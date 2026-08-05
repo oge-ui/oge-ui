@@ -20,6 +20,8 @@ const PEOPLE: Person[] = [
 async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
   await fixture.whenStable();
+  // select-all (allPages) resolves through the DataSource promise chain
+  await new Promise((resolve) => setTimeout(resolve));
   fixture.detectChanges();
 }
 

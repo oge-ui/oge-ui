@@ -150,6 +150,35 @@ describe('OgeGrid imperative API & events', () => {
     expect(written[0]).toBe('Name\tDepartment\r\nAda\tEng');
   });
 
+  it('select-all covers all pages by default and only the page with selectAllMode: page', async () => {
+    const fixture = TestBed.createComponent(OgeGrid<Row>);
+    fixture.componentRef.setInput('data', ROWS);
+    fixture.componentRef.setInput('columns', ['name']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('paging', { pageSize: 2 });
+    fixture.componentRef.setInput('selectionMode', 'checkbox');
+    const grid = fixture.componentInstance;
+    fixture.detectChanges();
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const headerCheckbox = () =>
+      el.querySelector('.oge-checkbox-cell input') as HTMLInputElement;
+    // default 'allPages': all 3 rows selected although the page shows 2
+    headerCheckbox().dispatchEvent(new Event('change'));
+    await settle(fixture);
+    expect(el.querySelectorAll('.oge-row-selected').length).toBe(2);
+    expect(headerCheckbox().checked).toBe(true);
+    const selected = (grid as unknown as { store: { selection: { count(): number } } }).store;
+    expect(selected.selection.count()).toBe(3);
+    // 'page' mode: only the visible page
+    headerCheckbox().dispatchEvent(new Event('change')); // clear
+    fixture.componentRef.setInput('selectAllMode', 'page');
+    await settle(fixture);
+    headerCheckbox().dispatchEvent(new Event('change'));
+    await settle(fixture);
+    expect(selected.selection.count()).toBe(2);
+  });
+
   it('clearFilters and clearSorting reset the view', async () => {
     const { fixture, el, grid } = await render();
     // sort by name desc via two header clicks

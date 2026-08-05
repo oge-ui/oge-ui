@@ -1703,11 +1703,20 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return this.store.selection.isSelected(key);
   }
 
+  /**
+   * Header select-all scope: `'allPages'` (default) selects the whole
+   * filtered set across pages; `'page'` only the rows on the current page.
+   */
+  readonly selectAllMode = input<'allPages' | 'page'>('allPages');
+
   protected readonly allSelected = computed(() => {
     const keys = this.dataKeys();
     if (!keys.length) return false;
     const selected = this.store.selection.selected();
-    return keys.every((key) => selected.has(key));
+    if (this.selectAllMode() === 'page' || selected.size >= this.totalCount()) {
+      return keys.every((key) => selected.has(key));
+    }
+    return false;
   });
 
   protected readonly someSelected = computed(
@@ -1734,10 +1743,24 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.store.selection.toggle(node.key);
   }
 
-  /** Select-all works on the *current* (filtered) data set. */
+  /** Select-all works on the current filtered set; scope via `selectAllMode`. */
   protected toggleSelectAll(): void {
-    if (this.allSelected()) this.store.selection.clear();
-    else this.store.selection.replace(this.dataKeys());
+    if (this.allSelected()) {
+      this.store.selection.clear();
+      return;
+    }
+    if (untracked(this.selectAllMode) === 'page') {
+      this.store.selection.replace(this.dataKeys());
+      return;
+    }
+    void this.selectAllPages();
+  }
+
+  /** Loads the full filtered set (paging ignored) and selects every key. */
+  private async selectAllPages(): Promise<void> {
+    const { rows } = await this.getExportData();
+    const keyOf = untracked(this.keySelector);
+    this.store.selection.replace(rows.map((row, index) => keyOf(row, index)));
   }
 
   protected ariaSelectedOf(node: DataRowNode<T>): boolean | null {
