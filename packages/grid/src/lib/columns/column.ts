@@ -1,27 +1,12 @@
 import { Directive, contentChild, input, model } from '@angular/core';
 import type { ValidatorFn } from '@angular/forms';
 import type { FilterExpr, FilterOperator, SummaryType } from '@oge-ui/core';
+import type { OgeColumnLookup, OgeDataType } from '@oge-ui/grid/foundation';
 import { OgeCellTemplate } from '../templates/cell-template';
 import { OgeEditTemplate } from '../templates/edit-template';
 import { OgeHeaderTemplate } from '../templates/header-template';
 
-export type OgeDataType = 'string' | 'number' | 'date' | 'boolean';
-
-/**
- * Lookup configuration: cells store a raw value but display (and edit/filter
- * with) the text of the matching lookup item.
- */
-export interface OgeColumnLookup {
-  /**
-   * Items, or a function of the row for cascading lookups — during editing it
-   * receives the row's current draft values, so dependent editors update live.
-   */
-  dataSource: readonly unknown[] | ((row: never) => readonly unknown[]);
-  /** Property holding the stored value; omit when items are primitives. */
-  valueExpr?: string;
-  /** Property holding the display text; omit when items are primitives. */
-  displayExpr?: string;
-}
+export type { OgeColumnLookup, OgeDataType } from '@oge-ui/grid/foundation';
 
 /**
  * Declarative column definition. Renders nothing itself — the grid collects
