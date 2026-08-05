@@ -28,6 +28,7 @@ import {
   buildCsv,
   computeWindow,
   createFieldAccessor,
+  createFilterPredicate,
   flattenGroupedData,
   foldText,
   foldTextWithMap,
@@ -941,9 +942,15 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       : { data: [] };
     let rows = result.data as readonly T[];
     if (scope === 'selection') {
-      const selected = untracked(this.store.selection.selected);
-      const keyOf = untracked(this.keySelector);
-      rows = rows.filter((row, index) => selected.has(keyOf(row, index)));
+      if (untracked(this.selectionDeferred)) {
+        const expr = untracked(this.selectionFilter);
+        const predicate = expr ? createFilterPredicate<T>(expr) : null;
+        rows = predicate ? rows.filter((row) => predicate(row)) : [];
+      } else {
+        const selected = untracked(this.store.selection.selected);
+        const keyOf = untracked(this.keySelector);
+        rows = rows.filter((row, index) => selected.has(keyOf(row, index)));
+      }
     }
     return { rows, columns: this.exportColumns() };
   }
@@ -982,7 +989,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private clipboardText(): string {
     const nodes = untracked(this.flatNodes);
     const columns = this.exportColumns();
-    const selected = untracked(this.store.selection.selected);
+    const selected: ReadonlySet<RowKey> = untracked(this.selectionDeferred)
+      ? untracked(this.deferredSelectedKeys)
+      : untracked(this.store.selection.selected);
     const rows = nodes
       .filter((node): node is DataRowNode<T> => node.kind === 'data' && selected.has(node.key))
       .map((node) => node.data);
@@ -1847,7 +1856,60 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   );
 
   protected isRowSelected(key: RowKey): boolean {
+    if (this.selectionDeferred()) return this.deferredSelectedKeys().has(key);
     return this.store.selection.isSelected(key);
+  }
+
+  // --- deferred selection ---------------------------------------------------
+
+  /**
+   * DevExtreme-style deferred selection: no key set is tracked — the
+   * selection is the serializable `selectionFilter` expression instead, so
+   * select-all over huge remote sets never fetches keys. Requires a string
+   * `keyField`. `null` means nothing is selected.
+   */
+  readonly selectionDeferred = input(false);
+  /** Two-way selection expression (deferred mode). */
+  readonly selectionFilter = model<FilterExpr | null>(null);
+
+  private readonly deferredKeyFieldName = computed<string | null>(() => {
+    const key = this.keyField();
+    return typeof key === 'string' ? key : null;
+  });
+
+  /** Keys of the currently rendered rows that match `selectionFilter`. */
+  private readonly deferredSelectedKeys = computed<ReadonlySet<RowKey>>(() => {
+    const expr = this.selectionFilter();
+    if (!this.selectionDeferred() || !expr) return new Set<RowKey>();
+    const predicate = createFilterPredicate<T>(expr);
+    const keys = new Set<RowKey>();
+    for (const node of this.flatNodes()) {
+      if (node.kind === 'data' && predicate(node.data)) keys.add(node.key);
+    }
+    return keys;
+  });
+
+  private keyEqualsExpr(key: RowKey): FilterExpr | null {
+    const field = this.deferredKeyFieldName();
+    return field ? { type: 'binary', field, op: 'eq', value: key } : null;
+  }
+
+  private deferredToggle(key: RowKey): void {
+    const eq = this.keyEqualsExpr(key);
+    if (!eq) return;
+    const current = untracked(this.selectionFilter);
+    if (untracked(this.deferredSelectedKeys).has(key)) {
+      this.selectionFilter.set(
+        current ? { type: 'and', operands: [current, { type: 'not', operand: eq }] } : null
+      );
+    } else {
+      this.selectionFilter.set(current ? { type: 'or', operands: [current, eq] } : eq);
+    }
+  }
+
+  private deferredSelectOnly(key: RowKey): void {
+    const eq = this.keyEqualsExpr(key);
+    if (eq) this.selectionFilter.set(eq);
   }
 
   /**
@@ -1859,6 +1921,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly allSelected = computed(() => {
     const keys = this.dataKeys();
     if (!keys.length) return false;
+    if (this.selectionDeferred()) {
+      const selected = this.deferredSelectedKeys();
+      return keys.every((key) => selected.has(key));
+    }
     const selected = this.store.selection.selected();
     if (this.selectAllMode() === 'page' || selected.size >= this.totalCount()) {
       return keys.every((key) => selected.has(key));
@@ -1866,15 +1932,23 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return false;
   });
 
-  protected readonly someSelected = computed(
-    () => this.store.selection.count() > 0 && !this.allSelected()
-  );
+  protected readonly someSelected = computed(() => {
+    if (this.selectionDeferred()) {
+      return this.deferredSelectedKeys().size > 0 && !this.allSelected();
+    }
+    return this.store.selection.count() > 0 && !this.allSelected();
+  });
 
   protected onRowClick(node: DataRowNode<T>, event: MouseEvent): void {
     this.rowClick.emit({ row: node.data, key: node.key, event });
     if (this.focusedRowEnabled()) this.focusedRowKey.set(node.key);
     const mode = this.selectionMode();
     if (mode === 'none') return;
+    if (this.selectionDeferred()) {
+      if (mode === 'single') this.deferredSelectOnly(node.key);
+      else this.deferredToggle(node.key);
+      return;
+    }
     if (mode === 'single') {
       this.store.selection.selectOnly(node.key);
       return;
@@ -1937,11 +2011,27 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected onCheckboxToggle(node: DataRowNode<T>, event: Event): void {
     event.stopPropagation();
+    if (this.selectionDeferred()) {
+      this.deferredToggle(node.key);
+      return;
+    }
     this.store.selection.toggle(node.key);
   }
 
   /** Select-all works on the current filtered set; scope via `selectAllMode`. */
   protected toggleSelectAll(): void {
+    if (this.selectionDeferred()) {
+      const field = this.deferredKeyFieldName();
+      if (!field) return;
+      if (this.allSelected()) {
+        this.selectionFilter.set(null);
+        return;
+      }
+      // "everything matching the current filter" — no keys are materialized
+      const filter = untracked(this.store.loadOptions).filter;
+      this.selectionFilter.set(filter ?? { type: 'binary', field, op: 'isnotnull' });
+      return;
+    }
     if (this.allSelected()) {
       this.store.selection.clear();
       return;
@@ -2074,8 +2164,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         const node = nodes[row];
         if (node?.kind === 'data' && this.selectionMode() !== 'none') {
           event.preventDefault();
-          if (this.selectionMode() === 'single') this.store.selection.selectOnly(node.key);
-          else this.store.selection.toggle(node.key);
+          if (this.selectionDeferred()) {
+            if (this.selectionMode() === 'single') this.deferredSelectOnly(node.key);
+            else this.deferredToggle(node.key);
+          } else if (this.selectionMode() === 'single') {
+            this.store.selection.selectOnly(node.key);
+          } else this.store.selection.toggle(node.key);
         }
         return;
       }
