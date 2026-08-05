@@ -36,7 +36,8 @@ export class DeferredChildrenLoader<T = unknown> {
   /** Fetched children by node key — feed to the flatten step. */
   readonly children = this.cache.asReadonly();
 
-  private readonly inflight = new Set<RowKey>();
+  /** Per-key request token: `finally` only clears its own generation. */
+  private readonly inflight = new Map<RowKey, symbol>();
   private baseJson: string | null = null;
 
   private readonly loadEffect = effect(() => {
@@ -54,7 +55,8 @@ export class DeferredChildrenLoader<T = unknown> {
       if (!source) return;
       for (const request of pending) {
         if (this.inflight.has(request.key)) continue;
-        this.inflight.add(request.key);
+        const token = Symbol();
+        this.inflight.set(request.key, token);
         source
           .load(request.buildOptions(rest))
           .then((result) => {
@@ -64,7 +66,11 @@ export class DeferredChildrenLoader<T = unknown> {
             this.cache.set(next);
           })
           .catch((err) => this.deps.onError(err))
-          .finally(() => this.inflight.delete(request.key));
+          .finally(() => {
+            if (this.inflight.get(request.key) === token) {
+              this.inflight.delete(request.key);
+            }
+          });
       }
     });
   });

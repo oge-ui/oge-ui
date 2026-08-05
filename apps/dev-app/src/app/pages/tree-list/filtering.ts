@@ -77,8 +77,9 @@ const SNIPPET = `<oge-tree-list
         match.
       </li>
       <li>
-        The DataSource never receives filter or search — no server round-trip
-        per keystroke.
+        The DataSource never receives filter or search — matching runs over the
+        rows already loaded, and lazily fetched children stay cached across
+        filter changes.
       </li>
       <li>
         The search box matches any visible column, locale-safe (İ/i folding

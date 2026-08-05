@@ -395,18 +395,20 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     },
   );
 
+  /** Lazy child requests filter on this field; requires a string `parentIdExpr`. */
+  private readonly lazyParentField = computed<string | null>(() => {
+    const parent = this.parentIdExpr();
+    return typeof parent === 'string' ? parent : null;
+  });
+
   private readonly effLoadMode = computed<'full' | 'lazy'>(() => {
+    // without a string parent field no child request can ever be built
+    if (this.lazyParentField() === null) return 'full';
     const explicit = this.loadMode();
     if (explicit) return explicit;
     return isDataSource(this.data()) && this.hasItemsExpr() !== undefined
       ? 'lazy'
       : 'full';
-  });
-
-  /** Lazy child requests filter on this field; requires a string `parentIdExpr`. */
-  private readonly lazyParentField = computed<string | null>(() => {
-    const parent = this.parentIdExpr();
-    return typeof parent === 'string' ? parent : null;
   });
 
   // --- keys & tree index ----------------------------------------------------
@@ -478,9 +480,18 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     });
   });
 
-  private readonly expandableKeys = computed<ReadonlySet<RowKey>>(
-    () => new Set(this.treeIndex().childrenOf.keys()),
-  );
+  /** Rows that can expand: loaded buckets plus lazy `hasItemsExpr` hints. */
+  private readonly expandableKeys = computed<ReadonlySet<RowKey>>(() => {
+    const index = this.treeIndex();
+    const keys = new Set<RowKey>(index.childrenOf.keys());
+    const hint = this.hasChildrenHint();
+    if (hint && this.effLoadMode() === 'lazy') {
+      for (const [key, row] of index.byKey) {
+        if (hint(row) === true) keys.add(key);
+      }
+    }
+    return keys;
+  });
 
   // --- expansion ------------------------------------------------------------
 
@@ -546,7 +557,10 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       ...(this.autoExpandAll()
         ? { collapsedRowKeys: toggled }
         : { expandedRowKeys: toggled }),
-      hasChildren: this.hasChildrenHint(),
+      // the hint only means something when a lazy loader can satisfy it —
+      // honoring it in full mode would render an eternal loading skeleton
+      hasChildren:
+        this.effLoadMode() === 'lazy' ? this.hasChildrenHint() : undefined,
       deferredChildren: this.deferredLoader.children(),
       visibleKeys: this.visibleKeys(),
     });
@@ -597,9 +611,23 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Unwrapped user source — lazy child requests bypass the tree wrapper. */
   private readonly innerSource = signal<DataSource<T> | null>(null);
 
+  /**
+   * Loader fingerprint without filter/search: the tree filters client-side,
+   * so a filter keystroke must not wipe the child cache and refetch every
+   * open level.
+   */
+  private readonly childLoadBase = computed(() => {
+    const {
+      filter: _filter,
+      searchText: _search,
+      ...rest
+    } = this.store.loadOptions();
+    return rest;
+  });
+
   private readonly deferredLoader = new DeferredChildrenLoader<T>({
     pending: this.pendingChildRequests,
-    baseOptions: this.store.loadOptions,
+    baseOptions: this.childLoadBase,
     source: this.innerSource,
     onError: (err) => this.adapter.error.set(err),
   });
@@ -867,8 +895,34 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   protected toggleSelectAll(): void {
-    if (untracked(this.allSelected)) this.store.selection.clear();
-    else this.store.selection.replace(untracked(this.dataKeys));
+    if (untracked(this.allSelected)) {
+      this.store.selection.clear();
+      return;
+    }
+    const keys = untracked(this.dataKeys);
+    if (!untracked(this.selectionRecursive)) {
+      this.store.selection.replace(keys);
+      return;
+    }
+    // recursive mode cascades: visible keys plus all their descendants, so
+    // select-all and per-row toggles agree about scope under a filter
+    const index = untracked(this.treeIndex);
+    const keyOf = untracked(this.rowKeyOf);
+    const selected = new Set<RowKey>(keys);
+    const stack = [...keys];
+    while (stack.length) {
+      const key = stack.pop() as RowKey;
+      const children = index.childrenOf.get(key);
+      if (!children) continue;
+      for (const child of children) {
+        const childKey = keyOf(child);
+        if (!selected.has(childKey)) {
+          selected.add(childKey);
+          stack.push(childKey);
+        }
+      }
+    }
+    this.store.selection.replace([...selected]);
   }
 
   protected ariaSelectedOf(node: DataRowNode<T>): boolean | null {
@@ -916,6 +970,11 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     string,
     ReturnType<typeof setTimeout>
   >();
+
+  private readonly clearFilterTimers = this.destroyRef.onDestroy(() => {
+    for (const timer of this.filterTimers.values()) clearTimeout(timer);
+    this.filterTimers.clear();
+  });
 
   private debounced(key: string, apply: () => void): void {
     const pending = this.filterTimers.get(key);
@@ -1095,8 +1154,13 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     if (fromParentKey === target.key) return;
     const data = untracked(this.data);
     const parentField = untracked(this.lazyParentField);
-    if (!isDataSource(data) && parentField !== null) {
-      // plain-array data: write the new parent in place and re-index
+    // auto-apply only for plain arrays with a writable top-level parent
+    // field; dotted paths and DataSources are the consumer's job
+    if (
+      !isDataSource(data) &&
+      parentField !== null &&
+      !parentField.includes('.')
+    ) {
       (row as Record<string, unknown>)[parentField] = target.key;
       this.adapter.reload();
     }
@@ -1121,7 +1185,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     events: {
       savingChanges: (event) => this.savingChanges.emit(event),
     },
-    reload: () => this.adapter.reload(),
+    // saved rows may live in the lazy child cache — drop it so the reload
+    // re-fetches open levels and the UI shows the persisted values
+    reload: () => {
+      this.deferredLoader.reset();
+      this.adapter.reload();
+    },
   });
 
   protected readonly editMode = this.editingModel.editMode;
@@ -1300,7 +1369,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         event.preventDefault();
         if (this.selectionMode() === 'single')
           this.store.selection.selectOnly(node.key);
-        else this.store.selection.toggle(node.key);
+        else this.toggleSelection(node.key);
       }
       return;
     }
@@ -1420,21 +1489,25 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     const levelOf = new Map<T, number>(
       nodes.map((node) => [node.data, node.level]),
     );
+    const messages = untracked(this.msg);
+    // display-faithful text per cell: format > lookup text > boolean labels
+    const textOf = (column: ResolvedColumn<T>, value: unknown): string => {
+      if (column.format) return column.format(value);
+      if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
+      if (column.dataType === 'boolean' && value != null) {
+        return value ? messages.booleanTrue : messages.booleanFalse;
+      }
+      return formatCellValue(value, column.dataType, undefined);
+    };
     const columns = untracked(this.resolvedColumns).map((column, index) => ({
       caption: column.caption,
       field: column.field,
       dataType: column.dataType,
-      accessor:
-        index === 0
-          ? (row: T): unknown => {
-              const value = column.accessor(row);
-              const text = column.format
-                ? column.format(value)
-                : formatCellValue(value, column.dataType, undefined);
-              return '  '.repeat(levelOf.get(row) ?? 0) + text;
-            }
-          : column.accessor,
-      format: index === 0 ? undefined : column.format,
+      accessor: (row: T): unknown => {
+        const text = textOf(column, column.accessor(row));
+        return index === 0 ? '  '.repeat(levelOf.get(row) ?? 0) + text : text;
+      },
+      format: undefined,
     }));
     return buildCsv(
       nodes.map((node) => node.data),
@@ -1489,13 +1562,18 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       const inner = isDataSource(data)
         ? data
         : new ArrayDataSource<T>(data, { key, sortValues });
-      this.innerSource.set(inner);
-      this.adapter.setSource(
-        treeSource(
-          inner,
-          lazy && parentField ? { parentField, rootValue } : null,
-        ),
-      );
+      untracked(() => {
+        // a new source (or key/parent mapping) invalidates the child cache —
+        // stale rows from the previous source must never join the new tree
+        if (this.innerSource() !== null) this.deferredLoader.reset();
+        this.innerSource.set(inner);
+        this.adapter.setSource(
+          treeSource(
+            inner,
+            lazy && parentField ? { parentField, rootValue } : null,
+          ),
+        );
+      });
     });
     // trees never page: the flatten step owns visibility
     effect(() => {

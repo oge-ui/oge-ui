@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type {
   DataSource,
@@ -36,6 +36,14 @@ class StubLazySource implements DataSource<Node> {
   readonly log: LoadOptions[] = [];
   /** When set, child loads stall until `release()` is called. */
   gate: Promise<void> | null = null;
+  private readonly rows: Node[];
+
+  constructor(titlePrefix = '') {
+    this.rows = ROWS.map((row) => ({
+      ...row,
+      title: `${titlePrefix}${row.title}`,
+    }));
+  }
 
   keyOf(item: Node): RowKey {
     return item.id;
@@ -47,7 +55,14 @@ class StubLazySource implements DataSource<Node> {
     const filter = options.filter as
       { field: string; op: string; value: unknown } | undefined;
     const parent = filter?.value ?? null;
-    return { data: ROWS.filter((row) => row.parentId === parent) };
+    return { data: this.rows.filter((row) => row.parentId === parent) };
+  }
+
+  async update(key: RowKey, patch: Partial<Node>): Promise<Node> {
+    const row = this.rows.find((candidate) => candidate.id === key);
+    if (!row) throw new Error(`no row ${String(key)}`);
+    Object.assign(row, patch);
+    return row;
   }
 }
 
@@ -75,17 +90,19 @@ function expanderOf(el: HTMLElement, title: string): HTMLButtonElement | null {
   imports: [OgeTreeList, OgeColumn],
   template: `
     <oge-tree-list
-      [data]="source"
+      [data]="source()"
       keyExpr="id"
       parentIdExpr="parentId"
       hasItemsExpr="hasChildren"
+      [editing]="editing"
     >
       <oge-column field="title" />
     </oge-tree-list>
   `,
 })
 class Host {
-  readonly source = new StubLazySource();
+  readonly source = signal(new StubLazySource());
+  editing: false | { mode: 'cell'; allowUpdating: boolean } = false;
 }
 
 describe('OgeTreeList lazy loading', () => {
@@ -102,8 +119,8 @@ describe('OgeTreeList lazy loading', () => {
   it('loads only the roots initially, with a parentId-eq-root filter', async () => {
     const { host, el } = await render();
     expect(rowTitles(el)).toEqual(['Root A', 'Root B']);
-    expect(host.source.log.length).toBe(1);
-    expect(host.source.log[0].filter).toEqual({
+    expect(host.source().log.length).toBe(1);
+    expect(host.source().log[0].filter).toEqual({
       type: 'binary',
       field: 'parentId',
       op: 'eq',
@@ -120,8 +137,8 @@ describe('OgeTreeList lazy loading', () => {
     await settle(fixture);
     await settle(fixture);
     expect(rowTitles(el)).toEqual(['Root A', 'Child A1', 'Root B']);
-    expect(host.source.log.length).toBe(2);
-    expect(host.source.log[1].filter).toEqual({
+    expect(host.source().log.length).toBe(2);
+    expect(host.source().log[1].filter).toEqual({
       type: 'binary',
       field: 'parentId',
       op: 'eq',
@@ -133,17 +150,17 @@ describe('OgeTreeList lazy loading', () => {
     expanderOf(el, 'Root A')?.click();
     await settle(fixture);
     expect(rowTitles(el)).toEqual(['Root A', 'Child A1', 'Root B']);
-    expect(host.source.log.length).toBe(2);
+    expect(host.source().log.length).toBe(2);
   });
 
   it('shows a skeleton filler row while children are in flight', async () => {
     const { fixture, host, el } = await render();
     let release!: () => void;
-    host.source.gate = new Promise<void>((resolve) => (release = resolve));
+    host.source().gate = new Promise<void>((resolve) => (release = resolve));
     expanderOf(el, 'Root A')?.click();
     await settle(fixture);
     expect(el.querySelector('.oge-filler-row')).toBeTruthy();
-    host.source.gate = null;
+    host.source().gate = null;
     release();
     await settle(fixture);
     await settle(fixture);
@@ -165,12 +182,63 @@ describe('OgeTreeList lazy loading', () => {
       'Grand A1a',
       'Root B',
     ]);
-    expect(host.source.log.length).toBe(3);
-    expect(host.source.log[2].filter).toEqual({
+    expect(host.source().log.length).toBe(3);
+    expect(host.source().log[2].filter).toEqual({
       type: 'binary',
       field: 'parentId',
       op: 'eq',
       value: 3,
     });
+  });
+
+  it('swapping the DataSource drops the child cache — no stale rows from the old source', async () => {
+    const { fixture, host, el } = await render();
+    expanderOf(el, 'Root A')?.click();
+    await settle(fixture);
+    await settle(fixture);
+    expect(rowTitles(el)).toContain('Child A1');
+
+    host.source.set(new StubLazySource('B:'));
+    fixture.detectChanges();
+    await settle(fixture);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle(fixture);
+    // the new source received the base (roots) load…
+    expect(host.source().log.length).toBeGreaterThan(0);
+    // …and the roots come from it
+    expect(rowTitles(el)).toContain('B:Root A');
+    // …and so do the re-fetched children of the still-expanded node
+    await new Promise((resolve) => setTimeout(resolve));
+    await settle(fixture);
+    expect(rowTitles(el)).toContain('B:Child A1');
+    expect(rowTitles(el)).not.toContain('Child A1');
+  });
+
+  it('saving a cell edit on a lazily loaded child re-fetches and shows the new value', async () => {
+    const { fixture, host, el } = await render();
+    host.editing = { mode: 'cell', allowUpdating: true };
+    fixture.detectChanges();
+    expanderOf(el, 'Root A')?.click();
+    await settle(fixture);
+    await settle(fixture);
+    const childRow = Array.from(
+      el.querySelectorAll<HTMLElement>('.oge-row'),
+    ).find((row) => (row.textContent ?? '').includes('Child A1'));
+    childRow?.querySelector<HTMLElement>('.oge-cell')?.click();
+    await settle(fixture);
+    const editor = el.querySelector<HTMLInputElement>('.oge-editor');
+    expect(editor).toBeTruthy();
+    if (!editor) return;
+    editor.value = 'Edited child';
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    editor.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+    );
+    await settle(fixture);
+    await new Promise((resolve) => setTimeout(resolve));
+    await settle(fixture);
+    await settle(fixture);
+    expect(rowTitles(el)).toContain('Edited child');
+    expect(rowTitles(el)).not.toContain('Child A1');
   });
 });
