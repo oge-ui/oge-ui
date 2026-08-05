@@ -8,6 +8,7 @@ export * from './lib/data/load-options';
 export * from './lib/data/data-source';
 export * from './lib/data/array-data-source';
 export * from './lib/data/custom-data-source';
+export * from './lib/data/odata';
 export * from './lib/filtering/filter-evaluator';
 export * from './lib/pipeline/run-load-options';
 export * from './lib/pipeline/steps/filter.step';
