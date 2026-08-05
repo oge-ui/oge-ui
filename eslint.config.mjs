@@ -21,20 +21,17 @@ export default [
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           depConstraints: [
             {
-              sourceTag: 'scope:shared',
-              onlyDependOnLibsWithTags: ['scope:shared'],
+              sourceTag: 'scope:core',
+              onlyDependOnLibsWithTags: ['scope:core'],
+              bannedExternalImports: ['@angular/*', 'rxjs*', 'zone.js*'],
             },
             {
-              sourceTag: 'scope:shop',
-              onlyDependOnLibsWithTags: ['scope:shop', 'scope:shared'],
+              sourceTag: 'scope:grid',
+              onlyDependOnLibsWithTags: ['scope:grid', 'scope:core'],
             },
             {
-              sourceTag: 'scope:api',
-              onlyDependOnLibsWithTags: ['scope:api', 'scope:shared'],
-            },
-            {
-              sourceTag: 'type:data',
-              onlyDependOnLibsWithTags: ['type:data'],
+              sourceTag: 'scope:app',
+              onlyDependOnLibsWithTags: ['scope:app', 'scope:grid', 'scope:core'],
             },
           ],
         },
