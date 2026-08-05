@@ -142,6 +142,12 @@ export interface OgeScrollingOptions {
    * Windowed mode is row-only: grouping and master-detail are unavailable.
    */
   remote?: boolean;
+  /**
+   * 'virtual' renders only the columns inside the horizontal viewport.
+   * Requires plain columns: no pinned columns and no column bands; columns
+   * without a numeric `width` fall back to their min width.
+   */
+  columnRenderingMode?: 'standard' | 'virtual';
 }
 
 export interface OgeDataChange<T = unknown> {
@@ -162,6 +168,8 @@ interface LookupItem {
 }
 
 interface ResolvedColumn<T = unknown> {
+  /** Position within the full column set (stable under column virtualization). */
+  absIndex: number;
   id: string;
   field: string | undefined;
   caption: string;
@@ -453,6 +461,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly viewportRef = viewChild<ElementRef<HTMLElement>>('viewport');
 
   protected readonly scrollTop = signal(0);
+  protected readonly scrollLeft = signal(0);
   protected readonly viewportHeight = signal(400);
 
   protected readonly detailTemplate = contentChild(OgeDetailTemplate<T>);
@@ -545,7 +554,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         () => this.store.editing.editCell() !== null || this.store.editing.editRowKey() !== null
       );
       if (editorOpen) return;
-      untracked(() => this.scrollRowIntoView(cell.row));
+      untracked(() => {
+        this.scrollRowIntoView(cell.row);
+        this.scrollColumnIntoView(cell.col);
+      });
       setTimeout(() => {
         if (this.store.editing.editCell() !== null || this.store.editing.editRowKey() !== null) {
           return;
@@ -652,7 +664,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected onScroll(event: Event): void {
-    this.scrollTop.set((event.target as HTMLElement).scrollTop);
+    const target = event.target as HTMLElement;
+    this.scrollTop.set(target.scrollTop);
+    this.scrollLeft.set(target.scrollLeft);
   }
 
   // --- state persistence ----------------------------------------------------
@@ -887,7 +901,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const declared = this.declaredColumns();
     const bands = this.bandByColumn();
     const adaptiveHidden = this.adaptiveHiddenIds();
-    let columns: ResolvedColumn<T>[];
+    let columns: Omit<ResolvedColumn<T>, 'absIndex'>[];
     if (declared.length) {
       columns = declared
         .filter((column) => column.visible())
@@ -959,7 +973,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const left = columns.filter((c) => c.pinned === 'left');
     const right = columns.filter((c) => c.pinned === 'right');
     const middle = columns.filter((c) => !c.pinned);
-    return [...left, ...middle, ...right];
+    return [...left, ...middle, ...right].map((column, index) => ({ ...column, absIndex: index }));
   });
 
   /**
@@ -1029,18 +1043,96 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     () => this.columnMinWidth() ?? this.config.columnMinWidth
   );
 
+  // --- column virtualization ------------------------------------------------
+
+  /** Extra horizontal pixels rendered on each side of the viewport. */
+  private static readonly COL_OVERSCAN_PX = 200;
+
+  /**
+   * Column virtualization is opt-in and requires plain columns: pinned columns
+   * and bands rely on every column being present in the DOM.
+   */
+  protected readonly colVirtualized = computed(
+    () =>
+      this.scrolling()?.columnRenderingMode === 'virtual' &&
+      this.bandRow() === null &&
+      this.resolvedColumns().every((column) => column.pinned === false)
+  );
+
+  /** Effective numeric width per column (fallback: min width) for prefix sums. */
+  private readonly colWidths = computed<readonly number[]>(() => {
+    const defaultMin = this.effColumnMinWidth();
+    return this.resolvedColumns().map((column) =>
+      typeof column.width === 'number' ? column.width : (column.minWidth ?? defaultMin)
+    );
+  });
+
+  private readonly colRange = computed<{
+    start: number;
+    end: number;
+    spacerLeft: number;
+    spacerRight: number;
+  } | null>(() => {
+    if (!this.colVirtualized()) return null;
+    const widths = this.colWidths();
+    const viewLeft = this.scrollLeft() - OgeGrid.COL_OVERSCAN_PX;
+    const viewRight =
+      this.scrollLeft() + (this.hostWidth() || 1200) + OgeGrid.COL_OVERSCAN_PX;
+    let x = this.leadingWidth();
+    let start = widths.length;
+    let end = widths.length;
+    let spacerLeft = 0;
+    for (let i = 0; i < widths.length; i++) {
+      if (x + widths[i] > viewLeft) {
+        start = i;
+        break;
+      }
+      spacerLeft += widths[i];
+      x += widths[i];
+    }
+    for (let i = start; i < widths.length; i++) {
+      if (x >= viewRight) {
+        end = i;
+        break;
+      }
+      x += widths[i];
+    }
+    let spacerRight = 0;
+    for (let i = end; i < widths.length; i++) spacerRight += widths[i];
+    return { start, end, spacerLeft, spacerRight };
+  });
+
+  /** Columns actually rendered — the horizontal window when virtualized. */
+  protected readonly renderColumns = computed<readonly ResolvedColumn<T>[]>(() => {
+    const columns = this.resolvedColumns();
+    const range = this.colRange();
+    return range ? columns.slice(range.start, range.end) : columns;
+  });
+
+  protected readonly colSpacerLeft = computed(() => this.colRange()?.spacerLeft ?? 0);
+  protected readonly colSpacerRight = computed(() => this.colRange()?.spacerRight ?? 0);
+
   protected readonly gridTemplateColumns = computed(() => {
     const defaultMin = this.effColumnMinWidth();
+    const leading: string[] = [];
+    if (this.hasExpander()) leading.push(`${EXPANDER_WIDTH}px`);
+    if (this.hasCheckboxColumn()) leading.push(`${CHECKBOX_WIDTH}px`);
+    const trailing = this.hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : [];
+    const range = this.colRange();
+    if (range) {
+      const widths = this.colWidths();
+      const tracks: string[] = [];
+      if (range.spacerLeft > 0) tracks.push(`${range.spacerLeft}px`);
+      for (let i = range.start; i < range.end; i++) tracks.push(`${widths[i]}px`);
+      if (range.spacerRight > 0) tracks.push(`${range.spacerRight}px`);
+      return [...leading, ...tracks, ...trailing].join(' ');
+    }
     const tracks = this.resolvedColumns().map((column) => {
       const width = column.width;
       if (typeof width === 'number') return `${width}px`;
       if (width == null && column.pinned) return `${this.config.pinnedDefaultWidth}px`;
       return width ?? `minmax(${column.minWidth ?? defaultMin}px, 1fr)`;
     });
-    const leading: string[] = [];
-    if (this.hasExpander()) leading.push(`${EXPANDER_WIDTH}px`);
-    if (this.hasCheckboxColumn()) leading.push(`${CHECKBOX_WIDTH}px`);
-    const trailing = this.hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : [];
     return [...leading, ...tracks, ...trailing].join(' ');
   });
 
@@ -1324,6 +1416,23 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       remaining -= 1;
     }
     return index;
+  }
+
+  /** Brings a virtualized column into the horizontal window before focusing. */
+  private scrollColumnIntoView(col: number): void {
+    if (!this.colVirtualized()) return;
+    const widths = this.colWidths();
+    if (col < 0 || col >= widths.length) return;
+    const viewport = this.viewportRef()?.nativeElement;
+    if (!viewport) return;
+    let left = this.leadingWidth();
+    for (let i = 0; i < col; i++) left += widths[i];
+    const right = left + widths[col];
+    if (left < viewport.scrollLeft) viewport.scrollLeft = left;
+    else if (right > viewport.scrollLeft + viewport.clientWidth) {
+      viewport.scrollLeft = right - viewport.clientWidth;
+    }
+    this.scrollLeft.set(viewport.scrollLeft);
   }
 
   private scrollRowIntoView(row: number): void {

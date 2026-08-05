@@ -26,9 +26,9 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 | "All" page size option | ✔ | ❌ | |
 | Pager display modes (compact/adaptive) | ✔ | ❌ | |
 | Row virtual scrolling | ✔ | ✅ | Fenwick-tree windowing, 100k e2e |
-| **Column virtualization** | ✔ | ❌ | planned in architecture, never implemented |
-| **Infinite scrolling** | ✔ | ❌ | `filler` row kind exists, loading not wired |
-| Remote virtual scrolling (windowed fetch) | ✔ | ❌ | virtual mode currently loads the full set |
+| **Column virtualization** | ✔ | ✅ | `columnRenderingMode: 'virtual'`; plain columns only (no pins/bands) |
+| **Infinite scrolling** | ✔ | ✅ | `scrolling.mode: 'infinite'`, skeleton fillers, growing scroll space |
+| Remote virtual scrolling (windowed fetch) | ✔ | ✅ | 100-row block cache, de-dupe, sort/filter invalidation; 1M-row demo |
 | Variable row heights (measured) | ✔ | 🟡 | fixed `rowHeight`/`detailRowHeight`; no ResizeObserver measurement / scroll anchoring |
 | scrollToRow public API | ✔ | 🟡 | internal only |
 
@@ -135,6 +135,6 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 
 **Phase 11 — Column parity: ✅ DONE** (lookup columns + editors, banded columns, `calculateCellValue`, `sortOrder`/`sortIndex`/`groupIndex`, word wrap, adaptive hiding). Remaining → Phase 13: cascading lookups, buttons-column customization, `calculateFilterExpression`.
 
-**Phase 12 — Data & scrolling parity:** infinite scrolling · remote virtual scrolling · column virtualization · measured variable row heights + scroll anchoring · push/live updates wiring · deferred group loading · OData adapter.
+**Phase 12 — Data & scrolling parity (in progress):** ~~infinite scrolling~~ ✅ · ~~remote virtual scrolling~~ ✅ · ~~column virtualization~~ ✅ · measured variable row heights + scroll anchoring · push/live updates wiring · deferred group loading · OData adapter.
 
 **Phase 13 — UX & API parity:** imperative API (`refresh`, `expandAll/collapseAll`, `scrollToRow`, `clearFilters`…) · richer event surface (`cellClick`, `rowDblClick`, `contentReady`) · expand/collapse-all UI · loading panel · row alternation · noData/row templates · toolbar customization · clipboard copy · focused-row mode · `selectAllMode: 'page'` · delete confirmation · form edit mode · row drag reordering · RTL · "All" page size + pager modes.

@@ -136,7 +136,10 @@
           />
         </div>
       }
-      @for (column of resolvedColumns(); track column.id) {
+      @if (colSpacerLeft() > 0) {
+        <div class="oge-header-cell oge-col-spacer" role="columnheader" aria-hidden="true"></div>
+      }
+      @for (column of renderColumns(); track column.id) {
         <div
           class="oge-header-cell"
           role="columnheader"
@@ -197,6 +200,9 @@
           }
         </div>
       }
+      @if (colSpacerRight() > 0) {
+        <div class="oge-header-cell oge-col-spacer" role="columnheader" aria-hidden="true"></div>
+      }
       @if (hasCommandColumn()) {
         <div class="oge-header-cell oge-command-cell" role="columnheader"></div>
       }
@@ -209,7 +215,10 @@
         @if (hasCheckboxColumn()) {
           <div class="oge-filter-cell" role="gridcell"></div>
         }
-        @for (column of resolvedColumns(); track column.id) {
+        @if (colSpacerLeft() > 0) {
+          <div class="oge-filter-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+        }
+        @for (column of renderColumns(); track column.id) {
           <div
             class="oge-filter-cell"
             role="gridcell"
@@ -280,6 +289,9 @@
             }
           </div>
         }
+        @if (colSpacerRight() > 0) {
+          <div class="oge-filter-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+        }
         @if (hasCommandColumn()) {
           <div class="oge-filter-cell" role="gridcell"></div>
         }
@@ -334,7 +346,10 @@
                   />
                 </div>
               }
-              @for (column of resolvedColumns(); track column.id; let colIndex = $index) {
+              @if (colSpacerLeft() > 0) {
+                <div class="oge-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+              }
+              @for (column of renderColumns(); track column.id) {
                 <div
                   class="oge-cell"
                   role="gridcell"
@@ -344,10 +359,10 @@
                   [class.oge-cell-editing]="isCellEditorOpen(node, column)"
                   [style.left.px]="pinnedLeftOf(column)"
                   [style.right.px]="pinnedRightOf(column)"
-                  [attr.data-cell]="viewStart() + nodeIndex + '-' + colIndex"
-                  [attr.aria-colindex]="leadingCellCount() + colIndex + 1"
-                  [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, colIndex) ? 0 : -1"
-                  (focus)="onCellFocus(viewStart() + nodeIndex, colIndex)"
+                  [attr.data-cell]="viewStart() + nodeIndex + '-' + column.absIndex"
+                  [attr.aria-colindex]="leadingCellCount() + column.absIndex + 1"
+                  [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, column.absIndex) ? 0 : -1"
+                  (focus)="onCellFocus(viewStart() + nodeIndex, column.absIndex)"
                   (click)="onCellClickToEdit(node, column, $event)"
                   (keydown.f2)="onCellClickToEdit(node, column, $event)"
                   (keydown.enter)="onCellClickToEdit(node, column, $event)"
@@ -406,6 +421,9 @@
                     {{ cellDisplayText(node, column) }}
                   }
                 </div>
+              }
+              @if (colSpacerRight() > 0) {
+                <div class="oge-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
               }
               @if (hasCommandColumn()) {
                 <div class="oge-cell oge-command-cell" role="gridcell">
@@ -509,10 +527,16 @@
               [style.height.px]="effRowHeight()"
               [style.grid-template-columns]="gridTemplateColumns()"
             >
-              @for (column of resolvedColumns(); track column.id) {
+              @if (colSpacerLeft() > 0) {
+                <div class="oge-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+              }
+              @for (column of renderColumns(); track column.id) {
                 <div class="oge-cell" role="gridcell" aria-busy="true">
                   <span class="oge-skeleton" aria-hidden="true"></span>
                 </div>
+              }
+              @if (colSpacerRight() > 0) {
+                <div class="oge-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
               }
             </div>
           }
@@ -533,7 +557,10 @@
       @if (hasCommandColumn()) {
         <div class="oge-total-cell" role="gridcell"></div>
       }
-      @for (column of resolvedColumns(); track column.id) {
+      @if (colSpacerLeft() > 0) {
+        <div class="oge-total-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+      }
+      @for (column of renderColumns(); track column.id) {
         <div
           class="oge-total-cell"
           role="gridcell"
@@ -544,6 +571,9 @@
         >
           {{ totalSummaryByColumn().get(column.id) ?? '' }}
         </div>
+      }
+      @if (colSpacerRight() > 0) {
+        <div class="oge-total-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
       }
     </div>
   }

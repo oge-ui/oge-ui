@@ -13,6 +13,13 @@ const SNIPPET = `<!-- give the grid a bounded height and switch virtualScroll on
   <oge-column field="salary" caption="Salary" dataType="number" />
 </oge-grid>`;
 
+const COLUMN_SNIPPET = `<!-- 200 columns: only the ones near the horizontal viewport are rendered -->
+<oge-grid [data]="wideRows" keyField="c0"
+          [columns]="wideColumns"
+          [scrolling]="{ mode: 'virtual', columnRenderingMode: 'virtual' }"
+          class="h-[420px]">
+</oge-grid>`;
+
 @Component({
   selector: 'app-virtual-scroll',
   imports: [OgeGrid, OgeColumn, DemoCard, DocHeader],
@@ -44,9 +51,33 @@ const SNIPPET = `<!-- give the grid a bounded height and switch virtualScroll on
       <li>Group and master-detail rows participate with their own heights (<code>detailRowHeight</code>).</li>
       <li>Keyboard navigation scrolls the focused row into view automatically, even across 100k rows.</li>
     </ul>
+
+    <h3>Column virtualization</h3>
+    <p>
+      Wide grids get the same treatment horizontally:
+      <code>columnRenderingMode: 'virtual'</code> renders only the columns near the horizontal
+      viewport and stands spacer tracks in for the rest. Scroll sideways below — the DOM holds
+      a couple dozen of the 200 columns at any time.
+    </p>
+
+    <app-demo-card [chips]="['200 columns', '1.000 rows']" [code]="columnSnippet">
+      <oge-grid
+        [data]="wideRows"
+        keyField="c0"
+        [columns]="wideColumns"
+        [scrolling]="{ mode: 'virtual', columnRenderingMode: 'virtual' }"
+        style="height: 420px"
+      />
+    </app-demo-card>
   `,
 })
 export class VirtualScrollPage {
   protected readonly employees = makeEmployees(100_000);
   protected readonly snippet = SNIPPET;
+  protected readonly columnSnippet = COLUMN_SNIPPET;
+
+  protected readonly wideColumns = Array.from({ length: 200 }, (_, i) => `c${i}`);
+  protected readonly wideRows = Array.from({ length: 1_000 }, (_, r) =>
+    Object.fromEntries(this.wideColumns.map((field, i) => [field, `R${r + 1} · C${i}`]))
+  ) as Record<string, string>[];
 }

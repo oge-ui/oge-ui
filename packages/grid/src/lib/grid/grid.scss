@@ -800,7 +800,7 @@
   width: 70%;
   height: 10px;
   border-radius: 5px;
-  background: color-mix(in srgb, var(--oge-muted-color) 18%, transparent);
+  background: var(--oge-skeleton-color, rgba(148, 163, 184, 0.25));
   animation: oge-skeleton-pulse 1.2s ease-in-out infinite;
 }
 
