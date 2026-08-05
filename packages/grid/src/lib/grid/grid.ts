@@ -43,7 +43,8 @@ import {
   type ValueAccessor,
   type ViewportWindow,
 } from '@oge-ui/core';
-import { OgeColumn, type OgeDataType } from '../columns/column';
+import { OgeColumn, type OgeColumnLookup, type OgeDataType } from '../columns/column';
+import { OgeColumnGroup } from '../columns/column-group';
 import { formatCellValue } from '../columns/value-format';
 import {
   OGE_GRID_CONFIG,
@@ -144,6 +145,11 @@ export interface OgeSavingChangesEvent<T = unknown> {
   cancel: boolean;
 }
 
+interface LookupItem {
+  value: unknown;
+  text: string;
+}
+
 interface ResolvedColumn<T = unknown> {
   id: string;
   field: string | undefined;
@@ -158,6 +164,9 @@ interface ResolvedColumn<T = unknown> {
   accessor: ValueAccessor<T>;
   format: ((value: unknown) => string) | undefined;
   editable: boolean;
+  lookupItems: readonly LookupItem[] | undefined;
+  bandCaption: string | undefined;
+  hidingPriority: number | undefined;
   cellTemplate: TemplateRef<OgeCellTemplateContext<T>> | undefined;
   headerTemplate: TemplateRef<OgeHeaderTemplateContext<T>> | undefined;
   editTemplate: TemplateRef<OgeEditTemplateContext<T>> | undefined;
@@ -201,6 +210,21 @@ function isDataSource<T>(value: readonly T[] | DataSource<T>): value is DataSour
   return !Array.isArray(value) && typeof (value as DataSource<T>).load === 'function';
 }
 
+function resolveLookupItems(lookup: OgeColumnLookup | undefined): readonly LookupItem[] | undefined {
+  if (!lookup) return undefined;
+  const valueOf = lookup.valueExpr ? createFieldAccessor(lookup.valueExpr) : (item: unknown) => item;
+  const textOf = lookup.displayExpr ? createFieldAccessor(lookup.displayExpr) : (item: unknown) => item;
+  return lookup.dataSource.map((item) => ({
+    value: valueOf(item),
+    text: String(textOf(item) ?? ''),
+  }));
+}
+
+function lookupTextOf(items: readonly LookupItem[], value: unknown): string {
+  const match = items.find((item) => item.value === value || String(item.value) === String(value));
+  return match ? match.text : value == null ? '' : String(value);
+}
+
 const EXPANDER_WIDTH = 32;
 const CHECKBOX_WIDTH = 36;
 const COMMAND_WIDTH = 90;
@@ -218,6 +242,7 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
     class: 'oge-grid',
     '[class.oge-virtual]': 'virtualScroll()',
     '[class.oge-loading]': 'adapter.loading()',
+    '[class.oge-wrap]': 'wordWrap()',
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'closePopups()',
   },
@@ -400,7 +425,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly viewportHeight = signal(400);
 
   protected readonly detailTemplate = contentChild(OgeDetailTemplate<T>);
-  protected readonly declaredColumns = contentChildren<OgeColumn<T>>(OgeColumn);
+  protected readonly declaredColumns = contentChildren<OgeColumn<T>>(OgeColumn, {
+    descendants: true,
+  });
+  protected readonly columnGroups = contentChildren<OgeColumnGroup<T>>(OgeColumnGroup);
+
+  /** New inputs (wordWrap) + responsive width tracking. */
+  readonly wordWrap = input(false);
+  protected readonly hostWidth = signal(0);
 
   constructor() {
     effect(() => {
@@ -543,11 +575,46 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       });
     });
     this.destroyRef.onDestroy(() => clearTimeout(this.stateSaveTimer));
+    // initial sort/group from column inputs — applied only while the slices
+    // are untouched (so stateKey restore and user interaction win)
+    effect(() => {
+      const columns = this.declaredColumns();
+      const sortConfigs = columns
+        .map((column) => ({
+          field: column.field(),
+          dir: column.sortOrder(),
+          index: column.sortIndex() ?? 0,
+        }))
+        .filter((c): c is { field: string; dir: 'asc' | 'desc'; index: number } =>
+          Boolean(c.field && c.dir)
+        )
+        .sort((a, b) => a.index - b.index);
+      const groupConfigs = columns
+        .map((column) => ({ field: column.field(), index: column.groupIndex() }))
+        .filter((c): c is { field: string; index: number } =>
+          Boolean(c.field && c.index !== undefined)
+        )
+        .sort((a, b) => a.index - b.index);
+      untracked(() => {
+        if (sortConfigs.length && this.store.sort.descriptors().length === 0) {
+          this.store.sort.set(sortConfigs.map(({ field, dir }) => ({ field, dir })));
+        }
+        if (groupConfigs.length && this.store.grouping.descriptors().length === 0) {
+          this.store.grouping.set(
+            groupConfigs.map(({ field }) => ({ field, dir: 'asc' as const }))
+          );
+        }
+      });
+    });
     afterNextRender(() => {
       const viewport = this.viewportRef()?.nativeElement;
       if (!viewport || typeof ResizeObserver === 'undefined') return;
       this.viewportHeight.set(viewport.clientHeight);
-      const observer = new ResizeObserver(() => this.viewportHeight.set(viewport.clientHeight));
+      this.hostWidth.set(viewport.clientWidth);
+      const observer = new ResizeObserver(() => {
+        this.viewportHeight.set(viewport.clientHeight);
+        this.hostWidth.set(viewport.clientWidth);
+      });
       observer.observe(viewport);
       this.destroyRef.onDestroy(() => observer.disconnect());
     });
@@ -593,9 +660,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         accessor: column.accessor as (row: T) => unknown,
         format:
           column.format ??
-          (column.dataType === 'boolean'
-            ? (value: unknown) => (value ? messages.booleanTrue : messages.booleanFalse)
-            : undefined),
+          (column.lookupItems
+            ? (value: unknown) => lookupTextOf(column.lookupItems as LookupItem[], value)
+            : column.dataType === 'boolean'
+              ? (value: unknown) => (value ? messages.booleanTrue : messages.booleanFalse)
+              : undefined),
       }));
     return buildCsv(rows, columns, options);
   }
@@ -715,10 +784,21 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- columns -------------------------------------------------------------
 
+  /** OgeColumn instance → band caption (from `<oge-column-group>`). */
+  private readonly bandByColumn = computed<ReadonlyMap<OgeColumn<T>, string>>(() => {
+    const map = new Map<OgeColumn<T>, string>();
+    for (const group of this.columnGroups()) {
+      for (const column of group.columns()) map.set(column, group.caption());
+    }
+    return map;
+  });
+
   protected readonly resolvedColumns = computed<ResolvedColumn<T>[]>(() => {
     const widthOverrides = this.store.columns.widthOverrides();
     const pinOverrides = this.store.columns.pinOverrides();
     const declared = this.declaredColumns();
+    const bands = this.bandByColumn();
+    const adaptiveHidden = this.adaptiveHiddenIds();
     let columns: ResolvedColumn<T>[];
     if (declared.length) {
       columns = declared
@@ -726,6 +806,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         .map((column, index) => {
           const field = column.field();
           const id = field ?? `col-${index}`;
+          const calculate = column.calculateCellValue();
           return {
             id,
             field,
@@ -737,15 +818,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
             filterable: column.filterable() && field != null,
             filterOperator: column.filterOperator(),
             pinned: pinOverrides.get(id) ?? column.pinned(),
-            accessor: field ? createFieldAccessor<T>(field) : () => undefined,
+            accessor: calculate ?? (field ? createFieldAccessor<T>(field) : () => undefined),
             format: column.format(),
-            editable: column.editable() && field != null,
+            editable: column.editable() && field != null && !calculate,
+            lookupItems: resolveLookupItems(column.lookup()),
+            bandCaption: bands.get(column),
+            hidingPriority: column.hidingPriority(),
             cellTemplate: column.cellTemplate()?.templateRef,
             headerTemplate: column.headerTemplate()?.templateRef,
             editTemplate: column.editTemplate()?.templateRef,
             source: column,
           };
-        });
+        })
+        .filter((column) => !adaptiveHidden.has(column.id));
     } else {
       const defs = this.columns();
       const fields = defs?.length
@@ -762,6 +847,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         filterable: true,
         filterOperator: undefined,
         pinned: pinOverrides.get(field) ?? (false as const),
+        lookupItems: undefined,
+        bandCaption: undefined,
+        hidingPriority: undefined,
         accessor: createFieldAccessor<T>(field),
         format: undefined,
         editable: true,
@@ -784,6 +872,54 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const right = columns.filter((c) => c.pinned === 'right');
     const middle = columns.filter((c) => !c.pinned);
     return [...left, ...middle, ...right];
+  });
+
+  /**
+   * Responsive column hiding: when the fixed/estimated widths exceed the
+   * available width, columns with a `hidingPriority` are hidden starting
+   * from the lowest priority.
+   */
+  private readonly adaptiveHiddenIds = computed<ReadonlySet<string>>(() => {
+    const hostWidth = this.hostWidth();
+    if (!hostWidth) return new Set();
+    const declared = this.declaredColumns().filter((column) => column.visible());
+    if (!declared.length) return new Set();
+    const defaultMin = this.columnMinWidth() ?? this.config.columnMinWidth;
+    const widthOf = (column: OgeColumn<T>): number => {
+      const width = column.width();
+      if (typeof width === 'number') return width;
+      return column.minWidth() ?? defaultMin;
+    };
+    const leading =
+      (this.detailTemplate() ? EXPANDER_WIDTH : 0) +
+      (this.selectionMode() === 'checkbox' ? CHECKBOX_WIDTH : 0);
+    let total = leading + declared.reduce((sum, column) => sum + widthOf(column), 0);
+    const hidden = new Set<string>();
+    const candidates = declared
+      .filter((column) => column.hidingPriority() !== undefined)
+      .sort((a, b) => (a.hidingPriority() ?? 0) - (b.hidingPriority() ?? 0));
+    for (const column of candidates) {
+      if (total <= hostWidth) break;
+      const field = column.field();
+      if (!field) continue;
+      hidden.add(field);
+      total -= widthOf(column);
+    }
+    return hidden;
+  });
+
+  /** Band header cells (caption + span) for the current column order. */
+  protected readonly bandRow = computed<{ caption: string | null; span: number }[] | null>(() => {
+    const columns = this.resolvedColumns();
+    if (!columns.some((column) => column.bandCaption)) return null;
+    const cells: { caption: string | null; span: number }[] = [];
+    for (const column of columns) {
+      const caption = column.bandCaption ?? null;
+      const last = cells[cells.length - 1];
+      if (last && last.caption !== null && last.caption === caption) last.span += 1;
+      else cells.push({ caption, span: 1 });
+    }
+    return cells;
   });
 
   /** True when a leading expander column is rendered (master-detail active). */
@@ -905,10 +1041,27 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected cellDisplayText(node: DataRowNode<T>, column: ResolvedColumn<T>): string {
     const value = this.displayValue(node, column);
-    if (column.dataType === 'boolean' && !column.format && value != null) {
+    if (column.format) return column.format(value);
+    if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
+    if (column.dataType === 'boolean' && value != null) {
       return value ? this.msg().booleanTrue : this.msg().booleanFalse;
     }
-    return formatCellValue(value, column.dataType, column.format);
+    return formatCellValue(value, column.dataType, undefined);
+  }
+
+  /** Filter-row lookup select: applies an exact-match filter on the raw value. */
+  protected onLookupFilter(column: ResolvedColumn<T>, rawIndex: string): void {
+    const field = column.field;
+    if (!field || !column.lookupItems) return;
+    if (rawIndex === '') {
+      this.store.filter.setRowFilter(field, null);
+      return;
+    }
+    const item = column.lookupItems[Number(rawIndex)];
+    this.store.filter.setRowFilter(
+      field,
+      item === undefined ? null : { type: 'binary', field, op: 'eq', value: item.value }
+    );
   }
 
   protected onEditorEnter(): void {
@@ -1342,6 +1495,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   private editorValue(control: FormControl<unknown>, column: ResolvedColumn<T>): unknown {
     const value = control.value;
+    if (column.lookupItems) {
+      const match = column.lookupItems.find((item) => String(item.value) === String(value));
+      return match ? match.value : value;
+    }
     if (column.dataType === 'number' && value !== null && value !== '' && value !== undefined) {
       const parsed = Number(value);
       return Number.isNaN(parsed) ? value : parsed;
@@ -1914,7 +2071,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected headerValueText(value: unknown): string {
     if (value == null || value === '') return this.msg().blankValue;
-    return String(value);
+    const field = this.headerFilterField();
+    const items = field ? this.columnByField(field)?.lookupItems : undefined;
+    return items ? lookupTextOf(items, value) : String(value);
   }
 
   protected onPageSizeChange(pageSize: number): void {

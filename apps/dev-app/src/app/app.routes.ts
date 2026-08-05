@@ -40,6 +40,11 @@ export const appRoutes: Route[] = [
         title: 'oge — Data Grid Remote Data',
       },
       {
+        path: 'columns',
+        loadComponent: () => import('./pages/data-grid/columns').then((m) => m.ColumnsPage),
+        title: 'oge — Data Grid Columns',
+      },
+      {
         path: 'filtering',
         loadComponent: () => import('./pages/data-grid/filtering').then((m) => m.FilteringPage),
         title: 'oge — Data Grid Filtering',

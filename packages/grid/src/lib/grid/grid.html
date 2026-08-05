@@ -97,6 +97,30 @@
   (keydown)="onGridKeydown($event)"
 >
   <div class="oge-header" role="rowgroup">
+    @if (bandRow(); as bands) {
+      <div class="oge-band-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
+        @if (hasExpander()) {
+          <div class="oge-band-cell" role="columnheader"></div>
+        }
+        @if (hasCheckboxColumn()) {
+          <div class="oge-band-cell" role="columnheader"></div>
+        }
+        @for (band of bands; track $index) {
+          <div
+            class="oge-band-cell"
+            role="columnheader"
+            [class.oge-band-filled]="band.caption !== null"
+            [style.grid-column]="'span ' + band.span"
+            [attr.aria-colspan]="band.span"
+          >
+            {{ band.caption ?? '' }}
+          </div>
+        }
+        @if (hasCommandColumn()) {
+          <div class="oge-band-cell" role="columnheader"></div>
+        }
+      </div>
+    }
     <div class="oge-header-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
       @if (hasExpander()) {
         <div class="oge-header-cell oge-expander-cell" role="columnheader" aria-label="Detail"></div>
@@ -193,7 +217,18 @@
             [style.left.px]="pinnedLeftOf(column)"
             [style.right.px]="pinnedRightOf(column)"
           >
-            @if (column.filterable) {
+            @if (column.filterable && column.lookupItems; as items) {
+              <select
+                class="oge-filter-input"
+                [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+                (change)="onLookupFilter(column, $any($event.target).value)"
+              >
+                <option value="">{{ msg().selectAllValues }}</option>
+                @for (item of items; track $index) {
+                  <option [value]="$index">{{ item.text }}</option>
+                }
+              </select>
+            } @else if (column.filterable) {
               @if (column.dataType !== 'boolean') {
                 <button
                   type="button"
@@ -322,6 +357,17 @@
                       <ng-container
                         *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
                       />
+                    } @else if (column.lookupItems; as items) {
+                      <select
+                        class="oge-editor oge-editor-input"
+                        [formControl]="$any(editControl(node, column))"
+                        (keydown.enter)="onEditorEnter()"
+                        (keydown.escape)="cancelActiveEditor()"
+                      >
+                        @for (item of items; track $index) {
+                          <option [value]="item.value">{{ item.text }}</option>
+                        }
+                      </select>
                     } @else {
                       @switch (column.dataType) {
                         @case ('boolean') {
@@ -553,6 +599,12 @@
             <span class="oge-popup-label">{{ column.caption }}</span>
             @if (column.editTemplate) {
               <ng-container *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)" />
+            } @else if (column.lookupItems; as items) {
+              <select class="oge-editor oge-editor-input" [formControl]="$any(editControl(node, column))">
+                @for (item of items; track $index) {
+                  <option [value]="item.value">{{ item.text }}</option>
+                }
+              </select>
             } @else {
               @switch (column.dataType) {
                 @case ('boolean') {

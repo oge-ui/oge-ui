@@ -29,7 +29,8 @@ export {
 } from './lib/config';
 export { type SelectionMode } from './lib/state/selection-slice';
 export { SelectionSlice } from './lib/state/selection-slice';
-export { OgeColumn, type OgeDataType } from './lib/columns/column';
+export { OgeColumn, type OgeDataType, type OgeColumnLookup } from './lib/columns/column';
+export { OgeColumnGroup } from './lib/columns/column-group';
 export { formatCellValue } from './lib/columns/value-format';
 export { OgeCellTemplate, type OgeCellTemplateContext } from './lib/templates/cell-template';
 export { OgeHeaderTemplate, type OgeHeaderTemplateContext } from './lib/templates/header-template';

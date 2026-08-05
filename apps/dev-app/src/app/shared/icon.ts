@@ -19,7 +19,8 @@ export type IconName =
   | 'check-square'
   | 'sun'
   | 'moon'
-  | 'pencil';
+  | 'pencil'
+  | 'columns';
 
 /** Lucide-style inline SVG icons — no emoji, no icon-font dependency. */
 @Component({
@@ -118,6 +119,10 @@ export type IconName =
         @case ('pencil') {
           <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
           <path d="m15 5 4 4" />
+        }
+        @case ('columns') {
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 3v18" /><path d="M15 3v18" />
         }
       }
     </svg>

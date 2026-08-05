@@ -8,6 +8,18 @@ import { OgeHeaderTemplate } from '../templates/header-template';
 export type OgeDataType = 'string' | 'number' | 'date' | 'boolean';
 
 /**
+ * Lookup configuration: cells store a raw value but display (and edit/filter
+ * with) the text of the matching lookup item.
+ */
+export interface OgeColumnLookup {
+  dataSource: readonly unknown[];
+  /** Property holding the stored value; omit when items are primitives. */
+  valueExpr?: string;
+  /** Property holding the display text; omit when items are primitives. */
+  displayExpr?: string;
+}
+
+/**
  * Declarative column definition. Renders nothing itself — the grid collects
  * these via content projection and derives its layout from them:
  *
@@ -38,6 +50,17 @@ export class OgeColumn<T = unknown> {
   readonly filterOperator = input<FilterOperator>();
   /** Track minimum in px for flexible-width columns. */
   readonly minWidth = input<number>();
+  /** Maps stored values to display texts (cells, filters, editors). */
+  readonly lookup = input<OgeColumnLookup>();
+  /** Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). */
+  readonly calculateCellValue = input<(row: T) => unknown>();
+  /** Initial sort direction applied on first render (with `sortIndex` for multi-sort order). */
+  readonly sortOrder = input<'asc' | 'desc'>();
+  readonly sortIndex = input<number>();
+  /** Initial group level of this column (0 = first). */
+  readonly groupIndex = input<number>();
+  /** Responsive hiding: lower priorities hide first when the grid runs out of width. */
+  readonly hidingPriority = input<number>();
   /** Pins the column to an edge (requires a numeric `width`). */
   readonly pinned = input<false | 'left' | 'right'>(false);
   /** Aggregate shown on group rows for this column's field. */

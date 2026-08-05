@@ -311,10 +311,40 @@
 
 .oge-header-row,
 .oge-filter-row,
+.oge-band-row,
 .oge-row,
 .oge-total-row {
   display: grid;
   align-items: stretch;
+}
+
+.oge-band-row {
+  border-bottom: 1px solid var(--oge-border-color);
+  min-width: fit-content;
+}
+
+.oge-band-cell {
+  padding: 6px var(--oge-cell-padding-x);
+  text-align: center;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--oge-muted-color);
+  background: var(--oge-header-bg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-band-filled {
+  color: var(--oge-header-color);
+  border-inline: 1px solid var(--oge-border-color);
+}
+
+.oge-wrap {
+  .oge-cell {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 .oge-header-cell {

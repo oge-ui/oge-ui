@@ -37,7 +37,7 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 | Feature | DevExtreme | oge | Notes |
 |---|---|---|---|
 | Single/multi/none + allowUnsorting | ✔ | ✅ | incl. global config |
-| Initial sort via column (`sortIndex`/`sortOrder`) | ✔ | ❌ | only interactive / store API |
+| Initial sort via column (`sortIndex`/`sortOrder`) | ✔ | ✅ | + `groupIndex` (Phase 11); stateKey/user wins |
 | Custom sort (`calculateSortValue`) | ✔ | ❌ | |
 
 ## 4. Filtering & search
@@ -65,7 +65,7 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 | Summaries in **group footer** | ✔ | ❌ | inline on group row only |
 | Expand/collapse **all** (API + UI) | ✔ | ❌ | per-group only |
 | `autoExpandGroup` control | ✔ | ❌ | always expanded by default |
-| Column `groupIndex` input | ✔ | ❌ | grid-level `groupBy` only |
+| Column `groupIndex` input | ✔ | ✅ | Phase 11 |
 
 ## 6. Columns
 
@@ -73,13 +73,13 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 |---|---|---|---|
 | Resize / reorder / fixed (pin) / chooser | ✔ | ✅ | |
 | minWidth / width / visible | ✔ | ✅ | |
-| **Banded columns** (multi-row headers) | ✔ | ❌ | in original feature list |
-| **Lookup columns** (display + dropdown editor) | ✔ | ❌ | big one; incl. cascading lookups |
-| Calculated columns (`calculateCellValue`) | ✔ | ❌ | template-only columns work, but can't sort/filter on computed values |
-| Adaptive column hiding (`hidingPriority`) | ✔ | ❌ | responsive behavior |
+| **Banded columns** (multi-row headers) | ✔ | ✅ | `<oge-column-group>` (Phase 11) |
+| **Lookup columns** (display + dropdown editor) | ✔ | ✅ | display/filter/header-filter/editor/CSV (Phase 11); cascading still ❌ |
+| Calculated columns (`calculateCellValue`) | ✔ | 🟡 | display/CSV (Phase 11); sort/filter on computed values ❌ |
+| Adaptive column hiding (`hidingPriority`) | ✔ | ✅ | width-driven, restores automatically (Phase 11) |
 | Command/buttons column customization | ✔ | ❌ | fixed edit/delete buttons only |
 | Header/cell/edit templates | ✔ | ✅ | fully typed |
-| Word wrap / auto row height | ✔ | ❌ | cells are nowrap |
+| Word wrap / auto row height | ✔ | ✅ | `wordWrap` input (Phase 11; virtual mode stays fixed-height) |
 
 ## 7. Selection, focus, keyboard
 
@@ -101,7 +101,7 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 | **form** mode (inline form) | ✔ | ❌ | popup covers the dialog case |
 | Validation rules | ✔ | ✅ | `required` + any Angular validators |
 | Custom editors (`editCellTemplate`) | ✔ | ✅ | `*ogeEditTemplate` with FormControl |
-| Lookup editors | ✔ | ❌ | depends on lookup columns |
+| Lookup editors | ✔ | ✅ | default select editor (Phase 11); cascading ❌ |
 | Row drag & drop reordering | ✔ | ❌ | |
 | Confirmation on delete | ✔ | ❌ | deletes immediately (non-batch) |
 
@@ -133,7 +133,7 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 
 **Phase 10 — Filtering parity: ✅ DONE** (filter builder + panel, operator menu, header-filter search, `[(filterValue)]`, search highlighting).
 
-**Phase 11 — Column parity:** lookup columns (+ lookup editors, cascading) · banded columns · `calculateCellValue`/`calculateFilterExpression` · `sortIndex`/`groupIndex`/`sortOrder` column inputs · buttons-column customization · word wrap · adaptive hiding priority.
+**Phase 11 — Column parity: ✅ DONE** (lookup columns + editors, banded columns, `calculateCellValue`, `sortOrder`/`sortIndex`/`groupIndex`, word wrap, adaptive hiding). Remaining → Phase 13: cascading lookups, buttons-column customization, `calculateFilterExpression`.
 
 **Phase 12 — Data & scrolling parity:** infinite scrolling · remote virtual scrolling · column virtualization · measured variable row heights + scroll anchoring · push/live updates wiring · deferred group loading · OData adapter.
 
