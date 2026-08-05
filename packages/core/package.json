@@ -1,6 +1,9 @@
 {
   "name": "@oge-ui/core",
   "version": "0.3.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./index.cjs",
   "module": "./index.js",
   "dependencies": {}
