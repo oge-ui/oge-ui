@@ -11,6 +11,8 @@ export {
   type KeyboardNavModelDeps,
   type KeyboardNavTreeHooks,
 } from './keyboard-nav-model';
+export { createStatePersistence, type StatePersistenceOptions } from './state-persistence';
+export { OGE_STATE_STORAGE, type OgeStateStorage } from './state-storage';
 export {
   RowVirtualizerModel,
   type RowVirtualizerModelDeps,

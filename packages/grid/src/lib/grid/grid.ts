@@ -63,6 +63,8 @@ import {
   type LookupItem,
   type PendingChildRequest,
   type ResolvedColumn as FoundationResolvedColumn,
+  OGE_STATE_STORAGE,
+  createStatePersistence,
 } from '@oge-ui/grid/foundation';
 import { OgeColumn, type OgeDataType } from '../columns/column';
 import { OgeColumnGroup } from '../columns/column-group';
@@ -84,7 +86,6 @@ import {
 } from '../filter-builder/filter-builder';
 import { OgePager } from '../pager/pager';
 import { GridStateStore } from '../state/grid-state.store';
-import { OGE_STATE_STORAGE } from '../state/state-storage';
 import type { OgeEditingOptions } from '../state/editing-slice';
 import type { SelectionMode } from '../state/selection-slice';
 import type { OgeEditTemplateContext } from '../templates/edit-template';
@@ -723,44 +724,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       });
     });
     // --- state persistence (stateKey) ---
-    effect(() => {
-      const key = this.stateKey();
-      this.declaredColumns(); // re-run once the column directives registered
-      if (!key || this.restoredStateKey === key) return;
-      this.restoredStateKey = key;
-      const raw = untracked(() => this.stateStorage.get(`oge-grid:${key}`));
-      const apply = (text: string | null): void => {
-        if (!text) return;
-        try {
-          this.applyState(JSON.parse(text) as GridStateSnapshot);
-        } catch {
-          // corrupt persisted state — start clean
-        }
-      };
-      if (raw !== null && typeof raw === 'object') {
-        // async backend (API / IndexedDB) — apply when it resolves, unless
-        // the grid switched to a different stateKey in the meantime
-        void raw.then((text) => {
-          if (untracked(this.stateKey) === key) apply(text);
-        });
-      } else {
-        apply(raw);
-      }
+    createStatePersistence<GridStateSnapshot>({
+      stateKey: this.stateKey,
+      prefix: 'oge-grid',
+      storage: this.stateStorage,
+      snapshot: this.persistedSnapshot,
+      apply: (snapshot) => this.applyState(snapshot),
+      // re-run the restore once the column directives registered
+      beforeRestore: () => this.declaredColumns(),
+      onChange: (snapshot) => this.stateChange.emit(snapshot),
     });
-    effect(() => {
-      const snapshot = this.persistedSnapshot();
-      const key = this.stateKey();
-      untracked(() => {
-        clearTimeout(this.stateSaveTimer);
-        this.stateSaveTimer = setTimeout(() => {
-          if (key) void this.stateStorage.set(`oge-grid:${key}`, JSON.stringify(snapshot));
-          // first run is the initial state, not a change
-          if (this.stateChangeSeen) this.stateChange.emit(snapshot);
-          this.stateChangeSeen = true;
-        }, 250);
-      });
-    });
-    this.destroyRef.onDestroy(() => clearTimeout(this.stateSaveTimer));
     // initial sort/group from column inputs — applied only while the slices
     // are untouched (so stateKey restore and user interaction win)
     effect(() => {
@@ -816,10 +789,6 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   // --- state persistence ----------------------------------------------------
-
-  private restoredStateKey: string | null = null;
-  private stateSaveTimer: ReturnType<typeof setTimeout> | undefined;
-  private stateChangeSeen = false;
 
   /**
    * Debounced notification whenever the persistable UI state changes —

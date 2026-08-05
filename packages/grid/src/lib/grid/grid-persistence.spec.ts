@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { OgeColumn } from '../columns/column';
-import { OGE_STATE_STORAGE, type OgeStateStorage } from '../state/state-storage';
+import { OGE_STATE_STORAGE, type OgeStateStorage } from '@oge-ui/grid/foundation';
 import { GridStateStore } from '../state/grid-state.store';
 import { OgeGrid } from './grid';
 
@@ -112,6 +112,67 @@ describe('OgeGrid state persistence', () => {
   });
 });
 
+describe('OgeGrid async storage + imperative state API', () => {
+  it('restores from a promise-returning backend (API-style)', async () => {
+    const backend = new MemoryStorage();
+    backend.set(
+      'oge-grid:test-grid',
+      JSON.stringify({ sort: [{ field: 'name', dir: 'asc' }] })
+    );
+    const asyncStorage: OgeStateStorage = {
+      get: async (key) => {
+        await wait(20);
+        return backend.get(key);
+      },
+      set: async (key, value) => {
+        await wait(5);
+        backend.set(key, value);
+      },
+    };
+    TestBed.configureTestingModule({
+      providers: [{ provide: OGE_STATE_STORAGE, useValue: asyncStorage }],
+    });
+    const fixture = TestBed.createComponent(PersistenceHost);
+    await settle(fixture);
+    await wait(40); // let the async get resolve
+    await settle(fixture);
+    const rows = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.oge-row .oge-cell:nth-child(2)')
+    ).map((c) => c.textContent?.trim());
+    expect(rows).toEqual(['Ali', 'Cem']);
+  });
+
+  it('state() / applyState() round-trip and stateChange notifies on changes', async () => {
+    const fixture = TestBed.createComponent(PersistenceHost);
+    await settle(fixture);
+    const grid = gridOf(fixture);
+    const store = storeOf(fixture);
+    const emitted: unknown[] = [];
+    grid.stateChange.subscribe((snapshot) => emitted.push(snapshot));
+    await wait(300); // initial debounce fire — must NOT emit
+    expect(emitted.length).toBe(0);
+
+    store.sort.set([{ field: 'age', dir: 'desc' }]);
+    await settle(fixture);
+    await wait(300);
+    expect(emitted.length).toBe(1);
+
+    const snapshot = grid.state();
+    expect(snapshot.sort).toEqual([{ field: 'age', dir: 'desc' }]);
+
+    store.sort.clear();
+    await settle(fixture);
+    expect(grid.state().sort ?? []).toEqual([]);
+
+    grid.applyState(snapshot);
+    await settle(fixture);
+    const rows = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.oge-row .oge-cell:nth-child(2)')
+    ).map((c) => c.textContent?.trim());
+    expect(rows).toEqual(['Ali', 'Cem']); // age desc: 40 first
+  });
+});
+
 describe('OgeGrid header context menu', () => {
   async function render() {
     const fixture = TestBed.createComponent(PersistenceHost);
@@ -162,6 +223,25 @@ describe('OgeGrid header context menu', () => {
     expect(
       Array.from(el.querySelectorAll('.oge-header-caption')).map((h) => h.textContent?.trim())
     ).not.toContain('Age');
+  });
+
+  it('headerContextMenu lets consumers replace the built-in items', async () => {
+    const { fixture, el } = await render();
+    const grid = gridOf(fixture);
+    let ran = '';
+    grid.headerContextMenu.subscribe((event) => {
+      event.items.length = 0; // drop the built-ins entirely
+      event.items.push({ text: `Pivot by ${event.caption}`, action: () => (ran = event.field) });
+    });
+
+    openMenu(el, 2); // city
+    await settle(fixture);
+    const items = Array.from(el.querySelectorAll('.oge-menu-item')).map((i) =>
+      i.textContent?.trim()
+    );
+    expect(items).toEqual(['Pivot by City']);
+    menuItem(el, 'Pivot by City').click();
+    expect(ran).toBe('city');
   });
 });
 

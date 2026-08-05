@@ -4,6 +4,7 @@ export {
   type OgeRowClickEvent,
   type OgeMenuItem,
   type OgeContextMenuEvent,
+  type OgeHeaderContextMenuEvent,
   type OgeFilterRowOptions,
   type OgeHeaderFilterOptions,
   type OgeSearchPanelOptions,
@@ -55,7 +56,7 @@ export { GroupingSlice } from './lib/state/grouping-slice';
 export { ExpansionSlice } from './lib/state/expansion-slice';
 export { ColumnsSlice } from './lib/state/columns-slice';
 export { GridDataAdapter } from './lib/data/grid-data-adapter';
-export { OGE_STATE_STORAGE, type OgeStateStorage } from './lib/state/state-storage';
+export { OGE_STATE_STORAGE, type OgeStateStorage } from '@oge-ui/grid/foundation';
 export {
   OgeFilterBuilderGroup,
   builderToExpr,
