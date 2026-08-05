@@ -1,0 +1,94 @@
+<header
+  class="sticky top-0 z-20 flex items-center justify-between border-b border-gray-200 bg-white/90 px-5 py-2.5 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90"
+>
+  <a routerLink="/getting-started" class="flex items-center gap-2.5">
+    <img src="favicon-192.png" alt="oge logo" class="h-7 w-7" />
+    <span class="text-[15px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">oge</span>
+    <span class="mt-px text-[13px] text-gray-400 dark:text-gray-500">Angular UI Components</span>
+  </a>
+  <div class="flex items-center gap-4 text-[13px] text-gray-500 dark:text-gray-400">
+    <label class="flex items-center gap-2">
+      <span class="text-gray-400 dark:text-gray-500">Grid theme</span>
+      <select
+        class="rounded-md border border-gray-200 bg-white px-2 py-1 text-[13px] text-gray-700 outline-none focus:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+        [value]="themeService.theme()"
+        (change)="themeService.theme.set($any($event.target).value)"
+      >
+        @for (theme of themes; track theme.value) {
+          <option [value]="theme.value">{{ theme.label }}</option>
+        }
+      </select>
+    </label>
+    <button
+      type="button"
+      class="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+      [attr.aria-label]="themeService.mode() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+      (click)="themeService.toggleMode()"
+    >
+      <app-icon [name]="themeService.mode() === 'dark' ? 'sun' : 'moon'" [size]="14" />
+    </button>
+    <span class="h-4 w-px bg-gray-200 dark:bg-gray-700"></span>
+    <span class="font-mono">v0.0.1</span>
+    <span class="h-4 w-px bg-gray-200 dark:bg-gray-700"></span>
+    <span>Angular 22</span>
+  </div>
+</header>
+<div class="grid flex-1 grid-cols-[240px_minmax(0,1fr)] max-md:grid-cols-1">
+  <nav
+    class="sticky top-[49px] flex max-h-[calc(100vh-49px)] flex-col overflow-y-auto border-r border-gray-200 px-4 py-6 max-md:static max-md:max-h-none max-md:border-b max-md:border-r-0 dark:border-gray-800"
+  >
+    <div class="relative mb-5">
+      <span class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+        <app-icon name="search" [size]="13" />
+      </span>
+      <input
+        type="search"
+        placeholder="Search"
+        class="w-full rounded-md border border-gray-200 bg-gray-50 py-1.5 pl-8 pr-2 text-[13px] text-gray-700 outline-none placeholder:text-gray-400 focus:border-gray-300 focus:bg-white dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:focus:bg-gray-900"
+        [value]="navQuery()"
+        (input)="navQuery.set($any($event.target).value)"
+      />
+    </div>
+    @for (section of sections(); track section.title) {
+      <div class="mb-4">
+        <button
+          type="button"
+          class="mb-1 flex w-full items-center justify-between rounded-md px-1 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+          (click)="toggleSection(section.title)"
+          [attr.aria-expanded]="!collapsed().has(section.title)"
+        >
+          {{ section.title }}
+          <span
+            class="text-gray-300 transition-transform duration-200 dark:text-gray-600"
+            [class.-rotate-90]="collapsed().has(section.title)"
+          >
+            <app-icon name="chevron-down" [size]="13" />
+          </span>
+        </button>
+        @if (!collapsed().has(section.title)) {
+          <div class="flex flex-col border-l border-gray-200 dark:border-gray-800">
+            @for (item of section.items; track item.path) {
+              <a
+                [routerLink]="item.path"
+                [routerLinkActiveOptions]="{ exact: true }"
+                routerLinkActive="-ml-px border-l-2 border-indigo-600 font-medium text-gray-900 dark:border-indigo-400 dark:text-gray-100"
+                class="flex items-center gap-2 py-1.5 pl-4 text-[13.5px] text-gray-500 transition-colors hover:text-gray-900 dark:hover:text-gray-200"
+              >
+                <span class="text-gray-400 dark:text-gray-500"><app-icon [name]="item.icon" [size]="14" /></span>
+                {{ item.label }}
+              </a>
+            }
+          </div>
+        }
+      </div>
+    }
+    <div class="mt-auto border-t border-gray-100 pt-4 text-[12px] text-gray-400 dark:border-gray-800 dark:text-gray-600">
+      MIT License
+    </div>
+  </nav>
+  <main class="min-w-0 px-10 py-10 max-md:px-4">
+    <div class="mx-auto max-w-4xl">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

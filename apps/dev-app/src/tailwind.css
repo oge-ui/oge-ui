@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode: `.dark` on <html> drives all dark: variants. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Docs typography — Tailwind's preflight resets headings, so the docs
+   content styles live here centrally instead of per page. */
+@layer base {
+  body {
+    @apply bg-white text-gray-900 antialiased;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+
+  main h1 {
+    @apply dark:text-gray-100;
+  }
+
+  main h2 {
+    @apply mb-3 mt-1 text-2xl font-bold dark:text-gray-100;
+  }
+
+  main h3 {
+    @apply mb-2 mt-7 text-lg font-semibold dark:text-gray-200;
+  }
+
+  main p {
+    @apply my-2 max-w-3xl leading-relaxed text-gray-700 dark:text-gray-400;
+  }
+
+  main ul {
+    @apply my-2 max-w-3xl list-disc pl-5 leading-relaxed text-gray-700 dark:text-gray-400;
+  }
+
+  main ul li {
+    @apply my-1;
+  }
+
+  main kbd {
+    @apply rounded border border-gray-300 bg-gray-100 px-1.5 py-px font-mono text-xs dark:border-gray-600 dark:bg-gray-800;
+  }
+
+  main code {
+    @apply rounded bg-slate-100 px-1 py-px text-[13px] dark:bg-gray-800 dark:text-gray-300;
+  }
+}
+
+@layer components {
+  .api-table {
+    @apply my-2 mb-6 w-full border-collapse text-sm;
+  }
+
+  .api-table th,
+  .api-table td {
+    @apply border-b border-gray-200 px-2.5 py-1.5 text-left align-top dark:border-gray-800;
+  }
+
+  .api-table th {
+    @apply bg-gray-100 dark:bg-gray-900;
+  }
+}

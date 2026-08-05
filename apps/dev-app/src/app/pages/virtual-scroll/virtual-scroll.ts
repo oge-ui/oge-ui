@@ -1,0 +1,52 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { DemoCard } from '../../shared/demo-card';
+import { DocHeader } from '../../shared/doc-header';
+import { makeEmployees } from '../../shared/demo-data';
+
+const SNIPPET = `<!-- give the grid a bounded height and switch virtualScroll on -->
+<oge-grid [data]="employees" keyField="id"
+          [virtualScroll]="true" [rowHeight]="36" [overscan]="6"
+          class="h-[560px]">
+  <oge-column field="id" caption="Id" [width]="90" dataType="number" />
+  <oge-column field="firstName" caption="First Name" />
+  <oge-column field="salary" caption="Salary" dataType="number" />
+</oge-grid>`;
+
+@Component({
+  selector: 'app-virtual-scroll',
+  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <app-doc-header title="Virtual Scroll" [chips]="['virtualScroll', 'rowHeight', 'overscan']">
+      <p>
+        {{ employees.length.toLocaleString() }} rows in one scrollable list — only the visible
+        window is rendered into the DOM. Open DevTools and watch the element count while
+        scrolling.
+      </p>
+    </app-doc-header>
+
+    <app-demo-card [chips]="['100.000 rows']" [code]="snippet">
+      <oge-grid [data]="employees" keyField="id" [virtualScroll]="true" style="height: 560px">
+        <oge-column field="id" caption="Id" [width]="90" dataType="number" />
+        <oge-column field="firstName" caption="First Name" />
+        <oge-column field="lastName" caption="Last Name" />
+        <oge-column field="department" caption="Department" />
+        <oge-column field="city" caption="City" />
+        <oge-column field="salary" caption="Salary" dataType="number" />
+      </oge-grid>
+    </app-demo-card>
+
+    <h3>How it works</h3>
+    <ul>
+      <li>Row offsets live in a <strong>Fenwick (binary-indexed) tree</strong>: finding the row at any scroll position and the total height are both O(log n) — scrolling cost does not grow with list size.</li>
+      <li>Only the visible rows plus an <code>overscan</code> buffer (default 6) exist in the DOM; a spacer element keeps the scrollbar honest.</li>
+      <li>Group and master-detail rows participate with their own heights (<code>detailRowHeight</code>).</li>
+      <li>Keyboard navigation scrolls the focused row into view automatically, even across 100k rows.</li>
+    </ul>
+  `,
+})
+export class VirtualScrollPage {
+  protected readonly employees = makeEmployees(100_000);
+  protected readonly snippet = SNIPPET;
+}
