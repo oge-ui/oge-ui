@@ -75,6 +75,11 @@ export class OgeColumn<T = unknown> {
   readonly pinned = input<false | 'left' | 'right'>(false);
   /** Aggregate(s) shown on group rows for this column's field. */
   readonly groupSummary = input<SummaryType | readonly SummaryType[]>();
+  /**
+   * Where this column's group summaries render: inline on the group header
+   * row (default) or on a dedicated footer row after the group's children.
+   */
+  readonly groupSummaryPosition = input<'row' | 'footer'>('row');
   /** Aggregate(s) shown in the grid's total row for this column's field. */
   readonly totalSummary = input<SummaryType | readonly SummaryType[]>();
   /**

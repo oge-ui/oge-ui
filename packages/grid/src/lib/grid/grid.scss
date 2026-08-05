@@ -624,6 +624,37 @@
   background: var(--oge-header-bg);
 }
 
+// --- group footer summary rows ---------------------------------------------
+
+.oge-group-footer-row {
+  display: grid;
+  align-items: stretch;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-group-bg, var(--oge-header-bg));
+  min-width: fit-content;
+}
+
+.oge-group-footer-cell {
+  padding: var(--oge-cell-padding-y) var(--oge-cell-padding-x);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--oge-header-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: inherit;
+
+  &.oge-cell-number {
+    text-align: end;
+  }
+
+  &.oge-pinned {
+    position: sticky;
+    z-index: 2;
+    background: var(--oge-group-bg, var(--oge-header-bg));
+  }
+}
+
 // --- editing ---------------------------------------------------------------
 
 .oge-toolbar-text-btn {

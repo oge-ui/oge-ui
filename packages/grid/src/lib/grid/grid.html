@@ -693,6 +693,46 @@
               </div>
             </div>
           }
+          @case ('summary') {
+            <div
+              class="oge-group-footer-row"
+              role="row"
+              [attr.data-rowindex]="viewStart() + nodeIndex"
+              [style.height.px]="virtualized() && !autoRowHeight() ? effRowHeight() : null"
+              [style.grid-template-columns]="gridTemplateColumns()"
+            >
+              @if (rowDragging()) {
+                <div class="oge-group-footer-cell" role="gridcell"></div>
+              }
+              @if (hasExpander()) {
+                <div class="oge-group-footer-cell" role="gridcell"></div>
+              }
+              @if (hasCheckboxColumn()) {
+                <div class="oge-group-footer-cell" role="gridcell"></div>
+              }
+              @if (hasCommandColumn()) {
+                <div class="oge-group-footer-cell" role="gridcell"></div>
+              }
+              @if (colSpacerLeft() > 0) {
+                <div class="oge-group-footer-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+              }
+              @for (column of renderColumns(); track column.id) {
+                <div
+                  class="oge-group-footer-cell"
+                  role="gridcell"
+                  [class.oge-cell-number]="column.dataType === 'number'"
+                  [class.oge-pinned]="column.pinned !== false"
+                  [style.inset-inline-start.px]="pinnedLeftOf(column)"
+                  [style.inset-inline-end.px]="pinnedRightOf(column)"
+                >
+                  {{ groupFooterText(node, column) }}
+                </div>
+              }
+              @if (colSpacerRight() > 0) {
+                <div class="oge-group-footer-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+              }
+            </div>
+          }
           @case ('detail') {
             <div
               class="oge-detail-row"

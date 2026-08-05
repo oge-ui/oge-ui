@@ -174,6 +174,50 @@ describe('OgeGrid multiple summaries per column', () => {
   template: `
     <oge-grid [data]="data" keyField="id" [groupBy]="['region']">
       <oge-column field="region" />
+      <oge-column field="city" />
+      <oge-column field="amount" dataType="number" groupSummary="sum" groupSummaryPosition="footer" />
+    </oge-grid>
+  `,
+})
+class GroupFooterHost {
+  readonly data = SALES;
+}
+
+describe('OgeGrid group footer summaries', () => {
+  it('moves footer-positioned summaries off the header into a footer row per group', async () => {
+    const fixture = TestBed.createComponent(GroupFooterHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+
+    // the group header no longer shows the aggregate inline
+    const header = el.querySelector('.oge-group-row')?.textContent ?? '';
+    expect(header).not.toContain('Sum');
+
+    const footers = Array.from(el.querySelectorAll('.oge-group-footer-row'));
+    expect(footers.length).toBe(2); // one per group
+    const footerTexts = footers.map((f) => f.textContent?.replace(/\s+/g, ' ').trim());
+    expect(footerTexts).toEqual(['Sum: 300', 'Sum: 300']);
+    // the value sits in the amount column's cell (last column)
+    const cells = footers[0].querySelectorAll('.oge-group-footer-cell');
+    expect(cells[cells.length - 1].textContent?.trim()).toBe('Sum: 300');
+  });
+
+  it('hides the footer when its group is collapsed', async () => {
+    const fixture = TestBed.createComponent(GroupFooterHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+
+    (el.querySelector('.oge-group-row') as HTMLElement).click();
+    await settle(fixture);
+    expect(el.querySelectorAll('.oge-group-footer-row').length).toBe(1);
+  });
+});
+
+@Component({
+  imports: [OgeGrid, OgeColumn],
+  template: `
+    <oge-grid [data]="data" keyField="id" [groupBy]="['region']">
+      <oge-column field="region" />
       <oge-column
         field="amount"
         dataType="number"

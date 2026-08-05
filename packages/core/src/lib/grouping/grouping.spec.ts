@@ -152,6 +152,33 @@ describe('flattenGroupedData', () => {
     expect(flat[0].kind === 'group' && flat[0].expanded).toBe(false);
   });
 
+  it('emits group footer summary rows after expanded groups only', () => {
+    const groups = [{ field: 'region', dir: 'asc' as const }];
+    const groupSummary = [{ field: 'amount', type: 'sum' as const }];
+    const tree = groupRows(SALES, groups, groupSummary);
+    const flat = flattenGroupedData(tree, {
+      keyOf,
+      groups,
+      groupSummary,
+      groupFooters: true,
+      collapsedGroupKeys: new Set(['g:US']),
+    });
+    expect(
+      flat.map((n) =>
+        n.kind === 'summary'
+          ? `footer:${String(n.key)}=${n.summaries[0]?.value}`
+          : `${n.kind}:${String(n.key)}`
+      )
+    ).toEqual([
+      'group:g:EU',
+      'data:1',
+      'data:2',
+      'data:3',
+      'footer:g:EU:footer=350',
+      'group:g:US', // collapsed — no children, no footer
+    ]);
+  });
+
   it('injects detail rows after expanded data rows (grouped and plain)', () => {
     const plain = flattenGroupedData(SALES, {
       keyOf,

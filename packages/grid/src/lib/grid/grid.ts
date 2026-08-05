@@ -44,6 +44,7 @@ import {
   type RowKey,
   type RowNode,
   type SummaryDescriptor,
+  type SummaryRowNode,
   type SummaryType,
   type ValueAccessor,
   type ViewportWindow,
@@ -1047,6 +1048,18 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return entries.length ? Object.fromEntries(entries) : undefined;
   });
 
+  /** Fields whose group summaries render on a footer row instead of the group header. */
+  private readonly groupFooterFields = computed<ReadonlySet<string>>(() => {
+    const fields = new Set<string>();
+    for (const column of this.declaredColumns()) {
+      const field = column.field();
+      if (field && column.groupSummary() && column.groupSummaryPosition() === 'footer') {
+        fields.add(field);
+      }
+    }
+    return fields;
+  });
+
   /** Per-field `calculateCustomSummary` reducers (array data only). */
   private readonly customSummarySelectors = computed<
     Record<string, (rows: readonly T[]) => unknown> | undefined
@@ -1170,6 +1183,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           expandedDetailKeys: this.detailTemplate()
             ? this.store.expansion.expandedDetails()
             : undefined,
+          groupFooters: this.groupFooterFields().size > 0,
         })
       : [];
     // unsaved new rows render on top
@@ -1758,7 +1772,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected groupSummaryText(node: GroupRowNode): string {
     const messages = this.msg();
+    const footerFields = this.groupFooterFields();
     return node.summaries
+      .filter((summary) => !footerFields.has(summary.field))
       .map((summary) => {
         const column = summary.field ? this.columnByField(summary.field) : undefined;
         const value = column
@@ -1771,6 +1787,22 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         });
       })
       .join('  ·  ');
+  }
+
+  /** Footer summary text of one column on a group-footer (`summary`) row. */
+  protected groupFooterText(node: SummaryRowNode, column: ResolvedColumn<T>): string {
+    const field = column.field;
+    if (!field || !this.groupFooterFields().has(field)) return '';
+    const messages = this.msg();
+    return node.summaries
+      .filter((summary) => summary.field === field)
+      .map((summary) =>
+        formatPattern(messages.totalSummaryPattern, {
+          label: messages.summaryLabels[summary.type],
+          value: formatCellValue(summary.value, column.dataType, column.format),
+        })
+      )
+      .join(' · ');
   }
 
   protected toggleGroup(key: RowKey, event?: Event): void {
