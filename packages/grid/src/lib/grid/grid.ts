@@ -23,9 +23,7 @@ import {
 } from '@angular/core';
 import {
   ArrayDataSource,
-  OffsetTree,
   buildCsv,
-  computeWindow,
   createFilterPredicate,
   flattenGroupedData,
   foldText,
@@ -45,13 +43,13 @@ import {
   type SummaryDescriptor,
   type SummaryRowNode,
   type SummaryType,
-  type ViewportWindow,
 } from '@oge-ui/core';
 import {
   CHECKBOX_WIDTH,
   COMMAND_WIDTH,
   ColumnLayoutModel,
   ColumnModel,
+  RowVirtualizerModel,
   DRAG_WIDTH,
   EXPANDER_WIDTH,
   buildRowFilterExpr,
@@ -577,7 +575,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   constructor() {
     // measure real row heights once the DOM for the current window is in place
     afterRenderEffect(() => {
-      if (!this.measuring()) return;
+      if (!this.virtualizer.measuring()) return;
       this.viewNodes();
       this.measureRenderedRows();
     });
@@ -1240,99 +1238,37 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return this.adapter.highestLoaded() + WINDOW_BLOCK_SIZE;
   });
 
-  /** Measured row heights by row key (auto row-height mode). */
-  private readonly measuredHeights = signal<ReadonlyMap<RowKey, number>>(new Map());
-
-  private readonly measuring = computed(
-    () => this.autoRowHeight() && this.virtualized() && !this.windowed()
-  );
-
-  private readonly offsetTree = computed<OffsetTree>(() => {
-    const rowHeight = this.effRowHeight();
-    if (this.windowed()) {
-      return new OffsetTree(this.windowCount(), () => rowHeight);
-    }
-    const nodes = this.flatNodes();
-    const detailHeight = this.effDetailRowHeight();
-    const measured = this.measuring() ? this.measuredHeights() : null;
-    return new OffsetTree(nodes.length, (i) => {
-      const node = nodes[i];
-      return (
-        measured?.get(node.key) ?? (node.kind === 'detail' ? detailHeight : rowHeight)
-      );
-    });
+  private readonly virtualizer = new RowVirtualizerModel<T>({
+    flatNodes: this.flatNodes,
+    virtualized: this.virtualized,
+    scrollTop: this.scrollTop,
+    viewportHeight: this.viewportHeight,
+    rowHeight: this.effRowHeight,
+    detailRowHeight: this.effDetailRowHeight,
+    overscan: this.effOverscan,
+    autoRowHeight: this.autoRowHeight,
+    viewport: () => this.viewportRef()?.nativeElement ?? null,
+    windowAdapter: {
+      active: this.windowed,
+      count: this.windowCount,
+      rows: this.adapter.windowRows,
+      keyOf: this.keySelector,
+      blockSize: WINDOW_BLOCK_SIZE,
+    },
   });
 
-  /**
-   * Reads real row heights after each render and folds them into the offset
-   * tree. Corrections above the first visible row shift `scrollTop` by the
-   * same delta (scroll anchoring), so content on screen never jumps.
-   */
-  private measureRenderedRows(): void {
-    const viewport = this.viewportRef()?.nativeElement;
-    if (!viewport) return;
-    const nodes = untracked(this.flatNodes);
-    const defaults = {
-      row: untracked(this.effRowHeight),
-      detail: untracked(this.effDetailRowHeight),
-    };
-    const current = untracked(this.measuredHeights);
-    const anchorIndex = untracked(this.viewStart);
-    let changed: Map<RowKey, number> | null = null;
-    let deltaAbove = 0;
-    for (const el of viewport.querySelectorAll<HTMLElement>('[data-rowindex]')) {
-      const index = Number(el.dataset['rowindex']);
-      const node = nodes[index];
-      const height = el.offsetHeight;
-      if (!node || !height) continue;
-      const previous =
-        current.get(node.key) ?? (node.kind === 'detail' ? defaults.detail : defaults.row);
-      if (Math.abs(height - previous) < 1) continue;
-      (changed ??= new Map(current)).set(node.key, height);
-      if (index < anchorIndex) deltaAbove += height - previous;
-    }
-    if (!changed) return;
-    this.measuredHeights.set(changed);
-    if (deltaAbove !== 0) {
-      viewport.scrollTop += deltaAbove;
-      this.scrollTop.set(viewport.scrollTop);
-    }
-  }
-
-  protected readonly viewWindow = computed<ViewportWindow | null>(() => {
-    if (!this.virtualized()) return null;
-    return computeWindow(
-      this.scrollTop(),
-      this.viewportHeight(),
-      this.offsetTree(),
-      this.effOverscan()
-    );
-  });
+  private readonly offsetTree = this.virtualizer.offsetTree;
+  private readonly measuredHeights = this.virtualizer.measuredHeights;
+  protected readonly viewWindow = this.virtualizer.viewWindow;
 
   /** Index of the first rendered node within the flat row space. */
-  protected readonly viewStart = computed(() => this.viewWindow()?.start ?? 0);
+  protected readonly viewStart = this.virtualizer.viewStart;
 
-  protected readonly viewNodes = computed<readonly RowNode<T>[]>(() => {
-    const window = this.viewWindow();
-    if (this.windowed()) {
-      const rows = this.adapter.windowRows();
-      const keyOf = this.keySelector();
-      const start = window?.start ?? 0;
-      const end = window?.end ?? Math.min(this.windowCount(), WINDOW_BLOCK_SIZE);
-      const nodes: RowNode<T>[] = [];
-      for (let i = start; i < end; i++) {
-        const row = rows.get(i);
-        nodes.push(
-          row !== undefined
-            ? { kind: 'data', key: keyOf(row, i), data: row, sourceIndex: i, level: 0 }
-            : { kind: 'filler', key: `oge-filler-${i}`, index: i }
-        );
-      }
-      return nodes;
-    }
-    const nodes = this.flatNodes();
-    return window ? nodes.slice(window.start, window.end) : nodes;
-  });
+  protected readonly viewNodes = this.virtualizer.viewNodes;
+
+  private measureRenderedRows(): void {
+    this.virtualizer.measureRenderedRows();
+  }
 
   /** Keeps the adapter's load strategy in sync with the scrolling options. */
   private readonly windowModeEffect = effect(() => {
@@ -1357,14 +1293,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     });
   });
 
-  protected readonly bodyHeight = computed<number | null>(
-    () => this.viewWindow()?.totalHeight ?? null
-  );
+  protected readonly bodyHeight = this.virtualizer.bodyHeight;
 
-  protected readonly rowsTransform = computed<string | null>(() => {
-    const window = this.viewWindow();
-    return window ? `translateY(${window.offsetY}px)` : null;
-  });
+  protected readonly rowsTransform = this.virtualizer.rowsTransform;
 
   // --- columns -------------------------------------------------------------
 
@@ -1929,16 +1860,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   private scrollRowIntoView(row: number): void {
-    if (!this.virtualized()) return;
-    const tree = this.offsetTree();
-    const viewport = this.viewportRef()?.nativeElement;
-    if (!viewport) return;
-    const top = tree.offsetOf(row);
-    const bottom = top + tree.heightAt(row);
-    if (top < viewport.scrollTop) viewport.scrollTop = top;
-    else if (bottom > viewport.scrollTop + viewport.clientHeight) {
-      viewport.scrollTop = bottom - viewport.clientHeight;
-    }
+    this.virtualizer.scrollRowIntoView(row);
   }
 
   protected onGridKeydown(event: KeyboardEvent): void {

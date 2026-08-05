@@ -1,6 +1,11 @@
 export { EXPANDER_WIDTH, CHECKBOX_WIDTH, COMMAND_WIDTH, DRAG_WIDTH } from './constants';
 export { ColumnLayoutModel, type ColumnLayoutModelDeps } from './column-layout-model';
 export {
+  RowVirtualizerModel,
+  type RowVirtualizerModelDeps,
+  type RowVirtualizerWindowAdapter,
+} from './row-virtualizer-model';
+export {
   ColumnModel,
   buildRowFilterExpr,
   defaultOperatorFor,
