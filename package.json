@@ -60,6 +60,8 @@
     "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "jsonc-eslint-parser": "^2.1.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "ng-packagr": "~22.0.0",
     "nx": "23.1.0",
     "postcss": "^8.5.25",

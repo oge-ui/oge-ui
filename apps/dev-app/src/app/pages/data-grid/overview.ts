@@ -73,6 +73,9 @@ const QUICK_START_FILES = [
         <button ogeToolbar type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="exportExcel()">
           Export Excel
         </button>
+        <button ogeToolbar type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="exportPdf()">
+          Export PDF
+        </button>
       </oge-grid>
     </app-demo-card>
 
@@ -117,8 +120,10 @@ const QUICK_START_FILES = [
     <h3>Export</h3>
     <p>
       CSV ships in the core bundle; Excel lives in the separate
-      <code>&#64;oge-ui/grid/export-excel</code> entry point (backed by <code>exceljs</code>), so
-      it only loads when you import it — typically via a dynamic <code>import()</code>.
+      <code>&#64;oge-ui/grid/export-excel</code> entry point (backed by <code>exceljs</code>) and
+      PDF in <code>&#64;oge-ui/grid/export-pdf</code> (backed by <code>jspdf</code> +
+      <code>jspdf-autotable</code>), so they only load when you import them — typically via a
+      dynamic <code>import()</code>.
     </p>
     <ul>
       <li><strong>Paging</strong> is ignored by default: the export contains the <em>full</em> filtered + sorted set, not just the visible page. Pass <code>{{ '{' }} scope: 'page' {{ '}' }}</code> for the current page only, or <code>'selection'</code> for the selected rows.</li>
@@ -138,6 +143,7 @@ const QUICK_START_FILES = [
         <tr><td><code>exportCsv(filename?)</code></td><td>Downloads the current view as a CSV file</td></tr>
         <tr><td><code>getExportData(opts?)</code></td><td>Rows + column metadata of the current view — feeds custom exporters; <code>scope: 'all' | 'page' | 'selection'</code></td></tr>
         <tr><td><code>exportGridToExcel(grid, opts?)</code></td><td>From <code>&#64;oge-ui/grid/export-excel</code>: downloads the view as .xlsx</td></tr>
+        <tr><td><code>exportGridToPdf(grid, opts?)</code></td><td>From <code>&#64;oge-ui/grid/export-pdf</code>: downloads the view as .pdf (title, orientation, page format)</td></tr>
         <tr><td><code>copyToClipboard()</code></td><td>Copies the selected rows (or current view) as tab-separated text; also on Ctrl+C</td></tr>
         <tr><td><code>selectAllPages()</code></td><td>Selects every filtered row across pages, fetching keys for remote sources</td></tr>
         <tr><td><code>refresh()</code> · <code>scrollToRow(key)</code> · <code>clearFilters()</code> · <code>clearSorting()</code> · <code>expandAllGroups()</code> / <code>collapseAllGroups()</code></td><td>Imperative view control</td></tr>
@@ -189,5 +195,13 @@ export class DataGridOverviewPage {
     if (!grid) return;
     const { exportGridToExcel } = await import('@oge-ui/grid/export-excel');
     await exportGridToExcel(grid, { filename: 'employees.xlsx', sheetName: 'Employees' });
+  }
+
+  /** jspdf loads lazily the same way. */
+  protected async exportPdf(): Promise<void> {
+    const grid = this.grid();
+    if (!grid) return;
+    const { exportGridToPdf } = await import('@oge-ui/grid/export-pdf');
+    await exportGridToPdf(grid, { filename: 'employees.pdf', title: 'Employees' });
   }
 }

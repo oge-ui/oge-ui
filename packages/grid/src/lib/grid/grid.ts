@@ -2917,7 +2917,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       }
       const start = sourceIndex[found];
       const last = sourceIndex[found + needle.length - 1];
-      const end = last + (text.codePointAt(last)! > 0xffff ? 2 : 1); // past the last source char
+      const end = last + ((text.codePointAt(last) ?? 0) > 0xffff ? 2 : 1); // past the last source char
       html += escape(text.slice(index, start));
       html += `<mark class="oge-highlight">${escape(text.slice(start, end))}</mark>`;
       index = end;
