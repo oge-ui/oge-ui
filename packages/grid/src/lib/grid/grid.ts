@@ -162,6 +162,8 @@ export interface OgePagingOptions {
   pageSizes?: readonly (number | 'all')[];
   /** Shows the total row count in the pager. Default true. */
   showInfo?: boolean;
+  /** 'compact' shows `page / count`; 'adaptive' switches to compact on narrow grids. */
+  displayMode?: 'full' | 'compact' | 'adaptive';
 }
 
 export interface OgeSortingOptions {

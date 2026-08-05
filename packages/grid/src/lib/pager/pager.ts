@@ -1,10 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  ElementRef,
   ViewEncapsulation,
+  afterNextRender,
   computed,
+  inject,
   input,
   output,
+  signal,
 } from '@angular/core';
 import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
 
@@ -25,16 +30,20 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
         <path d="m10 3.5-4.5 4.5L10 12.5" />
       </svg>
     </button>
-    @for (page of pages(); track page) {
-      <button
-        type="button"
-        class="oge-pager-btn"
-        [class.oge-pager-current]="page === pageIndex()"
-        [attr.aria-current]="page === pageIndex() ? 'page' : null"
-        (click)="pageChange.emit(page)"
-      >
-        {{ page + 1 }}
-      </button>
+    @if (isCompact()) {
+      <span class="oge-pager-compact">{{ pageIndex() + 1 }} / {{ pageCount() }}</span>
+    } @else {
+      @for (page of pages(); track page) {
+        <button
+          type="button"
+          class="oge-pager-btn"
+          [class.oge-pager-current]="page === pageIndex()"
+          [attr.aria-current]="page === pageIndex() ? 'page' : null"
+          (click)="pageChange.emit(page)"
+        >
+          {{ page + 1 }}
+        </button>
+      }
     }
     <button
       type="button"
@@ -124,6 +133,12 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
       }
     }
 
+    .oge-pager-compact {
+      padding: 0 6px;
+      font-variant-numeric: tabular-nums;
+      color: var(--oge-muted-color);
+    }
+
     .oge-pager-info {
       margin-left: auto;
       color: var(--oge-muted-color);
@@ -143,6 +158,28 @@ export class OgePager {
   readonly pageChange = output<number>();
   /** Emits the new page size; `0` means "all rows" (paging off). */
   readonly pageSizeChange = output<number>();
+
+  /** 'compact' shows `page / count` instead of page buttons; 'adaptive' switches on narrow hosts. */
+  readonly displayMode = input<'full' | 'compact' | 'adaptive'>('full');
+
+  private readonly hostWidth = signal(Number.POSITIVE_INFINITY);
+
+  protected readonly isCompact = computed(() => {
+    const mode = this.displayMode();
+    if (mode === 'compact') return true;
+    return mode === 'adaptive' && this.hostWidth() < 480;
+  });
+
+  constructor() {
+    const host = inject<ElementRef<HTMLElement>>(ElementRef);
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      if (typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(() => this.hostWidth.set(host.nativeElement.clientWidth));
+      observer.observe(host.nativeElement);
+      destroyRef.onDestroy(() => observer.disconnect());
+    });
+  }
 
   protected onSizeChange(raw: string): void {
     this.pageSizeChange.emit(raw === 'all' ? 0 : +raw);

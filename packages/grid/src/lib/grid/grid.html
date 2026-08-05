@@ -616,6 +616,7 @@
     [pageSize]="store.paging.pageSize() ?? 0"
     [pageSizes]="pagingOpts.pageSizes ?? null"
     [showInfo]="pagingOpts.showInfo !== false"
+    [displayMode]="pagingOpts.displayMode ?? 'full'"
     [messages]="msg()"
     (pageChange)="store.paging.goTo($event)"
     (pageSizeChange)="onPageSizeChange($event)"

@@ -179,6 +179,23 @@ describe('OgeGrid imperative API & events', () => {
     expect(selected.selection.count()).toBe(2);
   });
 
+  it('pager displayMode: compact replaces page buttons with page / count', async () => {
+    const fixture = TestBed.createComponent(OgeGrid<Row>);
+    fixture.componentRef.setInput('data', ROWS);
+    fixture.componentRef.setInput('columns', ['name']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('paging', { pageSize: 2, displayMode: 'compact' });
+    fixture.detectChanges();
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.oge-pager-compact')?.textContent?.trim()).toBe('1 / 2');
+    expect(el.querySelectorAll('.oge-pager-current').length).toBe(0);
+    // prev/next still page
+    (el.querySelectorAll('.oge-pager-btn')[1] as HTMLElement).click();
+    await settle(fixture);
+    expect(el.querySelector('.oge-pager-compact')?.textContent?.trim()).toBe('2 / 2');
+  });
+
   it('clearFilters and clearSorting reset the view', async () => {
     const { fixture, el, grid } = await render();
     // sort by name desc via two header clicks
