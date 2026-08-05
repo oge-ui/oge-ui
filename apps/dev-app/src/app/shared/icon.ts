@@ -6,6 +6,7 @@ export type IconName =
   | 'table'
   | 'sort'
   | 'zap'
+  | 'activity'
   | 'infinity'
   | 'globe'
   | 'search'
@@ -63,6 +64,9 @@ export type IconName =
         }
         @case ('zap') {
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        }
+        @case ('activity') {
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
         }
         @case ('infinity') {
           <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z" />

@@ -46,6 +46,12 @@ export const appRoutes: Route[] = [
         title: 'oge — Data Grid Remote Data',
       },
       {
+        path: 'live-updates',
+        loadComponent: () =>
+          import('./pages/live-updates/live-updates').then((m) => m.LiveUpdatesPage),
+        title: 'oge — Data Grid Live Updates',
+      },
+      {
         path: 'columns',
         loadComponent: () => import('./pages/data-grid/columns').then((m) => m.ColumnsPage),
         title: 'oge — Data Grid Columns',

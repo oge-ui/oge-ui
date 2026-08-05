@@ -1,5 +1,5 @@
-import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
-import type { DataSource, LoadOptions, LoadResult } from '@oge-ui/core';
+import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import type { DataChange, DataSource, LoadOptions, LoadResult } from '@oge-ui/core';
 import { GridStateStore } from '../state/grid-state.store';
 
 /** Rows fetched per windowed request (remote virtual / infinite scrolling). */
@@ -70,9 +70,13 @@ export class GridDataAdapter<T = unknown> {
    * Ensures the row blocks covering [start, end) are loaded or in flight.
    * A change of sort/filter/search invalidates the whole cache.
    */
+  /** Last requested window — reused when a push invalidates the block cache. */
+  private lastRange: { start: number; end: number } | null = null;
+
   requestRange(start: number, end: number): void {
     const source = untracked(this._source);
     if (!source || untracked(this._mode) !== 'window') return;
+    this.lastRange = { start, end };
     const base = this.windowBase();
     const baseJson = JSON.stringify(base);
     if (baseJson !== this.windowBaseJson) {
@@ -111,6 +115,7 @@ export class GridDataAdapter<T = unknown> {
   }
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.changesSub?.unsubscribe());
     effect(() => {
       const source = this._source();
       const options = this.store.loadOptions();
@@ -128,8 +133,58 @@ export class GridDataAdapter<T = unknown> {
     });
   }
 
+  // --- live updates (DataSource.changes push stream) ------------------------
+
+  private changesSub: { unsubscribe(): void } | null = null;
+
   setSource(source: DataSource<T> | null): void {
+    this.changesSub?.unsubscribe();
+    this.changesSub = null;
     this._source.set(source);
+    if (source?.changes) {
+      this.changesSub = source.changes.subscribe((batch) => this.applyPush(batch));
+    }
+  }
+
+  /**
+   * Applies pushed changes without a user-visible reload. Pure updates patch
+   * rows in place; structural changes (insert/remove) re-run the current load
+   * so sorting/filtering/paging stay correct.
+   */
+  private applyPush(batch: readonly DataChange<T>[]): void {
+    const source = untracked(this._source);
+    if (!source || !batch.length) return;
+    const onlyUpdates = batch.every((change) => change.type === 'update');
+    if (untracked(this._mode) === 'window') {
+      if (onlyUpdates) {
+        const merged = new Map(untracked(this._windowRows));
+        for (const change of batch) {
+          if (change.type !== 'update') continue;
+          for (const [index, row] of merged) {
+            if (source.keyOf(row) === change.key) {
+              merged.set(index, { ...(row as object), ...change.patch } as T);
+              break;
+            }
+          }
+        }
+        this._windowRows.set(merged);
+      } else {
+        this.resetWindow();
+        if (this.lastRange) this.requestRange(this.lastRange.start, this.lastRange.end);
+      }
+      return;
+    }
+    const result = untracked(this._result);
+    const grouped = (untracked(this.store.loadOptions).group?.length ?? 0) > 0;
+    if (onlyUpdates && result && !grouped) {
+      const data = (result.data as readonly T[]).map((row) => {
+        const change = batch.find((c) => c.type === 'update' && source.keyOf(row) === c.key);
+        return change?.type === 'update' ? ({ ...(row as object), ...change.patch } as T) : row;
+      });
+      this._result.set({ ...result, data });
+    } else {
+      this.reload();
+    }
   }
 
   /** Re-runs the current load (e.g. after external data mutations). */

@@ -3,7 +3,13 @@ import { runLoadOptions } from '../pipeline/run-load-options';
 import type { RowKey } from '../rows/row-node';
 import { compareValues } from '../util/comparators';
 import { createFieldAccessor, resolveKeySelector } from '../util/value-accessor';
-import type { DataSource, DataSourceCapabilities, LoadResult } from './data-source';
+import type {
+  DataChange,
+  DataSource,
+  DataSourceCapabilities,
+  LoadResult,
+  SubscribableLike,
+} from './data-source';
 import type { FilterExpr, LoadOptions } from './load-options';
 
 export interface ArrayDataSourceOptions<T> {
@@ -75,6 +81,47 @@ export class ArrayDataSource<T> implements DataSource<T> {
     if (index < 0) return Promise.reject(new Error(`ArrayDataSource: key not found: ${String(key)}`));
     rows.splice(index, 1);
     return Promise.resolve();
+  }
+
+  // --- live updates ---------------------------------------------------------
+
+  private readonly observers = new Set<(batch: readonly DataChange<T>[]) => void>();
+
+  /** Push stream consumed by the grid; fed by {@link push}. */
+  readonly changes: SubscribableLike<readonly DataChange<T>[]> = {
+    subscribe: (observer) => {
+      this.observers.add(observer);
+      return { unsubscribe: () => this.observers.delete(observer) };
+    },
+  };
+
+  /**
+   * Applies external changes to the underlying array (when mutable) and
+   * notifies subscribed grids without a full reload (DevExtreme `store.push`).
+   */
+  push(batch: readonly DataChange<T>[]): void {
+    if (this.mutableRows) {
+      for (const change of batch) {
+        switch (change.type) {
+          case 'insert':
+            this.mutableRows.push(change.item);
+            break;
+          case 'update': {
+            const index = this.indexOfKey(change.key);
+            if (index >= 0) {
+              this.mutableRows[index] = { ...this.mutableRows[index], ...change.patch };
+            }
+            break;
+          }
+          case 'remove': {
+            const index = this.indexOfKey(change.key);
+            if (index >= 0) this.mutableRows.splice(index, 1);
+            break;
+          }
+        }
+      }
+    }
+    for (const observer of this.observers) observer(batch);
   }
 
   load(options: LoadOptions): Promise<LoadResult<T>> {

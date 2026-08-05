@@ -41,6 +41,7 @@ export class App {
         { path: '/components/data-grid/virtual-scroll', label: 'Virtual Scroll', icon: 'zap' },
         { path: '/components/data-grid/infinite-scroll', label: 'Infinite Scroll', icon: 'infinity' },
         { path: '/components/data-grid/remote-data', label: 'Remote Data', icon: 'globe' },
+        { path: '/components/data-grid/live-updates', label: 'Live Updates', icon: 'activity' },
       ],
     },
   ];

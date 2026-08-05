@@ -1,6 +1,12 @@
 import type { RowKey } from '../rows/row-node';
 import { resolveKeySelector } from '../util/value-accessor';
-import type { DataSource, DataSourceCapabilities, LoadResult } from './data-source';
+import type {
+  DataChange,
+  DataSource,
+  DataSourceCapabilities,
+  LoadResult,
+  SubscribableLike,
+} from './data-source';
 import type { FilterExpr, LoadOptions } from './load-options';
 
 export interface CustomDataSourceOptions<T> {
@@ -13,6 +19,8 @@ export interface CustomDataSourceOptions<T> {
   insert?: (item: T) => Promise<T>;
   update?: (key: RowKey, patch: Partial<T>) => Promise<T>;
   remove?: (key: RowKey) => Promise<void>;
+  /** Push stream of external changes (e.g. a WebSocket feed mapped to DataChange batches). */
+  changes?: SubscribableLike<readonly DataChange<T>[]>;
 }
 
 /**
@@ -26,6 +34,7 @@ export class CustomDataSource<T> implements DataSource<T> {
   readonly insert?: DataSource<T>['insert'];
   readonly update?: DataSource<T>['update'];
   readonly remove?: DataSource<T>['remove'];
+  readonly changes?: SubscribableLike<readonly DataChange<T>[]>;
 
   private readonly keySelector: (row: T) => RowKey;
   private readonly loadDelegate: (options: LoadOptions) => Promise<LoadResult<T>>;
@@ -45,6 +54,7 @@ export class CustomDataSource<T> implements DataSource<T> {
     if (options.insert) this.insert = options.insert;
     if (options.update) this.update = options.update;
     if (options.remove) this.remove = options.remove;
+    if (options.changes) this.changes = options.changes;
   }
 
   load(options: LoadOptions): Promise<LoadResult<T>> {

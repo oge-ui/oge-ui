@@ -32,6 +32,24 @@ describe('ArrayDataSource', () => {
     expect((await source.load({})).data).toHaveLength(3);
   });
 
+  it('push applies changes to the array and notifies subscribers', async () => {
+    const rows = ROWS.map((row) => ({ ...row }));
+    const source = new ArrayDataSource(rows, { key: 'id' });
+    const batches: unknown[] = [];
+    const sub = source.changes.subscribe((batch) => batches.push(batch));
+    source.push([
+      { type: 'update', key: 2, patch: { name: 'z' } },
+      { type: 'insert', item: { id: 4, name: 'd' } },
+      { type: 'remove', key: 1 },
+    ]);
+    const result = await source.load({ sort: [{ field: 'id', dir: 'asc' }] });
+    expect((result.data as Row[]).map((r) => `${r.id}:${r.name}`)).toEqual(['2:z', '3:b', '4:d']);
+    expect(batches).toHaveLength(1);
+    sub.unsubscribe();
+    source.push([{ type: 'remove', key: 3 }]);
+    expect(batches).toHaveLength(1); // unsubscribed observers stay silent
+  });
+
   it('derives keys from the key option', () => {
     const source = new ArrayDataSource(ROWS, { key: (r) => `row-${r.id}` });
     expect(source.keyOf(ROWS[1])).toBe('row-2');
