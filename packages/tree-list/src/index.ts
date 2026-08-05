@@ -1,4 +1,8 @@
-export { OgeTreeList, type OgeTreeRowToggleEvent } from './lib/tree-list/tree-list';
+export {
+  OgeTreeList,
+  type OgeTreeRowReparentEvent,
+  type OgeTreeRowToggleEvent,
+} from './lib/tree-list/tree-list';
 
 // Column definitions, templates and configuration are shared with the grid —
 // re-exported here so tree-only consumers have a single import source.

@@ -21,24 +21,42 @@ import {
 } from '@angular/core';
 import {
   ArrayDataSource,
+  ancestorsOf,
   buildTreeIndex,
+  computeTreeCheckStates,
   createFieldAccessor,
+  createFilterPredicate,
+  filterTreeKeys,
   flattenTreeData,
+  foldText,
+  resolveSelectedKeys,
+  toggleTreeSelection,
+  type CheckState,
   type DataRowNode,
   type DataSource,
+  type FilterOperator,
   type RowKey,
   type RowNode,
+  type TreeFilterMode,
   type TreeIndex,
+  type TreeListStateSnapshot,
 } from '@oge-ui/core';
 import {
   CHECKBOX_WIDTH,
+  DRAG_WIDTH,
   ColumnLayoutModel,
   ColumnModel,
+  DeferredChildrenLoader,
   KeyboardNavModel,
+  OGE_STATE_STORAGE,
   RowVirtualizerModel,
+  buildRowFilterExpr,
+  createStatePersistence,
+  defaultOperatorFor,
   isDataSource,
   lookupTextOf,
   type ColumnDefLike,
+  type PendingChildRequest,
   type ResolvedColumn as FoundationResolvedColumn,
 } from '@oge-ui/grid/foundation';
 import {
@@ -50,9 +68,11 @@ import {
   OgeNoDataTemplate,
   formatCellValue,
   type OgeCellTemplateContext,
+  type OgeFilterRowOptions,
   type OgeGridMessages,
   type OgeHeaderTemplateContext,
   type OgeRowClickEvent,
+  type OgeSearchPanelOptions,
   type OgeSortingOptions,
   type SelectionMode,
 } from '@oge-ui/grid';
@@ -64,6 +84,47 @@ type ResolvedColumn<T = unknown> = FoundationResolvedColumn<T, OgeColumn<T>>;
 export interface OgeTreeRowToggleEvent<T = unknown> {
   key: RowKey;
   row: T;
+}
+
+const EMPTY_CHECK_STATES: ReadonlyMap<RowKey, CheckState> = new Map();
+
+/** Fired after a row is dropped onto a new parent. */
+export interface OgeTreeRowReparentEvent<T = unknown> {
+  key: RowKey;
+  row: T;
+  fromParentKey: RowKey | null;
+  toParentKey: RowKey | null;
+}
+
+/**
+ * Wraps the user source for tree semantics: filter/search never reach the
+ * source (filtering runs client-side so ancestor rows survive), and lazy
+ * mode narrows the base load to the root rows.
+ */
+function treeSource<T>(
+  inner: DataSource<T>,
+  lazy: { parentField: string; rootValue: unknown } | null
+): DataSource<T> {
+  return {
+    capabilities: { ...inner.capabilities, filter: false },
+    keyOf: (item) => inner.keyOf(item),
+    load: (options) => {
+      const { filter: _filter, searchText: _search, ...rest } = options;
+      return inner.load(
+        lazy
+          ? {
+              ...rest,
+              filter: { type: 'binary', field: lazy.parentField, op: 'eq', value: lazy.rootValue },
+            }
+          : rest
+      );
+    },
+    ...(inner.distinct ? { distinct: inner.distinct.bind(inner) } : {}),
+    ...(inner.insert ? { insert: inner.insert.bind(inner) } : {}),
+    ...(inner.update ? { update: inner.update.bind(inner) } : {}),
+    ...(inner.remove ? { remove: inner.remove.bind(inner) } : {}),
+    ...(inner.changes ? { changes: inner.changes } : {}),
+  };
 }
 
 /**
@@ -98,6 +159,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected readonly store = inject(GridStateStore);
   protected readonly adapter: GridDataAdapter<T> = inject(GridDataAdapter);
   private readonly config = inject(OGE_GRID_CONFIG);
+  private readonly stateStorage = inject(OGE_STATE_STORAGE);
   private readonly destroyRef = inject(DestroyRef);
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly viewportRef = viewChild<ElementRef<HTMLElement>>('viewport');
@@ -131,8 +193,37 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    */
   readonly hasItemsExpr = input<string | ((row: T) => boolean) | undefined>(undefined);
 
+  /**
+   * `'full'` loads everything up front; `'lazy'` fetches children per
+   * expansion (`filter: [parentIdExpr, '=', parentKey]` against the
+   * DataSource). Defaults to `'lazy'` when a DataSource plus `hasItemsExpr`
+   * are given, `'full'` otherwise. Lazy mode needs a string `parentIdExpr`.
+   */
+  readonly loadMode = input<'full' | 'lazy' | undefined>(undefined);
+
   /** Programmatic column definitions (alternative to declarative `<oge-column>`). */
   readonly columns = input<readonly (string | ColumnDefLike)[] | undefined>(undefined);
+
+  /** Per-column filter editors under the header. */
+  readonly filterRow = input<boolean | OgeFilterRowOptions>(false);
+
+  /** Global search box in the toolbar. */
+  readonly searchPanel = input<boolean | OgeSearchPanelOptions>(false);
+
+  /**
+   * How filtering expands the matched set: matched rows always keep their
+   * ancestors visible; `'fullBranch'` additionally keeps all descendants.
+   */
+  readonly filterMode = input<TreeFilterMode>('withAncestors');
+
+  /** Debounce for text filter inputs, in ms. Set to 0 in tests. */
+  readonly filterDebounce = input<number | undefined>(undefined);
+
+  /**
+   * Persists user state (sort, filters, column layout, expansion) under this
+   * key via `OGE_STATE_STORAGE` (default: localStorage).
+   */
+  readonly stateKey = input<string | undefined>(undefined);
 
   /** `true` = multi-column sorting, `'single'`, or `false` to disable. */
   readonly sortable = input<boolean | 'single' | 'multi'>(true);
@@ -155,8 +246,20 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Row selection: none | single | multiple (ctrl/shift) | checkbox column. */
   readonly selectionMode = input<SelectionMode>('none');
 
+  /**
+   * Recursive selection: toggling a row cascades to its descendants and
+   * normalizes ancestors (tri-state checkboxes).
+   */
+  readonly selectionRecursive = input(false);
+
   /** Two-way binding of the selected row keys. */
   readonly selectedKeys = model<RowKey[]>([]);
+
+  /** Highlights and tracks a single focused row. */
+  readonly focusedRowEnabled = input(false);
+
+  /** Two-way binding of the focused row's key. */
+  readonly focusedRowKey = model<RowKey | null>(null);
 
   /** Alternating row background (zebra striping), stable under virtualization. */
   readonly rowAlternation = input(false);
@@ -167,12 +270,28 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    */
   readonly rtlEnabled = input<boolean | undefined>(undefined);
 
+  /**
+   * Drag-handle column for reparenting rows: dropping onto a row makes the
+   * dragged row its child. With plain-array data and a string `parentIdExpr`
+   * the parent field is updated in place; DataSource consumers handle
+   * `rowReparented` instead.
+   */
+  readonly rowDragging = input(false);
+
+  /** Fires after a row is dropped onto a new parent. */
+  readonly rowReparented = output<OgeTreeRowReparentEvent<T>>();
+
   readonly rowClick = output<OgeRowClickEvent<T>>();
   readonly rowDblClick = output<OgeRowClickEvent<T>>();
   readonly rowExpanded = output<OgeTreeRowToggleEvent<T>>();
   readonly rowCollapsed = output<OgeTreeRowToggleEvent<T>>();
   /** Fires after the tree has rendered a new result set. */
   readonly contentReady = output<void>();
+  /**
+   * Debounced notification whenever the persistable UI state changes —
+   * persist the snapshot anywhere without `OGE_STATE_STORAGE`.
+   */
+  readonly stateChange = output<TreeListStateSnapshot>();
 
   protected readonly declaredColumns = contentChildren<OgeColumn<T>>(OgeColumn, {
     descendants: true,
@@ -216,6 +335,39 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected readonly virtualized = computed(() => this.virtualScroll());
 
+  protected readonly filterRowVisible = computed(() => {
+    const value = this.filterRow();
+    return typeof value === 'boolean' ? value : value.visible !== false;
+  });
+
+  private readonly effFilterDebounce = computed(() => {
+    const row = this.filterRow();
+    const fromOptions = typeof row === 'object' ? row.debounce : undefined;
+    return fromOptions ?? this.filterDebounce() ?? this.config.filterDebounce;
+  });
+
+  protected readonly searchPanelVisible = computed(() => {
+    const value = this.searchPanel();
+    return typeof value === 'boolean' ? value : value.visible !== false;
+  });
+
+  protected readonly searchPanelOptions = computed<OgeSearchPanelOptions>(() => {
+    const value = this.searchPanel();
+    return typeof value === 'object' ? value : {};
+  });
+
+  private readonly effLoadMode = computed<'full' | 'lazy'>(() => {
+    const explicit = this.loadMode();
+    if (explicit) return explicit;
+    return isDataSource(this.data()) && this.hasItemsExpr() !== undefined ? 'lazy' : 'full';
+  });
+
+  /** Lazy child requests filter on this field; requires a string `parentIdExpr`. */
+  private readonly lazyParentField = computed<string | null>(() => {
+    const parent = this.parentIdExpr();
+    return typeof parent === 'string' ? parent : null;
+  });
+
   // --- keys & tree index ----------------------------------------------------
 
   /** Row → key accessor (trees always need an intrinsic key). */
@@ -254,13 +406,26 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return entries.length ? Object.fromEntries(entries) : undefined;
   });
 
+  /** Loaded rows: the base result plus lazily fetched children (lazy mode). */
+  private readonly indexRows = computed<readonly T[]>(() => {
+    const base = (this.adapter.result()?.data ?? []) as readonly T[];
+    const cache = this.deferredLoader.children();
+    if (!cache.size) return base;
+    const all = [...base];
+    for (const rows of cache.values()) all.push(...rows);
+    return all;
+  });
+
   /**
-   * Adjacency index, rebuilt only when the loaded result changes. The source
-   * applies the global sort, so buckets inherit sibling order for free.
+   * Adjacency index, rebuilt only when the loaded rows change. The source
+   * applies the global sort, so buckets inherit sibling order for free; lazy
+   * child batches keep their per-request order.
    */
   protected readonly treeIndex = computed<TreeIndex<T>>(() => {
-    const result = this.adapter.result();
-    return buildTreeIndex<T>((result?.data ?? []) as readonly T[], {
+    // track the result identity: a reload must re-index even when the source
+    // returns the same (in-place mutated) array reference
+    this.adapter.result();
+    return buildTreeIndex<T>(this.indexRows(), {
       keyOf: this.rowKeyOf(),
       parentIdOf: this.parentIdOf(),
       rootValue: this.rootValue(),
@@ -292,6 +457,36 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return this.expandedSet().has(key);
   }
 
+  // --- filtering (client-side, ancestors preserved) --------------------------
+
+  /**
+   * Row predicate from the filter slice + search text. Filtering always runs
+   * client-side over the loaded nodes — the DataSource never receives
+   * filter/search (a source-side filter would drop ancestor rows).
+   */
+  private readonly filterPredicate = computed<((row: T) => boolean) | null>(() => {
+    const expr = this.store.filter.combinedExpr();
+    const search = this.store.filter.searchText().trim();
+    const exprPredicate = expr ? createFilterPredicate<T>(expr) : null;
+    if (!search) return exprPredicate;
+    const needle = foldText(search);
+    const columns = this.resolvedColumns();
+    const searchPredicate = (row: T): boolean =>
+      columns.some((column) => {
+        const value = column.accessor(row);
+        return value != null && foldText(String(value)).includes(needle);
+      });
+    if (!exprPredicate) return searchPredicate;
+    return (row) => exprPredicate(row) && searchPredicate(row);
+  });
+
+  /** Keys visible under the active filter (`null` = everything). */
+  private readonly visibleKeys = computed<ReadonlySet<RowKey> | null>(() => {
+    const predicate = this.filterPredicate();
+    if (!predicate) return null;
+    return filterTreeKeys(this.treeIndex(), predicate, this.filterMode());
+  });
+
   // --- flat rows ------------------------------------------------------------
 
   protected readonly flatNodes = computed<RowNode<T>[]>(() => {
@@ -303,7 +498,44 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         ? { collapsedRowKeys: toggled }
         : { expandedRowKeys: toggled }),
       hasChildren: this.hasChildrenHint(),
+      deferredChildren: this.deferredLoader.children(),
+      visibleKeys: this.visibleKeys(),
     });
+  });
+
+  // --- lazy child loading ----------------------------------------------------
+
+  /** Expanded lazy nodes whose children are neither indexed nor cached yet. */
+  private readonly pendingChildRequests = computed<readonly PendingChildRequest[]>(() => {
+    if (this.effLoadMode() !== 'lazy') return [];
+    const parentField = this.lazyParentField();
+    if (!parentField) return [];
+    const index = this.treeIndex();
+    const cache = this.deferredLoader.children();
+    const requests: PendingChildRequest[] = [];
+    for (const node of this.flatNodes()) {
+      if (node.kind !== 'data' || !node.expanded) continue;
+      if (index.childrenOf.has(node.key) || cache.has(node.key)) continue;
+      const value = node.key;
+      requests.push({
+        key: node.key,
+        buildOptions: (base) => ({
+          ...(base.sort?.length ? { sort: base.sort } : {}),
+          filter: { type: 'binary', field: parentField, op: 'eq', value },
+        }),
+      });
+    }
+    return requests;
+  });
+
+  /** Unwrapped user source — lazy child requests bypass the tree wrapper. */
+  private readonly innerSource = signal<DataSource<T> | null>(null);
+
+  private readonly deferredLoader = new DeferredChildrenLoader<T>({
+    pending: this.pendingChildRequests,
+    baseOptions: this.store.loadOptions,
+    source: this.innerSource,
+    onError: (err) => this.adapter.error.set(err),
   });
 
   protected readonly keyOf = computed<(row: T, index: number) => RowKey>(() => {
@@ -339,10 +571,13 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected readonly hasCheckboxColumn = computed(() => this.selectionMode() === 'checkbox');
 
-  protected readonly leadingCellCount = computed(() => (this.hasCheckboxColumn() ? 1 : 0));
+  protected readonly leadingCellCount = computed(
+    () => (this.rowDragging() ? 1 : 0) + (this.hasCheckboxColumn() ? 1 : 0)
+  );
 
-  private readonly leadingWidth = computed(() =>
-    this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0
+  private readonly leadingWidth = computed(
+    () =>
+      (this.rowDragging() ? DRAG_WIDTH : 0) + (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0)
   );
 
   protected readonly firstDataRow = computed<T | undefined>(() => {
@@ -371,9 +606,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     colVirtualized: computed(() => false),
     scrollLeft: this.scrollLeft,
     hostWidth: this.hostWidth,
-    leadingTracks: computed(() =>
-      this.hasCheckboxColumn() ? [`${CHECKBOX_WIDTH}px`] : []
-    ),
+    leadingTracks: computed(() => {
+      const tracks: string[] = [];
+      if (this.rowDragging()) tracks.push(`${DRAG_WIDTH}px`);
+      if (this.hasCheckboxColumn()) tracks.push(`${CHECKBOX_WIDTH}px`);
+      return tracks;
+    }),
     trailingTracks: computed(() => []),
     leadingWidth: this.leadingWidth,
     defaultMinWidth: this.effColumnMinWidth,
@@ -472,6 +710,44 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return this.store.selection.isSelected(key);
   }
 
+  /** Tri-state map (recursive selection); empty when the feature is off. */
+  private readonly checkStates = computed<ReadonlyMap<RowKey, CheckState>>(() => {
+    if (!this.selectionRecursive()) return EMPTY_CHECK_STATES;
+    return computeTreeCheckStates(this.treeIndex(), this.store.selection.selected());
+  });
+
+  protected rowCheckState(key: RowKey): CheckState {
+    if (!this.selectionRecursive()) {
+      return this.isRowSelected(key) ? 'checked' : 'unchecked';
+    }
+    return this.checkStates().get(key) ?? 'unchecked';
+  }
+
+  /** Central toggle: cascades through descendants in recursive mode. */
+  private toggleSelection(key: RowKey): void {
+    if (untracked(this.selectionRecursive)) {
+      this.store.selection.replace([
+        ...toggleTreeSelection(
+          untracked(this.treeIndex),
+          untracked(this.store.selection.selected),
+          key,
+          true
+        ),
+      ]);
+    } else {
+      this.store.selection.toggle(key);
+    }
+  }
+
+  /** Selected keys narrowed per mode (recursive selection reporting). */
+  getSelectedRowKeys(mode: 'all' | 'leavesOnly' | 'excludeRecursive' = 'all'): RowKey[] {
+    return resolveSelectedKeys(
+      untracked(this.treeIndex),
+      untracked(this.store.selection.selected),
+      mode
+    );
+  }
+
   protected readonly allSelected = computed(() => {
     const keys = this.dataKeys();
     if (!keys.length) return false;
@@ -485,6 +761,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected onRowClick(node: DataRowNode<T>, event: MouseEvent): void {
     this.rowClick.emit({ row: node.data, key: node.key, event });
+    if (this.focusedRowEnabled()) this.focusedRowKey.set(node.key);
     const mode = this.selectionMode();
     if (mode === 'none') return;
     if (mode === 'single') {
@@ -493,12 +770,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     }
     if (event.shiftKey) this.store.selection.selectRange(this.dataKeys(), node.key);
     else if (event.ctrlKey || event.metaKey || mode === 'checkbox') {
-      this.store.selection.toggle(node.key);
+      this.toggleSelection(node.key);
     } else this.store.selection.selectOnly(node.key);
   }
 
   protected onCheckboxToggle(node: DataRowNode<T>): void {
-    this.store.selection.toggle(node.key);
+    this.toggleSelection(node.key);
   }
 
   protected toggleSelectAll(): void {
@@ -537,6 +814,74 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   protected readonly multiSorted = computed(() => this.store.sort.descriptors().length > 1);
+
+  // --- filter row & search ---------------------------------------------------
+
+  private readonly filterTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+  private debounced(key: string, apply: () => void): void {
+    const pending = this.filterTimers.get(key);
+    if (pending) clearTimeout(pending);
+    const delay = this.effFilterDebounce();
+    if (delay <= 0) {
+      apply();
+      return;
+    }
+    this.filterTimers.set(
+      key,
+      setTimeout(() => {
+        this.filterTimers.delete(key);
+        apply();
+      }, delay)
+    );
+  }
+
+  /** Row-filter expression for a column — the column's custom builder wins. */
+  private rowFilterExprFor(column: ResolvedColumn<T>, raw: string) {
+    const field = column.field;
+    if (!field) return null;
+    const operator: FilterOperator | undefined = column.filterOperator;
+    if (column.calculateFilterExpression) {
+      const text = raw.trim();
+      const op = operator ?? defaultOperatorFor(column.dataType);
+      return text ? column.calculateFilterExpression(text, op) : null;
+    }
+    return buildRowFilterExpr(field, column.dataType, raw, operator);
+  }
+
+  protected onFilterInput(column: ResolvedColumn<T>, raw: string): void {
+    const field = column.field;
+    if (!field) return;
+    this.debounced(`f:${field}`, () => {
+      this.store.filter.setRowFilter(field, this.rowFilterExprFor(column, raw));
+    });
+  }
+
+  /** Selects apply immediately (no debounce). */
+  protected onFilterSelect(column: ResolvedColumn<T>, raw: string): void {
+    const field = column.field;
+    if (!field) return;
+    this.store.filter.setRowFilter(field, this.rowFilterExprFor(column, raw));
+  }
+
+  /** Filter-row lookup select: applies an exact-match filter on the raw value. */
+  protected onLookupFilter(column: ResolvedColumn<T>, rawIndex: string): void {
+    const field = column.field;
+    if (!field || !column.lookupItems) return;
+    if (rawIndex === '') {
+      this.store.filter.setRowFilter(field, null);
+      return;
+    }
+    const item = column.lookupItems[Number(rawIndex)];
+    this.store.filter.setRowFilter(
+      field,
+      item === undefined ? null : { type: 'binary', field, op: 'eq', value: item.value }
+    );
+  }
+
+  protected onSearchInput(raw: string): void {
+    this.debounced('search', () => this.store.filter.setSearchText(raw));
+  }
 
   // --- column resize --------------------------------------------------------
 
@@ -592,6 +937,58 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return formatCellValue(value, column.dataType, undefined);
   }
 
+  // --- row drag reparenting -------------------------------------------------
+
+  private draggedRowKey: RowKey | null = null;
+  /** Key of the row currently hovered as a valid drop target. */
+  protected readonly dropTargetKey = signal<RowKey | null>(null);
+
+  protected onRowDragStart(node: DataRowNode<T>, event: DragEvent): void {
+    this.draggedRowKey = node.key;
+    event.dataTransfer?.setData('text/plain', String(node.key));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  private isValidDropTarget(targetKey: RowKey): boolean {
+    const dragged = this.draggedRowKey;
+    if (dragged === null || dragged === targetKey) return false;
+    // a row must not become a descendant of itself
+    return !ancestorsOf(untracked(this.treeIndex), targetKey).includes(dragged);
+  }
+
+  protected onRowDragOver(node: DataRowNode<T>, event: DragEvent): void {
+    if (!this.isValidDropTarget(node.key)) return;
+    event.preventDefault();
+    if (this.dropTargetKey() !== node.key) this.dropTargetKey.set(node.key);
+  }
+
+  protected onRowDragEnd(): void {
+    this.draggedRowKey = null;
+    this.dropTargetKey.set(null);
+  }
+
+  protected onRowDrop(target: DataRowNode<T>, event: DragEvent): void {
+    const draggedKey = this.draggedRowKey;
+    const valid = draggedKey !== null && this.isValidDropTarget(target.key);
+    this.onRowDragEnd();
+    if (!valid || draggedKey === null) return;
+    event.preventDefault();
+    const index = untracked(this.treeIndex);
+    const row = index.byKey.get(draggedKey);
+    if (row === undefined) return;
+    const fromParentKey = index.parentOf.get(draggedKey) ?? null;
+    if (fromParentKey === target.key) return;
+    const data = untracked(this.data);
+    const parentField = untracked(this.lazyParentField);
+    if (!isDataSource(data) && parentField !== null) {
+      // plain-array data: write the new parent in place and re-index
+      (row as Record<string, unknown>)[parentField] = target.key;
+      this.adapter.reload();
+    }
+    this.expandRow(target.key);
+    this.rowReparented.emit({ key: draggedKey, row, fromParentKey, toParentKey: target.key });
+  }
+
   // --- expansion actions ----------------------------------------------------
 
   private setRowExpanded(node: DataRowNode<T>, expand: boolean): void {
@@ -629,11 +1026,56 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     if (this.keyboard.handleKey(event)) event.preventDefault();
   }
 
+  // --- state persistence ----------------------------------------------------
+
+  /** Store snapshot + column visibility + expansion (paging/grouping don't apply). */
+  private readonly persistedSnapshot = computed<TreeListStateSnapshot>(() => {
+    const { group: _group, paging: _paging, ...base } = this.store.snapshot();
+    const hidden = this.declaredColumns()
+      .filter((column) => !column.visible())
+      .map((column) => column.field())
+      .filter((field): field is string => field != null);
+    return {
+      ...base,
+      columns: { ...base.columns, hidden },
+      expansion: { toggled: [...this.toggledKeys()] },
+    };
+  });
+
+  /** Current persistable UI state: sort, filters, column layout, expansion. */
+  state(): TreeListStateSnapshot {
+    return untracked(this.persistedSnapshot);
+  }
+
+  /** Applies a previously captured state snapshot (see `state()` / `stateChange`). */
+  applyState(snapshot: TreeListStateSnapshot): void {
+    untracked(() => {
+      this.store.applySnapshot(snapshot);
+      if (snapshot.expansion) {
+        this.store.expansion.setGroups(new Set(snapshot.expansion.toggled));
+      }
+      const hidden = new Set(snapshot.columns?.hidden ?? []);
+      for (const column of this.declaredColumns()) {
+        const field = column.field();
+        if (field) column.visible.set(!hidden.has(field));
+      }
+    });
+  }
+
   // --- imperative API -------------------------------------------------------
 
-  /** Re-runs the current load against the DataSource. */
+  /** Re-runs the current load and drops lazily fetched children. */
   refresh(): void {
+    this.deferredLoader.reset();
     this.adapter.reload();
+  }
+
+  clearFilters(): void {
+    this.store.filter.clearAll();
+  }
+
+  clearSorting(): void {
+    this.store.sort.clear();
   }
 
   expandAll(): void {
@@ -649,11 +1091,16 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   expandRow(key: RowKey): void {
-    if (!untracked(this.expandedSet).has(key)) this.store.expansion.toggleGroup(key);
+    // polarity-aware: expanded means "not toggled" under autoExpandAll
+    const toggled = untracked(this.toggledKeys).has(key);
+    const shouldToggle = untracked(this.autoExpandAll) ? toggled : !toggled;
+    if (shouldToggle) this.store.expansion.toggleGroup(key);
   }
 
   collapseRow(key: RowKey): void {
-    if (untracked(this.expandedSet).has(key)) this.store.expansion.toggleGroup(key);
+    const toggled = untracked(this.toggledKeys).has(key);
+    const shouldToggle = untracked(this.autoExpandAll) ? !toggled : toggled;
+    if (shouldToggle) this.store.expansion.toggleGroup(key);
   }
 
   isRowExpanded(key: RowKey): boolean {
@@ -686,8 +1133,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       const data = this.data();
       const key = this.rowKeyOf();
       const sortValues = this.sortValueSelectors();
+      const parentField = this.lazyParentField();
+      const lazy = this.effLoadMode() === 'lazy' && parentField !== null;
+      const rootValue = this.rootValue();
+      const inner = isDataSource(data)
+        ? data
+        : new ArrayDataSource<T>(data, { key, sortValues });
+      this.innerSource.set(inner);
       this.adapter.setSource(
-        isDataSource(data) ? data : new ArrayDataSource<T>(data, { key, sortValues })
+        treeSource(inner, lazy && parentField ? { parentField, rootValue } : null)
       );
     });
     // trees never page: the flatten step owns visibility
@@ -736,6 +1190,19 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         if (keys.length === expanded.size && keys.every((key) => expanded.has(key))) return;
         this.expandedRowKeys.set([...expanded]);
       });
+    });
+    // --- state persistence (stateKey) ---
+    // Registered AFTER the model⇄slice sync effects: their first run must
+    // precede the restore, or the models' defaults would overwrite it.
+    createStatePersistence<TreeListStateSnapshot>({
+      stateKey: this.stateKey,
+      prefix: 'oge-tree-list',
+      storage: this.stateStorage,
+      snapshot: this.persistedSnapshot,
+      apply: (snapshot) => this.applyState(snapshot),
+      // re-run the restore once the column directives registered
+      beforeRestore: () => this.declaredColumns(),
+      onChange: (snapshot) => this.stateChange.emit(snapshot),
     });
     // focus follows the keyboard-navigation cell
     effect(() => {
