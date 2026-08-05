@@ -306,7 +306,11 @@ export class EditingModel<
     const node = this.dataNodeOf(rowKey);
     if (!node) return;
     const controls = this.activeControls();
-    const data: Record<string, unknown> = {};
+    // added rows keep host-staged fields (e.g. a tree parent reference) that
+    // have no editor column — control values overlay them below
+    const data: Record<string, unknown> = this.deps.slice.isAdded(rowKey)
+      ? { ...this.deps.slice.changes().get(rowKey) }
+      : {};
     let invalid = false;
     for (const column of this.deps.columns()) {
       const field = column.field;

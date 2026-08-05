@@ -1,0 +1,152 @@
+import { Component } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { OgeColumn, type OgeEditingOptions } from '@oge-ui/grid';
+import { OgeTreeList } from './tree-list';
+
+interface Task {
+  id: number;
+  parentId: number | null;
+  title: string;
+  effort: number;
+}
+
+const TASKS: Task[] = [
+  { id: 1, parentId: null, title: 'Root A', effort: 5 },
+  { id: 2, parentId: 1, title: 'Child A1', effort: 3 },
+  { id: 3, parentId: null, title: 'Root B', effort: 2 },
+];
+
+async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+}
+
+const flush = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve));
+
+function rowOf(el: HTMLElement, text: string): HTMLElement | undefined {
+  return Array.from(el.querySelectorAll<HTMLElement>('.oge-row')).find((row) =>
+    (row.textContent ?? '').includes(text),
+  );
+}
+
+@Component({
+  imports: [OgeTreeList, OgeColumn],
+  template: `
+    <oge-tree-list
+      [data]="data"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      [autoExpandAll]="true"
+      [editing]="editing"
+    >
+      <oge-column field="title" caption="Title" />
+      <oge-column field="effort" caption="Effort" dataType="number" />
+    </oge-tree-list>
+  `,
+})
+class Host {
+  readonly data = TASKS.map((task) => ({ ...task }));
+  editing: OgeEditingOptions = { mode: 'cell', allowUpdating: true };
+}
+
+describe('OgeTreeList editing', () => {
+  async function render(configure?: (host: Host) => void) {
+    const fixture = TestBed.createComponent(Host);
+    configure?.(fixture.componentInstance);
+    await settle(fixture);
+    const grid = fixture.debugElement.children[0]
+      .componentInstance as OgeTreeList<Task>;
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      el: fixture.nativeElement as HTMLElement,
+      grid,
+    };
+  }
+
+  it('cell mode: click opens an editor, Enter commits and writes back', async () => {
+    const { fixture, host, el } = await render();
+    const cell = rowOf(el, 'Child A1')?.querySelectorAll<HTMLElement>(
+      '.oge-cell',
+    )[0];
+    cell?.click();
+    await settle(fixture);
+    const editor = el.querySelector<HTMLInputElement>('.oge-editor');
+    expect(editor).toBeTruthy();
+    if (!editor) return;
+    editor.value = 'Renamed A1';
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    editor.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+    );
+    await settle(fixture);
+    await flush();
+    await settle(fixture);
+    expect(host.data[1].title).toBe('Renamed A1');
+    expect(rowOf(el, 'Renamed A1')).toBeTruthy();
+  });
+
+  it('row mode: the command column edits and saves a whole row', async () => {
+    const { fixture, host, el } = await render(
+      (h) => (h.editing = { mode: 'row', allowUpdating: true }),
+    );
+    rowOf(el, 'Root B')
+      ?.querySelector<HTMLButtonElement>('.oge-command-btn')
+      ?.click();
+    await settle(fixture);
+    const editors = el.querySelectorAll<HTMLInputElement>('.oge-editor');
+    expect(editors.length).toBe(2);
+    editors[1].value = '9';
+    editors[1].dispatchEvent(new Event('input', { bubbles: true }));
+    el.querySelector<HTMLButtonElement>('.oge-command-save')?.click();
+    await settle(fixture);
+    await flush();
+    await settle(fixture);
+    expect(host.data[2].effort).toBe(9);
+  });
+
+  it('addRow(parentKey) stages the parent so the saved row lands under it', async () => {
+    const { fixture, host, el, grid } = await render(
+      (h) =>
+        (h.editing = { mode: 'row', allowUpdating: true, allowAdding: true }),
+    );
+    grid.addRow(1);
+    await settle(fixture);
+    // the new row renders on top with open editors
+    const editors = el.querySelectorAll<HTMLInputElement>('.oge-editor');
+    expect(editors.length).toBe(2);
+    editors[0].value = 'New child';
+    editors[0].dispatchEvent(new Event('input', { bubbles: true }));
+    el.querySelector<HTMLButtonElement>('.oge-command-save')?.click();
+    await settle(fixture);
+    await flush();
+    await settle(fixture);
+    const added = host.data.find((row) => row.title === 'New child');
+    expect(added?.parentId).toBe(1);
+    // after the reload it renders as a child of Root A
+    expect(rowOf(el, 'New child')?.getAttribute('aria-level')).toBe('2');
+  });
+
+  it('delete removes the row (and confirmDelete: false skips the dialog)', async () => {
+    const { fixture, host, el } = await render(
+      (h) =>
+        (h.editing = {
+          mode: 'row',
+          allowUpdating: true,
+          allowDeleting: true,
+          confirmDelete: false,
+        }),
+    );
+    const deleteBtn = rowOf(el, 'Root B')?.querySelector<HTMLButtonElement>(
+      '.oge-command-delete',
+    );
+    deleteBtn?.click();
+    await settle(fixture);
+    await flush();
+    await settle(fixture);
+    expect(host.data.some((row) => row.title === 'Root B')).toBe(false);
+    expect(rowOf(el, 'Root B')).toBeUndefined();
+  });
+});

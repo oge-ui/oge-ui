@@ -1,4 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
+import { ReactiveFormsModule, type FormControl } from '@angular/forms';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -45,8 +46,10 @@ import {
 } from '@oge-ui/core';
 import {
   CHECKBOX_WIDTH,
+  COMMAND_WIDTH,
   DRAG_WIDTH,
   ColumnLayoutModel,
+  EditingModel,
   ColumnModel,
   DeferredChildrenLoader,
   KeyboardNavModel,
@@ -69,11 +72,15 @@ import {
   OgeColumnGroup,
   OgeNoDataTemplate,
   formatCellValue,
+  type OgeCellClickEvent,
   type OgeCellTemplateContext,
+  type OgeEditTemplateContext,
+  type OgeEditingOptions,
   type OgeFilterRowOptions,
   type OgeGridMessages,
   type OgeHeaderTemplateContext,
   type OgeRowClickEvent,
+  type OgeSavingChangesEvent,
   type OgeSearchPanelOptions,
   type OgeSortingOptions,
   type SelectionMode,
@@ -148,7 +155,7 @@ function treeSource<T>(
  */
 @Component({
   selector: 'oge-tree-list',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, ReactiveFormsModule],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
@@ -293,8 +300,16 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Fires after a row is dropped onto a new parent. */
   readonly rowReparented = output<OgeTreeRowReparentEvent<T>>();
 
+  /** Enables editing: `{ mode: 'cell' | 'row' | 'batch', allow… }`. */
+  readonly editing = input<false | OgeEditingOptions>(false);
+
+  /** Fires before changes reach the DataSource; cancelable. */
+  readonly savingChanges = output<OgeSavingChangesEvent<T>>();
+
   readonly rowClick = output<OgeRowClickEvent<T>>();
   readonly rowDblClick = output<OgeRowClickEvent<T>>();
+  /** Fires when a data cell is clicked. */
+  readonly cellClick = output<OgeCellClickEvent<T>>();
   readonly rowExpanded = output<OgeTreeRowToggleEvent<T>>();
   readonly rowCollapsed = output<OgeTreeRowToggleEvent<T>>();
   /** Fires after the tree has rendered a new result set. */
@@ -525,7 +540,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected readonly flatNodes = computed<RowNode<T>[]>(() => {
     const toggled = this.toggledKeys();
-    return flattenTreeData<T>({
+    const nodes = flattenTreeData<T>({
       index: this.treeIndex(),
       keyOf: this.rowKeyOf(),
       ...(this.autoExpandAll()
@@ -535,6 +550,21 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       deferredChildren: this.deferredLoader.children(),
       visibleKeys: this.visibleKeys(),
     });
+    // unsaved added rows render on top as roots, like the grid
+    const added = this.store.editing.added();
+    if (!added.length) return nodes;
+    const changes = this.store.editing.changes();
+    const newNodes: RowNode<T>[] = added.map((key, i) => ({
+      kind: 'data',
+      key,
+      data: (changes.get(key) ?? {}) as T,
+      sourceIndex: -1 - i,
+      level: 0,
+      parentKey: null,
+      hasChildren: false,
+      expanded: false,
+    }));
+    return [...newNodes, ...nodes];
   });
 
   // --- lazy child loading ----------------------------------------------------
@@ -658,7 +688,9 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       if (this.hasCheckboxColumn()) tracks.push(`${CHECKBOX_WIDTH}px`);
       return tracks;
     }),
-    trailingTracks: computed(() => []),
+    trailingTracks: computed(() =>
+      this.hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : [],
+    ),
     leadingWidth: this.leadingWidth,
     defaultMinWidth: this.effColumnMinWidth,
     pinnedDefaultWidth: computed(() => this.config.pinnedDefaultWidth),
@@ -1077,6 +1109,166 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     });
   }
 
+  // --- editing ---------------------------------------------------------------
+
+  private readonly editingModel = new EditingModel<T, OgeColumn<T>>({
+    editing: this.editing,
+    slice: this.store.editing,
+    columns: this.resolvedColumns,
+    flatNodes: this.flatNodes,
+    source: this.adapter.source,
+    confirmDeleteMessage: computed(() => this.msg().confirmDelete),
+    events: {
+      savingChanges: (event) => this.savingChanges.emit(event),
+    },
+    reload: () => this.adapter.reload(),
+  });
+
+  protected readonly editMode = this.editingModel.editMode;
+  protected readonly canUpdate = this.editingModel.canUpdate;
+  protected readonly canDelete = this.editingModel.canDelete;
+  protected readonly canAdd = this.editingModel.canAdd;
+
+  /** Trailing command cell: shown when row edit or delete actions exist. */
+  protected readonly hasCommandColumn = computed(
+    () =>
+      this.editingModel.editingOptions() !== null &&
+      (this.canUpdate() || this.canDelete()),
+  );
+
+  protected isCellDirty(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): boolean {
+    return this.editingModel.isCellDirty(node, column);
+  }
+
+  protected isRowEditing(key: RowKey): boolean {
+    return this.editingModel.isRowEditing(key);
+  }
+
+  protected isCellEditorOpen(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): boolean {
+    return this.editingModel.isCellEditorOpen(node, column);
+  }
+
+  protected editControl(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): FormControl<unknown> {
+    return this.editingModel.editControl(node, column);
+  }
+
+  protected lookupItemsFor(node: DataRowNode<T>, column: ResolvedColumn<T>) {
+    return this.editingModel.lookupItemsFor(node, column);
+  }
+
+  protected commitAndNext(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+    event: Event,
+  ): void {
+    this.editingModel.commitAndNext(node, column, event);
+  }
+
+  protected cancelActiveEditor(): void {
+    this.editingModel.cancelActiveEditor();
+  }
+
+  protected onEditorBlur(): void {
+    this.editingModel.onEditorBlur();
+  }
+
+  protected onEditorEnter(): void {
+    if (this.editMode() === 'row') this.editingModel.commitActiveRow();
+    else this.editingModel.commitActiveCell();
+  }
+
+  protected startRowEdit(node: DataRowNode<T>, event?: Event): void {
+    this.editingModel.startRowEdit(node, event);
+  }
+
+  protected commitActiveRow(): void {
+    this.editingModel.commitActiveRow();
+  }
+
+  protected deleteRow(node: DataRowNode<T>, event?: Event): void {
+    this.editingModel.deleteRow(node, event);
+  }
+
+  protected saveAllChanges(): void {
+    this.editingModel.saveAllChanges();
+  }
+
+  protected discardAllChanges(): void {
+    this.editingModel.discardAllChanges();
+  }
+
+  protected editContextFor(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): OgeEditTemplateContext<T> {
+    return {
+      $implicit: this.editControl(node, column),
+      row: node.data,
+      column: column.source as OgeColumn<T>,
+    };
+  }
+
+  protected editorErrorText(control: FormControl<unknown>): string | null {
+    if (!control.invalid || !control.touched) return null;
+    return control.hasError('required')
+      ? this.msg().requiredError
+      : this.msg().invalidError;
+  }
+
+  protected onCellClickToEdit(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+    event?: Event,
+  ): void {
+    // ignore events bubbling out of an open editor (e.g. its own Enter commit)
+    if ((event?.target as HTMLElement | null)?.closest?.('.oge-editor')) return;
+    if (event?.type === 'click') {
+      this.cellClick.emit({
+        row: node.data,
+        key: node.key,
+        field: column.field,
+        value: column.accessor(node.data),
+        event,
+      });
+    }
+    const mode = this.editMode();
+    if (
+      (mode !== 'cell' && mode !== 'batch') ||
+      !this.canUpdate() ||
+      !column.editable ||
+      !column.field ||
+      this.store.editing.isRemoved(node.key)
+    ) {
+      return;
+    }
+    if (!this.store.editing.isCellEditing(node.key, column.field)) {
+      this.store.editing.startCell(node.key, column.field);
+    }
+  }
+
+  /**
+   * Adds a new (unsaved) row; with `parentKey` and a string `parentIdExpr`
+   * the parent reference is pre-staged, so saving inserts it under that node.
+   */
+  addRow(parentKey?: RowKey): void {
+    this.editingModel.addNewRow();
+    const parentField = untracked(this.lazyParentField);
+    if (parentKey !== undefined && parentField !== null) {
+      const key = untracked(this.store.editing.added)[0];
+      if (key !== undefined)
+        this.store.editing.setChange(key, parentField, parentKey);
+    }
+  }
+
   // --- expansion actions ----------------------------------------------------
 
   private setRowExpanded(node: DataRowNode<T>, expand: boolean): void {
@@ -1381,12 +1573,35 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       beforeRestore: () => this.declaredColumns(),
       onChange: (snapshot) => this.stateChange.emit(snapshot),
     });
-    // focus follows the keyboard-navigation cell
+    // focus the first editor when one opens
+    effect(() => {
+      const cell = this.store.editing.editCell();
+      const rowKey = this.store.editing.editRowKey();
+      if (!cell && rowKey === null) return;
+      setTimeout(() => {
+        this.hostRef.nativeElement
+          .querySelector<HTMLElement>('.oge-editor')
+          ?.focus();
+      });
+    });
+    // focus follows the keyboard-navigation cell — unless an editor is open
     effect(() => {
       const cell = this.focusedCell();
       if (!cell) return;
+      const editorOpen = untracked(
+        () =>
+          this.store.editing.editCell() !== null ||
+          this.store.editing.editRowKey() !== null,
+      );
+      if (editorOpen) return;
       untracked(() => this.virtualizer.scrollRowIntoView(cell.row));
       setTimeout(() => {
+        if (
+          this.store.editing.editCell() !== null ||
+          this.store.editing.editRowKey() !== null
+        ) {
+          return;
+        }
         const viewport = this.viewportRef()?.nativeElement;
         const el = viewport?.querySelector<HTMLElement>(
           `[data-cell="${cell.row}-${cell.col}"]`,

@@ -8,8 +8,11 @@ model, theming, virtualization, keyboard navigation and data layer.
 - O(visible) expand/collapse; 100k-node trees stay smooth with `virtualScroll`
 - Lazy child loading against any `DataSource` (one `parentId eq key` request per expansion)
 - Client-side filtering & search that keep ancestor rows visible
-- Selection (single / multiple / checkbox), full treegrid ARIA, RTL-aware keyboard
+- Selection (single / multiple / checkbox / recursive tri-state), full treegrid ARIA, RTL-aware keyboard
+- Editing (cell / row / batch) with the grid's editors, validators and `savingChanges` flow;
+  `addRow(parentKey)` inserts under a chosen node
 - State persistence (`stateKey`) for sort, filters, column layout and expansion
+- CSV export with the hierarchy expressed as first-column indentation
 
 ## Install
 

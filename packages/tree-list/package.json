@@ -6,7 +6,8 @@
   },
   "peerDependencies": {
     "@angular/common": "^22.0.0",
-    "@angular/core": "^22.0.0"
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0"
   },
   "dependencies": {
     "@oge-ui/core": "0.3.0",

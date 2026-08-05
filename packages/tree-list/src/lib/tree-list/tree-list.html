@@ -1,6 +1,28 @@
-@if (searchPanelVisible()) {
+@if (searchPanelVisible() || canAdd() || (editMode() === 'batch' &&
+store.editing.hasPending())) {
 <div class="oge-toolbar">
+  @if (canAdd()) {
+  <button type="button" class="oge-toolbar-text-btn" (click)="addRow()">
+    {{ msg().addRow }}
+  </button>
+  } @if (editMode() === 'batch' && store.editing.hasPending()) {
+  <button
+    type="button"
+    class="oge-toolbar-text-btn oge-btn-accent"
+    (click)="saveAllChanges()"
+  >
+    {{ msg().saveChanges }}
+  </button>
+  <button
+    type="button"
+    class="oge-toolbar-text-btn"
+    (click)="discardAllChanges()"
+  >
+    {{ msg().discardChanges }}
+  </button>
+  }
   <div class="oge-toolbar-spacer"></div>
+  @if (searchPanelVisible()) {
   <input
     class="oge-search-input"
     type="search"
@@ -9,6 +31,7 @@
     [style.width.px]="searchPanelOptions().width ?? null"
     (input)="onSearchInput($any($event.target).value)"
   />
+  }
 </div>
 }
 <!-- Delegated keyboard handler: focus lives on the tree cells inside (roving tabindex). -->
@@ -122,6 +145,8 @@
         ></span>
         }
       </div>
+      } @if (hasCommandColumn()) {
+      <div class="oge-header-cell oge-command-cell" role="columnheader"></div>
       }
     </div>
     @if (filterRowVisible()) {
@@ -187,6 +212,8 @@
         />
         } } }
       </div>
+      } @if (hasCommandColumn()) {
+      <div class="oge-filter-cell" role="gridcell"></div>
       }
     </div>
     }
@@ -204,6 +231,8 @@
         [class.oge-row-alt]="rowAlternation() && (viewStart() + nodeIndex) % 2 === 1"
         [class.oge-row-focused]="focusedRowEnabled() && focusedRowKey() === node.key"
         [class.oge-row-selected]="selectionMode() !== 'none' && isRowSelected(node.key)"
+        [class.oge-row-removed]="store.editing.isRemoved(node.key)"
+        [class.oge-row-new]="store.editing.isAdded(node.key)"
         [attr.aria-selected]="ariaSelectedOf(node)"
         [attr.aria-level]="node.level + 1"
         [attr.aria-posinset]="node.posInSet"
@@ -265,12 +294,17 @@
           [class.oge-tree-cell]="column.absIndex === 0"
           [class.oge-cell-number]="column.dataType === 'number'"
           [class.oge-pinned]="column.pinned !== false"
+          [class.oge-cell-dirty]="isCellDirty(node, column)"
+          [class.oge-cell-editing]="isCellEditorOpen(node, column)"
           [style.inset-inline-start.px]="pinnedLeftOf(column)"
           [style.inset-inline-end.px]="pinnedRightOf(column)"
           [attr.data-cell]="viewStart() + nodeIndex + '-' + column.absIndex"
           [attr.aria-colindex]="leadingCellCount() + column.absIndex + 1"
           [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, column.absIndex) ? 0 : -1"
           (focus)="onCellFocus(viewStart() + nodeIndex, column.absIndex)"
+          (click)="onCellClickToEdit(node, column, $event)"
+          (keydown.f2)="onCellClickToEdit(node, column, $event)"
+          (keydown.enter)="onCellClickToEdit(node, column, $event)"
         >
           @if (column.absIndex === 0) {
           <span
@@ -302,7 +336,44 @@
           </button>
           } @else {
           <span class="oge-tree-expander-spacer" aria-hidden="true"></span>
-          } } @if (column.cellTemplate) {
+          } } @if (isCellEditorOpen(node, column)) { @if (column.editTemplate) {
+          <ng-container
+            *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
+          />
+          } @else if (lookupItemsFor(node, column); as items) {
+          <select
+            class="oge-editor oge-editor-input"
+            [formControl]="$any(editControl(node, column))"
+            (keydown.enter)="onEditorEnter()"
+            (keydown.escape)="cancelActiveEditor()"
+          >
+            @for (item of items; track $index) {
+            <option [value]="item.value">{{ item.text }}</option>
+            }
+          </select>
+          } @else { @switch (column.dataType) { @case ('boolean') {
+          <input
+            class="oge-editor"
+            type="checkbox"
+            [formControl]="$any(editControl(node, column))"
+            (keydown.enter)="onEditorEnter()"
+            (keydown.escape)="cancelActiveEditor()"
+          />
+          } @default {
+          <input
+            class="oge-editor oge-editor-input"
+            [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
+            [formControl]="$any(editControl(node, column))"
+            [class.oge-editor-invalid]="
+              editControl(node, column).touched && editControl(node, column).invalid
+            "
+            [attr.title]="editorErrorText(editControl(node, column))"
+            (keydown.enter)="onEditorEnter()"
+            (keydown.escape)="cancelActiveEditor()"
+            (keydown.tab)="commitAndNext(node, column, $event)"
+            (blur)="onEditorBlur()"
+          />
+          } } } } @else if (column.cellTemplate) {
           <ng-container
             *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
           />
@@ -311,6 +382,106 @@
             >{{ cellDisplayText(node, column) }}</span
           >
           }
+        </div>
+        } @if (hasCommandColumn()) {
+        <div class="oge-cell oge-command-cell" role="gridcell">
+          @if (isRowEditing(node.key)) {
+          <button
+            type="button"
+            class="oge-command-btn oge-command-save"
+            [attr.aria-label]="msg().saveRow"
+            (click)="commitActiveRow(); $event.stopPropagation()"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m3 8.5 3.5 3.5L13 5" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="oge-command-btn"
+            [attr.aria-label]="msg().cancelEdit"
+            (click)="cancelActiveEditor(); $event.stopPropagation()"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="m4 4 8 8M12 4l-8 8" />
+            </svg>
+          </button>
+          } @else { @if (canUpdate() && editMode() === 'row') {
+          <button
+            type="button"
+            class="oge-command-btn"
+            [attr.aria-label]="msg().editRow"
+            (click)="startRowEdit(node, $event)"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M10.5 2.5 13.5 5.5 5.5 13.5H2.5v-3z" />
+            </svg>
+          </button>
+          } @if (canDelete()) {
+          <button
+            type="button"
+            class="oge-command-btn oge-command-delete"
+            [attr.aria-label]="store.editing.isRemoved(node.key) ? msg().undeleteRow : msg().deleteRow"
+            (click)="deleteRow(node, $event)"
+          >
+            @if (store.editing.isRemoved(node.key)) {
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 7c1-2.5 3-4 5.5-4A5.5 5.5 0 1 1 3.5 10" />
+              <path d="M3 3v4h4" />
+            </svg>
+            } @else {
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M2.5 4.5h11M5.5 4.5V3a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.5M4 4.5l.7 8.2a1 1 0 0 0 1 .8h4.6a1 1 0 0 0 1-.8l.7-8.2"
+              />
+            </svg>
+            }
+          </button>
+          } }
         </div>
         }
       </div>

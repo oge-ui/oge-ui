@@ -152,27 +152,27 @@ KeyboardNavModel, DeferredChildrenLoader, EditingModel, state persistence) and
 the `@oge-ui/core` tree primitives (`buildTreeIndex`, `flattenTreeData`,
 `filterTreeKeys`, tri-state selection helpers).
 
-| Feature                                                           | Reference | oge | Notes                                                                              |
-| ----------------------------------------------------------------- | --------- | --- | ---------------------------------------------------------------------------------- |
-| Flat self-referencing data (`keyExpr`/`parentIdExpr`/`rootValue`) | ✔         | ✅  | + `orphanPolicy: discard/promoteToRoot`                                            |
-| Expand/collapse + `autoExpandAll` + `[(expandedRowKeys)]`         | ✔         | ✅  | polarity-aware toggled set, O(visible) flatten                                     |
-| Remote lazy loading (`hasItemsExpr`)                              | ✔         | ✅  | `filter: [parentIdExpr,'=',key]` per expansion; cache + skeleton; sort invalidates |
-| Row virtualization                                                | ✔         | ✅  | 100k-node spec                                                                     |
-| Sorting (sibling-scoped, multi)                                   | ✔         | ✅  | source-applied sort inherits bucket order                                          |
-| Filter row + search panel                                         | ✔         | ✅  | client-side, ancestors preserved; `filterMode: withAncestors/fullBranch/matchOnly` |
-| Selection (single/multiple/checkbox)                              | ✔         | ✅  | shared SelectionSlice; two-way `selectedKeys`                                      |
-| Recursive tri-state selection                                     | ✔         | ✅  | `selectionRecursive` + `getSelectedRowKeys(mode)`                                  |
-| Focused row                                                       | ✔         | ✅  | `[(focusedRowKey)]`                                                                |
-| Keyboard navigation (treegrid)                                    | ✔         | ✅  | logical ArrowRight/Left expand/collapse, parent/first-child jumps, RTL-aware       |
-| ARIA treegrid                                                     | partial   | ✅  | `aria-level/posinset/setsize/expanded`                                             |
-| Columns: resize, templates, bands, lookup display                 | ✔         | ✅  | shared `<oge-column>`                                                              |
-| Drag & drop reparenting                                           | ✔         | ✅  | drop-onto-row; descendant guard; array auto-apply + `rowReparented`                |
-| State persistence (`stateKey`)                                    | ✔         | ✅  | sort/filters/columns/expansion                                                     |
-| Theming (dark/bootstrap/tailwind)                                 | ✔         | ✅  | shared `_structure.scss` + theme css                                               |
-| Editing (cell/row/form)                                           | ✔         | 🟡  | foundation `EditingModel` extracted; tree wiring planned                           |
-| Export CSV/Excel (indent/outline)                                 | ✔         | ❌  | planned                                                                            |
-| Column chooser / header filter / filter builder                   | ✔         | ❌  | planned (shared slices ready)                                                      |
-| Paging                                                            | ✔         | ❌  | planned (post-flatten page)                                                        |
-| Node drag between-sibling ordering                                | ✔         | ❌  | planned (reparent-only today)                                                      |
+| Feature                                                           | Reference | oge | Notes                                                                                      |
+| ----------------------------------------------------------------- | --------- | --- | ------------------------------------------------------------------------------------------ |
+| Flat self-referencing data (`keyExpr`/`parentIdExpr`/`rootValue`) | ✔         | ✅  | + `orphanPolicy: discard/promoteToRoot`                                                    |
+| Expand/collapse + `autoExpandAll` + `[(expandedRowKeys)]`         | ✔         | ✅  | polarity-aware toggled set, O(visible) flatten                                             |
+| Remote lazy loading (`hasItemsExpr`)                              | ✔         | ✅  | `filter: [parentIdExpr,'=',key]` per expansion; cache + skeleton; sort invalidates         |
+| Row virtualization                                                | ✔         | ✅  | 100k-node spec                                                                             |
+| Sorting (sibling-scoped, multi)                                   | ✔         | ✅  | source-applied sort inherits bucket order                                                  |
+| Filter row + search panel                                         | ✔         | ✅  | client-side, ancestors preserved; `filterMode: withAncestors/fullBranch/matchOnly`         |
+| Selection (single/multiple/checkbox)                              | ✔         | ✅  | shared SelectionSlice; two-way `selectedKeys`                                              |
+| Recursive tri-state selection                                     | ✔         | ✅  | `selectionRecursive` + `getSelectedRowKeys(mode)`                                          |
+| Focused row                                                       | ✔         | ✅  | `[(focusedRowKey)]`                                                                        |
+| Keyboard navigation (treegrid)                                    | ✔         | ✅  | logical ArrowRight/Left expand/collapse, parent/first-child jumps, RTL-aware               |
+| ARIA treegrid                                                     | partial   | ✅  | `aria-level/posinset/setsize/expanded`                                                     |
+| Columns: resize, templates, bands, lookup display                 | ✔         | ✅  | shared `<oge-column>`                                                                      |
+| Drag & drop reparenting                                           | ✔         | ✅  | drop-onto-row; descendant guard; array auto-apply + `rowReparented`                        |
+| State persistence (`stateKey`)                                    | ✔         | ✅  | sort/filters/columns/expansion                                                             |
+| Theming (dark/bootstrap/tailwind)                                 | ✔         | ✅  | shared `_structure.scss` + theme css                                                       |
+| Editing (cell/row/batch)                                          | ✔         | ✅  | shared `EditingModel`; `addRow(parentKey)` pre-stages the parent; form/popup modes planned |
+| Export CSV (indented)                                             | ✔         | ✅  | `getCsv()/exportCsv()` over the visible tree; Excel outline planned                        |
+| Column chooser / header filter / filter builder                   | ✔         | ❌  | planned (shared slices ready)                                                              |
+| Paging                                                            | ✔         | ❌  | planned (post-flatten page)                                                                |
+| Node drag between-sibling ordering                                | ✔         | ❌  | planned (reparent-only today)                                                              |
 
 **Next:** TreeList editing wiring + export · pivot-style features · editing form layouts (`formItems` customization) · export appearance hooks (`customizeCell`).
