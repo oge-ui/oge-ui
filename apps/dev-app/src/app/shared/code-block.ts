@@ -2,6 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import { highlight } from './highlight';
 
+export interface CodeFile {
+  name: string;
+  language: string;
+  code: string;
+}
+
 const DEFAULT_TITLES: Record<string, string> = {
   ts: 'component.ts',
   html: 'template.html',
@@ -9,7 +15,10 @@ const DEFAULT_TITLES: Record<string, string> = {
   sh: 'terminal',
 };
 
-/** VS Code-style code block: line numbers, Dark+ palette, tab bar, copy. */
+/**
+ * VS Code-style code block: file tabs in the window bar (multi-file support),
+ * line numbers, Dark+ palette, copy. Always dark, independent of docs theme.
+ */
 @Component({
   selector: 'app-code-block',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,21 +27,33 @@ const DEFAULT_TITLES: Record<string, string> = {
       class="overflow-hidden bg-[#1e1e1e]"
       [class]="frameless() ? '' : 'my-3 mb-5 rounded-xl border border-[#2d2d2d] shadow-lg'"
     >
-      <!-- window bar -->
+      <!-- window bar with file tabs -->
       <div class="flex items-center gap-3 bg-[#181818] px-3 pt-2">
         <span class="flex gap-1.5 pb-2">
           <span class="h-3 w-3 rounded-full bg-[#ff5f57]"></span>
           <span class="h-3 w-3 rounded-full bg-[#febc2e]"></span>
           <span class="h-3 w-3 rounded-full bg-[#28c840]"></span>
         </span>
-        <!-- file tab -->
-        <span class="flex items-center gap-2 rounded-t-md border-t-2 border-[#4f8ff0] bg-[#1e1e1e] px-3.5 py-1.5 font-mono text-[12px] text-gray-300">
-          <span class="h-2 w-2 rounded-sm" [class]="dotClass()"></span>
-          {{ displayTitle() }}
-        </span>
+        <div class="flex min-w-0 overflow-x-auto">
+          @for (file of effFiles(); track file.name; let index = $index) {
+            <button
+              type="button"
+              class="flex shrink-0 items-center gap-2 rounded-t-md px-3.5 py-1.5 font-mono text-[12px] transition-colors"
+              [class]="
+                index === activeIndex()
+                  ? 'border-t-2 border-[#4f8ff0] bg-[#1e1e1e] text-gray-200'
+                  : 'border-t-2 border-transparent text-gray-500 hover:text-gray-300'
+              "
+              (click)="activeIndex.set(index)"
+            >
+              <span class="h-2 w-2 rounded-sm" [class]="dotClass(file.language)"></span>
+              {{ file.name }}
+            </button>
+          }
+        </div>
         <button
           type="button"
-          class="ml-auto mb-1.5 flex items-center gap-1.5 rounded-md border border-[#3c3c3c] px-2 py-1 text-xs text-gray-300 transition-colors hover:border-[#5a5a5a] hover:bg-[#2a2a2a] hover:text-white"
+          class="mb-1.5 ml-auto flex shrink-0 items-center gap-1.5 rounded-md border border-[#3c3c3c] px-2 py-1 text-xs text-gray-300 transition-colors hover:border-[#5a5a5a] hover:bg-[#2a2a2a] hover:text-white"
           (click)="copy()"
         >
           @if (copied()) {
@@ -83,7 +104,7 @@ const DEFAULT_TITLES: Record<string, string> = {
       .tok-type { color: #4ec9b0; }
       .tok-decorator { color: #dcdcaa; }
       .tok-number { color: #b5cea8; }
-      .tok-tag { color: #569cd6; }
+      .tok-tag { color: #7ee787; }
       .tok-attr { color: #9cdcfe; }
       .tok-interp { color: #dcdcaa; }
     }
@@ -92,21 +113,35 @@ const DEFAULT_TITLES: Record<string, string> = {
 export class CodeBlock {
   private readonly sanitizer = inject(DomSanitizer);
 
-  readonly code = input.required<string>();
+  /** Single-snippet shorthand. */
+  readonly code = input<string | undefined>(undefined);
   readonly language = input('html');
-  /** Optional file-name shown in the editor tab. */
+  /** Optional file-name for the single-snippet shorthand. */
   readonly title = input<string | undefined>(undefined);
+  /** Multi-file mode: one editor tab per file. */
+  readonly files = input<readonly CodeFile[] | undefined>(undefined);
   /** Removes outer border/margins (for embedding inside demo cards). */
   readonly frameless = input(false);
 
   protected readonly copied = signal(false);
+  protected readonly activeIndex = signal(0);
 
-  protected readonly displayTitle = computed(
-    () => this.title() ?? DEFAULT_TITLES[this.language()] ?? this.language()
-  );
+  protected readonly effFiles = computed<readonly CodeFile[]>(() => {
+    const files = this.files();
+    if (files?.length) return files;
+    const code = this.code();
+    if (code === undefined) return [];
+    const language = this.language();
+    return [{ name: this.title() ?? DEFAULT_TITLES[language] ?? language, language, code }];
+  });
 
-  protected readonly dotClass = computed(() => {
-    switch (this.language()) {
+  private readonly activeFile = computed<CodeFile | undefined>(() => {
+    const files = this.effFiles();
+    return files[Math.min(this.activeIndex(), files.length - 1)];
+  });
+
+  protected dotClass(language: string): string {
+    switch (language) {
       case 'ts':
         return 'bg-[#519aba]';
       case 'html':
@@ -116,19 +151,24 @@ export class CodeBlock {
       default:
         return 'bg-[#8bc34a]';
     }
-  });
+  }
 
   protected readonly lineNumbers = computed(() => {
-    const count = this.code().split('\n').length;
+    const count = (this.activeFile()?.code ?? '').split('\n').length;
     return Array.from({ length: count }, (_, i) => i + 1);
   });
 
-  protected readonly highlighted = computed<SafeHtml>(() =>
-    this.sanitizer.bypassSecurityTrustHtml(highlight(this.code(), this.language()))
-  );
+  protected readonly highlighted = computed<SafeHtml>(() => {
+    const file = this.activeFile();
+    return this.sanitizer.bypassSecurityTrustHtml(
+      file ? highlight(file.code, file.language) : ''
+    );
+  });
 
   protected copy(): void {
-    navigator.clipboard?.writeText(this.code()).then(() => {
+    const file = this.activeFile();
+    if (!file) return;
+    navigator.clipboard?.writeText(file.code).then(() => {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 1500);
     });

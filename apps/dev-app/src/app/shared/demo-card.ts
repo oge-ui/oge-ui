@@ -1,23 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { CodeBlock } from './code-block';
+import { CodeBlock, type CodeFile } from './code-block';
 
-export interface DemoFile {
-  name: string;
-  language: string;
-  code: string;
-}
-
-const DEFAULT_NAMES: Record<string, string> = {
-  ts: 'component.ts',
-  html: 'template.html',
-  css: 'styles.css',
-  sh: 'terminal',
-};
+export type DemoFile = CodeFile;
 
 /**
- * Docs demo card with Preview/Code tabs. Multi-file demos show one tab per
- * file (component.ts / template.html / …). The live demo stays mounted while
- * a code tab is open, so grid state survives tab switches.
+ * Docs demo card with Preview/Code tabs. In the Code tab, multi-file demos
+ * show their file tabs inside the editor's own window bar (VS Code style).
+ * The live demo stays mounted while Code is open, so grid state survives.
  */
 @Component({
   selector: 'app-demo-card',
@@ -26,21 +15,27 @@ const DEFAULT_NAMES: Record<string, string> = {
   template: `
     <section class="my-6 overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-gray-800">
       <header
-        class="flex items-center gap-3 border-b border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
+        class="flex items-center gap-3 border-b px-3 py-2"
+        [class]="
+          codeOpen()
+            ? 'border-[#2d2d2d] bg-[#181818]'
+            : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900'
+        "
       >
-        @if (effectiveFiles().length) {
+        @if (hasCode()) {
           <div
-            class="flex flex-wrap rounded-lg border border-gray-200 bg-white p-0.5 dark:border-gray-700 dark:bg-gray-950"
+            class="flex rounded-lg border p-0.5"
+            [class]="
+              codeOpen()
+                ? 'border-[#3c3c3c] bg-[#1e1e1e]'
+                : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950'
+            "
           >
-            @for (tab of tabNames(); track tab) {
+            @for (tab of tabs; track tab) {
               <button
                 type="button"
                 class="rounded-md px-3 py-1 text-xs font-medium transition-colors"
-                [class]="
-                  activeTab() === tab
-                    ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
-                "
+                [class]="tabClass(tab)"
                 (click)="activeTab.set(tab)"
               >
                 {{ tab }}
@@ -53,22 +48,27 @@ const DEFAULT_NAMES: Record<string, string> = {
         <div class="ml-auto flex flex-wrap justify-end gap-1.5">
           @for (chip of chips(); track chip) {
             <span
-              class="rounded border border-gray-200 bg-white px-2 py-0.5 font-mono text-[11px] text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+              class="rounded border px-2 py-0.5 font-mono text-[11px]"
+              [class]="
+                codeOpen()
+                  ? 'border-[#3c3c3c] bg-[#1e1e1e] text-gray-400'
+                  : 'border-gray-200 bg-white text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+              "
             >
               {{ chip }}
             </span>
           }
         </div>
       </header>
-      <div class="p-4" [hidden]="activeTab() !== 'Preview'">
+      <div class="p-4" [hidden]="activeTab() === 'Code'">
         <ng-content />
       </div>
-      @for (file of effectiveFiles(); track file.name) {
-        <div [hidden]="activeTab() !== file.name">
+      @if (hasCode()) {
+        <div [hidden]="activeTab() === 'Preview'">
           <app-code-block
-            [code]="file.code"
-            [language]="file.language"
-            [title]="file.name"
+            [code]="code()"
+            [language]="language()"
+            [files]="files()"
             [frameless]="true"
           />
         </div>
@@ -82,22 +82,25 @@ export class DemoCard {
   /** Single-snippet shorthand; use `files` for multi-file demos. */
   readonly code = input<string | undefined>(undefined);
   readonly language = input('html');
-  /** Multi-file demo sources, one tab per file. */
+  /** Multi-file demo sources — rendered as editor tabs inside the Code view. */
   readonly files = input<readonly DemoFile[] | undefined>(undefined);
 
-  protected readonly effectiveFiles = computed<readonly DemoFile[]>(() => {
-    const files = this.files();
-    if (files?.length) return files;
-    const code = this.code();
-    if (!code) return [];
-    const language = this.language();
-    return [{ name: DEFAULT_NAMES[language] ?? language, language, code }];
-  });
+  protected readonly tabs = ['Preview', 'Code'] as const;
+  protected readonly activeTab = signal<'Preview' | 'Code'>('Preview');
 
-  protected readonly tabNames = computed(() => [
-    'Preview',
-    ...this.effectiveFiles().map((file) => file.name),
-  ]);
+  protected readonly hasCode = computed(
+    () => this.code() !== undefined || (this.files()?.length ?? 0) > 0
+  );
 
-  protected readonly activeTab = signal('Preview');
+  protected readonly codeOpen = computed(() => this.hasCode() && this.activeTab() === 'Code');
+
+  protected tabClass(tab: 'Preview' | 'Code'): string {
+    const active = this.activeTab() === tab;
+    if (this.codeOpen()) {
+      return active ? 'bg-[#3c3c3c] text-white' : 'text-gray-500 hover:text-gray-300';
+    }
+    return active
+      ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+      : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200';
+  }
 }

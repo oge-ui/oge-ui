@@ -6,6 +6,9 @@ import { test, expect } from '@playwright/test';
  * `color-contrast` is excluded — demo palette tuning is a docs concern,
  * not a grid-markup concern.
  */
+// Axe scans are CPU-heavy and three run concurrently — give them headroom.
+test.beforeEach(() => test.slow());
+
 async function scanGrid(page: import('@playwright/test').Page): Promise<void> {
   const results = await new AxeBuilder({ page })
     .include('.oge-grid')

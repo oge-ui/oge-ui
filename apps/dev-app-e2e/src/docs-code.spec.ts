@@ -4,7 +4,7 @@ test('served code tabs render highlighted source with exact text fidelity', asyn
   await page.goto('/components/data-grid/sorting');
   await expect(page.locator('.oge-row').first()).toBeVisible();
 
-  await page.getByRole('button', { name: 'template.html', exact: true }).click();
+  await page.getByRole('button', { name: 'Code', exact: true }).click();
   const code = page.locator('.code-pre code').first();
   await expect(code).toBeVisible();
 
