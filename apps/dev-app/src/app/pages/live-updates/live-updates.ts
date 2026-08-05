@@ -71,9 +71,12 @@ export class LiveUpdatesPage {
 
   protected readonly employees = new ArrayDataSource<Employee>(makeEmployees(200), { key: 'id' });
 
+  private tick = 0;
+
   constructor() {
+    // sweep the keys in order so updates are always visible on the current page
     const timer = setInterval(() => {
-      const key = 1 + Math.floor(Math.random() * 200);
+      const key = 1 + (this.tick++ % 200);
       const salary = 30000 + Math.floor(Math.random() * 90) * 1000;
       this.employees.push([{ type: 'update', key, patch: { salary } }]);
       this.updateCount.update((count) => count + 1);

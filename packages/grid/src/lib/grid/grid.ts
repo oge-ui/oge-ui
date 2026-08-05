@@ -29,9 +29,11 @@ import {
   computeWindow,
   createFieldAccessor,
   flattenGroupedData,
+  groupNodeKey,
   resolveKeySelector,
   type CsvOptions,
   type GridStateSnapshot,
+  type GroupedItem,
   type DataRowNode,
   type DataSource,
   type FilterExpr,
@@ -132,6 +134,15 @@ export interface OgeSortingOptions {
   mode?: 'none' | 'single' | 'multi';
   /** Whether a third header click clears the sort. Defaults from global config. */
   allowUnsorting?: boolean;
+}
+
+export interface OgeGroupingOptions {
+  /**
+   * `false` starts every group collapsed and enables deferred loading:
+   * a grouped payload may return `items: null` per group, and the grid
+   * fetches a group's children only when it is expanded.
+   */
+  autoExpandAll?: boolean;
 }
 
 export interface OgeScrollingOptions {
@@ -368,6 +379,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Initial/programmatic grouping by field names (also drivable via the group panel). */
   readonly groupBy = input<readonly string[] | undefined>(undefined);
+
+  /** DevExtreme-style grouping options (`autoExpandAll`, deferred loading). */
+  readonly grouping = input<OgeGroupingOptions | undefined>(undefined);
 
   /** Shows the column visibility chooser button. */
   readonly columnChooser = input(false);
@@ -760,14 +774,117 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.grouped() || this.detailTemplate() !== undefined ? 'treegrid' : 'grid'
   );
 
+  /** `autoExpandAll: false` inverts group expansion: the toggled set holds *expanded* keys. */
+  private readonly groupsAutoExpand = computed(() => this.grouping()?.autoExpandAll !== false);
+
+  // --- deferred group loading ----------------------------------------------
+
+  /** Children fetched on demand for groups delivered with `items: null`. */
+  private readonly deferredGroupRows = signal<
+    ReadonlyMap<RowKey, readonly unknown[]>
+  >(new Map());
+
+  /** Expanded groups whose children are neither in the payload nor cached yet. */
+  private readonly pendingGroups = computed<{ key: RowKey; path: unknown[] }[]>(() => {
+    const result = this.adapter.result();
+    const groups = this.store.grouping.descriptors();
+    if (!result || !groups.length || !result.data.length) return [];
+    const first = result.data[0] as Record<string, unknown> | null;
+    if (typeof first !== 'object' || first === null || !('items' in first)) return [];
+    const autoExpand = this.groupsAutoExpand();
+    const toggled = this.store.expansion.collapsedGroups();
+    const cache = this.deferredGroupRows();
+    const pending: { key: RowKey; path: unknown[] }[] = [];
+    const visit = (
+      items: readonly GroupedItem<T>[],
+      parentKey: RowKey | null,
+      path: readonly unknown[]
+    ): void => {
+      for (const item of items) {
+        const key = groupNodeKey(parentKey, item.key);
+        const expanded = autoExpand ? !toggled.has(key) : toggled.has(key);
+        if (!expanded) continue;
+        const children = item.items ?? cache.get(key) ?? null;
+        if (children === null) {
+          pending.push({ key, path: [...path, item.key] });
+          continue;
+        }
+        const child = children[0] as Record<string, unknown> | undefined;
+        if (child && typeof child === 'object' && 'items' in child && 'key' in child) {
+          visit(children as readonly GroupedItem<T>[], key, [...path, item.key]);
+        }
+      }
+    };
+    visit(result.data as readonly GroupedItem<T>[], null, []);
+    return pending;
+  });
+
+  private readonly pendingGroupLoads = new Set<RowKey>();
+  private deferredBaseJson: string | null = null;
+
+  /** Fetches children for expanded deferred groups; base changes drop the cache. */
+  private readonly deferredGroupEffect = effect(() => {
+    const pending = this.pendingGroups();
+    const base = this.store.loadOptions();
+    untracked(() => {
+      const { signal: _signal, skip: _skip, take: _take, ...rest } = base;
+      const baseJson = JSON.stringify(rest);
+      if (baseJson !== this.deferredBaseJson) {
+        this.deferredBaseJson = baseJson;
+        this.pendingGroupLoads.clear();
+        if (this.deferredGroupRows().size) this.deferredGroupRows.set(new Map());
+      }
+      const source = this.adapter.source();
+      if (!source) return;
+      const groups = rest.group ?? [];
+      for (const entry of pending) {
+        if (this.pendingGroupLoads.has(entry.key)) continue;
+        this.pendingGroupLoads.add(entry.key);
+        const pathFilters: FilterExpr[] = entry.path.map((value, i) => ({
+          type: 'binary',
+          field: groups[i]?.field ?? '',
+          op: 'eq',
+          value,
+        }));
+        const operands = [...(rest.filter ? [rest.filter] : []), ...pathFilters];
+        const filter = operands.length === 1 ? operands[0] : { type: 'and' as const, operands };
+        const remaining = groups.slice(entry.path.length);
+        source
+          .load({
+            filter,
+            ...(rest.sort?.length ? { sort: rest.sort } : {}),
+            ...(rest.searchText ? { searchText: rest.searchText } : {}),
+            ...(remaining.length
+              ? {
+                  group: remaining,
+                  ...(rest.groupSummary?.length ? { groupSummary: rest.groupSummary } : {}),
+                }
+              : {}),
+          })
+          .then((result) => {
+            if (this.deferredBaseJson !== baseJson) return; // stale base
+            const next = new Map(untracked(this.deferredGroupRows));
+            next.set(entry.key, result.data as readonly unknown[]);
+            this.deferredGroupRows.set(next);
+          })
+          .catch((err) => this.adapter.error.set(err))
+          .finally(() => this.pendingGroupLoads.delete(entry.key));
+      }
+    });
+  });
+
   protected readonly flatNodes = computed<RowNode<T>[]>(() => {
     const result = this.adapter.result();
+    const toggledGroups = this.store.expansion.collapsedGroups();
     const flattened = result
       ? flattenGroupedData<T>(result.data as readonly T[], {
           keyOf: this.keySelector(),
           groups: this.store.grouping.descriptors(),
           groupSummary: this.store.grouping.groupSummary(),
-          collapsedGroupKeys: this.store.expansion.collapsedGroups(),
+          ...(this.groupsAutoExpand()
+            ? { collapsedGroupKeys: toggledGroups }
+            : { expandedGroupKeys: toggledGroups }),
+          deferredChildren: this.deferredGroupRows() as ReadonlyMap<RowKey, readonly T[]>,
           expandedDetailKeys: this.detailTemplate()
             ? this.store.expansion.expandedDetails()
             : undefined,

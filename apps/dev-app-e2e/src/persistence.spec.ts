@@ -23,11 +23,12 @@ test('grid state survives a page reload via stateKey', async ({ page }) => {
 
 test('header context menu sorts and pins', async ({ page }) => {
   await page.goto('/components/data-grid/grouping');
-  await expect(page.locator('.oge-row').first()).toBeVisible();
+  const grid = page.locator('oge-grid').first();
+  await expect(grid.locator('.oge-row').first()).toBeVisible();
 
-  const cityHeader = page.locator('.oge-header-cell', { hasText: 'City' });
+  const cityHeader = grid.locator('.oge-header-cell', { hasText: 'City' });
   await cityHeader.click({ button: 'right' });
-  const menu = page.locator('.oge-context-menu');
+  const menu = grid.locator('.oge-context-menu');
   await expect(menu).toBeVisible();
   await expect(menu.locator('.oge-menu-item', { hasText: 'Group by this column' })).toBeVisible();
 

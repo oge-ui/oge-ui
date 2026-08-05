@@ -16,7 +16,7 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 | Push / live updates (`reshapeOnPush`) | ✔ | ✅ | `ArrayDataSource.push()` + `changes` stream; updates patch in place, insert/remove reload |
 | Server-side sort/filter/page/group | ✔ | ✅ | verified with request-log e2e |
 | Server-side summaries | ✔ | ✅ | positional `summary` payload |
-| Deferred group loading (`items: null`) | ✔ | 🟡 | flatten supports `null` children; no on-demand fetch trigger |
+| Deferred group loading (`items: null`) | ✔ | ✅ | `grouping.autoExpandAll: false`; children fetched on expand, cached, skeleton while loading |
 
 ## 2. Paging & scrolling
 
@@ -135,6 +135,6 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 
 **Phase 11 — Column parity: ✅ DONE** (lookup columns + editors, banded columns, `calculateCellValue`, `sortOrder`/`sortIndex`/`groupIndex`, word wrap, adaptive hiding). Remaining → Phase 13: cascading lookups, buttons-column customization, `calculateFilterExpression`.
 
-**Phase 12 — Data & scrolling parity (in progress):** ~~infinite scrolling~~ ✅ · ~~remote virtual scrolling~~ ✅ · ~~column virtualization~~ ✅ · ~~push/live updates wiring~~ ✅ · ~~OData adapter~~ ✅ · ~~measured variable row heights + scroll anchoring~~ ✅ · deferred group loading.
+**Phase 12 — Data & scrolling parity: ✅ DONE** (infinite scrolling, remote virtual scrolling with block cache, column virtualization, push/live updates, OData adapter, measured variable row heights + scroll anchoring, deferred group loading via `grouping.autoExpandAll: false`).
 
 **Phase 13 — UX & API parity:** imperative API (`refresh`, `expandAll/collapseAll`, `scrollToRow`, `clearFilters`…) · richer event surface (`cellClick`, `rowDblClick`, `contentReady`) · expand/collapse-all UI · loading panel · row alternation · noData/row templates · toolbar customization · clipboard copy · focused-row mode · `selectAllMode: 'page'` · delete confirmation · form edit mode · row drag reordering · RTL · "All" page size + pager modes.
