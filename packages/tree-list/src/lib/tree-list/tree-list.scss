@@ -1,0 +1,44 @@
+@use '../../../../grid/src/lib/styles/tokens';
+// Shared structural chrome (rows, cells, header, viewport, popups) — global
+// class selectors, so the tree-list is fully styled without a grid on the page.
+@use '../../../../grid/src/lib/styles/structure';
+
+.oge-tree-list {
+  @include tokens.core-tokens;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  font-size: var(--oge-font-size);
+  overflow: hidden;
+}
+
+// first data column: indent + expander + content on one line
+.oge-tree-cell {
+  display: flex;
+  align-items: center;
+  min-inline-size: 0;
+}
+
+.oge-tree-indent {
+  flex: none;
+}
+
+.oge-tree-expander {
+  flex: none;
+  margin-inline-end: 4px;
+}
+
+// keeps leaf content aligned with expandable siblings
+.oge-tree-expander-spacer {
+  flex: none;
+  inline-size: 24px;
+}
+
+.oge-tree-cell-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

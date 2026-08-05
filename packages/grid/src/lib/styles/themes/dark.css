@@ -8,7 +8,9 @@
  *   <oge-grid class="oge-theme-dark">…
  */
 .oge-theme-dark .oge-grid,
-.oge-grid.oge-theme-dark {
+.oge-theme-dark .oge-tree-list,
+.oge-grid.oge-theme-dark,
+.oge-tree-list.oge-theme-dark {
   /* native form controls (checkboxes, selects, date pickers) follow suit */
   color-scheme: dark;
   --oge-bg: #111827;

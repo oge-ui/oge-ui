@@ -8,7 +8,8 @@
  * Usage (global styles, after your `@import "tailwindcss";`):
  *   @import '@oge-ui/grid/themes/tailwind.css';
  */
-.oge-grid {
+.oge-grid,
+.oge-tree-list {
   --oge-border-color: var(--color-slate-200, #e2e8f0);
   --oge-header-bg: var(--color-slate-50, #f8fafc);
   --oge-header-color: var(--color-slate-600, #475569);

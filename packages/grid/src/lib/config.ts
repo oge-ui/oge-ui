@@ -22,6 +22,10 @@ export interface OgeGridMessages {
   selectAllRows: string;
   selectRow: string;
   toggleDetail: string;
+  /** Aria label of a collapsed tree row's expander (tree-list). */
+  expandRow: string;
+  /** Aria label of an expanded tree row's expander (tree-list). */
+  collapseRow: string;
   previousPage: string;
   nextPage: string;
   rowsSuffix: string;
@@ -87,6 +91,8 @@ export const OGE_DEFAULT_MESSAGES: OgeGridMessages = {
   selectAllRows: 'Select all rows',
   selectRow: 'Select row',
   toggleDetail: 'Toggle detail',
+  expandRow: 'Expand row',
+  collapseRow: 'Collapse row',
   previousPage: 'Previous page',
   nextPage: 'Next page',
   rowsSuffix: 'rows',

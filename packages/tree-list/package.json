@@ -1,0 +1,16 @@
+{
+  "name": "@oge-ui/tree-list",
+  "version": "0.3.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/core": "0.3.0",
+    "@oge-ui/grid": "0.3.0"
+  },
+  "sideEffects": false
+}

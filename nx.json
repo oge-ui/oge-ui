@@ -43,7 +43,7 @@
     }
   },
   "release": {
-    "projects": ["core", "grid"],
+    "projects": ["core", "grid", "tree-list"],
     "projectsRelationship": "independent",
     "version": {
       "preVersionCommand": "npx nx run-many -t build"

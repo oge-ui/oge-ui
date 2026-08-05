@@ -8,7 +8,8 @@
  * Usage (global styles, after bootstrap.css):
  *   @import '@oge-ui/grid/themes/bootstrap.css';
  */
-.oge-grid {
+.oge-grid,
+.oge-tree-list {
   --oge-border-color: var(--bs-border-color, #dee2e6);
   --oge-header-bg: var(--bs-tertiary-bg, #f8f9fa);
   --oge-header-color: var(--bs-emphasis-color, #212529);
