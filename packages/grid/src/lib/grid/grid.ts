@@ -244,6 +244,7 @@ interface ResolvedColumn<T = unknown> {
   format: ((value: unknown) => string) | undefined;
   editable: boolean;
   lookupItems: readonly LookupItem[] | undefined;
+  lookup: OgeColumnLookup | undefined;
   bandCaption: string | undefined;
   hidingPriority: number | undefined;
   cellTemplate: TemplateRef<OgeCellTemplateContext<T>> | undefined;
@@ -289,14 +290,22 @@ function isDataSource<T>(value: readonly T[] | DataSource<T>): value is DataSour
   return !Array.isArray(value) && typeof (value as DataSource<T>).load === 'function';
 }
 
-function resolveLookupItems(lookup: OgeColumnLookup | undefined): readonly LookupItem[] | undefined {
-  if (!lookup) return undefined;
+function mapLookupItems(
+  items: readonly unknown[],
+  lookup: OgeColumnLookup
+): readonly LookupItem[] {
   const valueOf = lookup.valueExpr ? createFieldAccessor(lookup.valueExpr) : (item: unknown) => item;
   const textOf = lookup.displayExpr ? createFieldAccessor(lookup.displayExpr) : (item: unknown) => item;
-  return lookup.dataSource.map((item) => ({
+  return items.map((item) => ({
     value: valueOf(item),
     text: String(textOf(item) ?? ''),
   }));
+}
+
+/** Static lookups resolve once; function (cascading) lookups resolve per row. */
+function resolveLookupItems(lookup: OgeColumnLookup | undefined): readonly LookupItem[] | undefined {
+  if (!lookup || typeof lookup.dataSource === 'function') return undefined;
+  return mapLookupItems(lookup.dataSource, lookup);
 }
 
 function lookupTextOf(items: readonly LookupItem[], value: unknown): string {
@@ -1337,6 +1346,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
             format: column.format(),
             editable: column.editable() && field != null && !calculate,
             lookupItems: resolveLookupItems(column.lookup()),
+            lookup: column.lookup(),
             bandCaption: bands.get(column),
             hidingPriority: column.hidingPriority(),
             cellTemplate: column.cellTemplate()?.templateRef,
@@ -1364,6 +1374,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         calculateFilterExpression: undefined,
         pinned: pinOverrides.get(field) ?? (false as const),
         lookupItems: undefined,
+        lookup: undefined,
         bandCaption: undefined,
         hidingPriority: undefined,
         accessor: createFieldAccessor<T>(field),
@@ -1642,6 +1653,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected cellDisplayText(node: DataRowNode<T>, column: ResolvedColumn<T>): string {
     const value = this.displayValue(node, column);
     if (column.format) return column.format(value);
+    if (column.lookup && typeof column.lookup.dataSource === 'function') {
+      const items = this.lookupItemsFor(node, column);
+      if (items) return lookupTextOf(items, value);
+    }
     if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
     if (column.dataType === 'boolean' && value != null) {
       return value ? this.msg().booleanTrue : this.msg().booleanFalse;
@@ -2156,6 +2171,31 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected editControl(node: DataRowNode<T>, column: ResolvedColumn<T>): FormControl<unknown> {
     return this.activeControls().get(`${String(node.key)}::${column.field}`) as FormControl<unknown>;
+  }
+
+  /** Row merged with its open editors' current values (cascading lookups). */
+  private draftRowOf(node: DataRowNode<T>): T {
+    const prefix = `${String(node.key)}::`;
+    const draft: Record<string, unknown> = { ...(node.data as Record<string, unknown>) };
+    for (const [mapKey, control] of untracked(this.activeControls)) {
+      if (mapKey.startsWith(prefix)) draft[mapKey.slice(prefix.length)] = control.value;
+    }
+    return draft as T;
+  }
+
+  /** Editor option list — cascading (function) lookups see the row's draft. */
+  protected lookupItemsFor(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>
+  ): readonly LookupItem[] | undefined {
+    const lookup = column.lookup;
+    if (lookup && typeof lookup.dataSource === 'function') {
+      return mapLookupItems(
+        (lookup.dataSource as (row: T) => readonly unknown[])(this.draftRowOf(node)),
+        lookup
+      );
+    }
+    return column.lookupItems;
   }
 
   protected editContextFor(

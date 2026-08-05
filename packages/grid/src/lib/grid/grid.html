@@ -413,7 +413,7 @@
                       <ng-container
                         *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
                       />
-                    } @else if (column.lookupItems; as items) {
+                    } @else if (lookupItemsFor(node, column); as items) {
                       <select
                         class="oge-editor oge-editor-input"
                         [formControl]="$any(editControl(node, column))"
@@ -707,7 +707,7 @@
             <span class="oge-popup-label">{{ column.caption }}</span>
             @if (column.editTemplate) {
               <ng-container *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)" />
-            } @else if (column.lookupItems; as items) {
+            } @else if (lookupItemsFor(node, column); as items) {
               <select class="oge-editor oge-editor-input" [formControl]="$any(editControl(node, column))">
                 @for (item of items; track $index) {
                   <option [value]="item.value">{{ item.text }}</option>
