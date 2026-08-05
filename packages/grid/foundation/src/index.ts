@@ -1,6 +1,11 @@
 export { EXPANDER_WIDTH, CHECKBOX_WIDTH, COMMAND_WIDTH, DRAG_WIDTH } from './constants';
 export { ColumnLayoutModel, type ColumnLayoutModelDeps } from './column-layout-model';
 export {
+  KeyboardNavModel,
+  type KeyboardNavModelDeps,
+  type KeyboardNavTreeHooks,
+} from './keyboard-nav-model';
+export {
   RowVirtualizerModel,
   type RowVirtualizerModelDeps,
   type RowVirtualizerWindowAdapter,

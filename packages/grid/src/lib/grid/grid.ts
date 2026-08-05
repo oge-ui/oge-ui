@@ -49,6 +49,7 @@ import {
   COMMAND_WIDTH,
   ColumnLayoutModel,
   ColumnModel,
+  KeyboardNavModel,
   RowVirtualizerModel,
   DRAG_WIDTH,
   EXPANDER_WIDTH,
@@ -1810,36 +1811,24 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- keyboard navigation -------------------------------------------------
 
+  private readonly keyboard = new KeyboardNavModel<T>({
+    flatNodes: this.flatNodes,
+    columnCount: computed(() => this.resolvedColumns().length),
+    rtl: this.rtl,
+    pageSize: computed(() =>
+      Math.max(1, Math.floor(this.viewportHeight() / this.effRowHeight()) - 1)
+    ),
+  });
+
   /** Focused cell: flat node index + visible column index. */
-  protected readonly focusedCell = signal<{ row: number; col: number } | null>(null);
+  protected readonly focusedCell = this.keyboard.focusedCell;
 
   protected isCellTabbable(row: number, col: number): boolean {
-    const focused = this.focusedCell();
-    if (focused) return focused.row === row && focused.col === col;
-    return row === this.firstDataRowIndex() && col === 0;
+    return this.keyboard.isCellTabbable(row, col);
   }
-
-  private readonly firstDataRowIndex = computed(() =>
-    this.flatNodes().findIndex((node) => node.kind === 'data')
-  );
 
   protected onCellFocus(row: number, col: number): void {
-    const current = this.focusedCell();
-    if (current?.row !== row || current.col !== col) this.focusedCell.set({ row, col });
-  }
-
-  private moveFocusRow(from: number, direction: 1 | -1, steps = 1): number {
-    const nodes = this.flatNodes();
-    let index = from;
-    let remaining = steps;
-    while (remaining > 0) {
-      let next = index + direction;
-      while (next >= 0 && next < nodes.length && nodes[next].kind !== 'data') next += direction;
-      if (next < 0 || next >= nodes.length) break;
-      index = next;
-      remaining -= 1;
-    }
-    return index;
+    this.keyboard.onCellFocus(row, col);
   }
 
   /** Brings a virtualized column into the horizontal window before focusing. */
@@ -1896,56 +1885,20 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       if (noEditorOpen) void this.copyToClipboard();
       return;
     }
-    const nodes = this.flatNodes();
-    const lastCol = this.resolvedColumns().length - 1;
-    const pageSize = Math.max(1, Math.floor(this.viewportHeight() / this.effRowHeight()) - 1);
-    let { row, col } = cell;
-    switch (event.key) {
-      case 'ArrowDown':
-        row = this.moveFocusRow(row, 1);
-        break;
-      case 'ArrowUp':
-        row = this.moveFocusRow(row, -1);
-        break;
-      case 'ArrowRight':
-        // arrows move visually: in RTL the next column lies to the left
-        col = this.rtl() ? Math.max(0, col - 1) : Math.min(lastCol, col + 1);
-        break;
-      case 'ArrowLeft':
-        col = this.rtl() ? Math.min(lastCol, col + 1) : Math.max(0, col - 1);
-        break;
-      case 'Home':
-        if (event.ctrlKey) row = this.moveFocusRow(-1, 1);
-        col = 0;
-        break;
-      case 'End':
-        if (event.ctrlKey) row = this.moveFocusRow(nodes.length, -1);
-        col = lastCol;
-        break;
-      case 'PageDown':
-        row = this.moveFocusRow(row, 1, pageSize);
-        break;
-      case 'PageUp':
-        row = this.moveFocusRow(row, -1, pageSize);
-        break;
-      case ' ': {
-        const node = nodes[row];
-        if (node?.kind === 'data' && this.selectionMode() !== 'none') {
-          event.preventDefault();
-          if (this.selectionDeferred()) {
-            if (this.selectionMode() === 'single') this.deferredSelectOnly(node.key);
-            else this.deferredToggle(node.key);
-          } else if (this.selectionMode() === 'single') {
-            this.store.selection.selectOnly(node.key);
-          } else this.store.selection.toggle(node.key);
-        }
-        return;
+    if (event.key === ' ') {
+      const node = this.flatNodes()[cell.row];
+      if (node?.kind === 'data' && this.selectionMode() !== 'none') {
+        event.preventDefault();
+        if (this.selectionDeferred()) {
+          if (this.selectionMode() === 'single') this.deferredSelectOnly(node.key);
+          else this.deferredToggle(node.key);
+        } else if (this.selectionMode() === 'single') {
+          this.store.selection.selectOnly(node.key);
+        } else this.store.selection.toggle(node.key);
       }
-      default:
-        return;
+      return;
     }
-    event.preventDefault();
-    if (row !== cell.row || col !== cell.col) this.focusedCell.set({ row, col });
+    if (this.keyboard.handleKey(event)) event.preventDefault();
   }
 
   // --- context menu --------------------------------------------------------
