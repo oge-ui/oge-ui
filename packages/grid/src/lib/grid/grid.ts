@@ -517,6 +517,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Alternating row background (zebra striping), stable under virtualization. */
   readonly rowAlternation = input(false);
 
+  /** Highlights and tracks a single focused row (DevExtreme focusedRowEnabled). */
+  readonly focusedRowEnabled = input(false);
+
+  /** Two-way binding of the focused row's key. */
+  readonly focusedRowKey = model<RowKey | null>(null);
+
   /** Spinner overlay while a load is in flight. */
   readonly loadPanel = input(false);
 
@@ -1630,6 +1636,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected onRowClick(node: DataRowNode<T>, event: MouseEvent): void {
     this.rowClick.emit({ row: node.data, key: node.key, event });
+    if (this.focusedRowEnabled()) this.focusedRowKey.set(node.key);
     const mode = this.selectionMode();
     if (mode === 'none') return;
     if (mode === 'single') {

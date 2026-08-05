@@ -795,6 +795,11 @@
   background: var(--oge-row-alt-bg, rgba(148, 163, 184, 0.08));
 }
 
+// focused row (focusedRowEnabled)
+.oge-row-focused .oge-cell {
+  background: var(--oge-row-focused-bg, rgba(79, 70, 229, 0.1));
+}
+
 // loading panel overlay (loadPanel)
 .oge-load-panel {
   position: absolute;

@@ -310,6 +310,7 @@
               class="oge-row"
               role="row"
               [class.oge-row-alt]="rowAlternation() && (viewStart() + nodeIndex) % 2 === 1"
+              [class.oge-row-focused]="focusedRowEnabled() && focusedRowKey() === node.key"
               [class.oge-row-selected]="selectionMode() !== 'none' && isRowSelected(node.key)"
               [class.oge-row-removed]="store.editing.isRemoved(node.key)"
               [class.oge-row-new]="store.editing.isAdded(node.key)"
