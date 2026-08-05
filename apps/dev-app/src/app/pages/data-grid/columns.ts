@@ -74,6 +74,28 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
       </oge-grid>
     </app-demo-card>
 
+    <h3>Right-to-left</h3>
+    <p>
+      Set <code>rtlEnabled</code> (or wrap the grid in a <code>dir="rtl"</code> container — it
+      auto-detects the inherited direction). Layout, pinned columns, chevrons and keyboard
+      arrows all mirror; the library uses CSS logical properties throughout.
+    </p>
+
+    <app-demo-card [chips]="['rtlEnabled', 'pinned']" [code]="rtlSnippet">
+      <oge-grid
+        [data]="employees"
+        keyField="id"
+        [rtlEnabled]="true"
+        [paging]="{ pageSize: 6, displayMode: 'compact' }"
+      >
+        <oge-column field="id" caption="No" [width]="70" dataType="number" pinned="left" />
+        <oge-column field="firstName" caption="Ad" />
+        <oge-column field="lastName" caption="Soyad" />
+        <oge-column field="city" caption="Şehir" />
+        <oge-column field="salary" caption="Maaş" dataType="number" />
+      </oge-grid>
+    </app-demo-card>
+
     <h3>Notes</h3>
     <ul>
       <li><strong>Lookup</strong> columns keep the raw value in your data; display, the filter select, the header filter and the default editor all speak the label. CSV export writes the label too.</li>
@@ -88,4 +110,9 @@ export class ColumnsPage {
   protected readonly departments = DEPARTMENTS;
   protected readonly snippet = SNIPPET;
   protected readonly yearly = (row: Employee) => row.salary * 12;
+  protected readonly rtlSnippet = `<oge-grid [data]="employees" keyField="id" [rtlEnabled]="true">
+  <oge-column field="id" caption="No" [width]="70" dataType="number" pinned="left" />
+  <oge-column field="firstName" caption="Ad" />
+  <oge-column field="salary" caption="Maaş" dataType="number" />
+</oge-grid>`;
 }

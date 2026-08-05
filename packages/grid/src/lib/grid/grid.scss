@@ -1,4 +1,4 @@
-﻿@use '../styles/tokens';
+@use '../styles/tokens';
 
 .oge-grid {
   @include tokens.core-tokens;
@@ -121,7 +121,7 @@
   font: inherit;
   color: var(--oge-accent);
   cursor: pointer;
-  text-align: left;
+  text-align: start;
 
   &:hover {
     text-decoration: underline;
@@ -146,7 +146,7 @@
   flex-shrink: 0;
   min-width: 26px;
   padding: 3px 4px;
-  margin-right: 4px;
+  margin-inline-end: 4px;
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
   background: var(--oge-popup-bg);
@@ -188,7 +188,7 @@
   border-radius: var(--oge-radius);
 
   .oge-fb-group {
-    margin-left: 12px;
+    margin-inline-start: 12px;
   }
 }
 
@@ -402,7 +402,7 @@
 .oge-header-filter-btn {
   display: inline-flex;
   align-items: center;
-  margin-left: auto;
+  margin-inline-start: auto;
   padding: 2px;
   border: none;
   border-radius: var(--oge-radius);
@@ -474,7 +474,7 @@
 }
 
 .oge-cell-number {
-  text-align: right;
+  text-align: end;
   font-variant-numeric: tabular-nums;
 }
 
@@ -531,7 +531,7 @@
   cursor: pointer;
   user-select: none;
   position: sticky;
-  left: 0;
+  inset-inline-start: 0;
   max-width: 100%;
 
   &:hover {
@@ -544,7 +544,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding-right: var(--oge-cell-padding-x);
+  padding-inline-end: var(--oge-cell-padding-x);
 }
 
 .oge-group-arrow {
@@ -567,11 +567,11 @@
 }
 
 .oge-group-summaries {
-  margin-left: auto;
+  margin-inline-start: auto;
   color: var(--oge-muted-color);
   font-size: 12px;
   white-space: nowrap;
-  padding-left: 12px;
+  padding-inline-start: 12px;
 }
 
 .oge-detail-row {
@@ -579,7 +579,7 @@
   background: var(--oge-detail-bg);
   overflow: auto;
   position: sticky;
-  left: 0;
+  inset-inline-start: 0;
   max-width: 100%;
 }
 
@@ -669,7 +669,7 @@
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
+    inset-inline-start: 0;
     border-style: solid;
     border-width: 5px 5px 0 0;
     border-color: var(--oge-accent) transparent transparent transparent;
@@ -866,6 +866,23 @@
   }
 }
 
+// --- RTL -------------------------------------------------------------------
+
+.oge-rtl {
+  // directional chevrons (expander, group arrow, pager prev/next) mirror
+  .oge-expander-btn svg,
+  .oge-group-arrow svg,
+  .oge-pager-btn svg {
+    transform: scaleX(-1);
+  }
+
+  // the wrapper rotation must reverse too: mirrored chevron + -90° = pointing down
+  .oge-expander-btn.oge-expanded,
+  .oge-group-arrow.oge-expanded {
+    transform: rotate(-90deg);
+  }
+}
+
 // --- popups ----------------------------------------------------------------
 
 .oge-header-filter-popup,
@@ -943,7 +960,7 @@
   border-radius: var(--oge-radius);
   background: none;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   color: var(--oge-header-color);
 

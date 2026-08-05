@@ -98,7 +98,8 @@ describe('OgeGrid grouping', () => {
     const { el } = await render();
     const pinnedHeader = el.querySelector('.oge-header-cell.oge-pinned') as HTMLElement;
     expect(pinnedHeader).toBeTruthy();
-    expect(pinnedHeader.style.left).toBe('0px');
+    // logical property so RTL mirrors pinning automatically
+    expect(pinnedHeader.style.insetInlineStart).toBe('0px');
   });
 });
 

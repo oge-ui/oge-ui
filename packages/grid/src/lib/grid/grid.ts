@@ -310,6 +310,8 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
     '[class.oge-virtual]': 'virtualized()',
     '[class.oge-loading]': 'adapter.loading()',
     '[class.oge-wrap]': 'wordWrap()',
+    '[class.oge-rtl]': 'rtl()',
+    '[attr.dir]': "rtlEnabled() === undefined ? null : rtlEnabled() ? 'rtl' : 'ltr'",
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'closePopups()',
   },
@@ -544,6 +546,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Alternating row background (zebra striping), stable under virtualization. */
   readonly rowAlternation = input(false);
 
+  /**
+   * Right-to-left layout. `undefined` (default) auto-detects the inherited
+   * CSS `direction`; `true`/`false` force it.
+   */
+  readonly rtlEnabled = input<boolean | undefined>(undefined);
+
+  /** Direction detected from the DOM when `rtlEnabled` is not set. */
+  private readonly detectedRtl = signal(false);
+
+  protected readonly rtl = computed(() => this.rtlEnabled() ?? this.detectedRtl());
+
   /** Highlights and tracks a single focused row (DevExtreme focusedRowEnabled). */
   readonly focusedRowEnabled = input(false);
 
@@ -753,6 +766,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       });
       observer.observe(viewport);
       this.destroyRef.onDestroy(() => observer.disconnect());
+      this.detectedRtl.set(
+        getComputedStyle(this.hostRef.nativeElement).direction === 'rtl'
+      );
     });
   }
 
@@ -1855,10 +1871,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         row = this.moveFocusRow(row, -1);
         break;
       case 'ArrowRight':
-        col = Math.min(lastCol, col + 1);
+        // arrows move visually: in RTL the next column lies to the left
+        col = this.rtl() ? Math.max(0, col - 1) : Math.min(lastCol, col + 1);
         break;
       case 'ArrowLeft':
-        col = Math.max(0, col - 1);
+        col = this.rtl() ? Math.min(lastCol, col + 1) : Math.max(0, col - 1);
         break;
       case 'Home':
         if (event.ctrlKey) row = this.moveFocusRow(-1, 1);

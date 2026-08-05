@@ -196,6 +196,38 @@ describe('OgeGrid imperative API & events', () => {
     expect(el.querySelector('.oge-pager-compact')?.textContent?.trim()).toBe('2 / 2');
   });
 
+  it('rtlEnabled sets dir/class and inverts horizontal arrow keys', async () => {
+    const fixture = TestBed.createComponent(OgeGrid<Row>);
+    fixture.componentRef.setInput('data', ROWS);
+    fixture.componentRef.setInput('columns', ['name', 'department']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('rtlEnabled', true);
+    fixture.detectChanges();
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.getAttribute('dir')).toBe('rtl');
+    expect(el.classList.contains('oge-rtl')).toBe(true);
+    // focus the first cell, then ArrowRight must move BACKWARD (visually right)
+    const cells = el.querySelectorAll('.oge-row .oge-cell');
+    (cells[1] as HTMLElement).dispatchEvent(new FocusEvent('focus'));
+    await settle(fixture);
+    const instance = fixture.componentInstance as unknown as {
+      onGridKeydown(event: KeyboardEvent): void;
+    };
+    instance.onGridKeydown(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    // CD first so the focus-follow effect queues after any stale focus timeout
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+    const focused = (
+      fixture.componentInstance as unknown as {
+        focusedCell: () => { row: number; col: number } | null;
+      }
+    ).focusedCell();
+    expect(focused).toEqual({ row: 0, col: 0 });
+  });
+
   it('clearFilters and clearSorting reset the view', async () => {
     const { fixture, el, grid } = await render();
     // sort by name desc via two header clicks

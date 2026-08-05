@@ -153,8 +153,8 @@
           role="columnheader"
           [class.oge-header-sortable]="column.sortable && sortMode() !== 'none'"
           [class.oge-pinned]="column.pinned !== false"
-          [style.left.px]="pinnedLeftOf(column)"
-          [style.right.px]="pinnedRightOf(column)"
+          [style.inset-inline-start.px]="pinnedLeftOf(column)"
+          [style.inset-inline-end.px]="pinnedRightOf(column)"
           [attr.aria-sort]="ariaSortOf(column)"
           [attr.tabindex]="
             (column.sortable && sortMode() !== 'none') ||
@@ -231,8 +231,8 @@
             class="oge-filter-cell"
             role="gridcell"
             [class.oge-pinned]="column.pinned !== false"
-            [style.left.px]="pinnedLeftOf(column)"
-            [style.right.px]="pinnedRightOf(column)"
+            [style.inset-inline-start.px]="pinnedLeftOf(column)"
+            [style.inset-inline-end.px]="pinnedRightOf(column)"
           >
             @if (column.filterable && column.lookupItems; as items) {
               <select
@@ -369,8 +369,8 @@
                   [class.oge-pinned]="column.pinned !== false"
                   [class.oge-cell-dirty]="isCellDirty(node, column)"
                   [class.oge-cell-editing]="isCellEditorOpen(node, column)"
-                  [style.left.px]="pinnedLeftOf(column)"
-                  [style.right.px]="pinnedRightOf(column)"
+                  [style.inset-inline-start.px]="pinnedLeftOf(column)"
+                  [style.inset-inline-end.px]="pinnedRightOf(column)"
                   [attr.data-cell]="viewStart() + nodeIndex + '-' + column.absIndex"
                   [attr.aria-colindex]="leadingCellCount() + column.absIndex + 1"
                   [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, column.absIndex) ? 0 : -1"
@@ -590,8 +590,8 @@
           role="gridcell"
           [class.oge-cell-number]="column.dataType === 'number'"
           [class.oge-pinned]="column.pinned !== false"
-          [style.left.px]="pinnedLeftOf(column)"
-          [style.right.px]="pinnedRightOf(column)"
+          [style.inset-inline-start.px]="pinnedLeftOf(column)"
+          [style.inset-inline-end.px]="pinnedRightOf(column)"
         >
           {{ totalSummaryByColumn().get(column.id) ?? '' }}
         </div>

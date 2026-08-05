@@ -119,7 +119,7 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      margin-left: 12px;
+      margin-inline-start: 12px;
       font-size: 12px;
       color: var(--oge-muted-color);
 
@@ -140,7 +140,7 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
     }
 
     .oge-pager-info {
-      margin-left: auto;
+      margin-inline-start: auto;
       color: var(--oge-muted-color);
       font-size: 12px;
     }
