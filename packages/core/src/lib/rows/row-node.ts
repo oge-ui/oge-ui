@@ -12,6 +12,32 @@ export interface DataRowNode<T = unknown> {
   readonly sourceIndex: number;
   /** Group nesting depth (0 when not grouped). */
   readonly level: number;
+  /**
+   * Key of the parent data row (`null` for roots). Populated only by tree
+   * flattening (tree-list); absent for plain/grouped grids.
+   */
+  readonly parentKey?: RowKey | null;
+  /**
+   * Whether the row can be expanded to reveal children. Populated only by
+   * tree flattening; absent for plain/grouped grids.
+   */
+  readonly hasChildren?: boolean;
+  /**
+   * Whether the row is currently expanded (always `false` when not
+   * expandable). Populated only by tree flattening; absent for plain/grouped
+   * grids.
+   */
+  readonly expanded?: boolean;
+  /**
+   * 1-based ARIA position of the row within its *visible* sibling bucket
+   * (`aria-posinset`). Populated only by tree flattening.
+   */
+  readonly posInSet?: number;
+  /**
+   * Number of *visible* siblings in the row's bucket, itself included
+   * (`aria-setsize`). Populated only by tree flattening.
+   */
+  readonly setSize?: number;
 }
 
 /** A group header row produced by row grouping. */
