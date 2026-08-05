@@ -318,6 +318,7 @@
               [style.height.px]="virtualized() && !autoRowHeight() ? effRowHeight() : null"
               [style.grid-template-columns]="gridTemplateColumns()"
               (click)="onRowClick(node, $event)"
+              (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
               (contextmenu)="onRowContextMenuOpen(node, $event)"
             >
               @if (hasExpander()) {

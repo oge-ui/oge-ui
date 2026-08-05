@@ -86,6 +86,14 @@ export interface OgeRowClickEvent<T = unknown> {
   event: MouseEvent;
 }
 
+export interface OgeCellClickEvent<T = unknown> {
+  row: T;
+  key: RowKey;
+  field: string | undefined;
+  value: unknown;
+  event: Event;
+}
+
 export interface OgeMenuItem {
   text: string;
   disabled?: boolean;
@@ -472,6 +480,15 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Fires on row right-click; add `items` in the handler to open the built-in menu. */
   readonly rowContextMenu = output<OgeContextMenuEvent<T>>();
 
+  /** Fires when a data cell is clicked. */
+  readonly cellClick = output<OgeCellClickEvent<T>>();
+
+  /** Fires when a data row is double-clicked. */
+  readonly rowDblClick = output<OgeRowClickEvent<T>>();
+
+  /** Fires after the grid has rendered a new result set. */
+  readonly contentReady = output<void>();
+
   /** Enables editing: `{ mode: 'cell' | 'row' | 'batch' | 'popup', allow… }`. */
   readonly editing = input<false | OgeEditingOptions>(false);
 
@@ -502,6 +519,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       if (!this.measuring()) return;
       this.viewNodes();
       this.measureRenderedRows();
+    });
+    // contentReady: after the DOM for a new result set is in place
+    afterRenderEffect(() => {
+      if (this.adapter.result() === null) return;
+      untracked(() => this.contentReady.emit());
     });
     effect(() => {
       const data = this.data();
@@ -711,6 +733,70 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       .filter((field): field is string => field != null);
     return { ...base, columns: { ...base.columns, hidden } };
   });
+
+  // --- imperative API -------------------------------------------------------
+
+  /** Re-runs the current load against the DataSource. */
+  refresh(): void {
+    this.adapter.reload();
+  }
+
+  /** Expands every group row (all levels). */
+  expandAllGroups(): void {
+    this.store.expansion.setGroups(
+      untracked(this.groupsAutoExpand) ? new Set() : this.collectGroupKeys()
+    );
+  }
+
+  /** Collapses every group row (all levels). */
+  collapseAllGroups(): void {
+    this.store.expansion.setGroups(
+      untracked(this.groupsAutoExpand) ? this.collectGroupKeys() : new Set()
+    );
+  }
+
+  /** All group node keys of the current result, across levels. */
+  private collectGroupKeys(): Set<RowKey> {
+    const keys = new Set<RowKey>();
+    const result = untracked(this.adapter.result);
+    if (!result?.data.length) return keys;
+    const visit = (items: readonly unknown[], parentKey: RowKey | null): void => {
+      for (const item of items) {
+        if (typeof item !== 'object' || item === null || !('items' in item) || !('key' in item)) {
+          return;
+        }
+        const group = item as GroupedItem<T>;
+        const key = groupNodeKey(parentKey, group.key);
+        keys.add(key);
+        if (group.items?.length) visit(group.items, key);
+      }
+    };
+    visit(result.data, null);
+    return keys;
+  }
+
+  /** Clears every filter: row filters, header filters, builder filter and search. */
+  clearFilters(): void {
+    this.store.filter.clearAll();
+  }
+
+  /** Clears the sort order. */
+  clearSorting(): void {
+    this.store.sort.clear();
+  }
+
+  /**
+   * Scrolls a row into the viewport — by flat index, or by row key when a
+   * `RowKey` is given.
+   */
+  scrollToRow(target: number | RowKey): void {
+    const nodes = untracked(this.flatNodes);
+    let index = nodes.findIndex((node) => node.key === target);
+    if (index < 0 && typeof target === 'number' && target >= 0 && target < nodes.length) {
+      index = target;
+    }
+    if (index >= 0) this.scrollRowIntoView(index);
+  }
 
   // --- CSV export -----------------------------------------------------------
 
@@ -1853,6 +1939,15 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected onCellClickToEdit(node: DataRowNode<T>, column: ResolvedColumn<T>, event?: Event): void {
     // ignore events bubbling out of an open editor (e.g. its own Enter commit)
     if ((event?.target as HTMLElement | null)?.closest?.('.oge-editor')) return;
+    if (event?.type === 'click') {
+      this.cellClick.emit({
+        row: node.data,
+        key: node.key,
+        field: column.field,
+        value: column.accessor(node.data),
+        event,
+      });
+    }
     const mode = this.editMode();
     if (
       (mode !== 'cell' && mode !== 'batch') ||

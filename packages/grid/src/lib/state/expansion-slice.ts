@@ -33,6 +33,11 @@ export class ExpansionSlice {
     if (this._collapsedGroups().size) this._collapsedGroups.set(new Set());
   }
 
+  /** Replaces the toggled-group set (expand-all / collapse-all). */
+  setGroups(keys: ReadonlySet<RowKey>): void {
+    this._collapsedGroups.set(new Set(keys));
+  }
+
   clearDetails(): void {
     if (this._expandedDetails().size) this._expandedDetails.set(new Set());
   }
