@@ -638,8 +638,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const data = this.data();
       const keyField = this.keyField();
       const sortValues = this.sortValueSelectors();
+      const customSummaries = this.customSummarySelectors();
       this.adapter.setSource(
-        isDataSource(data) ? data : new ArrayDataSource<T>(data, { key: keyField, sortValues })
+        isDataSource(data)
+          ? data
+          : new ArrayDataSource<T>(data, { key: keyField, sortValues, customSummaries })
       );
     });
     // Inline object/array bindings produce a fresh reference on every change
@@ -1039,6 +1042,18 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const entries = this.declaredColumns().flatMap((column) => {
       const field = column.field();
       const calculate = column.calculateSortValue();
+      return field && calculate ? [[field, calculate] as const] : [];
+    });
+    return entries.length ? Object.fromEntries(entries) : undefined;
+  });
+
+  /** Per-field `calculateCustomSummary` reducers (array data only). */
+  private readonly customSummarySelectors = computed<
+    Record<string, (rows: readonly T[]) => unknown> | undefined
+  >(() => {
+    const entries = this.declaredColumns().flatMap((column) => {
+      const field = column.field();
+      const calculate = column.calculateCustomSummary();
       return field && calculate ? [[field, calculate] as const] : [];
     });
     return entries.length ? Object.fromEntries(entries) : undefined;

@@ -152,6 +152,49 @@ describe('OgeGrid multiple summaries per column', () => {
   });
 });
 
+@Component({
+  imports: [OgeGrid, OgeColumn],
+  template: `
+    <oge-grid [data]="data" keyField="id" [groupBy]="['region']">
+      <oge-column field="region" />
+      <oge-column
+        field="amount"
+        dataType="number"
+        groupSummary="custom"
+        totalSummary="custom"
+        [calculateCustomSummary]="amountRange"
+      />
+    </oge-grid>
+  `,
+})
+class CustomSummaryHost {
+  readonly data = SALES;
+  readonly amountRange = (rows: readonly Sale[]): number => {
+    const values = rows.map((r) => r.amount);
+    return Math.max(...values) - Math.min(...values);
+  };
+}
+
+describe('OgeGrid calculateCustomSummary', () => {
+  it('computes group and total aggregates with the column reducer', async () => {
+    const fixture = TestBed.createComponent(CustomSummaryHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+
+    const groups = Array.from(el.querySelectorAll('.oge-group-row')).map((g) =>
+      g.textContent?.replace(/\s+/g, ' ').trim()
+    );
+    // EU: 200-100=100, US single row: 300-300=0
+    expect(groups[0]).toContain('Custom of Amount: 100');
+    expect(groups[1]).toContain('Custom of Amount: 0');
+
+    const totalCells = Array.from(el.querySelectorAll('.oge-total-cell')).map((c) =>
+      c.textContent?.trim()
+    );
+    expect(totalCells).toContain('Custom: 200'); // 300-100 over all rows
+  });
+});
+
 describe('OgeGrid master-detail', () => {
   async function render() {
     const fixture = TestBed.createComponent(DetailHost);

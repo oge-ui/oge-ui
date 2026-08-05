@@ -41,6 +41,34 @@ describe('computeSummaries', () => {
     ]);
     expect(result.map((s) => s.value)).toEqual([null, null, 0]);
   });
+
+  it('runs custom reducers keyed by name ?? field and defaults to null when missing', () => {
+    const result = computeSummaries(
+      SALES,
+      [
+        { field: 'amount', type: 'custom' },
+        { field: 'amount', type: 'custom', name: 'range' },
+        { field: 'amount', type: 'custom', name: 'unregistered' },
+      ],
+      {
+        amount: (rows) => rows.filter((r) => (r as { amount: number | null }).amount != null).length,
+        range: (rows, field) => {
+          const values = rows
+            .map((r) => (r as Record<string, unknown>)[field])
+            .filter((v): v is number => typeof v === 'number');
+          return Math.max(...values) - Math.min(...values);
+        },
+      }
+    );
+    expect(result.map((s) => s.value)).toEqual([4, 250, null]);
+  });
+
+  it('passes custom reducers through groupRows per bucket', () => {
+    const tree = groupRows(SALES, [{ field: 'region', dir: 'asc' }], [{ field: 'amount', type: 'custom' }], {
+      amount: (rows) => rows.length * 1000,
+    });
+    expect(tree.map((g) => g.summary)).toEqual([[3000], [2000]]);
+  });
 });
 
 describe('groupRows', () => {

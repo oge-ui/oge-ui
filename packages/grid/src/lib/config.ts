@@ -138,7 +138,7 @@ export const OGE_DEFAULT_MESSAGES: OgeGridMessages = {
   logicOr: 'Or',
   apply: 'Apply',
   filterValuePlaceholder: 'Value',
-  summaryLabels: { sum: 'Sum', avg: 'Avg', min: 'Min', max: 'Max', count: 'Count' },
+  summaryLabels: { sum: 'Sum', avg: 'Avg', min: 'Min', max: 'Max', count: 'Count', custom: 'Custom' },
   groupSummaryPattern: '{label} of {column}: {value}',
   totalSummaryPattern: '{label}: {value}',
 };

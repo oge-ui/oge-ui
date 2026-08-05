@@ -1,5 +1,6 @@
 import { applyFilter } from '../pipeline/steps/filter.step';
 import { runLoadOptions } from '../pipeline/run-load-options';
+import type { CustomSummaryMap } from '../grouping/summaries';
 import type { RowKey } from '../rows/row-node';
 import { compareValues } from '../util/comparators';
 import { createFieldAccessor, resolveKeySelector } from '../util/value-accessor';
@@ -19,6 +20,8 @@ export interface ArrayDataSourceOptions<T> {
   searchFields?: readonly string[];
   /** Per-field custom sort keys (`calculateSortValue`). */
   sortValues?: Readonly<Record<string, (row: T) => unknown>>;
+  /** Custom summary reducers keyed by descriptor `name ?? field`. */
+  customSummaries?: CustomSummaryMap<T>;
 }
 
 /**
@@ -40,6 +43,7 @@ export class ArrayDataSource<T> implements DataSource<T> {
   private readonly keySelector: ((row: T) => RowKey) | null;
   private readonly searchFields: readonly string[] | undefined;
   private readonly sortValues: Readonly<Record<string, (row: T) => unknown>> | undefined;
+  private readonly customSummaries: CustomSummaryMap<T> | undefined;
   /** Present only when constructed with a mutable array (enables CRUD). */
   private readonly mutableRows: T[] | null;
 
@@ -52,6 +56,7 @@ export class ArrayDataSource<T> implements DataSource<T> {
     this.keySelector = options.key != null ? resolveKeySelector(options.key) : null;
     this.searchFields = options.searchFields;
     this.sortValues = options.sortValues;
+    this.customSummaries = options.customSummaries;
   }
 
   private requireMutable(): T[] {
@@ -130,7 +135,11 @@ export class ArrayDataSource<T> implements DataSource<T> {
 
   load(options: LoadOptions): Promise<LoadResult<T>> {
     return Promise.resolve(
-      runLoadOptions(this.getRows(), options, { searchFields: this.searchFields, sortValues: this.sortValues })
+      runLoadOptions(this.getRows(), options, {
+        searchFields: this.searchFields,
+        sortValues: this.sortValues,
+        customSummaries: this.customSummaries,
+      })
     );
   }
 

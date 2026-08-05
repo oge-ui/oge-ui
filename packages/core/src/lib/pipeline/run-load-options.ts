@@ -2,7 +2,7 @@ import type { LoadOptions } from '../data/load-options';
 import type { LoadResult } from '../data/data-source';
 import { buildSearchFilter } from '../filtering/filter-evaluator';
 import { groupRows } from '../grouping/group-rows';
-import { computeSummaries } from '../grouping/summaries';
+import { computeSummaries, type CustomSummaryMap } from '../grouping/summaries';
 import { applyFilter } from './steps/filter.step';
 import { applyPaging } from './steps/paginate.step';
 import { applySort } from './steps/sort.step';
@@ -12,6 +12,8 @@ export interface RunLoadOptionsConfig<T = unknown> {
   searchFields?: readonly string[];
   /** Per-field custom sort keys (`calculateSortValue`); client-side only. */
   sortValues?: Readonly<Record<string, (row: T) => unknown>>;
+  /** Custom summary reducers keyed by descriptor `name ?? field`; client-side only. */
+  customSummaries?: CustomSummaryMap<T>;
 }
 
 /**
@@ -34,7 +36,11 @@ export function runLoadOptions<T>(
   const searched = applyFilter(filtered, searchFilter);
 
   const summary = options.totalSummary?.length
-    ? { summary: computeSummaries(searched, options.totalSummary).map((s) => s.value) }
+    ? {
+        summary: computeSummaries(searched, options.totalSummary, config.customSummaries).map(
+          (s) => s.value
+        ),
+      }
     : {};
   const totalCount = options.requireTotalCount ? { totalCount: searched.length } : {};
 
@@ -45,7 +51,7 @@ export function runLoadOptions<T>(
       [...groups.map((g) => ({ field: g.field, dir: g.dir })), ...(options.sort ?? [])],
       config.sortValues
     );
-    const grouped = groupRows(sorted, groups, options.groupSummary ?? []);
+    const grouped = groupRows(sorted, groups, options.groupSummary ?? [], config.customSummaries);
     return {
       data: grouped,
       ...(options.requireGroupCount ? { groupCount: grouped.length } : {}),

@@ -77,6 +77,11 @@ export class OgeColumn<T = unknown> {
   readonly groupSummary = input<SummaryType | readonly SummaryType[]>();
   /** Aggregate(s) shown in the grid's total row for this column's field. */
   readonly totalSummary = input<SummaryType | readonly SummaryType[]>();
+  /**
+   * Reducer for the `'custom'` summary type: receives the (group or total)
+   * rows and returns the aggregate value. Client-side data only.
+   */
+  readonly calculateCustomSummary = input<(rows: readonly T[]) => unknown>();
   /** Whether cells of this column can be edited. */
   readonly editable = input(true);
   /** Marks the field as required in editors. */

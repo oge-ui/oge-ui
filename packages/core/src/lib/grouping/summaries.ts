@@ -2,8 +2,21 @@ import type { SummaryDescriptor, SummaryValue } from '../data/load-options';
 import { compareValues } from '../util/comparators';
 import { createFieldAccessor } from '../util/value-accessor';
 
-function computeOne<T>(rows: readonly T[], descriptor: SummaryDescriptor): unknown {
+/** User-provided reducer for `type: 'custom'` summaries (client-side only). */
+export type CustomSummaryFn<T = unknown> = (rows: readonly T[], field: string) => unknown;
+
+export type CustomSummaryMap<T = unknown> = Readonly<Record<string, CustomSummaryFn<T>>>;
+
+function computeOne<T>(
+  rows: readonly T[],
+  descriptor: SummaryDescriptor,
+  customSummaries?: CustomSummaryMap<T>
+): unknown {
   if (descriptor.type === 'count') return rows.length;
+  if (descriptor.type === 'custom') {
+    const calculate = customSummaries?.[descriptor.name ?? descriptor.field];
+    return calculate ? calculate(rows, descriptor.field) : null;
+  }
   const accessor = createFieldAccessor<T>(descriptor.field);
   switch (descriptor.type) {
     case 'sum':
@@ -37,11 +50,12 @@ function computeOne<T>(rows: readonly T[], descriptor: SummaryDescriptor): unkno
 /** Computes summary values for a set of rows (used per group and for grid totals). */
 export function computeSummaries<T>(
   rows: readonly T[],
-  descriptors: readonly SummaryDescriptor[]
+  descriptors: readonly SummaryDescriptor[],
+  customSummaries?: CustomSummaryMap<T>
 ): SummaryValue[] {
   return descriptors.map((descriptor) => ({
     field: descriptor.field,
     type: descriptor.type,
-    value: computeOne(rows, descriptor),
+    value: computeOne(rows, descriptor, customSummaries),
   }));
 }

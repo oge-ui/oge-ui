@@ -35,11 +35,17 @@ export type FilterExpr =
   | { readonly type: 'and' | 'or'; readonly operands: readonly FilterExpr[] }
   | { readonly type: 'not'; readonly operand: FilterExpr };
 
-export type SummaryType = 'sum' | 'avg' | 'min' | 'max' | 'count';
+export type SummaryType = 'sum' | 'avg' | 'min' | 'max' | 'count' | 'custom';
 
 export interface SummaryDescriptor {
   readonly field: string;
   readonly type: SummaryType;
+  /**
+   * Identifies the custom calculator for `type: 'custom'` (defaults to
+   * `field`). The descriptor stays serializable — the function itself travels
+   * out-of-band (`customSummaries` on the data source / pipeline config).
+   */
+  readonly name?: string;
 }
 
 /** A computed summary value (paired with the descriptor that produced it). */
