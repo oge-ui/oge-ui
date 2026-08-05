@@ -50,6 +50,7 @@ import {
 import {
   CHECKBOX_WIDTH,
   COMMAND_WIDTH,
+  ColumnLayoutModel,
   ColumnModel,
   DRAG_WIDTH,
   EXPANDER_WIDTH,
@@ -1426,9 +1427,6 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- column virtualization ------------------------------------------------
 
-  /** Extra horizontal pixels rendered on each side of the viewport. */
-  private static readonly COL_OVERSCAN_PX = 200;
-
   /**
    * Column virtualization is opt-in and requires plain columns: pinned columns
    * and bands rely on every column being present in the DOM.
@@ -1440,115 +1438,42 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.resolvedColumns().every((column) => column.pinned === false)
   );
 
-  /** Effective numeric width per column (fallback: min width) for prefix sums. */
-  private readonly colWidths = computed<readonly number[]>(() => {
-    const defaultMin = this.effColumnMinWidth();
-    return this.resolvedColumns().map((column) =>
-      typeof column.width === 'number' ? column.width : (column.minWidth ?? defaultMin)
-    );
-  });
-
-  private readonly colRange = computed<{
-    start: number;
-    end: number;
-    spacerLeft: number;
-    spacerRight: number;
-  } | null>(() => {
-    if (!this.colVirtualized()) return null;
-    const widths = this.colWidths();
-    const viewLeft = this.scrollLeft() - OgeGrid.COL_OVERSCAN_PX;
-    const viewRight =
-      this.scrollLeft() + (this.hostWidth() || 1200) + OgeGrid.COL_OVERSCAN_PX;
-    let x = this.leadingWidth();
-    let start = widths.length;
-    let end = widths.length;
-    let spacerLeft = 0;
-    for (let i = 0; i < widths.length; i++) {
-      if (x + widths[i] > viewLeft) {
-        start = i;
-        break;
-      }
-      spacerLeft += widths[i];
-      x += widths[i];
-    }
-    for (let i = start; i < widths.length; i++) {
-      if (x >= viewRight) {
-        end = i;
-        break;
-      }
-      x += widths[i];
-    }
-    let spacerRight = 0;
-    for (let i = end; i < widths.length; i++) spacerRight += widths[i];
-    return { start, end, spacerLeft, spacerRight };
-  });
-
-  /** Columns actually rendered — the horizontal window when virtualized. */
-  protected readonly renderColumns = computed<readonly ResolvedColumn<T>[]>(() => {
-    const columns = this.resolvedColumns();
-    const range = this.colRange();
-    return range ? columns.slice(range.start, range.end) : columns;
-  });
-
-  protected readonly colSpacerLeft = computed(() => this.colRange()?.spacerLeft ?? 0);
-  protected readonly colSpacerRight = computed(() => this.colRange()?.spacerRight ?? 0);
-
-  protected readonly gridTemplateColumns = computed(() => {
-    const defaultMin = this.effColumnMinWidth();
+  private readonly leadingTracks = computed<readonly string[]>(() => {
     const leading: string[] = [];
     if (this.rowDragging()) leading.push(`${DRAG_WIDTH}px`);
     if (this.hasExpander()) leading.push(`${EXPANDER_WIDTH}px`);
     if (this.hasCheckboxColumn()) leading.push(`${CHECKBOX_WIDTH}px`);
-    const trailing = this.hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : [];
-    const range = this.colRange();
-    if (range) {
-      const widths = this.colWidths();
-      const tracks: string[] = [];
-      if (range.spacerLeft > 0) tracks.push(`${range.spacerLeft}px`);
-      for (let i = range.start; i < range.end; i++) tracks.push(`${widths[i]}px`);
-      if (range.spacerRight > 0) tracks.push(`${range.spacerRight}px`);
-      return [...leading, ...tracks, ...trailing].join(' ');
-    }
-    const tracks = this.resolvedColumns().map((column) => {
-      const width = column.width;
-      if (typeof width === 'number') return `${width}px`;
-      if (width == null && column.pinned) return `${this.config.pinnedDefaultWidth}px`;
-      return width ?? `minmax(${column.minWidth ?? defaultMin}px, 1fr)`;
-    });
-    return [...leading, ...tracks, ...trailing].join(' ');
+    return leading;
   });
 
-  private pinnedWidth(column: ResolvedColumn<T>): number {
-    return typeof column.width === 'number' ? column.width : this.config.pinnedDefaultWidth;
-  }
-
-  /** Sticky offsets for pinned columns (id → CSS left/right px). */
-  protected readonly pinnedOffsets = computed<ReadonlyMap<string, { left?: number; right?: number }>>(
-    () => {
-      const offsets = new Map<string, { left?: number; right?: number }>();
-      const columns = this.resolvedColumns();
-      let left = this.leadingWidth();
-      for (const column of columns) {
-        if (column.pinned !== 'left') continue;
-        offsets.set(column.id, { left });
-        left += this.pinnedWidth(column);
-      }
-      let right = 0;
-      for (const column of [...columns].reverse()) {
-        if (column.pinned !== 'right') continue;
-        offsets.set(column.id, { right });
-        right += this.pinnedWidth(column);
-      }
-      return offsets;
-    }
+  private readonly trailingTracks = computed<readonly string[]>(() =>
+    this.hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : []
   );
 
+  private readonly layoutModel = new ColumnLayoutModel<T, OgeColumn<T>>({
+    resolvedColumns: this.resolvedColumns,
+    colVirtualized: this.colVirtualized,
+    scrollLeft: this.scrollLeft,
+    hostWidth: this.hostWidth,
+    leadingTracks: this.leadingTracks,
+    trailingTracks: this.trailingTracks,
+    leadingWidth: this.leadingWidth,
+    defaultMinWidth: this.effColumnMinWidth,
+    pinnedDefaultWidth: computed(() => this.config.pinnedDefaultWidth),
+  });
+
+  /** Columns actually rendered — the horizontal window when virtualized. */
+  protected readonly renderColumns = this.layoutModel.renderColumns;
+  protected readonly colSpacerLeft = this.layoutModel.colSpacerLeft;
+  protected readonly colSpacerRight = this.layoutModel.colSpacerRight;
+  protected readonly gridTemplateColumns = this.layoutModel.gridTemplateColumns;
+
   protected pinnedLeftOf(column: ResolvedColumn<T>): number | null {
-    return this.pinnedOffsets().get(column.id)?.left ?? null;
+    return this.layoutModel.pinnedLeftOf(column);
   }
 
   protected pinnedRightOf(column: ResolvedColumn<T>): number | null {
-    return this.pinnedOffsets().get(column.id)?.right ?? null;
+    return this.layoutModel.pinnedRightOf(column);
   }
 
   // --- sorting -------------------------------------------------------------
@@ -1989,7 +1914,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Brings a virtualized column into the horizontal window before focusing. */
   private scrollColumnIntoView(col: number): void {
     if (!this.colVirtualized()) return;
-    const widths = this.colWidths();
+    const widths = this.layoutModel.colWidths();
     if (col < 0 || col >= widths.length) return;
     const viewport = this.viewportRef()?.nativeElement;
     if (!viewport) return;
@@ -2626,7 +2551,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     event.preventDefault();
     event.stopPropagation();
     const headerCell = (event.target as HTMLElement).closest('.oge-header-cell') as HTMLElement;
-    const startWidth = headerCell?.offsetWidth ?? this.pinnedWidth(column);
+    const startWidth =
+      headerCell?.offsetWidth ??
+      (typeof column.width === 'number' ? column.width : this.config.pinnedDefaultWidth);
     const startX = event.clientX;
     const onMove = (move: PointerEvent): void => {
       this.suppressHeaderClick = true;
