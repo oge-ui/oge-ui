@@ -596,6 +596,9 @@
 }
 
 .oge-detail-cell {
+  // stay inside the visible viewport even when the columns scroll horizontally
+  position: sticky;
+  inset-inline-start: 0;
   padding: 12px 16px;
 }
 
@@ -881,6 +884,9 @@
 }
 
 .oge-form-cell {
+  // stay inside the visible viewport even when the columns scroll horizontally
+  position: sticky;
+  inset-inline-start: 0;
   padding: 12px var(--oge-cell-padding-x);
 }
 

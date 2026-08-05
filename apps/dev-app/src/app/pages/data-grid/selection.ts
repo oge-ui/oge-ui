@@ -1,5 +1,6 @@
+import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import type { RowKey } from '@oge-ui/core';
+import type { FilterExpr, RowKey } from '@oge-ui/core';
 import { OgeColumn, OgeGrid, type OgeContextMenuEvent } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -16,9 +17,20 @@ onContextMenu(event: OgeContextMenuEvent<Employee>) {
   event.items.push({ text: 'Copy name', action: () => copy(event.row) });
 }`;
 
+const DEFERRED_SNIPPET = `<oge-grid [data]="rows" keyField="id"
+          selectionMode="checkbox"
+          [selectionDeferred]="true" [(selectionFilter)]="selectionFilter">
+  …
+</oge-grid>
+
+<!-- selectionFilter is a plain FilterExpr — POST it to your backend:
+     null                                        → nothing selected
+     { field: 'id', op: 'isnotnull' }            → select-all (no filter active)
+     { and: [all, { not: { id eq 42 } }] }       → all except #42 -->`;
+
 @Component({
   selector: 'app-selection',
-  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader],
+  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -59,19 +71,58 @@ onContextMenu(event: OgeContextMenuEvent<Employee>) {
       </oge-grid>
     </app-demo-card>
 
+    <h3>Deferred selection</h3>
+    <p>
+      With <code>selectionDeferred</code> the grid never materializes a key list — the selection
+      <em>is</em> a serializable <code>FilterExpr</code> in the two-way
+      <code>selectionFilter</code> binding. Select-all over a million remote rows costs nothing:
+      the expression captures the current filter, and unchecking a row just adds an
+      <code>and-not</code> clause. Send the expression to your backend to process the selection
+      server-side.
+    </p>
+
+    <app-demo-card [chips]="['selectionDeferred', 'selectionFilter']" [code]="deferredSnippet">
+      <div class="grid grid-cols-[minmax(0,2fr)_minmax(260px,1fr)] items-start gap-4 max-lg:grid-cols-1">
+        <oge-grid
+          [data]="deferredRows"
+          keyField="id"
+          selectionMode="checkbox"
+          [selectionDeferred]="true"
+          [selectionFilter]="selectionFilter()"
+          (selectionFilterChange)="selectionFilter.set($event)"
+          [paging]="{ pageSize: 8 }"
+        >
+          <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="department" caption="Department" />
+          <oge-column field="salary" caption="Salary" dataType="number" />
+        </oge-grid>
+        <aside class="max-h-[420px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-900">
+          <h3 class="!mt-0 mb-2 text-sm font-semibold">selectionFilter</h3>
+          <pre class="m-0 whitespace-pre-wrap break-all font-mono text-xs leading-relaxed">{{
+            selectionFilter() === null ? 'null  (nothing selected)' : (selectionFilter() | json)
+          }}</pre>
+        </aside>
+      </div>
+    </app-demo-card>
+
     <h3>Notes</h3>
     <ul>
       <li><code>[(selectedKeys)]</code> is a two-way model — push keys in from outside and the checkboxes follow.</li>
-      <li>Select-all operates on the <em>filtered</em> set: apply a filter first and only matching rows are selected.</li>
+      <li>Select-all operates on the <em>filtered</em> set: apply a filter first and only matching rows are selected. <code>selectAllMode="page"</code> restricts it to the visible page.</li>
       <li><kbd>Shift</kbd>-ranges span group rows correctly (only data rows are selected).</li>
+      <li><kbd>Ctrl</kbd>+<kbd>C</kbd> (or <code>copyToClipboard()</code>) copies the selected rows as tab-separated text ready for Excel.</li>
       <li>Full keyboard support: arrows, <kbd>Home</kbd>/<kbd>End</kbd>, <kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Space</kbd> to select — WAI-ARIA grid pattern, verified with axe.</li>
     </ul>
   `,
 })
 export class SelectionPage {
   protected readonly snippet = SNIPPET;
+  protected readonly deferredSnippet = DEFERRED_SNIPPET;
   protected readonly employees = makeEmployees(1000);
+  protected readonly deferredRows = makeEmployees(60, 5);
   protected readonly selected = signal<RowKey[]>([]);
+  protected readonly selectionFilter = signal<FilterExpr | null>(null);
   protected readonly lastAction = signal('');
 
   protected onContextMenu(event: OgeContextMenuEvent<Employee>): void {

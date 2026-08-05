@@ -30,7 +30,8 @@ test('groups rows, collapses a group and shows summaries', async ({ page }) => {
 
 test('deferred groups fetch children only on expand', async ({ page }) => {
   await page.goto('/components/data-grid/grouping');
-  const grid = page.locator('oge-grid').nth(1);
+  // last grid on the page is the deferred-loading demo
+  const grid = page.locator('oge-grid').last();
 
   // groups render collapsed from a headers-only payload
   await expect(grid.locator('.oge-group-row').first()).toBeVisible();

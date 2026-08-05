@@ -64,11 +64,13 @@ filter: FilterExpr = {
         <oge-column field="department" caption="Department" />
         <oge-column field="city" caption="City" />
         <oge-column field="salary" caption="Salary" dataType="number" />
+        <oge-column field="hireDate" caption="Hire Date" dataType="date" [width]="120" />
       </oge-grid>
     </app-demo-card>
 
     <h3>Notes</h3>
     <ul>
+      <li>Open the <strong>Hire Date</strong> header filter: date values are grouped into a year tree — the year checkbox toggles all its dates at once and the search box matches years or single dates.</li>
       <li>Every surface produces the same serializable <code>FilterExpr</code> tree — combined with AND and sent to your backend unchanged in remote mode.</li>
       <li>The operator button in each filter cell offers dataType-appropriate operators; <em>Reset</em> returns to the column default.</li>
       <li><code>[(filterValue)]</code> is two-way: set it programmatically, read what the builder produced, persist it — it also participates in <code>stateKey</code>.</li>

@@ -354,6 +354,7 @@
                   class="oge-form-cell"
                   role="gridcell"
                   [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
+                  [style.max-width.px]="hostWidth() || null"
                 >
                   <div class="oge-form-fields">
                     @for (column of resolvedColumns(); track column.id) {
@@ -748,6 +749,7 @@
                 class="oge-detail-cell"
                 role="gridcell"
                 [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
+                [style.max-width.px]="hostWidth() || null"
               >
                 @if (detailTemplate(); as detail) {
                   <ng-container *ngTemplateOutlet="detail.templateRef; context: detailContext(node.data)" />

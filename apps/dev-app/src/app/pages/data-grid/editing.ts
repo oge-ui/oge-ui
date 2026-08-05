@@ -31,6 +31,38 @@ onSaving(event: OgeSavingChangesEvent<Employee>) {
   // (insert/update/remove) is called and the grid reloads.
 }`;
 
+interface Assignment {
+  id: number;
+  title: string;
+  countryId: number;
+  cityId: number;
+  done: boolean;
+}
+
+interface City {
+  id: number;
+  countryId: number;
+  name: string;
+}
+
+const LOOKUP_SNIPPET = `<oge-grid [data]="assignments" keyField="id"
+          [editing]="{ mode: 'row', allowUpdating: true, allowDeleting: true }"
+          [commandButtons]="commandButtons">
+  <oge-column field="countryId" caption="Country"
+              [lookup]="{ dataSource: countries, valueExpr: 'id', displayExpr: 'name' }" />
+  <!-- cascading: the city list depends on the row's (draft) country -->
+  <oge-column field="cityId" caption="City"
+              [lookup]="{ dataSource: citiesOf, valueExpr: 'id', displayExpr: 'name' }" />
+</oge-grid>
+
+citiesOf = (row: Assignment) => CITIES.filter(c => c.countryId === row.countryId);
+
+commandButtons: OgeCommandButton<Assignment>[] = [
+  { name: 'edit' },
+  { name: 'delete' },
+  { text: 'Archive', visible: (row) => !row.done, onClick: (row) => archive(row) },
+];`;
+
 @Component({
   selector: 'app-editing',
   imports: [OgeGrid, OgeColumn, OgeEditTemplate, DemoCard, DocHeader, ReactiveFormsModule],
@@ -103,6 +135,41 @@ onSaving(event: OgeSavingChangesEvent<Employee>) {
       </div>
     </app-demo-card>
 
+    <h3>Cascading lookups & command-column customization</h3>
+    <p>
+      A lookup's <code>dataSource</code> may be a <em>function of the row</em>: while editing,
+      it receives the draft values, so picking a country immediately re-filters the city editor.
+      The command column is customizable through <code>commandButtons</code> — built-in
+      <code>edit</code>/<code>delete</code> plus your own buttons with per-row visibility.
+    </p>
+
+    <app-demo-card [chips]="['lookup', 'cascading', 'commandButtons']" [code]="lookupSnippet">
+      <oge-grid
+        [data]="assignments"
+        keyField="id"
+        [editing]="{ mode: 'row', allowUpdating: true, allowDeleting: true }"
+        [commandButtons]="commandButtons"
+      >
+        <oge-column field="title" caption="Task" />
+        <oge-column
+          field="countryId"
+          caption="Country"
+          [lookup]="{ dataSource: countries, valueExpr: 'id', displayExpr: 'name' }"
+        />
+        <oge-column
+          field="cityId"
+          caption="City"
+          [lookup]="{ dataSource: citiesOf, valueExpr: 'id', displayExpr: 'name' }"
+        />
+        <oge-column field="done" caption="Done" dataType="boolean" [width]="90" />
+      </oge-grid>
+      @if (lastCommand()) {
+        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          Last command: <span class="font-mono">{{ lastCommand() }}</span>
+        </div>
+      }
+    </app-demo-card>
+
     <h3>Notes</h3>
     <ul>
       <li><strong>cell</strong>: click a cell (or press <kbd>Enter</kbd>/<kbd>F2</kbd> on a focused one), edit, commit with <kbd>Enter</kbd>; <kbd>Tab</kbd> commits and moves to the next editable cell, <kbd>Esc</kbd> reverts.</li>
@@ -127,4 +194,42 @@ export class EditingPage {
       .join(' | ');
     this.saveLog.set([text, ...this.saveLog()].slice(0, 20));
   }
+
+  // --- cascading lookups & command buttons ---------------------------------
+
+  protected readonly lookupSnippet = LOOKUP_SNIPPET;
+  protected readonly lastCommand = signal('');
+
+  protected readonly countries = [
+    { id: 1, name: 'Türkiye' },
+    { id: 2, name: 'Germany' },
+  ];
+
+  private readonly cities: City[] = [
+    { id: 1, countryId: 1, name: 'İstanbul' },
+    { id: 2, countryId: 1, name: 'Ankara' },
+    { id: 3, countryId: 2, name: 'Berlin' },
+    { id: 4, countryId: 2, name: 'Munich' },
+  ];
+
+  /** Cascading: the city list is a function of the row's (draft) country. */
+  protected readonly citiesOf = (row: Assignment): readonly City[] =>
+    this.cities.filter((city) => city.countryId === row.countryId);
+
+  protected readonly assignments: Assignment[] = [
+    { id: 1, title: 'Site survey', countryId: 1, cityId: 1, done: false },
+    { id: 2, title: 'Install rollout', countryId: 1, cityId: 2, done: true },
+    { id: 3, title: 'Kickoff workshop', countryId: 2, cityId: 3, done: false },
+    { id: 4, title: 'Audit visit', countryId: 2, cityId: 4, done: false },
+  ];
+
+  protected readonly commandButtons: OgeCommandButton<Assignment>[] = [
+    { name: 'edit' },
+    { name: 'delete' },
+    {
+      text: 'Archive',
+      visible: (row) => !row.done,
+      onClick: (row) => this.lastCommand.set(`archive #${row.id} (${row.title})`),
+    },
+  ];
 }

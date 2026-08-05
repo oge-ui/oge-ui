@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import type { FilterExpr } from '@oge-ui/core';
 import { OgeColumn, OgeColumnGroup, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -74,6 +75,33 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
       </oge-grid>
     </app-demo-card>
 
+    <h3>Custom sort keys & filter expressions</h3>
+    <p>
+      <code>calculateSortValue</code> replaces the value a column sorts by — here the department
+      lookup sorts by its Turkish <em>label</em> instead of the stored code.
+      <code>calculateFilterExpression</code> rewrites what the filter row produces: typing a
+      number into Salary Band filters the underlying salary by <em>thousands</em>.
+    </p>
+
+    <app-demo-card [chips]="['calculateSortValue', 'calculateFilterExpression']" [code]="calcSnippet">
+      <oge-grid [data]="employees" keyField="id" [filterRow]="true" [paging]="{ pageSize: 8 }">
+        <oge-column field="firstName" caption="First Name" />
+        <oge-column
+          field="department"
+          caption="Department"
+          [lookup]="{ dataSource: departments, valueExpr: 'code', displayExpr: 'label' }"
+          [calculateSortValue]="departmentLabel"
+        />
+        <oge-column
+          field="salary"
+          caption="Salary Band (k)"
+          dataType="number"
+          [format]="thousandsBand"
+          [calculateFilterExpression]="salaryBandFilter"
+        />
+      </oge-grid>
+    </app-demo-card>
+
     <h3>Right-to-left</h3>
     <p>
       Set <code>rtlEnabled</code> (or wrap the grid in a <code>dir="rtl"</code> container — it
@@ -115,4 +143,41 @@ export class ColumnsPage {
   <oge-column field="firstName" caption="Ad" />
   <oge-column field="salary" caption="Maaş" dataType="number" />
 </oge-grid>`;
+
+  // --- custom sort keys & filter expressions -------------------------------
+
+  protected readonly calcSnippet = `<oge-column field="department"
+            [lookup]="{ dataSource: departments, valueExpr: 'code', displayExpr: 'label' }"
+            [calculateSortValue]="departmentLabel" />
+<oge-column field="salary" caption="Salary Band (k)"
+            [calculateFilterExpression]="salaryBandFilter" />
+
+// sort the lookup column by its display label, not the stored code
+departmentLabel = (row) => departments.find(d => d.code === row.department)?.label;
+
+// '60' in the filter row means the 60k band: 60000 <= salary < 61000
+salaryBandFilter = (value, operator) => value == null ? null : {
+  type: 'and', operands: [
+    { type: 'binary', field: 'salary', op: 'ge', value: +value * 1000 },
+    { type: 'binary', field: 'salary', op: 'lt', value: (+value + 1) * 1000 },
+  ],
+};`;
+
+  protected readonly departmentLabel = (row: Employee): string =>
+    DEPARTMENTS.find((department) => department.code === row.department)?.label ?? row.department;
+
+  protected readonly thousandsBand = (value: unknown): string =>
+    typeof value === 'number' ? `${Math.floor(value / 1000)}k` : String(value ?? '');
+
+  protected readonly salaryBandFilter = (value: unknown): FilterExpr | null => {
+    const band = Number(value);
+    if (value == null || value === '' || Number.isNaN(band)) return null;
+    return {
+      type: 'and',
+      operands: [
+        { type: 'binary', field: 'salary', op: 'ge', value: band * 1000 },
+        { type: 'binary', field: 'salary', op: 'lt', value: (band + 1) * 1000 },
+      ],
+    };
+  };
 }

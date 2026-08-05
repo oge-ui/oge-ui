@@ -13,6 +13,18 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id"
               groupSummary="avg" totalSummary="sum" [format]="money" />
 </oge-grid>`;
 
+const SUMMARY_SNIPPET = `<oge-grid [data]="rows" keyField="id" [groupBy]="['department']">
+  <!-- custom aggregate: any reducer over the group's rows -->
+  <oge-column field="city" groupSummary="custom"
+              [calculateCustomSummary]="distinctCities" />
+  <!-- several aggregates at once, rendered on a footer row after the group -->
+  <oge-column field="salary" dataType="number"
+              [groupSummary]="['min', 'max']" groupSummaryPosition="footer"
+              [totalSummary]="['sum', 'avg']" />
+</oge-grid>
+
+distinctCities = (rows: Employee[]) => new Set(rows.map(r => r.city)).size + ' cities';`;
+
 const DEFERRED_FILES: DemoFile[] = [
   {
     name: 'deferred.component.ts',
@@ -86,6 +98,35 @@ readonly source = new CustomDataSource<Employee>({
       </oge-grid>
     </app-demo-card>
 
+    <h3>Multiple, custom and group-footer summaries</h3>
+    <p>
+      A column may declare a <em>list</em> of aggregates, place them on a dedicated footer row
+      after each group (<code>groupSummaryPosition="footer"</code>), or compute its own value
+      with <code>calculateCustomSummary</code> — here the City column counts distinct cities per
+      department.
+    </p>
+
+    <app-demo-card [chips]="['multiple aggregates', 'group footer', 'custom summary']" [code]="summarySnippet">
+      <oge-grid [data]="summaryRows" keyField="id" [groupBy]="['department']">
+        <oge-column field="firstName" caption="First Name" />
+        <oge-column
+          field="city"
+          caption="City"
+          groupSummary="custom"
+          [calculateCustomSummary]="distinctCities"
+        />
+        <oge-column
+          field="salary"
+          caption="Salary"
+          dataType="number"
+          [format]="money"
+          [groupSummary]="['min', 'max']"
+          groupSummaryPosition="footer"
+          [totalSummary]="['sum', 'avg']"
+        />
+      </oge-grid>
+    </app-demo-card>
+
     <h3>Deferred group loading</h3>
     <p>
       With <code>grouping.autoExpandAll: false</code> groups start collapsed, and a remote source
@@ -121,7 +162,13 @@ readonly source = new CustomDataSource<Employee>({
 export class GroupingPage {
   protected readonly employees = makeEmployees(500);
   protected readonly snippet = SNIPPET;
+  protected readonly summarySnippet = SUMMARY_SNIPPET;
   protected readonly deferredFiles = DEFERRED_FILES;
+  protected readonly summaryRows = makeEmployees(40, 3);
+
+  /** Custom summary: distinct city count per group. */
+  protected readonly distinctCities = (rows: readonly Employee[]): string =>
+    `${new Set(rows.map((row) => row.city)).size} cities`;
   protected readonly money = (value: unknown): string =>
     typeof value === 'number' ? `₺${Math.round(value).toLocaleString('tr-TR')}` : String(value ?? '');
 

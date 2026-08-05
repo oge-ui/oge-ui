@@ -2,22 +2,24 @@ import { test, expect } from '@playwright/test';
 
 test('checkbox selection with select-all and context menu', async ({ page }) => {
   await page.goto('/components/data-grid/selection');
-  await expect(page.locator('.oge-row').first()).toBeVisible();
+  // first grid = the main checkbox demo (the deferred demo follows it)
+  const grid = page.locator('oge-grid').first();
+  await expect(grid.locator('.oge-row').first()).toBeVisible();
 
   // single checkbox
-  await page.locator('.oge-cell.oge-checkbox-cell input').nth(1).click();
+  await grid.locator('.oge-cell.oge-checkbox-cell input').nth(1).click();
   await expect(page.getByText('Selected:')).toContainText('1');
-  await expect(page.locator('.oge-row-selected')).toHaveCount(1);
+  await expect(grid.locator('.oge-row-selected')).toHaveCount(1);
 
   // select-all works on the whole (virtualized, filtered) data set
-  await page.locator('.oge-header-cell.oge-checkbox-cell input').click();
+  await grid.locator('.oge-header-cell.oge-checkbox-cell input').click();
   await expect(page.getByText('Selected:')).toContainText('1000');
 
-  await page.locator('.oge-header-cell.oge-checkbox-cell input').click();
+  await grid.locator('.oge-header-cell.oge-checkbox-cell input').click();
   await expect(page.getByText('Selected:')).toContainText('0');
 
   // context menu: right-click and run an item
-  await page.locator('.oge-row').nth(2).click({ button: 'right' });
+  await grid.locator('.oge-row').nth(2).click({ button: 'right' });
   const menu = page.locator('.oge-context-menu');
   await expect(menu).toBeVisible();
   await expect(menu.locator('.oge-menu-item').nth(2)).toBeDisabled();
@@ -28,10 +30,11 @@ test('checkbox selection with select-all and context menu', async ({ page }) => 
 
 test('keyboard navigation moves the focused cell and selects with Space', async ({ page }) => {
   await page.goto('/components/data-grid/selection');
-  await expect(page.locator('.oge-row').first()).toBeVisible();
+  const grid = page.locator('oge-grid').first();
+  await expect(grid.locator('.oge-row').first()).toBeVisible();
 
   // focus the first data cell (in checkbox mode this also toggles row 1) …
-  await page.locator('[data-cell="0-0"]').click();
+  await grid.locator('[data-cell="0-0"]').click();
   await expect(page.getByText('Selected:')).toContainText('1');
 
   // …then walk with arrows and add row 3 with Space

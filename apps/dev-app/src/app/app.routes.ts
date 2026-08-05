@@ -77,6 +77,11 @@ export const appRoutes: Route[] = [
         title: 'oge — Data Grid Grouping',
       },
       {
+        path: 'rows',
+        loadComponent: () => import('./pages/data-grid/rows').then((m) => m.RowsPage),
+        title: 'oge — Data Grid Rows & Templates',
+      },
+      {
         path: 'master-detail',
         loadComponent: () =>
           import('./pages/data-grid/master-detail').then((m) => m.MasterDetailPage),
