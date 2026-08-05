@@ -1,0 +1,563 @@
+﻿@if (searchPanelVisible() || groupPanel() || columnChooser() || canAdd() || editMode() === 'batch') {
+  <div class="oge-toolbar">
+    @if (groupPanel()) {
+      <div
+        class="oge-group-panel"
+        (dragover)="onColumnDragOver($event)"
+        (drop)="onGroupPanelDrop($event)"
+      >
+        @for (descriptor of store.grouping.descriptors(); track descriptor.field) {
+          <span class="oge-group-chip">
+            {{ groupCaption(descriptor.field) }}
+            <button
+              type="button"
+              class="oge-group-chip-remove"
+              [attr.aria-label]="msg().ungroupPrefix + ' ' + groupCaption(descriptor.field)"
+              (click)="ungroup(descriptor.field, $event)"
+            >
+              <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="m4 4 8 8M12 4l-8 8" />
+              </svg>
+            </button>
+          </span>
+        } @empty {
+          <span class="oge-group-panel-hint">{{ msg().groupPanelHint }}</span>
+        }
+      </div>
+    }
+    <span class="oge-toolbar-spacer"></span>
+    @if (canAdd()) {
+      <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="addNewRow()">
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M8 3v10M3 8h10" />
+        </svg>
+        {{ msg().addRow }}
+      </button>
+    }
+    @if (editMode() === 'batch' && store.editing.hasPending()) {
+      <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent" (click)="saveAllChanges()">
+        {{ msg().saveChanges }}
+      </button>
+      <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="discardAllChanges()">
+        {{ msg().discardChanges }}
+      </button>
+    }
+    @if (columnChooser()) {
+      <button type="button" class="oge-toolbar-btn" [attr.aria-label]="msg().columnChooser" (click)="toggleChooser($event)">
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <rect x="2" y="2.5" width="12" height="11" rx="1.5" />
+          <path d="M6.5 2.5v11M10.5 2.5v11" />
+        </svg>
+      </button>
+    }
+    @if (searchPanelVisible()) {
+      <input
+        class="oge-search-input"
+        type="search"
+        [placeholder]="searchPanelOptions().placeholder ?? msg().search"
+        [attr.aria-label]="searchPanelOptions().placeholder ?? msg().search"
+        [style.width.px]="searchPanelOptions().width ?? null"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+    }
+  </div>
+}
+<!-- Delegated keyboard handler: focus lives on the grid cells inside (roving tabindex). -->
+<!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+<div
+  #viewport
+  class="oge-viewport"
+  [attr.role]="gridRole()"
+  [attr.aria-rowcount]="totalCount() + 1"
+  [attr.aria-colcount]="resolvedColumns().length + leadingCellCount() + (hasCommandColumn() ? 1 : 0)"
+  [attr.aria-multiselectable]="
+    selectionMode() === 'multiple' || selectionMode() === 'checkbox' ? true : null
+  "
+  (scroll)="onScroll($event)"
+  (keydown)="onGridKeydown($event)"
+>
+  <div class="oge-header" role="rowgroup">
+    <div class="oge-header-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
+      @if (hasExpander()) {
+        <div class="oge-header-cell oge-expander-cell" role="columnheader" aria-label="Detail"></div>
+      }
+      @if (hasCheckboxColumn()) {
+        <div class="oge-header-cell oge-checkbox-cell" role="columnheader" aria-label="Select all">
+          <input
+            type="checkbox"
+            [checked]="allSelected()"
+            [indeterminate]="someSelected()"
+            [attr.aria-label]="msg().selectAllRows"
+            (change)="toggleSelectAll()"
+          />
+        </div>
+      }
+      @for (column of resolvedColumns(); track column.id) {
+        <div
+          class="oge-header-cell"
+          role="columnheader"
+          [class.oge-header-sortable]="column.sortable && sortMode() !== 'none'"
+          [class.oge-pinned]="column.pinned !== false"
+          [style.left.px]="pinnedLeftOf(column)"
+          [style.right.px]="pinnedRightOf(column)"
+          [attr.aria-sort]="ariaSortOf(column)"
+          [attr.tabindex]="
+            (column.sortable && sortMode() !== 'none') ||
+            (column.field && (groupPanel() || columnReorder()))
+              ? 0
+              : null
+          "
+          [attr.draggable]="column.field && (groupPanel() || columnReorder()) ? true : null"
+          (dragstart)="onHeaderDragStart(column, $event)"
+          (dragover)="onColumnDragOver($event)"
+          (drop)="onHeaderDrop(column, $event)"
+          (contextmenu)="onHeaderContextMenu(column, $event)"
+          (click)="onHeaderClick(column, $event)"
+          (keydown.enter)="onHeaderClick(column, $event)"
+          (keydown.space)="onHeaderClick(column, $event)"
+        >
+          <span class="oge-header-caption">
+            @if (column.headerTemplate) {
+              <ng-container *ngTemplateOutlet="column.headerTemplate; context: headerContext(column)" />
+            } @else {
+              {{ column.caption }}
+            }
+          </span>
+          @if (sortStateOf(column); as sort) {
+            <span class="oge-sort-indicator" aria-hidden="true">
+              <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                @if (sort.dir === 'asc') {
+                  <path d="m3.5 10 4.5-4.5L12.5 10" />
+                } @else {
+                  <path d="m3.5 6 4.5 4.5L12.5 6" />
+                }
+              </svg>
+              @if (multiSorted()) {<sub>{{ sort.index }}</sub>}
+            </span>
+          }
+          @if (headerFilterAvailable() && column.filterable) {
+            <button
+              type="button"
+              class="oge-header-filter-btn"
+              [class.oge-header-filter-active]="isHeaderFilterActive(column)"
+              [attr.aria-label]="msg().filterValues"
+              (click)="toggleHeaderFilter(column, $event)"
+            >
+              <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                <path d="M1 2h14L10 8.5V14l-4-1.8V8.5L1 2z" fill="currentColor" />
+              </svg>
+            </button>
+          }
+          @if (columnResize()) {
+            <span class="oge-resize-handle" (pointerdown)="onResizeStart(column, $event)"></span>
+          }
+        </div>
+      }
+      @if (hasCommandColumn()) {
+        <div class="oge-header-cell oge-command-cell" role="columnheader"></div>
+      }
+    </div>
+    @if (filterRowVisible()) {
+      <div class="oge-filter-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
+        @if (hasExpander()) {
+          <div class="oge-filter-cell" role="gridcell"></div>
+        }
+        @if (hasCheckboxColumn()) {
+          <div class="oge-filter-cell" role="gridcell"></div>
+        }
+        @for (column of resolvedColumns(); track column.id) {
+          <div
+            class="oge-filter-cell"
+            role="gridcell"
+            [class.oge-pinned]="column.pinned !== false"
+            [style.left.px]="pinnedLeftOf(column)"
+            [style.right.px]="pinnedRightOf(column)"
+          >
+            @if (column.filterable) {
+              @switch (column.dataType) {
+                @case ('boolean') {
+                  <select
+                    class="oge-filter-input"
+                    [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+                    (change)="onFilterSelect(column, $any($event.target).value)"
+                  >
+                    <option value="">{{ msg().selectAllValues }}</option>
+                    <option value="true">{{ msg().booleanTrue }}</option>
+                    <option value="false">{{ msg().booleanFalse }}</option>
+                  </select>
+                }
+                @case ('number') {
+                  <input
+                    class="oge-filter-input"
+                    type="number"
+                    [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+                    (input)="onFilterInput(column, $any($event.target).value)"
+                  />
+                }
+                @case ('date') {
+                  <input
+                    class="oge-filter-input"
+                    type="date"
+                    [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+                    (change)="onFilterSelect(column, $any($event.target).value)"
+                  />
+                }
+                @default {
+                  <input
+                    class="oge-filter-input"
+                    type="text"
+                    [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+                    (input)="onFilterInput(column, $any($event.target).value)"
+                  />
+                }
+              }
+            }
+          </div>
+        }
+        @if (hasCommandColumn()) {
+          <div class="oge-filter-cell" role="gridcell"></div>
+        }
+      </div>
+    }
+  </div>
+  <div class="oge-body" [style.height.px]="bodyHeight()">
+    <div class="oge-rows" role="rowgroup" [style.transform]="rowsTransform()">
+      @for (node of viewNodes(); track node.key; let nodeIndex = $index) {
+        @switch (node.kind) {
+          @case ('data') {
+            <!-- Row click/contextmenu are pointer conveniences; the keyboard path goes
+                 through the focusable cells (arrows + Space + browser context-menu key). -->
+            <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+            <div
+              class="oge-row"
+              role="row"
+              [class.oge-row-selected]="selectionMode() !== 'none' && isRowSelected(node.key)"
+              [class.oge-row-removed]="store.editing.isRemoved(node.key)"
+              [class.oge-row-new]="store.editing.isAdded(node.key)"
+              [attr.aria-selected]="ariaSelectedOf(node)"
+              [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
+              [style.height.px]="virtualScroll() ? effRowHeight() : null"
+              [style.grid-template-columns]="gridTemplateColumns()"
+              (click)="onRowClick(node, $event)"
+              (contextmenu)="onRowContextMenuOpen(node, $event)"
+            >
+              @if (hasExpander()) {
+                <div class="oge-cell oge-expander-cell" role="gridcell">
+                  <button
+                    type="button"
+                    class="oge-expander-btn"
+                    [class.oge-expanded]="store.expansion.isDetailExpanded(node.key)"
+                    [attr.aria-expanded]="store.expansion.isDetailExpanded(node.key)"
+                    [attr.aria-label]="msg().toggleDetail"
+                    (click)="toggleDetail(node.key, $event)"
+                  >
+                    <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="m6 3.5 4.5 4.5L6 12.5" />
+                    </svg>
+                  </button>
+                </div>
+              }
+              @if (hasCheckboxColumn()) {
+                <div class="oge-cell oge-checkbox-cell" role="gridcell">
+                  <input
+                    type="checkbox"
+                    [checked]="isRowSelected(node.key)"
+                    [attr.aria-label]="msg().selectRow"
+                    (click)="$event.stopPropagation()"
+                    (change)="onCheckboxToggle(node, $event)"
+                  />
+                </div>
+              }
+              @for (column of resolvedColumns(); track column.id; let colIndex = $index) {
+                <div
+                  class="oge-cell"
+                  role="gridcell"
+                  [class.oge-cell-number]="column.dataType === 'number'"
+                  [class.oge-pinned]="column.pinned !== false"
+                  [class.oge-cell-dirty]="isCellDirty(node, column)"
+                  [class.oge-cell-editing]="isCellEditorOpen(node, column)"
+                  [style.left.px]="pinnedLeftOf(column)"
+                  [style.right.px]="pinnedRightOf(column)"
+                  [attr.data-cell]="viewStart() + nodeIndex + '-' + colIndex"
+                  [attr.aria-colindex]="leadingCellCount() + colIndex + 1"
+                  [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, colIndex) ? 0 : -1"
+                  (focus)="onCellFocus(viewStart() + nodeIndex, colIndex)"
+                  (click)="onCellClickToEdit(node, column, $event)"
+                  (keydown.f2)="onCellClickToEdit(node, column, $event)"
+                  (keydown.enter)="onCellClickToEdit(node, column, $event)"
+                >
+                  @if (isCellEditorOpen(node, column)) {
+                    @if (column.editTemplate) {
+                      <ng-container
+                        *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
+                      />
+                    } @else {
+                      @switch (column.dataType) {
+                        @case ('boolean') {
+                          <input
+                            class="oge-editor"
+                            type="checkbox"
+                            [formControl]="$any(editControl(node, column))"
+                            (keydown.enter)="onEditorEnter()"
+                            (keydown.escape)="cancelActiveEditor()"
+                          />
+                        }
+                        @default {
+                          <input
+                            class="oge-editor oge-editor-input"
+                            [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
+                            [formControl]="$any(editControl(node, column))"
+                            [class.oge-editor-invalid]="
+                              editControl(node, column).touched && editControl(node, column).invalid
+                            "
+                            [attr.title]="editorErrorText(editControl(node, column))"
+                            (keydown.enter)="onEditorEnter()"
+                            (keydown.escape)="cancelActiveEditor()"
+                            (keydown.tab)="commitAndNext(node, column, $event)"
+                            (blur)="onEditorBlur()"
+                          />
+                        }
+                      }
+                    }
+                  } @else if (column.cellTemplate) {
+                    <ng-container
+                      *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
+                    />
+                  } @else {
+                    {{ cellDisplayText(node, column) }}
+                  }
+                </div>
+              }
+              @if (hasCommandColumn()) {
+                <div class="oge-cell oge-command-cell" role="gridcell">
+                  @if (isRowEditing(node.key) || (editMode() === 'popup' && store.editing.editRowKey() === node.key)) {
+                    <button
+                      type="button"
+                      class="oge-command-btn oge-command-save"
+                      [attr.aria-label]="msg().saveRow"
+                      (click)="commitActiveRow(); $event.stopPropagation()"
+                    >
+                      <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8.5 3.5 3.5L13 5" /></svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="oge-command-btn"
+                      [attr.aria-label]="msg().cancelEdit"
+                      (click)="cancelActiveEditor(); $event.stopPropagation()"
+                    >
+                      <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m4 4 8 8M12 4l-8 8" /></svg>
+                    </button>
+                  } @else {
+                    @if ((editMode() === 'row' || editMode() === 'popup') && canUpdate()) {
+                      <button
+                        type="button"
+                        class="oge-command-btn"
+                        [attr.aria-label]="msg().editRow"
+                        (click)="startRowEdit(node, $event)"
+                      >
+                        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 2.5 13.5 5.5 5.5 13.5H2.5v-3z" /></svg>
+                      </button>
+                    }
+                    @if (canDelete()) {
+                      <button
+                        type="button"
+                        class="oge-command-btn oge-command-delete"
+                        [attr.aria-label]="store.editing.isRemoved(node.key) ? msg().undeleteRow : msg().deleteRow"
+                        (click)="deleteRow(node, $event)"
+                      >
+                        @if (store.editing.isRemoved(node.key)) {
+                          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7c1-2.5 3-4 5.5-4A5.5 5.5 0 1 1 3.5 10" /><path d="M3 3v4h4" /></svg>
+                        } @else {
+                          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h11M5.5 4.5V3a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.5M4 4.5l.7 8.2a1 1 0 0 0 1 .8h4.6a1 1 0 0 0 1-.8l.7-8.2" /></svg>
+                        }
+                      </button>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          }
+          @case ('group') {
+            <div
+              class="oge-group-row"
+              role="row"
+              tabindex="0"
+              [attr.aria-expanded]="node.expanded"
+              [style.height.px]="virtualScroll() ? effRowHeight() : null"
+              [style.padding-left.px]="12 + node.level * 20"
+              (click)="toggleGroup(node.key)"
+              (keydown.enter)="toggleGroup(node.key, $event)"
+              (keydown.space)="toggleGroup(node.key, $event)"
+            >
+              <div
+                class="oge-group-cell"
+                role="gridcell"
+                [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
+              >
+                <span class="oge-group-arrow" [class.oge-expanded]="node.expanded" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m6 3.5 4.5 4.5L6 12.5" />
+                  </svg>
+                </span>
+                <span class="oge-group-label">
+                  {{ groupCaption(node.groupField) + ': ' }}<strong>{{ groupValueText(node) }}</strong>
+                  <span class="oge-group-count">{{ ' (' + node.childCount + ')' }}</span>
+                </span>
+                @if (node.summaries.length) {
+                  <span class="oge-group-summaries">{{ ' ' + groupSummaryText(node) }}</span>
+                }
+              </div>
+            </div>
+          }
+          @case ('detail') {
+            <div class="oge-detail-row" role="row" [style.height.px]="virtualScroll() ? effDetailRowHeight() : null">
+              <div
+                class="oge-detail-cell"
+                role="gridcell"
+                [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
+              >
+                @if (detailTemplate(); as detail) {
+                  <ng-container *ngTemplateOutlet="detail.templateRef; context: detailContext(node.data)" />
+                }
+              </div>
+            </div>
+          }
+        }
+      } @empty {
+        <div class="oge-no-data">{{ msg().noData }}</div>
+      }
+    </div>
+  </div>
+  @if (hasTotalRow()) {
+    <div class="oge-total-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
+      @if (hasExpander()) {
+        <div class="oge-total-cell" role="gridcell"></div>
+      }
+      @if (hasCheckboxColumn()) {
+        <div class="oge-total-cell" role="gridcell"></div>
+      }
+      @if (hasCommandColumn()) {
+        <div class="oge-total-cell" role="gridcell"></div>
+      }
+      @for (column of resolvedColumns(); track column.id) {
+        <div
+          class="oge-total-cell"
+          role="gridcell"
+          [class.oge-cell-number]="column.dataType === 'number'"
+          [class.oge-pinned]="column.pinned !== false"
+          [style.left.px]="pinnedLeftOf(column)"
+          [style.right.px]="pinnedRightOf(column)"
+        >
+          {{ totalSummaryByColumn().get(column.id) ?? '' }}
+        </div>
+      }
+    </div>
+  }
+</div>
+@if (pagingOptions(); as pagingOpts) {
+  <oge-pager
+    [pageIndex]="store.paging.pageIndex()"
+    [pageCount]="pageCount()"
+    [totalCount]="totalCount()"
+    [pageSize]="store.paging.pageSize() ?? pagingOpts.pageSize"
+    [pageSizes]="pagingOpts.pageSizes ?? null"
+    [showInfo]="pagingOpts.showInfo !== false"
+    [messages]="msg()"
+    (pageChange)="store.paging.goTo($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+  />
+}
+@if (headerFilterField()) {
+  <div
+    class="oge-header-filter-popup"
+    role="listbox"
+    [style.top.px]="headerFilterPosition().top"
+    [style.left.px]="headerFilterPosition().left"
+  >
+    @if (headerFilterValues(); as values) {
+      <label class="oge-hf-item oge-hf-all">
+        <input type="checkbox" [checked]="allHeaderValuesSelected()" (change)="toggleAllHeaderValues()" />
+        <span>{{ msg().selectAllValues }}</span>
+      </label>
+      @for (value of values; track $index) {
+        <label class="oge-hf-item">
+          <input type="checkbox" [checked]="isHeaderValueSelected(value)" (change)="toggleHeaderValue(value)" />
+          <span>{{ headerValueText(value) }}</span>
+        </label>
+      }
+    } @else {
+      <div class="oge-hf-loading">{{ msg().loading }}</div>
+    }
+  </div>
+}
+@if (chooserOpen()) {
+  <div class="oge-chooser-popup">
+    <div class="oge-chooser-title">{{ msg().columnChooserTitle }}</div>
+    @for (column of declaredColumns(); track $index) {
+      <label class="oge-hf-item">
+        <input type="checkbox" [checked]="column.visible()" (change)="column.visible.set(!column.visible())" />
+        <span>{{ column.caption() ?? column.field() }}</span>
+      </label>
+    }
+  </div>
+}
+@if (popupNode(); as node) {
+  <div class="oge-popup-backdrop"></div>
+  <div class="oge-edit-popup" role="dialog" aria-modal="true" [attr.aria-label]="msg().editRow">
+    <div class="oge-popup-title">{{ msg().editRow }}</div>
+    <div class="oge-popup-fields">
+      @for (column of resolvedColumns(); track column.id) {
+        @if (column.editable && column.field) {
+          <div class="oge-popup-field">
+            <span class="oge-popup-label">{{ column.caption }}</span>
+            @if (column.editTemplate) {
+              <ng-container *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)" />
+            } @else {
+              @switch (column.dataType) {
+                @case ('boolean') {
+                  <input class="oge-editor" type="checkbox" [formControl]="$any(editControl(node, column))" />
+                }
+                @default {
+                  <input
+                    class="oge-editor oge-editor-input"
+                    [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
+                    [formControl]="$any(editControl(node, column))"
+                    [class.oge-editor-invalid]="
+                      editControl(node, column).touched && editControl(node, column).invalid
+                    "
+                  />
+                }
+              }
+            }
+            @if (editorErrorText(editControl(node, column)); as error) {
+              <span class="oge-popup-error">{{ error }}</span>
+            }
+          </div>
+        }
+      }
+    </div>
+    <div class="oge-popup-actions">
+      <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent" (click)="commitActiveRow()">
+        {{ msg().saveRow }}
+      </button>
+      <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="cancelActiveEditor()">
+        {{ msg().cancelEdit }}
+      </button>
+    </div>
+  </div>
+}
+@if (contextMenu(); as menu) {
+  <div class="oge-context-menu" role="menu" [style.top.px]="menu.y" [style.left.px]="menu.x">
+    @for (item of menu.items; track $index) {
+      <button
+        type="button"
+        role="menuitem"
+        class="oge-menu-item"
+        [disabled]="item.disabled"
+        (click)="runMenuItem(item)"
+      >
+        {{ item.text }}
+      </button>
+    }
+  </div>
+}

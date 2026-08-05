@@ -1,0 +1,26 @@
+/**
+ * Dark theme for @oge-ui/grid.
+ *
+ * Apply the `oge-theme-dark` class to any ancestor (typically <html> or
+ * <body>) — or to a single grid — to switch it to dark tokens:
+ *
+ *   <html class="oge-theme-dark">…
+ *   <oge-grid class="oge-theme-dark">…
+ */
+.oge-theme-dark .oge-grid,
+.oge-grid.oge-theme-dark {
+  /* native form controls (checkboxes, selects, date pickers) follow suit */
+  color-scheme: dark;
+  --oge-bg: #111827;
+  --oge-text-color: #d1d5db;
+  --oge-border-color: #374151;
+  --oge-header-bg: #1f2937;
+  --oge-header-color: #e5e7eb;
+  --oge-row-hover-bg: #1e293b;
+  --oge-selected-bg: #1e3a5f;
+  --oge-muted-color: #6b7280;
+  --oge-group-bg: #182031;
+  --oge-detail-bg: #0f1623;
+  --oge-popup-bg: #1f2937;
+  --oge-accent: #60a5fa;
+}

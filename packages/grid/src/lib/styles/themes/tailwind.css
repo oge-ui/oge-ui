@@ -1,0 +1,24 @@
+/**
+ * Tailwind bridge theme for @oge-ui/grid.
+ *
+ * Maps oge design tokens onto Tailwind v4 theme variables so the grid blends
+ * into a Tailwind app (slate surfaces, indigo accents). Every mapping has a
+ * plain-CSS fallback, so the file is safe even where a variable is not emitted.
+ *
+ * Usage (global styles, after your `@import "tailwindcss";`):
+ *   @import '@oge-ui/grid/themes/tailwind.css';
+ */
+.oge-grid {
+  --oge-border-color: var(--color-slate-200, #e2e8f0);
+  --oge-header-bg: var(--color-slate-50, #f8fafc);
+  --oge-header-color: var(--color-slate-600, #475569);
+  --oge-text-color: var(--color-slate-700, #334155);
+  --oge-row-hover-bg: var(--color-slate-100, #f1f5f9);
+  --oge-selected-bg: var(--color-indigo-50, #eef2ff);
+  --oge-group-bg: var(--color-slate-100, #f1f5f9);
+  --oge-detail-bg: var(--color-slate-50, #f8fafc);
+  --oge-muted-color: var(--color-slate-400, #94a3b8);
+  --oge-accent: var(--color-indigo-600, #4f46e5);
+  --oge-radius: var(--radius-lg, 8px);
+  --oge-font-size: var(--text-sm, 13.5px);
+}

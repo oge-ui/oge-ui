@@ -1,0 +1,28 @@
+/**
+ * Bootstrap 5 bridge theme for @oge-ui/grid.
+ *
+ * Maps oge design tokens onto Bootstrap CSS variables so the grid follows the
+ * app's Bootstrap theme (primary-blue accents, Bootstrap grays, its dark mode
+ * via `data-bs-theme="dark"`). Every mapping has a plain-CSS fallback.
+ *
+ * Usage (global styles, after bootstrap.css):
+ *   @import '@oge-ui/grid/themes/bootstrap.css';
+ */
+.oge-grid {
+  --oge-border-color: var(--bs-border-color, #dee2e6);
+  --oge-header-bg: var(--bs-tertiary-bg, #f8f9fa);
+  --oge-header-color: var(--bs-emphasis-color, #212529);
+  --oge-text-color: var(--bs-body-color, #212529);
+  --oge-bg: var(--bs-body-bg, #ffffff);
+  --oge-popup-bg: var(--bs-body-bg, #ffffff);
+  --oge-row-hover-bg: var(--bs-secondary-bg, #e9ecef);
+  --oge-selected-bg: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.15);
+  --oge-group-bg: var(--bs-tertiary-bg, #f8f9fa);
+  --oge-detail-bg: var(--bs-tertiary-bg, #f8f9fa);
+  --oge-muted-color: var(--bs-secondary-color, #6c757d);
+  --oge-accent: var(--bs-primary, #0d6efd);
+  --oge-font-size: 15px;
+  --oge-radius: var(--bs-border-radius, 6px);
+  --oge-row-height: 42px;
+  --oge-cell-padding-y: 10px;
+}

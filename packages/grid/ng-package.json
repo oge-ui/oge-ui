@@ -1,0 +1,15 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/packages/grid",
+  "allowedNonPeerDependencies": ["@oge-ui/core"],
+  "assets": [
+    {
+      "input": "src/lib/styles/themes",
+      "glob": "*.css",
+      "output": "themes"
+    }
+  ],
+  "lib": {
+    "entryFile": "src/index.ts"
+  }
+}

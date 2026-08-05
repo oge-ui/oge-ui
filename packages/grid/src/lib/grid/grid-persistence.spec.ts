@@ -1,0 +1,186 @@
+import { Component } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { OgeColumn } from '../columns/column';
+import { OGE_STATE_STORAGE, type OgeStateStorage } from '../state/state-storage';
+import { GridStateStore } from '../state/grid-state.store';
+import { OgeGrid } from './grid';
+
+interface Person {
+  id: number;
+  name: string;
+  city: string;
+  age: number;
+}
+
+const PEOPLE: Person[] = [
+  { id: 1, name: 'Cem', city: 'İzmir', age: 30 },
+  { id: 2, name: 'Ali', city: 'Ankara', age: 40 },
+];
+
+class MemoryStorage implements OgeStateStorage {
+  readonly map = new Map<string, string>();
+  get(key: string): string | null {
+    return this.map.get(key) ?? null;
+  }
+  set(key: string, value: string): void {
+    this.map.set(key, value);
+  }
+}
+
+async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+}
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+@Component({
+  imports: [OgeGrid, OgeColumn],
+  template: `
+    <oge-grid [data]="data" keyField="id" stateKey="test-grid" [groupPanel]="true">
+      <oge-column field="id" dataType="number" [width]="60" />
+      <oge-column field="name" />
+      <oge-column field="city" />
+      <oge-column field="age" dataType="number" />
+    </oge-grid>
+  `,
+})
+class PersistenceHost {
+  readonly data = PEOPLE;
+}
+
+function gridOf(fixture: ComponentFixture<PersistenceHost>): OgeGrid<Person> {
+  return fixture.debugElement.children[0].componentInstance as OgeGrid<Person>;
+}
+
+function storeOf(fixture: ComponentFixture<PersistenceHost>): GridStateStore {
+  return (gridOf(fixture) as unknown as { store: GridStateStore }).store;
+}
+
+describe('OgeGrid state persistence', () => {
+  it('round-trips sort, widths, pins and hidden columns through storage', async () => {
+    const storage = new MemoryStorage();
+    TestBed.configureTestingModule({
+      providers: [{ provide: OGE_STATE_STORAGE, useValue: storage }],
+    });
+
+    // --- session 1: user changes state
+    const first = TestBed.createComponent(PersistenceHost);
+    await settle(first);
+    const el = first.nativeElement as HTMLElement;
+    (el.querySelectorAll('.oge-header-cell')[1] as HTMLElement).click(); // sort by name asc
+    const store = storeOf(first);
+    store.columns.setWidth('city', 234);
+    store.columns.setPinned('id', 'left');
+    // hide the 'age' column via its directive model
+    const grid = gridOf(first) as unknown as {
+      declaredColumns(): readonly { field(): string | undefined; visible: { set(v: boolean): void } }[];
+    };
+    grid.declaredColumns().find((c) => c.field() === 'age')?.visible.set(false);
+    await settle(first);
+    await wait(350); // > save debounce
+    first.destroy();
+
+    const saved = storage.get('oge-grid:test-grid');
+    expect(saved).toBeTruthy();
+
+    // --- session 2: fresh grid restores everything
+    const second = TestBed.createComponent(PersistenceHost);
+    await settle(second);
+    const el2 = second.nativeElement as HTMLElement;
+
+    const nameHeader = Array.from(el2.querySelectorAll('.oge-header-cell')).find((h) =>
+      h.textContent?.includes('Name')
+    );
+    expect(nameHeader?.getAttribute('aria-sort')).toBe('ascending');
+    const rows = Array.from(el2.querySelectorAll('.oge-row .oge-cell:nth-child(2)')).map((c) =>
+      c.textContent?.trim()
+    );
+    expect(rows).toEqual(['Ali', 'Cem']); // restored sort applied to data
+
+    expect((el2.querySelector('.oge-header-row') as HTMLElement).style.gridTemplateColumns).toContain(
+      '234px'
+    );
+    const idHeader = Array.from(el2.querySelectorAll('.oge-header-cell')).find((h) =>
+      h.textContent?.includes('Id')
+    ) as HTMLElement;
+    expect(idHeader.classList.contains('oge-pinned')).toBe(true);
+    expect(
+      Array.from(el2.querySelectorAll('.oge-header-caption')).map((h) => h.textContent?.trim())
+    ).not.toContain('Age');
+  });
+});
+
+describe('OgeGrid header context menu', () => {
+  async function render() {
+    const fixture = TestBed.createComponent(PersistenceHost);
+    await settle(fixture);
+    return { fixture, el: fixture.nativeElement as HTMLElement };
+  }
+
+  function openMenu(el: HTMLElement, headerIndex: number): void {
+    el.querySelectorAll('.oge-header-cell')[headerIndex].dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+    );
+  }
+
+  function menuItem(el: HTMLElement, text: string): HTMLButtonElement {
+    return Array.from(el.querySelectorAll('.oge-menu-item')).find((b) =>
+      b.textContent?.includes(text)
+    ) as HTMLButtonElement;
+  }
+
+  it('sorts, groups, pins and hides via the built-in menu', async () => {
+    const { fixture, el } = await render();
+
+    openMenu(el, 1);
+    await settle(fixture);
+    expect(el.querySelector('.oge-context-menu')).toBeTruthy();
+    menuItem(el, 'Sort descending').click();
+    await settle(fixture);
+    expect(el.querySelectorAll('.oge-header-cell')[1].getAttribute('aria-sort')).toBe('descending');
+
+    openMenu(el, 2); // city
+    await settle(fixture);
+    menuItem(el, 'Group by this column').click();
+    await settle(fixture);
+    expect(el.querySelectorAll('.oge-group-row').length).toBeGreaterThan(0);
+
+    openMenu(el, 0); // id → pin left
+    await settle(fixture);
+    menuItem(el, 'Pin left').click();
+    await settle(fixture);
+    expect(
+      el.querySelectorAll('.oge-header-cell')[0].classList.contains('oge-pinned')
+    ).toBe(true);
+
+    openMenu(el, 3); // age → hide
+    await settle(fixture);
+    menuItem(el, 'Hide column').click();
+    await settle(fixture);
+    expect(
+      Array.from(el.querySelectorAll('.oge-header-caption')).map((h) => h.textContent?.trim())
+    ).not.toContain('Age');
+  });
+});
+
+describe('OgeGrid CSV export', () => {
+  it('exports the filtered + sorted view with formatting', async () => {
+    const fixture = TestBed.createComponent(PersistenceHost);
+    await settle(fixture);
+    const grid = gridOf(fixture);
+    const store = storeOf(fixture);
+    store.sort.set([{ field: 'name', dir: 'asc' }]);
+    store.filter.setRowFilter('city', {
+      type: 'binary',
+      field: 'city',
+      op: 'contains',
+      value: 'an',
+    });
+    await settle(fixture);
+
+    const csv = await grid.getCsv({ bom: false });
+    expect(csv).toBe('Id,Name,City,Age\r\n2,Ali,Ankara,40');
+  });
+});

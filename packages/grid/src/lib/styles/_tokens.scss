@@ -1,0 +1,21 @@
+// Core design tokens of the oge grid. Components must reference these
+// variables instead of raw values so themes only need to override tokens.
+@mixin core-tokens {
+  --oge-bg: #ffffff;
+  --oge-text-color: #1f2937;
+  --oge-border-color: #d5d9e0;
+  --oge-header-bg: #f5f6f8;
+  --oge-header-color: #3c4250;
+  --oge-row-hover-bg: #f0f4fa;
+  --oge-selected-bg: #e3edfb;
+  --oge-cell-padding-x: 12px;
+  --oge-cell-padding-y: 8px;
+  --oge-font-size: 14px;
+  --oge-row-height: 36px;
+  --oge-muted-color: #8a8f9c;
+  --oge-radius: 4px;
+  --oge-group-bg: #f0f2f6;
+  --oge-detail-bg: #fafbfd;
+  --oge-popup-bg: #ffffff;
+  --oge-accent: #2563eb;
+}
