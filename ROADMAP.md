@@ -3,7 +3,7 @@
 Comparison of `@oge-ui/grid` against DevExtreme DataGrid (v25/26 feature set).
 Legend: ✅ implemented · 🟡 partial · ❌ missing.
 
-Last updated: 2026-08-05 (after Phase 13 / UX & API parity).
+Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 1. Data binding & data operations
 
@@ -47,7 +47,7 @@ Last updated: 2026-08-05 (after Phase 13 / UX & API parity).
 | Filter row | ✔ | ✅ | dataType-aware editors, debounce |
 | Filter row **operator menu** per cell | ✔ | ✅ | per-dataType operators + Reset (Phase 10) |
 | Header filter (distinct values) | ✔ | ✅ | via `DataSource.distinct` |
-| Header filter search box | ✔ | ✅ | Phase 10; grouped items still ❌ |
+| Header filter search box | ✔ | ✅ | Phase 10; date columns group by year with tri-state checkboxes (Phase 14) |
 | Search panel | ✔ | ✅ | |
 | Search result **highlighting** | ✔ | ✅ | default cells, `<mark>` (Phase 10) |
 | **Filter Builder + filter panel** | ✔ | ✅ | recursive and/or editor + readable panel (Phase 10) |
@@ -60,10 +60,10 @@ Last updated: 2026-08-05 (after Phase 13 / UX & API parity).
 |---|---|---|---|
 | Group panel drag & drop, multi-level | ✔ | ✅ | |
 | Group summaries / total summaries | ✔ | ✅ | sum/avg/min/max/count, localized patterns |
-| Multiple summaries per column | ✔ | 🟡 | one `groupSummary` + one `totalSummary` per column |
-| Custom summary (`calculateCustomSummary`) | ✔ | ❌ | |
-| Summaries in **group footer** | ✔ | ❌ | inline on group row only |
-| Expand/collapse **all** (API + UI) | ✔ | ✅ | `expandAllGroups()` / `collapseAllGroups()` (Phase 13); no toolbar button |
+| Multiple summaries per column | ✔ | ✅ | `[groupSummary]="['sum','avg']"` (Phase 14) |
+| Custom summary (`calculateCustomSummary`) | ✔ | ✅ | `type: 'custom'` + column reducer, client-side (Phase 14) |
+| Summaries in **group footer** | ✔ | ✅ | `groupSummaryPosition: 'footer'` per column (Phase 14) |
+| Expand/collapse **all** (API + UI) | ✔ | ✅ | API (Phase 13) + toolbar buttons when grouped (Phase 14) |
 | `autoExpandGroup` control | ✔ | ✅ | `grouping.autoExpandAll` (Phase 12) |
 | Column `groupIndex` input | ✔ | ✅ | Phase 11 |
 
@@ -88,7 +88,7 @@ Last updated: 2026-08-05 (after Phase 13 / UX & API parity).
 | single/multiple/checkbox + shift/ctrl | ✔ | ✅ | |
 | Select-all (filtered) + indeterminate | ✔ | ✅ | |
 | `selectAllMode: 'page'` | ✔ | ✅ | page or all filtered pages, async fetch for remote (Phase 13) |
-| Deferred selection | ✔ | ❌ | |
+| Deferred selection | ✔ | ✅ | `selectionDeferred` + `[(selectionFilter)]` FilterExpr (Phase 14) |
 | Focused row mode (`focusedRowKey`) | ✔ | ✅ | `focusedRowEnabled` + `[(focusedRowKey)]` (Phase 13) |
 | Excel-like keyboard navigation | ✔ | ✅ | axe-verified ARIA; RTL-aware arrows |
 | Clipboard copy | ✔ | ✅ | `copyToClipboard()` + Ctrl+C, TSV of selection (Phase 13) |
@@ -121,7 +121,7 @@ Last updated: 2026-08-05 (after Phase 13 / UX & API parity).
 | Header context menu | ✔ | ✅ | sort/group/pin/hide, localized (Phase 9) |
 | **State persistence** | ✔ | ✅ | `stateKey` + `OGE_STATE_STORAGE` (Phase 9) |
 | **Export CSV/Excel** | ✔ | ✅ | CSV in core; Excel via lazy `@oge-ui/grid/export-excel` (exceljs, typed cells); `scope: all/page/selection` |
-| Export PDF | ✔ | ❌ | post-0.1 |
+| Export PDF | ✔ | ✅ | lazy `@oge-ui/grid/export-pdf` (jspdf + autotable, optional peers) (Phase 14) |
 | Imperative public API (refresh, expandAll, …) | ✔ | ✅ | `refresh/expandAllGroups/collapseAllGroups/clearFilters/clearSorting/scrollToRow/exportCsv/copyToClipboard/selectAllPages` (Phase 13) |
 | Event surface (cellClick, rowPrepared, …) | ✔ | ✅ | + `cellClick/rowDblClick/contentReady/rowReordered` (Phase 13) |
 | Master-detail | ✔ | ✅ | typed template |
@@ -139,4 +139,6 @@ Last updated: 2026-08-05 (after Phase 13 / UX & API parity).
 
 **Phase 13 — UX & API parity: ✅ DONE** (imperative API, richer event surface, loading panel, row alternation, focused-row mode, delete confirmation, noData/row templates, toolbar customization, Excel export secondary entry with export scopes, clipboard copy, `selectAllMode: 'page'`, pager display modes + "All" page size, RTL, row drag reordering, form edit mode, cascading lookups, buttons-column customization, `calculateSortValue`/`calculateFilterExpression`).
 
-**Next (post-0.2.0):** deferred selection · group footer summaries · custom summaries (`calculateCustomSummary`) · multiple summaries per column · header-filter search on grouped items · expand/collapse-all toolbar UI · PDF export · TreeList (separate component).
+**Phase 14 — Summary, selection & export parity: ✅ DONE (v0.3.0)** (multiple summaries per column, `calculateCustomSummary`, group footer summaries, expand/collapse-all toolbar UI, grouped date values in the header filter, deferred selection via `selectionFilter`, PDF export secondary entry).
+
+**Next:** TreeList (separate component) · pivot-style features · editing form layouts (`formItems` customization) · export appearance hooks (`customizeCell`).

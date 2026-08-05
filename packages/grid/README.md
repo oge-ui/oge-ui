@@ -9,9 +9,9 @@ Fast, complete **data grid for Angular** — built on signals, runs zoneless, th
 - **Live updates** — `ArrayDataSource.push()` patches changed cells in place
 - **Sorting** — single & multi (Shift+click), stable, locale-aware, `calculateSortValue`
 - **Filtering** — filter row with per-cell operator menu, Excel-style header filter with search, global search with highlighting, filter builder + panel, `calculateFilterExpression`
-- **Grouping** — drag & drop group panel, multi-level, group/total aggregates (`sum · avg · min · max · count`), deferred child loading, `expandAllGroups()` / `collapseAllGroups()`
+- **Grouping** — drag & drop group panel, multi-level, group/total aggregates (`sum · avg · min · max · count · custom`), multiple aggregates per column, group footer rows, deferred child loading, expand/collapse-all (API + toolbar)
 - **Editing** — `cell` / `row` / `batch` / `popup` / `form` modes on Reactive Forms with validation, delete confirmation and cancelable `savingChanges`
-- **Selection** — single / multiple / checkbox, filtered select-all (`selectAllMode: 'page' | 'allPages'`), Shift-ranges, focused-row mode
+- **Selection** — single / multiple / checkbox, filtered select-all (`selectAllMode: 'page' | 'allPages'`), Shift-ranges, focused-row mode, deferred selection as a serializable `selectionFilter` expression
 - **Columns** — resize, reorder, pin, chooser, banded headers, lookup columns (incl. cascading), calculated columns, adaptive hiding, typed cell/header/edit templates, customizable command buttons
 - **Master-detail** — fully typed `*ogeDetailTemplate`; custom full-row rendering via `*ogeRowTemplate`
 - **Row drag & drop** — handle-based reordering with `rowReordered` event
@@ -19,7 +19,7 @@ Fast, complete **data grid for Angular** — built on signals, runs zoneless, th
 - **RTL** — `rtlEnabled` or auto-detected, fully mirrored layout
 - **Header & row context menus** — built-in sort/group/pin/hide + custom items
 - **State persistence** — `stateKey` restores sort/filters/grouping/column layout (pluggable storage)
-- **Export** — CSV built in, Excel via lazy `@oge-ui/grid/export-excel` (exceljs stays out of your main bundle); `scope: 'all' | 'page' | 'selection'`
+- **Export** — CSV built in, Excel via lazy `@oge-ui/grid/export-excel` (exceljs) and PDF via lazy `@oge-ui/grid/export-pdf` (jspdf) — heavy libs stay out of your main bundle; `scope: 'all' | 'page' | 'selection'`
 - **Toolbar** — default items plus your own controls via the `[ogeToolbar]` slot
 - **Imperative API** — `refresh`, `scrollToRow`, `clearFilters`, `clearSorting`, `exportCsv`, `copyToClipboard`, …
 - **Theming** — `--oge-*` design tokens, dark theme, Tailwind & Bootstrap bridge themes, row striping, loading panel
