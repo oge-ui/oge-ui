@@ -26,7 +26,7 @@ export {
   EditingSlice,
   type OgeEditMode,
   type OgeEditingOptions,
-} from './lib/state/editing-slice';
+} from '@oge-ui/grid/foundation';
 export {
   OGE_GRID_CONFIG,
   OGE_DEFAULT_GRID_CONFIG,

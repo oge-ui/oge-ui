@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import {
   ChangeDetectionStrategy,
@@ -50,6 +50,7 @@ import {
   ColumnLayoutModel,
   ColumnModel,
   DeferredChildrenLoader,
+  EditingModel,
   KeyboardNavModel,
   RowVirtualizerModel,
   DRAG_WIDTH,
@@ -59,8 +60,9 @@ import {
   humanize,
   isDataSource,
   lookupTextOf,
-  mapLookupItems,
   type LookupItem,
+  type OgeEditingOptions,
+  type OgeSavingChangesEvent,
   type PendingChildRequest,
   type ResolvedColumn as FoundationResolvedColumn,
   OGE_STATE_STORAGE,
@@ -86,7 +88,6 @@ import {
 } from '../filter-builder/filter-builder';
 import { OgePager } from '../pager/pager';
 import { GridStateStore } from '../state/grid-state.store';
-import type { OgeEditingOptions } from '../state/editing-slice';
 import type { SelectionMode } from '../state/selection-slice';
 import type { OgeEditTemplateContext } from '../templates/edit-template';
 import type { OgeCellTemplateContext } from '../templates/cell-template';
@@ -250,17 +251,9 @@ export interface OgeScrollingOptions {
   columnRenderingMode?: 'standard' | 'virtual';
 }
 
-export interface OgeDataChange<T = unknown> {
-  type: 'insert' | 'update' | 'remove';
-  key: RowKey;
-  data?: Record<string, unknown> & Partial<T>;
-}
-
-/** Cancelable; set `cancel = true` in the handler to abort the save. */
-export interface OgeSavingChangesEvent<T = unknown> {
-  changes: OgeDataChange<T>[];
-  cancel: boolean;
-}
+// Save-flow types moved to the foundation entry with the editing model;
+// re-exported so `@oge-ui/grid` consumers are unaffected.
+export { type OgeDataChange, type OgeSavingChangesEvent } from '@oge-ui/grid/foundation';
 
 /** Grid-side view of the shared column view-model: `source` is the OgeColumn. */
 type ResolvedColumn<T = unknown> = FoundationResolvedColumn<T, OgeColumn<T>>;
@@ -1934,17 +1927,23 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- editing -------------------------------------------------------------
 
-  protected readonly editingOptions = computed<OgeEditingOptions | null>(() => {
-    const value = this.editing();
-    return value === false ? null : value;
+  /** Editing engine: modes, editor controls, commit/cancel/save flows. */
+  private readonly editingModel = new EditingModel<T, OgeColumn<T>>({
+    editing: this.editing,
+    slice: this.store.editing,
+    columns: this.resolvedColumns,
+    flatNodes: this.flatNodes,
+    source: this.adapter.source,
+    confirmDeleteMessage: computed(() => this.msg().confirmDelete),
+    events: { savingChanges: (event) => this.savingChanges.emit(event) },
+    reload: () => this.adapter.reload(),
   });
 
-  protected readonly editMode = computed(() => this.editingOptions()?.mode ?? null);
-  protected readonly canUpdate = computed(
-    () => !!this.editingOptions() && this.editingOptions()?.allowUpdating !== false
-  );
-  protected readonly canDelete = computed(() => !!this.editingOptions()?.allowDeleting);
-  protected readonly canAdd = computed(() => !!this.editingOptions()?.allowAdding);
+  protected readonly editingOptions = this.editingModel.editingOptions;
+  protected readonly editMode = this.editingModel.editMode;
+  protected readonly canUpdate = this.editingModel.canUpdate;
+  protected readonly canDelete = this.editingModel.canDelete;
+  protected readonly canAdd = this.editingModel.canAdd;
 
   /** Trailing command column (edit/delete/save/cancel buttons). */
   protected readonly hasCommandColumn = computed(() => {
@@ -1975,86 +1974,33 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     button.onClick?.(node.data, node.key);
   }
 
-  private newRowCounter = 0;
-
   /** Row data with pending edits applied (batch dirty view). */
   protected displayValue(node: DataRowNode<T>, column: ResolvedColumn<T>): unknown {
-    const field = column.field;
-    if (field && this.store.editing.hasChange(node.key, field)) {
-      return this.store.editing.changeFor(node.key, field);
-    }
-    return column.accessor(node.data);
+    return this.editingModel.displayValue(node, column);
   }
 
   protected isCellDirty(node: DataRowNode<T>, column: ResolvedColumn<T>): boolean {
-    return (
-      this.editMode() === 'batch' &&
-      column.field != null &&
-      this.store.editing.hasChange(node.key, column.field)
-    );
+    return this.editingModel.isCellDirty(node, column);
   }
 
   protected isRowEditing(key: RowKey): boolean {
-    const mode = this.editMode();
-    return (mode === 'row' || mode === 'form') && this.store.editing.editRowKey() === key;
+    return this.editingModel.isRowEditing(key);
   }
 
   /** Form mode: the row whose cells are replaced by the inline form. */
   protected isFormRow(key: RowKey): boolean {
-    return this.editMode() === 'form' && this.store.editing.editRowKey() === key;
+    return this.editingModel.isFormRow(key);
   }
 
   protected isCellEditorOpen(node: DataRowNode<T>, column: ResolvedColumn<T>): boolean {
-    if (!column.editable || !column.field || !this.canUpdate()) return false;
-    const mode = this.editMode();
-    if (mode === 'cell' || mode === 'batch') {
-      return this.store.editing.isCellEditing(node.key, column.field);
-    }
-    return mode === 'row' && this.store.editing.editRowKey() === node.key;
+    return this.editingModel.isCellEditorOpen(node, column);
   }
 
   /** Reactive controls for the active editor(s), keyed `key::field`. */
-  protected readonly activeControls = computed<ReadonlyMap<string, FormControl<unknown>>>(() => {
-    const map = new Map<string, FormControl<unknown>>();
-    const mode = this.editMode();
-    if (!mode) return map;
-    const cell = this.store.editing.editCell();
-    const rowKey = this.store.editing.editRowKey();
-    const targetKey = cell?.key ?? rowKey;
-    if (targetKey === null || targetKey === undefined) return map;
-    const node = this.flatNodes().find(
-      (candidate): candidate is DataRowNode<T> =>
-        candidate.kind === 'data' && candidate.key === targetKey
-    );
-    if (!node) return map;
-    for (const column of this.resolvedColumns()) {
-      const field = column.field;
-      if (!field || !column.editable) continue;
-      if (cell && field !== cell.field) continue;
-      const validators = [...(column.source?.validators() ?? [])];
-      if (column.source?.required()) validators.push(Validators.required);
-      map.set(
-        `${String(targetKey)}::${field}`,
-        new FormControl<unknown>(untracked(() => this.displayValue(node, column)), {
-          validators,
-        })
-      );
-    }
-    return map;
-  });
+  protected readonly activeControls = this.editingModel.activeControls;
 
   protected editControl(node: DataRowNode<T>, column: ResolvedColumn<T>): FormControl<unknown> {
-    return this.activeControls().get(`${String(node.key)}::${column.field}`) as FormControl<unknown>;
-  }
-
-  /** Row merged with its open editors' current values (cascading lookups). */
-  private draftRowOf(node: DataRowNode<T>): T {
-    const prefix = `${String(node.key)}::`;
-    const draft: Record<string, unknown> = { ...(node.data as Record<string, unknown>) };
-    for (const [mapKey, control] of untracked(this.activeControls)) {
-      if (mapKey.startsWith(prefix)) draft[mapKey.slice(prefix.length)] = control.value;
-    }
-    return draft as T;
+    return this.editingModel.editControl(node, column);
   }
 
   /** Editor option list — cascading (function) lookups see the row's draft. */
@@ -2062,14 +2008,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     node: DataRowNode<T>,
     column: ResolvedColumn<T>
   ): readonly LookupItem[] | undefined {
-    const lookup = column.lookup;
-    if (lookup && typeof lookup.dataSource === 'function') {
-      return mapLookupItems(
-        (lookup.dataSource as (row: T) => readonly unknown[])(this.draftRowOf(node)),
-        lookup
-      );
-    }
-    return column.lookupItems;
+    return this.editingModel.lookupItemsFor(node, column);
   }
 
   protected editContextFor(
@@ -2115,202 +2054,48 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     }
   }
 
-  private editorValue(control: FormControl<unknown>, column: ResolvedColumn<T>): unknown {
-    const value = control.value;
-    if (column.lookupItems) {
-      const match = column.lookupItems.find((item) => String(item.value) === String(value));
-      return match ? match.value : value;
-    }
-    if (column.dataType === 'number' && value !== null && value !== '' && value !== undefined) {
-      const parsed = Number(value);
-      return Number.isNaN(parsed) ? value : parsed;
-    }
-    return value;
-  }
-
   /** Commits the single-cell editor (cell → save, batch → pending change). */
   protected commitActiveCell(): void {
-    const cell = this.store.editing.editCell();
-    if (!cell) return;
-    const column = this.resolvedColumns().find((candidate) => candidate.field === cell.field);
-    const control = this.activeControls().get(`${String(cell.key)}::${cell.field}`);
-    if (!column || !control) return;
-    if (control.invalid) {
-      control.markAsTouched();
-      return;
-    }
-    const node = this.flatNodes().find(
-      (candidate): candidate is DataRowNode<T> =>
-        candidate.kind === 'data' && candidate.key === cell.key
-    );
-    const value = this.editorValue(control, column);
-    const original = node ? column.accessor(node.data) : undefined;
-    if (this.editMode() === 'batch') {
-      if (value !== original || this.store.editing.isAdded(cell.key)) {
-        this.store.editing.setChange(cell.key, cell.field, value);
-      }
-      this.store.editing.stopEditor();
-      return;
-    }
-    // cell mode: immediate write-back
-    if (value === original) {
-      this.store.editing.stopEditor();
-      return;
-    }
-    void this.runSave([
-      { type: 'update', key: cell.key, data: { [cell.field]: value } as OgeDataChange<T>['data'] },
-    ]);
+    this.editingModel.commitActiveCell();
   }
 
   protected cancelActiveEditor(): void {
-    const rowKey = this.store.editing.editRowKey();
-    if (rowKey !== null && this.store.editing.isAdded(rowKey)) {
-      this.store.editing.dropAdded(rowKey);
-    }
-    this.store.editing.stopEditor();
+    this.editingModel.cancelActiveEditor();
   }
 
   protected onEditorBlur(): void {
-    const cell = this.store.editing.editCell();
-    if (!cell) return;
-    const control = this.activeControls().get(`${String(cell.key)}::${cell.field}`);
-    if (control && control.valid) this.commitActiveCell();
+    this.editingModel.onEditorBlur();
   }
 
   /** Tab inside a cell editor: commit and open the next editable column. */
   protected commitAndNext(node: DataRowNode<T>, column: ResolvedColumn<T>, event: Event): void {
-    const mode = this.editMode();
-    if (mode !== 'cell' && mode !== 'batch') return;
-    event.preventDefault();
-    this.commitActiveCell();
-    const columns = this.resolvedColumns();
-    const from = columns.findIndex((candidate) => candidate.id === column.id);
-    const next = columns.slice(from + 1).find((candidate) => candidate.editable && candidate.field);
-    if (next?.field) this.store.editing.startCell(node.key, next.field);
+    this.editingModel.commitAndNext(node, column, event);
   }
 
   protected startRowEdit(node: DataRowNode<T>, event?: Event): void {
-    event?.stopPropagation();
-    this.store.editing.startRow(node.key);
+    this.editingModel.startRowEdit(node, event);
   }
 
   /** Saves the row editor (row + popup modes). */
   protected commitActiveRow(): void {
-    const rowKey = this.store.editing.editRowKey();
-    if (rowKey === null) return;
-    const node = this.flatNodes().find(
-      (candidate): candidate is DataRowNode<T> =>
-        candidate.kind === 'data' && candidate.key === rowKey
-    );
-    if (!node) return;
-    const controls = this.activeControls();
-    const data: Record<string, unknown> = {};
-    let invalid = false;
-    for (const column of this.resolvedColumns()) {
-      const field = column.field;
-      if (!field || !column.editable) continue;
-      const control = controls.get(`${String(rowKey)}::${field}`);
-      if (!control) continue;
-      if (control.invalid) {
-        control.markAsTouched();
-        invalid = true;
-        continue;
-      }
-      const value = this.editorValue(control, column);
-      if (value !== column.accessor(node.data) || this.store.editing.isAdded(rowKey)) {
-        data[field] = value;
-      }
-    }
-    if (invalid) return;
-    if (!Object.keys(data).length) {
-      this.store.editing.stopEditor();
-      return;
-    }
-    const type = this.store.editing.isAdded(rowKey) ? 'insert' : 'update';
-    void this.runSave([{ type, key: rowKey, data: data as OgeDataChange<T>['data'] }]);
+    this.editingModel.commitActiveRow();
   }
 
   protected deleteRow(node: DataRowNode<T>, event?: Event): void {
-    event?.stopPropagation();
-    if (this.store.editing.isAdded(node.key)) {
-      this.store.editing.dropAdded(node.key);
-      return;
-    }
-    if (this.editMode() === 'batch') {
-      this.store.editing.toggleRemoved(node.key);
-      return;
-    }
-    const editing = this.editing();
-    if (
-      editing &&
-      editing.confirmDelete &&
-      typeof confirm === 'function' &&
-      !confirm(untracked(this.msg).confirmDelete)
-    ) {
-      return;
-    }
-    void this.runSave([{ type: 'remove', key: node.key }]);
+    this.editingModel.deleteRow(node, event);
   }
 
   protected addNewRow(): void {
-    const key = `oge-new-${++this.newRowCounter}`;
-    this.store.editing.addRow(key);
-    const mode = this.editMode();
-    if (mode === 'row' || mode === 'popup' || mode === 'form' || mode === 'cell') {
-      this.store.editing.startRow(key);
-    }
+    this.editingModel.addNewRow();
   }
 
   /** Batch toolbar: save everything pending. */
   protected saveAllChanges(): void {
-    const editing = this.store.editing;
-    const changes: OgeDataChange<T>[] = [];
-    for (const key of editing.added()) {
-      if (editing.removed().has(key)) continue;
-      changes.push({
-        type: 'insert',
-        key,
-        data: (editing.changes().get(key) ?? {}) as OgeDataChange<T>['data'],
-      });
-    }
-    for (const [key, data] of editing.changes()) {
-      if (editing.isAdded(key) || editing.removed().has(key)) continue;
-      changes.push({ type: 'update', key, data: data as OgeDataChange<T>['data'] });
-    }
-    for (const key of editing.removed()) {
-      if (editing.isAdded(key)) continue;
-      changes.push({ type: 'remove', key });
-    }
-    void this.runSave(changes);
+    this.editingModel.saveAllChanges();
   }
 
   protected discardAllChanges(): void {
-    this.store.editing.clearPending();
-  }
-
-  private async runSave(changes: OgeDataChange<T>[]): Promise<void> {
-    if (!changes.length) {
-      this.store.editing.stopEditor();
-      return;
-    }
-    const event: OgeSavingChangesEvent<T> = { changes, cancel: false };
-    this.savingChanges.emit(event);
-    if (event.cancel) return;
-    const source = this.adapter.source();
-    try {
-      for (const change of changes) {
-        if (change.type === 'update') {
-          await source?.update?.(change.key, change.data as Partial<T>);
-        } else if (change.type === 'insert') {
-          await source?.insert?.(change.data as T);
-        } else {
-          await source?.remove?.(change.key);
-        }
-      }
-    } finally {
-      this.store.editing.clearPending();
-      this.adapter.reload();
-    }
+    this.editingModel.discardAllChanges();
   }
 
   // --- group panel & column drag/drop --------------------------------------

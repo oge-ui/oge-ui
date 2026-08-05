@@ -1,7 +1,7 @@
 import { Injectable, Signal, computed, effect, untracked } from '@angular/core';
 import type { GridStateSnapshot, LoadOptions } from '@oge-ui/core';
+import { EditingSlice } from '@oge-ui/grid/foundation';
 import { ColumnsSlice } from './columns-slice';
-import { EditingSlice } from './editing-slice';
 import { ExpansionSlice } from './expansion-slice';
 import { FilterSlice } from './filter-slice';
 import { GroupingSlice } from './grouping-slice';

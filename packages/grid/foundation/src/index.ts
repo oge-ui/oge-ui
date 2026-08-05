@@ -7,6 +7,13 @@ export {
   type PendingChildRequest,
 } from './deferred-children-loader';
 export {
+  EditingModel,
+  type EditingModelDeps,
+  type OgeDataChange,
+  type OgeSavingChangesEvent,
+} from './editing-model';
+export { EditingSlice, type OgeEditMode, type OgeEditingOptions } from './editing-slice';
+export {
   KeyboardNavModel,
   type KeyboardNavModelDeps,
   type KeyboardNavTreeHooks,

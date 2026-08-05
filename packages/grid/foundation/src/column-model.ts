@@ -1,4 +1,5 @@
 import { computed, type Signal, type TemplateRef } from '@angular/core';
+import type { ValidatorFn } from '@angular/forms';
 import {
   createFieldAccessor,
   type DataSource,
@@ -56,6 +57,10 @@ export interface ColumnSource<T = unknown> {
   readonly hidingPriority: () => number | undefined;
   readonly pinned: () => false | 'left' | 'right';
   readonly editable: () => boolean;
+  /** Marks the field as required in editors. */
+  readonly required: () => boolean;
+  /** Extra Angular validators applied to the editor control. */
+  readonly validators: () => readonly ValidatorFn[] | undefined;
   readonly cellTemplate: () => { templateRef: TemplateRef<object> } | undefined;
   readonly headerTemplate: () => { templateRef: TemplateRef<object> } | undefined;
   readonly editTemplate: () => { templateRef: TemplateRef<object> } | undefined;
