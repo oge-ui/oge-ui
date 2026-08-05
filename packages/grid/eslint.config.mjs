@@ -54,4 +54,24 @@ export default [
     // Override or add rules here
     rules: {},
   },
+  {
+    // The foundation entry point must stay independent of the primary entry:
+    // it may only depend on @oge-ui/core and Angular. This keeps the entry
+    // points cycle-free (primary imports foundation, never the reverse).
+    files: ['foundation/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@oge-ui/grid', '**/src/lib/**', '../../src/**'],
+              message:
+                'foundation must not import from the primary @oge-ui/grid entry point.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];

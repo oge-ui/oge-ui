@@ -50,6 +50,12 @@ import {
   type ValueAccessor,
   type ViewportWindow,
 } from '@oge-ui/core';
+import {
+  CHECKBOX_WIDTH,
+  COMMAND_WIDTH,
+  DRAG_WIDTH,
+  EXPANDER_WIDTH,
+} from '@oge-ui/grid/foundation';
 import { OgeColumn, type OgeColumnLookup, type OgeDataType } from '../columns/column';
 import { OgeColumnGroup } from '../columns/column-group';
 import { formatCellValue } from '../columns/value-format';
@@ -342,10 +348,6 @@ function lookupTextOf(items: readonly LookupItem[], value: unknown): string {
   return text !== undefined ? text : value == null ? '' : String(value);
 }
 
-const EXPANDER_WIDTH = 32;
-const CHECKBOX_WIDTH = 36;
-const COMMAND_WIDTH = 90;
-const DRAG_WIDTH = 28;
 const COLUMN_DRAG_TYPE = 'application/x-oge-column';
 
 @Component({

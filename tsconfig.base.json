@@ -17,6 +17,7 @@
       "@oge-ui/core": ["./packages/core/src/index.ts"],
       "@oge-ui/grid": ["./packages/grid/src/index.ts"],
       "@oge-ui/grid/export-excel": ["./packages/grid/export-excel/src/index.ts"],
+      "@oge-ui/grid/foundation": ["./packages/grid/foundation/src/index.ts"],
       "@oge-ui/grid/export-pdf": ["./packages/grid/export-pdf/src/index.ts"]
     }
   },
