@@ -5,14 +5,16 @@ import { createFieldAccessor, type ValueAccessor } from '../../util/value-access
 /**
  * Stable multi-key sort. Returns the input array untouched when there is
  * nothing to sort (referential transparency helps memoization later).
+ * `sortValues` overrides the accessor per field (custom sort keys).
  */
 export function applySort<T>(
   rows: readonly T[],
-  sort: readonly SortDescriptor[] | undefined
+  sort: readonly SortDescriptor[] | undefined,
+  sortValues?: Readonly<Record<string, ValueAccessor<T>>>
 ): readonly T[] {
   if (!sort?.length || rows.length < 2) return rows;
   const keys: { accessor: ValueAccessor<T>; mult: 1 | -1 }[] = sort.map((descriptor) => ({
-    accessor: createFieldAccessor<T>(descriptor.field),
+    accessor: sortValues?.[descriptor.field] ?? createFieldAccessor<T>(descriptor.field),
     mult: descriptor.dir === 'desc' ? -1 : 1,
   }));
   // Array.prototype.sort is stable per the ES spec.

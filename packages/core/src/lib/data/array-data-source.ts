@@ -17,6 +17,8 @@ export interface ArrayDataSourceOptions<T> {
   key?: keyof T | ((row: T) => RowKey);
   /** Fields the global search text matches against. Defaults to the first row's keys. */
   searchFields?: readonly string[];
+  /** Per-field custom sort keys (`calculateSortValue`). */
+  sortValues?: Readonly<Record<string, (row: T) => unknown>>;
 }
 
 /**
@@ -37,6 +39,7 @@ export class ArrayDataSource<T> implements DataSource<T> {
   private readonly getRows: () => readonly T[];
   private readonly keySelector: ((row: T) => RowKey) | null;
   private readonly searchFields: readonly string[] | undefined;
+  private readonly sortValues: Readonly<Record<string, (row: T) => unknown>> | undefined;
   /** Present only when constructed with a mutable array (enables CRUD). */
   private readonly mutableRows: T[] | null;
 
@@ -48,6 +51,7 @@ export class ArrayDataSource<T> implements DataSource<T> {
     this.mutableRows = typeof data === 'function' ? null : (data as T[]);
     this.keySelector = options.key != null ? resolveKeySelector(options.key) : null;
     this.searchFields = options.searchFields;
+    this.sortValues = options.sortValues;
   }
 
   private requireMutable(): T[] {
@@ -126,7 +130,7 @@ export class ArrayDataSource<T> implements DataSource<T> {
 
   load(options: LoadOptions): Promise<LoadResult<T>> {
     return Promise.resolve(
-      runLoadOptions(this.getRows(), options, { searchFields: this.searchFields })
+      runLoadOptions(this.getRows(), options, { searchFields: this.searchFields, sortValues: this.sortValues })
     );
   }
 

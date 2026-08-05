@@ -1,6 +1,6 @@
 import { Directive, contentChild, input, model } from '@angular/core';
 import type { ValidatorFn } from '@angular/forms';
-import type { FilterOperator, SummaryType } from '@oge-ui/core';
+import type { FilterExpr, FilterOperator, SummaryType } from '@oge-ui/core';
 import { OgeCellTemplate } from '../templates/cell-template';
 import { OgeEditTemplate } from '../templates/edit-template';
 import { OgeHeaderTemplate } from '../templates/header-template';
@@ -54,6 +54,12 @@ export class OgeColumn<T = unknown> {
   readonly lookup = input<OgeColumnLookup>();
   /** Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). */
   readonly calculateCellValue = input<(row: T) => unknown>();
+  /** Custom sort key for this column (client-side array data only). */
+  readonly calculateSortValue = input<(row: T) => unknown>();
+  /** Custom filter expression for filter-row/operator-menu input on this column. */
+  readonly calculateFilterExpression = input<
+    (value: unknown, operator: FilterOperator) => FilterExpr | null
+  >();
   /** Initial sort direction applied on first render (with `sortIndex` for multi-sort order). */
   readonly sortOrder = input<'asc' | 'desc'>();
   readonly sortIndex = input<number>();

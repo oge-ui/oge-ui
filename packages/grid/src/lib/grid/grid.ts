@@ -227,6 +227,9 @@ interface ResolvedColumn<T = unknown> {
   sortable: boolean;
   filterable: boolean;
   filterOperator: FilterOperator | undefined;
+  calculateFilterExpression:
+    | ((value: unknown, operator: FilterOperator) => FilterExpr | null)
+    | undefined;
   pinned: false | 'left' | 'right';
   accessor: ValueAccessor<T>;
   format: ((value: unknown) => string) | undefined;
@@ -584,8 +587,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     effect(() => {
       const data = this.data();
       const keyField = this.keyField();
+      const sortValues = this.sortValueSelectors();
       this.adapter.setSource(
-        isDataSource(data) ? data : new ArrayDataSource<T>(data, { key: keyField })
+        isDataSource(data) ? data : new ArrayDataSource<T>(data, { key: keyField, sortValues })
       );
     });
     // Inline object/array bindings produce a fresh reference on every change
@@ -976,6 +980,18 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** `autoExpandAll: false` inverts group expansion: the toggled set holds *expanded* keys. */
   private readonly groupsAutoExpand = computed(() => this.grouping()?.autoExpandAll !== false);
 
+  /** Per-field `calculateSortValue` selectors (array data only). */
+  private readonly sortValueSelectors = computed<
+    Record<string, (row: T) => unknown> | undefined
+  >(() => {
+    const entries = this.declaredColumns().flatMap((column) => {
+      const field = column.field();
+      const calculate = column.calculateSortValue();
+      return field && calculate ? [[field, calculate] as const] : [];
+    });
+    return entries.length ? Object.fromEntries(entries) : undefined;
+  });
+
   // --- deferred group loading ----------------------------------------------
 
   /** Children fetched on demand for groups delivered with `items: null`. */
@@ -1296,6 +1312,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
             sortable: column.sortable() && field != null,
             filterable: column.filterable() && field != null,
             filterOperator: column.filterOperator(),
+            calculateFilterExpression: column.calculateFilterExpression(),
             pinned: pinOverrides.get(id) ?? column.pinned(),
             accessor: calculate ?? (field ? createFieldAccessor<T>(field) : () => undefined),
             format: column.format(),
@@ -1325,6 +1342,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         sortable: true,
         filterable: true,
         filterOperator: undefined,
+        calculateFilterExpression: undefined,
         pinned: pinOverrides.get(field) ?? (false as const),
         lookupItems: undefined,
         bandCaption: undefined,
@@ -2409,9 +2427,25 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.debounced(`f:${field}`, () => {
       this.store.filter.setRowFilter(
         field,
-        buildRowFilterExpr(field, column.dataType, raw, this.currentOperator(column))
+        this.rowFilterExprFor(column, raw, this.currentOperator(column))
       );
     });
+  }
+
+  /** Row-filter expression for a column — the column's custom builder wins. */
+  private rowFilterExprFor(
+    column: ResolvedColumn<T>,
+    raw: string,
+    operator?: FilterOperator
+  ): FilterExpr | null {
+    const field = column.field;
+    if (!field) return null;
+    if (column.calculateFilterExpression) {
+      const text = raw.trim();
+      const op = operator ?? column.filterOperator ?? defaultOperatorFor(column.dataType);
+      return text ? column.calculateFilterExpression(text, op) : null;
+    }
+    return buildRowFilterExpr(field, column.dataType, raw, operator);
   }
 
   /** Selects apply immediately (no debounce). */
@@ -2419,10 +2453,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const field = column.field;
     if (!field) return;
     this.rowFilterRaw.set(field, raw);
-    this.store.filter.setRowFilter(
-      field,
-      buildRowFilterExpr(field, column.dataType, raw, this.currentOperator(column))
-    );
+    this.store.filter.setRowFilter(field, this.rowFilterExprFor(column, raw, this.currentOperator(column)));
   }
 
   protected onSearchInput(raw: string): void {
@@ -2493,10 +2524,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     // re-apply the current editor value with the new operator
     const raw = this.rowFilterRaw.get(field) ?? '';
     const effective = op ?? menu.column.filterOperator ?? defaultOperatorFor(menu.column.dataType);
-    this.store.filter.setRowFilter(
-      field,
-      buildRowFilterExpr(field, menu.column.dataType, raw, effective)
-    );
+    this.store.filter.setRowFilter(field, this.rowFilterExprFor(menu.column, raw, effective));
   }
 
   // --- filter panel + builder ----------------------------------------------

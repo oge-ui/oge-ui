@@ -7,9 +7,11 @@ import { applyFilter } from './steps/filter.step';
 import { applyPaging } from './steps/paginate.step';
 import { applySort } from './steps/sort.step';
 
-export interface RunLoadOptionsConfig {
+export interface RunLoadOptionsConfig<T = unknown> {
   /** Fields the global `searchText` is matched against (client-side). */
   searchFields?: readonly string[];
+  /** Per-field custom sort keys (`calculateSortValue`); client-side only. */
+  sortValues?: Readonly<Record<string, (row: T) => unknown>>;
 }
 
 /**
@@ -21,7 +23,7 @@ export interface RunLoadOptionsConfig {
 export function runLoadOptions<T>(
   rows: readonly T[],
   options: LoadOptions,
-  config: RunLoadOptionsConfig = {}
+  config: RunLoadOptionsConfig<T> = {}
 ): LoadResult<T> {
   const filtered = applyFilter(rows, options.filter);
   const searchFields =
@@ -38,10 +40,11 @@ export function runLoadOptions<T>(
 
   const groups = options.group ?? [];
   if (groups.length) {
-    const sorted = applySort(searched, [
-      ...groups.map((g) => ({ field: g.field, dir: g.dir })),
-      ...(options.sort ?? []),
-    ]);
+    const sorted = applySort(
+      searched,
+      [...groups.map((g) => ({ field: g.field, dir: g.dir })), ...(options.sort ?? [])],
+      config.sortValues
+    );
     const grouped = groupRows(sorted, groups, options.groupSummary ?? []);
     return {
       data: grouped,
@@ -51,7 +54,7 @@ export function runLoadOptions<T>(
     };
   }
 
-  const sorted = applySort(searched, options.sort);
+  const sorted = applySort(searched, options.sort, config.sortValues);
   const paged = applyPaging(sorted, options.skip, options.take);
   return { data: paged, ...totalCount, ...summary };
 }
