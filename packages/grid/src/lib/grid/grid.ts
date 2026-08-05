@@ -2681,11 +2681,27 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     }
   }
 
+  /** Header the dragged column would be inserted in front of (drop indicator). */
+  protected readonly headerDropTargetId = signal<string | null>(null);
+
+  protected onHeaderDragOver(column: ResolvedColumn<T>, event: DragEvent): void {
+    if (!event.dataTransfer?.types.includes(COLUMN_DRAG_TYPE)) return;
+    event.preventDefault();
+    if (this.columnReorder() && this.headerDropTargetId() !== column.id) {
+      this.headerDropTargetId.set(column.id);
+    }
+  }
+
+  protected onHeaderDragEnd(): void {
+    this.headerDropTargetId.set(null);
+  }
+
   protected onColumnDragOver(event: DragEvent): void {
     if (event.dataTransfer?.types.includes(COLUMN_DRAG_TYPE)) event.preventDefault();
   }
 
   protected onHeaderDrop(target: ResolvedColumn<T>, event: DragEvent): void {
+    this.headerDropTargetId.set(null);
     const sourceId = event.dataTransfer?.getData(COLUMN_DRAG_TYPE);
     if (!sourceId || !this.columnReorder() || sourceId === target.id) return;
     event.preventDefault();
@@ -2737,10 +2753,87 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- column chooser ------------------------------------------------------
 
   protected readonly chooserOpen = signal(false);
+  /** Anchored to the chooser button: its bottom-right corner. */
+  protected readonly chooserPosition = signal<{ top: number; left: number }>({ top: 0, left: 0 });
 
   protected toggleChooser(event: Event): void {
     event.stopPropagation();
-    this.chooserOpen.set(!this.chooserOpen());
+    if (this.chooserOpen()) {
+      this.chooserOpen.set(false);
+      return;
+    }
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.chooserPosition.set({ top: rect.bottom + 4, left: rect.right });
+    this.chooserOpen.set(true);
+  }
+
+  /** Chooser rows: every column with its id and caption, in display order. */
+  protected readonly chooserEntries = computed<
+    readonly { id: string; caption: string; column: OgeColumn<T> | undefined }[]
+  >(() => {
+    const declared = this.declaredColumns();
+    let entries: { id: string; caption: string; column: OgeColumn<T> | undefined }[];
+    if (declared.length) {
+      entries = declared.map((column, index) => {
+        const field = column.field();
+        return {
+          id: field ?? `col-${index}`,
+          caption: column.caption() ?? (field ? humanize(field) : ''),
+          column,
+        };
+      });
+    } else {
+      entries = this.resolvedColumns().map((column) => ({
+        id: column.id,
+        caption: column.caption,
+        column: undefined,
+      }));
+    }
+    const order = this.store.columns.order();
+    if (!order) return entries;
+    return [...entries].sort((a, b) => {
+      const ia = order.indexOf(a.id);
+      const ib = order.indexOf(b.id);
+      return (ia < 0 ? Number.MAX_SAFE_INTEGER : ia) - (ib < 0 ? Number.MAX_SAFE_INTEGER : ib);
+    });
+  });
+
+  protected toggleChooserVisible(entry: { column: OgeColumn<T> | undefined }): void {
+    entry.column?.visible.set(!entry.column.visible());
+  }
+
+  private chooserDragId: string | null = null;
+  /** Chooser row the dragged column would be inserted in front of. */
+  protected readonly chooserDropTargetId = signal<string | null>(null);
+
+  protected onChooserDragStart(id: string, event: DragEvent): void {
+    this.chooserDragId = id;
+    event.dataTransfer?.setData('text/plain', id);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected onChooserDragOver(id: string, event: DragEvent): void {
+    if (!this.chooserDragId) return;
+    event.preventDefault();
+    if (this.chooserDropTargetId() !== id) this.chooserDropTargetId.set(id);
+  }
+
+  protected onChooserDragEnd(): void {
+    this.chooserDragId = null;
+    this.chooserDropTargetId.set(null);
+  }
+
+  /** Reorders columns by dropping one chooser row onto another. */
+  protected onChooserDrop(targetId: string, event: DragEvent): void {
+    const sourceId = this.chooserDragId;
+    this.onChooserDragEnd();
+    if (!sourceId || sourceId === targetId || !this.columnReorder()) return;
+    event.preventDefault();
+    this.store.columns.reorder(
+      this.chooserEntries().map((entry) => entry.id),
+      sourceId,
+      targetId
+    );
   }
 
   // --- filtering -----------------------------------------------------------

@@ -362,6 +362,18 @@
   background: var(--oge-header-bg);
 }
 
+// insert indicator while dragging a header: the column lands in front of this one
+.oge-col-drop-target::before {
+  content: '';
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--oge-accent-color);
+  pointer-events: none;
+}
+
 .oge-header-sortable {
   cursor: pointer;
 
@@ -1041,9 +1053,30 @@
 }
 
 .oge-chooser-popup {
-  right: 16px;
-  top: auto;
-  margin-top: 4px;
+  // anchored to the chooser button: [style.top/left] is its bottom-right corner
+  transform: translateX(-100%);
+}
+
+.oge-chooser-item {
+  position: relative;
+  user-select: none;
+}
+
+// insert indicator: the dragged column lands in front of this row
+.oge-chooser-drop-target::before {
+  content: '';
+  position: absolute;
+  inset-inline: 4px;
+  top: -1px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--oge-accent-color);
+}
+
+.oge-chooser-grip {
+  display: inline-flex;
+  color: var(--oge-muted-color);
+  cursor: grab;
 }
 
 .oge-chooser-title {

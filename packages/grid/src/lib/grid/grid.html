@@ -189,9 +189,11 @@
               ? 0
               : null
           "
+          [class.oge-col-drop-target]="headerDropTargetId() === column.id"
           [attr.draggable]="column.field && (groupPanel() || columnReorder()) ? true : null"
           (dragstart)="onHeaderDragStart(column, $event)"
-          (dragover)="onColumnDragOver($event)"
+          (dragover)="onHeaderDragOver(column, $event)"
+          (dragend)="onHeaderDragEnd()"
           (drop)="onHeaderDrop(column, $event)"
           (contextmenu)="onHeaderContextMenu(column, $event)"
           (click)="onHeaderClick(column, $event)"
@@ -895,12 +897,38 @@
   </div>
 }
 @if (chooserOpen()) {
-  <div class="oge-chooser-popup">
+  <div
+    class="oge-chooser-popup"
+    [style.top.px]="chooserPosition().top"
+    [style.left.px]="chooserPosition().left"
+  >
     <div class="oge-chooser-title">{{ msg().columnChooserTitle }}</div>
-    @for (column of declaredColumns(); track $index) {
-      <label class="oge-hf-item">
-        <input type="checkbox" [checked]="column.visible()" (change)="column.visible.set(!column.visible())" />
-        <span>{{ column.caption() ?? column.field() }}</span>
+    @for (entry of chooserEntries(); track entry.id) {
+      <label
+        class="oge-hf-item oge-chooser-item"
+        [class.oge-chooser-drop-target]="chooserDropTargetId() === entry.id"
+        [draggable]="columnReorder()"
+        (dragstart)="onChooserDragStart(entry.id, $any($event))"
+        (dragover)="onChooserDragOver(entry.id, $any($event))"
+        (dragend)="onChooserDragEnd()"
+        (drop)="onChooserDrop(entry.id, $any($event))"
+      >
+        @if (columnReorder()) {
+          <span class="oge-chooser-grip" aria-hidden="true">
+            <svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor">
+              <circle cx="5" cy="3.5" r="1.2" /><circle cx="11" cy="3.5" r="1.2" />
+              <circle cx="5" cy="8" r="1.2" /><circle cx="11" cy="8" r="1.2" />
+              <circle cx="5" cy="12.5" r="1.2" /><circle cx="11" cy="12.5" r="1.2" />
+            </svg>
+          </span>
+        }
+        <input
+          type="checkbox"
+          [checked]="entry.column ? entry.column.visible() : true"
+          [disabled]="!entry.column"
+          (change)="toggleChooserVisible(entry)"
+        />
+        <span>{{ entry.caption }}</span>
       </label>
     }
   </div>

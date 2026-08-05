@@ -26,7 +26,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 @Component({
   imports: [OgeGrid, OgeColumn],
   template: `
-    <oge-grid [data]="data" keyField="id" [groupBy]="groupBy()" [groupPanel]="true">
+    <oge-grid [data]="data" keyField="id" [groupBy]="groupBy()" [groupPanel]="true" [columnChooser]="true">
       <oge-column field="id" dataType="number" [width]="70" pinned="left" />
       <oge-column field="region" />
       <oge-column field="city" />
@@ -298,6 +298,29 @@ describe('OgeGrid column operations', () => {
     await settle(fixture);
     const headerRow = el.querySelector('.oge-header-row') as HTMLElement;
     expect(headerRow.style.gridTemplateColumns).toContain('222px');
+  });
+
+  it('reorders columns by dragging rows inside the column chooser', async () => {
+    const { fixture, el } = await render();
+    (el.querySelector('.oge-toolbar-btn[aria-label="Column chooser"]') as HTMLButtonElement).click();
+    await settle(fixture);
+    const items = el.querySelectorAll('.oge-chooser-item');
+    expect(items.length).toBe(4);
+
+    // drag City in front of Region
+    items[2].dispatchEvent(new Event('dragstart', { bubbles: true }));
+    items[1].dispatchEvent(new Event('drop', { bubbles: true }));
+    await settle(fixture);
+
+    const captions = Array.from(el.querySelectorAll('.oge-header-caption')).map((h) =>
+      h.textContent?.trim()
+    );
+    expect(captions).toEqual(['Id', 'City', 'Region', 'Amount']);
+    // the chooser list mirrors the new order
+    const chooserTexts = Array.from(el.querySelectorAll('.oge-chooser-item span:last-child')).map(
+      (s) => s.textContent?.trim()
+    );
+    expect(chooserTexts).toEqual(['Id', 'City', 'Region', 'Amount']);
   });
 
   it('reorders columns via the columns slice', async () => {
