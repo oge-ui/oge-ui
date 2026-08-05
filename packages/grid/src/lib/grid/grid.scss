@@ -800,6 +800,13 @@
   background: var(--oge-row-focused-bg, rgba(79, 70, 229, 0.1));
 }
 
+// custom row templates (*ogeRowTemplate) — the template owns the layout
+.oge-custom-row {
+  display: block;
+  border-bottom: 1px solid var(--oge-border-color);
+  cursor: default;
+}
+
 // custom command-column buttons (commandButtons)
 .oge-command-text-btn {
   padding: 2px 6px;

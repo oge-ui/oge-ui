@@ -317,6 +317,31 @@
       @for (node of viewNodes(); track node.key; let nodeIndex = $index) {
         @switch (node.kind) {
           @case ('data') {
+            @if (rowTemplate(); as rowTpl) {
+              <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+              <div
+                class="oge-row oge-custom-row"
+                role="row"
+                [class.oge-row-selected]="selectionMode() !== 'none' && isRowSelected(node.key)"
+                [class.oge-row-focused]="focusedRowEnabled() && focusedRowKey() === node.key"
+                [attr.aria-selected]="ariaSelectedOf(node)"
+                [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
+                [attr.data-rowindex]="viewStart() + nodeIndex"
+                [style.height.px]="virtualized() && !autoRowHeight() ? effRowHeight() : null"
+                (click)="onRowClick(node, $event)"
+                (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
+                (contextmenu)="onRowContextMenuOpen(node, $event)"
+              >
+                <div role="gridcell" [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()">
+                  <ng-container
+                    *ngTemplateOutlet="
+                      rowTpl.templateRef;
+                      context: { $implicit: node.data, index: viewStart() + nodeIndex, key: node.key }
+                    "
+                  />
+                </div>
+              </div>
+            } @else {
             <!-- Row click/contextmenu are pointer conveniences; the keyboard path goes
                  through the focusable cells (arrows + Space + browser context-menu key). -->
             <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
@@ -529,6 +554,7 @@
                 </div>
               }
             </div>
+            }
           }
           @case ('group') {
             <div
