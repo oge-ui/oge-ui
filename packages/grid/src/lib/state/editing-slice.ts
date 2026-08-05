@@ -1,7 +1,7 @@
 import { computed, signal } from '@angular/core';
 import type { RowKey } from '@oge-ui/core';
 
-export type OgeEditMode = 'cell' | 'row' | 'batch' | 'popup';
+export type OgeEditMode = 'cell' | 'row' | 'batch' | 'popup' | 'form';
 
 export interface OgeEditingOptions {
   mode: OgeEditMode;

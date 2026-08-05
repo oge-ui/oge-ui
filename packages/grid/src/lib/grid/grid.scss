@@ -800,6 +800,48 @@
   background: var(--oge-row-focused-bg, rgba(79, 70, 229, 0.1));
 }
 
+// inline form editing (editing.mode: 'form')
+.oge-form-row {
+  display: block;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-group-bg, #f0f2f6);
+}
+
+.oge-form-cell {
+  padding: 12px var(--oge-cell-padding-x);
+}
+
+.oge-form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 16px;
+}
+
+.oge-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oge-form-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--oge-muted-color);
+}
+
+.oge-form-error {
+  font-size: 11px;
+  color: #dc2626;
+}
+
+.oge-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 // custom row templates (*ogeRowTemplate) — the template owns the layout
 .oge-custom-row {
   display: block;

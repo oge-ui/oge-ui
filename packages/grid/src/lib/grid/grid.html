@@ -317,7 +317,87 @@
       @for (node of viewNodes(); track node.key; let nodeIndex = $index) {
         @switch (node.kind) {
           @case ('data') {
-            @if (rowTemplate(); as rowTpl) {
+            @if (isFormRow(node.key)) {
+              <div
+                class="oge-row oge-form-row"
+                role="row"
+                [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
+                [attr.data-rowindex]="viewStart() + nodeIndex"
+              >
+                <div
+                  class="oge-form-cell"
+                  role="gridcell"
+                  [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
+                >
+                  <div class="oge-form-fields">
+                    @for (column of resolvedColumns(); track column.id) {
+                      @if (column.editable && column.field) {
+                        <div class="oge-form-field">
+                          <span class="oge-form-label">{{ column.caption }}</span>
+                          @if (column.editTemplate) {
+                            <ng-container
+                              *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
+                            />
+                          } @else if (lookupItemsFor(node, column); as items) {
+                            <select
+                              class="oge-editor oge-editor-input"
+                              [formControl]="$any(editControl(node, column))"
+                              (keydown.enter)="onEditorEnter()"
+                              (keydown.escape)="cancelActiveEditor()"
+                            >
+                              @for (item of items; track $index) {
+                                <option [value]="item.value">{{ item.text }}</option>
+                              }
+                            </select>
+                          } @else {
+                            @switch (column.dataType) {
+                              @case ('boolean') {
+                                <input
+                                  class="oge-editor"
+                                  type="checkbox"
+                                  [formControl]="$any(editControl(node, column))"
+                                />
+                              }
+                              @default {
+                                <input
+                                  class="oge-editor oge-editor-input"
+                                  [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
+                                  [formControl]="$any(editControl(node, column))"
+                                  [class.oge-editor-invalid]="
+                                    editControl(node, column).touched && editControl(node, column).invalid
+                                  "
+                                  (keydown.enter)="onEditorEnter()"
+                                  (keydown.escape)="cancelActiveEditor()"
+                                />
+                              }
+                            }
+                          }
+                          @if (editorErrorText(editControl(node, column)); as error) {
+                            <span class="oge-form-error">{{ error }}</span>
+                          }
+                        </div>
+                      }
+                    }
+                  </div>
+                  <div class="oge-form-actions">
+                    <button
+                      type="button"
+                      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+                      (click)="commitActiveRow()"
+                    >
+                      {{ msg().saveRow }}
+                    </button>
+                    <button
+                      type="button"
+                      class="oge-toolbar-btn oge-toolbar-text-btn"
+                      (click)="cancelActiveEditor()"
+                    >
+                      {{ msg().cancelEdit }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            } @else if (rowTemplate(); as rowTpl) {
               <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
               <div
                 class="oge-row oge-custom-row"

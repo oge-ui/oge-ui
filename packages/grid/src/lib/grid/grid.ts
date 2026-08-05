@@ -553,7 +553,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Fires after the grid has rendered a new result set. */
   readonly contentReady = output<void>();
 
-  /** Enables editing: `{ mode: 'cell' | 'row' | 'batch' | 'popup', allow… }`. */
+  /** Enables editing: `{ mode: 'cell' | 'row' | 'batch' | 'popup' | 'form', allow… }`. */
   readonly editing = input<false | OgeEditingOptions>(false);
 
   /** Fires before changes reach the DataSource; cancelable. */
@@ -1701,7 +1701,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected onEditorEnter(): void {
     const mode = this.editMode();
-    if (mode === 'row' || mode === 'popup') this.commitActiveRow();
+    if (mode === 'row' || mode === 'popup' || mode === 'form') this.commitActiveRow();
     else this.commitActiveCell();
   }
 
@@ -2124,7 +2124,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (this.commandButtons()?.length) return true;
     const mode = this.editMode();
     if (!mode) return false;
-    if (mode === 'row' || mode === 'popup') return this.canUpdate() || this.canDelete();
+    if (mode === 'row' || mode === 'popup' || mode === 'form') return this.canUpdate() || this.canDelete();
     return this.canDelete();
   });
 
@@ -2134,7 +2134,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (custom?.length) return custom;
     const mode = this.editMode();
     const buttons: OgeCommandButton<T>[] = [];
-    if ((mode === 'row' || mode === 'popup') && this.canUpdate()) buttons.push({ name: 'edit' });
+    if ((mode === 'row' || mode === 'popup' || mode === 'form') && this.canUpdate()) buttons.push({ name: 'edit' });
     if (mode && this.canDelete()) buttons.push({ name: 'delete' });
     return buttons;
   });
@@ -2168,7 +2168,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected isRowEditing(key: RowKey): boolean {
-    return this.editMode() === 'row' && this.store.editing.editRowKey() === key;
+    const mode = this.editMode();
+    return (mode === 'row' || mode === 'form') && this.store.editing.editRowKey() === key;
+  }
+
+  /** Form mode: the row whose cells are replaced by the inline form. */
+  protected isFormRow(key: RowKey): boolean {
+    return this.editMode() === 'form' && this.store.editing.editRowKey() === key;
   }
 
   protected isCellEditorOpen(node: DataRowNode<T>, column: ResolvedColumn<T>): boolean {
@@ -2423,7 +2429,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const key = `oge-new-${++this.newRowCounter}`;
     this.store.editing.addRow(key);
     const mode = this.editMode();
-    if (mode === 'row' || mode === 'popup' || mode === 'cell') {
+    if (mode === 'row' || mode === 'popup' || mode === 'form' || mode === 'cell') {
       this.store.editing.startRow(key);
     }
   }
