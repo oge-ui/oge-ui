@@ -112,6 +112,15 @@ export interface OgeExportOptions {
   scope?: 'all' | 'page' | 'selection';
 }
 
+export interface OgeRowReorderedEvent<T = unknown> {
+  key: RowKey;
+  targetKey: RowKey;
+  /** Positions within the rendered (filtered/sorted) view. */
+  fromIndex: number;
+  toIndex: number;
+  row: T;
+}
+
 export interface OgeCellClickEvent<T = unknown> {
   row: T;
   key: RowKey;
@@ -298,6 +307,7 @@ function lookupTextOf(items: readonly LookupItem[], value: unknown): string {
 const EXPANDER_WIDTH = 32;
 const CHECKBOX_WIDTH = 36;
 const COMMAND_WIDTH = 90;
+const DRAG_WIDTH = 28;
 const COLUMN_DRAG_TYPE = 'application/x-oge-column';
 
 @Component({
@@ -559,6 +569,15 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly detectedRtl = signal(false);
 
   protected readonly rtl = computed(() => this.rtlEnabled() ?? this.detectedRtl());
+
+  /**
+   * Drag-handle column for reordering rows. With plain-array data the array
+   * is mutated in place; DataSource consumers handle `rowReordered` instead.
+   */
+  readonly rowDragging = input(false);
+
+  /** Fires after a row is dropped in a new position. */
+  readonly rowReordered = output<OgeRowReorderedEvent<T>>();
 
   /** Highlights and tracks a single focused row (DevExtreme focusedRowEnabled). */
   readonly focusedRowEnabled = input(false);
@@ -1426,12 +1445,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Number of leading utility cells (expander / checkbox) before data columns. */
   protected readonly leadingCellCount = computed(
-    () => (this.hasExpander() ? 1 : 0) + (this.hasCheckboxColumn() ? 1 : 0)
+    () =>
+      (this.rowDragging() ? 1 : 0) +
+      (this.hasExpander() ? 1 : 0) +
+      (this.hasCheckboxColumn() ? 1 : 0)
   );
 
   private readonly leadingWidth = computed(
     () =>
-      (this.hasExpander() ? EXPANDER_WIDTH : 0) + (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0)
+      (this.rowDragging() ? DRAG_WIDTH : 0) +
+      (this.hasExpander() ? EXPANDER_WIDTH : 0) +
+      (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0)
   );
 
   private readonly effColumnMinWidth = computed(
@@ -1510,6 +1534,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly gridTemplateColumns = computed(() => {
     const defaultMin = this.effColumnMinWidth();
     const leading: string[] = [];
+    if (this.rowDragging()) leading.push(`${DRAG_WIDTH}px`);
     if (this.hasExpander()) leading.push(`${EXPANDER_WIDTH}px`);
     if (this.hasCheckboxColumn()) leading.push(`${CHECKBOX_WIDTH}px`);
     const trailing = this.hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : [];
@@ -1772,6 +1797,56 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     else if (event.ctrlKey || event.metaKey || mode === 'checkbox') {
       this.store.selection.toggle(node.key);
     } else this.store.selection.selectOnly(node.key);
+  }
+
+  // --- row drag reordering -------------------------------------------------
+
+  private draggedRowKey: RowKey | null = null;
+  /** Key of the row currently hovered as drop target (indicator line). */
+  protected readonly dropTargetKey = signal<RowKey | null>(null);
+
+  protected onRowDragStart(node: DataRowNode<T>, event: DragEvent): void {
+    this.draggedRowKey = node.key;
+    event.dataTransfer?.setData('text/plain', String(node.key));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected onRowDragOver(node: DataRowNode<T>, event: DragEvent): void {
+    if (this.draggedRowKey === null) return;
+    event.preventDefault();
+    if (this.dropTargetKey() !== node.key) this.dropTargetKey.set(node.key);
+  }
+
+  protected onRowDragEnd(): void {
+    this.draggedRowKey = null;
+    this.dropTargetKey.set(null);
+  }
+
+  protected onRowDrop(target: DataRowNode<T>, event: DragEvent): void {
+    const fromKey = this.draggedRowKey;
+    this.onRowDragEnd();
+    if (fromKey === null || fromKey === target.key) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const nodes = untracked(this.flatNodes);
+    const dataNodes = nodes.filter((node): node is DataRowNode<T> => node.kind === 'data');
+    const fromIndex = dataNodes.findIndex((node) => node.key === fromKey);
+    const toIndex = dataNodes.findIndex((node) => node.key === target.key);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const moved = dataNodes[fromIndex].data;
+    // plain-array data: move in place so the new order survives a reload
+    const data = untracked(this.data);
+    if (Array.isArray(data)) {
+      const keyOf = untracked(this.keySelector);
+      const source = data as T[];
+      const sourceFrom = source.findIndex((row, index) => keyOf(row, index) === fromKey);
+      const sourceTo = source.findIndex((row, index) => keyOf(row, index) === target.key);
+      if (sourceFrom >= 0 && sourceTo >= 0) {
+        source.splice(sourceTo, 0, ...source.splice(sourceFrom, 1));
+        this.adapter.reload();
+      }
+    }
+    this.rowReordered.emit({ key: fromKey, targetKey: target.key, fromIndex, toIndex, row: moved });
   }
 
   protected onCheckboxToggle(node: DataRowNode<T>, event: Event): void {

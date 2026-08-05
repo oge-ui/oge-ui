@@ -800,6 +800,28 @@
   background: var(--oge-row-focused-bg, rgba(79, 70, 229, 0.1));
 }
 
+// row drag reordering (rowDragging)
+.oge-drag-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oge-drag-handle {
+  display: inline-flex;
+  padding: 2px;
+  color: var(--oge-muted-color);
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.oge-drop-target .oge-cell {
+  box-shadow: inset 0 2px 0 var(--oge-accent, #4f46e5);
+}
+
 // loading panel overlay (loadPanel)
 .oge-load-panel {
   position: absolute;

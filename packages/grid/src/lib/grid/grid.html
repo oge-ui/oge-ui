@@ -130,6 +130,9 @@
       </div>
     }
     <div class="oge-header-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
+      @if (rowDragging()) {
+        <div class="oge-header-cell oge-drag-cell" role="columnheader" aria-label="Reorder"></div>
+      }
       @if (hasExpander()) {
         <div class="oge-header-cell oge-expander-cell" role="columnheader" aria-label="Detail"></div>
       }
@@ -217,6 +220,9 @@
     </div>
     @if (filterRowVisible()) {
       <div class="oge-filter-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
+        @if (rowDragging()) {
+          <div class="oge-filter-cell" role="gridcell"></div>
+        }
         @if (hasExpander()) {
           <div class="oge-filter-cell" role="gridcell"></div>
         }
@@ -327,10 +333,33 @@
               [attr.data-rowindex]="viewStart() + nodeIndex"
               [style.height.px]="virtualized() && !autoRowHeight() ? effRowHeight() : null"
               [style.grid-template-columns]="gridTemplateColumns()"
+              [class.oge-drop-target]="dropTargetKey() === node.key"
               (click)="onRowClick(node, $event)"
               (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
               (contextmenu)="onRowContextMenuOpen(node, $event)"
+              (dragover)="rowDragging() && onRowDragOver(node, $event)"
+              (drop)="rowDragging() && onRowDrop(node, $event)"
             >
+              @if (rowDragging()) {
+                <div class="oge-cell oge-drag-cell" role="gridcell">
+                  <!-- the click handler only shields the row-click; dragging is pointer-driven -->
+                  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+                  <span
+                    class="oge-drag-handle"
+                    draggable="true"
+                    [attr.aria-label]="'Reorder row'"
+                    (dragstart)="onRowDragStart(node, $event)"
+                    (dragend)="onRowDragEnd()"
+                    (click)="$event.stopPropagation()"
+                  >
+                    <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
+                      <circle cx="5.5" cy="4" r="1.2" /><circle cx="10.5" cy="4" r="1.2" />
+                      <circle cx="5.5" cy="8" r="1.2" /><circle cx="10.5" cy="8" r="1.2" />
+                      <circle cx="5.5" cy="12" r="1.2" /><circle cx="10.5" cy="12" r="1.2" />
+                    </svg>
+                  </span>
+                </div>
+              }
               @if (hasExpander()) {
                 <div class="oge-cell oge-expander-cell" role="gridcell">
                   <button
@@ -572,6 +601,9 @@
   </div>
   @if (hasTotalRow()) {
     <div class="oge-total-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
+      @if (rowDragging()) {
+        <div class="oge-total-cell" role="gridcell"></div>
+      }
       @if (hasExpander()) {
         <div class="oge-total-cell" role="gridcell"></div>
       }
