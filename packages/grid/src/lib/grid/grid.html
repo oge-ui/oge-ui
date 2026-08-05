@@ -1,4 +1,11 @@
-@if (searchPanelVisible() || groupPanel() || columnChooser() || canAdd() || editMode() === 'batch') {
+@if (
+  searchPanelVisible() ||
+  groupPanel() ||
+  columnChooser() ||
+  canAdd() ||
+  editMode() === 'batch' ||
+  toolbarItems().length > 0
+) {
   <div class="oge-toolbar">
     @if (groupPanel()) {
       <div
@@ -26,6 +33,7 @@
       </div>
     }
     <span class="oge-toolbar-spacer"></span>
+    <ng-content select="[ogeToolbar]" />
     @if (canAdd()) {
       <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="addNewRow()">
         <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">

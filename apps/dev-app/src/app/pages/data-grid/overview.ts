@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { OgeCellTemplate, OgeColumn, OgeGrid, OgeToolbarItem } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
@@ -38,7 +38,7 @@ const QUICK_START_FILES = [
 
 @Component({
   selector: 'app-data-grid-overview',
-  imports: [OgeGrid, OgeColumn, OgeCellTemplate, DemoCard, DocHeader, RouterLink],
+  imports: [OgeGrid, OgeColumn, OgeCellTemplate, OgeToolbarItem, DemoCard, DocHeader, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header title="Overview" [chips]="['oge-grid', 'oge-column', 'ogeCellTemplate']">
@@ -66,6 +66,13 @@ const QUICK_START_FILES = [
         <oge-column field="city" caption="City" />
         <oge-column field="salary" caption="Salary" dataType="number" [format]="money" />
         <oge-column field="hireDate" caption="Hire Date" dataType="date" [width]="120" />
+        <!-- custom toolbar items project into the grid's own toolbar -->
+        <button ogeToolbar type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="grid()?.exportCsv('employees.csv')">
+          Export CSV
+        </button>
+        <button ogeToolbar type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="exportExcel()">
+          Export Excel
+        </button>
       </oge-grid>
     </app-demo-card>
 
@@ -108,22 +115,10 @@ const QUICK_START_FILES = [
       <li><strong>Master-detail &amp; groups</strong>: exports contain data rows only. Detail rows are arbitrary templates and group headers are view artifacts — re-group in Excel via the auto-filter, or feed <code>getExportData()</code> into a custom exporter if you need more.</li>
       <li>Numbers and dates are written as <em>typed</em> Excel cells; lookup and boolean columns use their display text.</li>
     </ul>
-    <div class="mb-4 flex gap-2">
-      <button
-        type="button"
-        class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-        (click)="grid()?.exportCsv('employees.csv')"
-      >
-        Export CSV
-      </button>
-      <button
-        type="button"
-        class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-        (click)="exportExcel()"
-      >
-        Export Excel
-      </button>
-    </div>
+    <p>
+      The demo grid above hosts its export buttons via the <code>ogeToolbar</code> attribute —
+      any projected element with it lands in the grid's toolbar next to the built-in controls.
+    </p>
 
     <h3>Methods</h3>
     <table class="api-table">

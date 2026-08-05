@@ -42,6 +42,7 @@ export { OgeCellTemplate, type OgeCellTemplateContext } from './lib/templates/ce
 export { OgeHeaderTemplate, type OgeHeaderTemplateContext } from './lib/templates/header-template';
 export { OgeDetailTemplate, type OgeDetailTemplateContext } from './lib/templates/detail-template';
 export { OgeNoDataTemplate } from './lib/templates/no-data-template';
+export { OgeToolbarItem } from './lib/templates/toolbar-item';
 export { OgePager } from './lib/pager/pager';
 export { GridStateStore } from './lib/state/grid-state.store';
 export { SortSlice } from './lib/state/sort-slice';

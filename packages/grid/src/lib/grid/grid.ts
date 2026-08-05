@@ -73,6 +73,7 @@ import type { OgeEditTemplateContext } from '../templates/edit-template';
 import type { OgeCellTemplateContext } from '../templates/cell-template';
 import { OgeDetailTemplate, type OgeDetailTemplateContext } from '../templates/detail-template';
 import { OgeNoDataTemplate } from '../templates/no-data-template';
+import { OgeToolbarItem } from '../templates/toolbar-item';
 import type { OgeHeaderTemplateContext } from '../templates/header-template';
 
 /** Programmatic column definition (alternative to declarative `<oge-column>`). */
@@ -551,6 +552,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   readonly loadPanel = input(false);
 
   protected readonly noDataTemplate = contentChild(OgeNoDataTemplate);
+  protected readonly toolbarItems = contentChildren(OgeToolbarItem);
 
   constructor() {
     // measure real row heights once the DOM for the current window is in place

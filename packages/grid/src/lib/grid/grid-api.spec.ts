@@ -1,4 +1,6 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { OgeToolbarItem } from '../templates/toolbar-item';
 import { OgeGrid } from './grid';
 
 interface Row {
@@ -77,6 +79,26 @@ describe('OgeGrid imperative API & events', () => {
     grid.refresh();
     await settle(fixture);
     expect((fixture.nativeElement as HTMLElement).querySelectorAll('.oge-row').length).toBe(3);
+  });
+
+  it('projects [ogeToolbar] content into the grid toolbar', async () => {
+    @Component({
+      imports: [OgeGrid, OgeToolbarItem],
+      template: `
+        <oge-grid [data]="rows" keyField="id" [columns]="['name']">
+          <button ogeToolbar type="button" class="my-export">Export</button>
+        </oge-grid>
+      `,
+    })
+    class Host {
+      rows = ROWS;
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    // the toolbar renders solely because of the projected item
+    expect(el.querySelector('.oge-toolbar .my-export')?.textContent?.trim()).toBe('Export');
   });
 
   it('getExportData ignores paging by default and honors page/selection scopes', async () => {
