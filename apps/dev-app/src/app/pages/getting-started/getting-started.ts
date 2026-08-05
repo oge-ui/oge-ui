@@ -23,7 +23,7 @@ providers: [
   }),
 ]`;
 
-const OPTIONS = `<!-- DevExtreme-style option objects; plain booleans still work -->
+const OPTIONS = `<!-- Option objects; plain booleans still work -->
 <oge-grid [data]="rows" keyField="id"
           [paging]="{ pageSize: 20, pageSizes: [10, 20, 50], showInfo: true }"
           [filterRow]="{ debounce: 500 }"
@@ -121,7 +121,7 @@ const THEMING = `/* Components read --oge-* design tokens — override them anyw
     <h2>Configuration &amp; localization</h2>
     <p>
       Every default and every UI string is configurable — globally through DI, or per grid with
-      DevExtreme-style option objects:
+      Option objects:
     </p>
     <app-code-block [code]="config" language="ts" />
     <app-code-block [code]="options" language="html" />

@@ -1,17 +1,17 @@
-# oge Data Grid — DevExtreme Parity Roadmap
+# oge Data Grid — Feature Parity Roadmap
 
-Comparison of `@oge-ui/grid` against DevExtreme DataGrid (v25/26 feature set).
+Comparison of `@oge-ui/grid` against the feature set of leading commercial data grids.
 Legend: ✅ implemented · 🟡 partial · ❌ missing.
 
 Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 1. Data binding & data operations
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | Local array binding | ✔ | ✅ | `T[]`, `ArrayDataSource` |
-| Custom remote store | CustomStore | ✅ | `CustomDataSource` + serializable `LoadOptions` |
-| OData store | ODataStore | ✅ | `ODataDataSource` + `buildODataQuery` (v4: `$skip`/`$top`/`$orderby`/`$filter`/`$count`) |
+| Custom remote store | ✔ | ✅ | `CustomDataSource` + serializable `LoadOptions` |
+| OData store | ✔ | ✅ | `ODataDataSource` + `buildODataQuery` (v4: `$skip`/`$top`/`$orderby`/`$filter`/`$count`) |
 | CRUD write-back | ✔ | ✅ | `insert/update/remove`, in-place array CRUD |
 | Push / live updates (`reshapeOnPush`) | ✔ | ✅ | `ArrayDataSource.push()` + `changes` stream; updates patch in place, insert/remove reload |
 | `highlightChanges` (flash pushed cells) | ✔ | ✅ | exact patched cells flash, re-triggers on repeat updates (Phase 14) |
@@ -21,7 +21,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 2. Paging & scrolling
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | Paging + page-size selector + info | ✔ | ✅ | `pageSizes`, `showInfo` |
 | "All" page size option | ✔ | ✅ | `pageSizes: [10, 'all']` (Phase 13) |
@@ -35,7 +35,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 3. Sorting
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | Single/multi/none + allowUnsorting | ✔ | ✅ | incl. global config |
 | Initial sort via column (`sortIndex`/`sortOrder`) | ✔ | ✅ | + `groupIndex` (Phase 11); stateKey/user wins |
@@ -43,7 +43,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 4. Filtering & search
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | Filter row | ✔ | ✅ | dataType-aware editors, debounce |
 | Filter row **operator menu** per cell | ✔ | ✅ | per-dataType operators + Reset (Phase 10) |
@@ -57,7 +57,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 5. Grouping & summaries
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | Group panel drag & drop, multi-level | ✔ | ✅ | |
 | Group summaries / total summaries | ✔ | ✅ | sum/avg/min/max/count, localized patterns |
@@ -70,7 +70,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 6. Columns
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | Resize / reorder / fixed (pin) / chooser | ✔ | ✅ | chooser anchored to its button, drag-reorder rows, drop indicators on headers (Phase 14) |
 | minWidth / width / visible | ✔ | ✅ | |
@@ -84,7 +84,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 7. Selection, focus, keyboard
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | single/multiple/checkbox + shift/ctrl | ✔ | ✅ | |
 | Select-all (filtered) + indeterminate | ✔ | ✅ | |
@@ -96,7 +96,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 8. Editing
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | cell / row / batch / popup modes | ✔ | ✅ | |
 | **form** mode (inline form) | ✔ | ✅ | `editing.mode: 'form'` — labeled inline form row (Phase 13) |
@@ -108,7 +108,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 9. Appearance, UX, misc
 
-| Feature | DevExtreme | oge | Notes |
+| Feature | Reference | oge | Notes |
 |---|---|---|---|
 | Theming (tokens, dark, bridges) | ✔ | ✅ | arguably ahead (Tailwind/Bootstrap bridges) |
 | Localization of all texts | ✔ | ✅ | `provideOgeGridConfig` messages |
@@ -126,7 +126,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 | Imperative public API (refresh, expandAll, …) | ✔ | ✅ | `refresh/expandAllGroups/collapseAllGroups/clearFilters/clearSorting/scrollToRow/exportCsv/copyToClipboard/selectAllPages` (Phase 13) |
 | Event surface (cellClick, rowPrepared, …) | ✔ | ✅ | + `cellClick/rowDblClick/contentReady/rowReordered` (Phase 13) |
 | Master-detail | ✔ | ✅ | typed template |
-| Hierarchical data | TreeList | ❌ | separate future component |
+| Hierarchical data (tree grid) | ✔ | ❌ | separate future component |
 
 ## Prioritized backlog
 
@@ -142,4 +142,4 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 **Phase 14 — Summary, selection & export parity: ✅ DONE (v0.3.0)** (multiple summaries per column, `calculateCustomSummary`, group footer summaries, expand/collapse-all toolbar UI, grouped date values in the header filter, deferred selection via `selectionFilter`, PDF export secondary entry, `highlightChanges` cell flash, anchored column chooser with drag reorder + drop indicators, Rows & Templates docs page).
 
-**Next:** TreeList (separate component) · pivot-style features · editing form layouts (`formItems` customization) · export appearance hooks (`customizeCell`).
+**Next:** tree grid (separate component) · pivot-style features · editing form layouts (`formItems` customization) · export appearance hooks (`customizeCell`).

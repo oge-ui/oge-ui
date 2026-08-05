@@ -92,4 +92,18 @@ describe('runLoadOptions', () => {
     // Generous bound for shared CI runners; still catches accidental O(n²).
     expect(performance.now() - start).toBeLessThan(250);
   });
+
+  it('text-filters 10k rows within the performance budget', () => {
+    const rows = Array.from({ length: 10_000 }, (_, i) => ({
+      id: i,
+      name: `Employee ${String(i)} ${i % 2 ? 'İzmir' : 'Ankara'}`,
+    }));
+    const start = performance.now();
+    const result = runLoadOptions(rows, {
+      filter: { type: 'binary', field: 'name', op: 'contains', value: 'izmir' },
+      requireTotalCount: true,
+    });
+    expect(result.totalCount).toBe(5000);
+    expect(performance.now() - start).toBeLessThan(250);
+  });
 });

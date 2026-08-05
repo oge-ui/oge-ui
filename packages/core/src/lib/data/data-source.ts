@@ -1,7 +1,7 @@
 import type { RowKey } from '../rows/row-node';
 import type { FilterExpr, LoadOptions } from './load-options';
 
-/** One level of server-grouped data (DevExtreme-style nested groups). */
+/** One level of server-grouped data (nested server groups). */
 export interface GroupedItem<T = unknown> {
   readonly key: unknown;
   /** `null` means children are collapsed/deferred and must be loaded on demand. */

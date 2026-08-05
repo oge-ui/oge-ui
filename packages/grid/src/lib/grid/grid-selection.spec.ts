@@ -112,6 +112,18 @@ describe('OgeGrid selection', () => {
     expect(el.querySelectorAll('.oge-group-row.oge-row-selected').length).toBe(0);
   });
 
+  it('Ctrl+A selects every filtered row in multi-select modes', async () => {
+    const { fixture, host, el } = await render();
+    clickRow(el, 0); // establish keyboard focus on a cell
+    await settle(fixture);
+    const viewport = el.querySelector('.oge-viewport') as HTMLElement;
+    viewport.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true })
+    );
+    await settle(fixture);
+    expect(new Set(host.selected)).toEqual(new Set([1, 2, 3, 4]));
+  });
+
   it('checkbox mode renders a checkbox column and select-all with indeterminate state', async () => {
     const { fixture, host, el } = await render('checkbox');
     const header = el.querySelector('.oge-header-cell.oge-checkbox-cell input') as HTMLInputElement;

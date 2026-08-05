@@ -78,7 +78,7 @@ export class TickerComponent {
         Any DataSource can expose a <code>changes</code> stream; the grid subscribes and applies
         pushed batches without a reload. Pure <code>update</code> batches patch rows in place —
         sorting, selection and scroll position are untouched — and with
-        <code>highlightChanges</code> every patched cell flashes briefly, DevExtreme-style.
+        <code>highlightChanges</code> every patched cell flashes briefly.
         Rising and falling prices are rendered by a typed <code>*ogeCellTemplate</code>.
       </p>
     </app-doc-header>

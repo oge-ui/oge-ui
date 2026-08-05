@@ -70,7 +70,7 @@ commandButtons: OgeCommandButton<Assignment>[] = [
   template: `
     <app-doc-header title="Editing" [chips]="['editing', 'required', 'ogeEditTemplate', 'savingChanges']">
       <p>
-        Five DevExtreme-style edit modes over the same grid. <em>Batch</em> collects changes
+        Five edit modes over the same grid. <em>Batch</em> collects changes
         (dirty markers, strike-through deletes) until <em>Save changes</em>; <em>form</em>
         replaces the row with an inline labeled form; the other modes write back immediately.
         First Name is required; Department uses a custom <code>*ogeEditTemplate</code>.

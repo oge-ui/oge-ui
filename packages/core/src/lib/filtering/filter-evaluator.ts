@@ -53,7 +53,7 @@ function asText(value: unknown): string | null {
 
 /**
  * Compiles a FilterExpr tree into a row predicate. String matching is
- * case-insensitive (DevExtreme-style defaults).
+ * case-insensitive.
  */
 export function createFilterPredicate<T = unknown>(expr: FilterExpr): (row: T) => boolean {
   switch (expr.type) {
@@ -86,30 +86,36 @@ export function createFilterPredicate<T = unknown>(expr: FilterExpr): (row: T) =
       return (row) => (orderedCompare(accessor(row), value) ?? 1) < 0;
     case 'le':
       return (row) => (orderedCompare(accessor(row), value) ?? 1) <= 0;
-    case 'contains':
+    // The needle is constant per predicate — fold it once at compile time,
+    // not once per row (matters when filtering large sets).
+    case 'contains': {
+      const needle = asText(value);
       return (row) => {
         const cell = asText(accessor(row));
-        const needle = asText(value);
         return cell != null && needle != null && cell.includes(needle);
       };
-    case 'notcontains':
+    }
+    case 'notcontains': {
+      const needle = asText(value);
       return (row) => {
         const cell = asText(accessor(row));
-        const needle = asText(value);
         return cell == null || needle == null || !cell.includes(needle);
       };
-    case 'startswith':
+    }
+    case 'startswith': {
+      const needle = asText(value);
       return (row) => {
         const cell = asText(accessor(row));
-        const needle = asText(value);
         return cell != null && needle != null && cell.startsWith(needle);
       };
-    case 'endswith':
+    }
+    case 'endswith': {
+      const needle = asText(value);
       return (row) => {
         const cell = asText(accessor(row));
-        const needle = asText(value);
         return cell != null && needle != null && cell.endsWith(needle);
       };
+    }
     case 'in': {
       const values = Array.isArray(value) ? value : [value];
       return (row) => {

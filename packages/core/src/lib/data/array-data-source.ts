@@ -28,7 +28,7 @@ export interface ArrayDataSourceOptions<T> {
  * In-memory DataSource: executes every operation client-side via the row
  * pipeline. Accepts a plain array or a getter (so callers can hand over a
  * signal or any other live reference). When constructed with a plain array,
- * CRUD write-back mutates that array in place (DevExtreme-style).
+ * CRUD write-back mutates that array in place .
  */
 export class ArrayDataSource<T> implements DataSource<T> {
   readonly capabilities: DataSourceCapabilities = {
@@ -106,7 +106,7 @@ export class ArrayDataSource<T> implements DataSource<T> {
 
   /**
    * Applies external changes to the underlying array (when mutable) and
-   * notifies subscribed grids without a full reload (DevExtreme `store.push`).
+   * notifies subscribed grids without a full reload .
    */
   push(batch: readonly DataChange<T>[]): void {
     if (this.mutableRows) {

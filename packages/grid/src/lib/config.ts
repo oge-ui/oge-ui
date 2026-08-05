@@ -186,7 +186,7 @@ export type OgeGridConfigInput = Partial<Omit<OgeGridConfig, 'messages'>> & {
 };
 
 /**
- * Application- or component-scoped grid defaults (DevExtreme-style global config):
+ * Application- or component-scoped grid defaults:
  *
  * ```ts
  * providers: [

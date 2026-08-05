@@ -19,7 +19,7 @@ npx nx e2e dev-app-e2e      # Playwright suite (incl. axe accessibility scans)
 - `apps/dev-app` — documentation site (live demos, playground, API reference)
 - `packages/core` — pure TypeScript engine (no Angular imports; lint-enforced)
 - `packages/grid` — Angular library (ng-packagr / APF)
-- [`ROADMAP.md`](ROADMAP.md) — DevExtreme parity gap analysis & phased backlog
+- [`ROADMAP.md`](ROADMAP.md) — feature parity gap analysis & phased backlog
 
 ## Releasing
 

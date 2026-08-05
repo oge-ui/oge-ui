@@ -160,7 +160,7 @@ export interface OgeContextMenuEvent<T = unknown> {
   items: OgeMenuItem[];
 }
 
-// --- DevExtreme-style option objects (boolean shorthands remain valid) ------
+// --- Option objects (boolean shorthands remain valid) ------
 
 export interface OgeFilterRowOptions {
   visible?: boolean;
@@ -324,9 +324,22 @@ function resolveLookupItems(lookup: OgeColumnLookup | undefined): readonly Looku
   return mapLookupItems(lookup.dataSource, lookup);
 }
 
+/**
+ * Per-items-array text index so lookup display stays O(1) per cell instead of
+ * scanning the list for every rendered cell. Keyed weakly on the (stable)
+ * items array; string keys cover both strict and coerced value matches.
+ */
+const lookupTextCache = new WeakMap<readonly LookupItem[], Map<string, string>>();
+
 function lookupTextOf(items: readonly LookupItem[], value: unknown): string {
-  const match = items.find((item) => item.value === value || String(item.value) === String(value));
-  return match ? match.text : value == null ? '' : String(value);
+  let map = lookupTextCache.get(items);
+  if (!map) {
+    map = new Map();
+    for (const item of items) map.set(String(item.value), item.text);
+    lookupTextCache.set(items, map);
+  }
+  const text = map.get(String(value));
+  return text !== undefined ? text : value == null ? '' : String(value);
 }
 
 const EXPANDER_WIDTH = 32;
@@ -375,7 +388,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** `false` disables sorting entirely; `'single'` restricts to one column (no shift+click chains). */
   readonly sortable = input<boolean | 'single' | 'multi'>('multi');
 
-  /** DevExtreme-style sorting options; overrides the `sortable` shorthand. */
+  /** Sorting options; overrides the `sortable` shorthand. */
   readonly sorting = input<OgeSortingOptions | undefined>(undefined);
 
   readonly paging = input<false | OgePagingOptions>(false);
@@ -386,7 +399,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    */
   readonly virtualScroll = input(false);
 
-  /** DevExtreme-style scrolling options; overrides the `virtualScroll` shorthand. */
+  /** Scrolling options; overrides the `virtualScroll` shorthand. */
   readonly scrolling = input<OgeScrollingOptions | undefined>(undefined);
 
   protected readonly effScrolling = computed<{
@@ -456,7 +469,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Initial/programmatic grouping by field names (also drivable via the group panel). */
   readonly groupBy = input<readonly string[] | undefined>(undefined);
 
-  /** DevExtreme-style grouping options (`autoExpandAll`, deferred loading). */
+  /** Grouping options (`autoExpandAll`, deferred loading). */
   readonly grouping = input<OgeGroupingOptions | undefined>(undefined);
 
   /** Shows the column visibility chooser button. */
@@ -611,7 +624,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    */
   readonly commandButtons = input<readonly OgeCommandButton<T>[] | undefined>(undefined);
 
-  /** Highlights and tracks a single focused row (DevExtreme focusedRowEnabled). */
+  /** Highlights and tracks a single focused row . */
   readonly focusedRowEnabled = input(false);
 
   /** Two-way binding of the focused row's key. */
@@ -620,7 +633,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Spinner overlay while a load is in flight. */
   readonly loadPanel = input(false);
 
-  /** Briefly flashes cells patched by push updates (DevExtreme highlightChanges). */
+  /** Briefly flashes cells patched by push updates . */
   readonly highlightChanges = input(false);
 
   /** `key::field` of recently pushed cells → batch counter (drives the flash animation). */
@@ -632,7 +645,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    */
   protected cellFlashPhase(key: RowKey, field: string | undefined): number {
     if (field == null || !this.highlightChanges()) return 0;
-    const batch = this.updatedCells().get(`${String(key)}::${field}`);
+    const cells = this.updatedCells();
+    if (!cells.size) return 0; // fast path: no per-cell key allocation while idle
+    const batch = cells.get(`${String(key)}::${field}`);
     return batch === undefined ? 0 : (batch % 2) + 1;
   }
 
@@ -1801,8 +1816,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- grouping ------------------------------------------------------------
 
+  /** Field → column index; group rows and summaries resolve columns per render. */
+  private readonly columnsByField = computed<ReadonlyMap<string, ResolvedColumn<T>>>(() => {
+    const map = new Map<string, ResolvedColumn<T>>();
+    for (const column of this.resolvedColumns()) {
+      if (column.field !== undefined && !map.has(column.field)) map.set(column.field, column);
+    }
+    return map;
+  });
+
   protected columnByField(field: string): ResolvedColumn<T> | undefined {
-    return this.resolvedColumns().find((c) => c.field === field);
+    return this.columnsByField().get(field);
   }
 
   protected groupCaption(field: string): string {
@@ -1900,7 +1924,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- deferred selection ---------------------------------------------------
 
   /**
-   * DevExtreme-style deferred selection: no key set is tracked — the
+   * Deferred selection: no key set is tracked — the
    * selection is the serializable `selectionFilter` expression instead, so
    * select-all over huge remote sets never fetches keys. Requires a string
    * `keyField`. `null` means nothing is selected.
@@ -2156,13 +2180,36 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected onGridKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      // close any open popup (menus, header filter, chooser) before anything else
+      if (
+        this.contextMenu() ||
+        this.operatorMenu() ||
+        this.headerFilterField() !== null ||
+        this.chooserOpen() ||
+        this.builderOpen()
+      ) {
+        event.preventDefault();
+        this.closePopups();
+        return;
+      }
+    }
+    const noEditorOpen =
+      this.store.editing.editCell() === null && this.store.editing.editRowKey() === null;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+      // Ctrl+A selects every (filtered) row in multi-select modes
+      const mode = this.selectionMode();
+      if (noEditorOpen && (mode === 'multiple' || mode === 'checkbox')) {
+        event.preventDefault();
+        if (!this.allSelected()) this.toggleSelectAll();
+      }
+      return;
+    }
     const cell = this.focusedCell();
     if (!cell) return;
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
       // no editor open → copy selection/cell; native copy still runs unhindered
-      if (this.store.editing.editCell() === null && this.store.editing.editRowKey() === null) {
-        void this.copyToClipboard();
-      }
+      if (noEditorOpen) void this.copyToClipboard();
       return;
     }
     const nodes = this.flatNodes();
@@ -3074,9 +3121,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   /**
-   * Date columns present header-filter values grouped by year (DevExtreme
-   * style). The search box matches the year label (keeping the whole group)
-   * or individual formatted dates; groups left empty disappear.
+   * Date columns present header-filter values grouped by year. The search box
+   * matches the year label (keeping the whole group) or individual formatted
+   * dates; groups left empty disappear.
    */
   protected readonly headerValueGroups = computed<
     readonly { label: string; values: readonly unknown[] }[] | null
