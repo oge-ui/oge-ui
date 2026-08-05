@@ -1,4 +1,4 @@
-﻿@if (searchPanelVisible() || groupPanel() || columnChooser() || canAdd() || editMode() === 'batch') {
+@if (searchPanelVisible() || groupPanel() || columnChooser() || canAdd() || editMode() === 'batch') {
   <div class="oge-toolbar">
     @if (groupPanel()) {
       <div
@@ -302,7 +302,7 @@
               [class.oge-row-new]="store.editing.isAdded(node.key)"
               [attr.aria-selected]="ariaSelectedOf(node)"
               [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
-              [style.height.px]="virtualScroll() ? effRowHeight() : null"
+              [style.height.px]="virtualized() ? effRowHeight() : null"
               [style.grid-template-columns]="gridTemplateColumns()"
               (click)="onRowClick(node, $event)"
               (contextmenu)="onRowContextMenuOpen(node, $event)"
@@ -462,7 +462,7 @@
               role="row"
               tabindex="0"
               [attr.aria-expanded]="node.expanded"
-              [style.height.px]="virtualScroll() ? effRowHeight() : null"
+              [style.height.px]="virtualized() ? effRowHeight() : null"
               [style.padding-left.px]="12 + node.level * 20"
               (click)="toggleGroup(node.key)"
               (keydown.enter)="toggleGroup(node.key, $event)"
@@ -489,7 +489,7 @@
             </div>
           }
           @case ('detail') {
-            <div class="oge-detail-row" role="row" [style.height.px]="virtualScroll() ? effDetailRowHeight() : null">
+            <div class="oge-detail-row" role="row" [style.height.px]="virtualized() ? effDetailRowHeight() : null">
               <div
                 class="oge-detail-cell"
                 role="gridcell"
@@ -499,6 +499,21 @@
                   <ng-container *ngTemplateOutlet="detail.templateRef; context: detailContext(node.data)" />
                 }
               </div>
+            </div>
+          }
+          @case ('filler') {
+            <div
+              class="oge-row oge-filler-row"
+              role="row"
+              [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
+              [style.height.px]="effRowHeight()"
+              [style.grid-template-columns]="gridTemplateColumns()"
+            >
+              @for (column of resolvedColumns(); track column.id) {
+                <div class="oge-cell" role="gridcell" aria-busy="true">
+                  <span class="oge-skeleton" aria-hidden="true"></span>
+                </div>
+              }
             </div>
           }
         }

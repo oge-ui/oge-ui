@@ -789,6 +789,32 @@
   transition: opacity 120ms ease;
 }
 
+// Placeholder rows for blocks that are still loading (remote virtual / infinite).
+.oge-filler-row .oge-cell {
+  display: flex;
+  align-items: center;
+}
+
+.oge-skeleton {
+  display: block;
+  width: 70%;
+  height: 10px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--oge-muted-color) 18%, transparent);
+  animation: oge-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes oge-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
 .oge-virtual {
   .oge-rows {
     will-change: transform;

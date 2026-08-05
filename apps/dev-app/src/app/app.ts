@@ -39,6 +39,7 @@ export class App {
         { path: '/components/data-grid/grouping', label: 'Grouping & Summaries', icon: 'layout' },
         { path: '/components/data-grid/master-detail', label: 'Master-Detail', icon: 'pages' },
         { path: '/components/data-grid/virtual-scroll', label: 'Virtual Scroll', icon: 'zap' },
+        { path: '/components/data-grid/infinite-scroll', label: 'Infinite Scroll', icon: 'infinity' },
         { path: '/components/data-grid/remote-data', label: 'Remote Data', icon: 'globe' },
       ],
     },

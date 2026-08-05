@@ -51,7 +51,7 @@ import {
   formatPattern,
   type OgeGridMessages,
 } from '../config';
-import { GridDataAdapter } from '../data/grid-data-adapter';
+import { GridDataAdapter, WINDOW_BLOCK_SIZE } from '../data/grid-data-adapter';
 import {
   OgeFilterBuilderGroup,
   builderToExpr,
@@ -131,6 +131,17 @@ export interface OgeSortingOptions {
   mode?: 'none' | 'single' | 'multi';
   /** Whether a third header click clears the sort. Defaults from global config. */
   allowUnsorting?: boolean;
+}
+
+export interface OgeScrollingOptions {
+  /** 'virtual' windows the DOM; 'infinite' additionally loads on demand while scrolling down. */
+  mode?: 'standard' | 'virtual' | 'infinite';
+  /**
+   * Fetch rows in blocks from the DataSource instead of loading everything
+   * (server-side windowing). Defaults to true for 'infinite'.
+   * Windowed mode is row-only: grouping and master-detail are unavailable.
+   */
+  remote?: boolean;
 }
 
 export interface OgeDataChange<T = unknown> {
@@ -240,7 +251,7 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
   styleUrl: './grid.scss',
   host: {
     class: 'oge-grid',
-    '[class.oge-virtual]': 'virtualScroll()',
+    '[class.oge-virtual]': 'virtualized()',
     '[class.oge-loading]': 'adapter.loading()',
     '[class.oge-wrap]': 'wordWrap()',
     '(document:click)': 'onDocumentClick($event)',
@@ -278,6 +289,26 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * Give the grid a bounded height (e.g. `style="height: 600px"`) when enabled.
    */
   readonly virtualScroll = input(false);
+
+  /** DevExtreme-style scrolling options; overrides the `virtualScroll` shorthand. */
+  readonly scrolling = input<OgeScrollingOptions | undefined>(undefined);
+
+  protected readonly effScrolling = computed<{
+    mode: 'standard' | 'virtual' | 'infinite';
+    remote: boolean;
+  }>(() => {
+    const options = this.scrolling();
+    const mode = options?.mode ?? (this.virtualScroll() ? 'virtual' : 'standard');
+    return { mode, remote: options?.remote ?? mode === 'infinite' };
+  });
+
+  /** Virtualized rendering active (virtual or infinite). */
+  protected readonly virtualized = computed(() => this.effScrolling().mode !== 'standard');
+
+  /** Sparse block-fetching active. */
+  protected readonly windowed = computed(
+    () => this.virtualized() && this.effScrolling().remote
+  );
 
   /** Fixed row height in px used by the virtualizer. Defaults from global config. */
   readonly rowHeight = input<number | undefined>(undefined);
@@ -729,10 +760,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   private readonly firstDataRow = computed<T | undefined>(() => {
     const node = this.flatNodes().find((n) => n.kind === 'data');
-    return node?.kind === 'data' ? node.data : undefined;
+    if (node?.kind === 'data') return node.data;
+    // windowed mode never populates the full result; sample the block cache
+    const first = this.adapter.windowRows().values().next();
+    return first.done ? undefined : first.value;
   });
 
   protected readonly totalCount = computed<number>(() => {
+    if (this.windowed()) return this.adapter.windowTotal() ?? this.adapter.highestLoaded();
     const result = this.adapter.result();
     if (result?.totalCount != null) return result.totalCount;
     return this.flatNodes().reduce((count, node) => (node.kind === 'data' ? count + 1 : count), 0);
@@ -745,9 +780,23 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- virtualization ------------------------------------------------------
 
+  /**
+   * Row count of the windowed virtual space. With an unknown total (pure
+   * infinite scrolling) the space grows one block past the highest loaded row,
+   * so the user can always scroll further until the source runs dry.
+   */
+  private readonly windowCount = computed<number>(() => {
+    const total = this.adapter.windowTotal();
+    if (total != null) return total;
+    return this.adapter.highestLoaded() + WINDOW_BLOCK_SIZE;
+  });
+
   private readonly offsetTree = computed<OffsetTree>(() => {
-    const nodes = this.flatNodes();
     const rowHeight = this.effRowHeight();
+    if (this.windowed()) {
+      return new OffsetTree(this.windowCount(), () => rowHeight);
+    }
+    const nodes = this.flatNodes();
     const detailHeight = this.effDetailRowHeight();
     return new OffsetTree(nodes.length, (i) =>
       nodes[i].kind === 'detail' ? detailHeight : rowHeight
@@ -755,7 +804,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   protected readonly viewWindow = computed<ViewportWindow | null>(() => {
-    if (!this.virtualScroll()) return null;
+    if (!this.virtualized()) return null;
     return computeWindow(
       this.scrollTop(),
       this.viewportHeight(),
@@ -764,13 +813,52 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     );
   });
 
-  /** Index of the first rendered node within `flatNodes()`. */
+  /** Index of the first rendered node within the flat row space. */
   protected readonly viewStart = computed(() => this.viewWindow()?.start ?? 0);
 
   protected readonly viewNodes = computed<readonly RowNode<T>[]>(() => {
     const window = this.viewWindow();
+    if (this.windowed()) {
+      const rows = this.adapter.windowRows();
+      const keyOf = this.keySelector();
+      const start = window?.start ?? 0;
+      const end = window?.end ?? Math.min(this.windowCount(), WINDOW_BLOCK_SIZE);
+      const nodes: RowNode<T>[] = [];
+      for (let i = start; i < end; i++) {
+        const row = rows.get(i);
+        nodes.push(
+          row !== undefined
+            ? { kind: 'data', key: keyOf(row, i), data: row, sourceIndex: i, level: 0 }
+            : { kind: 'filler', key: `oge-filler-${i}`, index: i }
+        );
+      }
+      return nodes;
+    }
     const nodes = this.flatNodes();
     return window ? nodes.slice(window.start, window.end) : nodes;
+  });
+
+  /** Keeps the adapter's load strategy in sync with the scrolling options. */
+  private readonly windowModeEffect = effect(() => {
+    const windowed = this.windowed();
+    untracked(() => this.adapter.setMode(windowed ? 'window' : 'full'));
+  });
+
+  /**
+   * Requests the blocks covering the visible window (plus one block of
+   * read-ahead). Tracking `loadOptions` re-triggers after sort/filter changes,
+   * which invalidate the adapter's block cache.
+   */
+  private readonly windowRequestEffect = effect(() => {
+    if (!this.windowed()) return;
+    if (!this.adapter.source()) return; // re-run once the source is attached
+    const window = this.viewWindow();
+    this.store.loadOptions();
+    untracked(() => {
+      const start = window?.start ?? 0;
+      const end = window?.end ?? WINDOW_BLOCK_SIZE;
+      this.adapter.requestRange(start, end + WINDOW_BLOCK_SIZE);
+    });
   });
 
   protected readonly bodyHeight = computed<number | null>(
@@ -1239,7 +1327,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   private scrollRowIntoView(row: number): void {
-    if (!this.virtualScroll()) return;
+    if (!this.virtualized()) return;
     const tree = this.offsetTree();
     const viewport = this.viewportRef()?.nativeElement;
     if (!viewport) return;

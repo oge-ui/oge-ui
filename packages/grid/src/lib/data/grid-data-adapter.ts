@@ -1,6 +1,9 @@
-import { Injectable, effect, inject, signal, untracked } from '@angular/core';
-import type { DataSource, LoadResult } from '@oge-ui/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import type { DataSource, LoadOptions, LoadResult } from '@oge-ui/core';
 import { GridStateStore } from '../state/grid-state.store';
+
+/** Rows fetched per windowed request (remote virtual / infinite scrolling). */
+export const WINDOW_BLOCK_SIZE = 100;
 
 /**
  * Bridges the reactive grid state to the pull-based DataSource contract with
@@ -22,11 +25,98 @@ export class GridDataAdapter<T = unknown> {
 
   private inflight: AbortController | null = null;
 
+  // --- windowed mode (remote virtual / infinite scrolling) -----------------
+
+  /** 'full' loads the whole (paged) result; 'window' fetches sparse blocks. */
+  private readonly _mode = signal<'full' | 'window'>('full');
+
+  private readonly _windowRows = signal<ReadonlyMap<number, T>>(new Map());
+  private readonly _windowTotal = signal<number | null>(null);
+  private readonly _highestLoaded = signal(0);
+  private windowBaseJson: string | null = null;
+  private readonly pendingBlocks = new Set<number>();
+  private readonly loadedBlocks = new Set<number>();
+  private readonly pendingCount = signal(0);
+
+  readonly windowRows = this._windowRows.asReadonly();
+  readonly windowTotal = this._windowTotal.asReadonly();
+  /** Exclusive upper bound of the highest loaded row index. */
+  readonly highestLoaded = this._highestLoaded.asReadonly();
+  readonly windowLoading = computed(() => this.pendingCount() > 0);
+
+  setMode(mode: 'full' | 'window'): void {
+    if (untracked(this._mode) === mode) return;
+    this._mode.set(mode);
+    if (mode === 'window') this.resetWindow();
+  }
+
+  private resetWindow(): void {
+    this.windowBaseJson = null;
+    this.pendingBlocks.clear();
+    this.loadedBlocks.clear();
+    this._windowRows.set(new Map());
+    this._windowTotal.set(null);
+    this._highestLoaded.set(0);
+    this.pendingCount.set(0);
+  }
+
+  /** Base options for windowed loads: everything except skip/take/signal. */
+  private windowBase(): Omit<LoadOptions, 'skip' | 'take' | 'signal'> {
+    const { skip: _s, take: _t, signal: _sig, ...base } = untracked(this.store.loadOptions);
+    return base;
+  }
+
+  /**
+   * Ensures the row blocks covering [start, end) are loaded or in flight.
+   * A change of sort/filter/search invalidates the whole cache.
+   */
+  requestRange(start: number, end: number): void {
+    const source = untracked(this._source);
+    if (!source || untracked(this._mode) !== 'window') return;
+    const base = this.windowBase();
+    const baseJson = JSON.stringify(base);
+    if (baseJson !== this.windowBaseJson) {
+      this.resetWindow();
+      this.windowBaseJson = baseJson;
+    }
+    const total = untracked(this._windowTotal);
+    const clampedEnd = total === null ? end : Math.min(end, total);
+    const firstBlock = Math.max(0, Math.floor(start / WINDOW_BLOCK_SIZE));
+    const lastBlock = Math.max(firstBlock, Math.ceil(clampedEnd / WINDOW_BLOCK_SIZE) - 1);
+    for (let block = firstBlock; block <= lastBlock; block++) {
+      if (this.pendingBlocks.has(block) || this.loadedBlocks.has(block)) continue;
+      this.pendingBlocks.add(block);
+      this.pendingCount.set(this.pendingBlocks.size);
+      const expectedBase = baseJson;
+      source
+        .load({ ...base, skip: block * WINDOW_BLOCK_SIZE, take: WINDOW_BLOCK_SIZE })
+        .then((result) => {
+          if (this.windowBaseJson !== expectedBase) return; // stale base
+          const rows = result.data as readonly T[];
+          const merged = new Map(untracked(this._windowRows));
+          rows.forEach((row, i) => merged.set(block * WINDOW_BLOCK_SIZE + i, row));
+          this._windowRows.set(merged);
+          if (result.totalCount !== undefined) this._windowTotal.set(result.totalCount);
+          this._highestLoaded.set(
+            Math.max(untracked(this._highestLoaded), block * WINDOW_BLOCK_SIZE + rows.length)
+          );
+          this.loadedBlocks.add(block);
+        })
+        .catch((err) => this.error.set(err))
+        .finally(() => {
+          this.pendingBlocks.delete(block);
+          this.pendingCount.set(this.pendingBlocks.size);
+        });
+    }
+  }
+
   constructor() {
     effect(() => {
       const source = this._source();
       const options = this.store.loadOptions();
+      const mode = this._mode();
       untracked(() => {
+        if (mode === 'window') return; // windowed loads go through requestRange
         if (!source) {
           this.inflight?.abort();
           this.inflight = null;

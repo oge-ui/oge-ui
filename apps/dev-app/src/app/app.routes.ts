@@ -34,6 +34,12 @@ export const appRoutes: Route[] = [
         title: 'oge — Data Grid Virtual Scroll',
       },
       {
+        path: 'infinite-scroll',
+        loadComponent: () =>
+          import('./pages/infinite-scroll/infinite-scroll').then((m) => m.InfiniteScrollPage),
+        title: 'oge — Data Grid Infinite Scroll',
+      },
+      {
         path: 'remote-data',
         loadComponent: () =>
           import('./pages/remote-data/remote-data').then((m) => m.RemoteDataPage),

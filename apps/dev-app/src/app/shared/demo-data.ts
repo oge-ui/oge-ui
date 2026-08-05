@@ -25,6 +25,27 @@ function mulberry32(seed: number): () => number {
   };
 }
 
+/**
+ * Generates the employee at a given index on demand — lets demos expose
+ * millions of rows without ever materializing the full array.
+ */
+export function makeEmployeeAt(index: number, seed = 42): Employee {
+  const rand = mulberry32(seed + index * 7919);
+  const pick = <T>(arr: readonly T[]): T => arr[Math.floor(rand() * arr.length)];
+  const year = 2015 + Math.floor(rand() * 10);
+  const month = 1 + Math.floor(rand() * 12);
+  const day = 1 + Math.floor(rand() * 28);
+  return {
+    id: index + 1,
+    firstName: pick(FIRST_NAMES),
+    lastName: pick(LAST_NAMES),
+    department: pick(DEPARTMENTS),
+    city: pick(CITIES),
+    salary: 30000 + Math.floor(rand() * 90) * 1000,
+    hireDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+  };
+}
+
 export function makeEmployees(count: number, seed = 42): Employee[] {
   const rand = mulberry32(seed);
   const pick = <T>(arr: readonly T[]): T => arr[Math.floor(rand() * arr.length)];
