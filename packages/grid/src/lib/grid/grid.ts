@@ -620,6 +620,22 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Spinner overlay while a load is in flight. */
   readonly loadPanel = input(false);
 
+  /** Briefly flashes cells patched by push updates (DevExtreme highlightChanges). */
+  readonly highlightChanges = input(false);
+
+  /** `key::field` of recently pushed cells → batch counter (drives the flash animation). */
+  protected readonly updatedCells = signal<ReadonlyMap<string, number>>(new Map());
+
+  /**
+   * 0 = no flash; 1/2 alternate per push batch so consecutive updates to the
+   * same cell restart the CSS animation (two identical keyframes, new class).
+   */
+  protected cellFlashPhase(key: RowKey, field: string | undefined): number {
+    if (field == null || !this.highlightChanges()) return 0;
+    const batch = this.updatedCells().get(`${String(key)}::${field}`);
+    return batch === undefined ? 0 : (batch % 2) + 1;
+  }
+
   protected readonly noDataTemplate = contentChild(OgeNoDataTemplate);
   protected readonly rowTemplate = contentChild(OgeRowTemplate<T>);
   protected readonly toolbarItems = contentChildren(OgeToolbarItem);
@@ -635,6 +651,27 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     afterRenderEffect(() => {
       if (this.adapter.result() === null) return;
       untracked(() => this.contentReady.emit());
+    });
+    // highlightChanges: stamp pushed cells, clear each batch after its flash
+    effect(() => {
+      const { batch, cells } = this.adapter.pushedCells();
+      if (!cells.length || !untracked(this.highlightChanges)) return;
+      untracked(() => {
+        const next = new Map(this.updatedCells());
+        for (const cell of cells) next.set(`${String(cell.key)}::${cell.field}`, batch);
+        this.updatedCells.set(next);
+        setTimeout(() => {
+          const current = new Map(untracked(this.updatedCells));
+          let changed = false;
+          for (const [cellKey, cellBatch] of current) {
+            if (cellBatch === batch) {
+              current.delete(cellKey);
+              changed = true;
+            }
+          }
+          if (changed) this.updatedCells.set(current);
+        }, 1300);
+      });
     });
     effect(() => {
       const data = this.data();

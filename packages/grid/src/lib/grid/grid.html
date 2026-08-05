@@ -527,6 +527,8 @@
                   [class.oge-pinned]="column.pinned !== false"
                   [class.oge-cell-dirty]="isCellDirty(node, column)"
                   [class.oge-cell-editing]="isCellEditorOpen(node, column)"
+                  [class.oge-cell-flash-a]="cellFlashPhase(node.key, column.field) === 1"
+                  [class.oge-cell-flash-b]="cellFlashPhase(node.key, column.field) === 2"
                   [style.inset-inline-start.px]="pinnedLeftOf(column)"
                   [style.inset-inline-end.px]="pinnedRightOf(column)"
                   [attr.data-cell]="viewStart() + nodeIndex + '-' + column.absIndex"

@@ -4,6 +4,7 @@ import {
   OgeColumn,
   OgeEditTemplate,
   OgeGrid,
+  type OgeCommandButton,
   type OgeEditMode,
   type OgeSavingChangesEvent,
 } from '@oge-ui/grid';
@@ -37,10 +38,11 @@ onSaving(event: OgeSavingChangesEvent<Employee>) {
   template: `
     <app-doc-header title="Editing" [chips]="['editing', 'required', 'ogeEditTemplate', 'savingChanges']">
       <p>
-        Four DevExtreme-style edit modes over the same grid. <em>Batch</em> collects changes
-        (dirty markers, strike-through deletes) until <em>Save changes</em>; the other modes write
-        back immediately. First Name is required; Department uses a custom
-        <code>*ogeEditTemplate</code>.
+        Five DevExtreme-style edit modes over the same grid. <em>Batch</em> collects changes
+        (dirty markers, strike-through deletes) until <em>Save changes</em>; <em>form</em>
+        replaces the row with an inline labeled form; the other modes write back immediately.
+        First Name is required; Department uses a custom <code>*ogeEditTemplate</code>.
+        Deleting asks for confirmation (<code>confirmDelete</code>).
       </p>
     </app-doc-header>
 
@@ -66,7 +68,7 @@ onSaving(event: OgeSavingChangesEvent<Employee>) {
         <oge-grid
           [data]="employees"
           keyField="id"
-          [editing]="{ mode: editMode(), allowUpdating: true, allowAdding: true, allowDeleting: true }"
+          [editing]="{ mode: editMode(), allowUpdating: true, allowAdding: true, allowDeleting: true, confirmDelete: true }"
           [paging]="{ pageSize: 10 }"
           (savingChanges)="onSaving($event)"
         >
@@ -104,7 +106,8 @@ onSaving(event: OgeSavingChangesEvent<Employee>) {
     <h3>Notes</h3>
     <ul>
       <li><strong>cell</strong>: click a cell (or press <kbd>Enter</kbd>/<kbd>F2</kbd> on a focused one), edit, commit with <kbd>Enter</kbd>; <kbd>Tab</kbd> commits and moves to the next editable cell, <kbd>Esc</kbd> reverts.</li>
-      <li><strong>row / popup</strong>: use the command column's pencil button — all editable cells (or a dialog form) open at once with Save/Cancel.</li>
+      <li><strong>row / popup / form</strong>: use the command column's pencil button — all editable cells, a dialog, or an inline labeled form open at once with Save/Cancel.</li>
+      <li><code>confirmDelete: true</code> asks before a non-batch delete.</li>
       <li><strong>batch</strong>: nothing touches the DataSource until <em>Save changes</em>; dirty cells get a corner marker, deletions a strike-through, and everything is sent as one ordered change set.</li>
       <li>Validation blocks commits: <code>[required]</code> or any Angular <code>[validators]</code> mark the editor red and keep it open.</li>
       <li>The same flow drives remote sources — implement <code>insert/update/remove</code> on your DataSource.</li>
@@ -113,7 +116,7 @@ onSaving(event: OgeSavingChangesEvent<Employee>) {
 })
 export class EditingPage {
   protected readonly snippet = SNIPPET;
-  protected readonly modes: OgeEditMode[] = ['cell', 'row', 'batch', 'popup'];
+  protected readonly modes: OgeEditMode[] = ['cell', 'row', 'batch', 'popup', 'form'];
   protected readonly editMode = signal<OgeEditMode>('batch');
   protected readonly employees = makeEmployees(30, 11);
   protected readonly saveLog = signal<readonly string[]>([]);

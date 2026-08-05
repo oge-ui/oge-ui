@@ -1,5 +1,5 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
-import type { DataChange, DataSource, LoadOptions, LoadResult } from '@oge-ui/core';
+import type { DataChange, DataSource, LoadOptions, LoadResult, RowKey } from '@oge-ui/core';
 import { GridStateStore } from '../state/grid-state.store';
 
 /** Rows fetched per windowed request (remote virtual / infinite scrolling). */
@@ -137,6 +137,26 @@ export class GridDataAdapter<T = unknown> {
 
   private changesSub: { unsubscribe(): void } | null = null;
 
+  /**
+   * Cells touched by the most recent pushed update batch, with a batch
+   * counter — drives the grid's `highlightChanges` cell flash.
+   */
+  readonly pushedCells = signal<{
+    readonly batch: number;
+    readonly cells: readonly { key: RowKey; field: string }[];
+  }>({ batch: 0, cells: [] });
+
+  private notifyPushedCells(batch: readonly DataChange<T>[]): void {
+    const cells: { key: RowKey; field: string }[] = [];
+    for (const change of batch) {
+      if (change.type !== 'update') continue;
+      for (const field of Object.keys(change.patch)) cells.push({ key: change.key, field });
+    }
+    if (cells.length) {
+      this.pushedCells.set({ batch: untracked(this.pushedCells).batch + 1, cells });
+    }
+  }
+
   setSource(source: DataSource<T> | null): void {
     this.changesSub?.unsubscribe();
     this.changesSub = null;
@@ -168,6 +188,7 @@ export class GridDataAdapter<T = unknown> {
           }
         }
         this._windowRows.set(merged);
+        this.notifyPushedCells(batch);
       } else {
         this.resetWindow();
         if (this.lastRange) this.requestRange(this.lastRange.start, this.lastRange.end);
@@ -182,6 +203,7 @@ export class GridDataAdapter<T = unknown> {
         return change?.type === 'update' ? ({ ...(row as object), ...change.patch } as T) : row;
       });
       this._result.set({ ...result, data });
+      this.notifyPushedCells(batch);
     } else {
       this.reload();
     }

@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/grid",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "peerDependencies": {
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
@@ -22,7 +22,7 @@
     }
   },
   "dependencies": {
-    "@oge-ui/core": "0.2.0"
+    "@oge-ui/core": "0.3.0"
   },
   "exports": {
     "./themes/*": "./themes/*"

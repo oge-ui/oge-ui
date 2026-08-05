@@ -148,6 +148,15 @@ interface Toggle {
           [headerFilter]="headerFilter()"
           [searchPanel]="searchPanel()"
           [sortable]="sortable() ? 'multi' : false"
+          [selectionMode]="selection() ? 'checkbox' : 'none'"
+          [groupPanel]="grouping()"
+          [groupBy]="grouping() ? ['department'] : []"
+          [columnChooser]="columnChooser()"
+          [rowAlternation]="rowAlternation()"
+          [focusedRowEnabled]="focusedRow()"
+          [rowDragging]="rowDragging()"
+          [rtlEnabled]="rtl() ? true : undefined"
+          [editing]="editing() ? { mode: 'batch', allowUpdating: true, allowAdding: true, allowDeleting: true } : false"
           [style.height]="virtualScroll() ? '520px' : null"
         >
           <oge-column field="id" caption="Id" [width]="80" dataType="number" />
@@ -195,6 +204,14 @@ export class PlaygroundPage {
   protected readonly searchPanel = signal(true);
   protected readonly paging = signal(true);
   protected readonly virtualScroll = signal(false);
+  protected readonly selection = signal(false);
+  protected readonly grouping = signal(false);
+  protected readonly columnChooser = signal(false);
+  protected readonly rowAlternation = signal(false);
+  protected readonly focusedRow = signal(false);
+  protected readonly rowDragging = signal(false);
+  protected readonly rtl = signal(false);
+  protected readonly editing = signal(false);
   protected readonly pageSize = signal(15);
   protected readonly rowCount = signal(1000);
 
@@ -205,6 +222,14 @@ export class PlaygroundPage {
     { key: 'searchPanel', label: 'Search panel', icon: 'search', state: this.searchPanel },
     { key: 'paging', label: 'Paging', icon: 'pages', state: this.paging },
     { key: 'virtualScroll', label: 'Virtual scroll', icon: 'zap', state: this.virtualScroll },
+    { key: 'selection', label: 'Selection', icon: 'check-square', state: this.selection },
+    { key: 'grouping', label: 'Grouping', icon: 'layout', state: this.grouping },
+    { key: 'columnChooser', label: 'Column chooser', icon: 'columns', state: this.columnChooser },
+    { key: 'editing', label: 'Editing (batch)', icon: 'pencil', state: this.editing },
+    { key: 'rowAlternation', label: 'Row striping', icon: 'table', state: this.rowAlternation },
+    { key: 'focusedRow', label: 'Focused row', icon: 'gauge', state: this.focusedRow },
+    { key: 'rowDragging', label: 'Row drag & drop', icon: 'sliders', state: this.rowDragging },
+    { key: 'rtl', label: 'RTL', icon: 'globe', state: this.rtl },
   ];
 
   protected readonly employees = computed(() => makeEmployees(this.rowCount()));
@@ -217,6 +242,14 @@ export class PlaygroundPage {
     if (this.headerFilter()) attrs.push(`[headerFilter]="true"`);
     if (this.searchPanel()) attrs.push(`[searchPanel]="true"`);
     if (!this.sortable()) attrs.push(`[sortable]="false"`);
+    if (this.selection()) attrs.push(`selectionMode="checkbox"`);
+    if (this.grouping()) attrs.push(`[groupPanel]="true"`, `[groupBy]="['department']"`);
+    if (this.columnChooser()) attrs.push(`[columnChooser]="true"`);
+    if (this.editing()) attrs.push(`[editing]="{ mode: 'batch', allowUpdating: true, allowAdding: true, allowDeleting: true }"`);
+    if (this.rowAlternation()) attrs.push(`[rowAlternation]="true"`);
+    if (this.focusedRow()) attrs.push(`[focusedRowEnabled]="true"`);
+    if (this.rowDragging()) attrs.push(`[rowDragging]="true"`);
+    if (this.rtl()) attrs.push(`[rtlEnabled]="true"`);
     return `<oge-grid ${attrs.join('\n          ')}>\n  <oge-column field="id" caption="Id" [width]="80" dataType="number" />\n  <oge-column field="firstName" caption="First Name" />\n  <!-- … -->\n</oge-grid>`;
   });
 }

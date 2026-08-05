@@ -624,6 +624,36 @@
   background: var(--oge-header-bg);
 }
 
+// --- highlightChanges cell flash --------------------------------------------
+// Two identical animations under different names: alternating the class per
+// push batch restarts the flash even when the same cell updates repeatedly.
+
+.oge-cell-flash-a {
+  animation: oge-cell-flash-a 1.2s ease-out;
+}
+
+.oge-cell-flash-b {
+  animation: oge-cell-flash-b 1.2s ease-out;
+}
+
+@keyframes oge-cell-flash-a {
+  from {
+    background-color: var(--oge-update-flash-bg, rgba(99, 102, 241, 0.24));
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@keyframes oge-cell-flash-b {
+  from {
+    background-color: var(--oge-update-flash-bg, rgba(99, 102, 241, 0.24));
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
 // --- group footer summary rows ---------------------------------------------
 
 .oge-group-footer-row {
