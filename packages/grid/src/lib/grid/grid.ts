@@ -867,8 +867,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const keyOf = untracked(this.keySelector);
       rows = rows.filter((row, index) => selected.has(keyOf(row, index)));
     }
+    return { rows, columns: this.exportColumns() };
+  }
+
+  /** Field columns with display formatting resolved (lookup text, booleans). */
+  private exportColumns(): OgeExportColumn<T>[] {
     const messages = untracked(this.msg);
-    const columns = untracked(this.resolvedColumns)
+    return untracked(this.resolvedColumns)
       .filter((column) => column.field)
       .map((column) => ({
         caption: column.caption,
@@ -883,7 +888,33 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
               ? (value: unknown) => (value ? messages.booleanTrue : messages.booleanFalse)
               : undefined),
       }));
-    return { rows, columns };
+  }
+
+  /**
+   * Copies the selected rows (with a header) — or, without a selection, the
+   * focused cell's text — to the clipboard as tab-separated values.
+   */
+  async copyToClipboard(): Promise<void> {
+    const text = this.clipboardText();
+    if (text && typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    }
+  }
+
+  private clipboardText(): string {
+    const nodes = untracked(this.flatNodes);
+    const columns = this.exportColumns();
+    const selected = untracked(this.store.selection.selected);
+    const rows = nodes
+      .filter((node): node is DataRowNode<T> => node.kind === 'data' && selected.has(node.key))
+      .map((node) => node.data);
+    if (rows.length) return buildCsv(rows, columns, { separator: '\t', bom: false });
+    const cell = untracked(this.focusedCell);
+    const node = cell ? nodes[cell.row] : undefined;
+    const column = cell ? untracked(this.resolvedColumns)[cell.col] : undefined;
+    if (!node || node.kind !== 'data' || !column) return '';
+    const value = column.accessor(node.data);
+    return value == null ? '' : column.format ? column.format(value) : String(value);
   }
 
   /** Builds CSV of the current view; `scope` narrows to the page or selection. */
@@ -1780,6 +1811,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected onGridKeydown(event: KeyboardEvent): void {
     const cell = this.focusedCell();
     if (!cell) return;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
+      // no editor open → copy selection/cell; native copy still runs unhindered
+      if (this.store.editing.editCell() === null && this.store.editing.editRowKey() === null) {
+        void this.copyToClipboard();
+      }
+      return;
+    }
     const nodes = this.flatNodes();
     const lastCol = this.resolvedColumns().length - 1;
     const pageSize = Math.max(1, Math.floor(this.viewportHeight() / this.effRowHeight()) - 1);

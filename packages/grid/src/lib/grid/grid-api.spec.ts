@@ -124,6 +124,32 @@ describe('OgeGrid imperative API & events', () => {
     expect(selection.rows[0].name).toBe('Ada');
   });
 
+  it('Ctrl+C copies the selected rows as TSV with a header', async () => {
+    const written: string[] = [];
+    Object.assign(navigator, {
+      clipboard: { writeText: (text: string) => (written.push(text), Promise.resolve()) },
+    });
+    const fixture = TestBed.createComponent(OgeGrid<Row>);
+    fixture.componentRef.setInput('data', ROWS);
+    fixture.componentRef.setInput('columns', ['name', 'department']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('selectionMode', 'multiple');
+    fixture.detectChanges();
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    // focus a cell (roving tabindex) and select the first row
+    const firstCell = el.querySelector('.oge-row .oge-cell') as HTMLElement;
+    firstCell.dispatchEvent(new FocusEvent('focus'));
+    firstCell.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await settle(fixture);
+    el.querySelector('.oge-viewport')?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true })
+    );
+    await settle(fixture);
+    expect(written).toHaveLength(1);
+    expect(written[0]).toBe('Name\tDepartment\r\nAda\tEng');
+  });
+
   it('clearFilters and clearSorting reset the view', async () => {
     const { fixture, el, grid } = await render();
     // sort by name desc via two header clicks
