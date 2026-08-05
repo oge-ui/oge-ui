@@ -24,6 +24,8 @@ export interface OgeGridMessages {
   nextPage: string;
   rowsSuffix: string;
   pageSizeLabel: string;
+  allRows: string;
+  confirmDelete: string;
   booleanTrue: string;
   booleanFalse: string;
   editRow: string;
@@ -85,6 +87,8 @@ export const OGE_DEFAULT_MESSAGES: OgeGridMessages = {
   nextPage: 'Next page',
   rowsSuffix: 'rows',
   pageSizeLabel: 'Rows per page',
+  allRows: 'All',
+  confirmDelete: 'Delete this row?',
   booleanTrue: '✓',
   booleanFalse: '✗',
   editRow: 'Edit',

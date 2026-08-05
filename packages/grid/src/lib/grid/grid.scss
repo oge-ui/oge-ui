@@ -3,6 +3,7 @@
 .oge-grid {
   @include tokens.core-tokens;
 
+  position: relative; // anchors the load-panel overlay
   display: flex;
   flex-direction: column;
   border: 1px solid var(--oge-border-color);
@@ -787,6 +788,40 @@
 .oge-loading .oge-viewport {
   opacity: 0.6;
   transition: opacity 120ms ease;
+}
+
+// zebra striping (rowAlternation)
+.oge-row-alt .oge-cell {
+  background: var(--oge-row-alt-bg, rgba(148, 163, 184, 0.08));
+}
+
+// loading panel overlay (loadPanel)
+.oge-load-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--oge-muted-color);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.oge-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--oge-border-color);
+  border-top-color: var(--oge-accent-color, #4f46e5);
+  border-radius: 50%;
+  animation: oge-spin 700ms linear infinite;
+}
+
+@keyframes oge-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // Placeholder rows for blocks that are still loading (remote virtual / infinite).

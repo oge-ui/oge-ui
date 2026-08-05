@@ -51,12 +51,12 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
       <label class="oge-pager-sizes">
         <span class="oge-pager-sizes-label">{{ messages().pageSizeLabel }}</span>
         <select
-          [value]="pageSize()"
+          [value]="pageSize() || 'all'"
           [attr.aria-label]="messages().pageSizeLabel"
-          (change)="pageSizeChange.emit(+$any($event.target).value)"
+          (change)="onSizeChange($any($event.target).value)"
         >
           @for (size of sizes; track size) {
-            <option [value]="size">{{ size }}</option>
+            <option [value]="size">{{ size === 'all' ? messages().allRows : size }}</option>
           }
         </select>
       </label>
@@ -136,12 +136,17 @@ export class OgePager {
   readonly pageCount = input.required<number>();
   readonly totalCount = input.required<number>();
   readonly pageSize = input<number>(0);
-  /** Page-size choices; null hides the selector. */
-  readonly pageSizes = input<readonly number[] | null>(null);
+  /** Page-size choices; `'all'` adds an unpaged option; null hides the selector. */
+  readonly pageSizes = input<readonly (number | 'all')[] | null>(null);
   readonly showInfo = input(true);
   readonly messages = input<OgeGridMessages>(OGE_DEFAULT_MESSAGES);
   readonly pageChange = output<number>();
+  /** Emits the new page size; `0` means "all rows" (paging off). */
   readonly pageSizeChange = output<number>();
+
+  protected onSizeChange(raw: string): void {
+    this.pageSizeChange.emit(raw === 'all' ? 0 : +raw);
+  }
 
   /** Windowed page list: first, last, and up to 5 pages around the current one. */
   protected readonly pages = computed<number[]>(() => {

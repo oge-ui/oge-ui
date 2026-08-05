@@ -8,6 +8,8 @@ export interface OgeEditingOptions {
   allowUpdating?: boolean;
   allowAdding?: boolean;
   allowDeleting?: boolean;
+  /** Ask for confirmation (native dialog) before a non-batch delete. */
+  confirmDelete?: boolean;
 }
 
 /**

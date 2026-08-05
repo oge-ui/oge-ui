@@ -72,6 +72,7 @@ import type { SelectionMode } from '../state/selection-slice';
 import type { OgeEditTemplateContext } from '../templates/edit-template';
 import type { OgeCellTemplateContext } from '../templates/cell-template';
 import { OgeDetailTemplate, type OgeDetailTemplateContext } from '../templates/detail-template';
+import { OgeNoDataTemplate } from '../templates/no-data-template';
 import type { OgeHeaderTemplateContext } from '../templates/header-template';
 
 /** Programmatic column definition (alternative to declarative `<oge-column>`). */
@@ -132,8 +133,8 @@ export interface OgeSearchPanelOptions {
 
 export interface OgePagingOptions {
   pageSize: number;
-  /** Shows a page-size selector in the pager. */
-  pageSizes?: readonly number[];
+  /** Shows a page-size selector in the pager; `'all'` adds an unpaged option. */
+  pageSizes?: readonly (number | 'all')[];
   /** Shows the total row count in the pager. Default true. */
   showInfo?: boolean;
 }
@@ -512,6 +513,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** New inputs (wordWrap) + responsive width tracking. */
   readonly wordWrap = input(false);
   protected readonly hostWidth = signal(0);
+
+  /** Alternating row background (zebra striping), stable under virtualization. */
+  readonly rowAlternation = input(false);
+
+  /** Spinner overlay while a load is in flight. */
+  readonly loadPanel = input(false);
+
+  protected readonly noDataTemplate = contentChild(OgeNoDataTemplate);
 
   constructor() {
     // measure real row heights once the DOM for the current window is in place
@@ -2088,6 +2097,15 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.store.editing.toggleRemoved(node.key);
       return;
     }
+    const editing = this.editing();
+    if (
+      editing &&
+      editing.confirmDelete &&
+      typeof confirm === 'function' &&
+      !confirm(untracked(this.msg).confirmDelete)
+    ) {
+      return;
+    }
     void this.runSave([{ type: 'remove', key: node.key }]);
   }
 
@@ -2547,7 +2565,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected onPageSizeChange(pageSize: number): void {
-    this.store.paging.configure(pageSize);
+    this.store.paging.configure(pageSize === 0 ? null : pageSize);
   }
 }
 

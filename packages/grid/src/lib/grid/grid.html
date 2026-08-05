@@ -309,6 +309,7 @@
             <div
               class="oge-row"
               role="row"
+              [class.oge-row-alt]="rowAlternation() && (viewStart() + nodeIndex) % 2 === 1"
               [class.oge-row-selected]="selectionMode() !== 'none' && isRowSelected(node.key)"
               [class.oge-row-removed]="store.editing.isRemoved(node.key)"
               [class.oge-row-new]="store.editing.isAdded(node.key)"
@@ -550,7 +551,13 @@
           }
         }
       } @empty {
-        <div class="oge-no-data">{{ msg().noData }}</div>
+        @if (noDataTemplate(); as noData) {
+          <div class="oge-no-data">
+            <ng-container *ngTemplateOutlet="noData.templateRef" />
+          </div>
+        } @else {
+          <div class="oge-no-data">{{ msg().noData }}</div>
+        }
       }
     </div>
   </div>
@@ -586,12 +593,18 @@
     </div>
   }
 </div>
+@if (loadPanel() && adapter.loading()) {
+  <div class="oge-load-panel" role="status">
+    <span class="oge-spinner" aria-hidden="true"></span>
+    {{ msg().loading }}
+  </div>
+}
 @if (pagingOptions(); as pagingOpts) {
   <oge-pager
     [pageIndex]="store.paging.pageIndex()"
     [pageCount]="pageCount()"
     [totalCount]="totalCount()"
-    [pageSize]="store.paging.pageSize() ?? pagingOpts.pageSize"
+    [pageSize]="store.paging.pageSize() ?? 0"
     [pageSizes]="pagingOpts.pageSizes ?? null"
     [showInfo]="pagingOpts.showInfo !== false"
     [messages]="msg()"

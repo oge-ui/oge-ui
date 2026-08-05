@@ -35,6 +35,7 @@ export { formatCellValue } from './lib/columns/value-format';
 export { OgeCellTemplate, type OgeCellTemplateContext } from './lib/templates/cell-template';
 export { OgeHeaderTemplate, type OgeHeaderTemplateContext } from './lib/templates/header-template';
 export { OgeDetailTemplate, type OgeDetailTemplateContext } from './lib/templates/detail-template';
+export { OgeNoDataTemplate } from './lib/templates/no-data-template';
 export { OgePager } from './lib/pager/pager';
 export { GridStateStore } from './lib/state/grid-state.store';
 export { SortSlice } from './lib/state/sort-slice';
