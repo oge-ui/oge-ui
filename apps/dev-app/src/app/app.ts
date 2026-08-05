@@ -32,6 +32,7 @@ export class App {
         { path: '/components/data-grid', label: 'Overview', icon: 'table' },
         { path: '/components/data-grid/playground', label: 'Playground', icon: 'sliders' },
         { path: '/components/data-grid/sorting', label: 'Sorting & Paging', icon: 'sort' },
+        { path: '/components/data-grid/filtering', label: 'Filtering', icon: 'filter' },
         { path: '/components/data-grid/selection', label: 'Selection', icon: 'check-square' },
         { path: '/components/data-grid/editing', label: 'Editing', icon: 'pencil' },
         { path: '/components/data-grid/grouping', label: 'Grouping & Summaries', icon: 'layout' },

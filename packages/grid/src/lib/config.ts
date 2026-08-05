@@ -1,5 +1,5 @@
 import { InjectionToken, type Provider } from '@angular/core';
-import type { SummaryType } from '@oge-ui/core';
+import type { FilterOperator, SummaryType } from '@oge-ui/core';
 
 /**
  * Every user-facing string in the grid — override globally via
@@ -46,6 +46,19 @@ export interface OgeGridMessages {
   unpin: string;
   hideColumn: string;
   exportCsv: string;
+  /** Operator labels for the filter-row operator menu and the filter builder. */
+  operators: Record<FilterOperator, string>;
+  resetOperator: string;
+  filterBuilderTitle: string;
+  createFilter: string;
+  clearFilter: string;
+  addCondition: string;
+  addGroup: string;
+  removeItem: string;
+  logicAnd: string;
+  logicOr: string;
+  apply: string;
+  filterValuePlaceholder: string;
   summaryLabels: Record<SummaryType, string>;
   /** Pattern for group-row summaries; placeholders: {label} {column} {value} */
   groupSummaryPattern: string;
@@ -94,6 +107,33 @@ export const OGE_DEFAULT_MESSAGES: OgeGridMessages = {
   unpin: 'Unpin',
   hideColumn: 'Hide column',
   exportCsv: 'Export CSV',
+  operators: {
+    eq: 'Equals',
+    ne: 'Does not equal',
+    gt: 'Greater than',
+    ge: 'Greater than or equal',
+    lt: 'Less than',
+    le: 'Less than or equal',
+    contains: 'Contains',
+    notcontains: 'Does not contain',
+    startswith: 'Starts with',
+    endswith: 'Ends with',
+    in: 'Is any of',
+    between: 'Between',
+    isnull: 'Is blank',
+    isnotnull: 'Is not blank',
+  },
+  resetOperator: 'Reset',
+  filterBuilderTitle: 'Filter Builder',
+  createFilter: 'Create filter',
+  clearFilter: 'Clear',
+  addCondition: 'Add condition',
+  addGroup: 'Add group',
+  removeItem: 'Remove',
+  logicAnd: 'And',
+  logicOr: 'Or',
+  apply: 'Apply',
+  filterValuePlaceholder: 'Value',
   summaryLabels: { sum: 'Sum', avg: 'Avg', min: 'Min', max: 'Max', count: 'Count' },
   groupSummaryPattern: '{label} of {column}: {value}',
   totalSummaryPattern: '{label}: {value}',

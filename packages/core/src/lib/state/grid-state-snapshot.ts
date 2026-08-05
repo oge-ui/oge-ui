@@ -10,6 +10,7 @@ export interface GridStateSnapshot {
   filter?: {
     row?: readonly (readonly [string, FilterExpr])[];
     header?: readonly (readonly [string, readonly unknown[]])[];
+    builder?: FilterExpr | null;
     searchText?: string;
   };
   paging?: {

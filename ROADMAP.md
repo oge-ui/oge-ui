@@ -45,13 +45,13 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 | Feature | DevExtreme | oge | Notes |
 |---|---|---|---|
 | Filter row | ✔ | ✅ | dataType-aware editors, debounce |
-| Filter row **operator menu** per cell | ✔ | ❌ | oge has a fixed `filterOperator` per column |
+| Filter row **operator menu** per cell | ✔ | ✅ | per-dataType operators + Reset (Phase 10) |
 | Header filter (distinct values) | ✔ | ✅ | via `DataSource.distinct` |
-| Header filter search box / grouped items | ✔ | ❌ | |
+| Header filter search box | ✔ | ✅ | Phase 10; grouped items still ❌ |
 | Search panel | ✔ | ✅ | |
-| Search result **highlighting** | ✔ | ❌ | |
-| **Filter Builder + filter panel** | ✔ | ❌ | `FilterExpr` tree already supports and/or/not nesting |
-| Programmatic filter value input/output | ✔ | 🟡 | slices exist; no public `[filterValue]` binding |
+| Search result **highlighting** | ✔ | ✅ | default cells, `<mark>` (Phase 10) |
+| **Filter Builder + filter panel** | ✔ | ✅ | recursive and/or editor + readable panel (Phase 10) |
+| Programmatic filter value input/output | ✔ | ✅ | `[(filterValue)]`, persisted via `stateKey` (Phase 10) |
 | `calculateFilterExpression` per column | ✔ | ❌ | |
 
 ## 5. Grouping & summaries
@@ -131,7 +131,7 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 
 **Phase 9 (already planned):** state persistence · CSV/Excel export · README · npm publish v0.1.0.
 
-**Phase 10 — Filtering parity:** filter builder + filter panel · filter-row operator menu · header-filter search · public `[filterValue]` two-way binding · search highlighting.
+**Phase 10 — Filtering parity: ✅ DONE** (filter builder + panel, operator menu, header-filter search, `[(filterValue)]`, search highlighting).
 
 **Phase 11 — Column parity:** lookup columns (+ lookup editors, cascading) · banded columns · `calculateCellValue`/`calculateFilterExpression` · `sortIndex`/`groupIndex`/`sortOrder` column inputs · buttons-column customization · word wrap · adaptive hiding priority.
 

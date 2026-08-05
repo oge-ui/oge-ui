@@ -1,5 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -50,6 +51,15 @@ import {
   type OgeGridMessages,
 } from '../config';
 import { GridDataAdapter } from '../data/grid-data-adapter';
+import {
+  OgeFilterBuilderGroup,
+  builderToExpr,
+  describeExpr,
+  exprToBuilder,
+  operatorsFor,
+  type BuilderGroup,
+  type FilterBuilderField,
+} from '../filter-builder/filter-builder';
 import { OgePager } from '../pager/pager';
 import { GridStateStore } from '../state/grid-state.store';
 import { OGE_STATE_STORAGE } from '../state/state-storage';
@@ -154,6 +164,11 @@ interface ResolvedColumn<T = unknown> {
   source: OgeColumn<T> | undefined;
 }
 
+/** Default filter-row operator per dataType. */
+function defaultOperatorFor(dataType: OgeDataType): FilterOperator {
+  return dataType === 'string' ? 'contains' : 'eq';
+}
+
 /** Maps a filter-row input value to a FilterExpr for the column's dataType. */
 function buildRowFilterExpr(
   field: string,
@@ -163,19 +178,16 @@ function buildRowFilterExpr(
 ): FilterExpr | null {
   const text = raw.trim();
   if (!text) return null;
+  const op = operator ?? defaultOperatorFor(dataType);
   switch (dataType) {
     case 'number': {
       const value = Number(text);
-      return Number.isNaN(value)
-        ? null
-        : { type: 'binary', field, op: operator ?? 'eq', value };
+      return Number.isNaN(value) ? null : { type: 'binary', field, op, value };
     }
     case 'boolean':
       return { type: 'binary', field, op: 'eq', value: text === 'true' };
-    case 'date':
-      return { type: 'binary', field, op: operator ?? 'eq', value: text };
     default:
-      return { type: 'binary', field, op: operator ?? 'contains', value: text };
+      return { type: 'binary', field, op, value: text };
   }
 }
 
@@ -196,7 +208,7 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
 
 @Component({
   selector: 'oge-grid',
-  imports: [NgTemplateOutlet, OgePager, ReactiveFormsModule],
+  imports: [NgTemplateOutlet, OgePager, ReactiveFormsModule, OgeFilterBuilderGroup],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
@@ -272,6 +284,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * restores it on startup.
    */
   readonly stateKey = input<string | undefined>(undefined);
+
+  /** Shows the filter panel bar with the filter-builder entry point. */
+  readonly filterPanel = input(false);
+
+  /** Two-way binding of the builder/programmatic filter expression. */
+  readonly filterValue = model<FilterExpr | null>(null);
 
   /** Shows the drop area for drag-and-drop row grouping. */
   readonly groupPanel = input(false);
@@ -472,6 +490,22 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         const viewport = this.viewportRef()?.nativeElement;
         const el = viewport?.querySelector<HTMLElement>(`[data-cell="${cell.row}-${cell.col}"]`);
         el?.focus({ preventScroll: true });
+      });
+    });
+    // filterValue model ⇄ builder filter slice (guarded both ways)
+    effect(() => {
+      const value = this.filterValue();
+      untracked(() => {
+        const current = this.store.filter.builderFilter();
+        if (JSON.stringify(value) === JSON.stringify(current)) return;
+        this.store.filter.setBuilderFilter(value);
+      });
+    });
+    effect(() => {
+      const current = this.store.filter.builderFilter();
+      untracked(() => {
+        if (JSON.stringify(current) === JSON.stringify(this.filterValue())) return;
+        this.filterValue.set(current);
       });
     });
     // --- state persistence (stateKey) ---
@@ -1590,10 +1624,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected onFilterInput(column: ResolvedColumn<T>, raw: string): void {
     const field = column.field;
     if (!field) return;
+    this.rowFilterRaw.set(field, raw);
     this.debounced(`f:${field}`, () => {
       this.store.filter.setRowFilter(
         field,
-        buildRowFilterExpr(field, column.dataType, raw, column.filterOperator)
+        buildRowFilterExpr(field, column.dataType, raw, this.currentOperator(column))
       );
     });
   }
@@ -1602,14 +1637,170 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected onFilterSelect(column: ResolvedColumn<T>, raw: string): void {
     const field = column.field;
     if (!field) return;
+    this.rowFilterRaw.set(field, raw);
     this.store.filter.setRowFilter(
       field,
-      buildRowFilterExpr(field, column.dataType, raw, column.filterOperator)
+      buildRowFilterExpr(field, column.dataType, raw, this.currentOperator(column))
     );
   }
 
   protected onSearchInput(raw: string): void {
     this.debounced('search', () => this.store.filter.setSearchText(raw));
+  }
+
+  // --- filter-row operator menu --------------------------------------------
+
+  /** User-chosen filter-row operator per field (overrides column default). */
+  private readonly rowFilterOps = signal<ReadonlyMap<string, FilterOperator>>(new Map());
+  /** Last raw editor value per field, so an operator change re-applies it. */
+  private readonly rowFilterRaw = new Map<string, string>();
+
+  protected readonly operatorMenu = signal<{
+    column: ResolvedColumn<T>;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  protected currentOperator(column: ResolvedColumn<T>): FilterOperator {
+    if (!column.field) return 'contains';
+    return (
+      this.rowFilterOps().get(column.field) ??
+      column.filterOperator ??
+      defaultOperatorFor(column.dataType)
+    );
+  }
+
+  protected operatorSymbol(column: ResolvedColumn<T>): string {
+    const symbols: Partial<Record<FilterOperator, string>> = {
+      eq: '=',
+      ne: '≠',
+      gt: '>',
+      ge: '≥',
+      lt: '<',
+      le: '≤',
+      contains: '∗',
+      notcontains: '!∗',
+      startswith: 'a…',
+      endswith: '…z',
+    };
+    return symbols[this.currentOperator(column)] ?? '=';
+  }
+
+  protected toggleOperatorMenu(column: ResolvedColumn<T>, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.operatorMenu()?.column.id === column.id) {
+      this.operatorMenu.set(null);
+      return;
+    }
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.operatorMenu.set({ column, x: rect.left, y: rect.bottom + 4 });
+  }
+
+  protected operatorChoices(column: ResolvedColumn<T>): FilterOperator[] {
+    return operatorsFor(column.dataType).filter((op) => op !== 'isnull' && op !== 'isnotnull');
+  }
+
+  protected chooseOperator(op: FilterOperator | null): void {
+    const menu = this.operatorMenu();
+    this.operatorMenu.set(null);
+    const field = menu?.column.field;
+    if (!menu || !field) return;
+    const next = new Map(this.rowFilterOps());
+    if (op === null) next.delete(field);
+    else next.set(field, op);
+    this.rowFilterOps.set(next);
+    // re-apply the current editor value with the new operator
+    const raw = this.rowFilterRaw.get(field) ?? '';
+    const effective = op ?? menu.column.filterOperator ?? defaultOperatorFor(menu.column.dataType);
+    this.store.filter.setRowFilter(
+      field,
+      buildRowFilterExpr(field, menu.column.dataType, raw, effective)
+    );
+  }
+
+  // --- filter panel + builder ----------------------------------------------
+
+  protected readonly builderOpen = signal(false);
+  protected builderTree: BuilderGroup = { kind: 'group', logic: 'and', items: [] };
+  /** Bumped by the recursive editor so the preview text refreshes. */
+  protected readonly builderVersion = signal(0);
+
+  protected readonly builderFields = computed<FilterBuilderField[]>(() =>
+    this.resolvedColumns()
+      .filter((column) => column.filterable && column.field)
+      .map((column) => ({
+        field: column.field as string,
+        caption: column.caption,
+        dataType: column.dataType,
+      }))
+  );
+
+  protected readonly filterPanelText = computed<string | null>(() => {
+    const expr = this.store.filter.builderFilter();
+    if (!expr) return null;
+    return describeExpr(expr, this.builderFields(), this.msg());
+  });
+
+  protected openFilterBuilder(): void {
+    this.builderTree = exprToBuilder(this.store.filter.builderFilter(), this.builderFields());
+    if (!this.builderTree.items.length) {
+      const first = this.builderFields()[0];
+      if (first) {
+        this.builderTree.items.push({
+          kind: 'condition',
+          field: first.field,
+          op: operatorsFor(first.dataType)[0],
+          value: '',
+        });
+      }
+    }
+    this.builderVersion.set(this.builderVersion() + 1);
+    this.builderOpen.set(true);
+  }
+
+  protected readonly builderPreview = computed<string>(() => {
+    this.builderVersion();
+    const expr = builderToExpr(this.builderTree, this.builderFields());
+    return expr ? describeExpr(expr, this.builderFields(), this.msg()) : '—';
+  });
+
+  protected applyFilterBuilder(): void {
+    this.store.filter.setBuilderFilter(builderToExpr(this.builderTree, this.builderFields()));
+    this.builderOpen.set(false);
+  }
+
+  protected clearBuilderFilter(event?: Event): void {
+    event?.stopPropagation();
+    this.store.filter.setBuilderFilter(null);
+  }
+
+  // --- search highlighting --------------------------------------------------
+
+  private readonly sanitizer = inject(DomSanitizer);
+
+  /** Escaped cell text with `<mark>` around search matches, or null when inactive. */
+  protected searchHighlightHtml(node: DataRowNode<T>, column: ResolvedColumn<T>): SafeHtml | null {
+    const query = this.store.filter.searchText().trim();
+    if (!query) return null;
+    const text = this.cellDisplayText(node, column);
+    const lower = text.toLocaleLowerCase();
+    const needle = query.toLocaleLowerCase();
+    if (!lower.includes(needle)) return null;
+    const escape = (value: string) =>
+      value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let html = '';
+    let index = 0;
+    while (index < text.length) {
+      const found = lower.indexOf(needle, index);
+      if (found < 0) {
+        html += escape(text.slice(index));
+        break;
+      }
+      html += escape(text.slice(index, found));
+      html += `<mark class="oge-highlight">${escape(text.slice(found, found + needle.length))}</mark>`;
+      index = found + needle.length;
+    }
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   // --- header filter (Excel-style distinct values) -------------------------
@@ -1618,6 +1809,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly headerFilterPosition = signal<{ top: number; left: number }>({ top: 0, left: 0 });
   /** null while the distinct values are loading. */
   protected readonly headerFilterValues = signal<readonly unknown[] | null>(null);
+  /** Search text inside the header-filter popup. */
+  protected readonly headerFilterSearch = signal('');
+
+  protected readonly visibleHeaderValues = computed<readonly unknown[] | null>(() => {
+    const values = this.headerFilterValues();
+    if (!values) return null;
+    const query = this.headerFilterSearch().trim().toLocaleLowerCase();
+    if (!query) return values;
+    return values.filter((value) => this.headerValueText(value).toLocaleLowerCase().includes(query));
+  });
 
   protected readonly headerFilterAvailable = computed(
     () => this.headerFilterVisible() && typeof this.adapter.source()?.distinct === 'function'
@@ -1635,6 +1836,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.headerFilterField.set(field);
     this.headerFilterPosition.set({ top: rect.bottom + 4, left: rect.left });
     this.headerFilterValues.set(null);
+    this.headerFilterSearch.set('');
     this.adapter
       .source()
       ?.distinct?.(field)
@@ -1654,6 +1856,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.closeHeaderFilter();
     this.chooserOpen.set(false);
     this.contextMenu.set(null);
+    this.operatorMenu.set(null);
+    this.builderOpen.set(false);
   }
 
   /** Closes popups on clicks outside of them. */
@@ -1667,6 +1871,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     }
     if (this.contextMenu() && !target?.closest?.('.oge-context-menu')) {
       this.contextMenu.set(null);
+    }
+    if (this.operatorMenu() && !target?.closest?.('.oge-operator-menu')) {
+      this.operatorMenu.set(null);
     }
   }
 

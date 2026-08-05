@@ -62,6 +62,26 @@
     }
   </div>
 }
+@if (filterPanel()) {
+  <div class="oge-filter-panel">
+    <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" class="oge-filter-panel-icon">
+      <path d="M1 2h14L10 8.5V14l-4-1.8V8.5L1 2z" fill="currentColor" />
+    </svg>
+    <button type="button" class="oge-filter-panel-text" (click)="openFilterBuilder()">
+      {{ filterPanelText() ?? msg().createFilter }}
+    </button>
+    @if (filterPanelText()) {
+      <button
+        type="button"
+        class="oge-filter-panel-clear"
+        [attr.aria-label]="msg().clearFilter"
+        (click)="clearBuilderFilter($event)"
+      >
+        <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m4 4 8 8M12 4l-8 8" /></svg>
+      </button>
+    }
+  </div>
+}
 <!-- Delegated keyboard handler: focus lives on the grid cells inside (roving tabindex). -->
 <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
 <div
@@ -174,6 +194,17 @@
             [style.right.px]="pinnedRightOf(column)"
           >
             @if (column.filterable) {
+              @if (column.dataType !== 'boolean') {
+                <button
+                  type="button"
+                  class="oge-filter-op-btn"
+                  [attr.aria-label]="msg().operators[currentOperator(column)]"
+                  [attr.title]="msg().operators[currentOperator(column)]"
+                  (click)="toggleOperatorMenu(column, $event)"
+                >
+                  {{ operatorSymbol(column) }}
+                </button>
+              }
               @switch (column.dataType) {
                 @case ('boolean') {
                   <select
@@ -323,6 +354,8 @@
                     <ng-container
                       *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
                     />
+                  } @else if (searchHighlightHtml(node, column); as highlighted) {
+                    <span [innerHTML]="highlighted"></span>
                   } @else {
                     {{ cellDisplayText(node, column) }}
                   }
@@ -474,7 +507,15 @@
     [style.top.px]="headerFilterPosition().top"
     [style.left.px]="headerFilterPosition().left"
   >
-    @if (headerFilterValues(); as values) {
+    <input
+      class="oge-hf-search"
+      type="search"
+      [placeholder]="msg().search"
+      [attr.aria-label]="msg().search"
+      [value]="headerFilterSearch()"
+      (input)="headerFilterSearch.set($any($event.target).value)"
+    />
+    @if (visibleHeaderValues(); as values) {
       <label class="oge-hf-item oge-hf-all">
         <input type="checkbox" [checked]="allHeaderValuesSelected()" (change)="toggleAllHeaderValues()" />
         <span>{{ msg().selectAllValues }}</span>
@@ -541,6 +582,46 @@
         {{ msg().saveRow }}
       </button>
       <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="cancelActiveEditor()">
+        {{ msg().cancelEdit }}
+      </button>
+    </div>
+  </div>
+}
+@if (operatorMenu(); as opMenu) {
+  <div class="oge-context-menu oge-operator-menu" role="menu" [style.top.px]="opMenu.y" [style.left.px]="opMenu.x">
+    @for (op of operatorChoices(opMenu.column); track op) {
+      <button
+        type="button"
+        role="menuitem"
+        class="oge-menu-item"
+        [class.oge-menu-item-active]="currentOperator(opMenu.column) === op"
+        (click)="chooseOperator(op)"
+      >
+        {{ msg().operators[op] }}
+      </button>
+    }
+    <button type="button" role="menuitem" class="oge-menu-item oge-menu-item-muted" (click)="chooseOperator(null)">
+      {{ msg().resetOperator }}
+    </button>
+  </div>
+}
+@if (builderOpen()) {
+  <div class="oge-popup-backdrop"></div>
+  <div class="oge-edit-popup oge-builder-popup" role="dialog" aria-modal="true" [attr.aria-label]="msg().filterBuilderTitle">
+    <div class="oge-popup-title">{{ msg().filterBuilderTitle }}</div>
+    <oge-filter-builder-group
+      [group]="builderTree"
+      [fields]="builderFields()"
+      [messages]="msg()"
+      [root]="true"
+      (changed)="builderVersion.set(builderVersion() + 1)"
+    />
+    <div class="oge-builder-preview">{{ builderPreview() }}</div>
+    <div class="oge-popup-actions">
+      <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent" (click)="applyFilterBuilder()">
+        {{ msg().apply }}
+      </button>
+      <button type="button" class="oge-toolbar-btn oge-toolbar-text-btn" (click)="builderOpen.set(false)">
         {{ msg().cancelEdit }}
       </button>
     </div>

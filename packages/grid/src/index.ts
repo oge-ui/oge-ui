@@ -44,3 +44,13 @@ export { ExpansionSlice } from './lib/state/expansion-slice';
 export { ColumnsSlice } from './lib/state/columns-slice';
 export { GridDataAdapter } from './lib/data/grid-data-adapter';
 export { OGE_STATE_STORAGE, type OgeStateStorage } from './lib/state/state-storage';
+export {
+  OgeFilterBuilderGroup,
+  builderToExpr,
+  exprToBuilder,
+  describeExpr,
+  operatorsFor,
+  type BuilderGroup,
+  type BuilderCondition,
+  type FilterBuilderField,
+} from './lib/filter-builder/filter-builder';

@@ -9,9 +9,15 @@ import type { FilterExpr } from '@oge-ui/core';
 export class FilterSlice {
   private readonly _rowFilters = signal<ReadonlyMap<string, FilterExpr>>(new Map());
   private readonly _headerFilters = signal<ReadonlyMap<string, readonly unknown[]>>(new Map());
+  private readonly _builderFilter = signal<FilterExpr | null>(null);
   private readonly _searchText = signal('');
 
   readonly searchText = this._searchText.asReadonly();
+  readonly builderFilter = this._builderFilter.asReadonly();
+
+  setBuilderFilter(expr: FilterExpr | null): void {
+    this._builderFilter.set(expr);
+  }
 
   setRowFilter(field: string, expr: FilterExpr | null): void {
     const next = new Map(this._rowFilters());
@@ -39,6 +45,7 @@ export class FilterSlice {
   clearAll(): void {
     this._rowFilters.set(new Map());
     this._headerFilters.set(new Map());
+    this._builderFilter.set(null);
     this._searchText.set('');
   }
 
@@ -46,11 +53,13 @@ export class FilterSlice {
   toState(): {
     row: (readonly [string, FilterExpr])[];
     header: (readonly [string, readonly unknown[]])[];
+    builder: FilterExpr | null;
     searchText: string;
   } {
     return {
       row: [...this._rowFilters().entries()],
       header: [...this._headerFilters().entries()],
+      builder: this._builderFilter(),
       searchText: this._searchText(),
     };
   }
@@ -58,10 +67,12 @@ export class FilterSlice {
   applyState(state: {
     row?: readonly (readonly [string, FilterExpr])[];
     header?: readonly (readonly [string, readonly unknown[]])[];
+    builder?: FilterExpr | null;
     searchText?: string;
   }): void {
     this._rowFilters.set(new Map(state.row ?? []));
     this._headerFilters.set(new Map(state.header ?? []));
+    this._builderFilter.set(state.builder ?? null);
     this._searchText.set(state.searchText ?? '');
   }
 
@@ -71,6 +82,8 @@ export class FilterSlice {
     for (const [field, values] of this._headerFilters()) {
       operands.push({ type: 'binary', field, op: 'in', value: values });
     }
+    const builder = this._builderFilter();
+    if (builder) operands.push(builder);
     if (!operands.length) return null;
     return operands.length === 1 ? operands[0] : { type: 'and', operands };
   });
