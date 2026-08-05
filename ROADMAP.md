@@ -14,6 +14,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 | OData store | ODataStore | ✅ | `ODataDataSource` + `buildODataQuery` (v4: `$skip`/`$top`/`$orderby`/`$filter`/`$count`) |
 | CRUD write-back | ✔ | ✅ | `insert/update/remove`, in-place array CRUD |
 | Push / live updates (`reshapeOnPush`) | ✔ | ✅ | `ArrayDataSource.push()` + `changes` stream; updates patch in place, insert/remove reload |
+| `highlightChanges` (flash pushed cells) | ✔ | ✅ | exact patched cells flash, re-triggers on repeat updates (Phase 14) |
 | Server-side sort/filter/page/group | ✔ | ✅ | verified with request-log e2e |
 | Server-side summaries | ✔ | ✅ | positional `summary` payload |
 | Deferred group loading (`items: null`) | ✔ | ✅ | `grouping.autoExpandAll: false`; children fetched on expand, cached, skeleton while loading |
@@ -71,7 +72,7 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 | Feature | DevExtreme | oge | Notes |
 |---|---|---|---|
-| Resize / reorder / fixed (pin) / chooser | ✔ | ✅ | |
+| Resize / reorder / fixed (pin) / chooser | ✔ | ✅ | chooser anchored to its button, drag-reorder rows, drop indicators on headers (Phase 14) |
 | minWidth / width / visible | ✔ | ✅ | |
 | **Banded columns** (multi-row headers) | ✔ | ✅ | `<oge-column-group>` (Phase 11) |
 | **Lookup columns** (display + dropdown editor) | ✔ | ✅ | display/filter/header-filter/editor/CSV (Phase 11); cascading via `dataSource: (row) => items` (Phase 13) |
@@ -139,6 +140,6 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 **Phase 13 — UX & API parity: ✅ DONE** (imperative API, richer event surface, loading panel, row alternation, focused-row mode, delete confirmation, noData/row templates, toolbar customization, Excel export secondary entry with export scopes, clipboard copy, `selectAllMode: 'page'`, pager display modes + "All" page size, RTL, row drag reordering, form edit mode, cascading lookups, buttons-column customization, `calculateSortValue`/`calculateFilterExpression`).
 
-**Phase 14 — Summary, selection & export parity: ✅ DONE (v0.3.0)** (multiple summaries per column, `calculateCustomSummary`, group footer summaries, expand/collapse-all toolbar UI, grouped date values in the header filter, deferred selection via `selectionFilter`, PDF export secondary entry).
+**Phase 14 — Summary, selection & export parity: ✅ DONE (v0.3.0)** (multiple summaries per column, `calculateCustomSummary`, group footer summaries, expand/collapse-all toolbar UI, grouped date values in the header filter, deferred selection via `selectionFilter`, PDF export secondary entry, `highlightChanges` cell flash, anchored column chooser with drag reorder + drop indicators, Rows & Templates docs page).
 
 **Next:** TreeList (separate component) · pivot-style features · editing form layouts (`formItems` customization) · export appearance hooks (`customizeCell`).
