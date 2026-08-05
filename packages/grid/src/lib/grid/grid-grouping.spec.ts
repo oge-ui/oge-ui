@@ -78,6 +78,23 @@ describe('OgeGrid grouping', () => {
     expect(totalCells).toContain('Sum: 600');
   });
 
+  it('collapses and expands all groups via the toolbar buttons', async () => {
+    const { fixture, el } = await render();
+    const button = (label: string) =>
+      el.querySelector(`.oge-toolbar-btn[aria-label="${label}"]`) as HTMLButtonElement;
+
+    button('Collapse all groups').click();
+    await settle(fixture);
+    expect(el.querySelectorAll('.oge-row').length).toBe(0);
+    expect(
+      Array.from(el.querySelectorAll('.oge-group-row')).map((g) => g.getAttribute('aria-expanded'))
+    ).toEqual(['false', 'false']);
+
+    button('Expand all groups').click();
+    await settle(fixture);
+    expect(el.querySelectorAll('.oge-row').length).toBe(3);
+  });
+
   it('renders group panel chips and ungroups via the chip button', async () => {
     const { fixture, el } = await render();
     expect(el.querySelector('.oge-group-chip')?.textContent).toContain('Region');

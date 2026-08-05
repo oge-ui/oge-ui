@@ -15,6 +15,8 @@ export interface OgeGridMessages {
   columnChooserTitle: string;
   groupPanelHint: string;
   ungroupPrefix: string;
+  expandAllGroups: string;
+  collapseAllGroups: string;
   filterPrefix: string;
   filterValues: string;
   selectAllRows: string;
@@ -78,6 +80,8 @@ export const OGE_DEFAULT_MESSAGES: OgeGridMessages = {
   columnChooserTitle: 'Columns',
   groupPanelHint: 'Drag a column header here to group',
   ungroupPrefix: 'Ungroup',
+  expandAllGroups: 'Expand all groups',
+  collapseAllGroups: 'Collapse all groups',
   filterPrefix: 'Filter',
   filterValues: 'Filter values',
   selectAllRows: 'Select all rows',
