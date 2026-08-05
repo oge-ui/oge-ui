@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
-import { makeEmployees } from '../../shared/demo-data';
+import { makeEmployees, type Employee } from '../../shared/demo-data';
 
 const QUICK_START_TS = `import { Component } from '@angular/core';
 import { OgeGrid, OgeColumn, OgeCellTemplate } from '@oge-ui/grid';
@@ -97,12 +97,43 @@ const QUICK_START_FILES = [
       </tbody>
     </table>
 
+    <h3>Export</h3>
+    <p>
+      CSV ships in the core bundle; Excel lives in the separate
+      <code>&#64;oge-ui/grid/export-excel</code> entry point (backed by <code>exceljs</code>), so
+      it only loads when you import it — typically via a dynamic <code>import()</code>.
+    </p>
+    <ul>
+      <li><strong>Paging</strong> is ignored by default: the export contains the <em>full</em> filtered + sorted set, not just the visible page. Pass <code>{{ '{' }} scope: 'page' {{ '}' }}</code> for the current page only, or <code>'selection'</code> for the selected rows.</li>
+      <li><strong>Master-detail &amp; groups</strong>: exports contain data rows only. Detail rows are arbitrary templates and group headers are view artifacts — re-group in Excel via the auto-filter, or feed <code>getExportData()</code> into a custom exporter if you need more.</li>
+      <li>Numbers and dates are written as <em>typed</em> Excel cells; lookup and boolean columns use their display text.</li>
+    </ul>
+    <div class="mb-4 flex gap-2">
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
+        (click)="grid()?.exportCsv('employees.csv')"
+      >
+        Export CSV
+      </button>
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
+        (click)="exportExcel()"
+      >
+        Export Excel
+      </button>
+    </div>
+
     <h3>Methods</h3>
     <table class="api-table">
       <thead><tr><th>Method</th><th>Description</th></tr></thead>
       <tbody>
         <tr><td><code>getCsv(options?)</code></td><td>Returns the current view (filter + search + sort applied) as a CSV string</td></tr>
         <tr><td><code>exportCsv(filename?)</code></td><td>Downloads the current view as a CSV file</td></tr>
+        <tr><td><code>getExportData()</code></td><td>Rows + column metadata of the current view — feeds custom exporters</td></tr>
+        <tr><td><code>exportGridToExcel(grid, opts?)</code></td><td>From <code>&#64;oge-ui/grid/export-excel</code>: downloads the view as .xlsx</td></tr>
+        <tr><td><code>refresh()</code> · <code>scrollToRow(key)</code> · <code>clearFilters()</code> · <code>clearSorting()</code> · <code>expandAllGroups()</code> / <code>collapseAllGroups()</code></td><td>Imperative view control</td></tr>
       </tbody>
     </table>
 
@@ -133,4 +164,14 @@ export class DataGridOverviewPage {
   protected readonly quickStartFiles = QUICK_START_FILES;
   protected readonly money = (value: unknown): string =>
     typeof value === 'number' ? `₺${value.toLocaleString('tr-TR')}` : String(value ?? '');
+
+  protected readonly grid = viewChild(OgeGrid<Employee>);
+
+  /** exceljs stays out of the initial bundle — loaded on first click. */
+  protected async exportExcel(): Promise<void> {
+    const grid = this.grid();
+    if (!grid) return;
+    const { exportGridToExcel } = await import('@oge-ui/grid/export-excel');
+    await exportGridToExcel(grid, { filename: 'employees.xlsx', sheetName: 'Employees' });
+  }
 }

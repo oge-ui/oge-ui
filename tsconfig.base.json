@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "paths": {
       "@oge-ui/core": ["./packages/core/src/index.ts"],
-      "@oge-ui/grid": ["./packages/grid/src/index.ts"]
+      "@oge-ui/grid": ["./packages/grid/src/index.ts"],
+      "@oge-ui/grid/export-excel": ["./packages/grid/export-excel/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

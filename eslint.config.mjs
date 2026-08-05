@@ -19,6 +19,9 @@ export default [
         {
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          // the export-excel secondary entry is intentionally lazy-loaded while
+          // the primary @oge-ui/grid entry stays a static import
+          checkDynamicDependenciesExceptions: ['@oge-ui/grid'],
           depConstraints: [
             {
               sourceTag: 'scope:core',

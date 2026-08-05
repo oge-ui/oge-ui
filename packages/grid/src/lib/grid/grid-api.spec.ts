@@ -79,6 +79,29 @@ describe('OgeGrid imperative API & events', () => {
     expect((fixture.nativeElement as HTMLElement).querySelectorAll('.oge-row').length).toBe(3);
   });
 
+  it('getExportData ignores paging by default and honors page/selection scopes', async () => {
+    const fixture = TestBed.createComponent(OgeGrid<Row>);
+    fixture.componentRef.setInput('data', ROWS);
+    fixture.componentRef.setInput('columns', ['name']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('paging', { pageSize: 2 });
+    fixture.componentRef.setInput('selectionMode', 'multiple');
+    const grid = fixture.componentInstance;
+    fixture.detectChanges();
+    await settle(fixture);
+    // default: the whole filtered set, not the 2-row page
+    expect((await grid.getExportData()).rows).toHaveLength(3);
+    expect((await grid.getExportData({ scope: 'page' })).rows).toHaveLength(2);
+    // select one row → selection scope narrows to it
+    (fixture.nativeElement as HTMLElement)
+      .querySelector('.oge-row')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await settle(fixture);
+    const selection = await grid.getExportData({ scope: 'selection' });
+    expect(selection.rows).toHaveLength(1);
+    expect(selection.rows[0].name).toBe('Ada');
+  });
+
   it('clearFilters and clearSorting reset the view', async () => {
     const { fixture, el, grid } = await render();
     // sort by name desc via two header clicks

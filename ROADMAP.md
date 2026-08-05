@@ -120,7 +120,7 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 | Context menu (rows) | ✔ | ✅ | event-driven items |
 | Header context menu | ✔ | ✅ | sort/group/pin/hide, localized (Phase 9) |
 | **State persistence** | ✔ | ✅ | `stateKey` + `OGE_STATE_STORAGE` (Phase 9) |
-| **Export CSV/Excel** | ✔ | 🟡 | CSV done (Phase 9); Excel (exceljs) pending |
+| **Export CSV/Excel** | ✔ | ✅ | CSV in core; Excel via lazy `@oge-ui/grid/export-excel` (exceljs, typed cells); `scope: all/page/selection` |
 | Export PDF | ✔ | ❌ | post-0.1 |
 | Imperative public API (refresh, expandAll, …) | ✔ | 🟡 | inputs/outputs only; no method surface |
 | Event surface (cellClick, rowPrepared, …) | ✔ | 🟡 | rowClick/contextMenu/savingChanges only |

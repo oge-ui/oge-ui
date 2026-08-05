@@ -11,6 +11,12 @@ export {
   type OgeSortingOptions,
   type OgeDataChange,
   type OgeSavingChangesEvent,
+  type OgeScrollingOptions,
+  type OgeGroupingOptions,
+  type OgeCellClickEvent,
+  type OgeExportColumn,
+  type OgeExportData,
+  type OgeExportOptions,
 } from './lib/grid/grid';
 export { OgeEditTemplate, type OgeEditTemplateContext } from './lib/templates/edit-template';
 export {

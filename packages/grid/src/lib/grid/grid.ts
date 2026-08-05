@@ -87,6 +87,30 @@ export interface OgeRowClickEvent<T = unknown> {
   event: MouseEvent;
 }
 
+/** Column metadata handed to exporters (CSV / Excel). */
+export interface OgeExportColumn<T = unknown> {
+  caption: string;
+  field: string | undefined;
+  dataType: OgeDataType;
+  accessor: (row: T) => unknown;
+  format?: ((value: unknown) => string) | undefined;
+}
+
+export interface OgeExportData<T = unknown> {
+  rows: readonly T[];
+  columns: readonly OgeExportColumn<T>[];
+}
+
+export interface OgeExportOptions {
+  /**
+   * Which rows to export. `'all'` (default) ignores paging and exports the
+   * full filtered + sorted set; `'page'` exports only the current page;
+   * `'selection'` exports the selected rows. Master-detail content and group
+   * headers are never exported — data rows only.
+   */
+  scope?: 'all' | 'page' | 'selection';
+}
+
 export interface OgeCellClickEvent<T = unknown> {
   row: T;
   key: RowKey;
@@ -813,24 +837,41 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (index >= 0) this.scrollRowIntoView(index);
   }
 
-  // --- CSV export -----------------------------------------------------------
+  // --- export ---------------------------------------------------------------
 
-  /** Builds CSV of the current view (filter + search + sort applied, no paging). */
-  async getCsv(options?: CsvOptions): Promise<string> {
+  /**
+   * Rows and column metadata of the current view (filter + search + sort
+   * applied) — the shared source for CSV/Excel exporters. By default paging
+   * is ignored (the full filtered set is exported); pass
+   * `{ scope: 'page' | 'selection' }` to narrow it.
+   */
+  async getExportData(options: OgeExportOptions = {}): Promise<OgeExportData<T>> {
+    const scope = options.scope ?? 'all';
     const source = untracked(this.adapter.source);
-    if (!source) return '';
     const load = untracked(this.store.loadOptions);
-    const result = await source.load({
-      ...(load.sort?.length ? { sort: load.sort } : {}),
-      ...(load.filter ? { filter: load.filter } : {}),
-      ...(load.searchText ? { searchText: load.searchText } : {}),
-    });
-    const rows = result.data as readonly T[];
+    const result = source
+      ? await source.load({
+          ...(load.sort?.length ? { sort: load.sort } : {}),
+          ...(load.filter ? { filter: load.filter } : {}),
+          ...(load.searchText ? { searchText: load.searchText } : {}),
+          ...(scope === 'page' && load.take != null
+            ? { skip: load.skip ?? 0, take: load.take }
+            : {}),
+        })
+      : { data: [] };
+    let rows = result.data as readonly T[];
+    if (scope === 'selection') {
+      const selected = untracked(this.store.selection.selected);
+      const keyOf = untracked(this.keySelector);
+      rows = rows.filter((row, index) => selected.has(keyOf(row, index)));
+    }
     const messages = untracked(this.msg);
     const columns = untracked(this.resolvedColumns)
       .filter((column) => column.field)
       .map((column) => ({
         caption: column.caption,
+        field: column.field,
+        dataType: column.dataType,
         accessor: column.accessor as (row: T) => unknown,
         format:
           column.format ??
@@ -840,6 +881,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
               ? (value: unknown) => (value ? messages.booleanTrue : messages.booleanFalse)
               : undefined),
       }));
+    return { rows, columns };
+  }
+
+  /** Builds CSV of the current view; `scope` narrows to the page or selection. */
+  async getCsv(options?: CsvOptions & OgeExportOptions): Promise<string> {
+    const { rows, columns } = await this.getExportData({ scope: options?.scope });
     return buildCsv(rows, columns, options);
   }
 
