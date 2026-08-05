@@ -1,6 +1,12 @@
 export { EXPANDER_WIDTH, CHECKBOX_WIDTH, COMMAND_WIDTH, DRAG_WIDTH } from './constants';
 export { ColumnLayoutModel, type ColumnLayoutModelDeps } from './column-layout-model';
 export {
+  DeferredChildrenLoader,
+  type DeferredBaseOptions,
+  type DeferredChildrenLoaderDeps,
+  type PendingChildRequest,
+} from './deferred-children-loader';
+export {
   KeyboardNavModel,
   type KeyboardNavModelDeps,
   type KeyboardNavTreeHooks,

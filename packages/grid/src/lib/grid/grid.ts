@@ -49,6 +49,7 @@ import {
   COMMAND_WIDTH,
   ColumnLayoutModel,
   ColumnModel,
+  DeferredChildrenLoader,
   KeyboardNavModel,
   RowVirtualizerModel,
   DRAG_WIDTH,
@@ -60,6 +61,7 @@ import {
   lookupTextOf,
   mapLookupItems,
   type LookupItem,
+  type PendingChildRequest,
   type ResolvedColumn as FoundationResolvedColumn,
 } from '@oge-ui/grid/foundation';
 import { OgeColumn, type OgeDataType } from '../columns/column';
@@ -1081,11 +1083,6 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- deferred group loading ----------------------------------------------
 
-  /** Children fetched on demand for groups delivered with `items: null`. */
-  private readonly deferredGroupRows = signal<
-    ReadonlyMap<RowKey, readonly unknown[]>
-  >(new Map());
-
   /** Expanded groups whose children are neither in the payload nor cached yet. */
   private readonly pendingGroups = computed<{ key: RowKey; path: unknown[] }[]>(() => {
     const result = this.adapter.result();
@@ -1121,27 +1118,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return pending;
   });
 
-  private readonly pendingGroupLoads = new Set<RowKey>();
-  private deferredBaseJson: string | null = null;
-
-  /** Fetches children for expanded deferred groups; base changes drop the cache. */
-  private readonly deferredGroupEffect = effect(() => {
-    const pending = this.pendingGroups();
-    const base = this.store.loadOptions();
-    untracked(() => {
-      const { signal: _signal, skip: _skip, take: _take, ...rest } = base;
-      const baseJson = JSON.stringify(rest);
-      if (baseJson !== this.deferredBaseJson) {
-        this.deferredBaseJson = baseJson;
-        this.pendingGroupLoads.clear();
-        if (this.deferredGroupRows().size) this.deferredGroupRows.set(new Map());
-      }
-      const source = this.adapter.source();
-      if (!source) return;
-      const groups = rest.group ?? [];
-      for (const entry of pending) {
-        if (this.pendingGroupLoads.has(entry.key)) continue;
-        this.pendingGroupLoads.add(entry.key);
+  /** Load-option construction for one deferred group: ancestor path filters + remaining group levels. */
+  private readonly pendingGroupRequests = computed<readonly PendingChildRequest[]>(() =>
+    this.pendingGroups().map((entry) => ({
+      key: entry.key,
+      buildOptions: (rest) => {
+        const groups = rest.group ?? [];
         const pathFilters: FilterExpr[] = entry.path.map((value, i) => ({
           type: 'binary',
           field: groups[i]?.field ?? '',
@@ -1151,29 +1133,31 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         const operands = [...(rest.filter ? [rest.filter] : []), ...pathFilters];
         const filter = operands.length === 1 ? operands[0] : { type: 'and' as const, operands };
         const remaining = groups.slice(entry.path.length);
-        source
-          .load({
-            filter,
-            ...(rest.sort?.length ? { sort: rest.sort } : {}),
-            ...(rest.searchText ? { searchText: rest.searchText } : {}),
-            ...(remaining.length
-              ? {
-                  group: remaining,
-                  ...(rest.groupSummary?.length ? { groupSummary: rest.groupSummary } : {}),
-                }
-              : {}),
-          })
-          .then((result) => {
-            if (this.deferredBaseJson !== baseJson) return; // stale base
-            const next = new Map(untracked(this.deferredGroupRows));
-            next.set(entry.key, result.data as readonly unknown[]);
-            this.deferredGroupRows.set(next);
-          })
-          .catch((err) => this.adapter.error.set(err))
-          .finally(() => this.pendingGroupLoads.delete(entry.key));
-      }
-    });
+        return {
+          filter,
+          ...(rest.sort?.length ? { sort: rest.sort } : {}),
+          ...(rest.searchText ? { searchText: rest.searchText } : {}),
+          ...(remaining.length
+            ? {
+                group: remaining,
+                ...(rest.groupSummary?.length ? { groupSummary: rest.groupSummary } : {}),
+              }
+            : {}),
+        };
+      },
+    }))
+  );
+
+  /** Fetches children for expanded deferred groups; base changes drop the cache. */
+  private readonly deferredLoader = new DeferredChildrenLoader<unknown>({
+    pending: this.pendingGroupRequests,
+    baseOptions: this.store.loadOptions,
+    source: this.adapter.source,
+    onError: (err) => this.adapter.error.set(err),
   });
+
+  /** Children fetched on demand for groups delivered with `items: null`. */
+  private readonly deferredGroupRows = this.deferredLoader.children;
 
   protected readonly flatNodes = computed<RowNode<T>[]>(() => {
     const result = this.adapter.result();
