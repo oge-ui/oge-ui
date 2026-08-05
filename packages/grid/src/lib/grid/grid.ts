@@ -665,17 +665,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         this.store.grouping.set(fields.map((field) => ({ field, dir: 'asc' as const })))
       );
     });
-    // summary configuration comes from the declared columns
+    // summary configuration comes from the declared columns; each column may
+    // declare a single aggregate or a list of them
     effect(() => {
+      const asList = (
+        value: SummaryType | readonly SummaryType[] | undefined
+      ): readonly SummaryType[] => (value === undefined ? [] : typeof value === 'string' ? [value] : value);
       const group: SummaryDescriptor[] = [];
       const total: SummaryDescriptor[] = [];
       for (const column of this.declaredColumns()) {
         const field = column.field();
         if (!field) continue;
-        const groupType = column.groupSummary();
-        if (groupType) group.push({ field, type: groupType });
-        const totalType = column.totalSummary();
-        if (totalType) total.push({ field, type: totalType });
+        for (const type of asList(column.groupSummary())) group.push({ field, type });
+        for (const type of asList(column.totalSummary())) total.push({ field, type });
       }
       this.store.grouping.setSummaries(group, total);
     });

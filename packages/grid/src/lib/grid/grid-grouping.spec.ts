@@ -117,6 +117,41 @@ class DetailHost {
   readonly data = SALES;
 }
 
+@Component({
+  imports: [OgeGrid, OgeColumn],
+  template: `
+    <oge-grid [data]="data" keyField="id" [groupBy]="['region']">
+      <oge-column field="region" />
+      <oge-column
+        field="amount"
+        dataType="number"
+        [groupSummary]="['sum', 'avg']"
+        [totalSummary]="['sum', 'count']"
+      />
+    </oge-grid>
+  `,
+})
+class MultiSummaryHost {
+  readonly data = SALES;
+}
+
+describe('OgeGrid multiple summaries per column', () => {
+  it('renders every declared aggregate on group rows and in the total row', async () => {
+    const fixture = TestBed.createComponent(MultiSummaryHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+
+    const firstGroup = el.querySelector('.oge-group-row')?.textContent?.replace(/\s+/g, ' ');
+    expect(firstGroup).toContain('Sum of Amount: 300');
+    expect(firstGroup).toContain('Avg of Amount: 150');
+
+    const totalCells = Array.from(el.querySelectorAll('.oge-total-cell')).map((c) =>
+      c.textContent?.replace(/\s+/g, ' ').trim()
+    );
+    expect(totalCells).toContain('Sum: 600 · Count: 3');
+  });
+});
+
 describe('OgeGrid master-detail', () => {
   async function render() {
     const fixture = TestBed.createComponent(DetailHost);

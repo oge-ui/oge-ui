@@ -73,10 +73,10 @@ export class OgeColumn<T = unknown> {
   readonly hidingPriority = input<number>();
   /** Pins the column to an edge (requires a numeric `width`). */
   readonly pinned = input<false | 'left' | 'right'>(false);
-  /** Aggregate shown on group rows for this column's field. */
-  readonly groupSummary = input<SummaryType>();
-  /** Aggregate shown in the grid's total row for this column's field. */
-  readonly totalSummary = input<SummaryType>();
+  /** Aggregate(s) shown on group rows for this column's field. */
+  readonly groupSummary = input<SummaryType | readonly SummaryType[]>();
+  /** Aggregate(s) shown in the grid's total row for this column's field. */
+  readonly totalSummary = input<SummaryType | readonly SummaryType[]>();
   /** Whether cells of this column can be edited. */
   readonly editable = input(true);
   /** Marks the field as required in editors. */
