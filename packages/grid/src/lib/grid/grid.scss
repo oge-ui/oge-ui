@@ -800,6 +800,13 @@
   background: var(--oge-row-focused-bg, rgba(79, 70, 229, 0.1));
 }
 
+// custom command-column buttons (commandButtons)
+.oge-command-text-btn {
+  padding: 2px 6px;
+  font-size: 12px;
+  color: var(--oge-accent, #4f46e5);
+}
+
 // row drag reordering (rowDragging)
 .oge-drag-cell {
   display: flex;

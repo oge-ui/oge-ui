@@ -14,6 +14,8 @@ export {
   type OgeScrollingOptions,
   type OgeGroupingOptions,
   type OgeCellClickEvent,
+  type OgeCommandButton,
+  type OgeRowReorderedEvent,
   type OgeExportColumn,
   type OgeExportData,
   type OgeExportOptions,

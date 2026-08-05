@@ -112,6 +112,17 @@ export interface OgeExportOptions {
   scope?: 'all' | 'page' | 'selection';
 }
 
+/** One button of the command column (`commandButtons` input). */
+export interface OgeCommandButton<T = unknown> {
+  /** Built-in behavior; omit for custom buttons. */
+  name?: 'edit' | 'delete';
+  /** Label for custom buttons (also the accessible name). */
+  text?: string;
+  onClick?: (row: T, key: RowKey) => void;
+  /** Per-row visibility. */
+  visible?: (row: T) => boolean;
+}
+
 export interface OgeRowReorderedEvent<T = unknown> {
   key: RowKey;
   targetKey: RowKey;
@@ -587,6 +598,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Fires after a row is dropped in a new position. */
   readonly rowReordered = output<OgeRowReorderedEvent<T>>();
+
+  /**
+   * Customizes the trailing command column: reorder/mix the built-in
+   * 'edit'/'delete' buttons with custom ones (text + onClick), with an
+   * optional per-row `visible` predicate.
+   */
+  readonly commandButtons = input<readonly OgeCommandButton<T>[] | undefined>(undefined);
 
   /** Highlights and tracks a single focused row (DevExtreme focusedRowEnabled). */
   readonly focusedRowEnabled = input(false);
@@ -2101,11 +2119,32 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Trailing command column (edit/delete/save/cancel buttons). */
   protected readonly hasCommandColumn = computed(() => {
+    if (this.commandButtons()?.length) return true;
     const mode = this.editMode();
     if (!mode) return false;
     if (mode === 'row' || mode === 'popup') return this.canUpdate() || this.canDelete();
     return this.canDelete();
   });
+
+  /** Buttons rendered in a row's idle command cell — input overrides defaults. */
+  protected readonly effCommandButtons = computed<readonly OgeCommandButton<T>[]>(() => {
+    const custom = this.commandButtons();
+    if (custom?.length) return custom;
+    const mode = this.editMode();
+    const buttons: OgeCommandButton<T>[] = [];
+    if ((mode === 'row' || mode === 'popup') && this.canUpdate()) buttons.push({ name: 'edit' });
+    if (mode && this.canDelete()) buttons.push({ name: 'delete' });
+    return buttons;
+  });
+
+  protected commandButtonVisible(button: OgeCommandButton<T>, node: DataRowNode<T>): boolean {
+    return button.visible ? button.visible(node.data) : true;
+  }
+
+  protected runCommandButton(button: OgeCommandButton<T>, node: DataRowNode<T>, event: Event): void {
+    event.stopPropagation();
+    button.onClick?.(node.data, node.key);
+  }
 
   private newRowCounter = 0;
 

@@ -228,6 +228,29 @@ describe('OgeGrid imperative API & events', () => {
     expect(focused).toEqual({ row: 0, col: 0 });
   });
 
+  it('commandButtons renders custom buttons with per-row visibility', async () => {
+    const clicked: unknown[] = [];
+    const fixture = TestBed.createComponent(OgeGrid<Row>);
+    fixture.componentRef.setInput('data', ROWS);
+    fixture.componentRef.setInput('columns', ['name']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('commandButtons', [
+      {
+        text: 'Detay',
+        onClick: (row: Row, key: unknown) => clicked.push([row.name, key]),
+        visible: (row: Row) => row.department === 'Eng',
+      },
+    ]);
+    fixture.detectChanges();
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    // only the 2 Eng rows show the button (Erin is Sales)
+    const buttons = el.querySelectorAll('.oge-command-text-btn');
+    expect(buttons.length).toBe(2);
+    (buttons[0] as HTMLElement).click();
+    expect(clicked).toEqual([[['Ada', 1]][0]]);
+  });
+
   it('clearFilters and clearSorting reset the view', async () => {
     const { fixture, el, grid } = await render();
     // sort by name desc via two header clicks
