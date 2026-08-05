@@ -1,9 +1,23 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { CodeBlock } from './code-block';
 
+export interface DemoFile {
+  name: string;
+  language: string;
+  code: string;
+}
+
+const DEFAULT_NAMES: Record<string, string> = {
+  ts: 'component.ts',
+  html: 'template.html',
+  css: 'styles.css',
+  sh: 'terminal',
+};
+
 /**
- * Docs demo card with Preview/Code tabs (shadcn-style). The live demo stays
- * mounted while the Code tab is open, so grid state survives tab switches.
+ * Docs demo card with Preview/Code tabs. Multi-file demos show one tab per
+ * file (component.ts / template.html / …). The live demo stays mounted while
+ * a code tab is open, so grid state survives tab switches.
  */
 @Component({
   selector: 'app-demo-card',
@@ -14,9 +28,11 @@ import { CodeBlock } from './code-block';
       <header
         class="flex items-center gap-3 border-b border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-800 dark:bg-gray-900"
       >
-        @if (code()) {
-          <div class="flex rounded-lg border border-gray-200 bg-white p-0.5 dark:border-gray-700 dark:bg-gray-950">
-            @for (tab of tabs; track tab) {
+        @if (effectiveFiles().length) {
+          <div
+            class="flex flex-wrap rounded-lg border border-gray-200 bg-white p-0.5 dark:border-gray-700 dark:bg-gray-950"
+          >
+            @for (tab of tabNames(); track tab) {
               <button
                 type="button"
                 class="rounded-md px-3 py-1 text-xs font-medium transition-colors"
@@ -44,12 +60,17 @@ import { CodeBlock } from './code-block';
           }
         </div>
       </header>
-      <div class="p-4" [hidden]="activeTab() === 'Code'">
+      <div class="p-4" [hidden]="activeTab() !== 'Preview'">
         <ng-content />
       </div>
-      @if (code(); as source) {
-        <div [hidden]="activeTab() === 'Preview'">
-          <app-code-block [code]="source" [language]="language()" [frameless]="true" />
+      @for (file of effectiveFiles(); track file.name) {
+        <div [hidden]="activeTab() !== file.name">
+          <app-code-block
+            [code]="file.code"
+            [language]="file.language"
+            [title]="file.name"
+            [frameless]="true"
+          />
         </div>
       }
     </section>
@@ -58,10 +79,25 @@ import { CodeBlock } from './code-block';
 export class DemoCard {
   readonly title = input('Example');
   readonly chips = input<readonly string[]>([]);
-  /** When given, a Preview/Code tab switcher appears. */
+  /** Single-snippet shorthand; use `files` for multi-file demos. */
   readonly code = input<string | undefined>(undefined);
   readonly language = input('html');
+  /** Multi-file demo sources, one tab per file. */
+  readonly files = input<readonly DemoFile[] | undefined>(undefined);
 
-  protected readonly tabs = ['Preview', 'Code'] as const;
-  protected readonly activeTab = signal<'Preview' | 'Code'>('Preview');
+  protected readonly effectiveFiles = computed<readonly DemoFile[]>(() => {
+    const files = this.files();
+    if (files?.length) return files;
+    const code = this.code();
+    if (!code) return [];
+    const language = this.language();
+    return [{ name: DEFAULT_NAMES[language] ?? language, language, code }];
+  });
+
+  protected readonly tabNames = computed(() => [
+    'Preview',
+    ...this.effectiveFiles().map((file) => file.name),
+  ]);
+
+  protected readonly activeTab = signal('Preview');
 }

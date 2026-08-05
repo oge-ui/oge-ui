@@ -5,31 +5,36 @@ import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees } from '../../shared/demo-data';
 
-const QUICK_START = `import { Component } from '@angular/core';
+const QUICK_START_TS = `import { Component } from '@angular/core';
 import { OgeGrid, OgeColumn, OgeCellTemplate } from '@oge-ui/grid';
 
 @Component({
   selector: 'app-employees',
   imports: [OgeGrid, OgeColumn, OgeCellTemplate],
-  template: \`
-    <oge-grid [data]="employees" keyField="id">
-      <oge-column field="id" caption="Id" [width]="70" dataType="number" />
-      <oge-column field="firstName" caption="First Name" />
-      <oge-column field="department" caption="Department">
-        <!-- cell templates are plain Angular templates — Tailwind classes just work -->
-        <span *ogeCellTemplate="let value"
-              class="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
-          {{ value }}
-        </span>
-      </oge-column>
-      <oge-column field="salary" caption="Salary" dataType="number" [format]="money" />
-    </oge-grid>
-  \`,
+  templateUrl: './employees.component.html',
 })
 export class EmployeesPage {
   employees = [/* ... */];
   money = (v: unknown) => \`₺\${(v as number).toLocaleString('tr-TR')}\`;
 }`;
+
+const QUICK_START_HTML = `<oge-grid [data]="employees" keyField="id">
+  <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+  <oge-column field="firstName" caption="First Name" />
+  <oge-column field="department" caption="Department">
+    <!-- cell templates are plain Angular templates — Tailwind classes just work -->
+    <span *ogeCellTemplate="let value"
+          class="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+      {{ value }}
+    </span>
+  </oge-column>
+  <oge-column field="salary" caption="Salary" dataType="number" [format]="money" />
+</oge-grid>`;
+
+const QUICK_START_FILES = [
+  { name: 'employees.component.ts', language: 'ts', code: QUICK_START_TS },
+  { name: 'employees.component.html', language: 'html', code: QUICK_START_HTML },
+];
 
 @Component({
   selector: 'app-data-grid-overview',
@@ -45,7 +50,7 @@ export class EmployeesPage {
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['50 rows', 'cell template']" [code]="quickStart" language="ts">
+    <app-demo-card [chips]="['50 rows', 'cell template']" [files]="quickStartFiles">
       <oge-grid [data]="employees" keyField="id">
         <oge-column field="id" caption="Id" [width]="70" dataType="number" />
         <oge-column field="firstName" caption="First Name" />
@@ -125,7 +130,7 @@ export class EmployeesPage {
 })
 export class DataGridOverviewPage {
   protected readonly employees = makeEmployees(50);
-  protected readonly quickStart = QUICK_START;
+  protected readonly quickStartFiles = QUICK_START_FILES;
   protected readonly money = (value: unknown): string =>
     typeof value === 'number' ? `₺${value.toLocaleString('tr-TR')}` : String(value ?? '');
 }

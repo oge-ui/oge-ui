@@ -59,16 +59,35 @@ const RULES: Record<string, Rule[]> = {
   sh: [
     { pattern: /(#[^\n]*)/g, render: span('tok-comment') },
     { pattern: /('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")/g, render: span('tok-string') },
-    { pattern: /(^|\s)(npm|npx|nx|ng|git|install)(?=\s|$)/gm, render: (_m, g) => `${g[0]}<span class="tok-keyword">${g[1]}</span>` },
+    {
+      pattern: /(^|\s)(npm|npx|nx|ng|git|install)(?=\s|$)/gm,
+      render: (_m, g) => `${g[0]}<span class="tok-keyword">${g[1]}</span>`,
+    },
   ],
 };
 
 /**
  * Applies rules in order; earlier matches are stashed behind private-use
- * placeholder characters so later rules cannot re-tokenize them.
+ * placeholders so later rules cannot re-tokenize them. The stash index is
+ * itself encoded with private-use "digit" characters — a placeholder must
+ * never contain word characters, otherwise the number/keyword rules would
+ * match inside it and corrupt the output.
  */
-const OPEN = '';
-const CLOSE = '';
+const OPEN = '\uE000';
+const CLOSE = '\uE001';
+const PUA_DIGIT_BASE = 0xe010;
+
+function encodeIndex(index: number): string {
+  return String(index).replace(/\d/g, (d) => String.fromCharCode(PUA_DIGIT_BASE + Number(d)));
+}
+
+function decodeIndex(encoded: string): number {
+  return Number(
+    encoded.replace(/[\uE010-\uE019]/g, (c) =>
+      String.fromCharCode(48 + (c.charCodeAt(0) - PUA_DIGIT_BASE))
+    )
+  );
+}
 
 export function highlight(code: string, language: string): string {
   const rules = RULES[language] ?? RULES['ts'];
@@ -77,12 +96,15 @@ export function highlight(code: string, language: string): string {
 
   for (const rule of rules) {
     text = text.replace(rule.pattern, (match, ...args) => {
-      if (match.includes(OPEN)) return match;
+      if (match.includes(OPEN) || match.includes(CLOSE)) return match;
       const groups = args.slice(0, -2) as string[];
       stash.push(rule.render(match, groups));
-      return `${OPEN}${stash.length - 1}${CLOSE}`;
+      return `${OPEN}${encodeIndex(stash.length - 1)}${CLOSE}`;
     });
   }
 
-  return text.replace(/(\d+)/g, (_m, index: string) => stash[Number(index)]);
+  return text.replace(
+    /\uE000([\uE010-\uE019]+)\uE001/g,
+    (_m, encoded: string) => stash[decodeIndex(encoded)] ?? ''
+  );
 }
