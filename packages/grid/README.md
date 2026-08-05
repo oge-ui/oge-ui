@@ -4,20 +4,25 @@ Fast, complete **data grid for Angular** — built on signals, runs zoneless, th
 
 ## Features
 
-- **Virtualized rendering** — 100.000+ rows with ~30 DOM elements (Fenwick-tree windowing)
-- **Server-side data** — one serializable `LoadOptions` contract (skip/take/sort/filter/group) for .NET / Node backends, with `AbortSignal` cancellation of stale requests
-- **Sorting** — single & multi (Shift+click), stable, locale-aware
-- **Filtering** — filter row, Excel-style header filter (distinct values), global search, debounced
-- **Grouping** — drag & drop group panel, multi-level, group/total aggregates (`sum · avg · min · max · count`)
-- **Editing** — `cell` / `row` / `batch` / `popup` modes on Reactive Forms with validation and cancelable `savingChanges`
-- **Selection** — single / multiple / checkbox, filtered select-all, Shift-ranges
-- **Columns** — resize, reorder, pin, chooser, typed cell/header/edit templates
-- **Master-detail** — fully typed `*ogeDetailTemplate`
-- **Keyboard & a11y** — Excel-like navigation, WAI-ARIA grid/treegrid pattern, axe-verified
+- **Virtualized rendering** — 100.000+ rows with ~30 DOM elements (Fenwick-tree windowing), measured variable row heights, column virtualization, infinite scrolling
+- **Server-side data** — one serializable `LoadOptions` contract (skip/take/sort/filter/group) for .NET / Node backends, `AbortSignal` cancellation, OData v4 adapter, remote virtual scrolling with block cache
+- **Live updates** — `ArrayDataSource.push()` patches changed cells in place
+- **Sorting** — single & multi (Shift+click), stable, locale-aware, `calculateSortValue`
+- **Filtering** — filter row with per-cell operator menu, Excel-style header filter with search, global search with highlighting, filter builder + panel, `calculateFilterExpression`
+- **Grouping** — drag & drop group panel, multi-level, group/total aggregates (`sum · avg · min · max · count`), deferred child loading, `expandAllGroups()` / `collapseAllGroups()`
+- **Editing** — `cell` / `row` / `batch` / `popup` / `form` modes on Reactive Forms with validation, delete confirmation and cancelable `savingChanges`
+- **Selection** — single / multiple / checkbox, filtered select-all (`selectAllMode: 'page' | 'allPages'`), Shift-ranges, focused-row mode
+- **Columns** — resize, reorder, pin, chooser, banded headers, lookup columns (incl. cascading), calculated columns, adaptive hiding, typed cell/header/edit templates, customizable command buttons
+- **Master-detail** — fully typed `*ogeDetailTemplate`; custom full-row rendering via `*ogeRowTemplate`
+- **Row drag & drop** — handle-based reordering with `rowReordered` event
+- **Keyboard & a11y** — Excel-like navigation, WAI-ARIA grid/treegrid pattern, axe-verified, clipboard copy (Ctrl+C)
+- **RTL** — `rtlEnabled` or auto-detected, fully mirrored layout
 - **Header & row context menus** — built-in sort/group/pin/hide + custom items
 - **State persistence** — `stateKey` restores sort/filters/grouping/column layout (pluggable storage)
-- **CSV export** — `exportCsv()` respects the current filter and sort
-- **Theming** — `--oge-*` design tokens, dark theme, Tailwind & Bootstrap bridge themes
+- **Export** — CSV built in, Excel via lazy `@oge-ui/grid/export-excel` (exceljs stays out of your main bundle); `scope: 'all' | 'page' | 'selection'`
+- **Toolbar** — default items plus your own controls via the `[ogeToolbar]` slot
+- **Imperative API** — `refresh`, `scrollToRow`, `clearFilters`, `clearSorting`, `exportCsv`, `copyToClipboard`, …
+- **Theming** — `--oge-*` design tokens, dark theme, Tailwind & Bootstrap bridge themes, row striping, loading panel
 - **Localization** — every UI string configurable via `provideOgeGridConfig`
 
 ## Installation
@@ -27,6 +32,17 @@ npm install @oge-ui/core @oge-ui/grid
 ```
 
 Requires Angular ≥ 22. All components are standalone.
+
+For Excel export, additionally install the optional peer and lazy-import the secondary entry:
+
+```sh
+npm install exceljs
+```
+
+```ts
+const { exportGridToExcel } = await import('@oge-ui/grid/export-excel');
+await exportGridToExcel(grid, { filename: 'orders.xlsx', scope: 'all' });
+```
 
 ## Quick start
 

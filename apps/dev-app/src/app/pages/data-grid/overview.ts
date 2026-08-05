@@ -98,7 +98,17 @@ const QUICK_START_FILES = [
         <tr><td><code>columnChooser</code></td><td>boolean</td><td>false</td><td>Column visibility popup</td></tr>
         <tr><td><code>columnResize</code> / <code>columnReorder</code></td><td>boolean</td><td>true</td><td>Header drag interactions</td></tr>
         <tr><td><code>detailRowHeight</code></td><td>number</td><td>200</td><td>Master-detail row height in virtual mode</td></tr>
-        <tr><td><code>editing</code></td><td>false | {{ '{' }} mode, allow… {{ '}' }}</td><td>false</td><td>cell / row / batch / popup editing</td></tr>
+        <tr><td><code>editing</code></td><td>false | {{ '{' }} mode, allow… {{ '}' }}</td><td>false</td><td>cell / row / batch / popup / form editing; <code>confirmDelete</code></td></tr>
+        <tr><td><code>scrolling</code></td><td>{{ '{' }} mode, columnRenderingMode {{ '}' }}</td><td>—</td><td>'virtual' | 'infinite' rows and 'virtual' columns</td></tr>
+        <tr><td><code>autoRowHeight</code></td><td>boolean</td><td>false</td><td>Measures real row heights in virtual mode</td></tr>
+        <tr><td><code>grouping</code></td><td>{{ '{' }} autoExpandAll {{ '}' }}</td><td>—</td><td><code>false</code> starts collapsed and defers child loading</td></tr>
+        <tr><td><code>selectAllMode</code></td><td>'allPages' | 'page'</td><td>'allPages'</td><td>Scope of the header select-all checkbox</td></tr>
+        <tr><td><code>focusedRowEnabled</code></td><td>boolean</td><td>false</td><td>Row-level focus with two-way <code>focusedRowKey</code></td></tr>
+        <tr><td><code>rowAlternation</code></td><td>boolean</td><td>false</td><td>Zebra striping via <code>--oge-row-alt-bg</code></td></tr>
+        <tr><td><code>loadPanel</code></td><td>boolean</td><td>false</td><td>Spinner overlay while loading</td></tr>
+        <tr><td><code>rowDragging</code></td><td>boolean</td><td>false</td><td>Drag-handle row reordering; emits <code>rowReordered</code></td></tr>
+        <tr><td><code>commandButtons</code></td><td>OgeCommandButton[]</td><td>—</td><td>Customize the command column (built-in + custom buttons)</td></tr>
+        <tr><td><code>rtlEnabled</code></td><td>boolean</td><td>auto</td><td>Right-to-left layout; auto-detected from the DOM when unset</td></tr>
         <tr><td><code>messages</code></td><td>Partial&lt;OgeGridMessages&gt;</td><td>global config</td><td>Per-grid UI-string overrides (i18n)</td></tr>
         <tr><td><code>stateKey</code></td><td>string</td><td>—</td><td>Persists sort/filter/group/column layout (localStorage, pluggable)</td></tr>
       </tbody>
@@ -126,8 +136,10 @@ const QUICK_START_FILES = [
       <tbody>
         <tr><td><code>getCsv(options?)</code></td><td>Returns the current view (filter + search + sort applied) as a CSV string</td></tr>
         <tr><td><code>exportCsv(filename?)</code></td><td>Downloads the current view as a CSV file</td></tr>
-        <tr><td><code>getExportData()</code></td><td>Rows + column metadata of the current view — feeds custom exporters</td></tr>
+        <tr><td><code>getExportData(opts?)</code></td><td>Rows + column metadata of the current view — feeds custom exporters; <code>scope: 'all' | 'page' | 'selection'</code></td></tr>
         <tr><td><code>exportGridToExcel(grid, opts?)</code></td><td>From <code>&#64;oge-ui/grid/export-excel</code>: downloads the view as .xlsx</td></tr>
+        <tr><td><code>copyToClipboard()</code></td><td>Copies the selected rows (or current view) as tab-separated text; also on Ctrl+C</td></tr>
+        <tr><td><code>selectAllPages()</code></td><td>Selects every filtered row across pages, fetching keys for remote sources</td></tr>
         <tr><td><code>refresh()</code> · <code>scrollToRow(key)</code> · <code>clearFilters()</code> · <code>clearSorting()</code> · <code>expandAllGroups()</code> / <code>collapseAllGroups()</code></td><td>Imperative view control</td></tr>
       </tbody>
     </table>
@@ -143,14 +155,23 @@ const QUICK_START_FILES = [
         <tr><td><code>format</code></td><td>(value) =&gt; string</td><td>—</td><td>Custom cell text formatter</td></tr>
         <tr><td><code>visible</code></td><td>boolean</td><td>true</td><td>Two-way visibility</td></tr>
         <tr><td><code>sortable</code> / <code>filterable</code></td><td>boolean</td><td>true</td><td>Per-column opt-out</td></tr>
+        <tr><td><code>lookup</code></td><td>{{ '{' }} dataSource, valueField, displayField {{ '}' }}</td><td>—</td><td>Key → label display and select editor; <code>dataSource</code> may be <code>(row) =&gt; items</code> for cascading</td></tr>
+        <tr><td><code>calculateCellValue</code></td><td>(row) =&gt; unknown</td><td>—</td><td>Computed column value (display + export)</td></tr>
+        <tr><td><code>calculateSortValue</code></td><td>(row) =&gt; unknown</td><td>—</td><td>Custom sort key for the column</td></tr>
+        <tr><td><code>calculateFilterExpression</code></td><td>(value, op) =&gt; FilterExpr</td><td>—</td><td>Custom filter expression built from the entered value</td></tr>
       </tbody>
     </table>
 
     <h3>Templates</h3>
     <p>
       <code>*ogeCellTemplate="let value; row as r"</code> customizes cells,
-      <code>*ogeHeaderTemplate="let column"</code> customizes headers — both fully typed via
-      template context guards.
+      <code>*ogeHeaderTemplate="let column"</code> customizes headers,
+      <code>*ogeEditTemplate</code> swaps in your own editor,
+      <code>*ogeDetailTemplate</code> renders master-detail content,
+      <code>*ogeRowTemplate</code> replaces the whole row and
+      <code>*ogeNoDataTemplate</code> the empty state — all fully typed via template context
+      guards. Elements marked with the <code>ogeToolbar</code> attribute project into the
+      grid toolbar.
     </p>
   `,
 })

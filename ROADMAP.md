@@ -3,7 +3,7 @@
 Comparison of `@oge-ui/grid` against DevExtreme DataGrid (v25/26 feature set).
 Legend: ✅ implemented · 🟡 partial · ❌ missing.
 
-Last updated: 2026-08-05 (after Phase 11 / Column parity).
+Last updated: 2026-08-05 (after Phase 13 / UX & API parity).
 
 ## 1. Data binding & data operations
 
@@ -23,14 +23,14 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 | Feature | DevExtreme | oge | Notes |
 |---|---|---|---|
 | Paging + page-size selector + info | ✔ | ✅ | `pageSizes`, `showInfo` |
-| "All" page size option | ✔ | ❌ | |
-| Pager display modes (compact/adaptive) | ✔ | ❌ | |
+| "All" page size option | ✔ | ✅ | `pageSizes: [10, 'all']` (Phase 13) |
+| Pager display modes (compact/adaptive) | ✔ | ✅ | `displayMode: full/compact/adaptive` + width-driven adaptive (Phase 13) |
 | Row virtual scrolling | ✔ | ✅ | Fenwick-tree windowing, 100k e2e |
 | **Column virtualization** | ✔ | ✅ | `columnRenderingMode: 'virtual'`; plain columns only (no pins/bands) |
 | **Infinite scrolling** | ✔ | ✅ | `scrolling.mode: 'infinite'`, skeleton fillers, growing scroll space |
 | Remote virtual scrolling (windowed fetch) | ✔ | ✅ | 100-row block cache, de-dupe, sort/filter invalidation; 1M-row demo |
 | Variable row heights (measured) | ✔ | ✅ | `autoRowHeight`: measured after render, scroll-anchored corrections |
-| scrollToRow public API | ✔ | 🟡 | internal only |
+| scrollToRow public API | ✔ | ✅ | `scrollToRow(index | key)` (Phase 13) |
 
 ## 3. Sorting
 
@@ -38,7 +38,7 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 |---|---|---|---|
 | Single/multi/none + allowUnsorting | ✔ | ✅ | incl. global config |
 | Initial sort via column (`sortIndex`/`sortOrder`) | ✔ | ✅ | + `groupIndex` (Phase 11); stateKey/user wins |
-| Custom sort (`calculateSortValue`) | ✔ | ❌ | |
+| Custom sort (`calculateSortValue`) | ✔ | ✅ | works client-side incl. lookup display order (Phase 13) |
 
 ## 4. Filtering & search
 
@@ -52,7 +52,7 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 | Search result **highlighting** | ✔ | ✅ | default cells, `<mark>` (Phase 10) |
 | **Filter Builder + filter panel** | ✔ | ✅ | recursive and/or editor + readable panel (Phase 10) |
 | Programmatic filter value input/output | ✔ | ✅ | `[(filterValue)]`, persisted via `stateKey` (Phase 10) |
-| `calculateFilterExpression` per column | ✔ | ❌ | |
+| `calculateFilterExpression` per column | ✔ | ✅ | filter row + builder use the custom expression (Phase 13) |
 
 ## 5. Grouping & summaries
 
@@ -63,8 +63,8 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 | Multiple summaries per column | ✔ | 🟡 | one `groupSummary` + one `totalSummary` per column |
 | Custom summary (`calculateCustomSummary`) | ✔ | ❌ | |
 | Summaries in **group footer** | ✔ | ❌ | inline on group row only |
-| Expand/collapse **all** (API + UI) | ✔ | ❌ | per-group only |
-| `autoExpandGroup` control | ✔ | ❌ | always expanded by default |
+| Expand/collapse **all** (API + UI) | ✔ | ✅ | `expandAllGroups()` / `collapseAllGroups()` (Phase 13); no toolbar button |
+| `autoExpandGroup` control | ✔ | ✅ | `grouping.autoExpandAll` (Phase 12) |
 | Column `groupIndex` input | ✔ | ✅ | Phase 11 |
 
 ## 6. Columns
@@ -74,10 +74,10 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 | Resize / reorder / fixed (pin) / chooser | ✔ | ✅ | |
 | minWidth / width / visible | ✔ | ✅ | |
 | **Banded columns** (multi-row headers) | ✔ | ✅ | `<oge-column-group>` (Phase 11) |
-| **Lookup columns** (display + dropdown editor) | ✔ | ✅ | display/filter/header-filter/editor/CSV (Phase 11); cascading still ❌ |
-| Calculated columns (`calculateCellValue`) | ✔ | 🟡 | display/CSV (Phase 11); sort/filter on computed values ❌ |
+| **Lookup columns** (display + dropdown editor) | ✔ | ✅ | display/filter/header-filter/editor/CSV (Phase 11); cascading via `dataSource: (row) => items` (Phase 13) |
+| Calculated columns (`calculateCellValue`) | ✔ | ✅ | display/CSV (Phase 11); sort/filter via `calculateSortValue`/`calculateFilterExpression` (Phase 13) |
 | Adaptive column hiding (`hidingPriority`) | ✔ | ✅ | width-driven, restores automatically (Phase 11) |
-| Command/buttons column customization | ✔ | ❌ | fixed edit/delete buttons only |
+| Command/buttons column customization | ✔ | ✅ | `commandButtons` input: built-in + custom buttons, `visible(row)`, icons (Phase 13) |
 | Header/cell/edit templates | ✔ | ✅ | fully typed |
 | Word wrap / auto row height | ✔ | ✅ | `wordWrap` input (Phase 11; virtual mode stays fixed-height) |
 
@@ -87,23 +87,23 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 |---|---|---|---|
 | single/multiple/checkbox + shift/ctrl | ✔ | ✅ | |
 | Select-all (filtered) + indeterminate | ✔ | ✅ | |
-| `selectAllMode: 'page'` | ✔ | ❌ | all-filtered only |
+| `selectAllMode: 'page'` | ✔ | ✅ | page or all filtered pages, async fetch for remote (Phase 13) |
 | Deferred selection | ✔ | ❌ | |
-| Focused row mode (`focusedRowKey`) | ✔ | ❌ | cell focus only |
-| Excel-like keyboard navigation | ✔ | ✅ | axe-verified ARIA |
-| Clipboard copy | ✔ | ❌ | |
+| Focused row mode (`focusedRowKey`) | ✔ | ✅ | `focusedRowEnabled` + `[(focusedRowKey)]` (Phase 13) |
+| Excel-like keyboard navigation | ✔ | ✅ | axe-verified ARIA; RTL-aware arrows |
+| Clipboard copy | ✔ | ✅ | `copyToClipboard()` + Ctrl+C, TSV of selection (Phase 13) |
 
 ## 8. Editing
 
 | Feature | DevExtreme | oge | Notes |
 |---|---|---|---|
 | cell / row / batch / popup modes | ✔ | ✅ | |
-| **form** mode (inline form) | ✔ | ❌ | popup covers the dialog case |
+| **form** mode (inline form) | ✔ | ✅ | `editing.mode: 'form'` — labeled inline form row (Phase 13) |
 | Validation rules | ✔ | ✅ | `required` + any Angular validators |
 | Custom editors (`editCellTemplate`) | ✔ | ✅ | `*ogeEditTemplate` with FormControl |
-| Lookup editors | ✔ | ✅ | default select editor (Phase 11); cascading ❌ |
-| Row drag & drop reordering | ✔ | ❌ | |
-| Confirmation on delete | ✔ | ❌ | deletes immediately (non-batch) |
+| Lookup editors | ✔ | ✅ | default select editor (Phase 11); cascading via function dataSource (Phase 13) |
+| Row drag & drop reordering | ✔ | ✅ | `rowDragging` + drag handle + `rowReordered` (Phase 13) |
+| Confirmation on delete | ✔ | ✅ | `editing.confirmDelete` (Phase 13) |
 
 ## 9. Appearance, UX, misc
 
@@ -111,19 +111,19 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 |---|---|---|---|
 | Theming (tokens, dark, bridges) | ✔ | ✅ | arguably ahead (Tailwind/Bootstrap bridges) |
 | Localization of all texts | ✔ | ✅ | `provideOgeGridConfig` messages |
-| RTL support | ✔ | ❌ | |
-| Row alternation (striping) | ✔ | ❌ | trivial token/option |
-| Loading indicator | ✔ | 🟡 | opacity only; no spinner/panel |
-| Custom no-data template | ✔ | ❌ | message-only |
-| Row template (full row) | ✔ | ❌ | |
-| Toolbar customization (custom items) | ✔ | ❌ | fixed layout |
+| RTL support | ✔ | ✅ | `rtlEnabled` / auto-detect, logical CSS properties, mirrored chevrons & arrows (Phase 13) |
+| Row alternation (striping) | ✔ | ✅ | `rowAlternation` + `--oge-row-alt-bg` token (Phase 13) |
+| Loading indicator | ✔ | ✅ | `loadPanel` spinner overlay (Phase 13) |
+| Custom no-data template | ✔ | ✅ | `*ogeNoDataTemplate` (Phase 13) |
+| Row template (full row) | ✔ | ✅ | `*ogeRowTemplate` with typed context (Phase 13) |
+| Toolbar customization (custom items) | ✔ | ✅ | `[ogeToolbar]` projected slot (Phase 13) |
 | Context menu (rows) | ✔ | ✅ | event-driven items |
 | Header context menu | ✔ | ✅ | sort/group/pin/hide, localized (Phase 9) |
 | **State persistence** | ✔ | ✅ | `stateKey` + `OGE_STATE_STORAGE` (Phase 9) |
 | **Export CSV/Excel** | ✔ | ✅ | CSV in core; Excel via lazy `@oge-ui/grid/export-excel` (exceljs, typed cells); `scope: all/page/selection` |
 | Export PDF | ✔ | ❌ | post-0.1 |
-| Imperative public API (refresh, expandAll, …) | ✔ | 🟡 | inputs/outputs only; no method surface |
-| Event surface (cellClick, rowPrepared, …) | ✔ | 🟡 | rowClick/contextMenu/savingChanges only |
+| Imperative public API (refresh, expandAll, …) | ✔ | ✅ | `refresh/expandAllGroups/collapseAllGroups/clearFilters/clearSorting/scrollToRow/exportCsv/copyToClipboard/selectAllPages` (Phase 13) |
+| Event surface (cellClick, rowPrepared, …) | ✔ | ✅ | + `cellClick/rowDblClick/contentReady/rowReordered` (Phase 13) |
 | Master-detail | ✔ | ✅ | typed template |
 | Hierarchical data | TreeList | ❌ | separate future component |
 
@@ -137,4 +137,6 @@ Last updated: 2026-08-05 (after Phase 11 / Column parity).
 
 **Phase 12 — Data & scrolling parity: ✅ DONE** (infinite scrolling, remote virtual scrolling with block cache, column virtualization, push/live updates, OData adapter, measured variable row heights + scroll anchoring, deferred group loading via `grouping.autoExpandAll: false`).
 
-**Phase 13 — UX & API parity:** imperative API (`refresh`, `expandAll/collapseAll`, `scrollToRow`, `clearFilters`…) · richer event surface (`cellClick`, `rowDblClick`, `contentReady`) · expand/collapse-all UI · loading panel · row alternation · noData/row templates · toolbar customization · clipboard copy · focused-row mode · `selectAllMode: 'page'` · delete confirmation · form edit mode · row drag reordering · RTL · "All" page size + pager modes.
+**Phase 13 — UX & API parity: ✅ DONE** (imperative API, richer event surface, loading panel, row alternation, focused-row mode, delete confirmation, noData/row templates, toolbar customization, Excel export secondary entry with export scopes, clipboard copy, `selectAllMode: 'page'`, pager display modes + "All" page size, RTL, row drag reordering, form edit mode, cascading lookups, buttons-column customization, `calculateSortValue`/`calculateFilterExpression`).
+
+**Next (post-0.2.0):** deferred selection · group footer summaries · custom summaries (`calculateCustomSummary`) · multiple summaries per column · header-filter search on grouped items · expand/collapse-all toolbar UI · PDF export · TreeList (separate component).

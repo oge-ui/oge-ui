@@ -5,7 +5,7 @@ Framework-agnostic engine behind the [oge](https://www.npmjs.com/package/@oge-ui
 ## What's inside
 
 - **DataSource contract** — `DataSource`, `LoadOptions` (skip/take/sort/filter/group/summary, `AbortSignal`), `LoadResult`, `GroupedItem`
-- **Implementations** — `ArrayDataSource` (in-memory, with CRUD write-back) and `CustomDataSource` (remote fetch delegate)
+- **Implementations** — `ArrayDataSource` (in-memory, CRUD write-back, `push()` live updates), `CustomDataSource` (remote fetch delegate) and `ODataDataSource` (`buildODataQuery`, OData v4)
 - **Filtering** — closed, serializable `FilterExpr` tree (14 operators) + evaluator
 - **Row pipeline** — pure, tested steps: filter → search → sort (stable, multi-key) → group → aggregate → paginate
 - **Flattened row model** — `RowNode` union (`data | group | detail | summary | filler`) feeding any renderer
