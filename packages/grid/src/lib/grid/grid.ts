@@ -9,6 +9,7 @@ import {
   TemplateRef,
   ViewEncapsulation,
   afterNextRender,
+  afterRenderEffect,
   computed,
   contentChild,
   contentChildren,
@@ -321,6 +322,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Fixed row height in px used by the virtualizer. Defaults from global config. */
   readonly rowHeight = input<number | undefined>(undefined);
 
+  /**
+   * Measures real row heights (wrapped text, templates) instead of forcing
+   * `rowHeight`, with scroll anchoring when heights above the viewport settle.
+   * Virtual mode only; ignored in windowed (remote) mode.
+   */
+  readonly autoRowHeight = input(false);
+
   /** Height assumed for expanded master-detail rows in virtual mode. */
   readonly detailRowHeight = input<number | undefined>(undefined);
 
@@ -475,6 +483,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly hostWidth = signal(0);
 
   constructor() {
+    // measure real row heights once the DOM for the current window is in place
+    afterRenderEffect(() => {
+      if (!this.measuring()) return;
+      this.viewNodes();
+      this.measureRenderedRows();
+    });
     effect(() => {
       const data = this.data();
       const keyField = this.keyField();
@@ -805,6 +819,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return this.adapter.highestLoaded() + WINDOW_BLOCK_SIZE;
   });
 
+  /** Measured row heights by row key (auto row-height mode). */
+  private readonly measuredHeights = signal<ReadonlyMap<RowKey, number>>(new Map());
+
+  private readonly measuring = computed(
+    () => this.autoRowHeight() && this.virtualized() && !this.windowed()
+  );
+
   private readonly offsetTree = computed<OffsetTree>(() => {
     const rowHeight = this.effRowHeight();
     if (this.windowed()) {
@@ -812,10 +833,50 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     }
     const nodes = this.flatNodes();
     const detailHeight = this.effDetailRowHeight();
-    return new OffsetTree(nodes.length, (i) =>
-      nodes[i].kind === 'detail' ? detailHeight : rowHeight
-    );
+    const measured = this.measuring() ? this.measuredHeights() : null;
+    return new OffsetTree(nodes.length, (i) => {
+      const node = nodes[i];
+      return (
+        measured?.get(node.key) ?? (node.kind === 'detail' ? detailHeight : rowHeight)
+      );
+    });
   });
+
+  /**
+   * Reads real row heights after each render and folds them into the offset
+   * tree. Corrections above the first visible row shift `scrollTop` by the
+   * same delta (scroll anchoring), so content on screen never jumps.
+   */
+  private measureRenderedRows(): void {
+    const viewport = this.viewportRef()?.nativeElement;
+    if (!viewport) return;
+    const nodes = untracked(this.flatNodes);
+    const defaults = {
+      row: untracked(this.effRowHeight),
+      detail: untracked(this.effDetailRowHeight),
+    };
+    const current = untracked(this.measuredHeights);
+    const anchorIndex = untracked(this.viewStart);
+    let changed: Map<RowKey, number> | null = null;
+    let deltaAbove = 0;
+    for (const el of viewport.querySelectorAll<HTMLElement>('[data-rowindex]')) {
+      const index = Number(el.dataset['rowindex']);
+      const node = nodes[index];
+      const height = el.offsetHeight;
+      if (!node || !height) continue;
+      const previous =
+        current.get(node.key) ?? (node.kind === 'detail' ? defaults.detail : defaults.row);
+      if (Math.abs(height - previous) < 1) continue;
+      (changed ??= new Map(current)).set(node.key, height);
+      if (index < anchorIndex) deltaAbove += height - previous;
+    }
+    if (!changed) return;
+    this.measuredHeights.set(changed);
+    if (deltaAbove !== 0) {
+      viewport.scrollTop += deltaAbove;
+      this.scrollTop.set(viewport.scrollTop);
+    }
+  }
 
   protected readonly viewWindow = computed<ViewportWindow | null>(() => {
     if (!this.virtualized()) return null;

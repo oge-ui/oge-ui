@@ -68,6 +68,30 @@ describe('OgeGrid virtualization', () => {
     expect(rowsEl.style.transform).toBe(`translateY(${(Math.min(...ids) - 1) * 30}px)`);
   });
 
+  it('folds measured heights into the offset tree in autoRowHeight mode', async () => {
+    const { fixture, el, grid } = await render();
+    fixture.componentRef.setInput('autoRowHeight', true);
+    // simulate the after-render measurement: rows 1 and 2 are taller than 30px
+    (
+      grid as unknown as {
+        measuredHeights: { set(v: ReadonlyMap<string | number, number>): void };
+      }
+    ).measuredHeights.set(
+      new Map<string | number, number>([
+        [1, 90],
+        [2, 60],
+      ])
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const body = el.querySelector('.oge-body') as HTMLElement;
+    // 998 default rows + 90 + 60 instead of 1000 × 30
+    expect(body.style.height).toBe(`${998 * 30 + 150}px`);
+    // rows keep natural height (no forced style) so content can wrap
+    const firstRow = el.querySelector('.oge-row') as HTMLElement;
+    expect(firstRow.style.height).toBe('');
+  });
+
   it('clamps the window at the end of the list', async () => {
     const { fixture, el, grid } = await render();
     (grid as unknown as { scrollTop: { set(v: number): void } }).scrollTop.set(999_999);

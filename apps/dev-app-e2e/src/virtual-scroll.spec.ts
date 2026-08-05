@@ -25,6 +25,34 @@ test('virtualizes 100k rows and shows the right slice at arbitrary positions', a
   await expect(grid.locator('.oge-row').last().locator('.oge-cell').first()).toHaveText('100000');
 });
 
+test('measures variable row heights and stays consistent while scrolling', async ({ page }) => {
+  await page.goto('/components/data-grid/virtual-scroll');
+  const grid = page.locator('oge-grid').nth(2);
+  await expect(grid.locator('.oge-row').first()).toBeVisible();
+
+  // wrapped bodies produce genuinely different row heights
+  const heights = await grid
+    .locator('.oge-row')
+    .evaluateAll((rows) => rows.map((row) => (row as HTMLElement).offsetHeight));
+  expect(new Set(heights).size).toBeGreaterThan(1);
+
+  // jump to the very end: as unmeasured rows settle the total height grows,
+  // so keep pushing to the bottom until the measured tree lands on the last row
+  await expect
+    .poll(async () => {
+      await grid.locator('.oge-viewport').evaluate((el) => (el.scrollTop = el.scrollHeight));
+      return (await grid.locator('.oge-row').last().locator('.oge-cell').first().textContent())?.trim();
+    })
+    .toBe('5000');
+
+  // and rows never overlap: each row starts where the previous one ends
+  const rects = await grid
+    .locator('.oge-row')
+    .evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().top));
+  const sorted = [...rects].sort((a, b) => a - b);
+  expect(rects).toEqual(sorted);
+});
+
 test('virtualizes 200 columns under horizontal scrolling', async ({ page }) => {
   await page.goto('/components/data-grid/virtual-scroll');
   const grid = page.locator('oge-grid').nth(1);

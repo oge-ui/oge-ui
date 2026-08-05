@@ -314,7 +314,8 @@
               [class.oge-row-new]="store.editing.isAdded(node.key)"
               [attr.aria-selected]="ariaSelectedOf(node)"
               [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
-              [style.height.px]="virtualized() ? effRowHeight() : null"
+              [attr.data-rowindex]="viewStart() + nodeIndex"
+              [style.height.px]="virtualized() && !autoRowHeight() ? effRowHeight() : null"
               [style.grid-template-columns]="gridTemplateColumns()"
               (click)="onRowClick(node, $event)"
               (contextmenu)="onRowContextMenuOpen(node, $event)"
@@ -480,7 +481,8 @@
               role="row"
               tabindex="0"
               [attr.aria-expanded]="node.expanded"
-              [style.height.px]="virtualized() ? effRowHeight() : null"
+              [attr.data-rowindex]="viewStart() + nodeIndex"
+              [style.height.px]="virtualized() && !autoRowHeight() ? effRowHeight() : null"
               [style.padding-left.px]="12 + node.level * 20"
               (click)="toggleGroup(node.key)"
               (keydown.enter)="toggleGroup(node.key, $event)"
@@ -507,7 +509,12 @@
             </div>
           }
           @case ('detail') {
-            <div class="oge-detail-row" role="row" [style.height.px]="virtualized() ? effDetailRowHeight() : null">
+            <div
+              class="oge-detail-row"
+              role="row"
+              [attr.data-rowindex]="viewStart() + nodeIndex"
+              [style.height.px]="virtualized() && !autoRowHeight() ? effDetailRowHeight() : null"
+            >
               <div
                 class="oge-detail-cell"
                 role="gridcell"

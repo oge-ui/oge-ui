@@ -20,6 +20,15 @@ const COLUMN_SNIPPET = `<!-- 200 columns: only the ones near the horizontal view
           class="h-[420px]">
 </oge-grid>`;
 
+const AUTO_HEIGHT_SNIPPET = `<!-- rows size to their content; measured heights feed the virtualizer -->
+<oge-grid [data]="notes" keyField="id"
+          [virtualScroll]="true" [autoRowHeight]="true" [wordWrap]="true"
+          class="h-[420px]">
+  <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+  <oge-column field="title" caption="Title" [width]="180" />
+  <oge-column field="body" caption="Body" />
+</oge-grid>`;
+
 @Component({
   selector: 'app-virtual-scroll',
   imports: [OgeGrid, OgeColumn, DemoCard, DocHeader],
@@ -69,6 +78,29 @@ const COLUMN_SNIPPET = `<!-- 200 columns: only the ones near the horizontal view
         style="height: 420px"
       />
     </app-demo-card>
+
+    <h3>Variable row heights</h3>
+    <p>
+      With <code>autoRowHeight</code> the virtualizer stops assuming a fixed row height: rendered
+      rows are measured, measurements feed the offset tree, and corrections above the viewport
+      are compensated on <code>scrollTop</code> in the same frame — no visible jump while
+      scrolling through wrapped content.
+    </p>
+
+    <app-demo-card [chips]="['5.000 rows', 'autoRowHeight', 'wordWrap']" [code]="autoHeightSnippet">
+      <oge-grid
+        [data]="notes"
+        keyField="id"
+        [virtualScroll]="true"
+        [autoRowHeight]="true"
+        [wordWrap]="true"
+        style="height: 420px"
+      >
+        <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+        <oge-column field="title" caption="Title" [width]="180" />
+        <oge-column field="body" caption="Body" />
+      </oge-grid>
+    </app-demo-card>
   `,
 })
 export class VirtualScrollPage {
@@ -80,4 +112,11 @@ export class VirtualScrollPage {
   protected readonly wideRows = Array.from({ length: 1_000 }, (_, r) =>
     Object.fromEntries(this.wideColumns.map((field, i) => [field, `R${r + 1} · C${i}`]))
   ) as Record<string, string>[];
+
+  protected readonly autoHeightSnippet = AUTO_HEIGHT_SNIPPET;
+  protected readonly notes = Array.from({ length: 5_000 }, (_, i) => ({
+    id: i + 1,
+    title: `Note ${i + 1}`,
+    body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(1 + ((i * 7) % 5)),
+  }));
 }
