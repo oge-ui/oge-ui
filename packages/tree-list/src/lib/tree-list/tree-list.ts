@@ -22,8 +22,10 @@ import {
 import {
   ArrayDataSource,
   ancestorsOf,
+  buildCsv,
   buildTreeIndex,
   computeTreeCheckStates,
+  type CsvOptions,
   createFieldAccessor,
   createFilterPredicate,
   filterTreeKeys,
@@ -1109,6 +1111,64 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   getNodeByKey(key: RowKey): T | undefined {
     return untracked(this.treeIndex).byKey.get(key);
+  }
+
+  /** Expands the ancestors of `key`, scrolls to it and focuses its first cell. */
+  focusRow(key: RowKey): void {
+    const index = untracked(this.treeIndex);
+    if (!index.byKey.has(key)) return;
+    for (const ancestor of ancestorsOf(index, key)) this.expandRow(ancestor);
+    if (untracked(this.focusedRowEnabled)) this.focusedRowKey.set(key);
+    const flatIndex = untracked(this.keyToFlatIndex).get(key);
+    if (flatIndex !== undefined) {
+      this.virtualizer.scrollRowIntoView(flatIndex);
+      this.keyboard.focusedCell.set({ row: flatIndex, col: 0 });
+    }
+  }
+
+  /**
+   * CSV of the currently visible rows (expansion + filter applied), the
+   * hierarchy expressed by indenting the first column.
+   */
+  getCsv(options?: CsvOptions): string {
+    const nodes = untracked(this.flatNodes).filter(
+      (node): node is DataRowNode<T> => node.kind === 'data'
+    );
+    const levelOf = new Map<T, number>(nodes.map((node) => [node.data, node.level]));
+    const columns = untracked(this.resolvedColumns).map((column, index) => ({
+      caption: column.caption,
+      field: column.field,
+      dataType: column.dataType,
+      accessor:
+        index === 0
+          ? (row: T): unknown => {
+              const value = column.accessor(row);
+              const text = column.format
+                ? column.format(value)
+                : formatCellValue(value, column.dataType, undefined);
+              return '  '.repeat(levelOf.get(row) ?? 0) + text;
+            }
+          : column.accessor,
+      format: index === 0 ? undefined : column.format,
+    }));
+    return buildCsv(
+      nodes.map((node) => node.data),
+      columns,
+      options
+    );
+  }
+
+  /** Downloads the visible tree as a CSV file. */
+  exportCsv(filename = 'tree-list.csv'): void {
+    const csv = this.getCsv();
+    if (typeof document === 'undefined') return;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   /** Scrolls a row (by key or visible index) into the viewport. */
