@@ -40,7 +40,7 @@ export class KeyboardNavModel<T = unknown> {
   readonly focusedCell = signal<{ row: number; col: number } | null>(null);
 
   private readonly firstDataRowIndex = computed(() =>
-    this.deps.flatNodes().findIndex((node) => node.kind === 'data')
+    this.deps.flatNodes().findIndex((node) => node.kind === 'data'),
   );
 
   /** Roving tabindex: only one cell participates in the tab order. */
@@ -52,7 +52,8 @@ export class KeyboardNavModel<T = unknown> {
 
   onCellFocus(row: number, col: number): void {
     const current = this.focusedCell();
-    if (current?.row !== row || current.col !== col) this.focusedCell.set({ row, col });
+    if (current?.row !== row || current.col !== col)
+      this.focusedCell.set({ row, col });
   }
 
   /** Moves `steps` data rows in `direction`, skipping non-data nodes. */
@@ -62,7 +63,8 @@ export class KeyboardNavModel<T = unknown> {
     let remaining = steps;
     while (remaining > 0) {
       let next = index + direction;
-      while (next >= 0 && next < nodes.length && nodes[next].kind !== 'data') next += direction;
+      while (next >= 0 && next < nodes.length && nodes[next].kind !== 'data')
+        next += direction;
       if (next < 0 || next >= nodes.length) break;
       index = next;
       remaining -= 1;
@@ -84,9 +86,15 @@ export class KeyboardNavModel<T = unknown> {
     let { row, col } = cell;
 
     const tree = this.deps.tree;
-    if (tree && col === 0 && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+    if (
+      tree &&
+      col === 0 &&
+      (event.key === 'ArrowRight' || event.key === 'ArrowLeft')
+    ) {
       // logical direction: "expand" points into the text flow
-      const isExpandKey = rtl ? event.key === 'ArrowLeft' : event.key === 'ArrowRight';
+      const isExpandKey = rtl
+        ? event.key === 'ArrowLeft'
+        : event.key === 'ArrowRight';
       if (isExpandKey) {
         if (tree.isExpandable(row) && !tree.isExpanded(row)) {
           tree.toggle(row, true);
@@ -145,7 +153,8 @@ export class KeyboardNavModel<T = unknown> {
       default:
         return false;
     }
-    if (row !== cell.row || col !== cell.col) this.focusedCell.set({ row, col });
+    if (row !== cell.row || col !== cell.col)
+      this.focusedCell.set({ row, col });
     return true;
   }
 }

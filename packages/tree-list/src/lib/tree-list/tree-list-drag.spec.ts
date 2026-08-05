@@ -23,12 +23,15 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 function rowOf(el: HTMLElement, title: string): HTMLElement | undefined {
   return Array.from(el.querySelectorAll<HTMLElement>('.oge-row')).find((row) =>
-    (row.textContent ?? '').includes(title)
+    (row.textContent ?? '').includes(title),
   );
 }
 
 function dragEvent(type: string): DragEvent {
-  const event = new Event(type, { bubbles: true, cancelable: true }) as DragEvent;
+  const event = new Event(type, {
+    bubbles: true,
+    cancelable: true,
+  }) as DragEvent;
   Object.defineProperty(event, 'dataTransfer', {
     value: { setData: () => undefined, effectAllowed: 'move' },
   });
@@ -59,16 +62,22 @@ describe('OgeTreeList drag reparenting', () => {
   async function render() {
     const fixture = TestBed.createComponent(Host);
     await settle(fixture);
-    return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      el: fixture.nativeElement as HTMLElement,
+    };
   }
 
   async function drag(
     fixture: ComponentFixture<unknown>,
     el: HTMLElement,
     from: string,
-    to: string
+    to: string,
   ): Promise<void> {
-    rowOf(el, from)?.querySelector('.oge-drag-handle')?.dispatchEvent(dragEvent('dragstart'));
+    rowOf(el, from)
+      ?.querySelector('.oge-drag-handle')
+      ?.dispatchEvent(dragEvent('dragstart'));
     await settle(fixture);
     const target = rowOf(el, to);
     target?.dispatchEvent(dragEvent('dragover'));

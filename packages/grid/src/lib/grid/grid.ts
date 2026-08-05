@@ -91,7 +91,10 @@ import { GridStateStore } from '../state/grid-state.store';
 import type { SelectionMode } from '../state/selection-slice';
 import type { OgeEditTemplateContext } from '../templates/edit-template';
 import type { OgeCellTemplateContext } from '../templates/cell-template';
-import { OgeDetailTemplate, type OgeDetailTemplateContext } from '../templates/detail-template';
+import {
+  OgeDetailTemplate,
+  type OgeDetailTemplateContext,
+} from '../templates/detail-template';
 import { OgeNoDataTemplate } from '../templates/no-data-template';
 import { OgeRowTemplate } from '../templates/row-template';
 import { OgeToolbarItem } from '../templates/toolbar-item';
@@ -253,7 +256,10 @@ export interface OgeScrollingOptions {
 
 // Save-flow types moved to the foundation entry with the editing model;
 // re-exported so `@oge-ui/grid` consumers are unaffected.
-export { type OgeDataChange, type OgeSavingChangesEvent } from '@oge-ui/grid/foundation';
+export {
+  type OgeDataChange,
+  type OgeSavingChangesEvent,
+} from '@oge-ui/grid/foundation';
 
 /** Grid-side view of the shared column view-model: `source` is the OgeColumn. */
 type ResolvedColumn<T = unknown> = FoundationResolvedColumn<T, OgeColumn<T>>;
@@ -262,7 +268,12 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
 
 @Component({
   selector: 'oge-grid',
-  imports: [NgTemplateOutlet, OgePager, ReactiveFormsModule, OgeFilterBuilderGroup],
+  imports: [
+    NgTemplateOutlet,
+    OgePager,
+    ReactiveFormsModule,
+    OgeFilterBuilderGroup,
+  ],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
@@ -274,7 +285,8 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
     '[class.oge-loading]': 'adapter.loading()',
     '[class.oge-wrap]': 'wordWrap()',
     '[class.oge-rtl]': 'rtl()',
-    '[attr.dir]': "rtlEnabled() === undefined ? null : rtlEnabled() ? 'rtl' : 'ltr'",
+    '[attr.dir]':
+      "rtlEnabled() === undefined ? null : rtlEnabled() ? 'rtl' : 'ltr'",
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'closePopups()',
   },
@@ -292,10 +304,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * Programmatic columns; used only when no declarative `<oge-column>` children
    * exist. When both are absent, columns are derived from the first row's keys.
    */
-  readonly columns = input<readonly (string | OgeColumnDef)[] | undefined>(undefined);
+  readonly columns = input<readonly (string | OgeColumnDef)[] | undefined>(
+    undefined,
+  );
 
   /** Field (or selector) producing a stable row key; falls back to the row index. */
-  readonly keyField = input<keyof T | ((row: T) => RowKey) | undefined>(undefined);
+  readonly keyField = input<keyof T | ((row: T) => RowKey) | undefined>(
+    undefined,
+  );
 
   /** `false` disables sorting entirely; `'single'` restricts to one column (no shift+click chains). */
   readonly sortable = input<boolean | 'single' | 'multi'>('multi');
@@ -319,16 +335,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     remote: boolean;
   }>(() => {
     const options = this.scrolling();
-    const mode = options?.mode ?? (this.virtualScroll() ? 'virtual' : 'standard');
+    const mode =
+      options?.mode ?? (this.virtualScroll() ? 'virtual' : 'standard');
     return { mode, remote: options?.remote ?? mode === 'infinite' };
   });
 
   /** Virtualized rendering active (virtual or infinite). */
-  protected readonly virtualized = computed(() => this.effScrolling().mode !== 'standard');
+  protected readonly virtualized = computed(
+    () => this.effScrolling().mode !== 'standard',
+  );
 
   /** Sparse block-fetching active. */
   protected readonly windowed = computed(
-    () => this.virtualized() && this.effScrolling().remote
+    () => this.virtualized() && this.effScrolling().remote,
   );
 
   /** Fixed row height in px used by the virtualizer. Defaults from global config. */
@@ -403,13 +422,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     ...this.messages(),
   }));
 
-  protected readonly effRowHeight = computed(() => this.rowHeight() ?? this.config.rowHeight);
-
-  protected readonly effDetailRowHeight = computed(
-    () => this.detailRowHeight() ?? this.config.detailRowHeight
+  protected readonly effRowHeight = computed(
+    () => this.rowHeight() ?? this.config.rowHeight,
   );
 
-  private readonly effOverscan = computed(() => this.overscan() ?? this.config.overscan);
+  protected readonly effDetailRowHeight = computed(
+    () => this.detailRowHeight() ?? this.config.detailRowHeight,
+  );
+
+  private readonly effOverscan = computed(
+    () => this.overscan() ?? this.config.overscan,
+  );
 
   protected readonly filterRowVisible = computed(() => {
     const value = this.filterRow();
@@ -440,10 +463,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return typeof value === 'boolean' ? value : value.visible !== false;
   });
 
-  protected readonly searchPanelOptions = computed<OgeSearchPanelOptions>(() => {
-    const value = this.searchPanel();
-    return typeof value === 'object' ? value : {};
-  });
+  protected readonly searchPanelOptions = computed<OgeSearchPanelOptions>(
+    () => {
+      const value = this.searchPanel();
+      return typeof value === 'object' ? value : {};
+    },
+  );
 
   protected readonly sortMode = computed<'none' | 'single' | 'multi'>(() => {
     const explicit = this.sorting()?.mode;
@@ -454,7 +479,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   private readonly allowUnsorting = computed(
-    () => this.sorting()?.allowUnsorting ?? this.config.allowUnsorting
+    () => this.sorting()?.allowUnsorting ?? this.config.allowUnsorting,
   );
 
   protected readonly pagingOptions = computed<OgePagingOptions | null>(() => {
@@ -499,10 +524,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly viewportHeight = signal(400);
 
   protected readonly detailTemplate = contentChild(OgeDetailTemplate<T>);
-  protected readonly declaredColumns = contentChildren<OgeColumn<T>>(OgeColumn, {
-    descendants: true,
-  });
-  protected readonly columnGroups = contentChildren<OgeColumnGroup<T>>(OgeColumnGroup);
+  protected readonly declaredColumns = contentChildren<OgeColumn<T>>(
+    OgeColumn,
+    {
+      descendants: true,
+    },
+  );
+  protected readonly columnGroups =
+    contentChildren<OgeColumnGroup<T>>(OgeColumnGroup);
 
   /** New inputs (wordWrap) + responsive width tracking. */
   readonly wordWrap = input(false);
@@ -520,7 +549,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Direction detected from the DOM when `rtlEnabled` is not set. */
   private readonly detectedRtl = signal(false);
 
-  protected readonly rtl = computed(() => this.rtlEnabled() ?? this.detectedRtl());
+  protected readonly rtl = computed(
+    () => this.rtlEnabled() ?? this.detectedRtl(),
+  );
 
   /**
    * Drag-handle column for reordering rows. With plain-array data the array
@@ -536,7 +567,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * 'edit'/'delete' buttons with custom ones (text + onClick), with an
    * optional per-row `visible` predicate.
    */
-  readonly commandButtons = input<readonly OgeCommandButton<T>[] | undefined>(undefined);
+  readonly commandButtons = input<readonly OgeCommandButton<T>[] | undefined>(
+    undefined,
+  );
 
   /** Highlights and tracks a single focused row . */
   readonly focusedRowEnabled = input(false);
@@ -551,7 +584,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   readonly highlightChanges = input(false);
 
   /** `key::field` of recently pushed cells → batch counter (drives the flash animation). */
-  protected readonly updatedCells = signal<ReadonlyMap<string, number>>(new Map());
+  protected readonly updatedCells = signal<ReadonlyMap<string, number>>(
+    new Map(),
+  );
 
   /**
    * 0 = no flash; 1/2 alternate per push batch so consecutive updates to the
@@ -587,7 +622,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       if (!cells.length || !untracked(this.highlightChanges)) return;
       untracked(() => {
         const next = new Map(this.updatedCells());
-        for (const cell of cells) next.set(`${String(cell.key)}::${cell.field}`, batch);
+        for (const cell of cells)
+          next.set(`${String(cell.key)}::${cell.field}`, batch);
         this.updatedCells.set(next);
         setTimeout(() => {
           const current = new Map(untracked(this.updatedCells));
@@ -610,7 +646,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.adapter.setSource(
         isDataSource(data)
           ? data
-          : new ArrayDataSource<T>(data, { key: keyField, sortValues, customSummaries })
+          : new ArrayDataSource<T>(data, {
+              key: keyField,
+              sortValues,
+              customSummaries,
+            }),
       );
     });
     // Inline object/array bindings produce a fresh reference on every change
@@ -623,7 +663,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const json = options ? JSON.stringify(options) : 'off';
       if (json === lastPagingJson) return;
       lastPagingJson = json;
-      untracked(() => this.store.paging.configure(options ? options.pageSize : null));
+      untracked(() =>
+        this.store.paging.configure(options ? options.pageSize : null),
+      );
     });
     let lastGroupByJson: string | undefined;
     effect(() => {
@@ -633,22 +675,27 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       if (json === lastGroupByJson) return;
       lastGroupByJson = json;
       untracked(() =>
-        this.store.grouping.set(fields.map((field) => ({ field, dir: 'asc' as const })))
+        this.store.grouping.set(
+          fields.map((field) => ({ field, dir: 'asc' as const })),
+        ),
       );
     });
     // summary configuration comes from the declared columns; each column may
     // declare a single aggregate or a list of them
     effect(() => {
       const asList = (
-        value: SummaryType | readonly SummaryType[] | undefined
-      ): readonly SummaryType[] => (value === undefined ? [] : typeof value === 'string' ? [value] : value);
+        value: SummaryType | readonly SummaryType[] | undefined,
+      ): readonly SummaryType[] =>
+        value === undefined ? [] : typeof value === 'string' ? [value] : value;
       const group: SummaryDescriptor[] = [];
       const total: SummaryDescriptor[] = [];
       for (const column of this.declaredColumns()) {
         const field = column.field();
         if (!field) continue;
-        for (const type of asList(column.groupSummary())) group.push({ field, type });
-        for (const type of asList(column.totalSummary())) total.push({ field, type });
+        for (const type of asList(column.groupSummary()))
+          group.push({ field, type });
+        for (const type of asList(column.totalSummary()))
+          total.push({ field, type });
       }
       this.store.grouping.setSummaries(group, total);
     });
@@ -657,7 +704,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const keys = this.selectedKeys();
       untracked(() => {
         const current = this.store.selection.selected();
-        if (keys.length === current.size && keys.every((key) => current.has(key))) return;
+        if (
+          keys.length === current.size &&
+          keys.every((key) => current.has(key))
+        )
+          return;
         this.store.selection.replace(keys);
       });
     });
@@ -665,7 +716,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const selected = this.store.selection.selected();
       untracked(() => {
         const keys = this.selectedKeys();
-        if (keys.length === selected.size && keys.every((key) => selected.has(key))) return;
+        if (
+          keys.length === selected.size &&
+          keys.every((key) => selected.has(key))
+        )
+          return;
         this.selectedKeys.set([...selected]);
       });
     });
@@ -675,7 +730,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const rowKey = this.store.editing.editRowKey();
       if (!cell && rowKey === null) return;
       setTimeout(() => {
-        this.hostRef.nativeElement.querySelector<HTMLElement>('.oge-editor')?.focus();
+        this.hostRef.nativeElement
+          .querySelector<HTMLElement>('.oge-editor')
+          ?.focus();
       });
     });
     // focus follows the keyboard-navigation cell — unless an editor is open
@@ -684,7 +741,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const cell = this.focusedCell();
       if (!cell) return;
       const editorOpen = untracked(
-        () => this.store.editing.editCell() !== null || this.store.editing.editRowKey() !== null
+        () =>
+          this.store.editing.editCell() !== null ||
+          this.store.editing.editRowKey() !== null,
       );
       if (editorOpen) return;
       untracked(() => {
@@ -692,11 +751,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         this.scrollColumnIntoView(cell.col);
       });
       setTimeout(() => {
-        if (this.store.editing.editCell() !== null || this.store.editing.editRowKey() !== null) {
+        if (
+          this.store.editing.editCell() !== null ||
+          this.store.editing.editRowKey() !== null
+        ) {
           return;
         }
         const viewport = this.viewportRef()?.nativeElement;
-        const el = viewport?.querySelector<HTMLElement>(`[data-cell="${cell.row}-${cell.col}"]`);
+        const el = viewport?.querySelector<HTMLElement>(
+          `[data-cell="${cell.row}-${cell.col}"]`,
+        );
         el?.focus({ preventScroll: true });
       });
     });
@@ -712,7 +776,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     effect(() => {
       const current = this.store.filter.builderFilter();
       untracked(() => {
-        if (JSON.stringify(current) === JSON.stringify(this.filterValue())) return;
+        if (JSON.stringify(current) === JSON.stringify(this.filterValue()))
+          return;
         this.filterValue.set(current);
       });
     });
@@ -737,23 +802,32 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           dir: column.sortOrder(),
           index: column.sortIndex() ?? 0,
         }))
-        .filter((c): c is { field: string; dir: 'asc' | 'desc'; index: number } =>
-          Boolean(c.field && c.dir)
+        .filter(
+          (c): c is { field: string; dir: 'asc' | 'desc'; index: number } =>
+            Boolean(c.field && c.dir),
         )
         .sort((a, b) => a.index - b.index);
       const groupConfigs = columns
-        .map((column) => ({ field: column.field(), index: column.groupIndex() }))
+        .map((column) => ({
+          field: column.field(),
+          index: column.groupIndex(),
+        }))
         .filter((c): c is { field: string; index: number } =>
-          Boolean(c.field && c.index !== undefined)
+          Boolean(c.field && c.index !== undefined),
         )
         .sort((a, b) => a.index - b.index);
       untracked(() => {
         if (sortConfigs.length && this.store.sort.descriptors().length === 0) {
-          this.store.sort.set(sortConfigs.map(({ field, dir }) => ({ field, dir })));
+          this.store.sort.set(
+            sortConfigs.map(({ field, dir }) => ({ field, dir })),
+          );
         }
-        if (groupConfigs.length && this.store.grouping.descriptors().length === 0) {
+        if (
+          groupConfigs.length &&
+          this.store.grouping.descriptors().length === 0
+        ) {
           this.store.grouping.set(
-            groupConfigs.map(({ field }) => ({ field, dir: 'asc' as const }))
+            groupConfigs.map(({ field }) => ({ field, dir: 'asc' as const })),
           );
         }
       });
@@ -770,7 +844,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       observer.observe(viewport);
       this.destroyRef.onDestroy(() => observer.disconnect());
       this.detectedRtl.set(
-        getComputedStyle(this.hostRef.nativeElement).direction === 'rtl'
+        getComputedStyle(this.hostRef.nativeElement).direction === 'rtl',
       );
     });
   }
@@ -826,14 +900,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Expands every group row (all levels). */
   expandAllGroups(): void {
     this.store.expansion.setGroups(
-      untracked(this.groupsAutoExpand) ? new Set() : this.collectGroupKeys()
+      untracked(this.groupsAutoExpand) ? new Set() : this.collectGroupKeys(),
     );
   }
 
   /** Collapses every group row (all levels). */
   collapseAllGroups(): void {
     this.store.expansion.setGroups(
-      untracked(this.groupsAutoExpand) ? this.collectGroupKeys() : new Set()
+      untracked(this.groupsAutoExpand) ? this.collectGroupKeys() : new Set(),
     );
   }
 
@@ -842,9 +916,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const keys = new Set<RowKey>();
     const result = untracked(this.adapter.result);
     if (!result?.data.length) return keys;
-    const visit = (items: readonly unknown[], parentKey: RowKey | null): void => {
+    const visit = (
+      items: readonly unknown[],
+      parentKey: RowKey | null,
+    ): void => {
       for (const item of items) {
-        if (typeof item !== 'object' || item === null || !('items' in item) || !('key' in item)) {
+        if (
+          typeof item !== 'object' ||
+          item === null ||
+          !('items' in item) ||
+          !('key' in item)
+        ) {
           return;
         }
         const group = item as GroupedItem<T>;
@@ -874,7 +956,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   scrollToRow(target: number | RowKey): void {
     const nodes = untracked(this.flatNodes);
     let index = nodes.findIndex((node) => node.key === target);
-    if (index < 0 && typeof target === 'number' && target >= 0 && target < nodes.length) {
+    if (
+      index < 0 &&
+      typeof target === 'number' &&
+      target >= 0 &&
+      target < nodes.length
+    ) {
       index = target;
     }
     if (index >= 0) this.scrollRowIntoView(index);
@@ -888,7 +975,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * is ignored (the full filtered set is exported); pass
    * `{ scope: 'page' | 'selection' }` to narrow it.
    */
-  async getExportData(options: OgeExportOptions = {}): Promise<OgeExportData<T>> {
+  async getExportData(
+    options: OgeExportOptions = {},
+  ): Promise<OgeExportData<T>> {
     const scope = options.scope ?? 'all';
     const source = untracked(this.adapter.source);
     const load = untracked(this.store.loadOptions);
@@ -930,9 +1019,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         format:
           column.format ??
           (column.lookupItems
-            ? (value: unknown) => lookupTextOf(column.lookupItems as LookupItem[], value)
+            ? (value: unknown) =>
+                lookupTextOf(column.lookupItems as LookupItem[], value)
             : column.dataType === 'boolean'
-              ? (value: unknown) => (value ? messages.booleanTrue : messages.booleanFalse)
+              ? (value: unknown) =>
+                  value ? messages.booleanTrue : messages.booleanFalse
               : undefined),
       }));
   }
@@ -955,20 +1046,30 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       ? untracked(this.deferredSelectedKeys)
       : untracked(this.store.selection.selected);
     const rows = nodes
-      .filter((node): node is DataRowNode<T> => node.kind === 'data' && selected.has(node.key))
+      .filter(
+        (node): node is DataRowNode<T> =>
+          node.kind === 'data' && selected.has(node.key),
+      )
       .map((node) => node.data);
-    if (rows.length) return buildCsv(rows, columns, { separator: '\t', bom: false });
+    if (rows.length)
+      return buildCsv(rows, columns, { separator: '\t', bom: false });
     const cell = untracked(this.focusedCell);
     const node = cell ? nodes[cell.row] : undefined;
     const column = cell ? untracked(this.resolvedColumns)[cell.col] : undefined;
     if (!node || node.kind !== 'data' || !column) return '';
     const value = column.accessor(node.data);
-    return value == null ? '' : column.format ? column.format(value) : String(value);
+    return value == null
+      ? ''
+      : column.format
+        ? column.format(value)
+        : String(value);
   }
 
   /** Builds CSV of the current view; `scope` narrows to the page or selection. */
   async getCsv(options?: CsvOptions & OgeExportOptions): Promise<string> {
-    const { rows, columns } = await this.getExportData({ scope: options?.scope });
+    const { rows, columns } = await this.getExportData({
+      scope: options?.scope,
+    });
     return buildCsv(rows, columns, options);
   }
 
@@ -987,25 +1088,31 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- data & rows ---------------------------------------------------------
 
-  private readonly keySelector = computed<(row: T, index: number) => RowKey>(() => {
-    const key = this.keyField();
-    if (key === undefined) return (_row, index) => index;
-    const selector = resolveKeySelector<T>(key);
-    return (row) => selector(row);
-  });
+  private readonly keySelector = computed<(row: T, index: number) => RowKey>(
+    () => {
+      const key = this.keyField();
+      if (key === undefined) return (_row, index) => index;
+      const selector = resolveKeySelector<T>(key);
+      return (row) => selector(row);
+    },
+  );
 
   /** Backwards-compatible alias used by the template's track expressions. */
   protected readonly keyOf = this.keySelector;
 
-  protected readonly grouped = computed(() => this.store.grouping.descriptors().length > 0);
+  protected readonly grouped = computed(
+    () => this.store.grouping.descriptors().length > 0,
+  );
 
   /** Rows expand/collapse when grouped or with master-detail → `treegrid`, else `grid`. */
   protected readonly gridRole = computed(() =>
-    this.grouped() || this.detailTemplate() !== undefined ? 'treegrid' : 'grid'
+    this.grouped() || this.detailTemplate() !== undefined ? 'treegrid' : 'grid',
   );
 
   /** `autoExpandAll: false` inverts group expansion: the toggled set holds *expanded* keys. */
-  private readonly groupsAutoExpand = computed(() => this.grouping()?.autoExpandAll !== false);
+  private readonly groupsAutoExpand = computed(
+    () => this.grouping()?.autoExpandAll !== false,
+  );
 
   /** Per-field `calculateSortValue` selectors (array data only). */
   private readonly sortValueSelectors = computed<
@@ -1024,7 +1131,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const fields = new Set<string>();
     for (const column of this.declaredColumns()) {
       const field = column.field();
-      if (field && column.groupSummary() && column.groupSummaryPosition() === 'footer') {
+      if (
+        field &&
+        column.groupSummary() &&
+        column.groupSummaryPosition() === 'footer'
+      ) {
         fields.add(field);
       }
     }
@@ -1046,42 +1157,55 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- deferred group loading ----------------------------------------------
 
   /** Expanded groups whose children are neither in the payload nor cached yet. */
-  private readonly pendingGroups = computed<{ key: RowKey; path: unknown[] }[]>(() => {
-    const result = this.adapter.result();
-    const groups = this.store.grouping.descriptors();
-    if (!result || !groups.length || !result.data.length) return [];
-    const first = result.data[0] as Record<string, unknown> | null;
-    if (typeof first !== 'object' || first === null || !('items' in first)) return [];
-    const autoExpand = this.groupsAutoExpand();
-    const toggled = this.store.expansion.collapsedGroups();
-    const cache = this.deferredGroupRows();
-    const pending: { key: RowKey; path: unknown[] }[] = [];
-    const visit = (
-      items: readonly GroupedItem<T>[],
-      parentKey: RowKey | null,
-      path: readonly unknown[]
-    ): void => {
-      for (const item of items) {
-        const key = groupNodeKey(parentKey, item.key);
-        const expanded = autoExpand ? !toggled.has(key) : toggled.has(key);
-        if (!expanded) continue;
-        const children = item.items ?? cache.get(key) ?? null;
-        if (children === null) {
-          pending.push({ key, path: [...path, item.key] });
-          continue;
+  private readonly pendingGroups = computed<{ key: RowKey; path: unknown[] }[]>(
+    () => {
+      const result = this.adapter.result();
+      const groups = this.store.grouping.descriptors();
+      if (!result || !groups.length || !result.data.length) return [];
+      const first = result.data[0] as Record<string, unknown> | null;
+      if (typeof first !== 'object' || first === null || !('items' in first))
+        return [];
+      const autoExpand = this.groupsAutoExpand();
+      const toggled = this.store.expansion.collapsedGroups();
+      const cache = this.deferredGroupRows();
+      const pending: { key: RowKey; path: unknown[] }[] = [];
+      const visit = (
+        items: readonly GroupedItem<T>[],
+        parentKey: RowKey | null,
+        path: readonly unknown[],
+      ): void => {
+        for (const item of items) {
+          const key = groupNodeKey(parentKey, item.key);
+          const expanded = autoExpand ? !toggled.has(key) : toggled.has(key);
+          if (!expanded) continue;
+          const children = item.items ?? cache.get(key) ?? null;
+          if (children === null) {
+            pending.push({ key, path: [...path, item.key] });
+            continue;
+          }
+          const child = children[0] as Record<string, unknown> | undefined;
+          if (
+            child &&
+            typeof child === 'object' &&
+            'items' in child &&
+            'key' in child
+          ) {
+            visit(children as readonly GroupedItem<T>[], key, [
+              ...path,
+              item.key,
+            ]);
+          }
         }
-        const child = children[0] as Record<string, unknown> | undefined;
-        if (child && typeof child === 'object' && 'items' in child && 'key' in child) {
-          visit(children as readonly GroupedItem<T>[], key, [...path, item.key]);
-        }
-      }
-    };
-    visit(result.data as readonly GroupedItem<T>[], null, []);
-    return pending;
-  });
+      };
+      visit(result.data as readonly GroupedItem<T>[], null, []);
+      return pending;
+    },
+  );
 
   /** Load-option construction for one deferred group: ancestor path filters + remaining group levels. */
-  private readonly pendingGroupRequests = computed<readonly PendingChildRequest[]>(() =>
+  private readonly pendingGroupRequests = computed<
+    readonly PendingChildRequest[]
+  >(() =>
     this.pendingGroups().map((entry) => ({
       key: entry.key,
       buildOptions: (rest) => {
@@ -1092,8 +1216,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           op: 'eq',
           value,
         }));
-        const operands = [...(rest.filter ? [rest.filter] : []), ...pathFilters];
-        const filter = operands.length === 1 ? operands[0] : { type: 'and' as const, operands };
+        const operands = [
+          ...(rest.filter ? [rest.filter] : []),
+          ...pathFilters,
+        ];
+        const filter =
+          operands.length === 1
+            ? operands[0]
+            : { type: 'and' as const, operands };
         const remaining = groups.slice(entry.path.length);
         return {
           filter,
@@ -1102,12 +1232,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           ...(remaining.length
             ? {
                 group: remaining,
-                ...(rest.groupSummary?.length ? { groupSummary: rest.groupSummary } : {}),
+                ...(rest.groupSummary?.length
+                  ? { groupSummary: rest.groupSummary }
+                  : {}),
               }
             : {}),
         };
       },
-    }))
+    })),
   );
 
   /** Fetches children for expanded deferred groups; base changes drop the cache. */
@@ -1132,7 +1264,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           ...(this.groupsAutoExpand()
             ? { collapsedGroupKeys: toggledGroups }
             : { expandedGroupKeys: toggledGroups }),
-          deferredChildren: this.deferredGroupRows() as ReadonlyMap<RowKey, readonly T[]>,
+          deferredChildren: this.deferredGroupRows() as ReadonlyMap<
+            RowKey,
+            readonly T[]
+          >,
           expandedDetailKeys: this.detailTemplate()
             ? this.store.expansion.expandedDetails()
             : undefined,
@@ -1161,15 +1296,21 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   protected readonly totalCount = computed<number>(() => {
-    if (this.windowed()) return this.adapter.windowTotal() ?? this.adapter.highestLoaded();
+    if (this.windowed())
+      return this.adapter.windowTotal() ?? this.adapter.highestLoaded();
     const result = this.adapter.result();
     if (result?.totalCount != null) return result.totalCount;
-    return this.flatNodes().reduce((count, node) => (node.kind === 'data' ? count + 1 : count), 0);
+    return this.flatNodes().reduce(
+      (count, node) => (node.kind === 'data' ? count + 1 : count),
+      0,
+    );
   });
 
   protected readonly pageCount = computed<number>(() => {
     const pageSize = this.store.paging.pageSize();
-    return pageSize == null ? 1 : Math.max(1, Math.ceil(this.totalCount() / pageSize));
+    return pageSize == null
+      ? 1
+      : Math.max(1, Math.ceil(this.totalCount() / pageSize));
   });
 
   // --- virtualization ------------------------------------------------------
@@ -1247,42 +1388,49 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- columns -------------------------------------------------------------
 
   /** OgeColumn instance → band caption (from `<oge-column-group>`). */
-  private readonly bandByColumn = computed<ReadonlyMap<OgeColumn<T>, string>>(() => {
-    const map = new Map<OgeColumn<T>, string>();
-    for (const group of this.columnGroups()) {
-      for (const column of group.columns()) map.set(column, group.caption());
-    }
-    return map;
-  });
+  private readonly bandByColumn = computed<ReadonlyMap<OgeColumn<T>, string>>(
+    () => {
+      const map = new Map<OgeColumn<T>, string>();
+      for (const group of this.columnGroups()) {
+        for (const column of group.columns()) map.set(column, group.caption());
+      }
+      return map;
+    },
+  );
 
   /** True when a leading expander column is rendered (master-detail active). */
-  protected readonly hasExpander = computed(() => this.detailTemplate() !== undefined);
+  protected readonly hasExpander = computed(
+    () => this.detailTemplate() !== undefined,
+  );
 
-  protected readonly hasCheckboxColumn = computed(() => this.selectionMode() === 'checkbox');
+  protected readonly hasCheckboxColumn = computed(
+    () => this.selectionMode() === 'checkbox',
+  );
 
   /** Number of leading utility cells (expander / checkbox) before data columns. */
   protected readonly leadingCellCount = computed(
     () =>
       (this.rowDragging() ? 1 : 0) +
       (this.hasExpander() ? 1 : 0) +
-      (this.hasCheckboxColumn() ? 1 : 0)
+      (this.hasCheckboxColumn() ? 1 : 0),
   );
 
   private readonly leadingWidth = computed(
     () =>
       (this.rowDragging() ? DRAG_WIDTH : 0) +
       (this.hasExpander() ? EXPANDER_WIDTH : 0) +
-      (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0)
+      (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
   );
 
   private readonly effColumnMinWidth = computed(
-    () => this.columnMinWidth() ?? this.config.columnMinWidth
+    () => this.columnMinWidth() ?? this.config.columnMinWidth,
   );
 
   /** Leading width counted against adaptive hiding (drag handle excluded). */
   private readonly adaptiveLeadingWidth = computed(
     () =>
-      (this.hasExpander() ? EXPANDER_WIDTH : 0) + (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0)
+      (this.hasExpander() ? EXPANDER_WIDTH : 0) +
+      (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
   );
 
   private readonly columnModel = new ColumnModel<T, OgeColumn<T>>({
@@ -1313,7 +1461,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     () =>
       this.scrolling()?.columnRenderingMode === 'virtual' &&
       this.bandRow() === null &&
-      this.resolvedColumns().every((column) => column.pinned === false)
+      this.resolvedColumns().every((column) => column.pinned === false),
   );
 
   private readonly leadingTracks = computed<readonly string[]>(() => {
@@ -1325,7 +1473,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   private readonly trailingTracks = computed<readonly string[]>(() =>
-    this.hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : []
+    this.hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : [],
   );
 
   private readonly layoutModel = new ColumnLayoutModel<T, OgeColumn<T>>({
@@ -1368,17 +1516,22 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.store.sort.toggle(column.field, additive, this.allowUnsorting());
   }
 
-  protected sortStateOf(column: ResolvedColumn<T>): { dir: 'asc' | 'desc'; index: number } | null {
+  protected sortStateOf(
+    column: ResolvedColumn<T>,
+  ): { dir: 'asc' | 'desc'; index: number } | null {
     return column.field ? this.store.sort.stateOf(column.field) : null;
   }
 
   protected ariaSortOf(column: ResolvedColumn<T>): string | null {
     const state = this.sortStateOf(column);
-    if (!state) return column.sortable && this.sortMode() !== 'none' ? 'none' : null;
+    if (!state)
+      return column.sortable && this.sortMode() !== 'none' ? 'none' : null;
     return state.dir === 'asc' ? 'ascending' : 'descending';
   }
 
-  protected readonly multiSorted = computed(() => this.store.sort.descriptors().length > 1);
+  protected readonly multiSorted = computed(
+    () => this.store.sort.descriptors().length > 1,
+  );
 
   // --- cells ---------------------------------------------------------------
 
@@ -1390,7 +1543,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return formatCellValue(value, column.dataType, column.format);
   }
 
-  protected cellContext(row: T, rowIndex: number, column: ResolvedColumn<T>): OgeCellTemplateContext<T> {
+  protected cellContext(
+    row: T,
+    rowIndex: number,
+    column: ResolvedColumn<T>,
+  ): OgeCellTemplateContext<T> {
     return {
       $implicit: column.accessor(row),
       row,
@@ -1400,11 +1557,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     };
   }
 
-  protected headerContext(column: ResolvedColumn<T>): OgeHeaderTemplateContext<T> {
+  protected headerContext(
+    column: ResolvedColumn<T>,
+  ): OgeHeaderTemplateContext<T> {
     return { $implicit: column.source as OgeColumn<T> };
   }
 
-  protected cellDisplayText(node: DataRowNode<T>, column: ResolvedColumn<T>): string {
+  protected cellDisplayText(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): string {
     const value = this.displayValue(node, column);
     if (column.format) return column.format(value);
     if (column.lookup && typeof column.lookup.dataSource === 'function') {
@@ -1429,13 +1591,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const item = column.lookupItems[Number(rawIndex)];
     this.store.filter.setRowFilter(
       field,
-      item === undefined ? null : { type: 'binary', field, op: 'eq', value: item.value }
+      item === undefined
+        ? null
+        : { type: 'binary', field, op: 'eq', value: item.value },
     );
   }
 
   protected onEditorEnter(): void {
     const mode = this.editMode();
-    if (mode === 'row' || mode === 'popup' || mode === 'form') this.commitActiveRow();
+    if (mode === 'row' || mode === 'popup' || mode === 'form')
+      this.commitActiveRow();
     else this.commitActiveCell();
   }
 
@@ -1445,7 +1610,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (key === null) return null;
     return (
       this.flatNodes().find(
-        (node): node is DataRowNode<T> => node.kind === 'data' && node.key === key
+        (node): node is DataRowNode<T> =>
+          node.kind === 'data' && node.key === key,
       ) ?? null
     );
   });
@@ -1457,10 +1623,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- grouping ------------------------------------------------------------
 
   /** Field → column index; group rows and summaries resolve columns per render. */
-  private readonly columnsByField = computed<ReadonlyMap<string, ResolvedColumn<T>>>(() => {
+  private readonly columnsByField = computed<
+    ReadonlyMap<string, ResolvedColumn<T>>
+  >(() => {
     const map = new Map<string, ResolvedColumn<T>>();
     for (const column of this.resolvedColumns()) {
-      if (column.field !== undefined && !map.has(column.field)) map.set(column.field, column);
+      if (column.field !== undefined && !map.has(column.field))
+        map.set(column.field, column);
     }
     return map;
   });
@@ -1486,7 +1655,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return node.summaries
       .filter((summary) => !footerFields.has(summary.field))
       .map((summary) => {
-        const column = summary.field ? this.columnByField(summary.field) : undefined;
+        const column = summary.field
+          ? this.columnByField(summary.field)
+          : undefined;
         const value = column
           ? formatCellValue(summary.value, column.dataType, column.format)
           : String(summary.value ?? '');
@@ -1500,7 +1671,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   /** Footer summary text of one column on a group-footer (`summary`) row. */
-  protected groupFooterText(node: SummaryRowNode, column: ResolvedColumn<T>): string {
+  protected groupFooterText(
+    node: SummaryRowNode,
+    column: ResolvedColumn<T>,
+  ): string {
     const field = column.field;
     if (!field || !this.groupFooterFields().has(field)) return '';
     const messages = this.msg();
@@ -1510,7 +1684,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         formatPattern(messages.totalSummaryPattern, {
           label: messages.summaryLabels[summary.type],
           value: formatCellValue(summary.value, column.dataType, column.format),
-        })
+        }),
       )
       .join(' · ');
   }
@@ -1527,7 +1701,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   /** Total-summary text per column id; empty when no totals are configured. */
-  protected readonly totalSummaryByColumn = computed<ReadonlyMap<string, string>>(() => {
+  protected readonly totalSummaryByColumn = computed<
+    ReadonlyMap<string, string>
+  >(() => {
     const descriptors = this.store.grouping.totalSummary();
     const values = this.adapter.result()?.summary;
     const out = new Map<string, string>();
@@ -1547,13 +1723,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return out;
   });
 
-  protected readonly hasTotalRow = computed(() => this.totalSummaryByColumn().size > 0);
+  protected readonly hasTotalRow = computed(
+    () => this.totalSummaryByColumn().size > 0,
+  );
 
   // --- selection -----------------------------------------------------------
 
   /** Keys of all (filtered, flattened) data rows in display order. */
   protected readonly dataKeys = computed<readonly RowKey[]>(() =>
-    this.flatNodes().flatMap((node) => (node.kind === 'data' ? [node.key] : []))
+    this.flatNodes().flatMap((node) =>
+      node.kind === 'data' ? [node.key] : [],
+    ),
   );
 
   protected isRowSelected(key: RowKey): boolean {
@@ -1601,10 +1781,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const current = untracked(this.selectionFilter);
     if (untracked(this.deferredSelectedKeys).has(key)) {
       this.selectionFilter.set(
-        current ? { type: 'and', operands: [current, { type: 'not', operand: eq }] } : null
+        current
+          ? { type: 'and', operands: [current, { type: 'not', operand: eq }] }
+          : null,
       );
     } else {
-      this.selectionFilter.set(current ? { type: 'or', operands: [current, eq] } : eq);
+      this.selectionFilter.set(
+        current ? { type: 'or', operands: [current, eq] } : eq,
+      );
     }
   }
 
@@ -1654,7 +1838,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.store.selection.selectOnly(node.key);
       return;
     }
-    if (event.shiftKey) this.store.selection.selectRange(this.dataKeys(), node.key);
+    if (event.shiftKey)
+      this.store.selection.selectRange(this.dataKeys(), node.key);
     else if (event.ctrlKey || event.metaKey || mode === 'checkbox') {
       this.store.selection.toggle(node.key);
     } else this.store.selection.selectOnly(node.key);
@@ -1690,7 +1875,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     event.preventDefault();
     event.stopPropagation();
     const nodes = untracked(this.flatNodes);
-    const dataNodes = nodes.filter((node): node is DataRowNode<T> => node.kind === 'data');
+    const dataNodes = nodes.filter(
+      (node): node is DataRowNode<T> => node.kind === 'data',
+    );
     const fromIndex = dataNodes.findIndex((node) => node.key === fromKey);
     const toIndex = dataNodes.findIndex((node) => node.key === target.key);
     if (fromIndex < 0 || toIndex < 0) return;
@@ -1700,14 +1887,24 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (Array.isArray(data)) {
       const keyOf = untracked(this.keySelector);
       const source = data as T[];
-      const sourceFrom = source.findIndex((row, index) => keyOf(row, index) === fromKey);
-      const sourceTo = source.findIndex((row, index) => keyOf(row, index) === target.key);
+      const sourceFrom = source.findIndex(
+        (row, index) => keyOf(row, index) === fromKey,
+      );
+      const sourceTo = source.findIndex(
+        (row, index) => keyOf(row, index) === target.key,
+      );
       if (sourceFrom >= 0 && sourceTo >= 0) {
         source.splice(sourceTo, 0, ...source.splice(sourceFrom, 1));
         this.adapter.reload();
       }
     }
-    this.rowReordered.emit({ key: fromKey, targetKey: target.key, fromIndex, toIndex, row: moved });
+    this.rowReordered.emit({
+      key: fromKey,
+      targetKey: target.key,
+      fromIndex,
+      toIndex,
+      row: moved,
+    });
   }
 
   protected onCheckboxToggle(node: DataRowNode<T>, event: Event): void {
@@ -1730,7 +1927,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       }
       // "everything matching the current filter" — no keys are materialized
       const filter = untracked(this.store.loadOptions).filter;
-      this.selectionFilter.set(filter ?? { type: 'binary', field, op: 'isnotnull' });
+      this.selectionFilter.set(
+        filter ?? { type: 'binary', field, op: 'isnotnull' },
+      );
       return;
     }
     if (this.allSelected()) {
@@ -1752,7 +1951,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected ariaSelectedOf(node: DataRowNode<T>): boolean | null {
-    return this.selectionMode() === 'none' ? null : this.isRowSelected(node.key);
+    return this.selectionMode() === 'none'
+      ? null
+      : this.isRowSelected(node.key);
   }
 
   // --- keyboard navigation -------------------------------------------------
@@ -1762,7 +1963,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     columnCount: computed(() => this.resolvedColumns().length),
     rtl: this.rtl,
     pageSize: computed(() =>
-      Math.max(1, Math.floor(this.viewportHeight() / this.effRowHeight()) - 1)
+      Math.max(1, Math.floor(this.viewportHeight() / this.effRowHeight()) - 1),
     ),
   });
 
@@ -1814,7 +2015,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       }
     }
     const noEditorOpen =
-      this.store.editing.editCell() === null && this.store.editing.editRowKey() === null;
+      this.store.editing.editCell() === null &&
+      this.store.editing.editRowKey() === null;
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
       // Ctrl+A selects every (filtered) row in multi-select modes
       const mode = this.selectionMode();
@@ -1836,7 +2038,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       if (node?.kind === 'data' && this.selectionMode() !== 'none') {
         event.preventDefault();
         if (this.selectionDeferred()) {
-          if (this.selectionMode() === 'single') this.deferredSelectOnly(node.key);
+          if (this.selectionMode() === 'single')
+            this.deferredSelectOnly(node.key);
           else this.deferredToggle(node.key);
         } else if (this.selectionMode() === 'single') {
           this.store.selection.selectOnly(node.key);
@@ -1855,7 +2058,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     items: OgeMenuItem[];
   } | null>(null);
 
-  protected onRowContextMenuOpen(node: DataRowNode<T>, event: MouseEvent): void {
+  protected onRowContextMenuOpen(
+    node: DataRowNode<T>,
+    event: MouseEvent,
+  ): void {
     const items: OgeMenuItem[] = [];
     this.rowContextMenu.emit({
       row: node.data,
@@ -1876,40 +2082,72 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   /** Built-in header context menu: sort / group / pin / hide. */
-  protected onHeaderContextMenu(column: ResolvedColumn<T>, event: MouseEvent): void {
+  protected onHeaderContextMenu(
+    column: ResolvedColumn<T>,
+    event: MouseEvent,
+  ): void {
     const field = column.field;
     if (!field) return;
     const messages = this.msg();
     const items: OgeMenuItem[] = [];
     if (column.sortable && this.sortMode() !== 'none') {
       items.push(
-        { text: messages.sortAscending, action: () => this.store.sort.set([{ field, dir: 'asc' }]) },
-        { text: messages.sortDescending, action: () => this.store.sort.set([{ field, dir: 'desc' }]) }
+        {
+          text: messages.sortAscending,
+          action: () => this.store.sort.set([{ field, dir: 'asc' }]),
+        },
+        {
+          text: messages.sortDescending,
+          action: () => this.store.sort.set([{ field, dir: 'desc' }]),
+        },
       );
       if (this.sortStateOf(column)) {
-        items.push({ text: messages.clearSort, action: () => this.store.sort.clear() });
+        items.push({
+          text: messages.clearSort,
+          action: () => this.store.sort.clear(),
+        });
       }
     }
     if (this.groupPanel()) {
-      const grouped = this.store.grouping.descriptors().some((d) => d.field === field);
+      const grouped = this.store.grouping
+        .descriptors()
+        .some((d) => d.field === field);
       items.push(
         grouped
-          ? { text: messages.ungroupColumn, action: () => this.store.grouping.ungroup(field) }
-          : { text: messages.groupByColumn, action: () => this.store.grouping.groupBy(field) }
+          ? {
+              text: messages.ungroupColumn,
+              action: () => this.store.grouping.ungroup(field),
+            }
+          : {
+              text: messages.groupByColumn,
+              action: () => this.store.grouping.groupBy(field),
+            },
       );
     }
     if (column.pinned !== 'left') {
-      items.push({ text: messages.pinLeft, action: () => this.store.columns.setPinned(column.id, 'left') });
+      items.push({
+        text: messages.pinLeft,
+        action: () => this.store.columns.setPinned(column.id, 'left'),
+      });
     }
     if (column.pinned !== 'right') {
-      items.push({ text: messages.pinRight, action: () => this.store.columns.setPinned(column.id, 'right') });
+      items.push({
+        text: messages.pinRight,
+        action: () => this.store.columns.setPinned(column.id, 'right'),
+      });
     }
     if (column.pinned !== false) {
-      items.push({ text: messages.unpin, action: () => this.store.columns.setPinned(column.id, false) });
+      items.push({
+        text: messages.unpin,
+        action: () => this.store.columns.setPinned(column.id, false),
+      });
     }
     if (column.source) {
       const source = column.source;
-      items.push({ text: messages.hideColumn, action: () => source.visible.set(false) });
+      items.push({
+        text: messages.hideColumn,
+        action: () => source.visible.set(false),
+      });
     }
     // consumers may add / remove / reorder the built-in items
     this.headerContextMenu.emit({
@@ -1950,36 +2188,56 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (this.commandButtons()?.length) return true;
     const mode = this.editMode();
     if (!mode) return false;
-    if (mode === 'row' || mode === 'popup' || mode === 'form') return this.canUpdate() || this.canDelete();
+    if (mode === 'row' || mode === 'popup' || mode === 'form')
+      return this.canUpdate() || this.canDelete();
     return this.canDelete();
   });
 
   /** Buttons rendered in a row's idle command cell — input overrides defaults. */
-  protected readonly effCommandButtons = computed<readonly OgeCommandButton<T>[]>(() => {
+  protected readonly effCommandButtons = computed<
+    readonly OgeCommandButton<T>[]
+  >(() => {
     const custom = this.commandButtons();
     if (custom?.length) return custom;
     const mode = this.editMode();
     const buttons: OgeCommandButton<T>[] = [];
-    if ((mode === 'row' || mode === 'popup' || mode === 'form') && this.canUpdate()) buttons.push({ name: 'edit' });
+    if (
+      (mode === 'row' || mode === 'popup' || mode === 'form') &&
+      this.canUpdate()
+    )
+      buttons.push({ name: 'edit' });
     if (mode && this.canDelete()) buttons.push({ name: 'delete' });
     return buttons;
   });
 
-  protected commandButtonVisible(button: OgeCommandButton<T>, node: DataRowNode<T>): boolean {
+  protected commandButtonVisible(
+    button: OgeCommandButton<T>,
+    node: DataRowNode<T>,
+  ): boolean {
     return button.visible ? button.visible(node.data) : true;
   }
 
-  protected runCommandButton(button: OgeCommandButton<T>, node: DataRowNode<T>, event: Event): void {
+  protected runCommandButton(
+    button: OgeCommandButton<T>,
+    node: DataRowNode<T>,
+    event: Event,
+  ): void {
     event.stopPropagation();
     button.onClick?.(node.data, node.key);
   }
 
   /** Row data with pending edits applied (batch dirty view). */
-  protected displayValue(node: DataRowNode<T>, column: ResolvedColumn<T>): unknown {
+  protected displayValue(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): unknown {
     return this.editingModel.displayValue(node, column);
   }
 
-  protected isCellDirty(node: DataRowNode<T>, column: ResolvedColumn<T>): boolean {
+  protected isCellDirty(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): boolean {
     return this.editingModel.isCellDirty(node, column);
   }
 
@@ -1992,28 +2250,34 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return this.editingModel.isFormRow(key);
   }
 
-  protected isCellEditorOpen(node: DataRowNode<T>, column: ResolvedColumn<T>): boolean {
+  protected isCellEditorOpen(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): boolean {
     return this.editingModel.isCellEditorOpen(node, column);
   }
 
   /** Reactive controls for the active editor(s), keyed `key::field`. */
   protected readonly activeControls = this.editingModel.activeControls;
 
-  protected editControl(node: DataRowNode<T>, column: ResolvedColumn<T>): FormControl<unknown> {
+  protected editControl(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): FormControl<unknown> {
     return this.editingModel.editControl(node, column);
   }
 
   /** Editor option list — cascading (function) lookups see the row's draft. */
   protected lookupItemsFor(
     node: DataRowNode<T>,
-    column: ResolvedColumn<T>
+    column: ResolvedColumn<T>,
   ): readonly LookupItem[] | undefined {
     return this.editingModel.lookupItemsFor(node, column);
   }
 
   protected editContextFor(
     node: DataRowNode<T>,
-    column: ResolvedColumn<T>
+    column: ResolvedColumn<T>,
   ): OgeEditTemplateContext<T> {
     return {
       $implicit: this.editControl(node, column),
@@ -2024,10 +2288,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected editorErrorText(control: FormControl<unknown>): string | null {
     if (!control.invalid || !control.touched) return null;
-    return control.hasError('required') ? this.msg().requiredError : this.msg().invalidError;
+    return control.hasError('required')
+      ? this.msg().requiredError
+      : this.msg().invalidError;
   }
 
-  protected onCellClickToEdit(node: DataRowNode<T>, column: ResolvedColumn<T>, event?: Event): void {
+  protected onCellClickToEdit(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+    event?: Event,
+  ): void {
     // ignore events bubbling out of an open editor (e.g. its own Enter commit)
     if ((event?.target as HTMLElement | null)?.closest?.('.oge-editor')) return;
     if (event?.type === 'click') {
@@ -2068,7 +2338,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   /** Tab inside a cell editor: commit and open the next editable column. */
-  protected commitAndNext(node: DataRowNode<T>, column: ResolvedColumn<T>, event: Event): void {
+  protected commitAndNext(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+    event: Event,
+  ): void {
     this.editingModel.commitAndNext(node, column, event);
   }
 
@@ -2100,7 +2374,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- group panel & column drag/drop --------------------------------------
 
-  protected onHeaderDragStart(column: ResolvedColumn<T>, event: DragEvent): void {
+  protected onHeaderDragStart(
+    column: ResolvedColumn<T>,
+    event: DragEvent,
+  ): void {
     if (!column.field || (!this.groupPanel() && !this.columnReorder())) {
       event.preventDefault();
       return;
@@ -2114,7 +2391,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Header the dragged column would be inserted in front of (drop indicator). */
   protected readonly headerDropTargetId = signal<string | null>(null);
 
-  protected onHeaderDragOver(column: ResolvedColumn<T>, event: DragEvent): void {
+  protected onHeaderDragOver(
+    column: ResolvedColumn<T>,
+    event: DragEvent,
+  ): void {
     if (!event.dataTransfer?.types.includes(COLUMN_DRAG_TYPE)) return;
     event.preventDefault();
     if (this.columnReorder() && this.headerDropTargetId() !== column.id) {
@@ -2127,7 +2407,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected onColumnDragOver(event: DragEvent): void {
-    if (event.dataTransfer?.types.includes(COLUMN_DRAG_TYPE)) event.preventDefault();
+    if (event.dataTransfer?.types.includes(COLUMN_DRAG_TYPE))
+      event.preventDefault();
   }
 
   protected onHeaderDrop(target: ResolvedColumn<T>, event: DragEvent): void {
@@ -2138,7 +2419,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.store.columns.reorder(
       this.resolvedColumns().map((c) => c.id),
       sourceId,
-      target.id
+      target.id,
     );
   }
 
@@ -2159,18 +2440,28 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   private suppressHeaderClick = false;
 
-  protected onResizeStart(column: ResolvedColumn<T>, event: PointerEvent): void {
+  protected onResizeStart(
+    column: ResolvedColumn<T>,
+    event: PointerEvent,
+  ): void {
     if (!this.columnResize()) return;
     event.preventDefault();
     event.stopPropagation();
-    const headerCell = (event.target as HTMLElement).closest('.oge-header-cell') as HTMLElement;
+    const headerCell = (event.target as HTMLElement).closest(
+      '.oge-header-cell',
+    ) as HTMLElement;
     const startWidth =
       headerCell?.offsetWidth ??
-      (typeof column.width === 'number' ? column.width : this.config.pinnedDefaultWidth);
+      (typeof column.width === 'number'
+        ? column.width
+        : this.config.pinnedDefaultWidth);
     const startX = event.clientX;
     const onMove = (move: PointerEvent): void => {
       this.suppressHeaderClick = true;
-      this.store.columns.setWidth(column.id, startWidth + (move.clientX - startX));
+      this.store.columns.setWidth(
+        column.id,
+        startWidth + (move.clientX - startX),
+      );
     };
     const onUp = (): void => {
       window.removeEventListener('pointermove', onMove);
@@ -2186,7 +2477,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected readonly chooserOpen = signal(false);
   /** Anchored to the chooser button: its bottom-right corner. */
-  protected readonly chooserPosition = signal<{ top: number; left: number }>({ top: 0, left: 0 });
+  protected readonly chooserPosition = signal<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
 
   protected toggleChooser(event: Event): void {
     event.stopPropagation();
@@ -2204,7 +2498,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     readonly { id: string; caption: string; column: OgeColumn<T> | undefined }[]
   >(() => {
     const declared = this.declaredColumns();
-    let entries: { id: string; caption: string; column: OgeColumn<T> | undefined }[];
+    let entries: {
+      id: string;
+      caption: string;
+      column: OgeColumn<T> | undefined;
+    }[];
     if (declared.length) {
       entries = declared.map((column, index) => {
         const field = column.field();
@@ -2226,11 +2524,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return [...entries].sort((a, b) => {
       const ia = order.indexOf(a.id);
       const ib = order.indexOf(b.id);
-      return (ia < 0 ? Number.MAX_SAFE_INTEGER : ia) - (ib < 0 ? Number.MAX_SAFE_INTEGER : ib);
+      return (
+        (ia < 0 ? Number.MAX_SAFE_INTEGER : ia) -
+        (ib < 0 ? Number.MAX_SAFE_INTEGER : ib)
+      );
     });
   });
 
-  protected toggleChooserVisible(entry: { column: OgeColumn<T> | undefined }): void {
+  protected toggleChooserVisible(entry: {
+    column: OgeColumn<T> | undefined;
+  }): void {
     entry.column?.visible.set(!entry.column.visible());
   }
 
@@ -2264,13 +2567,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.store.columns.reorder(
       this.chooserEntries().map((entry) => entry.id),
       sourceId,
-      targetId
+      targetId,
     );
   }
 
   // --- filtering -----------------------------------------------------------
 
-  private readonly filterTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private readonly filterTimers = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
 
   private debounced(key: string, apply: () => void): void {
     const pending = this.filterTimers.get(key);
@@ -2285,7 +2591,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       setTimeout(() => {
         this.filterTimers.delete(key);
         apply();
-      }, delay)
+      }, delay),
     );
   }
 
@@ -2296,7 +2602,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.debounced(`f:${field}`, () => {
       this.store.filter.setRowFilter(
         field,
-        this.rowFilterExprFor(column, raw, this.currentOperator(column))
+        this.rowFilterExprFor(column, raw, this.currentOperator(column)),
       );
     });
   }
@@ -2305,13 +2611,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private rowFilterExprFor(
     column: ResolvedColumn<T>,
     raw: string,
-    operator?: FilterOperator
+    operator?: FilterOperator,
   ): FilterExpr | null {
     const field = column.field;
     if (!field) return null;
     if (column.calculateFilterExpression) {
       const text = raw.trim();
-      const op = operator ?? column.filterOperator ?? defaultOperatorFor(column.dataType);
+      const op =
+        operator ??
+        column.filterOperator ??
+        defaultOperatorFor(column.dataType);
       return text ? column.calculateFilterExpression(text, op) : null;
     }
     return buildRowFilterExpr(field, column.dataType, raw, operator);
@@ -2322,7 +2631,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const field = column.field;
     if (!field) return;
     this.rowFilterRaw.set(field, raw);
-    this.store.filter.setRowFilter(field, this.rowFilterExprFor(column, raw, this.currentOperator(column)));
+    this.store.filter.setRowFilter(
+      field,
+      this.rowFilterExprFor(column, raw, this.currentOperator(column)),
+    );
   }
 
   protected onSearchInput(raw: string): void {
@@ -2332,7 +2644,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- filter-row operator menu --------------------------------------------
 
   /** User-chosen filter-row operator per field (overrides column default). */
-  private readonly rowFilterOps = signal<ReadonlyMap<string, FilterOperator>>(new Map());
+  private readonly rowFilterOps = signal<ReadonlyMap<string, FilterOperator>>(
+    new Map(),
+  );
   /** Last raw editor value per field, so an operator change re-applies it. */
   private readonly rowFilterRaw = new Map<string, string>();
 
@@ -2367,7 +2681,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return symbols[this.currentOperator(column)] ?? '=';
   }
 
-  protected toggleOperatorMenu(column: ResolvedColumn<T>, event: MouseEvent): void {
+  protected toggleOperatorMenu(
+    column: ResolvedColumn<T>,
+    event: MouseEvent,
+  ): void {
     event.stopPropagation();
     if (this.operatorMenu()?.column.id === column.id) {
       this.operatorMenu.set(null);
@@ -2378,7 +2695,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected operatorChoices(column: ResolvedColumn<T>): FilterOperator[] {
-    return operatorsFor(column.dataType).filter((op) => op !== 'isnull' && op !== 'isnotnull');
+    return operatorsFor(column.dataType).filter(
+      (op) => op !== 'isnull' && op !== 'isnotnull',
+    );
   }
 
   protected chooseOperator(op: FilterOperator | null): void {
@@ -2392,14 +2711,24 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.rowFilterOps.set(next);
     // re-apply the current editor value with the new operator
     const raw = this.rowFilterRaw.get(field) ?? '';
-    const effective = op ?? menu.column.filterOperator ?? defaultOperatorFor(menu.column.dataType);
-    this.store.filter.setRowFilter(field, this.rowFilterExprFor(menu.column, raw, effective));
+    const effective =
+      op ??
+      menu.column.filterOperator ??
+      defaultOperatorFor(menu.column.dataType);
+    this.store.filter.setRowFilter(
+      field,
+      this.rowFilterExprFor(menu.column, raw, effective),
+    );
   }
 
   // --- filter panel + builder ----------------------------------------------
 
   protected readonly builderOpen = signal(false);
-  protected builderTree: BuilderGroup = { kind: 'group', logic: 'and', items: [] };
+  protected builderTree: BuilderGroup = {
+    kind: 'group',
+    logic: 'and',
+    items: [],
+  };
   /** Bumped by the recursive editor so the preview text refreshes. */
   protected readonly builderVersion = signal(0);
 
@@ -2410,7 +2739,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         field: column.field as string,
         caption: column.caption,
         dataType: column.dataType,
-      }))
+      })),
   );
 
   protected readonly filterPanelText = computed<string | null>(() => {
@@ -2420,7 +2749,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   protected openFilterBuilder(): void {
-    this.builderTree = exprToBuilder(this.store.filter.builderFilter(), this.builderFields());
+    this.builderTree = exprToBuilder(
+      this.store.filter.builderFilter(),
+      this.builderFields(),
+    );
     if (!this.builderTree.items.length) {
       const first = this.builderFields()[0];
       if (first) {
@@ -2443,7 +2775,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   protected applyFilterBuilder(): void {
-    this.store.filter.setBuilderFilter(builderToExpr(this.builderTree, this.builderFields()));
+    this.store.filter.setBuilderFilter(
+      builderToExpr(this.builderTree, this.builderFields()),
+    );
     this.builderOpen.set(false);
   }
 
@@ -2457,7 +2791,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly sanitizer = inject(DomSanitizer);
 
   /** Escaped cell text with `<mark>` around search matches, or null when inactive. */
-  protected searchHighlightHtml(node: DataRowNode<T>, column: ResolvedColumn<T>): SafeHtml | null {
+  protected searchHighlightHtml(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): SafeHtml | null {
     const query = this.store.filter.searchText().trim();
     if (!query) return null;
     const text = this.cellDisplayText(node, column);
@@ -2491,19 +2828,28 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- header filter (Excel-style distinct values) -------------------------
 
   protected readonly headerFilterField = signal<string | null>(null);
-  protected readonly headerFilterPosition = signal<{ top: number; left: number }>({ top: 0, left: 0 });
+  protected readonly headerFilterPosition = signal<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
   /** null while the distinct values are loading. */
-  protected readonly headerFilterValues = signal<readonly unknown[] | null>(null);
+  protected readonly headerFilterValues = signal<readonly unknown[] | null>(
+    null,
+  );
   /** Search text inside the header-filter popup. */
   protected readonly headerFilterSearch = signal('');
 
-  protected readonly visibleHeaderValues = computed<readonly unknown[] | null>(() => {
-    const values = this.headerFilterValues();
-    if (!values) return null;
-    const query = foldText(this.headerFilterSearch().trim());
-    if (!query) return values;
-    return values.filter((value) => foldText(this.headerValueText(value)).includes(query));
-  });
+  protected readonly visibleHeaderValues = computed<readonly unknown[] | null>(
+    () => {
+      const values = this.headerFilterValues();
+      if (!values) return null;
+      const query = foldText(this.headerFilterSearch().trim());
+      if (!query) return values;
+      return values.filter((value) =>
+        foldText(this.headerValueText(value)).includes(query),
+      );
+    },
+  );
 
   /**
    * Date columns present header-filter values grouped by year. The search box
@@ -2534,7 +2880,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return groups.flatMap((group) => {
       if (foldText(group.label).includes(query)) return [group];
       const leaves = group.values.filter((value) =>
-        foldText(this.headerValueText(value)).includes(query)
+        foldText(this.headerValueText(value)).includes(query),
       );
       return leaves.length ? [{ label: group.label, values: leaves }] : [];
     });
@@ -2543,15 +2889,23 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private headerYearOf(value: unknown): string {
     if (value == null || value === '') return this.msg().blankValue;
     const date = value instanceof Date ? value : new Date(String(value));
-    return Number.isNaN(date.getTime()) ? String(value) : String(date.getFullYear());
+    return Number.isNaN(date.getTime())
+      ? String(value)
+      : String(date.getFullYear());
   }
 
-  protected isHeaderGroupSelected(group: { values: readonly unknown[] }): boolean {
+  protected isHeaderGroupSelected(group: {
+    values: readonly unknown[];
+  }): boolean {
     return group.values.every((value) => this.isHeaderValueSelected(value));
   }
 
-  protected isHeaderGroupIndeterminate(group: { values: readonly unknown[] }): boolean {
-    const selected = group.values.filter((value) => this.isHeaderValueSelected(value)).length;
+  protected isHeaderGroupIndeterminate(group: {
+    values: readonly unknown[];
+  }): boolean {
+    const selected = group.values.filter((value) =>
+      this.isHeaderValueSelected(value),
+    ).length;
     return selected > 0 && selected < group.values.length;
   }
 
@@ -2564,12 +2918,20 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const allSelected = group.values.every((value) => current.includes(value));
     const next = allSelected
       ? current.filter((value) => !group.values.includes(value))
-      : [...current, ...group.values.filter((value) => !current.includes(value))];
-    this.store.filter.setHeaderFilter(field, next.length === all.length ? null : next);
+      : [
+          ...current,
+          ...group.values.filter((value) => !current.includes(value)),
+        ];
+    this.store.filter.setHeaderFilter(
+      field,
+      next.length === all.length ? null : next,
+    );
   }
 
   protected readonly headerFilterAvailable = computed(
-    () => this.headerFilterVisible() && typeof this.adapter.source()?.distinct === 'function'
+    () =>
+      this.headerFilterVisible() &&
+      typeof this.adapter.source()?.distinct === 'function',
   );
 
   protected toggleHeaderFilter(column: ResolvedColumn<T>, event: Event): void {
@@ -2590,7 +2952,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       ?.distinct?.(field)
       .then((values) => {
         if (this.headerFilterField() === field) {
-          this.headerFilterValues.set(values.slice(0, this.effHeaderFilterLimit()));
+          this.headerFilterValues.set(
+            values.slice(0, this.effHeaderFilterLimit()),
+          );
         }
       });
   }
@@ -2611,7 +2975,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Closes popups on clicks outside of them. */
   protected onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement | null;
-    if (this.headerFilterField() !== null && !target?.closest?.('.oge-header-filter-popup')) {
+    if (
+      this.headerFilterField() !== null &&
+      !target?.closest?.('.oge-header-filter-popup')
+    ) {
       this.closeHeaderFilter();
     }
     if (this.chooserOpen() && !target?.closest?.('.oge-chooser-popup')) {
@@ -2626,7 +2993,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected isHeaderFilterActive(column: ResolvedColumn<T>): boolean {
-    return column.field != null && this.store.filter.headerFilterOf(column.field) != null;
+    return (
+      column.field != null &&
+      this.store.filter.headerFilterOf(column.field) != null
+    );
   }
 
   protected isHeaderValueSelected(value: unknown): boolean {
@@ -2644,7 +3014,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const next = current.includes(value)
       ? current.filter((candidate) => candidate !== value)
       : [...current, value];
-    this.store.filter.setHeaderFilter(field, next.length === all.length ? null : next);
+    this.store.filter.setHeaderFilter(
+      field,
+      next.length === all.length ? null : next,
+    );
   }
 
   protected toggleAllHeaderValues(): void {
@@ -2665,7 +3038,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const field = this.headerFilterField();
     const column = field ? this.columnByField(field) : undefined;
     if (column?.lookupItems) return lookupTextOf(column.lookupItems, value);
-    if (column?.dataType === 'date') return formatCellValue(value, 'date', column.format);
+    if (column?.dataType === 'date')
+      return formatCellValue(value, 'date', column.format);
     return String(value);
   }
 

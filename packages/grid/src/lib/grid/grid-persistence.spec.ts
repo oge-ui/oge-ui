@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { OgeColumn } from '../columns/column';
-import { OGE_STATE_STORAGE, type OgeStateStorage } from '@oge-ui/grid/foundation';
+import {
+  OGE_STATE_STORAGE,
+  type OgeStateStorage,
+} from '@oge-ui/grid/foundation';
 import { GridStateStore } from '../state/grid-state.store';
 import { OgeGrid } from './grid';
 
@@ -38,7 +41,12 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 @Component({
   imports: [OgeGrid, OgeColumn],
   template: `
-    <oge-grid [data]="data" keyField="id" stateKey="test-grid" [groupPanel]="true">
+    <oge-grid
+      [data]="data"
+      keyField="id"
+      stateKey="test-grid"
+      [groupPanel]="true"
+    >
       <oge-column field="id" dataType="number" [width]="60" />
       <oge-column field="name" />
       <oge-column field="city" />
@@ -75,9 +83,15 @@ describe('OgeGrid state persistence', () => {
     store.columns.setPinned('id', 'left');
     // hide the 'age' column via its directive model
     const grid = gridOf(first) as unknown as {
-      declaredColumns(): readonly { field(): string | undefined; visible: { set(v: boolean): void } }[];
+      declaredColumns(): readonly {
+        field(): string | undefined;
+        visible: { set(v: boolean): void };
+      }[];
     };
-    grid.declaredColumns().find((c) => c.field() === 'age')?.visible.set(false);
+    grid
+      .declaredColumns()
+      .find((c) => c.field() === 'age')
+      ?.visible.set(false);
     await settle(first);
     await wait(350); // > save debounce
     first.destroy();
@@ -90,24 +104,27 @@ describe('OgeGrid state persistence', () => {
     await settle(second);
     const el2 = second.nativeElement as HTMLElement;
 
-    const nameHeader = Array.from(el2.querySelectorAll('.oge-header-cell')).find((h) =>
-      h.textContent?.includes('Name')
-    );
+    const nameHeader = Array.from(
+      el2.querySelectorAll('.oge-header-cell'),
+    ).find((h) => h.textContent?.includes('Name'));
     expect(nameHeader?.getAttribute('aria-sort')).toBe('ascending');
-    const rows = Array.from(el2.querySelectorAll('.oge-row .oge-cell:nth-child(2)')).map((c) =>
-      c.textContent?.trim()
-    );
+    const rows = Array.from(
+      el2.querySelectorAll('.oge-row .oge-cell:nth-child(2)'),
+    ).map((c) => c.textContent?.trim());
     expect(rows).toEqual(['Ali', 'Cem']); // restored sort applied to data
 
-    expect((el2.querySelector('.oge-header-row') as HTMLElement).style.gridTemplateColumns).toContain(
-      '234px'
-    );
-    const idHeader = Array.from(el2.querySelectorAll('.oge-header-cell')).find((h) =>
-      h.textContent?.includes('Id')
+    expect(
+      (el2.querySelector('.oge-header-row') as HTMLElement).style
+        .gridTemplateColumns,
+    ).toContain('234px');
+    const idHeader = Array.from(el2.querySelectorAll('.oge-header-cell')).find(
+      (h) => h.textContent?.includes('Id'),
     ) as HTMLElement;
     expect(idHeader.classList.contains('oge-pinned')).toBe(true);
     expect(
-      Array.from(el2.querySelectorAll('.oge-header-caption')).map((h) => h.textContent?.trim())
+      Array.from(el2.querySelectorAll('.oge-header-caption')).map((h) =>
+        h.textContent?.trim(),
+      ),
     ).not.toContain('Age');
   });
 });
@@ -117,7 +134,7 @@ describe('OgeGrid async storage + imperative state API', () => {
     const backend = new MemoryStorage();
     backend.set(
       'oge-grid:test-grid',
-      JSON.stringify({ sort: [{ field: 'name', dir: 'asc' }] })
+      JSON.stringify({ sort: [{ field: 'name', dir: 'asc' }] }),
     );
     const asyncStorage: OgeStateStorage = {
       get: async (key) => {
@@ -137,7 +154,9 @@ describe('OgeGrid async storage + imperative state API', () => {
     await wait(40); // let the async get resolve
     await settle(fixture);
     const rows = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.oge-row .oge-cell:nth-child(2)')
+      (fixture.nativeElement as HTMLElement).querySelectorAll(
+        '.oge-row .oge-cell:nth-child(2)',
+      ),
     ).map((c) => c.textContent?.trim());
     expect(rows).toEqual(['Ali', 'Cem']);
   });
@@ -167,7 +186,9 @@ describe('OgeGrid async storage + imperative state API', () => {
     grid.applyState(snapshot);
     await settle(fixture);
     const rows = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll('.oge-row .oge-cell:nth-child(2)')
+      (fixture.nativeElement as HTMLElement).querySelectorAll(
+        '.oge-row .oge-cell:nth-child(2)',
+      ),
     ).map((c) => c.textContent?.trim());
     expect(rows).toEqual(['Ali', 'Cem']); // age desc: 40 first
   });
@@ -182,13 +203,13 @@ describe('OgeGrid header context menu', () => {
 
   function openMenu(el: HTMLElement, headerIndex: number): void {
     el.querySelectorAll('.oge-header-cell')[headerIndex].dispatchEvent(
-      new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
     );
   }
 
   function menuItem(el: HTMLElement, text: string): HTMLButtonElement {
     return Array.from(el.querySelectorAll('.oge-menu-item')).find((b) =>
-      b.textContent?.includes(text)
+      b.textContent?.includes(text),
     ) as HTMLButtonElement;
   }
 
@@ -200,7 +221,9 @@ describe('OgeGrid header context menu', () => {
     expect(el.querySelector('.oge-context-menu')).toBeTruthy();
     menuItem(el, 'Sort descending').click();
     await settle(fixture);
-    expect(el.querySelectorAll('.oge-header-cell')[1].getAttribute('aria-sort')).toBe('descending');
+    expect(
+      el.querySelectorAll('.oge-header-cell')[1].getAttribute('aria-sort'),
+    ).toBe('descending');
 
     openMenu(el, 2); // city
     await settle(fixture);
@@ -213,7 +236,9 @@ describe('OgeGrid header context menu', () => {
     menuItem(el, 'Pin left').click();
     await settle(fixture);
     expect(
-      el.querySelectorAll('.oge-header-cell')[0].classList.contains('oge-pinned')
+      el
+        .querySelectorAll('.oge-header-cell')[0]
+        .classList.contains('oge-pinned'),
     ).toBe(true);
 
     openMenu(el, 3); // age → hide
@@ -221,7 +246,9 @@ describe('OgeGrid header context menu', () => {
     menuItem(el, 'Hide column').click();
     await settle(fixture);
     expect(
-      Array.from(el.querySelectorAll('.oge-header-caption')).map((h) => h.textContent?.trim())
+      Array.from(el.querySelectorAll('.oge-header-caption')).map((h) =>
+        h.textContent?.trim(),
+      ),
     ).not.toContain('Age');
   });
 
@@ -231,13 +258,16 @@ describe('OgeGrid header context menu', () => {
     let ran = '';
     grid.headerContextMenu.subscribe((event) => {
       event.items.length = 0; // drop the built-ins entirely
-      event.items.push({ text: `Pivot by ${event.caption}`, action: () => (ran = event.field) });
+      event.items.push({
+        text: `Pivot by ${event.caption}`,
+        action: () => (ran = event.field),
+      });
     });
 
     openMenu(el, 2); // city
     await settle(fixture);
     const items = Array.from(el.querySelectorAll('.oge-menu-item')).map((i) =>
-      i.textContent?.trim()
+      i.textContent?.trim(),
     );
     expect(items).toEqual(['Pivot by City']);
     menuItem(el, 'Pivot by City').click();

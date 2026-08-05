@@ -68,7 +68,10 @@ export class GridStateStore {
         header: filter.header,
         ...(filter.searchText ? { searchText: filter.searchText } : {}),
       },
-      paging: { pageIndex: this.paging.pageIndex(), pageSize: this.paging.pageSize() },
+      paging: {
+        pageIndex: this.paging.pageIndex(),
+        pageSize: this.paging.pageSize(),
+      },
       columns: {
         order: this.columns.order(),
         widths: [...this.columns.widthOverrides().entries()],
@@ -119,6 +122,6 @@ export class GridStateStore {
         requireTotalCount: true,
       };
     },
-    { equal: loadOptionsEqual }
+    { equal: loadOptionsEqual },
   );
 }

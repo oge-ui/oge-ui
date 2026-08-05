@@ -62,7 +62,8 @@ export interface ColumnSource<T = unknown> {
   /** Extra Angular validators applied to the editor control. */
   readonly validators: () => readonly ValidatorFn[] | undefined;
   readonly cellTemplate: () => { templateRef: TemplateRef<object> } | undefined;
-  readonly headerTemplate: () => { templateRef: TemplateRef<object> } | undefined;
+  readonly headerTemplate: () =>
+    { templateRef: TemplateRef<object> } | undefined;
   readonly editTemplate: () => { templateRef: TemplateRef<object> } | undefined;
 }
 
@@ -77,7 +78,10 @@ export interface ColumnDefLike {
  * `S` is the concrete declarative source type of the host component (e.g.
  * `OgeColumn<T>`), so hosts keep full typing on `source`.
  */
-export interface ResolvedColumn<T = unknown, S extends ColumnSource<T> = ColumnSource<T>> {
+export interface ResolvedColumn<
+  T = unknown,
+  S extends ColumnSource<T> = ColumnSource<T>,
+> {
   /** Position within the full column set (stable under column virtualization). */
   absIndex: number;
   id: string;
@@ -116,7 +120,7 @@ export function buildRowFilterExpr(
   field: string,
   dataType: OgeDataType,
   raw: string,
-  operator?: FilterOperator
+  operator?: FilterOperator,
 ): FilterExpr | null {
   const text = raw.trim();
   if (!text) return null;
@@ -136,20 +140,30 @@ export function buildRowFilterExpr(
 /** Derives a header caption from a (possibly dotted) field path. */
 export function humanize(field: string): string {
   const last = field.split('.').pop() ?? field;
-  const spaced = last.replace(/[_-]+/g, ' ').replace(/([a-z\d])([A-Z])/g, '$1 $2');
+  const spaced = last
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2');
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-export function isDataSource<T>(value: readonly T[] | DataSource<T>): value is DataSource<T> {
-  return !Array.isArray(value) && typeof (value as DataSource<T>).load === 'function';
+export function isDataSource<T>(
+  value: readonly T[] | DataSource<T>,
+): value is DataSource<T> {
+  return (
+    !Array.isArray(value) && typeof (value as DataSource<T>).load === 'function'
+  );
 }
 
 export function mapLookupItems(
   items: readonly unknown[],
-  lookup: OgeColumnLookup
+  lookup: OgeColumnLookup,
 ): readonly LookupItem[] {
-  const valueOf = lookup.valueExpr ? createFieldAccessor(lookup.valueExpr) : (item: unknown) => item;
-  const textOf = lookup.displayExpr ? createFieldAccessor(lookup.displayExpr) : (item: unknown) => item;
+  const valueOf = lookup.valueExpr
+    ? createFieldAccessor(lookup.valueExpr)
+    : (item: unknown) => item;
+  const textOf = lookup.displayExpr
+    ? createFieldAccessor(lookup.displayExpr)
+    : (item: unknown) => item;
   return items.map((item) => ({
     value: valueOf(item),
     text: String(textOf(item) ?? ''),
@@ -158,7 +172,7 @@ export function mapLookupItems(
 
 /** Static lookups resolve once; function (cascading) lookups resolve per row. */
 export function resolveLookupItems(
-  lookup: OgeColumnLookup | undefined
+  lookup: OgeColumnLookup | undefined,
 ): readonly LookupItem[] | undefined {
   if (!lookup || typeof lookup.dataSource === 'function') return undefined;
   return mapLookupItems(lookup.dataSource, lookup);
@@ -169,9 +183,15 @@ export function resolveLookupItems(
  * scanning the list for every rendered cell. Keyed weakly on the (stable)
  * items array; string keys cover both strict and coerced value matches.
  */
-const lookupTextCache = new WeakMap<readonly LookupItem[], Map<string, string>>();
+const lookupTextCache = new WeakMap<
+  readonly LookupItem[],
+  Map<string, string>
+>();
 
-export function lookupTextOf(items: readonly LookupItem[], value: unknown): string {
+export function lookupTextOf(
+  items: readonly LookupItem[],
+  value: unknown,
+): string {
   let map = lookupTextCache.get(items);
   if (!map) {
     map = new Map();
@@ -208,7 +228,10 @@ export interface ColumnModelDeps<T, S extends ColumnSource<T>> {
  * accessors/captions. Hosted as a plain field by the component (slice
  * pattern — no DI).
  */
-export class ColumnModel<T = unknown, S extends ColumnSource<T> = ColumnSource<T>> {
+export class ColumnModel<
+  T = unknown,
+  S extends ColumnSource<T> = ColumnSource<T>,
+> {
   constructor(private readonly deps: ColumnModelDeps<T, S>) {}
 
   /**
@@ -219,7 +242,9 @@ export class ColumnModel<T = unknown, S extends ColumnSource<T> = ColumnSource<T
   readonly adaptiveHiddenIds = computed<ReadonlySet<string>>(() => {
     const hostWidth = this.deps.hostWidth();
     if (!hostWidth) return new Set();
-    const declared = this.deps.declaredColumns().filter((column) => column.visible());
+    const declared = this.deps
+      .declaredColumns()
+      .filter((column) => column.visible());
     if (!declared.length) return new Set();
     const defaultMin = this.deps.defaultMinWidth();
     const widthOf = (column: S): number => {
@@ -228,7 +253,8 @@ export class ColumnModel<T = unknown, S extends ColumnSource<T> = ColumnSource<T
       return column.minWidth() ?? defaultMin;
     };
     let total =
-      this.deps.adaptiveLeadingWidth() + declared.reduce((sum, column) => sum + widthOf(column), 0);
+      this.deps.adaptiveLeadingWidth() +
+      declared.reduce((sum, column) => sum + widthOf(column), 0);
     const hidden = new Set<string>();
     const candidates = declared
       .filter((column) => column.hidingPriority() !== undefined)
@@ -269,7 +295,9 @@ export class ColumnModel<T = unknown, S extends ColumnSource<T> = ColumnSource<T
             filterOperator: column.filterOperator(),
             calculateFilterExpression: column.calculateFilterExpression(),
             pinned: pinOverrides.get(id) ?? column.pinned(),
-            accessor: calculate ?? (field ? createFieldAccessor<T>(field) : () => undefined),
+            accessor:
+              calculate ??
+              (field ? createFieldAccessor<T>(field) : () => undefined),
             format: column.format(),
             editable: column.editable() && field != null && !calculate,
             lookupItems: resolveLookupItems(column.lookup()),
@@ -286,7 +314,9 @@ export class ColumnModel<T = unknown, S extends ColumnSource<T> = ColumnSource<T
     } else {
       const defs = this.deps.columnDefs();
       const fields = defs?.length
-        ? defs.map((def) => (typeof def === 'string' ? { field: def, caption: undefined } : def))
+        ? defs.map((def) =>
+            typeof def === 'string' ? { field: def, caption: undefined } : def,
+          )
         : Object.keys(this.deps.firstDataRow() ?? {}).map((field) => ({
             field,
             caption: undefined,
@@ -322,24 +352,33 @@ export class ColumnModel<T = unknown, S extends ColumnSource<T> = ColumnSource<T
       columns = [...columns].sort((a, b) => {
         const ia = order.indexOf(a.id);
         const ib = order.indexOf(b.id);
-        return (ia < 0 ? Number.MAX_SAFE_INTEGER : ia) - (ib < 0 ? Number.MAX_SAFE_INTEGER : ib);
+        return (
+          (ia < 0 ? Number.MAX_SAFE_INTEGER : ia) -
+          (ib < 0 ? Number.MAX_SAFE_INTEGER : ib)
+        );
       });
     }
     const left = columns.filter((c) => c.pinned === 'left');
     const right = columns.filter((c) => c.pinned === 'right');
     const middle = columns.filter((c) => !c.pinned);
-    return [...left, ...middle, ...right].map((column, index) => ({ ...column, absIndex: index }));
+    return [...left, ...middle, ...right].map((column, index) => ({
+      ...column,
+      absIndex: index,
+    }));
   });
 
   /** Band header cells (caption + span) for the current column order. */
-  readonly bandRow = computed<{ caption: string | null; span: number }[] | null>(() => {
+  readonly bandRow = computed<
+    { caption: string | null; span: number }[] | null
+  >(() => {
     const columns = this.resolvedColumns();
     if (!columns.some((column) => column.bandCaption)) return null;
     const cells: { caption: string | null; span: number }[] = [];
     for (const column of columns) {
       const caption = column.bandCaption ?? null;
       const last = cells[cells.length - 1];
-      if (last && last.caption !== null && last.caption === caption) last.span += 1;
+      if (last && last.caption !== null && last.caption === caption)
+        last.span += 1;
       else cells.push({ caption, span: 1 });
     }
     return cells;

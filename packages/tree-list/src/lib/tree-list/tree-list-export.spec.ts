@@ -47,7 +47,8 @@ describe('OgeTreeList CSV export', () => {
     const fixture = TestBed.createComponent(Host);
     configure?.(fixture.componentInstance);
     await settle(fixture);
-    const grid = fixture.debugElement.children[0].componentInstance as OgeTreeList<Task>;
+    const grid = fixture.debugElement.children[0]
+      .componentInstance as OgeTreeList<Task>;
     return { fixture, grid };
   }
 

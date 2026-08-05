@@ -49,7 +49,7 @@ export interface TreeIndex<T> {
  */
 export function buildTreeIndex<T>(
   data: readonly T[],
-  config: TreeIndexConfig<T>
+  config: TreeIndexConfig<T>,
 ): TreeIndex<T> {
   const policy = config.orphanPolicy ?? 'discard';
   const byKey = new Map<RowKey, T>();
@@ -114,7 +114,7 @@ export function buildTreeIndex<T>(
  */
 export function ancestorsOf(
   index: Pick<TreeIndex<unknown>, 'parentOf'>,
-  key: RowKey
+  key: RowKey,
 ): RowKey[] {
   const out: RowKey[] = [];
   const visited = new Set<RowKey>([key]);

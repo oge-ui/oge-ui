@@ -1,4 +1,10 @@
-import { computed, signal, untracked, type Signal, type WritableSignal } from '@angular/core';
+import {
+  computed,
+  signal,
+  untracked,
+  type Signal,
+  type WritableSignal,
+} from '@angular/core';
 import {
   OffsetTree,
   computeWindow,
@@ -51,14 +57,17 @@ export interface RowVirtualizerModelDeps<T> {
 export class RowVirtualizerModel<T = unknown> {
   constructor(private readonly deps: RowVirtualizerModelDeps<T>) {}
 
-  private readonly windowed = computed(() => this.deps.windowAdapter?.active() ?? false);
+  private readonly windowed = computed(
+    () => this.deps.windowAdapter?.active() ?? false,
+  );
 
   /** Measured row heights by row key (auto row-height mode). */
   readonly measuredHeights = signal<ReadonlyMap<RowKey, number>>(new Map());
 
   /** Whether measured (variable) row heights are in effect this frame. */
   readonly measuring = computed(
-    () => this.deps.autoRowHeight() && this.deps.virtualized() && !this.windowed()
+    () =>
+      this.deps.autoRowHeight() && this.deps.virtualized() && !this.windowed(),
   );
 
   readonly offsetTree = computed<OffsetTree>(() => {
@@ -73,7 +82,8 @@ export class RowVirtualizerModel<T = unknown> {
     return new OffsetTree(nodes.length, (i) => {
       const node = nodes[i];
       return (
-        measured?.get(node.key) ?? (node.kind === 'detail' ? detailHeight : rowHeight)
+        measured?.get(node.key) ??
+        (node.kind === 'detail' ? detailHeight : rowHeight)
       );
     });
   });
@@ -95,13 +105,16 @@ export class RowVirtualizerModel<T = unknown> {
     const anchorIndex = untracked(this.viewStart);
     let changed: Map<RowKey, number> | null = null;
     let deltaAbove = 0;
-    for (const el of viewport.querySelectorAll<HTMLElement>('[data-rowindex]')) {
+    for (const el of viewport.querySelectorAll<HTMLElement>(
+      '[data-rowindex]',
+    )) {
       const index = Number(el.dataset['rowindex']);
       const node = nodes[index];
       const height = el.offsetHeight;
       if (!node || !height) continue;
       const previous =
-        current.get(node.key) ?? (node.kind === 'detail' ? defaults.detail : defaults.row);
+        current.get(node.key) ??
+        (node.kind === 'detail' ? defaults.detail : defaults.row);
       if (Math.abs(height - previous) < 1) continue;
       (changed ??= new Map(current)).set(node.key, height);
       if (index < anchorIndex) deltaAbove += height - previous;
@@ -120,7 +133,7 @@ export class RowVirtualizerModel<T = unknown> {
       this.deps.scrollTop(),
       this.deps.viewportHeight(),
       this.offsetTree(),
-      this.deps.overscan()
+      this.deps.overscan(),
     );
   });
 
@@ -134,14 +147,21 @@ export class RowVirtualizerModel<T = unknown> {
       const rows = windowAdapter.rows();
       const keyOf = windowAdapter.keyOf();
       const start = window?.start ?? 0;
-      const end = window?.end ?? Math.min(windowAdapter.count(), windowAdapter.blockSize);
+      const end =
+        window?.end ?? Math.min(windowAdapter.count(), windowAdapter.blockSize);
       const nodes: RowNode<T>[] = [];
       for (let i = start; i < end; i++) {
         const row = rows.get(i);
         nodes.push(
           row !== undefined
-            ? { kind: 'data', key: keyOf(row, i), data: row, sourceIndex: i, level: 0 }
-            : { kind: 'filler', key: `oge-filler-${i}`, index: i }
+            ? {
+                kind: 'data',
+                key: keyOf(row, i),
+                data: row,
+                sourceIndex: i,
+                level: 0,
+              }
+            : { kind: 'filler', key: `oge-filler-${i}`, index: i },
         );
       }
       return nodes;
@@ -150,7 +170,9 @@ export class RowVirtualizerModel<T = unknown> {
     return window ? nodes.slice(window.start, window.end) : nodes;
   });
 
-  readonly bodyHeight = computed<number | null>(() => this.viewWindow()?.totalHeight ?? null);
+  readonly bodyHeight = computed<number | null>(
+    () => this.viewWindow()?.totalHeight ?? null,
+  );
 
   readonly rowsTransform = computed<string | null>(() => {
     const window = this.viewWindow();

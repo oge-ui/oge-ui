@@ -21,7 +21,10 @@ const TASKS: Task[] = [
 ];
 
 function index(): TreeIndex<Task> {
-  return buildTreeIndex(TASKS, { keyOf: (t) => t.id, parentIdOf: (t) => t.parentId });
+  return buildTreeIndex(TASKS, {
+    keyOf: (t) => t.id,
+    parentIdOf: (t) => t.parentId,
+  });
 }
 
 describe('filterTreeKeys', () => {
@@ -31,13 +34,25 @@ describe('filterTreeKeys', () => {
   });
 
   it('dedupes shared ancestors across multiple matches', () => {
-    const keys = filterTreeKeys(index(), (t) => t.id === 4 || t.id === 3, 'withAncestors');
+    const keys = filterTreeKeys(
+      index(),
+      (t) => t.id === 4 || t.id === 3,
+      'withAncestors',
+    );
     expect([...keys].sort()).toEqual([1, 2, 3, 4]);
   });
 
   it('matchOnly is an alias of withAncestors', () => {
-    const a = filterTreeKeys(index(), (t) => t.title.includes('.1'), 'matchOnly');
-    const b = filterTreeKeys(index(), (t) => t.title.includes('.1'), 'withAncestors');
+    const a = filterTreeKeys(
+      index(),
+      (t) => t.title.includes('.1'),
+      'matchOnly',
+    );
+    const b = filterTreeKeys(
+      index(),
+      (t) => t.title.includes('.1'),
+      'withAncestors',
+    );
     expect(a).toEqual(b);
   });
 

@@ -6,7 +6,10 @@ import type { GridStateSnapshot } from './grid-state-snapshot';
  * the grid snapshot minus row grouping (a tree list has none), plus row
  * expansion. Plain data — no framework types.
  */
-export interface TreeListStateSnapshot extends Omit<GridStateSnapshot, 'group'> {
+export interface TreeListStateSnapshot extends Omit<
+  GridStateSnapshot,
+  'group'
+> {
   expansion?: {
     /**
      * Keys toggled away from the default polarity: collapsed keys when

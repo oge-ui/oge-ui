@@ -24,7 +24,7 @@ export type TreeFilterMode = 'matchOnly' | 'withAncestors' | 'fullBranch';
 export function filterTreeKeys<T>(
   index: TreeIndex<T>,
   predicate: (row: T) => boolean,
-  mode: TreeFilterMode
+  mode: TreeFilterMode,
 ): Set<RowKey> {
   const visible = new Set<RowKey>();
   const matches: RowKey[] = [];

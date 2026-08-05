@@ -18,7 +18,9 @@ function detailNode(key: string, parentKey: number): RowNode<Row> {
   return { kind: 'detail', key, parentKey, data: { id: parentKey } };
 }
 
-const NODES: readonly RowNode<Row>[] = Array.from({ length: 1000 }, (_, i) => dataNode(i));
+const NODES: readonly RowNode<Row>[] = Array.from({ length: 1000 }, (_, i) =>
+  dataNode(i),
+);
 
 interface ModelOverrides {
   flatNodes?: readonly RowNode<Row>[];
@@ -58,7 +60,7 @@ function makeAdapter(over: Partial<RowVirtualizerWindowAdapter<Row>> = {}) {
         [0, { id: 100 }],
         [1, { id: 101 }],
         [3, { id: 103 }],
-      ])
+      ]),
     ),
     keyOf: signal((row: Row) => row.id),
     blockSize: 5,
@@ -79,7 +81,12 @@ describe('RowVirtualizerModel', () => {
 
     it('gives detail rows the detailRowHeight', () => {
       const { model } = createModel({
-        flatNodes: [dataNode(0), dataNode(1), detailNode('det', 1), dataNode(2)],
+        flatNodes: [
+          dataNode(0),
+          dataNode(1),
+          detailNode('det', 1),
+          dataNode(2),
+        ],
       });
       const tree = model.offsetTree();
       expect(tree.heightAt(2)).toBe(200);
@@ -88,7 +95,12 @@ describe('RowVirtualizerModel', () => {
 
     it('honors manually set measured heights while measuring', () => {
       const { model } = createModel({
-        flatNodes: [dataNode(0), dataNode(1), detailNode('det', 1), dataNode(2)],
+        flatNodes: [
+          dataNode(0),
+          dataNode(1),
+          detailNode('det', 1),
+          dataNode(2),
+        ],
         autoRowHeight: true,
       });
       expect(model.measuring()).toBe(true);
@@ -96,7 +108,7 @@ describe('RowVirtualizerModel', () => {
         new Map([
           [1, 90],
           ['det', 64],
-        ])
+        ]),
       );
       const tree = model.offsetTree();
       expect(tree.heightAt(0)).toBe(40); // unmeasured → default
@@ -116,7 +128,12 @@ describe('RowVirtualizerModel', () => {
   describe('viewWindow', () => {
     it('responds to scrollTop, viewportHeight and overscan', () => {
       const { deps, model } = createModel();
-      expect(model.viewWindow()).toEqual({ start: 0, end: 13, offsetY: 0, totalHeight: 40_000 });
+      expect(model.viewWindow()).toEqual({
+        start: 0,
+        end: 13,
+        offsetY: 0,
+        totalHeight: 40_000,
+      });
 
       deps.scrollTop.set(4000);
       expect(model.viewWindow()).toEqual({
@@ -187,8 +204,20 @@ describe('RowVirtualizerModel', () => {
         'data',
         ...Array(7).fill('filler'),
       ]);
-      expect(nodes[0]).toEqual({ kind: 'data', key: 100, data: { id: 100 }, sourceIndex: 0, level: 0 });
-      expect(nodes[3]).toEqual({ kind: 'data', key: 103, data: { id: 103 }, sourceIndex: 3, level: 0 });
+      expect(nodes[0]).toEqual({
+        kind: 'data',
+        key: 100,
+        data: { id: 100 },
+        sourceIndex: 0,
+        level: 0,
+      });
+      expect(nodes[3]).toEqual({
+        kind: 'data',
+        key: 103,
+        data: { id: 103 },
+        sourceIndex: 3,
+        level: 0,
+      });
       expect(nodes[2].key).toBe('oge-filler-2');
       expect(nodes[10].key).toBe('oge-filler-10');
     });
@@ -210,7 +239,9 @@ describe('RowVirtualizerModel', () => {
   describe('scrollRowIntoView', () => {
     it('scrolls down to reveal a row below and up for a row above', () => {
       const fake = { scrollTop: 0, clientHeight: 400 };
-      const { model } = createModel({ viewport: () => fake as unknown as HTMLElement });
+      const { model } = createModel({
+        viewport: () => fake as unknown as HTMLElement,
+      });
 
       model.scrollRowIntoView(50); // rows 50 spans 2000..2040 → align bottom
       expect(fake.scrollTop).toBe(2040 - 400);

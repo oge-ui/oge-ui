@@ -25,7 +25,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 function rowByTitle(el: HTMLElement, title: string): HTMLElement | undefined {
   return Array.from(el.querySelectorAll<HTMLElement>('.oge-row')).find((row) =>
-    (row.textContent ?? '').includes(title)
+    (row.textContent ?? '').includes(title),
   );
 }
 
@@ -55,11 +55,17 @@ describe('OgeTreeList selection', () => {
     const fixture = TestBed.createComponent(Host);
     configure?.(fixture.componentInstance);
     await settle(fixture);
-    return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      el: fixture.nativeElement as HTMLElement,
+    };
   }
 
   it('single mode keeps exactly one row selected', async () => {
-    const { fixture, host, el } = await render((h) => (h.selectionMode = 'single'));
+    const { fixture, host, el } = await render(
+      (h) => (h.selectionMode = 'single'),
+    );
     rowByTitle(el, 'Child A1')?.click();
     await settle(fixture);
     expect(host.selectedKeys).toEqual([2]);
@@ -74,18 +80,24 @@ describe('OgeTreeList selection', () => {
     rowByTitle(el, 'Root A')?.click();
     await settle(fixture);
     rowByTitle(el, 'Child A2')?.dispatchEvent(
-      new MouseEvent('click', { bubbles: true, ctrlKey: true })
+      new MouseEvent('click', { bubbles: true, ctrlKey: true }),
     );
     await settle(fixture);
     expect([...host.selectedKeys].sort()).toEqual([1, 3]);
-    expect(rowByTitle(el, 'Child A2')?.getAttribute('aria-selected')).toBe('true');
-    expect(rowByTitle(el, 'Child A1')?.getAttribute('aria-selected')).toBe('false');
+    expect(rowByTitle(el, 'Child A2')?.getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    expect(rowByTitle(el, 'Child A1')?.getAttribute('aria-selected')).toBe(
+      'false',
+    );
   });
 
   it('checkbox mode renders a leading column and select-all toggles every visible row', async () => {
-    const { fixture, host, el } = await render((h) => (h.selectionMode = 'checkbox'));
+    const { fixture, host, el } = await render(
+      (h) => (h.selectionMode = 'checkbox'),
+    );
     const headerCheckbox = el.querySelector<HTMLInputElement>(
-      '.oge-header-cell.oge-checkbox-cell input'
+      '.oge-header-cell.oge-checkbox-cell input',
     );
     expect(headerCheckbox).toBeTruthy();
     headerCheckbox?.click();
@@ -98,6 +110,8 @@ describe('OgeTreeList selection', () => {
 
   it('selectedKeys input drives the visual selection', async () => {
     const { el } = await render((h) => (h.selectedKeys = [2]));
-    expect(rowByTitle(el, 'Child A1')?.classList.contains('oge-row-selected')).toBe(true);
+    expect(
+      rowByTitle(el, 'Child A1')?.classList.contains('oge-row-selected'),
+    ).toBe(true);
   });
 });

@@ -1,15 +1,15 @@
 @if (searchPanelVisible()) {
-  <div class="oge-toolbar">
-    <div class="oge-toolbar-spacer"></div>
-    <input
-      class="oge-search-input"
-      type="search"
-      [placeholder]="searchPanelOptions().placeholder ?? msg().search"
-      [attr.aria-label]="searchPanelOptions().placeholder ?? msg().search"
-      [style.width.px]="searchPanelOptions().width ?? null"
-      (input)="onSearchInput($any($event.target).value)"
-    />
-  </div>
+<div class="oge-toolbar">
+  <div class="oge-toolbar-spacer"></div>
+  <input
+    class="oge-search-input"
+    type="search"
+    [placeholder]="searchPanelOptions().placeholder ?? msg().search"
+    [attr.aria-label]="searchPanelOptions().placeholder ?? msg().search"
+    [style.width.px]="searchPanelOptions().width ?? null"
+    (input)="onSearchInput($any($event.target).value)"
+  />
+</div>
 }
 <!-- Delegated keyboard handler: focus lives on the tree cells inside (roving tabindex). -->
 <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
@@ -27,291 +27,318 @@
 >
   <div class="oge-header" role="rowgroup">
     @if (bandRow(); as bands) {
-      <div class="oge-band-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
-        @if (rowDragging()) {
-          <div class="oge-band-cell" role="columnheader"></div>
-        }
-        @if (hasCheckboxColumn()) {
-          <div class="oge-band-cell" role="columnheader"></div>
-        }
-        @for (band of bands; track $index) {
-          <div
-            class="oge-band-cell"
-            role="columnheader"
-            [class.oge-band-filled]="band.caption !== null"
-            [style.grid-column]="'span ' + band.span"
-            [attr.aria-colspan]="band.span"
+    <div
+      class="oge-band-row"
+      role="row"
+      [style.grid-template-columns]="gridTemplateColumns()"
+    >
+      @if (rowDragging()) {
+      <div class="oge-band-cell" role="columnheader"></div>
+      } @if (hasCheckboxColumn()) {
+      <div class="oge-band-cell" role="columnheader"></div>
+      } @for (band of bands; track $index) {
+      <div
+        class="oge-band-cell"
+        role="columnheader"
+        [class.oge-band-filled]="band.caption !== null"
+        [style.grid-column]="'span ' + band.span"
+        [attr.aria-colspan]="band.span"
+      >
+        {{ band.caption ?? '' }}
+      </div>
+      }
+    </div>
+    }
+    <div
+      class="oge-header-row"
+      role="row"
+      [style.grid-template-columns]="gridTemplateColumns()"
+    >
+      @if (rowDragging()) {
+      <div
+        class="oge-header-cell oge-drag-cell"
+        role="columnheader"
+        aria-label="Reparent"
+      ></div>
+      } @if (hasCheckboxColumn()) {
+      <div
+        class="oge-header-cell oge-checkbox-cell"
+        role="columnheader"
+        aria-label="Select all"
+      >
+        <input
+          type="checkbox"
+          [checked]="allSelected()"
+          [indeterminate]="someSelected()"
+          [attr.aria-label]="msg().selectAllRows"
+          (change)="toggleSelectAll()"
+        />
+      </div>
+      } @for (column of renderColumns(); track column.id) {
+      <div
+        class="oge-header-cell"
+        role="columnheader"
+        [class.oge-header-sortable]="column.sortable && sortMode() !== 'none'"
+        [class.oge-pinned]="column.pinned !== false"
+        [style.inset-inline-start.px]="pinnedLeftOf(column)"
+        [style.inset-inline-end.px]="pinnedRightOf(column)"
+        [attr.aria-sort]="ariaSortOf(column)"
+        [attr.tabindex]="column.sortable && sortMode() !== 'none' ? 0 : null"
+        (click)="onHeaderClick(column, $event)"
+        (keydown.enter)="onHeaderClick(column, $event)"
+        (keydown.space)="onHeaderClick(column, $event)"
+      >
+        <span class="oge-header-caption">
+          @if (column.headerTemplate) {
+          <ng-container
+            *ngTemplateOutlet="column.headerTemplate; context: headerContext(column)"
+          />
+          } @else { {{ column.caption }} }
+        </span>
+        @if (sortStateOf(column); as sort) {
+        <span class="oge-sort-indicator" aria-hidden="true">
+          <svg
+            viewBox="0 0 16 16"
+            width="11"
+            height="11"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            {{ band.caption ?? '' }}
-          </div>
+            @if (sort.dir === 'asc') {
+            <path d="m3.5 10 4.5-4.5L12.5 10" />
+            } @else {
+            <path d="m3.5 6 4.5 4.5L12.5 6" />
+            }
+          </svg>
+          @if (multiSorted()) {<sub>{{ sort.index }}</sub>}
+        </span>
+        } @if (columnResize()) {
+        <span
+          class="oge-resize-handle"
+          (pointerdown)="onResizeStart(column, $event)"
+        ></span>
         }
       </div>
-    }
-    <div class="oge-header-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
-      @if (rowDragging()) {
-        <div class="oge-header-cell oge-drag-cell" role="columnheader" aria-label="Reparent"></div>
-      }
-      @if (hasCheckboxColumn()) {
-        <div class="oge-header-cell oge-checkbox-cell" role="columnheader" aria-label="Select all">
-          <input
-            type="checkbox"
-            [checked]="allSelected()"
-            [indeterminate]="someSelected()"
-            [attr.aria-label]="msg().selectAllRows"
-            (change)="toggleSelectAll()"
-          />
-        </div>
-      }
-      @for (column of renderColumns(); track column.id) {
-        <div
-          class="oge-header-cell"
-          role="columnheader"
-          [class.oge-header-sortable]="column.sortable && sortMode() !== 'none'"
-          [class.oge-pinned]="column.pinned !== false"
-          [style.inset-inline-start.px]="pinnedLeftOf(column)"
-          [style.inset-inline-end.px]="pinnedRightOf(column)"
-          [attr.aria-sort]="ariaSortOf(column)"
-          [attr.tabindex]="column.sortable && sortMode() !== 'none' ? 0 : null"
-          (click)="onHeaderClick(column, $event)"
-          (keydown.enter)="onHeaderClick(column, $event)"
-          (keydown.space)="onHeaderClick(column, $event)"
-        >
-          <span class="oge-header-caption">
-            @if (column.headerTemplate) {
-              <ng-container *ngTemplateOutlet="column.headerTemplate; context: headerContext(column)" />
-            } @else {
-              {{ column.caption }}
-            }
-          </span>
-          @if (sortStateOf(column); as sort) {
-            <span class="oge-sort-indicator" aria-hidden="true">
-              <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                @if (sort.dir === 'asc') {
-                  <path d="m3.5 10 4.5-4.5L12.5 10" />
-                } @else {
-                  <path d="m3.5 6 4.5 4.5L12.5 6" />
-                }
-              </svg>
-              @if (multiSorted()) {<sub>{{ sort.index }}</sub>}
-            </span>
-          }
-          @if (columnResize()) {
-            <span class="oge-resize-handle" (pointerdown)="onResizeStart(column, $event)"></span>
-          }
-        </div>
       }
     </div>
     @if (filterRowVisible()) {
-      <div class="oge-filter-row" role="row" [style.grid-template-columns]="gridTemplateColumns()">
-        @if (rowDragging()) {
-          <div class="oge-filter-cell" role="gridcell"></div>
-        }
-        @if (hasCheckboxColumn()) {
-          <div class="oge-filter-cell" role="gridcell"></div>
-        }
-        @for (column of renderColumns(); track column.id) {
-          <div
-            class="oge-filter-cell"
-            role="gridcell"
-            [class.oge-pinned]="column.pinned !== false"
-            [style.inset-inline-start.px]="pinnedLeftOf(column)"
-            [style.inset-inline-end.px]="pinnedRightOf(column)"
-          >
-            @if (column.filterable && column.lookupItems; as items) {
-              <select
-                class="oge-filter-input"
-                [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-                (change)="onLookupFilter(column, $any($event.target).value)"
-              >
-                <option value="">{{ msg().selectAllValues }}</option>
-                @for (item of items; track $index) {
-                  <option [value]="$index">{{ item.text }}</option>
-                }
-              </select>
-            } @else if (column.filterable) {
-              @switch (column.dataType) {
-                @case ('boolean') {
-                  <select
-                    class="oge-filter-input"
-                    [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-                    (change)="onFilterSelect(column, $any($event.target).value)"
-                  >
-                    <option value="">{{ msg().selectAllValues }}</option>
-                    <option value="true">{{ msg().booleanTrue }}</option>
-                    <option value="false">{{ msg().booleanFalse }}</option>
-                  </select>
-                }
-                @case ('number') {
-                  <input
-                    class="oge-filter-input"
-                    type="number"
-                    [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-                    (input)="onFilterInput(column, $any($event.target).value)"
-                  />
-                }
-                @case ('date') {
-                  <input
-                    class="oge-filter-input"
-                    type="date"
-                    [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-                    (change)="onFilterSelect(column, $any($event.target).value)"
-                  />
-                }
-                @default {
-                  <input
-                    class="oge-filter-input"
-                    type="text"
-                    [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-                    (input)="onFilterInput(column, $any($event.target).value)"
-                  />
-                }
-              }
-            }
-          </div>
-        }
+    <div
+      class="oge-filter-row"
+      role="row"
+      [style.grid-template-columns]="gridTemplateColumns()"
+    >
+      @if (rowDragging()) {
+      <div class="oge-filter-cell" role="gridcell"></div>
+      } @if (hasCheckboxColumn()) {
+      <div class="oge-filter-cell" role="gridcell"></div>
+      } @for (column of renderColumns(); track column.id) {
+      <div
+        class="oge-filter-cell"
+        role="gridcell"
+        [class.oge-pinned]="column.pinned !== false"
+        [style.inset-inline-start.px]="pinnedLeftOf(column)"
+        [style.inset-inline-end.px]="pinnedRightOf(column)"
+      >
+        @if (column.filterable && column.lookupItems; as items) {
+        <select
+          class="oge-filter-input"
+          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+          (change)="onLookupFilter(column, $any($event.target).value)"
+        >
+          <option value="">{{ msg().selectAllValues }}</option>
+          @for (item of items; track $index) {
+          <option [value]="$index">{{ item.text }}</option>
+          }
+        </select>
+        } @else if (column.filterable) { @switch (column.dataType) { @case
+        ('boolean') {
+        <select
+          class="oge-filter-input"
+          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+          (change)="onFilterSelect(column, $any($event.target).value)"
+        >
+          <option value="">{{ msg().selectAllValues }}</option>
+          <option value="true">{{ msg().booleanTrue }}</option>
+          <option value="false">{{ msg().booleanFalse }}</option>
+        </select>
+        } @case ('number') {
+        <input
+          class="oge-filter-input"
+          type="number"
+          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+          (input)="onFilterInput(column, $any($event.target).value)"
+        />
+        } @case ('date') {
+        <input
+          class="oge-filter-input"
+          type="date"
+          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+          (change)="onFilterSelect(column, $any($event.target).value)"
+        />
+        } @default {
+        <input
+          class="oge-filter-input"
+          type="text"
+          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
+          (input)="onFilterInput(column, $any($event.target).value)"
+        />
+        } } }
       </div>
+      }
+    </div>
     }
   </div>
   <div class="oge-body" [style.height.px]="bodyHeight()">
     <div class="oge-rows" role="rowgroup" [style.transform]="rowsTransform()">
       @for (node of viewNodes(); track node.key; let nodeIndex = $index) {
-        @switch (node.kind) {
-          @case ('data') {
-            <!-- Row click/contextmenu are pointer conveniences; the keyboard path goes
+      @switch (node.kind) { @case ('data') {
+      <!-- Row click/contextmenu are pointer conveniences; the keyboard path goes
                  through the focusable cells (arrows + Space). -->
-            <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-            <div
-              class="oge-row"
-              role="row"
-              [class.oge-row-alt]="rowAlternation() && (viewStart() + nodeIndex) % 2 === 1"
-              [class.oge-row-focused]="focusedRowEnabled() && focusedRowKey() === node.key"
-              [class.oge-row-selected]="selectionMode() !== 'none' && isRowSelected(node.key)"
-              [attr.aria-selected]="ariaSelectedOf(node)"
-              [attr.aria-level]="node.level + 1"
-              [attr.aria-posinset]="node.posInSet"
-              [attr.aria-setsize]="node.setSize"
-              [attr.aria-expanded]="node.hasChildren ? node.expanded : null"
-              [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
-              [attr.data-rowindex]="viewStart() + nodeIndex"
-              [style.height.px]="virtualized() ? effRowHeight() : null"
-              [style.grid-template-columns]="gridTemplateColumns()"
-              [class.oge-drop-target]="dropTargetKey() === node.key"
-              (click)="onRowClick(node, $event)"
-              (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
-              (dragover)="rowDragging() && onRowDragOver(node, $event)"
-              (drop)="rowDragging() && onRowDrop(node, $event)"
+      <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+      <div
+        class="oge-row"
+        role="row"
+        [class.oge-row-alt]="rowAlternation() && (viewStart() + nodeIndex) % 2 === 1"
+        [class.oge-row-focused]="focusedRowEnabled() && focusedRowKey() === node.key"
+        [class.oge-row-selected]="selectionMode() !== 'none' && isRowSelected(node.key)"
+        [attr.aria-selected]="ariaSelectedOf(node)"
+        [attr.aria-level]="node.level + 1"
+        [attr.aria-posinset]="node.posInSet"
+        [attr.aria-setsize]="node.setSize"
+        [attr.aria-expanded]="node.hasChildren ? node.expanded : null"
+        [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
+        [attr.data-rowindex]="viewStart() + nodeIndex"
+        [style.height.px]="virtualized() ? effRowHeight() : null"
+        [style.grid-template-columns]="gridTemplateColumns()"
+        [class.oge-drop-target]="dropTargetKey() === node.key"
+        (click)="onRowClick(node, $event)"
+        (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
+        (dragover)="rowDragging() && onRowDragOver(node, $event)"
+        (drop)="rowDragging() && onRowDrop(node, $event)"
+      >
+        @if (rowDragging()) {
+        <div class="oge-cell oge-drag-cell" role="gridcell">
+          <!-- the click handler only shields the row-click; dragging is pointer-driven -->
+          <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+          <span
+            class="oge-drag-handle"
+            draggable="true"
+            [attr.aria-label]="'Reparent row'"
+            (dragstart)="onRowDragStart(node, $event)"
+            (dragend)="onRowDragEnd()"
+            (click)="$event.stopPropagation()"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="12"
+              height="12"
+              fill="currentColor"
+              aria-hidden="true"
             >
-              @if (rowDragging()) {
-                <div class="oge-cell oge-drag-cell" role="gridcell">
-                  <!-- the click handler only shields the row-click; dragging is pointer-driven -->
-                  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-                  <span
-                    class="oge-drag-handle"
-                    draggable="true"
-                    [attr.aria-label]="'Reparent row'"
-                    (dragstart)="onRowDragStart(node, $event)"
-                    (dragend)="onRowDragEnd()"
-                    (click)="$event.stopPropagation()"
-                  >
-                    <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
-                      <circle cx="5.5" cy="4" r="1.2" /><circle cx="10.5" cy="4" r="1.2" />
-                      <circle cx="5.5" cy="8" r="1.2" /><circle cx="10.5" cy="8" r="1.2" />
-                      <circle cx="5.5" cy="12" r="1.2" /><circle cx="10.5" cy="12" r="1.2" />
-                    </svg>
-                  </span>
-                </div>
-              }
-              @if (hasCheckboxColumn()) {
-                <div class="oge-cell oge-checkbox-cell" role="gridcell">
-                  <input
-                    type="checkbox"
-                    [checked]="rowCheckState(node.key) === 'checked'"
-                    [indeterminate]="rowCheckState(node.key) === 'indeterminate'"
-                    [attr.aria-label]="msg().selectRow"
-                    (click)="$event.stopPropagation()"
-                    (change)="onCheckboxToggle(node)"
-                  />
-                </div>
-              }
-              @for (column of renderColumns(); track column.id) {
-                <div
-                  class="oge-cell"
-                  role="gridcell"
-                  [class.oge-tree-cell]="column.absIndex === 0"
-                  [class.oge-cell-number]="column.dataType === 'number'"
-                  [class.oge-pinned]="column.pinned !== false"
-                  [style.inset-inline-start.px]="pinnedLeftOf(column)"
-                  [style.inset-inline-end.px]="pinnedRightOf(column)"
-                  [attr.data-cell]="viewStart() + nodeIndex + '-' + column.absIndex"
-                  [attr.aria-colindex]="leadingCellCount() + column.absIndex + 1"
-                  [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, column.absIndex) ? 0 : -1"
-                  (focus)="onCellFocus(viewStart() + nodeIndex, column.absIndex)"
-                >
-                  @if (column.absIndex === 0) {
-                    <span
-                      class="oge-tree-indent"
-                      [style.inline-size.px]="node.level * 20"
-                      aria-hidden="true"
-                    ></span>
-                    @if (node.hasChildren) {
-                      <button
-                        type="button"
-                        class="oge-expander-btn oge-tree-expander"
-                        [class.oge-expanded]="node.expanded"
-                        [attr.aria-label]="node.expanded ? msg().collapseRow : msg().expandRow"
-                        tabindex="-1"
-                        (click)="onExpanderClick(node, $event)"
-                      >
-                        <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="m6 3.5 4.5 4.5L6 12.5" />
-                        </svg>
-                      </button>
-                    } @else {
-                      <span class="oge-tree-expander-spacer" aria-hidden="true"></span>
-                    }
-                  }
-                  @if (column.cellTemplate) {
-                    <ng-container
-                      *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
-                    />
-                  } @else {
-                    <span class="oge-tree-cell-text">{{ cellDisplayText(node, column) }}</span>
-                  }
-                </div>
-              }
-            </div>
-          }
-          @case ('filler') {
-            <div
-              class="oge-row oge-filler-row"
-              role="row"
-              [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
-              [style.height.px]="effRowHeight()"
-              [style.grid-template-columns]="gridTemplateColumns()"
+              <circle cx="5.5" cy="4" r="1.2" />
+              <circle cx="10.5" cy="4" r="1.2" />
+              <circle cx="5.5" cy="8" r="1.2" />
+              <circle cx="10.5" cy="8" r="1.2" />
+              <circle cx="5.5" cy="12" r="1.2" />
+              <circle cx="10.5" cy="12" r="1.2" />
+            </svg>
+          </span>
+        </div>
+        } @if (hasCheckboxColumn()) {
+        <div class="oge-cell oge-checkbox-cell" role="gridcell">
+          <input
+            type="checkbox"
+            [checked]="rowCheckState(node.key) === 'checked'"
+            [indeterminate]="rowCheckState(node.key) === 'indeterminate'"
+            [attr.aria-label]="msg().selectRow"
+            (click)="$event.stopPropagation()"
+            (change)="onCheckboxToggle(node)"
+          />
+        </div>
+        } @for (column of renderColumns(); track column.id) {
+        <div
+          class="oge-cell"
+          role="gridcell"
+          [class.oge-tree-cell]="column.absIndex === 0"
+          [class.oge-cell-number]="column.dataType === 'number'"
+          [class.oge-pinned]="column.pinned !== false"
+          [style.inset-inline-start.px]="pinnedLeftOf(column)"
+          [style.inset-inline-end.px]="pinnedRightOf(column)"
+          [attr.data-cell]="viewStart() + nodeIndex + '-' + column.absIndex"
+          [attr.aria-colindex]="leadingCellCount() + column.absIndex + 1"
+          [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, column.absIndex) ? 0 : -1"
+          (focus)="onCellFocus(viewStart() + nodeIndex, column.absIndex)"
+        >
+          @if (column.absIndex === 0) {
+          <span
+            class="oge-tree-indent"
+            [style.inline-size.px]="node.level * 20"
+            aria-hidden="true"
+          ></span>
+          @if (node.hasChildren) {
+          <button
+            type="button"
+            class="oge-expander-btn oge-tree-expander"
+            [class.oge-expanded]="node.expanded"
+            [attr.aria-label]="node.expanded ? msg().collapseRow : msg().expandRow"
+            tabindex="-1"
+            (click)="onExpanderClick(node, $event)"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              @if (rowDragging()) {
-                <div class="oge-cell" role="gridcell" aria-hidden="true"></div>
-              }
-              @if (hasCheckboxColumn()) {
-                <div class="oge-cell" role="gridcell" aria-hidden="true"></div>
-              }
-              @for (column of renderColumns(); track column.id) {
-                <div class="oge-cell" role="gridcell" aria-busy="true">
-                  <span class="oge-skeleton" aria-hidden="true"></span>
-                </div>
-              }
-            </div>
+              <path d="m6 3.5 4.5 4.5L6 12.5" />
+            </svg>
+          </button>
+          } @else {
+          <span class="oge-tree-expander-spacer" aria-hidden="true"></span>
+          } } @if (column.cellTemplate) {
+          <ng-container
+            *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
+          />
+          } @else {
+          <span class="oge-tree-cell-text"
+            >{{ cellDisplayText(node, column) }}</span
+          >
           }
+        </div>
         }
-      } @empty {
-        @if (noDataTemplate(); as noData) {
-          <div class="oge-no-data">
-            <ng-container *ngTemplateOutlet="noData.templateRef" />
-          </div>
-        } @else {
-          <div class="oge-no-data">{{ msg().noData }}</div>
+      </div>
+      } @case ('filler') {
+      <div
+        class="oge-row oge-filler-row"
+        role="row"
+        [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
+        [style.height.px]="effRowHeight()"
+        [style.grid-template-columns]="gridTemplateColumns()"
+      >
+        @if (rowDragging()) {
+        <div class="oge-cell" role="gridcell" aria-hidden="true"></div>
+        } @if (hasCheckboxColumn()) {
+        <div class="oge-cell" role="gridcell" aria-hidden="true"></div>
+        } @for (column of renderColumns(); track column.id) {
+        <div class="oge-cell" role="gridcell" aria-busy="true">
+          <span class="oge-skeleton" aria-hidden="true"></span>
+        </div>
         }
-      }
+      </div>
+      } } } @empty { @if (noDataTemplate(); as noData) {
+      <div class="oge-no-data">
+        <ng-container *ngTemplateOutlet="noData.templateRef" />
+      </div>
+      } @else {
+      <div class="oge-no-data">{{ msg().noData }}</div>
+      } }
     </div>
   </div>
 </div>

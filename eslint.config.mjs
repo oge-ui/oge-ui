@@ -34,7 +34,11 @@ export default [
             },
             {
               sourceTag: 'scope:tree-list',
-              onlyDependOnLibsWithTags: ['scope:tree-list', 'scope:grid', 'scope:core'],
+              onlyDependOnLibsWithTags: [
+                'scope:tree-list',
+                'scope:grid',
+                'scope:core',
+              ],
             },
             {
               sourceTag: 'scope:app',

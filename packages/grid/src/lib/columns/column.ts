@@ -46,9 +46,8 @@ export class OgeColumn<T = unknown> {
   /** Custom sort key for this column (client-side array data only). */
   readonly calculateSortValue = input<(row: T) => unknown>();
   /** Custom filter expression for filter-row/operator-menu input on this column. */
-  readonly calculateFilterExpression = input<
-    (value: unknown, operator: FilterOperator) => FilterExpr | null
-  >();
+  readonly calculateFilterExpression =
+    input<(value: unknown, operator: FilterOperator) => FilterExpr | null>();
   /** Initial sort direction applied on first render (with `sortIndex` for multi-sort order). */
   readonly sortOrder = input<'asc' | 'desc'>();
   readonly sortIndex = input<number>();

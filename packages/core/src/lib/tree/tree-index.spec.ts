@@ -1,4 +1,8 @@
-import { ancestorsOf, buildTreeIndex, type TreeIndexConfig } from './tree-index';
+import {
+  ancestorsOf,
+  buildTreeIndex,
+  type TreeIndexConfig,
+} from './tree-index';
 
 interface Task {
   id: number;
@@ -67,7 +71,10 @@ describe('buildTreeIndex', () => {
 
   it('promotes orphans to roots under promoteToRoot, still counting them', () => {
     const rows: Task[] = [...TASKS, { id: 6, parentId: 999, title: 'lost' }];
-    const index = buildTreeIndex(rows, { ...CONFIG, orphanPolicy: 'promoteToRoot' });
+    const index = buildTreeIndex(rows, {
+      ...CONFIG,
+      orphanPolicy: 'promoteToRoot',
+    });
     expect(index.orphanCount).toBe(1);
     expect(index.roots.map((t) => t.id)).toEqual([1, 5, 6]);
     expect(index.parentOf.get(6)).toBeNull();

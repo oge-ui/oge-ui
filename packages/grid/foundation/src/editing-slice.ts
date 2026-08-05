@@ -18,13 +18,15 @@ export interface OgeEditingOptions {
  */
 export class EditingSlice {
   /** Active single-cell editor (cell/batch modes). */
-  private readonly _editCell = signal<{ key: RowKey; field: string } | null>(null);
+  private readonly _editCell = signal<{ key: RowKey; field: string } | null>(
+    null,
+  );
   /** Row in full edit (row/popup modes). */
   private readonly _editRowKey = signal<RowKey | null>(null);
   /** Pending field changes per row key. */
-  private readonly _changes = signal<ReadonlyMap<RowKey, Readonly<Record<string, unknown>>>>(
-    new Map()
-  );
+  private readonly _changes = signal<
+    ReadonlyMap<RowKey, Readonly<Record<string, unknown>>>
+  >(new Map());
   /** Rows marked for deletion (batch). */
   private readonly _removed = signal<ReadonlySet<RowKey>>(new Set());
   /** Newly added (unsaved) rows, rendered on top. */
@@ -37,7 +39,10 @@ export class EditingSlice {
   readonly added = this._added.asReadonly();
 
   readonly hasPending = computed(
-    () => this._changes().size > 0 || this._removed().size > 0 || this._added().length > 0
+    () =>
+      this._changes().size > 0 ||
+      this._removed().size > 0 ||
+      this._added().length > 0,
   );
 
   startCell(key: RowKey, field: string): void {

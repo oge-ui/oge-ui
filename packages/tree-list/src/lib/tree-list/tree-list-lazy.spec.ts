@@ -44,7 +44,8 @@ class StubLazySource implements DataSource<Node> {
   async load(options: LoadOptions): Promise<LoadResult<Node>> {
     this.log.push(options);
     if (this.gate) await this.gate;
-    const filter = options.filter as { field: string; op: string; value: unknown } | undefined;
+    const filter = options.filter as
+      { field: string; op: string; value: unknown } | undefined;
     const parent = filter?.value ?? null;
     return { data: ROWS.filter((row) => row.parentId === parent) };
   }
@@ -58,13 +59,14 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 function rowTitles(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-row:not(.oge-filler-row)')).map(
-    (row) => row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? ''
+    (row) =>
+      row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? '',
   );
 }
 
 function expanderOf(el: HTMLElement, title: string): HTMLButtonElement | null {
-  const row = Array.from(el.querySelectorAll<HTMLElement>('.oge-row')).find((entry) =>
-    (entry.textContent ?? '').includes(title)
+  const row = Array.from(el.querySelectorAll<HTMLElement>('.oge-row')).find(
+    (entry) => (entry.textContent ?? '').includes(title),
   );
   return row?.querySelector<HTMLButtonElement>('.oge-tree-expander') ?? null;
 }
@@ -90,7 +92,11 @@ describe('OgeTreeList lazy loading', () => {
   async function render() {
     const fixture = TestBed.createComponent(Host);
     await settle(fixture);
-    return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      el: fixture.nativeElement as HTMLElement,
+    };
   }
 
   it('loads only the roots initially, with a parentId-eq-root filter', async () => {
@@ -153,7 +159,12 @@ describe('OgeTreeList lazy loading', () => {
     expanderOf(el, 'Child A1')?.click();
     await settle(fixture);
     await settle(fixture);
-    expect(rowTitles(el)).toEqual(['Root A', 'Child A1', 'Grand A1a', 'Root B']);
+    expect(rowTitles(el)).toEqual([
+      'Root A',
+      'Child A1',
+      'Grand A1a',
+      'Root B',
+    ]);
     expect(host.source.log.length).toBe(3);
     expect(host.source.log[2].filter).toEqual({
       type: 'binary',

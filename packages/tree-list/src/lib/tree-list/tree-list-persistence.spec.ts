@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { OGE_STATE_STORAGE, type OgeStateStorage } from '@oge-ui/grid/foundation';
+import {
+  OGE_STATE_STORAGE,
+  type OgeStateStorage,
+} from '@oge-ui/grid/foundation';
 import { OgeColumn } from '@oge-ui/grid';
 import { OgeTreeList } from './tree-list';
 
@@ -22,18 +25,25 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
 }
 
-const flushSave = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 300));
+const flushSave = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 300));
 
 function rowTitles(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-row')).map(
-    (row) => row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? ''
+    (row) =>
+      row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? '',
   );
 }
 
 @Component({
   imports: [OgeTreeList, OgeColumn],
   template: `
-    <oge-tree-list [data]="data" keyExpr="id" parentIdExpr="parentId" stateKey="tree-a">
+    <oge-tree-list
+      [data]="data"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      stateKey="tree-a"
+    >
       <oge-column field="title" />
     </oge-tree-list>
   `,
@@ -59,7 +69,9 @@ describe('OgeTreeList state persistence', () => {
     let fixture = TestBed.createComponent(Host);
     await settle(fixture);
     let el = fixture.nativeElement as HTMLElement;
-    Array.from(el.querySelectorAll<HTMLButtonElement>('.oge-tree-expander'))[0]?.click();
+    Array.from(
+      el.querySelectorAll<HTMLButtonElement>('.oge-tree-expander'),
+    )[0]?.click();
     await settle(fixture);
     const header = el.querySelector<HTMLElement>('.oge-header-cell');
     header?.click(); // asc
@@ -75,6 +87,8 @@ describe('OgeTreeList state persistence', () => {
     await settle(fixture);
     el = fixture.nativeElement as HTMLElement;
     expect(rowTitles(el)).toEqual(['Root B', 'Root A', 'Child A1']);
-    expect(el.querySelector('.oge-header-cell')?.getAttribute('aria-sort')).toBe('descending');
+    expect(
+      el.querySelector('.oge-header-cell')?.getAttribute('aria-sort'),
+    ).toBe('descending');
   });
 });

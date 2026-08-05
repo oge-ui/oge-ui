@@ -5,7 +5,9 @@ import type { ResolvedColumn } from './column-model';
 /** Minimal column stub — the layout model only reads id/width/minWidth/pinned/absIndex. */
 function col(
   id: string,
-  over: Partial<Pick<ResolvedColumn, 'width' | 'minWidth' | 'pinned' | 'absIndex'>> = {}
+  over: Partial<
+    Pick<ResolvedColumn, 'width' | 'minWidth' | 'pinned' | 'absIndex'>
+  > = {},
 ): ResolvedColumn {
   return { id, pinned: false, absIndex: 0, ...over } as ResolvedColumn;
 }
@@ -21,7 +23,10 @@ interface LayoutOverrides {
   pinnedDefaultWidth?: number;
 }
 
-function createLayout(columns: readonly ResolvedColumn[], over: LayoutOverrides = {}) {
+function createLayout(
+  columns: readonly ResolvedColumn[],
+  over: LayoutOverrides = {},
+) {
   const deps = {
     resolvedColumns: signal(columns),
     colVirtualized: signal(over.colVirtualized ?? false),
@@ -38,7 +43,7 @@ function createLayout(columns: readonly ResolvedColumn[], over: LayoutOverrides 
 
 /** 20 numeric 100px columns for the virtualization tests. */
 const uniformColumns = Array.from({ length: 20 }, (_, i) =>
-  col(`c${i}`, { width: 100, absIndex: i })
+  col(`c${i}`, { width: 100, absIndex: i }),
 );
 
 describe('ColumnLayoutModel', () => {
@@ -51,7 +56,7 @@ describe('ColumnLayoutModel', () => {
           col('c'),
           col('d', { width: '2fr', minWidth: 55 }), // string widths fall back to min
         ],
-        { defaultMinWidth: 80 }
+        { defaultMinWidth: 80 },
       );
       expect(layout.colWidths()).toEqual([100, 60, 80, 55]);
     });
@@ -72,15 +77,17 @@ describe('ColumnLayoutModel', () => {
           trailingTracks: ['90px'],
           defaultMinWidth: 80,
           pinnedDefaultWidth: 120,
-        }
+        },
       );
       expect(layout.gridTemplateColumns()).toBe(
-        '32px 28px 100px 2fr 120px minmax(60px, 1fr) minmax(80px, 1fr) 90px'
+        '32px 28px 100px 2fr 120px minmax(60px, 1fr) minmax(80px, 1fr) 90px',
       );
     });
 
     it('keeps an explicit width on a pinned column instead of the pinned default', () => {
-      const { layout } = createLayout([col('pin', { width: 70, pinned: 'left' })]);
+      const { layout } = createLayout([
+        col('pin', { width: 70, pinned: 'left' }),
+      ]);
       expect(layout.gridTemplateColumns()).toBe('70px');
     });
   });
@@ -95,7 +102,10 @@ describe('ColumnLayoutModel', () => {
     ];
 
     it('chains left offsets from the leading width and right offsets from 0', () => {
-      const { layout } = createLayout(columns, { leadingWidth: 40, pinnedDefaultWidth: 120 });
+      const { layout } = createLayout(columns, {
+        leadingWidth: 40,
+        pinnedDefaultWidth: 120,
+      });
       expect(layout.pinnedOffsets().get('l1')).toEqual({ left: 40 });
       expect(layout.pinnedOffsets().get('l2')).toEqual({ left: 140 });
       // right chain walks the columns in reverse: r2 sits at the edge
@@ -116,7 +126,9 @@ describe('ColumnLayoutModel', () => {
 
   describe('column virtualization window', () => {
     it('renders everything and reports zero spacers when colVirtualized is false', () => {
-      const { deps, layout } = createLayout(uniformColumns, { colVirtualized: false });
+      const { deps, layout } = createLayout(uniformColumns, {
+        colVirtualized: false,
+      });
       expect(layout.renderColumns()).toBe(deps.resolvedColumns());
       expect(layout.colSpacerLeft()).toBe(0);
       expect(layout.colSpacerRight()).toBe(0);
@@ -143,7 +155,7 @@ describe('ColumnLayoutModel', () => {
       expect(layout.colSpacerLeft()).toBe(0);
       expect(layout.colSpacerRight()).toBe(1300);
       expect(layout.gridTemplateColumns()).toBe(
-        ['50px', ...Array(7).fill('100px'), '1300px'].join(' ')
+        ['50px', ...Array(7).fill('100px'), '1300px'].join(' '),
       );
     });
 
@@ -170,7 +182,7 @@ describe('ColumnLayoutModel', () => {
       expect(layout.colSpacerLeft()).toBe(700);
       expect(layout.colSpacerRight()).toBe(300);
       expect(layout.gridTemplateColumns()).toBe(
-        ['700px', ...Array(10).fill('100px'), '300px'].join(' ')
+        ['700px', ...Array(10).fill('100px'), '300px'].join(' '),
       );
 
       deps.scrollLeft.set(0);

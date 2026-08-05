@@ -63,13 +63,17 @@ export function flattenTreeData<T>(config: FlattenTreeConfig<T>): RowNode<T>[] {
   const collapsed = config.collapsedRowKeys ?? EMPTY_SET;
   const expandedDetails = config.expandedDetailKeys ?? EMPTY_SET;
   const visible = config.visibleKeys ?? null;
-  const sortedCache = config.compare ? new Map<readonly T[], readonly T[]>() : null;
+  const sortedCache = config.compare
+    ? new Map<readonly T[], readonly T[]>()
+    : null;
   const path = new Set<RowKey>();
   let sourceIndex = 0;
   let warnedCycle = false;
 
   const isExpanded = (key: RowKey): boolean =>
-    config.expandedRowKeys ? config.expandedRowKeys.has(key) : !collapsed.has(key);
+    config.expandedRowKeys
+      ? config.expandedRowKeys.has(key)
+      : !collapsed.has(key);
 
   const sortBucket = (bucket: readonly T[]): readonly T[] => {
     if (!config.compare || bucket.length < 2) return bucket;
@@ -81,9 +85,15 @@ export function flattenTreeData<T>(config: FlattenTreeConfig<T>): RowNode<T>[] {
   };
 
   const childrenFor = (key: RowKey): readonly T[] | null =>
-    config.index.childrenOf.get(key) ?? config.deferredChildren?.get(key) ?? null;
+    config.index.childrenOf.get(key) ??
+    config.deferredChildren?.get(key) ??
+    null;
 
-  const visitBucket = (bucket: readonly T[], level: number, parentKey: RowKey | null): void => {
+  const visitBucket = (
+    bucket: readonly T[],
+    level: number,
+    parentKey: RowKey | null,
+  ): void => {
     const siblings = visible
       ? sortBucket(bucket).filter((row) => visible.has(config.keyOf(row)))
       : sortBucket(bucket);
@@ -94,13 +104,18 @@ export function flattenTreeData<T>(config: FlattenTreeConfig<T>): RowNode<T>[] {
       if (path.has(key)) {
         if (!warnedCycle) {
           warnedCycle = true;
-          console.warn(`[oge] flattenTreeData: cycle detected at key "${String(key)}" — subtree skipped`);
+          console.warn(
+            `[oge] flattenTreeData: cycle detected at key "${String(key)}" — subtree skipped`,
+          );
         }
         continue;
       }
       const bucketChildren = childrenFor(key);
       const hint = config.hasChildren?.(row);
-      const hasChildren = typeof hint === 'boolean' ? hint : bucketChildren !== null && bucketChildren.length > 0;
+      const hasChildren =
+        typeof hint === 'boolean'
+          ? hint
+          : bucketChildren !== null && bucketChildren.length > 0;
       const expanded = hasChildren && isExpanded(key);
       out.push({
         kind: 'data',
@@ -116,7 +131,12 @@ export function flattenTreeData<T>(config: FlattenTreeConfig<T>): RowNode<T>[] {
       });
       sourceIndex += 1;
       if (expandedDetails.has(key)) {
-        out.push({ kind: 'detail', key: `d:${key}`, parentKey: key, data: row });
+        out.push({
+          kind: 'detail',
+          key: `d:${key}`,
+          parentKey: key,
+          data: row,
+        });
       }
       if (!expanded) continue;
       if (bucketChildren === null) {

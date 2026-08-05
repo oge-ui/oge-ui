@@ -49,12 +49,7 @@ Give it a `DataSource` plus `hasItemsExpr`; children are fetched per expansion
 with `filter: [parentIdExpr, '=', parentKey]` (the root load uses `rootValue`):
 
 ```html
-<oge-tree-list
-  [data]="source"
-  keyExpr="id"
-  parentIdExpr="parentId"
-  hasItemsExpr="hasSubordinates"
-/>
+<oge-tree-list [data]="source" keyExpr="id" parentIdExpr="parentId" hasItemsExpr="hasSubordinates" />
 ```
 
 The server sees a plain filter — an OData backend works out of the box

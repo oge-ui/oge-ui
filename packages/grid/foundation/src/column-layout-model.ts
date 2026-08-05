@@ -1,7 +1,10 @@
 import { computed, type Signal } from '@angular/core';
 import type { ColumnSource, ResolvedColumn } from './column-model';
 
-export interface ColumnLayoutModelDeps<T, S extends ColumnSource<T> = ColumnSource<T>> {
+export interface ColumnLayoutModelDeps<
+  T,
+  S extends ColumnSource<T> = ColumnSource<T>,
+> {
   resolvedColumns: Signal<readonly ResolvedColumn<T, S>[]>;
   /** Whether horizontal (column) virtualization is active — the host decides. */
   colVirtualized: Signal<boolean>;
@@ -25,7 +28,10 @@ export interface ColumnLayoutModelDeps<T, S extends ColumnSource<T> = ColumnSour
  * window over the resolved columns. Hosted as a plain field by the
  * component (slice pattern — no DI).
  */
-export class ColumnLayoutModel<T = unknown, S extends ColumnSource<T> = ColumnSource<T>> {
+export class ColumnLayoutModel<
+  T = unknown,
+  S extends ColumnSource<T> = ColumnSource<T>,
+> {
   /** Extra horizontal pixels rendered on each side of the viewport. */
   private static readonly COL_OVERSCAN_PX = 200;
 
@@ -34,9 +40,13 @@ export class ColumnLayoutModel<T = unknown, S extends ColumnSource<T> = ColumnSo
   /** Effective numeric width per column (fallback: min width) for prefix sums. */
   readonly colWidths = computed<readonly number[]>(() => {
     const defaultMin = this.deps.defaultMinWidth();
-    return this.deps.resolvedColumns().map((column) =>
-      typeof column.width === 'number' ? column.width : (column.minWidth ?? defaultMin)
-    );
+    return this.deps
+      .resolvedColumns()
+      .map((column) =>
+        typeof column.width === 'number'
+          ? column.width
+          : (column.minWidth ?? defaultMin),
+      );
   });
 
   private readonly colRange = computed<{
@@ -49,7 +59,9 @@ export class ColumnLayoutModel<T = unknown, S extends ColumnSource<T> = ColumnSo
     const widths = this.colWidths();
     const viewLeft = this.deps.scrollLeft() - ColumnLayoutModel.COL_OVERSCAN_PX;
     const viewRight =
-      this.deps.scrollLeft() + (this.deps.hostWidth() || 1200) + ColumnLayoutModel.COL_OVERSCAN_PX;
+      this.deps.scrollLeft() +
+      (this.deps.hostWidth() || 1200) +
+      ColumnLayoutModel.COL_OVERSCAN_PX;
     let x = this.deps.leadingWidth();
     let start = widths.length;
     let end = widths.length;
@@ -93,25 +105,31 @@ export class ColumnLayoutModel<T = unknown, S extends ColumnSource<T> = ColumnSo
       const widths = this.colWidths();
       const tracks: string[] = [];
       if (range.spacerLeft > 0) tracks.push(`${range.spacerLeft}px`);
-      for (let i = range.start; i < range.end; i++) tracks.push(`${widths[i]}px`);
+      for (let i = range.start; i < range.end; i++)
+        tracks.push(`${widths[i]}px`);
       if (range.spacerRight > 0) tracks.push(`${range.spacerRight}px`);
       return [...leading, ...tracks, ...trailing].join(' ');
     }
     const tracks = this.deps.resolvedColumns().map((column) => {
       const width = column.width;
       if (typeof width === 'number') return `${width}px`;
-      if (width == null && column.pinned) return `${this.deps.pinnedDefaultWidth()}px`;
+      if (width == null && column.pinned)
+        return `${this.deps.pinnedDefaultWidth()}px`;
       return width ?? `minmax(${column.minWidth ?? defaultMin}px, 1fr)`;
     });
     return [...leading, ...tracks, ...trailing].join(' ');
   });
 
   private pinnedWidth(column: ResolvedColumn<T, S>): number {
-    return typeof column.width === 'number' ? column.width : this.deps.pinnedDefaultWidth();
+    return typeof column.width === 'number'
+      ? column.width
+      : this.deps.pinnedDefaultWidth();
   }
 
   /** Sticky offsets for pinned columns (id → CSS left/right px). */
-  readonly pinnedOffsets = computed<ReadonlyMap<string, { left?: number; right?: number }>>(() => {
+  readonly pinnedOffsets = computed<
+    ReadonlyMap<string, { left?: number; right?: number }>
+  >(() => {
     const offsets = new Map<string, { left?: number; right?: number }>();
     const columns = this.deps.resolvedColumns();
     let left = this.deps.leadingWidth();

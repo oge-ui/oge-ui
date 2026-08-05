@@ -51,8 +51,17 @@ describe('flattenTreeData', () => {
   });
 
   it('skips subtrees of collapsed keys', () => {
-    const flat = flattenTreeData({ index: indexOf(), keyOf, collapsedRowKeys: new Set<RowKey>([2]) });
-    expect(sketch(flat)).toEqual(['1@0(null)+', '2@1(1)-', '3@1(1).', '5@0(null).']);
+    const flat = flattenTreeData({
+      index: indexOf(),
+      keyOf,
+      collapsedRowKeys: new Set<RowKey>([2]),
+    });
+    expect(sketch(flat)).toEqual([
+      '1@0(null)+',
+      '2@1(1)-',
+      '3@1(1).',
+      '5@0(null).',
+    ]);
   });
 
   it('honors expandedRowKeys polarity (default collapsed) and lets it win over collapsedRowKeys', () => {
@@ -62,7 +71,12 @@ describe('flattenTreeData', () => {
       expandedRowKeys: new Set<RowKey>([1]),
       collapsedRowKeys: new Set<RowKey>([1]),
     });
-    expect(sketch(flat)).toEqual(['1@0(null)+', '2@1(1)-', '3@1(1).', '5@0(null).']);
+    expect(sketch(flat)).toEqual([
+      '1@0(null)+',
+      '2@1(1)-',
+      '3@1(1).',
+      '5@0(null).',
+    ]);
   });
 
   it('computes 1-based posInSet/setSize per sibling bucket', () => {
@@ -77,7 +91,11 @@ describe('flattenTreeData', () => {
 
   it('recomputes posInSet/setSize against the visible bucket after filtering', () => {
     const flat = dataRows(
-      flattenTreeData({ index: indexOf(), keyOf, visibleKeys: new Set<RowKey>([1, 3]) })
+      flattenTreeData({
+        index: indexOf(),
+        keyOf,
+        visibleKeys: new Set<RowKey>([1, 3]),
+      }),
     );
     expect(flat.map((n) => n.key)).toEqual([1, 3]);
     const three = flat.find((n) => n.key === 3);
@@ -88,7 +106,11 @@ describe('flattenTreeData', () => {
 
   it('prunes whole subtrees not covered by visibleKeys', () => {
     // 2 visible but its child 4 not: subtree below 4 disappears; 5 filtered out
-    const flat = flattenTreeData({ index: indexOf(), keyOf, visibleKeys: new Set<RowKey>([1, 2]) });
+    const flat = flattenTreeData({
+      index: indexOf(),
+      keyOf,
+      visibleKeys: new Set<RowKey>([1, 2]),
+    });
     expect(dataRows(flat).map((n) => n.key)).toEqual([1, 2]);
   });
 
@@ -99,7 +121,7 @@ describe('flattenTreeData', () => {
         keyOf,
         collapsedRowKeys: new Set<RowKey>([5]),
         hasChildren: (t) => (t.id === 5 ? true : undefined),
-      })
+      }),
     );
     const five = flat.find((n) => n.key === 5);
     expect(five?.hasChildren).toBe(true);
@@ -143,7 +165,7 @@ describe('flattenTreeData', () => {
   it('sorts each sibling bucket via compare without mutating the index', () => {
     const index = indexOf();
     const flat = dataRows(
-      flattenTreeData({ index, keyOf, compare: (a, b) => b.id - a.id })
+      flattenTreeData({ index, keyOf, compare: (a, b) => b.id - a.id }),
     );
     expect(flat.map((n) => n.key)).toEqual([5, 1, 3, 2, 4]);
     // source buckets untouched
@@ -153,7 +175,9 @@ describe('flattenTreeData', () => {
 
   it('keeps data order in buckets when no compare is given', () => {
     const flat = dataRows(flattenTreeData({ index: indexOf(), keyOf }));
-    expect(flat.filter((n) => n.parentKey === 1).map((n) => n.key)).toEqual([2, 3]);
+    expect(flat.filter((n) => n.parentKey === 1).map((n) => n.key)).toEqual([
+      2, 3,
+    ]);
   });
 
   it('emits detail rows after rows in expandedDetailKeys', () => {

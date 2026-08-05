@@ -21,7 +21,10 @@ export interface OgeSavingChangesEvent<T = unknown> {
   cancel: boolean;
 }
 
-export interface EditingModelDeps<T, S extends ColumnSource<T> = ColumnSource<T>> {
+export interface EditingModelDeps<
+  T,
+  S extends ColumnSource<T> = ColumnSource<T>,
+> {
   /** The host's `editing` input: `false` disables editing entirely. */
   editing: Signal<false | OgeEditingOptions>;
   /** Editing state slice: which editor is open plus the pending change set. */
@@ -50,7 +53,10 @@ export interface EditingModelDeps<T, S extends ColumnSource<T> = ColumnSource<T>
  * and reach the DataSource only through `runSave`. Hosted as a plain field by
  * the component (slice pattern — no DI).
  */
-export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<T>> {
+export class EditingModel<
+  T = unknown,
+  S extends ColumnSource<T> = ColumnSource<T>,
+> {
   constructor(private readonly deps: EditingModelDeps<T, S>) {}
 
   readonly editingOptions = computed<OgeEditingOptions | null>(() => {
@@ -60,7 +66,8 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
 
   readonly editMode = computed(() => this.editingOptions()?.mode ?? null);
   readonly canUpdate = computed(
-    () => !!this.editingOptions() && this.editingOptions()?.allowUpdating !== false
+    () =>
+      !!this.editingOptions() && this.editingOptions()?.allowUpdating !== false,
   );
   readonly canDelete = computed(() => !!this.editingOptions()?.allowDeleting);
   readonly canAdd = computed(() => !!this.editingOptions()?.allowAdding);
@@ -72,7 +79,8 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
     return this.deps
       .flatNodes()
       .find(
-        (candidate): candidate is DataRowNode<T> => candidate.kind === 'data' && candidate.key === key
+        (candidate): candidate is DataRowNode<T> =>
+          candidate.kind === 'data' && candidate.key === key,
       );
   }
 
@@ -95,7 +103,10 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
 
   isRowEditing(key: RowKey): boolean {
     const mode = this.editMode();
-    return (mode === 'row' || mode === 'form') && this.deps.slice.editRowKey() === key;
+    return (
+      (mode === 'row' || mode === 'form') &&
+      this.deps.slice.editRowKey() === key
+    );
   }
 
   /** Form mode: the row whose cells are replaced by the inline form. */
@@ -103,7 +114,10 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
     return this.editMode() === 'form' && this.deps.slice.editRowKey() === key;
   }
 
-  isCellEditorOpen(node: DataRowNode<T>, column: ResolvedColumn<T, S>): boolean {
+  isCellEditorOpen(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T, S>,
+  ): boolean {
     if (!column.editable || !column.field || !this.canUpdate()) return false;
     const mode = this.editMode();
     if (mode === 'cell' || mode === 'batch') {
@@ -113,42 +127,55 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
   }
 
   /** Reactive controls for the active editor(s), keyed `key::field`. */
-  readonly activeControls = computed<ReadonlyMap<string, FormControl<unknown>>>(() => {
-    const map = new Map<string, FormControl<unknown>>();
-    const mode = this.editMode();
-    if (!mode) return map;
-    const cell = this.deps.slice.editCell();
-    const rowKey = this.deps.slice.editRowKey();
-    const targetKey = cell?.key ?? rowKey;
-    if (targetKey === null || targetKey === undefined) return map;
-    const node = this.dataNodeOf(targetKey);
-    if (!node) return map;
-    for (const column of this.deps.columns()) {
-      const field = column.field;
-      if (!field || !column.editable) continue;
-      if (cell && field !== cell.field) continue;
-      const validators = [...(column.source?.validators() ?? [])];
-      if (column.source?.required()) validators.push(Validators.required);
-      map.set(
-        `${String(targetKey)}::${field}`,
-        new FormControl<unknown>(untracked(() => this.displayValue(node, column)), {
-          validators,
-        })
-      );
-    }
-    return map;
-  });
+  readonly activeControls = computed<ReadonlyMap<string, FormControl<unknown>>>(
+    () => {
+      const map = new Map<string, FormControl<unknown>>();
+      const mode = this.editMode();
+      if (!mode) return map;
+      const cell = this.deps.slice.editCell();
+      const rowKey = this.deps.slice.editRowKey();
+      const targetKey = cell?.key ?? rowKey;
+      if (targetKey === null || targetKey === undefined) return map;
+      const node = this.dataNodeOf(targetKey);
+      if (!node) return map;
+      for (const column of this.deps.columns()) {
+        const field = column.field;
+        if (!field || !column.editable) continue;
+        if (cell && field !== cell.field) continue;
+        const validators = [...(column.source?.validators() ?? [])];
+        if (column.source?.required()) validators.push(Validators.required);
+        map.set(
+          `${String(targetKey)}::${field}`,
+          new FormControl<unknown>(
+            untracked(() => this.displayValue(node, column)),
+            {
+              validators,
+            },
+          ),
+        );
+      }
+      return map;
+    },
+  );
 
-  editControl(node: DataRowNode<T>, column: ResolvedColumn<T, S>): FormControl<unknown> {
-    return this.activeControls().get(`${String(node.key)}::${column.field}`) as FormControl<unknown>;
+  editControl(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T, S>,
+  ): FormControl<unknown> {
+    return this.activeControls().get(
+      `${String(node.key)}::${column.field}`,
+    ) as FormControl<unknown>;
   }
 
   /** Row merged with its open editors' current values (cascading lookups). */
   private draftRowOf(node: DataRowNode<T>): T {
     const prefix = `${String(node.key)}::`;
-    const draft: Record<string, unknown> = { ...(node.data as Record<string, unknown>) };
+    const draft: Record<string, unknown> = {
+      ...(node.data as Record<string, unknown>),
+    };
     for (const [mapKey, control] of untracked(this.activeControls)) {
-      if (mapKey.startsWith(prefix)) draft[mapKey.slice(prefix.length)] = control.value;
+      if (mapKey.startsWith(prefix))
+        draft[mapKey.slice(prefix.length)] = control.value;
     }
     return draft as T;
   }
@@ -156,25 +183,37 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
   /** Editor option list — cascading (function) lookups see the row's draft. */
   lookupItemsFor(
     node: DataRowNode<T>,
-    column: ResolvedColumn<T, S>
+    column: ResolvedColumn<T, S>,
   ): readonly LookupItem[] | undefined {
     const lookup = column.lookup;
     if (lookup && typeof lookup.dataSource === 'function') {
       return mapLookupItems(
-        (lookup.dataSource as (row: T) => readonly unknown[])(this.draftRowOf(node)),
-        lookup
+        (lookup.dataSource as (row: T) => readonly unknown[])(
+          this.draftRowOf(node),
+        ),
+        lookup,
       );
     }
     return column.lookupItems;
   }
 
-  private editorValue(control: FormControl<unknown>, column: ResolvedColumn<T, S>): unknown {
+  private editorValue(
+    control: FormControl<unknown>,
+    column: ResolvedColumn<T, S>,
+  ): unknown {
     const value = control.value;
     if (column.lookupItems) {
-      const match = column.lookupItems.find((item) => String(item.value) === String(value));
+      const match = column.lookupItems.find(
+        (item) => String(item.value) === String(value),
+      );
       return match ? match.value : value;
     }
-    if (column.dataType === 'number' && value !== null && value !== '' && value !== undefined) {
+    if (
+      column.dataType === 'number' &&
+      value !== null &&
+      value !== '' &&
+      value !== undefined
+    ) {
       const parsed = Number(value);
       return Number.isNaN(parsed) ? value : parsed;
     }
@@ -185,8 +224,12 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
   commitActiveCell(): void {
     const cell = this.deps.slice.editCell();
     if (!cell) return;
-    const column = this.deps.columns().find((candidate) => candidate.field === cell.field);
-    const control = this.activeControls().get(`${String(cell.key)}::${cell.field}`);
+    const column = this.deps
+      .columns()
+      .find((candidate) => candidate.field === cell.field);
+    const control = this.activeControls().get(
+      `${String(cell.key)}::${cell.field}`,
+    );
     if (!column || !control) return;
     if (control.invalid) {
       control.markAsTouched();
@@ -208,7 +251,11 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
       return;
     }
     void this.runSave([
-      { type: 'update', key: cell.key, data: { [cell.field]: value } as OgeDataChange<T>['data'] },
+      {
+        type: 'update',
+        key: cell.key,
+        data: { [cell.field]: value } as OgeDataChange<T>['data'],
+      },
     ]);
   }
 
@@ -223,19 +270,27 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
   onEditorBlur(): void {
     const cell = this.deps.slice.editCell();
     if (!cell) return;
-    const control = this.activeControls().get(`${String(cell.key)}::${cell.field}`);
+    const control = this.activeControls().get(
+      `${String(cell.key)}::${cell.field}`,
+    );
     if (control && control.valid) this.commitActiveCell();
   }
 
   /** Tab inside a cell editor: commit and open the next editable column. */
-  commitAndNext(node: DataRowNode<T>, column: ResolvedColumn<T, S>, event: Event): void {
+  commitAndNext(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T, S>,
+    event: Event,
+  ): void {
     const mode = this.editMode();
     if (mode !== 'cell' && mode !== 'batch') return;
     event.preventDefault();
     this.commitActiveCell();
     const columns = this.deps.columns();
     const from = columns.findIndex((candidate) => candidate.id === column.id);
-    const next = columns.slice(from + 1).find((candidate) => candidate.editable && candidate.field);
+    const next = columns
+      .slice(from + 1)
+      .find((candidate) => candidate.editable && candidate.field);
     if (next?.field) this.deps.slice.startCell(node.key, next.field);
   }
 
@@ -264,7 +319,10 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
         continue;
       }
       const value = this.editorValue(control, column);
-      if (value !== column.accessor(node.data) || this.deps.slice.isAdded(rowKey)) {
+      if (
+        value !== column.accessor(node.data) ||
+        this.deps.slice.isAdded(rowKey)
+      ) {
         data[field] = value;
       }
     }
@@ -274,7 +332,9 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
       return;
     }
     const type = this.deps.slice.isAdded(rowKey) ? 'insert' : 'update';
-    void this.runSave([{ type, key: rowKey, data: data as OgeDataChange<T>['data'] }]);
+    void this.runSave([
+      { type, key: rowKey, data: data as OgeDataChange<T>['data'] },
+    ]);
   }
 
   deleteRow(node: DataRowNode<T>, event?: Event): void {
@@ -303,7 +363,12 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
     const key = `oge-new-${++this.newRowCounter}`;
     this.deps.slice.addRow(key);
     const mode = this.editMode();
-    if (mode === 'row' || mode === 'popup' || mode === 'form' || mode === 'cell') {
+    if (
+      mode === 'row' ||
+      mode === 'popup' ||
+      mode === 'form' ||
+      mode === 'cell'
+    ) {
       this.deps.slice.startRow(key);
     }
   }
@@ -322,7 +387,11 @@ export class EditingModel<T = unknown, S extends ColumnSource<T> = ColumnSource<
     }
     for (const [key, data] of editing.changes()) {
       if (editing.isAdded(key) || editing.removed().has(key)) continue;
-      changes.push({ type: 'update', key, data: data as OgeDataChange<T>['data'] });
+      changes.push({
+        type: 'update',
+        key,
+        data: data as OgeDataChange<T>['data'],
+      });
     }
     for (const key of editing.removed()) {
       if (editing.isAdded(key)) continue;

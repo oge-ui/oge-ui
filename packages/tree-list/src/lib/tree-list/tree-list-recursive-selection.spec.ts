@@ -25,10 +25,12 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 }
 
 function checkboxOf(el: HTMLElement, title: string): HTMLInputElement | null {
-  const row = Array.from(el.querySelectorAll<HTMLElement>('.oge-row')).find((entry) =>
-    (entry.textContent ?? '').includes(title)
+  const row = Array.from(el.querySelectorAll<HTMLElement>('.oge-row')).find(
+    (entry) => (entry.textContent ?? '').includes(title),
   );
-  return row?.querySelector<HTMLInputElement>('.oge-checkbox-cell input') ?? null;
+  return (
+    row?.querySelector<HTMLInputElement>('.oge-checkbox-cell input') ?? null
+  );
 }
 
 @Component({
@@ -56,7 +58,11 @@ describe('OgeTreeList recursive selection', () => {
   async function render() {
     const fixture = TestBed.createComponent(Host);
     await settle(fixture);
-    return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      el: fixture.nativeElement as HTMLElement,
+    };
   }
 
   it('checking a parent cascades to all descendants', async () => {
@@ -92,7 +98,8 @@ describe('OgeTreeList recursive selection', () => {
     const { fixture, el } = await render();
     checkboxOf(el, 'Root A')?.click();
     await settle(fixture);
-    const grid = fixture.debugElement.children[0].componentInstance as OgeTreeList<Task>;
+    const grid = fixture.debugElement.children[0]
+      .componentInstance as OgeTreeList<Task>;
     expect(grid.getSelectedRowKeys('all').sort()).toEqual([1, 2, 3, 4]);
     expect(grid.getSelectedRowKeys('leavesOnly').sort()).toEqual([3, 4]);
     expect(grid.getSelectedRowKeys('excludeRecursive')).toEqual([1]);

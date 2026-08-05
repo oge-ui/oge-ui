@@ -148,7 +148,14 @@ export const OGE_DEFAULT_MESSAGES: OgeGridMessages = {
   logicOr: 'Or',
   apply: 'Apply',
   filterValuePlaceholder: 'Value',
-  summaryLabels: { sum: 'Sum', avg: 'Avg', min: 'Min', max: 'Max', count: 'Count', custom: 'Custom' },
+  summaryLabels: {
+    sum: 'Sum',
+    avg: 'Avg',
+    min: 'Min',
+    max: 'Max',
+    count: 'Count',
+    custom: 'Custom',
+  },
   groupSummaryPattern: '{label} of {column}: {value}',
   totalSummaryPattern: '{label}: {value}',
 };
@@ -183,9 +190,12 @@ export const OGE_DEFAULT_GRID_CONFIG: OgeGridConfig = {
   messages: OGE_DEFAULT_MESSAGES,
 };
 
-export const OGE_GRID_CONFIG = new InjectionToken<OgeGridConfig>('OGE_GRID_CONFIG', {
-  factory: () => OGE_DEFAULT_GRID_CONFIG,
-});
+export const OGE_GRID_CONFIG = new InjectionToken<OgeGridConfig>(
+  'OGE_GRID_CONFIG',
+  {
+    factory: () => OGE_DEFAULT_GRID_CONFIG,
+  },
+);
 
 export type OgeGridConfigInput = Partial<Omit<OgeGridConfig, 'messages'>> & {
   messages?: Partial<OgeGridMessages>;
@@ -215,6 +225,12 @@ export function provideOgeGridConfig(config: OgeGridConfigInput): Provider {
   };
 }
 
-export function formatPattern(pattern: string, values: Record<string, string>): string {
-  return pattern.replace(/\{(\w+)\}/g, (match, key: string) => values[key] ?? match);
+export function formatPattern(
+  pattern: string,
+  values: Record<string, string>,
+): string {
+  return pattern.replace(
+    /\{(\w+)\}/g,
+    (match, key: string) => values[key] ?? match,
+  );
 }

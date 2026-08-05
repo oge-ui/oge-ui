@@ -25,7 +25,10 @@ const TASKS: Task[] = [
 ];
 
 function index(): TreeIndex<Task> {
-  return buildTreeIndex(TASKS, { keyOf: (t) => t.id, parentIdOf: (t) => t.parentId });
+  return buildTreeIndex(TASKS, {
+    keyOf: (t) => t.id,
+    parentIdOf: (t) => t.parentId,
+  });
 }
 
 const keys = (s: ReadonlySet<RowKey> | RowKey[]) => [...s].sort();
@@ -53,7 +56,10 @@ describe('computeTreeCheckStates', () => {
   });
 
   it('checks the full chain when every descendant is selected', () => {
-    const states = computeTreeCheckStates(index(), new Set<RowKey>([2, 3, 4, 5]));
+    const states = computeTreeCheckStates(
+      index(),
+      new Set<RowKey>([2, 3, 4, 5]),
+    );
     expect(states.get(1)).toBe('checked');
   });
 
@@ -106,19 +112,27 @@ describe('resolveSelectedKeys', () => {
   const selected = new Set<RowKey>([1, 2, 4, 5, 6]);
 
   it("'all' returns every selected key in index insertion order", () => {
-    expect(resolveSelectedKeys(index(), selected, 'all')).toEqual([1, 2, 4, 5, 6]);
+    expect(resolveSelectedKeys(index(), selected, 'all')).toEqual([
+      1, 2, 4, 5, 6,
+    ]);
   });
 
   it("'leavesOnly' keeps only selected keys without children", () => {
-    expect(resolveSelectedKeys(index(), selected, 'leavesOnly')).toEqual([4, 5, 6]);
+    expect(resolveSelectedKeys(index(), selected, 'leavesOnly')).toEqual([
+      4, 5, 6,
+    ]);
   });
 
   it("'excludeRecursive' keeps top-most selected roots of selected subtrees", () => {
-    expect(resolveSelectedKeys(index(), selected, 'excludeRecursive')).toEqual([1, 6]);
+    expect(resolveSelectedKeys(index(), selected, 'excludeRecursive')).toEqual([
+      1, 6,
+    ]);
   });
 
   it("'excludeRecursive' keeps a child whose parent is unselected", () => {
     const partial = new Set<RowKey>([4, 5]);
-    expect(resolveSelectedKeys(index(), partial, 'excludeRecursive')).toEqual([4, 5]);
+    expect(resolveSelectedKeys(index(), partial, 'excludeRecursive')).toEqual([
+      4, 5,
+    ]);
   });
 });

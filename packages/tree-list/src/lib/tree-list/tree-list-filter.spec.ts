@@ -26,14 +26,15 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 function rowTitles(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-row')).map(
-    (row) => row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? ''
+    (row) =>
+      row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? '',
   );
 }
 
 async function typeFilter(
   fixture: ComponentFixture<unknown>,
   el: HTMLElement,
-  text: string
+  text: string,
 ): Promise<void> {
   const input = el.querySelector<HTMLInputElement>('.oge-filter-input');
   if (!input) throw new Error('filter input not found');
@@ -69,7 +70,11 @@ describe('OgeTreeList filtering', () => {
     const fixture = TestBed.createComponent(Host);
     configure?.(fixture.componentInstance);
     await settle(fixture);
-    return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      el: fixture.nativeElement as HTMLElement,
+    };
   }
 
   it('withAncestors keeps the ancestor chain of matches visible', async () => {
@@ -79,7 +84,9 @@ describe('OgeTreeList filtering', () => {
   });
 
   it('fullBranch also keeps the descendants of matches', async () => {
-    const { fixture, el } = await render((host) => (host.filterMode = 'fullBranch'));
+    const { fixture, el } = await render(
+      (host) => (host.filterMode = 'fullBranch'),
+    );
     await typeFilter(fixture, el, 'Beta');
     expect(rowTitles(el)).toEqual(['Alpha', 'Beta', 'Gamma']);
   });
@@ -88,7 +95,13 @@ describe('OgeTreeList filtering', () => {
     const { fixture, el } = await render();
     await typeFilter(fixture, el, 'Gamma');
     await typeFilter(fixture, el, '');
-    expect(rowTitles(el)).toEqual(['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon']);
+    expect(rowTitles(el)).toEqual([
+      'Alpha',
+      'Beta',
+      'Gamma',
+      'Delta',
+      'Epsilon',
+    ]);
   });
 
   it('the search panel matches any visible column and keeps ancestors', async () => {

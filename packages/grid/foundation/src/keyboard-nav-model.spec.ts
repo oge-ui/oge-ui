@@ -1,6 +1,9 @@
 import { signal } from '@angular/core';
 import type { RowNode } from '@oge-ui/core';
-import { KeyboardNavModel, type KeyboardNavTreeHooks } from './keyboard-nav-model';
+import {
+  KeyboardNavModel,
+  type KeyboardNavTreeHooks,
+} from './keyboard-nav-model';
 
 function dataNode(key: string, i: number): RowNode {
   return { kind: 'data', key, data: {}, sourceIndex: i, level: 0 };
@@ -63,7 +66,7 @@ function makeTree(
     expanded?: (row: number) => boolean;
     parent?: (row: number) => number;
     firstChild?: (row: number) => number;
-  } = {}
+  } = {},
 ) {
   const toggles: Array<{ row: number; expand: boolean }> = [];
   const hooks: KeyboardNavTreeHooks = {
@@ -104,10 +107,13 @@ describe('KeyboardNavModel', () => {
       { from: 1, direction: 1 as const, steps: 99, expected: 6 }, // clamps at the last data row
       { from: 6, direction: 1 as const, steps: 1, expected: 6 },
       { from: 1, direction: -1 as const, steps: 1, expected: 1 }, // nothing above but a group
-    ])('from $from dir $direction steps $steps → $expected', ({ from, direction, steps, expected }) => {
-      const { nav } = createNav();
-      expect(nav.moveFocusRow(from, direction, steps)).toBe(expected);
-    });
+    ])(
+      'from $from dir $direction steps $steps → $expected',
+      ({ from, direction, steps, expected }) => {
+        const { nav } = createNav();
+        expect(nav.moveFocusRow(from, direction, steps)).toBe(expected);
+      },
+    );
   });
 
   describe('handleKey', () => {
@@ -145,14 +151,62 @@ describe('KeyboardNavModel', () => {
     });
 
     it.each([
-      { name: 'LTR ArrowRight advances', rtl: false, k: 'ArrowRight', col: 1, expected: 2 },
-      { name: 'LTR ArrowRight clamps at last', rtl: false, k: 'ArrowRight', col: 2, expected: 2 },
-      { name: 'LTR ArrowLeft retreats', rtl: false, k: 'ArrowLeft', col: 1, expected: 0 },
-      { name: 'LTR ArrowLeft clamps at 0', rtl: false, k: 'ArrowLeft', col: 0, expected: 0 },
-      { name: 'RTL ArrowRight retreats', rtl: true, k: 'ArrowRight', col: 1, expected: 0 },
-      { name: 'RTL ArrowRight clamps at 0', rtl: true, k: 'ArrowRight', col: 0, expected: 0 },
-      { name: 'RTL ArrowLeft advances', rtl: true, k: 'ArrowLeft', col: 1, expected: 2 },
-      { name: 'RTL ArrowLeft clamps at last', rtl: true, k: 'ArrowLeft', col: 2, expected: 2 },
+      {
+        name: 'LTR ArrowRight advances',
+        rtl: false,
+        k: 'ArrowRight',
+        col: 1,
+        expected: 2,
+      },
+      {
+        name: 'LTR ArrowRight clamps at last',
+        rtl: false,
+        k: 'ArrowRight',
+        col: 2,
+        expected: 2,
+      },
+      {
+        name: 'LTR ArrowLeft retreats',
+        rtl: false,
+        k: 'ArrowLeft',
+        col: 1,
+        expected: 0,
+      },
+      {
+        name: 'LTR ArrowLeft clamps at 0',
+        rtl: false,
+        k: 'ArrowLeft',
+        col: 0,
+        expected: 0,
+      },
+      {
+        name: 'RTL ArrowRight retreats',
+        rtl: true,
+        k: 'ArrowRight',
+        col: 1,
+        expected: 0,
+      },
+      {
+        name: 'RTL ArrowRight clamps at 0',
+        rtl: true,
+        k: 'ArrowRight',
+        col: 0,
+        expected: 0,
+      },
+      {
+        name: 'RTL ArrowLeft advances',
+        rtl: true,
+        k: 'ArrowLeft',
+        col: 1,
+        expected: 2,
+      },
+      {
+        name: 'RTL ArrowLeft clamps at last',
+        rtl: true,
+        k: 'ArrowLeft',
+        col: 2,
+        expected: 2,
+      },
     ])('$name', ({ rtl, k, col, expected }) => {
       const { nav } = createNav({ rtl });
       nav.onCellFocus(3, col);
@@ -194,7 +248,10 @@ describe('KeyboardNavModel', () => {
     ];
 
     it('expands a collapsed expandable row on the logical expand key', () => {
-      const { hooks, toggles } = makeTree({ expandable: () => true, expanded: () => false });
+      const { hooks, toggles } = makeTree({
+        expandable: () => true,
+        expanded: () => false,
+      });
       const { nav } = createNav({ flatNodes: ALL_DATA, tree: hooks });
       nav.onCellFocus(1, 0);
       expect(nav.handleKey(key('ArrowRight'))).toBe(true);
@@ -228,7 +285,10 @@ describe('KeyboardNavModel', () => {
     });
 
     it('collapses an expanded row on the logical collapse key', () => {
-      const { hooks, toggles } = makeTree({ expandable: () => true, expanded: () => true });
+      const { hooks, toggles } = makeTree({
+        expandable: () => true,
+        expanded: () => true,
+      });
       const { nav } = createNav({ flatNodes: ALL_DATA, tree: hooks });
       nav.onCellFocus(1, 0);
       expect(nav.handleKey(key('ArrowLeft'))).toBe(true);
@@ -260,7 +320,11 @@ describe('KeyboardNavModel', () => {
         expandable: () => true,
         expanded: (row) => row === 1,
       });
-      const { nav } = createNav({ flatNodes: ALL_DATA, rtl: true, tree: hooks });
+      const { nav } = createNav({
+        flatNodes: ALL_DATA,
+        rtl: true,
+        tree: hooks,
+      });
       nav.onCellFocus(2, 0); // collapsed
       expect(nav.handleKey(key('ArrowLeft'))).toBe(true); // logical expand in RTL
       expect(toggles).toEqual([{ row: 2, expand: true }]);
@@ -273,7 +337,10 @@ describe('KeyboardNavModel', () => {
     });
 
     it('ignores tree semantics outside column 0', () => {
-      const { hooks, toggles } = makeTree({ expandable: () => true, expanded: () => false });
+      const { hooks, toggles } = makeTree({
+        expandable: () => true,
+        expanded: () => false,
+      });
       const { nav } = createNav({ flatNodes: ALL_DATA, tree: hooks });
       nav.onCellFocus(1, 1);
       expect(nav.handleKey(key('ArrowRight'))).toBe(true);

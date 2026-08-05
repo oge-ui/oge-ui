@@ -19,7 +19,7 @@ export type CheckState = 'checked' | 'unchecked' | 'indeterminate';
  */
 export function computeTreeCheckStates<T>(
   index: TreeIndex<T>,
-  selected: ReadonlySet<RowKey>
+  selected: ReadonlySet<RowKey>,
 ): Map<RowKey, CheckState> {
   const states = new Map<RowKey, CheckState>();
   // iterative post-order: push (key, entered); children resolve before parents
@@ -78,7 +78,7 @@ export function toggleTreeSelection<T>(
   index: TreeIndex<T>,
   selected: ReadonlySet<RowKey>,
   key: RowKey,
-  recursive: boolean
+  recursive: boolean,
 ): Set<RowKey> {
   const next = new Set(selected);
   const turnOn = !next.has(key);
@@ -101,7 +101,8 @@ export function toggleTreeSelection<T>(
   for (const ancestor of ancestorsOf(index, key)) {
     const children = index.childrenOf.get(ancestor) ?? [];
     const allSelected =
-      children.length > 0 && children.every((child) => next.has(keyIn(index, child)));
+      children.length > 0 &&
+      children.every((child) => next.has(keyIn(index, child)));
     if (allSelected) next.add(ancestor);
     else next.delete(ancestor);
   }
@@ -120,7 +121,7 @@ export function toggleTreeSelection<T>(
 export function resolveSelectedKeys<T>(
   index: TreeIndex<T>,
   selected: ReadonlySet<RowKey>,
-  mode: 'all' | 'leavesOnly' | 'excludeRecursive'
+  mode: 'all' | 'leavesOnly' | 'excludeRecursive',
 ): RowKey[] {
   const out: RowKey[] = [];
   for (const key of index.byKey.keys()) {

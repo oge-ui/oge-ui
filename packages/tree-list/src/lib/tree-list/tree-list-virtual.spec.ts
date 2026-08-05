@@ -17,7 +17,11 @@ function bigTree(): Node[] {
     const rootId = id++;
     rows.push({ id: rootId, parentId: null, title: `Root ${root}` });
     for (let child = 0; child < 999; child++) {
-      rows.push({ id: id++, parentId: rootId, title: `Node ${rootId}-${child}` });
+      rows.push({
+        id: id++,
+        parentId: rootId,
+        title: `Node ${rootId}-${child}`,
+      });
     }
   }
   return rows;
@@ -73,12 +77,14 @@ describe('OgeTreeList virtualization', () => {
 
   it('renders the correct slice at an arbitrary scroll position', async () => {
     const { fixture, el, grid } = await render();
-    (grid as unknown as { scrollTop: { set(value: number): void } }).scrollTop.set(50_000 * 30);
+    (
+      grid as unknown as { scrollTop: { set(value: number): void } }
+    ).scrollTop.set(50_000 * 30);
     await settle(fixture);
     const first = el.querySelector('.oge-row');
     expect(first?.textContent).toContain('Node ');
     const indices = Array.from(el.querySelectorAll('.oge-row')).map((row) =>
-      Number(row.getAttribute('data-rowindex'))
+      Number(row.getAttribute('data-rowindex')),
     );
     expect(Math.min(...indices)).toBeGreaterThan(49_000);
   });

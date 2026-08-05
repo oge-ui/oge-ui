@@ -24,7 +24,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 function pressKey(el: HTMLElement, key: string): void {
   el.querySelector('.oge-viewport')?.dispatchEvent(
-    new KeyboardEvent('keydown', { key, bubbles: true })
+    new KeyboardEvent('keydown', { key, bubbles: true }),
   );
 }
 
@@ -35,7 +35,8 @@ function focusFirstCell(el: HTMLElement): void {
 
 function rowTitles(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-row')).map(
-    (row) => row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? ''
+    (row) =>
+      row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? '',
   );
 }
 
@@ -62,7 +63,11 @@ describe('OgeTreeList keyboard navigation', () => {
   async function render() {
     const fixture = TestBed.createComponent(Host);
     await settle(fixture);
-    return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      el: fixture.nativeElement as HTMLElement,
+    };
   }
 
   it('ArrowRight expands a collapsed expandable row', async () => {

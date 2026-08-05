@@ -1,4 +1,10 @@
-import { DestroyRef, effect, inject, untracked, type Signal } from '@angular/core';
+import {
+  DestroyRef,
+  effect,
+  inject,
+  untracked,
+  type Signal,
+} from '@angular/core';
 import type { OgeStateStorage } from './state-storage';
 
 export interface StatePersistenceOptions<S> {
@@ -25,7 +31,9 @@ export interface StatePersistenceOptions<S> {
  * change notification. Must run in an injection context (component
  * constructor or field initializer).
  */
-export function createStatePersistence<S>(options: StatePersistenceOptions<S>): void {
+export function createStatePersistence<S>(
+  options: StatePersistenceOptions<S>,
+): void {
   const destroyRef = inject(DestroyRef);
   let restoredKey: string | null = null;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -36,7 +44,9 @@ export function createStatePersistence<S>(options: StatePersistenceOptions<S>): 
     options.beforeRestore?.();
     if (!key || restoredKey === key) return;
     restoredKey = key;
-    const raw = untracked(() => options.storage.get(`${options.prefix}:${key}`));
+    const raw = untracked(() =>
+      options.storage.get(`${options.prefix}:${key}`),
+    );
     const apply = (text: string | null): void => {
       if (!text) return;
       try {
@@ -62,7 +72,11 @@ export function createStatePersistence<S>(options: StatePersistenceOptions<S>): 
     untracked(() => {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
-        if (key) void options.storage.set(`${options.prefix}:${key}`, JSON.stringify(snapshot));
+        if (key)
+          void options.storage.set(
+            `${options.prefix}:${key}`,
+            JSON.stringify(snapshot),
+          );
         // first run is the initial state, not a change
         if (changeSeen) options.onChange?.(snapshot);
         changeSeen = true;
