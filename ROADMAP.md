@@ -3,7 +3,7 @@
 Comparison of `@oge-ui/grid` against DevExtreme DataGrid (v25/26 feature set).
 Legend: ✅ implemented · 🟡 partial · ❌ missing.
 
-Last updated: 2026-08-05 (after Phase 8 / Editing).
+Last updated: 2026-08-05 (after Phase 11 / Column parity).
 
 ## 1. Data binding & data operations
 
@@ -118,9 +118,9 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 | Row template (full row) | ✔ | ❌ | |
 | Toolbar customization (custom items) | ✔ | ❌ | fixed layout |
 | Context menu (rows) | ✔ | ✅ | event-driven items |
-| Header context menu | ✔ | ❌ | |
-| **State persistence** | ✔ | ❌ | Phase 9 |
-| **Export CSV/Excel** | ✔ | ❌ | Phase 9 |
+| Header context menu | ✔ | ✅ | sort/group/pin/hide, localized (Phase 9) |
+| **State persistence** | ✔ | ✅ | `stateKey` + `OGE_STATE_STORAGE` (Phase 9) |
+| **Export CSV/Excel** | ✔ | 🟡 | CSV done (Phase 9); Excel (exceljs) pending |
 | Export PDF | ✔ | ❌ | post-0.1 |
 | Imperative public API (refresh, expandAll, …) | ✔ | 🟡 | inputs/outputs only; no method surface |
 | Event surface (cellClick, rowPrepared, …) | ✔ | 🟡 | rowClick/contextMenu/savingChanges only |
@@ -129,7 +129,7 @@ Last updated: 2026-08-05 (after Phase 8 / Editing).
 
 ## Prioritized backlog
 
-**Phase 9 (already planned):** state persistence · CSV/Excel export · README · npm publish v0.1.0.
+**Phase 9: ✅ DONE** (state persistence, CSV export, header context menu, READMEs, v0.1.0 release prep; Excel export deferred to Phase 13).
 
 **Phase 10 — Filtering parity: ✅ DONE** (filter builder + panel, operator menu, header-filter search, `[(filterValue)]`, search highlighting).
 
