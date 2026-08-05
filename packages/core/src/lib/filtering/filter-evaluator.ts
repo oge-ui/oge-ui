@@ -1,5 +1,6 @@
 import type { FilterExpr } from '../data/load-options';
 import { createFieldAccessor } from '../util/value-accessor';
+import { foldText } from '../util/text-fold';
 
 /**
  * Normalizes a value for comparison:
@@ -20,7 +21,7 @@ function looseEquals(a: unknown, b: unknown): boolean {
   const [na, nb] = normalizePair(a, b);
   if (na == null || nb == null) return na == null && nb == null;
   if (typeof na === 'string' && typeof nb === 'string') {
-    return na.toLocaleLowerCase() === nb.toLocaleLowerCase();
+    return foldText(na) === foldText(nb);
   }
   return na === nb;
 }
@@ -34,8 +35,8 @@ function orderedCompare(a: unknown, b: unknown): number | null {
     return na < nb ? -1 : na > nb ? 1 : 0;
   }
   if (typeof na === 'string' && typeof nb === 'string') {
-    const la = na.toLocaleLowerCase();
-    const lb = nb.toLocaleLowerCase();
+    const la = foldText(na);
+    const lb = foldText(nb);
     return la < lb ? -1 : la > lb ? 1 : 0;
   }
   const va = na as number | string;
@@ -47,7 +48,7 @@ function orderedCompare(a: unknown, b: unknown): number | null {
 
 function asText(value: unknown): string | null {
   if (value == null) return null;
-  return String(value).toLocaleLowerCase();
+  return foldText(String(value));
 }
 
 /**

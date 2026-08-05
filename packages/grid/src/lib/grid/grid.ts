@@ -29,6 +29,8 @@ import {
   computeWindow,
   createFieldAccessor,
   flattenGroupedData,
+  foldText,
+  foldTextWithMap,
   groupNodeKey,
   resolveKeySelector,
   type CsvOptions,
@@ -2754,22 +2756,29 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const query = this.store.filter.searchText().trim();
     if (!query) return null;
     const text = this.cellDisplayText(node, column);
-    const lower = text.toLocaleLowerCase();
-    const needle = query.toLocaleLowerCase();
-    if (!lower.includes(needle)) return null;
+    // Match on folded text (locale-independent, accent-insensitive), then map
+    // the folded match range back onto the original string for the <mark>.
+    const { folded, sourceIndex } = foldTextWithMap(text);
+    const needle = foldText(query);
+    if (!needle || !folded.includes(needle)) return null;
     const escape = (value: string) =>
       value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     let html = '';
     let index = 0;
-    while (index < text.length) {
-      const found = lower.indexOf(needle, index);
+    let foldedFrom = 0;
+    for (;;) {
+      const found = folded.indexOf(needle, foldedFrom);
       if (found < 0) {
         html += escape(text.slice(index));
         break;
       }
-      html += escape(text.slice(index, found));
-      html += `<mark class="oge-highlight">${escape(text.slice(found, found + needle.length))}</mark>`;
-      index = found + needle.length;
+      const start = sourceIndex[found];
+      const last = sourceIndex[found + needle.length - 1];
+      const end = last + (text.codePointAt(last)! > 0xffff ? 2 : 1); // past the last source char
+      html += escape(text.slice(index, start));
+      html += `<mark class="oge-highlight">${escape(text.slice(start, end))}</mark>`;
+      index = end;
+      foldedFrom = found + needle.length;
     }
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
@@ -2786,9 +2795,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly visibleHeaderValues = computed<readonly unknown[] | null>(() => {
     const values = this.headerFilterValues();
     if (!values) return null;
-    const query = this.headerFilterSearch().trim().toLocaleLowerCase();
+    const query = foldText(this.headerFilterSearch().trim());
     if (!query) return values;
-    return values.filter((value) => this.headerValueText(value).toLocaleLowerCase().includes(query));
+    return values.filter((value) => foldText(this.headerValueText(value)).includes(query));
   });
 
   protected readonly headerFilterAvailable = computed(
