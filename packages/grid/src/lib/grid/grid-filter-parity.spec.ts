@@ -236,3 +236,78 @@ describe('search highlighting + header filter search', () => {
     expect(items).toEqual(['İzmir']);
   });
 });
+
+interface Order {
+  id: number;
+  name: string;
+  shipped: string;
+}
+
+@Component({
+  imports: [OgeGrid, OgeColumn],
+  template: `
+    <oge-grid [data]="data" keyField="id" [headerFilter]="true">
+      <oge-column field="name" caption="Name" />
+      <oge-column field="shipped" caption="Shipped" dataType="date" />
+    </oge-grid>
+  `,
+})
+class DateHeaderFilterHost {
+  readonly data: Order[] = [
+    { id: 1, name: 'A', shipped: '2024-01-10' },
+    { id: 2, name: 'B', shipped: '2024-06-05' },
+    { id: 3, name: 'C', shipped: '2025-02-20' },
+  ];
+}
+
+describe('header filter grouped date values', () => {
+  async function renderDates() {
+    const fixture = TestBed.createComponent(DateHeaderFilterHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    (el.querySelectorAll('.oge-header-filter-btn')[1] as HTMLButtonElement).click();
+    await settle(fixture);
+    return { fixture, el };
+  }
+
+  it('groups values by year with leaves underneath', async () => {
+    const { el } = await renderDates();
+    const groups = Array.from(el.querySelectorAll('.oge-hf-group span')).map((s) =>
+      s.textContent?.trim()
+    );
+    expect(groups).toEqual(['2024', '2025']);
+    expect(el.querySelectorAll('.oge-hf-leaf').length).toBe(3);
+  });
+
+  it('search matches year labels and individual dates', async () => {
+    const { fixture, el } = await renderDates();
+    const hfSearch = el.querySelector('.oge-hf-search') as HTMLInputElement;
+
+    hfSearch.value = '2025';
+    hfSearch.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle(fixture);
+    expect(el.querySelectorAll('.oge-hf-group').length).toBe(1);
+    expect(el.querySelectorAll('.oge-hf-leaf').length).toBe(1);
+
+    hfSearch.value = '06-05';
+    hfSearch.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle(fixture);
+    const leaves = Array.from(el.querySelectorAll('.oge-hf-leaf span')).map((s) =>
+      s.textContent?.trim()
+    );
+    expect(leaves).toEqual(['2024-06-05']);
+  });
+
+  it('year checkbox toggles all its dates and filters the rows', async () => {
+    const { fixture, el } = await renderDates();
+    // uncheck the whole 2024 group → only the 2025 row remains
+    (el.querySelectorAll('.oge-hf-group input')[0] as HTMLInputElement).click();
+    await settle(fixture);
+    const rows = Array.from(el.querySelectorAll('.oge-row .oge-cell:first-child')).map((c) =>
+      c.textContent?.trim()
+    );
+    expect(rows).toEqual(['C']);
+    // group checkbox reflects the cleared state
+    expect((el.querySelectorAll('.oge-hf-group input')[0] as HTMLInputElement).checked).toBe(false);
+  });
+});

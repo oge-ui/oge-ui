@@ -2849,6 +2849,69 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return values.filter((value) => foldText(this.headerValueText(value)).includes(query));
   });
 
+  /**
+   * Date columns present header-filter values grouped by year (DevExtreme
+   * style). The search box matches the year label (keeping the whole group)
+   * or individual formatted dates; groups left empty disappear.
+   */
+  protected readonly headerValueGroups = computed<
+    readonly { label: string; values: readonly unknown[] }[] | null
+  >(() => {
+    const field = this.headerFilterField();
+    const column = field ? this.columnByField(field) : undefined;
+    if (column?.dataType !== 'date') return null;
+    const values = this.headerFilterValues();
+    if (!values) return null;
+    const buckets = new Map<string, unknown[]>();
+    for (const value of values) {
+      const label = this.headerYearOf(value);
+      const bucket = buckets.get(label);
+      if (bucket) bucket.push(value);
+      else buckets.set(label, [value]);
+    }
+    const groups = [...buckets.entries()].map(([label, groupValues]) => ({
+      label,
+      values: groupValues as readonly unknown[],
+    }));
+    const query = foldText(this.headerFilterSearch().trim());
+    if (!query) return groups;
+    return groups.flatMap((group) => {
+      if (foldText(group.label).includes(query)) return [group];
+      const leaves = group.values.filter((value) =>
+        foldText(this.headerValueText(value)).includes(query)
+      );
+      return leaves.length ? [{ label: group.label, values: leaves }] : [];
+    });
+  });
+
+  private headerYearOf(value: unknown): string {
+    if (value == null || value === '') return this.msg().blankValue;
+    const date = value instanceof Date ? value : new Date(String(value));
+    return Number.isNaN(date.getTime()) ? String(value) : String(date.getFullYear());
+  }
+
+  protected isHeaderGroupSelected(group: { values: readonly unknown[] }): boolean {
+    return group.values.every((value) => this.isHeaderValueSelected(value));
+  }
+
+  protected isHeaderGroupIndeterminate(group: { values: readonly unknown[] }): boolean {
+    const selected = group.values.filter((value) => this.isHeaderValueSelected(value)).length;
+    return selected > 0 && selected < group.values.length;
+  }
+
+  /** Checks/unchecks every value of a year group at once. */
+  protected toggleHeaderGroup(group: { values: readonly unknown[] }): void {
+    const field = this.headerFilterField();
+    const all = this.headerFilterValues();
+    if (field == null || all == null) return;
+    const current = this.store.filter.headerFilterOf(field) ?? all;
+    const allSelected = group.values.every((value) => current.includes(value));
+    const next = allSelected
+      ? current.filter((value) => !group.values.includes(value))
+      : [...current, ...group.values.filter((value) => !current.includes(value))];
+    this.store.filter.setHeaderFilter(field, next.length === all.length ? null : next);
+  }
+
   protected readonly headerFilterAvailable = computed(
     () => this.headerFilterVisible() && typeof this.adapter.source()?.distinct === 'function'
   );
@@ -2944,8 +3007,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected headerValueText(value: unknown): string {
     if (value == null || value === '') return this.msg().blankValue;
     const field = this.headerFilterField();
-    const items = field ? this.columnByField(field)?.lookupItems : undefined;
-    return items ? lookupTextOf(items, value) : String(value);
+    const column = field ? this.columnByField(field) : undefined;
+    if (column?.lookupItems) return lookupTextOf(column.lookupItems, value);
+    if (column?.dataType === 'date') return formatCellValue(value, 'date', column.format);
+    return String(value);
   }
 
   protected onPageSizeChange(pageSize: number): void {

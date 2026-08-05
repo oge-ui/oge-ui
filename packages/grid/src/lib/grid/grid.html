@@ -854,7 +854,29 @@
       [value]="headerFilterSearch()"
       (input)="headerFilterSearch.set($any($event.target).value)"
     />
-    @if (visibleHeaderValues(); as values) {
+    @if (headerValueGroups(); as groups) {
+      <label class="oge-hf-item oge-hf-all">
+        <input type="checkbox" [checked]="allHeaderValuesSelected()" (change)="toggleAllHeaderValues()" />
+        <span>{{ msg().selectAllValues }}</span>
+      </label>
+      @for (group of groups; track group.label) {
+        <label class="oge-hf-item oge-hf-group">
+          <input
+            type="checkbox"
+            [checked]="isHeaderGroupSelected(group)"
+            [indeterminate]="isHeaderGroupIndeterminate(group)"
+            (change)="toggleHeaderGroup(group)"
+          />
+          <span>{{ group.label }}</span>
+        </label>
+        @for (value of group.values; track $index) {
+          <label class="oge-hf-item oge-hf-leaf">
+            <input type="checkbox" [checked]="isHeaderValueSelected(value)" (change)="toggleHeaderValue(value)" />
+            <span>{{ headerValueText(value) }}</span>
+          </label>
+        }
+      }
+    } @else if (visibleHeaderValues(); as values) {
       <label class="oge-hf-item oge-hf-all">
         <input type="checkbox" [checked]="allHeaderValuesSelected()" (change)="toggleAllHeaderValues()" />
         <span>{{ msg().selectAllValues }}</span>

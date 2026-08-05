@@ -1038,6 +1038,15 @@
   }
 }
 
+// grouped (date) header-filter values: bold year nodes, indented leaves
+.oge-hf-group {
+  font-weight: 600;
+}
+
+.oge-hf-leaf {
+  padding-inline-start: 26px;
+}
+
 .oge-hf-all {
   border-bottom: 1px solid var(--oge-border-color);
   margin-bottom: 2px;
