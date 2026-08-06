@@ -1,3 +1,15 @@
+Copyright (c) 2026 kaya2m
+
+Portions of this repository are licensed as follows:
+
+- Everything under `packages/pivot` is licensed under the OGE UI Commercial
+  License — see `packages/pivot/LICENSE`. It is source-available, free for
+  evaluation and development, and requires a paid license for production use.
+- Everything else is licensed under the MIT License, reproduced below, and
+  will remain MIT-licensed.
+
+---
+
 MIT License
 
 Copyright (c) 2026 kaya2m

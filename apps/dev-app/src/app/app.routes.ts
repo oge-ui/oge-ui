@@ -362,6 +362,12 @@ export const appRoutes: Route[] = [
       },
     ],
   },
+  {
+    path: 'license',
+    loadComponent: () =>
+      import('./pages/license/license').then((m) => m.LicensePage),
+    title: 'OGE — Licensing',
+  },
   // legacy redirects
   { path: 'basic-grid', redirectTo: 'components/data-grid' },
   { path: 'playground', redirectTo: 'components/data-grid/playground' },

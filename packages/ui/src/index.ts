@@ -10,15 +10,17 @@
  * ```
  *
  * Star re-exports are the deliberate exception to the house "named exports
- * only" barrel rule — this package mirrors seven APIs verbatim and must never
+ * only" barrel rule — this package mirrors six APIs verbatim and must never
  * drift from them. `@oge-ui/tree-list` re-exports the grid's column API, so
  * its unique symbols are re-exported by name to avoid ambiguous star exports
  * (ESM silently drops names exported by two stars). The scoped packages
  * remain the canonical import paths for size-conscious apps.
+ *
+ * The commercial `@oge-ui/pivot` package is deliberately NOT part of this
+ * MIT umbrella — install and import it separately.
  */
 export * from '@oge-ui/core';
 export * from '@oge-ui/grid';
-export * from '@oge-ui/pivot';
 export * from '@oge-ui/overlay';
 export * from '@oge-ui/buttons';
 export * from '@oge-ui/inputs';

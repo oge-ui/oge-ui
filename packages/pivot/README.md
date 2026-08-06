@@ -1,5 +1,10 @@
 # @oge-ui/pivot
 
+> **Commercial package.** Unlike the rest of the OGE UI suite (MIT), the
+> pivot grid is source-available commercial software: free for evaluation,
+> development and testing — a paid license is required for production use.
+> See [LICENSE](LICENSE) and [ogeui.com/license](https://ogeui.com/license).
+
 Pivot grid for Angular, built on the same signal-based foundation as
 [`@oge-ui/grid`](https://www.npmjs.com/package/@oge-ui/grid). The aggregation
 engine lives in `@oge-ui/core` as pure, framework-free TypeScript — the

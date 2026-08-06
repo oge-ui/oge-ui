@@ -17,7 +17,7 @@
   <a href="https://www.npmjs.com/package/oge-ui"><img src="https://img.shields.io/npm/v/oge-ui?label=oge-ui&color=6366f1" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/@oge-ui/grid"><img src="https://img.shields.io/npm/v/@oge-ui/grid?label=%40oge-ui%2Fgrid&color=8b5cf6" alt="npm version" /></a>
   <a href="https://github.com/kaya2m/oge-ui/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/kaya2m/oge-ui/ci.yml?branch=main&label=CI" alt="CI status" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22d3ee" alt="MIT license" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Commercial%20pivot-22d3ee" alt="MIT license (commercial pivot)" /></a>
   <img src="https://img.shields.io/badge/Angular-%E2%89%A522-dd0031" alt="Angular 22+" />
 </p>
 
@@ -53,9 +53,9 @@ npm install oge-ui
 ```sh
 npm install @oge-ui/grid        # data grid (+ @oge-ui/core)
 npm install @oge-ui/tree-list   # hierarchical grid
-npm install @oge-ui/pivot       # pivot table
 npm install @oge-ui/buttons     # buttons, groups, drop-downs (+ @oge-ui/overlay)
 npm install @oge-ui/inputs      # text, textarea, number and select editors
+npm install @oge-ui/pivot       # pivot table (commercial — see Licensing)
 ```
 
 ## Quick start
@@ -94,12 +94,15 @@ No modules, no forms boilerplate — `[(value)]` binds straight to a
 
 ## Packages
 
+All packages are MIT except `@oge-ui/pivot`, which is commercial (free for
+evaluation and development) — see [Licensing](#licensing).
+
 | Package                                   | Description                                                                             | npm                                                    |
 | ----------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [`oge-ui`](packages/ui)                   | **Umbrella**: one install + one import path for the whole suite                         | [npm](https://www.npmjs.com/package/oge-ui)            |
+| [`oge-ui`](packages/ui)                   | **Umbrella**: one install + one import path for the whole MIT suite                     | [npm](https://www.npmjs.com/package/oge-ui)            |
 | [`@oge-ui/grid`](packages/grid)           | Virtualized Data Grid: sorting, filtering, grouping, editing, master-detail, export     | [npm](https://www.npmjs.com/package/@oge-ui/grid)      |
 | [`@oge-ui/tree-list`](packages/tree-list) | Hierarchical grid: lazy loading, tri-state selection, drag & drop                       | [npm](https://www.npmjs.com/package/@oge-ui/tree-list) |
-| [`@oge-ui/pivot`](packages/pivot)         | Pivot Grid: rows × columns × measures, totals, two-axis virtualization, Excel export    | [npm](https://www.npmjs.com/package/@oge-ui/pivot)     |
+| [`@oge-ui/pivot`](packages/pivot) ⭐      | Pivot Grid (commercial): rows × columns × measures, totals, two-axis virtualization     | [npm](https://www.npmjs.com/package/@oge-ui/pivot)     |
 | [`@oge-ui/buttons`](packages/buttons)     | Buttons, groups & drop-down/split buttons: async actions, click guards, hold-to-confirm | [npm](https://www.npmjs.com/package/@oge-ui/buttons)   |
 | [`@oge-ui/inputs`](packages/inputs)       | TextBox, TextArea, NumberBox and a searchable SelectBox (WAI-ARIA combobox)             | [npm](https://www.npmjs.com/package/@oge-ui/inputs)    |
 | [`@oge-ui/overlay`](packages/overlay)     | Anchored popups, menus, tooltips and context menus — flip-aware positioning engine      | [npm](https://www.npmjs.com/package/@oge-ui/overlay)   |
@@ -149,6 +152,19 @@ Architecture and house conventions live in
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); feature-parity tracking in
 [`ROADMAP.md`](ROADMAP.md).
 
-## License
+## Licensing
 
-[MIT](LICENSE)
+OGE UI is **open-core**:
+
+- **MIT — free forever.** `oge-ui`, `@oge-ui/core`, `@oge-ui/grid`
+  (including Excel/PDF export, master-detail and server-side operations),
+  `@oge-ui/tree-list`, `@oge-ui/inputs`, `@oge-ui/buttons` and
+  `@oge-ui/overlay` are [MIT-licensed](LICENSE). This is a commitment:
+  these packages and every feature currently in them will remain MIT.
+- **Commercial — `@oge-ui/pivot`.** The pivot grid is source-available
+  commercial software: free for evaluation, development and testing;
+  production use requires a paid license
+  ([packages/pivot/LICENSE](packages/pivot/LICENSE),
+  [ogeui.com/license](https://ogeui.com/license)). Future analytics-oriented
+  packages (e.g. charts) may join this tier — never anything that is MIT
+  today.
