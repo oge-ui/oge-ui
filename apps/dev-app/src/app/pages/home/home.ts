@@ -730,7 +730,7 @@ const ORG: OrgNode[] = [
               <app-icon name="arrow-right" [size]="14" />
             </a>
             <a
-              href="https://github.com/kaya2m"
+              href="https://github.com/oge-ui/oge-ui"
               target="_blank"
               rel="noopener"
               class="flex items-center gap-2 text-[13.5px] font-semibold text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
