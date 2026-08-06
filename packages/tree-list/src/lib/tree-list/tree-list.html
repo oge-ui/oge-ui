@@ -213,6 +213,18 @@ store.editing.hasPending())) {
           </svg>
           @if (multiSorted()) {<sub>{{ sort.index }}</sub>}
         </span>
+        } @if (headerFilterVisible() && column.filterable) {
+        <button
+          type="button"
+          class="oge-header-filter-btn"
+          [class.oge-header-filter-active]="isHeaderFilterActive(column)"
+          [attr.aria-label]="msg().filterValues"
+          (click)="toggleHeaderFilter(column, $event)"
+        >
+          <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+            <path d="M1 2h14L10 8.5V14l-4-1.8V8.5L1 2z" fill="currentColor" />
+          </svg>
+        </button>
         } @if (columnResize()) {
         <span
           class="oge-resize-handle"
@@ -620,10 +632,56 @@ store.editing.hasPending())) {
     </div>
   </div>
 </div>
-@if (loadPanel() && adapter.loading()) {
+@if (pagingOptions(); as pagingOpts) {
+<oge-pager
+  [pageIndex]="pageIndex()"
+  [pageCount]="pageCount()"
+  [totalCount]="totalDataCount()"
+  [pageSize]="effPageSize() ?? 0"
+  [pageSizes]="pagingOpts.pageSizes ?? null"
+  [showInfo]="pagingOpts.showInfo !== false"
+  [displayMode]="pagingOpts.displayMode ?? 'full'"
+  [messages]="msg()"
+  (pageChange)="pageIndex.set($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+/>
+} @if (loadPanel() && adapter.loading()) {
 <div class="oge-load-panel" role="status">
   <span class="oge-spinner" aria-hidden="true"></span>
   {{ msg().loading }}
+</div>
+} @if (headerFilterField() !== null) {
+<div
+  class="oge-header-filter-popup"
+  [style.top.px]="headerFilterPosition().top"
+  [style.left.px]="headerFilterPosition().left"
+>
+  <input
+    class="oge-hf-search"
+    type="search"
+    [placeholder]="msg().search"
+    [attr.aria-label]="msg().search"
+    [value]="headerFilterSearch()"
+    (input)="headerFilterSearch.set($any($event.target).value)"
+  />
+  <label class="oge-hf-item oge-hf-all">
+    <input
+      type="checkbox"
+      [checked]="allHeaderValuesSelected()"
+      (change)="toggleAllHeaderValues()"
+    />
+    <span>{{ msg().selectAllValues }}</span>
+  </label>
+  @for (value of visibleHeaderValues(); track $index) {
+  <label class="oge-hf-item">
+    <input
+      type="checkbox"
+      [checked]="isHeaderValueSelected(value)"
+      (change)="toggleHeaderValue(value)"
+    />
+    <span>{{ headerValueText(value) }}</span>
+  </label>
+  }
 </div>
 } @if (contextMenu(); as menu) {
 <div

@@ -10,6 +10,8 @@ model, theming, virtualization, keyboard navigation and data layer.
 - Client-side filtering & search that keep ancestor rows visible — with
   `expandNodesOnFiltering`, per-column operator menu, a filter builder
   (`[(filterValue)]`) and `<mark>` search highlighting
+- Excel-style header filter popups (distinct values with search), client-side
+  paging over the visible rows
 - Column chooser, drag-and-drop column reordering, row & header context menus,
   `[ogeToolbar]` slot, `commandButtons`, `loadPanel`, `wordWrap`
 - Selection (single / multiple / checkbox / recursive tri-state), full treegrid ARIA, RTL-aware keyboard

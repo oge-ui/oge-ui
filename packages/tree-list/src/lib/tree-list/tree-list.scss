@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius);
+  border-radius: var(--oge-radius-lg, var(--oge-radius));
   font-size: var(--oge-font-size);
   overflow: hidden;
 }

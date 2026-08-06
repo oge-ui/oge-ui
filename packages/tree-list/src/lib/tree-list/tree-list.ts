@@ -77,6 +77,7 @@ import {
   OgeColumnGroup,
   OgeFilterBuilderGroup,
   OgeNoDataTemplate,
+  OgePager,
   OgeToolbarItem,
   builderToExpr,
   describeExpr,
@@ -93,7 +94,9 @@ import {
   type OgeContextMenuEvent,
   type OgeEditTemplateContext,
   type OgeHeaderContextMenuEvent,
+  type OgeHeaderFilterOptions,
   type OgeMenuItem,
+  type OgePagingOptions,
   type OgeEditingOptions,
   type OgeFilterRowOptions,
   type OgeGridMessages,
@@ -187,7 +190,12 @@ function treeSource<T>(
  */
 @Component({
   selector: 'oge-tree-list',
-  imports: [NgTemplateOutlet, ReactiveFormsModule, OgeFilterBuilderGroup],
+  imports: [
+    NgTemplateOutlet,
+    ReactiveFormsModule,
+    OgeFilterBuilderGroup,
+    OgePager,
+  ],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
@@ -287,6 +295,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Shows the filter panel bar with the filter-builder entry point. */
   readonly filterPanel = input(false);
+
+  /** Excel-style distinct-value filter popups on the column headers. */
+  readonly headerFilter = input<boolean | OgeHeaderFilterOptions>(false);
+
+  /**
+   * Pages the visible (flattened) rows client-side. Paging and
+   * `virtualScroll` are alternatives — when both are set, paging wins.
+   */
+  readonly paging = input<false | OgePagingOptions>(false);
 
   /** Two-way binding of the builder/programmatic filter expression. */
   readonly filterValue = model<FilterExpr | null>(null);
@@ -475,6 +492,24 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       return typeof value === 'object' ? value : {};
     },
   );
+
+  protected readonly headerFilterVisible = computed(() => {
+    const value = this.headerFilter();
+    return typeof value === 'boolean' ? value : value.visible !== false;
+  });
+
+  private readonly effHeaderFilterLimit = computed(() => {
+    const value = this.headerFilter();
+    return (
+      (typeof value === 'object' ? value.valueLimit : undefined) ??
+      this.config.headerFilterValueLimit
+    );
+  });
+
+  protected readonly pagingOptions = computed<OgePagingOptions | null>(() => {
+    const value = this.paging();
+    return value === false ? null : value;
+  });
 
   /** Lazy child requests filter on this field; requires a string `parentIdExpr`. */
   private readonly lazyParentField = computed<string | null>(() => {
@@ -767,14 +802,57 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     onError: (err) => this.adapter.error.set(err),
   });
 
+  // --- client-side paging over the visible rows ------------------------------
+
+  protected readonly pageIndex = signal(0);
+  /** User-picked size from the pager; `0` = "all rows", `null` = use options. */
+  private readonly pageSizeOverride = signal<number | null>(null);
+
+  protected readonly effPageSize = computed<number | null>(() => {
+    const options = this.pagingOptions();
+    if (!options) return null;
+    const override = this.pageSizeOverride();
+    const size = override ?? options.pageSize ?? 20;
+    return size > 0 ? size : null; // 0 = "all"
+  });
+
+  protected readonly pageCount = computed(() => {
+    const size = this.effPageSize();
+    if (size === null) return 1;
+    return Math.max(1, Math.ceil(this.flatNodes().length / size));
+  });
+
+  /** The flat rows actually rendered: the current page, or everything. */
+  protected readonly renderNodes = computed<readonly RowNode<T>[]>(() => {
+    const nodes = this.flatNodes();
+    const size = this.effPageSize();
+    if (size === null) return nodes;
+    const page = Math.min(this.pageIndex(), this.pageCount() - 1);
+    return nodes.slice(page * size, (page + 1) * size);
+  });
+
+  protected onPageSizeChange(size: number): void {
+    this.pageSizeOverride.set(size);
+    this.pageIndex.set(0);
+  }
+
   protected readonly keyOf = computed<(row: T, index: number) => RowKey>(() => {
     const selector = this.rowKeyOf();
     return (row) => selector(row);
   });
 
   /** Visible data-row count (drives aria-rowcount). */
-  protected readonly totalCount = computed(() =>
+  /** Visible data-row count across all pages (pager totals, select-all). */
+  protected readonly totalDataCount = computed(() =>
     this.flatNodes().reduce(
+      (count, node) => (node.kind === 'data' ? count + 1 : count),
+      0,
+    ),
+  );
+
+  /** Rendered data-row count (aria-rowcount of the current page). */
+  protected readonly totalCount = computed(() =>
+    this.renderNodes().reduce(
       (count, node) => (node.kind === 'data' ? count + 1 : count),
       0,
     ),
@@ -784,7 +862,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   private readonly keyToFlatIndex = computed<ReadonlyMap<RowKey, number>>(
     () => {
       const map = new Map<RowKey, number>();
-      const nodes = this.flatNodes();
+      const nodes = this.renderNodes();
       for (let i = 0; i < nodes.length; i++) {
         if (nodes[i].kind === 'data') map.set(nodes[i].key, i);
       }
@@ -873,7 +951,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   // --- virtualization -------------------------------------------------------
 
   private readonly virtualizer = new RowVirtualizerModel<T>({
-    flatNodes: this.flatNodes,
+    flatNodes: this.renderNodes,
     virtualized: this.virtualized,
     scrollTop: this.scrollTop,
     viewportHeight: this.viewportHeight,
@@ -893,7 +971,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   // --- keyboard -------------------------------------------------------------
 
   private readonly keyboard = new KeyboardNavModel<T>({
-    flatNodes: this.flatNodes,
+    flatNodes: this.renderNodes,
     columnCount: computed(() => this.resolvedColumns().length),
     rtl: this.rtl,
     pageSize: computed(() =>
@@ -914,7 +992,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       firstChildRowIndex: (row) => {
         const node = this.dataNodeAt(row);
         if (!node?.expanded) return -1;
-        const nodes = untracked(this.flatNodes);
+        const nodes = untracked(this.renderNodes);
         for (let i = row + 1; i < nodes.length; i++) {
           const next = nodes[i];
           if (next.kind !== 'data') continue;
@@ -936,7 +1014,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   private dataNodeAt(row: number): DataRowNode<T> | undefined {
-    const node = untracked(this.flatNodes)[row];
+    const node = untracked(this.renderNodes)[row];
     return node?.kind === 'data' ? node : undefined;
   }
 
@@ -1313,6 +1391,125 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.store.filter.setBuilderFilter(null);
   }
 
+  // --- header filter (distinct values) ---------------------------------------
+
+  /** Field whose header-filter popup is open, or null. */
+  protected readonly headerFilterField = signal<string | null>(null);
+  protected readonly headerFilterPosition = signal<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
+  protected readonly headerFilterSearch = signal('');
+
+  private readonly headerFilterColumn = computed<ResolvedColumn<T> | null>(
+    () => {
+      const field = this.headerFilterField();
+      if (field === null) return null;
+      return (
+        this.resolvedColumns().find((column) => column.field === field) ?? null
+      );
+    },
+  );
+
+  protected toggleHeaderFilter(column: ResolvedColumn<T>, event: Event): void {
+    event.stopPropagation();
+    if (!column.field) return;
+    if (this.headerFilterField() === column.field) {
+      this.closeHeaderFilter();
+      return;
+    }
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.headerFilterSearch.set('');
+    this.headerFilterPosition.set({ top: rect.bottom + 4, left: rect.left });
+    this.headerFilterField.set(column.field);
+  }
+
+  protected closeHeaderFilter(): void {
+    this.headerFilterField.set(null);
+  }
+
+  /** Distinct raw values of the open column over all loaded rows, sorted by text. */
+  private readonly headerValues = computed<readonly unknown[]>(() => {
+    const column = this.headerFilterColumn();
+    if (!column) return [];
+    const seen = new Map<string, unknown>();
+    for (const row of this.indexRows()) {
+      const value = column.accessor(row);
+      const text = String(value ?? '');
+      if (!seen.has(text)) seen.set(text, value);
+    }
+    // fold-based ordering: locale-independent, so local and CI runs agree
+    return [...seen.entries()]
+      .sort(([a], [b]) => {
+        const fa = foldText(a);
+        const fb = foldText(b);
+        return fa < fb ? -1 : fa > fb ? 1 : 0;
+      })
+      .slice(0, this.effHeaderFilterLimit())
+      .map(([, value]) => value);
+  });
+
+  protected headerValueText(value: unknown): string {
+    const column = untracked(this.headerFilterColumn);
+    if (!column) return String(value ?? '');
+    if (value == null || value === '') return this.msg().blankValue;
+    if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
+    return formatCellValue(value, column.dataType, column.format);
+  }
+
+  /** Popup rows after the popup's own search box. */
+  protected readonly visibleHeaderValues = computed<readonly unknown[]>(() => {
+    const values = this.headerValues();
+    const query = foldText(this.headerFilterSearch().trim());
+    if (!query) return values;
+    return values.filter((value) =>
+      foldText(this.headerValueText(value)).includes(query),
+    );
+  });
+
+  protected isHeaderValueSelected(value: unknown): boolean {
+    const field = this.headerFilterField();
+    if (field === null) return false;
+    const selected = this.store.filter.headerFilterOf(field);
+    return selected === null || selected.includes(value);
+  }
+
+  protected toggleHeaderValue(value: unknown): void {
+    const field = untracked(this.headerFilterField);
+    if (field === null) return;
+    const all = untracked(this.headerValues);
+    const current = this.store.filter.headerFilterOf(field) ?? [...all]; // null = all selected
+    const next = current.includes(value)
+      ? current.filter((candidate) => candidate !== value)
+      : [...current, value];
+    // back to the full set = filter off
+    this.store.filter.setHeaderFilter(
+      field,
+      next.length === all.length ? null : next,
+    );
+  }
+
+  protected readonly allHeaderValuesSelected = computed(() => {
+    const field = this.headerFilterField();
+    if (field === null) return false;
+    return this.store.filter.headerFilterOf(field) === null;
+  });
+
+  protected toggleAllHeaderValues(): void {
+    const field = untracked(this.headerFilterField);
+    if (field === null) return;
+    const selected = this.store.filter.headerFilterOf(field);
+    // all → none; anything else → all
+    this.store.filter.setHeaderFilter(field, selected === null ? [] : null);
+  }
+
+  protected isHeaderFilterActive(column: ResolvedColumn<T>): boolean {
+    return (
+      column.field != null &&
+      this.store.filter.headerFilterOf(column.field) != null
+    );
+  }
+
   // --- search highlighting ---------------------------------------------------
 
   private readonly sanitizer = inject(DomSanitizer);
@@ -1643,6 +1840,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   protected closePopups(): void {
+    this.closeHeaderFilter();
     this.chooserOpen.set(false);
     this.contextMenu.set(null);
     this.operatorMenu.set(null);
@@ -1652,6 +1850,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Closes popups on clicks outside of them. */
   protected onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement | null;
+    if (
+      this.headerFilterField() !== null &&
+      !target?.closest?.('.oge-header-filter-popup')
+    ) {
+      this.closeHeaderFilter();
+    }
     if (this.chooserOpen() && !target?.closest?.('.oge-chooser-popup')) {
       this.chooserOpen.set(false);
     }
@@ -2020,7 +2224,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     const cell = this.focusedCell();
     if (!cell) return;
     if (event.key === ' ') {
-      const node = this.flatNodes()[cell.row];
+      const node = this.renderNodes()[cell.row];
       if (node?.kind === 'data' && this.selectionMode() !== 'none') {
         event.preventDefault();
         if (this.selectionMode() === 'single')
@@ -2209,7 +2413,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Scrolls a row (by key or visible index) into the viewport. */
   scrollToRow(target: number | RowKey): void {
-    const nodes = untracked(this.flatNodes);
+    const nodes = untracked(this.renderNodes);
     let index = nodes.findIndex((node) => node.key === target);
     if (
       index < 0 &&
@@ -2262,9 +2466,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         );
       });
     });
-    // trees never page: the flatten step owns visibility
+    // the SOURCE never pages: paging happens over the flattened rows
     effect(() => {
       untracked(() => this.store.paging.configure(null));
+    });
+    // filter/search changes jump back to the first page
+    effect(() => {
+      this.store.filter.combinedExpr();
+      this.store.filter.searchText();
+      untracked(() => this.pageIndex.set(0));
     });
     // selectedKeys model ⇄ selection slice (guarded both ways)
     effect(() => {
