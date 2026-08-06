@@ -21,7 +21,10 @@
       ],
       "@oge-ui/grid/foundation": ["./packages/grid/foundation/src/index.ts"],
       "@oge-ui/grid/export-pdf": ["./packages/grid/export-pdf/src/index.ts"],
-      "@oge-ui/tree-list": ["./packages/tree-list/src/index.ts"]
+      "@oge-ui/tree-list": ["./packages/tree-list/src/index.ts"],
+      "@oge-ui/tree-list/export-excel": [
+        "./packages/tree-list/export-excel/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

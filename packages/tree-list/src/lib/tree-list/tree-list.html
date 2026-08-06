@@ -1,7 +1,31 @@
-@if (searchPanelVisible() || canAdd() || (editMode() === 'batch' &&
+@if (searchPanelVisible() || canAdd() || columnChooser() ||
+toolbarItems().length > 0 || (editMode() === 'batch' &&
 store.editing.hasPending())) {
 <div class="oge-toolbar">
-  @if (canAdd()) {
+  <ng-content select="[ogeToolbar]" />
+  @if (columnChooser()) {
+  <button
+    type="button"
+    class="oge-toolbar-btn"
+    [attr.aria-label]="msg().columnChooser"
+    [attr.title]="msg().columnChooser"
+    (click)="toggleChooser($event)"
+  >
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      stroke-linecap="round"
+    >
+      <rect x="2" y="2.5" width="3.2" height="11" rx="0.8" />
+      <rect x="6.4" y="2.5" width="3.2" height="11" rx="0.8" />
+      <rect x="10.8" y="2.5" width="3.2" height="11" rx="0.8" />
+    </svg>
+  </button>
+  } @if (canAdd()) {
   <button type="button" class="oge-toolbar-text-btn" (click)="addRow()">
     {{ msg().addRow }}
   </button>
@@ -31,6 +55,45 @@ store.editing.hasPending())) {
     [style.width.px]="searchPanelOptions().width ?? null"
     (input)="onSearchInput($any($event.target).value)"
   />
+  }
+</div>
+} @if (filterPanel()) {
+<div class="oge-filter-panel">
+  <svg
+    viewBox="0 0 16 16"
+    width="12"
+    height="12"
+    aria-hidden="true"
+    class="oge-filter-panel-icon"
+  >
+    <path d="M1 2h14L10 8.5V14l-4-1.8V8.5L1 2z" fill="currentColor" />
+  </svg>
+  <button
+    type="button"
+    class="oge-filter-panel-text"
+    (click)="openFilterBuilder()"
+  >
+    {{ filterPanelText() ?? msg().createFilter }}
+  </button>
+  @if (filterPanelText()) {
+  <button
+    type="button"
+    class="oge-filter-panel-clear"
+    [attr.aria-label]="msg().clearFilter"
+    (click)="clearBuilderFilter($event)"
+  >
+    <svg
+      viewBox="0 0 16 16"
+      width="11"
+      height="11"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+    >
+      <path d="m4 4 8 8M12 4l-8 8" />
+    </svg>
+  </button>
   }
 </div>
 }
@@ -106,7 +169,19 @@ store.editing.hasPending())) {
         [style.inset-inline-start.px]="pinnedLeftOf(column)"
         [style.inset-inline-end.px]="pinnedRightOf(column)"
         [attr.aria-sort]="ariaSortOf(column)"
-        [attr.tabindex]="column.sortable && sortMode() !== 'none' ? 0 : null"
+        [attr.tabindex]="
+          (column.sortable && sortMode() !== 'none') ||
+          (column.field && columnReorder())
+            ? 0
+            : null
+        "
+        [class.oge-col-drop-target]="headerDropTargetId() === column.id"
+        [attr.draggable]="column.field && columnReorder() ? true : null"
+        (dragstart)="onHeaderDragStart(column, $event)"
+        (dragover)="onHeaderDragOver(column, $event)"
+        (dragend)="onHeaderDragEnd()"
+        (drop)="onHeaderDrop(column, $event)"
+        (contextmenu)="onHeaderContextMenu(column, $event)"
         (click)="onHeaderClick(column, $event)"
         (keydown.enter)="onHeaderClick(column, $event)"
         (keydown.space)="onHeaderClick(column, $event)"
@@ -178,8 +253,17 @@ store.editing.hasPending())) {
           <option [value]="$index">{{ item.text }}</option>
           }
         </select>
-        } @else if (column.filterable) { @switch (column.dataType) { @case
-        ('boolean') {
+        } @else if (column.filterable) { @if (column.dataType !== 'boolean') {
+        <button
+          type="button"
+          class="oge-filter-op-btn"
+          [attr.aria-label]="msg().operators[currentOperator(column)]"
+          [attr.title]="msg().operators[currentOperator(column)]"
+          (click)="toggleOperatorMenu(column, $event)"
+        >
+          {{ operatorSymbol(column) }}
+        </button>
+        } @switch (column.dataType) { @case ('boolean') {
         <select
           class="oge-filter-input"
           [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
@@ -245,6 +329,7 @@ store.editing.hasPending())) {
         [class.oge-drop-target]="dropTargetKey() === node.key"
         (click)="onRowClick(node, $event)"
         (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
+        (contextmenu)="onRowContextMenuOpen(node, $event)"
         (dragover)="rowDragging() && onRowDragOver(node, $event)"
         (drop)="rowDragging() && onRowDrop(node, $event)"
       >
@@ -377,6 +462,8 @@ store.editing.hasPending())) {
           <ng-container
             *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
           />
+          } @else if (searchHighlightHtml(node, column); as highlighted) {
+          <span class="oge-tree-cell-text" [innerHTML]="highlighted"></span>
           } @else {
           <span class="oge-tree-cell-text"
             >{{ cellDisplayText(node, column) }}</span
@@ -423,7 +510,9 @@ store.editing.hasPending())) {
               <path d="m4 4 8 8M12 4l-8 8" />
             </svg>
           </button>
-          } @else { @if (canUpdate() && editMode() === 'row') {
+          } @else { @for (btn of effCommandButtons(); track $index) { @if
+          (commandButtonVisible(btn, node)) { @switch (btn.name) { @case
+          ('edit') {
           <button
             type="button"
             class="oge-command-btn"
@@ -443,7 +532,7 @@ store.editing.hasPending())) {
               <path d="M10.5 2.5 13.5 5.5 5.5 13.5H2.5v-3z" />
             </svg>
           </button>
-          } @if (canDelete()) {
+          } @case ('delete') {
           <button
             type="button"
             class="oge-command-btn oge-command-delete"
@@ -481,7 +570,15 @@ store.editing.hasPending())) {
             </svg>
             }
           </button>
-          } }
+          } @default {
+          <button
+            type="button"
+            class="oge-command-btn oge-command-text-btn"
+            (click)="runCommandButton(btn, node, $event)"
+          >
+            {{ btn.text }}
+          </button>
+          } } } } }
         </div>
         }
       </div>
@@ -513,3 +610,127 @@ store.editing.hasPending())) {
     </div>
   </div>
 </div>
+@if (loadPanel() && adapter.loading()) {
+<div class="oge-load-panel" role="status">
+  <span class="oge-spinner" aria-hidden="true"></span>
+  {{ msg().loading }}
+</div>
+} @if (contextMenu(); as menu) {
+<div
+  class="oge-context-menu"
+  role="menu"
+  [style.top.px]="menu.y"
+  [style.left.px]="menu.x"
+>
+  @for (item of menu.items; track $index) {
+  <button
+    type="button"
+    role="menuitem"
+    class="oge-menu-item"
+    (click)="runMenuItem(item)"
+  >
+    {{ item.text }}
+  </button>
+  }
+</div>
+} @if (chooserOpen()) {
+<div
+  class="oge-chooser-popup"
+  [style.top.px]="chooserPosition().top"
+  [style.left.px]="chooserPosition().left"
+>
+  <div class="oge-chooser-title">{{ msg().columnChooserTitle }}</div>
+  @for (entry of chooserEntries(); track entry.id) {
+  <label
+    class="oge-hf-item oge-chooser-item"
+    [class.oge-chooser-drop-target]="chooserDropTargetId() === entry.id"
+    [draggable]="columnReorder()"
+    (dragstart)="onChooserDragStart(entry.id, $any($event))"
+    (dragover)="onChooserDragOver(entry.id, $any($event))"
+    (dragend)="onChooserDragEnd()"
+    (drop)="onChooserDrop(entry.id, $any($event))"
+  >
+    @if (columnReorder()) {
+    <span class="oge-chooser-grip" aria-hidden="true">
+      <svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor">
+        <circle cx="5" cy="3.5" r="1.2" />
+        <circle cx="11" cy="3.5" r="1.2" />
+        <circle cx="5" cy="8" r="1.2" />
+        <circle cx="11" cy="8" r="1.2" />
+        <circle cx="5" cy="12.5" r="1.2" />
+        <circle cx="11" cy="12.5" r="1.2" />
+      </svg>
+    </span>
+    }
+    <input
+      type="checkbox"
+      [checked]="entry.column ? entry.column.visible() : true"
+      [disabled]="!entry.column"
+      (change)="toggleChooserVisible(entry)"
+    />
+    <span>{{ entry.caption }}</span>
+  </label>
+  }
+</div>
+} @if (operatorMenu(); as opMenu) {
+<div
+  class="oge-context-menu oge-operator-menu"
+  role="menu"
+  [style.top.px]="opMenu.y"
+  [style.left.px]="opMenu.x"
+>
+  @for (op of operatorChoices(opMenu.column); track op) {
+  <button
+    type="button"
+    role="menuitem"
+    class="oge-menu-item"
+    [class.oge-menu-item-active]="currentOperator(opMenu.column) === op"
+    (click)="chooseOperator(op)"
+  >
+    {{ msg().operators[op] }}
+  </button>
+  }
+  <button
+    type="button"
+    role="menuitem"
+    class="oge-menu-item oge-menu-item-muted"
+    (click)="chooseOperator(null)"
+  >
+    {{ msg().resetOperator }}
+  </button>
+</div>
+} @if (builderOpen()) {
+<div class="oge-popup-backdrop"></div>
+<div
+  class="oge-edit-popup oge-builder-popup"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="msg().filterBuilderTitle"
+>
+  <div class="oge-popup-title">{{ msg().filterBuilderTitle }}</div>
+  <oge-filter-builder-group
+    [group]="builderTree"
+    [fields]="builderFields()"
+    [messages]="msg()"
+    [root]="true"
+    (changed)="builderVersion.set(builderVersion() + 1)"
+  />
+  <div class="oge-builder-preview">{{ builderPreview() }}</div>
+  <div class="oge-popup-actions">
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      (click)="applyFilterBuilder()"
+    >
+      {{ msg().apply }}
+    </button>
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn"
+      (click)="builderOpen.set(false)"
+    >
+      {{ msg().cancelEdit }}
+    </button>
+  </div>
+</div>
+}

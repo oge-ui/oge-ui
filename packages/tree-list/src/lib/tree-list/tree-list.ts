@@ -1,5 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ReactiveFormsModule, type FormControl } from '@angular/forms';
+import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -32,6 +33,8 @@ import {
   filterTreeKeys,
   flattenTreeData,
   foldText,
+  foldTextWithMap,
+  type FilterExpr,
   resolveSelectedKeys,
   toggleTreeSelection,
   type CheckState,
@@ -58,6 +61,7 @@ import {
   buildRowFilterExpr,
   createStatePersistence,
   defaultOperatorFor,
+  humanize,
   isDataSource,
   lookupTextOf,
   type ColumnDefLike,
@@ -70,11 +74,25 @@ import {
   OGE_GRID_CONFIG,
   OgeColumn,
   OgeColumnGroup,
+  OgeFilterBuilderGroup,
   OgeNoDataTemplate,
+  OgeToolbarItem,
+  builderToExpr,
+  describeExpr,
+  exprToBuilder,
   formatCellValue,
+  operatorsFor,
+  type BuilderGroup,
+  type FilterBuilderField,
+  type OgeCommandButton,
+  type OgeExportColumn,
+  type OgeExportData,
   type OgeCellClickEvent,
   type OgeCellTemplateContext,
+  type OgeContextMenuEvent,
   type OgeEditTemplateContext,
+  type OgeHeaderContextMenuEvent,
+  type OgeMenuItem,
   type OgeEditingOptions,
   type OgeFilterRowOptions,
   type OgeGridMessages,
@@ -96,6 +114,14 @@ export interface OgeTreeRowToggleEvent<T = unknown> {
 }
 
 const EMPTY_CHECK_STATES: ReadonlyMap<RowKey, CheckState> = new Map();
+
+const COLUMN_DRAG_TYPE = 'application/x-oge-column';
+
+/** Export payload of the visible tree; `levels` aligns with `rows`. */
+export interface OgeTreeExportData<T = unknown> extends OgeExportData<T> {
+  /** Zero-based depth per exported row (drives spreadsheet outline levels). */
+  levels: readonly number[];
+}
 
 /** Fired after a row is dropped onto a new parent. */
 export interface OgeTreeRowReparentEvent<T = unknown> {
@@ -155,7 +181,7 @@ function treeSource<T>(
  */
 @Component({
   selector: 'oge-tree-list',
-  imports: [NgTemplateOutlet, ReactiveFormsModule],
+  imports: [NgTemplateOutlet, ReactiveFormsModule, OgeFilterBuilderGroup],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
@@ -165,9 +191,12 @@ function treeSource<T>(
     class: 'oge-tree-list',
     '[class.oge-virtual]': 'virtualized()',
     '[class.oge-loading]': 'adapter.loading()',
+    '[class.oge-wrap]': 'wordWrap()',
     '[class.oge-rtl]': 'rtl()',
     '[attr.dir]':
       "rtlEnabled() === undefined ? null : rtlEnabled() ? 'rtl' : 'ltr'",
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'closePopups()',
   },
 })
 export class OgeTreeList<T extends object = Record<string, unknown>> {
@@ -238,6 +267,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Debounce for text filter inputs, in ms. Set to 0 in tests. */
   readonly filterDebounce = input<number | undefined>(undefined);
 
+  /** Auto-expands the ancestor chains of matches while a filter is active. */
+  readonly expandNodesOnFiltering = input(true);
+
+  /** Shows the filter panel bar with the filter-builder entry point. */
+  readonly filterPanel = input(false);
+
+  /** Two-way binding of the builder/programmatic filter expression. */
+  readonly filterValue = model<FilterExpr | null>(null);
+
   /**
    * Persists user state (sort, filters, column layout, expansion) under this
    * key via `OGE_STATE_STORAGE` (default: localStorage).
@@ -258,6 +296,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Enables drag-resize handles on header edges. */
   readonly columnResize = input(true);
+
+  /** Enables drag-and-drop column reordering (headers and chooser rows). */
+  readonly columnReorder = input(true);
+
+  /** Shows the column visibility chooser button in the toolbar. */
+  readonly columnChooser = input(false);
 
   /** Per-instance message overrides (merged over the global config). */
   readonly messages = input<Partial<OgeGridMessages> | undefined>(undefined);
@@ -282,6 +326,21 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Alternating row background (zebra striping), stable under virtualization. */
   readonly rowAlternation = input(false);
+
+  /** Cells wrap instead of truncating; virtual mode keeps fixed heights. */
+  readonly wordWrap = input(false);
+
+  /** Spinner overlay while a load is in flight. */
+  readonly loadPanel = input(false);
+
+  /**
+   * Customizes the trailing command column: reorder/mix the built-in
+   * 'edit'/'delete' buttons with custom ones (text + onClick), with an
+   * optional per-row `visible` predicate.
+   */
+  readonly commandButtons = input<readonly OgeCommandButton<T>[] | undefined>(
+    undefined,
+  );
 
   /**
    * Right-to-left layout. `undefined` (default) auto-detects the inherited
@@ -310,6 +369,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   readonly rowDblClick = output<OgeRowClickEvent<T>>();
   /** Fires when a data cell is clicked. */
   readonly cellClick = output<OgeCellClickEvent<T>>();
+
+  /** Fires on row right-click; add `items` in the handler to open the built-in menu. */
+  readonly rowContextMenu = output<OgeContextMenuEvent<T>>();
+
+  /** Customize (or extend) the built-in header context menu per column. */
+  readonly headerContextMenu = output<OgeHeaderContextMenuEvent>();
   readonly rowExpanded = output<OgeTreeRowToggleEvent<T>>();
   readonly rowCollapsed = output<OgeTreeRowToggleEvent<T>>();
   /** Fires after the tree has rendered a new result set. */
@@ -329,6 +394,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected readonly columnGroups =
     contentChildren<OgeColumnGroup<T>>(OgeColumnGroup);
   protected readonly noDataTemplate = contentChild(OgeNoDataTemplate);
+  protected readonly toolbarItems = contentChildren(OgeToolbarItem);
 
   // --- viewport state -------------------------------------------------------
 
@@ -547,10 +613,43 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return filterTreeKeys(this.treeIndex(), predicate, this.filterMode());
   });
 
+  /**
+   * While filtering, parents of visible rows must expand or the matches stay
+   * hidden under collapsed branches (`expandNodesOnFiltering`).
+   */
+  private readonly filterExpandedKeys = computed<ReadonlySet<RowKey> | null>(
+    () => {
+      if (!this.expandNodesOnFiltering()) return null;
+      const visible = this.visibleKeys();
+      if (!visible) return null;
+      const index = this.treeIndex();
+      const parents = new Set<RowKey>();
+      for (const key of visible) {
+        const parent = index.parentOf.get(key);
+        if (parent != null && visible.has(parent)) parents.add(parent);
+      }
+      return parents;
+    },
+  );
+
   // --- flat rows ------------------------------------------------------------
 
   protected readonly flatNodes = computed<RowNode<T>[]>(() => {
-    const toggled = this.toggledKeys();
+    let toggled = this.toggledKeys();
+    const filterExpanded = this.filterExpandedKeys();
+    if (filterExpanded?.size) {
+      if (this.autoExpandAll()) {
+        // toggled = collapsed: matched paths must not stay collapsed
+        const next = new Set(toggled);
+        for (const key of filterExpanded) next.delete(key);
+        toggled = next;
+      } else {
+        // toggled = expanded: matched paths join the expanded set
+        const next = new Set(toggled);
+        for (const key of filterExpanded) next.add(key);
+        toggled = next;
+      }
+    }
     const nodes = flattenTreeData<T>({
       index: this.treeIndex(),
       keyOf: this.rowKeyOf(),
@@ -993,14 +1092,98 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     );
   }
 
+  /** User-chosen filter-row operator per field (overrides column default). */
+  private readonly rowFilterOps = signal<ReadonlyMap<string, FilterOperator>>(
+    new Map(),
+  );
+  /** Last raw editor value per field, so an operator change re-applies it. */
+  private readonly rowFilterRaw = new Map<string, string>();
+
+  protected readonly operatorMenu = signal<{
+    column: ResolvedColumn<T>;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  protected currentOperator(column: ResolvedColumn<T>): FilterOperator {
+    if (!column.field) return 'contains';
+    return (
+      this.rowFilterOps().get(column.field) ??
+      column.filterOperator ??
+      defaultOperatorFor(column.dataType)
+    );
+  }
+
+  protected operatorSymbol(column: ResolvedColumn<T>): string {
+    const symbols: Partial<Record<FilterOperator, string>> = {
+      eq: '=',
+      ne: '≠',
+      gt: '>',
+      ge: '≥',
+      lt: '<',
+      le: '≤',
+      contains: '∗',
+      notcontains: '!∗',
+      startswith: 'a…',
+      endswith: '…z',
+    };
+    return symbols[this.currentOperator(column)] ?? '=';
+  }
+
+  protected toggleOperatorMenu(
+    column: ResolvedColumn<T>,
+    event: MouseEvent,
+  ): void {
+    event.stopPropagation();
+    if (this.operatorMenu()?.column.id === column.id) {
+      this.operatorMenu.set(null);
+      return;
+    }
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.operatorMenu.set({ column, x: rect.left, y: rect.bottom + 4 });
+  }
+
+  protected operatorChoices(column: ResolvedColumn<T>): FilterOperator[] {
+    return operatorsFor(column.dataType).filter(
+      (op) => op !== 'isnull' && op !== 'isnotnull',
+    );
+  }
+
+  protected chooseOperator(op: FilterOperator | null): void {
+    const menu = this.operatorMenu();
+    this.operatorMenu.set(null);
+    const field = menu?.column.field;
+    if (!menu || !field) return;
+    const next = new Map(this.rowFilterOps());
+    if (op === null) next.delete(field);
+    else next.set(field, op);
+    this.rowFilterOps.set(next);
+    // re-apply the current editor value with the new operator
+    const raw = this.rowFilterRaw.get(field) ?? '';
+    const effective =
+      op ??
+      menu.column.filterOperator ??
+      defaultOperatorFor(menu.column.dataType);
+    this.store.filter.setRowFilter(
+      field,
+      this.rowFilterExprFor(menu.column, raw, effective),
+    );
+  }
+
   /** Row-filter expression for a column — the column's custom builder wins. */
-  private rowFilterExprFor(column: ResolvedColumn<T>, raw: string) {
+  private rowFilterExprFor(
+    column: ResolvedColumn<T>,
+    raw: string,
+    operator?: FilterOperator,
+  ) {
     const field = column.field;
     if (!field) return null;
-    const operator: FilterOperator | undefined = column.filterOperator;
     if (column.calculateFilterExpression) {
       const text = raw.trim();
-      const op = operator ?? defaultOperatorFor(column.dataType);
+      const op =
+        operator ??
+        column.filterOperator ??
+        defaultOperatorFor(column.dataType);
       return text ? column.calculateFilterExpression(text, op) : null;
     }
     return buildRowFilterExpr(field, column.dataType, raw, operator);
@@ -1009,8 +1192,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected onFilterInput(column: ResolvedColumn<T>, raw: string): void {
     const field = column.field;
     if (!field) return;
+    this.rowFilterRaw.set(field, raw);
     this.debounced(`f:${field}`, () => {
-      this.store.filter.setRowFilter(field, this.rowFilterExprFor(column, raw));
+      this.store.filter.setRowFilter(
+        field,
+        this.rowFilterExprFor(column, raw, this.currentOperator(column)),
+      );
     });
   }
 
@@ -1018,7 +1205,115 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected onFilterSelect(column: ResolvedColumn<T>, raw: string): void {
     const field = column.field;
     if (!field) return;
-    this.store.filter.setRowFilter(field, this.rowFilterExprFor(column, raw));
+    this.rowFilterRaw.set(field, raw);
+    this.store.filter.setRowFilter(
+      field,
+      this.rowFilterExprFor(column, raw, this.currentOperator(column)),
+    );
+  }
+
+  // --- filter panel + builder ------------------------------------------------
+
+  protected readonly builderOpen = signal(false);
+  protected builderTree: BuilderGroup = {
+    kind: 'group',
+    logic: 'and',
+    items: [],
+  };
+  /** Bumped by the recursive editor so the preview text refreshes. */
+  protected readonly builderVersion = signal(0);
+
+  protected readonly builderFields = computed<FilterBuilderField[]>(() =>
+    this.resolvedColumns()
+      .filter((column) => column.filterable && column.field)
+      .map((column) => ({
+        field: column.field as string,
+        caption: column.caption,
+        dataType: column.dataType,
+      })),
+  );
+
+  protected readonly filterPanelText = computed<string | null>(() => {
+    const expr = this.store.filter.builderFilter();
+    if (!expr) return null;
+    return describeExpr(expr, this.builderFields(), this.msg());
+  });
+
+  protected openFilterBuilder(): void {
+    this.builderTree = exprToBuilder(
+      this.store.filter.builderFilter(),
+      this.builderFields(),
+    );
+    if (!this.builderTree.items.length) {
+      const first = this.builderFields()[0];
+      if (first) {
+        this.builderTree.items.push({
+          kind: 'condition',
+          field: first.field,
+          op: operatorsFor(first.dataType)[0],
+          value: '',
+        });
+      }
+    }
+    this.builderVersion.set(this.builderVersion() + 1);
+    this.builderOpen.set(true);
+  }
+
+  protected readonly builderPreview = computed<string>(() => {
+    this.builderVersion();
+    const expr = builderToExpr(this.builderTree, this.builderFields());
+    return expr ? describeExpr(expr, this.builderFields(), this.msg()) : '—';
+  });
+
+  protected applyFilterBuilder(): void {
+    this.store.filter.setBuilderFilter(
+      builderToExpr(this.builderTree, this.builderFields()),
+    );
+    this.builderOpen.set(false);
+  }
+
+  protected clearBuilderFilter(event?: Event): void {
+    event?.stopPropagation();
+    this.store.filter.setBuilderFilter(null);
+  }
+
+  // --- search highlighting ---------------------------------------------------
+
+  private readonly sanitizer = inject(DomSanitizer);
+
+  /** Escaped cell text with `<mark>` around search matches, or null when inactive. */
+  protected searchHighlightHtml(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): SafeHtml | null {
+    const query = this.store.filter.searchText().trim();
+    if (!query) return null;
+    const text = this.cellDisplayText(node, column);
+    // Match on folded text (locale-independent, accent-insensitive), then map
+    // the folded match range back onto the original string for the <mark>.
+    const { folded, sourceIndex } = foldTextWithMap(text);
+    const needle = foldText(query);
+    if (!needle || !folded.includes(needle)) return null;
+    const escape = (value: string) =>
+      value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let html = '';
+    let index = 0;
+    let foldedFrom = 0;
+    for (;;) {
+      const found = folded.indexOf(needle, foldedFrom);
+      if (found < 0) {
+        html += escape(text.slice(index));
+        break;
+      }
+      const start = sourceIndex[found];
+      const last = sourceIndex[found + needle.length - 1];
+      const end = last + ((text.codePointAt(last) ?? 0) > 0xffff ? 2 : 1);
+      html += escape(text.slice(index, start));
+      html += `<mark class="oge-highlight">${escape(text.slice(start, end))}</mark>`;
+      index = end;
+      foldedFrom = found + needle.length;
+    }
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   /** Filter-row lookup select: applies an exact-match filter on the raw value. */
@@ -1074,6 +1369,262 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+  }
+
+  // --- column drag reorder, chooser & context menus --------------------------
+
+  /** Header the dragged column would be inserted in front of (drop indicator). */
+  protected readonly headerDropTargetId = signal<string | null>(null);
+
+  protected onHeaderDragStart(
+    column: ResolvedColumn<T>,
+    event: DragEvent,
+  ): void {
+    if (!column.field || !this.columnReorder()) {
+      event.preventDefault();
+      return;
+    }
+    if (event.dataTransfer) {
+      event.dataTransfer.setData(COLUMN_DRAG_TYPE, column.id);
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  protected onHeaderDragOver(
+    column: ResolvedColumn<T>,
+    event: DragEvent,
+  ): void {
+    if (!event.dataTransfer?.types.includes(COLUMN_DRAG_TYPE)) return;
+    event.preventDefault();
+    if (this.columnReorder() && this.headerDropTargetId() !== column.id) {
+      this.headerDropTargetId.set(column.id);
+    }
+  }
+
+  protected onHeaderDragEnd(): void {
+    this.headerDropTargetId.set(null);
+  }
+
+  protected onHeaderDrop(target: ResolvedColumn<T>, event: DragEvent): void {
+    this.headerDropTargetId.set(null);
+    const sourceId = event.dataTransfer?.getData(COLUMN_DRAG_TYPE);
+    if (!sourceId || !this.columnReorder() || sourceId === target.id) return;
+    event.preventDefault();
+    this.store.columns.reorder(
+      this.resolvedColumns().map((c) => c.id),
+      sourceId,
+      target.id,
+    );
+  }
+
+  protected readonly chooserOpen = signal(false);
+  /** Anchored to the chooser button: its bottom-right corner. */
+  protected readonly chooserPosition = signal<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
+
+  protected toggleChooser(event: Event): void {
+    event.stopPropagation();
+    if (this.chooserOpen()) {
+      this.chooserOpen.set(false);
+      return;
+    }
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.chooserPosition.set({ top: rect.bottom + 4, left: rect.right });
+    this.chooserOpen.set(true);
+  }
+
+  /** Chooser rows: every column with its id and caption, in display order. */
+  protected readonly chooserEntries = computed<
+    readonly { id: string; caption: string; column: OgeColumn<T> | undefined }[]
+  >(() => {
+    const declared = this.declaredColumns();
+    let entries: {
+      id: string;
+      caption: string;
+      column: OgeColumn<T> | undefined;
+    }[];
+    if (declared.length) {
+      entries = declared.map((column, index) => {
+        const field = column.field();
+        return {
+          id: field ?? `col-${index}`,
+          caption: column.caption() ?? (field ? humanize(field) : ''),
+          column,
+        };
+      });
+    } else {
+      entries = this.resolvedColumns().map((column) => ({
+        id: column.id,
+        caption: column.caption,
+        column: undefined,
+      }));
+    }
+    const order = this.store.columns.order();
+    if (!order) return entries;
+    return [...entries].sort((a, b) => {
+      const ia = order.indexOf(a.id);
+      const ib = order.indexOf(b.id);
+      return (
+        (ia < 0 ? Number.MAX_SAFE_INTEGER : ia) -
+        (ib < 0 ? Number.MAX_SAFE_INTEGER : ib)
+      );
+    });
+  });
+
+  protected toggleChooserVisible(entry: {
+    column: OgeColumn<T> | undefined;
+  }): void {
+    entry.column?.visible.set(!entry.column.visible());
+  }
+
+  private chooserDragId: string | null = null;
+  /** Chooser row the dragged column would be inserted in front of. */
+  protected readonly chooserDropTargetId = signal<string | null>(null);
+
+  protected onChooserDragStart(id: string, event: DragEvent): void {
+    this.chooserDragId = id;
+    event.dataTransfer?.setData('text/plain', id);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected onChooserDragOver(id: string, event: DragEvent): void {
+    if (!this.chooserDragId) return;
+    event.preventDefault();
+    if (this.chooserDropTargetId() !== id) this.chooserDropTargetId.set(id);
+  }
+
+  protected onChooserDragEnd(): void {
+    this.chooserDragId = null;
+    this.chooserDropTargetId.set(null);
+  }
+
+  /** Reorders columns by dropping one chooser row onto another. */
+  protected onChooserDrop(targetId: string, event: DragEvent): void {
+    const sourceId = this.chooserDragId;
+    this.onChooserDragEnd();
+    if (!sourceId || sourceId === targetId || !this.columnReorder()) return;
+    event.preventDefault();
+    this.store.columns.reorder(
+      this.chooserEntries().map((entry) => entry.id),
+      sourceId,
+      targetId,
+    );
+  }
+
+  protected readonly contextMenu = signal<{
+    x: number;
+    y: number;
+    items: OgeMenuItem[];
+  } | null>(null);
+
+  protected onRowContextMenuOpen(
+    node: DataRowNode<T>,
+    event: MouseEvent,
+  ): void {
+    const items: OgeMenuItem[] = [];
+    this.rowContextMenu.emit({
+      row: node.data,
+      key: node.key,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      items,
+    });
+    if (!items.length) return; // fall back to the native browser menu
+    event.preventDefault();
+    this.contextMenu.set({ x: event.clientX, y: event.clientY, items });
+  }
+
+  protected runMenuItem(item: OgeMenuItem): void {
+    item.action?.();
+    this.contextMenu.set(null);
+  }
+
+  protected onHeaderContextMenu(
+    column: ResolvedColumn<T>,
+    event: MouseEvent,
+  ): void {
+    const field = column.field;
+    if (!field) return;
+    const messages = this.msg();
+    const items: OgeMenuItem[] = [];
+    if (column.sortable && this.sortMode() !== 'none') {
+      items.push(
+        {
+          text: messages.sortAscending,
+          action: () => this.store.sort.set([{ field, dir: 'asc' }]),
+        },
+        {
+          text: messages.sortDescending,
+          action: () => this.store.sort.set([{ field, dir: 'desc' }]),
+        },
+      );
+      if (this.sortStateOf(column)) {
+        items.push({
+          text: messages.clearSort,
+          action: () => this.store.sort.clear(),
+        });
+      }
+    }
+    if (column.pinned !== 'left') {
+      items.push({
+        text: messages.pinLeft,
+        action: () => this.store.columns.setPinned(column.id, 'left'),
+      });
+    }
+    if (column.pinned !== 'right') {
+      items.push({
+        text: messages.pinRight,
+        action: () => this.store.columns.setPinned(column.id, 'right'),
+      });
+    }
+    if (column.pinned !== false) {
+      items.push({
+        text: messages.unpin,
+        action: () => this.store.columns.setPinned(column.id, false),
+      });
+    }
+    if (column.source) {
+      const source = column.source;
+      items.push({
+        text: messages.hideColumn,
+        action: () => source.visible.set(false),
+      });
+    }
+    // consumers may add / remove / reorder the built-in items
+    this.headerContextMenu.emit({
+      field,
+      caption: column.caption,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      items,
+    });
+    if (!items.length) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.contextMenu.set({ x: event.clientX, y: event.clientY, items });
+  }
+
+  protected closePopups(): void {
+    this.chooserOpen.set(false);
+    this.contextMenu.set(null);
+    this.operatorMenu.set(null);
+    this.builderOpen.set(false);
+  }
+
+  /** Closes popups on clicks outside of them. */
+  protected onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (this.chooserOpen() && !target?.closest?.('.oge-chooser-popup')) {
+      this.chooserOpen.set(false);
+    }
+    if (this.contextMenu() && !target?.closest?.('.oge-context-menu')) {
+      this.contextMenu.set(null);
+    }
+    if (this.operatorMenu() && !target?.closest?.('.oge-operator-menu')) {
+      this.operatorMenu.set(null);
+    }
   }
 
   // --- cells ----------------------------------------------------------------
@@ -1198,12 +1749,42 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected readonly canDelete = this.editingModel.canDelete;
   protected readonly canAdd = this.editingModel.canAdd;
 
-  /** Trailing command cell: shown when row edit or delete actions exist. */
+  /** Trailing command cell: editing actions or custom command buttons. */
   protected readonly hasCommandColumn = computed(
     () =>
-      this.editingModel.editingOptions() !== null &&
-      (this.canUpdate() || this.canDelete()),
+      (this.editingModel.editingOptions() !== null &&
+        (this.canUpdate() || this.canDelete())) ||
+      (this.commandButtons()?.length ?? 0) > 0,
   );
+
+  /** Custom buttons win; otherwise edit/delete derive from the edit mode. */
+  protected readonly effCommandButtons = computed<
+    readonly OgeCommandButton<T>[]
+  >(() => {
+    const custom = this.commandButtons();
+    if (custom?.length) return custom;
+    const mode = this.editMode();
+    const buttons: OgeCommandButton<T>[] = [];
+    if (mode === 'row' && this.canUpdate()) buttons.push({ name: 'edit' });
+    if (mode && this.canDelete()) buttons.push({ name: 'delete' });
+    return buttons;
+  });
+
+  protected commandButtonVisible(
+    button: OgeCommandButton<T>,
+    node: DataRowNode<T>,
+  ): boolean {
+    return button.visible ? button.visible(node.data) : true;
+  }
+
+  protected runCommandButton(
+    button: OgeCommandButton<T>,
+    node: DataRowNode<T>,
+    event: Event,
+  ): void {
+    event.stopPropagation();
+    button.onClick?.(node.data, node.key);
+  }
 
   protected isCellDirty(
     node: DataRowNode<T>,
@@ -1482,38 +2063,60 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    * CSV of the currently visible rows (expansion + filter applied), the
    * hierarchy expressed by indenting the first column.
    */
-  getCsv(options?: CsvOptions): string {
+  /**
+   * Rows, column metadata and depth levels of the currently visible tree
+   * (expansion + filter applied) — the shared source for exporters.
+   */
+  getExportData(): OgeTreeExportData<T> {
     const nodes = untracked(this.flatNodes).filter(
       (node): node is DataRowNode<T> => node.kind === 'data',
     );
-    const levelOf = new Map<T, number>(
-      nodes.map((node) => [node.data, node.level]),
-    );
     const messages = untracked(this.msg);
     // display-faithful text per cell: format > lookup text > boolean labels
-    const textOf = (column: ResolvedColumn<T>, value: unknown): string => {
-      if (column.format) return column.format(value);
-      if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
-      if (column.dataType === 'boolean' && value != null) {
-        return value ? messages.booleanTrue : messages.booleanFalse;
-      }
-      return formatCellValue(value, column.dataType, undefined);
-    };
-    const columns = untracked(this.resolvedColumns).map((column, index) => ({
-      caption: column.caption,
-      field: column.field,
-      dataType: column.dataType,
-      accessor: (row: T): unknown => {
-        const text = textOf(column, column.accessor(row));
-        return index === 0 ? '  '.repeat(levelOf.get(row) ?? 0) + text : text;
-      },
-      format: undefined,
-    }));
-    return buildCsv(
-      nodes.map((node) => node.data),
-      columns,
-      options,
+    const columns: OgeExportColumn<T>[] = untracked(this.resolvedColumns).map(
+      (column) => ({
+        caption: column.caption,
+        field: column.field,
+        dataType: column.dataType,
+        accessor: column.accessor,
+        format: column.format
+          ? column.format
+          : column.lookupItems
+            ? (value: unknown): string =>
+                lookupTextOf(column.lookupItems ?? [], value)
+            : column.dataType === 'boolean'
+              ? (value: unknown): string =>
+                  value == null
+                    ? ''
+                    : value
+                      ? messages.booleanTrue
+                      : messages.booleanFalse
+              : undefined,
+      }),
     );
+    return {
+      rows: nodes.map((node) => node.data),
+      columns,
+      levels: nodes.map((node) => node.level),
+    };
+  }
+
+  getCsv(options?: CsvOptions): string {
+    const { rows, columns, levels } = this.getExportData();
+    const indexOf = new Map<T, number>(rows.map((row, i) => [row, i]));
+    const csvColumns = columns.map((column, columnIndex) => ({
+      ...column,
+      accessor: (row: T): unknown => {
+        const value = column.accessor(row);
+        if (columnIndex !== 0) return value;
+        const text = column.format
+          ? column.format(value)
+          : formatCellValue(value, column.dataType, undefined);
+        return '  '.repeat(levels[indexOf.get(row) ?? 0] ?? 0) + text;
+      },
+      format: columnIndex === 0 ? undefined : column.format,
+    }));
+    return buildCsv(rows, csvColumns, options);
   }
 
   /** Downloads the visible tree as a CSV file. */
@@ -1636,6 +2239,23 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         )
           return;
         this.expandedRowKeys.set([...expanded]);
+      });
+    });
+    // filterValue model ⇄ builder filter slice (guarded both ways)
+    effect(() => {
+      const value = this.filterValue();
+      untracked(() => {
+        const current = this.store.filter.builderFilter();
+        if (JSON.stringify(value) === JSON.stringify(current)) return;
+        this.store.filter.setBuilderFilter(value);
+      });
+    });
+    effect(() => {
+      const current = this.store.filter.builderFilter();
+      untracked(() => {
+        if (JSON.stringify(current) === JSON.stringify(this.filterValue()))
+          return;
+        this.filterValue.set(current);
       });
     });
     // --- state persistence (stateKey) ---

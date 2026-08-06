@@ -1,5 +1,6 @@
 export {
   OgeTreeList,
+  type OgeTreeExportData,
   type OgeTreeRowReparentEvent,
   type OgeTreeRowToggleEvent,
 } from './lib/tree-list/tree-list';
