@@ -31,6 +31,7 @@ import {
   createFieldAccessor,
   createFilterPredicate,
   filterTreeKeys,
+  flattenNestedTree,
   flattenTreeData,
   foldText,
   foldTextWithMap,
@@ -123,12 +124,17 @@ export interface OgeTreeExportData<T = unknown> extends OgeExportData<T> {
   levels: readonly number[];
 }
 
-/** Fired after a row is dropped onto a new parent. */
+/** Where a dragged row lands relative to the drop target. */
+export type OgeTreeDropPosition = 'inside' | 'before' | 'after';
+
+/** Fired after a row is dropped onto (or next to) another row. */
 export interface OgeTreeRowReparentEvent<T = unknown> {
   key: RowKey;
   row: T;
   fromParentKey: RowKey | null;
   toParentKey: RowKey | null;
+  /** `'inside'` reparents; `'before'`/`'after'` order among the target's siblings. */
+  position: OgeTreeDropPosition;
 }
 
 /**
@@ -238,6 +244,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   readonly hasItemsExpr = input<string | ((row: T) => boolean) | undefined>(
     undefined,
   );
+
+  /**
+   * Nested payloads: rows carry their children inline under this field (or
+   * accessor). The tree flattens them internally — `parentIdExpr` is ignored.
+   * Plain-array data only.
+   */
+  readonly itemsExpr = input<
+    string | ((row: T) => readonly T[] | undefined) | undefined
+  >(undefined);
 
   /**
    * `'full'` loads everything up front; `'lazy'` fetches children per
@@ -487,11 +502,32 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return (row) => accessor(row) as RowKey;
   });
 
+  /** Parent map produced from a nested (`itemsExpr`) payload, else null. */
+  private readonly nestedParents = signal<ReadonlyMap<
+    RowKey,
+    RowKey | null
+  > | null>(null);
+
   private readonly parentIdOf = computed<(row: T) => unknown>(() => {
+    const nested = this.nestedParents();
+    if (nested) {
+      const keyOf = this.rowKeyOf();
+      return (row) => nested.get(keyOf(row)) ?? null;
+    }
     const parent = this.parentIdExpr();
     return typeof parent === 'function'
       ? parent
       : createFieldAccessor<T>(parent);
+  });
+
+  private readonly nestedItemsOf = computed<
+    ((row: T) => readonly T[] | undefined) | null
+  >(() => {
+    const expr = this.itemsExpr();
+    if (expr === undefined) return null;
+    if (typeof expr === 'function') return expr;
+    const accessor = createFieldAccessor<T>(expr);
+    return (row) => accessor(row) as readonly T[] | undefined;
   });
 
   private readonly hasChildrenHint = computed<
@@ -1665,8 +1701,11 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   // --- row drag reparenting -------------------------------------------------
 
   private draggedRowKey: RowKey | null = null;
-  /** Key of the row currently hovered as a valid drop target. */
-  protected readonly dropTargetKey = signal<RowKey | null>(null);
+  /** Row + relative position currently hovered as a valid drop target. */
+  protected readonly dropTarget = signal<{
+    key: RowKey;
+    position: OgeTreeDropPosition;
+  } | null>(null);
 
   protected onRowDragStart(node: DataRowNode<T>, event: DragEvent): void {
     this.draggedRowKey = node.key;
@@ -1681,19 +1720,35 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return !ancestorsOf(untracked(this.treeIndex), targetKey).includes(dragged);
   }
 
+  /** Top/bottom quarter of a row = order before/after; middle = reparent inside. */
+  private dropPositionOf(event: DragEvent): OgeTreeDropPosition {
+    const row = (event.currentTarget ?? event.target) as HTMLElement | null;
+    const rect = row?.getBoundingClientRect?.();
+    if (!rect || rect.height <= 0) return 'inside';
+    const offset = (event.clientY - rect.top) / rect.height;
+    if (offset < 0.25) return 'before';
+    if (offset > 0.75) return 'after';
+    return 'inside';
+  }
+
   protected onRowDragOver(node: DataRowNode<T>, event: DragEvent): void {
     if (!this.isValidDropTarget(node.key)) return;
     event.preventDefault();
-    if (this.dropTargetKey() !== node.key) this.dropTargetKey.set(node.key);
+    const position = this.dropPositionOf(event);
+    const current = this.dropTarget();
+    if (current?.key !== node.key || current.position !== position) {
+      this.dropTarget.set({ key: node.key, position });
+    }
   }
 
   protected onRowDragEnd(): void {
     this.draggedRowKey = null;
-    this.dropTargetKey.set(null);
+    this.dropTarget.set(null);
   }
 
   protected onRowDrop(target: DataRowNode<T>, event: DragEvent): void {
     const draggedKey = this.draggedRowKey;
+    const position = this.dropTarget()?.position ?? this.dropPositionOf(event);
     const valid = draggedKey !== null && this.isValidDropTarget(target.key);
     this.onRowDragEnd();
     if (!valid || draggedKey === null) return;
@@ -1702,25 +1757,45 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     const row = index.byKey.get(draggedKey);
     if (row === undefined) return;
     const fromParentKey = index.parentOf.get(draggedKey) ?? null;
-    if (fromParentKey === target.key) return;
+    const toParentKey =
+      position === 'inside'
+        ? target.key
+        : (index.parentOf.get(target.key) ?? null);
+    if (position === 'inside' && fromParentKey === target.key) return;
     const data = untracked(this.data);
     const parentField = untracked(this.lazyParentField);
     // auto-apply only for plain arrays with a writable top-level parent
-    // field; dotted paths and DataSources are the consumer's job
+    // field; dotted paths, nested payloads and DataSources are the
+    // consumer's job (handle rowReparented)
     if (
       !isDataSource(data) &&
+      untracked(this.nestedItemsOf) === null &&
       parentField !== null &&
       !parentField.includes('.')
     ) {
-      (row as Record<string, unknown>)[parentField] = target.key;
+      const rootValue = untracked(this.rootValue);
+      (row as Record<string, unknown>)[parentField] =
+        toParentKey === null ? rootValue : toParentKey;
+      if (position !== 'inside') {
+        // before/after: also move the row next to the target in the backing
+        // array, so sibling order (data order) reflects the drop
+        const array = data as T[];
+        const from = array.indexOf(row);
+        if (from >= 0) array.splice(from, 1);
+        const targetRow = index.byKey.get(target.key);
+        const at = targetRow === undefined ? -1 : array.indexOf(targetRow);
+        if (at < 0) array.push(row);
+        else array.splice(position === 'before' ? at : at + 1, 0, row);
+      }
       this.adapter.reload();
     }
-    this.expandRow(target.key);
+    if (position === 'inside') this.expandRow(target.key);
     this.rowReparented.emit({
       key: draggedKey,
       row,
       fromParentKey,
-      toParentKey: target.key,
+      toParentKey,
+      position,
     });
   }
 
@@ -2156,16 +2231,25 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       untracked(() => this.contentReady.emit());
     });
     effect(() => {
-      const data = this.data();
+      let data = this.data();
       const key = this.rowKeyOf();
       const sortValues = this.sortValueSelectors();
       const parentField = this.lazyParentField();
       const lazy = this.effLoadMode() === 'lazy' && parentField !== null;
       const rootValue = this.rootValue();
+      const itemsOf = this.nestedItemsOf();
+      let nestedParents: ReadonlyMap<RowKey, RowKey | null> | null = null;
+      if (itemsOf && !isDataSource(data)) {
+        // nested payload: flatten inline children into the plain shape
+        const flattened = flattenNestedTree(data, { keyOf: key, itemsOf });
+        data = flattened.rows;
+        nestedParents = flattened.parentOf;
+      }
       const inner = isDataSource(data)
         ? data
         : new ArrayDataSource<T>(data, { key, sortValues });
       untracked(() => {
+        this.nestedParents.set(nestedParents);
         // a new source (or key/parent mapping) invalidates the child cache —
         // stale rows from the previous source must never join the new tree
         if (this.innerSource() !== null) this.deferredLoader.reset();

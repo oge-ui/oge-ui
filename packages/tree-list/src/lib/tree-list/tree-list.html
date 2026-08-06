@@ -326,7 +326,15 @@ store.editing.hasPending())) {
         [attr.data-rowindex]="viewStart() + nodeIndex"
         [style.height.px]="virtualized() ? effRowHeight() : null"
         [style.grid-template-columns]="gridTemplateColumns()"
-        [class.oge-drop-target]="dropTargetKey() === node.key"
+        [class.oge-drop-target]="
+          dropTarget()?.key === node.key && dropTarget()?.position === 'inside'
+        "
+        [class.oge-drop-before]="
+          dropTarget()?.key === node.key && dropTarget()?.position === 'before'
+        "
+        [class.oge-drop-after]="
+          dropTarget()?.key === node.key && dropTarget()?.position === 'after'
+        "
         (click)="onRowClick(node, $event)"
         (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
         (contextmenu)="onRowContextMenuOpen(node, $event)"

@@ -4,15 +4,22 @@ Hierarchical data grid (tree list) for Angular, built on the same engine as
 [`@oge-ui/grid`](https://www.npmjs.com/package/@oge-ui/grid): shared column
 model, theming, virtualization, keyboard navigation and data layer.
 
-- Flat self-referencing data (`id` / `parentId`) — no nested payloads needed
+- Flat self-referencing data (`id` / `parentId`) or nested payloads (`itemsExpr`)
 - O(visible) expand/collapse; 100k-node trees stay smooth with `virtualScroll`
 - Lazy child loading against any `DataSource` (one `parentId eq key` request per expansion)
-- Client-side filtering & search that keep ancestor rows visible
+- Client-side filtering & search that keep ancestor rows visible — with
+  `expandNodesOnFiltering`, per-column operator menu, a filter builder
+  (`[(filterValue)]`) and `<mark>` search highlighting
+- Column chooser, drag-and-drop column reordering, row & header context menus,
+  `[ogeToolbar]` slot, `commandButtons`, `loadPanel`, `wordWrap`
 - Selection (single / multiple / checkbox / recursive tri-state), full treegrid ARIA, RTL-aware keyboard
 - Editing (cell / row / batch) with the grid's editors, validators and `savingChanges` flow;
   `addRow(parentKey)` inserts under a chosen node
+- Drag & drop: reparent by dropping onto a row, or reorder among siblings by
+  dropping before/after (with drop indicators)
 - State persistence (`stateKey`) for sort, filters, column layout and expansion
-- CSV export with the hierarchy expressed as first-column indentation
+- CSV export with first-column indentation; Excel export
+  (`@oge-ui/tree-list/export-excel`, lazy) with native spreadsheet outlining
 
 ## Install
 

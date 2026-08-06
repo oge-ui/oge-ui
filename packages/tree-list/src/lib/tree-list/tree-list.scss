@@ -42,3 +42,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+// sibling-ordering drop indicators (inside-drop reuses .oge-drop-target)
+.oge-row.oge-drop-before {
+  box-shadow: inset 0 2px 0 0 var(--oge-accent);
+}
+
+.oge-row.oge-drop-after {
+  box-shadow: inset 0 -2px 0 0 var(--oge-accent);
+}

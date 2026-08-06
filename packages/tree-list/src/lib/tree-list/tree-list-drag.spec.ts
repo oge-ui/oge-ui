@@ -92,7 +92,13 @@ describe('OgeTreeList drag reparenting', () => {
     const { fixture, host, el } = await render();
     await drag(fixture, el, 'Root B', 'Child A1');
     expect(host.events).toEqual([
-      { key: 3, row: host.data[2], fromParentKey: null, toParentKey: 2 },
+      {
+        key: 3,
+        row: host.data[2],
+        fromParentKey: null,
+        toParentKey: 2,
+        position: 'inside',
+      },
     ]);
     expect(host.data[2].parentId).toBe(2);
     const rootB = rowOf(el, 'Root B');

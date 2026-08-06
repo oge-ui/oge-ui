@@ -5,6 +5,7 @@ export * from './lib/export/csv';
 export * from './lib/rows/flatten';
 export * from './lib/tree/tree-index';
 export * from './lib/tree/flatten-tree';
+export * from './lib/tree/nested-tree';
 export * from './lib/tree/tree-filter';
 export * from './lib/tree/tree-selection';
 export * from './lib/grouping/summaries';

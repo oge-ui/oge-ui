@@ -1,5 +1,6 @@
 export {
   OgeTreeList,
+  type OgeTreeDropPosition,
   type OgeTreeExportData,
   type OgeTreeRowReparentEvent,
   type OgeTreeRowToggleEvent,
