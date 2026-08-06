@@ -780,12 +780,15 @@
           }
         }
       } @empty {
-        @if (noDataTemplate(); as noData) {
-          <div class="oge-no-data">
-            <ng-container *ngTemplateOutlet="noData.templateRef" />
-          </div>
-        } @else {
-          <div class="oge-no-data">{{ msg().noData }}</div>
+        <!-- while a load is in flight the load panel speaks for the grid -->
+        @if (!adapter.loading()) {
+          @if (noDataTemplate(); as noData) {
+            <div class="oge-no-data">
+              <ng-container *ngTemplateOutlet="noData.templateRef" />
+            </div>
+          } @else {
+            <div class="oge-no-data">{{ msg().noData }}</div>
+          }
         }
       }
     </div>
