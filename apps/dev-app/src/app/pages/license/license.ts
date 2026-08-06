@@ -13,9 +13,8 @@ import { DocHeader } from '../../shared/doc-header';
       [chips]="['open-core', 'MIT', 'commercial pivot']"
     >
       <p>
-        OGE UI is <strong>open-core</strong>: the suite is MIT-licensed and
-        free for any use — one analytics package, the Pivot Grid, is
-        commercial.
+        OGE UI is <strong>open-core</strong>: the suite is MIT-licensed and free
+        for any use — one analytics package, the Pivot Grid, is commercial.
       </p>
     </app-doc-header>
 
@@ -27,16 +26,19 @@ import { DocHeader } from '../../shared/doc-header';
       <code>&#64;oge-ui/inputs</code>, <code>&#64;oge-ui/buttons</code> and
       <code>&#64;oge-ui/overlay</code> are released under the
       <a
-        href="https://github.com/kaya2m/oge-ui/blob/main/LICENSE"
+        href="https://github.com/oge-ui/oge-ui/blob/main/LICENSE"
         target="_blank"
         rel="noopener"
         >MIT license</a
       >.
     </p>
     <p>
-      This is a commitment, not a phase: <strong>these packages and every
-      feature currently in them will remain MIT.</strong> No feature that is
-      free today will ever move behind a paid license.
+      This is a commitment, not a phase:
+      <strong
+        >these packages and every feature currently in them will remain
+        MIT.</strong
+      >
+      No feature that is free today will ever move behind a paid license.
     </p>
 
     <h2 class="scroll-mt-20">Commercial — Pivot Grid</h2>
@@ -44,7 +46,7 @@ import { DocHeader } from '../../shared/doc-header';
       <code>&#64;oge-ui/pivot</code> is source-available commercial software
       under the
       <a
-        href="https://github.com/kaya2m/oge-ui/blob/main/packages/pivot/LICENSE"
+        href="https://github.com/oge-ui/oge-ui/blob/main/packages/pivot/LICENSE"
         target="_blank"
         rel="noopener"
         >OGE UI Commercial License</a
@@ -52,13 +54,13 @@ import { DocHeader } from '../../shared/doc-header';
     </p>
     <ul>
       <li>
-        <strong>Free</strong> for evaluation, development, testing and any
-        other non-production use — install it from npm and try everything.
+        <strong>Free</strong> for evaluation, development, testing and any other
+        non-production use — install it from npm and try everything.
       </li>
       <li>
         <strong>Paid license required</strong> for production deployments.
-        Per-developer licensing is being finalized; until pricing is public,
-        get in touch and we will set you up:
+        Per-developer licensing is being finalized; until pricing is public, get
+        in touch and we will set you up:
         <a href="mailto:license&#64;ogeui.com">license&#64;ogeui.com</a>.
       </li>
       <li>
@@ -69,20 +71,18 @@ import { DocHeader } from '../../shared/doc-header';
 
     <h2 class="scroll-mt-20">Why this model?</h2>
     <p>
-      The paid tier funds full-time maintenance of the free one. It is the
-      same model proven by other data-grid vendors — with a deliberately more
-      generous free tier: features that competitors sell (master-detail,
-      Excel export, advanced filtering, server-side operations) are MIT in
-      OGE.
+      The paid tier funds full-time maintenance of the free one. It is the same
+      model proven by other data-grid vendors — with a deliberately more
+      generous free tier: features that competitors sell (master-detail, Excel
+      export, advanced filtering, server-side operations) are MIT in OGE.
     </p>
 
     <h2 class="scroll-mt-20">Questions</h2>
     <p>
       Licensing questions, volume needs, or anything unclear —
-      <a href="mailto:license&#64;ogeui.com">license&#64;ogeui.com</a> or open
-      a
+      <a href="mailto:license&#64;ogeui.com">license&#64;ogeui.com</a> or open a
       <a
-        href="https://github.com/kaya2m/oge-ui/issues"
+        href="https://github.com/oge-ui/oge-ui/issues"
         target="_blank"
         rel="noopener"
         >GitHub issue</a

@@ -21,9 +21,9 @@
   "homepage": "https://ogeui.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kaya2m/oge-ui.git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
     "directory": "packages/pivot"
   },
-  "bugs": "https://github.com/kaya2m/oge-ui/issues",
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
   "license": "SEE LICENSE IN LICENSE"
 }

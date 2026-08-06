@@ -115,4 +115,4 @@ All user-facing strings (aria labels included) are overridable via
   nothing is installed, bundled or executed unless you opt in.
 - MIT licensed — and the umbrella and every package in it will stay MIT.
   The commercial `@oge-ui/pivot` package is not included.
-  Source: [github.com/kaya2m/oge-ui](https://github.com/kaya2m/oge-ui).
+  Source: [github.com/oge-ui/oge-ui](https://github.com/oge-ui/oge-ui).

@@ -16,7 +16,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/oge-ui"><img src="https://img.shields.io/npm/v/oge-ui?label=oge-ui&color=6366f1" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/@oge-ui/grid"><img src="https://img.shields.io/npm/v/@oge-ui/grid?label=%40oge-ui%2Fgrid&color=8b5cf6" alt="npm version" /></a>
-  <a href="https://github.com/kaya2m/oge-ui/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/kaya2m/oge-ui/ci.yml?branch=main&label=CI" alt="CI status" /></a>
+  <a href="https://github.com/oge-ui/oge-ui/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/oge-ui/oge-ui/ci.yml?branch=main&label=CI" alt="CI status" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Commercial%20pivot-22d3ee" alt="MIT license (commercial pivot)" /></a>
   <img src="https://img.shields.io/badge/Angular-%E2%89%A522-dd0031" alt="Angular 22+" />
 </p>

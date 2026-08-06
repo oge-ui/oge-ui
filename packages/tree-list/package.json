@@ -18,15 +18,17 @@
   },
   "dependencies": {
     "@oge-ui/core": "0.5.0",
-    "@oge-ui/grid": "0.5.0"
+    "@oge-ui/grid": "0.5.0",
+    "@oge-ui/inputs": "0.5.0",
+    "@oge-ui/overlay": "0.5.0"
   },
   "sideEffects": false,
   "homepage": "https://ogeui.com",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kaya2m/oge-ui.git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
     "directory": "packages/tree-list"
   },
-  "bugs": "https://github.com/kaya2m/oge-ui/issues",
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
   "license": "MIT"
 }
