@@ -9,7 +9,6 @@ import {
   OgeDropDownButton,
   OgeGrid,
   OgeNumberBox,
-  OgePivotGrid,
   OgeSelectBox,
   OgeTextBox,
   OgeTreeList,
@@ -19,11 +18,12 @@ import {
 
 describe('oge-ui umbrella barrel', () => {
   it('re-exports every family without star-export collisions', () => {
+    // @oge-ui/pivot is deliberately absent — the commercial package is not
+    // part of the MIT umbrella.
     for (const symbol of [
       OgeGrid,
       OgeColumn,
       OgeTreeList,
-      OgePivotGrid,
       OgeButton,
       OgeDropDownButton,
       OgeTextBox,
