@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📚 Documentation & live demos
+    url: https://ogeui.com
+    about: Docs, demos and API reference for every component.
+  - name: 💬 Questions & discussions
+    url: https://github.com/oge-ui/oge-ui/discussions
+    about: Ask usage questions or share what you're building.
+  - name: 💼 Commercial licensing (@oge-ui/pivot)
+    url: https://ogeui.com/license
+    about: Licensing tiers and contact for production use of the Pivot Grid.

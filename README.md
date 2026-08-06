@@ -150,7 +150,10 @@ npx nx run-many -t lint build # what CI runs
 
 Architecture and house conventions live in
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); feature-parity tracking in
-[`ROADMAP.md`](ROADMAP.md).
+[`ROADMAP.md`](ROADMAP.md). Please read
+[`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a PR; security issues go
+through [`SECURITY.md`](SECURITY.md), and the
+[code of conduct](CODE_OF_CONDUCT.md) applies in all project spaces.
 
 ## Licensing
 

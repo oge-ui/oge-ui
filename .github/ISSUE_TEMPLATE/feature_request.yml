@@ -1,0 +1,38 @@
+name: 💡 Feature request
+description: Suggest a new capability or API
+labels: ['enhancement']
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - '@oge-ui/grid (Data Grid)'
+        - '@oge-ui/tree-list (Tree List)'
+        - '@oge-ui/pivot (Pivot Grid)'
+        - '@oge-ui/inputs (TextBox / SelectBox / TagBox / …)'
+        - '@oge-ui/buttons'
+        - '@oge-ui/overlay'
+        - '@oge-ui/core'
+        - 'new package / other'
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: The use case matters more than the proposed API.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API (optional)
+      description: >
+        A sketch of inputs/outputs/template usage. If a reference grid
+        (DevExtreme, AG Grid, Kendo, …) has this feature, link its docs —
+        parity requests are tracked against ROADMAP.md.
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Current workaround (if any)

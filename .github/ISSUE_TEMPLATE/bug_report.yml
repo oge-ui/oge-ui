@@ -1,0 +1,59 @@
+name: 🐛 Bug report
+description: Something doesn't work the way it's documented
+labels: ['bug']
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - '@oge-ui/grid (Data Grid)'
+        - '@oge-ui/tree-list (Tree List)'
+        - '@oge-ui/pivot (Pivot Grid)'
+        - '@oge-ui/inputs (TextBox / SelectBox / TagBox / …)'
+        - '@oge-ui/buttons'
+        - '@oge-ui/overlay'
+        - '@oge-ui/core'
+        - 'oge-ui (umbrella)'
+        - 'docs / ogeui.com'
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: OGE UI version
+      placeholder: '0.5.0'
+    validations:
+      required: true
+  - type: input
+    id: angular
+    attributes:
+      label: Angular version
+      placeholder: '22.0.x'
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+      description: Include the relevant template/TS snippet if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: >
+        Steps to reproduce, ideally with a minimal StackBlitz/repo link.
+        Bugs with a runnable reproduction get fixed much faster.
+      placeholder: |
+        1. Bind a grid to …
+        2. Click …
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: Browser, OS, console errors, screenshots.
