@@ -2,10 +2,15 @@
 
 Open-source UI component suite for Angular, built on signals. The first component is the **Data Grid**: virtualized, server-driven, fully typed, themeable.
 
-| Package | Description |
-|---|---|
-| [`@oge-ui/core`](packages/core) | Framework-agnostic engine: data sources, filtering, row pipeline, virtualization math |
-| [`@oge-ui/grid`](packages/grid) | The Angular Data Grid component |
+| Package | Description | npm |
+|---|---|---|
+| [`@oge-ui/core`](packages/core) | Framework-agnostic engine: data sources, filtering, row pipeline, virtualization math | [npm](https://www.npmjs.com/package/@oge-ui/core) |
+| [`@oge-ui/grid`](packages/grid) | The Angular Data Grid component | [npm](https://www.npmjs.com/package/@oge-ui/grid) |
+| [`@oge-ui/tree-list`](packages/tree-list) | Hierarchical tree grid built on the same foundation | — |
+
+```sh
+npm install @oge-ui/core @oge-ui/grid
+```
 
 ## Development
 
