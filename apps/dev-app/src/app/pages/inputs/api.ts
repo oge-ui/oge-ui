@@ -1,0 +1,92 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { ApiReference } from '../../shared/api-reference';
+import { DocHeader } from '../../shared/doc-header';
+import { PageToc } from '../../shared/page-toc';
+import {
+  OGE_INPUTS_CONFIG_API,
+  OGE_INPUTS_TYPES_API,
+  OGE_NUMBER_BOX_API,
+  OGE_TEXT_AREA_API,
+  OGE_TEXT_BOX_API,
+} from './inputs-api-data';
+
+const SECTIONS = [
+  'OgeTextBox',
+  'OgeTextArea',
+  'OgeNumberBox',
+  'Shared input types',
+  'Inputs configuration',
+] as const;
+
+@Component({
+  selector: 'app-inputs-api',
+  imports: [ApiReference, DocHeader, PageToc, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <app-doc-header
+      title="Inputs API"
+      category="Inputs"
+      [chips]="['Properties', 'Methods', 'Events', 'Types']"
+    >
+      <p>
+        Complete API reference for <code>&#64;oge-ui/inputs</code>. The three
+        editors share one field chrome and one base class — shared members are
+        listed once per editor as "Common" groups, editor-specific members
+        first. Live examples are on the
+        <a
+          routerLink="/components/inputs"
+          class="text-indigo-600 dark:text-indigo-400"
+          >demo pages</a
+        >.
+      </p>
+    </app-doc-header>
+    <app-page-toc [sections]="sections" />
+
+    <app-api-reference
+      title="OgeTextBox"
+      selector="oge-text-box"
+      [sections]="textBoxApi"
+    />
+    <app-api-reference
+      title="OgeTextArea"
+      selector="oge-text-area"
+      [sections]="textAreaApi"
+    />
+    <app-api-reference
+      title="OgeNumberBox"
+      selector="oge-number-box"
+      [sections]="numberBoxApi"
+    />
+    <app-api-reference title="Shared input types" [sections]="typesApi" />
+    <app-api-reference title="Inputs configuration" [sections]="configApi" />
+
+    <h3>Notes</h3>
+    <ul>
+      <li>
+        All editors implement both classic <code>ControlValueAccessor</code> and
+        Signal Forms' <code>FormValueControl</code> — the
+        <code>readonly</code>/<code>errors</code>/<code>touch</code> names are
+        fixed by that contract.
+      </li>
+      <li>
+        <code>(valueCommitted)</code> is the DevExtreme
+        <code>onValueChanged</code> equivalent; native
+        <code>keydown</code>/<code>paste</code>/<code>cut</code> bubble from the
+        inner input and can be bound on the host element directly.
+      </li>
+      <li>
+        The suffix rail order is a contract: prefix · input · pending⊻success ·
+        copy · reveal · clear · spin · suffix.
+      </li>
+    </ul>
+  `,
+})
+export class InputsApiPage {
+  protected readonly sections = SECTIONS;
+  protected readonly textBoxApi = OGE_TEXT_BOX_API;
+  protected readonly textAreaApi = OGE_TEXT_AREA_API;
+  protected readonly numberBoxApi = OGE_NUMBER_BOX_API;
+  protected readonly typesApi = OGE_INPUTS_TYPES_API;
+  protected readonly configApi = OGE_INPUTS_CONFIG_API;
+}

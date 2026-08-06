@@ -1,0 +1,40 @@
+{
+  "name": "overlay",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/overlay/src",
+  "prefix": "oge",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["{projectRoot}", "dist/{projectRoot}"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  },
+  "tags": ["scope:overlay"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "project": "packages/overlay/ng-package.json",
+        "tsConfig": "packages/overlay/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/overlay/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

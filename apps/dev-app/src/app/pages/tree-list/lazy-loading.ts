@@ -82,6 +82,7 @@ class OrgLazySource implements DataSource<LazyNode> {
       [code]="snippet"
     >
       <oge-tree-list
+        style="max-height: 480px"
         [data]="source"
         keyExpr="id"
         parentIdExpr="parentId"

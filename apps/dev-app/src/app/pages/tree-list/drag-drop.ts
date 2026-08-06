@@ -38,6 +38,7 @@ const SNIPPET = `<oge-tree-list
       [code]="snippet"
     >
       <oge-tree-list
+        style="max-height: 480px"
         [data]="org"
         keyExpr="id"
         parentIdExpr="parentId"

@@ -9,7 +9,13 @@
  *   @import '@oge-ui/grid/themes/tailwind.css';
  */
 .oge-grid,
-.oge-tree-list {
+.oge-tree-list,
+.oge-button,
+.oge-button-group,
+.oge-drop-down-button,
+.oge-popup,
+.oge-menu-list,
+.oge-input {
   --oge-border-color: var(--color-slate-200, #e2e8f0);
   --oge-header-bg: var(--color-slate-50, #f8fafc);
   --oge-header-color: var(--color-slate-600, #475569);
@@ -22,4 +28,27 @@
   --oge-accent: var(--color-indigo-600, #4f46e5);
   --oge-radius: var(--radius-lg, 8px);
   --oge-font-size: var(--text-sm, 13.5px);
+  --oge-success: var(--color-green-600, #16a34a);
+  --oge-success-soft: color-mix(
+    in srgb,
+    var(--color-green-600, #16a34a) 12%,
+    transparent
+  );
+  --oge-warning: var(--color-amber-600, #d97706);
+  --oge-warning-soft: color-mix(
+    in srgb,
+    var(--color-amber-600, #d97706) 14%,
+    transparent
+  );
+  --oge-danger: var(--color-red-600, #dc2626);
+  --oge-danger-soft: color-mix(
+    in srgb,
+    var(--color-red-600, #dc2626) 12%,
+    transparent
+  );
+  --oge-badge-bg: var(--color-red-600, #dc2626);
+  /* accent-derived tints must follow the themed accent */
+  --oge-accent-soft: color-mix(in srgb, var(--oge-accent) 10%, transparent);
+  --oge-accent-25: color-mix(in srgb, var(--oge-accent) 25%, transparent);
+  --oge-focus-ring: color-mix(in srgb, var(--oge-accent) 40%, transparent);
 }

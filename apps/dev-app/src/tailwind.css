@@ -6,9 +6,24 @@
 /* Docs typography — Tailwind's preflight resets headings, so the docs
    content styles live here centrally instead of per page. */
 @layer base {
+  /* No global `scroll-behavior: smooth` — it animates every programmatic
+     scroll (breaking automation and jump-to-anchor); the TOC/heading click
+     handlers request smooth scrolling explicitly instead. The scroll padding
+     keeps programmatic scrolls (anchors, scrollIntoView, automation) clear
+     of the sticky 56px header. */
+  html {
+    scroll-padding-top: 4.5rem;
+  }
+
   body {
     @apply bg-white text-gray-900 antialiased;
-    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
   }
 
   .dark body {
@@ -50,6 +65,37 @@
 }
 
 @layer components {
+  /* Content shell: centers the page; when the page renders an
+     `app-page-toc`, a right gutter is reserved and the TOC docks into it
+     (absolutely positioned against this shell, sticky inside). */
+  .doc-shell {
+    position: relative;
+    margin-inline: auto;
+    max-width: 56rem;
+  }
+
+  @media (min-width: 80rem) {
+    .doc-shell:has(app-page-toc) {
+      max-width: 72rem;
+      padding-right: 16.5rem;
+    }
+
+    /* The component gallery lays its cards out three-across — give it the
+       full width instead of the reading-column cap. */
+    .doc-shell:has(app-components-index) {
+      max-width: 88rem;
+    }
+  }
+
+  /* Scrollable areas that should not show a scrollbar (sidebar, TOC). */
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .api-table {
     @apply my-2 mb-6 w-full border-collapse text-sm;
   }

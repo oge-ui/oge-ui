@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/grid",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publishConfig": {
     "access": "public"
   },
@@ -25,7 +25,7 @@
     }
   },
   "dependencies": {
-    "@oge-ui/core": "0.3.0"
+    "@oge-ui/core": "0.4.0"
   },
   "exports": {
     "./themes/*": "./themes/*"

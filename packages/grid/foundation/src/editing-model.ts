@@ -21,6 +21,60 @@ export interface OgeSavingChangesEvent<T = unknown> {
   cancel: boolean;
 }
 
+/** Fires after every change of a save batch reached the DataSource. */
+export interface OgeSavedChangesEvent<T = unknown> {
+  changes: OgeDataChange<T>[];
+}
+
+/** Cancelable: fires before a cell or row editor opens. */
+export interface OgeEditingStartEvent<T = unknown> {
+  key: RowKey;
+  row: T | undefined;
+  /** Field of the cell editor; `undefined` for whole-row editing. */
+  field?: string;
+  cancel: boolean;
+}
+
+/** Cancelable: fires before a new row is inserted into the DataSource. */
+export interface OgeRowInsertingEvent {
+  key: RowKey;
+  values: Record<string, unknown>;
+  cancel: boolean;
+}
+
+/** Fires after a new row was inserted into the DataSource. */
+export interface OgeRowInsertedEvent {
+  key: RowKey;
+  values: Record<string, unknown>;
+}
+
+/** Cancelable: fires before a row update reaches the DataSource. */
+export interface OgeRowUpdatingEvent<T = unknown> {
+  key: RowKey;
+  /** The row as currently loaded, before the update. */
+  row: T | undefined;
+  values: Record<string, unknown>;
+  cancel: boolean;
+}
+
+/** Fires after a row was updated in the DataSource. */
+export interface OgeRowUpdatedEvent {
+  key: RowKey;
+  values: Record<string, unknown>;
+}
+
+/** Cancelable: fires before a row is removed from the DataSource. */
+export interface OgeRowRemovingEvent<T = unknown> {
+  key: RowKey;
+  row: T | undefined;
+  cancel: boolean;
+}
+
+/** Fires after a row was removed from the DataSource. */
+export interface OgeRowRemovedEvent {
+  key: RowKey;
+}
+
 export interface EditingModelDeps<
   T,
   S extends ColumnSource<T> = ColumnSource<T>,
@@ -40,6 +94,20 @@ export interface EditingModelDeps<
   events: {
     /** Fires before changes reach the DataSource; cancelable via the event. */
     savingChanges(event: OgeSavingChangesEvent<T>): void;
+    /** Fires after a save batch was applied (only the non-canceled changes). */
+    savedChanges?(event: OgeSavedChangesEvent<T>): void;
+    /** Cancelable: fires before a row editor opens (`startRowEdit`). */
+    editingStart?(event: OgeEditingStartEvent<T>): void;
+    rowInserting?(event: OgeRowInsertingEvent): void;
+    rowInserted?(event: OgeRowInsertedEvent): void;
+    rowUpdating?(event: OgeRowUpdatingEvent<T>): void;
+    rowUpdated?(event: OgeRowUpdatedEvent): void;
+    rowRemoving?(event: OgeRowRemovingEvent<T>): void;
+    rowRemoved?(event: OgeRowRemovedEvent): void;
+    /** Fires after an edit session ended without saving. */
+    editCanceled?(): void;
+    /** A DataSource write failed while applying a save batch. */
+    dataError?(error: unknown): void;
   };
   /** Re-runs the current load after a save reached the DataSource. */
   reload(): void;
@@ -259,12 +327,31 @@ export class EditingModel<
     ]);
   }
 
-  cancelActiveEditor(): void {
+  cancelActiveEditor(notify = true): void {
+    const hadEditor =
+      this.deps.slice.editCell() !== null ||
+      this.deps.slice.editRowKey() !== null;
     const rowKey = this.deps.slice.editRowKey();
     if (rowKey !== null && this.deps.slice.isAdded(rowKey)) {
       this.deps.slice.dropAdded(rowKey);
     }
     this.deps.slice.stopEditor();
+    if (notify && hadEditor) this.deps.events.editCanceled?.();
+  }
+
+  /**
+   * Discards pending changes and closes any open editor, emitting
+   * `editCanceled` at most once — the imperative `discardChanges()` backend.
+   */
+  cancelEditing(): void {
+    const slice = this.deps.slice;
+    const hadWork =
+      untracked(slice.hasPending) ||
+      slice.editCell() !== null ||
+      slice.editRowKey() !== null;
+    this.cancelActiveEditor(false);
+    this.discardAllChanges(false);
+    if (hadWork) this.deps.events.editCanceled?.();
   }
 
   onEditorBlur(): void {
@@ -296,7 +383,15 @@ export class EditingModel<
 
   startRowEdit(node: DataRowNode<T>, event?: Event): void {
     event?.stopPropagation();
+    if (!this.notifyEditingStart(node.key, node.data)) return;
     this.deps.slice.startRow(node.key);
+  }
+
+  /** Emits the cancelable `editingStart` event; `false` when canceled. */
+  notifyEditingStart(key: RowKey, row: T | undefined, field?: string): boolean {
+    const event: OgeEditingStartEvent<T> = { key, row, field, cancel: false };
+    this.deps.events.editingStart?.(event);
+    return !event.cancel;
   }
 
   /** Saves the row editor (row + popup modes). */
@@ -404,8 +499,53 @@ export class EditingModel<
     void this.runSave(changes);
   }
 
-  discardAllChanges(): void {
+  discardAllChanges(notify = true): void {
+    const hadPending = untracked(this.deps.slice.hasPending);
     this.deps.slice.clearPending();
+    if (notify && hadPending) this.deps.events.editCanceled?.();
+  }
+
+  /** Emits the cancelable per-change pre event; `false` when canceled. */
+  private notifyChangeApplying(change: OgeDataChange<T>): boolean {
+    const values = (change.data ?? {}) as Record<string, unknown>;
+    if (change.type === 'insert') {
+      const event: OgeRowInsertingEvent = {
+        key: change.key,
+        values,
+        cancel: false,
+      };
+      this.deps.events.rowInserting?.(event);
+      return !event.cancel;
+    }
+    const row = this.dataNodeOf(change.key)?.data;
+    if (change.type === 'update') {
+      const event: OgeRowUpdatingEvent<T> = {
+        key: change.key,
+        row,
+        values,
+        cancel: false,
+      };
+      this.deps.events.rowUpdating?.(event);
+      return !event.cancel;
+    }
+    const event: OgeRowRemovingEvent<T> = {
+      key: change.key,
+      row,
+      cancel: false,
+    };
+    this.deps.events.rowRemoving?.(event);
+    return !event.cancel;
+  }
+
+  private notifyChangeApplied(change: OgeDataChange<T>): void {
+    const values = (change.data ?? {}) as Record<string, unknown>;
+    if (change.type === 'insert') {
+      this.deps.events.rowInserted?.({ key: change.key, values });
+    } else if (change.type === 'update') {
+      this.deps.events.rowUpdated?.({ key: change.key, values });
+    } else {
+      this.deps.events.rowRemoved?.({ key: change.key });
+    }
   }
 
   private async runSave(changes: OgeDataChange<T>[]): Promise<void> {
@@ -417,8 +557,11 @@ export class EditingModel<
     this.deps.events.savingChanges(event);
     if (event.cancel) return;
     const source = this.deps.source();
+    const applied: OgeDataChange<T>[] = [];
     try {
       for (const change of changes) {
+        // canceled changes are discarded with the rest of the pending set
+        if (!this.notifyChangeApplying(change)) continue;
         if (change.type === 'update') {
           await source?.update?.(change.key, change.data as Partial<T>);
         } else if (change.type === 'insert') {
@@ -426,10 +569,15 @@ export class EditingModel<
         } else {
           await source?.remove?.(change.key);
         }
+        this.notifyChangeApplied(change);
+        applied.push(change);
       }
+    } catch (error) {
+      this.deps.events.dataError?.(error);
     } finally {
       this.deps.slice.clearPending();
       this.deps.reload();
     }
+    if (applied.length) this.deps.events.savedChanges?.({ changes: applied });
   }
 }

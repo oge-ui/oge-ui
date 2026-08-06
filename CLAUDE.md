@@ -21,3 +21,10 @@
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
 <!-- nx configuration end-->
+
+# Workspace architecture & conventions
+
+- **Read `docs/ARCHITECTURE.md` FIRST before exploring the codebase** — it documents the package layout, new-package scaffold checklist, component authoring rules, public API language, token/theme system, testing patterns, and dev-app registration steps. It replaces most discovery work; only explore beyond it for feature-specific details.
+- Key invariants (details in ARCHITECTURE.md): signal APIs only (no decorators), OnPush + ViewEncapsulation.None + `.oge-*` global classes, string-union modes (no enums), tokens from `packages/grid/src/lib/styles/_tokens.scss` (never raw values), vitest specs beside source, all user-facing strings in a messages interface with `provideOge<X>Config()`.
+- Component libs: `@oge-ui/core` (framework-free engine), `@oge-ui/grid`, `@oge-ui/tree-list`, `@oge-ui/pivot`, `@oge-ui/buttons`. Demo/docs: `apps/dev-app` (+ `dev-app-e2e` Playwright/axe).
+- When you learn a new workspace-wide convention, update `docs/ARCHITECTURE.md` instead of leaving it undocumented.

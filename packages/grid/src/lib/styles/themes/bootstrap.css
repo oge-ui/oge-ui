@@ -9,7 +9,13 @@
  *   @import '@oge-ui/grid/themes/bootstrap.css';
  */
 .oge-grid,
-.oge-tree-list {
+.oge-tree-list,
+.oge-button,
+.oge-button-group,
+.oge-drop-down-button,
+.oge-popup,
+.oge-menu-list,
+.oge-input {
   --oge-border-color: var(--bs-border-color, #dee2e6);
   --oge-header-bg: var(--bs-tertiary-bg, #f8f9fa);
   --oge-header-color: var(--bs-emphasis-color, #212529);
@@ -26,4 +32,17 @@
   --oge-radius: var(--bs-border-radius, 6px);
   --oge-row-height: 42px;
   --oge-cell-padding-y: 10px;
+  --oge-success: var(--bs-success, #198754);
+  --oge-success-soft: rgba(var(--bs-success-rgb, 25, 135, 84), 0.12);
+  --oge-warning: var(--bs-warning, #ffc107);
+  --oge-warning-soft: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.15);
+  /* Bootstrap's warning is a light amber — dark text, like Bootstrap itself */
+  --oge-warning-contrast: #212529;
+  --oge-danger: var(--bs-danger, #dc3545);
+  --oge-danger-soft: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.12);
+  --oge-badge-bg: var(--bs-danger, #dc3545);
+  /* accent-derived tints must follow the themed accent */
+  --oge-accent-soft: color-mix(in srgb, var(--oge-accent) 10%, transparent);
+  --oge-accent-25: color-mix(in srgb, var(--oge-accent) 25%, transparent);
+  --oge-focus-ring: color-mix(in srgb, var(--oge-accent) 40%, transparent);
 }

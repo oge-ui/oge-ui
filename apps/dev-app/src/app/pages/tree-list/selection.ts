@@ -34,6 +34,7 @@ const SNIPPET = `<oge-tree-list
 
     <app-demo-card [chips]="['tri-state', 'cascade']" [code]="snippet">
       <oge-tree-list
+        style="max-height: 480px"
         [data]="org"
         keyExpr="id"
         parentIdExpr="parentId"

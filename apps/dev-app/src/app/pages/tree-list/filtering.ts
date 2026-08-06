@@ -55,6 +55,7 @@ const SNIPPET = `<oge-tree-list
         }
       </div>
       <oge-tree-list
+        style="max-height: 480px"
         [data]="org"
         keyExpr="id"
         parentIdExpr="parentId"

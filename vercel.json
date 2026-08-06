@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx nx build dev-app",
+  "outputDirectory": "dist/apps/dev-app/browser",
+  "installCommand": "npm ci",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

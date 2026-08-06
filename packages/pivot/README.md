@@ -67,12 +67,7 @@ export class SalesPage {
 Measures can post-process their values after aggregation:
 
 ```html
-<oge-pivot-field
-  dataField="amount" caption="% of Column" area="data"
-  summaryType="sum" summaryDisplayMode="percentOfColumnGrandTotal" />
-<oge-pivot-field
-  dataField="amount" caption="Running" area="data"
-  summaryType="sum" [runningTotal]="{ direction: 'row' }" />
+<oge-pivot-field dataField="amount" caption="% of Column" area="data" summaryType="sum" summaryDisplayMode="percentOfColumnGrandTotal" /> <oge-pivot-field dataField="amount" caption="Running" area="data" summaryType="sum" [runningTotal]="{ direction: 'row' }" />
 ```
 
 The same options are reachable at runtime from each measure chip's menu.
@@ -98,7 +93,7 @@ requests are aborted through `options.signal`.
 ## Export
 
 ```ts
-grid.exportCsv('sales.csv');            // what's on screen, headers flattened
+grid.exportCsv('sales.csv'); // what's on screen, headers flattened
 
 const { exportPivotToExcel } = await import('@oge-ui/pivot/export-excel');
 await exportPivotToExcel(grid, { filename: 'sales.xlsx' });
@@ -116,6 +111,18 @@ The Excel entry keeps `exceljs` out of your main bundle (optional peer);
 Field layout (areas, order, summary settings, filters), expansion on both axes
 and the field panel state round-trip through `OGE_STATE_STORAGE` (default:
 localStorage; pluggable with any async backend).
+
+## Imperative API & events
+
+Methods: `getResult()` (the matrix exactly as rendered), `drillDown(args)`,
+`expandAll(area)` / `collapseAll(area)`, `getFieldLayout()`,
+`showFieldChooser()`, `state()` / `applyState()`, `getCsv()` / `exportCsv()`.
+Events: `(cellClick)` / `(cellDblClick)` → `{ rowPath, columnPath,
+measureIndex, value, event }`, `(fieldLayoutChange)`, `(stateChange)`; the
+DevExtreme `cellPrepared` callback maps to the `customizeCell` input, and
+jQuery-era lifecycle members (`option()`, `repaint()`,
+`onInitialized`/`onOptionChanged`/`onContentReady`) are intentionally not
+replicated — signals and Angular lifecycle cover them.
 
 ## Theming
 

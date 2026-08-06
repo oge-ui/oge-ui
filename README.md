@@ -1,4 +1,4 @@
-# oge — Angular UI Components
+# OGE — Angular UI Components
 
 Open-source UI component suite for Angular, built on signals. The first component is the **Data Grid**: virtualized, server-driven, fully typed, themeable.
 

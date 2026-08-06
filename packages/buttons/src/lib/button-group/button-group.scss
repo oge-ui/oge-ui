@@ -1,0 +1,80 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-button-group {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  vertical-align: middle;
+
+  // Segmented look: merge inner radii and collapse doubled borders.
+  > .oge-button:not(:first-child) .oge-button-native {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+
+  > .oge-button:not(:last-child) .oge-button-native {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  > .oge-button + .oge-button {
+    margin-inline-start: -1px;
+  }
+
+  // Translucent outlined borders would stack into a darker seam where
+  // neighbours overlap — drop the leading edge of the second segment.
+  > .oge-button-outlined + .oge-button-outlined .oge-button-native {
+    border-inline-start-color: transparent;
+  }
+
+  // Solid severity fills merge into one slab without a visible boundary —
+  // separate adjacent colored segments with a soft contrast seam.
+  > .oge-button-colored:not(.oge-button-outlined):not(.oge-button-text-mode)
+    + .oge-button-colored:not(.oge-button-outlined):not(.oge-button-text-mode)
+    .oge-button-native {
+    border-inline-start-color: color-mix(
+      in srgb,
+      var(--oge-btn-contrast, var(--oge-severity-contrast)) 30%,
+      transparent
+    );
+  }
+
+  // Keep the focused segment's ring above its neighbours.
+  > .oge-button:focus-within {
+    z-index: 1;
+  }
+}
+
+// Selected segments always use the accent pair, independent of severity.
+// Scoped under the group so intent beats the styling-mode rules regardless
+// of component style injection order.
+.oge-button-group .oge-button-selected {
+  --oge-btn-main: var(--oge-accent);
+  --oge-btn-soft: var(--oge-accent-soft);
+
+  .oge-button-native {
+    background: var(--oge-accent-soft);
+    border-color: var(--oge-accent);
+    color: var(--oge-accent);
+    z-index: 1;
+
+    &:hover:not(:disabled) {
+      background: var(--oge-accent-25);
+    }
+  }
+}
+
+// Selected solid-severity segments keep their fill, just darker.
+.oge-button-group
+  .oge-button-selected.oge-button-colored:not(.oge-button-outlined):not(
+    .oge-button-text-mode
+  )
+  .oge-button-native {
+  background: color-mix(in srgb, var(--oge-btn-main) 78%, #000 22%);
+  border-color: transparent;
+  color: var(--oge-btn-contrast, var(--oge-severity-contrast));
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--oge-btn-main) 72%, #000 28%);
+  }
+}

@@ -9,15 +9,24 @@ import { RouterLink } from '@angular/router';
   template: `
     <div class="mb-6 border-b border-gray-200 pb-6 dark:border-gray-800">
       <nav class="mb-2 flex items-center gap-1.5 text-[12.5px] text-gray-400">
-        <a routerLink="/getting-started" class="hover:text-gray-600 dark:hover:text-gray-300">Docs</a>
+        <a
+          routerLink="/getting-started"
+          class="hover:text-gray-600 dark:hover:text-gray-300"
+          >Docs</a
+        >
         <span>/</span>
-        <a routerLink="/components/data-grid" class="hover:text-gray-600 dark:hover:text-gray-300">
+        <a
+          [routerLink]="categoryLink()"
+          class="hover:text-gray-600 dark:hover:text-gray-300"
+        >
           {{ category() }}
         </a>
         <span>/</span>
         <span class="text-gray-500 dark:text-gray-400">{{ title() }}</span>
       </nav>
-      <h1 class="!m-0 text-[26px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+      <h1
+        class="!m-0 text-[26px] font-semibold tracking-tight text-gray-900 dark:text-gray-100"
+      >
         {{ title() }}
       </h1>
       <div class="mt-2 [&>p]:!my-0 [&>p]:max-w-3xl">
@@ -40,5 +49,7 @@ import { RouterLink } from '@angular/router';
 export class DocHeader {
   readonly title = input.required<string>();
   readonly category = input('Data Grid');
+  /** Breadcrumb target of the category link. */
+  readonly categoryLink = input('/components/data-grid');
   readonly chips = input<readonly string[]>([]);
 }

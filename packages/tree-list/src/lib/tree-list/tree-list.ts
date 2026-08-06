@@ -103,6 +103,18 @@ import {
   type OgeHeaderTemplateContext,
   type OgeRowClickEvent,
   type OgeSavingChangesEvent,
+  type OgeSavedChangesEvent,
+  type OgeEditingStartEvent,
+  type OgeRowInsertingEvent,
+  type OgeRowInsertedEvent,
+  type OgeRowUpdatingEvent,
+  type OgeRowUpdatedEvent,
+  type OgeRowRemovingEvent,
+  type OgeRowRemovedEvent,
+  type OgeSelectionChangedEvent,
+  type OgeFocusedRowChangedEvent,
+  type OgeExportingEvent,
+  type OgeDataErrorEvent,
   type OgeSearchPanelOptions,
   type OgeSortingOptions,
   type SelectionMode,
@@ -219,7 +231,8 @@ function treeSource<T>(
   host: {
     class: 'oge-tree-list',
     '[class.oge-virtual]': 'virtualized()',
-    '[class.oge-loading]': 'adapter.loading()',
+    '[class.oge-loading]':
+      'adapter.loading() || customLoadingMessage() !== null',
     '[class.oge-wrap]': 'wordWrap()',
     '[class.oge-rtl]': 'rtl()',
     '[attr.dir]':
@@ -445,6 +458,34 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   readonly rowCollapsed = output<OgeTreeRowToggleEvent<T>>();
   /** Prefill new rows created by `addRow()` before their editors open. */
   readonly initNewRow = output<OgeTreeInitNewRowEvent>();
+  /** Fires when a data cell is double-clicked. */
+  readonly cellDblClick = output<OgeCellClickEvent<T>>();
+  /** Fires after the selection changed, with `addedKeys`/`removedKeys` diffs. */
+  readonly selectionChanged = output<OgeSelectionChangedEvent>();
+  /** Fires after the focused row changed (`focusedRowEnabled` or key writes). */
+  readonly focusedRowChanged = output<OgeFocusedRowChangedEvent<T>>();
+  /** Fires when a DataSource load or save fails. */
+  readonly dataErrorOccurred = output<OgeDataErrorEvent>();
+  /** Fires after a save batch was applied (only the non-canceled changes). */
+  readonly savedChanges = output<OgeSavedChangesEvent<T>>();
+  /** Cancelable: fires before a cell or row editor opens. */
+  readonly editingStart = output<OgeEditingStartEvent<T>>();
+  /** Cancelable: fires before a new row is inserted into the DataSource. */
+  readonly rowInserting = output<OgeRowInsertingEvent>();
+  /** Fires after a new row was inserted into the DataSource. */
+  readonly rowInserted = output<OgeRowInsertedEvent>();
+  /** Cancelable: fires before a row update reaches the DataSource. */
+  readonly rowUpdating = output<OgeRowUpdatingEvent<T>>();
+  /** Fires after a row was updated in the DataSource. */
+  readonly rowUpdated = output<OgeRowUpdatedEvent>();
+  /** Cancelable: fires before a row is removed from the DataSource. */
+  readonly rowRemoving = output<OgeRowRemovingEvent<T>>();
+  /** Fires after a row was removed from the DataSource. */
+  readonly rowRemoved = output<OgeRowRemovedEvent>();
+  /** Fires after an edit session ended without saving. */
+  readonly editCanceled = output<void>();
+  /** Cancelable: fires before a CSV export starts; `fileName` is mutable. */
+  readonly exporting = output<OgeExportingEvent>();
   /** Fires after the tree has rendered a new result set. */
   readonly contentReady = output<void>();
   /**
@@ -1020,7 +1061,8 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   // --- client-side paging over the visible rows ------------------------------
 
-  protected readonly pageIndex = signal(0);
+  /** Current zero-based page index (writable signal). */
+  readonly pageIndex = signal(0);
   /** User-picked size from the pager; `0` = "all rows", `null` = use options. */
   private readonly pageSizeOverride = signal<number | null>(null);
 
@@ -1057,9 +1099,8 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return (row) => selector(row);
   });
 
-  /** Visible data-row count (drives aria-rowcount). */
   /** Visible data-row count across all pages (pager totals, select-all). */
-  protected readonly totalDataCount = computed(() =>
+  readonly totalCount = computed(() =>
     this.flatNodes().reduce(
       (count, node) => (node.kind === 'data' ? count + 1 : count),
       0,
@@ -1067,7 +1108,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   );
 
   /** Rendered data-row count (aria-rowcount of the current page). */
-  protected readonly totalCount = computed(() =>
+  protected readonly renderedRowCount = computed(() =>
     this.renderNodes().reduce(
       (count, node) => (node.kind === 'data' ? count + 1 : count),
       0,
@@ -1273,7 +1314,8 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     ),
   );
 
-  protected isRowSelected(key: RowKey): boolean {
+  /** Whether the row carrying `key` is currently selected. */
+  isRowSelected(key: RowKey): boolean {
     return this.store.selection.isSelected(key);
   }
 
@@ -1366,17 +1408,21 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   protected toggleSelectAll(): void {
-    if (untracked(this.allSelected)) {
-      this.store.selection.clear();
-      return;
-    }
+    if (untracked(this.allSelected)) this.clearSelection();
+    else this.selectAll();
+  }
+
+  /**
+   * Selects every visible row; recursive mode additionally cascades to all
+   * their descendants, so select-all and per-row toggles agree about scope
+   * under a filter.
+   */
+  selectAll(): void {
     const keys = untracked(this.dataKeys);
     if (!untracked(this.selectionRecursive)) {
       this.store.selection.replace(keys);
       return;
     }
-    // recursive mode cascades: visible keys plus all their descendants, so
-    // select-all and per-row toggles agree about scope under a filter
     const index = untracked(this.treeIndex);
     const keyOf = untracked(this.rowKeyOf);
     const selected = new Set<RowKey>(keys);
@@ -1394,6 +1440,16 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       }
     }
     this.store.selection.replace([...selected]);
+  }
+
+  /** Clears the selection. */
+  clearSelection(): void {
+    this.store.selection.clear();
+  }
+
+  /** Deselects every row — same as `clearSelection()` (DevExtreme-parity name). */
+  deselectAll(): void {
+    this.clearSelection();
   }
 
   protected ariaSelectedOf(node: DataRowNode<T>): boolean | null {
@@ -2338,6 +2394,16 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     confirmDeleteMessage: computed(() => this.msg().confirmDelete),
     events: {
       savingChanges: (event) => this.savingChanges.emit(event),
+      savedChanges: (event) => this.savedChanges.emit(event),
+      editingStart: (event) => this.editingStart.emit(event),
+      rowInserting: (event) => this.rowInserting.emit(event),
+      rowInserted: (event) => this.rowInserted.emit(event),
+      rowUpdating: (event) => this.rowUpdating.emit(event),
+      rowUpdated: (event) => this.rowUpdated.emit(event),
+      rowRemoving: (event) => this.rowRemoving.emit(event),
+      rowRemoved: (event) => this.rowRemoved.emit(event),
+      editCanceled: () => this.editCanceled.emit(),
+      dataError: (error) => this.dataErrorOccurred.emit({ error }),
     },
     // saved rows may live in the lazy child cache — drop it so the reload
     // re-fetches open levels and the UI shows the persisted values
@@ -2514,7 +2580,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.editingModel.commitActiveRow();
   }
 
-  protected deleteRow(node: DataRowNode<T>, event?: Event): void {
+  protected deleteRowNode(node: DataRowNode<T>, event?: Event): void {
     this.editingModel.deleteRow(node, event);
   }
 
@@ -2551,6 +2617,16 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   ): void {
     // ignore events bubbling out of an open editor (e.g. its own Enter commit)
     if ((event?.target as HTMLElement | null)?.closest?.('.oge-editor')) return;
+    if (event?.type === 'dblclick') {
+      this.cellDblClick.emit({
+        row: node.data,
+        key: node.key,
+        field: column.field,
+        value: column.accessor(node.data),
+        event,
+      });
+      return;
+    }
     if (event?.type === 'click') {
       this.cellClick.emit({
         row: node.data,
@@ -2571,6 +2647,10 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       return;
     }
     if (!this.store.editing.isCellEditing(node.key, column.field)) {
+      if (
+        !this.editingModel.notifyEditingStart(node.key, node.data, column.field)
+      )
+        return;
       this.store.editing.startCell(node.key, column.field);
     }
   }
@@ -2768,6 +2848,136 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   /**
+   * Expands the path to `key`, scrolls to it and focuses it — same as
+   * `focusRow()` (DevExtreme-parity name).
+   */
+  navigateToRow(key: RowKey): void {
+    this.focusRow(key);
+  }
+
+  /** Message shown by `beginCustomLoading()`; `null` while inactive. */
+  protected readonly customLoadingMessage = signal<string | null>(null);
+
+  /**
+   * Shows the load panel with an optional custom message (default:
+   * `messages.loading`) until `endCustomLoading()` — independent of
+   * data-source activity and of the `loadPanel` input.
+   */
+  beginCustomLoading(message?: string): void {
+    this.customLoadingMessage.set(message ?? untracked(this.msg).loading);
+  }
+
+  /** Hides the load panel shown by `beginCustomLoading()`. */
+  endCustomLoading(): void {
+    this.customLoadingMessage.set(null);
+  }
+
+  /** Navigates to the given zero-based page (clamped to the valid range). */
+  setPageIndex(index: number): void {
+    const count = untracked(this.pageCount);
+    this.pageIndex.set(Math.min(Math.max(0, index), count - 1));
+  }
+
+  /** Current page size; `0` when paging is off or set to "all rows". */
+  pageSize(): number {
+    return untracked(this.effPageSize) ?? 0;
+  }
+
+  /** Changes the page size (`0` shows all rows) and resets to the first page. */
+  setPageSize(size: number): void {
+    this.pageSizeOverride.set(size);
+    this.pageIndex.set(0);
+  }
+
+  /** The flat data node carrying `key`, if it is currently rendered. */
+  private dataNodeByKey(key: RowKey): DataRowNode<T> | undefined {
+    return untracked(this.flatNodes).find(
+      (node): node is DataRowNode<T> =>
+        node.kind === 'data' && node.key === key,
+    );
+  }
+
+  /** Data of the selected rows, narrowed per mode like `getSelectedRowKeys`. */
+  getSelectedRowsData(
+    mode: 'all' | 'leavesOnly' | 'excludeRecursive' = 'all',
+  ): T[] {
+    const index = untracked(this.treeIndex);
+    return this.getSelectedRowKeys(mode)
+      .map((key) => index.byKey.get(key))
+      .filter((row): row is T => row !== undefined);
+  }
+
+  /**
+   * Copies the selected rows (with a header) to the clipboard as
+   * tab-separated values.
+   */
+  async copyToClipboard(): Promise<void> {
+    const selected = untracked(this.store.selection.selected);
+    if (!selected.size) return;
+    const { columns } = this.getExportData();
+    const rows = untracked(this.flatNodes)
+      .filter(
+        (node): node is DataRowNode<T> =>
+          node.kind === 'data' && selected.has(node.key),
+      )
+      .map((node) => node.data);
+    if (!rows.length) return;
+    const text = buildCsv(rows, columns, { separator: '\t', bom: false });
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    }
+  }
+
+  /**
+   * Opens the row editor for the row carrying `key`. Effective in
+   * `row`/`form`/`popup` modes; requires `editing.allowUpdating`.
+   */
+  editRow(key: RowKey): void {
+    if (!untracked(this.editingModel.canUpdate)) return;
+    const node = this.dataNodeByKey(key);
+    if (node) this.editingModel.startRowEdit(node);
+  }
+
+  /**
+   * Deletes the row carrying `key`: staged in batch mode (toggle), saved
+   * immediately otherwise. Requires `editing.allowDeleting`.
+   */
+  deleteRow(key: RowKey): void {
+    if (!untracked(this.editingModel.canDelete)) return;
+    const node = this.dataNodeByKey(key);
+    if (node) this.editingModel.deleteRow(node);
+  }
+
+  /**
+   * Saves pending edits: commits the open editor, and in batch mode saves the
+   * whole staged change set. `savingChanges` can still cancel the save.
+   */
+  saveChanges(): void {
+    const mode = untracked(this.editingModel.editMode);
+    if (mode === 'batch') {
+      this.editingModel.commitActiveCell();
+      this.editingModel.saveAllChanges();
+    } else if (mode === 'cell') {
+      this.editingModel.commitActiveCell();
+    } else {
+      this.editingModel.commitActiveRow();
+    }
+  }
+
+  /**
+   * Discards every pending change and closes any open editor; emits
+   * `editCanceled` when anything was open or pending.
+   */
+  discardChanges(): void {
+    this.editingModel.cancelEditing();
+  }
+
+  /** Whether unsaved edits exist: staged changes, added or removed rows. */
+  hasChanges(): boolean {
+    return untracked(this.store.editing.hasPending);
+  }
+
+  /**
    * CSV of the currently visible rows (expansion + filter applied), the
    * hierarchy expressed by indenting the first column.
    */
@@ -2827,15 +3037,22 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return buildCsv(rows, csvColumns, options);
   }
 
-  /** Downloads the visible tree as a CSV file. */
+  /**
+   * Downloads the visible tree as a CSV file. Fires the cancelable
+   * `exporting` event first (the Excel helper function calls
+   * `getExportData` directly and does not).
+   */
   exportCsv(filename = 'tree-list.csv'): void {
+    const event: OgeExportingEvent = { fileName: filename, cancel: false };
+    this.exporting.emit(event);
+    if (event.cancel) return;
     const csv = this.getCsv();
     if (typeof document === 'undefined') return;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = filename;
+    anchor.download = event.fileName;
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -2947,6 +3164,41 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
           return;
         this.selectedKeys.set([...selected]);
       });
+    });
+    // selectionChanged with added/removed diffs; the initial state is not a change
+    let previousSelection: ReadonlySet<RowKey> | null = null;
+    effect(() => {
+      const selected = this.store.selection.selected();
+      const previous = previousSelection;
+      previousSelection = selected;
+      if (previous === null) return;
+      if (
+        previous.size === selected.size &&
+        [...selected].every((key) => previous.has(key))
+      )
+        return;
+      this.selectionChanged.emit({
+        selectedKeys: [...selected],
+        addedKeys: [...selected].filter((key) => !previous.has(key)),
+        removedKeys: [...previous].filter((key) => !selected.has(key)),
+      });
+    });
+    // focusedRowChanged; the initial key is not a change
+    let previousFocusedKey: RowKey | null | undefined;
+    effect(() => {
+      const key = this.focusedRowKey();
+      const previous = previousFocusedKey;
+      previousFocusedKey = key;
+      if (previous === undefined || previous === key) return;
+      this.focusedRowChanged.emit({
+        key,
+        row: key === null ? undefined : untracked(() => this.getNodeByKey(key)),
+      });
+    });
+    // surface DataSource load failures (save failures route through the model)
+    effect(() => {
+      const error = this.adapter.error();
+      if (error !== null) this.dataErrorOccurred.emit({ error });
     });
     // expandedRowKeys model ⇄ expansion slice (guarded both ways, polarity-aware)
     effect(() => {

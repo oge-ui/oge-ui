@@ -1,0 +1,129 @@
+import { InjectionToken, type Provider } from '@angular/core';
+
+/**
+ * Every user-facing string in the inputs package — override globally via
+ * `provideOgeInputsConfig({ messages: {...} })` or per editor via `[messages]`.
+ * Error patterns support `{placeholder}` interpolation.
+ */
+export interface OgeInputsMessages {
+  /** Aria label of the clear (✕) button. */
+  clearButton: string;
+  /** Aria label of the password reveal toggle while hidden. */
+  showPassword: string;
+  /** Aria label of the password reveal toggle while revealed. */
+  hidePassword: string;
+  /** Aria label of the copy-to-clipboard button. */
+  copyButton: string;
+  /** Announced (aria-live) and shown transiently after a successful copy. */
+  copied: string;
+  /** Aria label of the number box's up spin button. */
+  spinIncrement: string;
+  /** Aria label of the number box's down spin button. */
+  spinDecrement: string;
+  /** Screen-reader text next to the async-validation spinner. */
+  pending: string;
+  /** Screen-reader text next to the success icon. */
+  valid: string;
+  /** Visual counter with a max — placeholders `{count}` `{max}`. */
+  counter: string;
+  /** Visual counter without a max — placeholder `{count}`. */
+  counterNoMax: string;
+  /** Aria label of the counter — placeholders `{count}` `{max}`. */
+  counterAria: string;
+  /** Aria label of the counter without a max — placeholder `{count}`. */
+  counterAriaNoMax: string;
+  requiredError: string;
+  emailError: string;
+  /** Placeholder `{min}`. */
+  minError: string;
+  /** Placeholder `{max}`. */
+  maxError: string;
+  /** Placeholder `{requiredLength}`. */
+  minLengthError: string;
+  /** Placeholder `{requiredLength}`. */
+  maxLengthError: string;
+  patternError: string;
+  /** Number box parse failure. */
+  invalidNumberError: string;
+  /** Fallback for unknown validation error kinds. */
+  invalidError: string;
+}
+
+export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
+  clearButton: 'Clear',
+  showPassword: 'Show password',
+  hidePassword: 'Hide password',
+  copyButton: 'Copy to clipboard',
+  copied: 'Copied',
+  spinIncrement: 'Increase value',
+  spinDecrement: 'Decrease value',
+  pending: 'Validating',
+  valid: 'Valid',
+  counter: '{count}/{max}',
+  counterNoMax: '{count}',
+  counterAria: '{count} of {max} characters used',
+  counterAriaNoMax: '{count} characters entered',
+  requiredError: 'This field is required',
+  emailError: 'Enter a valid email address',
+  minError: 'Value must be at least {min}',
+  maxError: 'Value must be at most {max}',
+  minLengthError: 'Enter at least {requiredLength} characters',
+  maxLengthError: 'Enter no more than {requiredLength} characters',
+  patternError: 'The value has an invalid format',
+  invalidNumberError: 'Enter a valid number',
+  invalidError: 'Invalid value',
+};
+
+/** Application-wide defaults, overridable per editor via the matching inputs. */
+export interface OgeInputsConfig {
+  /** Delay before number-box spin buttons start repeating. */
+  spinRepeatDelayMs: number;
+  /** Interval between spin repeats while held. */
+  spinRepeatIntervalMs: number;
+  /** How long the copy button shows its transient "copied" state. */
+  copiedResetMs: number;
+  messages: OgeInputsMessages;
+}
+
+export const OGE_DEFAULT_INPUTS_CONFIG: OgeInputsConfig = {
+  spinRepeatDelayMs: 400,
+  spinRepeatIntervalMs: 80,
+  copiedResetMs: 2000,
+  messages: OGE_DEFAULT_INPUTS_MESSAGES,
+};
+
+export const OGE_INPUTS_CONFIG = new InjectionToken<OgeInputsConfig>(
+  'OGE_INPUTS_CONFIG',
+  {
+    factory: () => OGE_DEFAULT_INPUTS_CONFIG,
+  },
+);
+
+export type OgeInputsConfigInput = Partial<
+  Omit<OgeInputsConfig, 'messages'>
+> & {
+  messages?: Partial<OgeInputsMessages>;
+};
+
+/**
+ * Application- or component-scoped input defaults:
+ *
+ * ```ts
+ * providers: [
+ *   provideOgeInputsConfig({
+ *     messages: { requiredError: 'Bu alan zorunludur' },
+ *   }),
+ * ]
+ * ```
+ */
+export function provideOgeInputsConfig(config: OgeInputsConfigInput): Provider {
+  const { messages, ...rest } = config;
+  return {
+    provide: OGE_INPUTS_CONFIG,
+    useValue: {
+      ...OGE_DEFAULT_INPUTS_CONFIG,
+      ...rest,
+      messages: { ...OGE_DEFAULT_INPUTS_MESSAGES, ...messages },
+    } satisfies OgeInputsConfig,
+  };
+}

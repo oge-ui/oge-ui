@@ -1,0 +1,50 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-popup {
+  @include tokens.core-tokens;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  position: fixed;
+  z-index: var(--oge-z-popup, 1000);
+  display: block;
+  min-width: 120px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  box-shadow: var(--oge-shadow-popup);
+  overflow: hidden;
+
+  /* entrance: fades/scales in from the anchored edge once measured */
+  transform: scale(0.97);
+  transform-origin: center top;
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
+
+  &[data-placement^='top'] {
+    transform-origin: center bottom;
+  }
+
+  &[data-placement^='left'] {
+    transform-origin: right center;
+  }
+
+  &[data-placement^='right'] {
+    transform-origin: left center;
+  }
+
+  &.oge-popup-ready {
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    transition: none;
+  }
+}

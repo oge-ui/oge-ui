@@ -1,6 +1,6 @@
 # @oge-ui/grid
 
-Fast, complete **data grid for Angular** — built on signals, runs zoneless, themes through CSS design tokens. The first component of the **oge** UI suite.
+Fast, complete **data grid for Angular** — built on signals, runs zoneless, themes through CSS design tokens. The first component of the **OGE** UI suite.
 
 ## Features
 
@@ -21,7 +21,7 @@ Fast, complete **data grid for Angular** — built on signals, runs zoneless, th
 - **State persistence** — `stateKey` restores sort/filters/grouping/column layout through any sync or async backend (localStorage, API, IndexedDB via `OGE_STATE_STORAGE`), or take control with `state()` / `applyState()` and the debounced `stateChange` event
 - **Export** — CSV built in, Excel via lazy `@oge-ui/grid/export-excel` (exceljs) and PDF via lazy `@oge-ui/grid/export-pdf` (jspdf) — heavy libs stay out of your main bundle; `scope: 'all' | 'page' | 'selection'`
 - **Toolbar** — default items plus your own controls via the `[ogeToolbar]` slot
-- **Imperative API** — `refresh`, `scrollToRow`, `clearFilters`, `clearSorting`, `exportCsv`, `copyToClipboard`, …
+- **Imperative API** — `refresh`, `scrollToRow`, `navigateToRow`, `clearFilters`, `clearSorting`, `expandRow`/`collapseRow`/`isRowExpanded`, `expandAllGroups`/`collapseAllGroups`, `selectAll`/`deselectAll`/`clearSelection`/`isRowSelected`/`getSelectedRowsData`, `getVisibleRows`/`getRowByKey`, `addRow`/`editRow`/`deleteRow`/`saveChanges`/`discardChanges`/`hasChanges`, `beginCustomLoading`/`endCustomLoading`, `pageIndex`/`setPageIndex`/`pageSize`/`setPageSize`/`pageCount`/`totalCount`, `state`/`applyState`, `getExportData`/`getCsv`/`exportCsv`, `copyToClipboard`
 - **Theming** — `--oge-*` design tokens, dark theme, Tailwind & Bootstrap bridge themes, row striping, loading panel
 - **Localization** — every UI string configurable via `provideOgeGridConfig`
 
@@ -54,8 +54,7 @@ import { OgeGrid, OgeColumn, OgeCellTemplate } from '@oge-ui/grid';
   selector: 'app-orders',
   imports: [OgeGrid, OgeColumn, OgeCellTemplate],
   template: `
-    <oge-grid [data]="orders" keyField="id"
-              [paging]="{ pageSize: 20 }" [filterRow]="true" [searchPanel]="true">
+    <oge-grid [data]="orders" keyField="id" [paging]="{ pageSize: 20 }" [filterRow]="true" [searchPanel]="true">
       <oge-column field="id" caption="#" [width]="70" dataType="number" />
       <oge-column field="customer" caption="Customer" />
       <oge-column field="total" caption="Total" dataType="number" />
@@ -72,6 +71,28 @@ export class OrdersPage {
   ];
 }
 ```
+
+## Reacting to changes — DevExtreme event map
+
+Everything you wired through DevExtreme callbacks exists here, signal-first:
+
+| DevExtreme                                                     | OGE                                                                                            |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `onRowClick` / `onRowDblClick`                                 | `(rowClick)` / `(rowDblClick)` → `{ row, key, event }`                                         |
+| `onCellClick` / `onCellDblClick`                               | `(cellClick)` / `(cellDblClick)` → `{ row, key, field, value, event }`                         |
+| `onSelectionChanged`                                           | `(selectionChanged)` → `{ selectedKeys, addedKeys, removedKeys }` + `[(selectedKeys)]`         |
+| `onFocusedRowChanged`                                          | `(focusedRowChanged)` → `{ key, row }` + `[(focusedRowKey)]`                                   |
+| `onEditingStart`                                               | `(editingStart)` → `{ key, row, field?, cancel }` (cancelable, cell & row editors)             |
+| `onInitNewRow`                                                 | `(initNewRow)` → `{ key, values }` — write into `values` to prefill                            |
+| `onRowInserting/-ed`, `onRowUpdating/-ed`, `onRowRemoving/-ed` | same names, per-change around the DataSource write; `-ing` events cancelable                   |
+| `onSaving` / `onSaved`                                         | `(savingChanges)` (cancelable, whole batch) / `(savedChanges)`                                 |
+| `onEditCanceled`                                               | `(editCanceled)`                                                                               |
+| `onExporting`                                                  | `(exporting)` → `{ fileName, cancel }` (CSV path)                                              |
+| `onDataErrorOccurred`                                          | `(dataErrorOccurred)` → `{ error }`                                                            |
+| `onContextMenuPreparing`                                       | `(rowContextMenu)` / `(headerContextMenu)` — prebuilt, mutable `items`                         |
+| `onRowExpanding/…` (master-detail/groups)                      | not evented on the grid (tree-list has all four); `expandRow`/`collapseRow` cover the API side |
+| `onKeyDown`                                                    | native `(keydown)` bubbles from the host                                                       |
+| `onInitialized` / `onOptionChanged` / `onContentReady`         | Angular lifecycle, `effect()`, signals — not needed (`(contentReady)` fires post-render)       |
 
 ## Remote data
 
@@ -90,12 +111,15 @@ const source = new CustomDataSource<Order>({
 
 ```css
 /* override design tokens anywhere */
-.oge-grid { --oge-header-bg: #eef2f8; --oge-row-height: 32px; }
+.oge-grid {
+  --oge-header-bg: #eef2f8;
+  --oge-row-height: 32px;
+}
 
 /* or use a bridge theme so the grid follows your CSS framework */
-@import '@oge-ui/grid/themes/tailwind.css';   /* Tailwind v4  */
-@import '@oge-ui/grid/themes/bootstrap.css';  /* Bootstrap 5  */
-@import '@oge-ui/grid/themes/dark.css';       /* + <html class="oge-theme-dark"> */
+@import '@oge-ui/grid/themes/tailwind.css'; /* Tailwind v4  */
+@import '@oge-ui/grid/themes/bootstrap.css'; /* Bootstrap 5  */
+@import '@oge-ui/grid/themes/dark.css'; /* + <html class="oge-theme-dark"> */
 ```
 
 ## Global configuration & localization
@@ -109,7 +133,7 @@ providers: [
     allowUnsorting: false,
     messages: { noData: 'Veri yok', search: 'Ara…', rowsSuffix: 'satır' },
   }),
-]
+];
 ```
 
 ## License

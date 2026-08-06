@@ -1,0 +1,90 @@
+.oge-drop-down-button {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.oge-drop-down-chevron {
+  flex: none;
+  // After the icon slot even with iconPosition="after" (icon has order: 2).
+  order: 3;
+  transition: transform 120ms ease;
+}
+
+.oge-drop-down-open .oge-drop-down-chevron {
+  transform: rotate(180deg);
+}
+
+// Split mode: segmented look, mirroring the button-group radius collapse.
+.oge-drop-down-split {
+  > .oge-button:first-child .oge-button-native {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  > .oge-drop-down-toggle {
+    margin-inline-start: -1px;
+
+    .oge-button-native {
+      border-start-start-radius: 0;
+      border-end-start-radius: 0;
+      padding-inline: 8px;
+    }
+
+    &.oge-button-sm .oge-button-native {
+      padding-inline: 6px;
+    }
+
+    &.oge-button-lg .oge-button-native {
+      padding-inline: 11px;
+    }
+
+    // Solid fills need a visible seam between the action and the toggle.
+    &.oge-button-colored:not(.oge-button-outlined):not(.oge-button-text-mode)
+      .oge-button-native {
+      border-inline-start-color: color-mix(
+        in srgb,
+        var(--oge-btn-contrast, var(--oge-severity-contrast)) 30%,
+        transparent
+      );
+    }
+  }
+
+  > .oge-button:focus-within {
+    z-index: 1;
+  }
+}
+
+// Status rows render inside .oge-popup, which provides the tokens.
+// 14px inline padding aligns the text with the menu items (4px + 10px).
+.oge-menu-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  color: var(--oge-muted-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-menu-status-spinner {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  animation: oge-dropdown-spin 0.8s linear infinite;
+}
+
+@keyframes oge-dropdown-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-drop-down-chevron {
+    transition: none;
+  }
+
+  .oge-menu-status-spinner {
+    animation-duration: 1.6s;
+  }
+}

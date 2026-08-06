@@ -1,0 +1,48 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-tooltip {
+  @include tokens.core-tokens;
+
+  box-sizing: border-box;
+  position: fixed;
+  /* above popups so tooltips inside open panels stay readable */
+  z-index: calc(var(--oge-z-popup, 1000) + 10);
+  max-width: 280px;
+  padding: 5px 10px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-tooltip-bg);
+  color: var(--oge-tooltip-color);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+  box-shadow: var(--oge-shadow-popup);
+  /* never a pointer target — hovering the bubble must not keep it alive */
+  pointer-events: none;
+
+  /* entrance: fades in and drifts from the anchored edge once measured */
+  transform: translateY(2px);
+  transition:
+    opacity 100ms ease-out,
+    transform 100ms ease-out;
+
+  &[data-placement^='bottom'] {
+    transform: translateY(-2px);
+  }
+
+  &[data-placement^='left'] {
+    transform: translateX(2px);
+  }
+
+  &[data-placement^='right'] {
+    transform: translateX(-2px);
+  }
+
+  &.oge-tooltip-ready {
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    transition: none;
+  }
+}

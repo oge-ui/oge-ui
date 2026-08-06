@@ -99,9 +99,34 @@ For full control use `state()` / `applyState()` and the `stateChange` output.
 
 ## Imperative API
 
-`expandAll()`, `collapseAll()`, `expandRow(key)`, `collapseRow(key)`,
-`isRowExpanded(key)`, `getNodeByKey(key)`, `scrollToRow(key | index)`,
-`refresh()`, `clearFilters()`, `clearSorting()`, `state()`, `applyState()`.
+- **Expansion & navigation** — `expandAll()`, `collapseAll()`, `expandRow(key)`,
+  `collapseRow(key)`, `isRowExpanded(key)`, `scrollToRow(key | index)`,
+  `focusRow(key)` / `navigateToRow(key)` (expands the ancestor path)
+- **Data access** — `getNodeByKey(key)`, `getVisibleRows()`, `forEachNode(cb)`
+- **Selection** — `selectAll()`, `deselectAll()`, `clearSelection()`,
+  `isRowSelected(key)`, `getSelectedRowKeys(mode)`, `getSelectedRowsData(mode)`,
+  `copyToClipboard()`
+- **Editing** — `addRow(parentKey?)`, `editRow(key)`, `deleteRow(key)`,
+  `saveChanges()`, `discardChanges()`, `hasChanges()`
+- **Paging & loading** — `pageIndex` (writable signal), `setPageIndex(i)`,
+  `pageSize()`, `setPageSize(n)`, `pageCount()`, `totalCount()`,
+  `beginCustomLoading(message?)`, `endCustomLoading()`
+- **State & export** — `refresh()`, `clearFilters()`, `clearSorting()`,
+  `state()`, `applyState()`, `getExportData()`, `getCsv()`, `exportCsv()`
+
+## Reacting to changes — DevExtreme event map
+
+| DevExtreme                                                        | OGE                                                                                       |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `onRowClick` / `onRowDblClick` / `onCellClick` / `onCellDblClick` | same names → flat payloads with `row`/`key`/`field`/`value`/`event`                       |
+| `onRowExpanding/-ed`, `onRowCollapsing/-ed`                       | same names; `-ing` events cancelable (UI-driven toggles; the imperative API stays silent) |
+| `onSelectionChanged`                                              | `(selectionChanged)` → `{ selectedKeys, addedKeys, removedKeys }` + `[(selectedKeys)]`    |
+| `onFocusedRowChanged`                                             | `(focusedRowChanged)` → `{ key, row }` + `[(focusedRowKey)]`                              |
+| `onEditingStart` / `onInitNewRow`                                 | `(editingStart)` (cancelable) / `(initNewRow)` → `{ key, parentKey, values }`             |
+| `onRowInserting/-ed`, `onRowUpdating/-ed`, `onRowRemoving/-ed`    | same names; `-ing` events cancelable                                                      |
+| `onSaving` / `onSaved` / `onEditCanceled`                         | `(savingChanges)` / `(savedChanges)` / `(editCanceled)`                                   |
+| `onExporting` / `onDataErrorOccurred`                             | `(exporting)` → `{ fileName, cancel }` / `(dataErrorOccurred)` → `{ error }`              |
+| `onNodesInitialized` / lifecycle callbacks                        | not replicated — signals, `effect()` and Angular lifecycle cover them                     |
 
 ## Theming
 

@@ -26,7 +26,10 @@
             "output": "themes"
           }
         ],
-        "styles": ["apps/dev-app/src/tailwind.css", "apps/dev-app/src/styles.scss"]
+        "styles": [
+          "apps/dev-app/src/tailwind.css",
+          "apps/dev-app/src/styles.scss"
+        ]
       },
       "configurations": {
         "production": {
@@ -38,8 +41,8 @@
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "12kb",
-              "maximumError": "24kb"
+              "maximumWarning": "16kb",
+              "maximumError": "32kb"
             }
           ],
           "outputHashing": "all"

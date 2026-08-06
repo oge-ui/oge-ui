@@ -103,7 +103,7 @@ store.editing.hasPending())) {
   #viewport
   class="oge-viewport"
   role="treegrid"
-  [attr.aria-rowcount]="totalCount() + 1"
+  [attr.aria-rowcount]="renderedRowCount() + 1"
   [attr.aria-colcount]="resolvedColumns().length + leadingCellCount()"
   [attr.aria-multiselectable]="
     selectionMode() === 'multiple' || selectionMode() === 'checkbox' ? true : null
@@ -520,6 +520,7 @@ store.editing.hasPending())) {
           [attr.tabindex]="isCellTabbable(viewStart() + nodeIndex, column.absIndex) ? 0 : -1"
           (focus)="onCellFocus(viewStart() + nodeIndex, column.absIndex)"
           (click)="onCellClickToEdit(node, column, $event)"
+          (dblclick)="onCellClickToEdit(node, column, $event)"
           (keydown.f2)="onCellClickToEdit(node, column, $event)"
           (keydown.enter)="onCellClickToEdit(node, column, $event)"
         >
@@ -678,7 +679,7 @@ store.editing.hasPending())) {
             type="button"
             class="oge-command-btn oge-command-delete"
             [attr.aria-label]="store.editing.isRemoved(node.key) ? msg().undeleteRow : msg().deleteRow"
-            (click)="deleteRow(node, $event)"
+            (click)="deleteRowNode(node, $event)"
           >
             @if (store.editing.isRemoved(node.key)) {
             <svg
@@ -769,7 +770,7 @@ store.editing.hasPending())) {
 <oge-pager
   [pageIndex]="pageIndex()"
   [pageCount]="pageCount()"
-  [totalCount]="totalDataCount()"
+  [totalCount]="totalCount()"
   [pageSize]="effPageSize() ?? 0"
   [pageSizes]="pagingOpts.pageSizes ?? null"
   [showInfo]="pagingOpts.showInfo !== false"
@@ -778,10 +779,10 @@ store.editing.hasPending())) {
   (pageChange)="pageIndex.set($event)"
   (pageSizeChange)="onPageSizeChange($event)"
 />
-} @if (loadPanel() && adapter.loading()) {
+} @if (customLoadingMessage() !== null || (loadPanel() && adapter.loading())) {
 <div class="oge-load-panel" role="status">
   <span class="oge-spinner" aria-hidden="true"></span>
-  {{ msg().loading }}
+  {{ customLoadingMessage() ?? msg().loading }}
 </div>
 } @if (popupNode(); as node) {
 <div class="oge-popup-backdrop"></div>

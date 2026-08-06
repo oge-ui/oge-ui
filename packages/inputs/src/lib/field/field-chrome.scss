@@ -1,0 +1,465 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// Host classes (.oge-input …) live on the editor elements (oge-text-box etc.);
+// the chrome renders the shared structure inside them.
+.oge-input {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  flex-direction: column;
+  width: var(--oge-input-width, 240px);
+  vertical-align: top;
+  font-size: var(--oge-font-size);
+
+  // Self-contained sizing — never depend on the host app's global reset.
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-input-fluid {
+  width: 100%;
+}
+
+.oge-input-field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+// --- label ------------------------------------------------------------------
+
+.oge-input-label {
+  display: block;
+  margin-block-end: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--oge-header-color);
+  cursor: default;
+}
+
+// static: snug, muted — an in-field style caption (readable muted token)
+.oge-input:not(.oge-input-label-outside) > .oge-input-field > .oge-input-label {
+  margin-block-end: 2px;
+  font-size: 11px;
+  color: var(--oge-input-muted);
+}
+
+.oge-input-required-mark {
+  margin-inline-start: 2px;
+  color: var(--oge-danger);
+}
+
+// --- container --------------------------------------------------------------
+
+.oge-input-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding-inline: 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.oge-input-focused .oge-input-container {
+  border-color: var(--oge-accent);
+  box-shadow: 0 0 0 3px var(--oge-accent-soft);
+}
+
+// keyboard focus gets the strong ring
+.oge-input .oge-input-container:has(.oge-input-native:focus-visible) {
+  box-shadow: 0 0 0 3px var(--oge-focus-ring);
+}
+
+.oge-input-invalid .oge-input-container {
+  border-color: var(--oge-danger);
+}
+
+.oge-input-invalid.oge-input-focused .oge-input-container {
+  box-shadow: 0 0 0 3px var(--oge-danger-soft);
+}
+
+.oge-input-readonly .oge-input-container {
+  background: var(--oge-input-filled-bg);
+}
+
+.oge-disabled .oge-input-container {
+  opacity: 0.55;
+}
+
+.oge-disabled .oge-input-label,
+.oge-disabled .oge-input-subscript {
+  opacity: 0.55;
+}
+
+.oge-disabled .oge-input-native {
+  cursor: default;
+}
+
+// filled
+.oge-input-filled .oge-input-container {
+  background: var(--oge-input-filled-bg);
+  border-color: transparent;
+}
+
+.oge-input-filled:not(.oge-disabled):not(.oge-input-focused)
+  .oge-input-container:hover {
+  background: var(--oge-row-hover-bg);
+}
+
+.oge-input-filled.oge-input-focused .oge-input-container {
+  border-color: var(--oge-accent);
+  background: var(--oge-popup-bg);
+}
+
+.oge-input-filled.oge-input-invalid .oge-input-container {
+  border-color: var(--oge-danger);
+}
+
+// underlined
+.oge-input-underlined .oge-input-container {
+  border: 0;
+  border-bottom: 1px solid var(--oge-border-color);
+  border-radius: 0;
+  background: transparent;
+  padding-inline: 2px;
+}
+
+.oge-input-underlined.oge-input-focused .oge-input-container {
+  border-bottom-color: var(--oge-accent);
+  box-shadow: 0 1px 0 0 var(--oge-accent);
+}
+
+.oge-input-underlined
+  .oge-input-container:has(.oge-input-native:focus-visible) {
+  box-shadow: 0 2px 0 0 var(--oge-focus-ring);
+}
+
+.oge-input-underlined.oge-input-invalid .oge-input-container {
+  border-bottom-color: var(--oge-danger);
+}
+
+// --- sizes ------------------------------------------------------------------
+
+.oge-input-sm {
+  font-size: calc(var(--oge-font-size) - 2px);
+
+  .oge-input-container {
+    min-height: 28px;
+    padding-inline: 8px;
+    gap: 4px;
+  }
+}
+
+.oge-input-lg {
+  font-size: calc(var(--oge-font-size) + 2px);
+
+  .oge-input-container {
+    min-height: 42px;
+    padding-inline: 12px;
+  }
+}
+
+// --- infix / native ---------------------------------------------------------
+
+.oge-input-infix {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oge-input-native {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  padding-block: 6px;
+  border: 0;
+  outline: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+
+  &::placeholder {
+    color: var(--oge-input-muted);
+    opacity: 1;
+  }
+
+  // Built-in browser widgets duplicate our rail buttons — suppress them.
+  &::-ms-reveal,
+  &::-ms-clear {
+    display: none;
+  }
+
+  &::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+// floating label
+.oge-input-label-floating .oge-input-infix {
+  padding-top: 12px;
+}
+
+// keep prefix/rail content on the input-text baseline in floating mode
+.oge-input-label-floating .oge-input-prefix,
+.oge-input-label-floating .oge-input-rail {
+  padding-block-start: 12px;
+}
+
+.oge-input-label-floating .oge-input-container {
+  min-height: 46px;
+}
+
+.oge-input-label-floating.oge-input-sm .oge-input-container {
+  min-height: 40px;
+}
+
+.oge-input-label-floating.oge-input-lg .oge-input-container {
+  min-height: 54px;
+}
+
+.oge-input-label-float {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: inherit;
+  font-weight: 400;
+  color: var(--oge-input-muted);
+  pointer-events: none;
+  transition:
+    top 120ms ease,
+    transform 120ms ease,
+    font-size 120ms ease,
+    color 120ms ease;
+}
+
+.oge-input-float-up .oge-input-label-float {
+  top: 3px;
+  transform: none;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.oge-input-float-up.oge-input-focused .oge-input-label-float {
+  color: var(--oge-accent);
+}
+
+.oge-input-invalid.oge-input-float-up .oge-input-label-float {
+  color: var(--oge-danger);
+}
+
+// --- prefix / rail ----------------------------------------------------------
+
+.oge-input-prefix,
+.oge-input-rail {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  color: var(--oge-muted-color);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.oge-input-rail-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--oge-focus-ring);
+  }
+}
+
+.oge-input-copy-done {
+  color: var(--oge-success);
+}
+
+.oge-input-pending {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  animation: oge-input-spin 0.8s linear infinite;
+}
+
+.oge-input-success {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  color: var(--oge-success);
+}
+
+@keyframes oge-input-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// spin buttons (number box)
+.oge-input-spin {
+  display: inline-flex;
+  flex-direction: column;
+  flex: none;
+}
+
+.oge-input-spin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  border-radius: 3px;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+@media (pointer: coarse) {
+  .oge-input-spin-btn {
+    width: 28px;
+    height: 20px;
+  }
+}
+
+// --- subscript --------------------------------------------------------------
+
+.oge-input-subscript {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 2px 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.oge-input-subscript-fixed {
+  min-height: 19px;
+}
+
+.oge-input-subscript-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oge-input-hint {
+  color: var(--oge-input-muted);
+}
+
+.oge-input-error {
+  color: var(--oge-danger);
+}
+
+.oge-input-counter {
+  flex: none;
+  color: var(--oge-input-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-input-counter-over {
+  color: var(--oge-danger);
+  font-weight: 600;
+}
+
+// --- textarea ---------------------------------------------------------------
+
+.oge-text-area .oge-input-container {
+  align-items: stretch;
+}
+
+.oge-text-area .oge-input-native {
+  resize: vertical;
+  min-height: 0;
+}
+
+.oge-text-area .oge-input-rail,
+.oge-text-area .oge-input-prefix {
+  align-self: flex-start;
+  padding-block: 6px;
+}
+
+.oge-text-area-auto .oge-input-native {
+  resize: none;
+  field-sizing: content;
+  min-height: calc(var(--oge-ta-min-rows, 3) * 1.4em + 12px);
+  max-height: calc(var(--oge-ta-max-rows, 1000) * 1.4em + 12px);
+  overflow-y: auto;
+}
+
+// --- a11y helpers -----------------------------------------------------------
+
+.oge-input-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-input-container,
+  .oge-input-label-float,
+  .oge-input-rail-btn,
+  .oge-input-spin-btn {
+    transition-duration: 0.01ms;
+  }
+
+  .oge-input-pending {
+    animation-duration: 1.6s;
+  }
+}

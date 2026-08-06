@@ -1,0 +1,15 @@
+{
+  "name": "@oge-ui/buttons",
+  "version": "0.4.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/overlay": "0.4.0"
+  },
+  "sideEffects": false
+}

@@ -54,7 +54,11 @@ export default [
             },
             {
               sourceTag: 'scope:inputs',
-              onlyDependOnLibsWithTags: ['scope:inputs', 'scope:core'],
+              onlyDependOnLibsWithTags: [
+                'scope:inputs',
+                'scope:overlay',
+                'scope:core',
+              ],
             },
             {
               sourceTag: 'scope:buttons',

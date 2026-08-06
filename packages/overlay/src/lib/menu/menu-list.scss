@@ -1,0 +1,64 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-menu-list {
+  @include tokens.core-tokens;
+
+  display: block;
+  padding: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+  outline: none;
+}
+
+.oge-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: var(--oge-font-size);
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-menu-item-active:not(:disabled) {
+  background: var(--oge-row-hover-bg);
+}
+
+.oge-menu-item-danger:not(:disabled) {
+  color: var(--oge-danger);
+}
+
+.oge-menu-item-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  flex: none;
+}
+
+.oge-menu-item-text {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oge-menu-separator {
+  margin: 4px;
+  border: 0;
+  border-top: 1px solid var(--oge-border-color);
+}

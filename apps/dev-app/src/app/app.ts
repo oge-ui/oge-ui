@@ -1,5 +1,13 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, DOCUMENT, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
+import { filter, map } from 'rxjs';
 import { Icon, type IconName } from './shared/icon';
 import { ThemeService, type GridTheme } from './shared/theme.service';
 
@@ -23,9 +31,24 @@ interface NavSection {
 export class App {
   private readonly allSections: NavSection[] = [
     {
-      title: 'Overview',
+      title: 'Getting Started',
       items: [
-        { path: '/getting-started', label: 'Getting Started', icon: 'book' },
+        { path: '/getting-started', label: 'Introduction', icon: 'book' },
+        {
+          path: '/getting-started/setup',
+          label: 'Set up your project',
+          icon: 'package',
+        },
+        {
+          path: '/getting-started/styling',
+          label: 'Style the app',
+          icon: 'palette',
+        },
+        {
+          path: '/getting-started/localization',
+          label: 'Localization',
+          icon: 'globe',
+        },
       ],
     },
     {
@@ -107,6 +130,11 @@ export class App {
           label: 'Live Updates',
           icon: 'activity',
         },
+        {
+          path: '/components/data-grid/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
       ],
     },
     {
@@ -143,6 +171,11 @@ export class App {
           label: 'Editing',
           icon: 'pencil',
         },
+        {
+          path: '/components/tree-list/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
       ],
     },
     {
@@ -154,9 +187,88 @@ export class App {
           label: 'Analytics & Export',
           icon: 'activity',
         },
+        {
+          path: '/components/pivot-grid/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Buttons',
+      items: [
+        { path: '/components/buttons', label: 'Overview', icon: 'pointer' },
+        {
+          path: '/components/buttons/interactions',
+          label: 'Interactions',
+          icon: 'zap',
+        },
+        {
+          path: '/components/buttons/button-group',
+          label: 'Button Group',
+          icon: 'columns',
+        },
+        {
+          path: '/components/buttons/drop-down-button',
+          label: 'Drop Down Button',
+          icon: 'chevron-down',
+        },
+        {
+          path: '/components/buttons/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Inputs',
+      items: [
+        { path: '/components/inputs', label: 'Overview', icon: 'text-cursor' },
+        {
+          path: '/components/inputs/validation',
+          label: 'Validation',
+          icon: 'check-square',
+        },
+        {
+          path: '/components/inputs/showcase',
+          label: 'Showcase',
+          icon: 'lightbulb',
+        },
+        {
+          path: '/components/inputs/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Overlay',
+      items: [
+        { path: '/components/overlay', label: 'Overview', icon: 'layers' },
+        {
+          path: '/components/overlay/tooltip-context-menu',
+          label: 'Tooltip & Context Menu',
+          icon: 'pointer',
+        },
+        {
+          path: '/components/overlay/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
       ],
     },
   ];
+
+  private readonly router = inject(Router);
+
+  /** Landing page renders full-bleed without the docs sidebar shell. */
+  protected readonly isHome = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects.split(/[?#]/)[0] === '/'),
+    ),
+    { initialValue: inject(DOCUMENT).location?.pathname === '/' },
+  );
 
   protected readonly themeService = inject(ThemeService);
   protected readonly themes: { value: GridTheme; label: string }[] = [

@@ -62,6 +62,14 @@ import {
   lookupTextOf,
   type LookupItem,
   type OgeEditingOptions,
+  type OgeEditingStartEvent,
+  type OgeRowInsertedEvent,
+  type OgeRowInsertingEvent,
+  type OgeRowRemovedEvent,
+  type OgeRowRemovingEvent,
+  type OgeRowUpdatedEvent,
+  type OgeRowUpdatingEvent,
+  type OgeSavedChangesEvent,
   type OgeSavingChangesEvent,
   type PendingChildRequest,
   type ResolvedColumn as FoundationResolvedColumn,
@@ -275,8 +283,47 @@ export interface OgeScrollingOptions {
 // re-exported so `@oge-ui/grid` consumers are unaffected.
 export {
   type OgeDataChange,
+  type OgeEditingStartEvent,
+  type OgeRowInsertedEvent,
+  type OgeRowInsertingEvent,
+  type OgeRowRemovedEvent,
+  type OgeRowRemovingEvent,
+  type OgeRowUpdatedEvent,
+  type OgeRowUpdatingEvent,
+  type OgeSavedChangesEvent,
   type OgeSavingChangesEvent,
 } from '@oge-ui/grid/foundation';
+
+/** Fires after the selection changed, with full state plus diffs. */
+export interface OgeSelectionChangedEvent {
+  selectedKeys: RowKey[];
+  addedKeys: RowKey[];
+  removedKeys: RowKey[];
+}
+
+/** Fires after the focused row changed. */
+export interface OgeFocusedRowChangedEvent<T = unknown> {
+  key: RowKey | null;
+  /** The focused row when it is currently loaded; `undefined` otherwise. */
+  row: T | undefined;
+}
+
+/** Cancelable: fires before a CSV export starts; `fileName` is mutable. */
+export interface OgeExportingEvent {
+  fileName: string;
+  cancel: boolean;
+}
+
+/** Prefill hook for `addRow()`: values written here stage onto the new row. */
+export interface OgeInitNewRowEvent {
+  key: RowKey;
+  values: Record<string, unknown>;
+}
+
+/** A DataSource load or save failed. */
+export interface OgeDataErrorEvent {
+  error: unknown;
+}
 
 /** Grid-side view of the shared column view-model: `source` is the OgeColumn. */
 type ResolvedColumn<T = unknown> = FoundationResolvedColumn<T, OgeColumn<T>>;
@@ -299,7 +346,8 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
   host: {
     class: 'oge-grid',
     '[class.oge-virtual]': 'virtualized()',
-    '[class.oge-loading]': 'adapter.loading()',
+    '[class.oge-loading]':
+      'adapter.loading() || customLoadingMessage() !== null',
     '[class.oge-wrap]': 'wordWrap()',
     '[class.oge-rtl]': 'rtl()',
     '[attr.dir]':
@@ -523,14 +571,59 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Fires when a data row is double-clicked. */
   readonly rowDblClick = output<OgeRowClickEvent<T>>();
 
+  /** Fires when a data cell is double-clicked. */
+  readonly cellDblClick = output<OgeCellClickEvent<T>>();
+
   /** Fires after the grid has rendered a new result set. */
   readonly contentReady = output<void>();
+
+  /** Fires after the selection changed, with `addedKeys`/`removedKeys` diffs. */
+  readonly selectionChanged = output<OgeSelectionChangedEvent>();
+
+  /** Fires after the focused row changed (`focusedRowEnabled` or key writes). */
+  readonly focusedRowChanged = output<OgeFocusedRowChangedEvent<T>>();
+
+  /** Fires when a DataSource load or save fails. */
+  readonly dataErrorOccurred = output<OgeDataErrorEvent>();
 
   /** Enables editing: `{ mode: 'cell' | 'row' | 'batch' | 'popup' | 'form', allow… }`. */
   readonly editing = input<false | OgeEditingOptions>(false);
 
   /** Fires before changes reach the DataSource; cancelable. */
   readonly savingChanges = output<OgeSavingChangesEvent<T>>();
+
+  /** Fires after a save batch was applied (only the non-canceled changes). */
+  readonly savedChanges = output<OgeSavedChangesEvent<T>>();
+
+  /** Cancelable: fires before a cell or row editor opens. */
+  readonly editingStart = output<OgeEditingStartEvent<T>>();
+
+  /** Prefill new rows created by `addRow()` before their editors open. */
+  readonly initNewRow = output<OgeInitNewRowEvent>();
+
+  /** Cancelable: fires before a new row is inserted into the DataSource. */
+  readonly rowInserting = output<OgeRowInsertingEvent>();
+
+  /** Fires after a new row was inserted into the DataSource. */
+  readonly rowInserted = output<OgeRowInsertedEvent>();
+
+  /** Cancelable: fires before a row update reaches the DataSource. */
+  readonly rowUpdating = output<OgeRowUpdatingEvent<T>>();
+
+  /** Fires after a row was updated in the DataSource. */
+  readonly rowUpdated = output<OgeRowUpdatedEvent>();
+
+  /** Cancelable: fires before a row is removed from the DataSource. */
+  readonly rowRemoving = output<OgeRowRemovingEvent<T>>();
+
+  /** Fires after a row was removed from the DataSource. */
+  readonly rowRemoved = output<OgeRowRemovedEvent>();
+
+  /** Fires after an edit session ended without saving. */
+  readonly editCanceled = output<void>();
+
+  /** Cancelable: fires before a CSV export starts; `fileName` is mutable. */
+  readonly exporting = output<OgeExportingEvent>();
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -740,6 +833,41 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           return;
         this.selectedKeys.set([...selected]);
       });
+    });
+    // selectionChanged with added/removed diffs; the initial state is not a change
+    let previousSelection: ReadonlySet<RowKey> | null = null;
+    effect(() => {
+      const selected = this.store.selection.selected();
+      const previous = previousSelection;
+      previousSelection = selected;
+      if (previous === null) return;
+      if (
+        previous.size === selected.size &&
+        [...selected].every((key) => previous.has(key))
+      )
+        return;
+      this.selectionChanged.emit({
+        selectedKeys: [...selected],
+        addedKeys: [...selected].filter((key) => !previous.has(key)),
+        removedKeys: [...previous].filter((key) => !selected.has(key)),
+      });
+    });
+    // focusedRowChanged; the initial key is not a change
+    let previousFocusedKey: RowKey | null | undefined;
+    effect(() => {
+      const key = this.focusedRowKey();
+      const previous = previousFocusedKey;
+      previousFocusedKey = key;
+      if (previous === undefined || previous === key) return;
+      this.focusedRowChanged.emit({
+        key,
+        row: key === null ? undefined : untracked(() => this.getRowByKey(key)),
+      });
+    });
+    // surface DataSource load failures (save failures route through the model)
+    effect(() => {
+      const error = this.adapter.error();
+      if (error !== null) this.dataErrorOccurred.emit({ error });
     });
     // focus the first editor when one opens
     effect(() => {
@@ -984,6 +1112,220 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (index >= 0) this.scrollRowIntoView(index);
   }
 
+  /**
+   * Scrolls the row carrying `key` into view and, when `focusedRowEnabled` is
+   * on, makes it the focused row. Rows hidden inside collapsed groups are not
+   * revealed — expand their groups first (`expandRow`).
+   */
+  navigateToRow(key: RowKey): void {
+    this.scrollToRow(key);
+    if (untracked(this.focusedRowEnabled)) this.focusedRowKey.set(key);
+  }
+
+  /**
+   * Whether the group row (addressed by its group node key) or master-detail
+   * row carrying `key` is currently expanded.
+   */
+  isRowExpanded(key: RowKey): boolean {
+    if (this.collectGroupKeys().has(key)) {
+      const toggled = untracked(this.store.expansion.collapsedGroups);
+      return untracked(this.groupsAutoExpand)
+        ? !toggled.has(key)
+        : toggled.has(key);
+    }
+    return untracked(() => this.store.expansion.isDetailExpanded(key));
+  }
+
+  /** Expands a group row (by its group node key) or a master-detail row. */
+  expandRow(key: RowKey): void {
+    this.setRowExpansion(key, true);
+  }
+
+  /** Collapses a group row (by its group node key) or a master-detail row. */
+  collapseRow(key: RowKey): void {
+    this.setRowExpansion(key, false);
+  }
+
+  private setRowExpansion(key: RowKey, expanded: boolean): void {
+    if (this.isRowExpanded(key) === expanded) return;
+    if (this.collectGroupKeys().has(key)) this.store.expansion.toggleGroup(key);
+    else this.store.expansion.toggleDetail(key);
+  }
+
+  /** Message shown by `beginCustomLoading()`; `null` while inactive. */
+  protected readonly customLoadingMessage = signal<string | null>(null);
+
+  /**
+   * Shows the load panel with an optional custom message (default:
+   * `messages.loading`) until `endCustomLoading()` — independent of
+   * data-source activity and of the `loadPanel` input.
+   */
+  beginCustomLoading(message?: string): void {
+    this.customLoadingMessage.set(message ?? untracked(this.msg).loading);
+  }
+
+  /** Hides the load panel shown by `beginCustomLoading()`. */
+  endCustomLoading(): void {
+    this.customLoadingMessage.set(null);
+  }
+
+  // --- imperative API: paging ----------------------------------------------
+
+  /** Current zero-based page index. */
+  pageIndex(): number {
+    return untracked(this.store.paging.pageIndex);
+  }
+
+  /** Navigates to the given zero-based page (clamped to the valid range). */
+  setPageIndex(index: number): void {
+    const count = untracked(this.pageCount);
+    this.store.paging.goTo(Math.min(Math.max(0, index), count - 1));
+  }
+
+  /** Current page size; `0` when paging is off. */
+  pageSize(): number {
+    return untracked(this.store.paging.pageSize) ?? 0;
+  }
+
+  /** Changes the page size (`0` turns paging off) and resets to the first page. */
+  setPageSize(size: number): void {
+    this.store.paging.configure(size === 0 ? null : size);
+  }
+
+  // --- imperative API: rows & selection ------------------------------------
+
+  /** The flat data node carrying `key`, if it is currently rendered. */
+  private dataNodeByKey(key: RowKey): DataRowNode<T> | undefined {
+    return untracked(this.flatNodes).find(
+      (node): node is DataRowNode<T> =>
+        node.kind === 'data' && node.key === key,
+    );
+  }
+
+  /** Data rows of the currently rendered page, in display order. */
+  getVisibleRows(): readonly T[] {
+    return untracked(this.flatNodes).flatMap((node) =>
+      node.kind === 'data' ? [node.data] : [],
+    );
+  }
+
+  /**
+   * The loaded row carrying `key`, if it is currently rendered (the tree
+   * list's `getNodeByKey` counterpart).
+   */
+  getRowByKey(key: RowKey): T | undefined {
+    return this.dataNodeByKey(key)?.data;
+  }
+
+  /** Data of the selected rows among the currently loaded rows, in display order. */
+  getSelectedRowsData(): T[] {
+    const selected: ReadonlySet<RowKey> = untracked(this.selectionDeferred)
+      ? untracked(this.deferredSelectedKeys)
+      : untracked(this.store.selection.selected);
+    return untracked(this.flatNodes)
+      .filter(
+        (node): node is DataRowNode<T> =>
+          node.kind === 'data' && selected.has(node.key),
+      )
+      .map((node) => node.data);
+  }
+
+  /**
+   * Selects every row of the current filtered set; scope via `selectAllMode`.
+   * Deferred mode: the selection becomes the current filter expression, so no
+   * keys are materialized.
+   */
+  selectAll(): void {
+    if (untracked(this.selectionDeferred)) {
+      const field = untracked(this.deferredKeyFieldName);
+      if (!field) return;
+      const filter = untracked(this.store.loadOptions).filter;
+      this.selectionFilter.set(
+        filter ?? { type: 'binary', field, op: 'isnotnull' },
+      );
+      return;
+    }
+    if (untracked(this.selectAllMode) === 'page') {
+      this.store.selection.replace(untracked(this.dataKeys));
+      return;
+    }
+    void this.selectAllPages();
+  }
+
+  /** Clears the selection (deferred mode: resets `selectionFilter`). */
+  clearSelection(): void {
+    if (untracked(this.selectionDeferred)) {
+      this.selectionFilter.set(null);
+      return;
+    }
+    this.store.selection.clear();
+  }
+
+  /** Deselects every row — same as `clearSelection()` (DevExtreme-parity name). */
+  deselectAll(): void {
+    this.clearSelection();
+  }
+
+  // --- imperative API: editing ---------------------------------------------
+
+  /**
+   * Adds a new (unsaved) row and opens its editor(s). Requires
+   * `editing.allowAdding`.
+   */
+  addRow(): void {
+    if (!untracked(this.editingModel.canAdd)) return;
+    this.createNewRow();
+  }
+
+  /**
+   * Opens the row editor for the row carrying `key`. Effective in
+   * `row`/`form`/`popup` modes; requires `editing.allowUpdating`.
+   */
+  editRow(key: RowKey): void {
+    if (!untracked(this.editingModel.canUpdate)) return;
+    const node = this.dataNodeByKey(key);
+    if (node) this.editingModel.startRowEdit(node);
+  }
+
+  /**
+   * Deletes the row carrying `key`: staged in batch mode (toggle), saved
+   * immediately otherwise. Requires `editing.allowDeleting`.
+   */
+  deleteRow(key: RowKey): void {
+    if (!untracked(this.editingModel.canDelete)) return;
+    const node = this.dataNodeByKey(key);
+    if (node) this.editingModel.deleteRow(node);
+  }
+
+  /**
+   * Saves pending edits: commits the open editor, and in batch mode saves the
+   * whole staged change set. `savingChanges` can still cancel the save.
+   */
+  saveChanges(): void {
+    const mode = untracked(this.editingModel.editMode);
+    if (mode === 'batch') {
+      this.editingModel.commitActiveCell();
+      this.editingModel.saveAllChanges();
+    } else if (mode === 'cell') {
+      this.editingModel.commitActiveCell();
+    } else {
+      this.editingModel.commitActiveRow();
+    }
+  }
+
+  /**
+   * Discards every pending change and closes any open editor; emits
+   * `editCanceled` when anything was open or pending.
+   */
+  discardChanges(): void {
+    this.editingModel.cancelEditing();
+  }
+
+  /** Whether unsaved edits exist: staged changes, added or removed rows. */
+  hasChanges(): boolean {
+    return untracked(this.store.editing.hasPending);
+  }
+
   // --- export ---------------------------------------------------------------
 
   /**
@@ -1113,15 +1455,22 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return buildCsv(rows, csvColumns, options);
   }
 
-  /** Downloads the current view as a CSV file. */
+  /**
+   * Downloads the current view as a CSV file. Fires the cancelable
+   * `exporting` event first (the Excel/PDF helper functions call
+   * `getExportData` directly and do not).
+   */
   async exportCsv(filename = 'grid.csv'): Promise<void> {
+    const event: OgeExportingEvent = { fileName: filename, cancel: false };
+    this.exporting.emit(event);
+    if (event.cancel) return;
     const csv = await this.getCsv();
     if (typeof document === 'undefined') return;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = filename;
+    anchor.download = event.fileName;
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -1335,7 +1684,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return first.done ? undefined : first.value;
   });
 
-  protected readonly totalCount = computed<number>(() => {
+  /** Data row count of the current filtered set, across all pages. */
+  readonly totalCount = computed<number>(() => {
     if (this.windowed())
       return this.adapter.windowTotal() ?? this.adapter.highestLoaded();
     const result = this.adapter.result();
@@ -1346,7 +1696,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     );
   });
 
-  protected readonly pageCount = computed<number>(() => {
+  /** Number of pages; `1` when paging is off. */
+  readonly pageCount = computed<number>(() => {
     const pageSize = this.store.paging.pageSize();
     return pageSize == null
       ? 1
@@ -1776,7 +2127,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     ),
   );
 
-  protected isRowSelected(key: RowKey): boolean {
+  /** Whether the row carrying `key` is currently selected. */
+  isRowSelected(key: RowKey): boolean {
     if (this.selectionDeferred()) return this.deferredSelectedKeys().has(key);
     return this.store.selection.isSelected(key);
   }
@@ -1958,29 +2310,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Select-all works on the current filtered set; scope via `selectAllMode`. */
   protected toggleSelectAll(): void {
-    if (this.selectionDeferred()) {
-      const field = this.deferredKeyFieldName();
-      if (!field) return;
-      if (this.allSelected()) {
-        this.selectionFilter.set(null);
-        return;
-      }
-      // "everything matching the current filter" — no keys are materialized
-      const filter = untracked(this.store.loadOptions).filter;
-      this.selectionFilter.set(
-        filter ?? { type: 'binary', field, op: 'isnotnull' },
-      );
-      return;
-    }
-    if (this.allSelected()) {
-      this.store.selection.clear();
-      return;
-    }
-    if (untracked(this.selectAllMode) === 'page') {
-      this.store.selection.replace(this.dataKeys());
-      return;
-    }
-    void this.selectAllPages();
+    if (untracked(this.allSelected)) this.clearSelection();
+    else this.selectAll();
   }
 
   /** Loads the full filtered set (paging ignored) and selects every key. */
@@ -2213,7 +2544,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     flatNodes: this.flatNodes,
     source: this.adapter.source,
     confirmDeleteMessage: computed(() => this.msg().confirmDelete),
-    events: { savingChanges: (event) => this.savingChanges.emit(event) },
+    events: {
+      savingChanges: (event) => this.savingChanges.emit(event),
+      savedChanges: (event) => this.savedChanges.emit(event),
+      editingStart: (event) => this.editingStart.emit(event),
+      rowInserting: (event) => this.rowInserting.emit(event),
+      rowInserted: (event) => this.rowInserted.emit(event),
+      rowUpdating: (event) => this.rowUpdating.emit(event),
+      rowUpdated: (event) => this.rowUpdated.emit(event),
+      rowRemoving: (event) => this.rowRemoving.emit(event),
+      rowRemoved: (event) => this.rowRemoved.emit(event),
+      editCanceled: () => this.editCanceled.emit(),
+      dataError: (error) => this.dataErrorOccurred.emit({ error }),
+    },
     reload: () => this.adapter.reload(),
   });
 
@@ -2235,11 +2578,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     );
     const items = this.editingOptions()?.formItems;
     if (!items?.length) {
-      return editable.map((column) => ({ column, label: column.caption, colSpan: 1 }));
+      return editable.map((column) => ({
+        column,
+        label: column.caption,
+        colSpan: 1,
+      }));
     }
     return items.flatMap((entry) => {
       const spec = typeof entry === 'string' ? { field: entry } : entry;
-      const column = editable.find((candidate) => candidate.field === spec.field);
+      const column = editable.find(
+        (candidate) => candidate.field === spec.field,
+      );
       if (!column) return [];
       return [
         {
@@ -2374,6 +2723,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   ): void {
     // ignore events bubbling out of an open editor (e.g. its own Enter commit)
     if ((event?.target as HTMLElement | null)?.closest?.('.oge-editor')) return;
+    if (event?.type === 'dblclick') {
+      this.cellDblClick.emit({
+        row: node.data,
+        key: node.key,
+        field: column.field,
+        value: column.accessor(node.data),
+        event,
+      });
+      return;
+    }
     if (event?.type === 'click') {
       this.cellClick.emit({
         row: node.data,
@@ -2394,6 +2753,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       return;
     }
     if (!this.store.editing.isCellEditing(node.key, column.field)) {
+      if (
+        !this.editingModel.notifyEditingStart(node.key, node.data, column.field)
+      )
+        return;
       this.store.editing.startCell(node.key, column.field);
     }
   }
@@ -2429,12 +2792,24 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.editingModel.commitActiveRow();
   }
 
-  protected deleteRow(node: DataRowNode<T>, event?: Event): void {
+  protected deleteRowNode(node: DataRowNode<T>, event?: Event): void {
     this.editingModel.deleteRow(node, event);
   }
 
   protected addNewRow(): void {
+    this.createNewRow();
+  }
+
+  /** Shared toolbar/imperative add-row path — stages `initNewRow` prefills. */
+  private createNewRow(): void {
     this.editingModel.addNewRow();
+    const key = untracked(this.store.editing.added)[0];
+    if (key === undefined) return;
+    const event: OgeInitNewRowEvent = { key, values: {} };
+    this.initNewRow.emit(event);
+    if (Object.keys(event.values).length) {
+      this.store.editing.setRowChanges(key, event.values);
+    }
   }
 
   /** Batch toolbar: save everything pending. */

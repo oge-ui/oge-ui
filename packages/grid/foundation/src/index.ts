@@ -18,6 +18,14 @@ export {
   EditingModel,
   type EditingModelDeps,
   type OgeDataChange,
+  type OgeEditingStartEvent,
+  type OgeRowInsertedEvent,
+  type OgeRowInsertingEvent,
+  type OgeRowRemovedEvent,
+  type OgeRowRemovingEvent,
+  type OgeRowUpdatedEvent,
+  type OgeRowUpdatingEvent,
+  type OgeSavedChangesEvent,
   type OgeSavingChangesEvent,
 } from './editing-model';
 export {

@@ -27,4 +27,27 @@
     0 12px 32px -8px rgba(15, 23, 42, 0.18),
     0 4px 12px -6px rgba(15, 23, 42, 0.1);
   --oge-tree-indent: 20px;
+  /* severity palette (buttons; future inputs/toasts) */
+  --oge-success: #16a34a;
+  --oge-success-soft: rgba(22, 163, 74, 0.12);
+  --oge-warning: #d97706;
+  --oge-warning-soft: rgba(217, 119, 6, 0.14);
+  --oge-danger: #dc2626;
+  --oge-danger-soft: rgba(220, 38, 38, 0.12);
+  /* text color on contained severity fills */
+  --oge-severity-contrast: #ffffff;
+  --oge-badge-bg: #dc2626;
+  --oge-badge-color: #ffffff;
+  /* elevation of contained buttons (dark theme overrides with black-based) */
+  --oge-shadow-btn: 0 1px 2px rgba(15, 23, 42, 0.12);
+  --oge-shadow-btn-hover: 0 2px 6px rgba(15, 23, 42, 0.16);
+  /* readable muted text (labels/placeholders/hints — WCAG-safe) */
+  --oge-input-muted: var(--oge-header-color);
+  /* filled-field surface; dark theme overrides with a surface-independent tint */
+  --oge-input-filled-bg: var(--oge-header-bg);
+  /* stacking layer of anchored popups/menus */
+  --oge-z-popup: 1000;
+  /* tooltip bubble (inverted surface; dark theme overrides) */
+  --oge-tooltip-bg: #1e2430;
+  --oge-tooltip-color: #f5f7fa;
 }

@@ -1,6 +1,6 @@
 # @oge-ui/core
 
-Framework-agnostic engine behind the [oge](https://www.npmjs.com/package/@oge-ui/grid) UI components. **Zero Angular (or any framework) dependency** — plain TypeScript, ESM.
+Framework-agnostic engine behind the [OGE](https://www.npmjs.com/package/@oge-ui/grid) UI components. **Zero Angular (or any framework) dependency** — plain TypeScript, ESM.
 
 ## What's inside
 
