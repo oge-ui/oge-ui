@@ -365,6 +365,11 @@ const QUICK_START_FILES = [
         Numbers and dates are written as <em>typed</em> Excel cells; lookup and
         boolean columns use their display text.
       </li>
+      <li>
+        <code>customizeCell</code> rewrites individual cells in every exporter —
+        return a replacement (typed values stay typed in Excel) or
+        <code>undefined</code> to keep the default.
+      </li>
     </ul>
     <p>
       The demo grid above hosts its export buttons via the

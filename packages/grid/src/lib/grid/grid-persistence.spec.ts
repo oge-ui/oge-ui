@@ -293,4 +293,24 @@ describe('OgeGrid CSV export', () => {
     const csv = await grid.getCsv({ bom: false });
     expect(csv).toBe('Id,Name,City,Age\r\n2,Ali,Ankara,40');
   });
+
+  it('customizeCell rewrites CSV cells and keeps defaults on undefined', async () => {
+    // isolate from state persisted by earlier tests in this suite
+    TestBed.configureTestingModule({
+      providers: [{ provide: OGE_STATE_STORAGE, useValue: new MemoryStorage() }],
+    });
+    const fixture = TestBed.createComponent(PersistenceHost);
+    await settle(fixture);
+    const csv = await gridOf(fixture).getCsv({
+      bom: false,
+      customizeCell: ({ field, value, text }) =>
+        field === 'name'
+          ? text.toUpperCase()
+          : field === 'age'
+            ? `${String(value)} yrs`
+            : undefined,
+    });
+    const lines = csv.split('\r\n');
+    expect(lines[1]).toBe('1,CEM,İzmir,30 yrs');
+  });
 });

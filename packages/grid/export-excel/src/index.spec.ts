@@ -15,8 +15,18 @@ const DATA: OgeExportData<Row> = {
   ],
   columns: [
     { caption: 'Id', field: 'id', dataType: 'number', accessor: (r) => r.id },
-    { caption: 'Name', field: 'name', dataType: 'string', accessor: (r) => r.name },
-    { caption: 'Hired', field: 'hired', dataType: 'date', accessor: (r) => r.hired },
+    {
+      caption: 'Name',
+      field: 'name',
+      dataType: 'string',
+      accessor: (r) => r.name,
+    },
+    {
+      caption: 'Hired',
+      field: 'hired',
+      dataType: 'date',
+      accessor: (r) => r.hired,
+    },
     {
       caption: 'Active',
       field: 'active',
@@ -29,7 +39,9 @@ const DATA: OgeExportData<Row> = {
 
 describe('buildExcelWorkbook', () => {
   it('writes a typed worksheet with bold headers and an auto-filter', () => {
-    const sheet = buildExcelWorkbook(DATA, { sheetName: 'People' }).getWorksheet('People');
+    const sheet = buildExcelWorkbook(DATA, {
+      sheetName: 'People',
+    }).getWorksheet('People');
     expect(sheet).toBeDefined();
     expect(sheet?.getRow(1).font?.bold).toBe(true);
     expect(sheet?.getRow(1).getCell(1).value).toBe('Id');
@@ -50,5 +62,18 @@ describe('buildExcelWorkbook', () => {
     const sheet = workbook.getWorksheet('Data');
     expect(sheet?.autoFilter).toBeFalsy();
     expect(sheet?.rowCount).toBe(3);
+  });
+
+  it('customizeCell overrides values and keeps defaults on undefined', () => {
+    const sheet = buildExcelWorkbook(DATA, {
+      customizeCell: ({ field, value, row }) => {
+        if (field === 'name') return `${String(value)} (${String(row.id)})`;
+        if (field === 'id') return (value as number) * 100; // stays a typed number
+        return undefined;
+      },
+    }).getWorksheet('Data');
+    expect(sheet?.getRow(2).getCell(1).value).toBe(100);
+    expect(sheet?.getRow(2).getCell(2).value).toBe('Ada (1)');
+    expect(sheet?.getRow(2).getCell(3).value).toBeInstanceOf(Date); // untouched default
   });
 });

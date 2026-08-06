@@ -14,7 +14,12 @@ const DATA: OgeExportData<Row> = {
   ],
   columns: [
     { caption: 'Id', field: 'id', dataType: 'number', accessor: (r) => r.id },
-    { caption: 'Name', field: 'name', dataType: 'string', accessor: (r) => r.name },
+    {
+      caption: 'Name',
+      field: 'name',
+      dataType: 'string',
+      accessor: (r) => r.name,
+    },
     {
       caption: 'Amount',
       field: 'amount',
@@ -41,6 +46,16 @@ describe('buildPdfDocument', () => {
     expect(text).toContain('Report');
     expect(text).toContain('Grace');
     expect(text).toContain('$250');
+  });
+
+  it('customizeCell rewrites the emitted text', () => {
+    const doc = buildPdfDocument(DATA, {
+      customizeCell: ({ field, text }) =>
+        field === 'name' ? text.toUpperCase() : undefined,
+    });
+    const output = JSON.stringify(doc.output());
+    expect(output).toContain('GRACE');
+    expect(output).toContain('$250'); // other cells keep their defaults
   });
 
   it('defaults to landscape a4', () => {

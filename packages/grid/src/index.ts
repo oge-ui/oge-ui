@@ -17,6 +17,7 @@ export {
   type OgeCellClickEvent,
   type OgeCommandButton,
   type OgeRowReorderedEvent,
+  type OgeExportCellArgs,
   type OgeExportColumn,
   type OgeExportData,
   type OgeExportOptions,

@@ -126,7 +126,18 @@ export interface OgeExportData<T = unknown> {
   columns: readonly OgeExportColumn<T>[];
 }
 
-export interface OgeExportOptions {
+/** Arguments handed to `customizeCell` for every exported cell. */
+export interface OgeExportCellArgs<T = unknown> {
+  row: T;
+  field: string | undefined;
+  caption: string;
+  /** Raw accessor value. */
+  value: unknown;
+  /** Default text the exporter would emit for this cell. */
+  text: string;
+}
+
+export interface OgeExportOptions<T = unknown> {
   /**
    * Which rows to export. `'all'` (default) ignores paging and exports the
    * full filtered + sorted set; `'page'` exports only the current page;
@@ -134,6 +145,12 @@ export interface OgeExportOptions {
    * headers are never exported — data rows only.
    */
   scope?: 'all' | 'page' | 'selection';
+  /**
+   * Override what a cell exports: return a replacement (string for CSV/PDF;
+   * string/number/Date/boolean stay typed in Excel) or `undefined` to keep
+   * the default.
+   */
+  customizeCell?: (cell: OgeExportCellArgs<T>) => unknown;
 }
 
 /** One button of the command column (`commandButtons` input). */
@@ -976,7 +993,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * `{ scope: 'page' | 'selection' }` to narrow it.
    */
   async getExportData(
-    options: OgeExportOptions = {},
+    options: OgeExportOptions<T> = {},
   ): Promise<OgeExportData<T>> {
     const scope = options.scope ?? 'all';
     const source = untracked(this.adapter.source);
@@ -1066,11 +1083,34 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   /** Builds CSV of the current view; `scope` narrows to the page or selection. */
-  async getCsv(options?: CsvOptions & OgeExportOptions): Promise<string> {
+  async getCsv(options?: CsvOptions & OgeExportOptions<T>): Promise<string> {
     const { rows, columns } = await this.getExportData({
       scope: options?.scope,
     });
-    return buildCsv(rows, columns, options);
+    const customize = options?.customizeCell;
+    const csvColumns = customize
+      ? columns.map((column) => ({
+          caption: column.caption,
+          accessor: (row: T) => {
+            const value = column.accessor(row);
+            const text =
+              value == null
+                ? ''
+                : column.format
+                  ? column.format(value)
+                  : String(value);
+            const out = customize({
+              row,
+              field: column.field,
+              caption: column.caption,
+              value,
+              text,
+            });
+            return out === undefined ? text : out;
+          },
+        }))
+      : columns;
+    return buildCsv(rows, csvColumns, options);
   }
 
   /** Downloads the current view as a CSV file. */
