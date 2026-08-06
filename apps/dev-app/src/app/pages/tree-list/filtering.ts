@@ -61,6 +61,7 @@ const SNIPPET = `<oge-tree-list
         [autoExpandAll]="true"
         [filterRow]="true"
         [searchPanel]="true"
+        [headerFilter]="true"
         [filterMode]="filterMode()"
       >
         <oge-column field="name" caption="Name" />

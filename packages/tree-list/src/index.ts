@@ -2,8 +2,10 @@ export {
   OgeTreeList,
   type OgeTreeDropPosition,
   type OgeTreeExportData,
+  type OgeTreeInitNewRowEvent,
   type OgeTreeRowReparentEvent,
   type OgeTreeRowToggleEvent,
+  type OgeTreeRowTogglingEvent,
 } from './lib/tree-list/tree-list';
 
 // Column definitions, templates and configuration are shared with the grid —

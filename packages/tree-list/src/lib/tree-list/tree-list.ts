@@ -117,6 +117,21 @@ export interface OgeTreeRowToggleEvent<T = unknown> {
   row: T;
 }
 
+/** Cancelable pre-toggle notification; set `cancel = true` to veto. */
+export interface OgeTreeRowTogglingEvent<T = unknown> {
+  key: RowKey;
+  row: T;
+  cancel: boolean;
+}
+
+/** Prefill hook for `addRow()`: values written here stage onto the new row. */
+export interface OgeTreeInitNewRowEvent {
+  key: RowKey;
+  /** Parent staged by `addRow(parentKey)`, if any. */
+  parentKey: RowKey | null;
+  values: Record<string, unknown>;
+}
+
 const EMPTY_CHECK_STATES: ReadonlyMap<RowKey, CheckState> = new Map();
 
 const COLUMN_DRAG_TYPE = 'application/x-oge-column';
@@ -362,6 +377,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Two-way binding of the focused row's key. */
   readonly focusedRowKey = model<RowKey | null>(null);
 
+  /**
+   * A `focusedRowKey` change expands its ancestor chain and scrolls the row
+   * into view automatically.
+   */
+  readonly autoNavigateToFocusedRow = input(false);
+
+  /** Hides the header select-all checkbox in checkbox mode. */
+  readonly allowSelectAll = input(true);
+
   /** Alternating row background (zebra striping), stable under virtualization. */
   readonly rowAlternation = input(false);
 
@@ -413,8 +437,14 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Customize (or extend) the built-in header context menu per column. */
   readonly headerContextMenu = output<OgeHeaderContextMenuEvent>();
+  /** Cancelable: fires before a row expands (UI-driven toggles). */
+  readonly rowExpanding = output<OgeTreeRowTogglingEvent<T>>();
+  /** Cancelable: fires before a row collapses (UI-driven toggles). */
+  readonly rowCollapsing = output<OgeTreeRowTogglingEvent<T>>();
   readonly rowExpanded = output<OgeTreeRowToggleEvent<T>>();
   readonly rowCollapsed = output<OgeTreeRowToggleEvent<T>>();
+  /** Prefill new rows created by `addRow()` before their editors open. */
+  readonly initNewRow = output<OgeTreeInitNewRowEvent>();
   /** Fires after the tree has rendered a new result set. */
   readonly contentReady = output<void>();
   /**
@@ -2322,6 +2352,46 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected readonly canDelete = this.editingModel.canDelete;
   protected readonly canAdd = this.editingModel.canAdd;
 
+  /**
+   * Fields the form/popup editors render, resolved from `editing.formItems`
+   * (selection, order, labels, spans) — default: every editable column.
+   */
+  protected readonly editFormItems = computed<
+    readonly { column: ResolvedColumn<T>; label: string; colSpan: number }[]
+  >(() => {
+    const editable = this.resolvedColumns().filter(
+      (column) => column.editable && column.field,
+    );
+    const items = this.editingModel.editingOptions()?.formItems;
+    if (!items?.length) {
+      return editable.map((column) => ({
+        column,
+        label: column.caption,
+        colSpan: 1,
+      }));
+    }
+    return items.flatMap((entry) => {
+      const spec = typeof entry === 'string' ? { field: entry } : entry;
+      const column = editable.find(
+        (candidate) => candidate.field === spec.field,
+      );
+      if (!column) return [];
+      return [
+        {
+          column,
+          label: spec.label ?? column.caption,
+          colSpan: Math.max(1, spec.colSpan ?? 1),
+        },
+      ];
+    });
+  });
+
+  /** Explicit form grid template when `editing.formColCount` is set. */
+  protected readonly formGridTemplate = computed<string | null>(() => {
+    const count = this.editingModel.editingOptions()?.formColCount;
+    return count && count > 0 ? `repeat(${count}, minmax(0, 1fr))` : null;
+  });
+
   /** Trailing command cell: editing actions or custom command buttons. */
   protected readonly hasCommandColumn = computed(
     () =>
@@ -2511,18 +2581,54 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    */
   addRow(parentKey?: RowKey): void {
     this.editingModel.addNewRow();
+    const key = untracked(this.store.editing.added)[0];
+    if (key === undefined) return;
     const parentField = untracked(this.lazyParentField);
     if (parentKey !== undefined && parentField !== null) {
-      const key = untracked(this.store.editing.added)[0];
-      if (key !== undefined)
-        this.store.editing.setChange(key, parentField, parentKey);
+      this.store.editing.setChange(key, parentField, parentKey);
     }
+    // prefill hook: values the consumer writes stage onto the new row
+    const event: OgeTreeInitNewRowEvent = {
+      key,
+      parentKey: parentKey ?? null,
+      values: {},
+    };
+    this.initNewRow.emit(event);
+    if (Object.keys(event.values).length) {
+      this.store.editing.setRowChanges(key, event.values);
+    }
+  }
+
+  /** Runs `callback` for every loaded row (all branches, loaded lazily or not). */
+  forEachNode(
+    callback: (row: T, key: RowKey, parentKey: RowKey | null) => void,
+  ): void {
+    const index = untracked(this.treeIndex);
+    for (const [key, row] of index.byKey) {
+      callback(row, key, index.parentOf.get(key) ?? null);
+    }
+  }
+
+  /** Data rows of the currently rendered page, in display order. */
+  getVisibleRows(): readonly T[] {
+    return untracked(this.renderNodes).flatMap((node) =>
+      node.kind === 'data' ? [node.data] : [],
+    );
   }
 
   // --- expansion actions ----------------------------------------------------
 
   private setRowExpanded(node: DataRowNode<T>, expand: boolean): void {
     if (!node.hasChildren || node.expanded === expand) return;
+    // consumers may veto UI-driven toggles (imperative API stays silent)
+    const toggling: OgeTreeRowTogglingEvent<T> = {
+      key: node.key,
+      row: node.data,
+      cancel: false,
+    };
+    if (expand) this.rowExpanding.emit(toggling);
+    else this.rowCollapsing.emit(toggling);
+    if (toggling.cancel) return;
     this.store.expansion.toggleGroup(node.key);
     if (expand) this.rowExpanded.emit({ key: node.key, row: node.data });
     else this.rowCollapsed.emit({ key: node.key, row: node.data });
@@ -2802,6 +2908,20 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       this.store.filter.combinedExpr();
       this.store.filter.searchText();
       untracked(() => this.pageIndex.set(0));
+    });
+    // autoNavigateToFocusedRow: expand the ancestors and scroll it into view
+    effect(() => {
+      const key = this.focusedRowKey();
+      if (key === null || !this.autoNavigateToFocusedRow()) return;
+      untracked(() => {
+        const index = this.treeIndex();
+        if (!index.byKey.has(key)) return;
+        for (const ancestor of ancestorsOf(index, key))
+          this.expandRow(ancestor);
+        const flatIndex = this.keyToFlatIndex().get(key);
+        if (flatIndex !== undefined)
+          this.virtualizer.scrollRowIntoView(flatIndex);
+      });
     });
     // selectedKeys model ⇄ selection slice (guarded both ways)
     effect(() => {

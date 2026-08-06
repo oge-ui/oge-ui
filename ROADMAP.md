@@ -84,15 +84,15 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 
 ## 7. Selection, focus, keyboard
 
-| Feature                               | Reference | oge | Notes                                                             |
-| ------------------------------------- | --------- | --- | ----------------------------------------------------------------- |
-| single/multiple/checkbox + shift/ctrl | ✔         | ✅  |                                                                   |
-| Select-all (filtered) + indeterminate | ✔         | ✅  |                                                                   |
-| `selectAllMode: 'page'`               | ✔         | ✅  | page or all filtered pages, async fetch for remote (Phase 13)     |
-| Deferred selection                    | ✔         | ✅  | `selectionDeferred` + `[(selectionFilter)]` FilterExpr (Phase 14) |
-| Focused row mode (`focusedRowKey`)    | ✔         | ✅  | `focusedRowEnabled` + `[(focusedRowKey)]` (Phase 13)              |
-| Excel-like keyboard navigation        | ✔         | ✅  | axe-verified ARIA; RTL-aware arrows                               |
-| Clipboard copy                        | ✔         | ✅  | `copyToClipboard()` + Ctrl+C, TSV of selection (Phase 13)         |
+| Feature                               | Reference | oge | Notes                                                                        |
+| ------------------------------------- | --------- | --- | ---------------------------------------------------------------------------- |
+| single/multiple/checkbox + shift/ctrl | ✔         | ✅  |                                                                              |
+| Select-all (filtered) + indeterminate | ✔         | ✅  |                                                                              |
+| `selectAllMode: 'page'`               | ✔         | ✅  | page or all filtered pages, async fetch for remote (Phase 13)                |
+| Deferred selection                    | ✔         | ✅  | `selectionDeferred` + `[(selectionFilter)]` FilterExpr (Phase 14)            |
+| Focused row                           | ✔         | ✅  | `[(focusedRowKey)]`; `autoNavigateToFocusedRow` expands the path and scrolls |
+| Excel-like keyboard navigation        | ✔         | ✅  | axe-verified ARIA; RTL-aware arrows                                          |
+| Clipboard copy                        | ✔         | ✅  | `copyToClipboard()` + Ctrl+C, TSV of selection (Phase 13)                    |
 
 ## 8. Editing
 
@@ -155,21 +155,21 @@ the `@oge-ui/core` tree primitives (`buildTreeIndex`, `flattenTreeData`,
 | Feature                                                             | Reference | oge | Notes                                                                                                                                                                    |
 | ------------------------------------------------------------------- | --------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Flat self-referencing data (`keyExpr`/`parentIdExpr`/`rootValue`)   | ✔         | ✅  | + `orphanPolicy: discard/promoteToRoot`                                                                                                                                  |
-| Expand/collapse + `autoExpandAll` + `[(expandedRowKeys)]`           | ✔         | ✅  | polarity-aware toggled set, O(visible) flatten                                                                                                                           |
+| Expand/collapse + `autoExpandAll` + `[(expandedRowKeys)]`           | ✔         | ✅  | polarity-aware toggled set, O(visible) flatten; cancelable `rowExpanding`/`rowCollapsing`                                                                                |
 | Remote lazy loading (`hasItemsExpr`)                                | ✔         | ✅  | `filter: [parentIdExpr,'=',key]` per expansion; cache + skeleton; sort invalidates; remote match discovery under filters with `[keyField,'in',keys]` ancestor completion |
 | Row + column virtualization                                         | ✔         | ✅  | 100k-node spec; `columnRenderingMode: 'virtual'` (plain columns)                                                                                                         |
 | Sorting (sibling-scoped, multi)                                     | ✔         | ✅  | source-applied sort inherits bucket order                                                                                                                                |
 | Filter row + search panel                                           | ✔         | ✅  | client-side, ancestors preserved; `filterMode`; `expandNodesOnFiltering`; operator menu; `<mark>` highlighting                                                           |
 | Selection (single/multiple/checkbox)                                | ✔         | ✅  | shared SelectionSlice; two-way `selectedKeys`                                                                                                                            |
 | Recursive tri-state selection                                       | ✔         | ✅  | `selectionRecursive` + `getSelectedRowKeys(mode)`; lazy branches bulk-fetch (`parentId in [...]`) before cascading                                                       |
-| Focused row                                                         | ✔         | ✅  | `[(focusedRowKey)]`                                                                                                                                                      |
+| Focused row                                                         | ✔         | ✅  | `[(focusedRowKey)]`; `autoNavigateToFocusedRow` expands the path and scrolls                                                                                             |
 | Keyboard navigation (treegrid)                                      | ✔         | ✅  | logical ArrowRight/Left expand/collapse, parent/first-child jumps, RTL-aware                                                                                             |
 | ARIA treegrid                                                       | partial   | ✅  | `aria-level/posinset/setsize/expanded`                                                                                                                                   |
 | Columns: resize, reorder, chooser, templates, bands, lookup display | ✔         | ✅  | shared `<oge-column>`; drag reorder + anchored chooser                                                                                                                   |
 | Drag & drop reparent + sibling ordering                             | ✔         | ✅  | drop inside/before/after with indicators; descendant guard; array auto-apply + `rowReparented`                                                                           |
 | State persistence (`stateKey`)                                      | ✔         | ✅  | sort/filters/columns/expansion                                                                                                                                           |
 | Theming (dark/bootstrap/tailwind)                                   | ✔         | ✅  | shared `_structure.scss` + theme css                                                                                                                                     |
-| Editing (cell/row/batch/form/popup)                                 | ✔         | ✅  | shared `EditingModel`; inline form row + modal dialog; `addRow(parentKey)` pre-stages the parent                                                                         |
+| Editing (cell/row/batch/form/popup)                                 | ✔         | ✅  | shared `EditingModel`; `formItems`/`formColCount` layouts; `addRow(parentKey)` + `initNewRow` prefill                                                                    |
 | Export CSV + Excel (native outline)                                 | ✔         | ✅  | indented CSV; lazy `@oge-ui/tree-list/export-excel` sets real `outlineLevel`s                                                                                            |
 | Column chooser / filter builder + panel / context menus / toolbar   | ✔         | ✅  | anchored chooser with drag reorder; `[(filterValue)]` builder; row + header menus; `[ogeToolbar]`; `loadPanel`/`wordWrap`/`commandButtons`                               |
 | Nested payloads (`itemsExpr`)                                       | ✔         | ✅  | inline `items` arrays flattened internally (array data)                                                                                                                  |

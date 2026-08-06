@@ -22,8 +22,12 @@ model, theming, virtualization, keyboard navigation and data layer.
   `[ogeToolbar]` slot, `commandButtons`, `loadPanel`, `wordWrap`
 - Selection (single / multiple / checkbox / recursive tri-state), full treegrid ARIA, RTL-aware keyboard
 - Editing in all five modes (cell / row / batch / form / popup) with the grid's
-  editors, validators and `savingChanges` flow; `addRow(parentKey)` inserts
-  under a chosen node
+  editors, validators and `savingChanges` flow; `formItems`/`formColCount`
+  form layouts; `addRow(parentKey)` inserts under a chosen node with an
+  `initNewRow` prefill hook
+- Cancelable `rowExpanding`/`rowCollapsing` events; `autoNavigateToFocusedRow`
+  expands and scrolls to a programmatically focused row; `forEachNode()` /
+  `getVisibleRows()` node APIs; `allowSelectAll` toggle
 - Drag & drop: reparent by dropping onto a row, or reorder among siblings by
   dropping before/after (with drop indicators)
 - State persistence (`stateKey`) for sort, filters, column layout and expansion

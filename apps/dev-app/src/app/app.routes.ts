@@ -172,6 +172,12 @@ export const appRoutes: Route[] = [
           import('./pages/tree-list/drag-drop').then((m) => m.TreeDragPage),
         title: 'oge — Tree List Drag & Drop',
       },
+      {
+        path: 'editing',
+        loadComponent: () =>
+          import('./pages/tree-list/editing').then((m) => m.TreeEditingPage),
+        title: 'oge — Tree List Editing',
+      },
     ],
   },
   // legacy redirects

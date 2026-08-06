@@ -138,6 +138,11 @@ export class App {
           label: 'Drag & Drop',
           icon: 'sort',
         },
+        {
+          path: '/components/tree-list/editing',
+          label: 'Editing',
+          icon: 'pencil',
+        },
       ],
     },
   ];
