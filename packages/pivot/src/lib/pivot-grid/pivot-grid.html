@@ -35,7 +35,6 @@
   >
     <span class="oge-pivot-area-label">{{ zone.label }}</span>
     @for (field of zone.fields; track field.id) {
-    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
     <span
       class="oge-pivot-field-chip"
       [class.oge-pivot-chip-filtered]="!!field.filterValues"
@@ -80,10 +79,9 @@
     ></div>
 
     <!-- column headers -->
-    @for (cell of visibleHeaderCells(); track cell.path.join('¦') +
+    @for (cell of visibleHeaderCells(); track cell.path.join('Â¦') +
     (cell.isTotal ? ':t' : '') + (cell.isGrandTotal ? ':g' : '') +
     cell.rowStart) {
-    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
     <div
       class="oge-pivot-col-header"
       role="columnheader"
@@ -125,7 +123,6 @@
     <!-- row headers + cells -->
     @for (rowIndex of visibleRowIndexes(); track rowIndex) { @if
     (rowLines()[rowIndex]; as line) {
-    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
     <div
       class="oge-pivot-row-header"
       role="rowheader"
@@ -164,12 +161,13 @@
       } {{ line.text }}
     </div>
     @for (columnIndex of visibleColumnIndexes(); track columnIndex) {
-    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
     <div
       class="oge-pivot-cell"
       role="gridcell"
       [class.oge-pivot-total]="line.isTotal || columnSlotIsTotal()[columnIndex]"
       [class.oge-pivot-grand]="line.isGrandTotal || columnSlotIsGrand()[columnIndex]"
+      [style.grid-row]="columnDepth() + 1 + rowIndex"
+      [style.grid-column]="columnIndex + 2"
       [attr.data-cell]="rowIndex + '-' + columnIndex"
       [attr.tabindex]="isCellTabbable(rowIndex, columnIndex) ? 0 : -1"
       (focus)="onCellFocus(rowIndex, columnIndex)"
@@ -285,7 +283,7 @@
 </div>
 } @if (chooserOpen()) {
 <div class="oge-popup-backdrop"></div>
-<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -->
 <div
   class="oge-edit-popup oge-pivot-chooser"
   role="dialog"

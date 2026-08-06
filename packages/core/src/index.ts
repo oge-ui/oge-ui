@@ -18,6 +18,7 @@ export * from './lib/pivot/pivot-display';
 export * from './lib/pivot/pivot-sort';
 export * from './lib/pivot/pivot-drill-down';
 export * from './lib/pivot/local-pivot-store';
+export * from './lib/pivot/pivot-csv';
 export * from './lib/state/pivot-grid-state-snapshot';
 export * from './lib/data/load-options';
 export * from './lib/data/data-source';

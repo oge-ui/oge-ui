@@ -5,7 +5,13 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@angular/core": "^22.0.0"
+    "@angular/core": "^22.0.0",
+    "exceljs": "^4.4.0"
+  },
+  "peerDependenciesMeta": {
+    "exceljs": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@oge-ui/core": "0.3.0",

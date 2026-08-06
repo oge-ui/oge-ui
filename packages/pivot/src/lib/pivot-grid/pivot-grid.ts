@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import {
   PivotEngine,
+  buildPivotCsv,
   foldText,
   type CustomSummaryMap,
   type FilterExpr,
@@ -30,13 +31,19 @@ import {
   type PivotLoadOptions,
   type PivotLoadResult,
   type PivotPath,
+  type PivotCsvOptions,
+  type PivotGridStateSnapshot,
   type PivotResult,
   type PivotSummaryDisplayMode,
   type SummaryDescriptor,
   type SummaryType,
 } from '@oge-ui/core';
 import { formatCellValue } from '@oge-ui/grid';
-import { humanize } from '@oge-ui/grid/foundation';
+import {
+  OGE_STATE_STORAGE,
+  createStatePersistence,
+  humanize,
+} from '@oge-ui/grid/foundation';
 import { OGE_PIVOT_MESSAGES, type OgePivotMessages } from './pivot-config';
 import { OgePivotField } from './pivot-field';
 import { PivotStateStore } from './pivot-state.store';
@@ -139,6 +146,10 @@ export class OgePivotGrid<T = unknown> {
   readonly messages = input<Partial<OgePivotMessages>>({});
   /** Conditional appearance hook: mutate `text` / `cssClass` per cell. */
   readonly customizeCell = input<(cell: OgePivotCellPrepared) => void>();
+  /** Persists the field layout + expansion under this key (`OGE_STATE_STORAGE`). */
+  readonly stateKey = input<string | undefined>(undefined);
+  /** Debounced notification whenever the persistable state changes. */
+  readonly stateChange = output<PivotGridStateSnapshot>();
 
   readonly cellClick = output<OgePivotCellClickEvent>();
   readonly cellDblClick = output<OgePivotCellClickEvent>();
@@ -247,9 +258,95 @@ export class OgePivotGrid<T = unknown> {
   private readonly remoteResult = signal<PivotResult | null>(null);
   private remoteAbort: AbortController | null = null;
 
+  // --- state persistence ----------------------------------------------------
+
+  private readonly persistedSnapshot = computed<PivotGridStateSnapshot>(() => ({
+    fields: this.resolvedFields().map((field) => ({
+      id: field.id,
+      area: field.area ?? null,
+      areaIndex: field.areaIndex,
+      summaryType: field.summaryType,
+      summaryDisplayMode: field.summaryDisplayMode,
+      sortOrder: field.sortOrder,
+      sortBySummaryField: field.sortBySummaryField,
+      sortBySummaryPath: field.sortBySummaryPath,
+      filterValues: field.filterValues,
+      filterType: field.filterType,
+    })),
+    rowExpandedPaths: this.store.rowExpandedPathList(),
+    columnExpandedPaths: this.store.columnExpandedPathList(),
+    fieldPanelCollapsed: this.store.fieldPanelCollapsed(),
+  }));
+
+  /** Current persistable UI state: field layout + expansion. */
+  state(): PivotGridStateSnapshot {
+    return untracked(this.persistedSnapshot);
+  }
+
+  /** Applies a previously captured state snapshot. */
+  applyState(snapshot: PivotGridStateSnapshot): void {
+    untracked(() => {
+      if (snapshot.fields) {
+        const overrides = new Map<string, Partial<PivotFieldConfig>>();
+        for (const entry of snapshot.fields) {
+          const { id, ...rest } = entry;
+          overrides.set(id, rest as Partial<PivotFieldConfig>);
+        }
+        this.store.applyOverrides(overrides);
+      }
+      this.store.setExpansion(
+        snapshot.rowExpandedPaths ?? [],
+        snapshot.columnExpandedPaths ?? []
+      );
+      if (snapshot.fieldPanelCollapsed !== undefined) {
+        if (this.store.fieldPanelCollapsed() !== snapshot.fieldPanelCollapsed) {
+          this.store.toggleFieldPanel();
+        }
+      }
+    });
+  }
+
+  // --- export ---------------------------------------------------------------
+
+  /** The materialized pivot exactly as rendered — for custom export integrations. */
+  getResult(): PivotResult {
+    return untracked(this.result);
+  }
+
+  /** CSV of exactly what is on screen (multi-level headers flattened). */
+  getCsv(options?: PivotCsvOptions): string {
+    const messages = untracked(this.msg);
+    return buildPivotCsv(untracked(this.result), {
+      grandTotalText: messages.grandTotal,
+      ...options,
+    });
+  }
+
+  /** Downloads the current view as a CSV file. */
+  exportCsv(filename = 'pivot.csv'): void {
+    const csv = this.getCsv();
+    if (typeof document === 'undefined') return;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   constructor() {
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(() => this.remoteAbort?.abort());
+    createStatePersistence<PivotGridStateSnapshot>({
+      stateKey: this.stateKey,
+      prefix: 'oge-pivot',
+      storage: inject(OGE_STATE_STORAGE),
+      snapshot: this.persistedSnapshot,
+      apply: (snapshot) => this.applyState(snapshot),
+      beforeRestore: () => this.fieldDirectives(),
+      onChange: (snapshot) => this.stateChange.emit(snapshot),
+    });
     // remote load: layout or expansion changes issue one (abortable) request
     effect(() => {
       const data = this.data();
@@ -481,22 +578,26 @@ export class OgePivotGrid<T = unknown> {
     },
   );
 
+  /** Fixed column track in virtual mode — widened when several measures share a cell. */
+  protected readonly virtualColumnWidth = computed<number>(() =>
+    Math.max(VIRTUAL_COLUMN_WIDTH, this.measures().length * 96),
+  );
+
   protected readonly columnWindow = computed<{ start: number; end: number }>(
     () => {
       const count = this.result().columnLeafCount;
       if (!this.virtualScrolling()) return { start: 0, end: count };
       const { left } = this.scrollPos();
       const { width } = this.viewportSize();
+      const columnWidth = this.virtualColumnWidth();
       const start = Math.max(
         0,
-        Math.floor((left - VIRTUAL_ROW_HEADER_WIDTH) / VIRTUAL_COLUMN_WIDTH) -
-          OVERSCAN,
+        Math.floor((left - VIRTUAL_ROW_HEADER_WIDTH) / columnWidth) - OVERSCAN,
       );
       const end = Math.min(
         count,
-        Math.ceil(
-          (left - VIRTUAL_ROW_HEADER_WIDTH + width) / VIRTUAL_COLUMN_WIDTH,
-        ) + OVERSCAN,
+        Math.ceil((left - VIRTUAL_ROW_HEADER_WIDTH + width) / columnWidth) +
+          OVERSCAN,
       );
       return { start, end: Math.max(end, start) };
     },
@@ -540,7 +641,7 @@ export class OgePivotGrid<T = unknown> {
     }
     return {
       rows: `repeat(${String(this.columnDepth())}, ${String(VIRTUAL_HEADER_HEIGHT)}px) repeat(${String(result.rowLeafCount)}, ${String(VIRTUAL_ROW_HEIGHT)}px)`,
-      columns: `${String(VIRTUAL_ROW_HEADER_WIDTH)}px repeat(${String(result.columnLeafCount)}, ${String(VIRTUAL_COLUMN_WIDTH)}px)`,
+      columns: `${String(VIRTUAL_ROW_HEADER_WIDTH)}px repeat(${String(result.columnLeafCount)}, ${String(this.virtualColumnWidth())}px)`,
     };
   });
 

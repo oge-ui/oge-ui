@@ -163,6 +163,9 @@
   border-bottom: 1px solid var(--oge-border-color);
   border-inline-end: 1px solid var(--oge-border-color);
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: background-color 120ms ease;
 }
 
@@ -187,6 +190,8 @@
   font-variant-numeric: tabular-nums;
   background: var(--oge-bg);
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
   transition: background-color 100ms ease;
 
   &:hover {
@@ -197,6 +202,8 @@
 .oge-pivot-measure {
   min-width: 3ch;
   text-align: end;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .oge-pivot-total {
