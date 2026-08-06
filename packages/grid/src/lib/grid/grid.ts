@@ -2791,6 +2791,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly sanitizer = inject(DomSanitizer);
 
   /** Escaped cell text with `<mark>` around search matches, or null when inactive. */
+  /** Highlight results memoized per cell text — cleared when the query changes. */
+  private highlightCacheQuery = '';
+  private readonly highlightCache = new Map<string, SafeHtml | null>();
+
   protected searchHighlightHtml(
     node: DataRowNode<T>,
     column: ResolvedColumn<T>,
@@ -2798,6 +2802,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const query = this.store.filter.searchText().trim();
     if (!query) return null;
     const text = this.cellDisplayText(node, column);
+    if (query !== this.highlightCacheQuery) {
+      this.highlightCacheQuery = query;
+      this.highlightCache.clear();
+    }
+    const cached = this.highlightCache.get(text);
+    if (cached !== undefined) return cached;
+    const result = this.buildHighlightHtml(text, query);
+    if (this.highlightCache.size > 1000) this.highlightCache.clear();
+    this.highlightCache.set(text, result);
+    return result;
+  }
+
+  private buildHighlightHtml(text: string, query: string): SafeHtml | null {
     // Match on folded text (locale-independent, accent-insensitive), then map
     // the folded match range back onto the original string for the <mark>.
     const { folded, sourceIndex } = foldTextWithMap(text);

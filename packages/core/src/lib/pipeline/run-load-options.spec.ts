@@ -88,9 +88,29 @@ describe('runLoadOptions', () => {
       value: (i * 2654435761) % 100_000,
     }));
     const start = performance.now();
-    runLoadOptions(rows, { sort: [{ field: 'value', dir: 'asc' }], requireTotalCount: true });
+    runLoadOptions(rows, {
+      sort: [{ field: 'value', dir: 'asc' }],
+      requireTotalCount: true,
+    });
     // Generous bound for shared CI runners; still catches accidental O(n²).
     expect(performance.now() - start).toBeLessThan(250);
+  });
+
+  it('sorts 100k rows by a dotted path within the performance budget', () => {
+    const rows = Array.from({ length: 100_000 }, (_, i) => ({
+      id: i,
+      nested: { value: (i * 2654435761) % 1_000_000 },
+    }));
+    const start = performance.now();
+    const result = runLoadOptions(rows, {
+      sort: [{ field: 'nested.value', dir: 'desc' }],
+      take: 10,
+    });
+    expect(
+      (result.data as { nested: { value: number } }[])[0].nested.value,
+    ).toBeGreaterThan(999_000);
+    // Precomputed sort keys keep even path-accessor sorts comfortably fast.
+    expect(performance.now() - start).toBeLessThan(1_000);
   });
 
   it('text-filters 10k rows within the performance budget', () => {
