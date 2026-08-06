@@ -18,9 +18,7 @@
   },
   "dependencies": {
     "@oge-ui/core": "0.5.0",
-    "@oge-ui/grid": "0.5.0",
-    "@oge-ui/inputs": "0.5.0",
-    "@oge-ui/overlay": "0.5.0"
+    "@oge-ui/grid": "0.5.0"
   },
   "sideEffects": false,
   "homepage": "https://ogeui.com",
