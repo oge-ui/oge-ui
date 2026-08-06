@@ -102,6 +102,63 @@ describe('OgeTreeList header filter', () => {
     expect(el.querySelector('.oge-header-filter-active')).toBeNull();
   });
 
+  it('date columns group by year with tri-state group checkboxes', async () => {
+    @Component({
+      imports: [OgeTreeList, OgeColumn],
+      template: `
+        <oge-tree-list
+          [data]="data"
+          keyExpr="id"
+          parentIdExpr="parentId"
+          [autoExpandAll]="true"
+          [headerFilter]="true"
+        >
+          <oge-column field="title" caption="Title" />
+          <oge-column field="due" caption="Due" dataType="date" />
+        </oge-tree-list>
+      `,
+    })
+    class DateHost {
+      readonly data = [
+        { id: 1, parentId: null, title: 'Root A', due: '2025-03-01' },
+        { id: 2, parentId: 1, title: 'Child A1', due: '2025-07-15' },
+        { id: 3, parentId: 1, title: 'Child A2', due: '2026-01-20' },
+        { id: 4, parentId: null, title: 'Root B', due: '2026-05-05' },
+      ];
+    }
+    const fixture = TestBed.createComponent(DateHost);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    el.querySelectorAll<HTMLButtonElement>('.oge-header-filter-btn')[1].click();
+    await settle(fixture);
+    const groups = Array.from(
+      el.querySelectorAll('.oge-header-filter-popup .oge-hf-group span'),
+    ).map((span) => span.textContent?.trim());
+    expect(groups).toEqual(['2025', '2026']);
+    // unticking the 2025 group hides its rows; Root A survives as ancestor
+    const group2025 = Array.from(
+      el.querySelectorAll<HTMLElement>(
+        '.oge-header-filter-popup .oge-hf-group',
+      ),
+    ).find((item) => item.textContent?.includes('2025'));
+    group2025?.querySelector<HTMLInputElement>('input')?.click();
+    await settle(fixture);
+    const titles = Array.from(el.querySelectorAll('.oge-row')).map(
+      (row) =>
+        row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? '',
+    );
+    expect(titles).toEqual(['Root A', 'Child A2', 'Root B']);
+    // partial re-check turns the group indeterminate
+    const leaf = el.querySelector<HTMLInputElement>(
+      '.oge-header-filter-popup .oge-hf-leaf input',
+    );
+    leaf?.click();
+    await settle(fixture);
+    expect(
+      group2025?.querySelector<HTMLInputElement>('input')?.indeterminate,
+    ).toBe(true);
+  });
+
   it('the popup search narrows the value list, locale-safe', async () => {
     const { fixture, el } = await render();
     await openOfficeFilter(fixture, el);

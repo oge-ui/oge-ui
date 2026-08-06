@@ -6,12 +6,18 @@ model, theming, virtualization, keyboard navigation and data layer.
 
 - Flat self-referencing data (`id` / `parentId`) or nested payloads (`itemsExpr`)
 - O(visible) expand/collapse; 100k-node trees stay smooth with `virtualScroll`
-- Lazy child loading against any `DataSource` (one `parentId eq key` request per expansion)
+- Lazy child loading against any `DataSource` (one `parentId eq key` request
+  per expansion); filters/search on lazy trees additionally discover matches
+  under never-expanded branches and complete their ancestor chains remotely
+- Column virtualization (`columnRenderingMode: 'virtual'`) for very wide trees
 - Client-side filtering & search that keep ancestor rows visible — with
   `expandNodesOnFiltering`, per-column operator menu, a filter builder
   (`[(filterValue)]`) and `<mark>` search highlighting
-- Excel-style header filter popups (distinct values with search), client-side
-  paging over the visible rows
+- Excel-style header filter popups (distinct values with search; date columns
+  group by year with tri-state checkboxes), client-side paging over the
+  visible rows
+- Recursive selection cascades into lazily loaded branches by bulk-fetching
+  the missing subtree first (`parentId in [...]`)
 - Column chooser, drag-and-drop column reordering, row & header context menus,
   `[ogeToolbar]` slot, `commandButtons`, `loadPanel`, `wordWrap`
 - Selection (single / multiple / checkbox / recursive tri-state), full treegrid ARIA, RTL-aware keyboard

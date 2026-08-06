@@ -322,6 +322,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Windows the DOM to the visible rows (100k-node trees). */
   readonly virtualScroll = input(false);
 
+  /**
+   * `'virtual'` renders only the columns inside the horizontal viewport.
+   * Requires plain columns: no pinned columns and no column bands.
+   */
+  readonly columnRenderingMode = input<'standard' | 'virtual'>('standard');
+
   readonly rowHeight = input<number | undefined>(undefined);
   readonly overscan = input<number | undefined>(undefined);
   readonly columnMinWidth = input<number | undefined>(undefined);
@@ -517,6 +523,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return typeof parent === 'string' ? parent : null;
   });
 
+  /** Remote lookups by key (`[keyField, 'in', keys]`) need a string `keyExpr`. */
+  private readonly lazyKeyField = computed<string | null>(() => {
+    const key = this.keyExpr();
+    return typeof key === 'string' ? key : null;
+  });
+
   private readonly effLoadMode = computed<'full' | 'lazy'>(() => {
     // without a string parent field no child request can ever be built
     if (this.lazyParentField() === null) return 'full';
@@ -590,13 +602,23 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return entries.length ? Object.fromEntries(entries) : undefined;
   });
 
-  /** Loaded rows: the base result plus lazily fetched children (lazy mode). */
+  /**
+   * Rows discovered by remote filtering (matches + their ancestor chains) —
+   * they join the index so lazy filtering can reach unloaded branches.
+   */
+  private readonly remoteFilterRows = signal<readonly T[]>([]);
+
+  /** Loaded rows: base result + lazily fetched children + remote matches. */
   private readonly indexRows = computed<readonly T[]>(() => {
     const base = (this.adapter.result()?.data ?? []) as readonly T[];
     const cache = this.deferredLoader.children();
-    if (!cache.size) return base;
+    const remote = this.remoteFilterRows();
+    if (!cache.size && !remote.length) return base;
+    // duplicates resolve first-wins in buildTreeIndex, so order is base →
+    // lazily fetched children → remotely discovered rows
     const all = [...base];
     for (const rows of cache.values()) all.push(...rows);
+    all.push(...remote);
     return all;
   });
 
@@ -802,6 +824,170 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     onError: (err) => this.adapter.error.set(err),
   });
 
+  // --- lazy remote filtering -------------------------------------------------
+
+  /** Fingerprint of the discovery currently applied/in flight. */
+  private remoteFilterJson: string | null = null;
+
+  /**
+   * Lazy trees cannot find matches under unloaded branches client-side, so an
+   * active filter/search additionally asks the source for ALL matching rows
+   * and then completes their ancestor chains via `[keyField, 'in', keys]`
+   * lookups. Needs string `keyExpr` + `parentIdExpr`; the contract is the
+   * plain filter language, so OData/custom stores work unchanged.
+   */
+  private readonly remoteFilterEffect = effect(() => {
+    const expr = this.store.filter.combinedExpr();
+    const search = this.store.filter.searchText().trim();
+    const lazy = this.effLoadMode() === 'lazy';
+    const source = this.innerSource();
+    const keyField = this.lazyKeyField();
+    untracked(() => {
+      if (!lazy || !source || !keyField || (!expr && !search)) {
+        this.remoteFilterJson = null;
+        if (this.remoteFilterRows().length) this.remoteFilterRows.set([]);
+        return;
+      }
+      const fingerprint = JSON.stringify({ expr, search });
+      if (fingerprint === this.remoteFilterJson) return;
+      this.remoteFilterJson = fingerprint;
+      void this.discoverRemoteMatches(
+        source,
+        expr,
+        search,
+        keyField,
+        fingerprint,
+      );
+    });
+  });
+
+  private async discoverRemoteMatches(
+    source: DataSource<T>,
+    expr: FilterExpr | null,
+    search: string,
+    keyField: string,
+    fingerprint: string,
+  ): Promise<void> {
+    try {
+      const result = await source.load({
+        ...(expr ? { filter: expr } : {}),
+        ...(search ? { searchText: search } : {}),
+      });
+      let rows = [...(result.data as readonly T[])];
+      const keyOf = untracked(this.rowKeyOf);
+      const parentIdOf = untracked(this.parentIdOf);
+      const rootValue = untracked(this.rootValue);
+      const known = new Set<RowKey>(untracked(this.indexRows).map(keyOf));
+      for (const row of rows) known.add(keyOf(row));
+      // complete the ancestor chains level by level (depth-capped)
+      for (let depth = 0; depth < 32; depth++) {
+        const missing = new Set<RowKey>();
+        for (const row of rows) {
+          const parent = parentIdOf(row);
+          if (parent == null || parent === rootValue) continue;
+          if (!known.has(parent as RowKey)) missing.add(parent as RowKey);
+        }
+        if (!missing.size) break;
+        const parents = await source.load({
+          filter: {
+            type: 'binary',
+            field: keyField,
+            op: 'in',
+            value: [...missing],
+          },
+        });
+        const fetched = parents.data as readonly T[];
+        if (!fetched.length) break; // the source cannot resolve further
+        for (const row of fetched) known.add(keyOf(row));
+        rows = [...rows, ...fetched];
+      }
+      if (this.remoteFilterJson !== fingerprint) return; // stale discovery
+      this.remoteFilterRows.set(rows);
+    } catch (err) {
+      if (this.remoteFilterJson === fingerprint) this.adapter.error.set(err);
+    }
+  }
+
+  // --- lazy subtree loading (recursive selection) ----------------------------
+
+  /** True when a hint-expandable descendant of `key` has no loaded children. */
+  private hasUnloadedDescendants(key: RowKey): boolean {
+    const hint = untracked(this.hasChildrenHint);
+    if (!hint || untracked(this.effLoadMode) !== 'lazy') return false;
+    const index = untracked(this.treeIndex);
+    const cache = untracked(this.deferredLoader.children);
+    const keyOf = untracked(this.rowKeyOf);
+    const stack: RowKey[] = [key];
+    while (stack.length) {
+      const current = stack.pop() as RowKey;
+      const row = index.byKey.get(current);
+      if (!row) return true;
+      const bucket = index.childrenOf.get(current);
+      if (hint(row) === true && !bucket && !cache.has(current)) return true;
+      if (bucket) for (const child of bucket) stack.push(keyOf(child));
+    }
+    return false;
+  }
+
+  /** Bulk-fetches every missing level under `rootKey` (`parentId in [...]`). */
+  private async loadSubtree(rootKey: RowKey): Promise<void> {
+    const source = untracked(this.innerSource);
+    const parentField = untracked(this.lazyParentField);
+    const hint = untracked(this.hasChildrenHint);
+    if (!source || !parentField || !hint) return;
+    const keyOf = untracked(this.rowKeyOf);
+    const parentIdOf = untracked(this.parentIdOf);
+    // seed: every hint-expandable node under the root with no loaded bucket
+    const missingUnder = (): RowKey[] => {
+      const index = untracked(this.treeIndex);
+      const cache = untracked(this.deferredLoader.children);
+      const out: RowKey[] = [];
+      const stack: RowKey[] = [rootKey];
+      while (stack.length) {
+        const current = stack.pop() as RowKey;
+        const row = index.byKey.get(current);
+        if (!row) continue;
+        const bucket = index.childrenOf.get(current);
+        if (hint(row) === true && !bucket && !cache.has(current))
+          out.push(current);
+        if (bucket) for (const child of bucket) stack.push(keyOf(child));
+      }
+      return out;
+    };
+    let frontier = missingUnder();
+    for (let depth = 0; depth < 32 && frontier.length; depth++) {
+      const result = await source.load({
+        filter: {
+          type: 'binary',
+          field: parentField,
+          op: 'in',
+          value: frontier,
+        },
+      });
+      const rows = result.data as readonly T[];
+      const byParent = new Map<RowKey, T[]>();
+      for (const row of rows) {
+        const parent = parentIdOf(row) as RowKey;
+        const bucket = byParent.get(parent);
+        if (bucket) bucket.push(row);
+        else byParent.set(parent, [row]);
+      }
+      // parents that came back empty are primed too, so they never refetch
+      for (const key of frontier) {
+        if (!byParent.has(key)) byParent.set(key, []);
+      }
+      this.deferredLoader.prime(byParent);
+      frontier = rows
+        .filter((row) => hint(row) === true)
+        .map(keyOf)
+        .filter(
+          (key) =>
+            !untracked(this.treeIndex).childrenOf.has(key) &&
+            !untracked(this.deferredLoader.children).has(key),
+        );
+    }
+  }
+
   // --- client-side paging over the visible rows ------------------------------
 
   protected readonly pageIndex = signal(0);
@@ -918,9 +1104,20 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected readonly resolvedColumns = this.columnModel.resolvedColumns;
   protected readonly bandRow = this.columnModel.bandRow;
 
+  /**
+   * Column virtualization is opt-in and requires plain columns: pinned
+   * columns and bands rely on every column being present in the DOM.
+   */
+  protected readonly colVirtualized = computed(
+    () =>
+      this.columnRenderingMode() === 'virtual' &&
+      this.bandRow() === null &&
+      this.resolvedColumns().every((column) => column.pinned === false),
+  );
+
   private readonly layoutModel = new ColumnLayoutModel<T, OgeColumn<T>>({
     resolvedColumns: this.resolvedColumns,
-    colVirtualized: computed(() => false),
+    colVirtualized: this.colVirtualized,
     scrollLeft: this.scrollLeft,
     hostWidth: this.hostWidth,
     leadingTracks: computed(() => {
@@ -939,6 +1136,25 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected readonly renderColumns = this.layoutModel.renderColumns;
   protected readonly gridTemplateColumns = this.layoutModel.gridTemplateColumns;
+  protected readonly colSpacerLeft = this.layoutModel.colSpacerLeft;
+  protected readonly colSpacerRight = this.layoutModel.colSpacerRight;
+
+  /** Brings a virtualized column into the horizontal window before focusing. */
+  private scrollColumnIntoView(col: number): void {
+    if (!this.colVirtualized()) return;
+    const widths = this.layoutModel.colWidths();
+    if (col < 0 || col >= widths.length) return;
+    const viewport = this.viewportRef()?.nativeElement;
+    if (!viewport) return;
+    let left = this.leadingWidth();
+    for (let i = 0; i < col; i++) left += widths[i];
+    const right = left + widths[col];
+    if (left < viewport.scrollLeft) viewport.scrollLeft = left;
+    else if (right > viewport.scrollLeft + viewport.clientWidth) {
+      viewport.scrollLeft = right - viewport.clientWidth;
+    }
+    this.scrollLeft.set(viewport.scrollLeft);
+  }
 
   protected pinnedLeftOf(column: ResolvedColumn<T>): number | null {
     return this.layoutModel.pinnedLeftOf(column);
@@ -1049,20 +1265,32 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return this.checkStates().get(key) ?? 'unchecked';
   }
 
-  /** Central toggle: cascades through descendants in recursive mode. */
+  /**
+   * Central toggle: cascades through descendants in recursive mode. On lazy
+   * trees the missing subtree is bulk-fetched first, so the cascade covers
+   * branches that were never expanded.
+   */
   private toggleSelection(key: RowKey): void {
-    if (untracked(this.selectionRecursive)) {
-      this.store.selection.replace([
-        ...toggleTreeSelection(
-          untracked(this.treeIndex),
-          untracked(this.store.selection.selected),
-          key,
-          true,
-        ),
-      ]);
-    } else {
+    if (!untracked(this.selectionRecursive)) {
       this.store.selection.toggle(key);
+      return;
     }
+    if (this.hasUnloadedDescendants(key)) {
+      void this.loadSubtree(key).then(() => this.applyRecursiveToggle(key));
+      return;
+    }
+    this.applyRecursiveToggle(key);
+  }
+
+  private applyRecursiveToggle(key: RowKey): void {
+    this.store.selection.replace([
+      ...toggleTreeSelection(
+        untracked(this.treeIndex),
+        untracked(this.store.selection.selected),
+        key,
+        true,
+      ),
+    ]);
   }
 
   /** Selected keys narrowed per mode (recursive selection reporting). */
@@ -1466,6 +1694,72 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       foldText(this.headerValueText(value)).includes(query),
     );
   });
+
+  /**
+   * Date columns group their values by year (tri-state group checkboxes);
+   * null when the open column is not a date column.
+   */
+  protected readonly headerValueGroups = computed<
+    readonly { label: string; values: readonly unknown[] }[] | null
+  >(() => {
+    const column = this.headerFilterColumn();
+    if (!column || column.dataType !== 'date') return null;
+    const byYear = new Map<string, unknown[]>();
+    for (const value of this.headerValues()) {
+      const date = value instanceof Date ? value : new Date(String(value));
+      const label = Number.isNaN(date.getTime())
+        ? this.msg().blankValue
+        : String(date.getFullYear());
+      const bucket = byYear.get(label);
+      if (bucket) bucket.push(value);
+      else byYear.set(label, [value]);
+    }
+    const query = foldText(this.headerFilterSearch().trim());
+    return [...byYear.entries()]
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([label, values]) => ({
+        label,
+        values: query
+          ? values.filter(
+              (value) =>
+                foldText(label).includes(query) ||
+                foldText(this.headerValueText(value)).includes(query),
+            )
+          : values,
+      }))
+      .filter((group) => group.values.length > 0);
+  });
+
+  protected isHeaderGroupSelected(group: {
+    values: readonly unknown[];
+  }): boolean {
+    return group.values.every((value) => this.isHeaderValueSelected(value));
+  }
+
+  protected isHeaderGroupIndeterminate(group: {
+    values: readonly unknown[];
+  }): boolean {
+    const selected = group.values.filter((value) =>
+      this.isHeaderValueSelected(value),
+    ).length;
+    return selected > 0 && selected < group.values.length;
+  }
+
+  /** Group checkbox: selects the whole year, or clears it when complete. */
+  protected toggleHeaderGroup(group: { values: readonly unknown[] }): void {
+    const field = untracked(this.headerFilterField);
+    if (field === null) return;
+    const all = untracked(this.headerValues);
+    const current = this.store.filter.headerFilterOf(field) ?? [...all];
+    const complete = group.values.every((value) => current.includes(value));
+    const next = complete
+      ? current.filter((value) => !group.values.includes(value))
+      : [...new Set([...current, ...group.values])];
+    this.store.filter.setHeaderFilter(
+      field,
+      next.length === all.length ? null : next,
+    );
+  }
 
   protected isHeaderValueSelected(value: unknown): boolean {
     const field = this.headerFilterField();
@@ -2301,9 +2595,11 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   // --- imperative API -------------------------------------------------------
 
-  /** Re-runs the current load and drops lazily fetched children. */
+  /** Re-runs the current load and drops lazily fetched/discovered rows. */
   refresh(): void {
     this.deferredLoader.reset();
+    this.remoteFilterJson = null;
+    this.remoteFilterRows.set([]);
     this.adapter.reload();
   }
 
@@ -2483,7 +2779,11 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         this.nestedParents.set(nestedParents);
         // a new source (or key/parent mapping) invalidates the child cache —
         // stale rows from the previous source must never join the new tree
-        if (this.innerSource() !== null) this.deferredLoader.reset();
+        if (this.innerSource() !== null) {
+          this.deferredLoader.reset();
+          this.remoteFilterJson = null;
+          this.remoteFilterRows.set([]);
+        }
         this.innerSource.set(inner);
         this.adapter.setSource(
           treeSource(
@@ -2613,7 +2913,10 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
           this.store.editing.editRowKey() !== null,
       );
       if (editorOpen) return;
-      untracked(() => this.virtualizer.scrollRowIntoView(cell.row));
+      untracked(() => {
+        this.virtualizer.scrollRowIntoView(cell.row);
+        this.scrollColumnIntoView(cell.col);
+      });
       setTimeout(() => {
         if (
           this.store.editing.editCell() !== null ||

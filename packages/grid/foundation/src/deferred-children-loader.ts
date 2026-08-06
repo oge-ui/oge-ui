@@ -81,4 +81,16 @@ export class DeferredChildrenLoader<T = unknown> {
     this.inflight.clear();
     if (untracked(this.cache).size) this.cache.set(new Map());
   }
+
+  /**
+   * Seeds children fetched outside the pending pipeline (bulk subtree or
+   * match-discovery loads). Entries live under the current base fingerprint
+   * and are dropped by the same invalidation rules as loaded ones.
+   */
+  prime(entries: ReadonlyMap<RowKey, readonly T[]>): void {
+    if (!entries.size) return;
+    const next = new Map(untracked(this.cache));
+    for (const [key, rows] of entries) next.set(key, rows);
+    this.cache.set(next);
+  }
 }

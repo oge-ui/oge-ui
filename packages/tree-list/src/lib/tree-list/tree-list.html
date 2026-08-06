@@ -160,6 +160,12 @@ store.editing.hasPending())) {
           (change)="toggleSelectAll()"
         />
       </div>
+      } @if (colSpacerLeft() > 0) {
+      <div
+        class="oge-header-cell oge-col-spacer"
+        role="columnheader"
+        aria-hidden="true"
+      ></div>
       } @for (column of renderColumns(); track column.id) {
       <div
         class="oge-header-cell"
@@ -232,6 +238,12 @@ store.editing.hasPending())) {
         ></span>
         }
       </div>
+      } @if (colSpacerRight() > 0) {
+      <div
+        class="oge-header-cell oge-col-spacer"
+        role="columnheader"
+        aria-hidden="true"
+      ></div>
       } @if (hasCommandColumn()) {
       <div class="oge-header-cell oge-command-cell" role="columnheader"></div>
       }
@@ -246,6 +258,12 @@ store.editing.hasPending())) {
       <div class="oge-filter-cell" role="gridcell"></div>
       } @if (hasCheckboxColumn()) {
       <div class="oge-filter-cell" role="gridcell"></div>
+      } @if (colSpacerLeft() > 0) {
+      <div
+        class="oge-filter-cell oge-col-spacer"
+        role="gridcell"
+        aria-hidden="true"
+      ></div>
       } @for (column of renderColumns(); track column.id) {
       <div
         class="oge-filter-cell"
@@ -308,6 +326,12 @@ store.editing.hasPending())) {
         />
         } } }
       </div>
+      } @if (colSpacerRight() > 0) {
+      <div
+        class="oge-filter-cell oge-col-spacer"
+        role="gridcell"
+        aria-hidden="true"
+      ></div>
       } @if (hasCommandColumn()) {
       <div class="oge-filter-cell" role="gridcell"></div>
       }
@@ -466,6 +490,12 @@ store.editing.hasPending())) {
             (change)="onCheckboxToggle(node)"
           />
         </div>
+        } @if (colSpacerLeft() > 0) {
+        <div
+          class="oge-cell oge-col-spacer"
+          role="gridcell"
+          aria-hidden="true"
+        ></div>
         } @for (column of renderColumns(); track column.id) {
         <div
           class="oge-cell"
@@ -566,6 +596,12 @@ store.editing.hasPending())) {
           >
           }
         </div>
+        } @if (colSpacerRight() > 0) {
+        <div
+          class="oge-cell oge-col-spacer"
+          role="gridcell"
+          aria-hidden="true"
+        ></div>
         } @if (hasCommandColumn()) {
         <div class="oge-cell oge-command-cell" role="gridcell">
           @if ( isRowEditing(node.key) || (editMode() === 'popup' &&
@@ -691,10 +727,22 @@ store.editing.hasPending())) {
         <div class="oge-cell" role="gridcell" aria-hidden="true"></div>
         } @if (hasCheckboxColumn()) {
         <div class="oge-cell" role="gridcell" aria-hidden="true"></div>
+        } @if (colSpacerLeft() > 0) {
+        <div
+          class="oge-cell oge-col-spacer"
+          role="gridcell"
+          aria-hidden="true"
+        ></div>
         } @for (column of renderColumns(); track column.id) {
         <div class="oge-cell" role="gridcell" aria-busy="true">
           <span class="oge-skeleton" aria-hidden="true"></span>
         </div>
+        } @if (colSpacerRight() > 0) {
+        <div
+          class="oge-cell oge-col-spacer"
+          role="gridcell"
+          aria-hidden="true"
+        ></div>
         }
       </div>
       } } } @empty { @if (noDataTemplate(); as noData) {
@@ -812,7 +860,27 @@ store.editing.hasPending())) {
     />
     <span>{{ msg().selectAllValues }}</span>
   </label>
-  @for (value of visibleHeaderValues(); track $index) {
+  @if (headerValueGroups(); as groups) { @for (group of groups; track
+  group.label) {
+  <label class="oge-hf-item oge-hf-group">
+    <input
+      type="checkbox"
+      [checked]="isHeaderGroupSelected(group)"
+      [indeterminate]="isHeaderGroupIndeterminate(group)"
+      (change)="toggleHeaderGroup(group)"
+    />
+    <span>{{ group.label }}</span>
+  </label>
+  @for (value of group.values; track $index) {
+  <label class="oge-hf-item oge-hf-leaf">
+    <input
+      type="checkbox"
+      [checked]="isHeaderValueSelected(value)"
+      (change)="toggleHeaderValue(value)"
+    />
+    <span>{{ headerValueText(value) }}</span>
+  </label>
+  } } } @else { @for (value of visibleHeaderValues(); track $index) {
   <label class="oge-hf-item">
     <input
       type="checkbox"
@@ -821,7 +889,7 @@ store.editing.hasPending())) {
     />
     <span>{{ headerValueText(value) }}</span>
   </label>
-  }
+  } }
 </div>
 } @if (contextMenu(); as menu) {
 <div
