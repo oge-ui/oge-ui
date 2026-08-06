@@ -129,6 +129,58 @@ describe('OgeTreeList editing', () => {
     expect(rowOf(el, 'New child')?.getAttribute('aria-level')).toBe('2');
   });
 
+  it('form mode: the editing row swaps for an inline labeled form and saves', async () => {
+    const { fixture, host, el } = await render(
+      (h) => (h.editing = { mode: 'form', allowUpdating: true }),
+    );
+    rowOf(el, 'Root B')
+      ?.querySelector<HTMLButtonElement>('.oge-command-btn')
+      ?.click();
+    await settle(fixture);
+    const form = el.querySelector<HTMLElement>('.oge-form-row');
+    expect(form).toBeTruthy();
+    const labels = Array.from(el.querySelectorAll('.oge-form-label')).map(
+      (label) => label.textContent?.trim(),
+    );
+    expect(labels).toEqual(['Title', 'Effort']);
+    const editors = form?.querySelectorAll<HTMLInputElement>('.oge-editor');
+    if (!editors) throw new Error('form editors missing');
+    editors[0].value = 'Renamed B';
+    editors[0].dispatchEvent(new Event('input', { bubbles: true }));
+    Array.from(
+      el.querySelectorAll<HTMLButtonElement>('.oge-form-actions button'),
+    )[0].click();
+    await settle(fixture);
+    await flush();
+    await settle(fixture);
+    expect(host.data[2].title).toBe('Renamed B');
+    expect(el.querySelector('.oge-form-row')).toBeNull();
+  });
+
+  it('popup mode: a modal dialog edits the row and saves through the source', async () => {
+    const { fixture, host, el } = await render(
+      (h) => (h.editing = { mode: 'popup', allowUpdating: true }),
+    );
+    rowOf(el, 'Child A1')
+      ?.querySelector<HTMLButtonElement>('.oge-command-btn')
+      ?.click();
+    await settle(fixture);
+    const popup = el.querySelector<HTMLElement>('.oge-edit-popup');
+    expect(popup).toBeTruthy();
+    const editors = popup?.querySelectorAll<HTMLInputElement>('.oge-editor');
+    if (!editors) throw new Error('popup editors missing');
+    editors[1].value = '7';
+    editors[1].dispatchEvent(new Event('input', { bubbles: true }));
+    Array.from(
+      el.querySelectorAll<HTMLButtonElement>('.oge-popup-actions button'),
+    )[0].click();
+    await settle(fixture);
+    await flush();
+    await settle(fixture);
+    expect(host.data[1].effort).toBe(7);
+    expect(el.querySelector('.oge-edit-popup')).toBeNull();
+  });
+
   it('delete removes the row (and confirmDelete: false skips the dialog)', async () => {
     const { fixture, host, el } = await render(
       (h) =>

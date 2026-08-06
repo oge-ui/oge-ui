@@ -176,4 +176,4 @@ the `@oge-ui/core` tree primitives (`buildTreeIndex`, `flattenTreeData`,
 | Header filter (distinct values popup)                               | ✔         | ❌  | planned (FilterSlice ready)                                                                                                                |
 | Paging                                                              | ✔         | ❌  | planned (post-flatten page)                                                                                                                |
 
-**Next:** TreeList form/popup editing · pivot-style features · editing form layouts (`formItems` customization) · export appearance hooks (`customizeCell`).
+**Next:** pivot-style features · editing form layouts (`formItems` customization) · export appearance hooks (`customizeCell`).

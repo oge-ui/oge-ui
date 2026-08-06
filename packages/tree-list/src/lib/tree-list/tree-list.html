@@ -317,7 +317,81 @@ store.editing.hasPending())) {
   <div class="oge-body" [style.height.px]="bodyHeight()">
     <div class="oge-rows" role="rowgroup" [style.transform]="rowsTransform()">
       @for (node of viewNodes(); track node.key; let nodeIndex = $index) {
-      @switch (node.kind) { @case ('data') {
+      @switch (node.kind) { @case ('data') { @if (isFormRow(node.key)) {
+      <div
+        class="oge-row oge-form-row"
+        role="row"
+        [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
+        [attr.data-rowindex]="viewStart() + nodeIndex"
+      >
+        <div
+          class="oge-form-cell"
+          role="gridcell"
+          [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
+          [style.max-width.px]="hostWidth() || null"
+        >
+          <div class="oge-form-fields">
+            @for (column of resolvedColumns(); track column.id) { @if
+            (column.editable && column.field) {
+            <div class="oge-form-field">
+              <span class="oge-form-label">{{ column.caption }}</span>
+              @if (column.editTemplate) {
+              <ng-container
+                *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
+              />
+              } @else if (lookupItemsFor(node, column); as items) {
+              <select
+                class="oge-editor oge-editor-input"
+                [formControl]="$any(editControl(node, column))"
+                (keydown.enter)="onEditorEnter()"
+                (keydown.escape)="cancelActiveEditor()"
+              >
+                @for (item of items; track $index) {
+                <option [value]="item.value">{{ item.text }}</option>
+                }
+              </select>
+              } @else { @switch (column.dataType) { @case ('boolean') {
+              <input
+                class="oge-editor"
+                type="checkbox"
+                [formControl]="$any(editControl(node, column))"
+              />
+              } @default {
+              <input
+                class="oge-editor oge-editor-input"
+                [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
+                [formControl]="$any(editControl(node, column))"
+                [class.oge-editor-invalid]="
+                  editControl(node, column).touched && editControl(node, column).invalid
+                "
+                (keydown.enter)="onEditorEnter()"
+                (keydown.escape)="cancelActiveEditor()"
+              />
+              } } } @if (editorErrorText(editControl(node, column)); as error) {
+              <span class="oge-form-error">{{ error }}</span>
+              }
+            </div>
+            } }
+          </div>
+          <div class="oge-form-actions">
+            <button
+              type="button"
+              class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+              (click)="commitActiveRow()"
+            >
+              {{ msg().saveRow }}
+            </button>
+            <button
+              type="button"
+              class="oge-toolbar-btn oge-toolbar-text-btn"
+              (click)="cancelActiveEditor()"
+            >
+              {{ msg().cancelEdit }}
+            </button>
+          </div>
+        </div>
+      </div>
+      } @else {
       <!-- Row click/contextmenu are pointer conveniences; the keyboard path goes
                  through the focusable cells (arrows + Space). -->
       <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
@@ -494,7 +568,8 @@ store.editing.hasPending())) {
         </div>
         } @if (hasCommandColumn()) {
         <div class="oge-cell oge-command-cell" role="gridcell">
-          @if (isRowEditing(node.key)) {
+          @if ( isRowEditing(node.key) || (editMode() === 'popup' &&
+          store.editing.editRowKey() === node.key) ) {
           <button
             type="button"
             class="oge-command-btn oge-command-save"
@@ -604,7 +679,7 @@ store.editing.hasPending())) {
         </div>
         }
       </div>
-      } @case ('filler') {
+      } } @case ('filler') {
       <div
         class="oge-row oge-filler-row"
         role="row"
@@ -649,6 +724,71 @@ store.editing.hasPending())) {
 <div class="oge-load-panel" role="status">
   <span class="oge-spinner" aria-hidden="true"></span>
   {{ msg().loading }}
+</div>
+} @if (popupNode(); as node) {
+<div class="oge-popup-backdrop"></div>
+<div
+  class="oge-edit-popup"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="msg().editRow"
+>
+  <div class="oge-popup-title">{{ msg().editRow }}</div>
+  <div class="oge-popup-fields">
+    @for (column of resolvedColumns(); track column.id) { @if (column.editable
+    && column.field) {
+    <div class="oge-popup-field">
+      <span class="oge-popup-label">{{ column.caption }}</span>
+      @if (column.editTemplate) {
+      <ng-container
+        *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
+      />
+      } @else if (lookupItemsFor(node, column); as items) {
+      <select
+        class="oge-editor oge-editor-input"
+        [formControl]="$any(editControl(node, column))"
+      >
+        @for (item of items; track $index) {
+        <option [value]="item.value">{{ item.text }}</option>
+        }
+      </select>
+      } @else { @switch (column.dataType) { @case ('boolean') {
+      <input
+        class="oge-editor"
+        type="checkbox"
+        [formControl]="$any(editControl(node, column))"
+      />
+      } @default {
+      <input
+        class="oge-editor oge-editor-input"
+        [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
+        [formControl]="$any(editControl(node, column))"
+        [class.oge-editor-invalid]="
+          editControl(node, column).touched && editControl(node, column).invalid
+        "
+      />
+      } } } @if (editorErrorText(editControl(node, column)); as error) {
+      <span class="oge-popup-error">{{ error }}</span>
+      }
+    </div>
+    } }
+  </div>
+  <div class="oge-popup-actions">
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      (click)="commitActiveRow()"
+    >
+      {{ msg().saveRow }}
+    </button>
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn"
+      (click)="cancelActiveEditor()"
+    >
+      {{ msg().cancelEdit }}
+    </button>
+  </div>
 </div>
 } @if (headerFilterField() !== null) {
 <div

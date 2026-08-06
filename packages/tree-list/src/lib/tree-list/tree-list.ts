@@ -2044,7 +2044,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     if (custom?.length) return custom;
     const mode = this.editMode();
     const buttons: OgeCommandButton<T>[] = [];
-    if (mode === 'row' && this.canUpdate()) buttons.push({ name: 'edit' });
+    if (
+      (mode === 'row' || mode === 'popup' || mode === 'form') &&
+      this.canUpdate()
+    ) {
+      buttons.push({ name: 'edit' });
+    }
     if (mode && this.canDelete()) buttons.push({ name: 'delete' });
     return buttons;
   });
@@ -2075,6 +2080,24 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected isRowEditing(key: RowKey): boolean {
     return this.editingModel.isRowEditing(key);
   }
+
+  /** The editing row renders as an inline labeled form (`mode: 'form'`). */
+  protected isFormRow(key: RowKey): boolean {
+    return this.editingModel.isFormRow(key);
+  }
+
+  /** The row edited in the modal dialog (`mode: 'popup'`), if any. */
+  protected readonly popupNode = computed<DataRowNode<T> | null>(() => {
+    if (this.editMode() !== 'popup') return null;
+    const key = this.store.editing.editRowKey();
+    if (key === null) return null;
+    return (
+      this.flatNodes().find(
+        (node): node is DataRowNode<T> =>
+          node.kind === 'data' && node.key === key,
+      ) ?? null
+    );
+  });
 
   protected isCellEditorOpen(
     node: DataRowNode<T>,
@@ -2111,8 +2134,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   protected onEditorEnter(): void {
-    if (this.editMode() === 'row') this.editingModel.commitActiveRow();
-    else this.editingModel.commitActiveCell();
+    const mode = this.editMode();
+    if (mode === 'row' || mode === 'popup' || mode === 'form') {
+      this.editingModel.commitActiveRow();
+    } else {
+      this.editingModel.commitActiveCell();
+    }
   }
 
   protected startRowEdit(node: DataRowNode<T>, event?: Event): void {
