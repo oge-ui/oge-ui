@@ -2,6 +2,8 @@ export {
   OgePivotGrid,
   PIVOT_FIELD_DRAG_TYPE,
   type OgePivotCellClickEvent,
+  type OgePivotCellPrepared,
+  type OgePivotMenuItem,
   type PivotAxisLine,
   type PivotHeaderCell,
 } from './lib/pivot-grid/pivot-grid';

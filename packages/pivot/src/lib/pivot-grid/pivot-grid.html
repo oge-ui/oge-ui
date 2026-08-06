@@ -1,47 +1,75 @@
 @if (fieldPanel()) {
-  <div class="oge-pivot-field-panel" [class.oge-pivot-panel-collapsed]="store.fieldPanelCollapsed()">
-    <button
-      type="button"
-      class="oge-pivot-panel-toggle"
-      [attr.aria-label]="store.fieldPanelCollapsed() ? msg().expandFieldPanel : msg().collapseFieldPanel"
-      [attr.aria-expanded]="!store.fieldPanelCollapsed()"
-      (click)="store.toggleFieldPanel()"
+<div
+  class="oge-pivot-field-panel"
+  [class.oge-pivot-panel-collapsed]="store.fieldPanelCollapsed()"
+>
+  <button
+    type="button"
+    class="oge-pivot-panel-toggle"
+    [attr.aria-label]="store.fieldPanelCollapsed() ? msg().expandFieldPanel : msg().collapseFieldPanel"
+    [attr.aria-expanded]="!store.fieldPanelCollapsed()"
+    (click)="store.toggleFieldPanel()"
+  >
+    <svg
+      viewBox="0 0 16 16"
+      width="12"
+      height="12"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      [class.oge-pivot-toggle-collapsed]="store.fieldPanelCollapsed()"
     >
-      <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" [class.oge-pivot-toggle-collapsed]="store.fieldPanelCollapsed()">
-        <path d="m3.5 6 4.5 4.5L12.5 6" />
-      </svg>
-    </button>
-    @if (!store.fieldPanelCollapsed()) {
-      @for (zone of panelAreas(); track zone.area) {
-        <div
-          class="oge-pivot-area"
-          [attr.data-area]="zone.area"
-          (dragover)="onAreaDragOver($event)"
-          (drop)="onAreaDrop(zone.area, $event)"
-        >
-          <span class="oge-pivot-area-label">{{ zone.label }}</span>
-          @for (field of zone.fields; track field.id) {
-            <span
-              class="oge-pivot-field-chip"
-              draggable="true"
-              (dragstart)="onFieldDragStart(field, $event)"
-              (dragend)="onFieldDragEnd()"
-            >
-              {{ field.caption }}
-            </span>
-          } @empty {
-            <span class="oge-pivot-area-hint">{{ msg().fieldPanelHint }}</span>
-          }
-        </div>
-      }
+      <path d="m3.5 6 4.5 4.5L12.5 6" />
+    </svg>
+  </button>
+  @if (!store.fieldPanelCollapsed()) { @for (zone of panelAreas(); track
+  zone.area) {
+  <div
+    class="oge-pivot-area"
+    [attr.data-area]="zone.area"
+    (dragover)="onAreaDragOver($event)"
+    (drop)="onAreaDrop(zone.area, $event)"
+  >
+    <span class="oge-pivot-area-label">{{ zone.label }}</span>
+    @for (field of zone.fields; track field.id) {
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+    <span
+      class="oge-pivot-field-chip"
+      [class.oge-pivot-chip-filtered]="!!field.filterValues"
+      draggable="true"
+      (dragstart)="onFieldDragStart(field, $event)"
+      (dragend)="onFieldDragEnd()"
+      (contextmenu)="zone.area === 'data' ? onMeasureContextMenu(field, $event) : null"
+    >
+      {{ field.caption }}
+    </span>
+    } @empty {
+    <span class="oge-pivot-area-hint">{{ msg().fieldPanelHint }}</span>
     }
   </div>
+  } }
+</div>
 }
 
-<div class="oge-pivot-viewport" role="grid">
+<div
+  class="oge-pivot-viewport"
+  role="grid"
+  #pivotViewport
+  (scroll)="onViewportScroll($event)"
+>
+  @if (loading()) {
+  <div class="oge-load-panel" role="status">
+    <span class="oge-spinner" aria-hidden="true"></span>
+    {{ msg().loading }}
+  </div>
+  }
   <div
     class="oge-pivot-matrix"
-    [style.grid-template-columns]="'minmax(160px, max-content) repeat(' + result().columnLeafCount + ', minmax(90px, auto))'"
+    [style.grid-template-rows]="matrixTemplate().rows"
+    [style.grid-template-columns]="matrixTemplate().columns"
   >
     <!-- corner -->
     <div
@@ -52,71 +80,293 @@
     ></div>
 
     <!-- column headers -->
-    @for (cell of columnHeaderCells(); track cell.path.join('¦') + (cell.isTotal ? ':t' : '') + (cell.isGrandTotal ? ':g' : '')) {
-      <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-      <div
-        class="oge-pivot-col-header"
-        role="columnheader"
-        [class.oge-pivot-total]="cell.isTotal"
-        [class.oge-pivot-grand]="cell.isGrandTotal"
-        [class.oge-pivot-expandable]="cell.hasChildren"
-        [attr.aria-expanded]="cell.hasChildren ? cell.expanded : null"
-        [style.grid-row]="cell.rowStart + ' / ' + cell.rowEnd"
-        [style.grid-column]="cell.columnStart + 1 + ' / span ' + cell.span"
-        (click)="toggleColumn(cell, $event)"
+    @for (cell of visibleHeaderCells(); track cell.path.join('¦') +
+    (cell.isTotal ? ':t' : '') + (cell.isGrandTotal ? ':g' : '') +
+    cell.rowStart) {
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+    <div
+      class="oge-pivot-col-header"
+      role="columnheader"
+      [class.oge-pivot-total]="cell.isTotal"
+      [class.oge-pivot-grand]="cell.isGrandTotal"
+      [class.oge-pivot-expandable]="cell.hasChildren"
+      [attr.aria-expanded]="cell.hasChildren ? cell.expanded : null"
+      [style.grid-row]="cell.rowStart + ' / ' + cell.rowEnd"
+      [style.grid-column]="cell.columnStart + 1 + ' / span ' + cell.span"
+      [attr.tabindex]="cell.hasChildren ? 0 : null"
+      (click)="toggleColumn(cell, $event)"
+      (keydown.enter)="toggleColumn(cell, $event)"
+      (keydown.space)="toggleColumn(cell, $event)"
+      (contextmenu)="onHeaderContextMenu('column', cell, $event)"
+    >
+      @if (cell.hasChildren) {
+      <span
+        class="oge-pivot-arrow"
+        [class.oge-pivot-arrow-open]="cell.expanded"
+        aria-hidden="true"
       >
-        @if (cell.hasChildren) {
-          <span class="oge-pivot-arrow" [class.oge-pivot-arrow-open]="cell.expanded" aria-hidden="true">
-            <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m6 3.5 4.5 4.5L6 12.5" />
-            </svg>
-          </span>
-        }
-        {{ cell.text }}
-      </div>
+        <svg
+          viewBox="0 0 16 16"
+          width="10"
+          height="10"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m6 3.5 4.5 4.5L6 12.5" />
+        </svg>
+      </span>
+      } {{ cell.text }}
+    </div>
     }
 
     <!-- row headers + cells -->
-    @for (line of rowLines(); track line.path.join('¦') + (line.isTotal ? ':t' : '') + (line.isGrandTotal ? ':g' : ''); let rowIndex = $index) {
-      <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-      <div
-        class="oge-pivot-row-header"
-        role="rowheader"
-        [class.oge-pivot-total]="line.isTotal"
-        [class.oge-pivot-grand]="line.isGrandTotal"
-        [class.oge-pivot-expandable]="line.hasChildren"
-        [attr.aria-expanded]="line.hasChildren ? line.expanded : null"
-        [style.grid-row]="columnDepth() + 1 + rowIndex"
-        [style.grid-column]="1"
-        [style.padding-inline-start.px]="12 + line.level * 18"
-        (click)="toggleRow(line, $event)"
+    @for (rowIndex of visibleRowIndexes(); track rowIndex) { @if
+    (rowLines()[rowIndex]; as line) {
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+    <div
+      class="oge-pivot-row-header"
+      role="rowheader"
+      [class.oge-pivot-total]="line.isTotal"
+      [class.oge-pivot-grand]="line.isGrandTotal"
+      [class.oge-pivot-expandable]="line.hasChildren"
+      [attr.aria-expanded]="line.hasChildren ? line.expanded : null"
+      [style.grid-row]="columnDepth() + 1 + rowIndex"
+      [style.grid-column]="1"
+      [style.padding-inline-start.px]="12 + line.level * 18"
+      [attr.tabindex]="line.hasChildren ? 0 : null"
+      (click)="toggleRow(line, $event)"
+      (keydown.enter)="toggleRow(line, $event)"
+      (keydown.space)="toggleRow(line, $event)"
+      (contextmenu)="onHeaderContextMenu('row', line, $event)"
+    >
+      @if (line.hasChildren) {
+      <span
+        class="oge-pivot-arrow"
+        [class.oge-pivot-arrow-open]="line.expanded"
+        aria-hidden="true"
       >
-        @if (line.hasChildren) {
-          <span class="oge-pivot-arrow" [class.oge-pivot-arrow-open]="line.expanded" aria-hidden="true">
-            <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m6 3.5 4.5 4.5L6 12.5" />
-            </svg>
-          </span>
-        }
-        {{ line.text }}
-      </div>
-      @for (columnIndex of columnIndexes(); track columnIndex) {
-        <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-        <div
-          class="oge-pivot-cell"
-          role="gridcell"
-          [class.oge-pivot-total]="line.isTotal || columnSlotIsTotal()[columnIndex]"
-          [class.oge-pivot-grand]="line.isGrandTotal || columnSlotIsGrand()[columnIndex]"
-          [style.grid-row]="columnDepth() + 1 + rowIndex"
-          [style.grid-column]="columnIndex + 2"
-          (click)="onCellClick(rowIndex, columnIndex, $event)"
-          (dblclick)="onCellClick(rowIndex, columnIndex, $event, true)"
+        <svg
+          viewBox="0 0 16 16"
+          width="10"
+          height="10"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
         >
-          @for (measure of measures(); track measure.id; let measureIndex = $index) {
-            <span class="oge-pivot-measure">{{ cellText(rowIndex, columnIndex, measureIndex) }}</span>
-          }
-        </div>
+          <path d="m6 3.5 4.5 4.5L6 12.5" />
+        </svg>
+      </span>
+      } {{ line.text }}
+    </div>
+    @for (columnIndex of visibleColumnIndexes(); track columnIndex) {
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+    <div
+      class="oge-pivot-cell"
+      role="gridcell"
+      [class.oge-pivot-total]="line.isTotal || columnSlotIsTotal()[columnIndex]"
+      [class.oge-pivot-grand]="line.isGrandTotal || columnSlotIsGrand()[columnIndex]"
+      [attr.data-cell]="rowIndex + '-' + columnIndex"
+      [attr.tabindex]="isCellTabbable(rowIndex, columnIndex) ? 0 : -1"
+      (focus)="onCellFocus(rowIndex, columnIndex)"
+      (keydown)="onMatrixKeydown($event)"
+      (click)="onCellClick(rowIndex, columnIndex, $event)"
+      (dblclick)="onCellClick(rowIndex, columnIndex, $event, true)"
+    >
+      @for (measure of measures(); track measure.id; let measureIndex = $index)
+      {
+      <span
+        class="oge-pivot-measure"
+        [class]="cellClass(rowIndex, columnIndex, measureIndex)"
+        >{{ cellText(rowIndex, columnIndex, measureIndex) }}</span
+      >
       }
+    </div>
+    } } }
+  </div>
+</div>
+
+@if (menu(); as contextMenu) {
+<div
+  class="oge-context-menu"
+  role="menu"
+  [style.top.px]="contextMenu.y"
+  [style.left.px]="contextMenu.x"
+>
+  @for (item of contextMenu.items; track $index) {
+  <button
+    type="button"
+    role="menuitem"
+    class="oge-menu-item"
+    [class.oge-menu-item-active]="item.active"
+    [disabled]="item.disabled"
+    (click)="runMenuItem(item)"
+  >
+    {{ item.text }}
+  </button>
+  }
+</div>
+} @if (filterPopup(); as popup) {
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<div
+  class="oge-header-filter-popup oge-pivot-filter-popup"
+  role="listbox"
+  [style.top.px]="popup.y"
+  [style.left.px]="popup.x"
+  (click)="$event.stopPropagation()"
+>
+  <div class="oge-chooser-title">{{ popup.caption }}</div>
+  <div class="oge-pivot-filter-type">
+    <label>
+      <input
+        type="radio"
+        name="oge-pivot-filter-type"
+        [checked]="popup.type === 'include'"
+        (change)="setFilterType('include')"
+      />
+      {{ msg().includeValues }}
+    </label>
+    <label>
+      <input
+        type="radio"
+        name="oge-pivot-filter-type"
+        [checked]="popup.type === 'exclude'"
+        (change)="setFilterType('exclude')"
+      />
+      {{ msg().excludeValues }}
+    </label>
+  </div>
+  <input
+    class="oge-hf-search"
+    type="search"
+    [placeholder]="msg().search"
+    [attr.aria-label]="msg().search"
+    [value]="filterSearch()"
+    (input)="filterSearch.set($any($event.target).value)"
+  />
+  <label class="oge-hf-item oge-hf-all">
+    <input
+      type="checkbox"
+      [checked]="popup.selected.size === popup.values.length"
+      (change)="toggleAllFilterValues()"
+    />
+    <span>{{ msg().selectAllValues }}</span>
+  </label>
+  @for (value of visibleFilterValues(); track $index) {
+  <label class="oge-hf-item">
+    <input
+      type="checkbox"
+      [checked]="popup.selected.has(value)"
+      (change)="toggleFilterValue(value)"
+    />
+    <span>{{ filterValueText(value) }}</span>
+  </label>
+  }
+  <div class="oge-pivot-popup-actions">
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      (click)="applyFilterPopup()"
+    >
+      {{ msg().apply }}
+    </button>
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn"
+      (click)="clearFilterPopup()"
+    >
+      {{ msg().clearFilter }}
+    </button>
+  </div>
+</div>
+} @if (chooserOpen()) {
+<div class="oge-popup-backdrop"></div>
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<div
+  class="oge-edit-popup oge-pivot-chooser"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="msg().fieldChooserTitle"
+  (click)="$event.stopPropagation()"
+>
+  <div class="oge-popup-title">{{ msg().fieldChooserTitle }}</div>
+  <input
+    class="oge-hf-search"
+    type="search"
+    [placeholder]="msg().search"
+    [attr.aria-label]="msg().search"
+    [value]="chooserSearch()"
+    (input)="chooserSearch.set($any($event.target).value)"
+  />
+  <div class="oge-pivot-chooser-grid">
+    <div
+      class="oge-pivot-chooser-zone oge-pivot-chooser-all"
+      (dragover)="onAreaDragOver($event)"
+      (drop)="onAreaDrop(null, $event)"
+    >
+      <span class="oge-pivot-area-label">{{ msg().allFields }}</span>
+      @for (field of chooserAllFields(); track field.id) {
+      <span
+        class="oge-pivot-field-chip"
+        [class.oge-pivot-chip-unused]="field.area === null || field.area === undefined"
+        draggable="true"
+        (dragstart)="onFieldDragStart(field, $event)"
+        (dragend)="onFieldDragEnd()"
+      >
+        {{ field.caption }}
+      </span>
+      }
+    </div>
+    @for (zone of panelAreas(); track zone.area) {
+    <div
+      class="oge-pivot-chooser-zone"
+      [attr.data-area]="zone.area"
+      (dragover)="onAreaDragOver($event)"
+      (drop)="onAreaDrop(zone.area, $event)"
+    >
+      <span class="oge-pivot-area-label">{{ zone.label }}</span>
+      @for (field of chooserAreaFields(zone.area); track field.id) {
+      <span
+        class="oge-pivot-field-chip"
+        draggable="true"
+        (dragstart)="onFieldDragStart(field, $event)"
+        (dragend)="onFieldDragEnd()"
+      >
+        {{ field.caption }}
+      </span>
+      }
+    </div>
+    }
+  </div>
+  <div class="oge-pivot-popup-actions">
+    @if (chooserDraft()) {
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      (click)="applyFieldChooser()"
+    >
+      {{ msg().apply }}
+    </button>
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn"
+      (click)="closeFieldChooser()"
+    >
+      {{ msg().cancel }}
+    </button>
+    } @else {
+    <button
+      type="button"
+      class="oge-toolbar-btn oge-toolbar-text-btn"
+      (click)="closeFieldChooser()"
+    >
+      {{ msg().apply }}
+    </button>
     }
   </div>
 </div>
+}

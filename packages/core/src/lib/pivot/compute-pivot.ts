@@ -1,6 +1,12 @@
 import type { CustomSummaryMap } from '../grouping/summaries';
 import { createFieldAccessor } from '../util/value-accessor';
-import { accumulate, accValue, createAcc, mergeAcc, type PivotAcc } from './pivot-accumulator';
+import {
+  accumulate,
+  accValue,
+  createAcc,
+  mergeAcc,
+  type PivotAcc,
+} from './pivot-accumulator';
 import { applyDisplayModes, type PivotSlot } from './pivot-display';
 import { intervalKey } from './pivot-interval';
 import { sortAxisChildren } from './pivot-sort';
@@ -15,7 +21,11 @@ import type {
 
 /** Stable, type-tagged key for an axis path (used for expansion sets). */
 export function pathKey(path: PivotPath): string {
-  return JSON.stringify(path.map((value) => (value === null ? ['null'] : [typeof value, String(value)])));
+  return JSON.stringify(
+    path.map((value) =>
+      value === null ? ['null'] : [typeof value, String(value)],
+    ),
+  );
 }
 
 export interface PivotComputeOptions<T = unknown> {
@@ -56,8 +66,20 @@ interface Cell {
   readonly rows: number[];
 }
 
-function createTrieNode(value: unknown, path: PivotPath, key: string): TrieNode {
-  return { value, path, key, children: new Map(), ordered: [], leafId: -1, leafIds: [] };
+function createTrieNode(
+  value: unknown,
+  path: PivotPath,
+  key: string,
+): TrieNode {
+  return {
+    value,
+    path,
+    key,
+    children: new Map(),
+    ordered: [],
+    leafId: -1,
+    leafIds: [],
+  };
 }
 
 /**
@@ -97,7 +119,7 @@ export class PivotEngine<T = unknown> {
     this.columnFields = byArea('column');
     this.measures = byArea('data');
     const filterFields = options.fields.filter(
-      (field) => field.filterValues?.length && field.area !== 'data'
+      (field) => field.filterValues?.length && field.area !== 'data',
     );
     const filters = filterFields.map((field) => ({
       accessor: this.accessorOf(field),
@@ -105,9 +127,15 @@ export class PivotEngine<T = unknown> {
       exclude: field.filterType === 'exclude',
     }));
 
-    const rowAccessors = this.rowFields.map((field) => this.axisAccessorOf(field));
-    const columnAccessors = this.columnFields.map((field) => this.axisAccessorOf(field));
-    this.measureAccessors = this.measures.map((field) => this.accessorOf(field));
+    const rowAccessors = this.rowFields.map((field) =>
+      this.axisAccessorOf(field),
+    );
+    const columnAccessors = this.columnFields.map((field) =>
+      this.axisAccessorOf(field),
+    );
+    this.measureAccessors = this.measures.map((field) =>
+      this.accessorOf(field),
+    );
 
     let nextRowLeaf = 0;
     let nextColumnLeaf = 0;
@@ -125,13 +153,19 @@ export class PivotEngine<T = unknown> {
       }
       if (excluded) continue;
 
-      const rowLeaf = this.internPath(this.rowRoot, rowAccessors, row, pathBuffer, () => nextRowLeaf++);
+      const rowLeaf = this.internPath(
+        this.rowRoot,
+        rowAccessors,
+        row,
+        pathBuffer,
+        () => nextRowLeaf++,
+      );
       const columnLeaf = this.internPath(
         this.columnRoot,
         columnAccessors,
         row,
         pathBuffer,
-        () => nextColumnLeaf++
+        () => nextColumnLeaf++,
       );
 
       let byColumn = this.cells.get(rowLeaf);
@@ -157,27 +191,31 @@ export class PivotEngine<T = unknown> {
       this.rowFields,
       this.measures,
       (node, target, measure) => this.aggregatedValue(node, target, measure),
-      this.columnRoot
+      this.columnRoot,
     );
     sortAxisChildren(
       this.columnRoot,
       this.columnFields,
       this.measures,
       (node, target, measure) => this.aggregatedValue(target, node, measure),
-      this.rowRoot
+      this.rowRoot,
     );
   }
 
   // --- construction helpers -------------------------------------------------
 
   private accessorOf(field: PivotFieldConfig): (row: T) => unknown {
-    return this.fns[field.id]?.selector ?? createFieldAccessor<T>(field.dataField);
+    return (
+      this.fns[field.id]?.selector ?? createFieldAccessor<T>(field.dataField)
+    );
   }
 
   private axisAccessorOf(field: PivotFieldConfig): (row: T) => unknown {
     const base = this.accessorOf(field);
     const interval = field.groupInterval;
-    return interval === undefined ? base : (row) => intervalKey(base(row), interval);
+    return interval === undefined
+      ? base
+      : (row) => intervalKey(base(row), interval);
   }
 
   private internPath(
@@ -185,7 +223,7 @@ export class PivotEngine<T = unknown> {
     accessors: readonly ((row: T) => unknown)[],
     row: T,
     buffer: unknown[],
-    nextLeaf: () => number
+    nextLeaf: () => number,
   ): number {
     if (!accessors.length) {
       if (root.leafId < 0) root.leafId = nextLeaf();
@@ -236,12 +274,17 @@ export class PivotEngine<T = unknown> {
           continue;
         }
         if (!merged) {
-          merged = { accs: this.measures.map(() => createAcc()), rows: [...found.rows] };
-          for (let m = 0; m < this.measures.length; m++) mergeAcc(merged.accs[m], found.accs[m]);
+          merged = {
+            accs: this.measures.map(() => createAcc()),
+            rows: [...found.rows],
+          };
+          for (let m = 0; m < this.measures.length; m++)
+            mergeAcc(merged.accs[m], found.accs[m]);
           found = merged;
         }
         merged.rows.push(...cell.rows);
-        for (let m = 0; m < this.measures.length; m++) mergeAcc(merged.accs[m], cell.accs[m]);
+        for (let m = 0; m < this.measures.length; m++)
+          mergeAcc(merged.accs[m], cell.accs[m]);
       }
     }
     return found;
@@ -252,7 +295,8 @@ export class PivotEngine<T = unknown> {
       if (!cell) return null;
       const type = measure.summaryType ?? 'sum';
       if (type === 'custom') {
-        const reducer = this.customSummaries?.[measure.summaryName ?? measure.dataField];
+        const reducer =
+          this.customSummaries?.[measure.summaryName ?? measure.dataField];
         if (!reducer) return null;
         const rows = cell.rows.map((rowIndex) => this.rows[rowIndex]);
         return reducer(rows, measure.dataField);
@@ -264,7 +308,7 @@ export class PivotEngine<T = unknown> {
   private aggregatedValue(
     rowNode: TrieNode,
     columnNode: TrieNode,
-    measureIndex: number
+    measureIndex: number,
   ): unknown {
     const cell = this.aggregateCell(rowNode, columnNode);
     if (!cell) return null;
@@ -276,17 +320,22 @@ export class PivotEngine<T = unknown> {
 
   /** Keys of every expandable node on an axis (for expand-all). */
   allGroupKeys(axis: 'row' | 'column'): ReadonlySet<string> {
-    const keys = new Set<string>();
+    return new Set(this.allGroupPaths(axis).map((path) => pathKey(path)));
+  }
+
+  /** Paths of every expandable node on an axis. */
+  allGroupPaths(axis: 'row' | 'column'): readonly PivotPath[] {
+    const paths: PivotPath[] = [];
     const visit = (node: TrieNode): void => {
       for (const child of node.ordered) {
         if (child.ordered.length) {
-          keys.add(child.key);
+          paths.push(child.path);
           visit(child);
         }
       }
     };
     visit(axis === 'row' ? this.rowRoot : this.columnRoot);
-    return keys;
+    return paths;
   }
 
   /** Rows behind one (rowPath, columnPath) intersection — the drill-down data. */
@@ -321,14 +370,14 @@ export class PivotEngine<T = unknown> {
       this.rowFields,
       config.rowExpandedPaths ?? EMPTY_SET,
       settings.showRowTotals !== false,
-      settings.showRowGrandTotals !== false
+      settings.showRowGrandTotals !== false,
     );
     const columnAxis = this.buildAxis(
       this.columnRoot,
       this.columnFields,
       config.columnExpandedPaths ?? EMPTY_SET,
       settings.showColumnTotals !== false,
-      settings.showColumnGrandTotals !== false
+      settings.showColumnGrandTotals !== false,
     );
 
     const values: unknown[][][] = [];
@@ -338,7 +387,9 @@ export class PivotEngine<T = unknown> {
         line.push(
           rowSlot.suppress || columnSlot.suppress
             ? this.measures.map(() => null)
-            : this.measureValues(this.aggregateCell(rowSlot.trie, columnSlot.trie))
+            : this.measureValues(
+                this.aggregateCell(rowSlot.trie, columnSlot.trie),
+              ),
         );
       }
       values.push(line);
@@ -361,7 +412,7 @@ export class PivotEngine<T = unknown> {
     fields: readonly PivotFieldConfig[],
     expanded: ReadonlySet<string>,
     showTotals: boolean,
-    showGrandTotals: boolean
+    showGrandTotals: boolean,
   ): { nodes: PivotAxisNode[]; slots: InternalSlot[] } {
     const slots: InternalSlot[] = [];
 
@@ -457,12 +508,17 @@ export class PivotEngine<T = unknown> {
     return { nodes, slots };
   }
 
-  private axisText(field: PivotFieldConfig | undefined, value: unknown): string {
+  private axisText(
+    field: PivotFieldConfig | undefined,
+    value: unknown,
+  ): string {
     const base = value == null ? '' : String(value);
     if (!field) return base;
     const fns = this.fns[field.id];
     const formatted = fns?.format ? fns.format(value) : base;
-    return fns?.customizeText ? fns.customizeText({ value, valueText: formatted }) : formatted;
+    return fns?.customizeText
+      ? fns.customizeText({ value, valueText: formatted })
+      : formatted;
   }
 }
 

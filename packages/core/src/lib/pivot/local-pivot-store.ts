@@ -29,7 +29,7 @@ export class LocalPivotStore<T = unknown> implements OgePivotStore<T> {
 
   constructor(
     private readonly rows: readonly T[] | (() => readonly T[]),
-    private readonly options: LocalPivotStoreOptions<T> = {}
+    private readonly options: LocalPivotStoreOptions<T> = {},
   ) {}
 
   private getRows(): readonly T[] {
@@ -78,40 +78,42 @@ export class LocalPivotStore<T = unknown> implements OgePivotStore<T> {
     });
     const toKeySet = (paths: readonly (readonly unknown[])[] | undefined) =>
       new Set((paths ?? []).map((path) => pathKey(path)));
+    // one materialization with grand totals on; the payload then separates
+    // them out (last row / last column / corner) per the contract
     const result = engine.materialize({
       rowExpandedPaths: toKeySet(options.rowExpandedPaths),
       columnExpandedPaths: toKeySet(options.columnExpandedPaths),
-      // the payload separates totals, so materialize plain slots only
       settings: {
-        showRowTotals: false,
-        showColumnTotals: false,
-        showRowGrandTotals: false,
-        showColumnGrandTotals: false,
-      },
-    });
-
-    const grand = engine.materialize({
-      rowExpandedPaths: new Set(),
-      columnExpandedPaths: new Set(),
-      settings: {
-        showRowTotals: false,
-        showColumnTotals: false,
+        showRowTotals: true,
+        showColumnTotals: true,
         showRowGrandTotals: true,
         showColumnGrandTotals: true,
       },
     });
-    const grandTotal = grand.values.at(-1)?.at(-1) ?? undefined;
+
+    const rowCount = result.rowLeafCount - 1; // minus the grand row
+    const columnCount = result.columnLeafCount - 1;
+    const body = result.values
+      .slice(0, rowCount)
+      .map((line) => line.slice(0, columnCount));
+    const rowTotals = result.values
+      .slice(0, rowCount)
+      .map((line) => [line[columnCount]]);
+    const columnTotals = [result.values[rowCount]?.slice(0, columnCount) ?? []];
+    const grandTotal = result.values[rowCount]?.[columnCount];
 
     return Promise.resolve({
       rows: toPayload(result.rowRoot),
       columns: toPayload(result.columnRoot),
-      values: result.values,
+      values: body,
+      rowTotals,
+      columnTotals,
       grandTotal,
     });
   }
 
   drillDown(
-    args: PivotDrillDownArgs & { skip?: number; take?: number }
+    args: PivotDrillDownArgs & { skip?: number; take?: number },
   ): Promise<T[]> {
     // Answers from the last load's layout and filtered rows.
     const engine = new PivotEngine<T>({
@@ -127,14 +129,19 @@ export class LocalPivotStore<T = unknown> implements OgePivotStore<T> {
 }
 
 function toPayload(nodes: readonly PivotAxisNode[]): PivotAxisPayloadNode[] {
-  return nodes
-    // expanded parents carry isTotal (their line holds the subtotals) but must
-    // stay in the payload; only grand totals and childless total lines drop out
-    .filter((node) => !node.isGrandTotal && !(node.isTotal && node.children.length === 0))
-    .map((node) => ({
-      value: node.value,
-      text: node.text,
-      hasChildren: node.hasChildren,
-      children: node.children.length ? toPayload(node.children) : undefined,
-    }));
+  return (
+    nodes
+      // expanded parents carry isTotal (their line holds the subtotals) but must
+      // stay in the payload; only grand totals and childless total lines drop out
+      .filter(
+        (node) =>
+          !node.isGrandTotal && !(node.isTotal && node.children.length === 0),
+      )
+      .map((node) => ({
+        value: node.value,
+        text: node.text,
+        hasChildren: node.hasChildren,
+        children: node.children.length ? toPayload(node.children) : undefined,
+      }))
+  );
 }
