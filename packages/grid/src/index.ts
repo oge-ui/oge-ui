@@ -28,6 +28,7 @@ export {
 } from './lib/templates/edit-template';
 export {
   EditingSlice,
+  type OgeEditFormItem,
   type OgeEditMode,
   type OgeEditingOptions,
 } from '@oge-ui/grid/foundation';

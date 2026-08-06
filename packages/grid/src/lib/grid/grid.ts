@@ -2223,6 +2223,40 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly canDelete = this.editingModel.canDelete;
   protected readonly canAdd = this.editingModel.canAdd;
 
+  /**
+   * Fields the form/popup editors render, resolved from `editing.formItems`
+   * (selection, order, labels, spans) — default: every editable column.
+   */
+  protected readonly editFormItems = computed<
+    readonly { column: ResolvedColumn<T>; label: string; colSpan: number }[]
+  >(() => {
+    const editable = this.resolvedColumns().filter(
+      (column) => column.editable && column.field,
+    );
+    const items = this.editingOptions()?.formItems;
+    if (!items?.length) {
+      return editable.map((column) => ({ column, label: column.caption, colSpan: 1 }));
+    }
+    return items.flatMap((entry) => {
+      const spec = typeof entry === 'string' ? { field: entry } : entry;
+      const column = editable.find((candidate) => candidate.field === spec.field);
+      if (!column) return [];
+      return [
+        {
+          column,
+          label: spec.label ?? column.caption,
+          colSpan: Math.max(1, spec.colSpan ?? 1),
+        },
+      ];
+    });
+  });
+
+  /** Explicit form grid template when `editing.formColCount` is set. */
+  protected readonly formGridTemplate = computed<string | null>(() => {
+    const count = this.editingOptions()?.formColCount;
+    return count && count > 0 ? `repeat(${count}, minmax(0, 1fr))` : null;
+  });
+
   /** Trailing command column (edit/delete/save/cancel buttons). */
   protected readonly hasCommandColumn = computed(() => {
     if (this.commandButtons()?.length) return true;

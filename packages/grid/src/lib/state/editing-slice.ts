@@ -2,6 +2,7 @@
 // imports keep working.
 export {
   EditingSlice,
+  type OgeEditFormItem,
   type OgeEditMode,
   type OgeEditingOptions,
 } from '@oge-ui/grid/foundation';

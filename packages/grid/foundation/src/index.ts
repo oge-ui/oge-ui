@@ -22,6 +22,7 @@ export {
 } from './editing-model';
 export {
   EditingSlice,
+  type OgeEditFormItem,
   type OgeEditMode,
   type OgeEditingOptions,
 } from './editing-slice';

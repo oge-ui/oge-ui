@@ -873,9 +873,9 @@
 }
 
 .oge-popup-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr; // editing.formColCount overrides via style binding
+  gap: 10px 16px;
 }
 
 .oge-popup-field {

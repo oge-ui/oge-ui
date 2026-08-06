@@ -356,11 +356,11 @@
                   [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
                   [style.max-width.px]="hostWidth() || null"
                 >
-                  <div class="oge-form-fields">
-                    @for (column of resolvedColumns(); track column.id) {
-                      @if (column.editable && column.field) {
-                        <div class="oge-form-field">
-                          <span class="oge-form-label">{{ column.caption }}</span>
+                  <div class="oge-form-fields" [style.grid-template-columns]="formGridTemplate()">
+                    @for (item of editFormItems(); track item.column.id) {
+                      @if (item.column; as column) {
+                        <div class="oge-form-field" [style.grid-column]="item.colSpan > 1 ? 'span ' + item.colSpan : null">
+                          <span class="oge-form-label">{{ item.label }}</span>
                           @if (column.editTemplate) {
                             <ng-container
                               *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
@@ -939,11 +939,11 @@
   <div class="oge-popup-backdrop"></div>
   <div class="oge-edit-popup" role="dialog" aria-modal="true" [attr.aria-label]="msg().editRow">
     <div class="oge-popup-title">{{ msg().editRow }}</div>
-    <div class="oge-popup-fields">
-      @for (column of resolvedColumns(); track column.id) {
-        @if (column.editable && column.field) {
-          <div class="oge-popup-field">
-            <span class="oge-popup-label">{{ column.caption }}</span>
+    <div class="oge-popup-fields" [style.grid-template-columns]="formGridTemplate()">
+      @for (item of editFormItems(); track item.column.id) {
+        @if (item.column; as column) {
+          <div class="oge-popup-field" [style.grid-column]="item.colSpan > 1 ? 'span ' + item.colSpan : null">
+            <span class="oge-popup-label">{{ item.label }}</span>
             @if (column.editTemplate) {
               <ng-container *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)" />
             } @else if (lookupItemsFor(node, column); as items) {

@@ -52,4 +52,33 @@ describe('OgeGrid form edit mode', () => {
     expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe('Ada L.');
     expect(rows[0].name).toBe('Ada L.');
   });
+
+  it('formItems controls field selection, order, labels, spans and column count', async () => {
+    const rows: Row[] = [{ id: 1, name: 'Ada', salary: 100 }];
+    const fixture = TestBed.createComponent(OgeGrid<Row>);
+    fixture.componentRef.setInput('data', rows);
+    fixture.componentRef.setInput('columns', ['name', 'salary']);
+    fixture.componentRef.setInput('keyField', 'id');
+    fixture.componentRef.setInput('editing', {
+      mode: 'form',
+      allowUpdating: true,
+      formColCount: 2,
+      formItems: [{ field: 'salary', label: 'Monthly Pay', colSpan: 2 }, 'name'],
+    });
+    fixture.detectChanges();
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+
+    (el.querySelector('.oge-command-btn') as HTMLElement).click();
+    await settle(fixture);
+
+    const fields = el.querySelector('.oge-form-fields') as HTMLElement;
+    expect(fields.style.gridTemplateColumns).toBe('repeat(2, minmax(0, 1fr))');
+    const labels = Array.from(fields.querySelectorAll('.oge-form-label')).map((l) =>
+      l.textContent?.trim()
+    );
+    expect(labels).toEqual(['Monthly Pay', 'Name']); // custom order + label
+    const firstField = fields.querySelector('.oge-form-field') as HTMLElement;
+    expect(firstField.style.gridColumn).toBe('span 2');
+  });
 });

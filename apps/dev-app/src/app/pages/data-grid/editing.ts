@@ -175,6 +175,7 @@ commandButtons: OgeCommandButton<Assignment>[] = [
       <li><strong>cell</strong>: click a cell (or press <kbd>Enter</kbd>/<kbd>F2</kbd> on a focused one), edit, commit with <kbd>Enter</kbd>; <kbd>Tab</kbd> commits and moves to the next editable cell, <kbd>Esc</kbd> reverts.</li>
       <li><strong>row / popup / form</strong>: use the command column's pencil button — all editable cells, a dialog, or an inline labeled form open at once with Save/Cancel.</li>
       <li><code>confirmDelete: true</code> asks before a non-batch delete.</li>
+      <li><code>editing.formItems</code> picks the fields (and their order, labels and <code>colSpan</code>) that the <em>form</em> and <em>popup</em> editors show; <code>formColCount</code> fixes the layout column count.</li>
       <li><strong>batch</strong>: nothing touches the DataSource until <em>Save changes</em>; dirty cells get a corner marker, deletions a strike-through, and everything is sent as one ordered change set.</li>
       <li>Validation blocks commits: <code>[required]</code> or any Angular <code>[validators]</code> mark the editor red and keep it open.</li>
       <li>The same flow drives remote sources — implement <code>insert/update/remove</code> on your DataSource.</li>

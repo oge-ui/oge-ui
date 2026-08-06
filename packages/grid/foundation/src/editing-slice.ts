@@ -3,6 +3,15 @@ import type { RowKey } from '@oge-ui/core';
 
 export type OgeEditMode = 'cell' | 'row' | 'batch' | 'popup' | 'form';
 
+/** One entry of `formItems`: which field the form/popup editor shows, and how. */
+export interface OgeEditFormItem {
+  field: string;
+  /** Override the label (defaults to the column caption). */
+  label?: string;
+  /** Form-layout columns this editor spans. Default 1. */
+  colSpan?: number;
+}
+
 export interface OgeEditingOptions {
   mode: OgeEditMode;
   allowUpdating?: boolean;
@@ -10,6 +19,13 @@ export interface OgeEditingOptions {
   allowDeleting?: boolean;
   /** Ask for confirmation (native dialog) before a non-batch delete. */
   confirmDelete?: boolean;
+  /**
+   * Fields shown by the `form` and `popup` editors — selection, order,
+   * labels and column spans. Default: every editable column.
+   */
+  formItems?: readonly (string | OgeEditFormItem)[];
+  /** Fixed number of form-layout columns; default: responsive auto-fit. */
+  formColCount?: number;
 }
 
 /**
