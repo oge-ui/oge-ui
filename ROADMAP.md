@@ -119,8 +119,8 @@ Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
 | Row template (full row)                       | ✔         | ✅  | `*ogeRowTemplate` with typed context (Phase 13)                                                                                       |
 | Toolbar customization (custom items)          | ✔         | ✅  | `[ogeToolbar]` projected slot (Phase 13)                                                                                              |
 | Context menu (rows)                           | ✔         | ✅  | event-driven items                                                                                                                    |
-| Header context menu                           | ✔         | ✅  | sort/group/pin/hide, localized (Phase 9)                                                                                              |
-| **State persistence**                         | ✔         | ✅  | `stateKey` + `OGE_STATE_STORAGE` (Phase 9)                                                                                            |
+| Header context menu                           | ✔         | ✅  | sort/group/pin/hide, localized (Phase 9); customizable via `headerContextMenu` (Phase 15)                                             |
+| **State persistence**                         | ✔         | ✅  | `stateKey` + sync/async `OGE_STATE_STORAGE`; `state()` / `applyState()` / `stateChange` (Phase 15)                                    |
 | **Export CSV/Excel**                          | ✔         | ✅  | CSV in core; Excel via lazy `@oge-ui/grid/export-excel` (exceljs, typed cells); `scope: all/page/selection`                           |
 | Export PDF                                    | ✔         | ✅  | lazy `@oge-ui/grid/export-pdf` (jspdf + autotable, optional peers) (Phase 14)                                                         |
 | Imperative public API (refresh, expandAll, …) | ✔         | ✅  | `refresh/expandAllGroups/collapseAllGroups/clearFilters/clearSorting/scrollToRow/exportCsv/copyToClipboard/selectAllPages` (Phase 13) |

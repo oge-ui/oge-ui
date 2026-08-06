@@ -17,8 +17,8 @@ Fast, complete **data grid for Angular** — built on signals, runs zoneless, th
 - **Row drag & drop** — handle-based reordering with `rowReordered` event
 - **Keyboard & a11y** — Excel-like navigation, WAI-ARIA grid/treegrid pattern, axe-verified, clipboard copy (Ctrl+C)
 - **RTL** — `rtlEnabled` or auto-detected, fully mirrored layout
-- **Header & row context menus** — built-in sort/group/pin/hide + custom items
-- **State persistence** — `stateKey` restores sort/filters/grouping/column layout (pluggable storage)
+- **Header & row context menus** — built-in sort/group/pin/hide items arrive prebuilt and mutable (`headerContextMenu`), row menus fully event-driven (`rowContextMenu`)
+- **State persistence** — `stateKey` restores sort/filters/grouping/column layout through any sync or async backend (localStorage, API, IndexedDB via `OGE_STATE_STORAGE`), or take control with `state()` / `applyState()` and the debounced `stateChange` event
 - **Export** — CSV built in, Excel via lazy `@oge-ui/grid/export-excel` (exceljs) and PDF via lazy `@oge-ui/grid/export-pdf` (jspdf) — heavy libs stay out of your main bundle; `scope: 'all' | 'page' | 'selection'`
 - **Toolbar** — default items plus your own controls via the `[ogeToolbar]` slot
 - **Imperative API** — `refresh`, `scrollToRow`, `clearFilters`, `clearSorting`, `exportCsv`, `copyToClipboard`, …
