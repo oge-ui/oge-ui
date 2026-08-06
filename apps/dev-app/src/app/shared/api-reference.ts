@@ -111,7 +111,19 @@ const SECTION_ORDER = [
               {{ group.title }}
             </h4>
           }
-          <div class="overflow-x-auto">
+          <!-- tabindex + role: a keyboard user must be able to scroll an
+               overflowing table (axe: scrollable-region-focusable) -->
+          <div
+            class="overflow-x-auto rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60"
+            tabindex="0"
+            role="region"
+            [attr.aria-label]="
+              title() +
+              ' ' +
+              section.label +
+              (group.title ? ' — ' + group.title : '')
+            "
+          >
             <table class="api-table">
               <thead>
                 <tr>

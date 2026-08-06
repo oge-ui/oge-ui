@@ -8,6 +8,7 @@ import {
   OGE_INPUTS_TYPES_API,
   OGE_NUMBER_BOX_API,
   OGE_SELECT_BOX_API,
+  OGE_TAG_BOX_API,
   OGE_TEXT_AREA_API,
   OGE_TEXT_BOX_API,
 } from './inputs-api-data';
@@ -17,6 +18,7 @@ const SECTIONS = [
   'OgeTextArea',
   'OgeNumberBox',
   'OgeSelectBox',
+  'OgeTagBox',
   'Shared input types',
   'Inputs configuration',
 ] as const;
@@ -65,6 +67,11 @@ const SECTIONS = [
       selector="oge-select-box"
       [sections]="selectBoxApi"
     />
+    <app-api-reference
+      title="OgeTagBox"
+      selector="oge-tag-box"
+      [sections]="tagBoxApi"
+    />
     <app-api-reference title="Shared input types" [sections]="typesApi" />
     <app-api-reference title="Inputs configuration" [sections]="configApi" />
 
@@ -95,6 +102,7 @@ export class InputsApiPage {
   protected readonly textAreaApi = OGE_TEXT_AREA_API;
   protected readonly numberBoxApi = OGE_NUMBER_BOX_API;
   protected readonly selectBoxApi = OGE_SELECT_BOX_API;
+  protected readonly tagBoxApi = OGE_TAG_BOX_API;
   protected readonly typesApi = OGE_INPUTS_TYPES_API;
   protected readonly configApi = OGE_INPUTS_CONFIG_API;
 }

@@ -142,6 +142,14 @@ interface ComponentCard {
       </thead>
       <tbody>
         <tr>
+          <td><code>oge-ui</code></td>
+          <td>
+            <strong>Umbrella:</strong> installs and re-exports every package
+            below — one install, one import path. The scoped packages remain the
+            à-la-carte alternative.
+          </td>
+        </tr>
+        <tr>
           <td><code>&#64;oge-ui/core</code></td>
           <td>
             Framework-agnostic engine: data sources, filtering, row pipeline,
@@ -183,8 +191,8 @@ interface ComponentCard {
         <tr>
           <td><code>&#64;oge-ui/inputs</code></td>
           <td>
-            TextBox, TextArea and NumberBox on one field chrome, with three
-            form-binding modes.
+            TextBox, TextArea, NumberBox plus SelectBox and TagBox (multi-select
+            combobox) on one field chrome, with three form-binding modes.
           </td>
         </tr>
       </tbody>

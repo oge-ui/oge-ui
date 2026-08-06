@@ -1,40 +1,62 @@
-# oge-ui
+<p align="center">
+  <a href="https://ogeui.com"><img src="https://ogeui.com/logo.png" alt="OGE UI logo" width="96" /></a>
+</p>
 
-One-install umbrella for the **OGE Angular UI suite** — signal-based,
-zoneless, themeable components for data-heavy apps.
+<h1 align="center">oge-ui</h1>
 
-**Docs & live demos: [ogeui.com](https://ogeui.com)**
+<p align="center">
+  One-install umbrella for the <b>OGE Angular UI suite</b> — signal-based,
+  zoneless, themeable components engineered for data-heavy apps.
+</p>
+
+<p align="center">
+  <a href="https://ogeui.com"><b>ogeui.com</b></a> — docs, live demos &amp; API reference
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/oge-ui"><img src="https://img.shields.io/npm/v/oge-ui?color=6366f1" alt="npm version" /></a>
+  <img src="https://img.shields.io/badge/license-MIT-22d3ee" alt="MIT license" />
+  <img src="https://img.shields.io/badge/Angular-%E2%89%A522-dd0031" alt="Angular 22+" />
+</p>
+
+---
 
 ```sh
 npm install oge-ui
 ```
 
-This pulls in and re-exports every scoped package:
+One install, one import path:
 
-| Package                                                                | Contents                                                                    |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| [`@oge-ui/grid`](https://www.npmjs.com/package/@oge-ui/grid)           | Virtualized Data Grid: sorting, filtering, grouping, editing, master-detail |
-| [`@oge-ui/tree-list`](https://www.npmjs.com/package/@oge-ui/tree-list) | Hierarchical grid with lazy loading, tri-state selection, drag & drop       |
-| [`@oge-ui/pivot`](https://www.npmjs.com/package/@oge-ui/pivot)         | Pivot Grid: rows × columns × measures with totals and export                |
-| [`@oge-ui/buttons`](https://www.npmjs.com/package/@oge-ui/buttons)     | Buttons, groups and drop-down/split buttons with async actions              |
-| [`@oge-ui/inputs`](https://www.npmjs.com/package/@oge-ui/inputs)       | TextBox, TextArea, NumberBox and a searchable SelectBox (combobox)          |
-| [`@oge-ui/overlay`](https://www.npmjs.com/package/@oge-ui/overlay)     | Anchored popups, menus, tooltips and context menus                          |
-| [`@oge-ui/core`](https://www.npmjs.com/package/@oge-ui/core)           | Framework-free data engine (sorting/filtering/virtualization math)          |
+```ts
+import { OgeGrid, OgeColumn, OgeSelectBox, OgeTagBox, OgeButton } from 'oge-ui';
+```
 
-## Usage
+## What's inside
 
-Import everything from one place:
+| Component family                            | Highlights                                                                                                                             | Docs                                                    |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Data Grid** (`@oge-ui/grid`)              | Row + column virtualization into the millions, sorting, filtering, grouping, editing, master-detail, remote data, CSV/Excel/PDF export | [demos](https://ogeui.com/components/data-grid)         |
+| **Tree List** (`@oge-ui/tree-list`)         | The grid feature set on hierarchical data: lazy loading, tri-state selection, drag & drop                                              | [demos](https://ogeui.com/components/tree-list)         |
+| **Pivot Grid** (`@oge-ui/pivot`)            | Rows × columns × measures, totals, field chooser, Excel export                                                                         | [demos](https://ogeui.com/components/pivot-grid)        |
+| **Select Box & Tag Box** (`@oge-ui/inputs`) | WAI-ARIA combobox: search, grouping, custom values, avatars, multi-select chips                                                        | [demos](https://ogeui.com/components/inputs/select-box) |
+| **Inputs** (`@oge-ui/inputs`)               | TextBox / TextArea / NumberBox on one field chrome, Signal Forms + reactive forms                                                      | [demos](https://ogeui.com/components/inputs)            |
+| **Buttons** (`@oge-ui/buttons`)             | Async actions with auto loading, click guards, hold-to-confirm, groups, split buttons                                                  | [demos](https://ogeui.com/components/buttons)           |
+| **Overlay** (`@oge-ui/overlay`)             | Flip-aware anchored popups, menus, tooltips, context menus                                                                             | [demos](https://ogeui.com/components/overlay)           |
+| **Core** (`@oge-ui/core`)                   | Framework-free data engine: sorting/filtering/pivot/virtualization math                                                                | —                                                       |
+
+## Quick start
 
 ```ts
 import { Component, signal } from '@angular/core';
-import { OgeButton, OgeColumn, OgeGrid, OgeSelectBox } from 'oge-ui';
+import { OgeColumn, OgeGrid, OgeTagBox } from 'oge-ui';
 
 @Component({
   selector: 'app-orders',
-  imports: [OgeGrid, OgeColumn, OgeSelectBox, OgeButton],
+  imports: [OgeGrid, OgeColumn, OgeTagBox],
   template: `
-    <oge-select-box label="Region" [items]="regions" [(value)]="region" />
-    <oge-grid [data]="orders()" keyField="id">
+    <oge-tag-box label="Regions" [items]="regions" [searchEnabled]="true" [(value)]="selected" />
+
+    <oge-grid [data]="orders()" keyField="id" [filterRow]="true">
       <oge-column field="product" caption="Product" />
       <oge-column field="amount" caption="Amount" dataType="number" />
     </oge-grid>
@@ -42,19 +64,48 @@ import { OgeButton, OgeColumn, OgeGrid, OgeSelectBox } from 'oge-ui';
 })
 export class Orders {
   readonly regions = ['EMEA', 'APAC', 'Americas'];
-  readonly region = signal<unknown>(null);
-  readonly orders = signal([{ id: 1, product: 'Aurora', amount: 1249 }]);
+  readonly selected = signal<readonly unknown[]>(['EMEA']);
+  readonly orders = signal([{ id: 1, product: 'Aurora Display', amount: 1249 }]);
 }
 ```
 
-Everything is standalone, tree-shakeable (`sideEffects: false`) and typed —
-unused components never reach your bundle.
+No modules, no forms boilerplate — `[(value)]` binds straight to a `signal()`;
+the same editors also plug into Signal Forms (`[formField]`) and reactive
+forms (`formControl`).
 
-## Prefer a smaller footprint?
+## Why the umbrella?
 
-The scoped packages remain the canonical, à-la-carte path — install only what
-you use (`npm install @oge-ui/grid`); shared engines arrive as dependencies
-automatically. Excel/PDF export libraries (`exceljs`, `jspdf`) are **optional
-peers** either way: nothing is installed or bundled unless you opt in.
+- **Zero decision fatigue** — one `npm install`, every component importable
+  from `'oge-ui'`.
+- **Versions always in sync** — the umbrella pins every `@oge-ui/*` package to
+  the exact same release.
+- **Still tree-shakeable** — everything is standalone ESM with
+  `sideEffects: false`; unused components never reach your bundle.
+- **Not a lock-in** — the scoped packages remain the canonical à-la-carte
+  path (`npm install @oge-ui/grid`) when you want the smallest possible
+  dependency tree.
 
-Requires Angular ≥ 22.
+## Theming
+
+One set of CSS design tokens drives every component:
+
+```css
+:root {
+  --oge-accent: #6366f1;
+  --oge-radius: 8px;
+}
+```
+
+Bundled bridges: **dark** (add `.oge-theme-dark` to any ancestor),
+**Tailwind** and **Bootstrap** —
+[styling guide](https://ogeui.com/getting-started/styling).
+All user-facing strings (aria labels included) are overridable via
+`provideOge<X>Config()` —
+[localization guide](https://ogeui.com/getting-started/localization).
+
+## Good to know
+
+- Requires **Angular ≥ 22** (standalone components, signals, zoneless).
+- Excel/PDF export libraries (`exceljs`, `jspdf`) are **optional peers**:
+  nothing is installed, bundled or executed unless you opt in.
+- MIT licensed. Source: [github.com/kaya2m/oge-ui](https://github.com/kaya2m/oge-ui).

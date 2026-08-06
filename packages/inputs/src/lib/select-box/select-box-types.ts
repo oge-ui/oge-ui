@@ -24,6 +24,14 @@ export type OgeSelectBoxSearchMode = 'contains' | 'startswith';
 export type OgeSelectBoxDisabledExpr<TItem> =
   string | ((item: TItem) => boolean);
 
+/**
+ * Item → image URL (avatar, flag, product photo…) rendered before the option
+ * text. Empty/undefined results render no image. For inline SVG icons use
+ * `itemTemplate` instead.
+ */
+export type OgeSelectBoxImageExpr<TItem> =
+  string | ((item: TItem) => string | undefined);
+
 /** Payload of `selectionChanged` — fires whenever the resolved item changes. */
 export interface OgeSelectBoxSelectionChangedEvent<TItem> {
   item: TItem | null;

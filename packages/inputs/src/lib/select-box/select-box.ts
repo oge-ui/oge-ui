@@ -30,6 +30,7 @@ import type {
   OgeSelectBoxDisabledExpr,
   OgeSelectBoxDisplayExpr,
   OgeSelectBoxGroupExpr,
+  OgeSelectBoxImageExpr,
   OgeSelectBoxItemClickEvent,
   OgeSelectBoxItemsFn,
   OgeSelectBoxSearchChangedEvent,
@@ -195,6 +196,14 @@ type SelectRow<TItem> =
                       "
                     />
                   } @else {
+                    @if (imageOf(row.item); as imageUrl) {
+                      <img
+                        class="oge-select-option-img"
+                        [src]="imageUrl"
+                        alt=""
+                        loading="lazy"
+                      />
+                    }
                     <span class="oge-select-option-text">{{
                       displayOf(row.item)
                     }}</span>
@@ -233,6 +242,10 @@ export class OgeSelectBox<TItem = unknown>
   );
   /** Marks individual items as non-selectable. */
   readonly disabledExpr = input<OgeSelectBoxDisabledExpr<TItem> | undefined>(
+    undefined,
+  );
+  /** Item → image URL rendered before the option text (avatars, flags…). */
+  readonly imageExpr = input<OgeSelectBoxImageExpr<TItem> | undefined>(
     undefined,
   );
   /** Groups flat items under headers; items are re-ordered by first-seen group. */
@@ -569,6 +582,9 @@ export class OgeSelectBox<TItem = unknown>
   open(): void {
     if (this.effectiveDisabled() || this.readonly()) return;
     this.opened.set(true);
+    // initialize the active option synchronously — a keydown arriving before
+    // the opened-sync effect flushes must already see a valid activeIndex
+    if (this.activeIndex() < 0) this.initActiveFromSelection();
   }
 
   /** Closes the popup. */
@@ -741,6 +757,16 @@ export class OgeSelectBox<TItem = unknown>
 
   protected optionId(index: number): string {
     return `${this.inputId}-option-${index}`;
+  }
+
+  protected imageOf(item: TItem): string | null {
+    const expr = this.imageExpr();
+    if (expr === undefined) return null;
+    const url =
+      typeof expr === 'function'
+        ? expr(item)
+        : (item as Record<string, unknown>)[expr];
+    return typeof url === 'string' && url.length > 0 ? url : null;
   }
 
   private itemValue(item: TItem): unknown {

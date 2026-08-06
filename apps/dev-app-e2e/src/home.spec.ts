@@ -25,6 +25,24 @@ test.describe('home / landing page', () => {
     ).toBeVisible();
   });
 
+  test('hero select popup aligns with its field (no transformed ancestor)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'select-box.ts' }).click();
+    const select = page.locator('app-home oge-select-box').first();
+    await select.locator('.oge-input-native').click();
+    const popup = page.locator('app-home .oge-popup');
+    await expect(popup).toBeVisible();
+    const field = await select.locator('.oge-input-container').boundingBox();
+    const panel = await popup.boundingBox();
+    // a transformed ancestor (tilt/entrance animation) would throw the
+    // fixed-position popup hundreds of pixels off — assert alignment
+    expect(Math.abs(panel.x - field.x)).toBeLessThan(2);
+    expect(panel.y).toBeGreaterThan(field.y);
+    expect(panel.y - (field.y + field.height)).toBeLessThan(40);
+  });
+
   test('CTA navigates into the docs shell', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('link', { name: 'Get started', exact: true }).click();

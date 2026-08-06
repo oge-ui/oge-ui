@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { OgeSelectBox, type OgeSelectBoxCustomItemEvent } from '@oge-ui/inputs';
+import {
+  OgeSelectBox,
+  OgeTagBox,
+  type OgeSelectBoxCustomItemEvent,
+} from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
@@ -9,6 +13,7 @@ const SECTIONS = [
   'Data mapping & search',
   'Grouping & custom values',
   'Lazy data',
+  'Tag Box — multi-select',
   'Item states & templates',
   'Field chrome',
   'Keyboard & accessibility',
@@ -76,6 +81,25 @@ loadWarehouses = () =>
     setTimeout(() => resolve(['Hamburg', 'İzmir', 'Rotterdam']), 900),
   );`;
 
+const TAGBOX_SNIPPET = `<oge-tag-box
+  label="Skills"
+  [items]="skills"
+  [searchEnabled]="true"
+  [showClearButton]="true"
+  [(value)]="selectedSkills"
+  (selectionChanged)="onDelta($event.addedItems, $event.removedItems)"
+/>
+
+<oge-tag-box
+  label="Team"
+  [items]="users"
+  displayExpr="name"
+  valueExpr="id"
+  imageExpr="avatar"
+  [maxDisplayedTags]="3"
+  [(value)]="teamIds"
+/>`;
+
 const STATES_SNIPPET = `<oge-select-box
   label="Plan"
   [items]="plans"
@@ -117,7 +141,7 @@ interface DemoPlan {
 
 @Component({
   selector: 'app-inputs-select-box',
-  imports: [OgeSelectBox, DemoCard, DocHeader, PageToc],
+  imports: [OgeSelectBox, OgeTagBox, DemoCard, DocHeader, PageToc],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -216,6 +240,37 @@ interface DemoPlan {
         [items]="loadWarehouses"
         [(value)]="warehouse"
       />
+    </app-demo-card>
+
+    <app-demo-card
+      heading="Tag Box — multi-select"
+      description="<code>&lt;oge-tag-box&gt;</code> is the multi-select sibling: the value is an <em>array</em> of <code>valueExpr</code> results, picks render as removable chips, the popup stays open while selecting (checkbox listbox, <code>aria-multiselectable</code>) and <kbd>Backspace</kbd> removes the last chip. <code>imageExpr</code> puts avatars on chips and options; <code>maxDisplayedTags</code> collapses overflow into a <code>+N</code> chip."
+      [chips]="[
+        'value: T[]',
+        'imageExpr',
+        'maxDisplayedTags',
+        'selectionChanged',
+      ]"
+      [code]="tagBoxSnippet"
+    >
+      <div class="flex flex-wrap items-start gap-6">
+        <oge-tag-box
+          label="Skills"
+          [items]="skills"
+          [searchEnabled]="true"
+          [showClearButton]="true"
+          [(value)]="selectedSkills"
+        />
+        <oge-tag-box
+          label="Team"
+          [items]="avatarUsers"
+          displayExpr="name"
+          valueExpr="id"
+          imageExpr="avatar"
+          [maxDisplayedTags]="3"
+          [(value)]="teamIds"
+        />
+      </div>
     </app-demo-card>
 
     <app-demo-card
@@ -333,6 +388,28 @@ export class InputsSelectBoxPage {
   protected readonly warehouse = signal<unknown>(null);
 
   protected readonly tags = signal<string[]>(['angular', 'signals']);
+  protected readonly tagBoxSnippet = TAGBOX_SNIPPET;
+
+  protected readonly skills = ['Angular', 'Signals', 'Nx', 'Vitest', 'SCSS'];
+  protected readonly selectedSkills = signal<readonly unknown[]>(['Angular']);
+  protected readonly teamIds = signal<readonly unknown[]>([1, 2]);
+
+  /** Inline SVG avatars — the docs stay fully offline. */
+  protected readonly avatarUsers = [1, 2, 3, 4, 5].map((id) => ({
+    id,
+    name: [
+      'Elif Kaya',
+      'Mert Demir',
+      'Selin Doğan',
+      'Can Yılmaz',
+      'Deniz Arslan',
+    ][id - 1],
+    avatar:
+      'data:image/svg+xml;utf8,' +
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" rx="8" fill="${['#6366f1', '#22d3ee', '#ec4899', '#10b981', '#f59e0b'][id - 1]}"/><text x="16" y="21" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#fff">${['EK', 'MD', 'SD', 'CY', 'DA'][id - 1]}</text></svg>`,
+      ),
+  }));
 
   protected createTag(event: OgeSelectBoxCustomItemEvent<string>): void {
     event.customItem = event.text;

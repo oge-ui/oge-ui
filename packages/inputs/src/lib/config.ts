@@ -55,6 +55,8 @@ export interface OgeInputsMessages {
   dropDownLoading: string;
   /** Error row of the select box popup when a lazy `items` function rejects. */
   dropDownLoadError: string;
+  /** Aria label of a tag chip's remove (×) button. */
+  removeTagButton: string;
 }
 
 export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
@@ -84,6 +86,7 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   noDataText: 'No data to display',
   dropDownLoading: 'Loading…',
   dropDownLoadError: 'Failed to load data',
+  removeTagButton: 'Remove',
 };
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */

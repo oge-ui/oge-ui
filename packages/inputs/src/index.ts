@@ -1,11 +1,17 @@
 export { OgeTextBox } from './lib/text-box/text-box';
 export { OgeSelectBox } from './lib/select-box/select-box';
+export { OgeTagBox } from './lib/tag-box/tag-box';
+export {
+  type OgeTagBoxSelectionChangedEvent,
+  type OgeTagBoxItemClickEvent,
+} from './lib/tag-box/tag-box-types';
 export {
   type OgeSelectBoxDisplayExpr,
   type OgeSelectBoxValueExpr,
   type OgeSelectBoxSearchExpr,
   type OgeSelectBoxSearchMode,
   type OgeSelectBoxDisabledExpr,
+  type OgeSelectBoxImageExpr,
   type OgeSelectBoxSelectionChangedEvent,
   type OgeSelectBoxItemClickEvent,
   type OgeSelectBoxSearchChangedEvent,

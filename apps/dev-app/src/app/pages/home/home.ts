@@ -202,9 +202,12 @@ const ORG: OrgNode[] = [
           </p>
         </div>
 
-        <!-- Right: tabbed live-component window with pointer parallax -->
-        <div class="home-in home-d6 min-w-0">
-          <div class="home-tilt">
+        <!-- Right: tabbed live-component window with pointer parallax.
+             The tilt's perspective transform would become the containing
+             block for the select popup (position: fixed), so it is dropped
+             while the select tab is active. -->
+        <div class="home-in-fade home-d6 min-w-0">
+          <div [class.home-tilt]="demoTab() !== 'select'">
             <div class="home-window-frame">
               <div
                 class="overflow-hidden rounded-[11px] bg-white dark:bg-gray-950"
@@ -800,6 +803,11 @@ const ORG: OrgNode[] = [
       animation: home-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
+    /* opacity-only entrance for containers of position:fixed popups */
+    app-home .home-in-fade {
+      animation: home-fade 0.65s ease both;
+    }
+
     app-home .home-d2 {
       animation-delay: 0.07s;
     }
@@ -1071,14 +1079,14 @@ const ORG: OrgNode[] = [
       animation: home-pane-in 0.35s ease both;
     }
 
+    /* opacity-only: a filled transform animation would make the pane the
+       containing block for the select popup's fixed positioning */
     @keyframes home-pane-in {
       from {
         opacity: 0;
-        transform: translateY(6px);
       }
       to {
         opacity: 1;
-        transform: none;
       }
     }
 
@@ -1401,6 +1409,7 @@ export class HomePage {
   ];
 
   protected readonly packages = [
+    'oge-ui',
     '@oge-ui/core',
     '@oge-ui/grid',
     '@oge-ui/tree-list',
@@ -1449,7 +1458,7 @@ export class HomePage {
   ];
 
   protected readonly statTargets = [
-    { target: 7, suffix: '', label: 'npm packages' },
+    { target: 8, suffix: '', label: 'npm packages' },
     { target: 6, suffix: '', label: 'component families' },
     { target: 0, suffix: '', label: 'runtime dependencies' },
     { target: 100, suffix: '%', label: 'signal-based API' },
@@ -1763,11 +1772,17 @@ export class HomePage {
     const frame = (now: number): void => {
       this.drawWave(ctx, canvas, dpr, (now - t0) / 1000);
       if (canTilt && tilt) {
-        const current = this.tiltCurrent;
-        const target = this.tiltTarget;
-        current.rx += (target.rx - current.rx) * 0.08;
-        current.ry += (target.ry - current.ry) * 0.08;
-        tilt.style.transform = `perspective(1600px) rotateX(${current.rx.toFixed(2)}deg) rotateY(${current.ry.toFixed(2)}deg)`;
+        if (this.demoTab() === 'select') {
+          // no transform while the select tab is open — a transformed
+          // ancestor would misplace the popup's fixed positioning
+          if (tilt.style.transform) tilt.style.transform = '';
+        } else {
+          const current = this.tiltCurrent;
+          const target = this.tiltTarget;
+          current.rx += (target.rx - current.rx) * 0.08;
+          current.ry += (target.ry - current.ry) * 0.08;
+          tilt.style.transform = `perspective(1600px) rotateX(${current.rx.toFixed(2)}deg) rotateY(${current.ry.toFixed(2)}deg)`;
+        }
       }
       raf = requestAnimationFrame(frame);
     };

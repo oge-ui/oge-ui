@@ -544,3 +544,117 @@
   white-space: normal;
   overflow: visible;
 }
+
+.oge-select-option-img {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 6px;
+  object-fit: cover;
+}
+// --- tag box ----------------------------------------------------------------
+
+.oge-tag-box .oge-input-container {
+  height: auto;
+  min-height: 34px;
+}
+
+.oge-tag-box.oge-input-sm .oge-input-container {
+  min-height: 28px;
+}
+
+.oge-tag-box.oge-input-lg .oge-input-container {
+  min-height: 42px;
+}
+
+.oge-tag-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding-block: 3px;
+}
+
+.oge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 2px 6px 2px 8px;
+  border-radius: calc(var(--oge-radius) - 1px);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-size: calc(var(--oge-font-size) - 1px);
+  line-height: 1.4;
+}
+
+.oge-tag-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.oge-tag-img {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.oge-tag-more {
+  padding-inline: 8px;
+  color: var(--oge-muted-color);
+  background: var(--oge-row-hover-bg);
+}
+
+.oge-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.65;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease;
+
+  &:hover {
+    opacity: 1;
+    background: rgb(0 0 0 / 0.08);
+  }
+}
+
+.oge-tag-input {
+  flex: 1 1 60px;
+  min-width: 60px;
+  width: auto;
+}
+
+.oge-tag-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 4px;
+  background: var(--oge-bg);
+  color: #fff;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.oge-tag-checkbox-on {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent);
+}

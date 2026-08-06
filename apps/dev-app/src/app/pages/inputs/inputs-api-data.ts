@@ -867,6 +867,12 @@ export const OGE_SELECT_BOX_API: ApiSections = {
             'Groups flat items under headers; items are re-ordered by first-seen group.',
         },
         {
+          name: 'imageExpr',
+          type: 'string | ((item) =&gt; string)',
+          description:
+            'Item &rarr; image URL rendered before the option text (avatars, flags…). For inline SVG icons use <code>itemTemplate</code>.',
+        },
+        {
           name: 'showDropDownButton',
           type: 'boolean',
           default: 'true',
@@ -1025,5 +1031,96 @@ export const OGE_SELECT_BOX_API: ApiSections = {
         },
       ],
     },
+  ],
+};
+
+export const OGE_TAG_BOX_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeTagBox',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;readonly unknown[]&gt;',
+          default: '[]',
+          description:
+            'Committed values — the <code>valueExpr</code> of every selected item; two-way.',
+        },
+        {
+          name: 'items / displayExpr / valueExpr / disabledExpr / imageExpr',
+          type: 'shared with OgeSelectBox',
+          description:
+            'The tag box reuses the select box expression vocabulary verbatim.',
+        },
+        {
+          name: 'searchEnabled / searchMode / searchExpr',
+          type: 'shared with OgeSelectBox',
+          description: 'Client-side filtering of the option list.',
+        },
+        {
+          name: 'showSelectionControls',
+          type: 'boolean',
+          default: 'true',
+          description: 'Renders checkboxes in front of the options.',
+        },
+        {
+          name: 'hideSelectedItems',
+          type: 'boolean',
+          default: 'false',
+          description: 'Hides already-selected items from the popup list.',
+        },
+        {
+          name: 'maxDisplayedTags',
+          type: 'number | undefined',
+          description:
+            'Caps the rendered chips; the rest collapse into a <code>+N</code> chip.',
+        },
+        {
+          name: 'opened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick',
+          type: 'shared with OgeSelectBox',
+          description: 'Popup configuration and two-way visibility.',
+        },
+      ],
+    },
+    COMMON_CHROME,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeTagBox methods',
+      entries: [
+        {
+          name: 'open() / close() / toggle()',
+          type: 'void',
+          description: 'Popup control (no-ops while disabled/readonly).',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeTagBox events',
+      entries: [
+        {
+          name: 'selectionChanged',
+          type: 'OgeTagBoxSelectionChangedEvent',
+          description:
+            'Per-commit delta — <code>{ addedItems, removedItems }</code>.',
+        },
+        {
+          name: 'itemClick',
+          type: 'OgeTagBoxItemClickEvent',
+          description:
+            'An option row was toggled — <code>{ item, index, event }</code>.',
+        },
+        {
+          name: 'dropDownOpened / dropDownClosed',
+          type: 'void',
+          description: 'Popup visibility changes, from any trigger.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
   ],
 };
