@@ -19,9 +19,9 @@ export default [
         {
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
-          // the export-excel secondary entry is intentionally lazy-loaded while
-          // the primary @oge-ui/grid entry stays a static import
-          checkDynamicDependenciesExceptions: ['@oge-ui/grid'],
+          // the export-excel secondary entries are intentionally lazy-loaded
+          // while the primary package entries stay static imports
+          checkDynamicDependenciesExceptions: ['@oge-ui/grid', '@oge-ui/pivot'],
           depConstraints: [
             {
               sourceTag: 'scope:core',
@@ -49,8 +49,20 @@ export default [
               ],
             },
             {
+              sourceTag: 'scope:overlay',
+              onlyDependOnLibsWithTags: ['scope:overlay', 'scope:core'],
+            },
+            {
+              sourceTag: 'scope:inputs',
+              onlyDependOnLibsWithTags: ['scope:inputs', 'scope:core'],
+            },
+            {
               sourceTag: 'scope:buttons',
-              onlyDependOnLibsWithTags: ['scope:buttons', 'scope:core'],
+              onlyDependOnLibsWithTags: [
+                'scope:buttons',
+                'scope:overlay',
+                'scope:core',
+              ],
             },
             {
               sourceTag: 'scope:app',
@@ -60,6 +72,8 @@ export default [
                 'scope:tree-list',
                 'scope:pivot',
                 'scope:buttons',
+                'scope:overlay',
+                'scope:inputs',
                 'scope:core',
               ],
             },

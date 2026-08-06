@@ -2,11 +2,15 @@
 
 Open-source UI component suite for Angular, built on signals. The first component is the **Data Grid**: virtualized, server-driven, fully typed, themeable.
 
-| Package | Description | npm |
-|---|---|---|
-| [`@oge-ui/core`](packages/core) | Framework-agnostic engine: data sources, filtering, row pipeline, virtualization math | [npm](https://www.npmjs.com/package/@oge-ui/core) |
-| [`@oge-ui/grid`](packages/grid) | The Angular Data Grid component | [npm](https://www.npmjs.com/package/@oge-ui/grid) |
-| [`@oge-ui/tree-list`](packages/tree-list) | Hierarchical tree grid built on the same foundation | — |
+| Package                                   | Description                                                                                | npm                                               |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| [`@oge-ui/core`](packages/core)           | Framework-agnostic engine: data sources, filtering, row pipeline, virtualization math      | [npm](https://www.npmjs.com/package/@oge-ui/core) |
+| [`@oge-ui/grid`](packages/grid)           | The Angular Data Grid component                                                            | [npm](https://www.npmjs.com/package/@oge-ui/grid) |
+| [`@oge-ui/tree-list`](packages/tree-list) | Hierarchical tree grid built on the same foundation                                        | —                                                 |
+| [`@oge-ui/pivot`](packages/pivot)         | Pivot grid: pure aggregation engine, display modes, two-axis virtualization, Excel export  | —                                                 |
+| [`@oge-ui/buttons`](packages/buttons)     | Buttons, button group & drop-down button: severities, async actions, click guard, gestures | —                                                 |
+| [`@oge-ui/overlay`](packages/overlay)     | Anchored popup primitives: flip/clamp positioning, panel behavior model, accessible menu   | —                                                 |
+| [`@oge-ui/inputs`](packages/inputs)       | Form editors (text/textarea/number): floating labels, Signal Forms + CVA, counter, reveal  | —                                                 |
 
 ```sh
 npm install @oge-ui/core @oge-ui/grid

@@ -3,7 +3,7 @@
 Comparison of `@oge-ui/grid` against the feature set of leading commercial data grids.
 Legend: ✅ implemented · 🟡 partial · ❌ missing.
 
-Last updated: 2026-08-05 (after Phase 14 / summary, selection & export parity).
+Last updated: 2026-08-06 (after Phase 16 / pivot grid).
 
 ## 1. Data binding & data operations
 
@@ -176,4 +176,98 @@ the `@oge-ui/core` tree primitives (`buildTreeIndex`, `flattenTreeData`,
 | Header filter (distinct values popup, date-year groups)             | ✔         | ✅  | client-side distinct over loaded rows; popup search; tri-state year groups; fold-ordered (locale-safe)                                                                   |
 | Paging                                                              | ✔         | ✅  | client-side over the flattened visible rows; shared pager; filter resets the page                                                                                        |
 
-**Next:** pivot-style features · editing form layouts (`formItems` customization) · export appearance hooks (`customizeCell`).
+## Pivot Grid (`@oge-ui/pivot`) — Feature Parity
+
+`@oge-ui/pivot` builds on a pure engine in `@oge-ui/core` (`PivotEngine`,
+serializable `PivotFieldConfig`, `OgePivotStore` remote contract) and reuses
+the grid foundation for state persistence and shared UI primitives.
+
+| Feature                                                | Reference | oge | Notes                                                                                                                      |
+| ------------------------------------------------------ | --------- | --- | -------------------------------------------------------------------------------------------------------------------------- |
+| Four areas (row/column/data/filter) + field panel      | ✔         | ✅  | `<oge-pivot-field>` directives; drag chips between areas                                                                   |
+| Expand/collapse on both axes                           | ✔         | ✅  | expanded group keeps its own line carrying the subtotals                                                                   |
+| Summary types (sum/count/avg/min/max/custom)           | ✔         | ✅  | `calculateCustomSummary` reducers travel out-of-band                                                                       |
+| Date/number group intervals                            | ✔         | ✅  | year/quarter/month/day/dayOfWeek + numeric bucket size                                                                     |
+| Display modes (percent-of, running totals, variations) | ✔         | ✅  | post-processing over the materialized matrix; UI via measure chip menu                                                     |
+| Sorting (labels, `sortBySummary` on the opposite axis) | ✔         | ✅  | header context menu; nulls always last                                                                                     |
+| Field filters (include/exclude, search)                | ✔         | ✅  | distinct-value popup, capped at 1000, locale-folded search                                                                 |
+| Field chooser dialog                                   | ✔         | ✅  | search + 4 zones; `applyChangesMode: instantly/onDemand`                                                                   |
+| Totals visibility settings                             | ✔         | ✅  | row/column sub + grand totals independently                                                                                |
+| Drill-down (raw rows behind a cell)                    | ✔         | ✅  | `drillDown({ rowPath, columnPath })`; timezone-safe date range filters                                                     |
+| Two-axis virtual scrolling                             | ✔         | ✅  | fixed-track windows on rows _and_ columns; 20k-row DOM budget spec                                                         |
+| Remote/custom store                                    | ✔         | ✅  | serializable `PivotLoadOptions`/`PivotLoadResult`; `LocalPivotStore` reference impl; abortable loads                       |
+| State persistence                                      | ✔         | ✅  | `stateKey` via shared `OGE_STATE_STORAGE`; `state()`/`applyState()`/`stateChange`                                          |
+| Export CSV / Excel                                     | ✔         | ✅  | `getCsv()`/`exportCsv()` in the package; lazy `@oge-ui/pivot/export-excel` with merged multi-level headers and typed cells |
+| `customizeCell` appearance hook                        | ✔         | ✅  | mutable `{ text, cssClass }` per cell                                                                                      |
+| Keyboard navigation + i18n                             | partial   | ✅  | arrow/Home/End over the matrix, Enter/Space toggles headers; full `OgePivotMessages` token                                 |
+| Field panel collapse + header context menus            | ✔         | ✅  | sort, filter, remove, expand/collapse all, chooser                                                                         |
+| Pivot chart binding                                    | ✔         | ❌  | needs a charting package first                                                                                             |
+
+**Phase 16 — Pivot Grid: ✅ DONE** (P0 engine → P5 export/persistence; docs overview + analytics pages, e2e smoke).
+
+**Next:** pivot chart binding · grid popup migration to `@oge-ui/overlay`.
+
+## Buttons (`@oge-ui/buttons`) — Feature Parity
+
+`OgeButton` + `OgeButtonGroup` + `OgeDropDownButton` (reference
+button/button-group/drop-down-button scope, adapted to the signal-based house
+API). The drop-down builds on the new `@oge-ui/overlay` package
+(`resolvePopupPosition` flip/clamp math, `OgeAnchoredPanel` behavior model,
+`oge-popup` chrome, `oge-menu-list` with the canonical `OgeMenuItem`) — the
+grid's inline popups migrate to it in a future wave.
+
+| Feature                                               | Reference | oge     | Notes                                                                        |
+| ----------------------------------------------------- | --------- | ------- | ---------------------------------------------------------------------------- |
+| text / icon / iconPosition                            | Yes       | Done    | icons via `[ogeButtonIcon]` SVG projection (no icon font)                    |
+| type/severity + stylingMode (contained/outlined/text) | Yes       | Done    | `severity: normal/accent/success/warning/danger`, token-driven               |
+| sizes                                                 | No        | Done    | `size: sm/md/lg` (house addition)                                            |
+| disabled / hint / tabIndex / accessKey                | Yes       | Done    |                                                                              |
+| useSubmitBehavior                                     | Yes       | Done    | renders `type="submit"`                                                      |
+| focus/hover/active state flags                        | Yes       | Skipped | CSS pseudo-classes always on (simpler, documented)                           |
+| rtlEnabled                                            | Yes       | Done    | logical properties; follows `dir`, no input needed                           |
+| onClick                                               | Yes       | Done    | `(clicked)` output (guarded pipeline); native `(click)` documented as bypass |
+| **Async action + auto loading (single-flight)**       | No        | Done    | unique: `[action]`, `[(loading)]`, `actionDone`/`actionFailed`               |
+| **Click guard (throttle/debounce)**                   | No        | Done    | unique: `clickGuard: true / { mode, ms }`                                    |
+| **Badge / dot indicator**                             | No        | Done    | unique: `badge: number/string/true`, 99+ capping, a11y-aware                 |
+| **Hold-to-confirm**                                   | No        | Done    | unique: CSS-only progress bar, Escape/pointer-cancel abort, keyboard hold    |
+| **Auto-repeat (stepper)**                             | No        | Done    | unique: delay + interval, disabled-flip stop                                 |
+| ButtonGroup items + declarative children              | Yes       | Done    | both; items render after projected children                                  |
+| ButtonGroup selectionMode + selectedKeys              | Yes       | Done    | `none/single/multiple`, two-way model, added/removed diffs                   |
+| ButtonGroup keyboard nav + ARIA                       | partial   | Done    | roving tabindex, arrow/Home/End, radiogroup/toolbar/group roles, RTL-aware   |
+| DropDownButton (items / async items / placement)      | Yes       | Done    | `items` array or lazy fn (loading/error/empty rows, cache, runId race guard) |
+| SplitButton                                           | Yes       | Done    | `splitButton` input: main action + chevron toggle, segmented styling         |
+| **rememberLastAction (split)**                        | No        | Done    | unique: last item becomes the main label+action (IDE Run-button pattern)     |
+| Menu keyboard: arrows/Home/End + **type-ahead**       | partial   | Done    | WAI-ARIA menu-button, `aria-activedescendant`, focus restore, Tab handling   |
+| Custom panel content                                  | Yes       | Done    | `*ogeDropDownContent` template with `$implicit` close fn                     |
+| Overlay: flip/clamp + scroll reposition               | No        | Done    | `@oge-ui/overlay`; grid popups migrate later                                 |
+
+## Inputs (`@oge-ui/inputs`) — Feature Parity
+
+`OgeTextBox` + `OgeTextArea` + `OgeNumberBox` on one shared field chrome
+(reference TextBox/TextArea/NumberBox scope, Angular-native API). First
+package implementing the Signal Forms `FormValueControl` contract and the
+repo's CVA house pattern. Input masking is deferred to a later wave.
+
+| Feature                                            | Reference | oge     | Notes                                                                        |
+| -------------------------------------------------- | --------- | ------- | ---------------------------------------------------------------------------- |
+| mode/type (text/email/password/search/tel/url)     | Yes       | Done    | native `type` + first-class inputmode/enterkeyhint/autocomplete              |
+| label + labelMode (static/floating/hidden/outside) | Yes       | Done    | floating label with placeholder suppression                                  |
+| stylingMode (outlined/filled/underlined)           | Yes       | Done    | token-driven, all three themes                                               |
+| sizes                                              | No        | Done    | `sm/md/lg` = 28/34/42px (button parity)                                      |
+| showClearButton / placeholder / maxLength          | Yes       | Done    | clear keeps focus (mousedown prevented), tabindex -1                         |
+| buttons (custom editor buttons)                    | Yes       | Done    | replaced with `[ogeInputPrefix]`/`[ogeInputSuffix]` projection + fixed rail  |
+| hint / validation display                          | Yes       | Done    | subscript with `subscriptSizing: fixed/dynamic/none`, aria-live, describedby |
+| isValid/validationError inputs                     | Yes       | Done    | `invalid` + `errorText` (grid-editor parity), `errorDisplay` policy          |
+| **Signal Forms (FormValueControl)**                | No        | Done    | `[formField]` auto-binds errors/touched/disabled/min/max/…                   |
+| Reactive/template forms (CVA)                      | Yes       | Done    | constructor-assignment pattern, `control.events` state bridge                |
+| valueChangeEvent/debounce                          | Yes       | Done    | `debounce` ms + raw `inputChange` stream; blur/Enter flush                   |
+| **Grapheme-accurate counter (soft limit)**         | No        | Done    | unique: Intl.Segmenter, emoji family = 1; `counterMode: limit/soft`          |
+| **Password reveal + copy button**                  | No        | Done    | unique: in-place type flip (caret kept), clipboard + live-region             |
+| **Async pending indicator + success icon**         | No        | Done    | unique: rail spinner via `pending`, `showSuccessIcon`                        |
+| TextArea autoResize (minRows/maxRows)              | Yes       | Done    | CSS `field-sizing: content` + measurement fallback                           |
+| NumberBox null-empty / min/max/step / spin         | Yes       | Done    | `number \| null`, clamp-on-commit, hold-to-repeat + Arrow keys               |
+| NumberBox format                                   | Yes       | Done    | `Intl.NumberFormatOptions` display-on-blur, locale-aware parse               |
+| onValueChanged parity (previousValue + event)      | Yes       | Done    | `valueCommitted { value, previousValue, event? }`; `event === undefined` = programmatic |
+| reset() / imperative parity                        | Yes       | Done    | input `reset(value?)`, group `focus()`, drop-down `open/close/toggle()` + `selectionChanged`, group `itemClick { item?, index }` |
+| mask                                               | Yes       | Missing | deferred — Maskito attaches to the native input; adapter wave later          |
+| Grid editor migration to `<oge-text-box>`          | —         | Planned | `size=sm + labelMode=hidden + subscriptSizing=none` is the compact shape     |

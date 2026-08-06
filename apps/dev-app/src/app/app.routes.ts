@@ -186,8 +186,18 @@ export const appRoutes: Route[] = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/pivot-grid/overview').then((m) => m.PivotOverviewPage),
+          import('./pages/pivot-grid/overview').then(
+            (m) => m.PivotOverviewPage,
+          ),
         title: 'oge — Pivot Grid',
+      },
+      {
+        path: 'analytics',
+        loadComponent: () =>
+          import('./pages/pivot-grid/analytics').then(
+            (m) => m.PivotAnalyticsPage,
+          ),
+        title: 'oge — Pivot Analytics & Export',
       },
     ],
   },

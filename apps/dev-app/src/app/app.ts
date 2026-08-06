@@ -147,7 +147,14 @@ export class App {
     },
     {
       title: 'Pivot Grid',
-      items: [{ path: '/components/pivot-grid', label: 'Overview', icon: 'gauge' }],
+      items: [
+        { path: '/components/pivot-grid', label: 'Overview', icon: 'gauge' },
+        {
+          path: '/components/pivot-grid/analytics',
+          label: 'Analytics & Export',
+          icon: 'activity',
+        },
+      ],
     },
   ];
 

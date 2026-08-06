@@ -27,3 +27,34 @@ test('pivot grid renders totals, expands both axes and re-pivots via drag', asyn
   await expect(pivot.locator('.oge-pivot-area')).toHaveCount(4);
   await expect(pivot.locator('.oge-pivot-field-chip', { hasText: 'Region' })).toBeVisible();
 });
+
+test('virtual pivot keeps cells aligned with their headers after scrolling', async ({ page }) => {
+  await page.goto('/components/pivot-grid/analytics');
+  const pivot = page.locator('oge-pivot-grid').first();
+  await expect(pivot.locator('.oge-pivot-row-header', { hasText: 'Europe' })).toBeVisible();
+
+  // every data cell is explicitly placed on the grid (no auto-flow drift)
+  const firstCell = pivot.locator('.oge-pivot-cell').first();
+  await expect(firstCell).toHaveAttribute('data-cell', /\d+-\d+/);
+
+  // a grand-total column header and its cells line up horizontally
+  const grandHeader = pivot.locator('.oge-pivot-col-header', { hasText: 'Grand Total' }).first();
+  const grandCell = pivot.locator('.oge-pivot-cell.oge-pivot-grand').first();
+  const headerBox = await grandHeader.boundingBox();
+  const cellBox = await grandCell.boundingBox();
+  expect(headerBox).not.toBeNull();
+  expect(cellBox).not.toBeNull();
+  if (headerBox && cellBox) {
+    expect(Math.abs(headerBox.x - cellBox.x)).toBeLessThan(2);
+    expect(Math.abs(headerBox.width - cellBox.width)).toBeLessThan(2);
+  }
+
+  // export card: chooser opens from its button; CSV/Excel buttons are wired
+  await page.getByRole('button', { name: 'Field chooser' }).click();
+  const chooser = page.locator('.oge-pivot-chooser');
+  await expect(chooser).toBeVisible();
+  await chooser.locator('.oge-toolbar-text-btn').last().click();
+  await expect(chooser).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'CSV' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Excel' })).toBeVisible();
+});
