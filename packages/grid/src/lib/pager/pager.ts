@@ -26,12 +26,24 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
       (click)="pageChange.emit(pageIndex() - 1)"
       [attr.aria-label]="messages().previousPage"
     >
-      <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 16 16"
+        width="12"
+        height="12"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
         <path d="m10 3.5-4.5 4.5L10 12.5" />
       </svg>
     </button>
     @if (isCompact()) {
-      <span class="oge-pager-compact">{{ pageIndex() + 1 }} / {{ pageCount() }}</span>
+      <span class="oge-pager-compact"
+        >{{ pageIndex() + 1 }} / {{ pageCount() }}</span
+      >
     } @else {
       @for (page of pages(); track page) {
         <button
@@ -52,26 +64,42 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
       (click)="pageChange.emit(pageIndex() + 1)"
       [attr.aria-label]="messages().nextPage"
     >
-      <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 16 16"
+        width="12"
+        height="12"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
         <path d="m6 3.5 4.5 4.5L6 12.5" />
       </svg>
     </button>
     @if (pageSizes(); as sizes) {
       <label class="oge-pager-sizes">
-        <span class="oge-pager-sizes-label">{{ messages().pageSizeLabel }}</span>
+        <span class="oge-pager-sizes-label">{{
+          messages().pageSizeLabel
+        }}</span>
         <select
           [value]="pageSize() || 'all'"
           [attr.aria-label]="messages().pageSizeLabel"
           (change)="onSizeChange($any($event.target).value)"
         >
           @for (size of sizes; track size) {
-            <option [value]="size">{{ size === 'all' ? messages().allRows : size }}</option>
+            <option [value]="size">
+              {{ size === 'all' ? messages().allRows : size }}
+            </option>
           }
         </select>
       </label>
     }
     @if (showInfo()) {
-      <span class="oge-pager-info">{{ totalCount() }} {{ messages().rowsSuffix }}</span>
+      <span class="oge-pager-info"
+        >{{ totalCount() }} {{ messages().rowsSuffix }}</span
+      >
     }
   `,
   styles: `
@@ -93,11 +121,14 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
       min-height: 26px;
       padding: 3px 7px;
       border: 1px solid transparent;
-      border-radius: var(--oge-radius);
+      border-radius: 999px;
       background: none;
       color: inherit;
       font: inherit;
       cursor: pointer;
+      transition:
+        background-color 120ms ease,
+        color 120ms ease;
 
       &:hover:not(:disabled) {
         background: var(--oge-row-hover-bg);
@@ -110,9 +141,13 @@ import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
     }
 
     .oge-pager-current {
-      border-color: var(--oge-border-color);
-      background: var(--oge-popup-bg, #fff);
+      background: var(--oge-accent);
+      color: #fff;
       font-weight: 600;
+
+      &:hover:not(:disabled) {
+        background: var(--oge-accent);
+      }
     }
 
     .oge-pager-sizes {
@@ -175,7 +210,9 @@ export class OgePager {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       if (typeof ResizeObserver === 'undefined') return;
-      const observer = new ResizeObserver(() => this.hostWidth.set(host.nativeElement.clientWidth));
+      const observer = new ResizeObserver(() =>
+        this.hostWidth.set(host.nativeElement.clientWidth),
+      );
       observer.observe(host.nativeElement);
       destroyRef.onDestroy(() => observer.disconnect());
     });
@@ -190,9 +227,13 @@ export class OgePager {
     const count = this.pageCount();
     const current = this.pageIndex();
     if (count <= 9) return Array.from({ length: count }, (_, i) => i);
-    const around = [current - 2, current - 1, current, current + 1, current + 2].filter(
-      (p) => p > 0 && p < count - 1
-    );
+    const around = [
+      current - 2,
+      current - 1,
+      current,
+      current + 1,
+      current + 2,
+    ].filter((p) => p > 0 && p < count - 1);
     return [...new Set([0, ...around, count - 1])].sort((a, b) => a - b);
   });
 }

@@ -27,10 +27,15 @@
   background: var(--oge-popup-bg);
   color: var(--oge-muted-color);
   cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
 
   &:hover {
     color: var(--oge-header-color);
     background: var(--oge-row-hover-bg);
+    border-color: var(--oge-muted-color);
   }
 }
 
@@ -42,6 +47,24 @@
   font: inherit;
   background: var(--oge-popup-bg);
   color: inherit;
+}
+
+// one calm focus treatment for every text input the chrome renders
+.oge-search-input,
+.oge-filter-input,
+.oge-hf-search,
+.oge-editor-input,
+.oge-fb-input {
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--oge-accent);
+    box-shadow: 0 0 0 3px var(--oge-accent-soft, rgba(37, 99, 235, 0.08));
+  }
 }
 
 .oge-group-panel {
@@ -263,7 +286,7 @@
 }
 
 .oge-highlight {
-  background: color-mix(in srgb, var(--oge-accent) 25%, transparent);
+  background: var(--oge-accent-25, rgba(37, 99, 235, 0.25));
   color: inherit;
   border-radius: 2px;
   padding: 0 1px;
@@ -289,6 +312,27 @@
   flex: 1;
   min-height: 0;
   position: relative;
+  // slim, quiet scrollbars keep the chrome out of the data's way
+  scrollbar-width: thin;
+  scrollbar-color: var(--oge-border-color) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--oge-border-color);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--oge-muted-color);
+    }
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 .oge-header {
@@ -345,11 +389,14 @@
   gap: 6px;
   padding: var(--oge-cell-padding-y) var(--oge-cell-padding-x);
   font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.01em;
   color: var(--oge-header-color);
   overflow: hidden;
   white-space: nowrap;
   user-select: none;
   background: var(--oge-header-bg);
+  transition: background-color 120ms ease;
 }
 
 // insert indicator while dragging a header: the column lands in front of this one
@@ -360,7 +407,7 @@
   inset-inline-start: 0;
   width: 3px;
   border-radius: 2px;
-  background: var(--oge-accent-color);
+  background: var(--oge-accent);
   pointer-events: none;
 }
 
@@ -474,6 +521,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   background: var(--oge-bg);
+  transition: background-color 100ms ease;
 }
 
 .oge-cell-number {
@@ -502,8 +550,17 @@
   background: var(--oge-selected-bg);
 }
 
+// slim accent bar marks selection without shouting
+.oge-row-selected {
+  box-shadow: inset 3px 0 0 var(--oge-accent);
+}
+
+.oge-rtl .oge-row-selected {
+  box-shadow: inset -3px 0 0 var(--oge-accent);
+}
+
 .oge-cell:focus-visible {
-  outline: 2px solid var(--oge-accent);
+  outline: 2px solid var(--oge-focus-ring, var(--oge-accent));
   outline-offset: -2px;
 }
 
@@ -749,7 +806,7 @@
 }
 
 .oge-row-new .oge-cell {
-  background: color-mix(in srgb, var(--oge-selected-bg) 45%, var(--oge-bg));
+  background: var(--oge-accent-soft, rgba(37, 99, 235, 0.08));
 }
 
 .oge-command-cell {
@@ -787,7 +844,8 @@
   position: fixed;
   inset: 0;
   z-index: 1090;
-  background: rgb(0 0 0 / 0.35);
+  background: rgb(15 23 42 / 0.32);
+  backdrop-filter: blur(1.5px);
 }
 
 .oge-edit-popup {
@@ -799,12 +857,12 @@
   width: min(420px, calc(100vw - 32px));
   max-height: calc(100vh - 64px);
   overflow: auto;
-  padding: 16px;
+  padding: 18px;
   border: 1px solid var(--oge-border-color);
-  border-radius: 8px;
+  border-radius: var(--oge-radius-lg, 8px);
   background: var(--oge-popup-bg);
   color: var(--oge-text-color, inherit);
-  box-shadow: 0 20px 50px rgb(0 0 0 / 0.25);
+  box-shadow: var(--oge-shadow-popup, 0 20px 50px rgb(0 0 0 / 0.25));
   font-size: var(--oge-font-size);
 }
 
@@ -1040,13 +1098,15 @@
   min-width: 180px;
   max-height: 280px;
   overflow: auto;
-  padding: 4px;
+  padding: 5px;
   border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius);
+  border-radius: var(--oge-radius-lg, var(--oge-radius));
   background: var(--oge-popup-bg);
   color: var(--oge-text-color, inherit);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+  box-shadow: var(--oge-shadow-popup, 0 6px 20px rgb(0 0 0 / 0.12));
   font-size: var(--oge-font-size);
+  scrollbar-width: thin;
+  scrollbar-color: var(--oge-border-color) transparent;
 }
 
 .oge-chooser-popup {
@@ -1067,7 +1127,7 @@
   top: -1px;
   height: 2px;
   border-radius: 1px;
-  background: var(--oge-accent-color);
+  background: var(--oge-accent);
 }
 
 .oge-chooser-grip {
@@ -1120,13 +1180,13 @@
 .oge-context-menu {
   position: fixed;
   z-index: 1000;
-  min-width: 160px;
-  padding: 4px;
+  min-width: 168px;
+  padding: 5px;
   border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius);
+  border-radius: var(--oge-radius-lg, var(--oge-radius));
   background: var(--oge-popup-bg);
   color: var(--oge-text-color, inherit);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+  box-shadow: var(--oge-shadow-popup, 0 6px 20px rgb(0 0 0 / 0.12));
   font-size: var(--oge-font-size);
   display: flex;
   flex-direction: column;
@@ -1141,6 +1201,7 @@
   text-align: start;
   cursor: pointer;
   color: var(--oge-header-color);
+  transition: background-color 100ms ease;
 
   &:hover:not(:disabled) {
     background: var(--oge-row-hover-bg);

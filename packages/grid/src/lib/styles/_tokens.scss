@@ -2,21 +2,29 @@
 // variables instead of raw values so themes only need to override tokens.
 @mixin core-tokens {
   --oge-bg: #ffffff;
-  --oge-text-color: #1f2937;
-  --oge-border-color: #d5d9e0;
-  --oge-header-bg: #f5f6f8;
-  --oge-header-color: #3c4250;
-  --oge-row-hover-bg: #f0f4fa;
-  --oge-selected-bg: #e3edfb;
-  --oge-cell-padding-x: 12px;
+  --oge-text-color: #1e2430;
+  --oge-border-color: #e6e9ef;
+  --oge-header-bg: #fafbfc;
+  --oge-header-color: #5b6472;
+  --oge-row-hover-bg: #f5f7fa;
+  --oge-selected-bg: #e9f0fd;
+  --oge-cell-padding-x: 14px;
   --oge-cell-padding-y: 8px;
   --oge-font-size: 14px;
   --oge-row-height: 36px;
-  --oge-muted-color: #8a8f9c;
-  --oge-radius: 4px;
-  --oge-group-bg: #f0f2f6;
+  --oge-muted-color: #98a1af;
+  --oge-radius: 6px;
+  --oge-radius-lg: 10px;
+  --oge-group-bg: #f4f6f9;
   --oge-detail-bg: #fafbfd;
   --oge-popup-bg: #ffffff;
   --oge-accent: #2563eb;
+  /* soft accent tints; themes overriding --oge-accent should override these too */
+  --oge-accent-soft: rgba(37, 99, 235, 0.08);
+  --oge-accent-25: rgba(37, 99, 235, 0.25);
+  --oge-focus-ring: rgba(37, 99, 235, 0.4);
+  --oge-shadow-popup:
+    0 12px 32px -8px rgba(15, 23, 42, 0.18),
+    0 4px 12px -6px rgba(15, 23, 42, 0.1);
   --oge-tree-indent: 20px;
 }
