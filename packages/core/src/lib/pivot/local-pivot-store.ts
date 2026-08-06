@@ -128,7 +128,9 @@ export class LocalPivotStore<T = unknown> implements OgePivotStore<T> {
 
 function toPayload(nodes: readonly PivotAxisNode[]): PivotAxisPayloadNode[] {
   return nodes
-    .filter((node) => !node.isTotal && !node.isGrandTotal)
+    // expanded parents carry isTotal (their line holds the subtotals) but must
+    // stay in the payload; only grand totals and childless total lines drop out
+    .filter((node) => !node.isGrandTotal && !(node.isTotal && node.children.length === 0))
     .map((node) => ({
       value: node.value,
       text: node.text,

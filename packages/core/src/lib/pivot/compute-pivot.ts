@@ -274,6 +274,21 @@ export class PivotEngine<T = unknown> {
     return accValue(cell.accs[measureIndex], type);
   }
 
+  /** Keys of every expandable node on an axis (for expand-all). */
+  allGroupKeys(axis: 'row' | 'column'): ReadonlySet<string> {
+    const keys = new Set<string>();
+    const visit = (node: TrieNode): void => {
+      for (const child of node.ordered) {
+        if (child.ordered.length) {
+          keys.add(child.key);
+          visit(child);
+        }
+      }
+    };
+    visit(axis === 'row' ? this.rowRoot : this.columnRoot);
+    return keys;
+  }
+
   /** Rows behind one (rowPath, columnPath) intersection — the drill-down data. */
   drillDownRows(rowPath: PivotPath, columnPath: PivotPath): T[] {
     const rowNode = this.nodeAt(this.rowRoot, rowPath);
@@ -320,7 +335,11 @@ export class PivotEngine<T = unknown> {
     for (const rowSlot of rowAxis.slots) {
       const line: unknown[][] = [];
       for (const columnSlot of columnAxis.slots) {
-        line.push(this.measureValues(this.aggregateCell(rowSlot.trie, columnSlot.trie)));
+        line.push(
+          rowSlot.suppress || columnSlot.suppress
+            ? this.measures.map(() => null)
+            : this.measureValues(this.aggregateCell(rowSlot.trie, columnSlot.trie))
+        );
       }
       values.push(line);
     }
@@ -361,6 +380,7 @@ export class PivotEngine<T = unknown> {
           parentKey: parentKeyOf(node.path),
           isTotal: false,
           isGrandTotal: false,
+          suppress: false,
         });
         return {
           value: node.value,
@@ -376,31 +396,21 @@ export class PivotEngine<T = unknown> {
         };
       }
 
+      // Classic tree layout: the expanded parent keeps its own line, which
+      // carries the subtotal values (blanked when totals are hidden), and its
+      // children follow right after.
       const start = slots.length;
+      const showOwnTotals = showTotals && (field?.showTotals ?? true);
+      slots.push({
+        trie: node,
+        path: node.path,
+        level,
+        parentKey: parentKeyOf(node.path),
+        isTotal: true,
+        isGrandTotal: false,
+        suppress: !showOwnTotals,
+      });
       const children = node.ordered.map((child) => visit(child, level + 1));
-      if (showTotals && (field?.showTotals ?? true)) {
-        const slotIndex = slots.length;
-        slots.push({
-          trie: node,
-          path: node.path,
-          level,
-          parentKey: parentKeyOf(node.path),
-          isTotal: true,
-          isGrandTotal: false,
-        });
-        children.push({
-          value: node.value,
-          text,
-          path: node.path,
-          children: [],
-          expanded: false,
-          hasChildren: false,
-          leafIndex: slotIndex,
-          leafCount: 1,
-          isTotal: true,
-          isGrandTotal: false,
-        });
-      }
       return {
         value: node.value,
         text,
@@ -408,9 +418,9 @@ export class PivotEngine<T = unknown> {
         children,
         expanded: true,
         hasChildren,
-        leafIndex: -1,
+        leafIndex: start,
         leafCount: slots.length - start,
-        isTotal: false,
+        isTotal: true,
         isGrandTotal: false,
       };
     };
@@ -428,6 +438,7 @@ export class PivotEngine<T = unknown> {
         parentKey: null,
         isTotal: false,
         isGrandTotal: true,
+        suppress: false,
       });
       nodes.push({
         value: null,
@@ -457,6 +468,8 @@ export class PivotEngine<T = unknown> {
 
 interface InternalSlot extends PivotSlot {
   readonly trie: TrieNode;
+  /** Totals hidden by settings: the slot stays (for the expander line) but renders blank. */
+  readonly suppress: boolean;
 }
 
 function parentKeyOf(path: PivotPath): string | null {

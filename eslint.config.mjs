@@ -41,11 +41,25 @@ export default [
               ],
             },
             {
+              sourceTag: 'scope:pivot',
+              onlyDependOnLibsWithTags: [
+                'scope:pivot',
+                'scope:grid',
+                'scope:core',
+              ],
+            },
+            {
+              sourceTag: 'scope:buttons',
+              onlyDependOnLibsWithTags: ['scope:buttons', 'scope:core'],
+            },
+            {
               sourceTag: 'scope:app',
               onlyDependOnLibsWithTags: [
                 'scope:app',
                 'scope:grid',
                 'scope:tree-list',
+                'scope:pivot',
+                'scope:buttons',
                 'scope:core',
               ],
             },

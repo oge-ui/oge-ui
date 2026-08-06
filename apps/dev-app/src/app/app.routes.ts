@@ -180,6 +180,17 @@ export const appRoutes: Route[] = [
       },
     ],
   },
+  {
+    path: 'components/pivot-grid',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/pivot-grid/overview').then((m) => m.PivotOverviewPage),
+        title: 'oge — Pivot Grid',
+      },
+    ],
+  },
   // legacy redirects
   { path: 'basic-grid', redirectTo: 'components/data-grid' },
   { path: 'playground', redirectTo: 'components/data-grid/playground' },

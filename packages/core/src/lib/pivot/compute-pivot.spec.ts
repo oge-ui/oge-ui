@@ -49,20 +49,21 @@ describe('computePivot', () => {
     ]);
   });
 
-  it('expands a row node into children plus a subtotal slot', () => {
+  it('expands a row node: the parent line leads with subtotals, children follow', () => {
     const result = computePivot({
       rows: SALES,
       fields: FIELDS,
       rowExpandedPaths: new Set([pathKey(['EU'])]),
     });
-    // rows: Berlin, Paris, EU-total, US, GRAND
+    // rows: EU (subtotal line), Berlin, Paris, US, GRAND
     expect(result.rowLeafCount).toBe(5);
-    expect(matrixOf(result).map((line) => line[2])).toEqual([300, 50, 350, 300, 650]);
+    expect(matrixOf(result).map((line) => line[2])).toEqual([350, 300, 50, 300, 650]);
     const eu = result.rowRoot[0];
     expect(eu.expanded).toBe(true);
-    expect(eu.leafCount).toBe(3); // Berlin + Paris + subtotal
-    const totalChild = eu.children.at(-1);
-    expect(totalChild?.isTotal).toBe(true);
+    expect(eu.isTotal).toBe(true); // its own line carries the subtotal values
+    expect(eu.leafIndex).toBe(0);
+    expect(eu.leafCount).toBe(3); // itself + Berlin + Paris
+    expect(eu.children.map((child) => String(child.value))).toEqual(['Berlin', 'Paris']);
   });
 
   it('honors total visibility settings', () => {
@@ -76,9 +77,11 @@ describe('computePivot', () => {
         showColumnGrandTotals: false,
       },
     });
-    // rows: Berlin, Paris, US — no subtotal, no grand rows/columns
-    expect(result.rowLeafCount).toBe(3);
+    // rows: EU (blank expander line), Berlin, Paris, US — no grand rows/columns
+    expect(result.rowLeafCount).toBe(4);
     expect(result.columnLeafCount).toBe(2);
+    expect(matrixOf(result)[0]).toEqual([null, null]); // totals hidden → blank parent line
+    expect(matrixOf(result)[1]).toEqual([100, 200]); // Berlin unaffected
   });
 
   it('applies include/exclude field filters before pivoting', () => {

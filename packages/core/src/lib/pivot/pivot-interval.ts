@@ -55,9 +55,11 @@ export function intervalRange(
     return { from: start, to: start + interval };
   }
   if (interval === 'year' && typeof bucket === 'number') {
+    // Timezone-independent, day-precision bounds: they compare correctly both
+    // as plain ISO date strings and (via Date.parse) against Date values.
     return {
-      from: new Date(bucket, 0, 1).toISOString(),
-      to: new Date(bucket + 1, 0, 1).toISOString(),
+      from: `${String(bucket).padStart(4, '0')}-01-01`,
+      to: `${String(bucket + 1).padStart(4, '0')}-01-01`,
     };
   }
   return null;

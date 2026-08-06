@@ -1,0 +1,208 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-pivot-grid {
+  @include tokens.core-tokens;
+
+  --oge-pivot-total-bg: var(--oge-group-bg);
+  --oge-pivot-grand-bg: var(--oge-header-bg);
+  --oge-pivot-chip-bg: var(--oge-popup-bg);
+
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg, var(--oge-radius));
+  font-size: var(--oge-font-size);
+  color: var(--oge-text-color);
+  background: var(--oge-bg);
+  overflow: hidden;
+}
+
+// --- field panel -------------------------------------------------------------
+
+.oge-pivot-field-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 40px 10px 12px;
+  border-bottom: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+}
+
+.oge-pivot-panel-collapsed {
+  padding-block: 6px;
+  min-height: 18px;
+}
+
+.oge-pivot-panel-toggle {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 8px;
+  display: inline-flex;
+  padding: 4px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-header-color);
+  }
+}
+
+.oge-pivot-toggle-collapsed {
+  transform: rotate(180deg);
+}
+
+.oge-pivot-area {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border: 1px dashed var(--oge-border-color);
+  border-radius: var(--oge-radius);
+}
+
+.oge-pivot-area-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--oge-muted-color);
+  margin-inline-end: 2px;
+}
+
+.oge-pivot-area-hint {
+  font-size: 12px;
+  color: var(--oge-muted-color);
+}
+
+.oge-pivot-field-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 999px;
+  background: var(--oge-pivot-chip-bg);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--oge-header-color);
+  cursor: grab;
+  user-select: none;
+}
+
+// --- matrix ------------------------------------------------------------------
+
+.oge-pivot-viewport {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--oge-border-color) transparent;
+}
+
+.oge-pivot-matrix {
+  display: grid;
+  min-width: fit-content;
+}
+
+.oge-pivot-corner,
+.oge-pivot-col-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--oge-header-bg);
+  border-bottom: 1px solid var(--oge-border-color);
+  border-inline-end: 1px solid var(--oge-border-color);
+}
+
+.oge-pivot-corner {
+  z-index: 3;
+  inset-inline-start: 0;
+}
+
+.oge-pivot-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--oge-header-color);
+  white-space: nowrap;
+  transition: background-color 120ms ease;
+}
+
+.oge-pivot-expandable {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+}
+
+.oge-pivot-row-header {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--oge-cell-padding-y) var(--oge-cell-padding-x);
+  font-weight: 600;
+  color: var(--oge-header-color);
+  background: var(--oge-header-bg);
+  border-bottom: 1px solid var(--oge-border-color);
+  border-inline-end: 1px solid var(--oge-border-color);
+  white-space: nowrap;
+  transition: background-color 120ms ease;
+}
+
+.oge-pivot-arrow {
+  display: inline-flex;
+  color: var(--oge-muted-color);
+  transition: transform 120ms ease;
+}
+
+.oge-pivot-arrow-open {
+  transform: rotate(90deg);
+}
+
+.oge-pivot-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: var(--oge-cell-padding-y) var(--oge-cell-padding-x);
+  border-bottom: 1px solid var(--oge-border-color);
+  border-inline-end: 1px solid var(--oge-border-color);
+  font-variant-numeric: tabular-nums;
+  background: var(--oge-bg);
+  white-space: nowrap;
+  transition: background-color 100ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+}
+
+.oge-pivot-measure {
+  min-width: 3ch;
+  text-align: end;
+}
+
+.oge-pivot-total {
+  background: var(--oge-pivot-total-bg);
+  font-weight: 600;
+}
+
+.oge-pivot-grand {
+  background: var(--oge-pivot-grand-bg);
+  font-weight: 700;
+}

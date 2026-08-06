@@ -145,6 +145,10 @@ export class App {
         },
       ],
     },
+    {
+      title: 'Pivot Grid',
+      items: [{ path: '/components/pivot-grid', label: 'Overview', icon: 'gauge' }],
+    },
   ];
 
   protected readonly themeService = inject(ThemeService);

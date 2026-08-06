@@ -81,10 +81,10 @@ describe('pivot display modes', () => {
       fields,
       rowExpandedPaths: new Set([pathKey(['EU'])]),
     });
-    // rows: Berlin, Paris, EU-total, US, GRAND; col 2024: 100, 50, 150, 300, 450
+    // rows: EU (subtotal line), Berlin, Paris, US, GRAND; col 2024: 150, 100, 50, 300, 450
     const col2024 = matrix(result).map((line) => line[0]);
-    expect(col2024[0]).toBeCloseTo(100 / 150); // Berlin vs its parent EU total
-    expect(col2024[1]).toBeCloseTo(50 / 150);
+    expect(col2024[1]).toBeCloseTo(100 / 150); // Berlin vs its parent EU total
+    expect(col2024[2]).toBeCloseTo(50 / 150);
     expect(col2024[3]).toBeCloseTo(300 / 450); // top-level US vs grand
   });
 
