@@ -29,6 +29,11 @@
 .oge-tree-expander {
   flex: none;
   margin-inline-end: 4px;
+
+  &:hover {
+    color: var(--oge-accent);
+    background: var(--oge-row-hover-bg);
+  }
 }
 
 // keeps leaf content aligned with expandable siblings

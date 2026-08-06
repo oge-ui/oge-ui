@@ -135,7 +135,10 @@ describe('OgeTreeList', () => {
     expect(grand?.getAttribute('aria-posinset')).toBe('1');
     expect(grand?.getAttribute('aria-setsize')).toBe('1');
     const indent = grand?.querySelector<HTMLElement>('.oge-tree-indent');
-    expect(indent?.style.inlineSize).toBe('40px');
+    // themable via the --oge-tree-indent token
+    expect(indent?.style.inlineSize).toBe(
+      'calc(var(--oge-tree-indent, 20px) * 2)',
+    );
     const rootA = rowByTitle(el, 'Root A');
     expect(rootA?.getAttribute('aria-level')).toBe('1');
     expect(rootA?.getAttribute('aria-expanded')).toBe('true');

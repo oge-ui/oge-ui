@@ -402,7 +402,9 @@ store.editing.hasPending())) {
           @if (column.absIndex === 0) {
           <span
             class="oge-tree-indent"
-            [style.inline-size.px]="node.level * 20"
+            [style.inline-size]="
+              'calc(var(--oge-tree-indent, 20px) * ' + node.level + ')'
+            "
             aria-hidden="true"
           ></span>
           @if (node.hasChildren) {
