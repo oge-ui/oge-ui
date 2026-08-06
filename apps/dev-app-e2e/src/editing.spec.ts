@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test('batch editing: edit cells, delete a row, save as one change set', async ({ page }) => {
+test('batch editing: edit cells, delete a row, save as one change set', async ({
+  page,
+}) => {
   await page.goto('/components/data-grid/editing');
   await expect(page.locator('.oge-row').first()).toBeVisible();
 
@@ -11,7 +13,9 @@ test('batch editing: edit cells, delete a row, save as one change set', async ({
   await editor.fill('Düzenlendi');
   await editor.press('Enter');
   await expect(page.locator('.oge-cell-dirty')).toHaveCount(1);
-  await expect(page.locator('.oge-row').first().locator('.oge-cell').nth(1)).toHaveText('Düzenlendi');
+  await expect(
+    page.locator('.oge-row').first().locator('.oge-cell').nth(1),
+  ).toHaveText('Düzenlendi');
 
   // mark second row for deletion (strike-through)
   await page.locator('.oge-command-delete').nth(1).click();
@@ -37,22 +41,31 @@ test('validation blocks a required cell from committing', async ({ page }) => {
   await editor.press('Enter');
   // editor stays open with the invalid style; nothing was saved
   await expect(page.locator('.oge-editor-invalid')).toBeVisible();
-  await expect(page.locator('.save-log li').first()).toContainText('No saves yet');
+  await expect(page.locator('.save-log li').first()).toContainText(
+    'No saves yet',
+  );
 
   await editor.press('Escape');
   await expect(page.locator('.oge-editor')).toHaveCount(0);
 });
 
 test('row mode edits via the command column', async ({ page }) => {
+  test.slow(); // editor focus timing is sensitive under parallel CI load
   await page.goto('/components/data-grid/editing');
+  const grid = page.locator('oge-grid').first();
   await page.getByRole('button', { name: 'row', exact: true }).click();
-  await expect(page.locator('.oge-row').first()).toBeVisible();
+  await expect(grid.locator('.oge-row').first()).toBeVisible();
 
-  await page.locator('[aria-label="Edit"]').first().click();
-  const editors = page.locator('.oge-editor');
+  await grid.locator('[aria-label="Edit"]').first().click();
+  const editors = grid.locator('.oge-editor');
   await expect(editors).toHaveCount(4); // firstName, lastName, department(select), salary
   await editors.first().fill('Satır Modu');
-  await page.locator('[aria-label="Save"]').click();
-  await expect(page.locator('.oge-row').first().locator('.oge-cell').nth(1)).toHaveText('Satır Modu');
-  await expect(page.locator('.save-log li').first()).toContainText('"firstName":"Satır Modu"');
+  await expect(editors.first()).toHaveValue('Satır Modu'); // editor kept focus & value
+  await grid.locator('[aria-label="Save"]').click();
+  await expect(
+    grid.locator('.oge-row').first().locator('.oge-cell').nth(1),
+  ).toHaveText('Satır Modu');
+  await expect(page.locator('.save-log li').first()).toContainText(
+    '"firstName":"Satır Modu"',
+  );
 });

@@ -37,7 +37,8 @@ export function createStatePersistence<S>(
   const destroyRef = inject(DestroyRef);
   let restoredKey: string | null = null;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
-  let changeSeen = false;
+  /** JSON of the last persisted/announced snapshot; null until the baseline is taken. */
+  let lastJson: string | null = null;
 
   effect(() => {
     const key = options.stateKey();
@@ -51,6 +52,9 @@ export function createStatePersistence<S>(
       if (!text) return;
       try {
         options.apply(JSON.parse(text) as S);
+        // restored state becomes the new baseline — no save/onChange echo,
+        // while the next real user change still reports against it
+        lastJson = JSON.stringify(untracked(options.snapshot));
       } catch {
         // corrupt persisted state — start clean
       }
@@ -70,16 +74,21 @@ export function createStatePersistence<S>(
     const snapshot = options.snapshot();
     const key = options.stateKey();
     untracked(() => {
+      const json = JSON.stringify(snapshot);
+      if (lastJson === null) {
+        // The very first snapshot is the baseline, not a change. Comparing
+        // against it (instead of skipping one debounce tick) means a user
+        // change landing within the first debounce window is still reported,
+        // and identical snapshots never re-save.
+        lastJson = json;
+        return;
+      }
+      if (json === lastJson) return;
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
-        if (key)
-          void options.storage.set(
-            `${options.prefix}:${key}`,
-            JSON.stringify(snapshot),
-          );
-        // first run is the initial state, not a change
-        if (changeSeen) options.onChange?.(snapshot);
-        changeSeen = true;
+        lastJson = json;
+        if (key) void options.storage.set(`${options.prefix}:${key}`, json);
+        options.onChange?.(snapshot);
       }, 250);
     });
   });
