@@ -57,6 +57,8 @@
   class="oge-pivot-viewport"
   role="grid"
   #pivotViewport
+  [attr.aria-rowcount]="columnDepth() + result().rowLeafCount"
+  [attr.aria-colcount]="result().columnLeafCount + 1"
   (scroll)="onViewportScroll($event)"
 >
   @if (loading()) {
@@ -79,7 +81,7 @@
     ></div>
 
     <!-- column headers -->
-    @for (cell of visibleHeaderCells(); track cell.path.join('Â¦') +
+    @for (cell of visibleHeaderCells(); track cell.path.join('|') +
     (cell.isTotal ? ':t' : '') + (cell.isGrandTotal ? ':g' : '') +
     cell.rowStart) {
     <div
@@ -89,6 +91,8 @@
       [class.oge-pivot-grand]="cell.isGrandTotal"
       [class.oge-pivot-expandable]="cell.hasChildren"
       [attr.aria-expanded]="cell.hasChildren ? cell.expanded : null"
+      [attr.aria-rowindex]="cell.rowStart"
+      [attr.aria-colindex]="cell.columnStart + 1"
       [style.grid-row]="cell.rowStart + ' / ' + cell.rowEnd"
       [style.grid-column]="cell.columnStart + 1 + ' / span ' + cell.span"
       [attr.tabindex]="cell.hasChildren ? 0 : null"
@@ -130,6 +134,8 @@
       [class.oge-pivot-grand]="line.isGrandTotal"
       [class.oge-pivot-expandable]="line.hasChildren"
       [attr.aria-expanded]="line.hasChildren ? line.expanded : null"
+      [attr.aria-rowindex]="columnDepth() + 1 + rowIndex"
+      [attr.aria-colindex]="1"
       [style.grid-row]="columnDepth() + 1 + rowIndex"
       [style.grid-column]="1"
       [style.padding-inline-start.px]="12 + line.level * 18"
@@ -166,6 +172,8 @@
       role="gridcell"
       [class.oge-pivot-total]="line.isTotal || columnSlotIsTotal()[columnIndex]"
       [class.oge-pivot-grand]="line.isGrandTotal || columnSlotIsGrand()[columnIndex]"
+      [attr.aria-rowindex]="columnDepth() + 1 + rowIndex"
+      [attr.aria-colindex]="columnIndex + 2"
       [style.grid-row]="columnDepth() + 1 + rowIndex"
       [style.grid-column]="columnIndex + 2"
       [attr.data-cell]="rowIndex + '-' + columnIndex"
