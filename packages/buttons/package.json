@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/buttons",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publishConfig": {
     "access": "public"
   },
@@ -9,7 +9,7 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/overlay": "0.4.0"
+    "@oge-ui/overlay": "0.5.0"
   },
   "sideEffects": false,
   "homepage": "https://ogeui.com",
