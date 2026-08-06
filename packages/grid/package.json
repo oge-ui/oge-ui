@@ -30,5 +30,13 @@
   "exports": {
     "./themes/*": "./themes/*"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaya2m/oge-ui.git",
+    "directory": "packages/grid"
+  },
+  "bugs": "https://github.com/kaya2m/oge-ui/issues",
+  "license": "MIT"
 }

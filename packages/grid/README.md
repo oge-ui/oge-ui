@@ -44,6 +44,17 @@ const { exportGridToExcel } = await import('@oge-ui/grid/export-excel');
 await exportGridToExcel(grid, { filename: 'orders.xlsx', scope: 'all' });
 ```
 
+### Security note on export dependencies
+
+The grid's only hard runtime dependency is `@oge-ui/core` (zero third-party
+code). `exceljs`, `jspdf` and `jspdf-autotable` are **optional peer
+dependencies**: they are never installed, bundled or executed unless you
+install them yourself to use the `/export-excel` / `/export-pdf` secondary
+entries. Supply-chain scanners (Socket, Snyk…) attribute those libraries'
+transitive trees — minified bundles, `eval` in canvg/core-js, deprecated
+utilities, install scripts — to this package's dependency graph; skipping the
+export peers skips all of it.
+
 ## Quick start
 
 ```ts

@@ -778,3 +778,252 @@ export const OGE_INPUTS_CONFIG_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_SELECT_BOX_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeSelectBox',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;unknown&gt;',
+          default: 'null',
+          description:
+            'Committed value (the <code>valueExpr</code> of the selected item); two-way.',
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[] | OgeSelectBoxItemsFn',
+          default: '[]',
+          description:
+            'The selectable items: an array, or a function invoked lazily on first open (sync or promise; loading/error rows render while pending). The selected item is resolved from this full set, never the filtered one.',
+        },
+        {
+          name: 'displayExpr',
+          type: 'string | ((item) =&gt; string)',
+          description:
+            'Item &rarr; display text. Omitted, the item itself is stringified.',
+        },
+        {
+          name: 'valueExpr',
+          type: 'string | ((item) =&gt; unknown)',
+          description:
+            'Item &rarr; committed value. Omitted, the whole item is the value.',
+        },
+        {
+          name: 'disabledExpr',
+          type: 'string | ((item) =&gt; boolean)',
+          description: 'Marks individual items as non-selectable.',
+        },
+        {
+          name: 'searchEnabled',
+          type: 'boolean',
+          default: 'false',
+          description: 'Enables typing into the field to filter the list.',
+        },
+        {
+          name: 'searchMode',
+          type: "'contains' | 'startswith'",
+          default: "'contains'",
+          description: 'How typed search text matches an item.',
+        },
+        {
+          name: 'searchExpr',
+          type: 'string | string[] | ((item) =&gt; string)',
+          description:
+            'Which text the filter matches; defaults to the display text.',
+        },
+        {
+          name: 'minSearchLength',
+          type: 'number',
+          default: '0',
+          description:
+            'Characters required before the filter narrows the list.',
+        },
+        {
+          name: 'showDataBeforeSearch',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Below <code>minSearchLength</code>: show the full list (<code>true</code>) or nothing (<code>false</code>).',
+        },
+        {
+          name: 'searchTimeout',
+          type: 'number | undefined',
+          description:
+            'Debounce before typed text filters the list; <code>undefined</code> = config default (250ms). The displayed text is never debounced.',
+        },
+        {
+          name: 'acceptCustomValue',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Lets typed text that matches no item become the value (committed on Enter/blur) — see <code>customItemCreating</code>.',
+        },
+        {
+          name: 'groupBy',
+          type: 'string | ((item) =&gt; string)',
+          description:
+            'Groups flat items under headers; items are re-ordered by first-seen group.',
+        },
+        {
+          name: 'showDropDownButton',
+          type: 'boolean',
+          default: 'true',
+          description: 'Renders the chevron toggle in the field rail.',
+        },
+        {
+          name: 'openOnFieldClick',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Clicking the field opens the popup (select-only mode toggles it).',
+        },
+        {
+          name: 'loading',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Shows a loading row instead of items — server-side filtering escape hatch.',
+        },
+        {
+          name: 'dropdownPlacement',
+          type: 'OgePopupPlacement',
+          default: "'bottom-start'",
+          description: 'Preferred popup side/alignment (flips when cramped).',
+        },
+        {
+          name: 'dropdownWidth',
+          type: "number | 'anchor'",
+          default: "'anchor'",
+          description:
+            "Popup width: fixed pixels or <code>'anchor'</code> to match the field box.",
+        },
+        {
+          name: 'dropdownMaxHeight',
+          type: 'number | undefined',
+          description:
+            'Scrollable list height cap; <code>undefined</code> = the CSS default (320px).',
+        },
+        {
+          name: 'wrapItemText',
+          type: 'boolean',
+          default: 'false',
+          description: 'Wraps long option text instead of ellipsizing it.',
+        },
+        {
+          name: 'useItemTextAsTitle',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Mirrors each option's display text into its <code>title</code> attribute.",
+        },
+        {
+          name: 'itemTemplate',
+          type: 'TemplateRef&lt;OgeSelectItemTemplateContext&gt;',
+          description:
+            'Custom option row rendering; context: <code>$implicit</code>, <code>index</code>, <code>selected</code>, <code>active</code>.',
+        },
+        {
+          name: 'opened',
+          type: 'model&lt;boolean&gt;',
+          default: 'false',
+          description: 'Popup visibility — two-way.',
+        },
+        {
+          name: 'selectedItem',
+          type: 'Signal&lt;TItem | null&gt;',
+          description:
+            'Read-only: the item whose <code>valueExpr</code> matches <code>value</code>.',
+        },
+        {
+          name: 'displayText',
+          type: 'Signal&lt;string&gt;',
+          description: 'Read-only: display text of the selected item.',
+        },
+      ],
+    },
+    COMMON_CHROME,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeSelectBox methods',
+      entries: [
+        {
+          name: 'open()',
+          type: 'void',
+          description: 'Opens the popup (no-op while disabled/readonly).',
+        },
+        { name: 'close()', type: 'void', description: 'Closes the popup.' },
+        {
+          name: 'toggle()',
+          type: 'void',
+          description: 'Toggles the popup.',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeSelectBox events',
+      entries: [
+        {
+          name: 'selectionChanged',
+          type: 'OgeSelectBoxSelectionChangedEvent',
+          description:
+            'The resolved selected item changed (user or programmatic) — <code>{ item, previousItem }</code>.',
+        },
+        {
+          name: 'itemClick',
+          type: 'OgeSelectBoxItemClickEvent',
+          description:
+            'An option row was activated — <code>{ item, index, event }</code>; <code>index</code> is within the visible (filtered) list.',
+        },
+        {
+          name: 'dropDownOpened / dropDownClosed',
+          type: 'void',
+          description: 'Popup visibility changes, from any trigger.',
+        },
+        {
+          name: 'searchChanged',
+          type: 'OgeSelectBoxSearchChangedEvent',
+          description:
+            'Raw search text on every keystroke — drive server-side filtering from here.',
+        },
+        {
+          name: 'customItemCreating',
+          type: 'OgeSelectBoxCustomItemEvent',
+          description:
+            'Mutable payload (DevExtreme-style): assign <code>customItem</code> — an item, a promise of one, or <code>null</code> to reject the text. Left unset, the raw text becomes the item.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      title: 'Select box types',
+      entries: [
+        {
+          name: 'OgeSelectBoxDisplayExpr / ValueExpr / DisabledExpr',
+          type: 'string | fn',
+          description:
+            'Field-name string or function expressions for display text, committed value and per-item disabling.',
+        },
+        {
+          name: 'OgeSelectBoxSearchMode',
+          type: "'contains' | 'startswith'",
+          description: 'Filter match mode.',
+        },
+        {
+          name: 'OgeSelectItemTemplateContext',
+          type: 'interface',
+          description:
+            '<code>{ $implicit: TItem; index: number; selected: boolean; active: boolean }</code>.',
+        },
+      ],
+    },
+  ],
+};

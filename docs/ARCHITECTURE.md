@@ -19,6 +19,7 @@ CI (`.github/workflows/ci.yml`): `npx nx run-many -t lint test build typecheck e
 | `buttons`     | `packages/buttons`   | `@oge-ui/buttons`   | Button family (OgeButton, OgeButtonGroup, OgeDropDownButton). Depends on `overlay`.                                                                                                                                                                                                                                                                         |
 | `overlay`     | `packages/overlay`   | `@oge-ui/overlay`   | Anchored popup primitives: `resolvePopupPosition` (incl. centered bare-side placements), `OgeAnchoredPanel` (virtual `anchorRect`, `transient` mode), `oge-popup`, `oge-menu-list` + canonical `OgeMenuItem`, and the `ogeTooltip` / `[ogeContextMenu]` directives (body-appended via `createComponent`; host element must be removed manually on destroy). |
 | `inputs`      | `packages/inputs`    | `@oge-ui/inputs`    | Form editors (OgeTextBox/OgeTextArea/OgeNumberBox) on one field chrome. Sets the CVA house pattern (constructor-assignment, no NG_VALUE_ACCESSOR provider) and implements Signal Forms' `FormValueControl`.                                                                                                                                                 |
+| `ui`          | `packages/ui`        | `oge-ui`            | Umbrella: pinned deps on every family + a re-export barrel (`export *` is this package's sanctioned exception; name collisions resolved by explicit re-export - see `src/index.ts`).                                                                                                                                                                        |
 | `dev-app`     | `apps/dev-app`       | —                   | Docs/demo site (port 4200, Tailwind v4).                                                                                                                                                                                                                                                                                                                    |
 | `dev-app-e2e` | `apps/dev-app-e2e`   | —                   | Playwright (chromium) + `@axe-core/playwright`.                                                                                                                                                                                                                                                                                                             |
 
@@ -128,6 +129,9 @@ decisions live in ROADMAP.md's "API parity" section.
   `globals: true` (no vitest imports needed).
 - E2e: `apps/dev-app-e2e/src/*.spec.ts` against `http://localhost:4200`; a11y via `AxeBuilder`
   (`a11y.spec.ts`), `color-contrast` rule disabled.
+- Overlay-flavored specs must stub `requestAnimationFrame` **asynchronously**
+  (`setTimeout(cb, 0)`) — a synchronous stub re-enters Angular's render scheduler mid-tick and
+  produces bogus NG0100 errors (see `select-box.spec.ts`).
 
 ## Dev-app registration (per new component)
 

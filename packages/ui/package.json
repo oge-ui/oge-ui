@@ -1,0 +1,26 @@
+{
+  "name": "oge-ui",
+  "version": "0.4.0",
+  "description": "Umbrella package for the OGE Angular UI suite — installs and re-exports every @oge-ui/* package: Data Grid, Tree List, Pivot Grid, Select Box, Buttons, Inputs and Overlay.",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@oge-ui/core": "0.4.0",
+    "@oge-ui/grid": "0.4.0",
+    "@oge-ui/tree-list": "0.4.0",
+    "@oge-ui/pivot": "0.4.0",
+    "@oge-ui/buttons": "0.4.0",
+    "@oge-ui/overlay": "0.4.0",
+    "@oge-ui/inputs": "0.4.0"
+  },
+  "sideEffects": false,
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaya2m/oge-ui.git",
+    "directory": "packages/ui"
+  },
+  "bugs": "https://github.com/kaya2m/oge-ui/issues",
+  "license": "MIT"
+}

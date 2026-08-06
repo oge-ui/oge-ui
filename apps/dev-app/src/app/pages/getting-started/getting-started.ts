@@ -12,12 +12,15 @@ const SECTIONS = [
   'Next steps',
 ] as const;
 
-const INSTALL = `# install only what you use — every package is standalone
+const INSTALL = `# everything at once — one install, one import path
+npm install oge-ui
+
+# …or install only what you use — every package is standalone
 npm install @oge-ui/grid        # data grid (+ @oge-ui/core)
 npm install @oge-ui/tree-list   # hierarchical grid
 npm install @oge-ui/pivot       # pivot table
 npm install @oge-ui/buttons     # buttons, groups, drop-downs (+ @oge-ui/overlay)
-npm install @oge-ui/inputs      # text, textarea and number editors`;
+npm install @oge-ui/inputs      # text, textarea, number and select editors`;
 
 const QUICK_START = `import { Component, signal } from '@angular/core';
 import { OgeButton } from '@oge-ui/buttons';
@@ -275,7 +278,7 @@ export class GettingStartedPage {
       icon: 'text-cursor',
       name: 'Inputs',
       description:
-        'Text, textarea and number editors with floating labels, validation and three form-binding modes.',
+        'Text, textarea, number and select editors with floating labels, validation and three form-binding modes.',
     },
   ];
 }

@@ -5,8 +5,20 @@
     "access": "public"
   },
   "peerDependencies": {
+    "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0"
   },
-  "sideEffects": false
+  "dependencies": {
+    "@oge-ui/overlay": "0.4.0"
+  },
+  "sideEffects": false,
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaya2m/oge-ui.git",
+    "directory": "packages/inputs"
+  },
+  "bugs": "https://github.com/kaya2m/oge-ui/issues",
+  "license": "MIT"
 }

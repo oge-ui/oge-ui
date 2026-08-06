@@ -355,3 +355,78 @@ repo's CVA house pattern. Input masking is deferred to a later wave.
 | reset() / imperative parity                        | Yes       | Done    | input `reset(value?)`, group `focus()`, drop-down `open/close/toggle()` + `selectionChanged`, group `itemClick { item?, index }` |
 | mask                                               | Yes       | Missing | deferred — external mask libraries attach to the native input; adapter wave later                                                |
 | Grid editor migration to `<oge-text-box>`          | —         | Planned | `size=sm + labelMode=hidden + subscriptSizing=none` is the compact shape                                                         |
+
+## Select family (`@oge-ui/inputs`) — Plan
+
+Research baseline: DevExtreme SelectBox/TagBox/Autocomplete, Kendo
+ComboBox/DropDownList/MultiSelect, PrimeNG Select, ng-select, MatSelect and
+the WAI-ARIA APG combobox pattern. Design decisions that came out of it:
+
+- **Lives in `@oge-ui/inputs`** on the shared field chrome (`OgeInputBase`,
+  `OGE_INPUT_HOST`), popup from `@oge-ui/overlay` (`OgeAnchoredPanel` +
+  `oge-popup`, `width: 'anchor'`, anchored on `.oge-input-container` so the
+  panel ignores label/subscript). `oge-menu-list` is **not** reused — its
+  `role="menu"` and container-focus model conflict with the combobox pattern;
+  the select renders its own `role="listbox"` options.
+- **DevExtreme vocabulary** (`displayExpr`/`valueExpr`, `searchEnabled`,
+  `acceptCustomValue`, `noDataText`) — string **or function** expressions.
+- **a11y = APG combobox with `aria-activedescendant`** (DOM focus never
+  leaves the input; the active option is referenced by id and scrolled into
+  view manually). Select-only variant gets printable type-ahead.
+- **Search architecture**: client-side filter built in; `searchChanged`
+  output + `loading` input as the server-side escape hatch (Kendo/ng-select
+  model) instead of a DataSource abstraction.
+- **Known pitfall handled in the design**: the selected value's item may not
+  be in the filtered/current list — `selectedItem` is derived from the full
+  item set, never the filtered one; uncommitted search text reverts to the
+  selected display text on blur.
+
+### Phase S1 — `OgeSelectBox` core — **shipped**
+
+| Feature                                             | Reference         | OGE  | Notes                                                                 |
+| --------------------------------------------------- | ----------------- | ---- | --------------------------------------------------------------------- |
+| items + displayExpr/valueExpr (string or fn)        | Yes               | Done | `valueExpr` omitted → whole item is the value                         |
+| value model + selectedItem/displayText (read-only)  | Yes               | Done | `[(value)]`, CVA + Signal Forms via `OgeInputBase`                    |
+| searchEnabled + searchMode (contains/startswith)    | Yes               | Done | client-side; `searchExpr` string/array/fn; `minSearchLength`          |
+| opened model + open/close/toggle methods            | Yes               | Done | `[(opened)]`; popup deferred behind `@if` (deferRendering semantics)  |
+| Chevron drop-down button in the field rail          | Yes               | Done | new `OgeInputDropDownApi` feature block in the chrome                 |
+| showClearButton / placeholder / labelModes / sizes  | Yes               | Done | inherited chrome                                                      |
+| Keyboard: APG combobox                              | partial           | Done | arrows, Alt+arrows, Enter/Esc/Tab, Home/End (select-only), PgUp/PgDn  |
+| Type-ahead when not searchable                      | Yes               | Done | printable chars jump to match, repeated char cycles                   |
+| Item disabled expression                            | No (ref: partial) | Done | `disabledExpr` — Kendo/PrimeNG have it, DevExtreme struggles          |
+| itemTemplate (TemplateRef input)                    | Yes               | Done | same shape as `OgeDropDownButton.itemTemplate`                        |
+| noDataText via messages i18n                        | Yes               | Done | `OgeInputsMessages.noDataText` + chevron aria label                   |
+| Events: selectionChanged/itemClick/dropDownOpened/… | Yes               | Done | + inherited `valueCommitted` (with `previousValue`), `cleared`, focus |
+| searchChanged output + loading input                | No                | Done | server-side filtering escape hatch (house addition)                   |
+
+### Phase S2 — combobox extras — **shipped**
+
+Done: `acceptCustomValue` + `customItemCreating` (mutable payload; sync/async
+item or `null` to reject; exact display match selects the existing item; the
+custom item is cached so `selectedItem`/display resolve even though it is not
+in `items`), `groupBy` string/fn for flat data (headers + first-seen-group
+reorder), lazy `items` function with loading/error rows and a runId race
+guard, `searchTimeout` debounce (config default 250ms; typed text is never
+debounced), `showDataBeforeSearch` + real `minSearchLength` semantics,
+`wrapItemText`, `useItemTextAsTitle`, `dropdownMaxHeight`.
+
+Deliberately not copied from DevExtreme: `dropDownOptions` kitchen sink
+(typed `dropdownPlacement/Width/MaxHeight` instead), deprecated
+`fieldTemplate` (prefix/suffix slots), `deferRendering` (always deferred),
+`valueChangeEvent` (fixed Enter/blur), state-flag inputs (CSS pseudo-classes),
+`elementAttr`/`height`/`width` (host bindings), `rtlEnabled` (logical
+properties). Moved to S3: preventable `opening`/`closing` pre-events,
+`groupTemplate`, `fieldAddons`.
+
+### Phase S3 — `OgeTagBox` (multi-select)
+
+`value: T[]`, tag chips (`tagTemplate`, `maxDisplayedTags`, `multiline`),
+`showSelectionControls` checkboxes, `selectAllMode`/`applyValueMode`
+(`'instantly' | 'useButtons'`), `hideSelectedItems`, add/remove delta events,
+`aria-multiselectable` listbox. Shares the S1 list/filter engine.
+
+### Phase S4 — `OgeAutocomplete` + virtualization
+
+Text-valued model (`value: string`), `maxItemCount`, no chevron by default,
+`openOnFieldClick: false`; fixed-item-height virtual scroll for all three
+(Kendo contract), designed into the S1 list body as a drop-in strategy.

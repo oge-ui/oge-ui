@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Icon, type IconName } from './shared/icon';
+import { SeoService } from './shared/seo.service';
 import { ThemeService, type GridTheme } from './shared/theme.service';
 
 interface NavItem {
@@ -230,6 +231,11 @@ export class App {
           icon: 'check-square',
         },
         {
+          path: '/components/inputs/select-box',
+          label: 'Select Box',
+          icon: 'chevron-down',
+        },
+        {
           path: '/components/inputs/showcase',
           label: 'Showcase',
           icon: 'lightbulb',
@@ -260,6 +266,8 @@ export class App {
   ];
 
   private readonly router = inject(Router);
+  /** Instantiates the root SEO service (canonical + meta per route). */
+  private readonly seo = inject(SeoService);
 
   /** Landing page renders full-bleed without the docs sidebar shell. */
   protected readonly isHome = toSignal(

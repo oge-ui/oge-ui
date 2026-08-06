@@ -280,7 +280,7 @@ export class ComponentsIndexPage {
       icon: 'text-cursor',
       path: '/components/inputs',
       description:
-        'TextBox, TextArea and NumberBox on one field chrome: floating labels, counters, password reveal and locale-aware number editing.',
+        'TextBox, TextArea, NumberBox and SelectBox on one field chrome: floating labels, counters, password reveal, locale-aware numbers and a searchable WAI-ARIA combobox.',
     },
     {
       key: 'pivot',

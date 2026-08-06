@@ -289,6 +289,14 @@ export const appRoutes: Route[] = [
         title: 'OGE — Input Validation',
       },
       {
+        path: 'select-box',
+        loadComponent: () =>
+          import('./pages/inputs/select-box').then(
+            (m) => m.InputsSelectBoxPage,
+          ),
+        title: 'OGE — Select Box',
+      },
+      {
         path: 'showcase',
         loadComponent: () =>
           import('./pages/inputs/showcase').then((m) => m.InputsShowcasePage),

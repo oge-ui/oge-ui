@@ -13,6 +13,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { OgeButton } from '@oge-ui/buttons';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { OgeSelectBox } from '@oge-ui/inputs';
 import { OgeTreeList } from '@oge-ui/tree-list';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 import { Icon, type IconName } from '../../shared/icon';
@@ -39,7 +40,7 @@ interface ComponentTile {
   path: string;
 }
 
-type DemoTab = 'grid' | 'tree' | 'buttons';
+type DemoTab = 'grid' | 'tree' | 'select' | 'buttons';
 
 const BASE_ROWS: TickerRow[] = [
   { id: 1, product: 'Aurora Display', region: 'EMEA', price: 1249, qty: 320 },
@@ -74,7 +75,15 @@ const ORG: OrgNode[] = [
  */
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Icon, OgeGrid, OgeColumn, OgeTreeList, OgeButton],
+  imports: [
+    RouterLink,
+    Icon,
+    OgeGrid,
+    OgeColumn,
+    OgeTreeList,
+    OgeButton,
+    OgeSelectBox,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   template: `
@@ -136,6 +145,15 @@ const ORG: OrgNode[] = [
                 <app-icon name="arrow-right" [size]="14" />
               </span>
             </a>
+            <a
+              href="https://www.npmjs.com/package/@oge-ui/grid"
+              target="_blank"
+              rel="noopener"
+              class="group flex items-center gap-1.5 text-[13.5px] font-semibold text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+            >
+              <app-icon name="package" [size]="14" />
+              View on npm
+            </a>
           </div>
 
           <div
@@ -151,7 +169,7 @@ const ORG: OrgNode[] = [
                 (change)="installPkg.set($any($event.target).value)"
               >
                 @for (pkg of installablePkgs; track pkg) {
-                  <option [value]="pkg">&#64;oge-ui/{{ pkg }}</option>
+                  <option [value]="pkg">{{ pkg }}</option>
                 }
               </select>
               <span
@@ -270,6 +288,27 @@ const ORG: OrgNode[] = [
                             [width]="140"
                           />
                         </oge-tree-list>
+                      </div>
+                    }
+                    @case ('select') {
+                      <div
+                        class="home-pane flex min-h-[272px] flex-wrap content-center items-start justify-center gap-5 p-6"
+                      >
+                        <oge-select-box
+                          label="City"
+                          [items]="heroCities"
+                          [showClearButton]="true"
+                          [(value)]="heroCity"
+                        />
+                        <oge-select-box
+                          label="Assignee"
+                          [items]="heroUsers"
+                          displayExpr="name"
+                          valueExpr="id"
+                          [searchEnabled]="true"
+                          placeholder="Type to search…"
+                          [(value)]="heroUserId"
+                        />
                       </div>
                     }
                     @case ('buttons') {
@@ -695,6 +734,15 @@ const ORG: OrgNode[] = [
             >
               <app-icon name="github" [size]="15" />
               GitHub
+            </a>
+            <a
+              href="https://www.npmjs.com/package/@oge-ui/grid"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center gap-2 text-[13.5px] font-semibold text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+            >
+              <app-icon name="package" [size]="15" />
+              npm
             </a>
           </div>
         </div>
@@ -1365,8 +1413,27 @@ export class HomePage {
   protected readonly demoTabs: { id: DemoTab; file: string }[] = [
     { id: 'grid', file: 'data-grid.ts' },
     { id: 'tree', file: 'tree-list.ts' },
+    { id: 'select', file: 'select-box.ts' },
     { id: 'buttons', file: 'buttons.ts' },
   ];
+
+  protected readonly heroCities = [
+    'Ankara',
+    'Berlin',
+    'Lisbon',
+    'Oslo',
+    'Tokyo',
+  ];
+
+  protected readonly heroUsers = [
+    { id: 1, name: 'Elif Kaya' },
+    { id: 2, name: 'Mert Demir' },
+    { id: 3, name: 'Selin Doğan' },
+    { id: 4, name: 'Deniz Arslan' },
+  ];
+
+  protected readonly heroCity = signal<unknown>('Lisbon');
+  protected readonly heroUserId = signal<unknown>(null);
 
   protected readonly demoTab = signal<DemoTab>('grid');
 
@@ -1416,7 +1483,7 @@ export class HomePage {
     {
       icon: 'text-cursor',
       name: 'Inputs',
-      desc: 'Text, textarea and number editors with floating labels and three form-binding modes.',
+      desc: 'Text, textarea, number and select editors with floating labels, search and three form-binding modes.',
       path: '/components/inputs',
     },
     {
@@ -1529,16 +1596,17 @@ export class HomePage {
     },
   ];
 
-  /** Directly installable packages (core/overlay arrive as dependencies). */
+  /** Installable packages: the umbrella first, then à-la-carte scopes. */
   protected readonly installablePkgs = [
-    'grid',
-    'tree-list',
-    'pivot',
-    'buttons',
-    'inputs',
+    'oge-ui',
+    '@oge-ui/grid',
+    '@oge-ui/tree-list',
+    '@oge-ui/pivot',
+    '@oge-ui/buttons',
+    '@oge-ui/inputs',
   ];
 
-  protected readonly installPkg = signal('grid');
+  protected readonly installPkg = signal('oge-ui');
 
   /** 0→1 easing progress for the count-up stats, driven on first scroll into view. */
   private readonly statProgress = signal(1);
@@ -1570,7 +1638,7 @@ export class HomePage {
 
   protected copyInstall(): void {
     void navigator.clipboard
-      ?.writeText(`npm install @oge-ui/${this.installPkg()}`)
+      ?.writeText(`npm install ${this.installPkg()}`)
       .then(() => {
         this.copied.set(true);
         setTimeout(() => this.copied.set(false), 2000);

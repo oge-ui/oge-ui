@@ -69,6 +69,19 @@ export default [
               ],
             },
             {
+              // umbrella package: re-exports every published family
+              sourceTag: 'scope:ui',
+              onlyDependOnLibsWithTags: [
+                'scope:grid',
+                'scope:tree-list',
+                'scope:pivot',
+                'scope:buttons',
+                'scope:overlay',
+                'scope:inputs',
+                'scope:core',
+              ],
+            },
+            {
               sourceTag: 'scope:app',
               onlyDependOnLibsWithTags: [
                 'scope:app',

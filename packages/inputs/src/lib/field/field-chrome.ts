@@ -200,6 +200,31 @@ import { OGE_INPUT_HOST, type OgeInputCounterState } from './input-host';
             </svg>
           </button>
         }
+        @if (host.dropdown && host.dropdown.visible()) {
+          <button
+            type="button"
+            class="oge-input-rail-btn oge-input-dropdown"
+            tabindex="-1"
+            [attr.aria-label]="host.msg().dropDownToggle"
+            [attr.aria-expanded]="host.dropdown.expanded()"
+            (mousedown)="$event.preventDefault()"
+            (click)="host.dropdown.toggle()"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m4 6 4 4 4-4" />
+            </svg>
+          </button>
+        }
         @if (host.spin && host.spin.visible()) {
           <span class="oge-input-spin">
             <button

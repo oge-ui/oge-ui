@@ -7,7 +7,12 @@ module.exports = withNx(
     tsConfig: './tsconfig.lib.json',
     compiler: 'swc',
     format: ['cjs', 'esm'],
-    assets: [{ input: '{projectRoot}', output: '.', glob: '*.md' }],
+    // note: '{projectRoot}' tokens are not interpolated inside rollup.config —
+    // the path must be spelled out relative to the workspace root
+    assets: [
+      { input: 'packages/core', output: '.', glob: '*.md' },
+      { input: 'packages/core', output: '.', glob: 'LICENSE' },
+    ],
   },
   {
     // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options

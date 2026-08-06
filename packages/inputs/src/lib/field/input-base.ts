@@ -22,6 +22,7 @@ import { resolveErrorMessage } from './error-messages';
 import type {
   OgeInputCounterState,
   OgeInputCopyApi,
+  OgeInputDropDownApi,
   OgeInputHost,
   OgeInputRevealApi,
   OgeInputSpinApi,
@@ -285,6 +286,7 @@ export abstract class OgeInputBase<T>
   readonly reveal: OgeInputRevealApi | null = null;
   readonly copy: OgeInputCopyApi | null = null;
   readonly spin: OgeInputSpinApi | null = null;
+  readonly dropdown: OgeInputDropDownApi | null = null;
 
   // --- commit pipeline -------------------------------------------------------
 
@@ -630,4 +632,11 @@ const TEMPLATE_BOUND_ATTRS = new Set([
   'aria-describedby',
   'aria-invalid',
   'aria-required',
+  // combobox pattern attributes owned by the select box template
+  'role',
+  'aria-haspopup',
+  'aria-expanded',
+  'aria-controls',
+  'aria-autocomplete',
+  'aria-activedescendant',
 ]);

@@ -11,5 +11,13 @@
   "dependencies": {
     "@oge-ui/overlay": "0.4.0"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaya2m/oge-ui.git",
+    "directory": "packages/buttons"
+  },
+  "bugs": "https://github.com/kaya2m/oge-ui/issues",
+  "license": "MIT"
 }

@@ -1,8 +1,8 @@
 # @oge-ui/inputs
 
 Signal-based Angular form editors — `oge-text-box`, `oge-text-area`,
-`oge-number-box` — sharing one field chrome and working with three form
-systems at once.
+`oge-number-box`, `oge-select-box` — sharing one field chrome and working
+with three form systems at once.
 
 ## Features
 
@@ -40,6 +40,15 @@ always`, announce via `aria-live`, and chain `aria-describedby` across
   ArrowUp/ArrowDown.
 - **Auto-resize textarea** — `autoResize` grows between `minRows`/`maxRows`
   using CSS `field-sizing: content` with a measurement fallback.
+- **Select box** — WAI-ARIA combobox with `aria-activedescendant` (focus
+  never leaves the input), `displayExpr`/`valueExpr` data mapping (string or
+  function), debounced client-side search (`searchEnabled`, `searchMode`,
+  `searchExpr`, `searchTimeout`, `minSearchLength`, `showDataBeforeSearch`)
+  with a `searchChanged` + `loading` server-side escape hatch, flat-data
+  grouping via `groupBy`, custom values (`acceptCustomValue` +
+  `customItemCreating`), lazy `items` functions with loading/error rows,
+  per-item `disabledExpr`, `itemTemplate`, select-only type-ahead, and a
+  flip-aware popup from `@oge-ui/overlay` that matches the field width.
 
 ## Installation
 

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
   OgeInputPrefix,
   OgeNumberBox,
@@ -45,6 +46,7 @@ const PREFIX_SNIPPET = `<oge-text-box label="Price">
 @Component({
   selector: 'app-inputs-overview',
   imports: [
+    RouterLink,
     OgeTextBox,
     OgeTextArea,
     OgeNumberBox,
@@ -67,15 +69,20 @@ const PREFIX_SNIPPET = `<oge-text-box label="Price">
       ]"
     >
       <p>
-        <code>&lt;oge-text-box&gt;</code>,
-        <code>&lt;oge-text-area&gt;</code> and
-        <code>&lt;oge-number-box&gt;</code> share one field chrome: four label
+        <code>&lt;oge-text-box&gt;</code>, <code>&lt;oge-text-area&gt;</code>,
+        <code>&lt;oge-number-box&gt;</code> and
+        <code>&lt;oge-select-box&gt;</code> share one field chrome: four label
         modes (including floating), three styling modes, prefix/suffix slots, a
         clear button and a fixed-height subscript for hints and validation
-        errors that never shifts your layout. All three work standalone via
+        errors that never shifts your layout. All of them work standalone via
         <code>[(value)]</code>, with Signal Forms via
         <code>[formField]</code> and with reactive forms via
-        <code>formControl</code>.
+        <code>formControl</code>. The drop-down editor has
+        <a
+          routerLink="/components/inputs/select-box"
+          class="text-indigo-600 dark:text-indigo-400"
+          >its own page</a
+        >.
       </p>
     </app-doc-header>
     <app-page-toc [sections]="sections" />

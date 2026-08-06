@@ -31,7 +31,8 @@
       "@oge-ui/tree-list": ["./packages/tree-list/src/index.ts"],
       "@oge-ui/tree-list/export-excel": [
         "./packages/tree-list/export-excel/src/index.ts"
-      ]
+      ],
+      "oge-ui": ["./packages/ui/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

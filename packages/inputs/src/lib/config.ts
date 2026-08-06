@@ -47,6 +47,14 @@ export interface OgeInputsMessages {
   invalidNumberError: string;
   /** Fallback for unknown validation error kinds. */
   invalidError: string;
+  /** Aria label of the select box's drop-down chevron button. */
+  dropDownToggle: string;
+  /** Empty-list row of the select box popup. */
+  noDataText: string;
+  /** Loading row of the select box popup while `loading` is `true`. */
+  dropDownLoading: string;
+  /** Error row of the select box popup when a lazy `items` function rejects. */
+  dropDownLoadError: string;
 }
 
 export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
@@ -72,6 +80,10 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   patternError: 'The value has an invalid format',
   invalidNumberError: 'Enter a valid number',
   invalidError: 'Invalid value',
+  dropDownToggle: 'Toggle dropdown',
+  noDataText: 'No data to display',
+  dropDownLoading: 'Loading…',
+  dropDownLoadError: 'Failed to load data',
 };
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */
@@ -82,6 +94,8 @@ export interface OgeInputsConfig {
   spinRepeatIntervalMs: number;
   /** How long the copy button shows its transient "copied" state. */
   copiedResetMs: number;
+  /** Select box: delay before typed search text filters the list. */
+  searchTimeoutMs: number;
   messages: OgeInputsMessages;
 }
 
@@ -89,6 +103,7 @@ export const OGE_DEFAULT_INPUTS_CONFIG: OgeInputsConfig = {
   spinRepeatDelayMs: 400,
   spinRepeatIntervalMs: 80,
   copiedResetMs: 2000,
+  searchTimeoutMs: 250,
   messages: OGE_DEFAULT_INPUTS_MESSAGES,
 };
 

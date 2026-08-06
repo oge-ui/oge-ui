@@ -32,6 +32,13 @@ export interface OgeInputSpinApi {
   release(): void;
 }
 
+/** Drop-down chevron feature block (select box only). */
+export interface OgeInputDropDownApi {
+  readonly visible: Signal<boolean>;
+  readonly expanded: Signal<boolean>;
+  toggle(): void;
+}
+
 /**
  * What the internal field chrome reads from its owning editor. Editors
  * provide themselves via `OGE_INPUT_HOST` (same bridge pattern as the
@@ -60,6 +67,7 @@ export interface OgeInputHost {
   readonly reveal: OgeInputRevealApi | null;
   readonly copy: OgeInputCopyApi | null;
   readonly spin: OgeInputSpinApi | null;
+  readonly dropdown: OgeInputDropDownApi | null;
   clear(): void;
   focus(): void;
 }

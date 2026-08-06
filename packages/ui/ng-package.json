@@ -1,0 +1,16 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/packages/ui",
+  "allowedNonPeerDependencies": [
+    "@oge-ui/core",
+    "@oge-ui/grid",
+    "@oge-ui/tree-list",
+    "@oge-ui/pivot",
+    "@oge-ui/buttons",
+    "@oge-ui/overlay",
+    "@oge-ui/inputs"
+  ],
+  "lib": {
+    "entryFile": "src/index.ts"
+  }
+}

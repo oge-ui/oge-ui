@@ -463,3 +463,84 @@
     animation-duration: 1.6s;
   }
 }
+
+// --- select box -------------------------------------------------------------
+
+.oge-select-box .oge-select-plain {
+  cursor: pointer;
+}
+
+.oge-input-dropdown svg {
+  transition: transform 120ms ease;
+}
+
+.oge-select-box-open .oge-input-dropdown svg {
+  transform: rotate(180deg);
+}
+
+// listbox popup content — rendered inside .oge-popup (fixed), which stays in
+// the component subtree, so the .oge-input token scope still applies
+.oge-select-list {
+  padding: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+  outline: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--oge-border-color) transparent;
+}
+
+.oge-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--oge-radius);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &.oge-disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-select-option-active:not(.oge-disabled) {
+  background: var(--oge-row-hover-bg);
+}
+
+.oge-select-option-selected:not(.oge-disabled) {
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+}
+
+.oge-select-option-text {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oge-select-status {
+  padding: 10px 12px;
+  color: var(--oge-muted-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-select-group {
+  padding: 8px 10px 3px;
+  font-size: calc(var(--oge-font-size) - 2px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--oge-muted-color);
+  user-select: none;
+}
+
+.oge-select-wrap .oge-select-option-text {
+  white-space: normal;
+  overflow: visible;
+}

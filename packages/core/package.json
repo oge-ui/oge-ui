@@ -6,5 +6,13 @@
   },
   "main": "./index.cjs",
   "module": "./index.js",
-  "dependencies": {}
+  "dependencies": {},
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaya2m/oge-ui.git",
+    "directory": "packages/core"
+  },
+  "bugs": "https://github.com/kaya2m/oge-ui/issues",
+  "license": "MIT"
 }

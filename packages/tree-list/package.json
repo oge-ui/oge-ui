@@ -20,5 +20,13 @@
     "@oge-ui/core": "0.4.0",
     "@oge-ui/grid": "0.4.0"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaya2m/oge-ui.git",
+    "directory": "packages/tree-list"
+  },
+  "bugs": "https://github.com/kaya2m/oge-ui/issues",
+  "license": "MIT"
 }

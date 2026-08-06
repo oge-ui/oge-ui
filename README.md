@@ -1,42 +1,154 @@
-# OGE — Angular UI Components
+<p align="center">
+  <img src="apps/dev-app/public/logo.png" alt="OGE UI logo" width="120" />
+</p>
 
-Open-source UI component suite for Angular, built on signals. The first component is the **Data Grid**: virtualized, server-driven, fully typed, themeable.
+<h1 align="center">OGE — Angular UI Components</h1>
 
-| Package                                   | Description                                                                                | npm                                               |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| [`@oge-ui/core`](packages/core)           | Framework-agnostic engine: data sources, filtering, row pipeline, virtualization math      | [npm](https://www.npmjs.com/package/@oge-ui/core) |
-| [`@oge-ui/grid`](packages/grid)           | The Angular Data Grid component                                                            | [npm](https://www.npmjs.com/package/@oge-ui/grid) |
-| [`@oge-ui/tree-list`](packages/tree-list) | Hierarchical tree grid built on the same foundation                                        | —                                                 |
-| [`@oge-ui/pivot`](packages/pivot)         | Pivot grid: pure aggregation engine, display modes, two-axis virtualization, Excel export  | —                                                 |
-| [`@oge-ui/buttons`](packages/buttons)     | Buttons, button group & drop-down button: severities, async actions, click guard, gestures | —                                                 |
-| [`@oge-ui/overlay`](packages/overlay)     | Anchored popup primitives: flip/clamp positioning, panel behavior model, accessible menu   | —                                                 |
-| [`@oge-ui/inputs`](packages/inputs)       | Form editors (text/textarea/number): floating labels, Signal Forms + CVA, counter, reveal  | —                                                 |
+<p align="center">
+  Signal-based, zoneless Angular components engineered for data-heavy apps:<br />
+  a virtualized <b>Data Grid</b>, <b>Tree List</b>, <b>Pivot Grid</b>, searchable <b>Select Box</b>, <b>Buttons</b> and form <b>Inputs</b>.
+</p>
+
+<p align="center">
+  <a href="https://ogeui.com"><b>ogeui.com</b></a> — docs, live demos &amp; API reference
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/oge-ui"><img src="https://img.shields.io/npm/v/oge-ui?label=oge-ui&color=6366f1" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@oge-ui/grid"><img src="https://img.shields.io/npm/v/@oge-ui/grid?label=%40oge-ui%2Fgrid&color=8b5cf6" alt="npm version" /></a>
+  <a href="https://github.com/kaya2m/oge-ui/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/kaya2m/oge-ui/ci.yml?branch=main&label=CI" alt="CI status" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22d3ee" alt="MIT license" /></a>
+  <img src="https://img.shields.io/badge/Angular-%E2%89%A522-dd0031" alt="Angular 22+" />
+</p>
+
+---
+
+## Why OGE?
+
+- **Signals end to end** — every input, output and piece of state is a signal.
+  No decorators, no lifecycle guesswork, full template type checking.
+- **Zoneless by default** — no Zone.js, no global change-detection sweeps;
+  components mark exactly what moved.
+- **Built for serious data** — row _and_ column virtualization into the
+  millions, server-side sort/filter/page/group, live push updates, infinite
+  scrolling, CSV/Excel/PDF export.
+- **Accessible by default** — WAI-ARIA grid and combobox semantics, full
+  keyboard navigation, axe-tested docs pages.
+- **Design-token theming** — one set of CSS variables drives every component;
+  dark, Tailwind and Bootstrap bridges ship in the box.
+- **Zero runtime dependencies** — the only hard dependency between packages is
+  OGE's own framework-free core. Export libraries (`exceljs`, `jspdf`) are
+  optional peers: never installed, bundled or executed unless you opt in.
+
+## Installation
+
+Everything at once:
 
 ```sh
-npm install @oge-ui/core @oge-ui/grid
+npm install oge-ui
 ```
 
-## Development
+…or à la carte — every package is standalone:
 
 ```sh
-npm install
-npx nx serve dev-app        # docs & demo site → http://localhost:4200
-npx nx run-many -t build test lint
-npx nx e2e dev-app-e2e      # Playwright suite (incl. axe accessibility scans)
+npm install @oge-ui/grid        # data grid (+ @oge-ui/core)
+npm install @oge-ui/tree-list   # hierarchical grid
+npm install @oge-ui/pivot       # pivot table
+npm install @oge-ui/buttons     # buttons, groups, drop-downs (+ @oge-ui/overlay)
+npm install @oge-ui/inputs      # text, textarea, number and select editors
 ```
 
-- `apps/dev-app` — documentation site (live demos, playground, API reference)
-- `packages/core` — pure TypeScript engine (no Angular imports; lint-enforced)
-- `packages/grid` — Angular library (ng-packagr / APF)
-- [`ROADMAP.md`](ROADMAP.md) — feature parity gap analysis & phased backlog
+## Quick start
 
-## Releasing
+```ts
+import { Component, signal } from '@angular/core';
+import { OgeButton, OgeColumn, OgeGrid, OgeSelectBox } from 'oge-ui';
+
+@Component({
+  selector: 'app-orders',
+  imports: [OgeGrid, OgeColumn, OgeSelectBox, OgeButton],
+  template: `
+    <oge-select-box label="Region" [items]="regions" [searchEnabled]="true" [(value)]="region" />
+
+    <oge-grid [data]="orders()" keyField="id" [filterRow]="true">
+      <oge-column field="product" caption="Product" />
+      <oge-column field="amount" caption="Amount" dataType="number" />
+    </oge-grid>
+
+    <oge-button text="Save" severity="accent" [action]="save" />
+  `,
+})
+export class Orders {
+  readonly regions = ['EMEA', 'APAC', 'Americas'];
+  readonly region = signal<unknown>(null);
+  readonly orders = signal([{ id: 1, product: 'Aurora Display', amount: 1249 }]);
+
+  // async action: the button manages its own loading spinner
+  readonly save = () => fetch('/api/orders', { method: 'POST' });
+}
+```
+
+No modules, no forms boilerplate — `[(value)]` binds straight to a
+`signal()`, and the same editors also plug into Signal Forms
+(`[formField]`) and reactive forms (`formControl`).
+
+## Packages
+
+| Package                                   | Description                                                                             | npm                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| [`oge-ui`](packages/ui)                   | **Umbrella**: one install + one import path for the whole suite                         | [npm](https://www.npmjs.com/package/oge-ui)            |
+| [`@oge-ui/grid`](packages/grid)           | Virtualized Data Grid: sorting, filtering, grouping, editing, master-detail, export     | [npm](https://www.npmjs.com/package/@oge-ui/grid)      |
+| [`@oge-ui/tree-list`](packages/tree-list) | Hierarchical grid: lazy loading, tri-state selection, drag & drop                       | [npm](https://www.npmjs.com/package/@oge-ui/tree-list) |
+| [`@oge-ui/pivot`](packages/pivot)         | Pivot Grid: rows × columns × measures, totals, two-axis virtualization, Excel export    | [npm](https://www.npmjs.com/package/@oge-ui/pivot)     |
+| [`@oge-ui/buttons`](packages/buttons)     | Buttons, groups & drop-down/split buttons: async actions, click guards, hold-to-confirm | [npm](https://www.npmjs.com/package/@oge-ui/buttons)   |
+| [`@oge-ui/inputs`](packages/inputs)       | TextBox, TextArea, NumberBox and a searchable SelectBox (WAI-ARIA combobox)             | [npm](https://www.npmjs.com/package/@oge-ui/inputs)    |
+| [`@oge-ui/overlay`](packages/overlay)     | Anchored popups, menus, tooltips and context menus — flip-aware positioning engine      | [npm](https://www.npmjs.com/package/@oge-ui/overlay)   |
+| [`@oge-ui/core`](packages/core)           | Framework-free data engine: data sources, filtering, pivot math, virtualization         | [npm](https://www.npmjs.com/package/@oge-ui/core)      |
+
+## Theming
+
+Every component reads one set of CSS design tokens — override them anywhere
+in the cascade:
+
+```css
+:root {
+  --oge-accent: #6366f1;
+  --oge-radius: 8px;
+}
+```
+
+Bundled themes: **dark** (`.oge-theme-dark` on any ancestor), **Tailwind** and
+**Bootstrap** bridge stylesheets. See the
+[styling guide](https://ogeui.com/getting-started/styling).
+
+## Localization
+
+All user-facing strings (including aria labels) live in per-package message
+catalogs — override globally with `provideOge<X>Config()` or per instance via
+`[messages]`. See the
+[localization guide](https://ogeui.com/getting-started/localization).
+
+## Compatibility
+
+| OGE | Angular | Notes                                    |
+| --- | ------- | ---------------------------------------- |
+| 0.x | ≥ 22    | standalone components, signals, zoneless |
+
+## Contributing
+
+This is an Nx workspace:
 
 ```sh
-npx nx release version <ver>   # bumps + tags (conventional commits)
-npx nx release publish         # publishes @oge-ui/core and @oge-ui/grid
+npm ci
+npx nx serve dev-app          # docs site on http://localhost:4200
+npx nx run-many -t test       # vitest suites
+npx nx run-many -t lint build # what CI runs
 ```
+
+Architecture and house conventions live in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); feature-parity tracking in
+[`ROADMAP.md`](ROADMAP.md).
 
 ## License
 
-MIT
+[MIT](LICENSE)
