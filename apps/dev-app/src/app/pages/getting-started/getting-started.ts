@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CodeBlock } from '../../shared/code-block';
 import { Icon, type IconName } from '../../shared/icon';
+import { SITE_VERSION } from '../../shared/site-version';
 import { PageToc } from '../../shared/page-toc';
 
 const SECTIONS = [
@@ -122,7 +123,7 @@ interface ComponentCard {
             }}</span>
             <span
               class="ml-auto rounded-full border border-gray-200 px-2 py-0.5 font-mono text-[11px] text-gray-400 dark:border-gray-700 dark:text-gray-500"
-              >v0.4.0</span
+              >v{{ version }}</span
             >
           </div>
           <p class="!mb-0 mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -224,6 +225,7 @@ interface ComponentCard {
   `,
 })
 export class GettingStartedPage {
+  protected readonly version = SITE_VERSION;
   protected readonly sections = SECTIONS;
   protected readonly install = INSTALL;
   protected readonly quickStart = QUICK_START;

@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Icon, type IconName } from './shared/icon';
+import { SITE_VERSION } from './shared/site-version';
 import { SeoService } from './shared/seo.service';
 import { ThemeService, type GridTheme } from './shared/theme.service';
 
@@ -30,6 +31,8 @@ interface NavSection {
   host: { class: 'flex min-h-screen flex-col' },
 })
 export class App {
+  protected readonly version = SITE_VERSION;
+
   private readonly allSections: NavSection[] = [
     {
       title: 'Getting Started',

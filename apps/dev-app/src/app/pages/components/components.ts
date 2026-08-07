@@ -6,6 +6,7 @@ import { OgeNumberBox, OgeTextBox } from '@oge-ui/inputs';
 import { OgeContextMenu, OgeTooltip, type OgeMenuItem } from '@oge-ui/overlay';
 import { OgeTreeList } from '@oge-ui/tree-list';
 import { Icon, type IconName } from '../../shared/icon';
+import { SITE_VERSION } from '../../shared/site-version';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 
 type FamilyKey = 'grid' | 'tree' | 'buttons' | 'inputs' | 'pivot' | 'overlay';
@@ -212,7 +213,7 @@ interface OrgNode {
               }}</span>
               <span
                 class="ml-auto rounded-full border border-gray-200 px-2 py-0.5 font-mono text-[11px] text-gray-400 dark:border-gray-700 dark:text-gray-500"
-                >v0.4.0</span
+                >v{{ version }}</span
               >
             </div>
             <p
@@ -236,6 +237,7 @@ interface OrgNode {
   `,
 })
 export class ComponentsIndexPage {
+  protected readonly version = SITE_VERSION;
   protected readonly heroChips = [
     'signal-based APIs',
     'zoneless-ready',
