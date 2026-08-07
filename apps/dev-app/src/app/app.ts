@@ -275,6 +275,11 @@ export class App {
           icon: 'pointer',
         },
         {
+          path: '/components/overlay/modal',
+          label: 'Modal',
+          icon: 'layout',
+        },
+        {
           path: '/components/overlay/api',
           label: 'API Reference',
           icon: 'code',

@@ -6,12 +6,16 @@ import { PageToc } from '../../shared/page-toc';
 import {
   OGE_ANCHORED_PANEL_API,
   OGE_MENU_LIST_API,
+  OGE_MODAL_API,
+  OGE_MODAL_SERVICE_API,
   OGE_OVERLAY_CONFIG_API,
   OGE_POPUP_API,
   RESOLVE_POPUP_POSITION_API,
 } from './overlay-api-data';
 
 const SECTIONS = [
+  'OgeModal',
+  'OgeModalService',
   'OgeMenuList',
   'OgeAnchoredPanel',
   'OgePopup',
@@ -44,6 +48,12 @@ const SECTIONS = [
     <app-page-toc [sections]="sections" />
 
     <app-api-reference
+      title="OgeModal"
+      selector="oge-modal"
+      [sections]="modalApi"
+    />
+    <app-api-reference title="OgeModalService" [sections]="modalServiceApi" />
+    <app-api-reference
       title="OgeMenuList"
       selector="oge-menu-list"
       [sections]="menuListApi"
@@ -60,9 +70,9 @@ const SECTIONS = [
     <h3>Notes</h3>
     <ul>
       <li>
-        Uniquely among OGE packages the overlay config has no
-        <code>messages</code> block — the package renders no user-facing
-        strings; consumer components own their i18n.
+        The overlay config's <code>messages</code> block is minimal — the
+        anchored primitives render no user-facing strings (consumer components
+        own their i18n); only the modal's ✕ button label lives there.
       </li>
       <li>
         Panels reposition (never detach) on capture-phase scroll and resize; a
@@ -73,6 +83,8 @@ const SECTIONS = [
 })
 export class OverlayApiPage {
   protected readonly sections = SECTIONS;
+  protected readonly modalApi = OGE_MODAL_API;
+  protected readonly modalServiceApi = OGE_MODAL_SERVICE_API;
   protected readonly menuListApi = OGE_MENU_LIST_API;
   protected readonly anchoredPanelApi = OGE_ANCHORED_PANEL_API;
   protected readonly popupApi = OGE_POPUP_API;

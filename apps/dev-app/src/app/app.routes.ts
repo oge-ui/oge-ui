@@ -350,6 +350,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Tooltip & Context Menu',
       },
       {
+        path: 'modal',
+        loadComponent: () =>
+          import('./pages/overlay/modal').then((m) => m.OverlayModalPage),
+        title: 'OGE — Modal',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/overlay/api').then((m) => m.OverlayApiPage),

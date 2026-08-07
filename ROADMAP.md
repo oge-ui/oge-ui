@@ -340,8 +340,9 @@ never `Date.parse`).
 storage shape via `serializeLikeOriginal`).
 
 **Next:** time-list virtualization ·
-`Intl.DateTimeFormatOptions` column display formats · `OgeModal` overlay
-primitive (focus trap) + edit-popup/filter-builder dialog migration · input
+`Intl.DateTimeFormatOptions` column display formats · grid/tree-list
+edit-popup + filter-builder migration onto `OgeModal` (shipped — see the
+Overlay Modal section) · input
 masking wave (incl. `useMaskBehavior`) · pivot chart binding · parity backlog:
 grid group/detail toggle events, `focusedCellChanged`, imperative column
 chooser open, `getTotalSummaryValue`, pivot `exporting` pre-event +
@@ -521,3 +522,43 @@ contract) on SelectBox, TagBox and Autocomplete — built on core's
 `OffsetTree`/`computeWindow`, absolute `aria-posinset`/`aria-setsize`, exported
 `OGE_SELECT_OPTION_HEIGHT` size map. Constraint: `virtualScroll` ignores
 `groupBy`/`wrapItemText` (fixed row heights; dev-mode warning).
+
+## Overlay Modal (`@oge-ui/overlay`) — Feature Parity
+
+Research baseline: DevExtreme dx-popup, PrimeNG p-dialog, Angular Material
+MatDialog (CDK a11y), Kendo Dialog/Window and the headless Radix/shadcn
+composition pattern. `OgeModal` is the centered dialog primitive: `div` +
+`role="dialog"` (deliberately **not** native `<dialog>.showModal()` — its
+top-layer would paint above the library's `position: fixed` select/date
+popups inside the modal form). Shipped alongside: the anchored-panel Escape
+stack extracted into a shared `overlay-stack.ts` (popup inside modal closes
+first), plus standalone `focus-trap.ts` and ref-counted `scroll-lock.ts`
+utilities, and the overlay config's first `messages` block (`modalClose`).
+
+| Feature                                 | Reference | OGE     | Notes                                                                                                                                        |
+| --------------------------------------- | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Modal backdrop (shading)                | Yes       | Done    | `--oge-modal-backdrop-bg` token; layer doubles as backdrop                                                                                   |
+| Declarative open + two-way binding      | Yes       | Done    | `[(opened)]` + `open()/close()/toggle()`; content lazy behind `@if`                                                                          |
+| Title bar + close button                | Yes       | Done    | `title` / `showCloseButton`; ✕ aria label from overlay messages                                                                              |
+| Header/footer templating                | Yes       | Done    | `*ogeModalTitle` / `*ogeModalFooter` slots (`$implicit` = close fn)                                                                          |
+| Custom title-bar actions (toolbarItems) | Yes       | Done    | `*ogeModalHeaderActions` slot between title and maximize/✕ (config API rejected)                                                             |
+| Close on Escape (topmost-only)          | Yes       | Done    | shared overlay stack; `closeOnEscape`                                                                                                        |
+| Close on backdrop click                 | Yes       | Done    | pointerdown-origin check — select-drag released outside never closes                                                                         |
+| Focus trap                              | Yes       | Done    | keydown-computed tabbables (no sentinels); zero-tabbable → panel                                                                             |
+| Initial-focus modes                     | partial   | Done    | `autoFocus: 'first-tabbable' \| 'panel' \| selector`; `[autofocus]` wins                                                                     |
+| Restore focus on close                  | Yes       | Done    | orphaned-focus guarded — never steals a moved focus                                                                                          |
+| Scroll lock                             | Yes       | Done    | ref-counted body lock + scrollbar-width compensation; `scrollLock`                                                                           |
+| width/height + min/max variants         | Yes       | Done    | `number \| string`; default `min(560px, 100%)`                                                                                               |
+| Cancelable closing pre-event            | partial   | Done    | `closing` with mutable `cancel` + reason                                                                                                     |
+| **Async close guard (single-flight)**   | No        | Done    | unique: `closeGuard: () => boolean \| Promise<boolean>`, `closePending` signal                                                               |
+| **Typed close result (declarative)**    | No        | Done    | unique: `OgeModal<R>`, `close(result)` → `closed.result`                                                                                     |
+| **Built-in busy state**                 | No        | Done    | unique: spinner veil + `aria-busy`; user closes blocked, `close()` allowed                                                                   |
+| `opening` pre-event                     | Yes       | Done    | cancelable `opening { cancel }` on every open path                                                                                           |
+| fullScreen / maximizable                | Yes       | Done    | `[(fullScreen)]` + `showMaximizeButton` title-bar toggle (dx has no button)                                                                  |
+| Shading off (transparent backdrop)      | Yes       | Done    | `shading: false` — visual only, stays modal; color via `--oge-modal-backdrop-bg`                                                             |
+| dragEnabled / resizeEnabled             | Yes       | Done    | header drag (viewport clamp, `dragOutsideBoundary`, `restorePosition`) + bottom-end handle (`resizeStarted`/`resized`); pointer-only, opt-in |
+| position (non-centered)                 | Yes       | partial | `placement: 'center' \| 'top'`; full my/at/of config stays anchored-panel work                                                               |
+| container / appendTo / portal           | Yes       | Done    | declarative stays inline (theming + stacking); `OgeModalService` body-appends                                                                |
+| Animation config                        | Yes       | partial | no config API (deliberate); duration/curve via `--oge-modal-transition` CSS var                                                              |
+| Service-based dynamic open              | Yes       | Done    | `OgeModalService.open(component\|template, config)`, `OGE_MODAL_DATA`, `OgeModalRef.closed` promise                                          |
+| Background `inert`/`aria-hidden`        | partial   | Done    | opt-in `inertBackground` — inerts siblings of every layer ancestor, restore-safe                                                             |

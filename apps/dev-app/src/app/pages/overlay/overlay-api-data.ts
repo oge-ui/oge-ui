@@ -408,6 +408,328 @@ export const OGE_OVERLAY_CONFIG_API: ApiSections = {
           description:
             'Idle time after which the menu type-ahead buffer resets.',
         },
+        {
+          name: 'messages',
+          type: 'OgeOverlayMessages',
+          description:
+            'User-facing strings of the modal header buttons: <code>modalClose</code>, <code>modalMaximize</code>, <code>modalRestore</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_MODAL_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'opened',
+          type: 'model&lt;boolean&gt;',
+          default: 'false',
+          description:
+            'Two-way open state. Setting it <code>false</code> directly closes without the guard pipeline.',
+        },
+        {
+          name: 'fullScreen',
+          type: 'model&lt;boolean&gt;',
+          default: 'false',
+          description:
+            'Two-way full-screen state; size inputs are ignored while <code>true</code>. Driven by the maximize button when shown.',
+        },
+        {
+          name: 'title',
+          type: 'string | undefined',
+          description:
+            'Header text; also the aria-label fallback when the header is hidden.',
+        },
+        {
+          name: 'ariaLabel',
+          type: 'string | undefined',
+          description: 'Accessible name override for headerless modals.',
+        },
+        {
+          name: 'width / height / minWidth / minHeight / maxWidth / maxHeight',
+          type: 'number | string | undefined',
+          description:
+            'Panel size — numbers are px, strings pass through. Default width <code>min(560px, 100%)</code>.',
+        },
+        {
+          name: 'placement',
+          type: 'OgeModalPlacement',
+          default: "'center'",
+          description:
+            "Viewport position: centered or pinned near the top edge (<code>'top'</code>, command-palette style).",
+        },
+        {
+          name: 'shading',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Dims the page behind the modal. <code>false</code> keeps the backdrop transparent while staying fully modal.',
+        },
+        {
+          name: 'showCloseButton',
+          type: 'boolean',
+          default: 'true',
+          description: 'Shows the header ✕ button.',
+        },
+        {
+          name: 'showMaximizeButton',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Shows a maximize/restore toggle in the header, driving <code>fullScreen</code>.',
+        },
+        {
+          name: 'dragEnabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Lets the user drag the panel by its header (viewport-clamped unless <code>dragOutsideBoundary</code>).',
+        },
+        {
+          name: 'dragOutsideBoundary',
+          type: 'boolean',
+          default: 'false',
+          description: 'Allows dragging the panel beyond the viewport edges.',
+        },
+        {
+          name: 'restorePosition',
+          type: 'boolean',
+          default: 'true',
+          description: 'Resets drag offset and resized size on every reopen.',
+        },
+        {
+          name: 'resizeEnabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Shows a bottom-end resize handle (min 160×120, viewport-capped).',
+        },
+        {
+          name: 'inertBackground',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Marks everything outside the modal <code>inert</code> while open — opt-in; content appended to <code>body</code> after opening is not covered.',
+        },
+        {
+          name: 'closeOnEscape',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Escape closes the modal when it is the topmost overlay (popups inside close first).',
+        },
+        {
+          name: 'closeOnBackdropClick',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'A click that starts <em>and</em> ends on the backdrop closes the modal — a text-selection drag released outside never does.',
+        },
+        {
+          name: 'scrollLock',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Locks body scroll while open (scrollbar-width compensated, ref-counted across stacked modals).',
+        },
+        {
+          name: 'autoFocus',
+          type: 'OgeModalAutoFocus',
+          default: "'first-tabbable'",
+          description:
+            'Initial focus target; an <code>[autofocus]</code> element inside the panel always wins.',
+        },
+        {
+          name: 'restoreFocus',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Restores focus to the opener on close — only when focus would otherwise be lost.',
+        },
+        {
+          name: 'padding',
+          type: 'boolean',
+          default: 'true',
+          description:
+            '<code>false</code> makes the body flush for grids and custom layouts.',
+        },
+        {
+          name: 'busy',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Spinner veil + <code>aria-busy</code>; user-initiated closes are blocked, programmatic <code>close()</code> still works.',
+        },
+        {
+          name: 'closeGuard',
+          type: '() =&gt; boolean | Promise&lt;boolean&gt; | undefined',
+          description:
+            'Veto hook run before every pipeline close; may be async (single-flight — see <code>closePending</code>). A rejected promise vetoes with a dev warning.',
+        },
+        {
+          name: 'messages',
+          type: 'Partial&lt;OgeOverlayMessages&gt; | undefined',
+          description: 'Per-instance message overrides.',
+        },
+        {
+          name: 'closePending',
+          type: 'Signal&lt;boolean&gt;',
+          description:
+            '<code>true</code> while an async <code>closeGuard</code> is pending — disable footer actions with it.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        { name: 'open(): void', type: 'void', description: 'Opens the modal.' },
+        {
+          name: 'close(result?: R): void',
+          type: 'void',
+          description:
+            "Closes through the full pipeline (<code>closing</code> → <code>closeGuard</code>); reason <code>'api'</code>, the argument becomes <code>closed.result</code>.",
+        },
+        { name: 'toggle(): void', type: 'void', description: 'Open ⇄ close.' },
+        {
+          name: 'focus(): void',
+          type: 'void',
+          description:
+            'Re-applies the initial-focus resolution. No-op while closed.',
+        },
+        {
+          name: 'toggleFullScreen(): void',
+          type: 'void',
+          description:
+            'Switches between windowed and full-screen (the maximize button’s action).',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'opening',
+          type: 'OgeModalOpeningEvent',
+          description:
+            'Cancelable: fires before the modal opens (any open path). Set <code>cancel = true</code> to keep it closed.',
+        },
+        {
+          name: 'closing',
+          type: 'OgeModalClosingEvent',
+          description:
+            'Cancelable: fires before any pipeline close (Escape, backdrop, ✕, <code>close()</code>). Set <code>cancel = true</code> to keep the modal open.',
+        },
+        {
+          name: 'closed',
+          type: 'OgeModalClosedEvent&lt;R&gt;',
+          description:
+            'Fires after the modal closed, with the reason and the optional result.',
+        },
+        {
+          name: 'resizeStarted / resized',
+          type: 'OgeModalResizeEvent',
+          description:
+            'Fire when a resize gesture starts (starting size) and ends (final size).',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeModalCloseReason',
+          type: "'api' | 'escape' | 'backdrop' | 'closeButton'",
+          description: 'Why the modal closed.',
+        },
+        {
+          name: 'OgeModalClosingEvent',
+          type: '{ reason: OgeModalCloseReason; cancel: boolean }',
+          description: 'Cancelable pre-close event.',
+        },
+        {
+          name: 'OgeModalClosedEvent&lt;R&gt;',
+          type: '{ reason: OgeModalCloseReason; result?: R }',
+          description:
+            'Post-close event; <code>result</code> comes from <code>close(result)</code> or the slot close function.',
+        },
+        {
+          name: 'OgeModalAutoFocus',
+          type: "'first-tabbable' | 'panel' | string",
+          description:
+            'Initial-focus strategy — a plain string is treated as a CSS selector inside the panel.',
+        },
+        {
+          name: 'OgeModalPlacement',
+          type: "'center' | 'top'",
+          description: 'Where the panel sits in the viewport.',
+        },
+        {
+          name: 'OgeModalOpeningEvent',
+          type: '{ cancel: boolean }',
+          description: 'Cancelable pre-open event.',
+        },
+        {
+          name: 'OgeModalResizeEvent',
+          type: '{ width: number; height: number; event: PointerEvent }',
+          description: 'Payload of the resize outputs.',
+        },
+        {
+          name: 'OgeModalSlotContext',
+          type: '{ $implicit: (result?: unknown) =&gt; void }',
+          description:
+            'Context of <code>*ogeModalTitle</code> / <code>*ogeModalHeaderActions</code> / <code>*ogeModalFooter</code>; the function closes the modal.',
+        },
+        {
+          name: '*ogeModalHeaderActions',
+          type: 'structural slot',
+          description:
+            'Custom title-bar buttons, rendered between the title and the maximize/✕ buttons; presses here never start a header drag.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_MODAL_SERVICE_API: ApiSections = {
+  methods: [
+    {
+      entries: [
+        {
+          name: 'open&lt;R, D&gt;(content: Type&lt;unknown&gt; | TemplateRef, config?: OgeModalOpenConfig&lt;D&gt;): OgeModalRef&lt;R&gt;',
+          type: 'OgeModalRef&lt;R&gt;',
+          description:
+            'Opens a body-appended modal hosting the component or template — the escape hatch for <code>transform</code>ed ancestors and for prompt/confirm flows without a declared <code>&lt;oge-modal&gt;</code>.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeModalOpenConfig&lt;D&gt;',
+          type: 'object',
+          description:
+            'The declarative inputs minus slots (<code>title</code>, sizing, <code>placement</code>, <code>closeGuard</code>, …) plus <code>data?: D</code>, made available to the content via <code>OGE_MODAL_DATA</code>.',
+        },
+        {
+          name: 'OgeModalRef&lt;R&gt;',
+          type: '{ close(result?: R): void; closed: Promise&lt;OgeModalClosedEvent&lt;R&gt;&gt; }',
+          description:
+            'Handle of a service-opened modal; content components can inject it to close themselves with a result.',
+        },
+        {
+          name: 'OGE_MODAL_DATA',
+          type: 'InjectionToken&lt;unknown&gt;',
+          description:
+            'The <code>config.data</code> payload, injectable in the content component.',
+        },
       ],
     },
   ],

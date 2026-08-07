@@ -1,4 +1,5 @@
 import { signal, type Signal } from '@angular/core';
+import { isTopOverlay, pushOverlay, removeOverlay } from '../overlay-stack';
 import {
   resolvePopupPosition,
   type OgePopupPlacement,
@@ -50,14 +51,6 @@ let nextPanelId = 0;
 /** Frames to wait for the owner to render the panel element after `open()`. */
 const MAX_MEASURE_RETRIES = 60;
 
-/** Currently open panels, bottom → top. Escape only closes the topmost. */
-const openPanelStack: OgeAnchoredPanel[] = [];
-
-function removeFromStack(panel: OgeAnchoredPanel): void {
-  const index = openPanelStack.indexOf(panel);
-  if (index !== -1) openPanelStack.splice(index, 1);
-}
-
 /**
  * Anchored-panel behavior as a DI-free model class (slice pattern): open/close
  * state, viewport-aware positioning (flip + clamp, RTL-aware), outside-click
@@ -100,7 +93,7 @@ export class OgeAnchoredPanel {
     this._isOpen.set(true);
     this._position.set(null);
     this.measureRetries = 0;
-    if (!this.options.transient) openPanelStack.push(this);
+    if (!this.options.transient) pushOverlay(this);
     this.addListeners();
     this.updatePosition();
   }
@@ -109,7 +102,7 @@ export class OgeAnchoredPanel {
     if (!this._isOpen()) return;
     const panelEl = this.options.panel();
     const anchorEl = this.options.anchor();
-    removeFromStack(this);
+    removeOverlay(this);
     this.removeListeners();
     this.cancelFrame();
     this.disconnectResizeObserver();
@@ -151,7 +144,7 @@ export class OgeAnchoredPanel {
 
   /** Removes every listener and pending frame; call on owner destroy. */
   destroy(): void {
-    removeFromStack(this);
+    removeOverlay(this);
     this.removeListeners();
     this.cancelFrame();
     this.disconnectResizeObserver();
@@ -251,8 +244,8 @@ export class OgeAnchoredPanel {
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (event.key !== 'Escape') return;
-    // With stacked overlays (popup inside popup) only the topmost closes.
-    if (openPanelStack[openPanelStack.length - 1] !== this) return;
+    // With stacked overlays (popup inside popup/modal) only the topmost closes.
+    if (!isTopOverlay(this)) return;
     event.stopPropagation();
     this.close('escape');
   };

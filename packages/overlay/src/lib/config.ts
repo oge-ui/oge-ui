@@ -1,10 +1,29 @@
 import { InjectionToken, type Provider } from '@angular/core';
 
 /**
- * Behavioral defaults of the overlay primitives. The overlay renders no
- * user-facing strings, so — uniquely among oge packages — there is no
- * `messages` block; consumer components (drop-down button etc.) own their
- * own i18n.
+ * User-facing strings rendered by the overlay primitives. The anchored
+ * popup/menu/tooltip primitives are chrome-free (their consumers own i18n);
+ * only the modal renders text of its own.
+ */
+export interface OgeOverlayMessages {
+  /** Aria label of the modal's close (✕) button. */
+  modalClose: string;
+  /** Aria label of the modal's maximize button (windowed state). */
+  modalMaximize: string;
+  /** Aria label of the modal's restore button (full-screen state). */
+  modalRestore: string;
+}
+
+export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
+  modalClose: 'Close',
+  modalMaximize: 'Maximize',
+  modalRestore: 'Restore',
+};
+
+/**
+ * Behavioral defaults of the overlay primitives, plus the small `messages`
+ * block used by the modal (the anchored primitives render no strings of their
+ * own — consumer components such as the drop-down button own their i18n).
  */
 export interface OgeOverlayConfig {
   /** Gap between anchor and panel on the main axis. */
@@ -17,6 +36,8 @@ export interface OgeOverlayConfig {
   tooltipShowDelayMs: number;
   /** Grace period before a tooltip hides after the pointer leaves. */
   tooltipHideDelayMs: number;
+  /** User-facing strings (modal close button etc.). */
+  messages: OgeOverlayMessages;
 }
 
 export const OGE_DEFAULT_OVERLAY_CONFIG: OgeOverlayConfig = {
@@ -25,6 +46,7 @@ export const OGE_DEFAULT_OVERLAY_CONFIG: OgeOverlayConfig = {
   typeAheadMs: 500,
   tooltipShowDelayMs: 400,
   tooltipHideDelayMs: 100,
+  messages: OGE_DEFAULT_OVERLAY_MESSAGES,
 };
 
 export const OGE_OVERLAY_CONFIG = new InjectionToken<OgeOverlayConfig>(
@@ -34,23 +56,29 @@ export const OGE_OVERLAY_CONFIG = new InjectionToken<OgeOverlayConfig>(
   },
 );
 
-export type OgeOverlayConfigInput = Partial<OgeOverlayConfig>;
+export type OgeOverlayConfigInput = Partial<
+  Omit<OgeOverlayConfig, 'messages'>
+> & {
+  messages?: Partial<OgeOverlayMessages>;
+};
 
 /**
  * Application- or component-scoped overlay defaults:
  *
  * ```ts
- * providers: [provideOgeOverlayConfig({ offset: 8 })]
+ * providers: [provideOgeOverlayConfig({ offset: 8, messages: { modalClose: 'Kapat' } })]
  * ```
  */
 export function provideOgeOverlayConfig(
   config: OgeOverlayConfigInput,
 ): Provider {
+  const { messages, ...rest } = config;
   return {
     provide: OGE_OVERLAY_CONFIG,
     useValue: {
       ...OGE_DEFAULT_OVERLAY_CONFIG,
-      ...config,
+      ...rest,
+      messages: { ...OGE_DEFAULT_OVERLAY_MESSAGES, ...messages },
     } satisfies OgeOverlayConfig,
   };
 }

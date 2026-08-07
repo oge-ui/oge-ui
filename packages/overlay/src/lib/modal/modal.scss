@@ -1,0 +1,220 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-modal-layer {
+  @include tokens.core-tokens;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  position: fixed;
+  inset: 0;
+  z-index: var(--oge-z-modal, 1100);
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 24px;
+  background: var(--oge-modal-backdrop-bg, rgb(15 23 42 / 0.32));
+  backdrop-filter: blur(1.5px);
+
+  /* entrance: backdrop fades, panel lifts in once mounted; duration/curve
+     tunable via --oge-modal-transition (a config API stays deliberately out) */
+  opacity: 0;
+  transition: opacity var(--oge-modal-transition, 120ms ease-out);
+
+  &.oge-modal-layer-ready {
+    opacity: 1;
+  }
+
+  &.oge-modal-layer-top {
+    place-items: start center;
+    padding-top: 48px;
+  }
+
+  &.oge-modal-layer-unshaded {
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  &.oge-modal-layer-fullscreen {
+    padding: 0;
+  }
+}
+
+.oge-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-popup);
+  font-size: var(--oge-font-size);
+  transform: translateY(8px) scale(0.98);
+  transition: transform var(--oge-modal-transition, 120ms ease-out);
+
+  .oge-modal-layer-ready & {
+    transform: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      var(--oge-shadow-popup),
+      0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &.oge-modal-fullscreen {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    border: none;
+    border-radius: 0;
+  }
+}
+
+.oge-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--oge-border-color);
+
+  &.oge-modal-header-draggable {
+    cursor: move;
+    user-select: none;
+  }
+}
+
+.oge-modal-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.oge-modal-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.oge-modal-close,
+.oge-modal-maximize {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent-soft);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+}
+
+.oge-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
+
+  &.oge-modal-body-flush {
+    padding: 0;
+  }
+}
+
+.oge-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--oge-border-color);
+}
+
+.oge-modal-resize-handle {
+  position: absolute;
+  inset-inline-end: 2px;
+  bottom: 2px;
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  cursor: se-resize;
+  /* diagonal grip lines */
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 3px,
+    var(--oge-border-color) 3px 4px
+  );
+  border-end-end-radius: var(--oge-radius-lg);
+}
+
+/* busy: translucent veil over the whole panel with a centered spinner */
+.oge-modal-busy-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--oge-popup-bg) 60%, transparent);
+}
+
+.oge-modal-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--oge-accent-soft);
+  border-top-color: var(--oge-accent);
+  border-radius: 50%;
+  animation: oge-modal-spin 700ms linear infinite;
+}
+
+@keyframes oge-modal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-modal-layer,
+  .oge-modal {
+    transition: none;
+  }
+
+  .oge-modal-layer {
+    opacity: 1;
+  }
+
+  .oge-modal {
+    transform: none;
+  }
+
+  .oge-modal-spinner {
+    animation: none;
+  }
+}

@@ -19,7 +19,8 @@
 .oge-check-box,
 .oge-switch,
 .oge-radio-group,
-.oge-calendar {
+.oge-calendar,
+.oge-modal-layer {
   --oge-border-color: var(--bs-border-color, #dee2e6);
   --oge-header-bg: var(--bs-tertiary-bg, #f8f9fa);
   --oge-header-color: var(--bs-emphasis-color, #212529);
