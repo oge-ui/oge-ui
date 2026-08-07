@@ -161,7 +161,7 @@
 
 .oge-calendar-cell-selected {
   background: var(--oge-accent);
-  color: #fff;
+  color: var(--oge-severity-contrast);
 
   &:hover:not(:disabled) {
     background: var(--oge-accent);

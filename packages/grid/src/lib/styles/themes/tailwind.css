@@ -21,7 +21,9 @@
 .oge-radio-group,
 .oge-calendar,
 .oge-modal-layer,
-.oge-toast-region {
+.oge-toast-region,
+.oge-tooltip,
+.oge-pivot-grid {
   --oge-border-color: var(--color-slate-200, #e2e8f0);
   --oge-header-bg: var(--color-slate-50, #f8fafc);
   --oge-header-color: var(--color-slate-600, #475569);

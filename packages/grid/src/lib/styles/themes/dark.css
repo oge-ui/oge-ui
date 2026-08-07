@@ -21,6 +21,8 @@
 .oge-theme-dark .oge-calendar,
 .oge-theme-dark .oge-modal-layer,
 .oge-theme-dark .oge-toast-region,
+.oge-theme-dark .oge-tooltip,
+.oge-theme-dark .oge-pivot-grid,
 .oge-grid.oge-theme-dark,
 .oge-tree-list.oge-theme-dark,
 .oge-button.oge-theme-dark,
@@ -34,7 +36,9 @@
 .oge-radio-group.oge-theme-dark,
 .oge-calendar.oge-theme-dark,
 .oge-modal-layer.oge-theme-dark,
-.oge-toast-region.oge-theme-dark {
+.oge-toast-region.oge-theme-dark,
+.oge-tooltip.oge-theme-dark,
+.oge-pivot-grid.oge-theme-dark {
   /* native form controls (checkboxes, selects, date pickers) follow suit */
   color-scheme: dark;
   --oge-bg: #111827;

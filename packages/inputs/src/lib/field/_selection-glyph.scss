@@ -12,7 +12,7 @@
   border: 1px solid var(--oge-border-color);
   border-radius: 4px;
   background: var(--oge-bg);
-  color: #fff;
+  color: var(--oge-severity-contrast);
   transition:
     background-color 120ms ease,
     border-color 120ms ease;

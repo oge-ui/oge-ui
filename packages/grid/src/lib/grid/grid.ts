@@ -26,8 +26,8 @@ import {
   buildCsv,
   createFilterPredicate,
   flattenGroupedData,
+  buildSearchHighlightHtml,
   foldText,
-  foldTextWithMap,
   groupNodeKey,
   resolveKeySelector,
   type CsvOptions,
@@ -3367,38 +3367,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     }
     const cached = this.highlightCache.get(text);
     if (cached !== undefined) return cached;
-    const result = this.buildHighlightHtml(text, query);
+    const html = buildSearchHighlightHtml(text, query);
+    const result =
+      html === null ? null : this.sanitizer.bypassSecurityTrustHtml(html);
     if (this.highlightCache.size > 1000) this.highlightCache.clear();
     this.highlightCache.set(text, result);
     return result;
-  }
-
-  private buildHighlightHtml(text: string, query: string): SafeHtml | null {
-    // Match on folded text (locale-independent, accent-insensitive), then map
-    // the folded match range back onto the original string for the <mark>.
-    const { folded, sourceIndex } = foldTextWithMap(text);
-    const needle = foldText(query);
-    if (!needle || !folded.includes(needle)) return null;
-    const escape = (value: string) =>
-      value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    let html = '';
-    let index = 0;
-    let foldedFrom = 0;
-    for (;;) {
-      const found = folded.indexOf(needle, foldedFrom);
-      if (found < 0) {
-        html += escape(text.slice(index));
-        break;
-      }
-      const start = sourceIndex[found];
-      const last = sourceIndex[found + needle.length - 1];
-      const end = last + ((text.codePointAt(last) ?? 0) > 0xffff ? 2 : 1); // past the last source char
-      html += escape(text.slice(index, start));
-      html += `<mark class="oge-highlight">${escape(text.slice(start, end))}</mark>`;
-      index = end;
-      foldedFrom = found + needle.length;
-    }
-    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   // --- header filter (Excel-style distinct values) -------------------------

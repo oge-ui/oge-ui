@@ -14,7 +14,8 @@ export interface CsvOptions {
   header?: boolean;
 }
 
-function escapeCell(text: string, separator: string): string {
+/** RFC 4180 quoting for a single CSV cell (shared with the pivot exporter). */
+export function escapeCsvCell(text: string, separator: string): string {
   if (
     text.includes(separator) ||
     text.includes('"') ||
@@ -37,7 +38,7 @@ export function buildCsv<T>(
   if (options.header !== false) {
     lines.push(
       columns
-        .map((column) => escapeCell(column.caption, separator))
+        .map((column) => escapeCsvCell(column.caption, separator))
         .join(separator),
     );
   }
@@ -52,7 +53,7 @@ export function buildCsv<T>(
               : column.format
                 ? column.format(value)
                 : String(value);
-          return escapeCell(text, separator);
+          return escapeCsvCell(text, separator);
         })
         .join(separator),
     );

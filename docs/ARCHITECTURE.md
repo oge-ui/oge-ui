@@ -112,7 +112,9 @@ smallest complete example):
 - Themes: `packages/grid/src/lib/styles/themes/{dark,bootstrap,tailwind}.css`. Each lists component root
   selectors explicitly — **a new component's host class must be added to all three files**. Dark mode is
   activated by `.oge-theme-dark` on any ancestor.
-- Focus convention: `:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--oge-accent-soft); }`.
+- Focus convention: two rings. Pointer/programmatic focus gets the soft ring
+  (`box-shadow: 0 0 0 3px var(--oge-accent-soft)`); keyboard `:focus-visible` gets the strong ring
+  (`outline: none; box-shadow: 0 0 0 3px var(--oge-focus-ring)`) — see `field-chrome.scss`.
   Transitions `120ms ease`. RTL via logical properties (no `rtlEnabled` machinery in new code).
 - Icons are inline SVG with `aria-hidden="true"` — there is no icon font or icon package.
 

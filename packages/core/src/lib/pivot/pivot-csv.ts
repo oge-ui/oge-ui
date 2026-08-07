@@ -1,3 +1,4 @@
+import { escapeCsvCell } from '../export/csv';
 import type { PivotAxisNode, PivotResult } from './pivot-types';
 
 export interface PivotCsvOptions {
@@ -9,18 +10,6 @@ export interface PivotCsvOptions {
   grandTotalText?: string;
   /** Corner-cell caption above the row headers. Default empty. */
   cornerText?: string;
-}
-
-function escapeCell(text: string, separator: string): string {
-  if (
-    text.includes(separator) ||
-    text.includes('"') ||
-    text.includes('\n') ||
-    text.includes('\r')
-  ) {
-    return `"${text.replace(/"/g, '""')}"`;
-  }
-  return text;
 }
 
 function slotLabels(
@@ -73,7 +62,7 @@ export function buildPivotCsv(
   }
 
   const lines: string[] = [
-    header.map((cell) => escapeCell(cell, separator)).join(separator),
+    header.map((cell) => escapeCsvCell(cell, separator)).join(separator),
   ];
   for (let r = 0; r < result.rowLeafCount; r++) {
     const cells: string[] = [rowLabels[r] ?? ''];
@@ -84,7 +73,7 @@ export function buildPivotCsv(
       }
     }
     lines.push(
-      cells.map((cell) => escapeCell(cell, separator)).join(separator),
+      cells.map((cell) => escapeCsvCell(cell, separator)).join(separator),
     );
   }
   const body = lines.join('\r\n');

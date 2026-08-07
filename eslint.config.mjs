@@ -76,12 +76,13 @@ export default [
               ],
             },
             {
-              // umbrella package: re-exports every published family
+              // umbrella package: re-exports every MIT family.
+              // scope:pivot is deliberately absent — the umbrella must never
+              // depend on the commercial tier (see LICENSE).
               sourceTag: 'scope:ui',
               onlyDependOnLibsWithTags: [
                 'scope:grid',
                 'scope:tree-list',
-                'scope:pivot',
                 'scope:buttons',
                 'scope:overlay',
                 'scope:inputs',

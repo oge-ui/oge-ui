@@ -44,3 +44,40 @@ export function foldTextWithMap(text: string): FoldedText {
   }
   return { folded, sourceIndex };
 }
+
+/**
+ * Escaped HTML for `text` with `<mark class="oge-highlight">` around every
+ * fold-matched occurrence of `query`, or `null` when there is no match.
+ * Matching is locale-independent and accent-insensitive ({@link foldText});
+ * match ranges are mapped back onto the original string, surrogate-safe.
+ * The result is plain markup — sanitize/trust it at the rendering layer.
+ */
+export function buildSearchHighlightHtml(
+  text: string,
+  query: string,
+): string | null {
+  const { folded, sourceIndex } = foldTextWithMap(text);
+  const needle = foldText(query);
+  if (!needle || !folded.includes(needle)) return null;
+  const escape = (value: string) =>
+    value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  let html = '';
+  let index = 0;
+  let foldedFrom = 0;
+  for (;;) {
+    const found = folded.indexOf(needle, foldedFrom);
+    if (found < 0) {
+      html += escape(text.slice(index));
+      break;
+    }
+    const start = sourceIndex[found];
+    const last = sourceIndex[found + needle.length - 1];
+    // step past the last source char (2 units for astral-plane code points)
+    const end = last + ((text.codePointAt(last) ?? 0) > 0xffff ? 2 : 1);
+    html += escape(text.slice(index, start));
+    html += `<mark class="oge-highlight">${escape(text.slice(start, end))}</mark>`;
+    index = end;
+    foldedFrom = found + needle.length;
+  }
+  return html;
+}

@@ -48,8 +48,8 @@ import {
   filterTreeKeys,
   flattenNestedTree,
   flattenTreeData,
+  buildSearchHighlightHtml,
   foldText,
-  foldTextWithMap,
   type FilterExpr,
   resolveSelectedKeys,
   toggleTreeSelection,
@@ -1966,31 +1966,8 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     const query = this.store.filter.searchText().trim();
     if (!query) return null;
     const text = this.cellDisplayText(node, column);
-    // Match on folded text (locale-independent, accent-insensitive), then map
-    // the folded match range back onto the original string for the <mark>.
-    const { folded, sourceIndex } = foldTextWithMap(text);
-    const needle = foldText(query);
-    if (!needle || !folded.includes(needle)) return null;
-    const escape = (value: string) =>
-      value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    let html = '';
-    let index = 0;
-    let foldedFrom = 0;
-    for (;;) {
-      const found = folded.indexOf(needle, foldedFrom);
-      if (found < 0) {
-        html += escape(text.slice(index));
-        break;
-      }
-      const start = sourceIndex[found];
-      const last = sourceIndex[found + needle.length - 1];
-      const end = last + ((text.codePointAt(last) ?? 0) > 0xffff ? 2 : 1);
-      html += escape(text.slice(index, start));
-      html += `<mark class="oge-highlight">${escape(text.slice(start, end))}</mark>`;
-      index = end;
-      foldedFrom = found + needle.length;
-    }
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+    const html = buildSearchHighlightHtml(text, query);
+    return html === null ? null : this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   /** Filter-row lookup select: applies an exact-match filter on the raw value. */
