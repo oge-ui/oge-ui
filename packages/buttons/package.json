@@ -1,6 +1,17 @@
 {
   "name": "@oge-ui/buttons",
   "version": "0.6.0",
+  "description": "Signal-based Angular button family: OgeButton with async single-flight actions and hold-to-confirm, OgeButtonGroup selection and OgeDropDownButton.",
+  "keywords": [
+    "angular",
+    "button",
+    "button-group",
+    "dropdown-button",
+    "split-button",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
   "publishConfig": {
     "access": "public"
   },

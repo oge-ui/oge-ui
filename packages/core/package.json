@@ -1,11 +1,26 @@
 {
   "name": "@oge-ui/core",
   "version": "0.6.0",
+  "description": "Framework-free data engine behind the OGE UI suite: DataSource contract (array, custom, OData), filtering/sorting/grouping pipeline, virtualization math and CSV export.",
+  "keywords": [
+    "datasource",
+    "data-engine",
+    "filtering",
+    "sorting",
+    "grouping",
+    "virtualization",
+    "odata",
+    "csv",
+    "typescript"
+  ],
+  "author": "kaya2m",
   "publishConfig": {
     "access": "public"
   },
-  "main": "./index.cjs",
-  "module": "./index.js",
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "sideEffects": false,
   "dependencies": {},
   "homepage": "https://ogeui.com",
   "repository": {

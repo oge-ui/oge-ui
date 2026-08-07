@@ -1,6 +1,20 @@
 {
   "name": "@oge-ui/grid",
   "version": "0.6.0",
+  "description": "Signal-based Angular data grid: virtualized rendering for 100k+ rows, filtering, grouping, editing, selection, column virtualization, state persistence and Excel/PDF export.",
+  "keywords": [
+    "angular",
+    "data-grid",
+    "datagrid",
+    "grid",
+    "table",
+    "signals",
+    "virtual-scroll",
+    "excel-export",
+    "pdf-export",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
   "publishConfig": {
     "access": "public"
   },

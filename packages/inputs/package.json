@@ -1,6 +1,21 @@
 {
   "name": "@oge-ui/inputs",
   "version": "0.6.0",
+  "description": "Signal-based Angular form editors on one shared field chrome: text/number boxes, select box, tag box, autocomplete, checkbox, switch, radio group, calendar and date editors — native Date + Intl, no date library.",
+  "keywords": [
+    "angular",
+    "forms",
+    "inputs",
+    "select",
+    "autocomplete",
+    "tagbox",
+    "datepicker",
+    "calendar",
+    "checkbox",
+    "switch",
+    "signals"
+  ],
+  "author": "kaya2m",
   "publishConfig": {
     "access": "public"
   },
