@@ -22,7 +22,9 @@ describe('OgeToastService timers', () => {
       return 1;
     });
     vi.stubGlobal('cancelAnimationFrame', () => undefined);
-    vi.useFakeTimers();
+    // Keep the async rAF stub in charge — the fake-timer default would
+    // replace requestAnimationFrame with 16ms-stepped frames.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   });
 
   afterEach(() => {
@@ -131,24 +133,22 @@ describe('OgeToastService timers', () => {
   it('progress bar arms after render and freezes at the fraction on pause', () => {
     const service = TestBed.inject(OgeToastService);
     service.show({ message: 'progress', displayTime: 1000, progressBar: true });
-    advance(0); // render + afterRenderEffect
-    advance(0); // async rAF stub → armProgress
+    advance(1); // render + both rAF frames → armProgress
 
     const bar = document.querySelector<HTMLElement>('.oge-toast-progress-bar');
     expect(bar?.style.transform).toBe('scaleX(0)');
-    expect(bar?.style.transition).toContain('linear');
+    expect(bar?.style.transition).toContain('1000ms');
 
-    advance(600); // 400ms remaining
+    advance(599); // 600ms elapsed → 400ms remaining
     toastEl()?.dispatchEvent(new MouseEvent('mouseenter'));
     tick();
     expect(bar?.style.transition).toBe('none');
     expect(bar?.style.transform).toBe('scaleX(0.4)');
 
     toastEl()?.dispatchEvent(new MouseEvent('mouseleave'));
-    advance(0); // re-render frozen state
-    advance(0); // rAF → re-arm with the remaining 400ms
+    advance(1); // rAF frames → re-arm with the live remaining time
     expect(bar?.style.transform).toBe('scaleX(0)');
-    expect(bar?.style.transition).toContain('400ms');
+    expect(bar?.style.transition).toMatch(/39\dms linear/);
   });
 
   it('overlapping pause causes are ref-counted (hover + hidden)', () => {

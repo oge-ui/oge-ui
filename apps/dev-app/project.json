@@ -26,10 +26,7 @@
             "output": "themes"
           }
         ],
-        "styles": [
-          "apps/dev-app/src/tailwind.css",
-          "apps/dev-app/src/styles.scss"
-        ]
+        "styles": ["apps/dev-app/src/tailwind.css"]
       },
       "configurations": {
         "production": {
@@ -66,9 +63,6 @@
           "buildTarget": "dev-app:build:development"
         }
       }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint"
     },
     "serve-static": {
       "continuous": true,

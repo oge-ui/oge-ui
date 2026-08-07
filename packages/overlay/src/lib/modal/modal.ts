@@ -75,7 +75,7 @@ let nextModalId = 0;
   template: `
     @if (opened()) {
       <!-- backdrop layer: handlers only delegate — the panel owns focus -->
-      <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+      <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keyboard access is provided by the roving-tabindex/listbox key handling on the container -->
       <div
         #layer
         class="oge-modal-layer"

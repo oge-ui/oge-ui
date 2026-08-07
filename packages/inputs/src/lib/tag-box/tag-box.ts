@@ -185,7 +185,7 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
                 "
               >
                 @for (row of windowedItems(); track row.index) {
-                  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+                  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- keyboard access is provided by the roving-tabindex/listbox key handling on the container -->
                   <div
                     class="oge-select-option"
                     role="option"
@@ -248,7 +248,7 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
                 activedescendant pattern: options are never focusable and all
                 keyboard interaction lives on the combobox input above
               -->
-              <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+              <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- keyboard access is provided by the roving-tabindex/listbox key handling on the container -->
               <div
                 class="oge-select-option"
                 role="option"

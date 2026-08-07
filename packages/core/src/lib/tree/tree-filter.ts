@@ -7,10 +7,11 @@ import { ancestorsOf, type TreeIndex } from './tree-index';
  * - `'withAncestors'`: matched rows plus all their ancestors.
  * - `'fullBranch'`: matched rows, their ancestors, and *all* descendants of
  *   matched rows.
- * - `'matchOnly'`: alias of `'withAncestors'` for now — in a strict tree
+ * - `'matchOnly'`: deliberately behaves like `'withAncestors'` — in a tree
  *   render a match under a non-matching parent would be unreachable, so
- *   ancestors are always structurally required. Kept as a distinct value for
- *   forward compatibility.
+ *   ancestors are always structurally required. It stays a distinct value so
+ *   callers can express intent (and so a flat-result rendering mode could
+ *   honor it later without an API change).
  */
 export type TreeFilterMode = 'matchOnly' | 'withAncestors' | 'fullBranch';
 

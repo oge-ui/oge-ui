@@ -147,7 +147,7 @@ const ZOOM_ORDER: OgeCalendarZoomLevel[] = ['month', 'year', 'decade'];
       </button>
     </div>
     <!-- Delegated keyboard handler: focus lives on the roving-tabindex cell buttons inside. -->
-    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- keyboard access is provided by the roving-tabindex/listbox key handling on the container -->
     <div
       class="oge-calendar-grid"
       role="grid"

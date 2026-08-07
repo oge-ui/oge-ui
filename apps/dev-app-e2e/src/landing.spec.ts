@@ -4,7 +4,7 @@ test('root shows the landing page and the data grid overview renders rows', asyn
   page,
 }) => {
   await page.goto('/');
-  // The landing page copy is still being iterated on — assert structure only.
+  // Structure only: landing copy changes freely without breaking e2e.
   await expect(page.locator('h1').first()).toBeVisible();
 
   await page.goto('/components/data-grid');
