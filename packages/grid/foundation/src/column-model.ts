@@ -2,6 +2,8 @@ import { computed, type Signal, type TemplateRef } from '@angular/core';
 import type { ValidatorFn } from '@angular/forms';
 import {
   createFieldAccessor,
+  nextDay,
+  startOfDay,
   type DataSource,
   type FilterExpr,
   type FilterOperator,
@@ -134,6 +136,46 @@ export function buildRowFilterExpr(
       return { type: 'binary', field, op: 'eq', value: text === 'true' };
     default:
       return { type: 'binary', field, op, value: text };
+  }
+}
+
+/**
+ * Timezone-safe day filter for `dataType: 'date'` columns: `eq` becomes a
+ * local `[startOfDay, nextDay)` range, ordering operators compare against the
+ * matching day boundary. Bounds are local `Date`s — exact for `Date`-stored
+ * rows; core's filter evaluator parses ISO-string cells when compared with
+ * `Date` bounds (rows with date-only strings in UTC-negative zones may need
+ * `calculateFilterExpression`).
+ */
+export function dateFilterExpr(
+  field: string,
+  op: FilterOperator,
+  day: Date,
+): FilterExpr {
+  const start = startOfDay(day);
+  const end = nextDay(day);
+  switch (op) {
+    case 'ne':
+      return {
+        type: 'not',
+        operand: dateFilterExpr(field, 'eq', day),
+      };
+    case 'lt':
+      return { type: 'binary', field, op: 'lt', value: start };
+    case 'le':
+      return { type: 'binary', field, op: 'lt', value: end };
+    case 'gt':
+      return { type: 'binary', field, op: 'ge', value: end };
+    case 'ge':
+      return { type: 'binary', field, op: 'ge', value: start };
+    default:
+      return {
+        type: 'and',
+        operands: [
+          { type: 'binary', field, op: 'ge', value: start },
+          { type: 'binary', field, op: 'lt', value: end },
+        ],
+      };
   }
 }
 

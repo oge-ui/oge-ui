@@ -36,7 +36,9 @@ async function typeFilter(
   el: HTMLElement,
   text: string,
 ): Promise<void> {
-  const input = el.querySelector<HTMLInputElement>('.oge-filter-input');
+  const input = el.querySelector<HTMLInputElement>(
+    '.oge-filter-input .oge-input-native',
+  );
   if (!input) throw new Error('filter input not found');
   input.value = text;
   input.dispatchEvent(new Event('input', { bubbles: true }));

@@ -1,7 +1,12 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/packages/tree-list",
-  "allowedNonPeerDependencies": ["@oge-ui/core", "@oge-ui/grid"],
+  "allowedNonPeerDependencies": [
+    "@oge-ui/core",
+    "@oge-ui/grid",
+    "@oge-ui/inputs",
+    "@oge-ui/overlay"
+  ],
   "lib": {
     "entryFile": "src/index.ts"
   }

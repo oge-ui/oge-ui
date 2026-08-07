@@ -15,7 +15,11 @@
 .oge-drop-down-button,
 .oge-popup,
 .oge-menu-list,
-.oge-input {
+.oge-input,
+.oge-check-box,
+.oge-switch,
+.oge-radio-group,
+.oge-calendar {
   --oge-border-color: var(--color-slate-200, #e2e8f0);
   --oge-header-bg: var(--color-slate-50, #f8fafc);
   --oge-header-color: var(--color-slate-600, #475569);

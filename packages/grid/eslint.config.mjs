@@ -51,8 +51,14 @@ export default [
   },
   {
     files: ['**/*.html'],
-    // Override or add rules here
-    rules: {},
+    rules: {
+      // oge-check-box wraps a real (visually hidden) native checkbox — labels
+      // associate with it through native nesting
+      '@angular-eslint/template/label-has-associated-control': [
+        'error',
+        { controlComponents: ['oge-check-box'] },
+      ],
+    },
   },
   {
     // The foundation entry point must stay independent of the primary entry:

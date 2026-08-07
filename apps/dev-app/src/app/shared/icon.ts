@@ -32,7 +32,9 @@ export type IconName =
   | 'copy'
   | 'check'
   | 'arrow-right'
-  | 'shield';
+  | 'shield'
+  | 'toggle'
+  | 'calendar';
 
 /** Lucide-style inline SVG icons — no emoji, no icon-font dependency. */
 @Component({
@@ -149,6 +151,14 @@ export type IconName =
         @case ('check-square') {
           <polyline points="9 11 12 14 22 4" />
           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        }
+        @case ('toggle') {
+          <rect x="1" y="5" width="22" height="14" rx="7" />
+          <circle cx="16" cy="12" r="3" />
+        }
+        @case ('calendar') {
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M3 10h18M8 2v4M16 2v4" />
         }
         @case ('sun') {
           <circle cx="12" cy="12" r="4" />

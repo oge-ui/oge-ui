@@ -4,10 +4,16 @@ import { ApiReference } from '../../shared/api-reference';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
 import {
+  OGE_AUTOCOMPLETE_API,
+  OGE_CALENDAR_API,
+  OGE_CHECK_BOX_API,
+  OGE_DATE_BOX_API,
   OGE_INPUTS_CONFIG_API,
   OGE_INPUTS_TYPES_API,
   OGE_NUMBER_BOX_API,
+  OGE_RADIO_GROUP_API,
   OGE_SELECT_BOX_API,
+  OGE_SWITCH_API,
   OGE_TAG_BOX_API,
   OGE_TEXT_AREA_API,
   OGE_TEXT_BOX_API,
@@ -19,6 +25,12 @@ const SECTIONS = [
   'OgeNumberBox',
   'OgeSelectBox',
   'OgeTagBox',
+  'OgeAutocomplete',
+  'OgeCheckBox',
+  'OgeSwitch',
+  'OgeRadioGroup',
+  'OgeCalendar',
+  'OgeDateBox',
   'Shared input types',
   'Inputs configuration',
 ] as const;
@@ -72,6 +84,36 @@ const SECTIONS = [
       selector="oge-tag-box"
       [sections]="tagBoxApi"
     />
+    <app-api-reference
+      title="OgeAutocomplete"
+      selector="oge-autocomplete"
+      [sections]="autocompleteApi"
+    />
+    <app-api-reference
+      title="OgeCheckBox"
+      selector="oge-check-box"
+      [sections]="checkBoxApi"
+    />
+    <app-api-reference
+      title="OgeSwitch"
+      selector="oge-switch"
+      [sections]="switchApi"
+    />
+    <app-api-reference
+      title="OgeRadioGroup"
+      selector="oge-radio-group"
+      [sections]="radioGroupApi"
+    />
+    <app-api-reference
+      title="OgeCalendar"
+      selector="oge-calendar"
+      [sections]="calendarApi"
+    />
+    <app-api-reference
+      title="OgeDateBox"
+      selector="oge-date-box"
+      [sections]="dateBoxApi"
+    />
     <app-api-reference title="Shared input types" [sections]="typesApi" />
     <app-api-reference title="Inputs configuration" [sections]="configApi" />
 
@@ -103,6 +145,12 @@ export class InputsApiPage {
   protected readonly numberBoxApi = OGE_NUMBER_BOX_API;
   protected readonly selectBoxApi = OGE_SELECT_BOX_API;
   protected readonly tagBoxApi = OGE_TAG_BOX_API;
+  protected readonly autocompleteApi = OGE_AUTOCOMPLETE_API;
+  protected readonly checkBoxApi = OGE_CHECK_BOX_API;
+  protected readonly switchApi = OGE_SWITCH_API;
+  protected readonly radioGroupApi = OGE_RADIO_GROUP_API;
+  protected readonly calendarApi = OGE_CALENDAR_API;
+  protected readonly dateBoxApi = OGE_DATE_BOX_API;
   protected readonly typesApi = OGE_INPUTS_TYPES_API;
   protected readonly configApi = OGE_INPUTS_CONFIG_API;
 }

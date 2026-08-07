@@ -131,7 +131,9 @@ describe('OgeTreeList API & events wave', () => {
     grid.addRow(1);
     await settle(fixture);
     expect(host.lastInit).toMatchObject({ parentKey: 1 });
-    const editors = el.querySelectorAll<HTMLInputElement>('.oge-editor');
+    const editors = el.querySelectorAll<HTMLInputElement>(
+      '.oge-editor .oge-input-native',
+    );
     expect(editors[0].value).toBe('Prefilled');
     expect(editors[1].value).toBe('9');
   });

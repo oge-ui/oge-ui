@@ -1,8 +1,10 @@
+// the canonical menu item now lives in @oge-ui/overlay — re-exported here so
+// grid consumers keep their import path
+export { type OgeMenuItem } from '@oge-ui/overlay';
 export {
   OgeGrid,
   type OgeColumnDef,
   type OgeRowClickEvent,
-  type OgeMenuItem,
   type OgeContextMenuEvent,
   type OgeHeaderContextMenuEvent,
   type OgeFilterRowOptions,
@@ -82,6 +84,10 @@ export {
 } from './lib/templates/row-template';
 export { OgeToolbarItem } from './lib/templates/toolbar-item';
 export { OgePager } from './lib/pager/pager';
+export {
+  OgeCellEditor,
+  type OgeCellEditorSurface,
+} from './lib/editing/cell-editor';
 export { GridStateStore } from './lib/state/grid-state.store';
 export { SortSlice } from './lib/state/sort-slice';
 export { PagingSlice } from './lib/state/paging-slice';

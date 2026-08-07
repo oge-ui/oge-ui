@@ -8,7 +8,7 @@ test('batch editing: edit cells, delete a row, save as one change set', async ({
 
   // edit first row's First Name (col index 1)
   await page.locator('.oge-row').first().locator('.oge-cell').nth(1).click();
-  const editor = page.locator('.oge-editor');
+  const editor = page.locator('.oge-editor .oge-input-native');
   await expect(editor).toBeVisible();
   await editor.fill('Düzenlendi');
   await editor.press('Enter');
@@ -36,7 +36,7 @@ test('validation blocks a required cell from committing', async ({ page }) => {
   await expect(page.locator('.oge-row').first()).toBeVisible();
 
   await page.locator('.oge-row').first().locator('.oge-cell').nth(1).click();
-  const editor = page.locator('.oge-editor');
+  const editor = page.locator('.oge-editor .oge-input-native');
   await editor.fill('');
   await editor.press('Enter');
   // editor stays open with the invalid style; nothing was saved
@@ -57,8 +57,8 @@ test('row mode edits via the command column', async ({ page }) => {
   await expect(grid.locator('.oge-row').first()).toBeVisible();
 
   await grid.locator('[aria-label="Edit"]').first().click();
-  const editors = grid.locator('.oge-editor');
-  await expect(editors).toHaveCount(4); // firstName, lastName, department(select), salary
+  await expect(grid.locator('.oge-editor')).toHaveCount(4); // firstName, lastName, department(select), salary
+  const editors = grid.locator('.oge-editor .oge-input-native');
   await editors.first().fill('Satır Modu');
   await expect(editors.first()).toHaveValue('Satır Modu'); // editor kept focus & value
   await grid.locator('[aria-label="Save"]').click();

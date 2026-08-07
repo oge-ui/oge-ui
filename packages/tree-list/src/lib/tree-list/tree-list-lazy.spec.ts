@@ -226,7 +226,9 @@ describe('OgeTreeList lazy loading', () => {
     ).find((row) => (row.textContent ?? '').includes('Child A1'));
     childRow?.querySelector<HTMLElement>('.oge-cell')?.click();
     await settle(fixture);
-    const editor = el.querySelector<HTMLInputElement>('.oge-editor');
+    const editor = el.querySelector<HTMLInputElement>(
+      '.oge-editor .oge-input-native',
+    );
     expect(editor).toBeTruthy();
     if (!editor) return;
     editor.value = 'Edited child';

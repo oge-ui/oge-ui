@@ -297,6 +297,28 @@ export const appRoutes: Route[] = [
         title: 'OGE — Select Box',
       },
       {
+        path: 'autocomplete',
+        loadComponent: () =>
+          import('./pages/inputs/autocomplete').then(
+            (m) => m.InputsAutocompletePage,
+          ),
+        title: 'OGE — Autocomplete',
+      },
+      {
+        path: 'toggle-controls',
+        loadComponent: () =>
+          import('./pages/inputs/toggle-controls').then(
+            (m) => m.InputsToggleControlsPage,
+          ),
+        title: 'OGE — Toggle Controls',
+      },
+      {
+        path: 'date-box',
+        loadComponent: () =>
+          import('./pages/inputs/date-box').then((m) => m.InputsDateBoxPage),
+        title: 'OGE — Date Editors',
+      },
+      {
         path: 'showcase',
         loadComponent: () =>
           import('./pages/inputs/showcase').then((m) => m.InputsShowcasePage),

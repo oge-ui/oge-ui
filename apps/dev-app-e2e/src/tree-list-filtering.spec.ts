@@ -8,7 +8,9 @@ test('filtering keeps ancestor rows visible', async ({ page }) => {
   const allCount = await rows.count();
   expect(allCount).toBeGreaterThan(10);
 
-  const officeFilter = tree.locator('.oge-filter-input').nth(2);
+  const officeFilter = tree
+    .locator('.oge-filter-input .oge-input-native')
+    .nth(2);
   await officeFilter.fill('Berlin');
   await expect
     .poll(async () => rows.count(), { timeout: 5000 })

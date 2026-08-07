@@ -1,4 +1,5 @@
 @use '../../../../grid/src/lib/styles/tokens';
+@use './selection-glyph';
 
 // Host classes (.oge-input …) live on the editor elements (oge-text-box etc.);
 // the chrome renders the shared structure inside them.
@@ -530,6 +531,13 @@
   font-size: var(--oge-font-size);
 }
 
+// matched part of a suggestion (autocomplete search highlight)
+.oge-select-mark {
+  background: none;
+  color: var(--oge-accent);
+  font-weight: 600;
+}
+
 .oge-select-group {
   padding: 8px 10px 3px;
   font-size: calc(var(--oge-font-size) - 2px);
@@ -551,6 +559,42 @@
   flex: none;
   border-radius: 6px;
   object-fit: cover;
+}
+
+// --- virtual scrolling ------------------------------------------------------
+// Fixed row heights must match OGE_SELECT_OPTION_HEIGHT in list-virtualizer.ts.
+
+.oge-select-list-virtual {
+  overflow-anchor: none;
+}
+
+.oge-select-spacer {
+  position: relative;
+}
+
+.oge-select-window {
+  will-change: transform;
+}
+
+.oge-select-list-virtual .oge-select-option {
+  box-sizing: border-box;
+  height: 34px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.oge-select-list-virtual .oge-select-option-text {
+  // wrapItemText is incompatible with fixed-height rows
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.oge-input-sm .oge-select-list-virtual .oge-select-option {
+  height: 28px;
+}
+
+.oge-input-lg .oge-select-list-virtual .oge-select-option {
+  height: 40px;
 }
 // --- tag box ----------------------------------------------------------------
 
@@ -639,22 +683,9 @@
 }
 
 .oge-tag-checkbox {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 15px;
-  height: 15px;
-  flex: none;
-  border: 1px solid var(--oge-border-color);
-  border-radius: 4px;
-  background: var(--oge-bg);
-  color: #fff;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+  @include selection-glyph.selection-glyph;
 }
 
 .oge-tag-checkbox-on {
-  border-color: var(--oge-accent);
-  background: var(--oge-accent);
+  @include selection-glyph.selection-glyph-on;
 }

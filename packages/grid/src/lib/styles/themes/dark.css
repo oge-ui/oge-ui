@@ -15,6 +15,10 @@
 .oge-theme-dark .oge-popup,
 .oge-theme-dark .oge-menu-list,
 .oge-theme-dark .oge-input,
+.oge-theme-dark .oge-check-box,
+.oge-theme-dark .oge-switch,
+.oge-theme-dark .oge-radio-group,
+.oge-theme-dark .oge-calendar,
 .oge-grid.oge-theme-dark,
 .oge-tree-list.oge-theme-dark,
 .oge-button.oge-theme-dark,
@@ -22,7 +26,11 @@
 .oge-drop-down-button.oge-theme-dark,
 .oge-popup.oge-theme-dark,
 .oge-menu-list.oge-theme-dark,
-.oge-input.oge-theme-dark {
+.oge-input.oge-theme-dark,
+.oge-check-box.oge-theme-dark,
+.oge-switch.oge-theme-dark,
+.oge-radio-group.oge-theme-dark,
+.oge-calendar.oge-theme-dark {
   /* native form controls (checkboxes, selects, date pickers) follow suit */
   color-scheme: dark;
   --oge-bg: #111827;

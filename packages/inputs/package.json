@@ -10,6 +10,7 @@
     "@angular/forms": "^22.0.0"
   },
   "dependencies": {
+    "@oge-ui/core": "0.5.0",
     "@oge-ui/overlay": "0.5.0"
   },
   "sideEffects": false,

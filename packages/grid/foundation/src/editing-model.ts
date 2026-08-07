@@ -1,6 +1,12 @@
 import { computed, untracked, type Signal } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import type { DataRowNode, DataSource, RowKey, RowNode } from '@oge-ui/core';
+import {
+  serializeLikeOriginal,
+  type DataRowNode,
+  type DataSource,
+  type RowKey,
+  type RowNode,
+} from '@oge-ui/core';
 import {
   mapLookupItems,
   type ColumnSource,
@@ -268,6 +274,7 @@ export class EditingModel<
   private editorValue(
     control: FormControl<unknown>,
     column: ResolvedColumn<T, S>,
+    original?: unknown,
   ): unknown {
     const value = control.value;
     if (column.lookupItems) {
@@ -284,6 +291,13 @@ export class EditingModel<
     ) {
       const parsed = Number(value);
       return Number.isNaN(parsed) ? value : parsed;
+    }
+    if (
+      column.dataType === 'date' &&
+      (value instanceof Date || value === null)
+    ) {
+      // the date box edits real Dates — write back in the row's storage shape
+      return serializeLikeOriginal(value, original);
     }
     return value;
   }
@@ -304,8 +318,8 @@ export class EditingModel<
       return;
     }
     const node = this.dataNodeOf(cell.key);
-    const value = this.editorValue(control, column);
     const original = node ? column.accessor(node.data) : undefined;
+    const value = this.editorValue(control, column, original);
     if (this.editMode() === 'batch') {
       if (value !== original || this.deps.slice.isAdded(cell.key)) {
         this.deps.slice.setChange(cell.key, cell.field, value);
@@ -417,11 +431,9 @@ export class EditingModel<
         invalid = true;
         continue;
       }
-      const value = this.editorValue(control, column);
-      if (
-        value !== column.accessor(node.data) ||
-        this.deps.slice.isAdded(rowKey)
-      ) {
+      const original = column.accessor(node.data);
+      const value = this.editorValue(control, column, original);
+      if (value !== original || this.deps.slice.isAdded(rowKey)) {
         data[field] = value;
       }
     }

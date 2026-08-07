@@ -2,10 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   ViewEncapsulation,
+  computed,
   input,
   output,
 } from '@angular/core';
 import type { FilterExpr, FilterOperator } from '@oge-ui/core';
+import { OgeSelectBox, OgeTextBox } from '@oge-ui/inputs';
 import type { OgeDataType } from '../columns/column';
 import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
 
@@ -36,7 +38,16 @@ export function operatorsFor(dataType: OgeDataType): FilterOperator[] {
     case 'boolean':
       return ['eq', 'ne'];
     default:
-      return ['contains', 'notcontains', 'startswith', 'endswith', 'eq', 'ne', 'isnull', 'isnotnull'];
+      return [
+        'contains',
+        'notcontains',
+        'startswith',
+        'endswith',
+        'eq',
+        'ne',
+        'isnull',
+        'isnotnull',
+      ];
   }
 }
 
@@ -52,7 +63,7 @@ function typedValue(raw: string, dataType: OgeDataType): unknown {
 /** Converts the mutable builder tree into a FilterExpr (drops empty parts). */
 export function builderToExpr(
   group: BuilderGroup,
-  fields: readonly FilterBuilderField[]
+  fields: readonly FilterBuilderField[],
 ): FilterExpr | null {
   const operands: FilterExpr[] = [];
   for (const item of group.items) {
@@ -69,7 +80,9 @@ export function builderToExpr(
       type: 'binary',
       field: item.field,
       op: item.op,
-      ...(needsValue ? { value: typedValue(item.value.trim(), meta.dataType) } : {}),
+      ...(needsValue
+        ? { value: typedValue(item.value.trim(), meta.dataType) }
+        : {}),
     });
   }
   if (!operands.length) return null;
@@ -79,7 +92,7 @@ export function builderToExpr(
 /** Converts a FilterExpr back into an editable builder tree. */
 export function exprToBuilder(
   expr: FilterExpr | null,
-  fields: readonly FilterBuilderField[]
+  fields: readonly FilterBuilderField[],
 ): BuilderGroup {
   const root: BuilderGroup = { kind: 'group', logic: 'and', items: [] };
   if (!expr) return root;
@@ -116,13 +129,16 @@ export function exprToBuilder(
 export function describeExpr(
   expr: FilterExpr,
   fields: readonly FilterBuilderField[],
-  messages: OgeGridMessages
+  messages: OgeGridMessages,
 ): string {
   if (expr.type === 'binary') {
-    const caption = fields.find((f) => f.field === expr.field)?.caption ?? expr.field;
+    const caption =
+      fields.find((f) => f.field === expr.field)?.caption ?? expr.field;
     const op = messages.operators[expr.op] ?? expr.op;
     const needsValue = expr.op !== 'isnull' && expr.op !== 'isnotnull';
-    return needsValue ? `[${caption}] ${op} '${String(expr.value ?? '')}'` : `[${caption}] ${op}`;
+    return needsValue
+      ? `[${caption}] ${op} '${String(expr.value ?? '')}'`
+      : `[${caption}] ${op}`;
   }
   if (expr.type === 'not') {
     return `NOT (${describeExpr(expr.operand, fields, messages)})`;
@@ -132,7 +148,7 @@ export function describeExpr(
     .map((operand) =>
       operand.type === 'binary'
         ? describeExpr(operand, fields, messages)
-        : `(${describeExpr(operand, fields, messages)})`
+        : `(${describeExpr(operand, fields, messages)})`,
     )
     .join(` ${logic} `);
 }
@@ -145,7 +161,7 @@ export function describeExpr(
   selector: 'oge-filter-builder-group',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [],
+  imports: [OgeSelectBox, OgeTextBox],
   template: `
     <div class="oge-fb-group" [class.oge-fb-root]="root()">
       <div class="oge-fb-logic" role="group">
@@ -172,7 +188,17 @@ export function describeExpr(
             [attr.aria-label]="messages().removeItem"
             (click)="remove.emit()"
           >
-            <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m4 4 8 8M12 4l-8 8" /></svg>
+            <svg
+              viewBox="0 0 16 16"
+              width="11"
+              height="11"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="m4 4 8 8M12 4l-8 8" />
+            </svg>
           </button>
         }
       </div>
@@ -185,7 +211,9 @@ export function describeExpr(
               (change)="setField(index, $any($event.target).value)"
             >
               @for (fieldMeta of fields(); track fieldMeta.field) {
-                <option [value]="fieldMeta.field">{{ fieldMeta.caption }}</option>
+                <option [value]="fieldMeta.field">
+                  {{ fieldMeta.caption }}
+                </option>
               }
             </select>
             <select
@@ -199,21 +227,41 @@ export function describeExpr(
             </select>
             @if (item.op !== 'isnull' && item.op !== 'isnotnull') {
               @if (dataTypeOf(item) === 'boolean') {
-                <select
+                <oge-select-box
                   class="oge-fb-input"
+                  size="sm"
+                  labelMode="hidden"
+                  subscriptSizing="none"
+                  [label]="messages().filterValuePlaceholder"
+                  [items]="booleanItems()"
+                  displayExpr="text"
+                  valueExpr="value"
                   [value]="item.value"
-                  (change)="setValue(index, $any($event.target).value)"
-                >
-                  <option value="true">{{ messages().booleanTrue }}</option>
-                  <option value="false">{{ messages().booleanFalse }}</option>
-                </select>
-              } @else {
+                  (valueCommitted)="
+                    setValue(index, $any($event.value ?? 'true'))
+                  "
+                />
+              } @else if (dataTypeOf(item) === 'date') {
                 <input
                   class="oge-fb-input"
-                  [type]="dataTypeOf(item) === 'number' ? 'number' : dataTypeOf(item) === 'date' ? 'date' : 'text'"
+                  type="date"
                   [placeholder]="messages().filterValuePlaceholder"
                   [value]="item.value"
                   (input)="setValue(index, $any($event.target).value)"
+                />
+              } @else {
+                <oge-text-box
+                  class="oge-fb-input"
+                  size="sm"
+                  labelMode="hidden"
+                  subscriptSizing="none"
+                  [label]="messages().filterValuePlaceholder"
+                  [placeholder]="messages().filterValuePlaceholder"
+                  [inputMode]="
+                    dataTypeOf(item) === 'number' ? 'decimal' : undefined
+                  "
+                  [value]="textValueOf(item)"
+                  (inputChange)="setValue(index, $event.text)"
                 />
               }
             }
@@ -223,7 +271,17 @@ export function describeExpr(
               [attr.aria-label]="messages().removeItem"
               (click)="removeAt(index)"
             >
-              <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m4 4 8 8M12 4l-8 8" /></svg>
+              <svg
+                viewBox="0 0 16 16"
+                width="11"
+                height="11"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <path d="m4 4 8 8M12 4l-8 8" />
+              </svg>
             </button>
           </div>
         } @else {
@@ -248,7 +306,20 @@ export class OgeFilterBuilderGroup {
   readonly remove = output<void>();
 
   protected dataTypeOf(condition: BuilderCondition): OgeDataType {
-    return this.fields().find((f) => f.field === condition.field)?.dataType ?? 'string';
+    return (
+      this.fields().find((f) => f.field === condition.field)?.dataType ??
+      'string'
+    );
+  }
+
+  /** Boolean value editor items. */
+  protected readonly booleanItems = computed(() => [
+    { value: 'true', text: this.messages().booleanTrue },
+    { value: 'false', text: this.messages().booleanFalse },
+  ]);
+
+  protected textValueOf(condition: BuilderCondition): string {
+    return condition.value == null ? '' : String(condition.value);
   }
 
   protected operatorsOf(condition: BuilderCondition): FilterOperator[] {

@@ -178,16 +178,6 @@
   align-items: center;
 }
 
-.oge-menu-item-active {
-  font-weight: 600;
-  color: var(--oge-accent);
-}
-
-.oge-menu-item-muted {
-  color: var(--oge-muted-color);
-  border-top: 1px solid var(--oge-border-color);
-}
-
 .oge-builder-popup {
   width: min(640px, calc(100vw - 32px));
 }
@@ -786,6 +776,30 @@
   box-shadow: 0 0 0 1px #dc2626;
 }
 
+// Composite editor host (oge-cell-editor) — fills its cell/form field; the
+// inner @oge-ui/inputs editors run in the compact sm/hidden-label shape.
+.oge-cell-editor {
+  display: block;
+  width: 100%;
+  min-width: 0;
+
+  .oge-input {
+    display: flex;
+    width: 100%;
+  }
+
+  // invalid state renders on the host border (house .oge-editor-invalid) —
+  // avoid double borders from the inner chrome
+  &.oge-editor-invalid {
+    border-radius: var(--oge-radius);
+  }
+
+  .oge-cell-editor-native {
+    // the native date input keeps the legacy .oge-editor-input look
+    display: block;
+  }
+}
+
 .oge-cell-dirty {
   position: relative;
 
@@ -1090,28 +1104,19 @@
 }
 
 // --- popups ----------------------------------------------------------------
+// Positioning/chrome comes from the enclosing <oge-popup> (@oge-ui/overlay);
+// these classes style only the popup CONTENT.
 
 .oge-header-filter-popup,
 .oge-chooser-popup {
-  position: fixed;
-  z-index: 1000;
   min-width: 180px;
   max-height: 280px;
   overflow: auto;
   padding: 5px;
-  border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius-lg, var(--oge-radius));
-  background: var(--oge-popup-bg);
   color: var(--oge-text-color, inherit);
-  box-shadow: var(--oge-shadow-popup, 0 6px 20px rgb(0 0 0 / 0.12));
   font-size: var(--oge-font-size);
   scrollbar-width: thin;
   scrollbar-color: var(--oge-border-color) transparent;
-}
-
-.oge-chooser-popup {
-  // anchored to the chooser button: [style.top/left] is its bottom-right corner
-  transform: translateX(-100%);
 }
 
 .oge-chooser-item {
@@ -1177,38 +1182,8 @@
   color: var(--oge-muted-color);
 }
 
-.oge-context-menu {
-  position: fixed;
-  z-index: 1000;
+// context/operator menus render an <oge-menu-list> inside an <oge-popup> —
+// both chrome and .oge-menu-item styling are owned by @oge-ui/overlay.
+.oge-context-menu .oge-menu-list {
   min-width: 168px;
-  padding: 5px;
-  border: 1px solid var(--oge-border-color);
-  border-radius: var(--oge-radius-lg, var(--oge-radius));
-  background: var(--oge-popup-bg);
-  color: var(--oge-text-color, inherit);
-  box-shadow: var(--oge-shadow-popup, 0 6px 20px rgb(0 0 0 / 0.12));
-  font-size: var(--oge-font-size);
-  display: flex;
-  flex-direction: column;
-}
-
-.oge-menu-item {
-  padding: 6px 12px;
-  border: none;
-  border-radius: var(--oge-radius);
-  background: none;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-  color: var(--oge-header-color);
-  transition: background-color 100ms ease;
-
-  &:hover:not(:disabled) {
-    background: var(--oge-row-hover-bg);
-  }
-
-  &:disabled {
-    color: var(--oge-muted-color);
-    cursor: default;
-  }
 }

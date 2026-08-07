@@ -27,8 +27,18 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 @Component({
   imports: [OgeGrid, OgeColumn],
   template: `
-    <oge-grid [data]="data" keyField="id" [editing]="editing()" (savingChanges)="onSaving($event)">
-      <oge-column field="id" dataType="number" [width]="60" [editable]="false" />
+    <oge-grid
+      [data]="data"
+      keyField="id"
+      [editing]="editing()"
+      (savingChanges)="onSaving($event)"
+    >
+      <oge-column
+        field="id"
+        dataType="number"
+        [width]="60"
+        [editable]="false"
+      />
       <oge-column field="name" [required]="true" />
       <oge-column field="price" dataType="number" />
     </oge-grid>
@@ -47,7 +57,22 @@ class EditingHost {
 }
 
 function cellAt(el: HTMLElement, row: number, col: number): HTMLElement {
-  return el.querySelectorAll('.oge-row')[row].querySelectorAll('.oge-cell')[col] as HTMLElement;
+  return el.querySelectorAll('.oge-row')[row].querySelectorAll('.oge-cell')[
+    col
+  ] as HTMLElement;
+}
+
+/** The native input inside the composite `.oge-editor` host. */
+function editorInput(root: HTMLElement | Element): HTMLInputElement {
+  return root.querySelector(
+    '.oge-editor .oge-input-native, .oge-editor input',
+  ) as HTMLInputElement;
+}
+
+function editorInputs(root: HTMLElement | Element): HTMLInputElement[] {
+  return Array.from(
+    root.querySelectorAll<HTMLInputElement>('.oge-editor .oge-input-native'),
+  );
 }
 
 function typeInto(input: HTMLInputElement, value: string): void {
@@ -56,14 +81,20 @@ function typeInto(input: HTMLInputElement, value: string): void {
 }
 
 function pressEnter(input: HTMLElement): void {
-  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  input.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+  );
 }
 
 async function render(editing: OgeEditingOptions) {
   const fixture = TestBed.createComponent(EditingHost);
   fixture.componentInstance.editing.set(editing);
   await settle(fixture);
-  return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+  return {
+    fixture,
+    host: fixture.componentInstance,
+    el: fixture.nativeElement as HTMLElement,
+  };
 }
 
 describe('OgeGrid editing — cell mode', () => {
@@ -71,7 +102,7 @@ describe('OgeGrid editing — cell mode', () => {
     const { fixture, host, el } = await render({ mode: 'cell' });
     cellAt(el, 0, 1).click();
     await settle(fixture);
-    const editor = el.querySelector('.oge-editor') as HTMLInputElement;
+    const editor = editorInput(el);
     expect(editor).toBeTruthy();
     expect(editor.value).toBe('Klavye');
 
@@ -92,14 +123,16 @@ describe('OgeGrid editing — cell mode', () => {
     const { fixture, host, el } = await render({ mode: 'cell' });
     cellAt(el, 1, 1).click();
     await settle(fixture);
-    const editor = el.querySelector('.oge-editor') as HTMLInputElement;
+    const editor = editorInput(el);
     typeInto(editor, '');
     pressEnter(editor);
     await settle(fixture);
     expect(host.events).toHaveLength(0);
     expect(el.querySelector('.oge-editor-invalid')).toBeTruthy();
 
-    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    editor.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
     await settle(fixture);
     expect(el.querySelector('.oge-editor')).toBeFalsy();
     expect(host.data[1].name).toBe('Fare');
@@ -110,7 +143,7 @@ describe('OgeGrid editing — cell mode', () => {
     host.cancelNext = true;
     cellAt(el, 0, 1).click();
     await settle(fixture);
-    const editor = el.querySelector('.oge-editor') as HTMLInputElement;
+    const editor = editorInput(el);
     typeInto(editor, 'X');
     pressEnter(editor);
     await settle(fixture);
@@ -121,19 +154,22 @@ describe('OgeGrid editing — cell mode', () => {
 
 describe('OgeGrid editing — batch mode', () => {
   it('accumulates dirty cells, marks removals and saves everything at once', async () => {
-    const { fixture, host, el } = await render({ mode: 'batch', allowDeleting: true });
+    const { fixture, host, el } = await render({
+      mode: 'batch',
+      allowDeleting: true,
+    });
 
     // edit two cells
     cellAt(el, 0, 2).click();
     await settle(fixture);
-    typeInto(el.querySelector('.oge-editor') as HTMLInputElement, '120');
-    pressEnter(el.querySelector('.oge-editor') as HTMLInputElement);
+    typeInto(editorInput(el), '120');
+    pressEnter(editorInput(el));
     await settle(fixture);
 
     cellAt(el, 1, 1).click();
     await settle(fixture);
-    typeInto(el.querySelector('.oge-editor') as HTMLInputElement, 'Oyuncu Faresi');
-    pressEnter(el.querySelector('.oge-editor') as HTMLInputElement);
+    typeInto(editorInput(el), 'Oyuncu Faresi');
+    pressEnter(editorInput(el));
     await settle(fixture);
 
     expect(el.querySelectorAll('.oge-cell-dirty').length).toBe(2);
@@ -141,13 +177,15 @@ describe('OgeGrid editing — batch mode', () => {
     expect(host.data[0].price).toBe(100); // not saved yet
 
     // mark third row for deletion
-    (el.querySelectorAll('.oge-command-delete')[2] as HTMLButtonElement).click();
+    (
+      el.querySelectorAll('.oge-command-delete')[2] as HTMLButtonElement
+    ).click();
     await settle(fixture);
     expect(el.querySelectorAll('.oge-row-removed').length).toBe(1);
 
     // save everything
-    const save = Array.from(el.querySelectorAll('.oge-toolbar-text-btn')).find((b) =>
-      b.textContent?.includes('Save changes')
+    const save = Array.from(el.querySelectorAll('.oge-toolbar-text-btn')).find(
+      (b) => b.textContent?.includes('Save changes'),
     ) as HTMLButtonElement;
     save.click();
     await settle(fixture);
@@ -169,14 +207,14 @@ describe('OgeGrid editing — batch mode', () => {
     const { fixture, host, el } = await render({ mode: 'batch' });
     cellAt(el, 0, 1).click();
     await settle(fixture);
-    typeInto(el.querySelector('.oge-editor') as HTMLInputElement, 'Değişti');
-    pressEnter(el.querySelector('.oge-editor') as HTMLInputElement);
+    typeInto(editorInput(el), 'Değişti');
+    pressEnter(editorInput(el));
     await settle(fixture);
     expect(el.querySelectorAll('.oge-cell-dirty').length).toBe(1);
 
-    const discard = Array.from(el.querySelectorAll('.oge-toolbar-text-btn')).find((b) =>
-      b.textContent?.includes('Discard')
-    ) as HTMLButtonElement;
+    const discard = Array.from(
+      el.querySelectorAll('.oge-toolbar-text-btn'),
+    ).find((b) => b.textContent?.includes('Discard')) as HTMLButtonElement;
     discard.click();
     await settle(fixture);
     expect(el.querySelectorAll('.oge-cell-dirty').length).toBe(0);
@@ -187,16 +225,22 @@ describe('OgeGrid editing — batch mode', () => {
 
 describe('OgeGrid editing — row mode', () => {
   it('edits a whole row via the command column and saves', async () => {
-    const { fixture, host, el } = await render({ mode: 'row', allowDeleting: true });
+    const { fixture, host, el } = await render({
+      mode: 'row',
+      allowDeleting: true,
+    });
     expect(el.querySelectorAll('.oge-command-cell').length).toBeGreaterThan(0);
 
-    (el.querySelectorAll('[aria-label="Edit"]')[0] as HTMLButtonElement).click();
+    (
+      el.querySelectorAll('[aria-label="Edit"]')[0] as HTMLButtonElement
+    ).click();
     await settle(fixture);
     const editors = el.querySelectorAll('.oge-editor');
     expect(editors.length).toBe(2); // name + price (id not editable)
 
-    typeInto(editors[0] as HTMLInputElement, 'Yeni Ad');
-    typeInto(editors[1] as HTMLInputElement, '111');
+    const inputs = editorInputs(el);
+    typeInto(inputs[0], 'Yeni Ad');
+    typeInto(inputs[1], '111');
     (el.querySelector('[aria-label="Save"]') as HTMLButtonElement).click();
     await settle(fixture);
     await settle(fixture);
@@ -208,8 +252,13 @@ describe('OgeGrid editing — row mode', () => {
   });
 
   it('deletes a row immediately in row mode', async () => {
-    const { fixture, host, el } = await render({ mode: 'row', allowDeleting: true });
-    (el.querySelectorAll('.oge-command-delete')[1] as HTMLButtonElement).click();
+    const { fixture, host, el } = await render({
+      mode: 'row',
+      allowDeleting: true,
+    });
+    (
+      el.querySelectorAll('.oge-command-delete')[1] as HTMLButtonElement
+    ).click();
     await settle(fixture);
     await settle(fixture);
     expect(host.events[0].changes).toEqual([{ type: 'remove', key: 2 }]);
@@ -217,22 +266,28 @@ describe('OgeGrid editing — row mode', () => {
   });
 
   it('adds a new row and inserts it on save', async () => {
-    const { fixture, host, el } = await render({ mode: 'row', allowAdding: true });
-    const add = Array.from(el.querySelectorAll('.oge-toolbar-text-btn')).find((b) =>
-      b.textContent?.includes('Add')
+    const { fixture, host, el } = await render({
+      mode: 'row',
+      allowAdding: true,
+    });
+    const add = Array.from(el.querySelectorAll('.oge-toolbar-text-btn')).find(
+      (b) => b.textContent?.includes('Add'),
     ) as HTMLButtonElement;
     add.click();
     await settle(fixture);
 
-    const editors = el.querySelectorAll('.oge-editor');
-    typeInto(editors[0] as HTMLInputElement, 'Kulaklık');
-    typeInto(editors[1] as HTMLInputElement, '75');
+    const inputs = editorInputs(el);
+    typeInto(inputs[0], 'Kulaklık');
+    typeInto(inputs[1], '75');
     (el.querySelector('[aria-label="Save"]') as HTMLButtonElement).click();
     await settle(fixture);
     await settle(fixture);
 
     expect(host.events[0].changes[0].type).toBe('insert');
-    expect(host.events[0].changes[0].data).toEqual({ name: 'Kulaklık', price: 75 });
+    expect(host.events[0].changes[0].data).toEqual({
+      name: 'Kulaklık',
+      price: 75,
+    });
     expect(host.data).toHaveLength(4);
     expect(host.data[3]).toMatchObject({ name: 'Kulaklık', price: 75 });
   });
@@ -248,10 +303,12 @@ describe('OgeGrid editing — popup mode', () => {
     const editors = popup.querySelectorAll('.oge-editor');
     expect(editors.length).toBe(2);
 
-    typeInto(editors[0] as HTMLInputElement, 'Popup Adı');
-    (Array.from(popup.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('Save')
-    ) as HTMLButtonElement).click();
+    typeInto(editorInputs(popup)[0], 'Popup Adı');
+    (
+      Array.from(popup.querySelectorAll('button')).find((b) =>
+        b.textContent?.includes('Save'),
+      ) as HTMLButtonElement
+    ).click();
     await settle(fixture);
     await settle(fixture);
 

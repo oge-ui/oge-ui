@@ -153,12 +153,10 @@ store.editing.hasPending())) {
         aria-label="Select all"
       >
         @if (allowSelectAll()) {
-        <input
-          type="checkbox"
-          [checked]="allSelected()"
-          [indeterminate]="someSelected()"
-          [attr.aria-label]="msg().selectAllRows"
-          (change)="toggleSelectAll()"
+        <oge-check-box
+          [value]="someSelected() ? null : allSelected()"
+          [label]="msg().selectAllRows"
+          (valueCommitted)="toggleSelectAll()"
         />
         }
       </div>
@@ -275,16 +273,19 @@ store.editing.hasPending())) {
         [style.inset-inline-end.px]="pinnedRightOf(column)"
       >
         @if (column.filterable && column.lookupItems; as items) {
-        <select
+        <oge-select-box
           class="oge-filter-input"
-          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-          (change)="onLookupFilter(column, $any($event.target).value)"
-        >
-          <option value="">{{ msg().selectAllValues }}</option>
-          @for (item of items; track $index) {
-          <option [value]="$index">{{ item.text }}</option>
-          }
-        </select>
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [showClearButton]="true"
+          [label]="msg().filterPrefix + ' ' + column.caption"
+          [items]="items"
+          displayExpr="text"
+          valueExpr="value"
+          (valueCommitted)="onLookupFilter(column, $event.value)"
+        />
         } @else if (column.filterable) { @if (column.dataType !== 'boolean') {
         <button
           type="button"
@@ -296,35 +297,48 @@ store.editing.hasPending())) {
           {{ operatorSymbol(column) }}
         </button>
         } @switch (column.dataType) { @case ('boolean') {
-        <select
+        <oge-select-box
           class="oge-filter-input"
-          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-          (change)="onFilterSelect(column, $any($event.target).value)"
-        >
-          <option value="">{{ msg().selectAllValues }}</option>
-          <option value="true">{{ msg().booleanTrue }}</option>
-          <option value="false">{{ msg().booleanFalse }}</option>
-        </select>
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="msg().filterPrefix + ' ' + column.caption"
+          [items]="booleanFilterItems()"
+          displayExpr="text"
+          valueExpr="value"
+          (valueCommitted)="onFilterSelect(column, $any($event.value ?? ''))"
+        />
         } @case ('number') {
-        <input
+        <oge-number-box
           class="oge-filter-input"
-          type="number"
-          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-          (input)="onFilterInput(column, $any($event.target).value)"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="msg().filterPrefix + ' ' + column.caption"
+          (inputChange)="onFilterInput(column, $event.text)"
         />
         } @case ('date') {
-        <input
+        <oge-date-box
           class="oge-filter-input"
-          type="date"
-          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-          (change)="onFilterSelect(column, $any($event.target).value)"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [showClearButton]="true"
+          [label]="msg().filterPrefix + ' ' + column.caption"
+          (valueCommitted)="onDateFilter(column, $event.value)"
         />
         } @default {
-        <input
+        <oge-text-box
           class="oge-filter-input"
-          type="text"
-          [attr.aria-label]="msg().filterPrefix + ' ' + column.caption"
-          (input)="onFilterInput(column, $any($event.target).value)"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [label]="msg().filterPrefix + ' ' + column.caption"
+          (inputChange)="onFilterInput(column, $event.text)"
         />
         } } }
       </div>
@@ -371,35 +385,20 @@ store.editing.hasPending())) {
               <ng-container
                 *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
               />
-              } @else if (lookupItemsFor(node, column); as items) {
-              <select
-                class="oge-editor oge-editor-input"
-                [formControl]="$any(editControl(node, column))"
-                (keydown.enter)="onEditorEnter()"
-                (keydown.escape)="cancelActiveEditor()"
-              >
-                @for (item of items; track $index) {
-                <option [value]="item.value">{{ item.text }}</option>
-                }
-              </select>
-              } @else { @switch (column.dataType) { @case ('boolean') {
-              <input
-                class="oge-editor"
-                type="checkbox"
-                [formControl]="$any(editControl(node, column))"
-              />
-              } @default {
-              <input
-                class="oge-editor oge-editor-input"
-                [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
-                [formControl]="$any(editControl(node, column))"
-                [class.oge-editor-invalid]="
+              } @else {
+              <oge-cell-editor
+                surface="form"
+                [control]="editControl(node, column)"
+                [dataType]="column.dataType"
+                [lookupItems]="lookupItemsFor(node, column)"
+                [label]="item.label"
+                [invalid]="
                   editControl(node, column).touched && editControl(node, column).invalid
                 "
-                (keydown.enter)="onEditorEnter()"
-                (keydown.escape)="cancelActiveEditor()"
+                (enterKey)="onEditorEnter()"
+                (escapeKey)="cancelActiveEditor()"
               />
-              } } } @if (editorErrorText(editControl(node, column)); as error) {
+              } @if (editorErrorText(editControl(node, column)); as error) {
               <span class="oge-form-error">{{ error }}</span>
               }
             </div>
@@ -560,40 +559,23 @@ store.editing.hasPending())) {
           <ng-container
             *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
           />
-          } @else if (lookupItemsFor(node, column); as items) {
-          <select
-            class="oge-editor oge-editor-input"
-            [formControl]="$any(editControl(node, column))"
-            (keydown.enter)="onEditorEnter()"
-            (keydown.escape)="cancelActiveEditor()"
-          >
-            @for (item of items; track $index) {
-            <option [value]="item.value">{{ item.text }}</option>
-            }
-          </select>
-          } @else { @switch (column.dataType) { @case ('boolean') {
-          <input
-            class="oge-editor"
-            type="checkbox"
-            [formControl]="$any(editControl(node, column))"
-            (keydown.enter)="onEditorEnter()"
-            (keydown.escape)="cancelActiveEditor()"
-          />
-          } @default {
-          <input
-            class="oge-editor oge-editor-input"
-            [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
-            [formControl]="$any(editControl(node, column))"
-            [class.oge-editor-invalid]="
+          } @else {
+          <oge-cell-editor
+            surface="cell"
+            [control]="editControl(node, column)"
+            [dataType]="column.dataType"
+            [lookupItems]="lookupItemsFor(node, column)"
+            [label]="column.caption"
+            [invalid]="
               editControl(node, column).touched && editControl(node, column).invalid
             "
-            [attr.title]="editorErrorText(editControl(node, column))"
-            (keydown.enter)="onEditorEnter()"
-            (keydown.escape)="cancelActiveEditor()"
-            (keydown.tab)="commitAndNext(node, column, $event)"
-            (blur)="onEditorBlur()"
+            [errorTitle]="editorErrorText(editControl(node, column))"
+            (enterKey)="onEditorEnter()"
+            (escapeKey)="cancelActiveEditor()"
+            (tabKey)="commitAndNext(node, column, $event)"
+            (focusLeft)="onEditorBlur()"
           />
-          } } } } @else if (column.cellTemplate) {
+          } } @else if (column.cellTemplate) {
           <ng-container
             *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
           />
@@ -808,31 +790,18 @@ store.editing.hasPending())) {
       <ng-container
         *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
       />
-      } @else if (lookupItemsFor(node, column); as items) {
-      <select
-        class="oge-editor oge-editor-input"
-        [formControl]="$any(editControl(node, column))"
-      >
-        @for (item of items; track $index) {
-        <option [value]="item.value">{{ item.text }}</option>
-        }
-      </select>
-      } @else { @switch (column.dataType) { @case ('boolean') {
-      <input
-        class="oge-editor"
-        type="checkbox"
-        [formControl]="$any(editControl(node, column))"
-      />
-      } @default {
-      <input
-        class="oge-editor oge-editor-input"
-        [type]="column.dataType === 'number' ? 'number' : column.dataType === 'date' ? 'date' : 'text'"
-        [formControl]="$any(editControl(node, column))"
-        [class.oge-editor-invalid]="
+      } @else {
+      <oge-cell-editor
+        surface="popup"
+        [control]="editControl(node, column)"
+        [dataType]="column.dataType"
+        [lookupItems]="lookupItemsFor(node, column)"
+        [label]="item.label"
+        [invalid]="
           editControl(node, column).touched && editControl(node, column).invalid
         "
       />
-      } } } @if (editorErrorText(editControl(node, column)); as error) {
+      } @if (editorErrorText(editControl(node, column)); as error) {
       <span class="oge-popup-error">{{ error }}</span>
       }
     </div>
@@ -856,142 +825,110 @@ store.editing.hasPending())) {
   </div>
 </div>
 } @if (headerFilterField() !== null) {
-<div
-  class="oge-header-filter-popup"
-  [style.top.px]="headerFilterPosition().top"
-  [style.left.px]="headerFilterPosition().left"
->
-  <input
-    class="oge-hf-search"
-    type="search"
-    [placeholder]="msg().search"
-    [attr.aria-label]="msg().search"
-    [value]="headerFilterSearch()"
-    (input)="headerFilterSearch.set($any($event.target).value)"
-  />
-  <label class="oge-hf-item oge-hf-all">
+<oge-popup #headerFilterPopup [panel]="headerFilterPanel">
+  <div class="oge-header-filter-popup">
     <input
-      type="checkbox"
-      [checked]="allHeaderValuesSelected()"
-      (change)="toggleAllHeaderValues()"
+      class="oge-hf-search"
+      type="search"
+      [placeholder]="msg().search"
+      [attr.aria-label]="msg().search"
+      [value]="headerFilterSearch()"
+      (input)="headerFilterSearch.set($any($event.target).value)"
     />
-    <span>{{ msg().selectAllValues }}</span>
-  </label>
-  @if (headerValueGroups(); as groups) { @for (group of groups; track
-  group.label) {
-  <label class="oge-hf-item oge-hf-group">
-    <input
-      type="checkbox"
-      [checked]="isHeaderGroupSelected(group)"
-      [indeterminate]="isHeaderGroupIndeterminate(group)"
-      (change)="toggleHeaderGroup(group)"
-    />
-    <span>{{ group.label }}</span>
-  </label>
-  @for (value of group.values; track $index) {
-  <label class="oge-hf-item oge-hf-leaf">
-    <input
-      type="checkbox"
-      [checked]="isHeaderValueSelected(value)"
-      (change)="toggleHeaderValue(value)"
-    />
-    <span>{{ headerValueText(value) }}</span>
-  </label>
-  } } } @else { @for (value of visibleHeaderValues(); track $index) {
-  <label class="oge-hf-item">
-    <input
-      type="checkbox"
-      [checked]="isHeaderValueSelected(value)"
-      (change)="toggleHeaderValue(value)"
-    />
-    <span>{{ headerValueText(value) }}</span>
-  </label>
-  } }
-</div>
+    <label class="oge-hf-item oge-hf-all">
+      <oge-check-box
+        [value]="allHeaderValuesSelected()"
+        (valueCommitted)="toggleAllHeaderValues()"
+      />
+      <span>{{ msg().selectAllValues }}</span>
+    </label>
+    @if (headerValueGroups(); as groups) { @for (group of groups; track
+    group.label) {
+    <label class="oge-hf-item oge-hf-group">
+      <oge-check-box
+        [value]="
+        isHeaderGroupIndeterminate(group) ? null : isHeaderGroupSelected(group)
+      "
+        (valueCommitted)="toggleHeaderGroup(group)"
+      />
+      <span>{{ group.label }}</span>
+    </label>
+    @for (value of group.values; track $index) {
+    <label class="oge-hf-item oge-hf-leaf">
+      <oge-check-box
+        [value]="isHeaderValueSelected(value)"
+        (valueCommitted)="toggleHeaderValue(value)"
+      />
+      <span>{{ headerValueText(value) }}</span>
+    </label>
+    } } } @else { @for (value of visibleHeaderValues(); track $index) {
+    <label class="oge-hf-item">
+      <oge-check-box
+        [value]="isHeaderValueSelected(value)"
+        (valueCommitted)="toggleHeaderValue(value)"
+      />
+      <span>{{ headerValueText(value) }}</span>
+    </label>
+    } }
+  </div>
+</oge-popup>
 } @if (contextMenu(); as menu) {
-<div
+<oge-popup
+  #contextMenuPopup
   class="oge-context-menu"
-  role="menu"
-  [style.top.px]="menu.y"
-  [style.left.px]="menu.x"
+  [panel]="contextMenuPanel"
 >
-  @for (item of menu.items; track $index) {
-  <button
-    type="button"
-    role="menuitem"
-    class="oge-menu-item"
-    (click)="runMenuItem(item)"
-  >
-    {{ item.text }}
-  </button>
-  }
-</div>
+  <oge-menu-list
+    [items]="menu.items"
+    (itemClick)="onContextMenuItemClick($event)"
+    (closeRequest)="contextMenuPanel.close($event.reason)"
+  />
+</oge-popup>
 } @if (chooserOpen()) {
-<div
-  class="oge-chooser-popup"
-  [style.top.px]="chooserPosition().top"
-  [style.left.px]="chooserPosition().left"
->
-  <div class="oge-chooser-title">{{ msg().columnChooserTitle }}</div>
-  @for (entry of chooserEntries(); track entry.id) {
-  <label
-    class="oge-hf-item oge-chooser-item"
-    [class.oge-chooser-drop-target]="chooserDropTargetId() === entry.id"
-    [draggable]="columnReorder()"
-    (dragstart)="onChooserDragStart(entry.id, $any($event))"
-    (dragover)="onChooserDragOver(entry.id, $any($event))"
-    (dragend)="onChooserDragEnd()"
-    (drop)="onChooserDrop(entry.id, $any($event))"
-  >
-    @if (columnReorder()) {
-    <span class="oge-chooser-grip" aria-hidden="true">
-      <svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor">
-        <circle cx="5" cy="3.5" r="1.2" />
-        <circle cx="11" cy="3.5" r="1.2" />
-        <circle cx="5" cy="8" r="1.2" />
-        <circle cx="11" cy="8" r="1.2" />
-        <circle cx="5" cy="12.5" r="1.2" />
-        <circle cx="11" cy="12.5" r="1.2" />
-      </svg>
-    </span>
+<oge-popup #chooserPopup [panel]="chooserPanel">
+  <div class="oge-chooser-popup">
+    <div class="oge-chooser-title">{{ msg().columnChooserTitle }}</div>
+    @for (entry of chooserEntries(); track entry.id) {
+    <label
+      class="oge-hf-item oge-chooser-item"
+      [class.oge-chooser-drop-target]="chooserDropTargetId() === entry.id"
+      [draggable]="columnReorder()"
+      (dragstart)="onChooserDragStart(entry.id, $any($event))"
+      (dragover)="onChooserDragOver(entry.id, $any($event))"
+      (dragend)="onChooserDragEnd()"
+      (drop)="onChooserDrop(entry.id, $any($event))"
+    >
+      @if (columnReorder()) {
+      <span class="oge-chooser-grip" aria-hidden="true">
+        <svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor">
+          <circle cx="5" cy="3.5" r="1.2" />
+          <circle cx="11" cy="3.5" r="1.2" />
+          <circle cx="5" cy="8" r="1.2" />
+          <circle cx="11" cy="8" r="1.2" />
+          <circle cx="5" cy="12.5" r="1.2" />
+          <circle cx="11" cy="12.5" r="1.2" />
+        </svg>
+      </span>
+      }
+      <oge-check-box
+        [value]="entry.column ? entry.column.visible() : true"
+        [disabled]="!entry.column"
+        (valueCommitted)="toggleChooserVisible(entry)"
+      />
+      <span>{{ entry.caption }}</span>
+    </label>
     }
-    <input
-      type="checkbox"
-      [checked]="entry.column ? entry.column.visible() : true"
-      [disabled]="!entry.column"
-      (change)="toggleChooserVisible(entry)"
-    />
-    <span>{{ entry.caption }}</span>
-  </label>
-  }
-</div>
+  </div>
+</oge-popup>
 } @if (operatorMenu(); as opMenu) {
-<div
-  class="oge-context-menu oge-operator-menu"
-  role="menu"
-  [style.top.px]="opMenu.y"
-  [style.left.px]="opMenu.x"
->
-  @for (op of operatorChoices(opMenu.column); track op) {
-  <button
-    type="button"
-    role="menuitem"
-    class="oge-menu-item"
-    [class.oge-menu-item-active]="currentOperator(opMenu.column) === op"
-    (click)="chooseOperator(op)"
-  >
-    {{ msg().operators[op] }}
-  </button>
-  }
-  <button
-    type="button"
-    role="menuitem"
-    class="oge-menu-item oge-menu-item-muted"
-    (click)="chooseOperator(null)"
-  >
-    {{ msg().resetOperator }}
-  </button>
-</div>
+<oge-popup #operatorPopup class="oge-operator-menu" [panel]="operatorPanel">
+  <oge-menu-list
+    [items]="operatorItems(opMenu.column)"
+    [ariaLabel]="msg().filterPrefix + ' ' + opMenu.column.caption"
+    (itemClick)="chooseOperator($any($event.item.value ?? null))"
+    (closeRequest)="operatorPanel.close($event.reason)"
+  />
+</oge-popup>
 } @if (builderOpen()) {
 <div class="oge-popup-backdrop"></div>
 <div

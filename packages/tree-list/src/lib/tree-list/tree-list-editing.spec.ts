@@ -73,7 +73,9 @@ describe('OgeTreeList editing', () => {
     )[0];
     cell?.click();
     await settle(fixture);
-    const editor = el.querySelector<HTMLInputElement>('.oge-editor');
+    const editor = el.querySelector<HTMLInputElement>(
+      '.oge-editor .oge-input-native',
+    );
     expect(editor).toBeTruthy();
     if (!editor) return;
     editor.value = 'Renamed A1';
@@ -96,7 +98,9 @@ describe('OgeTreeList editing', () => {
       ?.querySelector<HTMLButtonElement>('.oge-command-btn')
       ?.click();
     await settle(fixture);
-    const editors = el.querySelectorAll<HTMLInputElement>('.oge-editor');
+    const editors = el.querySelectorAll<HTMLInputElement>(
+      '.oge-editor .oge-input-native',
+    );
     expect(editors.length).toBe(2);
     editors[1].value = '9';
     editors[1].dispatchEvent(new Event('input', { bubbles: true }));
@@ -115,7 +119,9 @@ describe('OgeTreeList editing', () => {
     grid.addRow(1);
     await settle(fixture);
     // the new row renders on top with open editors
-    const editors = el.querySelectorAll<HTMLInputElement>('.oge-editor');
+    const editors = el.querySelectorAll<HTMLInputElement>(
+      '.oge-editor .oge-input-native',
+    );
     expect(editors.length).toBe(2);
     editors[0].value = 'New child';
     editors[0].dispatchEvent(new Event('input', { bubbles: true }));
@@ -143,7 +149,9 @@ describe('OgeTreeList editing', () => {
       (label) => label.textContent?.trim(),
     );
     expect(labels).toEqual(['Title', 'Effort']);
-    const editors = form?.querySelectorAll<HTMLInputElement>('.oge-editor');
+    const editors = form?.querySelectorAll<HTMLInputElement>(
+      '.oge-editor .oge-input-native',
+    );
     if (!editors) throw new Error('form editors missing');
     editors[0].value = 'Renamed B';
     editors[0].dispatchEvent(new Event('input', { bubbles: true }));
@@ -167,7 +175,9 @@ describe('OgeTreeList editing', () => {
     await settle(fixture);
     const popup = el.querySelector<HTMLElement>('.oge-edit-popup');
     expect(popup).toBeTruthy();
-    const editors = popup?.querySelectorAll<HTMLInputElement>('.oge-editor');
+    const editors = popup?.querySelectorAll<HTMLInputElement>(
+      '.oge-editor .oge-input-native',
+    );
     if (!editors) throw new Error('popup editors missing');
     editors[1].value = '7';
     editors[1].dispatchEvent(new Event('input', { bubbles: true }));

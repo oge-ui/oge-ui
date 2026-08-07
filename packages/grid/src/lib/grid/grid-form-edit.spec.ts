@@ -24,7 +24,10 @@ describe('OgeGrid form edit mode', () => {
     fixture.componentRef.setInput('data', rows);
     fixture.componentRef.setInput('columns', ['name', 'salary']);
     fixture.componentRef.setInput('keyField', 'id');
-    fixture.componentRef.setInput('editing', { mode: 'form', allowUpdating: true });
+    fixture.componentRef.setInput('editing', {
+      mode: 'form',
+      allowUpdating: true,
+    });
     fixture.detectChanges();
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
@@ -34,22 +37,26 @@ describe('OgeGrid form edit mode', () => {
     await settle(fixture);
     const form = el.querySelector('.oge-form-row') as HTMLElement;
     expect(form).toBeTruthy();
-    const labels = Array.from(form.querySelectorAll('.oge-form-label')).map((l) =>
-      l.textContent?.trim()
+    const labels = Array.from(form.querySelectorAll('.oge-form-label')).map(
+      (l) => l.textContent?.trim(),
     );
     expect(labels).toEqual(['Name', 'Salary']);
     // the edited row's cells are replaced; the other row still renders cells
     expect(el.querySelectorAll('.oge-row:not(.oge-form-row)').length).toBe(1);
 
     // change the name and save
-    const nameInput = form.querySelector('input.oge-editor-input') as HTMLInputElement;
+    const nameInput = form.querySelector(
+      '.oge-editor .oge-input-native',
+    ) as HTMLInputElement;
     nameInput.value = 'Ada L.';
     nameInput.dispatchEvent(new Event('input', { bubbles: true }));
     (form.querySelector('.oge-btn-accent') as HTMLElement).click();
     await settle(fixture);
 
     expect(el.querySelector('.oge-form-row')).toBeNull();
-    expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe('Ada L.');
+    expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe(
+      'Ada L.',
+    );
     expect(rows[0].name).toBe('Ada L.');
   });
 
@@ -63,7 +70,10 @@ describe('OgeGrid form edit mode', () => {
       mode: 'form',
       allowUpdating: true,
       formColCount: 2,
-      formItems: [{ field: 'salary', label: 'Monthly Pay', colSpan: 2 }, 'name'],
+      formItems: [
+        { field: 'salary', label: 'Monthly Pay', colSpan: 2 },
+        'name',
+      ],
     });
     fixture.detectChanges();
     await settle(fixture);
@@ -74,8 +84,8 @@ describe('OgeGrid form edit mode', () => {
 
     const fields = el.querySelector('.oge-form-fields') as HTMLElement;
     expect(fields.style.gridTemplateColumns).toBe('repeat(2, minmax(0, 1fr))');
-    const labels = Array.from(fields.querySelectorAll('.oge-form-label')).map((l) =>
-      l.textContent?.trim()
+    const labels = Array.from(fields.querySelectorAll('.oge-form-label')).map(
+      (l) => l.textContent?.trim(),
     );
     expect(labels).toEqual(['Monthly Pay', 'Name']); // custom order + label
     const firstField = fields.querySelector('.oge-form-field') as HTMLElement;

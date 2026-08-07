@@ -57,6 +57,34 @@ export interface OgeInputsMessages {
   dropDownLoadError: string;
   /** Aria label of a tag chip's remove (×) button. */
   removeTagButton: string;
+  /** Switch track text while on (empty string hides it). */
+  switchOn: string;
+  /** Switch track text while off (empty string hides it). */
+  switchOff: string;
+  /** Calendar today shortcut button. */
+  todayButton: string;
+  /** Aria label of the calendar's previous-view arrow. */
+  calendarPrev: string;
+  /** Aria label of the calendar's next-view arrow. */
+  calendarNext: string;
+  /** Aria label / title of the calendar's zoom-out header button. */
+  calendarZoomOut: string;
+  /** Aria label of the calendar grid. */
+  calendarLabel: string;
+  /** Aria label of the calendar's week-number column header. */
+  weekColumnLabel: string;
+  /** Date box parse failure (reverts on blur). */
+  invalidDateError: string;
+  /** Date box out-of-range message — placeholders `{min}` `{max}`. */
+  dateOutOfRangeError: string;
+  /** Confirm button of `applyValueMode: 'useButtons'`. */
+  okButton: string;
+  /** Cancel button of `applyValueMode: 'useButtons'`. */
+  cancelButton: string;
+  /** Aria label of the date range box's start input. */
+  rangeStartLabel: string;
+  /** Aria label of the date range box's end input. */
+  rangeEndLabel: string;
 }
 
 export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
@@ -87,6 +115,20 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   dropDownLoading: 'Loading…',
   dropDownLoadError: 'Failed to load data',
   removeTagButton: 'Remove',
+  switchOn: 'ON',
+  switchOff: 'OFF',
+  todayButton: 'Today',
+  calendarPrev: 'Previous',
+  calendarNext: 'Next',
+  calendarZoomOut: 'Zoom out',
+  calendarLabel: 'Calendar',
+  weekColumnLabel: 'Week',
+  invalidDateError: 'Enter a valid date',
+  dateOutOfRangeError: 'Date must be between {min} and {max}',
+  okButton: 'OK',
+  cancelButton: 'Cancel',
+  rangeStartLabel: 'Start date',
+  rangeEndLabel: 'End date',
 };
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */

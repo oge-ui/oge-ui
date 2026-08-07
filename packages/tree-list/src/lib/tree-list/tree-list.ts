@@ -1,5 +1,18 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ReactiveFormsModule, type FormControl } from '@angular/forms';
+import {
+  OgeCheckBox,
+  OgeDateBox,
+  OgeNumberBox,
+  OgeSelectBox,
+  OgeTextBox,
+} from '@oge-ui/inputs';
+import {
+  OgeAnchoredPanel,
+  OgeMenuList,
+  OgePopup,
+  type OgeMenuListItemClickEvent,
+} from '@oge-ui/overlay';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import {
   ChangeDetectionStrategy,
@@ -60,6 +73,7 @@ import {
   OGE_STATE_STORAGE,
   RowVirtualizerModel,
   buildRowFilterExpr,
+  dateFilterExpr,
   createStatePersistence,
   defaultOperatorFor,
   humanize,
@@ -73,6 +87,7 @@ import {
   GridDataAdapter,
   GridStateStore,
   OGE_GRID_CONFIG,
+  OgeCellEditor,
   OgeColumn,
   OgeColumnGroup,
   OgeFilterBuilderGroup,
@@ -222,6 +237,14 @@ function treeSource<T>(
     ReactiveFormsModule,
     OgeFilterBuilderGroup,
     OgePager,
+    OgeCellEditor,
+    OgeCheckBox,
+    OgeDateBox,
+    OgeSelectBox,
+    OgeTextBox,
+    OgeNumberBox,
+    OgePopup,
+    OgeMenuList,
   ],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -237,7 +260,6 @@ function treeSource<T>(
     '[class.oge-rtl]': 'rtl()',
     '[attr.dir]':
       "rtlEnabled() === undefined ? null : rtlEnabled() ? 'rtl' : 'ltr'",
-    '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'closePopups()',
   },
 })
@@ -1529,9 +1551,33 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected readonly operatorMenu = signal<{
     column: ResolvedColumn<T>;
-    x: number;
-    y: number;
+    anchor: HTMLElement;
   } | null>(null);
+
+  private readonly operatorPopupRef = viewChild('operatorPopup', {
+    read: ElementRef,
+  });
+
+  /** Anchored operator menu below its filter-row button. */
+  readonly operatorPanel = new OgeAnchoredPanel({
+    anchor: () => this.operatorMenu()?.anchor ?? this.hostRef.nativeElement,
+    panel: () => this.operatorPopupRef()?.nativeElement ?? null,
+    placement: () => 'bottom-start',
+    onClosed: () => this.operatorMenu.set(null),
+  });
+
+  /** Operator choices as canonical menu items; the reset row carries no value. */
+  protected operatorItems(column: ResolvedColumn<T>): OgeMenuItem[] {
+    const current = this.currentOperator(column);
+    const items: OgeMenuItem[] = this.operatorChoices(column).map((op) => ({
+      text: this.msg().operators[op],
+      value: op,
+      checked: op === current ? true : undefined,
+    }));
+    items.push({ text: '', separator: true });
+    items.push({ text: this.msg().resetOperator });
+    return items;
+  }
 
   protected currentOperator(column: ResolvedColumn<T>): FilterOperator {
     if (!column.field) return 'contains';
@@ -1564,11 +1610,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   ): void {
     event.stopPropagation();
     if (this.operatorMenu()?.column.id === column.id) {
-      this.operatorMenu.set(null);
+      this.operatorPanel.close();
       return;
     }
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    this.operatorMenu.set({ column, x: rect.left, y: rect.bottom + 4 });
+    this.operatorMenu.set({
+      column,
+      anchor: event.currentTarget as HTMLElement,
+    });
+    this.operatorPanel.open();
+    this.operatorPanel.updatePosition();
   }
 
   protected operatorChoices(column: ResolvedColumn<T>): FilterOperator[] {
@@ -1579,7 +1629,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected chooseOperator(op: FilterOperator | null): void {
     const menu = this.operatorMenu();
-    this.operatorMenu.set(null);
+    this.operatorPanel.close('select');
     const field = menu?.column.field;
     if (!menu || !field) return;
     const next = new Map(this.rowFilterOps());
@@ -1709,11 +1759,20 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Field whose header-filter popup is open, or null. */
   protected readonly headerFilterField = signal<string | null>(null);
-  protected readonly headerFilterPosition = signal<{
-    top: number;
-    left: number;
-  }>({ top: 0, left: 0 });
+  private readonly headerFilterAnchor = signal<HTMLElement | null>(null);
   protected readonly headerFilterSearch = signal('');
+
+  private readonly headerFilterPopupRef = viewChild('headerFilterPopup', {
+    read: ElementRef,
+  });
+
+  /** Anchored header-filter popup below its funnel button. */
+  readonly headerFilterPanel = new OgeAnchoredPanel({
+    anchor: () => this.headerFilterAnchor() ?? this.hostRef.nativeElement,
+    panel: () => this.headerFilterPopupRef()?.nativeElement ?? null,
+    placement: () => 'bottom-start',
+    onClosed: () => this.headerFilterField.set(null),
+  });
 
   private readonly headerFilterColumn = computed<ResolvedColumn<T> | null>(
     () => {
@@ -1732,14 +1791,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       this.closeHeaderFilter();
       return;
     }
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     this.headerFilterSearch.set('');
-    this.headerFilterPosition.set({ top: rect.bottom + 4, left: rect.left });
+    this.headerFilterAnchor.set(event.currentTarget as HTMLElement);
     this.headerFilterField.set(column.field);
+    this.headerFilterPanel.open();
+    this.headerFilterPanel.updatePosition();
   }
 
   protected closeHeaderFilter(): void {
-    this.headerFilterField.set(null);
+    this.headerFilterPanel.close();
   }
 
   /** Distinct raw values of the open column over all loaded rows, sorted by text. */
@@ -1930,19 +1990,31 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   /** Filter-row lookup select: applies an exact-match filter on the raw value. */
-  protected onLookupFilter(column: ResolvedColumn<T>, rawIndex: string): void {
+  protected onLookupFilter(column: ResolvedColumn<T>, value: unknown): void {
     const field = column.field;
     if (!field || !column.lookupItems) return;
-    if (rawIndex === '') {
-      this.store.filter.setRowFilter(field, null);
-      return;
-    }
-    const item = column.lookupItems[Number(rawIndex)];
     this.store.filter.setRowFilter(
       field,
-      item === undefined
-        ? null
-        : { type: 'binary', field, op: 'eq', value: item.value },
+      value == null ? null : { type: 'binary', field, op: 'eq', value },
+    );
+  }
+
+  /** Filter-row boolean editor items: (All) / true / false. */
+  protected readonly booleanFilterItems = computed(() => [
+    { value: '', text: this.msg().selectAllValues },
+    { value: 'true', text: this.msg().booleanTrue },
+    { value: 'false', text: this.msg().booleanFalse },
+  ]);
+
+  /** Filter-row date editor: applies a timezone-safe day-range expression. */
+  protected onDateFilter(column: ResolvedColumn<T>, value: unknown): void {
+    const field = column.field;
+    if (!field) return;
+    this.store.filter.setRowFilter(
+      field,
+      value instanceof Date
+        ? dateFilterExpr(field, this.currentOperator(column), value)
+        : null,
     );
   }
 
@@ -2032,20 +2104,30 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected readonly chooserOpen = signal(false);
   /** Anchored to the chooser button: its bottom-right corner. */
-  protected readonly chooserPosition = signal<{ top: number; left: number }>({
-    top: 0,
-    left: 0,
+  private readonly chooserAnchor = signal<HTMLElement | null>(null);
+
+  private readonly chooserPopupRef = viewChild('chooserPopup', {
+    read: ElementRef,
+  });
+
+  /** Anchored column chooser: end-aligned below its toolbar button. */
+  readonly chooserPanel = new OgeAnchoredPanel({
+    anchor: () => this.chooserAnchor() ?? this.hostRef.nativeElement,
+    panel: () => this.chooserPopupRef()?.nativeElement ?? null,
+    placement: () => 'bottom-end',
+    onClosed: () => this.chooserOpen.set(false),
   });
 
   protected toggleChooser(event: Event): void {
     event.stopPropagation();
     if (this.chooserOpen()) {
-      this.chooserOpen.set(false);
+      this.chooserPanel.close();
       return;
     }
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    this.chooserPosition.set({ top: rect.bottom + 4, left: rect.right });
+    this.chooserAnchor.set(event.currentTarget as HTMLElement);
     this.chooserOpen.set(true);
+    this.chooserPanel.open();
+    this.chooserPanel.updatePosition();
   }
 
   /** Chooser rows: every column with its id and caption, in display order. */
@@ -2132,6 +2214,39 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     items: OgeMenuItem[];
   } | null>(null);
 
+  private readonly contextMenuPopupRef = viewChild('contextMenuPopup', {
+    read: ElementRef,
+  });
+
+  /** Anchored context menu: pointer-point positioning with viewport clamping. */
+  readonly contextMenuPanel = new OgeAnchoredPanel({
+    anchor: () => this.hostRef.nativeElement,
+    anchorRect: () => {
+      const menu = this.contextMenu();
+      return menu ? { top: menu.y, left: menu.x, width: 0, height: 0 } : null;
+    },
+    panel: () => this.contextMenuPopupRef()?.nativeElement ?? null,
+    placement: () => 'bottom-start',
+    onClosed: () => this.contextMenu.set(null),
+  });
+
+  private openContextMenu(x: number, y: number, items: OgeMenuItem[]): void {
+    this.contextMenu.set({ x, y, items });
+    this.contextMenuPanel.open();
+    this.contextMenuPanel.updatePosition();
+    // the WAI-ARIA menu keyboard lives on the focused menu-list container
+    setTimeout(() =>
+      this.contextMenuPopupRef()
+        ?.nativeElement.querySelector('.oge-menu-list')
+        ?.focus(),
+    );
+  }
+
+  protected onContextMenuItemClick(_event: OgeMenuListItemClickEvent): void {
+    // the menu-list runs item.action after this handler returns
+    this.contextMenuPanel.close('select');
+  }
+
   protected onRowContextMenuOpen(
     node: DataRowNode<T>,
     event: MouseEvent,
@@ -2146,12 +2261,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     });
     if (!items.length) return; // fall back to the native browser menu
     event.preventDefault();
-    this.contextMenu.set({ x: event.clientX, y: event.clientY, items });
-  }
-
-  protected runMenuItem(item: OgeMenuItem): void {
-    item.action?.();
-    this.contextMenu.set(null);
+    this.openContextMenu(event.clientX, event.clientY, items);
   }
 
   protected onHeaderContextMenu(
@@ -2216,35 +2326,17 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     if (!items.length) return;
     event.preventDefault();
     event.stopPropagation();
-    this.contextMenu.set({ x: event.clientX, y: event.clientY, items });
+    this.openContextMenu(event.clientX, event.clientY, items);
   }
 
   protected closePopups(): void {
-    this.closeHeaderFilter();
-    this.chooserOpen.set(false);
-    this.contextMenu.set(null);
-    this.operatorMenu.set(null);
+    // the anchored panels also close themselves (outside click / Escape);
+    // this is the API/keyboard sweep that additionally covers the dialogs
+    this.headerFilterPanel.close();
+    this.chooserPanel.close();
+    this.contextMenuPanel.close();
+    this.operatorPanel.close();
     this.builderOpen.set(false);
-  }
-
-  /** Closes popups on clicks outside of them. */
-  protected onDocumentClick(event: Event): void {
-    const target = event.target as HTMLElement | null;
-    if (
-      this.headerFilterField() !== null &&
-      !target?.closest?.('.oge-header-filter-popup')
-    ) {
-      this.closeHeaderFilter();
-    }
-    if (this.chooserOpen() && !target?.closest?.('.oge-chooser-popup')) {
-      this.chooserOpen.set(false);
-    }
-    if (this.contextMenu() && !target?.closest?.('.oge-context-menu')) {
-      this.contextMenu.set(null);
-    }
-    if (this.operatorMenu() && !target?.closest?.('.oge-operator-menu')) {
-      this.operatorMenu.set(null);
-    }
   }
 
   // --- cells ----------------------------------------------------------------
@@ -3075,6 +3167,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   // --- wiring ---------------------------------------------------------------
 
   constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.contextMenuPanel.destroy();
+      this.operatorPanel.destroy();
+      this.headerFilterPanel.destroy();
+      this.chooserPanel.destroy();
+    });
     // contentReady: after the DOM for a new result set is in place
     afterRenderEffect(() => {
       if (this.adapter.result() === null) return;
@@ -3270,9 +3368,13 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       const rowKey = this.store.editing.editRowKey();
       if (!cell && rowKey === null) return;
       setTimeout(() => {
-        this.hostRef.nativeElement
-          .querySelector<HTMLElement>('.oge-editor')
-          ?.focus();
+        const editor =
+          this.hostRef.nativeElement.querySelector<HTMLElement>('.oge-editor');
+        // composite editors carry .oge-editor on the host — focus the control
+        const target =
+          editor?.querySelector<HTMLElement>('input, select, textarea') ??
+          editor;
+        target?.focus();
       });
     });
     // focus follows the keyboard-navigation cell — unless an editor is open

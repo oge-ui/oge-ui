@@ -931,6 +931,13 @@ export const OGE_SELECT_BOX_API: ApiSections = {
             'Custom option row rendering; context: <code>$implicit</code>, <code>index</code>, <code>selected</code>, <code>active</code>.',
         },
         {
+          name: 'virtualScroll',
+          type: 'boolean | OgeVirtualScrollOptions',
+          default: 'false',
+          description:
+            'Windowed rendering for large lists (<code>{ itemHeight, overscan }</code>). Rows get a fixed size-matched height; <code>groupBy</code> and <code>wrapItemText</code> are ignored while active.',
+        },
+        {
           name: 'opened',
           type: 'model&lt;boolean&gt;',
           default: 'false',
@@ -1034,6 +1041,618 @@ export const OGE_SELECT_BOX_API: ApiSections = {
   ],
 };
 
+export const OGE_CHECK_BOX_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeCheckBox',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;boolean | null&gt;',
+          default: 'false',
+          description:
+            '<code>true</code>/<code>false</code>, or <code>null</code> for the indeterminate (dash) state — two-way. <code>null</code> renders regardless of <code>threeState</code>.',
+        },
+        {
+          name: 'threeState',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Lets users cycle into the indeterminate state: <code>null → true → false → null</code> (DevExtreme cycle).',
+        },
+        {
+          name: 'text',
+          type: 'string',
+          default: "''",
+          description:
+            'Label text; the default <code>&lt;ng-content&gt;</code> slot renders when unset.',
+        },
+        {
+          name: 'size',
+          type: "'sm' | 'md' | 'lg'",
+          default: "'md'",
+          description: 'Glyph/font size preset.',
+        },
+        {
+          name: 'tooltip',
+          type: 'string | undefined',
+          description: 'Native <code>title</code> on the label element.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeCheckBox methods',
+      entries: [
+        {
+          name: 'toggle(): void',
+          type: 'void',
+          description:
+            'Advances the state exactly like a user click (respects <code>threeState</code>, no-op while disabled/readonly).',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [COMMON_EVENTS],
+};
+
+export const OGE_SWITCH_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeSwitch',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;boolean&gt;',
+          default: 'false',
+          description: 'The on/off state — two-way.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description: 'Accessible name (<code>aria-label</code>).',
+        },
+        {
+          name: 'onText / offText',
+          type: 'string | undefined',
+          description:
+            "Track texts; <code>undefined</code> falls back to the localized <code>switchOn</code>/<code>switchOff</code> messages ('ON'/'OFF'), empty strings hide the text.",
+        },
+        {
+          name: 'size',
+          type: "'sm' | 'md' | 'lg'",
+          default: "'md'",
+          description: 'Track size preset.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeSwitch methods',
+      entries: [
+        {
+          name: 'toggle(): void',
+          type: 'void',
+          description: 'Flips the state (no-op while disabled/readonly).',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [COMMON_EVENTS],
+};
+
+export const OGE_RADIO_GROUP_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeRadioGroup',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;unknown&gt;',
+          default: 'null',
+          description:
+            "The selected item's <code>valueExpr</code> result; two-way.",
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[]',
+          default: '[]',
+          description: 'The selectable items.',
+        },
+        {
+          name: 'displayExpr / valueExpr / disabledExpr',
+          type: 'shared with OgeSelectBox',
+          description:
+            'Field-name string or function expressions — the select box vocabulary.',
+        },
+        {
+          name: 'layout',
+          type: "'vertical' | 'horizontal'",
+          default: "'vertical'",
+          description: 'Column or row arrangement.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Accessible name of the group (<code>aria-label</code>).',
+        },
+        {
+          name: 'itemTemplate',
+          type: 'TemplateRef&lt;OgeSelectItemTemplateContext&gt;',
+          description:
+            'Custom item rendering next to the radio dot; context: <code>$implicit</code>, <code>index</code>, <code>selected</code>, <code>active</code>.',
+        },
+        {
+          name: 'size',
+          type: "'sm' | 'md' | 'lg'",
+          default: "'md'",
+          description: 'Dot/font size preset.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [COMMON_METHODS],
+  events: [
+    {
+      title: 'OgeRadioGroup events',
+      entries: [
+        {
+          name: 'itemClick',
+          type: 'OgeRadioGroupItemClickEvent',
+          description:
+            'A radio item was activated by click or keyboard — <code>{ item, index, event }</code>.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+};
+
+export const OGE_CALENDAR_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeCalendar',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;Date | null&gt;',
+          default: 'null',
+          description: 'The selected day (single mode) — two-way, local Date.',
+        },
+        {
+          name: 'values',
+          type: 'model&lt;readonly Date[]&gt;',
+          default: '[]',
+          description:
+            "Selected days for <code>selectionMode: 'multiple'</code> — two-way.",
+        },
+        {
+          name: 'selectionMode',
+          type: "'single' | 'multiple' | 'range'",
+          default: "'single'",
+          description:
+            'Range mode picks a start–end pair with a live hover preview.',
+        },
+        {
+          name: 'range',
+          type: 'model&lt;[Date | null, Date | null]&gt;',
+          default: '[null, null]',
+          description:
+            "The selected tuple for <code>selectionMode: 'range'</code> — two-way; either end may stay open.",
+        },
+        {
+          name: 'viewsCount',
+          type: '1 | 2',
+          default: '1',
+          description: 'Side-by-side month views (2 is the range layout).',
+        },
+        {
+          name: 'zoomLevel / minZoomLevel / maxZoomLevel',
+          type: "'month' | 'year' | 'decade'",
+          default: "'month' / 'decade' / 'month'",
+          description:
+            "Drill level (two-way) and its reachable bounds; dx's 'century' is deliberately dropped.",
+        },
+        {
+          name: 'min / max',
+          type: 'Date | undefined',
+          description:
+            'Day bounds; <code>undefined</code> = unbounded (no dx 1000–3000 defaults).',
+        },
+        {
+          name: 'disabledDates',
+          type: 'Date[] | ((d: Date) =&gt; boolean)',
+          description: 'Individual unselectable days.',
+        },
+        {
+          name: 'firstDayOfWeek',
+          type: 'number | undefined',
+          description:
+            "0–6 (Sunday-first); <code>undefined</code> resolves from the locale's Intl week info.",
+        },
+        {
+          name: 'showWeekNumbers',
+          type: "boolean | { rule: 'firstDay' | 'firstFourDays' | 'fullWeek' }",
+          default: 'false',
+          description: 'Week-number column; <code>true</code> = the ISO rule.',
+        },
+        {
+          name: 'showTodayButton',
+          type: 'boolean',
+          default: 'false',
+          description: 'Renders the localized today shortcut.',
+        },
+        {
+          name: 'focusedDate',
+          type: 'model&lt;Date | null&gt;',
+          description:
+            'The keyboard-focused day — two-way (controlled navigation).',
+        },
+        {
+          name: 'locale',
+          type: 'string | undefined',
+          description: 'BCP 47 locale for all texts (Intl).',
+        },
+        {
+          name: 'cellTemplate',
+          type: 'TemplateRef&lt;OgeCalendarCellTemplateContext&gt;',
+          description:
+            'Custom cell rendering — also available as the projected <code>[ogeCalendarCellTemplate]</code> slot.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [COMMON_METHODS],
+  events: [
+    {
+      title: 'OgeCalendar events',
+      entries: [
+        {
+          name: 'cellClick',
+          type: 'OgeCalendarCellClickEvent',
+          description:
+            'A day/month/year cell was activated — <code>{ date, view, event }</code>.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+};
+
+export const OGE_DATE_BOX_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeDateBox',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;Date | null&gt;',
+          default: 'null',
+          description:
+            "Always a local <code>Date</code> — serialization is the app's concern (no <code>dateSerializationFormat</code>). CVA writes accept ISO-like strings and epoch numbers leniently.",
+        },
+        {
+          name: 'type',
+          type: "'date' | 'time' | 'datetime'",
+          default: "'date'",
+          description:
+            'Picker: calendar, interval time list, or both (no dx <code>pickerType</code>). The rail icon follows the type.',
+        },
+        {
+          name: 'displayFormat',
+          type: 'Intl.DateTimeFormatOptions | ((d: Date) =&gt; string)',
+          description:
+            'Display text; <code>undefined</code> = per-type Intl defaults. No format strings, no date library.',
+        },
+        {
+          name: 'min / max / disabledDates',
+          type: 'as OgeCalendar',
+          description:
+            'Out-of-range typed text marks the field invalid — it is never clamped (unlike the number box).',
+        },
+        {
+          name: 'interval',
+          type: 'number',
+          default: '30',
+          description: 'Time list step in minutes.',
+        },
+        {
+          name: 'timeView',
+          type: "'list' | 'columns'",
+          default: "'list'",
+          description:
+            'Time picker layout: one interval list, or hour + minute columns.',
+        },
+        {
+          name: 'applyValueMode',
+          type: "'instantly' | 'useButtons'",
+          default: "'instantly'",
+          description:
+            'OK/Cancel footer collects picker changes in a draft when <code>useButtons</code>.',
+        },
+        {
+          name: 'acceptCustomValue',
+          type: 'boolean',
+          default: 'true',
+          description:
+            '<code>false</code> makes the text read-only (picker input only).',
+        },
+        {
+          name: 'openOnFieldClick',
+          type: 'boolean',
+          default: 'true',
+          description: 'Clicking the field opens the picker.',
+        },
+        {
+          name: 'firstDayOfWeek / showWeekNumbers / zoomLevel / calendarCellTemplate / locale',
+          type: 'calendar passthroughs',
+          description:
+            'Exposed individually — no <code>calendarOptions</code> kitchen-sink object.',
+        },
+        {
+          name: 'opened',
+          type: 'model&lt;boolean&gt;',
+          default: 'false',
+          description: 'Picker visibility — two-way.',
+        },
+      ],
+    },
+    {
+      title: 'OgeDateRangeBox',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;[Date | null, Date | null]&gt;',
+          default: '[null, null]',
+          description:
+            'Start–end tuple on one field: two parsed inputs + a two-view range calendar popup. A reversed pair reorders on commit; either end may stay open.',
+        },
+        {
+          name: 'type',
+          type: "'date' | 'datetime'",
+          default: "'date'",
+          description:
+            "<code>'datetime'</code> adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times.",
+        },
+        {
+          name: 'interval',
+          type: 'number',
+          default: '30',
+          description:
+            "Time list step in minutes (<code>type: 'datetime'</code>).",
+        },
+        {
+          name: 'min / max / disabledDates / firstDayOfWeek / showWeekNumbers / locale / displayFormat / openOnFieldClick / acceptCustomValue',
+          type: 'as OgeDateBox',
+          description: 'Shared configuration surface.',
+        },
+      ],
+    },
+    COMMON_CHROME,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeDateBox methods',
+      entries: [
+        {
+          name: 'open() / close() / toggle()',
+          type: 'void',
+          description: 'Picker control (no-ops while disabled/readonly).',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeDateBox events',
+      entries: [
+        {
+          name: 'dropDownOpened / dropDownClosed',
+          type: 'void',
+          description: 'Picker visibility changes, from any trigger.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      title: 'Date types',
+      entries: [
+        {
+          name: 'parseDateText(text, locale, kind, reference?)',
+          type: 'function',
+          description:
+            'Exported: locale-aware text → local <code>Date | null</code> via Intl part order — never <code>Date.parse</code>.',
+        },
+        {
+          name: 'OgeDateBoxType / OgeDateBoxApplyValueMode / OgeDateBoxDisplayFormat / OgeDateBoxTimeView',
+          type: 'types',
+          description: 'The string unions and the display-format shape.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_AUTOCOMPLETE_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeAutocomplete',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;string&gt;',
+          default: "''",
+          description:
+            'The typed text — the committed value is the string itself, not an item value; two-way.',
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[] | OgeSelectBoxItemsFn',
+          default: '[]',
+          description:
+            'The suggestion items: an array, or a function invoked lazily on first open (sync or promise; loading/error rows render while pending).',
+        },
+        {
+          name: 'displayExpr / disabledExpr / imageExpr / searchExpr / searchMode / groupBy / itemTemplate',
+          type: 'shared with OgeSelectBox',
+          description:
+            'The autocomplete reuses the select box expression vocabulary and list rendering verbatim (no <code>valueExpr</code> — the value is text).',
+        },
+        {
+          name: 'minSearchLength',
+          type: 'number',
+          default: '1',
+          description:
+            'Characters required before suggestions open while typing; deleting below the threshold closes the list.',
+        },
+        {
+          name: 'maxItemCount',
+          type: 'number',
+          default: '10',
+          description: 'Caps the rendered suggestion list.',
+        },
+        {
+          name: 'searchTimeout',
+          type: 'number | undefined',
+          description:
+            'Debounce before typed text filters the list; <code>undefined</code> = config default (250ms). The displayed text is never debounced.',
+        },
+        {
+          name: 'forceSelection',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Reverts non-matching text to the last committed value on blur; an exact display match resolves to the item with its canonical casing.',
+        },
+        {
+          name: 'searchHighlight',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Marks the matched part of each suggestion (<code>&lt;mark&gt;</code>).',
+        },
+        {
+          name: 'showDropDownButton',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Renders the chevron toggle in the field rail (off by default — DevExtreme parity).',
+        },
+        {
+          name: 'openOnFieldClick',
+          type: 'boolean',
+          default: 'false',
+          description: 'Clicking the field opens the suggestion list.',
+        },
+        {
+          name: 'loading / dropdownPlacement / dropdownWidth / dropdownMaxHeight / wrapItemText / useItemTextAsTitle',
+          type: 'shared with OgeSelectBox',
+          description: 'Popup configuration and list rendering.',
+        },
+        {
+          name: 'virtualScroll',
+          type: 'boolean | OgeVirtualScrollOptions',
+          default: 'false',
+          description:
+            'Windowed rendering for large lists — same contract as the select box.',
+        },
+        {
+          name: 'opened',
+          type: 'model&lt;boolean&gt;',
+          default: 'false',
+          description: 'Popup visibility — two-way.',
+        },
+        {
+          name: 'selectedItem',
+          type: 'Signal&lt;TItem | null&gt;',
+          description:
+            'Read-only: the last picked suggestion; <code>null</code> once the text diverges from it.',
+        },
+      ],
+    },
+    COMMON_CHROME,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeAutocomplete methods',
+      entries: [
+        {
+          name: 'open() / close() / toggle()',
+          type: 'void',
+          description: 'Popup control (no-ops while disabled/readonly).',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeAutocomplete events',
+      entries: [
+        {
+          name: 'selectionChanged',
+          type: 'OgeAutocompleteSelectionChangedEvent',
+          description:
+            'A suggestion was picked or the selection was canceled — <code>{ item: TItem | null, event? }</code>.',
+        },
+        {
+          name: 'itemClick',
+          type: 'OgeAutocompleteItemClickEvent',
+          description:
+            'A suggestion row was activated — <code>{ item, index, event }</code>.',
+        },
+        {
+          name: 'dropDownOpened / dropDownClosed',
+          type: 'void',
+          description: 'Popup visibility changes, from any trigger.',
+        },
+        {
+          name: 'searchChanged',
+          type: 'OgeSelectBoxSearchChangedEvent',
+          description:
+            'Raw search text on every keystroke — drive server-side filtering from here.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      title: 'Autocomplete types',
+      entries: [
+        {
+          name: 'OgeAutocompleteSelectionChangedEvent',
+          type: 'interface',
+          description:
+            '<code>{ item: TItem | null; event?: Event }</code> — <code>null</code> means the selection was canceled.',
+        },
+        {
+          name: 'OgeVirtualScrollOptions',
+          type: 'interface',
+          description:
+            '<code>{ itemHeight?: number; overscan?: number }</code>; default heights come from <code>OGE_SELECT_OPTION_HEIGHT</code> (28/34/40px for sm/md/lg).',
+        },
+      ],
+    },
+  ],
+};
+
 export const OGE_TAG_BOX_API: ApiSections = {
   properties: [
     {
@@ -1079,6 +1698,13 @@ export const OGE_TAG_BOX_API: ApiSections = {
           name: 'opened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick',
           type: 'shared with OgeSelectBox',
           description: 'Popup configuration and two-way visibility.',
+        },
+        {
+          name: 'virtualScroll',
+          type: 'boolean | OgeVirtualScrollOptions',
+          default: 'false',
+          description:
+            'Windowed rendering for large lists — same contract as the select box.',
         },
       ],
     },

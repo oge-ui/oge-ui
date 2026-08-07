@@ -32,10 +32,12 @@ export interface OgeInputSpinApi {
   release(): void;
 }
 
-/** Drop-down chevron feature block (select box only). */
+/** Drop-down toggle feature block (select/tag/date boxes, autocomplete). */
 export interface OgeInputDropDownApi {
   readonly visible: Signal<boolean>;
   readonly expanded: Signal<boolean>;
+  /** Rail glyph; `undefined` renders the default chevron. */
+  readonly icon?: 'chevron' | 'calendar' | 'clock';
   toggle(): void;
 }
 

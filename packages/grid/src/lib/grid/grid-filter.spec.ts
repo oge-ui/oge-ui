@@ -25,22 +25,34 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 function names(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-row')).map(
-    (row) => row.querySelectorAll('.oge-cell')[1]?.textContent?.trim() ?? ''
+    (row) => row.querySelectorAll('.oge-cell')[1]?.textContent?.trim() ?? '',
   );
 }
 
 async function render(inputs: Record<string, unknown> = {}) {
   const fixture = TestBed.createComponent(OgeGrid<Person>);
   fixture.componentRef.setInput('data', PEOPLE);
-  fixture.componentRef.setInput('columns', ['id', 'name', 'age', 'city', 'active']);
+  fixture.componentRef.setInput('columns', [
+    'id',
+    'name',
+    'age',
+    'city',
+    'active',
+  ]);
   fixture.componentRef.setInput('keyField', 'id');
   fixture.componentRef.setInput('filterDebounce', 0);
-  for (const [key, value] of Object.entries(inputs)) fixture.componentRef.setInput(key, value);
+  for (const [key, value] of Object.entries(inputs))
+    fixture.componentRef.setInput(key, value);
   await settle(fixture);
   return { fixture, el: fixture.nativeElement as HTMLElement };
 }
 
-function setInput(el: HTMLElement, selector: string, value: string, eventName = 'input'): void {
+function setInput(
+  el: HTMLElement,
+  selector: string,
+  value: string,
+  eventName = 'input',
+): void {
   const input = el.querySelector(selector) as HTMLInputElement;
   input.value = value;
   input.dispatchEvent(new Event(eventName, { bubbles: true }));
@@ -49,7 +61,12 @@ function setInput(el: HTMLElement, selector: string, value: string, eventName = 
 @Component({
   imports: [OgeGrid, OgeColumn],
   template: `
-    <oge-grid [data]="data" keyField="id" [filterRow]="true" [filterDebounce]="0">
+    <oge-grid
+      [data]="data"
+      keyField="id"
+      [filterRow]="true"
+      [filterDebounce]="0"
+    >
       <oge-column field="name" />
       <oge-column field="age" dataType="number" />
       <oge-column field="active" dataType="boolean" />
@@ -67,9 +84,15 @@ describe('OgeGrid filter row', () => {
     const el = fixture.nativeElement as HTMLElement;
     const cells = el.querySelectorAll('.oge-filter-cell');
     expect(cells.length).toBe(3);
-    expect(cells[0].querySelector('input[type="text"]')).toBeTruthy();
-    expect(cells[1].querySelector('input[type="number"]')).toBeTruthy();
-    expect(cells[2].querySelector('select')).toBeTruthy();
+    expect(
+      cells[0].querySelector('oge-text-box.oge-filter-input'),
+    ).toBeTruthy();
+    expect(
+      cells[1].querySelector('oge-number-box.oge-filter-input'),
+    ).toBeTruthy();
+    expect(
+      cells[2].querySelector('oge-select-box.oge-filter-input'),
+    ).toBeTruthy();
   });
 
   it('filters with contains on text columns', async () => {
@@ -97,7 +120,10 @@ describe('OgeGrid filter row', () => {
   });
 
   it('resets the page index when the filter changes', async () => {
-    const { fixture, el } = await render({ filterRow: true, paging: { pageSize: 2 } });
+    const { fixture, el } = await render({
+      filterRow: true,
+      paging: { pageSize: 2 },
+    });
     (el.querySelector('[aria-label="Next page"]') as HTMLButtonElement).click();
     await settle(fixture);
     expect(names(el)).toEqual(['Ali Çelik']); // page 2
@@ -125,9 +151,9 @@ describe('OgeGrid header filter', () => {
 
     (buttons[3] as HTMLButtonElement).click(); // city column
     await settle(fixture);
-    const items = Array.from(el.querySelectorAll('.oge-hf-item:not(.oge-hf-all) span')).map((s) =>
-      s.textContent?.trim()
-    );
+    const items = Array.from(
+      el.querySelectorAll('.oge-hf-item:not(.oge-hf-all) > span'),
+    ).map((s) => s.textContent?.trim());
     expect(items).toEqual(['Ankara', 'İzmir']);
 
     // uncheck 'Ankara' → only İzmir rows remain
@@ -141,10 +167,13 @@ describe('OgeGrid header filter', () => {
 
   it('closes on outside click', async () => {
     const { fixture, el } = await render({ headerFilter: true });
-    (el.querySelectorAll('.oge-header-filter-btn')[3] as HTMLButtonElement).click();
+    (
+      el.querySelectorAll('.oge-header-filter-btn')[3] as HTMLButtonElement
+    ).click();
     await settle(fixture);
     expect(el.querySelector('.oge-header-filter-popup')).toBeTruthy();
-    document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    // the anchored panel closes on document pointerdown outside anchor+panel
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     await settle(fixture);
     expect(el.querySelector('.oge-header-filter-popup')).toBeFalsy();
   });

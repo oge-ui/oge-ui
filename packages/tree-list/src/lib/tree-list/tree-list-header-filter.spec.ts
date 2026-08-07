@@ -78,7 +78,7 @@ describe('OgeTreeList header filter', () => {
     const { fixture, el } = await render();
     await openOfficeFilter(fixture, el);
     const labels = Array.from(
-      el.querySelectorAll('.oge-header-filter-popup .oge-hf-item span'),
+      el.querySelectorAll('.oge-header-filter-popup .oge-hf-item > span'),
     ).map((span) => span.textContent?.trim());
     // fold-ordered (locale-independent): İzmir folds to "izmir" → before London
     expect(labels).toEqual(['(All)', 'Berlin', 'İzmir', 'London']);
@@ -132,7 +132,7 @@ describe('OgeTreeList header filter', () => {
     el.querySelectorAll<HTMLButtonElement>('.oge-header-filter-btn')[1].click();
     await settle(fixture);
     const groups = Array.from(
-      el.querySelectorAll('.oge-header-filter-popup .oge-hf-group span'),
+      el.querySelectorAll('.oge-header-filter-popup .oge-hf-group > span'),
     ).map((span) => span.textContent?.trim());
     expect(groups).toEqual(['2025', '2026']);
     // unticking the 2025 group hides its rows; Root A survives as ancestor
@@ -168,7 +168,7 @@ describe('OgeTreeList header filter', () => {
     search.dispatchEvent(new Event('input', { bubbles: true }));
     await settle(fixture);
     const labels = Array.from(
-      el.querySelectorAll('.oge-header-filter-popup .oge-hf-item span'),
+      el.querySelectorAll('.oge-header-filter-popup .oge-hf-item > span'),
     ).map((span) => span.textContent?.trim());
     expect(labels).toEqual(['(All)', 'İzmir']);
   });

@@ -1,0 +1,172 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-switch {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  align-items: center;
+}
+
+.oge-switch-button {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    .oge-switch-track {
+      box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    }
+  }
+}
+
+.oge-switch-readonly .oge-switch-button {
+  cursor: default;
+}
+
+.oge-switch.oge-disabled {
+  opacity: 0.55;
+}
+
+// The track sizes itself to its text — long localized labels ("KAPALI",
+// "EINGESCHALTET", …) can never overflow. The thumb slides on a logical
+// inset, so RTL mirrors for free.
+.oge-switch-track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 42px;
+  height: 22px;
+  padding-inline: 24px 9px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 999px;
+  background: var(--oge-header-bg, var(--oge-bg));
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    padding 160ms ease;
+}
+
+.oge-switch-button:hover:not(:disabled) .oge-switch-track {
+  border-color: var(--oge-muted-color);
+}
+
+.oge-switch-thumb {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 2px;
+  translate: 0 -50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.25),
+    0 0 0 0.5px rgb(0 0 0 / 0.06);
+  transition:
+    inset-inline-start 160ms cubic-bezier(0.2, 0.9, 0.4, 1),
+    width 120ms ease;
+}
+
+// iOS-style press feedback: the thumb stretches while held
+.oge-switch-button:active:not(:disabled) .oge-switch-thumb {
+  width: 20px;
+}
+
+.oge-switch-text {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  color: var(--oge-muted-color);
+  user-select: none;
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+
+.oge-switch-on {
+  .oge-switch-track {
+    padding-inline: 9px 24px;
+    border-color: var(--oge-accent);
+    background: var(--oge-accent);
+  }
+
+  .oge-switch-thumb {
+    inset-inline-start: calc(100% - 18px);
+  }
+
+  // stretched press keeps the far edge anchored
+  .oge-switch-button:active:not(:disabled) .oge-switch-thumb {
+    inset-inline-start: calc(100% - 22px);
+  }
+
+  .oge-switch-text {
+    color: #fff;
+  }
+}
+
+.oge-switch-invalid .oge-switch-track {
+  border-color: var(--oge-danger);
+}
+
+// --- sizes ------------------------------------------------------------------
+
+.oge-switch-sm {
+  .oge-switch-track {
+    min-width: 34px;
+    height: 18px;
+    padding-inline: 19px 7px;
+  }
+
+  .oge-switch-thumb {
+    width: 12px;
+    height: 12px;
+  }
+
+  &.oge-switch-on .oge-switch-track {
+    padding-inline: 7px 19px;
+  }
+
+  &.oge-switch-on .oge-switch-thumb {
+    inset-inline-start: calc(100% - 14px);
+  }
+
+  .oge-switch-text {
+    font-size: 9px;
+  }
+}
+
+.oge-switch-lg {
+  .oge-switch-track {
+    min-width: 50px;
+    height: 26px;
+    padding-inline: 28px 11px;
+  }
+
+  .oge-switch-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  &.oge-switch-on .oge-switch-track {
+    padding-inline: 11px 28px;
+  }
+
+  &.oge-switch-on .oge-switch-thumb {
+    inset-inline-start: calc(100% - 22px);
+  }
+
+  .oge-switch-text {
+    font-size: 11px;
+  }
+}

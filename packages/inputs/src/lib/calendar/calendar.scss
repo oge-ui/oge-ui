@@ -1,0 +1,189 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-calendar {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg, var(--oge-radius));
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  user-select: none;
+}
+
+// borderless when embedded as a popup picker (the popup owns the chrome)
+.oge-popup .oge-calendar {
+  border: none;
+  background: transparent;
+}
+
+.oge-calendar-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.oge-calendar-nav,
+.oge-calendar-view-label,
+.oge-calendar-today-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+}
+
+.oge-calendar-view-label {
+  flex: 1 1 auto;
+  font-weight: 600;
+}
+
+.oge-calendar-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  outline: none;
+}
+
+.oge-calendar-views {
+  display: flex;
+  gap: 16px;
+}
+
+.oge-calendar-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.oge-calendar-view-title {
+  text-align: center;
+  font-weight: 600;
+  padding: 2px 0 4px;
+}
+
+.oge-calendar-row {
+  display: flex;
+  gap: 2px;
+}
+
+.oge-calendar-weekday,
+.oge-calendar-weeknum {
+  width: 32px;
+  text-align: center;
+  font-size: calc(var(--oge-font-size) - 2px);
+  color: var(--oge-muted-color);
+  line-height: 24px;
+}
+
+.oge-calendar-weeknum {
+  font-variant-numeric: tabular-nums;
+}
+
+// screen-reader-only text (the week column header has no visual label)
+.oge-calendar-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.oge-calendar-cell {
+  width: 32px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+}
+
+.oge-calendar-cell-wide {
+  width: 58px;
+  height: 40px;
+}
+
+.oge-calendar-cell-other {
+  color: var(--oge-muted-color);
+}
+
+.oge-calendar-cell-today {
+  box-shadow: inset 0 0 0 1px var(--oge-accent);
+}
+
+.oge-calendar-cell-selected {
+  background: var(--oge-accent);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent);
+  }
+}
+
+// range interior days (incl. the hover preview while picking the end)
+.oge-calendar-cell-in-range {
+  background: var(--oge-accent-soft);
+  border-radius: 0;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent-soft);
+  }
+}
+
+.oge-calendar-today-btn {
+  align-self: center;
+  color: var(--oge-accent);
+  font-weight: 600;
+}
+
+.oge-calendar-invalid {
+  border-color: var(--oge-danger);
+}

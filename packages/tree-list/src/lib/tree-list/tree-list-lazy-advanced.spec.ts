@@ -161,7 +161,9 @@ describe('OgeTreeList lazy remote filtering & recursive cascade', () => {
     const { fixture, el } = await render();
     // only the roots are loaded; Grand A1a lives two unloaded levels deep
     expect(rowTitles(el)).toEqual(['Root A', 'Root B']);
-    const filter = el.querySelector<HTMLInputElement>('.oge-filter-input');
+    const filter = el.querySelector<HTMLInputElement>(
+      '.oge-filter-input .oge-input-native',
+    );
     if (!filter) throw new Error('filter input missing');
     filter.value = 'Grand';
     filter.dispatchEvent(new Event('input', { bubbles: true }));

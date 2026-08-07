@@ -1,0 +1,24 @@
+// Shared checkbox-glyph visuals — single source of truth for the tag box
+// option checkboxes and the standalone OgeCheckBox (Wave B+). Grid selection
+// checkboxes adopt the same look via OgeCheckBox in the editor migration.
+
+@mixin selection-glyph($size: 15px) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $size;
+  height: $size;
+  flex: none;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 4px;
+  background: var(--oge-bg);
+  color: #fff;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+@mixin selection-glyph-on {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent);
+}

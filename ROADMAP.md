@@ -289,7 +289,63 @@ the grid foundation for state persistence and shared UI primitives.
 
 **Phase 17 — Methods & events API parity (grid + tree-list): ✅ DONE** (imperative editing/selection/data/navigation/loading/paging methods; `selectionChanged`/`focusedRowChanged`, editing lifecycle events, `exporting`, `dataErrorOccurred`, `cellDblClick`; dev-app API reference pages via the shared `ApiReference` component).
 
-**Next:** pivot chart binding · grid popup migration to `@oge-ui/overlay` · parity backlog: grid group/detail toggle events, `focusedCellChanged`, imperative column chooser open, `getTotalSummaryValue`, pivot `exporting` pre-event + customizable pivot context menus.
+**Phase 18 — Editor & popup unification (grid + tree-list): ✅ DONE.**
+Editors: one `OgeCellEditor` component (exported from `@oge-ui/grid`) replaced
+the six duplicated cell/form/popup editor blocks — lookup → `oge-select-box`,
+boolean → `oge-check-box`, number → `oge-number-box`, text → `oge-text-box`
+(compact `size=sm` shape); date stays native until the DateBox wave. Filter
+row + filter builder value editors migrated to the same components; select-all
+/ header-filter tri-state / column chooser checkboxes → `oge-check-box`.
+Popups: header filter, column chooser, operator menu and row/header context
+menus now run on `@oge-ui/overlay` (`OgeAnchoredPanel` + `oge-popup` +
+`oge-menu-list`) — flip/clamp/scroll-reposition, ARIA menu keyboard,
+panel-stack Escape and outside-pointerdown dismissal replace the hand-rolled
+fixed positioning and `document:click` listeners. **Breaking (pre-1.0):** the
+grid's legacy `OgeMenuItem {text, disabled?, action?}` is replaced by the
+canonical `@oge-ui/overlay` type (a superset — existing handlers compile
+unchanged); grid re-exports it. The pivot keeps its inline popups (commercial
+package, out of scope) with locally restored styles.
+
+## Date editors (`@oge-ui/inputs`) — Feature Parity
+
+`OgeCalendar` + `OgeDateBox` (reference Calendar/DateBox scope) on native
+`Date` + `Intl` only — no date library, no `DateAdapter`. Pure day math lives
+in `@oge-ui/core` (`date-utils.ts`: `startOfDay`/`addDays`/`monthMatrix`/
+`weekNumber`/`serializeLikeOriginal`/`toLocalDate` — all local construction,
+never `Date.parse`).
+
+| Feature                                           | Reference | OGE     | Notes                                                                     |
+| ------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------- |
+| Calendar month/year/decade zoom                   | Yes       | Done    | `'century'` deliberately dropped; `zoomLevel` two-way + min/max bounds    |
+| Calendar selection single/multiple/range          | Yes       | Done    | range with hover preview; `viewsCount: 2` two-month layout                |
+| DateRangeBox (start–end on one field)             | Yes       | Done    | `[start, end]` tuple, two parsed inputs, two-view range popup             |
+| Time picker views (`timeView: list \| columns`)   | partial   | Done    | interval list or hour+minute columns; dx rollers not replicated           |
+| Autocomplete search highlight (`searchHighlight`) | Yes       | Done    | matched substring marked in suggestions                                   |
+| min/max, `disabledDates` (array/fn)               | Yes       | Done    | day-granular; today button disabled when gated                            |
+| `firstDayOfWeek` (locale default), week numbers   | Yes       | Done    | Intl weekInfo fallback; `firstDay/firstFourDays/fullWeek` rules           |
+| Cell template + `focusedDate` controlled nav      | Yes       | Done    | typed `[ogeCalendarCellTemplate]`; Kendo-style `focusedDate` model        |
+| APG date-grid keyboard (roving DOM focus)         | partial   | Done    | ±1/±7 days, PgUp/PgDn ±month, Shift ±year, Home/End; `aria-current`       |
+| DateBox `type` date/time/datetime                 | Yes       | Done    | picker = calendar and/or interval time list; no dx `pickerType`           |
+| Intl-only `displayFormat` + locale-aware parsing  | Yes       | Done    | part order from `formatToParts` (dd/mm vs mm/dd), month names, 2-digit yr |
+| Invalid/out-of-range typing                       | Yes       | Done    | invalid while typing, blur reverts — never clamps, never a wrong date     |
+| `applyValueMode` instantly/useButtons             | Yes       | Done    | OK/Cancel footer drafts picker changes                                    |
+| `dateSerializationFormat`                         | Yes       | —       | deliberate: the value is always a local `Date`; serialization is app-side |
+| `useMaskBehavior`                                 | Yes       | Missing | deferred to the input-masking wave                                        |
+| Grid/tree-list date editors + filter row          | —         | Done    | `OgeCellEditor` date branch; timezone-safe day-range filter expressions   |
+| Time-list virtualization                          | —         | Backlog | plain scroll list in v1 (48 rows at the default 30-min interval)          |
+
+**Phase 19 — Date editors: ✅ DONE** (core date-utils; `OgeCalendar`;
+`OgeDateBox` incl. time/datetime + useButtons; grid/tree-list `dataType:
+'date'` editors and the `dateFilterExpr` day-range filter; rows keep their
+storage shape via `serializeLikeOriginal`).
+
+**Next:** time-list virtualization ·
+`Intl.DateTimeFormatOptions` column display formats · `OgeModal` overlay
+primitive (focus trap) + edit-popup/filter-builder dialog migration · input
+masking wave (incl. `useMaskBehavior`) · pivot chart binding · parity backlog:
+grid group/detail toggle events, `focusedCellChanged`, imperative column
+chooser open, `getTotalSummaryValue`, pivot `exporting` pre-event +
+customizable pivot context menus.
 
 ## Buttons (`@oge-ui/buttons`) — Feature Parity
 
@@ -356,6 +412,29 @@ repo's CVA house pattern. Input masking is deferred to a later wave.
 | mask                                               | Yes       | Missing | deferred — external mask libraries attach to the native input; adapter wave later                                                |
 | Grid editor migration to `<oge-text-box>`          | —         | Planned | `size=sm + labelMode=hidden + subscriptSizing=none` is the compact shape                                                         |
 
+## Toggle controls (`@oge-ui/inputs`) — Feature Parity
+
+`OgeCheckBox` + `OgeSwitch` + `OgeRadioGroup` (reference
+CheckBox/Switch/RadioGroup scope). First bare (chrome-free) controls, built on
+the new `OgeControlBase` — the chrome-free slice extracted from
+`OgeInputBase` (commit pipeline, CVA constructor-assignment, Signal Forms
+`FormValueControl`). The tag box checkbox glyph moved to a shared
+`_selection-glyph.scss` partial both consume.
+
+| Feature                                         | Reference | OGE     | Notes                                                                   |
+| ----------------------------------------------- | --------- | ------- | ----------------------------------------------------------------------- |
+| CheckBox two-state + `text`/content label       | Yes       | Done    | visually-hidden native input — label/Space/`aria-checked=mixed` free    |
+| CheckBox three-state (`value: boolean \| null`) | Yes       | Done    | `threeState` gates the user cycle; `null` always renders indeterminate  |
+| Switch on/off + `switchedOnText/OffText`        | Yes       | Done    | `onText`/`offText` → localized `switchOn`/`switchOff` messages fallback |
+| Switch swipe gesture                            | Yes       | Skipped | deliberate — click/Space/Enter only                                     |
+| RadioGroup items + `valueExpr`/`displayExpr`    | Yes       | Done    | select box expression vocabulary, `disabledExpr` included               |
+| RadioGroup `layout` vertical/horizontal         | Yes       | Done    |                                                                         |
+| RadioGroup `itemTemplate`                       | Yes       | Done    | typed `OgeSelectItemTemplateContext`                                    |
+| APG radiogroup keyboard (roving tabindex, wrap) | partial   | Done    | arrows move focus **and** selection, disabled skipped, RTL-aware        |
+| Sizes (`sm/md/lg`)                              | No        | Done    | house addition, button scale                                            |
+| Forms (CVA + Signal Forms + `[(value)]`)        | partial   | Done    | shared `OgeControlBase`; `valueCommitted` with `previousValue`          |
+| jQuery option machinery / state-flag inputs     | Yes       | —       | deliberate (signals, CSS pseudo-classes)                                |
+
 ## Select family (`@oge-ui/inputs`) — Plan
 
 Research baseline: DevExtreme SelectBox/TagBox/Autocomplete, Kendo
@@ -418,15 +497,27 @@ Deliberately not copied from DevExtreme: `dropDownOptions` kitchen sink
 properties). Moved to S3: preventable `opening`/`closing` pre-events,
 `groupTemplate`, `fieldAddons`.
 
-### Phase S3 — `OgeTagBox` (multi-select)
+### Phase S3 — `OgeTagBox` (multi-select) — **shipped (core)**
 
-`value: T[]`, tag chips (`tagTemplate`, `maxDisplayedTags`, `multiline`),
-`showSelectionControls` checkboxes, `selectAllMode`/`applyValueMode`
-(`'instantly' | 'useButtons'`), `hideSelectedItems`, add/remove delta events,
-`aria-multiselectable` listbox. Shares the S1 list/filter engine.
+Shipped: `value: T[]`, removable chips + `maxDisplayedTags` overflow chip,
+`showSelectionControls` checkboxes, `hideSelectedItems`, add/remove delta
+events, Backspace-removes-last, `aria-multiselectable` listbox, `imageExpr`.
+Remaining backlog: `tagTemplate`, `multiline`, `selectAllMode`,
+`applyValueMode` (`'instantly' | 'useButtons'`).
 
-### Phase S4 — `OgeAutocomplete` + virtualization
+### Phase S4 — `OgeAutocomplete` + virtualization — **shipped**
 
-Text-valued model (`value: string`), `maxItemCount`, no chevron by default,
-`openOnFieldClick: false`; fixed-item-height virtual scroll for all three
-(Kendo contract), designed into the S1 list body as a drop-in strategy.
+Shipped: text-valued model (`value: string`), `maxItemCount` (10),
+`minSearchLength` (1, typing below closes the list), no chevron by default,
+`openOnFieldClick: false`, `forceSelection` (house addition, PrimeNG-style
+blur revert), exact-match canonicalization, `selectionChanged`/`selectedItem`,
+lazy items + `searchChanged`/`loading` escape hatch, `groupBy`/`itemTemplate`.
+
+Shipped alongside: the duplicated select-box/tag-box list logic extracted into
+an internal `SelectListEngine` + `SelectPanelController`
+(`packages/inputs/src/lib/select-list/`), and **fixed-item-height virtual
+scrolling** (`virtualScroll: boolean | { itemHeight, overscan }`, Kendo
+contract) on SelectBox, TagBox and Autocomplete — built on core's
+`OffsetTree`/`computeWindow`, absolute `aria-posinset`/`aria-setsize`, exported
+`OGE_SELECT_OPTION_HEIGHT` size map. Constraint: `virtualScroll` ignores
+`groupBy`/`wrapItemText` (fixed row heights; dev-mode warning).

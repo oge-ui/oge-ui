@@ -236,6 +236,21 @@ export class App {
           icon: 'chevron-down',
         },
         {
+          path: '/components/inputs/autocomplete',
+          label: 'Autocomplete',
+          icon: 'search',
+        },
+        {
+          path: '/components/inputs/toggle-controls',
+          label: 'Toggle Controls',
+          icon: 'toggle',
+        },
+        {
+          path: '/components/inputs/date-box',
+          label: 'Date Editors',
+          icon: 'calendar',
+        },
+        {
           path: '/components/inputs/showcase',
           label: 'Showcase',
           icon: 'lightbulb',

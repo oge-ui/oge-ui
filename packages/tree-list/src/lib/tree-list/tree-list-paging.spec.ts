@@ -98,7 +98,9 @@ describe('OgeTreeList paging', () => {
       .find((button) => button.textContent?.trim() === '2')
       ?.click();
     await settle(fixture);
-    const filter = el.querySelector<HTMLInputElement>('.oge-filter-input');
+    const filter = el.querySelector<HTMLInputElement>(
+      '.oge-filter-input .oge-input-native',
+    );
     if (!filter) throw new Error('filter input missing');
     filter.value = 'Root';
     filter.dispatchEvent(new Event('input', { bubbles: true }));

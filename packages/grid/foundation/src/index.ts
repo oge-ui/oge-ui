@@ -52,6 +52,7 @@ export {
 export {
   ColumnModel,
   buildRowFilterExpr,
+  dateFilterExpr,
   defaultOperatorFor,
   humanize,
   isDataSource,

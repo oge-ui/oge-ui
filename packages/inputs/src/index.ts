@@ -1,6 +1,15 @@
 export { OgeTextBox } from './lib/text-box/text-box';
 export { OgeSelectBox } from './lib/select-box/select-box';
 export { OgeTagBox } from './lib/tag-box/tag-box';
+export { OgeAutocomplete } from './lib/autocomplete/autocomplete';
+export {
+  type OgeAutocompleteSelectionChangedEvent,
+  type OgeAutocompleteItemClickEvent,
+} from './lib/autocomplete/autocomplete-types';
+export {
+  OGE_SELECT_OPTION_HEIGHT,
+  type OgeVirtualScrollOptions,
+} from './lib/select-list/list-virtualizer';
 export {
   type OgeTagBoxSelectionChangedEvent,
   type OgeTagBoxItemClickEvent,
@@ -22,6 +31,32 @@ export {
 } from './lib/select-box/select-box-types';
 export { OgeTextArea, measureTextAreaHeight } from './lib/text-area/text-area';
 export { OgeNumberBox } from './lib/number-box/number-box';
+export { OgeCheckBox } from './lib/check-box/check-box';
+export { OgeSwitch } from './lib/switch/switch';
+export { OgeRadioGroup } from './lib/radio-group/radio-group';
+export { OgeCalendar, OgeCalendarCellTemplate } from './lib/calendar/calendar';
+export {
+  type OgeCalendarZoomLevel,
+  type OgeCalendarSelectionMode,
+  type OgeCalendarRange,
+  type OgeCalendarWeekNumberOptions,
+  type OgeCalendarDisabledDates,
+  type OgeCalendarCellTemplateContext,
+  type OgeCalendarCellClickEvent,
+} from './lib/calendar/calendar-types';
+export { OgeDateBox } from './lib/date-box/date-box';
+export { OgeDateRangeBox } from './lib/date-box/date-range-box';
+export {
+  type OgeDateBoxType,
+  type OgeDateBoxApplyValueMode,
+  type OgeDateBoxDisplayFormat,
+  type OgeDateBoxTimeView,
+} from './lib/date-box/date-box-types';
+export { parseDateText, datePartOrder } from './lib/date-box/date-parse';
+export {
+  type OgeRadioGroupItemClickEvent,
+  type OgeRadioGroupLayout,
+} from './lib/radio-group/radio-group-types';
 export {
   type OgeInputCounterState,
   type OgeInputRevealApi,

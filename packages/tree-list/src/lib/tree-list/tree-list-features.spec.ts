@@ -113,7 +113,9 @@ describe('OgeTreeList parity features', () => {
     const { fixture, el } = await render();
     // everything starts collapsed (autoExpandAll defaults to false)
     expect(rowTitles(el)).toEqual(['Root A', 'Root B']);
-    const titleFilter = el.querySelector<HTMLInputElement>('.oge-filter-input');
+    const titleFilter = el.querySelector<HTMLInputElement>(
+      '.oge-filter-input .oge-input-native',
+    );
     must(titleFilter).value = 'Grand';
     must(titleFilter).dispatchEvent(new Event('input', { bubbles: true }));
     await settle(fixture);
@@ -138,7 +140,9 @@ describe('OgeTreeList parity features', () => {
 
   it('the operator menu switches the filter operator and re-applies the value', async () => {
     const { fixture, el } = await render();
-    const titleFilter = el.querySelector<HTMLInputElement>('.oge-filter-input');
+    const titleFilter = el.querySelector<HTMLInputElement>(
+      '.oge-filter-input .oge-input-native',
+    );
     must(titleFilter).value = 'Root';
     must(titleFilter).dispatchEvent(new Event('input', { bubbles: true }));
     await settle(fixture);

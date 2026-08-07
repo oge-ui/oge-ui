@@ -38,7 +38,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 function names(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-row')).map(
-    (row) => row.querySelectorAll('.oge-cell')[1]?.textContent?.trim() ?? ''
+    (row) => row.querySelectorAll('.oge-cell')[1]?.textContent?.trim() ?? '',
   );
 }
 
@@ -91,7 +91,7 @@ describe('filter builder converters', () => {
         ],
       },
       FIELDS,
-      OGE_DEFAULT_MESSAGES
+      OGE_DEFAULT_MESSAGES,
     );
     expect(text).toBe("[Name] Contains 'ali' And [Age] Greater than '30'");
   });
@@ -111,7 +111,12 @@ describe('filter builder converters', () => {
       [filterValue]="filterValue()"
       (filterValueChange)="filterValue.set($event)"
     >
-      <oge-column field="id" dataType="number" [width]="60" [filterable]="false" />
+      <oge-column
+        field="id"
+        dataType="number"
+        [width]="60"
+        [filterable]="false"
+      />
       <oge-column field="name" />
       <oge-column field="city" />
       <oge-column field="age" dataType="number" />
@@ -126,13 +131,19 @@ class FilterParityHost {
 async function render() {
   const fixture = TestBed.createComponent(FilterParityHost);
   await settle(fixture);
-  return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+  return {
+    fixture,
+    host: fixture.componentInstance,
+    el: fixture.nativeElement as HTMLElement,
+  };
 }
 
 describe('filter-row operator menu', () => {
   it('switches the operator and re-applies the current value', async () => {
     const { fixture, el } = await render();
-    const nameFilter = el.querySelector('[aria-label="Filter Name"]') as HTMLInputElement;
+    const nameFilter = el.querySelector(
+      '[aria-label="Filter Name"]',
+    ) as HTMLInputElement;
     nameFilter.value = 'ali';
     nameFilter.dispatchEvent(new Event('input', { bubbles: true }));
     await settle(fixture);
@@ -141,17 +152,23 @@ describe('filter-row operator menu', () => {
     // open the operator menu of the Name column (first visible op button)
     (el.querySelectorAll('.oge-filter-op-btn')[0] as HTMLButtonElement).click();
     await settle(fixture);
-    const items = Array.from(el.querySelectorAll('.oge-operator-menu .oge-menu-item'));
+    const items = Array.from(
+      el.querySelectorAll('.oge-operator-menu .oge-menu-item'),
+    );
     expect(items.map((i) => i.textContent?.trim())).toContain('Ends with');
-    (items.find((i) => i.textContent?.includes('Ends with')) as HTMLButtonElement).click();
+    (
+      items.find((i) =>
+        i.textContent?.includes('Ends with'),
+      ) as HTMLButtonElement
+    ).click();
     await settle(fixture);
     expect(names(el)).toEqual([]); // nothing ends with 'ali'
 
     (el.querySelectorAll('.oge-filter-op-btn')[0] as HTMLButtonElement).click();
     await settle(fixture);
     (
-      Array.from(el.querySelectorAll('.oge-operator-menu .oge-menu-item')).find((i) =>
-        i.textContent?.includes('Starts with')
+      Array.from(el.querySelectorAll('.oge-operator-menu .oge-menu-item')).find(
+        (i) => i.textContent?.includes('Starts with'),
       ) as HTMLButtonElement
     ).click();
     await settle(fixture);
@@ -166,7 +183,7 @@ describe('filter panel + [filterValue]', () => {
     await settle(fixture);
     expect(names(el)).toEqual(['Ayşe Demir', 'Ali Çelik']);
     expect(el.querySelector('.oge-filter-panel-text')?.textContent).toContain(
-      "[Age] Greater than '35'"
+      "[Age] Greater than '35'",
     );
 
     // clear via the panel × and expect the model to sync back to null
@@ -184,13 +201,15 @@ describe('filter panel + [filterValue]', () => {
     expect(popup).toBeTruthy();
 
     // default first condition targets Name; set value and apply
-    const valueInput = popup.querySelector('input.oge-fb-input') as HTMLInputElement;
+    const valueInput = popup.querySelector(
+      '.oge-fb-input .oge-input-native',
+    ) as HTMLInputElement;
     valueInput.value = 'ayşe';
     valueInput.dispatchEvent(new Event('input', { bubbles: true }));
     await settle(fixture);
     (
       Array.from(popup.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('Apply')
+        b.textContent?.includes('Apply'),
       ) as HTMLButtonElement
     ).click();
     await settle(fixture);
@@ -221,7 +240,9 @@ describe('search highlighting + header filter search', () => {
   it('filters the header-filter value list with its search box', async () => {
     const { fixture, el } = await render();
     // open header filter on City column
-    (el.querySelectorAll('.oge-header-filter-btn')[1] as HTMLButtonElement).click();
+    (
+      el.querySelectorAll('.oge-header-filter-btn')[1] as HTMLButtonElement
+    ).click();
     await settle(fixture);
     const itemsBefore = el.querySelectorAll('.oge-hf-item:not(.oge-hf-all)');
     expect(itemsBefore.length).toBe(2);
@@ -230,9 +251,9 @@ describe('search highlighting + header filter search', () => {
     hfSearch.value = 'izm';
     hfSearch.dispatchEvent(new Event('input', { bubbles: true }));
     await settle(fixture);
-    const items = Array.from(el.querySelectorAll('.oge-hf-item:not(.oge-hf-all) span')).map((s) =>
-      s.textContent?.trim()
-    );
+    const items = Array.from(
+      el.querySelectorAll('.oge-hf-item:not(.oge-hf-all) > span'),
+    ).map((s) => s.textContent?.trim());
     expect(items).toEqual(['İzmir']);
   });
 });
@@ -265,15 +286,17 @@ describe('header filter grouped date values', () => {
     const fixture = TestBed.createComponent(DateHeaderFilterHost);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    (el.querySelectorAll('.oge-header-filter-btn')[1] as HTMLButtonElement).click();
+    (
+      el.querySelectorAll('.oge-header-filter-btn')[1] as HTMLButtonElement
+    ).click();
     await settle(fixture);
     return { fixture, el };
   }
 
   it('groups values by year with leaves underneath', async () => {
     const { el } = await renderDates();
-    const groups = Array.from(el.querySelectorAll('.oge-hf-group span')).map((s) =>
-      s.textContent?.trim()
+    const groups = Array.from(el.querySelectorAll('.oge-hf-group > span')).map(
+      (s) => s.textContent?.trim(),
     );
     expect(groups).toEqual(['2024', '2025']);
     expect(el.querySelectorAll('.oge-hf-leaf').length).toBe(3);
@@ -292,8 +315,8 @@ describe('header filter grouped date values', () => {
     hfSearch.value = '06-05';
     hfSearch.dispatchEvent(new Event('input', { bubbles: true }));
     await settle(fixture);
-    const leaves = Array.from(el.querySelectorAll('.oge-hf-leaf span')).map((s) =>
-      s.textContent?.trim()
+    const leaves = Array.from(el.querySelectorAll('.oge-hf-leaf > span')).map(
+      (s) => s.textContent?.trim(),
     );
     expect(leaves).toEqual(['2024-06-05']);
   });
@@ -303,11 +326,14 @@ describe('header filter grouped date values', () => {
     // uncheck the whole 2024 group → only the 2025 row remains
     (el.querySelectorAll('.oge-hf-group input')[0] as HTMLInputElement).click();
     await settle(fixture);
-    const rows = Array.from(el.querySelectorAll('.oge-row .oge-cell:first-child')).map((c) =>
-      c.textContent?.trim()
-    );
+    const rows = Array.from(
+      el.querySelectorAll('.oge-row .oge-cell:first-child'),
+    ).map((c) => c.textContent?.trim());
     expect(rows).toEqual(['C']);
     // group checkbox reflects the cleared state
-    expect((el.querySelectorAll('.oge-hf-group input')[0] as HTMLInputElement).checked).toBe(false);
+    expect(
+      (el.querySelectorAll('.oge-hf-group input')[0] as HTMLInputElement)
+        .checked,
+    ).toBe(false);
   });
 });

@@ -284,3 +284,54 @@
   overflow: auto;
   scrollbar-width: thin;
 }
+
+// --- inline-fixed popups (legacy) -------------------------------------------
+// The grid's shared popup/menu chrome moved into @oge-ui/overlay's <oge-popup>
+// and <oge-menu-list>; the pivot still positions its context menu and filter
+// popup inline — the fixed chrome lives here until the pivot migrates to the
+// overlay package.
+
+.oge-pivot-grid .oge-context-menu,
+.oge-pivot-grid .oge-header-filter-popup {
+  position: fixed;
+  z-index: 1000;
+  padding: 5px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg, var(--oge-radius));
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color, inherit);
+  box-shadow: var(--oge-shadow-popup, 0 6px 20px rgb(0 0 0 / 0.12));
+  font-size: var(--oge-font-size);
+}
+
+.oge-pivot-grid .oge-context-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+}
+
+.oge-pivot-grid .oge-menu-item {
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  color: var(--oge-header-color);
+  transition: background-color 100ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-pivot-grid .oge-menu-item-active {
+  font-weight: 600;
+  color: var(--oge-accent);
+}

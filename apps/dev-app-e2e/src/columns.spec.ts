@@ -10,32 +10,56 @@ test('banded headers, lookup display and adaptive hiding', async ({ page }) => {
   await expect(band).toHaveText('Person');
 
   // initial sortOrder="desc" on Id
-  await expect(page.locator('.oge-header-cell').first()).toHaveAttribute('aria-sort', 'descending');
-  await expect(page.locator('.oge-row').first().locator('.oge-cell').first()).toHaveText('200');
+  await expect(page.locator('.oge-header-cell').first()).toHaveAttribute(
+    'aria-sort',
+    'descending',
+  );
+  await expect(
+    page.locator('.oge-row').first().locator('.oge-cell').first(),
+  ).toHaveText('200');
 
   // lookup column renders labels, not codes
-  const departmentCell = page.locator('.oge-row').first().locator('.oge-cell').nth(3);
-  await expect(departmentCell).not.toHaveText(/Engineering|Sales|HR|Finance|Support/);
+  const departmentCell = page
+    .locator('.oge-row')
+    .first()
+    .locator('.oge-cell')
+    .nth(3);
+  await expect(departmentCell).not.toHaveText(
+    /Engineering|Sales|HR|Finance|Support/,
+  );
 
   // adaptive: shrink → City (priority 0) hides first
-  await expect(page.locator('.oge-header-caption', { hasText: 'City' })).toBeVisible();
+  await expect(
+    page.locator('.oge-header-caption', { hasText: 'City' }),
+  ).toBeVisible();
   await page.setViewportSize({ width: 700, height: 900 });
-  await expect(page.locator('.oge-header-caption', { hasText: 'City' })).toHaveCount(0);
+  await expect(
+    page.locator('.oge-header-caption', { hasText: 'City' }),
+  ).toHaveCount(0);
 
   await page.setViewportSize({ width: 1400, height: 900 });
-  await expect(page.locator('.oge-header-caption', { hasText: 'City' })).toBeVisible();
+  await expect(
+    page.locator('.oge-header-caption', { hasText: 'City' }),
+  ).toBeVisible();
 });
 
-test('lookup editor commits the raw value but shows the label', async ({ page }) => {
+test('lookup editor commits the raw value but shows the label', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1400, height: 900 });
   await page.goto('/components/data-grid/columns');
   await expect(page.locator('.oge-row').first()).toBeVisible();
 
-  const departmentCell = page.locator('.oge-row').first().locator('.oge-cell').nth(3);
+  const departmentCell = page
+    .locator('.oge-row')
+    .first()
+    .locator('.oge-cell')
+    .nth(3);
   await departmentCell.click();
-  const editor = page.locator('select.oge-editor');
+  const editor = page.locator('.oge-editor .oge-input-native');
   await expect(editor).toBeVisible();
-  await editor.selectOption({ label: 'Finans' });
+  await editor.click(); // opens the select-box popup
+  await page.locator('.oge-select-option', { hasText: 'Finans' }).click();
   await editor.press('Enter');
   await expect(departmentCell).toHaveText('Finans');
 });

@@ -30,7 +30,12 @@ export default [
             },
             {
               sourceTag: 'scope:grid',
-              onlyDependOnLibsWithTags: ['scope:grid', 'scope:core'],
+              onlyDependOnLibsWithTags: [
+                'scope:grid',
+                'scope:core',
+                'scope:inputs',
+                'scope:overlay',
+              ],
             },
             {
               sourceTag: 'scope:tree-list',
@@ -38,6 +43,8 @@ export default [
                 'scope:tree-list',
                 'scope:grid',
                 'scope:core',
+                'scope:inputs',
+                'scope:overlay',
               ],
             },
             {

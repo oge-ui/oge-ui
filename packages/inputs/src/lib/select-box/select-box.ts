@@ -18,13 +18,19 @@ import {
 import type { FormValueControl } from '@angular/forms/signals';
 import {
   OGE_OVERLAY_CONFIG,
-  OgeAnchoredPanel,
   OgePopup,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
 import { OgeFieldChrome } from '../field/field-chrome';
 import { OGE_INPUT_HOST, type OgeInputDropDownApi } from '../field/input-host';
 import { OgeInputBase } from '../field/input-base';
+import {
+  ListVirtualizerModel,
+  OGE_SELECT_OPTION_HEIGHT,
+  type OgeVirtualScrollOptions,
+} from '../select-list/list-virtualizer';
+import { SelectListEngine } from '../select-list/select-list-engine';
+import { SelectPanelController } from '../select-list/select-panel-controller';
 import type {
   OgeSelectBoxCustomItemEvent,
   OgeSelectBoxDisabledExpr,
@@ -41,16 +47,10 @@ import type {
   OgeSelectItemTemplateContext,
 } from './select-box-types';
 
-type ItemsState<TItem> =
-  | { status: 'static' }
-  | { status: 'idle' }
-  | { status: 'loading'; runId: number }
-  | { status: 'ready'; items: readonly TItem[] }
-  | { status: 'error' };
+declare const ngDevMode: boolean | undefined;
 
-type SelectRow<TItem> =
-  | { kind: 'group'; label: string }
-  | { kind: 'item'; item: TItem; index: number };
+/** CSS default of `.oge-select-list { max-height }` — the virtual viewport budget. */
+const DEFAULT_LIST_MAX_HEIGHT = 320;
 
 /**
  * Drop-down select editor on the shared oge field chrome — WAI-ARIA combobox
@@ -127,8 +127,10 @@ type SelectRow<TItem> =
     @if (opened()) {
       <oge-popup [panel]="panel">
         <div
+          #listEl
           class="oge-select-list"
-          [class.oge-select-wrap]="wrapItemText()"
+          [class.oge-select-wrap]="wrapItemText() && !virtualActive()"
+          [class.oge-select-list-virtual]="virtualActive()"
           role="listbox"
           [id]="listboxId"
           [style.maxHeight.px]="dropdownMaxHeight() ?? null"
@@ -138,6 +140,7 @@ type SelectRow<TItem> =
           [attr.aria-label]="
             labelMode() === 'hidden' && label() ? label() : null
           "
+          (scroll)="onListScroll($event)"
         >
           @if (loading() || itemsStatus() === 'loading') {
             <div class="oge-select-status" role="presentation">
@@ -150,6 +153,72 @@ type SelectRow<TItem> =
           } @else if (rows().length === 0) {
             <div class="oge-select-status" role="presentation">
               {{ msg().noDataText }}
+            </div>
+          } @else if (virtualActive()) {
+            <div
+              class="oge-select-spacer"
+              [style.height.px]="virtualWindow().totalHeight"
+            >
+              <div
+                class="oge-select-window"
+                [style.transform]="
+                  'translateY(' + virtualWindow().offsetY + 'px)'
+                "
+              >
+                @for (row of windowedItems(); track row.index) {
+                  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+                  <div
+                    class="oge-select-option"
+                    role="option"
+                    [id]="optionId(row.index)"
+                    [class.oge-select-option-active]="
+                      row.index === activeIndex()
+                    "
+                    [class.oge-select-option-selected]="
+                      row.item === selectedItem()
+                    "
+                    [class.oge-disabled]="isItemDisabled(row.item)"
+                    [attr.aria-selected]="row.item === selectedItem()"
+                    [attr.aria-disabled]="
+                      isItemDisabled(row.item) ? 'true' : null
+                    "
+                    [attr.aria-posinset]="row.index + 1"
+                    [attr.aria-setsize]="visibleItems().length"
+                    [attr.title]="
+                      useItemTextAsTitle() ? displayOf(row.item) : null
+                    "
+                    (mousedown)="$event.preventDefault()"
+                    (mouseenter)="onOptionHover(row.index, row.item)"
+                    (click)="selectItem(row.item, row.index, $event)"
+                  >
+                    @if (itemTemplate(); as template) {
+                      <ng-container
+                        *ngTemplateOutlet="
+                          template;
+                          context: {
+                            $implicit: row.item,
+                            index: row.index,
+                            selected: row.item === selectedItem(),
+                            active: row.index === activeIndex(),
+                          }
+                        "
+                      />
+                    } @else {
+                      @if (imageOf(row.item); as imageUrl) {
+                        <img
+                          class="oge-select-option-img"
+                          [src]="imageUrl"
+                          alt=""
+                          loading="lazy"
+                        />
+                      }
+                      <span class="oge-select-option-text">{{
+                        displayOf(row.item)
+                      }}</span>
+                    }
+                  </div>
+                }
+              </div>
             </div>
           } @else {
             @for (row of rows(); track $index) {
@@ -287,6 +356,12 @@ export class OgeSelectBox<TItem = unknown>
   readonly itemTemplate = input<
     TemplateRef<OgeSelectItemTemplateContext<TItem>> | undefined
   >(undefined);
+  /**
+   * Windowed rendering for large lists: `true` or `{ itemHeight, overscan }`.
+   * Rows get a fixed size-matched height; `groupBy` and `wrapItemText` are
+   * ignored while active.
+   */
+  readonly virtualScroll = input<boolean | OgeVirtualScrollOptions>(false);
   /** Popup visibility — two-way. */
   readonly opened = model(false);
 
@@ -308,9 +383,68 @@ export class OgeSelectBox<TItem = unknown>
   private readonly native = viewChild<ElementRef<HTMLInputElement>>('native');
   private readonly chromeRef = viewChild(OgeFieldChrome, { read: ElementRef });
   private readonly popupRef = viewChild(OgePopup, { read: ElementRef });
+  private readonly listEl = viewChild<ElementRef<HTMLElement>>('listEl');
 
-  /** Anchored-panel model — public so templates/tests can read `panelId`. */
-  readonly panel = new OgeAnchoredPanel({
+  /** Normalized `virtualScroll` options; `null` when virtualization is off. */
+  private readonly virtualOptions = computed<OgeVirtualScrollOptions | null>(
+    () => {
+      const value = this.virtualScroll();
+      if (value === false) return null;
+      return value === true ? {} : value;
+    },
+  );
+
+  protected readonly virtualActive = computed(
+    () => this.virtualOptions() !== null,
+  );
+
+  /** Fixed-height window model driving the virtualized list body. */
+  private readonly virtualizer = new ListVirtualizerModel({
+    itemCount: () => this.list.visibleItems().length,
+    itemHeight: () =>
+      this.virtualOptions()?.itemHeight ??
+      OGE_SELECT_OPTION_HEIGHT[this.size()],
+    overscan: () => this.virtualOptions()?.overscan ?? 4,
+    viewportHeight: () => this.dropdownMaxHeight() ?? DEFAULT_LIST_MAX_HEIGHT,
+    scrollContainer: () => this.listEl()?.nativeElement ?? null,
+  });
+
+  protected readonly virtualWindow = computed(() => this.virtualizer.window());
+
+  /** The windowed slice rendered in virtual mode — indices stay absolute. */
+  protected readonly windowedItems = computed<
+    readonly { item: TItem; index: number }[]
+  >(() => {
+    const { start, end } = this.virtualizer.window();
+    return this.list
+      .visibleItems()
+      .slice(start, end)
+      .map((item, offset) => ({ item, index: start + offset }));
+  });
+
+  /** Shared dropdown-list model (filtering, active option, lazy items, ids). */
+  private readonly list = new SelectListEngine<TItem>({
+    inputId: () => this.inputId,
+    opened: () => this.opened(),
+    items: () => this.items(),
+    displayExpr: () => this.displayExpr(),
+    valueExpr: () => this.valueExpr(),
+    disabledExpr: () => this.disabledExpr(),
+    imageExpr: () => this.imageExpr(),
+    searchExpr: () => this.searchExpr(),
+    searchEnabled: () => this.searchEnabled(),
+    searchMode: () => this.searchMode(),
+    searchDebounceMs: () => this.searchTimeout() ?? this.config.searchTimeoutMs,
+    minSearchLength: () => this.minSearchLength(),
+    showDataBeforeSearch: () => this.showDataBeforeSearch(),
+    groupBy: () => (this.virtualActive() ? undefined : this.groupBy()),
+    scrollActiveIntoView: (index) => {
+      if (this.virtualActive()) this.virtualizer.scrollToIndex(index);
+      else this.list.scrollOptionIntoView(index);
+    },
+  });
+
+  private readonly panelController = new SelectPanelController({
     // anchor on the bordered container, not the host — the host also holds
     // the label and subscript, which the popup must ignore
     anchor: () =>
@@ -321,38 +455,48 @@ export class OgeSelectBox<TItem = unknown>
     width: () => this.dropdownWidth(),
     offset: () => this.overlayConfig.offset,
     viewportPadding: () => this.overlayConfig.viewportPadding,
+    opened: this.opened,
+    blocked: () => this.effectiveDisabled() || this.readonly(),
     restoreFocus: () => this.focus(),
+    onOpened: () => {
+      this.list.ensureItemsLoaded();
+      // type-ahead / Home / End may have activated an option before the
+      // opened-sync effect ran — only fall back to the selection when
+      // nothing is active
+      if (this.list.activeIndex() < 0) this.initActiveFromSelection();
+      this.dropDownOpened.emit();
+    },
     onClosed: () => {
-      this.activeIndex.set(-1);
+      this.list.activeIndex.set(-1);
       this.userNavigated = false;
-      this.resetSearch();
-      if (this.opened()) this.opened.set(false);
+      this.list.resetSearch();
+      this.virtualizer.reset();
       this.dropDownClosed.emit();
     },
   });
 
+  /** Anchored-panel model — public so templates/tests can read `panelId`. */
+  readonly panel = this.panelController.panel;
+
   get listboxId(): string {
-    return `${this.inputId}-listbox`;
+    return this.list.listboxId;
   }
 
-  // --- items source (array or lazy function) ---------------------------------
+  protected readonly itemsStatus = this.list.itemsStatus;
 
-  private readonly itemsState = signal<ItemsState<TItem>>({
-    status: 'static',
-  });
-  private loadSeq = 0;
-
-  protected readonly itemsStatus = computed(() => this.itemsState().status);
-
-  /** The full item set — empty until a lazy source resolves. */
-  protected readonly resolvedItems = computed<readonly TItem[]>(() => {
-    const state = this.itemsState();
-    if (state.status === 'ready') return state.items;
-    if (state.status === 'static') {
-      const items = this.items();
-      return Array.isArray(items) ? items : [];
-    }
-    return [];
+  /** The item whose `valueExpr` matches `value` — from the full item set. */
+  readonly selectedItem = computed<TItem | null>(() => {
+    const currentValue = this.value();
+    if (currentValue == null) return null;
+    const found = this.list
+      .resolvedItems()
+      .find((item) => Object.is(this.list.itemValue(item), currentValue));
+    if (found !== undefined) return found;
+    const custom = this.customSelected();
+    return custom !== null &&
+      Object.is(this.list.itemValue(custom), currentValue)
+      ? custom
+      : null;
   });
 
   /**
@@ -362,126 +506,31 @@ export class OgeSelectBox<TItem = unknown>
   private readonly customSelected = signal<TItem | null>(null);
   private customSeq = 0;
 
-  /** The item whose `valueExpr` matches `value` — from the full item set. */
-  readonly selectedItem = computed<TItem | null>(() => {
-    const currentValue = this.value();
-    if (currentValue == null) return null;
-    const found = this.resolvedItems().find((item) =>
-      Object.is(this.itemValue(item), currentValue),
-    );
-    if (found !== undefined) return found;
-    const custom = this.customSelected();
-    return custom !== null && Object.is(this.itemValue(custom), currentValue)
-      ? custom
-      : null;
-  });
-
   /** Display text of the selected item (`''` when empty). */
   readonly displayText = computed(() => {
     const item = this.selectedItem();
     return item === null ? '' : this.displayOf(item);
   });
 
-  // --- search / filter -------------------------------------------------------
-
-  /** Search text while the user is filtering; `null` = not searching. */
-  private readonly searchText = signal<string | null>(null);
-  /** `searchText` after the `searchTimeout` debounce — drives the filter. */
-  private readonly filterText = signal<string | null>(null);
-  private searchTimer: ReturnType<typeof setTimeout> | null = null;
-
   protected readonly inputText = computed(
-    () => this.searchText() ?? this.displayText(),
+    () => this.list.searchText() ?? this.displayText(),
   );
 
-  /**
-   * Items after the client-side filter (and `groupBy` reordering); the popup
-   * renders exactly these, keyboard indices point into this array.
-   */
-  protected readonly visibleItems = computed<readonly TItem[]>(() => {
-    let items = this.filteredItems();
-    const expr = this.groupBy();
-    if (expr !== undefined) {
-      const buckets = new Map<string, TItem[]>();
-      for (const item of items) {
-        const key = this.groupKeyOf(item);
-        const bucket = buckets.get(key);
-        if (bucket) bucket.push(item);
-        else buckets.set(key, [item]);
-      }
-      items = Array.from(buckets.values()).flat();
-    }
-    return items;
-  });
+  protected readonly visibleItems = this.list.visibleItems;
+  protected readonly rows = this.list.rows;
+  protected readonly activeIndex = this.list.activeIndex;
+  protected readonly activeDescendant = this.list.activeDescendant;
 
-  private readonly filteredItems = computed<readonly TItem[]>(() => {
-    const items = this.resolvedItems();
-    if (!this.searchEnabled()) return items;
-    const term = this.filterText();
-    const typed = (term ?? '').trim();
-    const min = this.minSearchLength();
-    if (min > 0 && typed.length < min) {
-      return this.showDataBeforeSearch() ? items : [];
-    }
-    if (term === null || typed.length === 0) return items;
-    const trimmed = typed.toLocaleLowerCase();
-    const startsWith = this.searchMode() === 'startswith';
-    return items.filter((item) =>
-      this.searchStrings(item).some((text) => {
-        const lower = text.toLocaleLowerCase();
-        return startsWith ? lower.startsWith(trimmed) : lower.includes(trimmed);
-      }),
-    );
-  });
-
-  /** Visible items interleaved with group headers for rendering. */
-  protected readonly rows = computed<readonly SelectRow<TItem>[]>(() => {
-    const items = this.visibleItems();
-    const expr = this.groupBy();
-    if (expr === undefined) {
-      return items.map((item, index) => ({
-        kind: 'item' as const,
-        item,
-        index,
-      }));
-    }
-    const rows: SelectRow<TItem>[] = [];
-    let previousKey: string | null = null;
-    items.forEach((item, index) => {
-      const key = this.groupKeyOf(item);
-      if (index === 0 || key !== previousKey) {
-        rows.push({ kind: 'group', label: key });
-      }
-      previousKey = key;
-      rows.push({ kind: 'item', item, index });
-    });
-    return rows;
-  });
-
-  /** Index of the keyboard-active option within `visibleItems`. */
-  protected readonly activeIndex = signal(-1);
   /** Arrow navigation happened since the last keystroke (custom-value gate). */
   private userNavigated = false;
 
-  protected readonly activeDescendant = computed<string | null>(() =>
-    this.opened() && this.activeIndex() >= 0
-      ? this.optionId(this.activeIndex())
-      : null,
-  );
-
   // --- chevron feature block -------------------------------------------------
 
-  override readonly dropdown: OgeInputDropDownApi = {
-    visible: computed(
+  override readonly dropdown: OgeInputDropDownApi =
+    this.panelController.dropDownApi(
       () => this.showDropDownButton() && !this.effectiveDisabled(),
-    ),
-    expanded: computed(() => this.opened()),
-    toggle: () => {
-      if (this.effectiveDisabled() || this.readonly()) return;
-      this.toggle();
-      this.focus();
-    },
-  };
+      () => this.toggle(),
+    );
 
   // --- type-ahead (select-only mode) ----------------------------------------
 
@@ -490,65 +539,36 @@ export class OgeSelectBox<TItem = unknown>
 
   constructor() {
     super();
-    // `opened` model ↔ panel model, loop-guarded by comparing states first.
-    effect(() => {
-      const shouldOpen = this.opened();
-      untracked(() => {
-        if (shouldOpen && !this.panel.isOpen()) {
-          this.panel.open();
-          this.ensureItemsLoaded();
-          // type-ahead / Home / End may have activated an option before this
-          // effect ran — only fall back to the selection when nothing is active
-          if (this.activeIndex() < 0) this.initActiveFromSelection();
-          this.dropDownOpened.emit();
-        } else if (!shouldOpen && this.panel.isOpen()) {
-          this.panel.close('api');
+    // Dev-mode warnings for inputs the virtual mode ignores.
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+      effect(() => {
+        if (!this.virtualActive()) return;
+        if (this.groupBy() !== undefined) {
+          console.warn(
+            'oge-select-box: virtualScroll ignores groupBy — group headers are not rendered in virtual mode.',
+          );
+        }
+        if (this.wrapItemText()) {
+          console.warn(
+            'oge-select-box: virtualScroll forces fixed-height rows — wrapItemText is ignored.',
+          );
         }
       });
-    });
+    }
     // Items input changes: array ↔ function, or a new function reference.
     effect(() => {
       const items = this.items();
       untracked(() => {
-        this.itemsState.set(
-          typeof items === 'function'
-            ? { status: 'idle' }
-            : { status: 'static' },
-        );
-        if (this.opened()) this.ensureItemsLoaded();
-      });
-    });
-    // Debounce searchText into filterText (clears any stale pending timer).
-    effect(() => {
-      const text = this.searchText();
-      untracked(() => {
-        if (this.searchTimer !== null) {
-          clearTimeout(this.searchTimer);
-          this.searchTimer = null;
-        }
-        const ms = this.searchTimeout() ?? this.config.searchTimeoutMs;
-        if (text === null || !ms) {
-          this.filterText.set(text);
-          return;
-        }
-        this.searchTimer = setTimeout(() => {
-          this.searchTimer = null;
-          this.filterText.set(text);
-        }, ms);
+        void items;
+        this.list.syncItemsSource();
+        if (this.opened()) this.list.ensureItemsLoaded();
       });
     });
     // Filtering while open re-anchors the active option.
     effect(() => {
-      this.visibleItems();
+      this.list.visibleItems();
       untracked(() => {
         if (this.opened()) this.initActiveFromSelection();
-      });
-    });
-    // Becoming disabled/readonly closes an open popup.
-    effect(() => {
-      const blocked = this.effectiveDisabled() || this.readonly();
-      untracked(() => {
-        if (blocked && this.panel.isOpen()) this.panel.close('api');
       });
     });
     // selectionChanged fires on every resolved-item change, including
@@ -571,8 +591,8 @@ export class OgeSelectBox<TItem = unknown>
     });
     this.destroyRef.onDestroy(() => {
       if (this.typeTimer !== null) clearTimeout(this.typeTimer);
-      if (this.searchTimer !== null) clearTimeout(this.searchTimer);
-      this.panel.destroy();
+      this.list.destroy();
+      this.panelController.destroy();
     });
   }
 
@@ -584,7 +604,7 @@ export class OgeSelectBox<TItem = unknown>
     this.opened.set(true);
     // initialize the active option synchronously — a keydown arriving before
     // the opened-sync effect flushes must already see a valid activeIndex
-    if (this.activeIndex() < 0) this.initActiveFromSelection();
+    if (this.list.activeIndex() < 0) this.initActiveFromSelection();
   }
 
   /** Closes the popup. */
@@ -613,22 +633,26 @@ export class OgeSelectBox<TItem = unknown>
     if (!this.searchEnabled()) return;
     const text = (event.target as HTMLInputElement).value;
     this.userNavigated = false;
-    this.searchText.set(text);
+    this.list.setSearch(text);
     this.inputChange.emit({ text, event });
     this.searchChanged.emit({ text });
     if (!this.opened()) this.open();
   }
 
   protected onOptionHover(index: number, item: TItem): void {
-    if (!this.isItemDisabled(item)) this.activeIndex.set(index);
+    if (!this.isItemDisabled(item)) this.list.activeIndex.set(index);
+  }
+
+  protected onListScroll(event: Event): void {
+    if (this.virtualActive()) this.virtualizer.onScroll(event);
   }
 
   protected selectItem(item: TItem, index: number, event: Event): void {
     if (this.isItemDisabled(item)) return;
     this.itemClick.emit({ item, index, event });
     this.customSelected.set(null);
-    this.commitNow(this.itemValue(item), event);
-    this.resetSearch();
+    this.commitNow(this.list.itemValue(item), event);
+    this.list.resetSearch();
     this.close();
     this.focus();
   }
@@ -651,7 +675,7 @@ export class OgeSelectBox<TItem = unknown>
           this.commitActive(event);
           return;
         }
-        this.moveActive(event.key === 'ArrowDown' ? 1 : -1);
+        this.list.moveActive(event.key === 'ArrowDown' ? 1 : -1);
         return;
       }
       case 'Enter': {
@@ -661,7 +685,7 @@ export class OgeSelectBox<TItem = unknown>
           // values are on and the user has not arrowed through the list
           if (
             this.acceptCustomValue() &&
-            this.searchText() !== null &&
+            this.list.searchText() !== null &&
             !this.userNavigated &&
             this.tryCreateCustomItem(event)
           ) {
@@ -680,9 +704,9 @@ export class OgeSelectBox<TItem = unknown>
           return;
         }
         // two-stage Escape: popup already closed → clear the search text
-        if (this.searchText()) {
+        if (this.list.searchText()) {
           event.preventDefault();
-          this.resetSearch();
+          this.list.resetSearch();
         }
         return;
       }
@@ -695,10 +719,10 @@ export class OgeSelectBox<TItem = unknown>
         // editable mode: Home/End move the text caret (APG)
         if (this.searchEnabled()) return;
         event.preventDefault();
-        this.setActive(
+        this.list.setActive(
           event.key === 'Home'
-            ? this.edgeEnabledIndex(1)
-            : this.edgeEnabledIndex(-1),
+            ? this.list.edgeEnabledIndex(1)
+            : this.list.edgeEnabledIndex(-1),
         );
         if (!open) this.open();
         return;
@@ -708,7 +732,7 @@ export class OgeSelectBox<TItem = unknown>
         if (open) {
           event.preventDefault();
           this.userNavigated = true;
-          this.moveActive(event.key === 'PageDown' ? 10 : -10);
+          this.list.moveActive(event.key === 'PageDown' ? 10 : -10);
         }
         return;
       }
@@ -738,110 +762,29 @@ export class OgeSelectBox<TItem = unknown>
   // --- expression resolution (template-visible) ------------------------------
 
   protected displayOf(item: TItem): string {
-    const expr = this.displayExpr();
-    if (typeof expr === 'function') return expr(item);
-    if (typeof expr === 'string') {
-      return String((item as Record<string, unknown>)[expr] ?? '');
-    }
-    return typeof item === 'string' ? item : String(item ?? '');
+    return this.list.displayOf(item);
   }
 
   protected isItemDisabled(item: TItem): boolean {
-    const expr = this.disabledExpr();
-    if (typeof expr === 'function') return expr(item);
-    if (typeof expr === 'string') {
-      return Boolean((item as Record<string, unknown>)[expr]);
-    }
-    return false;
+    return this.list.isItemDisabled(item);
   }
 
   protected optionId(index: number): string {
-    return `${this.inputId}-option-${index}`;
+    return this.list.optionId(index);
   }
 
   protected imageOf(item: TItem): string | null {
-    const expr = this.imageExpr();
-    if (expr === undefined) return null;
-    const url =
-      typeof expr === 'function'
-        ? expr(item)
-        : (item as Record<string, unknown>)[expr];
-    return typeof url === 'string' && url.length > 0 ? url : null;
-  }
-
-  private itemValue(item: TItem): unknown {
-    const expr = this.valueExpr();
-    if (typeof expr === 'function') return expr(item);
-    if (typeof expr === 'string') {
-      return (item as Record<string, unknown>)[expr];
-    }
-    return item;
-  }
-
-  private groupKeyOf(item: TItem): string {
-    const expr = this.groupBy();
-    if (typeof expr === 'function') return expr(item);
-    if (typeof expr === 'string') {
-      return String((item as Record<string, unknown>)[expr] ?? '');
-    }
-    return '';
-  }
-
-  private searchStrings(item: TItem): string[] {
-    const expr = this.searchExpr();
-    if (typeof expr === 'function') return [expr(item)];
-    if (typeof expr === 'string') {
-      return [String((item as Record<string, unknown>)[expr] ?? '')];
-    }
-    if (Array.isArray(expr)) {
-      return expr.map((key) =>
-        String((item as Record<string, unknown>)[key] ?? ''),
-      );
-    }
-    return [this.displayOf(item)];
-  }
-
-  // --- lazy items ------------------------------------------------------------
-
-  private ensureItemsLoaded(): void {
-    const items = this.items();
-    if (typeof items !== 'function') return;
-    const state = this.itemsState();
-    if (state.status === 'ready' || state.status === 'loading') return;
-    const result = items();
-    if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
-      const runId = ++this.loadSeq;
-      this.itemsState.set({ status: 'loading', runId });
-      (result as PromiseLike<readonly TItem[]>).then(
-        (loaded) => {
-          const current = this.itemsState();
-          if (current.status === 'loading' && current.runId === runId) {
-            this.itemsState.set({ status: 'ready', items: loaded });
-          }
-        },
-        () => {
-          const current = this.itemsState();
-          if (current.status === 'loading' && current.runId === runId) {
-            this.itemsState.set({ status: 'error' });
-          }
-        },
-      );
-    } else {
-      this.itemsState.set({
-        status: 'ready',
-        items: result as readonly TItem[],
-      });
-    }
+    return this.list.imageOf(item);
   }
 
   // --- custom values ---------------------------------------------------------
 
   /** Returns `true` when the typed text was handled (created or rejected). */
   private tryCreateCustomItem(event?: Event): boolean {
-    const text = (this.searchText() ?? '').trim();
+    const text = (this.list.searchText() ?? '').trim();
     if (!text) return false;
     // exact display match selects the existing item instead of creating one
-    const items = this.resolvedItems();
+    const items = this.list.resolvedItems();
     const existing = items.find(
       (item) =>
         this.displayOf(item).toLocaleLowerCase() === text.toLocaleLowerCase(),
@@ -850,7 +793,7 @@ export class OgeSelectBox<TItem = unknown>
       if (!this.isItemDisabled(existing)) {
         this.selectItem(
           existing,
-          this.visibleItems().indexOf(existing),
+          this.list.visibleItems().indexOf(existing),
           event ?? new Event('change'),
         );
       }
@@ -881,76 +824,20 @@ export class OgeSelectBox<TItem = unknown>
 
   private applyCustomItem(item: TItem, event?: Event): void {
     this.customSelected.set(item);
-    this.commitNow(this.itemValue(item), event);
-    this.resetSearch();
+    this.commitNow(this.list.itemValue(item), event);
+    this.list.resetSearch();
     this.close();
   }
 
   // --- active-option bookkeeping ---------------------------------------------
 
   private initActiveFromSelection(): void {
-    const items = this.visibleItems();
-    const selected = this.selectedItem();
-    const selectedIndex = selected === null ? -1 : items.indexOf(selected);
-    this.setActive(
-      selectedIndex >= 0 ? selectedIndex : this.edgeEnabledIndex(1),
-    );
-  }
-
-  /** First (`direction = 1`) or last (`-1`) enabled index, `-1` when none. */
-  private edgeEnabledIndex(direction: 1 | -1): number {
-    const items = this.visibleItems();
-    const start = direction === 1 ? 0 : items.length - 1;
-    for (let i = start; i >= 0 && i < items.length; i += direction) {
-      if (!this.isItemDisabled(items[i])) return i;
-    }
-    return -1;
-  }
-
-  private moveActive(delta: number): void {
-    const items = this.visibleItems();
-    if (items.length === 0) return;
-    const direction = delta > 0 ? 1 : -1;
-    let index = this.activeIndex();
-    if (index < 0) {
-      this.setActive(this.edgeEnabledIndex(direction));
-      return;
-    }
-    let remaining = Math.abs(delta);
-    while (remaining > 0) {
-      let candidate = index + direction;
-      while (
-        candidate >= 0 &&
-        candidate < items.length &&
-        this.isItemDisabled(items[candidate])
-      ) {
-        candidate += direction;
-      }
-      if (candidate < 0 || candidate >= items.length) break;
-      index = candidate;
-      remaining--;
-    }
-    this.setActive(index);
-  }
-
-  private setActive(index: number): void {
-    this.activeIndex.set(index);
-    if (index < 0) return;
-    const id = this.optionId(index);
-    const schedule =
-      typeof requestAnimationFrame === 'function'
-        ? requestAnimationFrame
-        : (callback: FrameRequestCallback) => (callback(0), 0);
-    // the option never receives real focus (activedescendant pattern), so it
-    // must be scrolled into view manually — after the pending render
-    schedule(() =>
-      document.getElementById(id)?.scrollIntoView?.({ block: 'nearest' }),
-    );
+    this.list.activateItemOrFirst(this.selectedItem());
   }
 
   private commitActive(event: Event): void {
-    const items = this.visibleItems();
-    const index = this.activeIndex();
+    const items = this.list.visibleItems();
+    const index = this.list.activeIndex();
     if (index < 0 || index >= items.length) {
       this.close();
       return;
@@ -972,22 +859,18 @@ export class OgeSelectBox<TItem = unknown>
       Array.from(this.typeBuffer).every((c) => c.toLocaleLowerCase() === lower);
     this.typeBuffer += char;
     const query = cycling ? lower : this.typeBuffer.toLocaleLowerCase();
-    const items = this.visibleItems();
+    const items = this.list.visibleItems();
     if (items.length === 0) return;
-    const start = Math.max(this.activeIndex(), 0);
+    const start = Math.max(this.list.activeIndex(), 0);
     for (let offset = cycling ? 1 : 0; offset <= items.length; offset++) {
       const index = (start + offset) % items.length;
       const item = items[index];
       if (this.isItemDisabled(item)) continue;
       if (this.displayOf(item).toLocaleLowerCase().startsWith(query)) {
-        this.setActive(index);
+        this.list.setActive(index);
         return;
       }
     }
-  }
-
-  private resetSearch(): void {
-    if (this.searchText() !== null) this.searchText.set(null);
   }
 
   // --- base contract ---------------------------------------------------------
@@ -998,12 +881,12 @@ export class OgeSelectBox<TItem = unknown>
     // reverts to the selected display text
     if (
       this.acceptCustomValue() &&
-      this.searchText() !== null &&
+      this.list.searchText() !== null &&
       this.tryCreateCustomItem()
     ) {
       return;
     }
-    this.resetSearch();
+    this.list.resetSearch();
     if (this.opened()) this.close();
   }
 

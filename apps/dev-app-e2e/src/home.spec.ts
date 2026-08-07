@@ -37,8 +37,9 @@ test.describe('home / landing page', () => {
     const field = await select.locator('.oge-input-container').boundingBox();
     const panel = await popup.boundingBox();
     // a transformed ancestor (tilt/entrance animation) would throw the
-    // fixed-position popup hundreds of pixels off — assert alignment
-    expect(Math.abs(panel.x - field.x)).toBeLessThan(2);
+    // fixed-position popup hundreds of pixels off — assert alignment with a
+    // few px of slack for sub-pixel entrance-animation residue
+    expect(Math.abs(panel.x - field.x)).toBeLessThan(4);
     expect(panel.y).toBeGreaterThan(field.y);
     expect(panel.y - (field.y + field.height)).toBeLessThan(40);
   });

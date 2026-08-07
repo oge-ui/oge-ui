@@ -9,20 +9,25 @@ import {
   input,
   model,
   output,
-  signal,
   untracked,
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
 import {
   OGE_OVERLAY_CONFIG,
-  OgeAnchoredPanel,
   OgePopup,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
 import { OgeFieldChrome } from '../field/field-chrome';
 import { OGE_INPUT_HOST, type OgeInputDropDownApi } from '../field/input-host';
 import { OgeInputBase } from '../field/input-base';
+import {
+  ListVirtualizerModel,
+  OGE_SELECT_OPTION_HEIGHT,
+  type OgeVirtualScrollOptions,
+} from '../select-list/list-virtualizer';
+import { SelectListEngine } from '../select-list/select-list-engine';
+import { SelectPanelController } from '../select-list/select-panel-controller';
 import type {
   OgeSelectBoxDisabledExpr,
   OgeSelectBoxDisplayExpr,
@@ -35,6 +40,9 @@ import type {
   OgeTagBoxItemClickEvent,
   OgeTagBoxSelectionChangedEvent,
 } from './tag-box-types';
+
+/** CSS default of `.oge-select-list { max-height }` — the virtual viewport budget. */
+const DEFAULT_LIST_MAX_HEIGHT = 320;
 
 /**
  * Multi-select editor on the shared oge field chrome: selected items render
@@ -146,7 +154,9 @@ import type {
     @if (opened()) {
       <oge-popup [panel]="panel">
         <div
+          #listEl
           class="oge-select-list"
+          [class.oge-select-list-virtual]="virtualActive()"
           role="listbox"
           aria-multiselectable="true"
           [id]="listboxId"
@@ -157,10 +167,80 @@ import type {
           [attr.aria-label]="
             labelMode() === 'hidden' && label() ? label() : null
           "
+          (scroll)="onListScroll($event)"
         >
           @if (visibleItems().length === 0) {
             <div class="oge-select-status" role="presentation">
               {{ msg().noDataText }}
+            </div>
+          } @else if (virtualActive()) {
+            <div
+              class="oge-select-spacer"
+              [style.height.px]="virtualWindow().totalHeight"
+            >
+              <div
+                class="oge-select-window"
+                [style.transform]="
+                  'translateY(' + virtualWindow().offsetY + 'px)'
+                "
+              >
+                @for (row of windowedItems(); track row.index) {
+                  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+                  <div
+                    class="oge-select-option"
+                    role="option"
+                    [id]="optionId(row.index)"
+                    [class.oge-select-option-active]="
+                      row.index === activeIndex()
+                    "
+                    [class.oge-select-option-selected]="isSelected(row.item)"
+                    [class.oge-disabled]="isItemDisabled(row.item)"
+                    [attr.aria-selected]="isSelected(row.item)"
+                    [attr.aria-disabled]="
+                      isItemDisabled(row.item) ? 'true' : null
+                    "
+                    [attr.aria-posinset]="row.index + 1"
+                    [attr.aria-setsize]="visibleItems().length"
+                    (mousedown)="$event.preventDefault()"
+                    (mouseenter)="onOptionHover(row.index, row.item)"
+                    (click)="toggleItemAt(row.index, $event)"
+                  >
+                    @if (showSelectionControls()) {
+                      <span
+                        class="oge-tag-checkbox"
+                        [class.oge-tag-checkbox-on]="isSelected(row.item)"
+                        aria-hidden="true"
+                      >
+                        @if (isSelected(row.item)) {
+                          <svg
+                            viewBox="0 0 16 16"
+                            width="10"
+                            height="10"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path d="m3 8.5 3.5 3.5L13 4.5" />
+                          </svg>
+                        }
+                      </span>
+                    }
+                    @if (imageOf(row.item); as imageUrl) {
+                      <img
+                        class="oge-select-option-img"
+                        [src]="imageUrl"
+                        alt=""
+                        loading="lazy"
+                      />
+                    }
+                    <span class="oge-select-option-text">{{
+                      displayOf(row.item)
+                    }}</span>
+                  </div>
+                }
+              </div>
             </div>
           } @else {
             @for (item of visibleItems(); track $index) {
@@ -272,6 +352,11 @@ export class OgeTagBox<TItem = unknown>
   readonly dropdownWidth = input<number | 'anchor'>('anchor');
   /** Scrollable list height cap; `undefined` = the CSS default (320px). */
   readonly dropdownMaxHeight = input<number | undefined>(undefined);
+  /**
+   * Windowed rendering for large lists: `true` or `{ itemHeight, overscan }`.
+   * Rows get a fixed size-matched height while active.
+   */
+  readonly virtualScroll = input<boolean | OgeVirtualScrollOptions>(false);
   /** Popup visibility — two-way. */
   readonly opened = model(false);
 
@@ -285,9 +370,69 @@ export class OgeTagBox<TItem = unknown>
   private readonly native = viewChild<ElementRef<HTMLInputElement>>('native');
   private readonly chromeRef = viewChild(OgeFieldChrome, { read: ElementRef });
   private readonly popupRef = viewChild(OgePopup, { read: ElementRef });
+  private readonly listEl = viewChild<ElementRef<HTMLElement>>('listEl');
 
-  /** Anchored-panel model — public so templates/tests can read `panelId`. */
-  readonly panel = new OgeAnchoredPanel({
+  /** Normalized `virtualScroll` options; `null` when virtualization is off. */
+  private readonly virtualOptions = computed<OgeVirtualScrollOptions | null>(
+    () => {
+      const value = this.virtualScroll();
+      if (value === false) return null;
+      return value === true ? {} : value;
+    },
+  );
+
+  protected readonly virtualActive = computed(
+    () => this.virtualOptions() !== null,
+  );
+
+  /** Fixed-height window model driving the virtualized list body. */
+  private readonly virtualizer = new ListVirtualizerModel({
+    itemCount: () => this.list.visibleItems().length,
+    itemHeight: () =>
+      this.virtualOptions()?.itemHeight ??
+      OGE_SELECT_OPTION_HEIGHT[this.size()],
+    overscan: () => this.virtualOptions()?.overscan ?? 4,
+    viewportHeight: () => this.dropdownMaxHeight() ?? DEFAULT_LIST_MAX_HEIGHT,
+    scrollContainer: () => this.listEl()?.nativeElement ?? null,
+  });
+
+  protected readonly virtualWindow = computed(() => this.virtualizer.window());
+
+  /** The windowed slice rendered in virtual mode — indices stay absolute. */
+  protected readonly windowedItems = computed<
+    readonly { item: TItem; index: number }[]
+  >(() => {
+    const { start, end } = this.virtualizer.window();
+    return this.list
+      .visibleItems()
+      .slice(start, end)
+      .map((item, offset) => ({ item, index: start + offset }));
+  });
+
+  /** Shared dropdown-list model (filtering, active option, ids). */
+  private readonly list = new SelectListEngine<TItem>({
+    inputId: () => this.inputId,
+    opened: () => this.opened(),
+    items: () => this.items(),
+    displayExpr: () => this.displayExpr(),
+    valueExpr: () => this.valueExpr(),
+    disabledExpr: () => this.disabledExpr(),
+    imageExpr: () => this.imageExpr(),
+    searchExpr: () => this.searchExpr(),
+    searchEnabled: () => this.searchEnabled(),
+    searchMode: () => this.searchMode(),
+    searchDebounceMs: () => 0,
+    preFilterItems: (items) =>
+      this.hideSelectedItems()
+        ? items.filter((item) => !this.isSelected(item))
+        : items,
+    scrollActiveIntoView: (index) => {
+      if (this.virtualActive()) this.virtualizer.scrollToIndex(index);
+      else this.list.scrollOptionIntoView(index);
+    },
+  });
+
+  private readonly panelController = new SelectPanelController({
     anchor: () =>
       this.chromeRef()?.nativeElement.querySelector('.oge-input-container') ??
       this.hostEl.nativeElement,
@@ -296,17 +441,28 @@ export class OgeTagBox<TItem = unknown>
     width: () => this.dropdownWidth(),
     offset: () => this.overlayConfig.offset,
     viewportPadding: () => this.overlayConfig.viewportPadding,
+    opened: this.opened,
+    blocked: () => this.effectiveDisabled() || this.readonly(),
     restoreFocus: () => this.focus(),
+    onOpened: () => {
+      if (this.list.activeIndex() < 0) {
+        this.list.setActive(this.list.edgeEnabledIndex(1));
+      }
+      this.dropDownOpened.emit();
+    },
     onClosed: () => {
-      this.activeIndex.set(-1);
-      this.resetSearch();
-      if (this.opened()) this.opened.set(false);
+      this.list.activeIndex.set(-1);
+      this.list.resetSearch();
+      this.virtualizer.reset();
       this.dropDownClosed.emit();
     },
   });
 
+  /** Anchored-panel model — public so templates/tests can read `panelId`. */
+  readonly panel = this.panelController.panel;
+
   get listboxId(): string {
-    return `${this.inputId}-listbox`;
+    return this.list.listboxId;
   }
 
   /** Selected items resolved from `value`, in value order. */
@@ -314,31 +470,16 @@ export class OgeTagBox<TItem = unknown>
     const items = this.items();
     return this.value()
       .map((entry) =>
-        items.find((item) => Object.is(this.itemValue(item), entry)),
+        items.find((item) => Object.is(this.list.itemValue(item), entry)),
       )
       .filter((item): item is TItem => item !== undefined);
   });
 
-  private readonly searchText = signal<string | null>(null);
+  protected readonly searchTextValue = computed(
+    () => this.list.searchText() ?? '',
+  );
 
-  protected readonly searchTextValue = computed(() => this.searchText() ?? '');
-
-  protected readonly visibleItems = computed<readonly TItem[]>(() => {
-    let items = this.items();
-    if (this.hideSelectedItems()) {
-      items = items.filter((item) => !this.isSelected(item));
-    }
-    if (!this.searchEnabled()) return items;
-    const term = (this.searchText() ?? '').trim().toLocaleLowerCase();
-    if (!term) return items;
-    const startsWith = this.searchMode() === 'startswith';
-    return items.filter((item) =>
-      this.searchStrings(item).some((text) => {
-        const lower = text.toLocaleLowerCase();
-        return startsWith ? lower.startsWith(term) : lower.includes(term);
-      }),
-    );
-  });
+  protected readonly visibleItems = this.list.visibleItems;
 
   /** Chips rendered in the field (respects `maxDisplayedTags`). */
   protected readonly visibleChips = computed<
@@ -360,56 +501,33 @@ export class OgeTagBox<TItem = unknown>
     return Math.max(0, this.selectedItems().length - max);
   });
 
-  protected readonly activeIndex = signal(-1);
+  protected readonly activeIndex = this.list.activeIndex;
+  protected readonly activeDescendant = this.list.activeDescendant;
 
-  protected readonly activeDescendant = computed<string | null>(() =>
-    this.opened() && this.activeIndex() >= 0
-      ? this.optionId(this.activeIndex())
-      : null,
-  );
-
-  override readonly dropdown: OgeInputDropDownApi = {
-    visible: computed(
+  override readonly dropdown: OgeInputDropDownApi =
+    this.panelController.dropDownApi(
       () => this.showDropDownButton() && !this.effectiveDisabled(),
-    ),
-    expanded: computed(() => this.opened()),
-    toggle: () => {
-      if (this.effectiveDisabled() || this.readonly()) return;
-      this.toggle();
-      this.focus();
-    },
-  };
+      () => this.toggle(),
+    );
 
   constructor() {
     super();
-    effect(() => {
-      const shouldOpen = this.opened();
-      untracked(() => {
-        if (shouldOpen && !this.panel.isOpen()) {
-          this.panel.open();
-          if (this.activeIndex() < 0) this.setActive(this.edgeEnabledIndex(1));
-          this.dropDownOpened.emit();
-        } else if (!shouldOpen && this.panel.isOpen()) {
-          this.panel.close('api');
-        }
-      });
-    });
     // filtering / selection changes re-anchor the active option
     effect(() => {
-      this.visibleItems();
+      this.list.visibleItems();
       untracked(() => {
-        if (this.opened() && this.activeIndex() >= this.visibleItems().length) {
-          this.setActive(this.edgeEnabledIndex(1));
+        if (
+          this.opened() &&
+          this.list.activeIndex() >= this.list.visibleItems().length
+        ) {
+          this.list.setActive(this.list.edgeEnabledIndex(1));
         }
       });
     });
-    effect(() => {
-      const blocked = this.effectiveDisabled() || this.readonly();
-      untracked(() => {
-        if (blocked && this.panel.isOpen()) this.panel.close('api');
-      });
+    this.destroyRef.onDestroy(() => {
+      this.list.destroy();
+      this.panelController.destroy();
     });
-    this.destroyRef.onDestroy(() => this.panel.destroy());
   }
 
   // --- public API ------------------------------------------------------------
@@ -417,7 +535,9 @@ export class OgeTagBox<TItem = unknown>
   open(): void {
     if (this.effectiveDisabled() || this.readonly()) return;
     this.opened.set(true);
-    if (this.activeIndex() < 0) this.setActive(this.edgeEnabledIndex(1));
+    if (this.list.activeIndex() < 0) {
+      this.list.setActive(this.list.edgeEnabledIndex(1));
+    }
   }
 
   close(): void {
@@ -432,15 +552,15 @@ export class OgeTagBox<TItem = unknown>
   // --- selection -------------------------------------------------------------
 
   protected isSelected(item: TItem): boolean {
-    const entry = this.itemValue(item);
+    const entry = this.list.itemValue(item);
     return this.value().some((candidate) => Object.is(candidate, entry));
   }
 
   protected toggleItemAt(index: number, event: Event): void {
-    const item = this.visibleItems()[index];
+    const item = this.list.visibleItems()[index];
     if (item === undefined || this.isItemDisabled(item)) return;
     this.itemClick.emit({ item, index, event });
-    const entry = this.itemValue(item);
+    const entry = this.list.itemValue(item);
     const current = this.value();
     const exists = current.some((candidate) => Object.is(candidate, entry));
     const next = exists
@@ -453,7 +573,7 @@ export class OgeTagBox<TItem = unknown>
         : { addedItems: [item], removedItems: [] },
     );
     // picking stays open (multi-select); clear the search for the next pick
-    this.resetSearch();
+    this.list.resetSearch();
     this.focus();
   }
 
@@ -481,13 +601,17 @@ export class OgeTagBox<TItem = unknown>
   protected onNativeInput(event: Event): void {
     if (!this.searchEnabled()) return;
     const text = (event.target as HTMLInputElement).value;
-    this.searchText.set(text);
+    this.list.setSearch(text);
     this.inputChange.emit({ text, event });
     if (!this.opened()) this.open();
   }
 
   protected onOptionHover(index: number, item: TItem): void {
-    if (!this.isItemDisabled(item)) this.activeIndex.set(index);
+    if (!this.isItemDisabled(item)) this.list.activeIndex.set(index);
+  }
+
+  protected onListScroll(event: Event): void {
+    if (this.virtualActive()) this.virtualizer.onScroll(event);
   }
 
   protected onKeydown(event: KeyboardEvent): void {
@@ -501,13 +625,13 @@ export class OgeTagBox<TItem = unknown>
           this.open();
           return;
         }
-        this.moveActive(event.key === 'ArrowDown' ? 1 : -1);
+        this.list.moveActive(event.key === 'ArrowDown' ? 1 : -1);
         return;
       }
       case 'Enter': {
-        if (open && this.activeIndex() >= 0) {
+        if (open && this.list.activeIndex() >= 0) {
           event.preventDefault();
-          this.toggleItemAt(this.activeIndex(), event);
+          this.toggleItemAt(this.list.activeIndex(), event);
           return;
         }
         this.handleEnterKey(event);
@@ -517,13 +641,13 @@ export class OgeTagBox<TItem = unknown>
         if (this.searchEnabled()) return;
         event.preventDefault();
         if (!open) this.open();
-        else if (this.activeIndex() >= 0) {
-          this.toggleItemAt(this.activeIndex(), event);
+        else if (this.list.activeIndex() >= 0) {
+          this.toggleItemAt(this.list.activeIndex(), event);
         }
         return;
       }
       case 'Backspace': {
-        if ((this.searchText() ?? '') === '' && this.value().length > 0) {
+        if ((this.list.searchText() ?? '') === '' && this.value().length > 0) {
           event.preventDefault();
           this.removeAt(this.value().length - 1, event);
         }
@@ -533,9 +657,9 @@ export class OgeTagBox<TItem = unknown>
         if (open) {
           event.preventDefault();
           this.close();
-        } else if (this.searchText()) {
+        } else if (this.list.searchText()) {
           event.preventDefault();
-          this.resetSearch();
+          this.list.resetSearch();
         }
         return;
       }
@@ -549,112 +673,26 @@ export class OgeTagBox<TItem = unknown>
   // --- expression resolution -------------------------------------------------
 
   protected displayOf(item: TItem): string {
-    const expr = this.displayExpr();
-    if (typeof expr === 'function') return expr(item);
-    if (typeof expr === 'string') {
-      return String((item as Record<string, unknown>)[expr] ?? '');
-    }
-    return typeof item === 'string' ? item : String(item ?? '');
+    return this.list.displayOf(item);
   }
 
   protected isItemDisabled(item: TItem): boolean {
-    const expr = this.disabledExpr();
-    if (typeof expr === 'function') return expr(item);
-    if (typeof expr === 'string') {
-      return Boolean((item as Record<string, unknown>)[expr]);
-    }
-    return false;
+    return this.list.isItemDisabled(item);
   }
 
   protected imageOf(item: TItem): string | null {
-    const expr = this.imageExpr();
-    if (expr === undefined) return null;
-    const url =
-      typeof expr === 'function'
-        ? expr(item)
-        : (item as Record<string, unknown>)[expr];
-    return typeof url === 'string' && url.length > 0 ? url : null;
+    return this.list.imageOf(item);
   }
 
   protected optionId(index: number): string {
-    return `${this.inputId}-option-${index}`;
-  }
-
-  private itemValue(item: TItem): unknown {
-    const expr = this.valueExpr();
-    if (typeof expr === 'function') return expr(item);
-    if (typeof expr === 'string') {
-      return (item as Record<string, unknown>)[expr];
-    }
-    return item;
-  }
-
-  private searchStrings(item: TItem): string[] {
-    const expr = this.searchExpr();
-    if (typeof expr === 'function') return [expr(item)];
-    if (typeof expr === 'string') {
-      return [String((item as Record<string, unknown>)[expr] ?? '')];
-    }
-    if (Array.isArray(expr)) {
-      return expr.map((key) =>
-        String((item as Record<string, unknown>)[key] ?? ''),
-      );
-    }
-    return [this.displayOf(item)];
-  }
-
-  // --- active-option bookkeeping ---------------------------------------------
-
-  private edgeEnabledIndex(direction: 1 | -1): number {
-    const items = this.visibleItems();
-    const start = direction === 1 ? 0 : items.length - 1;
-    for (let i = start; i >= 0 && i < items.length; i += direction) {
-      if (!this.isItemDisabled(items[i])) return i;
-    }
-    return -1;
-  }
-
-  private moveActive(direction: 1 | -1): void {
-    const items = this.visibleItems();
-    if (items.length === 0) return;
-    const index = this.activeIndex();
-    if (index < 0) {
-      this.setActive(this.edgeEnabledIndex(direction));
-      return;
-    }
-    let candidate = index + direction;
-    while (
-      candidate >= 0 &&
-      candidate < items.length &&
-      this.isItemDisabled(items[candidate])
-    ) {
-      candidate += direction;
-    }
-    if (candidate >= 0 && candidate < items.length) this.setActive(candidate);
-  }
-
-  private setActive(index: number): void {
-    this.activeIndex.set(index);
-    if (index < 0) return;
-    const id = this.optionId(index);
-    const schedule =
-      typeof requestAnimationFrame === 'function'
-        ? requestAnimationFrame
-        : (callback: FrameRequestCallback) => (callback(0), 0);
-    schedule(() =>
-      document.getElementById(id)?.scrollIntoView?.({ block: 'nearest' }),
-    );
-  }
-
-  private resetSearch(): void {
-    if (this.searchText() !== null) this.searchText.set(null);
+    return this.list.optionId(index);
   }
 
   // --- base contract ---------------------------------------------------------
 
   protected override onFocusChanged(focused: boolean): void {
     if (focused) return;
-    this.resetSearch();
+    this.list.resetSearch();
     if (this.opened()) this.close();
   }
 

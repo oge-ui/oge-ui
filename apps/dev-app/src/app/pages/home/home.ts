@@ -11,8 +11,9 @@ import {
   type WritableSignal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ArrayDataSource } from '@oge-ui/core';
 import { OgeButton } from '@oge-ui/buttons';
-import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { OgeSelectBox } from '@oge-ui/inputs';
 import { OgeTreeList } from '@oge-ui/tree-list';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
@@ -24,6 +25,8 @@ interface TickerRow {
   region: string;
   price: number;
   qty: number;
+  /** Signed % move of the last tick — drives the trend cell. */
+  change: number;
 }
 
 interface OrgNode {
@@ -43,18 +46,24 @@ interface ComponentTile {
 type DemoTab = 'grid' | 'tree' | 'select' | 'buttons';
 
 const BASE_ROWS: TickerRow[] = [
-  { id: 1, product: 'Aurora Display', region: 'EMEA', price: 1249, qty: 320 },
-  { id: 2, product: 'Nebula Sensor', region: 'APAC', price: 862, qty: 780 },
+  // prettier-ignore
+  { id: 1, product: 'Aurora Display', region: 'EMEA', price: 1249, qty: 320, change: 0 },
+  // prettier-ignore
+  { id: 2, product: 'Nebula Sensor', region: 'APAC', price: 862, qty: 780, change: 0 },
   {
     id: 3,
     product: 'Quantum Relay',
     region: 'Americas',
     price: 1540,
     qty: 145,
+    change: 0,
   },
-  { id: 4, product: 'Photon Cable', region: 'EMEA', price: 96, qty: 4210 },
-  { id: 5, product: 'Ion Battery', region: 'Americas', price: 415, qty: 990 },
-  { id: 6, product: 'Vector GPU', region: 'APAC', price: 2199, qty: 260 },
+  // prettier-ignore
+  { id: 4, product: 'Photon Cable', region: 'EMEA', price: 96, qty: 4210, change: 0 },
+  // prettier-ignore
+  { id: 5, product: 'Ion Battery', region: 'Americas', price: 415, qty: 990, change: 0 },
+  // prettier-ignore
+  { id: 6, product: 'Vector GPU', region: 'APAC', price: 2199, qty: 260, change: 0 },
 ];
 
 const ORG: OrgNode[] = [
@@ -80,6 +89,7 @@ const ORG: OrgNode[] = [
     Icon,
     OgeGrid,
     OgeColumn,
+    OgeCellTemplate,
     OgeTreeList,
     OgeButton,
     OgeSelectBox,
@@ -93,7 +103,6 @@ const ORG: OrgNode[] = [
         <span class="home-blob home-blob-1"></span>
         <span class="home-blob home-blob-2"></span>
         <canvas class="home-fx absolute inset-0"></canvas>
-        <span class="home-gridlines"></span>
         <span class="home-noise"></span>
       </div>
 
@@ -229,7 +238,7 @@ const ORG: OrgNode[] = [
                       <button
                         type="button"
                         [attr.aria-pressed]="demoTab() === tab.id"
-                        (click)="demoTab.set(tab.id)"
+                        (click)="setDemoTab(tab.id)"
                         class="border-b-2 px-3.5 py-2.5 font-mono text-[12px] transition-colors"
                         [class]="
                           demoTab() === tab.id
@@ -254,24 +263,55 @@ const ORG: OrgNode[] = [
                   @switch (demoTab()) {
                     @case ('grid') {
                       <div class="home-pane p-3">
-                        <oge-grid [data]="rows()" keyField="id">
+                        <oge-grid
+                          [data]="heroSource"
+                          keyField="id"
+                          [highlightChanges]="true"
+                        >
                           <oge-column field="product" caption="Product" />
                           <oge-column
                             field="region"
                             caption="Region"
-                            [width]="100"
+                            [width]="86"
                           />
                           <oge-column
                             field="price"
                             caption="Price"
                             dataType="number"
-                            [width]="90"
+                            [width]="82"
                           />
+                          <oge-column
+                            field="change"
+                            caption="24h"
+                            dataType="number"
+                            [width]="86"
+                          >
+                            <span
+                              *ogeCellTemplate="let change"
+                              class="home-trend"
+                              [class.home-trend-up]="$any(change) > 0"
+                              [class.home-trend-down]="$any(change) < 0"
+                              >{{
+                                $any(change) > 0
+                                  ? '▲'
+                                  : $any(change) < 0
+                                    ? '▼'
+                                    : '—'
+                              }}
+                              {{
+                                $any(change) === 0
+                                  ? ''
+                                  : ($any(change) > 0 ? '+' : '') +
+                                    $any(change) +
+                                    '%'
+                              }}</span
+                            >
+                          </oge-column>
                           <oge-column
                             field="qty"
                             caption="Qty"
                             dataType="number"
-                            [width]="80"
+                            [width]="72"
                           />
                         </oge-grid>
                       </div>
@@ -850,7 +890,7 @@ const ORG: OrgNode[] = [
       }
     }
 
-    /* ── hero background: blobs, particle wave, dot grid, grain ───── */
+    /* ── hero background: blobs, glyph canvas, grain ──────────────── */
     app-home .home-blob {
       position: absolute;
       border-radius: 9999px;
@@ -914,21 +954,6 @@ const ORG: OrgNode[] = [
     app-home .home-fx {
       width: 100%;
       height: 100%;
-    }
-
-    app-home .home-gridlines {
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(
-        rgba(99, 102, 241, 0.22) 1px,
-        transparent 1px
-      );
-      background-size: 28px 28px;
-      mask-image: radial-gradient(
-        ellipse 65% 60% at 45% 35%,
-        black 20%,
-        transparent 72%
-      );
     }
 
     app-home .home-noise {
@@ -1016,6 +1041,24 @@ const ORG: OrgNode[] = [
       background-position: 100% 0;
       box-shadow: 0 8px 30px -8px rgba(217, 70, 239, 0.5);
       transform: translateY(-1px);
+    }
+
+    /* ── live trend cell ──────────────────────────────────────────── */
+    app-home .home-trend {
+      font-size: 11.5px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--oge-muted-color);
+      transition: color 200ms ease;
+      white-space: nowrap;
+    }
+
+    app-home .home-trend-up {
+      color: #10b981;
+    }
+
+    app-home .home-trend-down {
+      color: #f43f5e;
     }
 
     /* ── live pulse dot ───────────────────────────────────────────── */
@@ -1505,9 +1548,12 @@ export class HomePage {
 
   protected readonly org = ORG;
 
-  protected readonly rows = signal<TickerRow[]>(
+  /** Push-driven source so `highlightChanges` flashes exactly the patched cells. */
+  protected readonly heroSource = new ArrayDataSource<TickerRow>(
     BASE_ROWS.map((row) => ({ ...row })),
+    { key: 'id' },
   );
+  private readonly heroRows = BASE_ROWS.map((row) => ({ ...row }));
 
   protected readonly copied = signal(false);
 
@@ -1635,6 +1681,17 @@ export class HomePage {
   private pointer = { x: -9999, y: -9999 };
   private tiltTarget = { rx: 3, ry: -7 };
   private tiltCurrent = { rx: 3, ry: -7 };
+  private tiltEl: HTMLElement | null = null;
+
+  /**
+   * Tab switch clears the tilt transform SYNCHRONOUSLY when entering the
+   * select tab — a popup opened before the next rAF frame would otherwise
+   * measure its anchor under the residual transform and land offset.
+   */
+  protected setDemoTab(tab: DemoTab): void {
+    this.demoTab.set(tab);
+    if (tab === 'select' && this.tiltEl) this.tiltEl.style.transform = '';
+  }
 
   constructor() {
     const id = setInterval(() => this.tick(), 1500);
@@ -1654,16 +1711,30 @@ export class HomePage {
       });
   }
 
-  /** Nudge two random rows so the hero grid visibly streams data. */
+  /**
+   * Streams push-updates into the hero grid: two random rows tick with a
+   * visible price move, a signed trend cell and a `highlightChanges` flash on
+   * exactly the patched cells.
+   */
   private tick(): void {
-    const next = this.rows().map((row) => ({ ...row }));
-    for (let n = 0; n < 2; n++) {
-      const row = next[Math.floor(Math.random() * next.length)];
-      const drift = 1 + (Math.random() - 0.5) * 0.04;
-      row.price = Math.max(1, Math.round(row.price * drift));
-      row.qty = Math.max(0, row.qty + Math.round((Math.random() - 0.5) * 30));
+    const picked = new Set<number>();
+    while (picked.size < 2) {
+      picked.add(Math.floor(Math.random() * this.heroRows.length));
     }
-    this.rows.set(next);
+    this.heroSource.push(
+      [...picked].map((index) => {
+        const row = this.heroRows[index];
+        const movePct = (Math.random() - 0.45) * 6; // −2.7% … +3.3%
+        row.change = Math.round(movePct * 10) / 10;
+        row.price = Math.max(1, Math.round(row.price * (1 + movePct / 100)));
+        row.qty = Math.max(0, row.qty + Math.round((Math.random() - 0.5) * 40));
+        return {
+          type: 'update' as const,
+          key: row.id,
+          patch: { price: row.price, qty: row.qty, change: row.change },
+        };
+      }),
+    );
   }
 
   private setupStatCountUp(): void {
@@ -1706,6 +1777,7 @@ export class HomePage {
     const hero = host.querySelector<HTMLElement>('.home-hero');
     const canvas = host.querySelector<HTMLCanvasElement>('.home-fx');
     const tilt = host.querySelector<HTMLElement>('.home-tilt');
+    this.tiltEl = tilt;
     const ctx = canvas?.getContext('2d');
     if (!hero || !canvas || !ctx) return;
 
@@ -1790,7 +1862,42 @@ export class HomePage {
     this.destroyRef.onDestroy(() => cancelAnimationFrame(raf));
   }
 
-  /** Perspective dot-wave floor: cyan→violet→magenta, dips away from the cursor. */
+  /** Deterministic pseudo-random glyph field, reseeded per canvas size. */
+  private glyphs: {
+    x: number;
+    y: number;
+    depth: number;
+    type: number;
+    phase: number;
+  }[] = [];
+  private glyphSeedKey = '';
+
+  private seedGlyphs(w: number, h: number): void {
+    const key = `${Math.round(w)}x${Math.round(h)}`;
+    if (this.glyphSeedKey === key) return;
+    this.glyphSeedKey = key;
+    // deterministic layout: a hash noise over the index keeps SSR/tests stable
+    const noise = (i: number, salt: number): number => {
+      const v = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const count = Math.max(22, Math.floor(w / 46));
+    this.glyphs = Array.from({ length: count }, (_, i) => ({
+      x: noise(i, 1) * w,
+      y: h * 0.16 + noise(i, 2) * h * 0.8,
+      depth: 0.25 + noise(i, 3) * 0.75,
+      type: Math.floor(noise(i, 4) * 6),
+      phase: noise(i, 5) * Math.PI * 2,
+    }));
+  }
+
+  /**
+   * Floating field of wireframe UI glyphs — checkboxes, toggles, radios,
+   * sliders, input fields and chart bars — the component-library take on a
+   * particle background. Glyphs bob slowly, dodge the cursor and keep the
+   * cyan→violet→magenta hue ramp; a single static frame under
+   * prefers-reduced-motion.
+   */
   private drawWave(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
@@ -1801,29 +1908,120 @@ export class HomePage {
     const h = canvas.height / dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
+    this.seedGlyphs(w, h);
     const dark = document.documentElement.classList.contains('dark');
-    const rows = 13;
-    const cols = Math.max(26, Math.floor(w / 30));
-    const horizon = h * 0.56;
     const { x: mx, y: my } = this.pointer;
-    for (let r = 0; r < rows; r++) {
-      const depth = r / (rows - 1);
-      const y0 = horizon + depth * depth * (h - horizon) * 0.94;
-      for (let c = 0; c < cols; c++) {
-        const xn = c / (cols - 1) - 0.5;
-        const x = w / 2 + xn * w * (0.74 + 0.52 * depth);
-        let wave =
-          Math.sin(t * 1.1 + c * 0.32 + r * 0.65) * 9 * (0.35 + depth) +
-          Math.cos(t * 0.7 + c * 0.11 + r * 0.3) * 5 * depth;
-        const dx = x - mx;
-        const dy = y0 - my;
-        wave -= Math.exp(-(dx * dx + dy * dy) / 22000) * 26 * (0.3 + depth);
-        const hue = 190 + (xn + 0.5) * 130; // cyan → indigo → magenta
-        const alpha = (dark ? 0.55 : 0.38) * (0.25 + 0.75 * depth);
-        ctx.fillStyle = `hsla(${hue.toFixed(0)}, 85%, ${dark ? 66 : 52}%, ${alpha.toFixed(3)})`;
+
+    for (const glyph of this.glyphs) {
+      const bobX = Math.sin(t * 0.35 + glyph.phase) * 10 * glyph.depth;
+      const bobY =
+        Math.cos(t * 0.28 + glyph.phase * 1.7) * 8 * glyph.depth +
+        Math.sin(t * 0.12 + glyph.phase) * 4;
+      let x = glyph.x + bobX;
+      let y = glyph.y + bobY;
+      // dodge the cursor gently
+      const dx = x - mx;
+      const dy = y - my;
+      const dist2 = dx * dx + dy * dy;
+      const push = Math.exp(-dist2 / 26000) * 30;
+      if (push > 0.5) {
+        const len = Math.sqrt(dist2) || 1;
+        x += (dx / len) * push;
+        y += (dy / len) * push;
+      }
+      const size = 7 + glyph.depth * 12;
+      const hue = 190 + (x / w) * 130; // cyan → indigo → magenta
+      const alpha = (dark ? 0.4 : 0.3) * (0.35 + 0.65 * glyph.depth);
+      ctx.strokeStyle = `hsla(${hue.toFixed(0)}, 80%, ${dark ? 68 : 50}%, ${alpha.toFixed(3)})`;
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 1.1;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      this.drawGlyph(ctx, glyph.type, x, y, size, t + glyph.phase);
+    }
+  }
+
+  /** One wireframe UI control at (x, y); `s` is the glyph width. */
+  private drawGlyph(
+    ctx: CanvasRenderingContext2D,
+    type: number,
+    x: number,
+    y: number,
+    s: number,
+    t: number,
+  ): void {
+    ctx.beginPath();
+    switch (type) {
+      case 0: {
+        // checkbox: rounded square + check
+        const r = s * 0.22;
+        ctx.roundRect(x - s / 2, y - s / 2, s, s, r);
+        ctx.moveTo(x - s * 0.24, y);
+        ctx.lineTo(x - s * 0.06, y + s * 0.2);
+        ctx.lineTo(x + s * 0.26, y - s * 0.18);
+        ctx.stroke();
+        break;
+      }
+      case 1: {
+        // toggle: pill + thumb sliding with time
+        const height = s * 0.55;
+        ctx.roundRect(x - s / 2, y - height / 2, s, height, height / 2);
+        ctx.stroke();
+        const knob = Math.sin(t * 0.6) > 0 ? 1 : -1;
         ctx.beginPath();
-        ctx.arc(x, y0 + wave, 0.8 + 1.5 * depth, 0, Math.PI * 2);
+        ctx.arc(
+          x + knob * (s / 2 - height / 2),
+          y,
+          height * 0.32,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
+        break;
+      }
+      case 2: {
+        // radio: ring + dot
+        ctx.arc(x, y, s * 0.42, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x, y, s * 0.16, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 3: {
+        // slider: track + knob drifting with time
+        ctx.moveTo(x - s / 2, y);
+        ctx.lineTo(x + s / 2, y);
+        ctx.stroke();
+        const kx = x + Math.sin(t * 0.5) * s * 0.34;
+        ctx.beginPath();
+        ctx.arc(kx, y, s * 0.16, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 4: {
+        // input field: rounded rect + caret line
+        const height = s * 0.5;
+        ctx.roundRect(x - s / 2, y - height / 2, s, height, height * 0.3);
+        ctx.moveTo(x - s * 0.28, y - height * 0.22);
+        ctx.lineTo(x - s * 0.28, y + height * 0.22);
+        ctx.stroke();
+        break;
+      }
+      default: {
+        // chart: three bars breathing with time
+        const bw = s * 0.18;
+        const heights = [0.5, 0.85, 0.65].map(
+          (base, index) => base + Math.sin(t * 0.7 + index) * 0.12,
+        );
+        heights.forEach((hn, index) => {
+          const bx = x - s * 0.35 + index * s * 0.35;
+          ctx.moveTo(bx, y + s * 0.4);
+          ctx.lineTo(bx, y + s * 0.4 - hn * s * 0.8);
+        });
+        ctx.lineWidth = bw;
+        ctx.stroke();
+        break;
       }
     }
   }

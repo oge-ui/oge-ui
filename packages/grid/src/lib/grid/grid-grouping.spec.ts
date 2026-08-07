@@ -26,11 +26,22 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 @Component({
   imports: [OgeGrid, OgeColumn],
   template: `
-    <oge-grid [data]="data" keyField="id" [groupBy]="groupBy()" [groupPanel]="true" [columnChooser]="true">
+    <oge-grid
+      [data]="data"
+      keyField="id"
+      [groupBy]="groupBy()"
+      [groupPanel]="true"
+      [columnChooser]="true"
+    >
       <oge-column field="id" dataType="number" [width]="70" pinned="left" />
       <oge-column field="region" />
       <oge-column field="city" />
-      <oge-column field="amount" dataType="number" groupSummary="sum" totalSummary="sum" />
+      <oge-column
+        field="amount"
+        dataType="number"
+        groupSummary="sum"
+        totalSummary="sum"
+      />
     </oge-grid>
   `,
 })
@@ -49,7 +60,7 @@ describe('OgeGrid grouping', () => {
   it('renders group rows with caption, value, count and summaries', async () => {
     const { el } = await render();
     const groups = Array.from(el.querySelectorAll('.oge-group-row')).map((g) =>
-      g.textContent?.replace(/\s+/g, ' ').trim()
+      g.textContent?.replace(/\s+/g, ' ').trim(),
     );
     expect(groups).toEqual([
       'Region: EU (2) Sum of Amount: 300',
@@ -63,7 +74,9 @@ describe('OgeGrid grouping', () => {
     (el.querySelector('.oge-group-row') as HTMLElement).click();
     await settle(fixture);
     expect(el.querySelectorAll('.oge-row').length).toBe(1); // only the US row remains
-    expect(el.querySelector('.oge-group-row')?.getAttribute('aria-expanded')).toBe('false');
+    expect(
+      el.querySelector('.oge-group-row')?.getAttribute('aria-expanded'),
+    ).toBe('false');
 
     (el.querySelector('.oge-group-row') as HTMLElement).click();
     await settle(fixture);
@@ -72,8 +85,8 @@ describe('OgeGrid grouping', () => {
 
   it('shows the grid total summary row', async () => {
     const { el } = await render();
-    const totalCells = Array.from(el.querySelectorAll('.oge-total-cell')).map((c) =>
-      c.textContent?.trim()
+    const totalCells = Array.from(el.querySelectorAll('.oge-total-cell')).map(
+      (c) => c.textContent?.trim(),
     );
     expect(totalCells).toContain('Sum: 600');
   });
@@ -81,13 +94,17 @@ describe('OgeGrid grouping', () => {
   it('collapses and expands all groups via the toolbar buttons', async () => {
     const { fixture, el } = await render();
     const button = (label: string) =>
-      el.querySelector(`.oge-toolbar-btn[aria-label="${label}"]`) as HTMLButtonElement;
+      el.querySelector(
+        `.oge-toolbar-btn[aria-label="${label}"]`,
+      ) as HTMLButtonElement;
 
     button('Collapse all groups').click();
     await settle(fixture);
     expect(el.querySelectorAll('.oge-row').length).toBe(0);
     expect(
-      Array.from(el.querySelectorAll('.oge-group-row')).map((g) => g.getAttribute('aria-expanded'))
+      Array.from(el.querySelectorAll('.oge-group-row')).map((g) =>
+        g.getAttribute('aria-expanded'),
+      ),
     ).toEqual(['false', 'false']);
 
     button('Expand all groups').click();
@@ -97,7 +114,9 @@ describe('OgeGrid grouping', () => {
 
   it('renders group panel chips and ungroups via the chip button', async () => {
     const { fixture, el } = await render();
-    expect(el.querySelector('.oge-group-chip')?.textContent).toContain('Region');
+    expect(el.querySelector('.oge-group-chip')?.textContent).toContain(
+      'Region',
+    );
     (el.querySelector('.oge-group-chip-remove') as HTMLButtonElement).click();
     await settle(fixture);
     expect(el.querySelectorAll('.oge-group-row').length).toBe(0);
@@ -113,7 +132,9 @@ describe('OgeGrid grouping', () => {
 
   it('marks pinned columns sticky with computed offsets', async () => {
     const { el } = await render();
-    const pinnedHeader = el.querySelector('.oge-header-cell.oge-pinned') as HTMLElement;
+    const pinnedHeader = el.querySelector(
+      '.oge-header-cell.oge-pinned',
+    ) as HTMLElement;
     expect(pinnedHeader).toBeTruthy();
     // logical property so RTL mirrors pinning automatically
     expect(pinnedHeader.style.insetInlineStart).toBe('0px');
@@ -126,7 +147,9 @@ describe('OgeGrid grouping', () => {
     <oge-grid [data]="data" keyField="id">
       <oge-column field="id" dataType="number" />
       <oge-column field="city" />
-      <div *ogeDetailTemplate="let sale" class="detail-content">Detail of {{ sale.id }}</div>
+      <div *ogeDetailTemplate="let sale" class="detail-content">
+        Detail of {{ sale.id }}
+      </div>
     </oge-grid>
   `,
 })
@@ -158,12 +181,14 @@ describe('OgeGrid multiple summaries per column', () => {
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
 
-    const firstGroup = el.querySelector('.oge-group-row')?.textContent?.replace(/\s+/g, ' ');
+    const firstGroup = el
+      .querySelector('.oge-group-row')
+      ?.textContent?.replace(/\s+/g, ' ');
     expect(firstGroup).toContain('Sum of Amount: 300');
     expect(firstGroup).toContain('Avg of Amount: 150');
 
-    const totalCells = Array.from(el.querySelectorAll('.oge-total-cell')).map((c) =>
-      c.textContent?.replace(/\s+/g, ' ').trim()
+    const totalCells = Array.from(el.querySelectorAll('.oge-total-cell')).map(
+      (c) => c.textContent?.replace(/\s+/g, ' ').trim(),
     );
     expect(totalCells).toContain('Sum: 600 · Count: 3');
   });
@@ -175,7 +200,12 @@ describe('OgeGrid multiple summaries per column', () => {
     <oge-grid [data]="data" keyField="id" [groupBy]="['region']">
       <oge-column field="region" />
       <oge-column field="city" />
-      <oge-column field="amount" dataType="number" groupSummary="sum" groupSummaryPosition="footer" />
+      <oge-column
+        field="amount"
+        dataType="number"
+        groupSummary="sum"
+        groupSummaryPosition="footer"
+      />
     </oge-grid>
   `,
 })
@@ -195,7 +225,9 @@ describe('OgeGrid group footer summaries', () => {
 
     const footers = Array.from(el.querySelectorAll('.oge-group-footer-row'));
     expect(footers.length).toBe(2); // one per group
-    const footerTexts = footers.map((f) => f.textContent?.replace(/\s+/g, ' ').trim());
+    const footerTexts = footers.map((f) =>
+      f.textContent?.replace(/\s+/g, ' ').trim(),
+    );
     expect(footerTexts).toEqual(['Sum: 300', 'Sum: 300']);
     // the value sits in the amount column's cell (last column)
     const cells = footers[0].querySelectorAll('.oge-group-footer-cell');
@@ -243,14 +275,14 @@ describe('OgeGrid calculateCustomSummary', () => {
     const el = fixture.nativeElement as HTMLElement;
 
     const groups = Array.from(el.querySelectorAll('.oge-group-row')).map((g) =>
-      g.textContent?.replace(/\s+/g, ' ').trim()
+      g.textContent?.replace(/\s+/g, ' ').trim(),
     );
     // EU: 200-100=100, US single row: 300-300=0
     expect(groups[0]).toContain('Custom of Amount: 100');
     expect(groups[1]).toContain('Custom of Amount: 0');
 
-    const totalCells = Array.from(el.querySelectorAll('.oge-total-cell')).map((c) =>
-      c.textContent?.trim()
+    const totalCells = Array.from(el.querySelectorAll('.oge-total-cell')).map(
+      (c) => c.textContent?.trim(),
     );
     expect(totalCells).toContain('Custom: 200'); // 300-100 over all rows
   });
@@ -273,7 +305,9 @@ describe('OgeGrid master-detail', () => {
     const detail = el.querySelector('.oge-detail-row');
     expect(detail?.textContent).toContain('Detail of 2');
     // detail row sits directly after its parent row
-    expect(detail?.previousElementSibling?.classList.contains('oge-row')).toBe(true);
+    expect(detail?.previousElementSibling?.classList.contains('oge-row')).toBe(
+      true,
+    );
 
     (el.querySelectorAll('.oge-expander-btn')[1] as HTMLButtonElement).click();
     await settle(fixture);
@@ -290,11 +324,13 @@ describe('OgeGrid column operations', () => {
 
   it('applies width overrides from resize state', async () => {
     const { fixture, el } = await render();
-    const grid = fixture.debugElement.children[0].componentInstance as OgeGrid<Sale>;
-    (grid as unknown as { store: { columns: { setWidth(id: string, w: number): void } } }).store.columns.setWidth(
-      'city',
-      222
-    );
+    const grid = fixture.debugElement.children[0]
+      .componentInstance as OgeGrid<Sale>;
+    (
+      grid as unknown as {
+        store: { columns: { setWidth(id: string, w: number): void } };
+      }
+    ).store.columns.setWidth('city', 222);
     await settle(fixture);
     const headerRow = el.querySelector('.oge-header-row') as HTMLElement;
     expect(headerRow.style.gridTemplateColumns).toContain('222px');
@@ -302,7 +338,11 @@ describe('OgeGrid column operations', () => {
 
   it('reorders columns by dragging rows inside the column chooser', async () => {
     const { fixture, el } = await render();
-    (el.querySelector('.oge-toolbar-btn[aria-label="Column chooser"]') as HTMLButtonElement).click();
+    (
+      el.querySelector(
+        '.oge-toolbar-btn[aria-label="Column chooser"]',
+      ) as HTMLButtonElement
+    ).click();
     await settle(fixture);
     const items = el.querySelectorAll('.oge-chooser-item');
     expect(items.length).toBe(4);
@@ -312,27 +352,34 @@ describe('OgeGrid column operations', () => {
     items[1].dispatchEvent(new Event('drop', { bubbles: true }));
     await settle(fixture);
 
-    const captions = Array.from(el.querySelectorAll('.oge-header-caption')).map((h) =>
-      h.textContent?.trim()
+    const captions = Array.from(el.querySelectorAll('.oge-header-caption')).map(
+      (h) => h.textContent?.trim(),
     );
     expect(captions).toEqual(['Id', 'City', 'Region', 'Amount']);
     // the chooser list mirrors the new order
-    const chooserTexts = Array.from(el.querySelectorAll('.oge-chooser-item span:last-child')).map(
-      (s) => s.textContent?.trim()
-    );
+    const chooserTexts = Array.from(
+      el.querySelectorAll('.oge-chooser-item > span:last-child'),
+    ).map((s) => s.textContent?.trim());
     expect(chooserTexts).toEqual(['Id', 'City', 'Region', 'Amount']);
   });
 
   it('reorders columns via the columns slice', async () => {
     const { fixture, el } = await render();
-    const grid = fixture.debugElement.children[0].componentInstance as OgeGrid<Sale>;
-    const store = (grid as unknown as {
-      store: { columns: { reorder(base: readonly string[], s: string, t: string): void } };
-    }).store;
+    const grid = fixture.debugElement.children[0]
+      .componentInstance as OgeGrid<Sale>;
+    const store = (
+      grid as unknown as {
+        store: {
+          columns: {
+            reorder(base: readonly string[], s: string, t: string): void;
+          };
+        };
+      }
+    ).store;
     store.columns.reorder(['id', 'region', 'city', 'amount'], 'city', 'region');
     await settle(fixture);
-    const captions = Array.from(el.querySelectorAll('.oge-header-caption')).map((h) =>
-      h.textContent?.trim()
+    const captions = Array.from(el.querySelectorAll('.oge-header-caption')).map(
+      (h) => h.textContent?.trim(),
     );
     expect(captions).toEqual(['Id', 'City', 'Region', 'Amount']);
   });
