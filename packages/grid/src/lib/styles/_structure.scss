@@ -854,6 +854,9 @@
   color: #dc2626;
 }
 
+/* Legacy hand-rolled dialog chrome — grid/tree-list migrated onto oge-modal;
+   only the pivot's inline dialogs still use these. Remove after the pivot
+   migration. */
 .oge-popup-backdrop {
   position: fixed;
   inset: 0;

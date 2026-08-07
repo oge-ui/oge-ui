@@ -767,14 +767,13 @@ store.editing.hasPending())) {
   {{ customLoadingMessage() ?? msg().loading }}
 </div>
 } @if (popupNode(); as node) {
-<div class="oge-popup-backdrop"></div>
-<div
-  class="oge-edit-popup"
-  role="dialog"
-  aria-modal="true"
-  [attr.aria-label]="msg().editRow"
+<oge-modal
+  class="oge-edit-modal"
+  [opened]="true"
+  [title]="msg().editRow"
+  [width]="420"
+  (closed)="cancelActiveEditor()"
 >
-  <div class="oge-popup-title">{{ msg().editRow }}</div>
   <div
     class="oge-popup-fields"
     [style.grid-template-columns]="formGridTemplate()"
@@ -807,7 +806,7 @@ store.editing.hasPending())) {
     </div>
     } }
   </div>
-  <div class="oge-popup-actions">
+  <ng-container *ogeModalFooter>
     <button
       type="button"
       class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
@@ -822,8 +821,8 @@ store.editing.hasPending())) {
     >
       {{ msg().cancelEdit }}
     </button>
-  </div>
-</div>
+  </ng-container>
+</oge-modal>
 } @if (headerFilterField() !== null) {
 <oge-popup #headerFilterPopup [panel]="headerFilterPanel">
   <div class="oge-header-filter-popup">
@@ -929,15 +928,13 @@ store.editing.hasPending())) {
     (closeRequest)="operatorPanel.close($event.reason)"
   />
 </oge-popup>
-} @if (builderOpen()) {
-<div class="oge-popup-backdrop"></div>
-<div
-  class="oge-edit-popup oge-builder-popup"
-  role="dialog"
-  aria-modal="true"
-  [attr.aria-label]="msg().filterBuilderTitle"
+}
+<oge-modal
+  class="oge-builder-modal"
+  [(opened)]="builderOpen"
+  [title]="msg().filterBuilderTitle"
+  [width]="560"
 >
-  <div class="oge-popup-title">{{ msg().filterBuilderTitle }}</div>
   <oge-filter-builder-group
     [group]="builderTree"
     [fields]="builderFields()"
@@ -946,7 +943,7 @@ store.editing.hasPending())) {
     (changed)="builderVersion.set(builderVersion() + 1)"
   />
   <div class="oge-builder-preview">{{ builderPreview() }}</div>
-  <div class="oge-popup-actions">
+  <ng-container *ogeModalFooter>
     <button
       type="button"
       class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
@@ -961,6 +958,5 @@ store.editing.hasPending())) {
     >
       {{ msg().cancelEdit }}
     </button>
-  </div>
-</div>
-}
+  </ng-container>
+</oge-modal>

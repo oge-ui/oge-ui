@@ -10,6 +10,8 @@ import {
 import {
   OgeAnchoredPanel,
   OgeMenuList,
+  OgeModal,
+  OgeModalFooter,
   OgePopup,
   type OgeMenuListItemClickEvent,
 } from '@oge-ui/overlay';
@@ -245,6 +247,8 @@ function treeSource<T>(
     OgeNumberBox,
     OgePopup,
     OgeMenuList,
+    OgeModal,
+    OgeModalFooter,
   ],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -2331,12 +2335,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected closePopups(): void {
     // the anchored panels also close themselves (outside click / Escape);
-    // this is the API/keyboard sweep that additionally covers the dialogs
+    // this is the API/keyboard sweep. The edit/builder dialogs run on
+    // oge-modal, which owns its Escape/backdrop closing via the overlay stack.
     this.headerFilterPanel.close();
     this.chooserPanel.close();
     this.contextMenuPanel.close();
     this.operatorPanel.close();
-    this.builderOpen.set(false);
   }
 
   // --- cells ----------------------------------------------------------------

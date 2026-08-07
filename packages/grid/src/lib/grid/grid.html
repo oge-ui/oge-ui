@@ -1108,14 +1108,13 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   </div>
 </oge-popup>
 } @if (popupNode(); as node) {
-<div class="oge-popup-backdrop"></div>
-<div
-  class="oge-edit-popup"
-  role="dialog"
-  aria-modal="true"
-  [attr.aria-label]="msg().editRow"
+<oge-modal
+  class="oge-edit-modal"
+  [opened]="true"
+  [title]="msg().editRow"
+  [width]="420"
+  (closed)="cancelActiveEditor()"
 >
-  <div class="oge-popup-title">{{ msg().editRow }}</div>
   <div
     class="oge-popup-fields"
     [style.grid-template-columns]="formGridTemplate()"
@@ -1148,7 +1147,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     </div>
     } }
   </div>
-  <div class="oge-popup-actions">
+  <ng-container *ogeModalFooter>
     <button
       type="button"
       class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
@@ -1163,8 +1162,8 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     >
       {{ msg().cancelEdit }}
     </button>
-  </div>
-</div>
+  </ng-container>
+</oge-modal>
 } @if (operatorMenu(); as opMenu) {
 <oge-popup #operatorPopup class="oge-operator-menu" [panel]="operatorPanel">
   <oge-menu-list
@@ -1174,15 +1173,13 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     (closeRequest)="operatorPanel.close($event.reason)"
   />
 </oge-popup>
-} @if (builderOpen()) {
-<div class="oge-popup-backdrop"></div>
-<div
-  class="oge-edit-popup oge-builder-popup"
-  role="dialog"
-  aria-modal="true"
-  [attr.aria-label]="msg().filterBuilderTitle"
+}
+<oge-modal
+  class="oge-builder-modal"
+  [(opened)]="builderOpen"
+  [title]="msg().filterBuilderTitle"
+  [width]="560"
 >
-  <div class="oge-popup-title">{{ msg().filterBuilderTitle }}</div>
   <oge-filter-builder-group
     [group]="builderTree"
     [fields]="builderFields()"
@@ -1191,7 +1188,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     (changed)="builderVersion.set(builderVersion() + 1)"
   />
   <div class="oge-builder-preview">{{ builderPreview() }}</div>
-  <div class="oge-popup-actions">
+  <ng-container *ogeModalFooter>
     <button
       type="button"
       class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
@@ -1206,9 +1203,9 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     >
       {{ msg().cancelEdit }}
     </button>
-  </div>
-</div>
-} @if (contextMenu(); as menu) {
+  </ng-container>
+</oge-modal>
+@if (contextMenu(); as menu) {
 <oge-popup
   #contextMenuPopup
   class="oge-context-menu"

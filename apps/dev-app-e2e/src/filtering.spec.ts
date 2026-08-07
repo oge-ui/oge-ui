@@ -26,7 +26,7 @@ test('operator menu, filter builder and search highlighting work together', asyn
 
   // filter builder: create Salary >= 100000
   await page.locator('.oge-filter-panel-text').click();
-  const popup = page.locator('.oge-builder-popup');
+  const popup = page.locator('.oge-builder-modal .oge-modal');
   await expect(popup).toBeVisible();
   await popup.locator('select.oge-fb-input').first().selectOption('salary');
   await popup.locator('select.oge-fb-input').nth(1).selectOption('ge');

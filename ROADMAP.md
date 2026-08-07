@@ -340,9 +340,7 @@ never `Date.parse`).
 storage shape via `serializeLikeOriginal`).
 
 **Next:** time-list virtualization ·
-`Intl.DateTimeFormatOptions` column display formats · grid/tree-list
-edit-popup + filter-builder migration onto `OgeModal` (shipped — see the
-Overlay Modal section) · input
+`Intl.DateTimeFormatOptions` column display formats · input
 masking wave (incl. `useMaskBehavior`) · pivot chart binding · parity backlog:
 grid group/detail toggle events, `focusedCellChanged`, imperative column
 chooser open, `getTotalSummaryValue`, pivot `exporting` pre-event +
@@ -534,6 +532,10 @@ popups inside the modal form). Shipped alongside: the anchored-panel Escape
 stack extracted into a shared `overlay-stack.ts` (popup inside modal closes
 first), plus standalone `focus-trap.ts` and ref-counted `scroll-lock.ts`
 utilities, and the overlay config's first `messages` block (`modalClose`).
+The grid and tree-list edit-popup + filter-builder dialogs now run on
+`oge-modal` (focus trap and Escape stack for free); the pivot keeps its
+inline dialogs (commercial tier) and the legacy `.oge-edit-popup` CSS in
+`_structure.scss` stays until the pivot migrates.
 
 | Feature                                 | Reference | OGE     | Notes                                                                                                                                        |
 | --------------------------------------- | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |

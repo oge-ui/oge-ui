@@ -197,7 +197,9 @@ describe('filter panel + [filterValue]', () => {
     const { fixture, host, el } = await render();
     (el.querySelector('.oge-filter-panel-text') as HTMLButtonElement).click();
     await settle(fixture);
-    const popup = el.querySelector('.oge-builder-popup') as HTMLElement;
+    const popup = el.querySelector(
+      '.oge-builder-modal .oge-modal',
+    ) as HTMLElement;
     expect(popup).toBeTruthy();
 
     // default first condition targets Name; set value and apply
@@ -214,7 +216,7 @@ describe('filter panel + [filterValue]', () => {
     ).click();
     await settle(fixture);
 
-    expect(el.querySelector('.oge-builder-popup')).toBeFalsy();
+    expect(el.querySelector('.oge-builder-modal .oge-modal')).toBeFalsy();
     expect(names(el)).toEqual(['Ayşe Demir']);
     expect(host.filterValue()).toEqual({
       type: 'binary',

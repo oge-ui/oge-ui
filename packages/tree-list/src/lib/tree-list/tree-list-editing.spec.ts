@@ -173,7 +173,7 @@ describe('OgeTreeList editing', () => {
       ?.querySelector<HTMLButtonElement>('.oge-command-btn')
       ?.click();
     await settle(fixture);
-    const popup = el.querySelector<HTMLElement>('.oge-edit-popup');
+    const popup = el.querySelector<HTMLElement>('.oge-edit-modal .oge-modal');
     expect(popup).toBeTruthy();
     const editors = popup?.querySelectorAll<HTMLInputElement>(
       '.oge-editor .oge-input-native',
@@ -182,13 +182,13 @@ describe('OgeTreeList editing', () => {
     editors[1].value = '7';
     editors[1].dispatchEvent(new Event('input', { bubbles: true }));
     Array.from(
-      el.querySelectorAll<HTMLButtonElement>('.oge-popup-actions button'),
+      el.querySelectorAll<HTMLButtonElement>('.oge-modal-footer button'),
     )[0].click();
     await settle(fixture);
     await flush();
     await settle(fixture);
     expect(host.data[1].effort).toBe(7);
-    expect(el.querySelector('.oge-edit-popup')).toBeNull();
+    expect(el.querySelector('.oge-edit-modal .oge-modal')).toBeNull();
   });
 
   it('delete removes the row (and confirmDelete: false skips the dialog)', async () => {

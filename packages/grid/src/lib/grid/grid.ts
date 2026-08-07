@@ -105,6 +105,8 @@ import {
 import {
   OgeAnchoredPanel,
   OgeMenuList,
+  OgeModal,
+  OgeModalFooter,
   OgePopup,
   type OgeMenuItem,
   type OgeMenuListItemClickEvent,
@@ -359,6 +361,8 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
     OgeNumberBox,
     OgePopup,
     OgeMenuList,
+    OgeModal,
+    OgeModalFooter,
   ],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -2420,8 +2424,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         this.contextMenu() ||
         this.operatorMenu() ||
         this.headerFilterField() !== null ||
-        this.chooserOpen() ||
-        this.builderOpen()
+        this.chooserOpen()
       ) {
         event.preventDefault();
         this.closePopups();
@@ -3551,12 +3554,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected closePopups(): void {
     // the anchored panels also close themselves (outside click / Escape);
-    // this is the API/keyboard sweep that additionally covers the dialogs
+    // this is the API/keyboard sweep. The edit/builder dialogs run on
+    // oge-modal, which owns its Escape/backdrop closing via the overlay stack.
     this.headerFilterPanel.close();
     this.chooserPanel.close();
     this.contextMenuPanel.close();
     this.operatorPanel.close();
-    this.builderOpen.set(false);
   }
 
   protected isHeaderFilterActive(column: ResolvedColumn<T>): boolean {

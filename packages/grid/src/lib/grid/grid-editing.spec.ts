@@ -298,7 +298,7 @@ describe('OgeGrid editing — popup mode', () => {
     const { fixture, host, el } = await render({ mode: 'popup' });
     (el.querySelector('[aria-label="Edit"]') as HTMLButtonElement).click();
     await settle(fixture);
-    const popup = el.querySelector('.oge-edit-popup') as HTMLElement;
+    const popup = el.querySelector('.oge-edit-modal .oge-modal') as HTMLElement;
     expect(popup).toBeTruthy();
     const editors = popup.querySelectorAll('.oge-editor');
     expect(editors.length).toBe(2);
@@ -313,6 +313,6 @@ describe('OgeGrid editing — popup mode', () => {
     await settle(fixture);
 
     expect(host.data[0].name).toBe('Popup Adı');
-    expect(el.querySelector('.oge-edit-popup')).toBeFalsy();
+    expect(el.querySelector('.oge-edit-modal .oge-modal')).toBeFalsy();
   });
 });
