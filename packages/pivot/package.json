@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/pivot",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "publishConfig": {
     "access": "public"
   },
@@ -14,8 +14,8 @@
     }
   },
   "dependencies": {
-    "@oge-ui/core": "0.5.0",
-    "@oge-ui/grid": "0.5.0"
+    "@oge-ui/core": "0.6.0",
+    "@oge-ui/grid": "0.6.0"
   },
   "sideEffects": false,
   "homepage": "https://ogeui.com",
