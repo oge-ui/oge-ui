@@ -187,6 +187,57 @@ describe('OgeSelectBox', () => {
     ).toContain('No data');
   });
 
+  it('dropDownOpened/dropDownClosed frame the panel, itemClick reports the pick', async () => {
+    const fixture = TestBed.createComponent(Host);
+    await settle(fixture);
+    const box = selectBox(fixture);
+    const log: unknown[] = [];
+    box.dropDownOpened.subscribe(() => log.push('opened'));
+    box.dropDownClosed.subscribe(() => log.push('closed'));
+    box.itemClick.subscribe((event) =>
+      log.push([
+        'item',
+        event.item.name,
+        event.index,
+        event.event instanceof Event,
+      ]),
+    );
+    fixture.nativeElement.querySelector('.oge-input-dropdown').click();
+    await settle(fixture);
+    expect(log).toEqual(['opened']);
+    options(fixture)[1].click();
+    await settle(fixture);
+    expect(log).toEqual(['opened', ['item', 'Berlin', 1, true], 'closed']);
+    expect(fixture.componentInstance.value()).toBe(2);
+  });
+
+  it('searchChanged fires per keystroke and itemClick indexes the filtered list', async () => {
+    const fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.searchEnabled.set(true);
+    await settle(fixture);
+    const box = selectBox(fixture);
+    const searches: string[] = [];
+    box.searchChanged.subscribe((event) => searches.push(event.text));
+    const clicks: unknown[] = [];
+    box.itemClick.subscribe((event) =>
+      clicks.push([event.item.name, event.index]),
+    );
+    const input = inputEl(fixture);
+    input.value = 'bo';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle(fixture);
+    expect(searches).toEqual(['bo']);
+    input.value = 'bos';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle(fixture);
+    expect(searches).toEqual(['bo', 'bos']);
+    // filtered list is just [Boston] — the reported index is 0, not the
+    // item's position in the full data set
+    options(fixture)[0].click();
+    await settle(fixture);
+    expect(clicks).toEqual([['Boston', 0]]);
+  });
+
   it('reverts uncommitted search text to the selected display on blur', async () => {
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.searchEnabled.set(true);

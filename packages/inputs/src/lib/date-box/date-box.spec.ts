@@ -36,6 +36,18 @@ function inputEl(fixture: ComponentFixture<unknown>): HTMLInputElement {
   return fixture.nativeElement.querySelector('.oge-input-native');
 }
 
+function dateBox(fixture: ComponentFixture<unknown>): OgeDateBox {
+  return fixture.debugElement.children[0].componentInstance;
+}
+
+/** Collects dropDownOpened/dropDownClosed into a single ordered log. */
+function trackPanelEvents(fixture: ComponentFixture<unknown>): string[] {
+  const log: string[] = [];
+  dateBox(fixture).dropDownOpened.subscribe(() => log.push('opened'));
+  dateBox(fixture).dropDownClosed.subscribe(() => log.push('closed'));
+  return log;
+}
+
 function type(fixture: ComponentFixture<unknown>, text: string): void {
   const el = inputEl(fixture);
   el.value = text;
@@ -122,11 +134,13 @@ describe('OgeDateBox', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.value.set(new Date(2026, 7, 15));
     await settle(fixture);
+    const panelEvents = trackPanelEvents(fixture);
     fixture.nativeElement.querySelector('.oge-input-dropdown').click();
     await settle(fixture);
     const dialog = fixture.nativeElement.querySelector('.oge-date-box-panel');
     expect(dialog).toBeTruthy();
     expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(panelEvents).toEqual(['opened']);
     const focusTarget = dialog.querySelector('[data-focus-target]');
     expect(document.activeElement).toBe(focusTarget); // APG focus hand-off
     const day20 = Array.from(
@@ -143,6 +157,7 @@ describe('OgeDateBox', () => {
       fixture.nativeElement.querySelector('.oge-date-box-panel'),
     ).toBeNull();
     expect(document.activeElement).toBe(inputEl(fixture)); // focus restored
+    expect(panelEvents).toEqual(['opened', 'closed']);
   });
 
   it('type=time shows the interval list and picking merges into the day', async () => {
@@ -172,6 +187,7 @@ describe('OgeDateBox', () => {
     fixture.componentInstance.type.set('datetime');
     fixture.componentInstance.value.set(new Date(2026, 7, 15, 9, 30));
     await settle(fixture);
+    const panelEvents = trackPanelEvents(fixture);
     fixture.nativeElement.querySelector('.oge-input-dropdown').click();
     await settle(fixture);
     const day20 = Array.from(
@@ -192,6 +208,7 @@ describe('OgeDateBox', () => {
     expect(
       fixture.nativeElement.querySelector('.oge-date-box-panel'),
     ).toBeTruthy();
+    expect(panelEvents).toEqual(['opened']); // still open — no closed yet
     const slot = Array.from(
       fixture.nativeElement.querySelectorAll<HTMLButtonElement>(
         '.oge-date-box-time',
@@ -205,6 +222,7 @@ describe('OgeDateBox', () => {
     expect(
       fixture.nativeElement.querySelector('.oge-date-box-panel'),
     ).toBeNull();
+    expect(panelEvents).toEqual(['opened', 'closed']);
   });
 
   it('useButtons collects picks in a draft and commits on OK only', async () => {

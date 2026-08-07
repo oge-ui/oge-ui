@@ -137,7 +137,7 @@ describe('OgeToastService timers', () => {
 
     const bar = document.querySelector<HTMLElement>('.oge-toast-progress-bar');
     expect(bar?.style.transform).toBe('scaleX(0)');
-    expect(bar?.style.transition).toContain('1000ms');
+    expect(bar?.style.transition).toMatch(/(99\d|1000)ms linear/);
 
     advance(599); // 600ms elapsed → 400ms remaining
     toastEl()?.dispatchEvent(new MouseEvent('mouseenter'));

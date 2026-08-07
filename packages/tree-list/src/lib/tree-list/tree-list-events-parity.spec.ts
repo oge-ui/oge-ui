@@ -124,6 +124,131 @@ describe('OgeTreeList events (DevExtreme events parity)', () => {
     expect(events[0]).toMatchObject({ key: 1, field: 'name', value: 'Root' });
   });
 
+  it('rowClick / rowDblClick / cellClick fire with row and cell context', async () => {
+    const { fixture, el, tree } = await render({ autoExpandAll: true });
+    const log: unknown[] = [];
+    tree.cellClick.subscribe((e) =>
+      log.push(['cellClick', e.key, e.field, e.value]),
+    );
+    tree.rowClick.subscribe((e) =>
+      log.push(['rowClick', e.key, e.row.name, e.event instanceof MouseEvent]),
+    );
+    tree.rowDblClick.subscribe((e) => log.push(['rowDblClick', e.key]));
+    const cell = el
+      .querySelectorAll('.oge-row')[1]
+      .querySelector('.oge-cell') as HTMLElement;
+    cell.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await settle(fixture);
+    cell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    await settle(fixture);
+    expect(log).toEqual([
+      ['cellClick', 2, 'name', 'Child A'], // cell handler runs before the row's
+      ['rowClick', 2, 'Child A', true],
+      ['rowDblClick', 2],
+    ]);
+  });
+
+  it('rowExpanded / rowCollapsed report the toggled row; rowCollapsing can veto', async () => {
+    const { fixture, el, tree } = await render();
+    const log: unknown[] = [];
+    let cancelCollapse = true;
+    tree.rowExpanded.subscribe((e) =>
+      log.push(['expanded', e.key, e.row.name]),
+    );
+    tree.rowCollapsing.subscribe((e) => {
+      log.push(['collapsing', e.key, e.row.name]);
+      e.cancel = cancelCollapse;
+    });
+    tree.rowCollapsed.subscribe((e) => log.push(['collapsed', e.key]));
+    const expander = (): HTMLButtonElement | null =>
+      el.querySelector<HTMLButtonElement>('.oge-tree-expander');
+    expander()?.click();
+    await settle(fixture);
+    expect(log).toEqual([['expanded', 1, 'Root']]);
+    expect(el.querySelectorAll('.oge-row')).toHaveLength(4);
+    expander()?.click(); // canceled collapse — stays expanded, no rowCollapsed
+    await settle(fixture);
+    expect(log.slice(1)).toEqual([['collapsing', 1, 'Root']]);
+    expect(el.querySelectorAll('.oge-row')).toHaveLength(4);
+    cancelCollapse = false;
+    expander()?.click();
+    await settle(fixture);
+    expect(log.slice(2)).toEqual([
+      ['collapsing', 1, 'Root'],
+      ['collapsed', 1],
+    ]);
+    expect(el.querySelectorAll('.oge-row')).toHaveLength(2);
+  });
+
+  it('savingChanges reports the change set and cancel blocks the save', async () => {
+    const { fixture, el, tree } = await render({
+      autoExpandAll: true,
+      editing: { mode: 'batch', allowDeleting: true },
+    });
+    const events: unknown[] = [];
+    const saved: number[] = [];
+    let cancel = true;
+    tree.savingChanges.subscribe((e) => {
+      events.push(e.changes);
+      e.cancel = cancel;
+    });
+    tree.savedChanges.subscribe((e) => saved.push(e.changes.length));
+    tree.deleteRow(4);
+    tree.saveChanges();
+    await settle(fixture);
+    await settle(fixture);
+    expect(events).toEqual([[{ type: 'remove', key: 4 }]]);
+    expect(saved).toEqual([]); // canceled — nothing applied
+    expect(el.querySelectorAll('.oge-row')).toHaveLength(4);
+    cancel = false;
+    tree.saveChanges(); // the canceled change set is still pending
+    await settle(fixture);
+    await settle(fixture);
+    expect(events[1]).toEqual([{ type: 'remove', key: 4 }]);
+    expect(saved).toEqual([1]);
+    expect(el.querySelectorAll('.oge-row')).toHaveLength(3);
+  });
+
+  it('contentReady fires after the initial render and again on a data swap', async () => {
+    const fixture = TestBed.createComponent(OgeTreeList<Node>);
+    let ready = 0;
+    fixture.componentInstance.contentReady.subscribe(() => ready++);
+    fixture.componentRef.setInput(
+      'data',
+      NODES.map((node) => ({ ...node })),
+    );
+    fixture.componentRef.setInput('columns', ['name']);
+    fixture.detectChanges();
+    await expect
+      .poll(async () => {
+        await settle(fixture);
+        return ready;
+      })
+      .toBeGreaterThan(0);
+    const initial = ready;
+    fixture.componentRef.setInput(
+      'data',
+      NODES.slice(0, 1).map((node) => ({ ...node })),
+    );
+    await expect
+      .poll(async () => {
+        await settle(fixture);
+        return ready;
+      })
+      .toBeGreaterThan(initial);
+  });
+
+  it('stateChange emits a debounced snapshot carrying the toggled expansion', async () => {
+    const { fixture, el, tree } = await render();
+    const snapshots: unknown[] = [];
+    tree.stateChange.subscribe((snapshot) => snapshots.push(snapshot));
+    el.querySelector<HTMLButtonElement>('.oge-tree-expander')?.click();
+    await settle(fixture);
+    // the persistence layer debounces the notification — poll instead of sleeping
+    await expect.poll(() => snapshots.length).toBeGreaterThan(0);
+    expect(snapshots[0]).toMatchObject({ expansion: { toggled: [1] } });
+  });
+
   it('exporting can cancel the CSV download', async () => {
     const { tree } = await render();
     const created: string[] = [];

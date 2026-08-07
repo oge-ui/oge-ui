@@ -91,8 +91,13 @@ describe('OgeGrid calculateSortValue / calculateFilterExpression', () => {
     )[1] as HTMLInputElement;
     statusFilter.value = 'medium';
     statusFilter.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 350)); // > debounce
-    await settle(fixture);
-    expect(firstCells(el).sort()).toEqual(['Ada', 'Erin']); // high + medium
+    // the filter row debounces its input — poll the rendered rows instead of
+    // sleeping a magic duration
+    await expect
+      .poll(async () => {
+        await settle(fixture);
+        return firstCells(el).sort();
+      })
+      .toEqual(['Ada', 'Erin']); // high + medium
   });
 });

@@ -186,7 +186,7 @@ export function describeExpr(
             type="button"
             class="oge-fb-remove"
             [attr.aria-label]="messages().removeItem"
-            (click)="remove.emit()"
+            (click)="removeRequest.emit()"
           >
             <svg
               viewBox="0 0 16 16"

@@ -201,16 +201,22 @@ describe('OgeTreeList lazy loading', () => {
     host.source.set(new StubLazySource('B:'));
     fixture.detectChanges();
     await settle(fixture);
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    await settle(fixture);
-    // the new source received the base (roots) load…
+    // the new source received the base (roots) load and the roots come from
+    // it — poll for the async reload instead of sleeping a magic duration
+    await expect
+      .poll(async () => {
+        await settle(fixture);
+        return rowTitles(el);
+      })
+      .toContain('B:Root A');
     expect(host.source().log.length).toBeGreaterThan(0);
-    // …and the roots come from it
-    expect(rowTitles(el)).toContain('B:Root A');
     // …and so do the re-fetched children of the still-expanded node
-    await new Promise((resolve) => setTimeout(resolve));
-    await settle(fixture);
-    expect(rowTitles(el)).toContain('B:Child A1');
+    await expect
+      .poll(async () => {
+        await settle(fixture);
+        return rowTitles(el);
+      })
+      .toContain('B:Child A1');
     expect(rowTitles(el)).not.toContain('Child A1');
   });
 

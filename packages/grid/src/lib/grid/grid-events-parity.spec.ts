@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { OgeGrid } from './grid';
+import { OgeGrid, type OgeRowClickEvent } from './grid';
 
 interface Row {
   id: number;
@@ -189,6 +189,98 @@ describe('OgeGrid events (DevExtreme events parity)', () => {
       URL.createObjectURL = originalCreate;
       URL.revokeObjectURL = originalRevoke;
     }
+  });
+
+  it('rowClick fires with the row data, key and DOM event', async () => {
+    const { fixture, el, grid } = await render();
+    const events: OgeRowClickEvent<Row>[] = [];
+    grid.rowClick.subscribe((e) => events.push(e));
+    const rows = el.querySelectorAll('.oge-row');
+    rows[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await settle(fixture);
+    expect(events).toHaveLength(1);
+    expect(events[0].key).toBe(2);
+    expect(events[0].row).toMatchObject({ name: 'Grace', department: 'Eng' });
+    expect(events[0].event).toBeInstanceOf(MouseEvent);
+  });
+
+  it('rowInserting / rowInserted wrap an insert save, and cancel skips it', async () => {
+    const { fixture, el, grid } = await render({
+      editing: { mode: 'batch', allowAdding: true },
+    });
+    const log: string[] = [];
+    let cancel = true;
+    grid.initNewRow.subscribe((e) => (e.values['name'] = 'Nova'));
+    grid.rowInserting.subscribe((e) => {
+      log.push(`inserting:${String(e.values['name'])}`);
+      e.cancel = cancel;
+    });
+    grid.rowInserted.subscribe((e) =>
+      log.push(`inserted:${String(e.values['name'])}`),
+    );
+    grid.addRow();
+    grid.saveChanges();
+    await settle(fixture);
+    await settle(fixture);
+    expect(log).toEqual(['inserting:Nova']); // canceled — nothing applied
+    expect(el.querySelectorAll('.oge-row')).toHaveLength(3);
+    cancel = false;
+    grid.addRow();
+    grid.saveChanges();
+    await settle(fixture);
+    await settle(fixture);
+    expect(log.slice(1)).toEqual(['inserting:Nova', 'inserted:Nova']);
+    expect(el.querySelectorAll('.oge-row')).toHaveLength(4);
+  });
+
+  it('rowUpdating / rowUpdated wrap an update save, and cancel keeps the row', async () => {
+    const { fixture, el, grid } = await render({
+      editing: { mode: 'batch', allowUpdating: true },
+    });
+    const log: string[] = [];
+    let cancel = true;
+    grid.rowUpdating.subscribe((e) => {
+      log.push(
+        `updating:${String(e.key)}:${(e.row as Row | undefined)?.name}:${String(
+          e.values['name'],
+        )}`,
+      );
+      e.cancel = cancel;
+    });
+    grid.rowUpdated.subscribe((e) =>
+      log.push(`updated:${String(e.key)}:${String(e.values['name'])}`),
+    );
+    const editFirstCell = async (value: string): Promise<void> => {
+      const cell = el.querySelector('.oge-row .oge-cell') as HTMLElement;
+      cell.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await settle(fixture);
+      const input = el.querySelector(
+        '.oge-editor .oge-input-native, .oge-editor input',
+      ) as HTMLInputElement;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+      );
+      await settle(fixture);
+    };
+    await editFirstCell('Ada 2');
+    grid.saveChanges();
+    await settle(fixture);
+    await settle(fixture);
+    expect(log).toEqual(['updating:1:Ada:Ada 2']); // canceled — value untouched
+    expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe(
+      'Ada',
+    );
+    cancel = false;
+    await editFirstCell('Ada 3');
+    grid.saveChanges();
+    await settle(fixture);
+    await settle(fixture);
+    expect(log.slice(1)).toEqual(['updating:1:Ada:Ada 3', 'updated:1:Ada 3']);
+    expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe(
+      'Ada 3',
+    );
   });
 
   it('dataErrorOccurred surfaces DataSource load failures', async () => {

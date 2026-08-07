@@ -25,9 +25,6 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
 }
 
-const flushSave = (): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, 300));
-
 function rowTitles(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-row')).map(
     (row) =>
@@ -78,8 +75,10 @@ describe('OgeTreeList state persistence', () => {
     await settle(fixture);
     header?.click(); // desc
     await settle(fixture);
-    await flushSave();
-    expect(backend.has('oge-tree-list:tree-a')).toBe(true);
+    // the save is debounced — poll until the final snapshot (desc sort) lands
+    await expect
+      .poll(() => backend.get('oge-tree-list:tree-a') ?? '')
+      .toContain('"dir":"desc"');
     fixture.destroy();
 
     // second session: state restores from the backend

@@ -73,6 +73,38 @@ describe('OgeCalendar', () => {
     expect(fixture.componentInstance.value()).toEqual(new Date(2026, 7, 20));
   });
 
+  it('cellClick reports the activated cell with date, view and DOM event', async () => {
+    const fixture = TestBed.createComponent(Host);
+    await settle(fixture);
+    const calendar = fixture.debugElement.children[0]
+      .componentInstance as OgeCalendar;
+    const events: { date: Date; view: string; event: Event }[] = [];
+    calendar.cellClick.subscribe((e) => events.push(e));
+    const day20 = cells(fixture).find(
+      (cell) =>
+        cell.textContent?.trim() === '20' &&
+        !cell.classList.contains('oge-calendar-cell-other'),
+    );
+    day20?.click();
+    await settle(fixture);
+    expect(events).toHaveLength(1);
+    expect(events[0].date).toEqual(new Date(2026, 7, 20));
+    expect(events[0].view).toBe('month');
+    expect(events[0].event).toBeInstanceOf(Event);
+
+    // zoom out: a year-view cell reports view 'year'
+    fixture.nativeElement.querySelector('.oge-calendar-view-label').click();
+    await settle(fixture);
+    const march = cells(fixture).find(
+      (cell) => cell.textContent?.trim() === 'Mar',
+    );
+    march?.click();
+    await settle(fixture);
+    expect(events).toHaveLength(2);
+    expect(events[1].view).toBe('year');
+    expect(events[1].date.getMonth()).toBe(2);
+  });
+
   it('min/max and disabledDates render disabled, unselectable cells', async () => {
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.min.set(new Date(2026, 7, 10));

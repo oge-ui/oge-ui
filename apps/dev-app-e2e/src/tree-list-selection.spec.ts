@@ -13,6 +13,11 @@ test('recursive checkbox selection cascades and turns ancestors indeterminate', 
   const directorCheckbox = rows.nth(2).locator('.oge-checkbox-cell input');
   await expect(directorCheckbox).toBeChecked();
 
+  // the selected-keys readout tracks the model: the VP subtree is
+  // 1 VP + 3 directors + 15 engineers = 19 keys
+  const readout = page.locator('text=Selected keys');
+  await expect(readout).toContainText('Selected keys (19):');
+
   // uncheck one engineer: the VP flips to indeterminate
   const engineerCheckbox = rows.nth(3).locator('.oge-checkbox-cell input');
   await engineerCheckbox.uncheck();
@@ -20,8 +25,6 @@ test('recursive checkbox selection cascades and turns ancestors indeterminate', 
     .poll(() => vpCheckbox.evaluate((el: HTMLInputElement) => el.indeterminate))
     .toBe(true);
 
-  // the selected-keys readout tracks the model
-  await expect(page.locator('text=Selected keys')).toContainText(
-    'Selected keys',
-  );
+  // normalize-up drops the engineer plus its deselected VP/director ancestors
+  await expect(readout).toContainText('Selected keys (16):');
 });
