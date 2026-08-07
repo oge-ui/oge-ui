@@ -21,8 +21,18 @@ node_modules
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
-!.vscode/launch.json
 !.vscode/extensions.json
+
+# Local AI-assistant configuration (not part of the library)
+.claude/
+CLAUDE.md
+.agents/
+.cursor/
+.codex/
+.gemini/
+.opencode/
+AGENTS.md
+opencode.json
 
 # misc
 /.sass-cache
@@ -40,12 +50,9 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
-.cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
 .angular
-.claude/settings.local.json
-.claude/worktrees
 .playwright-mcp
 
 vite.config.*.timestamp*
