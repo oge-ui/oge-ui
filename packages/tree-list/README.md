@@ -114,7 +114,9 @@ For full control use `state()` / `applyState()` and the `stateChange` output.
 - **State & export** — `refresh()`, `clearFilters()`, `clearSorting()`,
   `state()`, `applyState()`, `getExportData()`, `getCsv()`, `exportCsv()`
 
-## Reacting to changes — DevExtreme event map
+## Migrating from other data grids
+
+How the DevExtreme TreeList callbacks map onto this component:
 
 | DevExtreme                                                        | OGE                                                                                       |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |

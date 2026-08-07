@@ -1,20 +1,37 @@
 # @oge-ui/core
 
-Framework-agnostic engine behind the [OGE](https://www.npmjs.com/package/@oge-ui/grid) UI components. **Zero Angular (or any framework) dependency** — plain TypeScript, ESM.
+The framework-agnostic engine behind the
+[OGE](https://www.npmjs.com/package/@oge-ui/grid) UI components: plain
+TypeScript, shipped as ESM, with zero dependency on Angular or any other
+framework. The Angular grid (`@oge-ui/grid`) is a thin signal-based shell
+over this package, and future framework adapters (React, ...) will share it.
 
 ## What's inside
 
-- **DataSource contract** — `DataSource`, `LoadOptions` (skip/take/sort/filter/group/summary, `AbortSignal`), `LoadResult`, `GroupedItem`
-- **Implementations** — `ArrayDataSource` (in-memory, CRUD write-back, `push()` live updates), `CustomDataSource` (remote fetch delegate) and `ODataDataSource` (`buildODataQuery`, OData v4)
-- **Filtering** — closed, serializable `FilterExpr` tree (14 operators) + evaluator
-- **Row pipeline** — pure, tested steps: filter → search → sort (stable, multi-key) → group → aggregate → paginate
-- **Flattened row model** — `RowNode` union (`data | group | detail | summary | filler`) feeding any renderer
-- **Virtualization math** — Fenwick-tree `OffsetTree` (O(log n) offset/index/height updates) + `computeWindow`
-- **Summaries** — `sum · avg · min · max · count`, null-safe
-- **CSV** — RFC 4180-style `buildCsv`
-- **State** — serializable `GridStateSnapshot`
+Data access starts with the `DataSource` contract. `LoadOptions` carries
+skip/take, sort, filter, group and summary descriptors plus an `AbortSignal`,
+and every load resolves to a `LoadResult` (with `GroupedItem` rows for
+grouped loads). Three implementations ship in the box: `ArrayDataSource`
+works in-memory with CRUD write-back and `push()` live updates,
+`CustomDataSource` delegates to any remote fetch function, and
+`ODataDataSource` targets OData v4 through `buildODataQuery`.
 
-The Angular grid (`@oge-ui/grid`) is a thin signal-based shell over this engine; future framework adapters (React, …) will share it.
+Filters are a closed, serializable `FilterExpr` tree with 14 operators and a
+matching evaluator, so the same expression can be evaluated client-side or
+translated for a server.
+
+The row pipeline turns raw items into render-ready rows through pure, tested
+steps: filter, then search, then a stable multi-key sort, then group,
+aggregate and paginate. Its output is a flattened `RowNode` union
+(`data | group | detail | summary | filler`) that any renderer can consume.
+
+A few smaller pieces round it out:
+
+- Virtualization math: a Fenwick-tree `OffsetTree` with O(log n)
+  offset/index/height updates, plus `computeWindow`.
+- Summaries: `sum`, `avg`, `min`, `max` and `count`, all null-safe.
+- `buildCsv` (RFC 4180-style CSV) and a serializable `GridStateSnapshot`
+  for state persistence.
 
 ## Installation
 

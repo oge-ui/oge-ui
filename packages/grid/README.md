@@ -83,9 +83,10 @@ export class OrdersPage {
 }
 ```
 
-## Reacting to changes — DevExtreme event map
+## Migrating from other data grids
 
-Everything you wired through DevExtreme callbacks exists here, signal-first:
+Coming from DevExtreme? Every callback you wired there exists here,
+signal-first:
 
 | DevExtreme                                                     | OGE                                                                                            |
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |

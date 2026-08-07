@@ -1,28 +1,31 @@
 # @oge-ui/inputs
 
-Signal-based Angular form editors — `oge-text-box`, `oge-text-area`,
-`oge-number-box`, `oge-select-box` — sharing one field chrome and working
-with three form systems at once.
+Signal-based Angular form editors sharing one field chrome and working with
+three form systems at once. Twelve editors ship today: `oge-text-box`,
+`oge-text-area`, `oge-number-box`, the dropdown family (`oge-select-box`,
+`oge-tag-box`, `oge-autocomplete`), toggle controls (`oge-check-box`,
+`oge-switch`, `oge-radio-group`) and date editors (`oge-calendar`,
+`oge-date-box`, `oge-date-range-box`).
 
 ## Features
 
-- **One field chrome** — label modes `static | floating | hidden | outside`,
+- **One field chrome**: label modes `static | floating | hidden | outside`,
   styling modes `outlined | filled | underlined`, sizes `sm | md | lg`
   (28/34/42px, the button scale), `[ogeInputPrefix]`/`[ogeInputSuffix]`
   slots, clear button, tooltip, and a subscript region for hint/error/counter
   with `subscriptSizing: fixed | dynamic | none` — `fixed` reserves the line
   so appearing errors never shift your layout.
-- **Triple forms integration** — standalone `[(value)]`; **Signal Forms**
+- **Triple forms integration**: standalone `[(value)]`; **Signal Forms**
   via `[formField]` (the components implement the `FormValueControl`
   contract, so schema constraints like `required`/`min`/`maxLength`
   auto-bind); classic reactive/template forms via a `ControlValueAccessor`
   bridge.
-- **Validation UX** — messages resolve from the i18n config
+- **Validation UX**: messages resolve from the i18n config
   (`provideOgeInputsConfig`), display per `errorDisplay: touched | dirty |
 always`, announce via `aria-live`, and chain `aria-describedby` across
   hint/error/counter. `errorText` overrides everything; `invalid`/`pending`
   work manually for non-forms usage.
-- **Grapheme-accurate counter** — `showCounter` counts what users perceive
+- **Grapheme-accurate counter**: `showCounter` counts what users perceive
   (`Intl.Segmenter`): an emoji family is 1 character, not 8 code units.
   `counterMode: 'soft'` allows typing past the limit and flags the counter.
 - **Password reveal & copy** — `mode="password"` auto-adds a reveal toggle
@@ -33,14 +36,14 @@ always`, announce via `aria-live`, and chain `aria-describedby` across
   `showSuccessIcon: 'touched' | 'always'` completes the triad.
 - **Debounced commits** — `debounce` batches `value`/forms updates; blur and
   Enter flush immediately; `inputChange` streams every keystroke regardless.
-- **Number box done right** — `value: number | null` (empty is `null`, never
+- **Number box**: `value: number | null` (empty is `null`, never
   `0`), locale-aware parsing (`1.234,56`, NBSP groups, `−`),
   `Intl.NumberFormat` display on blur with raw editing on focus, clamp to
   `min`/`max` on commit, spin buttons with hold-to-repeat plus
   ArrowUp/ArrowDown.
 - **Auto-resize textarea** — `autoResize` grows between `minRows`/`maxRows`
   using CSS `field-sizing: content` with a measurement fallback.
-- **Select box** — WAI-ARIA combobox with `aria-activedescendant` (focus
+- **Select box**: WAI-ARIA combobox with `aria-activedescendant` (focus
   never leaves the input), `displayExpr`/`valueExpr` data mapping (string or
   function), debounced client-side search (`searchEnabled`, `searchMode`,
   `searchExpr`, `searchTimeout`, `minSearchLength`, `showDataBeforeSearch`)
@@ -89,6 +92,68 @@ export class DemoComponent {
 ```
 
 Reactive forms work unchanged: `<oge-text-box [formControl]="control" />`.
+
+## Dropdown editors
+
+`oge-select-box` (described above) is the single-value combobox. Two siblings
+share its data mapping, search and popup machinery. `oge-tag-box` is the
+multi-select variant: `value` is a readonly array, selected items render as
+chips in the field, options get checkboxes (`showSelectionControls`),
+`maxDisplayedTags` collapses overflow into a `+N` chip and
+`hideSelectedItems` removes picked options from the list.
+`oge-autocomplete` is free text with suggestions: `value` is the string
+itself, not a picked item. `minSearchLength` and `maxItemCount` bound the
+list, `forceSelection` snaps to a matching item on blur, `searchHighlight`
+marks the matched substring, and `items` also accepts a lazy function for
+server-side lookups.
+
+All three support `displayExpr`/`disabledExpr`/`imageExpr` data mapping,
+`virtualScroll` for large lists and the flip-aware popup from
+`@oge-ui/overlay`.
+
+```html
+<oge-tag-box label="Regions" [items]="regions" [searchEnabled]="true" [(value)]="selected" /> <oge-autocomplete label="City" [items]="cities" [minSearchLength]="2" [(value)]="city" />
+```
+
+## Toggle controls
+
+`oge-check-box` binds `value: boolean | null` and supports an indeterminate
+third state via `threeState`; `text` renders an inline label next to the box.
+`oge-switch` is the on/off variant with optional `onText`/`offText` in the
+track. `oge-radio-group` renders one radio per entry in `items`, maps objects
+with `displayExpr`/`valueExpr` like the select box, lays out `vertical` or
+`horizontal`, and accepts an `itemTemplate`. All of them plug into the same
+three form systems as the text editors.
+
+```html
+<oge-check-box text="Accept terms" [(value)]="accepted" />
+<oge-switch label="Notifications" [(value)]="notify" />
+<oge-radio-group label="Priority" [items]="['Low', 'Normal', 'High']" [(value)]="priority" />
+```
+
+## Date editors
+
+The date stack is built on the native `Date` object and the `Intl` APIs;
+there is no date library in the dependency tree. Typed input parses
+locale-aware (`parseDateText`), and display formats are plain
+`Intl.DateTimeFormatOptions` or a custom function.
+
+`oge-calendar` is the standalone picker: `selectionMode` of `single`,
+`multiple` or `range`, drill-down between `month`/`year`/`decade` zoom
+levels, one or two side-by-side views (`viewsCount`), `min`/`max` and
+`disabledDates`, optional week numbers and today button, and an
+`*ogeCalendarCellTemplate` for custom cells. `oge-date-box` wraps a calendar
+in the field chrome with `type: 'date' | 'time' | 'datetime'` (time picking
+as a `list` or `columns` view, `interval` minutes apart) and
+`applyValueMode: 'instantly' | 'useButtons'`. `oge-date-range-box` edits a
+`[start, end]` tuple through a single field backed by a two-view range
+calendar.
+
+```html
+<oge-calendar [(value)]="date" [showTodayButton]="true" />
+<oge-date-box label="Due" type="datetime" [(value)]="due" />
+<oge-date-range-box label="Period" [(value)]="period" />
+```
 
 ## Suffix rail order (contract)
 
