@@ -50,6 +50,9 @@
   /* modal layer (above anchored popups; legacy grid dialogs sit at 1090/1100) */
   --oge-z-modal: 1100;
   --oge-modal-backdrop-bg: rgb(15 23 42 / 0.32);
+  /* toast regions (above modals — failure toasts must show over open dialogs) */
+  --oge-z-toast: 1200;
+  --oge-toast-width: 360px;
   /* tooltip bubble (inverted surface; dark theme overrides) */
   --oge-tooltip-bg: #1e2430;
   --oge-tooltip-color: #f5f7fa;

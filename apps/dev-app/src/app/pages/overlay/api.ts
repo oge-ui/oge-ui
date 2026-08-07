@@ -8,6 +8,7 @@ import {
   OGE_MENU_LIST_API,
   OGE_MODAL_API,
   OGE_MODAL_SERVICE_API,
+  OGE_TOAST_API,
   OGE_OVERLAY_CONFIG_API,
   OGE_POPUP_API,
   RESOLVE_POPUP_POSITION_API,
@@ -16,6 +17,7 @@ import {
 const SECTIONS = [
   'OgeModal',
   'OgeModalService',
+  'OgeToastService',
   'OgeMenuList',
   'OgeAnchoredPanel',
   'OgePopup',
@@ -53,6 +55,7 @@ const SECTIONS = [
       [sections]="modalApi"
     />
     <app-api-reference title="OgeModalService" [sections]="modalServiceApi" />
+    <app-api-reference title="OgeToastService" [sections]="toastApi" />
     <app-api-reference
       title="OgeMenuList"
       selector="oge-menu-list"
@@ -85,6 +88,7 @@ export class OverlayApiPage {
   protected readonly sections = SECTIONS;
   protected readonly modalApi = OGE_MODAL_API;
   protected readonly modalServiceApi = OGE_MODAL_SERVICE_API;
+  protected readonly toastApi = OGE_TOAST_API;
   protected readonly menuListApi = OGE_MENU_LIST_API;
   protected readonly anchoredPanelApi = OGE_ANCHORED_PANEL_API;
   protected readonly popupApi = OGE_POPUP_API;

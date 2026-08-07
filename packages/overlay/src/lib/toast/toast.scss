@@ -1,0 +1,279 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-toast-region {
+  @include tokens.core-tokens;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  position: fixed;
+  z-index: var(--oge-z-toast, 1200);
+  display: flex;
+  gap: 8px;
+  width: min(var(--oge-toast-width, 360px), calc(100vw - 32px));
+  padding: 16px;
+  /* the region never blocks the page — only toasts themselves are clickable */
+  pointer-events: none;
+
+  /* DOM order stays chronological (correct screen-reader / Tab order);
+     column-reverse on top edges puts the newest toast nearest the edge. */
+  &.oge-toast-region-top-start {
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    flex-direction: column-reverse;
+  }
+
+  &.oge-toast-region-top-center {
+    inset-block-start: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: column-reverse;
+  }
+
+  &.oge-toast-region-top-end {
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    flex-direction: column-reverse;
+  }
+
+  &.oge-toast-region-bottom-start {
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    flex-direction: column;
+  }
+
+  &.oge-toast-region-bottom-center {
+    inset-block-end: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: column;
+  }
+
+  &.oge-toast-region-bottom-end {
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    flex-direction: column;
+  }
+}
+
+/* height-collapse wrapper: 0fr ↔ 1fr animates height without JS measuring */
+.oge-toast-cell {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--oge-toast-transition, 150ms ease-out);
+
+  > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  &.oge-toast-cell-ready {
+    grid-template-rows: 1fr;
+  }
+
+  &.oge-toast-cell-closing {
+    grid-template-rows: 0fr;
+  }
+}
+
+.oge-toast {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--oge-border-color);
+  border-inline-start: 3px solid var(--oge-accent);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-popup);
+  font-size: var(--oge-font-size);
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--oge-toast-transition, 150ms ease-out),
+    transform var(--oge-toast-transition, 150ms ease-out);
+
+  .oge-toast-region-top-start &,
+  .oge-toast-region-top-center &,
+  .oge-toast-region-top-end & {
+    transform: translateY(-8px);
+  }
+
+  .oge-toast-cell-ready & {
+    opacity: 1;
+    transform: none;
+  }
+
+  .oge-toast-cell-closing & {
+    opacity: 0;
+  }
+
+  &.oge-toast-success {
+    border-inline-start-color: var(--oge-success);
+
+    > .oge-toast-icon {
+      color: var(--oge-success);
+    }
+  }
+
+  &.oge-toast-warning {
+    border-inline-start-color: var(--oge-warning);
+
+    > .oge-toast-icon {
+      color: var(--oge-warning);
+    }
+  }
+
+  &.oge-toast-error {
+    border-inline-start-color: var(--oge-danger);
+
+    > .oge-toast-icon {
+      color: var(--oge-danger);
+    }
+  }
+
+  &.oge-toast-info {
+    border-inline-start-color: var(--oge-accent);
+
+    > .oge-toast-icon {
+      color: var(--oge-accent);
+    }
+  }
+
+  &.oge-toast-clickable {
+    cursor: pointer;
+  }
+}
+
+.oge-toast-icon {
+  display: inline-flex;
+  flex: none;
+  margin-block-start: 1px;
+}
+
+.oge-toast-body {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.oge-toast-title {
+  font-weight: 600;
+  margin-block-end: 2px;
+}
+
+.oge-toast-count {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-accent-soft);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-toast-action {
+  flex: none;
+  padding: 2px 8px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+}
+
+.oge-toast-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+}
+
+.oge-toast-progress {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 0 0 var(--oge-radius-lg) var(--oge-radius-lg);
+}
+
+.oge-toast-progress-bar {
+  height: 100%;
+  background: var(--oge-accent-soft);
+  transform-origin: left;
+
+  [dir='rtl'] & {
+    transform-origin: right;
+  }
+}
+
+.oge-toast-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--oge-accent-soft);
+  border-top-color: var(--oge-accent);
+  border-radius: 50%;
+  animation: oge-toast-spin 700ms linear infinite;
+}
+
+@keyframes oge-toast-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* visually-hidden live regions; permanently mounted so announcements land */
+.oge-toast-announcer {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-toast,
+  .oge-toast-cell {
+    transition: none;
+  }
+
+  .oge-toast-spinner {
+    animation: none;
+  }
+}

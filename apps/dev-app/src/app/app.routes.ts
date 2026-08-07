@@ -356,6 +356,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Modal',
       },
       {
+        path: 'toast',
+        loadComponent: () =>
+          import('./pages/overlay/toast').then((m) => m.OverlayToastPage),
+        title: 'OGE — Toast',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/overlay/api').then((m) => m.OverlayApiPage),

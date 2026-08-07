@@ -564,3 +564,56 @@ inline dialogs (commercial tier) and the legacy `.oge-edit-popup` CSS in
 | Animation config                        | Yes       | partial | no config API (deliberate); duration/curve via `--oge-modal-transition` CSS var                                                              |
 | Service-based dynamic open              | Yes       | Done    | `OgeModalService.open(component\|template, config)`, `OGE_MODAL_DATA`, `OgeModalRef.closed` promise                                          |
 | Background `inert`/`aria-hidden`        | partial   | Done    | opt-in `inertBackground` — inerts siblings of every layer ancestor, restore-safe                                                             |
+
+## Overlay Toast (`@oge-ui/overlay`) — Feature Parity
+
+Research baseline: DevExtreme dxToast + `ui.notify()`, PrimeNG p-toast +
+MessageService, Angular Material MatSnackBar, ngx-toastr and sonner /
+react-hot-toast. `OgeToastService` is the suite's first service-first
+surface: one lazily-created, body-appended host renders a fixed region per
+used position plus two permanently-mounted hidden live-region announcers
+(error asserts, the rest are polite — visual toasts carry no `aria-live`, so
+`promise()` morphs never double-announce). Toasts never take focus and never
+join the Escape stack. JS owns timer truth (per-toast timeout + remaining-time
+bookkeeping, ref-counted pause causes); the progress bar is a JS-driven
+`scaleX` transition reading the same remaining value — provably in sync.
+
+| Feature                                            | Reference | OGE     | Notes                                                                                                  |
+| -------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| Imperative show + severity sugar                   | Yes       | Done    | `show(message \| options)`, `success/info/warning/error()`                                             |
+| type/severity + message + title                    | Yes       | Done    | `severity` union; PrimeNG summary/detail model via `title`                                             |
+| displayTime / life / duration                      | Yes       | Done    | `displayTime`; config `toastDisplayTime: 4000`                                                         |
+| sticky / disableTimeOut                            | Yes       | Done    | `sticky`; `loading` toasts implicitly sticky                                                           |
+| closable / closeButton                             | Yes       | Done    | default `true`; label from `messages.toastClose`                                                       |
+| Stack positions (notify stack / PrimeNG)           | Yes       | Done    | 6 logical positions `top/bottom × start/center/end`, RTL-aware; dx `{x,y}` and center rejected         |
+| notify stack.direction (8 variants)                | Yes       | covered | flex order per region: newest nearest edge; push falls out of flow + collapse                          |
+| newestOnTop                                        | Yes       | covered | fixed convention; DOM stays chronological (SR/Tab order) — knob rejected                               |
+| maxOpened + queue                                  | Yes       | Done    | `toastMaxVisible: 5`/position, lossless FIFO promotion (drop-oldest rejected)                          |
+| closeOnClick / tapToDismiss                        | Yes       | Done    | `closeOnClick` → reason `'click'`; button presses excluded                                             |
+| closeOnSwipe                                       | Yes       | Backlog | pointer-drag dismissal deferred                                                                        |
+| contentTemplate / headless                         | Yes       | Done    | `template` (`$implicit` = close fn, `data` in context)                                                 |
+| openFromComponent (Mat)                            | Yes       | Skipped | template covers custom content; heavy interaction belongs in `OgeModalService`                         |
+| hideOnOutsideClick / hideOnParentScroll            | Yes       | Skipped | non-modal surface must not react to outside interaction                                                |
+| shading / shadingColor                             | Yes       | Skipped | a toast with a backdrop is a modal                                                                     |
+| animation config                                   | Yes       | covered | fixed house CSS; duration via `--oge-toast-transition` var                                             |
+| width/height/min/max props                         | Yes       | covered | `--oge-toast-width` token + `cssClass`                                                                 |
+| wrapperAttr / toastClass / panelClass              | Yes       | Done    | `cssClass`                                                                                             |
+| data passthrough (Mat/PrimeNG)                     | Yes       | Done    | `data?: D` generic — template context + action event                                                   |
+| politeness / announcementMessage (Mat)             | Yes       | Done    | `announce: 'polite' \| 'assertive' \| 'off'`; default derives from severity                            |
+| Pause on hover (WCAG 2.2.1)                        | Yes       | Done    | hover **and** focus-within; ref-counted causes                                                         |
+| extendedTimeOut (ngx-toastr)                       | Yes       | covered | resume with remaining time — never less than promised                                                  |
+| progressBar (+ direction)                          | Yes       | Done    | `progressBar`/`toastProgressBar`; `'increasing'` rejected (remaining-time metaphor)                    |
+| preventDuplicates / countDuplicates / resetTimeout | Yes       | Done    | coalescing with ×N badge (`coalesce`/`toastCoalesceDuplicates`), timer restart, same ref; title in key |
+| onShown/onHiding/onTap/onDismiss/onAutoClose       | Yes       | covered | `ref.closed` promise with 6-value typed reason                                                         |
+| clear / dismissAll                                 | Yes       | Done    | `clear(position?)`, reason `'clear'`                                                                   |
+| Action button + reason'd close (Mat/sonner)        | Yes       | Done    | `action: { text, handler }` → reason `'action'` (undo pattern)                                         |
+| sonner cancel second button                        | No        | Skipped | ✕ button covers dismissal                                                                              |
+| custom icon (sonner)                               | No        | Skipped | `template` replaces the whole body; severity icons are house SVG                                       |
+| enableHtml (ngx-toastr)                            | Yes       | Skipped | XSS foot-gun; `template` covers rich content                                                           |
+| richColors / expand (sonner)                       | No        | Skipped | themes own color; expand is visual sugar                                                               |
+| dx widget-base props (accessKey/tabIndex/hint/…)   | Yes       | Skipped | toasts never take focus by design; RTL via logical properties                                          |
+| **promise() with in-place morph**                  | No        | Done    | unique in Angular: `promise(p, {loading, success, error})`, fn forms return patches                    |
+| **ref.update(patch) live morph**                   | No        | Done    | unique: message/severity/timing patch; powers `promise()`                                              |
+| **Pause on tab hidden**                            | No        | Done    | unique vs Angular libs: `visibilitychange` pauses/resumes all timers                                   |
+| **Coalesce ×N count badge**                        | No        | Done    | duplicate merge shows a live counter, not just suppression                                             |
+| Focus hotkey (F6-style)                            | No        | Backlog | regions sit at body end (last Tab stops); action toasts should be `sticky`                             |

@@ -45,6 +45,20 @@ export {
   type OgeModalPlacement,
   type OgeModalSlotContext,
 } from './lib/modal/modal-types';
+export { OgeToastService, OgeToastRef } from './lib/toast/toast-service';
+export {
+  type OgeToastSeverity,
+  type OgeToastPosition,
+  type OgeToastCloseReason,
+  type OgeToastAnnounce,
+  type OgeToastAction,
+  type OgeToastActionEvent,
+  type OgeToastClosedEvent,
+  type OgeToastSlotContext,
+  type OgeToastOptions,
+  type OgeToastUpdate,
+  type OgeToastPromiseOptions,
+} from './lib/toast/toast-types';
 export {
   provideOgeOverlayConfig,
   OGE_OVERLAY_CONFIG,

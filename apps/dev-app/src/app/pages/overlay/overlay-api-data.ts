@@ -734,3 +734,208 @@ export const OGE_MODAL_SERVICE_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_TOAST_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeToastOptions',
+      entries: [
+        {
+          name: 'message',
+          type: 'string (required)',
+          description: 'Body text; also the screen-reader announcement.',
+        },
+        {
+          name: 'title',
+          type: 'string | undefined',
+          description: 'Optional bold first line above the message.',
+        },
+        {
+          name: 'severity',
+          type: 'OgeToastSeverity',
+          default: "'info'",
+          description: 'Drives the accent bar, icon and announcement mode.',
+        },
+        {
+          name: 'displayTime',
+          type: 'number',
+          default: 'config toastDisplayTime (4000)',
+          description: 'Auto-dismiss time in ms.',
+        },
+        {
+          name: 'sticky',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Never auto-dismisses (<code>loading</code> toasts are implicitly sticky).',
+        },
+        {
+          name: 'closable',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Shows the ✕ button; aria label from <code>messages.toastClose</code>.',
+        },
+        {
+          name: 'closeOnClick',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "A click anywhere on the toast closes it (reason <code>'click'</code>); button presses excluded.",
+        },
+        {
+          name: 'progressBar',
+          type: 'boolean',
+          default: 'config toastProgressBar (false)',
+          description:
+            'Remaining-time bar — freezes exactly in sync with the paused timer.',
+        },
+        {
+          name: 'action',
+          type: 'OgeToastAction | undefined',
+          description:
+            "Inline action button; pressing it runs <code>handler</code> and closes with reason <code>'action'</code>.",
+        },
+        {
+          name: 'position',
+          type: 'OgeToastPosition',
+          default: "config toastPosition ('bottom-end')",
+          description: 'Region override for this toast.',
+        },
+        {
+          name: 'announce',
+          type: 'OgeToastAnnounce',
+          default: 'severity-derived',
+          description:
+            "<code>'assertive'</code> for errors, <code>'polite'</code> otherwise; <code>'off'</code> silences.",
+        },
+        {
+          name: 'loading',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Spinner instead of the severity icon; implicitly sticky while <code>true</code>.',
+        },
+        {
+          name: 'coalesce',
+          type: 'boolean',
+          default: 'config toastCoalesceDuplicates (false)',
+          description:
+            'Merge with an identical visible toast into one with a live ×N badge (timer restarts, same ref returned).',
+        },
+        {
+          name: 'id',
+          type: 'string | undefined',
+          description:
+            'Coalesce key override; defaults to severity+title+message.',
+        },
+        {
+          name: 'cssClass',
+          type: 'string | undefined',
+          description: 'Extra class(es) on the toast element.',
+        },
+        {
+          name: 'template',
+          type: 'TemplateRef&lt;OgeToastSlotContext&gt; | undefined',
+          description:
+            'Replaces the title/message body; <code>$implicit</code> closes the toast, <code>data</code> is in context.',
+        },
+        {
+          name: 'data',
+          type: 'D | undefined',
+          description:
+            'Arbitrary payload surfaced in the template context and action event.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      title: 'OgeToastService',
+      entries: [
+        {
+          name: 'show&lt;D&gt;(toast: string | OgeToastOptions&lt;D&gt;): OgeToastRef&lt;D&gt;',
+          type: 'OgeToastRef',
+          description:
+            'Shows a toast; a bare string becomes an info toast. SSR-safe no-op.',
+        },
+        {
+          name: 'success / info / warning / error(message, options?): OgeToastRef',
+          type: 'OgeToastRef',
+          description: 'Severity sugar for <code>show()</code>.',
+        },
+        {
+          name: 'promise&lt;T, D&gt;(promise, options): OgeToastRef&lt;D&gt;',
+          type: 'OgeToastRef',
+          description:
+            'Sticky spinner toast that morphs in place when the promise settles; the timer starts then. <code>success</code>/<code>error</code> accept a message or a function returning a message or an update patch.',
+        },
+        {
+          name: 'clear(position?: OgeToastPosition): void',
+          type: 'void',
+          description:
+            "Closes every toast (or one region) with reason <code>'clear'</code>.",
+        },
+      ],
+    },
+    {
+      title: 'OgeToastRef',
+      entries: [
+        {
+          name: 'close(): void',
+          type: 'void',
+          description: "Closes the toast (reason <code>'api'</code>).",
+        },
+        {
+          name: 'update(patch: OgeToastUpdate): void',
+          type: 'void',
+          description:
+            'Patches the toast in place; timing changes restart the timer, a changed message re-announces.',
+        },
+        {
+          name: 'closed',
+          type: 'Promise&lt;OgeToastClosedEvent&gt;',
+          description:
+            'Resolves after the toast closed (exit transition included), with the typed reason.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeToastSeverity',
+          type: "'info' | 'success' | 'warning' | 'error'",
+          description: 'Toast severity.',
+        },
+        {
+          name: 'OgeToastPosition',
+          type: "'top-start' | 'top-center' | 'top-end' | 'bottom-start' | 'bottom-center' | 'bottom-end'",
+          description: 'Logical, RTL-aware region positions.',
+        },
+        {
+          name: 'OgeToastCloseReason',
+          type: "'timeout' | 'closeButton' | 'click' | 'action' | 'api' | 'clear'",
+          description: 'Why a toast closed.',
+        },
+        {
+          name: 'OgeToastAction&lt;D&gt;',
+          type: '{ text: string; handler?: (event: OgeToastActionEvent&lt;D&gt;) =&gt; void }',
+          description: 'Inline action button.',
+        },
+        {
+          name: 'OgeToastSlotContext&lt;D&gt;',
+          type: '{ $implicit: () =&gt; void; data?: D }',
+          description: 'Context of a <code>template</code> toast body.',
+        },
+        {
+          name: 'Config keys',
+          type: 'toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates',
+          description:
+            'Defaults via <code>provideOgeOverlayConfig()</code>; strings via <code>messages.toastClose/toastRegionLabel/toastCountBadge</code>.',
+        },
+      ],
+    },
+  ],
+};

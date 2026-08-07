@@ -280,6 +280,11 @@ export class App {
           icon: 'layout',
         },
         {
+          path: '/components/overlay/toast',
+          label: 'Toast',
+          icon: 'zap',
+        },
+        {
           path: '/components/overlay/api',
           label: 'API Reference',
           icon: 'code',

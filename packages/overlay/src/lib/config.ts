@@ -1,4 +1,5 @@
 import { InjectionToken, type Provider } from '@angular/core';
+import type { OgeToastPosition } from './toast/toast-types';
 
 /**
  * User-facing strings rendered by the overlay primitives. The anchored
@@ -12,12 +13,21 @@ export interface OgeOverlayMessages {
   modalMaximize: string;
   /** Aria label of the modal's restore button (full-screen state). */
   modalRestore: string;
+  /** Aria label of a toast's close (✕) button. */
+  toastClose: string;
+  /** Aria label of each toast region. */
+  toastRegionLabel: string;
+  /** Coalesced-duplicate badge; `{count}` is replaced with the count. */
+  toastCountBadge: string;
 }
 
 export const OGE_DEFAULT_OVERLAY_MESSAGES: OgeOverlayMessages = {
   modalClose: 'Close',
   modalMaximize: 'Maximize',
   modalRestore: 'Restore',
+  toastClose: 'Close',
+  toastRegionLabel: 'Notifications',
+  toastCountBadge: '×{count}',
 };
 
 /**
@@ -36,7 +46,17 @@ export interface OgeOverlayConfig {
   tooltipShowDelayMs: number;
   /** Grace period before a tooltip hides after the pointer leaves. */
   tooltipHideDelayMs: number;
-  /** User-facing strings (modal close button etc.). */
+  /** Default toast stack position. */
+  toastPosition: OgeToastPosition;
+  /** Default toast auto-dismiss time in ms. */
+  toastDisplayTime: number;
+  /** Max simultaneously visible toasts per position; extras queue FIFO. */
+  toastMaxVisible: number;
+  /** Show the remaining-time progress bar on toasts by default. */
+  toastProgressBar: boolean;
+  /** Coalesce identical toasts into one with a count badge by default. */
+  toastCoalesceDuplicates: boolean;
+  /** User-facing strings (modal/toast buttons and labels). */
   messages: OgeOverlayMessages;
 }
 
@@ -46,6 +66,11 @@ export const OGE_DEFAULT_OVERLAY_CONFIG: OgeOverlayConfig = {
   typeAheadMs: 500,
   tooltipShowDelayMs: 400,
   tooltipHideDelayMs: 100,
+  toastPosition: 'bottom-end',
+  toastDisplayTime: 4000,
+  toastMaxVisible: 5,
+  toastProgressBar: false,
+  toastCoalesceDuplicates: false,
   messages: OGE_DEFAULT_OVERLAY_MESSAGES,
 };
 
