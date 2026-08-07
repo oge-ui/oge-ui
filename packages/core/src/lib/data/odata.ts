@@ -1,6 +1,10 @@
 import type { RowKey } from '../rows/row-node';
 import { resolveKeySelector } from '../util/value-accessor';
-import type { DataSource, DataSourceCapabilities, LoadResult } from './data-source';
+import type {
+  DataSource,
+  DataSourceCapabilities,
+  LoadResult,
+} from './data-source';
 import type { FilterExpr, LoadOptions } from './load-options';
 
 export interface ODataQueryOptions {
@@ -10,7 +14,8 @@ export interface ODataQueryOptions {
 
 function literal(value: unknown): string {
   if (value == null) return 'null';
-  if (typeof value === 'number' || typeof value === 'bigint') return String(value);
+  if (typeof value === 'number' || typeof value === 'bigint')
+    return String(value);
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (value instanceof Date) return value.toISOString();
   return `'${String(value).replace(/'/g, "''")}'`;
@@ -20,7 +25,9 @@ function filterToOData(expr: FilterExpr): string {
   switch (expr.type) {
     case 'and':
     case 'or': {
-      const parts = expr.operands.map((operand) => `(${filterToOData(operand)})`);
+      const parts = expr.operands.map(
+        (operand) => `(${filterToOData(operand)})`,
+      );
       return parts.join(` ${expr.type} `);
     }
     case 'not':
@@ -67,7 +74,10 @@ function filterToOData(expr: FilterExpr): string {
  * not translated — pair OData sources with client-side grouping or `$apply`
  * middleware of your own.
  */
-export function buildODataQuery(options: LoadOptions, config: ODataQueryOptions = {}): string {
+export function buildODataQuery(
+  options: LoadOptions,
+  config: ODataQueryOptions = {},
+): string {
   const params: string[] = [];
   if (options.skip) params.push(`$skip=${options.skip}`);
   if (options.take != null) params.push(`$top=${options.take}`);
@@ -87,7 +97,9 @@ export function buildODataQuery(options: LoadOptions, config: ODataQueryOptions 
     filters.push(`(${ors})`);
   }
   if (filters.length) {
-    params.push(`$filter=${encodeURIComponent(filters.map((f) => `(${f})`).join(' and '))}`);
+    params.push(
+      `$filter=${encodeURIComponent(filters.map((f) => `(${f})`).join(' and '))}`,
+    );
   }
   if (options.requireTotalCount) params.push('$count=true');
   return params.join('&');
@@ -125,7 +137,9 @@ export class ODataDataSource<T> implements DataSource<T> {
   }
 
   async load(load: LoadOptions): Promise<LoadResult<T>> {
-    const query = buildODataQuery(load, { searchFields: this.options.searchFields });
+    const query = buildODataQuery(load, {
+      searchFields: this.options.searchFields,
+    });
     const url = query ? `${this.options.url}?${query}` : this.options.url;
     const fetchFn = this.options.fetchFn ?? fetch;
     const response = await fetchFn(url, {
@@ -133,12 +147,19 @@ export class ODataDataSource<T> implements DataSource<T> {
       signal: load.signal,
     });
     if (!response.ok) {
-      throw new Error(`ODataDataSource: ${response.status} ${response.statusText} for ${url}`);
+      throw new Error(
+        `ODataDataSource: ${response.status} ${response.statusText} for ${url}`,
+      );
     }
-    const body = (await response.json()) as { value: T[]; '@odata.count'?: number };
+    const body = (await response.json()) as {
+      value: T[];
+      '@odata.count'?: number;
+    };
     return {
       data: body.value,
-      ...(body['@odata.count'] !== undefined ? { totalCount: body['@odata.count'] } : {}),
+      ...(body['@odata.count'] !== undefined
+        ? { totalCount: body['@odata.count'] }
+        : {}),
     };
   }
 

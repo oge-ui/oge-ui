@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test('CSV and Excel exports download files with the current view', async ({ page }) => {
+test('CSV and Excel exports download files with the current view', async ({
+  page,
+}) => {
   await page.goto('/components/data-grid');
   await expect(page.locator('.oge-row').first()).toBeVisible();
 

@@ -42,14 +42,22 @@ class CalcHost {
   readonly rows = ROWS;
   readonly bySeverity = (row: Row) => SEVERITY[row.status];
   /** Filter input matches every status at or above the typed severity. */
-  readonly atLeast = (value: unknown, _op: FilterOperator): FilterExpr | null => {
+  readonly atLeast = (
+    value: unknown,
+    _op: FilterOperator,
+  ): FilterExpr | null => {
     const min = SEVERITY[String(value)];
     if (min === undefined) return null;
     return {
       type: 'or',
       operands: Object.entries(SEVERITY)
         .filter(([, rank]) => rank >= min)
-        .map(([status]) => ({ type: 'binary', field: 'status', op: 'eq', value: status })),
+        .map(([status]) => ({
+          type: 'binary',
+          field: 'status',
+          op: 'eq',
+          value: status,
+        })),
     };
   };
   readonly unused = signal(0);
@@ -57,7 +65,7 @@ class CalcHost {
 
 function firstCells(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-row')).map(
-    (row) => row.querySelector('.oge-cell')?.textContent?.trim() ?? ''
+    (row) => row.querySelector('.oge-cell')?.textContent?.trim() ?? '',
   );
 }
 
@@ -68,7 +76,7 @@ describe('OgeGrid calculateSortValue / calculateFilterExpression', () => {
     const el = fixture.nativeElement as HTMLElement;
     // click the Status header → ascending by severity rank (low, medium, high)
     (el.querySelectorAll('.oge-header-cell')[1] as HTMLElement).dispatchEvent(
-      new MouseEvent('click', { bubbles: true })
+      new MouseEvent('click', { bubbles: true }),
     );
     await settle(fixture);
     expect(firstCells(el)).toEqual(['Grace', 'Erin', 'Ada']);
@@ -78,7 +86,9 @@ describe('OgeGrid calculateSortValue / calculateFilterExpression', () => {
     const fixture = TestBed.createComponent(CalcHost);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    const statusFilter = el.querySelectorAll('.oge-filter-cell input')[1] as HTMLInputElement;
+    const statusFilter = el.querySelectorAll(
+      '.oge-filter-cell input',
+    )[1] as HTMLInputElement;
     statusFilter.value = 'medium';
     statusFilter.dispatchEvent(new Event('input', { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 350)); // > debounce

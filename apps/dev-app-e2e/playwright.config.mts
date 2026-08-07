@@ -29,7 +29,8 @@ export default defineConfig({
    * the server normally.
    */
   webServer: {
-    command: 'npx nx run dev-app:serve || node -e "setInterval(() => {}, 2147483647)"',
+    command:
+      'npx nx run dev-app:serve || node -e "setInterval(() => {}, 2147483647)"',
     url: 'http://localhost:4200',
     reuseExistingServer: true,
     cwd: workspaceRoot,

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test('remote grid issues exactly one request per settled interaction', async ({ page }) => {
+test('remote grid issues exactly one request per settled interaction', async ({
+  page,
+}) => {
   await page.goto('/components/data-grid/remote-data');
   const log = page.locator('.request-log li');
 
@@ -9,7 +11,9 @@ test('remote grid issues exactly one request per settled interaction', async ({ 
   await expect(log).toHaveCount(1);
 
   // rapid typing → debounced into a single request, stale ones aborted
-  await page.locator('.oge-search-input').pressSequentially('ali', { delay: 50 });
+  await page
+    .locator('.oge-search-input')
+    .pressSequentially('ali', { delay: 50 });
   await expect(log).toHaveCount(2);
   await expect(log.first()).toContainText('search="ali"');
 

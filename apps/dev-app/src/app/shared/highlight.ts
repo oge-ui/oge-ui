@@ -10,7 +10,10 @@
  */
 
 function esc(text: string): string {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 interface Rule {
@@ -36,8 +39,14 @@ const TS_KEYWORDS =
 
 const RULES: Record<string, Rule[]> = {
   ts: [
-    { pattern: /\/\/[^\n]*|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->/g, render: span('tok-comment') },
-    { pattern: /`(?:[^`\\]|\\.)*`|'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, render: span('tok-string') },
+    {
+      pattern: /\/\/[^\n]*|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->/g,
+      render: span('tok-comment'),
+    },
+    {
+      pattern: /`(?:[^`\\]|\\.)*`|'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g,
+      render: span('tok-string'),
+    },
     { pattern: /@\w+/g, render: span('tok-decorator') },
     { pattern: new RegExp(TS_KEYWORDS, 'g'), render: span('tok-keyword') },
     { pattern: /\b[A-Z][A-Za-z0-9_]*\b/g, render: span('tok-type') },
@@ -45,7 +54,10 @@ const RULES: Record<string, Rule[]> = {
   ],
   html: [
     { pattern: /<!--[\s\S]*?-->/g, render: span('tok-comment') },
-    { pattern: /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, render: span('tok-string') },
+    {
+      pattern: /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g,
+      render: span('tok-string'),
+    },
     { pattern: /(<\/?)([a-zA-Z][\w-]*)/g, render: prefixed('tok-tag') },
     { pattern: /\{\{[^}]*\}\}/g, render: span('tok-interp') },
     {
@@ -56,7 +68,10 @@ const RULES: Record<string, Rule[]> = {
   ],
   css: [
     { pattern: /\/\*[\s\S]*?\*\//g, render: span('tok-comment') },
-    { pattern: /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, render: span('tok-string') },
+    {
+      pattern: /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g,
+      render: span('tok-string'),
+    },
     { pattern: /@[a-z-]+/g, render: span('tok-decorator') },
     { pattern: /--[\w-]+/g, render: span('tok-attr') },
     { pattern: /(^|[{;]\s*)([a-z-]+)(?=\s*:)/gm, render: prefixed('tok-attr') },
@@ -67,8 +82,14 @@ const RULES: Record<string, Rule[]> = {
   ],
   sh: [
     { pattern: /#[^\n]*/g, render: span('tok-comment') },
-    { pattern: /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, render: span('tok-string') },
-    { pattern: /(^|\s)(npm|npx|nx|ng|git|install)(?=\s|$)/gm, render: prefixed('tok-keyword') },
+    {
+      pattern: /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g,
+      render: span('tok-string'),
+    },
+    {
+      pattern: /(^|\s)(npm|npx|nx|ng|git|install)(?=\s|$)/gm,
+      render: prefixed('tok-keyword'),
+    },
   ],
 };
 

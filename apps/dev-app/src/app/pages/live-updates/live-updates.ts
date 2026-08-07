@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
 import { ArrayDataSource } from '@oge-ui/core';
 import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard, type DemoFile } from '../../shared/demo-card';
@@ -73,26 +79,61 @@ export class TickerComponent {
   imports: [OgeGrid, OgeColumn, OgeCellTemplate, DemoCard, DocHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-doc-header title="Live Updates" [chips]="['DataSource.changes', 'push', 'highlightChanges']">
+    <app-doc-header
+      title="Live Updates"
+      [chips]="['DataSource.changes', 'push', 'highlightChanges']"
+    >
       <p>
-        Any DataSource can expose a <code>changes</code> stream; the grid subscribes and applies
-        pushed batches without a reload. Pure <code>update</code> batches patch rows in place —
-        sorting, selection and scroll position are untouched — and with
-        <code>highlightChanges</code> every patched cell flashes briefly.
-        Rising and falling prices are rendered by a typed <code>*ogeCellTemplate</code>.
+        Any DataSource can expose a <code>changes</code> stream; the grid
+        subscribes and applies pushed batches without a reload. Pure
+        <code>update</code> batches patch rows in place — sorting, selection and
+        scroll position are untouched — and with
+        <code>highlightChanges</code> every patched cell flashes briefly. Rising
+        and falling prices are rendered by a typed
+        <code>*ogeCellTemplate</code>.
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['updates every 600ms', updateCount() + ' pushed', 'highlightChanges']" [files]="files">
-      <oge-grid [data]="stocks" keyField="id" [highlightChanges]="true" [sortable]="'single'">
+    <app-demo-card
+      [chips]="[
+        'updates every 600ms',
+        updateCount() + ' pushed',
+        'highlightChanges',
+      ]"
+      [files]="files"
+    >
+      <oge-grid
+        [data]="stocks"
+        keyField="id"
+        [highlightChanges]="true"
+        [sortable]="'single'"
+      >
         <oge-column field="symbol" caption="Symbol" [width]="110">
-          <span *ogeCellTemplate="let value" class="font-semibold tracking-wide">{{ value }}</span>
+          <span
+            *ogeCellTemplate="let value"
+            class="font-semibold tracking-wide"
+            >{{ value }}</span
+          >
         </oge-column>
         <oge-column field="name" caption="Company" />
-        <oge-column field="price" caption="Price" dataType="number" [format]="money">
-          <span *ogeCellTemplate="let value" class="font-semibold tabular-nums">{{ money(value) }}</span>
+        <oge-column
+          field="price"
+          caption="Price"
+          dataType="number"
+          [format]="money"
+        >
+          <span
+            *ogeCellTemplate="let value"
+            class="font-semibold tabular-nums"
+            >{{ money(value) }}</span
+          >
         </oge-column>
-        <oge-column field="change" caption="Change" dataType="number" [width]="170">
+        <oge-column
+          field="change"
+          caption="Change"
+          dataType="number"
+          [width]="170"
+        >
           <span
             *ogeCellTemplate="let value; row as stock"
             class="inline-flex items-center gap-1 font-medium tabular-nums"
@@ -103,26 +144,61 @@ export class TickerComponent {
             "
           >
             @if (asNumber(value) >= 0) {
-              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                viewBox="0 0 16 16"
+                width="12"
+                height="12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M8 13V3m0 0L4 7m4-4 4 4" />
               </svg>
             } @else {
-              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg
+                viewBox="0 0 16 16"
+                width="12"
+                height="12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M8 3v10m0 0 4-4m-4 4-4-4" />
               </svg>
             }
             {{ signed(asNumber(value)) }} ({{ signed(percentOf(stock)) }}%)
           </span>
         </oge-column>
-        <oge-column field="volume" caption="Volume" dataType="number" [format]="thousands" />
+        <oge-column
+          field="volume"
+          caption="Volume"
+          dataType="number"
+          [format]="thousands"
+        />
       </oge-grid>
     </app-demo-card>
 
     <h3>Notes</h3>
     <ul>
-      <li><code>highlightChanges</code> flashes exactly the patched cells — consecutive updates to the same cell restart the animation. Tune the color with the <code>--oge-update-flash-bg</code> token.</li>
-      <li><code>insert</code> / <code>remove</code> pushes re-run the current load so sorting, filtering and paging stay correct.</li>
-      <li><code>ArrayDataSource.push()</code> feeds the stream directly; map a WebSocket or SSE feed onto it for remote sources.</li>
+      <li>
+        <code>highlightChanges</code> flashes exactly the patched cells —
+        consecutive updates to the same cell restart the animation. Tune the
+        color with the <code>--oge-update-flash-bg</code> token.
+      </li>
+      <li>
+        <code>insert</code> / <code>remove</code> pushes re-run the current load
+        so sorting, filtering and paging stay correct.
+      </li>
+      <li>
+        <code>ArrayDataSource.push()</code> feeds the stream directly; map a
+        WebSocket or SSE feed onto it for remote sources.
+      </li>
     </ul>
   `,
 })
@@ -137,7 +213,9 @@ export class LiveUpdatesPage {
     volume: 1_000_000 + Math.floor(Math.random() * 9_000_000),
   }));
 
-  protected readonly stocks = new ArrayDataSource<Stock>(this.rows, { key: 'id' });
+  protected readonly stocks = new ArrayDataSource<Stock>(this.rows, {
+    key: 'id',
+  });
 
   protected readonly money = (value: unknown): string =>
     typeof value === 'number'
@@ -145,7 +223,9 @@ export class LiveUpdatesPage {
       : String(value ?? '');
 
   protected readonly thousands = (value: unknown): string =>
-    typeof value === 'number' ? value.toLocaleString('en-US') : String(value ?? '');
+    typeof value === 'number'
+      ? value.toLocaleString('en-US')
+      : String(value ?? '');
 
   protected asNumber(value: unknown): number {
     return typeof value === 'number' ? value : 0;
@@ -163,23 +243,26 @@ export class LiveUpdatesPage {
   constructor() {
     const timer = setInterval(() => {
       // patch a couple of random symbols per tick
-      const batch = Array.from({ length: 2 + Math.floor(Math.random() * 2) }, () => {
-        const row = this.rows[Math.floor(Math.random() * this.rows.length)];
-        const delta = row.price * (Math.random() * 0.012 - 0.006);
-        const price = Math.max(1, row.price + delta);
-        const change = price - (row.price - row.change); // vs. session open
-        const changePercent = (change / (price - change)) * 100;
-        return {
-          type: 'update' as const,
-          key: row.id,
-          patch: {
-            price: Math.round(price * 100) / 100,
-            change: Math.round(change * 100) / 100,
-            changePercent: Math.round(changePercent * 100) / 100,
-            volume: row.volume + Math.floor(Math.random() * 40_000),
-          },
-        };
-      });
+      const batch = Array.from(
+        { length: 2 + Math.floor(Math.random() * 2) },
+        () => {
+          const row = this.rows[Math.floor(Math.random() * this.rows.length)];
+          const delta = row.price * (Math.random() * 0.012 - 0.006);
+          const price = Math.max(1, row.price + delta);
+          const change = price - (row.price - row.change); // vs. session open
+          const changePercent = (change / (price - change)) * 100;
+          return {
+            type: 'update' as const,
+            key: row.id,
+            patch: {
+              price: Math.round(price * 100) / 100,
+              change: Math.round(change * 100) / 100,
+              changePercent: Math.round(changePercent * 100) / 100,
+              volume: row.volume + Math.floor(Math.random() * 40_000),
+            },
+          };
+        },
+      );
       this.stocks.push(batch);
       this.updateCount.update((count) => count + batch.length);
     }, 600);

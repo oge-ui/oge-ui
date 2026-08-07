@@ -12,12 +12,17 @@ test('groups rows, collapses a group and shows summaries', async ({ page }) => {
   await expect(groupRows.first()).toContainText('Avg of Salary:');
 
   // total summary row
-  await expect(grid.locator('.oge-total-cell', { hasText: 'Sum:' })).toBeVisible();
+  await expect(
+    grid.locator('.oge-total-cell', { hasText: 'Sum:' }),
+  ).toBeVisible();
 
   // collapsing the first group removes its child rows
   const before = await grid.locator('.oge-row').count();
   await groupRows.first().click();
-  await expect(grid.locator('.oge-group-row').first()).toHaveAttribute('aria-expanded', 'false');
+  await expect(grid.locator('.oge-group-row').first()).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
   const after = await grid.locator('.oge-row').count();
   expect(after).toBeLessThan(before);
 
@@ -53,9 +58,13 @@ test('deferred groups fetch children only on expand', async ({ page }) => {
 test('column chooser toggles column visibility', async ({ page }) => {
   await page.goto('/components/data-grid/grouping');
   const grid = page.locator('oge-grid').first();
-  await expect(grid.locator('.oge-header-cell', { hasText: 'City' })).toBeVisible();
+  await expect(
+    grid.locator('.oge-header-cell', { hasText: 'City' }),
+  ).toBeVisible();
 
   await grid.getByLabel('Column chooser').click();
   await grid.locator('.oge-chooser-popup label', { hasText: 'City' }).click();
-  await expect(grid.locator('.oge-header-cell', { hasText: 'City' })).toHaveCount(0);
+  await expect(
+    grid.locator('.oge-header-cell', { hasText: 'City' }),
+  ).toHaveCount(0);
 });

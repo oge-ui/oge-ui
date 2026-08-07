@@ -23,7 +23,9 @@ function networkDelay(ms: number, signal?: AbortSignal): Promise<void> {
 function describeOptions(options: LoadOptions): string {
   const parts = [`skip=${options.skip ?? 0}`, `take=${options.take ?? '∞'}`];
   if (options.sort?.length) {
-    parts.push(`sort=${options.sort.map((s) => `${s.field} ${s.dir}`).join(',')}`);
+    parts.push(
+      `sort=${options.sort.map((s) => `${s.field} ${s.dir}`).join(',')}`,
+    );
   }
   if (options.filter) parts.push(`filter=${JSON.stringify(options.filter)}`);
   if (options.searchText) parts.push(`search="${options.searchText}"`);
@@ -49,7 +51,10 @@ export class FakeEmployeeServer {
     return runLoadOptions(this.db, options);
   }
 
-  async distinct(field: string, options?: { filter?: FilterExpr | null }): Promise<readonly unknown[]> {
+  async distinct(
+    field: string,
+    options?: { filter?: FilterExpr | null },
+  ): Promise<readonly unknown[]> {
     this.push(`GET /api/employees/distinct?field=${field}`);
     await networkDelay(150);
     const accessor = createFieldAccessor<Employee>(field);
@@ -59,6 +64,8 @@ export class FakeEmployeeServer {
 
   private push(entry: string): void {
     this.counter += 1;
-    this.requestLog.set([`#${this.counter} ${entry}`, ...this.requestLog()].slice(0, 30));
+    this.requestLog.set(
+      [`#${this.counter} ${entry}`, ...this.requestLog()].slice(0, 30),
+    );
   }
 }

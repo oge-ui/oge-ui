@@ -38,17 +38,29 @@ const DEFERRED_SNIPPET = `<oge-grid [data]="rows" keyField="id"
       [chips]="['selectionMode', 'selectedKeys', 'rowContextMenu', 'keyboard']"
     >
       <p>
-        Checkbox selection with a filtered-aware select-all; <kbd>Ctrl</kbd>/<kbd>Shift</kbd>+click
-        also work. Navigate cells with the arrow keys and press <kbd>Space</kbd> to select.
-        Right-click a row for the context menu.
+        Checkbox selection with a filtered-aware select-all;
+        <kbd>Ctrl</kbd>/<kbd>Shift</kbd>+click also work. Navigate cells with
+        the arrow keys and press <kbd>Space</kbd> to select. Right-click a row
+        for the context menu.
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['1.000 rows', 'virtual', 'filterRow']" [code]="snippet" language="ts">
+    <app-demo-card
+      [chips]="['1.000 rows', 'virtual', 'filterRow']"
+      [code]="snippet"
+      language="ts"
+    >
       <div class="mb-3 text-sm text-gray-500 dark:text-gray-400">
-        Selected: <span class="font-semibold text-gray-900 dark:text-gray-100">{{ selected().length }}</span> rows
+        Selected:
+        <span class="font-semibold text-gray-900 dark:text-gray-100">{{
+          selected().length
+        }}</span>
+        rows
         @if (lastAction()) {
-          <span class="ml-3 rounded bg-gray-100 px-2 py-0.5 font-mono text-xs dark:bg-gray-800">{{ lastAction() }}</span>
+          <span
+            class="ml-3 rounded bg-gray-100 px-2 py-0.5 font-mono text-xs dark:bg-gray-800"
+            >{{ lastAction() }}</span
+          >
         }
       </div>
       <oge-grid
@@ -73,16 +85,21 @@ const DEFERRED_SNIPPET = `<oge-grid [data]="rows" keyField="id"
 
     <h3>Deferred selection</h3>
     <p>
-      With <code>selectionDeferred</code> the grid never materializes a key list — the selection
-      <em>is</em> a serializable <code>FilterExpr</code> in the two-way
-      <code>selectionFilter</code> binding. Select-all over a million remote rows costs nothing:
-      the expression captures the current filter, and unchecking a row just adds an
-      <code>and-not</code> clause. Send the expression to your backend to process the selection
-      server-side.
+      With <code>selectionDeferred</code> the grid never materializes a key list
+      — the selection <em>is</em> a serializable <code>FilterExpr</code> in the
+      two-way <code>selectionFilter</code> binding. Select-all over a million
+      remote rows costs nothing: the expression captures the current filter, and
+      unchecking a row just adds an <code>and-not</code> clause. Send the
+      expression to your backend to process the selection server-side.
     </p>
 
-    <app-demo-card [chips]="['selectionDeferred', 'selectionFilter']" [code]="deferredSnippet">
-      <div class="grid grid-cols-[minmax(0,2fr)_minmax(260px,1fr)] items-start gap-4 max-lg:grid-cols-1">
+    <app-demo-card
+      [chips]="['selectionDeferred', 'selectionFilter']"
+      [code]="deferredSnippet"
+    >
+      <div
+        class="grid grid-cols-[minmax(0,2fr)_minmax(260px,1fr)] items-start gap-4 max-lg:grid-cols-1"
+      >
         <oge-grid
           [data]="deferredRows"
           keyField="id"
@@ -97,22 +114,45 @@ const DEFERRED_SNIPPET = `<oge-grid [data]="rows" keyField="id"
           <oge-column field="department" caption="Department" />
           <oge-column field="salary" caption="Salary" dataType="number" />
         </oge-grid>
-        <aside class="max-h-[420px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-900">
+        <aside
+          class="max-h-[420px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-900"
+        >
           <h3 class="!mt-0 mb-2 text-sm font-semibold">selectionFilter</h3>
-          <pre class="m-0 whitespace-pre-wrap break-all font-mono text-xs leading-relaxed">{{
-            selectionFilter() === null ? 'null  (nothing selected)' : (selectionFilter() | json)
-          }}</pre>
+          <pre
+            class="m-0 whitespace-pre-wrap break-all font-mono text-xs leading-relaxed"
+            >{{
+              selectionFilter() === null
+                ? 'null  (nothing selected)'
+                : (selectionFilter() | json)
+            }}</pre>
         </aside>
       </div>
     </app-demo-card>
 
     <h3>Notes</h3>
     <ul>
-      <li><code>[(selectedKeys)]</code> is a two-way model — push keys in from outside and the checkboxes follow.</li>
-      <li>Select-all operates on the <em>filtered</em> set: apply a filter first and only matching rows are selected. <code>selectAllMode="page"</code> restricts it to the visible page.</li>
-      <li><kbd>Shift</kbd>-ranges span group rows correctly (only data rows are selected).</li>
-      <li><kbd>Ctrl</kbd>+<kbd>C</kbd> (or <code>copyToClipboard()</code>) copies the selected rows as tab-separated text ready for Excel.</li>
-      <li>Full keyboard support: arrows, <kbd>Home</kbd>/<kbd>End</kbd>, <kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Space</kbd> to select — WAI-ARIA grid pattern, verified with axe.</li>
+      <li>
+        <code>[(selectedKeys)]</code> is a two-way model — push keys in from
+        outside and the checkboxes follow.
+      </li>
+      <li>
+        Select-all operates on the <em>filtered</em> set: apply a filter first
+        and only matching rows are selected.
+        <code>selectAllMode="page"</code> restricts it to the visible page.
+      </li>
+      <li>
+        <kbd>Shift</kbd>-ranges span group rows correctly (only data rows are
+        selected).
+      </li>
+      <li>
+        <kbd>Ctrl</kbd>+<kbd>C</kbd> (or <code>copyToClipboard()</code>) copies
+        the selected rows as tab-separated text ready for Excel.
+      </li>
+      <li>
+        Full keyboard support: arrows, <kbd>Home</kbd>/<kbd>End</kbd>,
+        <kbd>PageUp</kbd>/<kbd>PageDown</kbd>, <kbd>Space</kbd> to select —
+        WAI-ARIA grid pattern, verified with axe.
+      </li>
     </ul>
   `,
 })
@@ -130,7 +170,9 @@ export class SelectionPage {
       {
         text: `Copy "${event.row.firstName} ${event.row.lastName}"`,
         action: () => {
-          navigator.clipboard?.writeText(`${event.row.firstName} ${event.row.lastName}`);
+          navigator.clipboard?.writeText(
+            `${event.row.firstName} ${event.row.lastName}`,
+          );
           this.lastAction.set(`copied #${event.row.id}`);
         },
       },
@@ -141,7 +183,7 @@ export class SelectionPage {
           this.lastAction.set(`selected #${event.row.id}`);
         },
       },
-      { text: 'Delete (disabled)', disabled: true }
+      { text: 'Delete (disabled)', disabled: true },
     );
   }
 }

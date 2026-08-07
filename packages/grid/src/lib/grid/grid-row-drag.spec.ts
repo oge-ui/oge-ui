@@ -14,9 +14,9 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 }
 
 function names(el: HTMLElement): string[] {
-  return Array.from(el.querySelectorAll('.oge-row .oge-cell:not(.oge-drag-cell)')).map(
-    (cell) => cell.textContent?.trim() ?? ''
-  );
+  return Array.from(
+    el.querySelectorAll('.oge-row .oge-cell:not(.oge-drag-cell)'),
+  ).map((cell) => cell.textContent?.trim() ?? '');
 }
 
 describe('OgeGrid row drag reordering', () => {
@@ -52,7 +52,12 @@ describe('OgeGrid row drag reordering', () => {
     expect(names(el)).toEqual(['Erin', 'Ada', 'Grace']);
     expect(rows.map((r) => r.name)).toEqual(['Erin', 'Ada', 'Grace']);
     expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ key: 3, targetKey: 1, fromIndex: 2, toIndex: 0 });
+    expect(events[0]).toMatchObject({
+      key: 3,
+      targetKey: 1,
+      fromIndex: 2,
+      toIndex: 0,
+    });
     expect(el.querySelectorAll('.oge-drop-target').length).toBe(0);
   });
 });

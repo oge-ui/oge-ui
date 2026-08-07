@@ -43,7 +43,11 @@ describe('ArrayDataSource', () => {
       { type: 'remove', key: 1 },
     ]);
     const result = await source.load({ sort: [{ field: 'id', dir: 'asc' }] });
-    expect((result.data as Row[]).map((r) => `${r.id}:${r.name}`)).toEqual(['2:z', '3:b', '4:d']);
+    expect((result.data as Row[]).map((r) => `${r.id}:${r.name}`)).toEqual([
+      '2:z',
+      '3:b',
+      '4:d',
+    ]);
     expect(batches).toHaveLength(1);
     sub.unsubscribe();
     source.push([{ type: 'remove', key: 3 }]);

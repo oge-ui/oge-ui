@@ -1,7 +1,8 @@
 import type { PivotGroupInterval } from './pivot-types';
 
 function asDate(value: unknown): Date | null {
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (value instanceof Date)
+    return Number.isNaN(value.getTime()) ? null : value;
   if (typeof value === 'string' || typeof value === 'number') {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? null : date;
@@ -14,7 +15,10 @@ function asDate(value: unknown): Date | null {
  * numbers (year 2024, quarter 1-4, month 1-12, day 1-31, dayOfWeek 0-6);
  * numeric intervals bucket to the range start. `null` stays `null`.
  */
-export function intervalKey(value: unknown, interval: PivotGroupInterval | undefined): unknown {
+export function intervalKey(
+  value: unknown,
+  interval: PivotGroupInterval | undefined,
+): unknown {
   if (interval === undefined || value == null) return value ?? null;
   if (typeof interval === 'number') {
     const num = typeof value === 'number' ? value : Number(value);
@@ -46,7 +50,7 @@ export function intervalKey(value: unknown, interval: PivotGroupInterval | undef
  */
 export function intervalRange(
   bucket: unknown,
-  interval: PivotGroupInterval | undefined
+  interval: PivotGroupInterval | undefined,
 ): { from: unknown; to: unknown } | null {
   if (interval === undefined) return null;
   if (typeof interval === 'number') {

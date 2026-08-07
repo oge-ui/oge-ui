@@ -1,10 +1,17 @@
 import type { FilterExpr } from '../data/load-options';
 import { intervalRange } from './pivot-interval';
 import type { PivotEngine } from './compute-pivot';
-import type { PivotDrillDownArgs, PivotFieldConfig, PivotPath } from './pivot-types';
+import type {
+  PivotDrillDownArgs,
+  PivotFieldConfig,
+  PivotPath,
+} from './pivot-types';
 
 /** Raw rows behind one pivot cell (local data). */
-export function drillDownRows<T>(engine: PivotEngine<T>, args: PivotDrillDownArgs): T[] {
+export function drillDownRows<T>(
+  engine: PivotEngine<T>,
+  args: PivotDrillDownArgs,
+): T[] {
   return engine.drillDownRows(args.rowPath, args.columnPath);
 }
 
@@ -17,7 +24,7 @@ export function drillDownRows<T>(engine: PivotEngine<T>, args: PivotDrillDownArg
  */
 export function pathToFilterExpr(
   fields: readonly PivotFieldConfig[],
-  path: PivotPath
+  path: PivotPath,
 ): FilterExpr | null {
   const operands: FilterExpr[] = [];
   for (let index = 0; index < path.length; index++) {
@@ -28,7 +35,7 @@ export function pathToFilterExpr(
       operands.push(
         value == null
           ? { type: 'binary', field: field.dataField, op: 'isnull' }
-          : { type: 'binary', field: field.dataField, op: 'eq', value }
+          : { type: 'binary', field: field.dataField, op: 'eq', value },
       );
       continue;
     }
@@ -50,7 +57,7 @@ export function pathToFilterExpr(
 export function drillDownFilter(
   rowFields: readonly PivotFieldConfig[],
   columnFields: readonly PivotFieldConfig[],
-  args: PivotDrillDownArgs
+  args: PivotDrillDownArgs,
 ): FilterExpr | null {
   const row = pathToFilterExpr(rowFields, args.rowPath);
   const column = pathToFilterExpr(columnFields, args.columnPath);

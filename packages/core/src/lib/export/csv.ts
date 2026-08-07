@@ -30,12 +30,16 @@ function escapeCell(text: string, separator: string): string {
 export function buildCsv<T>(
   rows: readonly T[],
   columns: readonly CsvColumn<T>[],
-  options: CsvOptions = {}
+  options: CsvOptions = {},
 ): string {
   const separator = options.separator ?? ',';
   const lines: string[] = [];
   if (options.header !== false) {
-    lines.push(columns.map((column) => escapeCell(column.caption, separator)).join(separator));
+    lines.push(
+      columns
+        .map((column) => escapeCell(column.caption, separator))
+        .join(separator),
+    );
   }
   for (const row of rows) {
     lines.push(
@@ -43,10 +47,14 @@ export function buildCsv<T>(
         .map((column) => {
           const value = column.accessor(row);
           const text =
-            value == null ? '' : column.format ? column.format(value) : String(value);
+            value == null
+              ? ''
+              : column.format
+                ? column.format(value)
+                : String(value);
           return escapeCell(text, separator);
         })
-        .join(separator)
+        .join(separator),
     );
   }
   const body = lines.join('\r\n');

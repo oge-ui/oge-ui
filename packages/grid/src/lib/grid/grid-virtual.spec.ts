@@ -6,7 +6,10 @@ interface Row {
   name: string;
 }
 
-const ROWS: Row[] = Array.from({ length: 1000 }, (_, i) => ({ id: i + 1, name: `Row ${i + 1}` }));
+const ROWS: Row[] = Array.from({ length: 1000 }, (_, i) => ({
+  id: i + 1,
+  name: `Row ${i + 1}`,
+}));
 
 /**
  * JSDOM has no real layout, so the viewport height is driven directly through
@@ -27,7 +30,9 @@ describe('OgeGrid virtualization', () => {
     fixture.componentRef.setInput('virtualScroll', true);
     fixture.componentRef.setInput('rowHeight', 30);
     const grid = fixture.componentInstance;
-    (grid as unknown as { viewportHeight: { set(v: number): void } }).viewportHeight.set(300);
+    (
+      grid as unknown as { viewportHeight: { set(v: number): void } }
+    ).viewportHeight.set(300);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -36,7 +41,7 @@ describe('OgeGrid virtualization', () => {
 
   function renderedIds(el: HTMLElement): string[] {
     return Array.from(el.querySelectorAll('.oge-row')).map(
-      (row) => row.querySelectorAll('.oge-cell')[0].textContent?.trim() ?? ''
+      (row) => row.querySelectorAll('.oge-cell')[0].textContent?.trim() ?? '',
     );
   }
 
@@ -56,16 +61,22 @@ describe('OgeGrid virtualization', () => {
 
   it('renders the correct slice at an arbitrary scroll position', async () => {
     const { fixture, el, grid } = await render();
-    (grid as unknown as { scrollTop: { set(v: number): void } }).scrollTop.set(15_000); // row 500
+    (grid as unknown as { scrollTop: { set(v: number): void } }).scrollTop.set(
+      15_000,
+    ); // row 500
     await fixture.whenStable();
     fixture.detectChanges();
     const ids = renderedIds(el).map(Number);
     expect(Math.min(...ids)).toBeLessThanOrEqual(501);
     expect(Math.max(...ids)).toBeGreaterThanOrEqual(510);
     const firstRow = el.querySelector('.oge-row') as HTMLElement;
-    expect(firstRow.getAttribute('aria-rowindex')).toBe(String(Math.min(...ids) + 1));
+    expect(firstRow.getAttribute('aria-rowindex')).toBe(
+      String(Math.min(...ids) + 1),
+    );
     const rowsEl = el.querySelector('.oge-rows') as HTMLElement;
-    expect(rowsEl.style.transform).toBe(`translateY(${(Math.min(...ids) - 1) * 30}px)`);
+    expect(rowsEl.style.transform).toBe(
+      `translateY(${(Math.min(...ids) - 1) * 30}px)`,
+    );
   });
 
   it('folds measured heights into the offset tree in autoRowHeight mode', async () => {
@@ -80,7 +91,7 @@ describe('OgeGrid virtualization', () => {
       new Map<string | number, number>([
         [1, 90],
         [2, 60],
-      ])
+      ]),
     );
     await fixture.whenStable();
     fixture.detectChanges();
@@ -94,7 +105,9 @@ describe('OgeGrid virtualization', () => {
 
   it('clamps the window at the end of the list', async () => {
     const { fixture, el, grid } = await render();
-    (grid as unknown as { scrollTop: { set(v: number): void } }).scrollTop.set(999_999);
+    (grid as unknown as { scrollTop: { set(v: number): void } }).scrollTop.set(
+      999_999,
+    );
     await fixture.whenStable();
     fixture.detectChanges();
     const ids = renderedIds(el).map(Number);

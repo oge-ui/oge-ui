@@ -21,7 +21,7 @@ export class OgeHeaderTemplate<T = unknown> {
 
   static ngTemplateContextGuard<T>(
     _dir: OgeHeaderTemplate<T>,
-    _ctx: unknown
+    _ctx: unknown,
   ): _ctx is OgeHeaderTemplateContext<T> {
     return true;
   }

@@ -17,8 +17,20 @@ const FIELDS: PivotFieldConfig[] = [
   { id: 'city', dataField: 'city', area: 'row', areaIndex: 2 },
   { id: 'year', dataField: 'year', area: 'column', areaIndex: 0 },
   { id: 'quarter', dataField: 'quarter', area: 'column', areaIndex: 1 },
-  { id: 'amount', dataField: 'amount', area: 'data', areaIndex: 0, summaryType: 'sum' },
-  { id: 'units', dataField: 'units', area: 'data', areaIndex: 1, summaryType: 'avg' },
+  {
+    id: 'amount',
+    dataField: 'amount',
+    area: 'data',
+    areaIndex: 0,
+    summaryType: 'sum',
+  },
+  {
+    id: 'units',
+    dataField: 'units',
+    area: 'data',
+    areaIndex: 1,
+    summaryType: 'avg',
+  },
 ];
 
 function makeRows(count: number): Row[] {
@@ -55,7 +67,10 @@ describe('pivot performance budgets', () => {
     engine.materialize({}); // warm
     const start = performance.now();
     engine.materialize({
-      rowExpandedPaths: new Set([pathKey(['Region 0']), pathKey(['Region 0', 'Country 0'])]),
+      rowExpandedPaths: new Set([
+        pathKey(['Region 0']),
+        pathKey(['Region 0', 'Country 0']),
+      ]),
       columnExpandedPaths: new Set([pathKey([2020])]),
     });
     const elapsed = performance.now() - start;

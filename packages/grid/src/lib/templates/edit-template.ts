@@ -27,7 +27,7 @@ export class OgeEditTemplate<T = unknown> {
 
   static ngTemplateContextGuard<T>(
     _dir: OgeEditTemplate<T>,
-    _ctx: unknown
+    _ctx: unknown,
   ): _ctx is OgeEditTemplateContext<T> {
     return true;
   }

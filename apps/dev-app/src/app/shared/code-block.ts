@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import { highlight } from './highlight';
 
@@ -25,7 +32,11 @@ const DEFAULT_TITLES: Record<string, string> = {
   template: `
     <div
       class="overflow-hidden bg-[#1e1e1e]"
-      [class]="frameless() ? '' : 'my-3 mb-5 rounded-xl border border-[#2d2d2d] shadow-lg'"
+      [class]="
+        frameless()
+          ? ''
+          : 'my-3 mb-5 rounded-xl border border-[#2d2d2d] shadow-lg'
+      "
     >
       <!-- window bar with file tabs -->
       <div class="flex items-center gap-3 bg-[#181818] px-3 pt-2">
@@ -46,7 +57,10 @@ const DEFAULT_TITLES: Record<string, string> = {
               "
               (click)="activeIndex.set(index)"
             >
-              <span class="h-2 w-2 rounded-sm" [class]="dotClass(file.language)"></span>
+              <span
+                class="h-2 w-2 rounded-sm"
+                [class]="dotClass(file.language)"
+              ></span>
               {{ file.name }}
             </button>
           }
@@ -57,28 +71,58 @@ const DEFAULT_TITLES: Record<string, string> = {
           (click)="copy()"
         >
           @if (copied()) {
-            <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="#28c840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8.5 3.5 3.5L13 5" /></svg>
+            <svg
+              viewBox="0 0 16 16"
+              width="11"
+              height="11"
+              fill="none"
+              stroke="#28c840"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m3 8.5 3.5 3.5L13 5" />
+            </svg>
             Copied
           } @else {
-            <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" /><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" /></svg>
+            <svg
+              viewBox="0 0 16 16"
+              width="11"
+              height="11"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            >
+              <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+              <path
+                d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"
+              />
+            </svg>
             Copy
           }
         </button>
       </div>
       <!-- editor body -->
       <div class="code-body flex overflow-x-auto">
-        <div class="line-numbers select-none py-4 pl-4 pr-3 text-right" aria-hidden="true">
+        <div
+          class="line-numbers select-none py-4 pl-4 pr-3 text-right"
+          aria-hidden="true"
+        >
           @for (line of lineNumbers(); track line) {
             <div>{{ line }}</div>
           }
         </div>
-        <pre class="code-pre m-0 flex-1 py-4 pr-4"><code [innerHTML]="highlighted()"></code></pre>
+        <pre
+          class="code-pre m-0 flex-1 py-4 pr-4"
+        ><code [innerHTML]="highlighted()"></code></pre>
       </div>
     </div>
   `,
   styles: `
     .code-body {
-      font-family: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+      font-family:
+        ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
       font-size: 13px;
       line-height: 1.7;
     }
@@ -98,15 +142,34 @@ const DEFAULT_TITLES: Record<string, string> = {
       padding-left: 16px;
       font: inherit;
 
-      .tok-comment { color: #6a9955; font-style: italic; }
-      .tok-string { color: #ce9178; }
-      .tok-keyword { color: #569cd6; }
-      .tok-type { color: #4ec9b0; }
-      .tok-decorator { color: #dcdcaa; }
-      .tok-number { color: #b5cea8; }
-      .tok-tag { color: #7ee787; }
-      .tok-attr { color: #9cdcfe; }
-      .tok-interp { color: #dcdcaa; }
+      .tok-comment {
+        color: #6a9955;
+        font-style: italic;
+      }
+      .tok-string {
+        color: #ce9178;
+      }
+      .tok-keyword {
+        color: #569cd6;
+      }
+      .tok-type {
+        color: #4ec9b0;
+      }
+      .tok-decorator {
+        color: #dcdcaa;
+      }
+      .tok-number {
+        color: #b5cea8;
+      }
+      .tok-tag {
+        color: #7ee787;
+      }
+      .tok-attr {
+        color: #9cdcfe;
+      }
+      .tok-interp {
+        color: #dcdcaa;
+      }
     }
   `,
 })
@@ -132,7 +195,13 @@ export class CodeBlock {
     const code = this.code();
     if (code === undefined) return [];
     const language = this.language();
-    return [{ name: this.title() ?? DEFAULT_TITLES[language] ?? language, language, code }];
+    return [
+      {
+        name: this.title() ?? DEFAULT_TITLES[language] ?? language,
+        language,
+        code,
+      },
+    ];
   });
 
   private readonly activeFile = computed<CodeFile | undefined>(() => {
@@ -161,7 +230,7 @@ export class CodeBlock {
   protected readonly highlighted = computed<SafeHtml>(() => {
     const file = this.activeFile();
     return this.sanitizer.bypassSecurityTrustHtml(
-      file ? highlight(file.code, file.language) : ''
+      file ? highlight(file.code, file.language) : '',
     );
   });
 

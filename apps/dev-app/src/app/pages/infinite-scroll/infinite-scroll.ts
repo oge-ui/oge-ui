@@ -49,15 +49,22 @@ export class EmployeesComponent {
   imports: [OgeGrid, OgeColumn, DemoCard, DocHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-doc-header title="Infinite &amp; Remote Virtual Scroll" [chips]="['scrolling', 'remote', 'CustomDataSource']">
+    <app-doc-header
+      title="Infinite &amp; Remote Virtual Scroll"
+      [chips]="['scrolling', 'remote', 'CustomDataSource']"
+    >
       <p>
-        One million rows, none of them preloaded. The grid fetches sparse 100-row blocks around
-        the viewport as you scroll — drag the scrollbar to the middle and only that block is
-        requested; everything in between is skipped. Rows still loading render as skeletons.
+        One million rows, none of them preloaded. The grid fetches sparse
+        100-row blocks around the viewport as you scroll — drag the scrollbar to
+        the middle and only that block is requested; everything in between is
+        skipped. Rows still loading render as skeletons.
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['1.000.000 rows', '150ms latency']" [files]="files">
+    <app-demo-card
+      [chips]="['1.000.000 rows', '150ms latency']"
+      [files]="files"
+    >
       <oge-grid
         [data]="employees"
         keyField="id"
@@ -76,9 +83,21 @@ export class EmployeesComponent {
 
     <h3>Scrolling modes</h3>
     <ul>
-      <li><code>mode: 'virtual'</code> with <code>remote: true</code> — the scrollbar reflects the full <code>totalCount</code>; blocks load on demand with block-level caching and de-duplication.</li>
-      <li><code>mode: 'infinite'</code> — same block fetching, but the scroll space grows as the user reaches the end; a <code>totalCount</code> is not required.</li>
-      <li>Sorting or filtering invalidates the block cache and reloads around the current position — the request carries the usual <code>LoadOptions</code>, so the server stays in charge.</li>
+      <li>
+        <code>mode: 'virtual'</code> with <code>remote: true</code> — the
+        scrollbar reflects the full <code>totalCount</code>; blocks load on
+        demand with block-level caching and de-duplication.
+      </li>
+      <li>
+        <code>mode: 'infinite'</code> — same block fetching, but the scroll
+        space grows as the user reaches the end; a <code>totalCount</code> is
+        not required.
+      </li>
+      <li>
+        Sorting or filtering invalidates the block cache and reloads around the
+        current position — the request carries the usual
+        <code>LoadOptions</code>, so the server stays in charge.
+      </li>
     </ul>
   `,
 })
@@ -91,7 +110,9 @@ export class InfiniteScrollPage {
       // fake server: ~150ms latency, rows generated on demand from the index
       await new Promise((resolve) => setTimeout(resolve, 150));
       const count = Math.max(0, Math.min(take, TOTAL - skip));
-      const data = Array.from({ length: count }, (_, i) => makeEmployeeAt(skip + i));
+      const data = Array.from({ length: count }, (_, i) =>
+        makeEmployeeAt(skip + i),
+      );
       return { data, totalCount: TOTAL };
     },
   });

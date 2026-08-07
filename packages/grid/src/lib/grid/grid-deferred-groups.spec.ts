@@ -39,7 +39,11 @@ describe('OgeGrid deferred group loading', () => {
             groups.set(row.department, (groups.get(row.department) ?? 0) + 1);
           }
           return {
-            data: [...groups.entries()].map(([key, count]) => ({ key, items: null, count })),
+            data: [...groups.entries()].map(([key, count]) => ({
+              key,
+              items: null,
+              count,
+            })),
             totalCount: ROWS.length,
           };
         }
@@ -48,7 +52,11 @@ describe('OgeGrid deferred group loading', () => {
           filter && filter.type === 'binary'
             ? filter.value
             : filter && filter.type === 'and'
-              ? (filter.operands.find((o) => o.type === 'binary') as { value?: unknown })?.value
+              ? (
+                  filter.operands.find((o) => o.type === 'binary') as {
+                    value?: unknown;
+                  }
+                )?.value
               : undefined;
         return { data: ROWS.filter((row) => row.department === value) };
       },
@@ -81,9 +89,9 @@ describe('OgeGrid deferred group loading', () => {
     // placeholder row while the child request is in flight
     expect(el.querySelectorAll('.oge-filler-row').length).toBe(1);
     await settle(fixture);
-    const names = Array.from(el.querySelectorAll('.oge-row .oge-cell:first-child')).map((cell) =>
-      cell.textContent?.trim()
-    );
+    const names = Array.from(
+      el.querySelectorAll('.oge-row .oge-cell:first-child'),
+    ).map((cell) => cell.textContent?.trim());
     expect(names).toEqual(['Ada', 'Grace']);
     expect(log.length).toBe(2);
     expect(log[1].group).toBeUndefined();

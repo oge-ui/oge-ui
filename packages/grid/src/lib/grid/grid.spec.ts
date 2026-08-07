@@ -26,33 +26,46 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 function headerTexts(el: HTMLElement): (string | undefined)[] {
   return Array.from(el.querySelectorAll('.oge-header-cell')).map((h) =>
-    h.querySelector('.oge-header-caption')?.textContent?.trim()
+    h.querySelector('.oge-header-caption')?.textContent?.trim(),
   );
 }
 
-function columnTexts(el: HTMLElement, columnIndex: number): (string | undefined)[] {
+function columnTexts(
+  el: HTMLElement,
+  columnIndex: number,
+): (string | undefined)[] {
   return Array.from(el.querySelectorAll('.oge-row')).map((row) =>
-    row.querySelectorAll('.oge-cell')[columnIndex]?.textContent?.trim()
+    row.querySelectorAll('.oge-cell')[columnIndex]?.textContent?.trim(),
   );
 }
 
-function rowCellTexts(el: HTMLElement, rowIndex: number): (string | undefined)[] {
-  return Array.from(el.querySelectorAll('.oge-row')[rowIndex].querySelectorAll('.oge-cell')).map(
-    (c) => c.textContent?.trim()
-  );
+function rowCellTexts(
+  el: HTMLElement,
+  rowIndex: number,
+): (string | undefined)[] {
+  return Array.from(
+    el.querySelectorAll('.oge-row')[rowIndex].querySelectorAll('.oge-cell'),
+  ).map((c) => c.textContent?.trim());
 }
 
-function clickHeader(el: HTMLElement, index: number, init?: MouseEventInit): void {
+function clickHeader(
+  el: HTMLElement,
+  index: number,
+  init?: MouseEventInit,
+): void {
   el.querySelectorAll('.oge-header-cell')[index].dispatchEvent(
-    new MouseEvent('click', { bubbles: true, ...init })
+    new MouseEvent('click', { bubbles: true, ...init }),
   );
 }
 
 describe('OgeGrid (auto/programmatic columns)', () => {
-  async function render(inputs: Partial<{ data: readonly Person[]; columns: readonly string[] }>) {
+  async function render(
+    inputs: Partial<{ data: readonly Person[]; columns: readonly string[] }>,
+  ) {
     const fixture = TestBed.createComponent(OgeGrid<Person>);
     if (inputs.data) fixture.componentRef.setInput('data', inputs.data);
-    if (inputs.columns) fixture.componentRef.setInput('columns', inputs.columns);
+    if (inputs.columns)
+      fixture.componentRef.setInput('columns', inputs.columns);
     await settle(fixture);
     return fixture.nativeElement as HTMLElement;
   }
@@ -85,7 +98,9 @@ describe('OgeGrid (auto/programmatic columns)', () => {
     <oge-grid [data]="data" keyField="id">
       <oge-column field="fullName" caption="Name" [width]="200" />
       <oge-column field="age" dataType="number">
-        <span *ogeCellTemplate="let value; row as person">{{ value }}y ({{ person.fullName }})</span>
+        <span *ogeCellTemplate="let value; row as person"
+          >{{ value }}y ({{ person.fullName }})</span
+        >
       </oge-column>
       <oge-column field="active" dataType="boolean" [visible]="activeVisible()">
         <em *ogeHeaderTemplate="let column">{{ column.field() }}!</em>
@@ -114,7 +129,7 @@ describe('OgeGrid (declarative columns)', () => {
     const { el } = await render();
     const headerRow = el.querySelector('.oge-header-row') as HTMLElement;
     expect(headerRow.style.gridTemplateColumns).toBe(
-      '200px minmax(120px, 1fr) minmax(120px, 1fr)'
+      '200px minmax(120px, 1fr) minmax(120px, 1fr)',
     );
   });
 
@@ -158,7 +173,9 @@ describe('OgeGrid sorting', () => {
     clickHeader(el, 0);
     await settle(fixture);
     expect(columnTexts(el, 0)).toEqual(['Ali', 'Ayşe', 'Cem']);
-    expect(el.querySelectorAll('.oge-header-cell')[0].getAttribute('aria-sort')).toBe('ascending');
+    expect(
+      el.querySelectorAll('.oge-header-cell')[0].getAttribute('aria-sort'),
+    ).toBe('ascending');
 
     clickHeader(el, 0);
     await settle(fixture);
@@ -214,7 +231,13 @@ interface Deferred {
 }
 
 class DeferredSource implements DataSource<Person> {
-  readonly capabilities = { sort: true, filter: true, group: true, paging: true, summary: true };
+  readonly capabilities = {
+    sort: true,
+    filter: true,
+    group: true,
+    paging: true,
+    summary: true,
+  };
   readonly calls: Deferred[] = [];
   load(options: LoadOptions): Promise<LoadResult<Person>> {
     return new Promise((resolve) => this.calls.push({ options, resolve }));

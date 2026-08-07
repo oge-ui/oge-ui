@@ -41,16 +41,28 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
   template: `
     <app-doc-header
       title="Columns"
-      [chips]="['oge-column-group', 'lookup', 'calculateCellValue', 'hidingPriority', 'sortOrder', 'wordWrap']"
+      [chips]="[
+        'oge-column-group',
+        'lookup',
+        'calculateCellValue',
+        'hidingPriority',
+        'sortOrder',
+        'wordWrap',
+      ]"
     >
       <p>
-        Banded headers, lookup columns (a stored code rendered — and edited/filtered — as its
-        label), calculated display columns, initial sorting via <code>sortOrder</code>, and
-        responsive hiding: shrink the window and watch City, then Last Name disappear.
+        Banded headers, lookup columns (a stored code rendered — and
+        edited/filtered — as its label), calculated display columns, initial
+        sorting via <code>sortOrder</code>, and responsive hiding: shrink the
+        window and watch City, then Last Name disappear.
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['banded', 'lookup edit', 'adaptive']" [code]="snippet" language="html">
+    <app-demo-card
+      [chips]="['banded', 'lookup edit', 'adaptive']"
+      [code]="snippet"
+      language="html"
+    >
       <oge-grid
         [data]="employees"
         keyField="id"
@@ -60,36 +72,69 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
         [filterDebounce]="200"
         [paging]="{ pageSize: 10 }"
       >
-        <oge-column field="id" caption="Id" [width]="70" dataType="number" sortOrder="desc" [editable]="false" />
+        <oge-column
+          field="id"
+          caption="Id"
+          [width]="70"
+          dataType="number"
+          sortOrder="desc"
+          [editable]="false"
+        />
         <oge-column-group caption="Person">
           <oge-column field="firstName" caption="First Name" />
-          <oge-column field="lastName" caption="Last Name" [hidingPriority]="1" />
+          <oge-column
+            field="lastName"
+            caption="Last Name"
+            [hidingPriority]="1"
+          />
         </oge-column-group>
         <oge-column
           field="department"
           caption="Department"
-          [lookup]="{ dataSource: departments, valueExpr: 'code', displayExpr: 'label' }"
+          [lookup]="{
+            dataSource: departments,
+            valueExpr: 'code',
+            displayExpr: 'label',
+          }"
         />
-        <oge-column caption="Yearly" dataType="number" [calculateCellValue]="yearly" [width]="110" />
+        <oge-column
+          caption="Yearly"
+          dataType="number"
+          [calculateCellValue]="yearly"
+          [width]="110"
+        />
         <oge-column field="city" caption="City" [hidingPriority]="0" />
       </oge-grid>
     </app-demo-card>
 
     <h3>Custom sort keys & filter expressions</h3>
     <p>
-      <code>calculateSortValue</code> replaces the value a column sorts by — here the department
-      lookup sorts by its Turkish <em>label</em> instead of the stored code.
-      <code>calculateFilterExpression</code> rewrites what the filter row produces: typing a
-      number into Salary Band filters the underlying salary by <em>thousands</em>.
+      <code>calculateSortValue</code> replaces the value a column sorts by —
+      here the department lookup sorts by its Turkish <em>label</em> instead of
+      the stored code. <code>calculateFilterExpression</code> rewrites what the
+      filter row produces: typing a number into Salary Band filters the
+      underlying salary by <em>thousands</em>.
     </p>
 
-    <app-demo-card [chips]="['calculateSortValue', 'calculateFilterExpression']" [code]="calcSnippet">
-      <oge-grid [data]="employees" keyField="id" [filterRow]="true" [paging]="{ pageSize: 8 }">
+    <app-demo-card
+      [chips]="['calculateSortValue', 'calculateFilterExpression']"
+      [code]="calcSnippet"
+    >
+      <oge-grid
+        [data]="employees"
+        keyField="id"
+        [filterRow]="true"
+        [paging]="{ pageSize: 8 }"
+      >
         <oge-column field="firstName" caption="First Name" />
         <oge-column
           field="department"
           caption="Department"
-          [lookup]="{ dataSource: departments, valueExpr: 'code', displayExpr: 'label' }"
+          [lookup]="{
+            dataSource: departments,
+            valueExpr: 'code',
+            displayExpr: 'label',
+          }"
           [calculateSortValue]="departmentLabel"
         />
         <oge-column
@@ -104,9 +149,10 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
 
     <h3>Right-to-left</h3>
     <p>
-      Set <code>rtlEnabled</code> (or wrap the grid in a <code>dir="rtl"</code> container — it
-      auto-detects the inherited direction). Layout, pinned columns, chevrons and keyboard
-      arrows all mirror; the library uses CSS logical properties throughout.
+      Set <code>rtlEnabled</code> (or wrap the grid in a
+      <code>dir="rtl"</code> container — it auto-detects the inherited
+      direction). Layout, pinned columns, chevrons and keyboard arrows all
+      mirror; the library uses CSS logical properties throughout.
     </p>
 
     <app-demo-card [chips]="['rtlEnabled', 'pinned']" [code]="rtlSnippet">
@@ -116,7 +162,13 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
         [rtlEnabled]="true"
         [paging]="{ pageSize: 6, displayMode: 'compact' }"
       >
-        <oge-column field="id" caption="No" [width]="70" dataType="number" pinned="left" />
+        <oge-column
+          field="id"
+          caption="No"
+          [width]="70"
+          dataType="number"
+          pinned="left"
+        />
         <oge-column field="firstName" caption="Ad" />
         <oge-column field="lastName" caption="Soyad" />
         <oge-column field="city" caption="Şehir" />
@@ -126,10 +178,25 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
 
     <h3>Notes</h3>
     <ul>
-      <li><strong>Lookup</strong> columns keep the raw value in your data; display, the filter select, the header filter and the default editor all speak the label. CSV export writes the label too.</li>
-      <li><strong>Calculated</strong> columns (<code>calculateCellValue</code>) are display-only: without a <code>field</code> they can't sort or filter (server contracts stay serializable).</li>
-      <li><strong>Bands</strong> are purely visual — resize, pinning and the column chooser keep working on the leaf columns.</li>
-      <li><code>sortOrder</code>/<code>sortIndex</code>/<code>groupIndex</code> only seed the initial state; user interaction and <code>stateKey</code> restores always win.</li>
+      <li>
+        <strong>Lookup</strong> columns keep the raw value in your data;
+        display, the filter select, the header filter and the default editor all
+        speak the label. CSV export writes the label too.
+      </li>
+      <li>
+        <strong>Calculated</strong> columns (<code>calculateCellValue</code>)
+        are display-only: without a <code>field</code> they can't sort or filter
+        (server contracts stay serializable).
+      </li>
+      <li>
+        <strong>Bands</strong> are purely visual — resize, pinning and the
+        column chooser keep working on the leaf columns.
+      </li>
+      <li>
+        <code>sortOrder</code>/<code>sortIndex</code>/<code>groupIndex</code>
+        only seed the initial state; user interaction and
+        <code>stateKey</code> restores always win.
+      </li>
     </ul>
   `,
 })
@@ -164,10 +231,13 @@ salaryBandFilter = (value, operator) => value == null ? null : {
 };`;
 
   protected readonly departmentLabel = (row: Employee): string =>
-    DEPARTMENTS.find((department) => department.code === row.department)?.label ?? row.department;
+    DEPARTMENTS.find((department) => department.code === row.department)
+      ?.label ?? row.department;
 
   protected readonly thousandsBand = (value: unknown): string =>
-    typeof value === 'number' ? `${Math.floor(value / 1000)}k` : String(value ?? '');
+    typeof value === 'number'
+      ? `${Math.floor(value / 1000)}k`
+      : String(value ?? '');
 
   protected readonly salaryBandFilter = (value: unknown): FilterExpr | null => {
     const band = Number(value);

@@ -21,7 +21,14 @@ const FIELDS: PivotFieldConfig[] = [
   { id: 'city', dataField: 'city', area: 'row', areaIndex: 1 },
   { id: 'year', dataField: 'year', area: 'column', areaIndex: 0 },
   { id: 'quarter', dataField: 'quarter', area: 'column', areaIndex: 1 },
-  { id: 'amount', dataField: 'amount', caption: 'Amount', area: 'data', areaIndex: 0, summaryType: 'sum' },
+  {
+    id: 'amount',
+    dataField: 'amount',
+    caption: 'Amount',
+    area: 'data',
+    areaIndex: 0,
+    summaryType: 'sum',
+  },
 ];
 
 describe('buildPivotWorkbook', () => {
@@ -32,7 +39,9 @@ describe('buildPivotWorkbook', () => {
       rowExpandedPaths: new Set([pathKey(['EU'])]),
       columnExpandedPaths: new Set([pathKey([2024])]),
     });
-    const sheet = buildPivotWorkbook(result, { sheetName: 'Sales' }).getWorksheet('Sales');
+    const sheet = buildPivotWorkbook(result, {
+      sheetName: 'Sales',
+    }).getWorksheet('Sales');
     expect(sheet).toBeDefined();
 
     // columns: 2024 (total), Q1, Q2, 2025, Grand Total → excel cols 2..6
@@ -61,7 +70,14 @@ describe('buildPivotWorkbook', () => {
   it('adds a measure caption line when several measures are shown', () => {
     const fields: PivotFieldConfig[] = [
       ...FIELDS,
-      { id: 'count', dataField: 'amount', caption: 'Orders', area: 'data', areaIndex: 1, summaryType: 'count' },
+      {
+        id: 'count',
+        dataField: 'amount',
+        caption: 'Orders',
+        area: 'data',
+        areaIndex: 1,
+        summaryType: 'count',
+      },
     ];
     const result = computePivot({ rows: SALES, fields });
     const sheet = buildPivotWorkbook(result, {

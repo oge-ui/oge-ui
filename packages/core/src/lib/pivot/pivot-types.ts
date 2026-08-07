@@ -1,4 +1,9 @@
-import type { FilterExpr, SortDirection, SummaryDescriptor, SummaryType } from '../data/load-options';
+import type {
+  FilterExpr,
+  SortDirection,
+  SummaryDescriptor,
+  SummaryType,
+} from '../data/load-options';
 
 /** Which pivot area a field lives in. `null` keeps it available but unused. */
 export type PivotArea = 'row' | 'column' | 'data' | 'filter';
@@ -10,7 +15,8 @@ export type PivotPath = readonly unknown[];
  * Date part or numeric bucket size a row/column field groups by.
  * A number means numeric intervals: value `v` lands in bucket `v - (v % n)`.
  */
-export type PivotGroupInterval = 'year' | 'quarter' | 'month' | 'day' | 'dayOfWeek' | number;
+export type PivotGroupInterval =
+  'year' | 'quarter' | 'month' | 'day' | 'dayOfWeek' | number;
 
 /**
  * Post-processing applied to a measure after aggregation.
@@ -75,7 +81,10 @@ export interface PivotFieldConfig {
 export interface PivotFieldFns<T = unknown> {
   /** Replaces the `dataField` accessor with a computed value. */
   readonly selector?: (row: T) => unknown;
-  readonly customizeText?: (info: { value: unknown; valueText: string }) => string;
+  readonly customizeText?: (info: {
+    value: unknown;
+    valueText: string;
+  }) => string;
   readonly format?: (value: unknown) => string;
 }
 
@@ -158,6 +167,10 @@ export interface PivotDrillDownArgs {
 export interface OgePivotStore<T = unknown> {
   load(options: PivotLoadOptions): Promise<PivotLoadResult>;
   drillDown?(
-    args: PivotDrillDownArgs & { filter?: FilterExpr | null; skip?: number; take?: number }
+    args: PivotDrillDownArgs & {
+      filter?: FilterExpr | null;
+      skip?: number;
+      take?: number;
+    },
   ): Promise<T[]>;
 }

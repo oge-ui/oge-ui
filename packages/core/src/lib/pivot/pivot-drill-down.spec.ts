@@ -55,7 +55,10 @@ describe('pathToFilterExpr', () => {
 
   it('returns null for date parts a plain range cannot express', () => {
     expect(
-      pathToFilterExpr([{ id: 'h', dataField: 'hired', area: 'row', groupInterval: 'month' }], [4])
+      pathToFilterExpr(
+        [{ id: 'h', dataField: 'hired', area: 'row', groupInterval: 'month' }],
+        [4],
+      ),
     ).toBeNull();
   });
 
@@ -63,7 +66,7 @@ describe('pathToFilterExpr', () => {
     const expr = drillDownFilter(
       [{ id: 'region', dataField: 'region', area: 'row' }],
       [{ id: 'city', dataField: 'city', area: 'column' }],
-      { rowPath: ['EU'], columnPath: ['Paris'] }
+      { rowPath: ['EU'], columnPath: ['Paris'] },
     );
     const matches = ROWS.filter(createFilterPredicate(expr as never));
     expect(matches).toHaveLength(1);
@@ -79,7 +82,11 @@ describe('LocalPivotStore', () => {
       measures: [{ field: 'amount', type: 'sum' }],
     });
     expect(result.rows.map((node) => node.value)).toEqual(['EU', 'US']);
-    expect(result.columns.map((node) => node.value)).toEqual(['Berlin', 'NYC', 'Paris']);
+    expect(result.columns.map((node) => node.value)).toEqual([
+      'Berlin',
+      'NYC',
+      'Paris',
+    ]);
     expect(result.grandTotal).toEqual([450]);
 
     const drill = await store.drillDown({ rowPath: ['EU'], columnPath: [] });

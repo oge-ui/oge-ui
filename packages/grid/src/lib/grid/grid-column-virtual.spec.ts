@@ -5,7 +5,7 @@ type Row = Record<string, string> & { c0: string };
 
 const FIELDS = Array.from({ length: 100 }, (_, i) => `c${i}`);
 const ROWS: Row[] = Array.from({ length: 5 }, (_, r) =>
-  Object.fromEntries(FIELDS.map((field, i) => [field, `r${r}v${i}`]))
+  Object.fromEntries(FIELDS.map((field, i) => [field, `r${r}v${i}`])),
 ) as Row[];
 
 describe('OgeGrid column virtualization', () => {
@@ -17,9 +17,13 @@ describe('OgeGrid column virtualization', () => {
     const fixture = TestBed.createComponent(OgeGrid<Row>);
     fixture.componentRef.setInput('data', ROWS);
     fixture.componentRef.setInput('columns', FIELDS);
-    fixture.componentRef.setInput('scrolling', { columnRenderingMode: 'virtual' });
+    fixture.componentRef.setInput('scrolling', {
+      columnRenderingMode: 'virtual',
+    });
     const grid = fixture.componentInstance;
-    (grid as unknown as { hostWidth: { set(v: number): void } }).hostWidth.set(800);
+    (grid as unknown as { hostWidth: { set(v: number): void } }).hostWidth.set(
+      800,
+    );
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -27,8 +31,11 @@ describe('OgeGrid column virtualization', () => {
   }
 
   function headerCaptions(el: HTMLElement): string[] {
-    return Array.from(el.querySelectorAll('.oge-header-cell:not(.oge-col-spacer)')).map(
-      (cell) => cell.querySelector('.oge-header-caption')?.textContent?.trim() ?? ''
+    return Array.from(
+      el.querySelectorAll('.oge-header-cell:not(.oge-col-spacer)'),
+    ).map(
+      (cell) =>
+        cell.querySelector('.oge-header-caption')?.textContent?.trim() ?? '',
     );
   }
 
@@ -38,23 +45,31 @@ describe('OgeGrid column virtualization', () => {
     expect(captions.length).toBeLessThan(30);
     expect(captions[0]).toBe('C0');
     // a right spacer track stands in for the ~80 hidden columns
-    expect(el.querySelectorAll('.oge-header-row .oge-col-spacer').length).toBe(1);
-    const firstRow = el.querySelector('.oge-row') as HTMLElement;
-    expect(firstRow.querySelectorAll('.oge-cell:not(.oge-col-spacer)').length).toBe(
-      captions.length
+    expect(el.querySelectorAll('.oge-header-row .oge-col-spacer').length).toBe(
+      1,
     );
+    const firstRow = el.querySelector('.oge-row') as HTMLElement;
+    expect(
+      firstRow.querySelectorAll('.oge-cell:not(.oge-col-spacer)').length,
+    ).toBe(captions.length);
   });
 
   it('shifts the window and keeps absolute cell indexes under horizontal scroll', async () => {
     const { fixture, el, grid } = await render();
-    (grid as unknown as { scrollLeft: { set(v: number): void } }).scrollLeft.set(5000);
+    (
+      grid as unknown as { scrollLeft: { set(v: number): void } }
+    ).scrollLeft.set(5000);
     await fixture.whenStable();
     fixture.detectChanges();
     const captions = headerCaptions(el);
     expect(captions[0]).not.toBe('C0');
-    expect(el.querySelectorAll('.oge-header-row .oge-col-spacer').length).toBe(2);
+    expect(el.querySelectorAll('.oge-header-row .oge-col-spacer').length).toBe(
+      2,
+    );
     // data-cell carries the absolute column index, not the slice index
-    const firstCell = el.querySelector('.oge-row .oge-cell:not(.oge-col-spacer)') as HTMLElement;
+    const firstCell = el.querySelector(
+      '.oge-row .oge-cell:not(.oge-col-spacer)',
+    ) as HTMLElement;
     const absIndex = Number(firstCell.getAttribute('data-cell')?.split('-')[1]);
     expect(absIndex).toBeGreaterThan(0);
     expect(firstCell.textContent?.trim()).toBe(`r0v${absIndex}`);
@@ -65,7 +80,11 @@ describe('OgeGrid column virtualization', () => {
     const fixture = TestBed.createComponent(OgeGrid<Row>);
     fixture.componentRef.setInput('data', ROWS);
     fixture.componentRef.setInput('columns', FIELDS);
-    (fixture.componentInstance as unknown as { hostWidth: { set(v: number): void } }).hostWidth.set(800);
+    (
+      fixture.componentInstance as unknown as {
+        hostWidth: { set(v: number): void };
+      }
+    ).hostWidth.set(800);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();

@@ -3,7 +3,10 @@ import { runLoadOptions } from '../pipeline/run-load-options';
 import type { CustomSummaryMap } from '../grouping/summaries';
 import type { RowKey } from '../rows/row-node';
 import { compareValues } from '../util/comparators';
-import { createFieldAccessor, resolveKeySelector } from '../util/value-accessor';
+import {
+  createFieldAccessor,
+  resolveKeySelector,
+} from '../util/value-accessor';
 import type {
   DataChange,
   DataSource,
@@ -42,18 +45,20 @@ export class ArrayDataSource<T> implements DataSource<T> {
   private readonly getRows: () => readonly T[];
   private readonly keySelector: ((row: T) => RowKey) | null;
   private readonly searchFields: readonly string[] | undefined;
-  private readonly sortValues: Readonly<Record<string, (row: T) => unknown>> | undefined;
+  private readonly sortValues:
+    Readonly<Record<string, (row: T) => unknown>> | undefined;
   private readonly customSummaries: CustomSummaryMap<T> | undefined;
   /** Present only when constructed with a mutable array (enables CRUD). */
   private readonly mutableRows: T[] | null;
 
   constructor(
     data: readonly T[] | (() => readonly T[]),
-    options: ArrayDataSourceOptions<T> = {}
+    options: ArrayDataSourceOptions<T> = {},
   ) {
     this.getRows = typeof data === 'function' ? data : () => data;
     this.mutableRows = typeof data === 'function' ? null : (data as T[]);
-    this.keySelector = options.key != null ? resolveKeySelector(options.key) : null;
+    this.keySelector =
+      options.key != null ? resolveKeySelector(options.key) : null;
     this.searchFields = options.searchFields;
     this.sortValues = options.sortValues;
     this.customSummaries = options.customSummaries;
@@ -61,7 +66,9 @@ export class ArrayDataSource<T> implements DataSource<T> {
 
   private requireMutable(): T[] {
     if (!this.mutableRows) {
-      throw new Error('ArrayDataSource: CRUD requires a plain array (not a getter).');
+      throw new Error(
+        'ArrayDataSource: CRUD requires a plain array (not a getter).',
+      );
     }
     return this.mutableRows;
   }
@@ -79,7 +86,10 @@ export class ArrayDataSource<T> implements DataSource<T> {
   update(key: RowKey, patch: Partial<T>): Promise<T> {
     const rows = this.requireMutable();
     const index = this.indexOfKey(key);
-    if (index < 0) return Promise.reject(new Error(`ArrayDataSource: key not found: ${String(key)}`));
+    if (index < 0)
+      return Promise.reject(
+        new Error(`ArrayDataSource: key not found: ${String(key)}`),
+      );
     rows[index] = { ...rows[index], ...patch };
     return Promise.resolve(rows[index]);
   }
@@ -87,14 +97,19 @@ export class ArrayDataSource<T> implements DataSource<T> {
   remove(key: RowKey): Promise<void> {
     const rows = this.requireMutable();
     const index = this.indexOfKey(key);
-    if (index < 0) return Promise.reject(new Error(`ArrayDataSource: key not found: ${String(key)}`));
+    if (index < 0)
+      return Promise.reject(
+        new Error(`ArrayDataSource: key not found: ${String(key)}`),
+      );
     rows.splice(index, 1);
     return Promise.resolve();
   }
 
   // --- live updates ---------------------------------------------------------
 
-  private readonly observers = new Set<(batch: readonly DataChange<T>[]) => void>();
+  private readonly observers = new Set<
+    (batch: readonly DataChange<T>[]) => void
+  >();
 
   /** Push stream consumed by the grid; fed by {@link push}. */
   readonly changes: SubscribableLike<readonly DataChange<T>[]> = {
@@ -118,7 +133,10 @@ export class ArrayDataSource<T> implements DataSource<T> {
           case 'update': {
             const index = this.indexOfKey(change.key);
             if (index >= 0) {
-              this.mutableRows[index] = { ...this.mutableRows[index], ...change.patch };
+              this.mutableRows[index] = {
+                ...this.mutableRows[index],
+                ...change.patch,
+              };
             }
             break;
           }
@@ -139,11 +157,14 @@ export class ArrayDataSource<T> implements DataSource<T> {
         searchFields: this.searchFields,
         sortValues: this.sortValues,
         customSummaries: this.customSummaries,
-      })
+      }),
     );
   }
 
-  distinct(field: string, options?: { filter?: FilterExpr | null }): Promise<readonly unknown[]> {
+  distinct(
+    field: string,
+    options?: { filter?: FilterExpr | null },
+  ): Promise<readonly unknown[]> {
     const accessor = createFieldAccessor<T>(field);
     const rows = applyFilter(this.getRows(), options?.filter);
     const seen = new Set<unknown>();

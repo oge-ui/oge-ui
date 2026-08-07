@@ -2,7 +2,11 @@ import type { FilterExpr } from '../data/load-options';
 import { applyFilter } from '../pipeline/steps/filter.step';
 import { buildSearchFilter, createFilterPredicate } from './filter-evaluator';
 
-function binary(field: string, op: FilterExpr extends { op: infer O } ? O : never, value?: unknown): FilterExpr {
+function binary(
+  field: string,
+  op: FilterExpr extends { op: infer O } ? O : never,
+  value?: unknown,
+): FilterExpr {
   return { type: 'binary', field, op, value } as FilterExpr;
 }
 
@@ -14,8 +18,18 @@ interface Row {
   active: boolean;
 }
 
-const row: Row = { name: 'Ada Lovelace', age: 36, hired: '2020-05-15', active: true };
-const nullRow: Row = { name: null, age: null, hired: '2021-01-01', active: false };
+const row: Row = {
+  name: 'Ada Lovelace',
+  age: 36,
+  hired: '2020-05-15',
+  active: true,
+};
+const nullRow: Row = {
+  name: null,
+  age: null,
+  hired: '2021-01-01',
+  active: false,
+};
 
 function matches(expr: FilterExpr, target: Row = row): boolean {
   return createFilterPredicate<Row>(expr)(target);
@@ -43,11 +57,15 @@ describe('createFilterPredicate — operator × dataType matrix', () => {
     });
     it('date: Date value vs ISO string cell', () => {
       expect(matches(binary('hired', 'eq', new Date('2020-05-15')))).toBe(true);
-      expect(matches(binary('hired', 'eq', new Date('2020-05-16')))).toBe(false);
+      expect(matches(binary('hired', 'eq', new Date('2020-05-16')))).toBe(
+        false,
+      );
     });
     it('date: Date cell vs ISO string value', () => {
       const withDate: Row = { ...row, hiredAt: new Date('2020-05-15') };
-      expect(matches(binary('hiredAt', 'eq', '2020-05-15'), withDate)).toBe(true);
+      expect(matches(binary('hiredAt', 'eq', '2020-05-15'), withDate)).toBe(
+        true,
+      );
     });
   });
 
@@ -67,7 +85,9 @@ describe('createFilterPredicate — operator × dataType matrix', () => {
     it('date strings and Date values', () => {
       expect(matches(binary('hired', 'gt', '2020-01-01'))).toBe(true);
       expect(matches(binary('hired', 'lt', new Date('2021-01-01')))).toBe(true);
-      expect(matches(binary('hired', 'gt', new Date('2021-01-01')))).toBe(false);
+      expect(matches(binary('hired', 'gt', new Date('2021-01-01')))).toBe(
+        false,
+      );
     });
     it('comparisons against null cells are always false', () => {
       expect(matches(binary('age', 'gt', 0), nullRow)).toBe(false);
@@ -109,7 +129,9 @@ describe('createFilterPredicate — operator × dataType matrix', () => {
       expect(matches(binary('age', 'between', [36, 36]))).toBe(true);
       expect(matches(binary('age', 'between', [37, 40]))).toBe(false);
       expect(matches(binary('age', 'between', [null, 40]))).toBe(true);
-      expect(matches(binary('hired', 'between', ['2020-01-01', '2020-12-31']))).toBe(true);
+      expect(
+        matches(binary('hired', 'between', ['2020-01-01', '2020-12-31'])),
+      ).toBe(true);
     });
     it('isnull / isnotnull', () => {
       expect(matches(binary('name', 'isnull'), nullRow)).toBe(true);
@@ -126,7 +148,10 @@ describe('createFilterPredicate — operator × dataType matrix', () => {
           binary('age', 'ge', 30),
           {
             type: 'or',
-            operands: [binary('name', 'contains', 'ada'), binary('name', 'contains', 'grace')],
+            operands: [
+              binary('name', 'contains', 'ada'),
+              binary('name', 'contains', 'grace'),
+            ],
           },
           { type: 'not', operand: binary('active', 'eq', false) },
         ],

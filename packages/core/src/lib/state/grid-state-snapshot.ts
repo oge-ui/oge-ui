@@ -1,4 +1,8 @@
-import type { FilterExpr, GroupDescriptor, SortDescriptor } from '../data/load-options';
+import type {
+  FilterExpr,
+  GroupDescriptor,
+  SortDescriptor,
+} from '../data/load-options';
 
 /**
  * Serializable snapshot of the user-driven grid state (persistence, sharing

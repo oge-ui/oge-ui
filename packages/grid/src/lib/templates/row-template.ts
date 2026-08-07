@@ -30,7 +30,7 @@ export class OgeRowTemplate<T = unknown> {
 
   static ngTemplateContextGuard<T>(
     _dir: OgeRowTemplate<T>,
-    _ctx: unknown
+    _ctx: unknown,
   ): _ctx is OgeRowTemplateContext<T> {
     return true;
   }

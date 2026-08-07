@@ -24,8 +24,10 @@ export class GroupingSlice {
   toggleDirection(field: string): void {
     this._descriptors.set(
       this._descriptors().map((d) =>
-        d.field === field ? { field, dir: d.dir === 'asc' ? 'desc' : 'asc' } : d
-      )
+        d.field === field
+          ? { field, dir: d.dir === 'asc' ? 'desc' : 'asc' }
+          : d,
+      ),
     );
   }
 
@@ -38,7 +40,10 @@ export class GroupingSlice {
   }
 
   /** Synced from column definitions; guarded so effects do not loop. */
-  setSummaries(group: readonly SummaryDescriptor[], total: readonly SummaryDescriptor[]): void {
+  setSummaries(
+    group: readonly SummaryDescriptor[],
+    total: readonly SummaryDescriptor[],
+  ): void {
     if (JSON.stringify(group) !== JSON.stringify(this._groupSummary())) {
       this._groupSummary.set(group);
     }

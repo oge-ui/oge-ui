@@ -34,10 +34,16 @@ export function mergeAcc(target: PivotAcc, source: PivotAcc): void {
   target.sum += source.sum;
   target.numCount += source.numCount;
   target.count += source.count;
-  if (source.min != null && (target.min == null || compareValues(source.min, target.min) < 0)) {
+  if (
+    source.min != null &&
+    (target.min == null || compareValues(source.min, target.min) < 0)
+  ) {
     target.min = source.min;
   }
-  if (source.max != null && (target.max == null || compareValues(source.max, target.max) > 0)) {
+  if (
+    source.max != null &&
+    (target.max == null || compareValues(source.max, target.max) > 0)
+  ) {
     target.max = source.max;
   }
 }

@@ -21,8 +21,20 @@ const FIELDS: PivotFieldConfig[] = [
   { id: 'region', dataField: 'region', area: 'row', areaIndex: 0 },
   { id: 'city', dataField: 'city', area: 'row', areaIndex: 1 },
   { id: 'year', dataField: 'year', area: 'column', areaIndex: 0 },
-  { id: 'amount', dataField: 'amount', area: 'data', areaIndex: 0, summaryType: 'sum' },
-  { id: 'count', dataField: 'amount', area: 'data', areaIndex: 1, summaryType: 'count' },
+  {
+    id: 'amount',
+    dataField: 'amount',
+    area: 'data',
+    areaIndex: 0,
+    summaryType: 'sum',
+  },
+  {
+    id: 'count',
+    dataField: 'amount',
+    area: 'data',
+    areaIndex: 1,
+    summaryType: 'count',
+  },
 ];
 
 /** Text map of the matrix: rows/cols labeled by path + total flags. */
@@ -57,13 +69,18 @@ describe('computePivot', () => {
     });
     // rows: EU (subtotal line), Berlin, Paris, US, GRAND
     expect(result.rowLeafCount).toBe(5);
-    expect(matrixOf(result).map((line) => line[2])).toEqual([350, 300, 50, 300, 650]);
+    expect(matrixOf(result).map((line) => line[2])).toEqual([
+      350, 300, 50, 300, 650,
+    ]);
     const eu = result.rowRoot[0];
     expect(eu.expanded).toBe(true);
     expect(eu.isTotal).toBe(true); // its own line carries the subtotal values
     expect(eu.leafIndex).toBe(0);
     expect(eu.leafCount).toBe(3); // itself + Berlin + Paris
-    expect(eu.children.map((child) => String(child.value))).toEqual(['Berlin', 'Paris']);
+    expect(eu.children.map((child) => String(child.value))).toEqual([
+      'Berlin',
+      'Paris',
+    ]);
   });
 
   it('honors total visibility settings', () => {
@@ -89,7 +106,13 @@ describe('computePivot', () => {
       rows: SALES,
       fields: [
         ...FIELDS,
-        { id: 'cityFilter', dataField: 'city', area: 'filter', filterValues: ['NYC'], filterType: 'exclude' },
+        {
+          id: 'cityFilter',
+          dataField: 'city',
+          area: 'filter',
+          filterValues: ['NYC'],
+          filterType: 'exclude',
+        },
       ],
     });
     expect(matrixOf(result).at(-1)).toEqual([150, 200, 350]); // NYC rows gone
@@ -114,13 +137,18 @@ describe('computePivot', () => {
     const result = computePivot({
       rows,
       fields: [
-        { id: 'hired', dataField: 'hired', area: 'column', groupInterval: 'year' },
+        {
+          id: 'hired',
+          dataField: 'hired',
+          area: 'column',
+          groupInterval: 'year',
+        },
         { id: 'amount', dataField: 'amount', area: 'data', summaryType: 'sum' },
       ],
     });
-    expect(result.columnRoot.filter((n) => !n.isGrandTotal).map((n) => n.value)).toEqual([
-      2024, 2025,
-    ]);
+    expect(
+      result.columnRoot.filter((n) => !n.isGrandTotal).map((n) => n.value),
+    ).toEqual([2024, 2025]);
     expect(matrixOf(result)[0]).toEqual([30, 5, 35]);
   });
 
@@ -138,7 +166,8 @@ describe('computePivot', () => {
         },
       ],
       customSummaries: {
-        distinctCities: (rows) => new Set(rows.map((r) => (r as Sale).city)).size,
+        distinctCities: (rows) =>
+          new Set(rows.map((r) => (r as Sale).city)).size,
       },
     });
     expect(matrixOf(result).map((line) => line[0])).toEqual([2, 1, 3]);

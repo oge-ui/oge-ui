@@ -26,7 +26,7 @@ export class OgeCellTemplate<T = unknown> {
 
   static ngTemplateContextGuard<T>(
     _dir: OgeCellTemplate<T>,
-    _ctx: unknown
+    _ctx: unknown,
   ): _ctx is OgeCellTemplateContext<T> {
     return true;
   }

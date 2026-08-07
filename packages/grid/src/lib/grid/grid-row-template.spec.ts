@@ -21,7 +21,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   template: `
     <oge-grid [data]="rows" keyField="id" selectionMode="single">
       <oge-column field="name" />
-      <div *ogeRowTemplate="let row; of: rows; let i = index" class="card">
+      <div *ogeRowTemplate="let row of rows; let i = index" class="card">
         #{{ i }} · {{ row.name.toUpperCase() }}
       </div>
     </oge-grid>
@@ -45,7 +45,7 @@ describe('OgeGrid row template', () => {
     expect(el.querySelectorAll('.oge-cell').length).toBe(0); // no default cells
     // row click still selects
     (el.querySelectorAll('.oge-custom-row')[1] as HTMLElement).dispatchEvent(
-      new MouseEvent('click', { bubbles: true })
+      new MouseEvent('click', { bubbles: true }),
     );
     await settle(fixture);
     expect(el.querySelectorAll('.oge-row-selected').length).toBe(1);

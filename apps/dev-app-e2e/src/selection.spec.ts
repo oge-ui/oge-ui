@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test('checkbox selection with select-all and context menu', async ({ page }) => {
+test('checkbox selection with select-all and context menu', async ({
+  page,
+}) => {
   await page.goto('/components/data-grid/selection');
   // first grid = the main checkbox demo (the deferred demo follows it)
   const grid = page.locator('oge-grid').first();
@@ -23,12 +25,16 @@ test('checkbox selection with select-all and context menu', async ({ page }) => 
   const menu = page.locator('.oge-context-menu');
   await expect(menu).toBeVisible();
   await expect(menu.locator('.oge-menu-item').nth(2)).toBeDisabled();
-  await menu.locator('.oge-menu-item', { hasText: 'Select this row only' }).click();
+  await menu
+    .locator('.oge-menu-item', { hasText: 'Select this row only' })
+    .click();
   await expect(page.locator('.oge-context-menu')).toHaveCount(0);
   await expect(page.getByText('Selected:')).toContainText('1');
 });
 
-test('keyboard navigation moves the focused cell and selects with Space', async ({ page }) => {
+test('keyboard navigation moves the focused cell and selects with Space', async ({
+  page,
+}) => {
   await page.goto('/components/data-grid/selection');
   const grid = page.locator('oge-grid').first();
   await expect(grid.locator('.oge-row').first()).toBeVisible();
@@ -42,7 +48,11 @@ test('keyboard navigation moves the focused cell and selects with Space', async 
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowRight');
   await expect
-    .poll(() => page.evaluate(() => (document.activeElement as HTMLElement)?.dataset?.['cell']))
+    .poll(() =>
+      page.evaluate(
+        () => (document.activeElement as HTMLElement)?.dataset?.['cell'],
+      ),
+    )
     .toBe('2-1');
 
   await page.keyboard.press(' ');

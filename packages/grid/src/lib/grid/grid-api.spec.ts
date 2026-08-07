@@ -34,7 +34,11 @@ describe('OgeGrid imperative API & events', () => {
     if (grouped) fixture.componentRef.setInput('groupBy', ['department']);
     fixture.detectChanges();
     await settle(fixture);
-    return { fixture, el: fixture.nativeElement as HTMLElement, grid: fixture.componentInstance };
+    return {
+      fixture,
+      el: fixture.nativeElement as HTMLElement,
+      grid: fixture.componentInstance,
+    };
   }
 
   it('collapseAllGroups / expandAllGroups toggle every group', async () => {
@@ -60,7 +64,11 @@ describe('OgeGrid imperative API & events', () => {
     firstCell.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     fixture.detectChanges();
     expect(cellClicks).toHaveLength(1);
-    expect(cellClicks[0]).toMatchObject({ key: 1, field: 'name', value: 'Ada' });
+    expect(cellClicks[0]).toMatchObject({
+      key: 1,
+      field: 'name',
+      value: 'Ada',
+    });
     expect(dblClicks).toHaveLength(1);
     expect(dblClicks[0]).toMatchObject({ key: 1 });
   });
@@ -78,7 +86,10 @@ describe('OgeGrid imperative API & events', () => {
     expect(ready).toBeGreaterThan(0);
     grid.refresh();
     await settle(fixture);
-    expect((fixture.nativeElement as HTMLElement).querySelectorAll('.oge-row').length).toBe(3);
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.oge-row')
+        .length,
+    ).toBe(3);
   });
 
   it('projects [ogeToolbar] content into the grid toolbar', async () => {
@@ -98,7 +109,9 @@ describe('OgeGrid imperative API & events', () => {
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     // the toolbar renders solely because of the projected item
-    expect(el.querySelector('.oge-toolbar .my-export')?.textContent?.trim()).toBe('Export');
+    expect(
+      el.querySelector('.oge-toolbar .my-export')?.textContent?.trim(),
+    ).toBe('Export');
   });
 
   it('getExportData ignores paging by default and honors page/selection scopes', async () => {
@@ -127,7 +140,9 @@ describe('OgeGrid imperative API & events', () => {
   it('Ctrl+C copies the selected rows as TSV with a header', async () => {
     const written: string[] = [];
     Object.assign(navigator, {
-      clipboard: { writeText: (text: string) => (written.push(text), Promise.resolve()) },
+      clipboard: {
+        writeText: (text: string) => (written.push(text), Promise.resolve()),
+      },
     });
     const fixture = TestBed.createComponent(OgeGrid<Row>);
     fixture.componentRef.setInput('data', ROWS);
@@ -143,7 +158,7 @@ describe('OgeGrid imperative API & events', () => {
     firstCell.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await settle(fixture);
     el.querySelector('.oge-viewport')?.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true })
+      new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true }),
     );
     await settle(fixture);
     expect(written).toHaveLength(1);
@@ -168,7 +183,9 @@ describe('OgeGrid imperative API & events', () => {
     await settle(fixture);
     expect(el.querySelectorAll('.oge-row-selected').length).toBe(2);
     expect(headerCheckbox().checked).toBe(true);
-    const selected = (grid as unknown as { store: { selection: { count(): number } } }).store;
+    const selected = (
+      grid as unknown as { store: { selection: { count(): number } } }
+    ).store;
     expect(selected.selection.count()).toBe(3);
     // 'page' mode: only the visible page
     headerCheckbox().dispatchEvent(new Event('change')); // clear
@@ -184,16 +201,23 @@ describe('OgeGrid imperative API & events', () => {
     fixture.componentRef.setInput('data', ROWS);
     fixture.componentRef.setInput('columns', ['name']);
     fixture.componentRef.setInput('keyField', 'id');
-    fixture.componentRef.setInput('paging', { pageSize: 2, displayMode: 'compact' });
+    fixture.componentRef.setInput('paging', {
+      pageSize: 2,
+      displayMode: 'compact',
+    });
     fixture.detectChanges();
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.oge-pager-compact')?.textContent?.trim()).toBe('1 / 2');
+    expect(el.querySelector('.oge-pager-compact')?.textContent?.trim()).toBe(
+      '1 / 2',
+    );
     expect(el.querySelectorAll('.oge-pager-current').length).toBe(0);
     // prev/next still page
     (el.querySelectorAll('.oge-pager-btn')[1] as HTMLElement).click();
     await settle(fixture);
-    expect(el.querySelector('.oge-pager-compact')?.textContent?.trim()).toBe('2 / 2');
+    expect(el.querySelector('.oge-pager-compact')?.textContent?.trim()).toBe(
+      '2 / 2',
+    );
   });
 
   it('rtlEnabled sets dir/class and inverts horizontal arrow keys', async () => {
@@ -258,10 +282,14 @@ describe('OgeGrid imperative API & events', () => {
     header.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     header.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await settle(fixture);
-    expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe('Grace');
+    expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe(
+      'Grace',
+    );
     grid.clearSorting();
     await settle(fixture);
-    expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe('Ada');
+    expect(el.querySelector('.oge-row .oge-cell')?.textContent?.trim()).toBe(
+      'Ada',
+    );
     grid.clearFilters(); // no-op without filters — must not throw
   });
 });

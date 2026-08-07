@@ -29,7 +29,9 @@ export class X<T extends object> {
 
 describe('highlight — textContent round-trip invariant', () => {
   it('html output text is exactly the input', () => {
-    expect(textOf(highlight(REAL_HTML_SNIPPET, 'html'))).toBe(REAL_HTML_SNIPPET);
+    expect(textOf(highlight(REAL_HTML_SNIPPET, 'html'))).toBe(
+      REAL_HTML_SNIPPET,
+    );
   });
 
   it('ts output text is exactly the input', () => {
@@ -44,14 +46,20 @@ describe('highlight — textContent round-trip invariant', () => {
   });
 
   it('many tokens (index > 9) stay uncorrupted', () => {
-    const code = Array.from({ length: 40 }, (_, i) => `const v${i} = ${i};`).join('\n');
+    const code = Array.from(
+      { length: 40 },
+      (_, i) => `const v${i} = ${i};`,
+    ).join('\n');
     expect(textOf(highlight(code, 'ts'))).toBe(code);
   });
 });
 
 describe('highlight — tokenization', () => {
   it('wraps keywords, strings, numbers and comments', () => {
-    const out = highlight(`const size = 15; // width\nconst name = 'Ali';`, 'ts');
+    const out = highlight(
+      `const size = 15; // width\nconst name = 'Ali';`,
+      'ts',
+    );
     expect(out).toContain('<span class="tok-keyword">const</span>');
     expect(out).toContain('<span class="tok-number">15</span>');
     expect(out).toContain(`<span class="tok-string">'Ali'</span>`);

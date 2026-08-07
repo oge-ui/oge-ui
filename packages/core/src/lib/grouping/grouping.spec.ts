@@ -51,22 +51,29 @@ describe('computeSummaries', () => {
         { field: 'amount', type: 'custom', name: 'unregistered' },
       ],
       {
-        amount: (rows) => rows.filter((r) => (r as { amount: number | null }).amount != null).length,
+        amount: (rows) =>
+          rows.filter((r) => (r as { amount: number | null }).amount != null)
+            .length,
         range: (rows, field) => {
           const values = rows
             .map((r) => (r as Record<string, unknown>)[field])
             .filter((v): v is number => typeof v === 'number');
           return Math.max(...values) - Math.min(...values);
         },
-      }
+      },
     );
     expect(result.map((s) => s.value)).toEqual([4, 250, null]);
   });
 
   it('passes custom reducers through groupRows per bucket', () => {
-    const tree = groupRows(SALES, [{ field: 'region', dir: 'asc' }], [{ field: 'amount', type: 'custom' }], {
-      amount: (rows) => rows.length * 1000,
-    });
+    const tree = groupRows(
+      SALES,
+      [{ field: 'region', dir: 'asc' }],
+      [{ field: 'amount', type: 'custom' }],
+      {
+        amount: (rows) => rows.length * 1000,
+      },
+    );
     expect(tree.map((g) => g.summary)).toEqual([[3000], [2000]]);
   });
 });
@@ -79,7 +86,7 @@ describe('groupRows', () => {
         { field: 'region', dir: 'asc' },
         { field: 'city', dir: 'asc' },
       ],
-      [{ field: 'amount', type: 'sum' }]
+      [{ field: 'amount', type: 'sum' }],
     );
     expect(tree.map((g) => g.key)).toEqual(['EU', 'US']);
     expect(tree[0].count).toBe(3);
@@ -113,8 +120,8 @@ describe('flattenGroupedData', () => {
       flat.map((n) =>
         n.kind === 'group'
           ? `${'  '.repeat(n.level)}[${n.groupField}=${n.groupValue} n=${n.childCount} sum=${n.summaries[0]?.value}]`
-          : `${'  '.repeat(n.level)}#${String(n.key)}`
-      )
+          : `${'  '.repeat(n.level)}#${String(n.key)}`,
+      ),
     ).toEqual([
       '[region=EU n=3 sum=350]',
       '  [city=Berlin n=2 sum=300]',
@@ -143,12 +150,11 @@ describe('flattenGroupedData', () => {
       groups,
       collapsedGroupKeys: new Set(['g:EU']),
     });
-    expect(flat.map((n) => (n.kind === 'group' ? `[${n.groupValue}]` : `#${String(n.key)}`))).toEqual([
-      '[EU]',
-      '[US]',
-      '#4',
-      '#5',
-    ]);
+    expect(
+      flat.map((n) =>
+        n.kind === 'group' ? `[${n.groupValue}]` : `#${String(n.key)}`,
+      ),
+    ).toEqual(['[EU]', '[US]', '#4', '#5']);
     expect(flat[0].kind === 'group' && flat[0].expanded).toBe(false);
   });
 
@@ -167,8 +173,8 @@ describe('flattenGroupedData', () => {
       flat.map((n) =>
         n.kind === 'summary'
           ? `footer:${String(n.key)}=${n.summaries[0]?.value}`
-          : `${n.kind}:${String(n.key)}`
-      )
+          : `${n.kind}:${String(n.key)}`,
+      ),
     ).toEqual([
       'group:g:EU',
       'data:1',

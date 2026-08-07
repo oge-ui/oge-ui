@@ -60,8 +60,12 @@ describe('OgeGrid configuration', () => {
     const fixture = TestBed.createComponent(ConfiguredHost);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.oge-search-input')?.getAttribute('placeholder')).toBe('Çalışan ara');
-    expect(el.querySelector('.oge-pager-info')?.textContent?.trim()).toBe('2 satır');
+    expect(
+      el.querySelector('.oge-search-input')?.getAttribute('placeholder'),
+    ).toBe('Çalışan ara');
+    expect(el.querySelector('.oge-pager-info')?.textContent?.trim()).toBe(
+      '2 satır',
+    );
     const cells = el.querySelectorAll('.oge-row .oge-cell');
     expect(cells[1]?.textContent?.trim()).toBe('Evet');
   });
@@ -71,14 +75,17 @@ describe('OgeGrid configuration', () => {
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelectorAll('.oge-row').length).toBe(1);
-    const select = el.querySelector('.oge-pager-sizes select') as HTMLSelectElement;
+    const select = el.querySelector(
+      '.oge-pager-sizes select',
+    ) as HTMLSelectElement;
     expect(select).toBeTruthy();
     expect(Array.from(select.options).map((o) => o.value)).toEqual(['1', '2']);
     select.value = '2';
     expect(select.value).toBe('2');
     select.dispatchEvent(new Event('change', { bubbles: true }));
     await settle(fixture);
-    const grid = fixture.debugElement.children[0].componentInstance as OgeGrid<Row>;
+    const grid = fixture.debugElement.children[0]
+      .componentInstance as OgeGrid<Row>;
     const pageSize = (
       grid as unknown as { store: { paging: { pageSize(): number | null } } }
     ).store.paging.pageSize();
@@ -102,7 +109,9 @@ describe('OgeGrid configuration', () => {
     const fixture = TestBed.createComponent(ConfiguredHost);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    const input = el.querySelector('[aria-label="Filter Name"]') as HTMLInputElement;
+    const input = el.querySelector(
+      '[aria-label="Filter Name"]',
+    ) as HTMLInputElement;
     // 'y' matches 'Ayşe' with contains but nothing with startswith
     input.value = 'y';
     input.dispatchEvent(new Event('input', { bubbles: true }));

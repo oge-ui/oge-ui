@@ -30,6 +30,8 @@ describe('compareValues', () => {
   });
 
   it('compares dates chronologically', () => {
-    expect(compareValues(new Date('2024-01-01'), new Date('2025-01-01'))).toBeLessThan(0);
+    expect(
+      compareValues(new Date('2024-01-01'), new Date('2025-01-01')),
+    ).toBeLessThan(0);
   });
 });

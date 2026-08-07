@@ -20,8 +20,12 @@ export function sortAxisChildren<Node extends SortableNode>(
   root: Node,
   fields: readonly PivotFieldConfig[],
   measures: readonly PivotFieldConfig[],
-  aggregate: (node: Node, oppositeTarget: Node, measureIndex: number) => unknown,
-  oppositeRoot?: Node
+  aggregate: (
+    node: Node,
+    oppositeTarget: Node,
+    measureIndex: number,
+  ) => unknown,
+  oppositeRoot?: Node,
 ): void {
   const resolveTarget = (path: PivotPath | undefined): Node | undefined => {
     if (!oppositeRoot) return oppositeRoot;
@@ -42,7 +46,7 @@ export function sortAxisChildren<Node extends SortableNode>(
       ? measures.findIndex(
           (measure) =>
             measure.id === field.sortBySummaryField ||
-            measure.dataField === field.sortBySummaryField
+            measure.dataField === field.sortBySummaryField,
         )
       : -1;
 
@@ -62,7 +66,7 @@ export function sortAxisChildren<Node extends SortableNode>(
       node.ordered = keyed.map((entry) => entry.child);
     } else {
       node.ordered = [...node.ordered].sort(
-        (a, b) => compareValues(a.value, b.value) * direction
+        (a, b) => compareValues(a.value, b.value) * direction,
       );
     }
     for (const child of node.ordered) visit(child as Node, level + 1);

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test('served code tabs render highlighted source with exact text fidelity', async ({ page }) => {
+test('served code tabs render highlighted source with exact text fidelity', async ({
+  page,
+}) => {
   await page.goto('/components/data-grid/sorting');
   await expect(page.locator('.oge-row').first()).toBeVisible();
 
@@ -12,8 +14,12 @@ test('served code tabs render highlighted source with exact text fidelity', asyn
   expect(await code.locator('span[class^="tok-"]').count()).toBeGreaterThan(5);
 
   // text fidelity: tricky substrings survive char-for-char
-  await expect(code).toContainText('[paging]="{ pageSize: 15, pageSizes: [15, 25, 50] }"');
-  await expect(code).toContainText("[sorting]=\"{ mode: 'multi', allowUnsorting: true }\"");
+  await expect(code).toContainText(
+    '[paging]="{ pageSize: 15, pageSizes: [15, 25, 50] }"',
+  );
+  await expect(code).toContainText(
+    '[sorting]="{ mode: \'multi\', allowUnsorting: true }"',
+  );
 
   // no private-use placeholder characters may ever reach the DOM,
   // and line numbers match the rendered line count

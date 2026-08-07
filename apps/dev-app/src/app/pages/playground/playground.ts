@@ -33,57 +33,99 @@ interface Toggle {
   template: `
     <app-doc-header title="Playground" category="Data Grid">
       <p>
-        Toggle the features — the grid, the live stats and the code snippet update instantly.
-        Combine anything: virtual scroll with filters, selection with paging, all at once.
+        Toggle the features — the grid, the live stats and the code snippet
+        update instantly. Combine anything: virtual scroll with filters,
+        selection with paging, all at once.
       </p>
     </app-doc-header>
 
     <div class="mb-4 grid grid-cols-4 gap-3 max-md:grid-cols-2">
       <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
-        <div class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Dataset</div>
-        <div class="mt-0.5 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
+        <div
+          class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+        >
+          Dataset
+        </div>
+        <div
+          class="mt-0.5 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100"
+        >
           {{ rowCount().toLocaleString() }}
         </div>
         <div class="text-xs text-gray-400">rows in memory</div>
       </div>
       <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
-        <div class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">DOM</div>
-        <div class="mt-0.5 text-xl font-semibold tabular-nums text-indigo-600 dark:text-indigo-400">
+        <div
+          class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+        >
+          DOM
+        </div>
+        <div
+          class="mt-0.5 text-xl font-semibold tabular-nums text-indigo-600 dark:text-indigo-400"
+        >
           {{ domRows() }}
         </div>
         <div class="text-xs text-gray-400">row elements rendered</div>
       </div>
       <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
-        <div class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Ratio</div>
-        <div class="mt-0.5 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
+        <div
+          class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+        >
+          Ratio
+        </div>
+        <div
+          class="mt-0.5 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100"
+        >
           {{ domRatio() }}
         </div>
         <div class="text-xs text-gray-400">of the data is in the DOM</div>
       </div>
       <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
-        <div class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Features</div>
-        <div class="mt-0.5 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-          {{ enabledCount() }}<span class="text-sm text-gray-400">/{{ toggles.length }}</span>
+        <div
+          class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+        >
+          Features
+        </div>
+        <div
+          class="mt-0.5 text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-100"
+        >
+          {{ enabledCount()
+          }}<span class="text-sm text-gray-400">/{{ toggles.length }}</span>
         </div>
         <div class="text-xs text-gray-400">enabled</div>
       </div>
     </div>
 
-    <div class="grid grid-cols-[250px_minmax(0,1fr)] items-start gap-5 max-lg:grid-cols-1">
-      <aside class="rounded-lg border border-gray-200 p-4 max-lg:order-first dark:border-gray-800">
-        <div class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Features</div>
+    <div
+      class="grid grid-cols-[250px_minmax(0,1fr)] items-start gap-5 max-lg:grid-cols-1"
+    >
+      <aside
+        class="rounded-lg border border-gray-200 p-4 max-lg:order-first dark:border-gray-800"
+      >
+        <div
+          class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+        >
+          Features
+        </div>
         <div class="flex flex-col">
           @for (option of toggles; track option.key) {
             <label
               class="flex cursor-pointer items-center justify-between rounded-md px-2 py-2 text-sm transition-colors hover:bg-gray-50"
             >
-              <span class="flex items-center gap-2.5 text-gray-700 dark:text-gray-300">
-                <span class="text-gray-400"><app-icon [name]="option.icon" [size]="14" /></span>
+              <span
+                class="flex items-center gap-2.5 text-gray-700 dark:text-gray-300"
+              >
+                <span class="text-gray-400"
+                  ><app-icon [name]="option.icon" [size]="14"
+                /></span>
                 {{ option.label }}
               </span>
               <span
                 class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
-                [class]="option.state() ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700'"
+                [class]="
+                  option.state()
+                    ? 'bg-indigo-600'
+                    : 'bg-gray-200 dark:bg-gray-700'
+                "
               >
                 <input
                   type="checkbox"
@@ -101,8 +143,14 @@ interface Toggle {
           }
         </div>
 
-        <div class="mb-2 mt-5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Data</div>
-        <label class="flex items-center justify-between px-2 py-1 text-sm text-gray-700 dark:text-gray-300">
+        <div
+          class="mb-2 mt-5 text-[11px] font-semibold uppercase tracking-wider text-gray-400"
+        >
+          Data
+        </div>
+        <label
+          class="flex items-center justify-between px-2 py-1 text-sm text-gray-700 dark:text-gray-300"
+        >
           Rows
           <select
             class="rounded-md border border-gray-200 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
@@ -116,7 +164,9 @@ interface Toggle {
           </select>
         </label>
         @if (paging()) {
-          <label class="flex items-center justify-between px-2 py-1 text-sm text-gray-700 dark:text-gray-300">
+          <label
+            class="flex items-center justify-between px-2 py-1 text-sm text-gray-700 dark:text-gray-300"
+          >
             Page size
             <select
               class="rounded-md border border-gray-200 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900"
@@ -129,11 +179,15 @@ interface Toggle {
             </select>
           </label>
         }
-        <div class="mt-4 flex gap-2 border-l-2 border-indigo-200 bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-600 dark:border-indigo-900 dark:bg-gray-900 dark:text-gray-400">
-          <span class="mt-0.5 shrink-0 text-indigo-500"><app-icon name="lightbulb" [size]="13" /></span>
+        <div
+          class="mt-4 flex gap-2 border-l-2 border-indigo-200 bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-600 dark:border-indigo-900 dark:bg-gray-900 dark:text-gray-400"
+        >
+          <span class="mt-0.5 shrink-0 text-indigo-500"
+            ><app-icon name="lightbulb" [size]="13"
+          /></span>
           <span>
-            Enable <strong>Virtual scroll</strong> with 100.000 rows — the DOM never holds more
-            than ~30 rows while scrolling.
+            Enable <strong>Virtual scroll</strong> with 100.000 rows — the DOM
+            never holds more than ~30 rows while scrolling.
           </span>
         </div>
       </aside>
@@ -156,7 +210,16 @@ interface Toggle {
           [focusedRowEnabled]="focusedRow()"
           [rowDragging]="rowDragging()"
           [rtlEnabled]="rtl() ? true : undefined"
-          [editing]="editing() ? { mode: 'batch', allowUpdating: true, allowAdding: true, allowDeleting: true } : false"
+          [editing]="
+            editing()
+              ? {
+                  mode: 'batch',
+                  allowUpdating: true,
+                  allowAdding: true,
+                  allowDeleting: true,
+                }
+              : false
+          "
           [style.height]="virtualScroll() ? '520px' : null"
         >
           <oge-column field="id" caption="Id" [width]="80" dataType="number" />
@@ -180,7 +243,9 @@ export class PlaygroundPage {
   constructor() {
     afterNextRender(() => {
       const timer = setInterval(() => {
-        this.domRows.set(this.hostRef.nativeElement.querySelectorAll('.oge-row').length);
+        this.domRows.set(
+          this.hostRef.nativeElement.querySelectorAll('.oge-row').length,
+        );
       }, 400);
       this.destroyRef.onDestroy(() => clearInterval(timer));
     });
@@ -195,7 +260,7 @@ export class PlaygroundPage {
   });
 
   protected readonly enabledCount = computed(
-    () => this.toggles.filter((toggle) => toggle.state()).length
+    () => this.toggles.filter((toggle) => toggle.state()).length,
   );
 
   protected readonly sortable = signal(true);
@@ -217,18 +282,73 @@ export class PlaygroundPage {
 
   protected readonly toggles: Toggle[] = [
     { key: 'sortable', label: 'Sorting', icon: 'sort', state: this.sortable },
-    { key: 'filterRow', label: 'Filter row', icon: 'filter', state: this.filterRow },
-    { key: 'headerFilter', label: 'Header filter', icon: 'chevron-down', state: this.headerFilter },
-    { key: 'searchPanel', label: 'Search panel', icon: 'search', state: this.searchPanel },
+    {
+      key: 'filterRow',
+      label: 'Filter row',
+      icon: 'filter',
+      state: this.filterRow,
+    },
+    {
+      key: 'headerFilter',
+      label: 'Header filter',
+      icon: 'chevron-down',
+      state: this.headerFilter,
+    },
+    {
+      key: 'searchPanel',
+      label: 'Search panel',
+      icon: 'search',
+      state: this.searchPanel,
+    },
     { key: 'paging', label: 'Paging', icon: 'pages', state: this.paging },
-    { key: 'virtualScroll', label: 'Virtual scroll', icon: 'zap', state: this.virtualScroll },
-    { key: 'selection', label: 'Selection', icon: 'check-square', state: this.selection },
-    { key: 'grouping', label: 'Grouping', icon: 'layout', state: this.grouping },
-    { key: 'columnChooser', label: 'Column chooser', icon: 'columns', state: this.columnChooser },
-    { key: 'editing', label: 'Editing (batch)', icon: 'pencil', state: this.editing },
-    { key: 'rowAlternation', label: 'Row striping', icon: 'table', state: this.rowAlternation },
-    { key: 'focusedRow', label: 'Focused row', icon: 'gauge', state: this.focusedRow },
-    { key: 'rowDragging', label: 'Row drag & drop', icon: 'sliders', state: this.rowDragging },
+    {
+      key: 'virtualScroll',
+      label: 'Virtual scroll',
+      icon: 'zap',
+      state: this.virtualScroll,
+    },
+    {
+      key: 'selection',
+      label: 'Selection',
+      icon: 'check-square',
+      state: this.selection,
+    },
+    {
+      key: 'grouping',
+      label: 'Grouping',
+      icon: 'layout',
+      state: this.grouping,
+    },
+    {
+      key: 'columnChooser',
+      label: 'Column chooser',
+      icon: 'columns',
+      state: this.columnChooser,
+    },
+    {
+      key: 'editing',
+      label: 'Editing (batch)',
+      icon: 'pencil',
+      state: this.editing,
+    },
+    {
+      key: 'rowAlternation',
+      label: 'Row striping',
+      icon: 'table',
+      state: this.rowAlternation,
+    },
+    {
+      key: 'focusedRow',
+      label: 'Focused row',
+      icon: 'gauge',
+      state: this.focusedRow,
+    },
+    {
+      key: 'rowDragging',
+      label: 'Row drag & drop',
+      icon: 'sliders',
+      state: this.rowDragging,
+    },
     { key: 'rtl', label: 'RTL', icon: 'globe', state: this.rtl },
   ];
 
@@ -236,16 +356,22 @@ export class PlaygroundPage {
 
   protected readonly snippet = computed(() => {
     const attrs = [`[data]="employees"`, `keyField="id"`];
-    if (this.virtualScroll()) attrs.push(`[virtualScroll]="true"`, `class="h-[520px]"`);
-    if (this.paging()) attrs.push(`[paging]="{ pageSize: ${this.pageSize()} }"`);
+    if (this.virtualScroll())
+      attrs.push(`[virtualScroll]="true"`, `class="h-[520px]"`);
+    if (this.paging())
+      attrs.push(`[paging]="{ pageSize: ${this.pageSize()} }"`);
     if (this.filterRow()) attrs.push(`[filterRow]="true"`);
     if (this.headerFilter()) attrs.push(`[headerFilter]="true"`);
     if (this.searchPanel()) attrs.push(`[searchPanel]="true"`);
     if (!this.sortable()) attrs.push(`[sortable]="false"`);
     if (this.selection()) attrs.push(`selectionMode="checkbox"`);
-    if (this.grouping()) attrs.push(`[groupPanel]="true"`, `[groupBy]="['department']"`);
+    if (this.grouping())
+      attrs.push(`[groupPanel]="true"`, `[groupBy]="['department']"`);
     if (this.columnChooser()) attrs.push(`[columnChooser]="true"`);
-    if (this.editing()) attrs.push(`[editing]="{ mode: 'batch', allowUpdating: true, allowAdding: true, allowDeleting: true }"`);
+    if (this.editing())
+      attrs.push(
+        `[editing]="{ mode: 'batch', allowUpdating: true, allowAdding: true, allowDeleting: true }"`,
+      );
     if (this.rowAlternation()) attrs.push(`[rowAlternation]="true"`);
     if (this.focusedRow()) attrs.push(`[focusedRowEnabled]="true"`);
     if (this.rowDragging()) attrs.push(`[rowDragging]="true"`);

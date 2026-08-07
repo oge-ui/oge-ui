@@ -16,13 +16,20 @@ describe('CustomDataSource', () => {
         return { data: [{ id: 1, name: 'x' }], totalCount: 42 };
       },
     });
-    const result = await source.load({ skip: 10, take: 5, requireTotalCount: true });
+    const result = await source.load({
+      skip: 10,
+      take: 5,
+      requireTotalCount: true,
+    });
     expect(result.totalCount).toBe(42);
     expect(seen[0]).toMatchObject({ skip: 10, take: 5 });
   });
 
   it('defaults to full server-side capabilities, overridable', () => {
-    const base = new CustomDataSource<Row>({ key: 'id', load: async () => ({ data: [] }) });
+    const base = new CustomDataSource<Row>({
+      key: 'id',
+      load: async () => ({ data: [] }),
+    });
     expect(base.capabilities.sort).toBe(true);
     const partial = new CustomDataSource<Row>({
       key: 'id',
@@ -34,12 +41,18 @@ describe('CustomDataSource', () => {
   });
 
   it('resolves keys via the key option', () => {
-    const source = new CustomDataSource<Row>({ key: (r) => `k${r.id}`, load: async () => ({ data: [] }) });
+    const source = new CustomDataSource<Row>({
+      key: (r) => `k${r.id}`,
+      load: async () => ({ data: [] }),
+    });
     expect(source.keyOf({ id: 3, name: 'x' })).toBe('k3');
   });
 
   it('exposes optional delegates only when provided', async () => {
-    const bare = new CustomDataSource<Row>({ key: 'id', load: async () => ({ data: [] }) });
+    const bare = new CustomDataSource<Row>({
+      key: 'id',
+      load: async () => ({ data: [] }),
+    });
     expect(bare.distinct).toBeUndefined();
     const withDistinct = new CustomDataSource<Row>({
       key: 'id',

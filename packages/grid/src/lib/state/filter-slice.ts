@@ -7,8 +7,12 @@ import type { FilterExpr } from '@oge-ui/core';
  * global search text (the latter travels separately as `LoadOptions.searchText`).
  */
 export class FilterSlice {
-  private readonly _rowFilters = signal<ReadonlyMap<string, FilterExpr>>(new Map());
-  private readonly _headerFilters = signal<ReadonlyMap<string, readonly unknown[]>>(new Map());
+  private readonly _rowFilters = signal<ReadonlyMap<string, FilterExpr>>(
+    new Map(),
+  );
+  private readonly _headerFilters = signal<
+    ReadonlyMap<string, readonly unknown[]>
+  >(new Map());
   private readonly _builderFilter = signal<FilterExpr | null>(null);
   private readonly _searchText = signal('');
 

@@ -21,7 +21,7 @@ describe('buildCsv', () => {
     const csv = buildCsv(
       [{ name: 'a,b "c"\nd', amount: 1 }],
       [{ caption: 'N', accessor: (r: Row) => r.name }],
-      { bom: false }
+      { bom: false },
     );
     expect(csv).toBe('N\r\n"a,b ""c""\nd"');
   });

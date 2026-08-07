@@ -4,9 +4,13 @@ export type PinOverride = 'left' | 'right' | false;
 
 /** UI-only column state: user-driven width, order and pin overrides. */
 export class ColumnsSlice {
-  private readonly _widthOverrides = signal<ReadonlyMap<string, number>>(new Map());
+  private readonly _widthOverrides = signal<ReadonlyMap<string, number>>(
+    new Map(),
+  );
   private readonly _order = signal<readonly string[] | null>(null);
-  private readonly _pinOverrides = signal<ReadonlyMap<string, PinOverride>>(new Map());
+  private readonly _pinOverrides = signal<ReadonlyMap<string, PinOverride>>(
+    new Map(),
+  );
 
   readonly widthOverrides = this._widthOverrides.asReadonly();
   readonly order = this._order.asReadonly();
@@ -29,7 +33,11 @@ export class ColumnsSlice {
   }
 
   /** Moves `sourceId` so it lands in front of `targetId` in the given base order. */
-  reorder(baseOrder: readonly string[], sourceId: string, targetId: string): void {
+  reorder(
+    baseOrder: readonly string[],
+    sourceId: string,
+    targetId: string,
+  ): void {
     if (sourceId === targetId) return;
     const order = (this._order() ?? baseOrder).filter((id) => id !== sourceId);
     const targetIndex = order.indexOf(targetId);
@@ -49,8 +57,10 @@ export class ColumnsSlice {
     widths?: readonly (readonly [string, number])[];
     pins?: readonly (readonly [string, PinOverride])[];
   }): void {
-    if (state.order !== undefined) this._order.set(state.order ? [...state.order] : null);
-    if (state.widths !== undefined) this._widthOverrides.set(new Map(state.widths));
+    if (state.order !== undefined)
+      this._order.set(state.order ? [...state.order] : null);
+    if (state.widths !== undefined)
+      this._widthOverrides.set(new Map(state.widths));
     if (state.pins !== undefined) this._pinOverrides.set(new Map(state.pins));
   }
 }

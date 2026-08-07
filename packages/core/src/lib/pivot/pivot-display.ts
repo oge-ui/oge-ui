@@ -24,13 +24,15 @@ export function applyDisplayModes(
   values: unknown[][][],
   rowSlots: readonly PivotSlot[],
   columnSlots: readonly PivotSlot[],
-  measures: readonly PivotFieldConfig[]
+  measures: readonly PivotFieldConfig[],
 ): void {
   const grandRow = rowSlots.findIndex((slot) => slot.isGrandTotal);
   const grandColumn = columnSlots.findIndex((slot) => slot.isGrandTotal);
 
   /** Nearest ancestor total slot on an axis (fallback: the grand slot). */
-  const totalIndexByKey = (slots: readonly PivotSlot[]): Map<string, number> => {
+  const totalIndexByKey = (
+    slots: readonly PivotSlot[],
+  ): Map<string, number> => {
     const map = new Map<string, number>();
     slots.forEach((slot, index) => {
       if (slot.isTotal) map.set(JSON.stringify(slot.path.map(String)), index);
@@ -42,7 +44,7 @@ export function applyDisplayModes(
   const parentTotal = (
     slot: PivotSlot,
     byKey: Map<string, number>,
-    grand: number
+    grand: number,
   ): number => {
     for (let cut = slot.path.length - 1; cut >= 1; cut--) {
       const key = JSON.stringify(slot.path.slice(0, cut).map(String));
@@ -125,7 +127,8 @@ export function applyDisplayModes(
           }
           if (value !== null) previous = value;
         }
-        for (let c = 0; c < columnSlots.length; c++) line[c][m] = next[c] ?? null;
+        for (let c = 0; c < columnSlots.length; c++)
+          line[c][m] = next[c] ?? null;
       }
       return;
     }
@@ -133,7 +136,10 @@ export function applyDisplayModes(
     // percent-of-* family: divide by the relevant total cell
     const valid = (pair: [number, number]): [number, number] | null =>
       pair[0] >= 0 && pair[1] >= 0 ? pair : null;
-    const denominatorIndex = (r: number, c: number): [number, number] | null => {
+    const denominatorIndex = (
+      r: number,
+      c: number,
+    ): [number, number] | null => {
       switch (mode) {
         case 'percentOfGrandTotal':
           return valid([grandRow, grandColumn]);
@@ -144,7 +150,10 @@ export function applyDisplayModes(
         case 'percentOfColumnTotal':
           return valid([parentTotal(rowSlots[r], rowTotalByKey, grandRow), c]);
         case 'percentOfRowTotal':
-          return valid([r, parentTotal(columnSlots[c], columnTotalByKey, grandColumn)]);
+          return valid([
+            r,
+            parentTotal(columnSlots[c], columnTotalByKey, grandColumn),
+          ]);
         default:
           return null;
       }
@@ -160,7 +169,10 @@ export function applyDisplayModes(
           continue;
         }
         const denominator = asNumber(snapshot[target[0]][target[1]]);
-        values[r][c][m] = denominator === null || denominator === 0 ? null : value / denominator;
+        values[r][c][m] =
+          denominator === null || denominator === 0
+            ? null
+            : value / denominator;
       }
     }
   });

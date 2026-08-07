@@ -10,8 +10,18 @@ import { foldText } from '../util/text-fold';
  */
 function normalizePair(a: unknown, b: unknown): [unknown, unknown] {
   if (a instanceof Date || b instanceof Date) {
-    const ta = a instanceof Date ? a.getTime() : typeof a === 'string' ? Date.parse(a) : a;
-    const tb = b instanceof Date ? b.getTime() : typeof b === 'string' ? Date.parse(b) : b;
+    const ta =
+      a instanceof Date
+        ? a.getTime()
+        : typeof a === 'string'
+          ? Date.parse(a)
+          : a;
+    const tb =
+      b instanceof Date
+        ? b.getTime()
+        : typeof b === 'string'
+          ? Date.parse(b)
+          : b;
     return [ta, tb];
   }
   return [a, b];
@@ -55,14 +65,20 @@ function asText(value: unknown): string | null {
  * Compiles a FilterExpr tree into a row predicate. String matching is
  * case-insensitive.
  */
-export function createFilterPredicate<T = unknown>(expr: FilterExpr): (row: T) => boolean {
+export function createFilterPredicate<T = unknown>(
+  expr: FilterExpr,
+): (row: T) => boolean {
   switch (expr.type) {
     case 'and': {
-      const predicates = expr.operands.map((operand) => createFilterPredicate<T>(operand));
+      const predicates = expr.operands.map((operand) =>
+        createFilterPredicate<T>(operand),
+      );
       return (row) => predicates.every((p) => p(row));
     }
     case 'or': {
-      const predicates = expr.operands.map((operand) => createFilterPredicate<T>(operand));
+      const predicates = expr.operands.map((operand) =>
+        createFilterPredicate<T>(operand),
+      );
       return (row) => predicates.some((p) => p(row));
     }
     case 'not': {
@@ -140,7 +156,10 @@ export function createFilterPredicate<T = unknown>(expr: FilterExpr): (row: T) =
 }
 
 /** Builds a case-insensitive `contains` filter across the given fields. */
-export function buildSearchFilter(fields: readonly string[], text: string): FilterExpr | null {
+export function buildSearchFilter(
+  fields: readonly string[],
+  text: string,
+): FilterExpr | null {
   const trimmed = text.trim();
   if (!trimmed || !fields.length) return null;
   const operands: FilterExpr[] = fields.map((field) => ({

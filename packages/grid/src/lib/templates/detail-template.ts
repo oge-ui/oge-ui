@@ -27,7 +27,7 @@ export class OgeDetailTemplate<T = unknown> {
 
   static ngTemplateContextGuard<T>(
     _dir: OgeDetailTemplate<T>,
-    _ctx: unknown
+    _ctx: unknown,
   ): _ctx is OgeDetailTemplateContext<T> {
     return true;
   }

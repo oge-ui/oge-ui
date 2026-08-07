@@ -13,7 +13,7 @@ export function groupRows<T>(
   rows: readonly T[],
   groups: readonly GroupDescriptor[],
   groupSummary: readonly SummaryDescriptor[] = [],
-  customSummaries?: CustomSummaryMap<T>
+  customSummaries?: CustomSummaryMap<T>,
 ): GroupedItem<T>[] {
   if (!groups.length) return [];
   const [current, ...rest] = groups;
@@ -34,10 +34,18 @@ export function groupRows<T>(
 
   return buckets.map((bucket) => ({
     key: bucket.key,
-    items: rest.length ? groupRows(bucket.rows, rest, groupSummary, customSummaries) : bucket.rows,
+    items: rest.length
+      ? groupRows(bucket.rows, rest, groupSummary, customSummaries)
+      : bucket.rows,
     count: bucket.rows.length,
     ...(groupSummary.length
-      ? { summary: computeSummaries(bucket.rows, groupSummary, customSummaries).map((s) => s.value) }
+      ? {
+          summary: computeSummaries(
+            bucket.rows,
+            groupSummary,
+            customSummaries,
+          ).map((s) => s.value),
+        }
       : {}),
   }));
 }

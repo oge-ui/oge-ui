@@ -18,7 +18,8 @@ class NaiveOffsets {
   constructor(private readonly heights: number[]) {}
   offsetOf(index: number): number {
     let sum = 0;
-    for (let i = 0; i < Math.min(index, this.heights.length); i++) sum += this.heights[i];
+    for (let i = 0; i < Math.min(index, this.heights.length); i++)
+      sum += this.heights[i];
     return sum;
   }
   get totalHeight(): number {
@@ -67,7 +68,10 @@ describe('OffsetTree', () => {
     const rand = mulberry32(1234);
     for (let run = 0; run < 20; run++) {
       const n = 1 + Math.floor(rand() * 300);
-      const heights = Array.from({ length: n }, () => 10 + Math.floor(rand() * 90));
+      const heights = Array.from(
+        { length: n },
+        () => 10 + Math.floor(rand() * 90),
+      );
       const tree = new OffsetTree(n, (i) => heights[i]);
       const updates = Math.floor(rand() * 20);
       for (let u = 0; u < updates; u++) {
@@ -110,21 +114,32 @@ describe('computeWindow', () => {
 
   it('renders nothing for an empty list', () => {
     const tree = new OffsetTree(0, 30);
-    expect(computeWindow(0, 300, tree)).toEqual({ start: 0, end: 0, offsetY: 0, totalHeight: 0 });
+    expect(computeWindow(0, 300, tree)).toEqual({
+      start: 0,
+      end: 0,
+      offsetY: 0,
+      totalHeight: 0,
+    });
   });
 
   it('covers the viewport with variable heights', () => {
     const rand = mulberry32(99);
-    const heights = Array.from({ length: 500 }, () => 20 + Math.floor(rand() * 100));
+    const heights = Array.from(
+      { length: 500 },
+      () => 20 + Math.floor(rand() * 100),
+    );
     const tree = new OffsetTree(500, (i) => heights[i]);
     for (let probe = 0; probe < 30; probe++) {
       const scrollTop = rand() * tree.totalHeight;
       const window = computeWindow(scrollTop, 400, tree, 2);
-      const clampedTop = Math.min(Math.max(0, scrollTop), tree.totalHeight - 400);
+      const clampedTop = Math.min(
+        Math.max(0, scrollTop),
+        tree.totalHeight - 400,
+      );
       // rendered block must fully cover the visible range
       expect(window.offsetY).toBeLessThanOrEqual(clampedTop);
       expect(tree.offsetOf(window.end)).toBeGreaterThanOrEqual(
-        Math.min(clampedTop + 400, tree.totalHeight)
+        Math.min(clampedTop + 400, tree.totalHeight),
       );
     }
   });

@@ -12,17 +12,30 @@ export interface PivotCsvOptions {
 }
 
 function escapeCell(text: string, separator: string): string {
-  if (text.includes(separator) || text.includes('"') || text.includes('\n') || text.includes('\r')) {
+  if (
+    text.includes(separator) ||
+    text.includes('"') ||
+    text.includes('\n') ||
+    text.includes('\r')
+  ) {
     return `"${text.replace(/"/g, '""')}"`;
   }
   return text;
 }
 
-function slotLabels(nodes: readonly PivotAxisNode[], grandText: string): string[] {
+function slotLabels(
+  nodes: readonly PivotAxisNode[],
+  grandText: string,
+): string[] {
   const labels: string[] = [];
-  const visit = (list: readonly PivotAxisNode[], trail: readonly string[]): void => {
+  const visit = (
+    list: readonly PivotAxisNode[],
+    trail: readonly string[],
+  ): void => {
     for (const node of list) {
-      const ownTrail = node.isGrandTotal ? [grandText] : [...trail, node.text || ''];
+      const ownTrail = node.isGrandTotal
+        ? [grandText]
+        : [...trail, node.text || ''];
       if (node.leafIndex >= 0) labels[node.leafIndex] = ownTrail.join(' / ');
       if (node.children.length) visit(node.children, ownTrail);
     }
@@ -37,7 +50,10 @@ function slotLabels(nodes: readonly PivotAxisNode[], grandText: string): string[
  * one line per visible row slot. Totals rows/columns come through as their
  * slots — exactly what is on screen is what exports.
  */
-export function buildPivotCsv(result: PivotResult, options: PivotCsvOptions = {}): string {
+export function buildPivotCsv(
+  result: PivotResult,
+  options: PivotCsvOptions = {},
+): string {
   const separator = options.separator ?? ',';
   const grandText = options.grandTotalText ?? 'Grand Total';
   const rowLabels = slotLabels(result.rowRoot, grandText);
@@ -49,12 +65,16 @@ export function buildPivotCsv(result: PivotResult, options: PivotCsvOptions = {}
     for (const measure of result.measures) {
       const label = columnLabels[c] ?? '';
       header.push(
-        multiMeasure ? `${label} — ${measure.caption ?? measure.dataField}` : label
+        multiMeasure
+          ? `${label} — ${measure.caption ?? measure.dataField}`
+          : label,
       );
     }
   }
 
-  const lines: string[] = [header.map((cell) => escapeCell(cell, separator)).join(separator)];
+  const lines: string[] = [
+    header.map((cell) => escapeCell(cell, separator)).join(separator),
+  ];
   for (let r = 0; r < result.rowLeafCount; r++) {
     const cells: string[] = [rowLabels[r] ?? ''];
     for (let c = 0; c < result.columnLeafCount; c++) {
@@ -63,7 +83,9 @@ export function buildPivotCsv(result: PivotResult, options: PivotCsvOptions = {}
         cells.push(value == null ? '' : String(value));
       }
     }
-    lines.push(cells.map((cell) => escapeCell(cell, separator)).join(separator));
+    lines.push(
+      cells.map((cell) => escapeCell(cell, separator)).join(separator),
+    );
   }
   const body = lines.join('\r\n');
   return options.bom === false ? body : `\uFEFF${body}`;

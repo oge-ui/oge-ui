@@ -35,7 +35,7 @@ function axisDepth(nodes: readonly PivotAxisNode[]): number {
 function headerCells(
   nodes: readonly PivotAxisNode[],
   depth: number,
-  grandText: string
+  grandText: string,
 ): HeaderCell[] {
   const cells: HeaderCell[] = [];
   const startOf = (node: PivotAxisNode): number =>
@@ -57,13 +57,17 @@ function headerCells(
   return cells;
 }
 
-function rowLabels(nodes: readonly PivotAxisNode[], grandText: string): string[] {
+function rowLabels(
+  nodes: readonly PivotAxisNode[],
+  grandText: string,
+): string[] {
   const labels: string[] = [];
   const visit = (list: readonly PivotAxisNode[], level: number): void => {
     for (const node of list) {
       if (node.leafIndex >= 0) {
         labels[node.leafIndex] =
-          '  '.repeat(Math.max(0, level)) + (node.isGrandTotal ? grandText : node.text);
+          '  '.repeat(Math.max(0, level)) +
+          (node.isGrandTotal ? grandText : node.text);
       }
       visit(node.children, level + 1);
     }
@@ -80,7 +84,7 @@ function rowLabels(nodes: readonly PivotAxisNode[], grandText: string): string[]
  */
 export function buildPivotWorkbook(
   result: PivotResult,
-  options: OgePivotExcelExportOptions = {}
+  options: OgePivotExcelExportOptions = {},
 ): Workbook {
   const grandText = options.grandTotalText ?? 'Grand Total';
   const workbook = new Workbook();
@@ -119,7 +123,11 @@ export function buildPivotWorkbook(
       for (let m = 0; m < measureCount; m++) {
         const value = result.values[r]?.[c]?.[m];
         excelRow.getCell(2 + c * measureCount + m).value =
-          typeof value === 'number' ? value : value == null ? '' : String(value);
+          typeof value === 'number'
+            ? value
+            : value == null
+              ? ''
+              : String(value);
       }
     }
   }
@@ -130,7 +138,7 @@ export function buildPivotWorkbook(
 /** Exports the pivot's current view as an `.xlsx` download. */
 export async function exportPivotToExcel<T extends object>(
   grid: OgePivotGrid<T>,
-  options: OgePivotExcelExportOptions = {}
+  options: OgePivotExcelExportOptions = {},
 ): Promise<void> {
   const workbook = buildPivotWorkbook(grid.getResult(), options);
   if (typeof document === 'undefined') return;

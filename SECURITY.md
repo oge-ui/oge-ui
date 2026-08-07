@@ -5,10 +5,10 @@
 Security fixes land on the latest minor release of the `0.x` line. Older
 versions do not receive patches — upgrade to the latest release.
 
-| Version | Supported |
-| ------- | --------- |
-| latest 0.x | ✅ |
-| older     | ❌ |
+| Version    | Supported |
+| ---------- | --------- |
+| latest 0.x | ✅        |
+| older      | ❌        |
 
 ## Reporting a vulnerability
 
@@ -28,5 +28,5 @@ unless you prefer otherwise.
 OGE UI components render user-supplied data as text (no `innerHTML` binding
 of row data), and export helpers (`exceljs`, `jspdf`) are optional peers that
 only run when you opt in. Reports about vulnerable versions of those peer
-libraries should go to their maintainers; reports about how OGE UI *uses*
+libraries should go to their maintainers; reports about how OGE UI _uses_
 them are in scope here.

@@ -22,18 +22,22 @@ export class SortSlice {
             ? [{ field, dir: 'desc' }]
             : allowUnsorting
               ? []
-              : [{ field, dir: 'asc' }]
+              : [{ field, dir: 'asc' }],
       );
       return;
     }
     if (!existing) {
       this._descriptors.set([...current, { field, dir: 'asc' }]);
     } else if (existing.dir === 'asc') {
-      this._descriptors.set(current.map((d) => (d.field === field ? { field, dir: 'desc' } : d)));
+      this._descriptors.set(
+        current.map((d) => (d.field === field ? { field, dir: 'desc' } : d)),
+      );
     } else if (allowUnsorting) {
       this._descriptors.set(current.filter((d) => d.field !== field));
     } else {
-      this._descriptors.set(current.map((d) => (d.field === field ? { field, dir: 'asc' } : d)));
+      this._descriptors.set(
+        current.map((d) => (d.field === field ? { field, dir: 'asc' } : d)),
+      );
     }
   }
 
@@ -48,6 +52,8 @@ export class SortSlice {
   /** Direction and 1-based chain position of a field, or null when unsorted. */
   stateOf(field: string): { dir: 'asc' | 'desc'; index: number } | null {
     const index = this._descriptors().findIndex((d) => d.field === field);
-    return index < 0 ? null : { dir: this._descriptors()[index].dir, index: index + 1 };
+    return index < 0
+      ? null
+      : { dir: this._descriptors()[index].dir, index: index + 1 };
   }
 }

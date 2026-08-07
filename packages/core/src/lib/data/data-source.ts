@@ -31,7 +31,11 @@ export interface DataSourceCapabilities {
 /** External change pushed into the grid without a full reload (live updates). */
 export type DataChange<T = unknown> =
   | { readonly type: 'insert'; readonly item: T }
-  | { readonly type: 'update'; readonly key: RowKey; readonly patch: Partial<T> }
+  | {
+      readonly type: 'update';
+      readonly key: RowKey;
+      readonly patch: Partial<T>;
+    }
   | { readonly type: 'remove'; readonly key: RowKey };
 
 /** Minimal observable contract — structurally compatible with RxJS, without depending on it. */
@@ -52,7 +56,10 @@ export interface DataSource<T = unknown> {
    * Distinct values of a field (for Excel-style header filters), optionally
    * narrowed by the current filter. Header filter UI is hidden when absent.
    */
-  distinct?(field: string, options?: { filter?: FilterExpr | null }): Promise<readonly unknown[]>;
+  distinct?(
+    field: string,
+    options?: { filter?: FilterExpr | null },
+  ): Promise<readonly unknown[]>;
   /** CRUD write-back used by the editing feature. Optional. */
   insert?(item: T): Promise<T>;
   update?(key: RowKey, patch: Partial<T>): Promise<T>;

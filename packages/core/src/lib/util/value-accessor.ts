@@ -6,9 +6,12 @@ export type ValueAccessor<T = unknown> = (row: T) => unknown;
  * Builds an accessor for a (possibly dotted) field path, e.g. `"customer.name"`.
  * Missing intermediate objects yield `undefined` instead of throwing.
  */
-export function createFieldAccessor<T = unknown>(field: string): ValueAccessor<T> {
+export function createFieldAccessor<T = unknown>(
+  field: string,
+): ValueAccessor<T> {
   if (!field.includes('.')) {
-    return (row: T) => (row as Record<string, unknown> | null | undefined)?.[field];
+    return (row: T) =>
+      (row as Record<string, unknown> | null | undefined)?.[field];
   }
   const path = field.split('.');
   return (row: T) => {
@@ -23,7 +26,7 @@ export function createFieldAccessor<T = unknown>(field: string): ValueAccessor<T
 
 /** Normalizes a key specification (field name or selector function) into a selector function. */
 export function resolveKeySelector<T>(
-  key: keyof T | ((row: T) => RowKey)
+  key: keyof T | ((row: T) => RowKey),
 ): (row: T) => RowKey {
   if (typeof key === 'function') return key;
   const accessor = createFieldAccessor<T>(String(key));

@@ -18,7 +18,7 @@ const SALES: Sale[] = [
 
 function fieldsWith(
   displayMode: PivotSummaryDisplayMode,
-  extra?: Partial<PivotFieldConfig>
+  extra?: Partial<PivotFieldConfig>,
 ): PivotFieldConfig[] {
   return [
     { id: 'region', dataField: 'region', area: 'row', areaIndex: 0 },
@@ -42,7 +42,10 @@ describe('pivot display modes', () => {
   // base (no mode): rows EU=150/200/350, US=300/100/400, G=450/300/750
 
   it('percentOfGrandTotal divides every cell by the overall grand', () => {
-    const result = computePivot({ rows: SALES, fields: fieldsWith('percentOfGrandTotal') });
+    const result = computePivot({
+      rows: SALES,
+      fields: fieldsWith('percentOfGrandTotal'),
+    });
     expect(matrix(result)[0][0]).toBeCloseTo(150 / 750);
     expect(matrix(result)[2][2]).toBeCloseTo(1);
   });
@@ -58,7 +61,10 @@ describe('pivot display modes', () => {
   });
 
   it('percentOfRowGrandTotal divides by the row grand-total column', () => {
-    const result = computePivot({ rows: SALES, fields: fieldsWith('percentOfRowGrandTotal') });
+    const result = computePivot({
+      rows: SALES,
+      fields: fieldsWith('percentOfRowGrandTotal'),
+    });
     expect(matrix(result)[0][0]).toBeCloseTo(150 / 350);
     expect(matrix(result)[0][2]).toBeCloseTo(1);
   });
@@ -89,10 +95,16 @@ describe('pivot display modes', () => {
   });
 
   it('absolute and percent variation compare against the previous column', () => {
-    const absolute = computePivot({ rows: SALES, fields: fieldsWith('absoluteVariation') });
+    const absolute = computePivot({
+      rows: SALES,
+      fields: fieldsWith('absoluteVariation'),
+    });
     // first column has no predecessor; totals are excluded from the chain
     expect(matrix(absolute)[0]).toEqual([null, 50, null]); // EU: 200-150
-    const percent = computePivot({ rows: SALES, fields: fieldsWith('percentVariation') });
+    const percent = computePivot({
+      rows: SALES,
+      fields: fieldsWith('percentVariation'),
+    });
     expect(matrix(percent)[1][1]).toBeCloseTo((100 - 300) / 300);
   });
 
@@ -102,6 +114,10 @@ describe('pivot display modes', () => {
       fields: fieldsWith('none', { runningTotal: { direction: 'row' } }),
     });
     // down the 2024 column: EU 150 → US 150+300=450 (single group at top level)
-    expect(matrix(result).map((line) => line[0]).slice(0, 2)).toEqual([150, 450]);
+    expect(
+      matrix(result)
+        .map((line) => line[0])
+        .slice(0, 2),
+    ).toEqual([150, 450]);
   });
 });

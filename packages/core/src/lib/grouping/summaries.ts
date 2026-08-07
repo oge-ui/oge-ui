@@ -3,14 +3,19 @@ import { compareValues } from '../util/comparators';
 import { createFieldAccessor } from '../util/value-accessor';
 
 /** User-provided reducer for `type: 'custom'` summaries (client-side only). */
-export type CustomSummaryFn<T = unknown> = (rows: readonly T[], field: string) => unknown;
+export type CustomSummaryFn<T = unknown> = (
+  rows: readonly T[],
+  field: string,
+) => unknown;
 
-export type CustomSummaryMap<T = unknown> = Readonly<Record<string, CustomSummaryFn<T>>>;
+export type CustomSummaryMap<T = unknown> = Readonly<
+  Record<string, CustomSummaryFn<T>>
+>;
 
 function computeOne<T>(
   rows: readonly T[],
   descriptor: SummaryDescriptor,
-  customSummaries?: CustomSummaryMap<T>
+  customSummaries?: CustomSummaryMap<T>,
 ): unknown {
   if (descriptor.type === 'count') return rows.length;
   if (descriptor.type === 'custom') {
@@ -40,7 +45,8 @@ function computeOne<T>(
       for (const row of rows) {
         const value = accessor(row);
         if (value == null) continue;
-        if (best == null || Math.sign(compareValues(value, best)) === direction) best = value;
+        if (best == null || Math.sign(compareValues(value, best)) === direction)
+          best = value;
       }
       return best;
     }
@@ -51,7 +57,7 @@ function computeOne<T>(
 export function computeSummaries<T>(
   rows: readonly T[],
   descriptors: readonly SummaryDescriptor[],
-  customSummaries?: CustomSummaryMap<T>
+  customSummaries?: CustomSummaryMap<T>,
 ): SummaryValue[] {
   return descriptors.map((descriptor) => ({
     field: descriptor.field,

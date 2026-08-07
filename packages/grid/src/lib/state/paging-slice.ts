@@ -27,6 +27,7 @@ export class PagingSlice {
   /** Restores persisted paging without resetting the index. */
   applyState(state: { pageSize?: number | null; pageIndex?: number }): void {
     if (state.pageSize !== undefined) this._pageSize.set(state.pageSize);
-    if (state.pageIndex !== undefined) this._pageIndex.set(Math.max(0, state.pageIndex));
+    if (state.pageIndex !== undefined)
+      this._pageIndex.set(Math.max(0, state.pageIndex));
   }
 }

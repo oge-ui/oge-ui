@@ -58,13 +58,19 @@ await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
     <app-doc-header
       title="Pivot Analytics & Export"
       category="Pivot Grid"
-      [chips]="['display modes', 'virtual scrolling', 'stateKey', 'CSV / Excel']"
+      [chips]="[
+        'display modes',
+        'virtual scrolling',
+        'stateKey',
+        'CSV / Excel',
+      ]"
     >
       <p>
-        Measures can be shown as percentages of a total or as running sums, big matrices stay
-        smooth with two-axis virtual scrolling, the whole layout persists under a
-        <code>stateKey</code>, and the visible matrix exports to CSV or a typed Excel workbook
-        with merged multi-level headers.
+        Measures can be shown as percentages of a total or as running sums, big
+        matrices stay smooth with two-axis virtual scrolling, the whole layout
+        persists under a
+        <code>stateKey</code>, and the visible matrix exports to CSV or a typed
+        Excel workbook with merged multi-level headers.
       </p>
     </app-doc-header>
 
@@ -74,8 +80,8 @@ await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
     >
       <div class="mb-2 flex items-center justify-between gap-3">
         <span class="text-sm text-gray-500 dark:text-gray-400">
-          Right-click a header for sorting and filters; the second measure shows each column's
-          share of its grand total.
+          Right-click a header for sorting and filters; the second measure shows
+          each column's share of its grand total.
         </span>
         <button
           type="button"
@@ -113,7 +119,12 @@ await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
       >
         <oge-pivot-field dataField="region" area="row" />
         <oge-pivot-field dataField="country" area="row" />
-        <oge-pivot-field dataField="date" caption="Year" area="column" groupInterval="year" />
+        <oge-pivot-field
+          dataField="date"
+          caption="Year"
+          area="column"
+          groupInterval="year"
+        />
         <oge-pivot-field
           dataField="amount"
           caption="Amount"
@@ -132,7 +143,10 @@ await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
       </oge-pivot-grid>
     </app-demo-card>
 
-    <app-demo-card [chips]="['stateKey', 'exportCsv', 'export-excel entry']" [code]="exportSnippet">
+    <app-demo-card
+      [chips]="['stateKey', 'exportCsv', 'export-excel entry']"
+      [code]="exportSnippet"
+    >
       <div class="mb-2 flex items-center justify-between gap-3">
         <span class="text-sm text-gray-500 dark:text-gray-400">
           Re-pivot or expand something, reload the page — the layout comes back.
@@ -154,7 +168,9 @@ await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              />
               <polyline points="14 2 14 8 20 8" />
               <line x1="8" y1="13" x2="16" y2="13" />
               <line x1="8" y1="17" x2="16" y2="17" />
@@ -186,21 +202,60 @@ await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
           </button>
         </span>
       </div>
-      <oge-pivot-grid #reportPivot [data]="sales" stateKey="demo-pivot-report" style="max-height: 460px">
+      <oge-pivot-grid
+        #reportPivot
+        [data]="sales"
+        stateKey="demo-pivot-report"
+        style="max-height: 460px"
+      >
         <oge-pivot-field dataField="region" area="row" />
         <oge-pivot-field dataField="city" area="row" />
-        <oge-pivot-field dataField="date" caption="Year" area="column" groupInterval="year" />
-        <oge-pivot-field dataField="amount" caption="Amount" area="data" summaryType="sum" [format]="money" />
-        <oge-pivot-field dataField="units" caption="Units" area="data" summaryType="sum" />
+        <oge-pivot-field
+          dataField="date"
+          caption="Year"
+          area="column"
+          groupInterval="year"
+        />
+        <oge-pivot-field
+          dataField="amount"
+          caption="Amount"
+          area="data"
+          summaryType="sum"
+          [format]="money"
+        />
+        <oge-pivot-field
+          dataField="units"
+          caption="Units"
+          area="data"
+          summaryType="sum"
+        />
       </oge-pivot-grid>
     </app-demo-card>
 
     <h3>Notes</h3>
     <ul>
-      <li><code>summaryDisplayMode</code>: percent-of row/column/grand totals and variations against the previous column; <code>runningTotal</code> accumulates along an axis and resets per group.</li>
-      <li><code>[virtualScrolling]="true"</code> windows both axes — only the visible headers and cells hit the DOM, wherever you scroll.</li>
-      <li><code>stateKey</code> saves field layout, expansion and the panel state through the same storage token the data grid uses (<code>OGE_STATE_STORAGE</code>); <code>state()</code> / <code>applyState()</code> give you the snapshot programmatically.</li>
-      <li><code>getCsv()</code> / <code>exportCsv()</code> flatten exactly what is on screen; <code>&#64;oge-ui/pivot/export-excel</code> adds <code>buildPivotWorkbook</code> + <code>exportPivotToExcel</code> and stays out of your main bundle.</li>
+      <li>
+        <code>summaryDisplayMode</code>: percent-of row/column/grand totals and
+        variations against the previous column;
+        <code>runningTotal</code> accumulates along an axis and resets per
+        group.
+      </li>
+      <li>
+        <code>[virtualScrolling]="true"</code> windows both axes — only the
+        visible headers and cells hit the DOM, wherever you scroll.
+      </li>
+      <li>
+        <code>stateKey</code> saves field layout, expansion and the panel state
+        through the same storage token the data grid uses
+        (<code>OGE_STATE_STORAGE</code>); <code>state()</code> /
+        <code>applyState()</code> give you the snapshot programmatically.
+      </li>
+      <li>
+        <code>getCsv()</code> / <code>exportCsv()</code> flatten exactly what is
+        on screen; <code>&#64;oge-ui/pivot/export-excel</code> adds
+        <code>buildPivotWorkbook</code> + <code>exportPivotToExcel</code> and
+        stays out of your main bundle.
+      </li>
     </ul>
   `,
 })
@@ -210,11 +265,15 @@ export class PivotAnalyticsPage {
   protected readonly analyticsSnippet = ANALYTICS_SNIPPET;
   protected readonly exportSnippet = EXPORT_SNIPPET;
 
-  protected readonly analytics = viewChild.required<OgePivotGrid<Sale>>('analyticsPivot');
-  protected readonly report = viewChild.required<OgePivotGrid<Sale>>('reportPivot');
+  protected readonly analytics =
+    viewChild.required<OgePivotGrid<Sale>>('analyticsPivot');
+  protected readonly report =
+    viewChild.required<OgePivotGrid<Sale>>('reportPivot');
 
   protected readonly money = (value: unknown): string =>
-    typeof value === 'number' ? `₺${Math.round(value).toLocaleString('tr-TR')}` : String(value ?? '');
+    typeof value === 'number'
+      ? `₺${Math.round(value).toLocaleString('tr-TR')}`
+      : String(value ?? '');
 
   protected async downloadExcel(): Promise<void> {
     const { exportPivotToExcel } = await import('@oge-ui/pivot/export-excel');

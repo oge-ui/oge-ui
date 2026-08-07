@@ -296,7 +296,7 @@ export class OgePivotGrid<T = unknown> {
       }
       this.store.setExpansion(
         snapshot.rowExpandedPaths ?? [],
-        snapshot.columnExpandedPaths ?? []
+        snapshot.columnExpandedPaths ?? [],
       );
       if (snapshot.fieldPanelCollapsed !== undefined) {
         if (this.store.fieldPanelCollapsed() !== snapshot.fieldPanelCollapsed) {
@@ -1267,7 +1267,9 @@ export class OgePivotGrid<T = unknown> {
   });
 
   protected filterValueText(value: unknown): string {
-    return value == null || value === '' ? this.msg().blankValue : String(value);
+    return value == null || value === ''
+      ? this.msg().blankValue
+      : String(value);
   }
 
   protected toggleFilterValue(value: unknown): void {

@@ -12,9 +12,12 @@ test('grid state survives a page reload via stateKey', async ({ page }) => {
   await page.waitForTimeout(400); // > save debounce
 
   await page.reload();
-  await expect(page.locator('.oge-header-cell').first()).toHaveAttribute('aria-sort', 'descending');
+  await expect(page.locator('.oge-header-cell').first()).toHaveAttribute(
+    'aria-sort',
+    'descending',
+  );
   await expect(
-    page.locator('.oge-row').first().locator('.oge-cell').first()
+    page.locator('.oge-row').first().locator('.oge-cell').first(),
   ).toHaveText('10000');
 
   // cleanup for repeatable runs
@@ -30,7 +33,9 @@ test('header context menu sorts and pins', async ({ page }) => {
   await cityHeader.click({ button: 'right' });
   const menu = grid.locator('.oge-context-menu');
   await expect(menu).toBeVisible();
-  await expect(menu.locator('.oge-menu-item', { hasText: 'Group by this column' })).toBeVisible();
+  await expect(
+    menu.locator('.oge-menu-item', { hasText: 'Group by this column' }),
+  ).toBeVisible();
 
   await menu.locator('.oge-menu-item', { hasText: 'Sort descending' }).click();
   await expect(cityHeader).toHaveAttribute('aria-sort', 'descending');

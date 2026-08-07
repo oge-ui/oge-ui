@@ -51,5 +51,6 @@ export class OgePivotField<T = unknown> {
   // out-of-band functions
   readonly selector = input<(row: T) => unknown>();
   readonly format = input<(value: unknown) => string>();
-  readonly customizeText = input<(info: { value: unknown; valueText: string }) => string>();
+  readonly customizeText =
+    input<(info: { value: unknown; valueText: string }) => string>();
 }

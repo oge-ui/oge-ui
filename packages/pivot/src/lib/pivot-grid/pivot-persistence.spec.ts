@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { OGE_STATE_STORAGE, type OgeStateStorage } from '@oge-ui/grid/foundation';
+import {
+  OGE_STATE_STORAGE,
+  type OgeStateStorage,
+} from '@oge-ui/grid/foundation';
 import { OgePivotField } from './pivot-field';
 import { OgePivotGrid } from './pivot-grid';
 
@@ -51,13 +54,16 @@ class PersistenceHost {
   readonly data = SALES;
 }
 
-function gridOf(fixture: ComponentFixture<PersistenceHost>): OgePivotGrid<Sale> {
-  return fixture.debugElement.children[0].componentInstance as OgePivotGrid<Sale>;
+function gridOf(
+  fixture: ComponentFixture<PersistenceHost>,
+): OgePivotGrid<Sale> {
+  return fixture.debugElement.children[0]
+    .componentInstance as OgePivotGrid<Sale>;
 }
 
 function rowHeaders(el: HTMLElement): string[] {
   return Array.from(el.querySelectorAll('.oge-pivot-row-header')).map(
-    (n) => n.textContent?.trim() ?? ''
+    (n) => n.textContent?.trim() ?? '',
   );
 }
 
@@ -86,7 +92,11 @@ describe('OgePivotGrid persistence + CSV export', () => {
     const el2 = second.nativeElement as HTMLElement;
     // restored: EU expanded (no city level since it was removed)
     expect(rowHeaders(el2)).toEqual(['EU', 'US', 'Grand Total']);
-    expect(gridOf(second).getFieldLayout().find((f) => f.id === 'city')?.area).toBeNull();
+    expect(
+      gridOf(second)
+        .getFieldLayout()
+        .find((f) => f.id === 'city')?.area,
+    ).toBeNull();
   });
 
   it('state()/applyState() round-trip and getCsv flattens what is on screen', async () => {

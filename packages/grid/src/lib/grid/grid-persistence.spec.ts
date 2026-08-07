@@ -297,7 +297,9 @@ describe('OgeGrid CSV export', () => {
   it('customizeCell rewrites CSV cells and keeps defaults on undefined', async () => {
     // isolate from state persisted by earlier tests in this suite
     TestBed.configureTestingModule({
-      providers: [{ provide: OGE_STATE_STORAGE, useValue: new MemoryStorage() }],
+      providers: [
+        { provide: OGE_STATE_STORAGE, useValue: new MemoryStorage() },
+      ],
     });
     const fixture = TestBed.createComponent(PersistenceHost);
     await settle(fixture);

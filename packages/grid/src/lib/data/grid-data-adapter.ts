@@ -1,5 +1,19 @@
-import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
-import type { DataChange, DataSource, LoadOptions, LoadResult, RowKey } from '@oge-ui/core';
+import {
+  DestroyRef,
+  Injectable,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
+import type {
+  DataChange,
+  DataSource,
+  LoadOptions,
+  LoadResult,
+  RowKey,
+} from '@oge-ui/core';
 import { GridStateStore } from '../state/grid-state.store';
 
 /** Rows fetched per windowed request (remote virtual / infinite scrolling). */
@@ -62,7 +76,12 @@ export class GridDataAdapter<T = unknown> {
 
   /** Base options for windowed loads: everything except skip/take/signal. */
   private windowBase(): Omit<LoadOptions, 'skip' | 'take' | 'signal'> {
-    const { skip: _s, take: _t, signal: _sig, ...base } = untracked(this.store.loadOptions);
+    const {
+      skip: _s,
+      take: _t,
+      signal: _sig,
+      ...base
+    } = untracked(this.store.loadOptions);
     return base;
   }
 
@@ -86,23 +105,37 @@ export class GridDataAdapter<T = unknown> {
     const total = untracked(this._windowTotal);
     const clampedEnd = total === null ? end : Math.min(end, total);
     const firstBlock = Math.max(0, Math.floor(start / WINDOW_BLOCK_SIZE));
-    const lastBlock = Math.max(firstBlock, Math.ceil(clampedEnd / WINDOW_BLOCK_SIZE) - 1);
+    const lastBlock = Math.max(
+      firstBlock,
+      Math.ceil(clampedEnd / WINDOW_BLOCK_SIZE) - 1,
+    );
     for (let block = firstBlock; block <= lastBlock; block++) {
-      if (this.pendingBlocks.has(block) || this.loadedBlocks.has(block)) continue;
+      if (this.pendingBlocks.has(block) || this.loadedBlocks.has(block))
+        continue;
       this.pendingBlocks.add(block);
       this.pendingCount.set(this.pendingBlocks.size);
       const expectedBase = baseJson;
       source
-        .load({ ...base, skip: block * WINDOW_BLOCK_SIZE, take: WINDOW_BLOCK_SIZE })
+        .load({
+          ...base,
+          skip: block * WINDOW_BLOCK_SIZE,
+          take: WINDOW_BLOCK_SIZE,
+        })
         .then((result) => {
           if (this.windowBaseJson !== expectedBase) return; // stale base
           const rows = result.data as readonly T[];
           const merged = new Map(untracked(this._windowRows));
-          rows.forEach((row, i) => merged.set(block * WINDOW_BLOCK_SIZE + i, row));
+          rows.forEach((row, i) =>
+            merged.set(block * WINDOW_BLOCK_SIZE + i, row),
+          );
           this._windowRows.set(merged);
-          if (result.totalCount !== undefined) this._windowTotal.set(result.totalCount);
+          if (result.totalCount !== undefined)
+            this._windowTotal.set(result.totalCount);
           this._highestLoaded.set(
-            Math.max(untracked(this._highestLoaded), block * WINDOW_BLOCK_SIZE + rows.length)
+            Math.max(
+              untracked(this._highestLoaded),
+              block * WINDOW_BLOCK_SIZE + rows.length,
+            ),
           );
           this.loadedBlocks.add(block);
         })
@@ -150,10 +183,14 @@ export class GridDataAdapter<T = unknown> {
     const cells: { key: RowKey; field: string }[] = [];
     for (const change of batch) {
       if (change.type !== 'update') continue;
-      for (const field of Object.keys(change.patch)) cells.push({ key: change.key, field });
+      for (const field of Object.keys(change.patch))
+        cells.push({ key: change.key, field });
     }
     if (cells.length) {
-      this.pushedCells.set({ batch: untracked(this.pushedCells).batch + 1, cells });
+      this.pushedCells.set({
+        batch: untracked(this.pushedCells).batch + 1,
+        cells,
+      });
     }
   }
 
@@ -162,7 +199,9 @@ export class GridDataAdapter<T = unknown> {
     this.changesSub = null;
     this._source.set(source);
     if (source?.changes) {
-      this.changesSub = source.changes.subscribe((batch) => this.applyPush(batch));
+      this.changesSub = source.changes.subscribe((batch) =>
+        this.applyPush(batch),
+      );
     }
   }
 
@@ -191,7 +230,8 @@ export class GridDataAdapter<T = unknown> {
         this.notifyPushedCells(batch);
       } else {
         this.resetWindow();
-        if (this.lastRange) this.requestRange(this.lastRange.start, this.lastRange.end);
+        if (this.lastRange)
+          this.requestRange(this.lastRange.start, this.lastRange.end);
       }
       return;
     }
@@ -199,8 +239,12 @@ export class GridDataAdapter<T = unknown> {
     const grouped = (untracked(this.store.loadOptions).group?.length ?? 0) > 0;
     if (onlyUpdates && result && !grouped) {
       const data = (result.data as readonly T[]).map((row) => {
-        const change = batch.find((c) => c.type === 'update' && source.keyOf(row) === c.key);
-        return change?.type === 'update' ? ({ ...(row as object), ...change.patch } as T) : row;
+        const change = batch.find(
+          (c) => c.type === 'update' && source.keyOf(row) === c.key,
+        );
+        return change?.type === 'update'
+          ? ({ ...(row as object), ...change.patch } as T)
+          : row;
       });
       this._result.set({ ...result, data });
       this.notifyPushedCells(batch);
@@ -215,7 +259,10 @@ export class GridDataAdapter<T = unknown> {
     if (source) this.load(source, untracked(this.store.loadOptions));
   }
 
-  private load(source: DataSource<T>, options: Parameters<DataSource<T>['load']>[0]): void {
+  private load(
+    source: DataSource<T>,
+    options: Parameters<DataSource<T>['load']>[0],
+  ): void {
     this.inflight?.abort();
     const controller = new AbortController();
     this.inflight = controller;

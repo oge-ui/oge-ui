@@ -37,7 +37,8 @@ describe('OgeGrid live updates (DataSource.changes push)', () => {
 
   function cellTexts(el: HTMLElement, column: number): string[] {
     return Array.from(el.querySelectorAll('.oge-row')).map(
-      (row) => row.querySelectorAll('.oge-cell')[column].textContent?.trim() ?? ''
+      (row) =>
+        row.querySelectorAll('.oge-cell')[column].textContent?.trim() ?? '',
     );
   }
 
@@ -56,16 +57,22 @@ describe('OgeGrid live updates (DataSource.changes push)', () => {
 
     source.push([{ type: 'update', key: 2, patch: { price: 99 } }]);
     await settle(fixture);
-    const flashed = Array.from(el.querySelectorAll('.oge-cell-flash-a, .oge-cell-flash-b'));
+    const flashed = Array.from(
+      el.querySelectorAll('.oge-cell-flash-a, .oge-cell-flash-b'),
+    );
     expect(flashed.length).toBe(1);
     expect(flashed[0].textContent?.trim()).toBe('99');
 
     // a second batch to the same cell alternates the class so the animation restarts
-    const firstClass = flashed[0].classList.contains('oge-cell-flash-a') ? 'a' : 'b';
+    const firstClass = flashed[0].classList.contains('oge-cell-flash-a')
+      ? 'a'
+      : 'b';
     source.push([{ type: 'update', key: 2, patch: { price: 77 } }]);
     await settle(fixture);
     const again = el.querySelector('.oge-cell-flash-a, .oge-cell-flash-b');
-    expect(again?.classList.contains(`oge-cell-flash-${firstClass}`)).toBe(false);
+    expect(again?.classList.contains(`oge-cell-flash-${firstClass}`)).toBe(
+      false,
+    );
   });
 
   it('reflects pushed inserts and removes', async () => {

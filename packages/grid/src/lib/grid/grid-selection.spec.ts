@@ -30,13 +30,20 @@ function rows(el: HTMLElement): HTMLElement[] {
 }
 
 function clickRow(el: HTMLElement, index: number, init?: MouseEventInit): void {
-  rows(el)[index].dispatchEvent(new MouseEvent('click', { bubbles: true, ...init }));
+  rows(el)[index].dispatchEvent(
+    new MouseEvent('click', { bubbles: true, ...init }),
+  );
 }
 
 function selectedIds(el: HTMLElement): string[] {
   return rows(el)
     .filter((row) => row.classList.contains('oge-row-selected'))
-    .map((row) => row.querySelector('.oge-cell:not(.oge-checkbox-cell)')?.textContent?.trim() ?? '');
+    .map(
+      (row) =>
+        row
+          .querySelector('.oge-cell:not(.oge-checkbox-cell)')
+          ?.textContent?.trim() ?? '',
+    );
 }
 
 @Component({
@@ -58,7 +65,9 @@ function selectedIds(el: HTMLElement): string[] {
 })
 class SelectionHost {
   readonly data = PEOPLE;
-  readonly mode = signal<'none' | 'single' | 'multiple' | 'checkbox'>('multiple');
+  readonly mode = signal<'none' | 'single' | 'multiple' | 'checkbox'>(
+    'multiple',
+  );
   readonly groupBy = signal<string[] | undefined>(undefined);
   selected: RowKey[] = [];
   lastMenu: OgeContextMenuEvent<Person> | null = null;
@@ -66,7 +75,10 @@ class SelectionHost {
 
   onMenu(event: OgeContextMenuEvent<Person>): void {
     this.lastMenu = event;
-    event.items.push({ text: `Copy ${event.row.name}`, action: () => this.menuActionRuns++ });
+    event.items.push({
+      text: `Copy ${event.row.name}`,
+      action: () => this.menuActionRuns++,
+    });
     event.items.push({ text: 'Disabled item', disabled: true });
   }
 }
@@ -76,7 +88,11 @@ describe('OgeGrid selection', () => {
     const fixture = TestBed.createComponent(SelectionHost);
     fixture.componentInstance.mode.set(mode);
     await settle(fixture);
-    return { fixture, host: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      el: fixture.nativeElement as HTMLElement,
+    };
   }
 
   it('single mode keeps exactly one row selected', async () => {
@@ -109,7 +125,9 @@ describe('OgeGrid selection', () => {
     clickRow(el, 3, { shiftKey: true });
     await settle(fixture);
     expect(host.selected).toEqual([1, 2, 3, 4]);
-    expect(el.querySelectorAll('.oge-group-row.oge-row-selected').length).toBe(0);
+    expect(el.querySelectorAll('.oge-group-row.oge-row-selected').length).toBe(
+      0,
+    );
   });
 
   it('Ctrl+A selects every filtered row in multi-select modes', async () => {
@@ -118,7 +136,7 @@ describe('OgeGrid selection', () => {
     await settle(fixture);
     const viewport = el.querySelector('.oge-viewport') as HTMLElement;
     viewport.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true })
+      new KeyboardEvent('keydown', { key: 'a', ctrlKey: true, bubbles: true }),
     );
     await settle(fixture);
     expect(new Set(host.selected)).toEqual(new Set([1, 2, 3, 4]));
@@ -126,11 +144,19 @@ describe('OgeGrid selection', () => {
 
   it('checkbox mode renders a checkbox column and select-all with indeterminate state', async () => {
     const { fixture, host, el } = await render('checkbox');
-    const header = el.querySelector('.oge-header-cell.oge-checkbox-cell input') as HTMLInputElement;
+    const header = el.querySelector(
+      '.oge-header-cell.oge-checkbox-cell input',
+    ) as HTMLInputElement;
     expect(header).toBeTruthy();
-    expect(el.querySelectorAll('.oge-cell.oge-checkbox-cell input').length).toBe(4);
+    expect(
+      el.querySelectorAll('.oge-cell.oge-checkbox-cell input').length,
+    ).toBe(4);
 
-    (el.querySelectorAll('.oge-cell.oge-checkbox-cell input')[1] as HTMLInputElement).click();
+    (
+      el.querySelectorAll(
+        '.oge-cell.oge-checkbox-cell input',
+      )[1] as HTMLInputElement
+    ).click();
     await settle(fixture);
     expect(host.selected).toEqual([2]);
     expect(header.indeterminate).toBe(true);
@@ -155,7 +181,9 @@ describe('OgeGrid selection', () => {
 
   it('sets aria attributes for selection', async () => {
     const { fixture, el } = await render();
-    expect(el.querySelector('.oge-viewport')?.getAttribute('aria-multiselectable')).toBe('true');
+    expect(
+      el.querySelector('.oge-viewport')?.getAttribute('aria-multiselectable'),
+    ).toBe('true');
     clickRow(el, 0);
     await settle(fixture);
     expect(rows(el)[0].getAttribute('aria-selected')).toBe('true');
@@ -178,13 +206,14 @@ describe('OgeGrid keyboard navigation', () => {
 
   function key(el: HTMLElement, key: string, init?: KeyboardEventInit): void {
     (el.querySelector('.oge-viewport') as HTMLElement).dispatchEvent(
-      new KeyboardEvent('keydown', { key, bubbles: true, ...init })
+      new KeyboardEvent('keydown', { key, bubbles: true, ...init }),
     );
   }
 
   function tabbableCell(el: HTMLElement): string | null {
     return (
-      el.querySelector('.oge-cell[tabindex="0"]')?.getAttribute('data-cell') ?? null
+      el.querySelector('.oge-cell[tabindex="0"]')?.getAttribute('data-cell') ??
+      null
     );
   }
 
@@ -243,14 +272,19 @@ describe('OgeGrid context menu', () => {
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
 
-    rows(el)[1].dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+    rows(el)[1].dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
+    );
     await settle(fixture);
     expect(fixture.componentInstance.lastMenu?.row.name).toBe('Ayşe');
 
     const menu = el.querySelector('.oge-context-menu') as HTMLElement;
     expect(menu).toBeTruthy();
     const items = Array.from(menu.querySelectorAll('.oge-menu-item'));
-    expect(items.map((i) => i.textContent?.trim())).toEqual(['Copy Ayşe', 'Disabled item']);
+    expect(items.map((i) => i.textContent?.trim())).toEqual([
+      'Copy Ayşe',
+      'Disabled item',
+    ]);
     expect((items[1] as HTMLButtonElement).disabled).toBe(true);
 
     (items[0] as HTMLButtonElement).click();

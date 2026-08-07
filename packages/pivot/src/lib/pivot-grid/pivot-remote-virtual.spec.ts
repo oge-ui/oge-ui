@@ -37,7 +37,11 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 @Component({
   imports: [OgePivotGrid, OgePivotField],
   template: `
-    <oge-pivot-grid [data]="data" [virtualScrolling]="true" [fieldPanel]="false">
+    <oge-pivot-grid
+      [data]="data"
+      [virtualScrolling]="true"
+      [fieldPanel]="false"
+    >
       <oge-pivot-field dataField="region" area="row" />
       <oge-pivot-field dataField="city" area="row" />
       <oge-pivot-field dataField="year" area="column" />
@@ -54,11 +58,14 @@ describe('OgePivotGrid virtual scrolling', () => {
     const fixture = TestBed.createComponent(VirtualHost);
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
-    const grid = fixture.debugElement.children[0].componentInstance as OgePivotGrid<Sale>;
+    const grid = fixture.debugElement.children[0]
+      .componentInstance as OgePivotGrid<Sale>;
     grid.expandAll('row'); // 50 regions × 200 cities → thousands of row slots
     await settle(fixture);
 
-    const totalRows = Array.from(el.querySelectorAll('.oge-pivot-row-header')).length;
+    const totalRows = Array.from(
+      el.querySelectorAll('.oge-pivot-row-header'),
+    ).length;
     expect(totalRows).toBeLessThan(80); // window + overscan, not thousands
     expect(el.querySelectorAll('.oge-pivot-cell').length).toBeLessThan(400);
 
@@ -103,14 +110,17 @@ describe('OgePivotGrid remote store', () => {
     const store = fixture.componentInstance.store;
 
     expect(store.calls).toHaveLength(1);
-    expect(store.calls[0].rowFields.map((f) => f.dataField)).toEqual(['region', 'city']);
+    expect(store.calls[0].rowFields.map((f) => f.dataField)).toEqual([
+      'region',
+      'city',
+    ]);
     expect(store.calls[0].measures).toEqual([
       { field: 'amount', type: 'sum', name: undefined },
     ]);
 
-    const headers = Array.from(el.querySelectorAll('.oge-pivot-row-header')).map((h) =>
-      h.textContent?.trim()
-    );
+    const headers = Array.from(
+      el.querySelectorAll('.oge-pivot-row-header'),
+    ).map((h) => h.textContent?.trim());
     expect(headers[0]).toBe('Region 0');
     expect(headers.at(-1)).toBe('Grand Total'); // grand row from rowTotals payload
 
@@ -119,9 +129,9 @@ describe('OgePivotGrid remote store', () => {
     await settle(fixture);
     expect(store.calls).toHaveLength(2);
     expect(store.calls[1].rowExpandedPaths).toEqual([['Region 0']]);
-    const expanded = Array.from(el.querySelectorAll('.oge-pivot-row-header')).map((h) =>
-      h.textContent?.trim()
-    );
+    const expanded = Array.from(
+      el.querySelectorAll('.oge-pivot-row-header'),
+    ).map((h) => h.textContent?.trim());
     expect(expanded).toContain('City 0'); // children came from the second load
   });
 });

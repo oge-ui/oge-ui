@@ -27,14 +27,22 @@ describe('pivot axis sorting', () => {
       { id: 'amount', dataField: 'amount', area: 'data', summaryType: 'sum' },
     ];
     expect(rowLabels(base)).toEqual(['A-Region', 'B-Region', 'C-Region']);
-    expect(
-      rowLabels([{ ...base[0], sortOrder: 'desc' }, base[1]])
-    ).toEqual(['C-Region', 'B-Region', 'A-Region']);
+    expect(rowLabels([{ ...base[0], sortOrder: 'desc' }, base[1]])).toEqual([
+      'C-Region',
+      'B-Region',
+      'A-Region',
+    ]);
   });
 
   it('sortBySummaryField orders a level by the measure grand total', () => {
     const fields: PivotFieldConfig[] = [
-      { id: 'region', dataField: 'region', area: 'row', sortBySummaryField: 'amount', sortOrder: 'desc' },
+      {
+        id: 'region',
+        dataField: 'region',
+        area: 'row',
+        sortBySummaryField: 'amount',
+        sortOrder: 'desc',
+      },
       { id: 'year', dataField: 'year', area: 'column' },
       { id: 'amount', dataField: 'amount', area: 'data', summaryType: 'sum' },
     ];

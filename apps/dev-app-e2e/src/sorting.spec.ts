@@ -11,9 +11,13 @@ test('sorts by header click and pages through 10k rows', async ({ page }) => {
   await idHeader.click();
   await idHeader.click();
   await expect(idHeader).toHaveAttribute('aria-sort', 'descending');
-  await expect(page.locator('.oge-row').first().locator('.oge-cell').first()).toHaveText('10000');
+  await expect(
+    page.locator('.oge-row').first().locator('.oge-cell').first(),
+  ).toHaveText('10000');
 
   // next page keeps the sort
   await page.getByLabel('Next page').click();
-  await expect(page.locator('.oge-row').first().locator('.oge-cell').first()).toHaveText('9985');
+  await expect(
+    page.locator('.oge-row').first().locator('.oge-cell').first(),
+  ).toHaveText('9985');
 });

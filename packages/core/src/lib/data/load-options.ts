@@ -31,7 +31,12 @@ export type FilterOperator =
  * cleanly for remote (e.g. .NET-style) backends.
  */
 export type FilterExpr =
-  | { readonly type: 'binary'; readonly field: string; readonly op: FilterOperator; readonly value?: unknown }
+  | {
+      readonly type: 'binary';
+      readonly field: string;
+      readonly op: FilterOperator;
+      readonly value?: unknown;
+    }
   | { readonly type: 'and' | 'or'; readonly operands: readonly FilterExpr[] }
   | { readonly type: 'not'; readonly operand: FilterExpr };
 

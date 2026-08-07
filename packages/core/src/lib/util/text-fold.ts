@@ -12,7 +12,10 @@
  * when match positions must be projected back onto the original text.
  */
 export function foldText(text: string): string {
-  return text.toLowerCase().normalize('NFD').replace(/\p{M}+/gu, '');
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}+/gu, '');
 }
 
 export interface FoldedText {
@@ -34,7 +37,8 @@ export function foldTextWithMap(text: string): FoldedText {
   let index = 0;
   for (const char of text) {
     const foldedChar = foldText(char);
-    for (let unit = 0; unit < foldedChar.length; unit++) sourceIndex.push(index);
+    for (let unit = 0; unit < foldedChar.length; unit++)
+      sourceIndex.push(index);
     folded += foldedChar;
     index += char.length;
   }

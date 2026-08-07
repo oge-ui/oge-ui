@@ -30,7 +30,9 @@ describe('resolveKeySelector', () => {
   });
 
   it('accepts a selector function', () => {
-    const keyOf = resolveKeySelector<{ a: string; b: string }>((r) => `${r.a}:${r.b}`);
+    const keyOf = resolveKeySelector<{ a: string; b: string }>(
+      (r) => `${r.a}:${r.b}`,
+    );
     expect(keyOf({ a: 'x', b: 'y' })).toBe('x:y');
   });
 });

@@ -15,7 +15,10 @@ export interface CustomDataSourceOptions<T> {
   load: (options: LoadOptions) => Promise<LoadResult<T>>;
   /** Defaults to "the server does everything". */
   capabilities?: Partial<DataSourceCapabilities>;
-  distinct?: (field: string, options?: { filter?: FilterExpr | null }) => Promise<readonly unknown[]>;
+  distinct?: (
+    field: string,
+    options?: { filter?: FilterExpr | null },
+  ) => Promise<readonly unknown[]>;
   insert?: (item: T) => Promise<T>;
   update?: (key: RowKey, patch: Partial<T>) => Promise<T>;
   remove?: (key: RowKey) => Promise<void>;
@@ -37,7 +40,9 @@ export class CustomDataSource<T> implements DataSource<T> {
   readonly changes?: SubscribableLike<readonly DataChange<T>[]>;
 
   private readonly keySelector: (row: T) => RowKey;
-  private readonly loadDelegate: (options: LoadOptions) => Promise<LoadResult<T>>;
+  private readonly loadDelegate: (
+    options: LoadOptions,
+  ) => Promise<LoadResult<T>>;
 
   constructor(options: CustomDataSourceOptions<T>) {
     this.keySelector = resolveKeySelector(options.key);

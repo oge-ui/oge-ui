@@ -14,11 +14,15 @@ export class OffsetTree {
   /** Smallest power of two ≥ n, used for binary lifting in indexAt. */
   private readonly topBit: number;
 
-  constructor(count: number, defaultHeight: number | ((index: number) => number)) {
+  constructor(
+    count: number,
+    defaultHeight: number | ((index: number) => number),
+  ) {
     this.n = count;
     this.heights = new Float64Array(count);
     this.tree = new Float64Array(count + 1);
-    const heightOf = typeof defaultHeight === 'function' ? defaultHeight : () => defaultHeight;
+    const heightOf =
+      typeof defaultHeight === 'function' ? defaultHeight : () => defaultHeight;
     for (let i = 0; i < count; i++) {
       const h = heightOf(i);
       this.heights[i] = h;

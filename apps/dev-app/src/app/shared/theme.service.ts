@@ -17,12 +17,12 @@ export class ThemeService {
   private readonly document = inject(DOCUMENT);
 
   readonly theme = signal<GridTheme>(
-    (localStorage.getItem(STORAGE_KEY) as GridTheme | null) ?? 'default'
+    (localStorage.getItem(STORAGE_KEY) as GridTheme | null) ?? 'default',
   );
 
   /** Docs light/dark mode; also switches the grids via the `oge-theme-dark` class. */
   readonly mode = signal<DocsMode>(
-    (localStorage.getItem(MODE_STORAGE_KEY) as DocsMode | null) ?? 'light'
+    (localStorage.getItem(MODE_STORAGE_KEY) as DocsMode | null) ?? 'light',
   );
 
   toggleMode(): void {
@@ -38,7 +38,8 @@ export class ThemeService {
         existing?.remove();
         return;
       }
-      const link = (existing as HTMLLinkElement) ?? this.document.createElement('link');
+      const link =
+        (existing as HTMLLinkElement) ?? this.document.createElement('link');
       link.id = LINK_ID;
       link.rel = 'stylesheet';
       link.href = `themes/${theme}.css`;

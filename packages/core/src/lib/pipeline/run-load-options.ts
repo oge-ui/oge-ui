@@ -25,7 +25,7 @@ export interface RunLoadOptionsConfig<T = unknown> {
 export function runLoadOptions<T>(
   rows: readonly T[],
   options: LoadOptions,
-  config: RunLoadOptionsConfig<T> = {}
+  config: RunLoadOptionsConfig<T> = {},
 ): LoadResult<T> {
   const filtered = applyFilter(rows, options.filter);
   const searchFields =
@@ -37,21 +37,33 @@ export function runLoadOptions<T>(
 
   const summary = options.totalSummary?.length
     ? {
-        summary: computeSummaries(searched, options.totalSummary, config.customSummaries).map(
-          (s) => s.value
-        ),
+        summary: computeSummaries(
+          searched,
+          options.totalSummary,
+          config.customSummaries,
+        ).map((s) => s.value),
       }
     : {};
-  const totalCount = options.requireTotalCount ? { totalCount: searched.length } : {};
+  const totalCount = options.requireTotalCount
+    ? { totalCount: searched.length }
+    : {};
 
   const groups = options.group ?? [];
   if (groups.length) {
     const sorted = applySort(
       searched,
-      [...groups.map((g) => ({ field: g.field, dir: g.dir })), ...(options.sort ?? [])],
-      config.sortValues
+      [
+        ...groups.map((g) => ({ field: g.field, dir: g.dir })),
+        ...(options.sort ?? []),
+      ],
+      config.sortValues,
     );
-    const grouped = groupRows(sorted, groups, options.groupSummary ?? [], config.customSummaries);
+    const grouped = groupRows(
+      sorted,
+      groups,
+      options.groupSummary ?? [],
+      config.customSummaries,
+    );
     return {
       data: grouped,
       ...(options.requireGroupCount ? { groupCount: grouped.length } : {}),
