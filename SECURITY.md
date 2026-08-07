@@ -5,11 +5,6 @@
 Security fixes land on the latest minor release of the `0.x` line. Older
 versions do not receive patches — upgrade to the latest release.
 
-| Version    | Supported |
-| ---------- | --------- |
-| latest 0.x | ✅        |
-| older      | ❌        |
-
 ## Reporting a vulnerability
 
 Please **do not open a public issue** for security problems.
@@ -19,9 +14,10 @@ Please **do not open a public issue** for security problems.
 - use GitHub's private reporting: **Security → Report a vulnerability** on
   the [oge-ui/oge-ui](https://github.com/oge-ui/oge-ui) repository.
 
-You will get an acknowledgement within 72 hours. We ask for up to 90 days to
-ship a fix before public disclosure; credit is given in the release notes
-unless you prefer otherwise.
+This is a small project; you will normally hear back within a few days. We
+ask for a reasonable window (up to 90 days) to ship a fix before public
+disclosure; credit is given in the release notes unless you prefer
+otherwise.
 
 ## Scope notes
 

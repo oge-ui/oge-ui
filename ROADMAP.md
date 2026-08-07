@@ -1,132 +1,132 @@
 # OGE Data Grid — Feature Parity Roadmap
 
 Comparison of `@oge-ui/grid` against the feature set of leading commercial data grids.
-Legend: ✅ implemented · 🟡 partial · ❌ missing.
+Legend: Done · Partial · Missing.
 
 Last updated: 2026-08-06 (after Phase 17 / methods & events API parity).
 
 ## 1. Data binding & data operations
 
-| Feature                                 | Reference | OGE | Notes                                                                                       |
-| --------------------------------------- | --------- | --- | ------------------------------------------------------------------------------------------- |
-| Local array binding                     | ✔         | ✅  | `T[]`, `ArrayDataSource`                                                                    |
-| Custom remote store                     | ✔         | ✅  | `CustomDataSource` + serializable `LoadOptions`                                             |
-| OData store                             | ✔         | ✅  | `ODataDataSource` + `buildODataQuery` (v4: `$skip`/`$top`/`$orderby`/`$filter`/`$count`)    |
-| CRUD write-back                         | ✔         | ✅  | `insert/update/remove`, in-place array CRUD                                                 |
-| Push / live updates (`reshapeOnPush`)   | ✔         | ✅  | `ArrayDataSource.push()` + `changes` stream; updates patch in place, insert/remove reload   |
-| `highlightChanges` (flash pushed cells) | ✔         | ✅  | exact patched cells flash, re-triggers on repeat updates (Phase 14)                         |
-| Server-side sort/filter/page/group      | ✔         | ✅  | verified with request-log e2e                                                               |
-| Server-side summaries                   | ✔         | ✅  | positional `summary` payload                                                                |
-| Deferred group loading (`items: null`)  | ✔         | ✅  | `grouping.autoExpandAll: false`; children fetched on expand, cached, skeleton while loading |
+| Feature                                 | Reference | OGE  | Notes                                                                                       |
+| --------------------------------------- | --------- | ---- | ------------------------------------------------------------------------------------------- |
+| Local array binding                     | Yes       | Done | `T[]`, `ArrayDataSource`                                                                    |
+| Custom remote store                     | Yes       | Done | `CustomDataSource` + serializable `LoadOptions`                                             |
+| OData store                             | Yes       | Done | `ODataDataSource` + `buildODataQuery` (v4: `$skip`/`$top`/`$orderby`/`$filter`/`$count`)    |
+| CRUD write-back                         | Yes       | Done | `insert/update/remove`, in-place array CRUD                                                 |
+| Push / live updates (`reshapeOnPush`)   | Yes       | Done | `ArrayDataSource.push()` + `changes` stream; updates patch in place, insert/remove reload   |
+| `highlightChanges` (flash pushed cells) | Yes       | Done | exact patched cells flash, re-triggers on repeat updates (Phase 14)                         |
+| Server-side sort/filter/page/group      | Yes       | Done | verified with request-log e2e                                                               |
+| Server-side summaries                   | Yes       | Done | positional `summary` payload                                                                |
+| Deferred group loading (`items: null`)  | Yes       | Done | `grouping.autoExpandAll: false`; children fetched on expand, cached, skeleton while loading |
 
 ## 2. Paging & scrolling
 
-| Feature                                   | Reference | OGE | Notes                                                                   |
-| ----------------------------------------- | --------- | --- | ----------------------------------------------------------------------- |
-| Paging + page-size selector + info        | ✔         | ✅  | `pageSizes`, `showInfo`                                                 |
-| "All" page size option                    | ✔         | ✅  | `pageSizes: [10, 'all']` (Phase 13)                                     |
-| Pager display modes (compact/adaptive)    | ✔         | ✅  | `displayMode: full/compact/adaptive` + width-driven adaptive (Phase 13) |
-| Row virtual scrolling                     | ✔         | ✅  | Fenwick-tree windowing, 100k e2e                                        |
-| **Column virtualization**                 | ✔         | ✅  | `columnRenderingMode: 'virtual'`; plain columns only (no pins/bands)    |
-| **Infinite scrolling**                    | ✔         | ✅  | `scrolling.mode: 'infinite'`, skeleton fillers, growing scroll space    |
-| Remote virtual scrolling (windowed fetch) | ✔         | ✅  | 100-row block cache, de-dupe, sort/filter invalidation; 1M-row demo     |
-| Variable row heights (measured)           | ✔         | ✅  | `autoRowHeight`: measured after render, scroll-anchored corrections     |
-| scrollToRow public API                    | ✔         | ✅  | `scrollToRow(index                                                      | key)` (Phase 13) |
+| Feature                                   | Reference | OGE  | Notes                                                                   |
+| ----------------------------------------- | --------- | ---- | ----------------------------------------------------------------------- |
+| Paging + page-size selector + info        | Yes       | Done | `pageSizes`, `showInfo`                                                 |
+| "All" page size option                    | Yes       | Done | `pageSizes: [10, 'all']` (Phase 13)                                     |
+| Pager display modes (compact/adaptive)    | Yes       | Done | `displayMode: full/compact/adaptive` + width-driven adaptive (Phase 13) |
+| Row virtual scrolling                     | Yes       | Done | Fenwick-tree windowing, 100k e2e                                        |
+| **Column virtualization**                 | Yes       | Done | `columnRenderingMode: 'virtual'`; plain columns only (no pins/bands)    |
+| **Infinite scrolling**                    | Yes       | Done | `scrolling.mode: 'infinite'`, skeleton fillers, growing scroll space    |
+| Remote virtual scrolling (windowed fetch) | Yes       | Done | 100-row block cache, de-dupe, sort/filter invalidation; 1M-row demo     |
+| Variable row heights (measured)           | Yes       | Done | `autoRowHeight`: measured after render, scroll-anchored corrections     |
+| scrollToRow public API                    | Yes       | Done | `scrollToRow(index                                                      | key)` (Phase 13) |
 
 ## 3. Sorting
 
-| Feature                                           | Reference | OGE | Notes                                                   |
-| ------------------------------------------------- | --------- | --- | ------------------------------------------------------- |
-| Single/multi/none + allowUnsorting                | ✔         | ✅  | incl. global config                                     |
-| Initial sort via column (`sortIndex`/`sortOrder`) | ✔         | ✅  | + `groupIndex` (Phase 11); stateKey/user wins           |
-| Custom sort (`calculateSortValue`)                | ✔         | ✅  | works client-side incl. lookup display order (Phase 13) |
+| Feature                                           | Reference | OGE  | Notes                                                   |
+| ------------------------------------------------- | --------- | ---- | ------------------------------------------------------- |
+| Single/multi/none + allowUnsorting                | Yes       | Done | incl. global config                                     |
+| Initial sort via column (`sortIndex`/`sortOrder`) | Yes       | Done | + `groupIndex` (Phase 11); stateKey/user wins           |
+| Custom sort (`calculateSortValue`)                | Yes       | Done | works client-side incl. lookup display order (Phase 13) |
 
 ## 4. Filtering & search
 
-| Feature                                | Reference | OGE | Notes                                                                     |
-| -------------------------------------- | --------- | --- | ------------------------------------------------------------------------- |
-| Filter row                             | ✔         | ✅  | dataType-aware editors, debounce                                          |
-| Filter row **operator menu** per cell  | ✔         | ✅  | per-dataType operators + Reset (Phase 10)                                 |
-| Header filter (distinct values)        | ✔         | ✅  | via `DataSource.distinct`                                                 |
-| Header filter search box               | ✔         | ✅  | Phase 10; date columns group by year with tri-state checkboxes (Phase 14) |
-| Search panel                           | ✔         | ✅  |                                                                           |
-| Search result **highlighting**         | ✔         | ✅  | default cells, `<mark>` (Phase 10)                                        |
-| **Filter Builder + filter panel**      | ✔         | ✅  | recursive and/or editor + readable panel (Phase 10)                       |
-| Programmatic filter value input/output | ✔         | ✅  | `[(filterValue)]`, persisted via `stateKey` (Phase 10)                    |
-| `calculateFilterExpression` per column | ✔         | ✅  | filter row + builder use the custom expression (Phase 13)                 |
+| Feature                                | Reference | OGE  | Notes                                                                     |
+| -------------------------------------- | --------- | ---- | ------------------------------------------------------------------------- |
+| Filter row                             | Yes       | Done | dataType-aware editors, debounce                                          |
+| Filter row **operator menu** per cell  | Yes       | Done | per-dataType operators + Reset (Phase 10)                                 |
+| Header filter (distinct values)        | Yes       | Done | via `DataSource.distinct`                                                 |
+| Header filter search box               | Yes       | Done | Phase 10; date columns group by year with tri-state checkboxes (Phase 14) |
+| Search panel                           | Yes       | Done |                                                                           |
+| Search result **highlighting**         | Yes       | Done | default cells, `<mark>` (Phase 10)                                        |
+| **Filter Builder + filter panel**      | Yes       | Done | recursive and/or editor + readable panel (Phase 10)                       |
+| Programmatic filter value input/output | Yes       | Done | `[(filterValue)]`, persisted via `stateKey` (Phase 10)                    |
+| `calculateFilterExpression` per column | Yes       | Done | filter row + builder use the custom expression (Phase 13)                 |
 
 ## 5. Grouping & summaries
 
-| Feature                                   | Reference | OGE | Notes                                                     |
-| ----------------------------------------- | --------- | --- | --------------------------------------------------------- |
-| Group panel drag & drop, multi-level      | ✔         | ✅  |                                                           |
-| Group summaries / total summaries         | ✔         | ✅  | sum/avg/min/max/count, localized patterns                 |
-| Multiple summaries per column             | ✔         | ✅  | `[groupSummary]="['sum','avg']"` (Phase 14)               |
-| Custom summary (`calculateCustomSummary`) | ✔         | ✅  | `type: 'custom'` + column reducer, client-side (Phase 14) |
-| Summaries in **group footer**             | ✔         | ✅  | `groupSummaryPosition: 'footer'` per column (Phase 14)    |
-| Expand/collapse **all** (API + UI)        | ✔         | ✅  | API (Phase 13) + toolbar buttons when grouped (Phase 14)  |
-| `autoExpandGroup` control                 | ✔         | ✅  | `grouping.autoExpandAll` (Phase 12)                       |
-| Column `groupIndex` input                 | ✔         | ✅  | Phase 11                                                  |
+| Feature                                   | Reference | OGE  | Notes                                                     |
+| ----------------------------------------- | --------- | ---- | --------------------------------------------------------- |
+| Group panel drag & drop, multi-level      | Yes       | Done |                                                           |
+| Group summaries / total summaries         | Yes       | Done | sum/avg/min/max/count, localized patterns                 |
+| Multiple summaries per column             | Yes       | Done | `[groupSummary]="['sum','avg']"` (Phase 14)               |
+| Custom summary (`calculateCustomSummary`) | Yes       | Done | `type: 'custom'` + column reducer, client-side (Phase 14) |
+| Summaries in **group footer**             | Yes       | Done | `groupSummaryPosition: 'footer'` per column (Phase 14)    |
+| Expand/collapse **all** (API + UI)        | Yes       | Done | API (Phase 13) + toolbar buttons when grouped (Phase 14)  |
+| `autoExpandGroup` control                 | Yes       | Done | `grouping.autoExpandAll` (Phase 12)                       |
+| Column `groupIndex` input                 | Yes       | Done | Phase 11                                                  |
 
 ## 6. Columns
 
-| Feature                                        | Reference | OGE | Notes                                                                                                     |
-| ---------------------------------------------- | --------- | --- | --------------------------------------------------------------------------------------------------------- |
-| Resize / reorder / fixed (pin) / chooser       | ✔         | ✅  | chooser anchored to its button, drag-reorder rows, drop indicators on headers (Phase 14)                  |
-| minWidth / width / visible                     | ✔         | ✅  |                                                                                                           |
-| **Banded columns** (multi-row headers)         | ✔         | ✅  | `<oge-column-group>` (Phase 11)                                                                           |
-| **Lookup columns** (display + dropdown editor) | ✔         | ✅  | display/filter/header-filter/editor/CSV (Phase 11); cascading via `dataSource: (row) => items` (Phase 13) |
-| Calculated columns (`calculateCellValue`)      | ✔         | ✅  | display/CSV (Phase 11); sort/filter via `calculateSortValue`/`calculateFilterExpression` (Phase 13)       |
-| Adaptive column hiding (`hidingPriority`)      | ✔         | ✅  | width-driven, restores automatically (Phase 11)                                                           |
-| Command/buttons column customization           | ✔         | ✅  | `commandButtons` input: built-in + custom buttons, `visible(row)`, icons (Phase 13)                       |
-| Header/cell/edit templates                     | ✔         | ✅  | fully typed                                                                                               |
-| Word wrap / auto row height                    | ✔         | ✅  | `wordWrap` input (Phase 11; virtual mode stays fixed-height)                                              |
+| Feature                                        | Reference | OGE  | Notes                                                                                                     |
+| ---------------------------------------------- | --------- | ---- | --------------------------------------------------------------------------------------------------------- |
+| Resize / reorder / fixed (pin) / chooser       | Yes       | Done | chooser anchored to its button, drag-reorder rows, drop indicators on headers (Phase 14)                  |
+| minWidth / width / visible                     | Yes       | Done |                                                                                                           |
+| **Banded columns** (multi-row headers)         | Yes       | Done | `<oge-column-group>` (Phase 11)                                                                           |
+| **Lookup columns** (display + dropdown editor) | Yes       | Done | display/filter/header-filter/editor/CSV (Phase 11); cascading via `dataSource: (row) => items` (Phase 13) |
+| Calculated columns (`calculateCellValue`)      | Yes       | Done | display/CSV (Phase 11); sort/filter via `calculateSortValue`/`calculateFilterExpression` (Phase 13)       |
+| Adaptive column hiding (`hidingPriority`)      | Yes       | Done | width-driven, restores automatically (Phase 11)                                                           |
+| Command/buttons column customization           | Yes       | Done | `commandButtons` input: built-in + custom buttons, `visible(row)`, icons (Phase 13)                       |
+| Header/cell/edit templates                     | Yes       | Done | fully typed                                                                                               |
+| Word wrap / auto row height                    | Yes       | Done | `wordWrap` input (Phase 11; virtual mode stays fixed-height)                                              |
 
 ## 7. Selection, focus, keyboard
 
-| Feature                               | Reference | OGE | Notes                                                                                                                                     |
-| ------------------------------------- | --------- | --- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| single/multiple/checkbox + shift/ctrl | ✔         | ✅  |                                                                                                                                           |
-| Select-all (filtered) + indeterminate | ✔         | ✅  |                                                                                                                                           |
-| `selectAllMode: 'page'`               | ✔         | ✅  | page or all filtered pages, async fetch for remote (Phase 13)                                                                             |
-| Deferred selection                    | ✔         | ✅  | `selectionDeferred` + `[(selectionFilter)]` FilterExpr (Phase 14)                                                                         |
-| Focused row                           | ✔         | ✅  | `[(focusedRowKey)]` + `focusedRowChanged`; `navigateToRow(key)` scrolls & focuses (tree-list additionally has `autoNavigateToFocusedRow`) |
-| Excel-like keyboard navigation        | ✔         | ✅  | axe-verified ARIA; RTL-aware arrows                                                                                                       |
-| Clipboard copy                        | ✔         | ✅  | `copyToClipboard()` + Ctrl+C, TSV of selection (Phase 13)                                                                                 |
+| Feature                               | Reference | OGE  | Notes                                                                                                                                     |
+| ------------------------------------- | --------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| single/multiple/checkbox + shift/ctrl | Yes       | Done |                                                                                                                                           |
+| Select-all (filtered) + indeterminate | Yes       | Done |                                                                                                                                           |
+| `selectAllMode: 'page'`               | Yes       | Done | page or all filtered pages, async fetch for remote (Phase 13)                                                                             |
+| Deferred selection                    | Yes       | Done | `selectionDeferred` + `[(selectionFilter)]` FilterExpr (Phase 14)                                                                         |
+| Focused row                           | Yes       | Done | `[(focusedRowKey)]` + `focusedRowChanged`; `navigateToRow(key)` scrolls & focuses (tree-list additionally has `autoNavigateToFocusedRow`) |
+| Excel-like keyboard navigation        | Yes       | Done | axe-verified ARIA; RTL-aware arrows                                                                                                       |
+| Clipboard copy                        | Yes       | Done | `copyToClipboard()` + Ctrl+C, TSV of selection (Phase 13)                                                                                 |
 
 ## 8. Editing
 
-| Feature                             | Reference | OGE | Notes                                                                          |
-| ----------------------------------- | --------- | --- | ------------------------------------------------------------------------------ |
-| cell / row / batch / popup modes    | ✔         | ✅  |                                                                                |
-| **form** mode (inline form)         | ✔         | ✅  | `editing.mode: 'form'` — labeled inline form row (Phase 13)                    |
-| Validation rules                    | ✔         | ✅  | `required` + any Angular validators                                            |
-| Custom editors (`editCellTemplate`) | ✔         | ✅  | `*ogeEditTemplate` with FormControl                                            |
-| Lookup editors                      | ✔         | ✅  | default select editor (Phase 11); cascading via function dataSource (Phase 13) |
-| Row drag & drop reordering          | ✔         | ✅  | `rowDragging` + drag handle + `rowReordered` (Phase 13)                        |
-| Confirmation on delete              | ✔         | ✅  | `editing.confirmDelete` (Phase 13)                                             |
+| Feature                             | Reference | OGE  | Notes                                                                          |
+| ----------------------------------- | --------- | ---- | ------------------------------------------------------------------------------ |
+| cell / row / batch / popup modes    | Yes       | Done |                                                                                |
+| **form** mode (inline form)         | Yes       | Done | `editing.mode: 'form'` — labeled inline form row (Phase 13)                    |
+| Validation rules                    | Yes       | Done | `required` + any Angular validators                                            |
+| Custom editors (`editCellTemplate`) | Yes       | Done | `*ogeEditTemplate` with FormControl                                            |
+| Lookup editors                      | Yes       | Done | default select editor (Phase 11); cascading via function dataSource (Phase 13) |
+| Row drag & drop reordering          | Yes       | Done | `rowDragging` + drag handle + `rowReordered` (Phase 13)                        |
+| Confirmation on delete              | Yes       | Done | `editing.confirmDelete` (Phase 13)                                             |
 
 ## 9. Appearance, UX, misc
 
-| Feature                                       | Reference | OGE | Notes                                                                                                                                                                                                                                                                                                                                                                                                |
-| --------------------------------------------- | --------- | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Theming (tokens, dark, bridges)               | ✔         | ✅  | arguably ahead (Tailwind/Bootstrap bridges)                                                                                                                                                                                                                                                                                                                                                          |
-| Localization of all texts                     | ✔         | ✅  | `provideOgeGridConfig` messages                                                                                                                                                                                                                                                                                                                                                                      |
-| RTL support                                   | ✔         | ✅  | `rtlEnabled` / auto-detect, logical CSS properties, mirrored chevrons & arrows (Phase 13)                                                                                                                                                                                                                                                                                                            |
-| Row alternation (striping)                    | ✔         | ✅  | `rowAlternation` + `--oge-row-alt-bg` token (Phase 13)                                                                                                                                                                                                                                                                                                                                               |
-| Loading indicator                             | ✔         | ✅  | `loadPanel` spinner overlay (Phase 13)                                                                                                                                                                                                                                                                                                                                                               |
-| Custom no-data template                       | ✔         | ✅  | `*ogeNoDataTemplate` (Phase 13)                                                                                                                                                                                                                                                                                                                                                                      |
-| Row template (full row)                       | ✔         | ✅  | `*ogeRowTemplate` with typed context (Phase 13)                                                                                                                                                                                                                                                                                                                                                      |
-| Toolbar customization (custom items)          | ✔         | ✅  | `[ogeToolbar]` projected slot (Phase 13)                                                                                                                                                                                                                                                                                                                                                             |
-| Context menu (rows)                           | ✔         | ✅  | event-driven items                                                                                                                                                                                                                                                                                                                                                                                   |
-| Header context menu                           | ✔         | ✅  | sort/group/pin/hide, localized (Phase 9); customizable via `headerContextMenu` (Phase 15)                                                                                                                                                                                                                                                                                                            |
-| **State persistence**                         | ✔         | ✅  | `stateKey` + sync/async `OGE_STATE_STORAGE`; `state()` / `applyState()` / `stateChange` (Phase 15)                                                                                                                                                                                                                                                                                                   |
-| **Export CSV/Excel**                          | ✔         | ✅  | CSV in core; Excel via lazy `@oge-ui/grid/export-excel` (exceljs, typed cells); `scope: all/page/selection`                                                                                                                                                                                                                                                                                          |
-| Export PDF                                    | ✔         | ✅  | lazy `@oge-ui/grid/export-pdf` (jspdf + autotable, optional peers) (Phase 14)                                                                                                                                                                                                                                                                                                                        |
-| Imperative public API (refresh, expandAll, …) | ✔         | ✅  | Phase 13 set + Phase 17: editing (`addRow/editRow/deleteRow/saveChanges/discardChanges/hasChanges`), selection (`selectAll/deselectAll/clearSelection/isRowSelected/getSelectedRowsData`), data (`getVisibleRows/getRowByKey`), navigation (`navigateToRow/expandRow/collapseRow/isRowExpanded`), loading (`beginCustomLoading/endCustomLoading`), paging getters/setters — see "API parity" section |
-| Event surface (cellClick, saving, …)          | ✔         | ✅  | Phase 13 set + Phase 17: `cellDblClick/selectionChanged/focusedRowChanged/editingStart/initNewRow/rowInserting‑ed/rowUpdating‑ed/rowRemoving‑ed/savedChanges/editCanceled/exporting/dataErrorOccurred` — see "API parity" section                                                                                                                                                                    |
-| Master-detail                                 | ✔         | ✅  | typed template                                                                                                                                                                                                                                                                                                                                                                                       |
-| Hierarchical data (tree grid)                 | ✔         | ✅  | separate `@oge-ui/tree-list` component (see table below)                                                                                                                                                                                                                                                                                                                                             |
+| Feature                                       | Reference | OGE  | Notes                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------------------------- | --------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Theming (tokens, dark, bridges)               | Yes       | Done | arguably ahead (Tailwind/Bootstrap bridges)                                                                                                                                                                                                                                                                                                                                                          |
+| Localization of all texts                     | Yes       | Done | `provideOgeGridConfig` messages                                                                                                                                                                                                                                                                                                                                                                      |
+| RTL support                                   | Yes       | Done | `rtlEnabled` / auto-detect, logical CSS properties, mirrored chevrons & arrows (Phase 13)                                                                                                                                                                                                                                                                                                            |
+| Row alternation (striping)                    | Yes       | Done | `rowAlternation` + `--oge-row-alt-bg` token (Phase 13)                                                                                                                                                                                                                                                                                                                                               |
+| Loading indicator                             | Yes       | Done | `loadPanel` spinner overlay (Phase 13)                                                                                                                                                                                                                                                                                                                                                               |
+| Custom no-data template                       | Yes       | Done | `*ogeNoDataTemplate` (Phase 13)                                                                                                                                                                                                                                                                                                                                                                      |
+| Row template (full row)                       | Yes       | Done | `*ogeRowTemplate` with typed context (Phase 13)                                                                                                                                                                                                                                                                                                                                                      |
+| Toolbar customization (custom items)          | Yes       | Done | `[ogeToolbar]` projected slot (Phase 13)                                                                                                                                                                                                                                                                                                                                                             |
+| Context menu (rows)                           | Yes       | Done | event-driven items                                                                                                                                                                                                                                                                                                                                                                                   |
+| Header context menu                           | Yes       | Done | sort/group/pin/hide, localized (Phase 9); customizable via `headerContextMenu` (Phase 15)                                                                                                                                                                                                                                                                                                            |
+| **State persistence**                         | Yes       | Done | `stateKey` + sync/async `OGE_STATE_STORAGE`; `state()` / `applyState()` / `stateChange` (Phase 15)                                                                                                                                                                                                                                                                                                   |
+| **Export CSV/Excel**                          | Yes       | Done | CSV in core; Excel via lazy `@oge-ui/grid/export-excel` (exceljs, typed cells); `scope: all/page/selection`                                                                                                                                                                                                                                                                                          |
+| Export PDF                                    | Yes       | Done | lazy `@oge-ui/grid/export-pdf` (jspdf + autotable, optional peers) (Phase 14)                                                                                                                                                                                                                                                                                                                        |
+| Imperative public API (refresh, expandAll, …) | Yes       | Done | Phase 13 set + Phase 17: editing (`addRow/editRow/deleteRow/saveChanges/discardChanges/hasChanges`), selection (`selectAll/deselectAll/clearSelection/isRowSelected/getSelectedRowsData`), data (`getVisibleRows/getRowByKey`), navigation (`navigateToRow/expandRow/collapseRow/isRowExpanded`), loading (`beginCustomLoading/endCustomLoading`), paging getters/setters — see "API parity" section |
+| Event surface (cellClick, saving, …)          | Yes       | Done | Phase 13 set + Phase 17: `cellDblClick/selectionChanged/focusedRowChanged/editingStart/initNewRow/rowInserting‑ed/rowUpdating‑ed/rowRemoving‑ed/savedChanges/editCanceled/exporting/dataErrorOccurred` — see "API parity" section                                                                                                                                                                    |
+| Master-detail                                 | Yes       | Done | typed template                                                                                                                                                                                                                                                                                                                                                                                       |
+| Hierarchical data (tree grid)                 | Yes       | Done | separate `@oge-ui/tree-list` component (see table below)                                                                                                                                                                                                                                                                                                                                             |
 
 ## API parity — Methods & Events (dxDataGrid / dxTreeList, Phase 17)
 
@@ -144,87 +144,87 @@ detail rows (`hidingPriority` is the house solution) and the AI-column surface
 
 ### Methods (dxDataGrid → OgeGrid)
 
-| Reference method (group)                                                                 | OGE | Notes                                                                                                |
-| ---------------------------------------------------------------------------------------- | --- | ---------------------------------------------------------------------------------------------------- |
-| `refresh()`                                                                              | ✅  | `refresh()`                                                                                          |
-| `byKey(key)` / `getVisibleRows()` / `keyOf(obj)`                                         | ✅  | `getRowByKey(key)` (sync, loaded rows) / `getVisibleRows()` / `keyField` selector                    |
-| `addRow()` / `deleteRow()` / `undeleteRow()`                                             | ✅  | `addRow()` + `initNewRow` prefill; `deleteRow(key)` — key-addressed, batch mode toggles (= undelete) |
-| `editRow()` / `editCell()`                                                               | ✅  | `editRow(key)` (row/form/popup); cell editors are pointer/keyboard-driven, `editingStart` can veto   |
-| `saveEditData()` / `cancelEditData()` / `hasEditData()` / `closeEditCell()`              | ✅  | `saveChanges()` / `discardChanges()` / `hasChanges()`; `discardChanges` also closes editors          |
-| `selectAll()` / `deselectAll()` / `clearSelection()`                                     | ✅  | same names; `selectAll()` honors `selectAllMode` and deferred mode (filter expression, no keys)      |
-| `selectRows()` / `deselectRows()` / `getSelectedRowKeys()`                               | ✅  | the `[(selectedKeys)]` model is the read/write surface                                               |
-| `getSelectedRowsData()` / `isRowSelected(key)`                                           | ✅  | same names (loaded rows)                                                                             |
-| `filter()` / `clearFilter()` / `searchByText()`                                          | ✅  | `[(filterValue)]` + `clearFilters()`; search via the search panel and the state snapshot             |
-| `clearSorting()` / `clearGrouping()`                                                     | ✅  | `clearSorting()`; grouping via the `groupBy` input (`[]` clears)                                     |
-| `expandRow()` / `collapseRow()` / `isRowExpanded()`                                      | ✅  | same names — group rows (group node key) and master-detail rows                                      |
-| `expandAll()` / `collapseAll()`                                                          | ✅  | `expandAllGroups()` / `collapseAllGroups()` (all levels; no per-`groupIndex` variant)                |
-| `pageIndex()` / `pageSize()` / `pageCount()` / `totalCount()`                            | ✅  | same getters + explicit `setPageIndex()` / `setPageSize()` setters (no overloaded getter/setter)     |
-| `navigateToRow(key)` / `focus()` / `isRowFocused()`                                      | ✅  | `navigateToRow(key)`; focus state reads from `focusedRowKey()`                                       |
-| `beginCustomLoading()` / `endCustomLoading()`                                            | ✅  | same names; message defaults to `messages.loading`                                                   |
-| `state()`                                                                                | ✅  | `state()` / `applyState()` / `stateChange`                                                           |
-| Export (via `onExporting`)                                                               | ✅  | `getExportData()` / `getCsv()` / `exportCsv()` + lazy Excel/PDF entries; `copyToClipboard()`         |
-| Column DOM/option access (`columnOption`, `cellValue`, `getCellElement`, `addColumn`, …) | —   | deliberate: columns are declarative signal inputs (`visible` is a model); no runtime option bag      |
-| `showColumnChooser()` / `hideColumnChooser()`                                            | 🟡  | `columnChooser` input renders the button; no imperative open — backlog                               |
-| `getTotalSummaryValue(name)`                                                             | 🟡  | totals render in the UI; no programmatic getter — backlog                                            |
+| Reference method (group)                                                                 | OGE     | Notes                                                                                                |
+| ---------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `refresh()`                                                                              | Done    | `refresh()`                                                                                          |
+| `byKey(key)` / `getVisibleRows()` / `keyOf(obj)`                                         | Done    | `getRowByKey(key)` (sync, loaded rows) / `getVisibleRows()` / `keyField` selector                    |
+| `addRow()` / `deleteRow()` / `undeleteRow()`                                             | Done    | `addRow()` + `initNewRow` prefill; `deleteRow(key)` — key-addressed, batch mode toggles (= undelete) |
+| `editRow()` / `editCell()`                                                               | Done    | `editRow(key)` (row/form/popup); cell editors are pointer/keyboard-driven, `editingStart` can veto   |
+| `saveEditData()` / `cancelEditData()` / `hasEditData()` / `closeEditCell()`              | Done    | `saveChanges()` / `discardChanges()` / `hasChanges()`; `discardChanges` also closes editors          |
+| `selectAll()` / `deselectAll()` / `clearSelection()`                                     | Done    | same names; `selectAll()` honors `selectAllMode` and deferred mode (filter expression, no keys)      |
+| `selectRows()` / `deselectRows()` / `getSelectedRowKeys()`                               | Done    | the `[(selectedKeys)]` model is the read/write surface                                               |
+| `getSelectedRowsData()` / `isRowSelected(key)`                                           | Done    | same names (loaded rows)                                                                             |
+| `filter()` / `clearFilter()` / `searchByText()`                                          | Done    | `[(filterValue)]` + `clearFilters()`; search via the search panel and the state snapshot             |
+| `clearSorting()` / `clearGrouping()`                                                     | Done    | `clearSorting()`; grouping via the `groupBy` input (`[]` clears)                                     |
+| `expandRow()` / `collapseRow()` / `isRowExpanded()`                                      | Done    | same names — group rows (group node key) and master-detail rows                                      |
+| `expandAll()` / `collapseAll()`                                                          | Done    | `expandAllGroups()` / `collapseAllGroups()` (all levels; no per-`groupIndex` variant)                |
+| `pageIndex()` / `pageSize()` / `pageCount()` / `totalCount()`                            | Done    | same getters + explicit `setPageIndex()` / `setPageSize()` setters (no overloaded getter/setter)     |
+| `navigateToRow(key)` / `focus()` / `isRowFocused()`                                      | Done    | `navigateToRow(key)`; focus state reads from `focusedRowKey()`                                       |
+| `beginCustomLoading()` / `endCustomLoading()`                                            | Done    | same names; message defaults to `messages.loading`                                                   |
+| `state()`                                                                                | Done    | `state()` / `applyState()` / `stateChange`                                                           |
+| Export (via `onExporting`)                                                               | Done    | `getExportData()` / `getCsv()` / `exportCsv()` + lazy Excel/PDF entries; `copyToClipboard()`         |
+| Column DOM/option access (`columnOption`, `cellValue`, `getCellElement`, `addColumn`, …) | —       | deliberate: columns are declarative signal inputs (`visible` is a model); no runtime option bag      |
+| `showColumnChooser()` / `hideColumnChooser()`                                            | Partial | `columnChooser` input renders the button; no imperative open — backlog                               |
+| `getTotalSummaryValue(name)`                                                             | Partial | totals render in the UI; no programmatic getter — backlog                                            |
 
 ### Events (dxDataGrid → OgeGrid)
 
-| Reference event                                                | OGE | Notes                                                                                       |
-| -------------------------------------------------------------- | --- | ------------------------------------------------------------------------------------------- |
-| `rowClick` / `rowDblClick` / `cellClick` / `cellDblClick`      | ✅  | same names, flat payloads with `row`/`key`/`field`/`value`/`event`                          |
-| `selectionChanged`                                             | ✅  | `{ selectedKeys, addedKeys, removedKeys }` diffs                                            |
-| `focusedRowChanged` / `focusedRowChanging`                     | ✅  | `focusedRowChanged { key, row }`; pre-event skipped — set the `focusedRowKey` model instead |
-| `editingStart`                                                 | ✅  | cancelable, `{ key, row, field?, cancel }` (cell and row editors)                           |
-| `initNewRow`                                                   | ✅  | `{ key, values }` prefill hook (tree-list adds `parentKey`)                                 |
-| `rowInserting/-ed`, `rowUpdating/-ed`, `rowRemoving/-ed`       | ✅  | per-change around the DataSource write; `-ing` events cancelable                            |
-| `saving` / `saved`                                             | ✅  | `savingChanges` (cancelable, whole batch) / `savedChanges` (applied changes)                |
-| `editCanceled` / `editCanceling`                               | ✅  | `editCanceled`; the sync discard needs no pre-event                                         |
-| `exporting`                                                    | ✅  | cancelable, mutable `fileName` (CSV path; Excel/PDF helpers call `getExportData` directly)  |
-| `dataErrorOccurred`                                            | ✅  | `{ error }` — load failures and save failures                                               |
-| `contextMenuPreparing`                                         | ✅  | `rowContextMenu` / `headerContextMenu` with prebuilt mutable `items`                        |
-| `contentReady`                                                 | ✅  | post-render notification (not a jQuery lifecycle hook)                                      |
-| `rowExpanding/-ed`, `rowCollapsing/-ed` (groups/master-detail) | 🟡  | tree-list has all four (cancelable); grid group/detail toggles are not evented — backlog    |
-| `focusedCellChanged/-ing`                                      | 🟡  | keyboard model tracks the cell internally; not exposed as an output — backlog               |
-| `rowValidating`                                                | —   | deliberate: Angular validators run per `FormControl`                                        |
+| Reference event                                                | OGE     | Notes                                                                                       |
+| -------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `rowClick` / `rowDblClick` / `cellClick` / `cellDblClick`      | Done    | same names, flat payloads with `row`/`key`/`field`/`value`/`event`                          |
+| `selectionChanged`                                             | Done    | `{ selectedKeys, addedKeys, removedKeys }` diffs                                            |
+| `focusedRowChanged` / `focusedRowChanging`                     | Done    | `focusedRowChanged { key, row }`; pre-event skipped — set the `focusedRowKey` model instead |
+| `editingStart`                                                 | Done    | cancelable, `{ key, row, field?, cancel }` (cell and row editors)                           |
+| `initNewRow`                                                   | Done    | `{ key, values }` prefill hook (tree-list adds `parentKey`)                                 |
+| `rowInserting/-ed`, `rowUpdating/-ed`, `rowRemoving/-ed`       | Done    | per-change around the DataSource write; `-ing` events cancelable                            |
+| `saving` / `saved`                                             | Done    | `savingChanges` (cancelable, whole batch) / `savedChanges` (applied changes)                |
+| `editCanceled` / `editCanceling`                               | Done    | `editCanceled`; the sync discard needs no pre-event                                         |
+| `exporting`                                                    | Done    | cancelable, mutable `fileName` (CSV path; Excel/PDF helpers call `getExportData` directly)  |
+| `dataErrorOccurred`                                            | Done    | `{ error }` — load failures and save failures                                               |
+| `contextMenuPreparing`                                         | Done    | `rowContextMenu` / `headerContextMenu` with prebuilt mutable `items`                        |
+| `contentReady`                                                 | Done    | post-render notification (not a jQuery lifecycle hook)                                      |
+| `rowExpanding/-ed`, `rowCollapsing/-ed` (groups/master-detail) | Partial | tree-list has all four (cancelable); grid group/detail toggles are not evented — backlog    |
+| `focusedCellChanged/-ing`                                      | Partial | keyboard model tracks the cell internally; not exposed as an output — backlog               |
+| `rowValidating`                                                | —       | deliberate: Angular validators run per `FormControl`                                        |
 
 ### dxTreeList extras
 
-| Reference member                                         | OGE | Notes                                                                              |
-| -------------------------------------------------------- | --- | ---------------------------------------------------------------------------------- |
-| `forEachNode()` / `getNodeByKey()`                       | ✅  | same names (`getNodeByKey` returns the row; nodes are flat rows + `treeIndex`)     |
-| `getSelectedRowKeys(mode)` / `getSelectedRowsData(mode)` | ✅  | `'all' \| 'leavesOnly' \| 'excludeRecursive'`                                      |
-| `addRow(parentId)`                                       | ✅  | `addRow(parentKey?)` + `initNewRow { key, parentKey, values }`                     |
-| `expandRow/collapseRow/isRowExpanded`                    | ✅  | polarity-aware under `autoExpandAll`; `rowExpanding/rowCollapsing` veto UI toggles |
-| `loadDescendants()`                                      | 🟡  | lazy loader fetches per expansion; no bulk prefetch API — backlog                  |
-| `getRootNode()`                                          | —   | deliberate: flat rows + `rootValue`; there is no node-object tree                  |
-| `nodesInitialized`                                       | —   | deliberate: the `treeIndex` is a computed — react with `effect()`                  |
+| Reference member                                         | OGE     | Notes                                                                              |
+| -------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `forEachNode()` / `getNodeByKey()`                       | Done    | same names (`getNodeByKey` returns the row; nodes are flat rows + `treeIndex`)     |
+| `getSelectedRowKeys(mode)` / `getSelectedRowsData(mode)` | Done    | `'all' \| 'leavesOnly' \| 'excludeRecursive'`                                      |
+| `addRow(parentId)`                                       | Done    | `addRow(parentKey?)` + `initNewRow { key, parentKey, values }`                     |
+| `expandRow/collapseRow/isRowExpanded`                    | Done    | polarity-aware under `autoExpandAll`; `rowExpanding/rowCollapsing` veto UI toggles |
+| `loadDescendants()`                                      | Partial | lazy loader fetches per expansion; no bulk prefetch API — backlog                  |
+| `getRootNode()`                                          | —       | deliberate: flat rows + `rootValue`; there is no node-object tree                  |
+| `nodesInitialized`                                       | —       | deliberate: the `treeIndex` is a computed — react with `effect()`                  |
 
 ### dxPivotGrid (small surface)
 
 Methods beyond the jQuery machinery: `getDataSource()` → engine/`OgePivotStore`
-inputs; `getFieldChooserPopup()` → `showFieldChooser()`; `bindChart()` → ❌
+inputs; `getFieldChooserPopup()` → `showFieldChooser()`; `bindChart()` → missing
 (needs a charting package, see backlog); `updateDimensions()` → not needed
-(signals). Events: `cellClick` ✅, `cellPrepared` → `customizeCell` input ✅,
+(signals). Events: `cellClick` done, `cellPrepared` → `customizeCell` input done,
 `contentReady/initialized/optionChanged/disposing` → deliberate,
-`contextMenuPreparing` → 🟡 internal menus are not customizable — backlog,
-`exporting` → 🟡 `exportCsv()` has no pre-event yet — backlog. The pivot also
+`contextMenuPreparing` → partial: internal menus are not customizable — backlog,
+`exporting` → partial: `exportCsv()` has no pre-event yet — backlog. The pivot also
 has `cellDblClick`, `fieldLayoutChange` and `stateChange` beyond the reference.
 
 ## Prioritized backlog
 
-**Phase 9: ✅ DONE** (state persistence, CSV export, header context menu, READMEs, v0.1.0 release prep; Excel export deferred to Phase 13).
+**Phase 9 — shipped** (state persistence, CSV export, header context menu, READMEs, v0.1.0 release prep; Excel export deferred to Phase 13).
 
-**Phase 10 — Filtering parity: ✅ DONE** (filter builder + panel, operator menu, header-filter search, `[(filterValue)]`, search highlighting).
+**Phase 10 — Filtering parity — shipped** (filter builder + panel, operator menu, header-filter search, `[(filterValue)]`, search highlighting).
 
-**Phase 11 — Column parity: ✅ DONE** (lookup columns + editors, banded columns, `calculateCellValue`, `sortOrder`/`sortIndex`/`groupIndex`, word wrap, adaptive hiding). Remaining → Phase 13: cascading lookups, buttons-column customization, `calculateFilterExpression`.
+**Phase 11 — Column parity — shipped** (lookup columns + editors, banded columns, `calculateCellValue`, `sortOrder`/`sortIndex`/`groupIndex`, word wrap, adaptive hiding). Remaining → Phase 13: cascading lookups, buttons-column customization, `calculateFilterExpression`.
 
-**Phase 12 — Data & scrolling parity: ✅ DONE** (infinite scrolling, remote virtual scrolling with block cache, column virtualization, push/live updates, OData adapter, measured variable row heights + scroll anchoring, deferred group loading via `grouping.autoExpandAll: false`).
+**Phase 12 — Data & scrolling parity — shipped** (infinite scrolling, remote virtual scrolling with block cache, column virtualization, push/live updates, OData adapter, measured variable row heights + scroll anchoring, deferred group loading via `grouping.autoExpandAll: false`).
 
-**Phase 13 — UX & API parity: ✅ DONE** (imperative API, richer event surface, loading panel, row alternation, focused-row mode, delete confirmation, noData/row templates, toolbar customization, Excel export secondary entry with export scopes, clipboard copy, `selectAllMode: 'page'`, pager display modes + "All" page size, RTL, row drag reordering, form edit mode, cascading lookups, buttons-column customization, `calculateSortValue`/`calculateFilterExpression`).
+**Phase 13 — UX & API parity — shipped** (imperative API, richer event surface, loading panel, row alternation, focused-row mode, delete confirmation, noData/row templates, toolbar customization, Excel export secondary entry with export scopes, clipboard copy, `selectAllMode: 'page'`, pager display modes + "All" page size, RTL, row drag reordering, form edit mode, cascading lookups, buttons-column customization, `calculateSortValue`/`calculateFilterExpression`).
 
-**Phase 14 — Summary, selection & export parity: ✅ DONE (v0.3.0)** (multiple summaries per column, `calculateCustomSummary`, group footer summaries, expand/collapse-all toolbar UI, grouped date values in the header filter, deferred selection via `selectionFilter`, PDF export secondary entry, `highlightChanges` cell flash, anchored column chooser with drag reorder + drop indicators, Rows & Templates docs page).
+**Phase 14 — Summary, selection & export parity — shipped (v0.3.0)** (multiple summaries per column, `calculateCustomSummary`, group footer summaries, expand/collapse-all toolbar UI, grouped date values in the header filter, deferred selection via `selectionFilter`, PDF export secondary entry, `highlightChanges` cell flash, anchored column chooser with drag reorder + drop indicators, Rows & Templates docs page).
 
-**Phase 15 — TreeList (`@oge-ui/tree-list`): ✅ CORE DONE** (new package; grid foundation extraction; see table below).
+**Phase 15 — TreeList (`@oge-ui/tree-list`) — core shipped** (new package; grid foundation extraction; see table below).
 
 ## TreeList — Feature Parity
 
@@ -234,29 +234,29 @@ KeyboardNavModel, DeferredChildrenLoader, EditingModel, state persistence) and
 the `@oge-ui/core` tree primitives (`buildTreeIndex`, `flattenTreeData`,
 `filterTreeKeys`, tri-state selection helpers).
 
-| Feature                                                             | Reference | OGE | Notes                                                                                                                                                                    |
-| ------------------------------------------------------------------- | --------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Flat self-referencing data (`keyExpr`/`parentIdExpr`/`rootValue`)   | ✔         | ✅  | + `orphanPolicy: discard/promoteToRoot`                                                                                                                                  |
-| Expand/collapse + `autoExpandAll` + `[(expandedRowKeys)]`           | ✔         | ✅  | polarity-aware toggled set, O(visible) flatten; cancelable `rowExpanding`/`rowCollapsing`                                                                                |
-| Remote lazy loading (`hasItemsExpr`)                                | ✔         | ✅  | `filter: [parentIdExpr,'=',key]` per expansion; cache + skeleton; sort invalidates; remote match discovery under filters with `[keyField,'in',keys]` ancestor completion |
-| Row + column virtualization                                         | ✔         | ✅  | 100k-node spec; `columnRenderingMode: 'virtual'` (plain columns)                                                                                                         |
-| Sorting (sibling-scoped, multi)                                     | ✔         | ✅  | source-applied sort inherits bucket order                                                                                                                                |
-| Filter row + search panel                                           | ✔         | ✅  | client-side, ancestors preserved; `filterMode`; `expandNodesOnFiltering`; operator menu; `<mark>` highlighting                                                           |
-| Selection (single/multiple/checkbox)                                | ✔         | ✅  | shared SelectionSlice; two-way `selectedKeys`                                                                                                                            |
-| Recursive tri-state selection                                       | ✔         | ✅  | `selectionRecursive` + `getSelectedRowKeys(mode)`; lazy branches bulk-fetch (`parentId in [...]`) before cascading                                                       |
-| Focused row                                                         | ✔         | ✅  | `[(focusedRowKey)]`; `autoNavigateToFocusedRow` expands the path and scrolls                                                                                             |
-| Keyboard navigation (treegrid)                                      | ✔         | ✅  | logical ArrowRight/Left expand/collapse, parent/first-child jumps, RTL-aware                                                                                             |
-| ARIA treegrid                                                       | partial   | ✅  | `aria-level/posinset/setsize/expanded`                                                                                                                                   |
-| Columns: resize, reorder, chooser, templates, bands, lookup display | ✔         | ✅  | shared `<oge-column>`; drag reorder + anchored chooser                                                                                                                   |
-| Drag & drop reparent + sibling ordering                             | ✔         | ✅  | drop inside/before/after with indicators; descendant guard; array auto-apply + `rowReparented`                                                                           |
-| State persistence (`stateKey`)                                      | ✔         | ✅  | sort/filters/columns/expansion                                                                                                                                           |
-| Theming (dark/bootstrap/tailwind)                                   | ✔         | ✅  | shared `_structure.scss` + theme css                                                                                                                                     |
-| Editing (cell/row/batch/form/popup)                                 | ✔         | ✅  | shared `EditingModel`; `formItems`/`formColCount` layouts; `addRow(parentKey)` + `initNewRow` prefill                                                                    |
-| Export CSV + Excel (native outline)                                 | ✔         | ✅  | indented CSV; lazy `@oge-ui/tree-list/export-excel` sets real `outlineLevel`s                                                                                            |
-| Column chooser / filter builder + panel / context menus / toolbar   | ✔         | ✅  | anchored chooser with drag reorder; `[(filterValue)]` builder; row + header menus; `[ogeToolbar]`; `loadPanel`/`wordWrap`/`commandButtons`                               |
-| Nested payloads (`itemsExpr`)                                       | ✔         | ✅  | inline `items` arrays flattened internally (array data)                                                                                                                  |
-| Header filter (distinct values popup, date-year groups)             | ✔         | ✅  | client-side distinct over loaded rows; popup search; tri-state year groups; fold-ordered (locale-safe)                                                                   |
-| Paging                                                              | ✔         | ✅  | client-side over the flattened visible rows; shared pager; filter resets the page                                                                                        |
+| Feature                                                             | Reference | OGE  | Notes                                                                                                                                                                    |
+| ------------------------------------------------------------------- | --------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Flat self-referencing data (`keyExpr`/`parentIdExpr`/`rootValue`)   | Yes       | Done | + `orphanPolicy: discard/promoteToRoot`                                                                                                                                  |
+| Expand/collapse + `autoExpandAll` + `[(expandedRowKeys)]`           | Yes       | Done | polarity-aware toggled set, O(visible) flatten; cancelable `rowExpanding`/`rowCollapsing`                                                                                |
+| Remote lazy loading (`hasItemsExpr`)                                | Yes       | Done | `filter: [parentIdExpr,'=',key]` per expansion; cache + skeleton; sort invalidates; remote match discovery under filters with `[keyField,'in',keys]` ancestor completion |
+| Row + column virtualization                                         | Yes       | Done | 100k-node spec; `columnRenderingMode: 'virtual'` (plain columns)                                                                                                         |
+| Sorting (sibling-scoped, multi)                                     | Yes       | Done | source-applied sort inherits bucket order                                                                                                                                |
+| Filter row + search panel                                           | Yes       | Done | client-side, ancestors preserved; `filterMode`; `expandNodesOnFiltering`; operator menu; `<mark>` highlighting                                                           |
+| Selection (single/multiple/checkbox)                                | Yes       | Done | shared SelectionSlice; two-way `selectedKeys`                                                                                                                            |
+| Recursive tri-state selection                                       | Yes       | Done | `selectionRecursive` + `getSelectedRowKeys(mode)`; lazy branches bulk-fetch (`parentId in [...]`) before cascading                                                       |
+| Focused row                                                         | Yes       | Done | `[(focusedRowKey)]`; `autoNavigateToFocusedRow` expands the path and scrolls                                                                                             |
+| Keyboard navigation (treegrid)                                      | Yes       | Done | logical ArrowRight/Left expand/collapse, parent/first-child jumps, RTL-aware                                                                                             |
+| ARIA treegrid                                                       | partial   | Done | `aria-level/posinset/setsize/expanded`                                                                                                                                   |
+| Columns: resize, reorder, chooser, templates, bands, lookup display | Yes       | Done | shared `<oge-column>`; drag reorder + anchored chooser                                                                                                                   |
+| Drag & drop reparent + sibling ordering                             | Yes       | Done | drop inside/before/after with indicators; descendant guard; array auto-apply + `rowReparented`                                                                           |
+| State persistence (`stateKey`)                                      | Yes       | Done | sort/filters/columns/expansion                                                                                                                                           |
+| Theming (dark/bootstrap/tailwind)                                   | Yes       | Done | shared `_structure.scss` + theme css                                                                                                                                     |
+| Editing (cell/row/batch/form/popup)                                 | Yes       | Done | shared `EditingModel`; `formItems`/`formColCount` layouts; `addRow(parentKey)` + `initNewRow` prefill                                                                    |
+| Export CSV + Excel (native outline)                                 | Yes       | Done | indented CSV; lazy `@oge-ui/tree-list/export-excel` sets real `outlineLevel`s                                                                                            |
+| Column chooser / filter builder + panel / context menus / toolbar   | Yes       | Done | anchored chooser with drag reorder; `[(filterValue)]` builder; row + header menus; `[ogeToolbar]`; `loadPanel`/`wordWrap`/`commandButtons`                               |
+| Nested payloads (`itemsExpr`)                                       | Yes       | Done | inline `items` arrays flattened internally (array data)                                                                                                                  |
+| Header filter (distinct values popup, date-year groups)             | Yes       | Done | client-side distinct over loaded rows; popup search; tri-state year groups; fold-ordered (locale-safe)                                                                   |
+| Paging                                                              | Yes       | Done | client-side over the flattened visible rows; shared pager; filter resets the page                                                                                        |
 
 ## Pivot Grid (`@oge-ui/pivot`) — Feature Parity
 
@@ -264,32 +264,32 @@ the `@oge-ui/core` tree primitives (`buildTreeIndex`, `flattenTreeData`,
 serializable `PivotFieldConfig`, `OgePivotStore` remote contract) and reuses
 the grid foundation for state persistence and shared UI primitives.
 
-| Feature                                                | Reference | OGE | Notes                                                                                                                      |
-| ------------------------------------------------------ | --------- | --- | -------------------------------------------------------------------------------------------------------------------------- |
-| Four areas (row/column/data/filter) + field panel      | ✔         | ✅  | `<oge-pivot-field>` directives; drag chips between areas                                                                   |
-| Expand/collapse on both axes                           | ✔         | ✅  | expanded group keeps its own line carrying the subtotals                                                                   |
-| Summary types (sum/count/avg/min/max/custom)           | ✔         | ✅  | `calculateCustomSummary` reducers travel out-of-band                                                                       |
-| Date/number group intervals                            | ✔         | ✅  | year/quarter/month/day/dayOfWeek + numeric bucket size                                                                     |
-| Display modes (percent-of, running totals, variations) | ✔         | ✅  | post-processing over the materialized matrix; UI via measure chip menu                                                     |
-| Sorting (labels, `sortBySummary` on the opposite axis) | ✔         | ✅  | header context menu; nulls always last                                                                                     |
-| Field filters (include/exclude, search)                | ✔         | ✅  | distinct-value popup, capped at 1000, locale-folded search                                                                 |
-| Field chooser dialog                                   | ✔         | ✅  | search + 4 zones; `applyChangesMode: instantly/onDemand`                                                                   |
-| Totals visibility settings                             | ✔         | ✅  | row/column sub + grand totals independently                                                                                |
-| Drill-down (raw rows behind a cell)                    | ✔         | ✅  | `drillDown({ rowPath, columnPath })`; timezone-safe date range filters                                                     |
-| Two-axis virtual scrolling                             | ✔         | ✅  | fixed-track windows on rows _and_ columns; 20k-row DOM budget spec                                                         |
-| Remote/custom store                                    | ✔         | ✅  | serializable `PivotLoadOptions`/`PivotLoadResult`; `LocalPivotStore` reference impl; abortable loads                       |
-| State persistence                                      | ✔         | ✅  | `stateKey` via shared `OGE_STATE_STORAGE`; `state()`/`applyState()`/`stateChange`                                          |
-| Export CSV / Excel                                     | ✔         | ✅  | `getCsv()`/`exportCsv()` in the package; lazy `@oge-ui/pivot/export-excel` with merged multi-level headers and typed cells |
-| `customizeCell` appearance hook                        | ✔         | ✅  | mutable `{ text, cssClass }` per cell                                                                                      |
-| Keyboard navigation + i18n                             | partial   | ✅  | arrow/Home/End over the matrix, Enter/Space toggles headers; full `OgePivotMessages` token                                 |
-| Field panel collapse + header context menus            | ✔         | ✅  | sort, filter, remove, expand/collapse all, chooser                                                                         |
-| Pivot chart binding                                    | ✔         | ❌  | needs a charting package first                                                                                             |
+| Feature                                                | Reference | OGE     | Notes                                                                                                                      |
+| ------------------------------------------------------ | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Four areas (row/column/data/filter) + field panel      | Yes       | Done    | `<oge-pivot-field>` directives; drag chips between areas                                                                   |
+| Expand/collapse on both axes                           | Yes       | Done    | expanded group keeps its own line carrying the subtotals                                                                   |
+| Summary types (sum/count/avg/min/max/custom)           | Yes       | Done    | `calculateCustomSummary` reducers travel out-of-band                                                                       |
+| Date/number group intervals                            | Yes       | Done    | year/quarter/month/day/dayOfWeek + numeric bucket size                                                                     |
+| Display modes (percent-of, running totals, variations) | Yes       | Done    | post-processing over the materialized matrix; UI via measure chip menu                                                     |
+| Sorting (labels, `sortBySummary` on the opposite axis) | Yes       | Done    | header context menu; nulls always last                                                                                     |
+| Field filters (include/exclude, search)                | Yes       | Done    | distinct-value popup, capped at 1000, locale-folded search                                                                 |
+| Field chooser dialog                                   | Yes       | Done    | search + 4 zones; `applyChangesMode: instantly/onDemand`                                                                   |
+| Totals visibility settings                             | Yes       | Done    | row/column sub + grand totals independently                                                                                |
+| Drill-down (raw rows behind a cell)                    | Yes       | Done    | `drillDown({ rowPath, columnPath })`; timezone-safe date range filters                                                     |
+| Two-axis virtual scrolling                             | Yes       | Done    | fixed-track windows on rows _and_ columns; 20k-row DOM budget spec                                                         |
+| Remote/custom store                                    | Yes       | Done    | serializable `PivotLoadOptions`/`PivotLoadResult`; `LocalPivotStore` reference impl; abortable loads                       |
+| State persistence                                      | Yes       | Done    | `stateKey` via shared `OGE_STATE_STORAGE`; `state()`/`applyState()`/`stateChange`                                          |
+| Export CSV / Excel                                     | Yes       | Done    | `getCsv()`/`exportCsv()` in the package; lazy `@oge-ui/pivot/export-excel` with merged multi-level headers and typed cells |
+| `customizeCell` appearance hook                        | Yes       | Done    | mutable `{ text, cssClass }` per cell                                                                                      |
+| Keyboard navigation + i18n                             | partial   | Done    | arrow/Home/End over the matrix, Enter/Space toggles headers; full `OgePivotMessages` token                                 |
+| Field panel collapse + header context menus            | Yes       | Done    | sort, filter, remove, expand/collapse all, chooser                                                                         |
+| Pivot chart binding                                    | Yes       | Missing | needs a charting package first                                                                                             |
 
-**Phase 16 — Pivot Grid: ✅ DONE** (P0 engine → P5 export/persistence; docs overview + analytics pages, e2e smoke).
+**Phase 16 — Pivot Grid — shipped** (P0 engine → P5 export/persistence; docs overview + analytics pages, e2e smoke).
 
-**Phase 17 — Methods & events API parity (grid + tree-list): ✅ DONE** (imperative editing/selection/data/navigation/loading/paging methods; `selectionChanged`/`focusedRowChanged`, editing lifecycle events, `exporting`, `dataErrorOccurred`, `cellDblClick`; dev-app API reference pages via the shared `ApiReference` component).
+**Phase 17 — Methods & events API parity (grid + tree-list) — shipped** (imperative editing/selection/data/navigation/loading/paging methods; `selectionChanged`/`focusedRowChanged`, editing lifecycle events, `exporting`, `dataErrorOccurred`, `cellDblClick`; dev-app API reference pages via the shared `ApiReference` component).
 
-**Phase 18 — Editor & popup unification (grid + tree-list): ✅ DONE.**
+**Phase 18 — Editor & popup unification (grid + tree-list) — shipped.**
 Editors: one `OgeCellEditor` component (exported from `@oge-ui/grid`) replaced
 the six duplicated cell/form/popup editor blocks — lookup → `oge-select-box`,
 boolean → `oge-check-box`, number → `oge-number-box`, text → `oge-text-box`
@@ -334,7 +334,7 @@ never `Date.parse`).
 | Grid/tree-list date editors + filter row          | —         | Done    | `OgeCellEditor` date branch; timezone-safe day-range filter expressions   |
 | Time-list virtualization                          | —         | Backlog | plain scroll list in v1 (48 rows at the default 30-min interval)          |
 
-**Phase 19 — Date editors: ✅ DONE** (core date-utils; `OgeCalendar`;
+**Phase 19 — Date editors — shipped** (core date-utils; `OgeCalendar`;
 `OgeDateBox` incl. time/datetime + useButtons; grid/tree-list `dataType:
 'date'` editors and the `dateFilterExpr` day-range filter; rows keep their
 storage shape via `serializeLikeOriginal`).
@@ -345,6 +345,12 @@ masking wave (incl. `useMaskBehavior`) · pivot chart binding · parity backlog:
 grid group/detail toggle events, `focusedCellChanged`, imperative column
 chooser open, `getTotalSummaryValue`, pivot `exporting` pre-event +
 customizable pivot context menus.
+
+**Internal debt:** consolidate the per-spec `settle()` test helpers (78
+copies, six diverging bodies) into one shared helper per package · give
+`oge-modal` a decorator host class like every other component · align the
+pivot config on the `provideOge<X>Config()` idiom · stop shipping `src/` in
+the `@oge-ui/core` tarball.
 
 ## Buttons (`@oge-ui/buttons`) — Feature Parity
 
@@ -365,17 +371,17 @@ grid's inline popups migrate to it in a future wave.
 | focus/hover/active state flags                        | Yes       | Skipped | CSS pseudo-classes always on (simpler, documented)                           |
 | rtlEnabled                                            | Yes       | Done    | logical properties; follows `dir`, no input needed                           |
 | onClick                                               | Yes       | Done    | `(clicked)` output (guarded pipeline); native `(click)` documented as bypass |
-| **Async action + auto loading (single-flight)**       | No        | Done    | unique: `[action]`, `[(loading)]`, `actionDone`/`actionFailed`               |
-| **Click guard (throttle/debounce)**                   | No        | Done    | unique: `clickGuard: true / { mode, ms }`                                    |
-| **Badge / dot indicator**                             | No        | Done    | unique: `badge: number/string/true`, 99+ capping, a11y-aware                 |
-| **Hold-to-confirm**                                   | No        | Done    | unique: CSS-only progress bar, Escape/pointer-cancel abort, keyboard hold    |
-| **Auto-repeat (stepper)**                             | No        | Done    | unique: delay + interval, disabled-flip stop                                 |
+| **Async action + auto loading (single-flight)**       | No        | Done    | OGE extra: `[action]`, `[(loading)]`, `actionDone`/`actionFailed`            |
+| **Click guard (throttle/debounce)**                   | No        | Done    | OGE extra: `clickGuard: true / { mode, ms }`                                 |
+| **Badge / dot indicator**                             | No        | Done    | OGE extra: `badge: number/string/true`, 99+ capping, a11y-aware              |
+| **Hold-to-confirm**                                   | No        | Done    | OGE extra: CSS-only progress bar, Escape/pointer-cancel abort, keyboard hold |
+| **Auto-repeat (stepper)**                             | No        | Done    | OGE extra: delay + interval, disabled-flip stop                              |
 | ButtonGroup items + declarative children              | Yes       | Done    | both; items render after projected children                                  |
 | ButtonGroup selectionMode + selectedKeys              | Yes       | Done    | `none/single/multiple`, two-way model, added/removed diffs                   |
 | ButtonGroup keyboard nav + ARIA                       | partial   | Done    | roving tabindex, arrow/Home/End, radiogroup/toolbar/group roles, RTL-aware   |
 | DropDownButton (items / async items / placement)      | Yes       | Done    | `items` array or lazy fn (loading/error/empty rows, cache, runId race guard) |
 | SplitButton                                           | Yes       | Done    | `splitButton` input: main action + chevron toggle, segmented styling         |
-| **rememberLastAction (split)**                        | No        | Done    | unique: last item becomes the main label+action (IDE Run-button pattern)     |
+| **rememberLastAction (split)**                        | No        | Done    | OGE extra: last item becomes the main label+action (IDE Run-button pattern)  |
 | Menu keyboard: arrows/Home/End + **type-ahead**       | partial   | Done    | WAI-ARIA menu-button, `aria-activedescendant`, focus restore, Tab handling   |
 | Custom panel content                                  | Yes       | Done    | `*ogeDropDownContent` template with `$implicit` close fn                     |
 | Overlay: flip/clamp + scroll reposition               | No        | Done    | `@oge-ui/overlay`; grid popups migrate later                                 |
@@ -400,9 +406,9 @@ repo's CVA house pattern. Input masking is deferred to a later wave.
 | **Signal Forms (FormValueControl)**                | No        | Done    | `[formField]` auto-binds errors/touched/disabled/min/max/…                                                                       |
 | Reactive/template forms (CVA)                      | Yes       | Done    | constructor-assignment pattern, `control.events` state bridge                                                                    |
 | valueChangeEvent/debounce                          | Yes       | Done    | `debounce` ms + raw `inputChange` stream; blur/Enter flush                                                                       |
-| **Grapheme-accurate counter (soft limit)**         | No        | Done    | unique: Intl.Segmenter, emoji family = 1; `counterMode: limit/soft`                                                              |
-| **Password reveal + copy button**                  | No        | Done    | unique: in-place type flip (caret kept), clipboard + live-region                                                                 |
-| **Async pending indicator + success icon**         | No        | Done    | unique: rail spinner via `pending`, `showSuccessIcon`                                                                            |
+| **Grapheme-accurate counter (soft limit)**         | No        | Done    | OGE extra: Intl.Segmenter, emoji family = 1; `counterMode: limit/soft`                                                           |
+| **Password reveal + copy button**                  | No        | Done    | OGE extra: in-place type flip (caret kept), clipboard + live-region                                                              |
+| **Async pending indicator + success icon**         | No        | Done    | OGE extra: rail spinner via `pending`, `showSuccessIcon`                                                                         |
 | TextArea autoResize (minRows/maxRows)              | Yes       | Done    | CSS `field-sizing: content` + measurement fallback                                                                               |
 | NumberBox null-empty / min/max/step / spin         | Yes       | Done    | `number \| null`, clamp-on-commit, hold-to-repeat + Arrow keys                                                                   |
 | NumberBox format                                   | Yes       | Done    | `Intl.NumberFormatOptions` display-on-blur, locale-aware parse                                                                   |
@@ -552,9 +558,9 @@ inline dialogs (commercial tier) and the legacy `.oge-edit-popup` CSS in
 | Scroll lock                             | Yes       | Done    | ref-counted body lock + scrollbar-width compensation; `scrollLock`                                                                           |
 | width/height + min/max variants         | Yes       | Done    | `number \| string`; default `min(560px, 100%)`                                                                                               |
 | Cancelable closing pre-event            | partial   | Done    | `closing` with mutable `cancel` + reason                                                                                                     |
-| **Async close guard (single-flight)**   | No        | Done    | unique: `closeGuard: () => boolean \| Promise<boolean>`, `closePending` signal                                                               |
-| **Typed close result (declarative)**    | No        | Done    | unique: `OgeModal<R>`, `close(result)` → `closed.result`                                                                                     |
-| **Built-in busy state**                 | No        | Done    | unique: spinner veil + `aria-busy`; user closes blocked, `close()` allowed                                                                   |
+| **Async close guard (single-flight)**   | No        | Done    | OGE extra: `closeGuard: () => boolean \| Promise<boolean>`, `closePending` signal                                                            |
+| **Typed close result (declarative)**    | No        | Done    | OGE extra: `OgeModal<R>`, `close(result)` → `closed.result`                                                                                  |
+| **Built-in busy state**                 | No        | Done    | OGE extra: spinner veil + `aria-busy`; user closes blocked, `close()` allowed                                                                |
 | `opening` pre-event                     | Yes       | Done    | cancelable `opening { cancel }` on every open path                                                                                           |
 | fullScreen / maximizable                | Yes       | Done    | `[(fullScreen)]` + `showMaximizeButton` title-bar toggle (dx has no button)                                                                  |
 | Shading off (transparent backdrop)      | Yes       | Done    | `shading: false` — visual only, stays modal; color via `--oge-modal-backdrop-bg`                                                             |
@@ -613,7 +619,7 @@ bookkeeping, ref-counted pause causes); the progress bar is a JS-driven
 | richColors / expand (sonner)                       | No        | Skipped | themes own color; expand is visual sugar                                                               |
 | dx widget-base props (accessKey/tabIndex/hint/…)   | Yes       | Skipped | toasts never take focus by design; RTL via logical properties                                          |
 | **promise() with in-place morph**                  | No        | Done    | unique in Angular: `promise(p, {loading, success, error})`, fn forms return patches                    |
-| **ref.update(patch) live morph**                   | No        | Done    | unique: message/severity/timing patch; powers `promise()`                                              |
+| **ref.update(patch) live morph**                   | No        | Done    | OGE extra: message/severity/timing patch; powers `promise()`                                           |
 | **Pause on tab hidden**                            | No        | Done    | unique vs Angular libs: `visibilitychange` pauses/resumes all timers                                   |
 | **Coalesce ×N count badge**                        | No        | Done    | duplicate merge shows a live counter, not just suppression                                             |
 | Focus hotkey (F6-style)                            | No        | Backlog | regions sit at body end (last Tab stops); action toasts should be `sticky`                             |
