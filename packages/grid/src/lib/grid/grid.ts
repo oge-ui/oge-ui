@@ -92,8 +92,8 @@ import {
   describeExpr,
   exprToBuilder,
   operatorsFor,
-  type BuilderGroup,
-  type FilterBuilderField,
+  type OgeBuilderGroup,
+  type OgeFilterBuilderField,
 } from '../filter-builder/filter-builder';
 import {
   OgeCheckBox,
@@ -114,7 +114,7 @@ import {
 import { OgeCellEditor } from '../editing/cell-editor';
 import { OgePager } from '../pager/pager';
 import { GridStateStore } from '../state/grid-state.store';
-import type { SelectionMode } from '../state/selection-slice';
+import type { OgeSelectionMode } from '../state/selection-slice';
 import type { OgeEditTemplateContext } from '../templates/edit-template';
 import type { OgeCellTemplateContext } from '../templates/cell-template';
 import {
@@ -578,7 +578,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   /** Row selection: none | single | multiple (ctrl/shift) | checkbox column. */
-  readonly selectionMode = input<SelectionMode>('none');
+  readonly selectionMode = input<OgeSelectionMode>('none');
 
   /** Two-way binding of the selected row keys. */
   readonly selectedKeys = model<RowKey[]>([]);
@@ -3283,7 +3283,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- filter panel + builder ----------------------------------------------
 
   protected readonly builderOpen = signal(false);
-  protected builderTree: BuilderGroup = {
+  protected builderTree: OgeBuilderGroup = {
     kind: 'group',
     logic: 'and',
     items: [],
@@ -3291,7 +3291,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Bumped by the recursive editor so the preview text refreshes. */
   protected readonly builderVersion = signal(0);
 
-  protected readonly builderFields = computed<FilterBuilderField[]>(() =>
+  protected readonly builderFields = computed<OgeFilterBuilderField[]>(() =>
     this.resolvedColumns()
       .filter((column) => column.filterable && column.field)
       .map((column) => ({

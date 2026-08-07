@@ -1,14 +1,14 @@
 export {
   OgePivotGrid,
-  PIVOT_FIELD_DRAG_TYPE,
+  OGE_PIVOT_FIELD_DRAG_TYPE,
   type OgePivotCellClickEvent,
   type OgePivotCellPrepared,
   type OgePivotMenuItem,
-  type PivotAxisLine,
-  type PivotHeaderCell,
+  type OgePivotAxisLine,
+  type OgePivotHeaderCell,
 } from './lib/pivot-grid/pivot-grid';
 export { OgePivotField } from './lib/pivot-grid/pivot-field';
-export { PivotStateStore } from './lib/pivot-grid/pivot-state.store';
+export { OgePivotStateStore } from './lib/pivot-grid/pivot-state.store';
 export {
   OGE_DEFAULT_PIVOT_MESSAGES,
   OGE_PIVOT_MESSAGES,

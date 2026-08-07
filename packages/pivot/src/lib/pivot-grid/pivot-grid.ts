@@ -46,9 +46,9 @@ import {
 } from '@oge-ui/grid/foundation';
 import { OGE_PIVOT_MESSAGES, type OgePivotMessages } from './pivot-config';
 import { OgePivotField } from './pivot-field';
-import { PivotStateStore } from './pivot-state.store';
+import { OgePivotStateStore } from './pivot-state.store';
 
-export const PIVOT_FIELD_DRAG_TYPE = 'application/x-oge-pivot-field';
+export const OGE_PIVOT_FIELD_DRAG_TYPE = 'application/x-oge-pivot-field';
 
 // virtual-mode fixed track sizes (px)
 const VIRTUAL_ROW_HEIGHT = 32;
@@ -67,7 +67,7 @@ const EMPTY_RESULT: PivotResult = {
 };
 
 /** One visible line of an axis (row line or column slot), in matrix order. */
-export interface PivotAxisLine {
+export interface OgePivotAxisLine {
   readonly text: string;
   readonly path: PivotPath;
   readonly level: number;
@@ -78,7 +78,7 @@ export interface PivotAxisLine {
 }
 
 /** A positioned column-header cell (multi-row header with spans). */
-export interface PivotHeaderCell extends PivotAxisLine {
+export interface OgePivotHeaderCell extends OgePivotAxisLine {
   /** 1-based grid row within the header block. */
   readonly rowStart: number;
   readonly rowEnd: number;
@@ -155,7 +155,7 @@ export class OgePivotGrid<T = unknown> {
   readonly cellDblClick = output<OgePivotCellClickEvent>();
   readonly fieldLayoutChange = output<readonly PivotFieldConfig[]>();
 
-  protected readonly store = new PivotStateStore();
+  protected readonly store = new OgePivotStateStore();
   private readonly defaultMessages = inject(OGE_PIVOT_MESSAGES);
   protected readonly msg = computed<OgePivotMessages>(() => ({
     ...this.defaultMessages,
@@ -615,17 +615,16 @@ export class OgePivotGrid<T = unknown> {
   });
 
   /** Header cells intersecting the horizontal window. */
-  protected readonly visibleHeaderCells = computed<readonly PivotHeaderCell[]>(
-    () => {
-      if (!this.virtualScrolling()) return this.columnHeaderCells();
-      const { start, end } = this.columnWindow();
-      return this.columnHeaderCells().filter(
-        (cell) =>
-          cell.columnStart - 1 < end &&
-          cell.columnStart - 1 + cell.span > start,
-      );
-    },
-  );
+  protected readonly visibleHeaderCells = computed<
+    readonly OgePivotHeaderCell[]
+  >(() => {
+    if (!this.virtualScrolling()) return this.columnHeaderCells();
+    const { start, end } = this.columnWindow();
+    return this.columnHeaderCells().filter(
+      (cell) =>
+        cell.columnStart - 1 < end && cell.columnStart - 1 + cell.span > start,
+    );
+  });
 
   /** Explicit track sizes so off-window cells keep their place (virtual mode). */
   protected readonly matrixTemplate = computed<{
@@ -647,8 +646,8 @@ export class OgePivotGrid<T = unknown> {
 
   // --- axis projections -----------------------------------------------------
 
-  protected readonly rowLines = computed<readonly PivotAxisLine[]>(() => {
-    const lines: PivotAxisLine[] = [];
+  protected readonly rowLines = computed<readonly OgePivotAxisLine[]>(() => {
+    const lines: OgePivotAxisLine[] = [];
     const visit = (nodes: readonly PivotAxisNode[], level: number): void => {
       for (const node of nodes) {
         if (node.leafIndex >= 0)
@@ -673,48 +672,48 @@ export class OgePivotGrid<T = unknown> {
     return depth;
   });
 
-  protected readonly columnHeaderCells = computed<readonly PivotHeaderCell[]>(
-    () => {
-      const depth = this.columnDepth();
-      const cells: PivotHeaderCell[] = [];
-      const startOf = (node: PivotAxisNode): number =>
-        node.leafIndex >= 0 ? node.leafIndex : startOf(node.children[0]);
-      const visit = (nodes: readonly PivotAxisNode[], level: number): void => {
-        for (const node of nodes) {
-          const start = startOf(node);
-          cells.push({
-            ...this.lineOf(node, level),
-            rowStart: level + 1,
-            rowEnd: node.children.length ? level + 2 : depth + 1,
-            columnStart: start + 1,
-            span: Math.max(1, node.leafCount),
-          });
-          if (node.children.length) {
-            // the expanded parent's own subtotal slot needs a header cell under
-            // the spanning parent, down to the leaf row
-            if (level + 2 <= depth) {
-              cells.push({
-                text: '',
-                path: node.path,
-                level: level + 1,
-                expanded: false,
-                hasChildren: false,
-                isTotal: true,
-                isGrandTotal: false,
-                rowStart: level + 2,
-                rowEnd: depth + 1,
-                columnStart: start + 1,
-                span: 1,
-              });
-            }
-            visit(node.children, level + 1);
+  protected readonly columnHeaderCells = computed<
+    readonly OgePivotHeaderCell[]
+  >(() => {
+    const depth = this.columnDepth();
+    const cells: OgePivotHeaderCell[] = [];
+    const startOf = (node: PivotAxisNode): number =>
+      node.leafIndex >= 0 ? node.leafIndex : startOf(node.children[0]);
+    const visit = (nodes: readonly PivotAxisNode[], level: number): void => {
+      for (const node of nodes) {
+        const start = startOf(node);
+        cells.push({
+          ...this.lineOf(node, level),
+          rowStart: level + 1,
+          rowEnd: node.children.length ? level + 2 : depth + 1,
+          columnStart: start + 1,
+          span: Math.max(1, node.leafCount),
+        });
+        if (node.children.length) {
+          // the expanded parent's own subtotal slot needs a header cell under
+          // the spanning parent, down to the leaf row
+          if (level + 2 <= depth) {
+            cells.push({
+              text: '',
+              path: node.path,
+              level: level + 1,
+              expanded: false,
+              hasChildren: false,
+              isTotal: true,
+              isGrandTotal: false,
+              rowStart: level + 2,
+              rowEnd: depth + 1,
+              columnStart: start + 1,
+              span: 1,
+            });
           }
+          visit(node.children, level + 1);
         }
-      };
-      visit(this.result().columnRoot, 0);
-      return cells;
-    },
-  );
+      }
+    };
+    visit(this.result().columnRoot, 0);
+    return cells;
+  });
 
   protected readonly columnIndexes = computed<readonly number[]>(() =>
     Array.from({ length: this.result().columnLeafCount }, (_, index) => index),
@@ -748,7 +747,7 @@ export class OgePivotGrid<T = unknown> {
     return this.columnSlotFlags().grand;
   }
 
-  private lineOf(node: PivotAxisNode, level: number): PivotAxisLine {
+  private lineOf(node: PivotAxisNode, level: number): OgePivotAxisLine {
     const messages = this.msg();
     const text = node.isGrandTotal
       ? messages.grandTotal
@@ -847,8 +846,8 @@ export class OgePivotGrid<T = unknown> {
   }
 
   /** Column slots in matrix order (mirror of `rowLines`). */
-  protected readonly columnLines = computed<readonly PivotAxisLine[]>(() => {
-    const lines: PivotAxisLine[] = [];
+  protected readonly columnLines = computed<readonly OgePivotAxisLine[]>(() => {
+    const lines: OgePivotAxisLine[] = [];
     const visit = (nodes: readonly PivotAxisNode[], level: number): void => {
       for (const node of nodes) {
         if (node.leafIndex >= 0)
@@ -860,7 +859,7 @@ export class OgePivotGrid<T = unknown> {
     return lines;
   });
 
-  private columnSlotLine(index: number): PivotAxisLine | undefined {
+  private columnSlotLine(index: number): OgePivotAxisLine | undefined {
     return this.columnLines()[index];
   }
 
@@ -869,13 +868,13 @@ export class OgePivotGrid<T = unknown> {
     return this.engine().drillDownRows(args.rowPath, args.columnPath);
   }
 
-  protected toggleRow(line: PivotAxisLine, event?: Event): void {
+  protected toggleRow(line: OgePivotAxisLine, event?: Event): void {
     event?.stopPropagation();
     if (event instanceof KeyboardEvent) event.preventDefault();
     if (line.hasChildren) this.store.toggleRowPath(line.path);
   }
 
-  protected toggleColumn(cell: PivotHeaderCell, event?: Event): void {
+  protected toggleColumn(cell: OgePivotHeaderCell, event?: Event): void {
     event?.stopPropagation();
     if (event instanceof KeyboardEvent) event.preventDefault();
     if (cell.hasChildren) this.store.toggleColumnPath(cell.path);
@@ -1005,7 +1004,7 @@ export class OgePivotGrid<T = unknown> {
 
   protected onFieldDragStart(field: PivotFieldConfig, event: DragEvent): void {
     this.draggedFieldId = field.id;
-    event.dataTransfer?.setData(PIVOT_FIELD_DRAG_TYPE, field.id);
+    event.dataTransfer?.setData(OGE_PIVOT_FIELD_DRAG_TYPE, field.id);
     if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
   }
 
@@ -1084,7 +1083,7 @@ export class OgePivotGrid<T = unknown> {
   /** Right-click on an axis header: sort / sortBySummary / filter / layout items. */
   protected onHeaderContextMenu(
     axis: 'row' | 'column',
-    line: PivotAxisLine,
+    line: OgePivotAxisLine,
     event: MouseEvent,
   ): void {
     event.preventDefault();

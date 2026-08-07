@@ -32,7 +32,7 @@ export interface OgeEditingOptions {
  * Editing state slice: which editor is open plus the pending (batch) change
  * set. Pending changes are UI state — they reach the DataSource only on save.
  */
-export class EditingSlice {
+export class OgeEditingSlice {
   /** Active single-cell editor (cell/batch modes). */
   private readonly _editCell = signal<{ key: RowKey; field: string } | null>(
     null,

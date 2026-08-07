@@ -143,17 +143,17 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
           description: 'Args of the <code>customizeCell</code> hook.',
         },
         {
-          name: 'PivotAxisLine',
+          name: 'OgePivotAxisLine',
           type: '{ text, path, level, expanded, hasChildren, isTotal, isGrandTotal }',
           description: 'One visible axis line, in matrix order.',
         },
         {
-          name: 'PivotHeaderCell',
-          type: 'PivotAxisLine &amp; { rowStart, rowEnd, columnStart, span }',
+          name: 'OgePivotHeaderCell',
+          type: 'OgePivotAxisLine &amp; { rowStart, rowEnd, columnStart, span }',
           description: 'Header cell with 1-based matrix coordinates.',
         },
         {
-          name: 'PIVOT_FIELD_DRAG_TYPE',
+          name: 'OGE_PIVOT_FIELD_DRAG_TYPE',
           type: "'application/x-oge-pivot-field'",
           description: 'DataTransfer type of field chips.',
         },

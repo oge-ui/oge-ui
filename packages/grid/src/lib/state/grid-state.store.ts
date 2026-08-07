@@ -1,6 +1,6 @@
 import { Injectable, Signal, computed, effect, untracked } from '@angular/core';
 import type { GridStateSnapshot, LoadOptions } from '@oge-ui/core';
-import { EditingSlice } from '@oge-ui/grid/foundation';
+import { OgeEditingSlice } from '@oge-ui/grid/foundation';
 import { ColumnsSlice } from './columns-slice';
 import { ExpansionSlice } from './expansion-slice';
 import { FilterSlice } from './filter-slice';
@@ -28,7 +28,7 @@ export class GridStateStore {
   readonly expansion = new ExpansionSlice();
   readonly columns = new ColumnsSlice();
   readonly selection = new SelectionSlice();
-  readonly editing = new EditingSlice();
+  readonly editing = new OgeEditingSlice();
 
   constructor() {
     // Cross-slice invariants: a changed filter/search/grouping invalidates the

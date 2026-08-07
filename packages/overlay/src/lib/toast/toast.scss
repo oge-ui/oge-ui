@@ -119,6 +119,10 @@
     > .oge-toast-icon {
       color: var(--oge-success);
     }
+
+    .oge-toast-progress-bar {
+      background: var(--oge-success);
+    }
   }
 
   &.oge-toast-warning {
@@ -127,6 +131,10 @@
     > .oge-toast-icon {
       color: var(--oge-warning);
     }
+
+    .oge-toast-progress-bar {
+      background: var(--oge-warning);
+    }
   }
 
   &.oge-toast-error {
@@ -134,6 +142,10 @@
 
     > .oge-toast-icon {
       color: var(--oge-danger);
+    }
+
+    .oge-toast-progress-bar {
+      background: var(--oge-danger);
     }
   }
 
@@ -234,7 +246,8 @@
 
 .oge-toast-progress-bar {
   height: 100%;
-  background: var(--oge-accent-soft);
+  background: var(--oge-accent);
+  opacity: 0.35;
   transform-origin: left;
 
   [dir='rtl'] & {

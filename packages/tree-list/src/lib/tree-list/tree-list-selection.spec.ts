@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import type { RowKey } from '@oge-ui/core';
-import { OgeColumn, type SelectionMode } from '@oge-ui/grid';
+import { OgeColumn, type OgeSelectionMode } from '@oge-ui/grid';
 import { OgeTreeList } from './tree-list';
 
 interface Task {
@@ -46,7 +46,7 @@ function rowByTitle(el: HTMLElement, title: string): HTMLElement | undefined {
 })
 class Host {
   data: Task[] = TASKS.map((task) => ({ ...task }));
-  selectionMode: SelectionMode = 'multiple';
+  selectionMode: OgeSelectionMode = 'multiple';
   selectedKeys: RowKey[] = [];
 }
 

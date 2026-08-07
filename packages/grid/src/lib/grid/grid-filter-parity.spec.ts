@@ -5,8 +5,8 @@ import {
   builderToExpr,
   describeExpr,
   exprToBuilder,
-  type BuilderGroup,
-  type FilterBuilderField,
+  type OgeBuilderGroup,
+  type OgeFilterBuilderField,
 } from '../filter-builder/filter-builder';
 import { OGE_DEFAULT_MESSAGES } from '../config';
 import { OgeColumn } from '../columns/column';
@@ -25,7 +25,7 @@ const PEOPLE: Person[] = [
   { id: 3, name: 'Ali Çelik', age: 50, city: 'Ankara' },
 ];
 
-const FIELDS: FilterBuilderField[] = [
+const FIELDS: OgeFilterBuilderField[] = [
   { field: 'name', caption: 'Name', dataType: 'string' },
   { field: 'age', caption: 'Age', dataType: 'number' },
 ];
@@ -65,7 +65,7 @@ describe('filter builder converters', () => {
   });
 
   it('drops empty conditions and typed-parses number values', () => {
-    const tree: BuilderGroup = {
+    const tree: OgeBuilderGroup = {
       kind: 'group',
       logic: 'and',
       items: [

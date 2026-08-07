@@ -11,23 +11,23 @@ import { OgeSelectBox, OgeTextBox } from '@oge-ui/inputs';
 import type { OgeDataType } from '../columns/column';
 import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
 
-export interface FilterBuilderField {
+export interface OgeFilterBuilderField {
   field: string;
   caption: string;
   dataType: OgeDataType;
 }
 
-export interface BuilderCondition {
+export interface OgeBuilderCondition {
   kind: 'condition';
   field: string;
   op: FilterOperator;
   value: string;
 }
 
-export interface BuilderGroup {
+export interface OgeBuilderGroup {
   kind: 'group';
   logic: 'and' | 'or';
-  items: (BuilderGroup | BuilderCondition)[];
+  items: (OgeBuilderGroup | OgeBuilderCondition)[];
 }
 
 export function operatorsFor(dataType: OgeDataType): FilterOperator[] {
@@ -62,8 +62,8 @@ function typedValue(raw: string, dataType: OgeDataType): unknown {
 
 /** Converts the mutable builder tree into a FilterExpr (drops empty parts). */
 export function builderToExpr(
-  group: BuilderGroup,
-  fields: readonly FilterBuilderField[],
+  group: OgeBuilderGroup,
+  fields: readonly OgeFilterBuilderField[],
 ): FilterExpr | null {
   const operands: FilterExpr[] = [];
   for (const item of group.items) {
@@ -92,12 +92,12 @@ export function builderToExpr(
 /** Converts a FilterExpr back into an editable builder tree. */
 export function exprToBuilder(
   expr: FilterExpr | null,
-  fields: readonly FilterBuilderField[],
-): BuilderGroup {
-  const root: BuilderGroup = { kind: 'group', logic: 'and', items: [] };
+  fields: readonly OgeFilterBuilderField[],
+): OgeBuilderGroup {
+  const root: OgeBuilderGroup = { kind: 'group', logic: 'and', items: [] };
   if (!expr) return root;
 
-  const toCondition = (node: FilterExpr): BuilderCondition | null => {
+  const toCondition = (node: FilterExpr): OgeBuilderCondition | null => {
     if (node.type !== 'binary') return null;
     return {
       kind: 'condition',
@@ -128,7 +128,7 @@ export function exprToBuilder(
 /** Human-readable summary of a FilterExpr for the filter panel. */
 export function describeExpr(
   expr: FilterExpr,
-  fields: readonly FilterBuilderField[],
+  fields: readonly OgeFilterBuilderField[],
   messages: OgeGridMessages,
 ): string {
   if (expr.type === 'binary') {
@@ -289,8 +289,8 @@ export function describeExpr(
             [group]="item"
             [fields]="fields()"
             [messages]="messages()"
-            (changed)="changed.emit()"
-            (remove)="removeAt(index)"
+            (treeChanged)="treeChanged.emit()"
+            (removeRequest)="removeAt(index)"
           />
         }
       }
@@ -298,14 +298,20 @@ export function describeExpr(
   `,
 })
 export class OgeFilterBuilderGroup {
-  readonly group = input.required<BuilderGroup>();
-  readonly fields = input.required<readonly FilterBuilderField[]>();
+  /** The mutable condition/group tree this node renders and edits. */
+  readonly group = input.required<OgeBuilderGroup>();
+  /** Filterable fields offered in the condition dropdowns. */
+  readonly fields = input.required<readonly OgeFilterBuilderField[]>();
+  /** Localized strings; defaults to the built-in English messages. */
   readonly messages = input<OgeGridMessages>(OGE_DEFAULT_MESSAGES);
+  /** True on the outermost group — hides the remove-group button. */
   readonly root = input(false);
-  readonly changed = output<void>();
-  readonly remove = output<void>();
+  /** Emitted after any mutation of the tree (logic, field, operator, value, add/remove). */
+  readonly treeChanged = output<void>();
+  /** Asks the parent group to remove this subgroup from its items. */
+  readonly removeRequest = output<void>();
 
-  protected dataTypeOf(condition: BuilderCondition): OgeDataType {
+  protected dataTypeOf(condition: OgeBuilderCondition): OgeDataType {
     return (
       this.fields().find((f) => f.field === condition.field)?.dataType ??
       'string'
@@ -318,17 +324,17 @@ export class OgeFilterBuilderGroup {
     { value: 'false', text: this.messages().booleanFalse },
   ]);
 
-  protected textValueOf(condition: BuilderCondition): string {
+  protected textValueOf(condition: OgeBuilderCondition): string {
     return condition.value == null ? '' : String(condition.value);
   }
 
-  protected operatorsOf(condition: BuilderCondition): FilterOperator[] {
+  protected operatorsOf(condition: OgeBuilderCondition): FilterOperator[] {
     return operatorsFor(this.dataTypeOf(condition));
   }
 
   protected setLogic(logic: 'and' | 'or'): void {
     this.group().logic = logic;
-    this.changed.emit();
+    this.treeChanged.emit();
   }
 
   protected addCondition(): void {
@@ -340,17 +346,17 @@ export class OgeFilterBuilderGroup {
       op: operatorsFor(first.dataType)[0],
       value: '',
     });
-    this.changed.emit();
+    this.treeChanged.emit();
   }
 
   protected addGroup(): void {
     this.group().items.push({ kind: 'group', logic: 'and', items: [] });
-    this.changed.emit();
+    this.treeChanged.emit();
   }
 
   protected removeAt(index: number): void {
     this.group().items.splice(index, 1);
-    this.changed.emit();
+    this.treeChanged.emit();
   }
 
   protected setField(index: number, field: string): void {
@@ -359,20 +365,20 @@ export class OgeFilterBuilderGroup {
     item.field = field;
     const ops = operatorsFor(this.dataTypeOf(item));
     if (!ops.includes(item.op)) item.op = ops[0];
-    this.changed.emit();
+    this.treeChanged.emit();
   }
 
   protected setOp(index: number, op: FilterOperator): void {
     const item = this.group().items[index];
     if (item.kind !== 'condition') return;
     item.op = op;
-    this.changed.emit();
+    this.treeChanged.emit();
   }
 
   protected setValue(index: number, value: string): void {
     const item = this.group().items[index];
     if (item.kind !== 'condition') return;
     item.value = value;
-    this.changed.emit();
+    this.treeChanged.emit();
   }
 }

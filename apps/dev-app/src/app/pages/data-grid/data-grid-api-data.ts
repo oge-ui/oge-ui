@@ -161,7 +161,7 @@ export const OGE_GRID_API: ApiSections = {
       entries: [
         {
           name: 'selectionMode',
-          type: 'SelectionMode',
+          type: 'OgeSelectionMode',
           default: "'none'",
           description:
             'Row selection: none | single | multiple (ctrl/shift) | checkbox column.',
@@ -940,7 +940,7 @@ export const OGE_GRID_TYPES_API: ApiSections = {
             'Convert between builder trees and <code>FilterExpr</code>; humanize expressions.',
         },
         {
-          name: 'BuilderGroup / BuilderCondition / FilterBuilderField',
+          name: 'OgeBuilderGroup / OgeBuilderCondition / OgeFilterBuilderField',
           type: 'interfaces',
           description: 'Filter-builder data model.',
         },

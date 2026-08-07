@@ -13,7 +13,7 @@ import {
   type LookupItem,
   type ResolvedColumn,
 } from './column-model';
-import type { EditingSlice, OgeEditingOptions } from './editing-slice';
+import type { OgeEditingSlice, OgeEditingOptions } from './editing-slice';
 
 export interface OgeDataChange<T = unknown> {
   type: 'insert' | 'update' | 'remove';
@@ -88,7 +88,7 @@ export interface EditingModelDeps<
   /** The host's `editing` input: `false` disables editing entirely. */
   editing: Signal<false | OgeEditingOptions>;
   /** Editing state slice: which editor is open plus the pending change set. */
-  slice: EditingSlice;
+  slice: OgeEditingSlice;
   /** Resolved columns — editors, validators and lookups are derived from them. */
   columns: Signal<readonly ResolvedColumn<T, S>[]>;
   /** Flat row list (unsaved added rows already rendered on top). */

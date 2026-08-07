@@ -12,7 +12,7 @@ import {
  * (kept as key → path so remote contracts get real paths back) and the
  * field-panel collapse flag.
  */
-export class PivotStateStore {
+export class OgePivotStateStore {
   private readonly _fieldOverrides = signal<
     ReadonlyMap<string, Partial<PivotFieldConfig>>
   >(new Map());

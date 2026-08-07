@@ -42,7 +42,7 @@ export {
   type OgeEditTemplateContext,
 } from './lib/templates/edit-template';
 export {
-  EditingSlice,
+  OgeEditingSlice,
   type OgeEditFormItem,
   type OgeEditMode,
   type OgeEditingOptions,
@@ -56,7 +56,7 @@ export {
   type OgeGridConfigInput,
   type OgeGridMessages,
 } from './lib/config';
-export { type SelectionMode } from './lib/state/selection-slice';
+export { type OgeSelectionMode } from './lib/state/selection-slice';
 export { SelectionSlice } from './lib/state/selection-slice';
 export {
   OgeColumn,
@@ -106,7 +106,7 @@ export {
   exprToBuilder,
   describeExpr,
   operatorsFor,
-  type BuilderGroup,
-  type BuilderCondition,
-  type FilterBuilderField,
+  type OgeBuilderGroup,
+  type OgeBuilderCondition,
+  type OgeFilterBuilderField,
 } from './lib/filter-builder/filter-builder';

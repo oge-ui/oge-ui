@@ -1,7 +1,7 @@
 import { computed, signal } from '@angular/core';
 import type { RowKey } from '@oge-ui/core';
 
-export type SelectionMode = 'none' | 'single' | 'multiple' | 'checkbox';
+export type OgeSelectionMode = 'none' | 'single' | 'multiple' | 'checkbox';
 
 /**
  * Selection state slice. Only data rows are selectable; range selection runs

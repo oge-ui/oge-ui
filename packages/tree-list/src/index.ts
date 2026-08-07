@@ -41,5 +41,5 @@ export {
   type OgeExportingEvent,
   type OgeDataErrorEvent,
   type OgeSortingOptions,
-  type SelectionMode,
+  type OgeSelectionMode,
 } from '@oge-ui/grid';

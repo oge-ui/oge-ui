@@ -101,8 +101,8 @@ import {
   exprToBuilder,
   formatCellValue,
   operatorsFor,
-  type BuilderGroup,
-  type FilterBuilderField,
+  type OgeBuilderGroup,
+  type OgeFilterBuilderField,
   type OgeCommandButton,
   type OgeExportColumn,
   type OgeExportData,
@@ -134,7 +134,7 @@ import {
   type OgeDataErrorEvent,
   type OgeSearchPanelOptions,
   type OgeSortingOptions,
-  type SelectionMode,
+  type OgeSelectionMode,
 } from '@oge-ui/grid';
 
 /** Tree-list view of the shared column view-model: `source` is the OgeColumn. */
@@ -399,7 +399,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   readonly messages = input<Partial<OgeGridMessages> | undefined>(undefined);
 
   /** Row selection: none | single | multiple (ctrl/shift) | checkbox column. */
-  readonly selectionMode = input<SelectionMode>('none');
+  readonly selectionMode = input<OgeSelectionMode>('none');
 
   /**
    * Recursive selection: toggling a row cascades to its descendants and
@@ -1697,7 +1697,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   // --- filter panel + builder ------------------------------------------------
 
   protected readonly builderOpen = signal(false);
-  protected builderTree: BuilderGroup = {
+  protected builderTree: OgeBuilderGroup = {
     kind: 'group',
     logic: 'and',
     items: [],
@@ -1705,7 +1705,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Bumped by the recursive editor so the preview text refreshes. */
   protected readonly builderVersion = signal(0);
 
-  protected readonly builderFields = computed<FilterBuilderField[]>(() =>
+  protected readonly builderFields = computed<OgeFilterBuilderField[]>(() =>
     this.resolvedColumns()
       .filter((column) => column.filterable && column.field)
       .map((column) => ({

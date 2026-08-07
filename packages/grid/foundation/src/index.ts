@@ -29,7 +29,7 @@ export {
   type OgeSavingChangesEvent,
 } from './editing-model';
 export {
-  EditingSlice,
+  OgeEditingSlice,
   type OgeEditFormItem,
   type OgeEditMode,
   type OgeEditingOptions,

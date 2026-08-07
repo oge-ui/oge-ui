@@ -112,7 +112,7 @@ export const OGE_TREE_LIST_API: ApiSections = {
       entries: [
         {
           name: 'selectionMode',
-          type: 'SelectionMode',
+          type: 'OgeSelectionMode',
           default: "'none'",
           description: 'none | single | multiple | checkbox.',
         },

@@ -653,19 +653,30 @@ export class OgeToastService {
       entry.timerId = null;
       this.dismiss(entry, 'timeout');
     }, entry.remaining);
+    // Freeze at the current fraction, then arm the transition two frames
+    // later: frame 1 paints the frozen state (freshly inserted elements have
+    // no previous computed style — a same-frame write would skip the
+    // transition entirely), frame 2 starts the countdown.
     if (entry.options().progressBar) {
-      // Two-step write: jump to the current fraction, then transition to 0
-      // over exactly the remaining time — provably in sync with the timer.
       this.freezeProgress(entry);
-      requestAnimationFrame(() => {
-        if (this.destroyed) return;
-        if (entry.pauseCauses > 0 || !this.isTimed(entry)) return;
-        entry.progressStyle.set({
-          transition: `transform ${entry.remaining}ms linear`,
-          transform: 'scaleX(0)',
-        });
-      });
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => this.armProgress(entry)),
+      );
     }
+  }
+
+  /** Transitions the frozen bar to 0 over the live remaining time. */
+  private armProgress(entry: ToastEntry): void {
+    if (this.destroyed || entry.pauseCauses > 0 || !this.isTimed(entry)) return;
+    if (entry.timerId === null || !entry.options().progressBar) return;
+    const liveRemaining = Math.max(
+      0,
+      entry.remaining - (Date.now() - entry.startedAt),
+    );
+    entry.progressStyle.set({
+      transition: `transform ${liveRemaining}ms linear`,
+      transform: 'scaleX(0)',
+    });
   }
 
   private freezeProgress(entry: ToastEntry): void {

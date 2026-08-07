@@ -940,7 +940,7 @@ store.editing.hasPending())) {
     [fields]="builderFields()"
     [messages]="msg()"
     [root]="true"
-    (changed)="builderVersion.set(builderVersion() + 1)"
+    (treeChanged)="builderVersion.set(builderVersion() + 1)"
   />
   <div class="oge-builder-preview">{{ builderPreview() }}</div>
   <ng-container *ogeModalFooter>
