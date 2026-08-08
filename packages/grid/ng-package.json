@@ -7,6 +7,7 @@
     "@oge-ui/overlay"
   ],
   "assets": [
+    "llms.txt",
     {
       "input": "src/lib/styles/themes",
       "glob": "*.css",

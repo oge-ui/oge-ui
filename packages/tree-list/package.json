@@ -35,6 +35,7 @@
     "@oge-ui/overlay": "0.6.0"
   },
   "sideEffects": false,
+  "schematics": "./schematics/collection.json",
   "homepage": "https://ogeui.com",
   "repository": {
     "type": "git",

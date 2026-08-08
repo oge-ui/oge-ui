@@ -1,0 +1,36 @@
+{
+  "name": "oge-schematics",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tools/oge-schematics/src",
+  "tags": ["scope:tools"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p tools/oge-schematics/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "schematics": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "grid:build",
+        "tree-list:build",
+        "pivot:build",
+        "inputs:build",
+        "buttons:build",
+        "overlay:build",
+        "tabs:build",
+        "layout:build",
+        "navigation:build",
+        "ui:build"
+      ],
+      "outputs": ["{workspaceRoot}/dist/packages/*/schematics"],
+      "options": {
+        "command": "node tools/oge-schematics/build.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

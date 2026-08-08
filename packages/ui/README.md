@@ -116,3 +116,10 @@ All user-facing strings (aria labels included) are overridable via
 - MIT licensed — and the umbrella and every package in it will stay MIT.
   The commercial `@oge-ui/pivot` package is not included.
   Source: [github.com/oge-ui/oge-ui](https://github.com/oge-ui/oge-ui).
+
+## For AI coding assistants
+
+The complete machine-readable API reference ships inside the package at
+`node_modules/oge-ui/llms.txt` — conventions, every documented member and
+copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
+<https://ogeui.com/llms-full.txt> (the whole suite).

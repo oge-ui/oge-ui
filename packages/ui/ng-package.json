@@ -8,8 +8,12 @@
     "@oge-ui/pivot",
     "@oge-ui/buttons",
     "@oge-ui/overlay",
-    "@oge-ui/inputs"
+    "@oge-ui/inputs",
+    "@oge-ui/tabs",
+    "@oge-ui/layout",
+    "@oge-ui/navigation"
   ],
+  "assets": ["llms.txt"],
   "lib": {
     "entryFile": "src/index.ts"
   }

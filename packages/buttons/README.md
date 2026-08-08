@@ -139,6 +139,13 @@ them per theme exactly like the grid tokens. `.oge-theme-dark` on any ancestor
 switches the dark palette. Note: the buttons SCSS consumes the token source in
 `@oge-ui/grid` at build time; there is no runtime dependency on the grid.
 
+## For AI coding assistants
+
+The complete machine-readable API reference ships inside the package at
+`node_modules/@oge-ui/buttons/llms.txt` — conventions, every documented member and
+copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
+<https://ogeui.com/llms-full.txt> (the whole suite).
+
 ## License
 
 MIT

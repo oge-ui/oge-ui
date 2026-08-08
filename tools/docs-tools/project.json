@@ -1,0 +1,31 @@
+{
+  "name": "docs-tools",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tools/docs-tools",
+  "tags": ["scope:tools"],
+  "targets": {
+    "llms": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/docs-tools/generate-llms.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "llms-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/docs-tools/generate-llms.mjs --check",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/docs-tools/check-snippets.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

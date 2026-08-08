@@ -11,18 +11,21 @@ CI (`.github/workflows/ci.yml`): `npx nx run-many -t lint test build typecheck e
 
 ## Packages
 
-| Project       | Path                 | npm                 | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------------- | -------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`        | `packages/core`      | `@oge-ui/core`      | Framework-free TS data engine (DataSource, filtering, virtualization math). **No Angular imports — lint-enforced.** Built with `@nx/rollup`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `grid`        | `packages/grid`      | `@oge-ui/grid`      | Data grid. Secondary entries: `/foundation`, `/export-excel`, `/export-pdf`. Owns the design tokens and theme CSS. Depends on `inputs` (editors: one `OgeCellEditor` renders the dataType-matched `oge-*-box` in the compact `size=sm` shape; `.oge-editor` host class is load-bearing) and `overlay` (header filter / chooser / operator + context menus run on `OgeAnchoredPanel` + `oge-menu-list`; the edit-popup and filter-builder dialogs run on `oge-modal`; the canonical `OgeMenuItem` is re-exported from the barrel).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `tree-list`   | `packages/tree-list` | `@oge-ui/tree-list` | Depends on grid, re-exports its column/template API. Secondary entry `/export-excel`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `pivot`       | `packages/pivot`     | `@oge-ui/pivot`     | Pivot grid on top of `core`'s PivotEngine.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `buttons`     | `packages/buttons`   | `@oge-ui/buttons`   | Button family (OgeButton, OgeButtonGroup, OgeDropDownButton). Depends on `overlay`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `overlay`     | `packages/overlay`   | `@oge-ui/overlay`   | Anchored popup primitives: `resolvePopupPosition` (incl. centered bare-side placements), `OgeAnchoredPanel` (virtual `anchorRect`, `transient` mode), `oge-popup`, `oge-menu-list` + canonical `OgeMenuItem`, and the `ogeTooltip` / `[ogeContextMenu]` directives (body-appended via `createComponent`; host element must be removed manually on destroy). Plus `oge-modal` (centered/top dialog: focus trap, ref-counted scroll lock, async `closeGuard`, typed `close(result)`, opt-in drag/resize/fullscreen/`inertBackground`) — all open surfaces share the internal `overlay-stack.ts` so Escape always closes the topmost (popup inside modal closes first). The declarative modal renders inline where declared: keep it away from `transform`ed ancestors; `OgeModalService.open()` is the body-appended imperative escape hatch (`OGE_MODAL_DATA` + `OgeModalRef`). `OgeToastService` (service-only) renders body-appended toast regions with permanent hidden live-region announcers; toasts never take focus and never join the Escape stack, and their timers pause on hover/focus/tab-hidden with remaining-time resume. The modal/toast strings own the config's `messages` entries. |
-| `inputs`      | `packages/inputs`    | `@oge-ui/inputs`    | Form editors (OgeTextBox/OgeTextArea/OgeNumberBox), dropdown editors (OgeSelectBox/OgeTagBox/OgeAutocomplete), bare toggle controls (OgeCheckBox/OgeSwitch/OgeRadioGroup) and date editors (OgeCalendar/OgeDateBox/OgeDateRangeBox). Base split: `OgeControlBase` (chrome-free — commit pipeline, CVA constructor-assignment, Signal Forms `FormValueControl`) → `OgeInputBase` (adds the field chrome). Dropdown editors share `lib/select-list/` (`SelectListEngine`, `SelectPanelController`, `ListVirtualizerModel` on core's `OffsetTree`, `expr.ts` resolvers). **Date convention:** native `Date` + `Intl` only — no date library, no `DateAdapter`; all day math goes through core's `date-utils.ts` (local construction, never `Date.parse`/`toISOString`); typed text parses via `formatToParts` part order; the calendar popup uses real DOM focus (APG date-picker-dialog), not `aria-activedescendant`.                                                                                                                                                                                                                                                                                 |
-| `ui`          | `packages/ui`        | `oge-ui`            | Umbrella: pinned deps on every family + a re-export barrel (`export *` is this package's sanctioned exception; name collisions resolved by explicit re-export - see `src/index.ts`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `dev-app`     | `apps/dev-app`       | —                   | Docs/demo site (port 4200, Tailwind v4).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `dev-app-e2e` | `apps/dev-app-e2e`   | —                   | Playwright (chromium) + `@axe-core/playwright`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Project       | Path                  | npm                  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------- | --------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`        | `packages/core`       | `@oge-ui/core`       | Framework-free TS data engine (DataSource, filtering, virtualization math). **No Angular imports — lint-enforced.** Built with `@nx/rollup`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `grid`        | `packages/grid`       | `@oge-ui/grid`       | Data grid. Secondary entries: `/foundation`, `/export-excel`, `/export-pdf`. Owns the design tokens and theme CSS. Depends on `inputs` (editors: one `OgeCellEditor` renders the dataType-matched `oge-*-box` in the compact `size=sm` shape; `.oge-editor` host class is load-bearing) and `overlay` (header filter / chooser / operator + context menus run on `OgeAnchoredPanel` + `oge-menu-list`; the edit-popup and filter-builder dialogs run on `oge-modal`; the canonical `OgeMenuItem` is re-exported from the barrel).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `tree-list`   | `packages/tree-list`  | `@oge-ui/tree-list`  | Depends on grid, re-exports its column/template API. Secondary entry `/export-excel`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `pivot`       | `packages/pivot`      | `@oge-ui/pivot`      | Pivot grid on top of `core`'s PivotEngine.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `buttons`     | `packages/buttons`    | `@oge-ui/buttons`    | Button family (OgeButton, OgeButtonGroup, OgeDropDownButton). Depends on `overlay`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `overlay`     | `packages/overlay`    | `@oge-ui/overlay`    | Anchored popup primitives: `resolvePopupPosition` (incl. centered bare-side placements), `OgeAnchoredPanel` (virtual `anchorRect`, `transient` mode), `oge-popup`, `oge-menu-list` + canonical `OgeMenuItem`, and the `ogeTooltip` / `[ogeContextMenu]` directives (body-appended via `createComponent`; host element must be removed manually on destroy). Plus `oge-modal` (centered/top dialog: focus trap, ref-counted scroll lock, async `closeGuard`, typed `close(result)`, opt-in drag/resize/fullscreen/`inertBackground`) — all open surfaces share the internal `overlay-stack.ts` so Escape always closes the topmost (popup inside modal closes first). The declarative modal renders inline where declared: keep it away from `transform`ed ancestors; `OgeModalService.open()` is the body-appended imperative escape hatch (`OGE_MODAL_DATA` + `OgeModalRef`). `OgeToastService` (service-only) renders body-appended toast regions with permanent hidden live-region announcers; toasts never take focus and never join the Escape stack, and their timers pause on hover/focus/tab-hidden with remaining-time resume. The modal/toast strings own the config's `messages` entries. |
+| `inputs`      | `packages/inputs`     | `@oge-ui/inputs`     | Form editors (OgeTextBox/OgeTextArea/OgeNumberBox), dropdown editors (OgeSelectBox/OgeTagBox/OgeAutocomplete), bare toggle controls (OgeCheckBox/OgeSwitch/OgeRadioGroup) and date editors (OgeCalendar/OgeDateBox/OgeDateRangeBox). Base split: `OgeControlBase` (chrome-free — commit pipeline, CVA constructor-assignment, Signal Forms `FormValueControl`) → `OgeInputBase` (adds the field chrome). Dropdown editors share `lib/select-list/` (`SelectListEngine`, `SelectPanelController`, `ListVirtualizerModel` on core's `OffsetTree`, `expr.ts` resolvers). **Date convention:** native `Date` + `Intl` only — no date library, no `DateAdapter`; all day math goes through core's `date-utils.ts` (local construction, never `Date.parse`/`toISOString`); typed text parses via `formatToParts` part order; the calendar popup uses real DOM focus (APG date-picker-dialog), not `aria-activedescendant`.                                                                                                                                                                                                                                                                                 |
+| `tabs`        | `packages/tabs`       | `@oge-ui/tabs`       | Tab family: `OgeTabs` (stand-alone strip), `OgeTabPanel` (strip + content), declarative `OgeTab` children merged with a data-driven `items` input (children first — ButtonGroup precedent). Internal `oge-tab-strip` presentational component owns keyboard (APG roving tabindex, automatic/manual activation), overflow arrows, the all-tabs menu (depends on `overlay`: `OgeAnchoredPanel` + `oge-menu-list`) and drag reorder; the shared abstract `OgeTabsBase` directive owns the models and the cancelable selection/close/reorder pipelines. Per-tab async `closeGuard` follows the modal's guard semantics (single-flight, rejection = veto); the app removes closed tabs on `tabClosed`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `layout`      | `packages/layout`     | `@oge-ui/layout`     | Layout containers. Today `OgeAccordion` + declarative `OgeAccordionItem` (WAI-ARIA APG accordion: heading-wrapped `<button>` headers, all in the Tab sequence, opt-in arrow/Home/End/type-ahead, single/multiple + `collapsible`, lazy render, async `expandGuard`, invalid-section indicator, per-panel async `contentLoader` with skeleton/retry, header-actions slot). Depends on `core` only — the home for future Splitter/Card/Toolbar.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `navigation`  | `packages/navigation` | `@oge-ui/navigation` | Navigation controls. Today `OgeTreeView` (WAI-ARIA APG treeview: roving tabindex, Right/Left open-child / close-parent semantics, type-ahead, `*`; flat **or** nested data; tri-state cascade checkboxes; search; lazy `loadChildren`; virtual scrolling; drag & drop reparenting). Depends on `core` only — the whole data layer is core's `lib/tree/` engine, so the package adds no engine code. Future home for Menubar / Breadcrumb / Drawer / Steps.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `ui`          | `packages/ui`         | `oge-ui`             | Umbrella: pinned deps on every family + a re-export barrel (`export *` is this package's sanctioned exception; name collisions resolved by explicit re-export - see `src/index.ts`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `dev-app`     | `apps/dev-app`        | —                    | Docs/demo site (port 4200, Tailwind v4).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `dev-app-e2e` | `apps/dev-app-e2e`    | —                    | Playwright (chromium) + `@axe-core/playwright`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 All component libs are buildable + publishable (ng-packagr via `@nx/angular:package`, APF partial-Ivy),
 `publishConfig.access: public`, Angular `^22.0.0` peers, `sideEffects: false`. Versions are
@@ -57,8 +60,41 @@ Then register in **four** places:
 2. `nx.json` → `release.projects` array
 3. root `eslint.config.mjs` → `depConstraints`: add `scope:<name>` entry and allow it from `scope:app`
 4. root `README.md` package table (+ `ROADMAP.md` if feature-tracked)
+5. `tools/docs-tools/lib/manifest.mjs` → `PACKAGES` entry, and `"assets": ["llms.txt"]` in
+   `ng-package.json` (see **Machine-readable docs** below). `nx run docs-tools:llms` warns about any
+   package folder missing from the manifest, so this step cannot be forgotten silently.
 
 There is **no test target in project.json** — `@nx/vitest` infers it from `vite.config.mts`.
+
+## Cross-package sharing (what gets extracted vs. copied)
+
+Sibling component packages (tabs, layout, …) grow the same shapes. The rule:
+
+- **Extract to `@oge-ui/core` only what is non-trivial _and_ framework-free.** Core cannot import Angular
+  (lint-enforced), which is the right filter — it keeps the shared layer to pure logic that can be unit
+  tested on its own. Currently: `runAsyncGuard` (`util/async-guard.ts` — the veto pipeline where a boolean
+  settles synchronously, a promise reports pending, and throw _and_ reject both mean veto),
+  `stepEnabledIndex` / `edgeEnabledIndex` (`util/nav-index.ts` — arrow and Home/End math with wrapping and
+  disabled-skipping) and `createTypeAheadBuffer` / `matchByPrefix` (`util/type-ahead.ts`, folding through
+  `foldText` so matching is locale- and accent-insensitive). Consumed by tabs, layout and navigation.
+  Reach for an existing engine before writing one: `packages/navigation`'s tree view needed **no** new data
+  code because `lib/tree/` (index, nested flatten, filter modes, tri-state cascade) was already there from
+  tree-list. Note the flip side — do not force a kernel helper where it does not fit: the tree's
+  `loadChildren` deliberately avoids `runAsyncGuard`, because that models a veto (rejection = "no") and
+  would swallow the error a failed fetch has to report.
+- **Copy the Angular-shaped conventions**; do not build a shared `@oge-ui/foundation`. These are 4–15 line
+  idioms whose types differ per component, so a generic base would trade a little duplication for awkward
+  `TemplateRef` generics and a permanent public npm surface for internal plumbing. The three to copy:
+  1. **Descriptor merge** — a `computed()` producing `[...fromChildren, ...fromItems]` (children first,
+     ButtonGroup precedent), each source filtered by `visible` and given a stable `id` (`key` ?? a per-source
+     auto id, distinct prefixes so the two namespaces cannot collide).
+  2. **Cancelable pipeline** — build the `-ing` event with `cancel: false`, `emit()` it, re-read `cancel`,
+     bail; then guard, then commit, then emit the past-tense event. Guards run _after_ the pre-event.
+  3. **Config/messages** — per-package `InjectionToken` + `provideOge<X>Config()` shallow-merging `messages`,
+     overlaid per instance by a `[messages]` input in a `mergedMessages` computed.
+- A **component-level template slot** queried with `contentChild(X, { descendants: false })` applies to
+  `items`-mode entries only; a slot that is really container chrome (e.g. the accordion's toggle icon) may
+  fall back for declarative children too — say which in the TSDoc.
 
 ## Component authoring rules
 
@@ -80,6 +116,35 @@ smallest complete example):
 - Members: `readonly` fields, `protected` for template-only, `private` internals. TSDoc (1–3 sentence,
   no `@param`) on every public member; class-level JSDoc carries a runnable HTML snippet.
 - Zoneless-ready: no `NgZone` assumptions; callbacks only set signals / emit outputs.
+- **Secondary affordances inside an interactive header** — two cases, pick by the parent's role:
+  - Inside a **composite-widget role** (`role="tab"`, `option`, `treeitem`, `gridcell` headers…) axe fails a
+    focusable child as `nested-interactive`. Render the affordance as an `aria-hidden` `<span>`, resolve its
+    clicks from `event.target.closest('.oge-x')` in the parent's handler, and give the parent a keyboard path
+    advertised via `aria-keyshortcuts` (see `packages/tabs`' close ✕ / Delete).
+  - When the header is a **plain `<button>`** (the APG accordion shape: title in a `<button>` wrapped in a
+    heading), the button carries no composite role, so the fix is simply to put the action _outside_ it —
+    a real `<button>` sibling in the header row. It is natively Tab-reachable, needs no `aria-keyshortcuts`,
+    and the widget's arrow navigation only visits the toggles (see `packages/layout`'s
+    `[ogeAccordionHeaderActionsTemplate]`). Prefer this whenever the role allows it.
+  - The composite case also covers **state**, not just actions: a tree's checkbox cannot be a real
+    `<input>` inside `role="treeitem"`. Put the state on the row itself (`aria-checked`, incl. `mixed`)
+    and render an `aria-hidden` glyph — see `packages/navigation`'s `.oge-tree-view-check`.
+- **Not every APG pattern uses a roving tabindex.** The accordion pattern deliberately does not: all header
+  buttons stay `tabindex="0"` and only Enter/Space/Tab are required. Arrow/Home/End/type-ahead (and
+  `Ctrl+PageUp/PageDown`, handled on the host so they work from inside panel content) are an opt-in
+  enhancement. The treeview pattern is the opposite — exactly one node in the Tab sequence. Check the
+  actual pattern before copying (or omitting) tab-strip focus machinery.
+- **Bind `[tabindex]`, not `[attr.tabindex]`, on a roving-tabindex row, and put the `(keydown)` on the same
+  element as the `(click)`.** `@angular-eslint`'s `interactive-supports-focus` and
+  `click-events-have-key-events` cannot see through `[attr.…]` or an ancestor handler, and will fail an
+  otherwise correct widget (see `tab-strip.ts` and `tree-view.ts`).
+- **A composite widget may render a flat DOM.** Where the structure is expressed with `aria-level` /
+  `aria-posinset` / `aria-setsize`, the APG does not require nested containers — and a flat list is what
+  makes windowed rendering possible at all. `packages/navigation`'s tree renders one `role="treeitem"` per
+  visible node with no nested `role="group"`, which is why it can virtualize; core's `flattenTreeData`
+  already emits `level`/`posInSet`/`setSize` for exactly this.
+- An expanded panel the user may not collapse gets **`aria-disabled="true"`, never the `disabled`
+  attribute** — it has to stay focusable (APG accordion).
 - Generics where rows are involved: `OgeGrid<T extends object = Record<string, unknown>>`.
 
 ### Public API language
@@ -97,7 +162,11 @@ smallest complete example):
 - Config/i18n: `InjectionToken` with factory default + `provideOge<X>Config()` shallow-merge provider —
   copy `packages/grid/src/lib/config.ts`. **Every user-facing string (incl. aria labels) lives in a
   messages interface.**
-- Template slots: structural directive per slot, selector `[oge<Slot>Template]`, exported context interface
+- Template slots: structural directive per slot, selector `[oge<Slot>Template]`, exported context interface.
+  When the same slot directive is legal both at component level and inside a child config component
+  (e.g. `[ogeTabContentTemplate]` in `oge-tab-panel` vs inside an `<oge-tab>`), query the component-level
+  one with `contentChild(X, { descendants: false })` — the signal `contentChild` default (`descendants: true`)
+  would steal the first child-level template.
   - `ngTemplateContextGuard` — see `packages/grid/src/lib/templates/cell-template.ts`.
 
 ## Styling & theming
@@ -153,16 +222,115 @@ decisions live in ROADMAP.md's "API parity" section.
 ## Dev-app registration (per new component)
 
 1. Page under `apps/dev-app/src/app/pages/<area>/<page>.ts` — standalone, `app-` selector, OnPush,
-   inline template using `DocHeader` + `DemoCard` + `const SNIPPET` code strings.
-2. Lazy route in `apps/dev-app/src/app/app.routes.ts` (`components/<name>/…`, `title: 'OGE — …'`).
-3. Nav entry in `allSections` in `apps/dev-app/src/app/app.ts` — icon must exist in the `IconName` union
-   in `apps/dev-app/src/app/shared/icon.ts`.
-4. Optional Playwright smoke/a11y spec in `apps/dev-app-e2e/src/`.
+   inline template using `DocHeader` + `DemoCard`.
+2. Code samples in a sibling **`<page>-snippets.ts`** data module (never inline in the page) —
+   see **Docs snippets must compile** below.
+3. Lazy route in `apps/dev-app/src/app/app.routes.ts` (`components/<name>/…`, `title: 'OGE — …'`).
+4. Nav entry in `allSections` in `apps/dev-app/src/app/app.ts` — icon must exist in the `IconName` union
+   in `apps/dev-app/src/app/shared/icon.ts`. A new **family** gets its own section with
+   `group: COMPONENTS_GROUP`; sections in that group render alphabetically.
+5. Three places a new family must also appear, or it is invisible to visitors:
+   the `/components` gallery (`pages/components/components.ts` — `FamilyKey`, a `@case` preview and a
+   `families` entry), the landing page index (`pages/home/home.ts` — `tiles`, kept at three columns so
+   the page does not grow), and the landing page's npm band (`packages`).
+6. API members in the family's `*-api-data.ts`, rendered from its `api.ts` page — this is what
+   `llms.txt` reads, so an undocumented member is invisible to every coding assistant.
+7. `npx nx run docs-tools:llms`, and commit the regenerated artifacts.
+8. Optional Playwright smoke/a11y spec in `apps/dev-app-e2e/src/`.
+
+**A component is not done until its AI-facing docs ship with it.** Three gates enforce that:
+
+| Gate                    | Fails when                                                          |
+| ----------------------- | ------------------------------------------------------------------- |
+| `docs-tools:typecheck`  | a page declares a code sample inline, or a snippet does not compile |
+| `docs-tools:llms`       | a demo folder is claimed by no package's `pageDirs`                 |
+| `docs-tools:llms-check` | the committed `llms.txt` / `sitemap.xml` differ from the generator  |
+
+`docs-tools:llms` additionally _warns_ about exported symbols with no API-reference row. That list is
+the backlog of members an assistant currently has to guess at — keep it shrinking.
+
+### Docs snippets must compile
+
+Docs snippets are the code developers _and_ coding assistants copy out of ogeui.com, so a snippet
+that does not compile is worse than no snippet. Two rules make that enforceable:
+
+- **Snippets live in `<page>-snippets.ts` pure data modules**, beside the page — the same split as
+  `*-api-data.ts`. Those modules import only `shared/demo-source.ts` (Angular-free), which is what
+  lets Node read them for the generator and the compile gate.
+- **Each demo is one complete standalone component**, built with `demoSource({ use, helpers, types,
+before, body, template, after, dataset })`: `use` lands in the import statement _and_
+  `@Component.imports`, `helpers` are imported but not declarable (`form()`, `Validators`), `types`
+  are `import type`. `@angular/core` imports are derived from a closed symbol list scanned over the
+  TypeScript parts only. `dataset: 'employees' | 'org'` inlines a small row array so `[data]`
+  bindings resolve. Demo cards render them with `language="ts"`.
+
+`npx nx run docs-tools:typecheck` writes every snippet into a scratch program and compiles it with
+`ngc` under `strictTemplates` — unknown elements, wrong string-union values, missing members and bad
+bindings all fail the build. Genuine fragments (shell commands, CSS token blocks, provider excerpts)
+stay plain strings and are skipped, but the checker **lists every exemption** so none is silent.
 
 The landing page (`pages/home/home.ts`, route `''`) is the one full-bleed page: `App.isHome`
 hides the sidebar shell and the `doc-shell` wrapper for it. Its canvas wave / pointer-parallax
 effects run on native listeners + rAF outside change detection and must stay dependency-free
 (no 3D/animation libraries) and disabled under `prefers-reduced-motion`.
+
+## Machine-readable docs (`tools/docs-tools`)
+
+Coding assistants are a first-class docs audience: they read the repo, `node_modules`, and whatever
+the site serves. Three artifacts serve them, all **generated and committed**:
+
+| Artifact                             | Purpose                                                      |
+| ------------------------------------ | ------------------------------------------------------------ |
+| `apps/dev-app/public/llms.txt`       | [llmstxt.org](https://llmstxt.org) index of packages + pages |
+| `apps/dev-app/public/llms-full.txt`  | conventions, every API member, every demo — one file         |
+| `apps/dev-app/public/llms/<pkg>.txt` | one self-contained reference per package                     |
+| `packages/<pkg>/llms.txt`            | same file, shipped in the tarball via `assets`               |
+| `apps/dev-app/public/sitemap.xml`    | generated from `app.routes.ts` (no longer hand-maintained)   |
+
+Everything is **derived from the workspace**, never hand-written twice: routes from `app.routes.ts`,
+link notes from `SeoService.DESCRIPTIONS`, member tables from each API page's
+`<app-api-reference>` bindings back through `*-api-data.ts`, symbol inventories from the entry-point
+barrels, demos from `*-snippets.ts`. The only hand-maintained input is
+`tools/docs-tools/lib/manifest.mjs` (per-package npm name, docs root, pitch) and the LLM-facing prose
+in `lib/prose.mjs` (**Writing OGE code** rules + a **Common mistakes** table of wrong guesses).
+
+```sh
+npx nx run docs-tools:llms         # regenerate (commit the result)
+npx nx run docs-tools:llms-check   # CI gate: committed artifacts match the generator
+npx nx run docs-tools:typecheck    # CI gate: every docs snippet compiles (see Testing)
+```
+
+`llms` also prints two "no silent gaps" reports: package folders missing from the manifest, and
+exported symbols with no API-reference row. `*-api-data.ts` is hand-compiled from source TSDoc, so
+that second report is the only signal that a table has fallen behind its component.
+
+## `ng add` (`tools/oge-schematics`)
+
+Every publishable package ships an `ng add` schematic. One implementation lives in
+`tools/oge-schematics/src/` and `build.mjs` bundles it once per package with esbuild, substituting
+the package name through `define`. Packages therefore carry **no schematic source** — only
+`"schematics": "./schematics/collection.json"` in `package.json`; `collection.json`, `schema.json`
+and the CJS bundle are written straight into `dist/packages/<pkg>/schematics/`.
+
+What it does: registers an optional theme stylesheet (`--theme=dark|tailwind|bootstrap`, inserted
+**first** in `styles` so the app's own stylesheet still wins), and writes an OGE usage block into the
+consumer's `AGENTS.md` between `<!-- oge-ui:start -->` markers — regenerated from the OGE packages in
+their `package.json`, opt out with `--skip-agents-file`. Nothing throws: a workspace it cannot read
+(Nx repo, bare library, no `build` target) gets a warning and the manual one-liner.
+
+Two constraints that are easy to break:
+
+- The bundle must be **`index.cjs`**, not `index.js` — ng-packagr stamps `"type": "module"` on the
+  dist `package.json`, and the schematics engine loads factories with `require`.
+- `schematics` must run **after** the package builds (ng-packagr wipes `dist/packages/<pkg>` first),
+  which is why the target `dependsOn` every package `build` and declares
+  `dist/packages/*/schematics` as its outputs so a cache hit restores them.
+
+```sh
+npx nx run oge-schematics:typecheck   # tsc over the schematic sources
+npx nx run oge-schematics:test        # SchematicTestRunner specs (vitest, node env)
+npx nx run oge-schematics:schematics  # build the bundles into dist
+```
 
 ## Release
 

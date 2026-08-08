@@ -1,0 +1,581 @@
+# @oge-ui/navigation
+
+> Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting.
+
+Part of OGE UI v0.6.0.
+Docs and live demos: https://ogeui.com/components/tree-view
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/navigation
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/navigation`
+
+- values: `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_TREE_VIEW_CONFIG`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeTreeViewConfig`
+- types: `CheckState`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
+
+## API reference
+
+### OgeTreeView — `<oge-tree-view>`
+
+#### Properties
+
+_Data & accessors_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly T[] \| undefined` | `—` | Nodes to display — a flat parent-referencing list or nested children. |
+| `keyExpr` | `string \| ((row: T) => RowKey)` | `'id'` | Field holding a node's stable key. |
+| `parentIdExpr` | `string \| ((row: T) => unknown)` | `'parentId'` | Field holding a node's parent key (flat data). |
+| `itemsExpr` | `string \| ((row: T) => readonly T[]) \| undefined` | `—` | Field holding nested children. Setting it switches the tree to hierarchical data. |
+| `displayExpr` | `string \| ((row: T) => unknown)` | `'text'` | Field holding the display text. |
+| `disabledExpr` | `string \| ((row: T) => unknown)` | `'disabled'` | Field marking a node disabled. |
+| `hasItemsExpr` | `string \| ((row: T) => unknown)` | `'hasItems'` | Field hinting that a node has children that are not loaded yet — only consulted with a `loadChildren`. |
+| `iconExpr` | `string \| ((row: T) => unknown) \| undefined` | `—` | Field holding SVG path data (`d`) for a per-node icon. |
+| `rootValue` | `unknown` | `—` | Parent value that marks root nodes in flat data. `undefined`/`null` treats both as root. |
+| `dataStructure` | `'plain' \| 'tree' \| undefined` | `—` | Explicit data shape; inferred from `itemsExpr` when unset. |
+
+_State (two-way)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `expandedKeys` | `readonly RowKey[]` | `[]` | Keys of the expanded nodes. |
+| `selectedKeys` | `readonly RowKey[]` | `[]` | Keys of the selected nodes, projected by `selectedKeysMode` on the way out. |
+| `focusedKey` | `RowKey \| undefined` | `—` | Key of the node holding the roving tabindex. |
+| `searchValue` | `string` | `''` | Current search text. |
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `'none' \| 'single' \| 'multiple'` | `'none'` | How nodes may be selected. |
+| `selectByClick` | `boolean \| undefined` | `—` | Selects a node when its row is clicked. `undefined` resolves to `true` without checkboxes and `false` with them, so clicking a label never silently ticks the box beside it. |
+| `selectNodesRecursive` | `boolean` | `true` | Cascades selection down to descendants and up to fully-selected parents (the tri-state model). |
+| `showCheckBoxes` | `'none' \| 'normal' \| 'selectAll'` | `'none'` | Checkbox column: hidden, per node, or per node plus a "select all" row. |
+| `selectedKeysMode` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` | `'all'` | Projection applied to `selectedKeys`: everything, only childless nodes, or the top-most roots of fully-selected subtrees. |
+
+_Expansion_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `expandEvent` | `'click' \| 'dblclick'` | `'click'` | Which gesture expands a node. The chevron always expands regardless. |
+| `expandNodesRecursive` | `boolean` | `true` | Expanding a node also expands its ancestors. |
+| `allowExpandAll` | `boolean` | `true` | Enables the APG `*` shortcut, which expands every sibling at the focused level. |
+
+_Search_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `searchEnabled` | `boolean` | `false` | Renders the built-in search box above the tree. |
+| `searchMode` | `'contains' \| 'startsWith' \| 'equals'` | `'contains'` | How the text is compared. Matching is accent- and locale-insensitive. |
+| `searchExpr` | `string \| ((row: T) => unknown) \| array \| undefined` | `—` | Fields searched instead of `displayExpr`; an array searches several. |
+| `searchTimeout` | `number` | `0` | Debounce applied to the search box, in milliseconds. |
+| `filterMode` | `'matchOnly' \| 'withAncestors' \| 'fullBranch'` | `'withAncestors'` | Which relatives of a match stay visible. `fullBranch` also keeps a match's descendants. |
+| `expandNodesOnFiltering` | `boolean` | `true` | Auto-expands the ancestors of matches. |
+| `highlightSearchResults` | `boolean` | `true` | Wraps matches in ``. |
+
+_Lazy loading, virtualization & drag_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `loadChildren` | `(parent: T, key: RowKey) => Promise<readonly T[]>` | `—` | Loads a node's children the first time it expands; a placeholder row shows meanwhile. Single-flight per node, and fetched children join the index so cascades reach them. |
+| `virtualScroll` | `boolean \| { itemHeight: number }` | `false` | Windowed rendering for large trees. Every row must actually be `itemHeight` tall (30px by default). |
+| `height` | `string \| undefined` | `—` | Height of the scroll container (any CSS length) — required for virtual scrolling to have a viewport. |
+| `allowDragging` | `boolean` | `false` | Enables pointer drag reordering. |
+| `allowDropInside` | `boolean` | `true` | Allows dropping *into* a node (reparenting), not just between siblings. |
+
+_Presentation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the whole component. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the node rows. |
+| `ariaLabel` | `string \| undefined` | `—` | Aria label of the tree. |
+| `messages` | `Partial<OgeTreeViewMessages>` | `{}` | Per-instance overrides of the config strings. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `expand(key)` | `(key: RowKey) => Promise<boolean>` | Expands a node, awaiting the lazy child fetch when there is one. Resolves `false` if the node is unknown or `itemExpanding` vetoed it. |
+| `collapse(key)` | `(key: RowKey) => Promise<boolean>` | Collapses a node; resolves whether it actually collapsed. |
+| `toggle(key)` | `(key: RowKey) => Promise<boolean>` | Expands the node if collapsed, collapses it otherwise. |
+| `expandAll()` | `() => void` | Expands every node that has loaded children. |
+| `collapseAll()` | `() => void` | Collapses every node. |
+| `selectAll()` | `() => void` | Selects every node. |
+| `unselectAll()` | `() => void` | Clears the selection. |
+| `select(key) / unselect(key)` | `(key: RowKey) => void` | Selects or deselects one node, cascading when `selectNodesRecursive` is on. |
+| `isExpanded(key) / isSelected(key)` | `(key: RowKey) => boolean` | Current state of one node. |
+| `getSelectedKeys(mode?)` | `(mode?: OgeTreeSelectedKeysMode) => RowKey[]` | Selected keys under a projection, defaulting to `selectedKeysMode`. |
+| `focus(key?)` | `(key?: RowKey) => void` | Focuses a node's row, or the first enabled one. |
+| `scrollToItem(key)` | `(key: RowKey) => void` | Scrolls a node into view, using offset math when virtualized. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemExpanding / itemCollapsing` | `OgeTreeExpandingEvent<T> / OgeTreeCollapsingEvent<T>` | Cancelable pre-events — set `cancel = true` to block the change. |
+| `itemExpanded / itemCollapsed` | `OgeTreeExpandedEvent<T> / OgeTreeCollapsedEvent<T>` | Emitted after the change committed. |
+| `selectionChanging` | `OgeTreeSelectionChangingEvent<T>` | Cancelable pre-event carrying the keys the selection would become. |
+| `selectionChanged` | `OgeTreeSelectionChangedEvent<T>` | Emitted after the selection committed, with `previousKeys`. |
+| `itemSelectionChanged` | `OgeTreeItemSelectionChangedEvent<T>` | Emitted for the single node whose own state flipped. |
+| `itemClick / itemDblClick` | `OgeTreeItemClickEvent<T>` | Emitted when a node row is clicked or double-clicked. |
+| `childrenLoaded / childrenLoadFailed` | `OgeTreeChildrenLoadedEvent<T> / OgeTreeChildrenFailedEvent<T>` | Emitted after a lazy `loadChildren` settled; the failure carries the original error. |
+| `selectAllChanged` | `OgeTreeSelectAllChangedEvent` | Emitted when the "select all" row is toggled. |
+| `itemReordering / itemReordered` | `OgeTreeReorderingEvent<T> / OgeTreeReorderedEvent<T>` | Cancelable pre-event and result of a drag & drop reparent, carrying `position: 'inside' \| 'before' \| 'after'`. The tree does not mutate your data. |
+
+#### Types
+
+_Template slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `[ogeTreeItemTemplate]` | `{ $implicit, key, level, expanded, selected, checkState, hasChildren, highlightedHtml }` | Replaces a node's built-in label. Renders inside `role="treeitem"`, so it must not contain focusable controls. |
+| `[ogeTreeExpandIconTemplate]` | `{ $implicit: boolean, item, key, loading }` | Replaces the expand/collapse chevron. |
+| `[ogeTreeNoDataTemplate]` | `—` | Replaces the empty state shown when the tree has no nodes or a search matched nothing. |
+
+_Keyboard (WAI-ARIA APG treeview)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Down / Up Arrow` | `navigation` | Moves focus over the visible nodes, skipping disabled ones. Trees do not wrap at the ends. |
+| `Right Arrow` | `navigation` | Opens a collapsed parent; on an open parent moves to its first child; no-op on a leaf. |
+| `Left Arrow` | `navigation` | Closes an open parent; otherwise moves focus to the parent node. |
+| `Home / End` | `navigation` | Moves to the first / last visible node. |
+| `Enter` | `activation` | Toggles a parent, or selects a leaf when a selection mode is set. |
+| `Space` | `selection` | Toggles selection on the focused node. `Shift+Space` selects the contiguous range. |
+| `Printable characters` | `type-ahead` | Moves focus to the next node whose label starts with the typed prefix, accent-insensitively. |
+| `*` | `expansion` | Expands every sibling at the focused level. |
+| `Ctrl+A, Shift+Arrow, Ctrl+Shift+Home/End` | `multi-select` | Select all, extend by one, and range-select to the start/end — the APG "recommended" model, so plain navigation needs no modifier. |
+
+### Tree view configuration
+
+#### Properties
+
+_OgeTreeViewMessages_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectAll` | `string` | `'Select all'` | Label of the "select all" row. |
+| `searchPlaceholder` | `string` | `'Search…'` | Placeholder of the built-in search box. |
+| `searchLabel` | `string` | `'Search the tree'` | Accessible name of the built-in search box. |
+| `clearSearch` | `string` | `'Clear search'` | Accessible name of the search box's clear button. |
+| `loadingChildren` | `string` | `'Loading…'` | Shown while a node's lazy children are loading. |
+| `childrenLoadFailed` | `string` | `'Could not load these items.'` | Shown when `loadChildren` rejected. |
+| `noData` | `string` | `'No items to display'` | Shown when the tree has no nodes at all. |
+| `noSearchResults` | `string` | `'No matching items'` | Shown when a search matched nothing. |
+
+#### Types
+
+_Behavioural defaults_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemHeight` | `number \| undefined` | Default row height used by `virtualScroll`. |
+| `expandEvent` | `'click' \| 'dblclick' \| undefined` | Default for the `expandEvent` input. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeTreeViewConfig(config)` | `(config: OgeTreeViewConfigInput) => Provider` | Application- or component-scoped defaults; shallow-merges `messages` over the built-ins. |
+| `OGE_TREE_VIEW_CONFIG` | `InjectionToken<OgeTreeViewConfig>` | The token itself, with a factory default — inject it to read the effective config. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Check
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+import type { RowKey } from '@oge-ui/core';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-view
+      [items]="folders"
+      displayExpr="name"
+      selectionMode="multiple"
+      showCheckBoxes="selectAll"
+      [(selectedKeys)]="picked"
+    />
+
+    <!-- selectedKeysMode projects the stored set on the way out:
+         'all' (default) · 'leavesOnly' · 'excludeRecursive' -->
+  `,
+})
+export class Demo {
+  protected readonly folders: Folder[] = [
+    { id: 1, parentId: null, name: 'Documents' },
+    { id: 2, parentId: 1, name: 'Reports' },
+    { id: 3, parentId: 2, name: 'Q1.pdf' },
+  ];
+
+  protected readonly picked = signal<RowKey[]>([]);
+}
+```
+
+### Dnd
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+import type { OgeTreeReorderedEvent } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-view
+      [items]="folders()"
+      displayExpr="name"
+      [allowDragging]="true"
+      [allowDropInside]="true"
+      (itemReordered)="reparent($event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly folders = signal<Folder[]>([
+    { id: 1, parentId: null, name: 'Documents' },
+    { id: 2, parentId: 1, name: 'Reports' },
+  ]);
+
+  // the tree never mutates your data; apply the move yourself
+  protected reparent(e: OgeTreeReorderedEvent<Folder>): void {
+    this.folders.update((rows) =>
+      rows.map((row) =>
+        row.id === e.dragKey
+          ? {
+              ...row,
+              parentId:
+                e.position === 'inside'
+                  ? (e.dropKey as number)
+                  : e.dropItem.parentId,
+            }
+          : row,
+      ),
+    );
+  }
+}
+```
+
+### Flat
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+import type { RowKey } from '@oge-ui/core';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-view
+      [items]="folders"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      displayExpr="name"
+      selectionMode="single"
+      [(expandedKeys)]="open"
+      [(selectedKeys)]="picked"
+    />
+  `,
+})
+export class Demo {
+  protected readonly folders: Folder[] = [
+    { id: 1, parentId: null, name: 'Documents' },
+    { id: 2, parentId: 1, name: 'Reports' },
+    { id: 3, parentId: 2, name: 'Q1.pdf' },
+  ];
+
+  protected readonly open = signal<RowKey[]>([1]);
+  protected readonly picked = signal<RowKey[]>([]);
+}
+```
+
+### Lazy
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-view
+      [items]="roots"
+      displayExpr="name"
+      hasItemsExpr="hasItems"
+      [loadChildren]="loadChildren"
+    />
+  `,
+})
+export class Demo {
+  protected readonly roots: Folder[] = [
+    { id: 1, parentId: null, name: 'Documents', hasItems: true },
+  ];
+
+  // a skeleton row shows while the promise is pending
+  protected readonly loadChildren = (parent: Folder): Promise<Folder[]> =>
+    fetch(`/api/folders?parent=${parent.id}`).then((r) => r.json());
+}
+```
+
+### Nested
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+
+interface NestedFolder {
+  id: number;
+  name: string;
+  children?: NestedFolder[];
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- nested payloads need only itemsExpr; the parent links are derived -->
+    <oge-tree-view [items]="tree" itemsExpr="children" displayExpr="name" />
+  `,
+})
+export class Demo {
+  protected readonly tree: NestedFolder[] = [
+    {
+      id: 1,
+      name: 'src',
+      children: [{ id: 2, name: 'app', children: [{ id: 3, name: 'main.ts' }] }],
+    },
+  ];
+}
+```
+
+### Search
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-view
+      [items]="folders"
+      displayExpr="name"
+      [searchEnabled]="true"
+      searchMode="contains"
+      filterMode="withAncestors"
+    />
+  `,
+})
+export class Demo {
+  protected readonly folders: Folder[] = [
+    { id: 1, parentId: null, name: 'Documents' },
+    { id: 2, parentId: 1, name: 'Reports' },
+    { id: 3, parentId: 2, name: 'Q1.pdf' },
+  ];
+}
+```
+
+### Template
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeItemTemplate, OgeTreeView } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeItemTemplate, OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-view [items]="folders" displayExpr="name">
+      <!-- the TypeFor input is a pure type anchor: bind the same array you pass
+           to [items] and let-item is typed as your row, not unknown -->
+      <ng-template
+        ogeTreeItemTemplate
+        [ogeTreeItemTemplateTypeFor]="folders"
+        let-item
+        let-level="level"
+      >
+        <strong>{{ item.name }}</strong>
+        <small>level {{ level }}</small>
+      </ng-template>
+    </oge-tree-view>
+
+    <!-- the template renders inside role="treeitem", so it must not contain
+         focusable controls — that would be a nested-interactive violation -->
+  `,
+})
+export class Demo {
+  protected readonly folders: Folder[] = [
+    { id: 1, parentId: null, name: 'Documents' },
+    { id: 2, parentId: 1, name: 'Reports' },
+    { id: 3, parentId: 2, name: 'Q1.pdf' },
+  ];
+}
+```
+
+### Virtual
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeView } from '@oge-ui/navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeView],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- every row must actually be itemHeight tall -->
+    <oge-tree-view
+      [items]="tenThousand"
+      displayExpr="name"
+      [virtualScroll]="{ itemHeight: 30 }"
+      height="320px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tenThousand: Folder[] = Array.from(
+    { length: 10000 },
+    (_, i) => ({ id: i + 1, parentId: null, name: `Item ${i + 1}` }),
+  );
+}
+```
+

@@ -1,0 +1,489 @@
+# @oge-ui/tree-list
+
+> The data-grid feature set on hierarchical data: lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
+
+Part of OGE UI v0.6.0.
+Docs and live demos: https://ogeui.com/components/tree-list
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/tree-list
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/tree-list`
+
+- values: `OGE_GRID_CONFIG`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnGroup`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgeTreeList`, `provideOgeGridConfig`
+- types: `OgeCellClickEvent`, `OgeCellTemplateContext`, `OgeColumnLookup`, `OgeDataErrorEvent`, `OgeDataType`, `OgeEditingStartEvent`, `OgeExportingEvent`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeHeaderTemplateContext`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortingOptions`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
+
+`@oge-ui/tree-list/export-excel`
+
+- values: `buildTreeExcelWorkbook`, `exportOgeTreeListToExcel`
+- types: `OgeTreeExcelExportOptions`
+
+## API reference
+
+### OgeTreeList — `<oge-tree-list>`
+
+#### Properties
+
+_Tree data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `readonly T[] \| DataSource<T>` | `[]` | Flat self-referencing rows: a static array or any DataSource. |
+| `keyExpr` | `string \| ((row: T) => RowKey)` | `'id'` | Row key: field path or selector (grid uses `keyField`). |
+| `parentIdExpr` | `string \| ((row: T) => unknown)` | `'parentId'` | Parent reference: field path or selector. |
+| `rootValue` | `unknown` | `null` | Parent value marking root rows. |
+| `orphanPolicy` | `'discard' \| 'promoteToRoot'` | `'discard'` | Rows whose parent key is missing: drop or render as roots. |
+| `itemsExpr` | `string \| ((row: T) => readonly T[] \| undefined) \| undefined` | `—` | Nested payloads: rows carry children inline (plain arrays only; `parentIdExpr` ignored). |
+| `hasItemsExpr` | `string \| ((row: T) => boolean) \| undefined` | `—` | Expandability hint for lazily loaded children. |
+| `loadMode` | `'full' \| 'lazy' \| undefined` | `—` | `'lazy'` fetches children per expansion (`filter: [parentIdExpr,'=',key]`); defaults to lazy with DataSource + `hasItemsExpr`. |
+
+_Expansion & focus_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `autoExpandAll` | `boolean` | `false` | Expands every row initially; the toggled-set polarity follows. |
+| `expandedRowKeys` | `model<readonly RowKey[]>` | `[]` | Two-way binding of the expanded row keys. |
+| `expandNodesOnFiltering` | `boolean` | `true` | Auto-expands ancestor chains of matches while a filter is active. |
+| `focusedRowEnabled` | `boolean` | `false` | Highlights and tracks a single focused row. |
+| `focusedRowKey` | `model<RowKey \| null>` | `null` | Two-way binding of the focused row's key. |
+| `autoNavigateToFocusedRow` | `boolean` | `false` | A `focusedRowKey` change expands its ancestor path and scrolls (tree-only). |
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `OgeSelectionMode` | `'none'` | none \| single \| multiple \| checkbox. |
+| `selectedKeys` | `model<RowKey[]>` | `[]` | Two-way binding of the selected row keys. |
+| `selectionRecursive` | `boolean` | `false` | Tri-state cascade to descendants and ancestors. |
+| `allowSelectAll` | `boolean` | `true` | Hides the header select-all checkbox when false. |
+
+_Filtering & paging_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `filterRow / headerFilter / searchPanel / filterPanel` | `boolean \| options` | `false` | Same options objects as the grid — all client-side over the loaded rows. |
+| `filterMode` | `TreeFilterMode` | `'withAncestors'` | Matches keep their ancestors; `'fullBranch'` also keeps all descendants. |
+| `filterValue` | `model<FilterExpr \| null>` | `null` | Two-way filter expression (builder). |
+| `filterDebounce` | `number \| undefined` | `—` | Debounce for text filter inputs. |
+| `paging` | `false \| OgePagingOptions` | `false` | Pages the visible (flattened) rows client-side; paging wins over `virtualScroll`. |
+| `sortable / sorting` | `boolean \| 'single' \| 'multi' / OgeSortingOptions` | `true` | Sibling-scoped, multi-column by default. |
+
+_Layout, editing & misc (grid-shared)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `columns` | `readonly (string \| ColumnDefLike)[] \| undefined` | `—` | Programmatic columns (or declarative ``). |
+| `virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth` | `various` | `—` | Virtualization knobs; `columnRenderingMode` is a top-level input here. |
+| `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false). |
+| `editing` | `false \| OgeEditingOptions` | `false` | cell/row/batch/form/popup via the shared EditingModel. |
+| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid. |
+
+#### Methods
+
+_Tree navigation & data_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `expandAll() / collapseAll()` | `void` | Polarity-aware over the expandable keys. |
+| `expandRow(key) / collapseRow(key) / isRowExpanded(key)` | `void / boolean` | Per-row expansion (imperative API bypasses the cancelable events). |
+| `focusRow(key) / navigateToRow(key)` | `void` | Expands the ancestor path, scrolls to the row and focuses its first cell. |
+| `scrollToRow(target: number \| RowKey)` | `void` | Scrolls a visible row into the viewport. |
+| `getNodeByKey(key): T \| undefined` | `T \| undefined` | The loaded row carrying `key`. |
+| `forEachNode(callback)` | `void` | Runs the callback for every loaded row with `(row, key, parentKey)`. |
+| `getVisibleRows(): readonly T[]` | `readonly T[]` | Data rows of the rendered page, in display order. |
+| `refresh(): void` | `void` | Re-runs the load and drops lazily fetched rows. |
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSelectedRowKeys(mode = 'all')` | `RowKey[]` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` narrows recursive selections. |
+| `getSelectedRowsData(mode = 'all')` | `T[]` | Row data per the same modes. |
+| `selectAll() / deselectAll() / clearSelection() / isRowSelected(key)` | `void / boolean` | Recursive mode cascades select-all to descendants. |
+| `copyToClipboard(): Promise<void>` | `Promise<void>` | Selected rows as tab-separated values (with header). |
+
+_Editing, paging, state & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addRow(parentKey?)` | `void` | New unsaved row; parent pre-staged with a string `parentIdExpr`; `initNewRow` can prefill. |
+| `editRow(key) / deleteRow(key) / saveChanges() / discardChanges() / hasChanges()` | `void / boolean` | Same semantics as the grid. |
+| `pageIndex / setPageIndex(i) / pageSize() / setPageSize(n) / pageCount() / totalCount()` | `signal / methods` | `pageIndex` is a writable signal; `totalCount()` spans all pages. |
+| `beginCustomLoading(message?) / endCustomLoading()` | `void` | Load panel independent of data activity. |
+| `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. |
+| `clearFilters() / clearSorting()` | `void` | Reset the view. |
+| `getExportData() / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async); CSV indents the first column 2 spaces per level; Excel entry sets real outline levels. |
+
+#### Events
+
+_Tree-specific_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `rowExpanding / rowCollapsing` | `OgeTreeRowTogglingEvent<T>` | Cancelable — UI-driven toggles only (the imperative API stays silent). |
+| `rowExpanded / rowCollapsed` | `OgeTreeRowToggleEvent<T>` | `{ key, row }` after a toggle. |
+| `rowReparented` | `OgeTreeRowReparentEvent<T>` | Drag & drop: `{ key, row, fromParentKey, toParentKey, position: 'inside' \| 'before' \| 'after' }`. |
+| `initNewRow` | `OgeTreeInitNewRowEvent` | `{ key, parentKey, values }` prefill hook. |
+
+_Shared with the grid_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `rowClick / rowDblClick / cellClick / cellDblClick` | `OgeRowClickEvent / OgeCellClickEvent` | Flat payloads with the originating DOM event. |
+| `rowContextMenu / headerContextMenu` | `context-menu events` | Mutable `items`. |
+| `selectionChanged / focusedRowChanged` | `diff / focus events` | Same payloads as the grid. |
+| `editingStart / rowInserting‑ed / rowUpdating‑ed / rowRemoving‑ed / savingChanges / savedChanges / editCanceled` | `editing lifecycle` | Same shared EditingModel pipeline as the grid; `-ing` events cancelable. |
+| `exporting / dataErrorOccurred / contentReady / stateChange` | `misc` | Same semantics as the grid (`stateChange` carries a `TreeListStateSnapshot`). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTreeDropPosition` | `'inside' \| 'before' \| 'after'` | Reparent vs sibling ordering. |
+| `OgeTreeExportData<T>` | `OgeExportData<T> & { levels: readonly number[] }` | Zero-based depth per exported row (drives spreadsheet outline levels). |
+| `TreeFilterMode` | `'withAncestors' \| 'fullBranch'` | Visible set under a filter. |
+| `exportOgeTreeListToExcel(treeList, options?)` | `@oge-ui/tree-list/export-excel` | Lazy Excel export with native outline grouping. |
+| `Re-exports` | `from @oge-ui/grid` | `OgeColumn`, templates, config/messages and the shared event payload types are re-exported so tree-only consumers have a single import source. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Drag drop
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeList } from '@oge-ui/tree-list';
+import type { OgeTreeRowReparentEvent } from '@oge-ui/tree-list';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-list
+      [data]="org"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      [autoExpandAll]="true"
+      [rowDragging]="true"
+      (rowReparented)="onReparent($event)"
+    />
+  `,
+})
+export class Demo {
+  readonly org = [
+    { id: 1, parentId: null, name: 'Aylin Koç', title: 'CEO', office: 'İstanbul', headcount: 4 },
+    { id: 2, parentId: 1, name: 'Baran Ateş', title: 'VP Engineering', office: 'İstanbul', headcount: 2 },
+    { id: 3, parentId: 2, name: 'Ceren Aksu', title: 'Team Lead', office: 'İzmir', headcount: 1 },
+    { id: 4, parentId: 3, name: 'Deniz Ünal', title: 'Engineer', office: 'İzmir', headcount: 0 },
+    { id: 5, parentId: 1, name: 'Elif Barış', title: 'VP Sales', office: 'Ankara', headcount: 0 },
+  ];
+
+  protected onReparent(event: OgeTreeRowReparentEvent<unknown>): void {
+    console.log(event.key, 'moved under', event.toParentKey);
+  }
+}
+```
+
+### Editing
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeList } from '@oge-ui/tree-list';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-list
+      [data]="org"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      [editing]="{
+        mode: 'form',
+        allowUpdating: true,
+        allowAdding: true,
+        allowDeleting: true,
+        formColCount: 2,
+        formItems: ['name', 'title', { field: 'office', colSpan: 2 }]
+      }"
+      (initNewRow)="$event.values['title'] = 'Engineer'"
+    />
+    <!-- treeList.addRow(parentKey) inserts under a chosen node -->
+  `,
+})
+export class Demo {
+  readonly org = [
+    { id: 1, parentId: null, name: 'Aylin Koç', title: 'CEO', office: 'İstanbul', headcount: 4 },
+    { id: 2, parentId: 1, name: 'Baran Ateş', title: 'VP Engineering', office: 'İstanbul', headcount: 2 },
+    { id: 3, parentId: 2, name: 'Ceren Aksu', title: 'Team Lead', office: 'İzmir', headcount: 1 },
+    { id: 4, parentId: 3, name: 'Deniz Ünal', title: 'Engineer', office: 'İzmir', headcount: 0 },
+    { id: 5, parentId: 1, name: 'Elif Barış', title: 'VP Sales', office: 'Ankara', headcount: 0 },
+  ];
+}
+```
+
+### Filtering
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-list
+      [data]="org"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      [autoExpandAll]="true"
+      [filterRow]="true"
+      [searchPanel]="true"
+      filterMode="withAncestors"
+    >
+      <oge-column field="name" caption="Name" />
+      <oge-column field="office" caption="Office" />
+    </oge-tree-list>
+  `,
+})
+export class Demo {
+  readonly org = [
+    { id: 1, parentId: null, name: 'Aylin Koç', title: 'CEO', office: 'İstanbul', headcount: 4 },
+    { id: 2, parentId: 1, name: 'Baran Ateş', title: 'VP Engineering', office: 'İstanbul', headcount: 2 },
+    { id: 3, parentId: 2, name: 'Ceren Aksu', title: 'Team Lead', office: 'İzmir', headcount: 1 },
+    { id: 4, parentId: 3, name: 'Deniz Ünal', title: 'Engineer', office: 'İzmir', headcount: 0 },
+    { id: 5, parentId: 1, name: 'Elif Barış', title: 'VP Sales', office: 'Ankara', headcount: 0 },
+  ];
+}
+```
+
+### Lazy loading
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeList } from '@oge-ui/tree-list';
+import { CustomDataSource } from '@oge-ui/core';
+
+interface Node {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasReports: boolean;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- children are fetched per expansion:
+         load({ filter: ['parentId', '=', parentKey] }) -->
+    <oge-tree-list
+      [data]="source"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      hasItemsExpr="hasReports"
+    />
+  `,
+})
+export class Demo {
+  protected readonly source = new CustomDataSource<Node>({
+    key: 'id',
+    load: (options) =>
+      fetch(`/api/org?parent=${parentKeyOf(options)}`)
+        .then((response) => response.json())
+        .then((data: Node[]) => ({ data, totalCount: data.length })),
+  });
+}
+
+/** The tree list asks for one level at a time: ['parentId', '=', key]. */
+function parentKeyOf(options: { filter?: unknown }): string {
+  const filter = options.filter as [string, string, unknown] | undefined;
+  return String(filter?.[2] ?? '');
+}
+```
+
+### Overview
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-list
+      [data]="org"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      [autoExpandAll]="true"
+    >
+      <oge-column field="name" caption="Name" />
+      <oge-column field="title" caption="Title" [width]="140" />
+      <oge-column field="office" caption="Office" [width]="140" />
+      <oge-column field="headcount" caption="Reports" dataType="number" [width]="110" />
+    </oge-tree-list>
+  `,
+})
+export class Demo {
+  readonly org = [
+    { id: 1, parentId: null, name: 'Aylin Koç', title: 'CEO', office: 'İstanbul', headcount: 4 },
+    { id: 2, parentId: 1, name: 'Baran Ateş', title: 'VP Engineering', office: 'İstanbul', headcount: 2 },
+    { id: 3, parentId: 2, name: 'Ceren Aksu', title: 'Team Lead', office: 'İzmir', headcount: 1 },
+    { id: 4, parentId: 3, name: 'Deniz Ünal', title: 'Engineer', office: 'İzmir', headcount: 0 },
+    { id: 5, parentId: 1, name: 'Elif Barış', title: 'VP Sales', office: 'Ankara', headcount: 0 },
+  ];
+}
+```
+
+### Selection
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTreeList } from '@oge-ui/tree-list';
+import type { RowKey } from '@oge-ui/core';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tree-list
+      [data]="org"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      [autoExpandAll]="true"
+      selectionMode="checkbox"
+      [selectionRecursive]="true"
+      [(selectedKeys)]="selectedKeys"
+    />
+  `,
+})
+export class Demo {
+  readonly org = [
+    { id: 1, parentId: null, name: 'Aylin Koç', title: 'CEO', office: 'İstanbul', headcount: 4 },
+    { id: 2, parentId: 1, name: 'Baran Ateş', title: 'VP Engineering', office: 'İstanbul', headcount: 2 },
+    { id: 3, parentId: 2, name: 'Ceren Aksu', title: 'Team Lead', office: 'İzmir', headcount: 1 },
+    { id: 4, parentId: 3, name: 'Deniz Ünal', title: 'Engineer', office: 'İzmir', headcount: 0 },
+    { id: 5, parentId: 1, name: 'Elif Barış', title: 'VP Sales', office: 'Ankara', headcount: 0 },
+  ];
+
+  protected readonly selectedKeys = signal<RowKey[]>([]);
+}
+```
+
+### Virtual scroll
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTreeList } from '@oge-ui/tree-list';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTreeList],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- 100 branches × 999 rows = 100.000 nodes -->
+    <oge-tree-list
+      [data]="rows"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      [autoExpandAll]="true"
+      [virtualScroll]="true"
+      style="height: 480px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly rows = Array.from({ length: 100 }, (_, branch) => [
+    { id: branch * 1000, parentId: null, name: `Branch ${branch + 1}` },
+    ...Array.from({ length: 999 }, (_, leaf) => ({
+      id: branch * 1000 + leaf + 1,
+      parentId: branch * 1000,
+      name: `Node ${leaf + 1}`,
+    })),
+  ]).flat();
+}
+```
+

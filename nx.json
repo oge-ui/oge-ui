@@ -51,11 +51,14 @@
       "buttons",
       "overlay",
       "inputs",
+      "tabs",
+      "layout",
+      "navigation",
       "ui"
     ],
     "projectsRelationship": "independent",
     "version": {
-      "preVersionCommand": "npx nx run-many -t build"
+      "preVersionCommand": "npx nx run-many -t build && npx nx run oge-schematics:schematics"
     },
     "changelog": {
       "workspaceChangelog": {

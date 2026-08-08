@@ -107,12 +107,20 @@ list, `forceSelection` snaps to a matching item on blur, `searchHighlight`
 marks the matched substring, and `items` also accepts a lazy function for
 server-side lookups.
 
-All three support `displayExpr`/`disabledExpr`/`imageExpr` data mapping,
+`oge-tree-select` is the hierarchical one: the same field chrome with a full
+`oge-tree-view` (from `@oge-ui/navigation`) as the popup. `value` is the
+selected node's key — or an array of keys with `selectionMode="multiple"` —
+and it forwards the tree's whole surface: flat or nested data,
+`showCheckBoxes` with the tri-state cascade, in-popup `searchEnabled`,
+`loadChildren` for lazy branches and `virtualScroll`. `selectedKeysMode`
+picks what a cascade actually stores (`'leavesOnly'` is usually it).
+
+All of them support `displayExpr`/`disabledExpr` data mapping,
 `virtualScroll` for large lists and the flip-aware popup from
 `@oge-ui/overlay`.
 
 ```html
-<oge-tag-box label="Regions" [items]="regions" [searchEnabled]="true" [(value)]="selected" /> <oge-autocomplete label="City" [items]="cities" [minSearchLength]="2" [(value)]="city" />
+<oge-tag-box label="Regions" [items]="regions" [searchEnabled]="true" [(value)]="selected" /> <oge-autocomplete label="City" [items]="cities" [minSearchLength]="2" [(value)]="city" /> <oge-tree-select label="Folder" [items]="folders" displayExpr="name" [(value)]="folderId" />
 ```
 
 ## Toggle controls
@@ -212,6 +220,13 @@ provideOgeInputsConfig({
   messages: { requiredError: 'Bu alan zorunludur', clearButton: 'Temizle' },
 });
 ```
+
+## For AI coding assistants
+
+The complete machine-readable API reference ships inside the package at
+`node_modules/@oge-ui/inputs/llms.txt` — conventions, every documented member and
+copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
+<https://ogeui.com/llms-full.txt> (the whole suite).
 
 ## License
 

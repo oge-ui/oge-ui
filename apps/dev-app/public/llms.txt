@@ -1,0 +1,125 @@
+# OGE UI
+
+> Signal-based Angular UI component suite for data-heavy applications: a virtualized Data Grid, Tree List, Pivot Grid, form editors, buttons, overlay surfaces (modal and toast), tabs and layout containers. Angular 22+, standalone components only, zoneless, zero runtime dependencies. MIT licensed, except @oge-ui/pivot which is commercial.
+
+Install with `npm i oge-ui` (every MIT family, one import path) or per family, e.g. `npm i @oge-ui/grid`. Requires Angular >= 22 and Node >= 22.22. Component styles ship inside the components, so no global stylesheet is required and the light theme is built in. App-wide defaults and every user-facing string come from `provideOge<Family>Config()`.
+
+For code generation, prefer the full reference — it inlines every API table and every demo source: [llms-full.txt](https://ogeui.com/llms-full.txt). Per-package references live at `https://ogeui.com/llms/<package>.txt` and ship inside each tarball at `node_modules/<package>/llms.txt`.
+
+## Packages
+
+- [@oge-ui/grid](https://ogeui.com/components/data-grid): Virtualized data grid: 100k+ rows, sorting, filtering, grouping with summaries, inline/batch/form editing, selection, master-detail, state persistence and CSV/Excel/PDF export.
+- [@oge-ui/tree-list](https://ogeui.com/components/tree-list): The data-grid feature set on hierarchical data: lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
+- [@oge-ui/inputs](https://ogeui.com/components/inputs): Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox and Switch — floating labels, validation, Signal Forms and reactive forms.
+- [@oge-ui/buttons](https://ogeui.com/components/buttons): Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.
+- [@oge-ui/overlay](https://ogeui.com/components/overlay): Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus, tooltips, context menus, the `oge-modal` dialog with `OgeModalService`, and `OgeToastService` notifications.
+- [@oge-ui/tabs](https://ogeui.com/components/tabs): Tab strip and tab panel: declarative or data-driven tabs, deferred rendering with keep-alive, closable and reorderable tabs, router integration.
+- [@oge-ui/layout](https://ogeui.com/components/accordion): Layout containers — accordion panels with single or multiple expansion.
+- [@oge-ui/navigation](https://ogeui.com/components/tree-view): Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting.
+- [@oge-ui/pivot](https://ogeui.com/components/pivot-grid): Cross-tab analytics: rows × columns × measures, grand totals, field chooser, sorting and Excel export. **Commercial licence.**
+- [@oge-ui/core](https://www.npmjs.com/package/@oge-ui/core): Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
+- [oge-ui](https://www.npmjs.com/package/oge-ui): Re-exports every MIT family from a single import path. `npm i oge-ui` then `import { OgeGrid, OgeButton } from 'oge-ui'`.
+
+## Getting started
+
+- [Getting Started](https://ogeui.com/getting-started): Get started with OGE: install the signal-based Angular UI packages, bind your first components and theme them with CSS design tokens.
+- [Set up your project](https://ogeui.com/getting-started/setup)
+- [Style the app](https://ogeui.com/getting-started/styling)
+- [Localization](https://ogeui.com/getting-started/localization)
+
+## AI
+
+- [AI coding assistants](https://ogeui.com/ai)
+
+## Data Grid
+
+- [Data Grid](https://ogeui.com/components/data-grid): Angular Data Grid with row and column virtualization, sorting, filtering, grouping with summaries, inline/batch editing, master-detail, remote data and CSV/Excel/PDF export.
+- [Data Grid Playground](https://ogeui.com/components/data-grid/playground)
+- [Data Grid Sorting & Paging](https://ogeui.com/components/data-grid/sorting)
+- [Data Grid Virtual Scroll](https://ogeui.com/components/data-grid/virtual-scroll)
+- [Data Grid Infinite Scroll](https://ogeui.com/components/data-grid/infinite-scroll)
+- [Data Grid Remote Data](https://ogeui.com/components/data-grid/remote-data)
+- [Data Grid Live Updates](https://ogeui.com/components/data-grid/live-updates)
+- [Data Grid Columns](https://ogeui.com/components/data-grid/columns)
+- [Data Grid Filtering](https://ogeui.com/components/data-grid/filtering)
+- [Data Grid Selection](https://ogeui.com/components/data-grid/selection)
+- [Data Grid Editing](https://ogeui.com/components/data-grid/editing)
+- [Data Grid Grouping](https://ogeui.com/components/data-grid/grouping)
+- [Data Grid Rows & Templates](https://ogeui.com/components/data-grid/rows)
+- [Data Grid State Persistence](https://ogeui.com/components/data-grid/persistence)
+- [Data Grid Context Menus](https://ogeui.com/components/data-grid/context-menu)
+- [Data Grid Master-Detail](https://ogeui.com/components/data-grid/master-detail)
+- [Data Grid API](https://ogeui.com/components/data-grid/api)
+
+## Tree List
+
+- [Tree List](https://ogeui.com/components/tree-list): Angular Tree List: the full data-grid feature set on hierarchical data — lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
+- [Tree List Lazy Loading](https://ogeui.com/components/tree-list/lazy-loading)
+- [Tree List Filtering](https://ogeui.com/components/tree-list/filtering)
+- [Tree List Selection](https://ogeui.com/components/tree-list/selection)
+- [Tree List Virtual Scroll](https://ogeui.com/components/tree-list/virtual-scroll)
+- [Tree List Drag & Drop](https://ogeui.com/components/tree-list/drag-drop)
+- [Tree List Editing](https://ogeui.com/components/tree-list/editing)
+- [Tree List API](https://ogeui.com/components/tree-list/api)
+
+## Inputs
+
+- [Inputs](https://ogeui.com/components/inputs): Angular form inputs on one field chrome: TextBox, TextArea, NumberBox and SelectBox with floating labels, validation, Signal Forms and reactive forms support.
+- [Input Validation](https://ogeui.com/components/inputs/validation)
+- [Select Box](https://ogeui.com/components/inputs/select-box): Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading and full keyboard support — signal-based and zoneless.
+- [Tree Select](https://ogeui.com/components/inputs/tree-select)
+- [Autocomplete](https://ogeui.com/components/inputs/autocomplete)
+- [Toggle Controls](https://ogeui.com/components/inputs/toggle-controls)
+- [Date Editors](https://ogeui.com/components/inputs/date-box)
+- [Input Showcase](https://ogeui.com/components/inputs/showcase)
+- [Inputs API](https://ogeui.com/components/inputs/api)
+
+## Buttons
+
+- [Buttons](https://ogeui.com/components/buttons): Angular Buttons with async actions and automatic loading, click guards, hold-to-confirm, badges, button groups and drop-down/split buttons.
+- [Button Interactions](https://ogeui.com/components/buttons/interactions)
+- [Button Group](https://ogeui.com/components/buttons/button-group)
+- [Drop Down Button](https://ogeui.com/components/buttons/drop-down-button)
+- [Buttons API](https://ogeui.com/components/buttons/api)
+
+## Overlay
+
+- [Overlay](https://ogeui.com/components/overlay): Angular overlay primitives: flip-aware anchored popups, WAI-ARIA menus, tooltips and context menus for any element.
+- [Tooltip & Context Menu](https://ogeui.com/components/overlay/tooltip-context-menu)
+- [Modal](https://ogeui.com/components/overlay/modal)
+- [Toast](https://ogeui.com/components/overlay/toast)
+- [Overlay API](https://ogeui.com/components/overlay/api)
+
+## Tabs
+
+- [Tabs](https://ogeui.com/components/tabs)
+- [Routed Tabs](https://ogeui.com/components/tabs/routed)
+- [Tabs API](https://ogeui.com/components/tabs/api)
+
+## Layout
+
+- [Accordion](https://ogeui.com/components/accordion)
+- [Accordion API](https://ogeui.com/components/accordion/api)
+
+## Navigation
+
+- [Tree View](https://ogeui.com/components/tree-view)
+- [Tree View API](https://ogeui.com/components/tree-view/api)
+
+## Pivot Grid
+
+- [Pivot Grid](https://ogeui.com/components/pivot-grid): Angular Pivot Grid: cross-tab analytics with rows × columns × measures, grand totals, field chooser, sorting and Excel export.
+- [Pivot Analytics & Export](https://ogeui.com/components/pivot-grid/analytics)
+- [Pivot Grid API](https://ogeui.com/components/pivot-grid/api)
+
+## Other pages
+
+- [Components](https://ogeui.com/components)
+- [Licensing](https://ogeui.com/license)
+
+## Optional
+
+- [Full reference](https://ogeui.com/llms-full.txt): every API member and demo source in one file — the best single input for code generation.
+- [Roadmap](https://github.com/oge-ui/oge-ui/blob/main/ROADMAP.md): shipped features and feature-parity tables against the reference libraries.
+- [Changelog](https://github.com/oge-ui/oge-ui/blob/main/CHANGELOG.md): released versions per package.
+- [Source](https://github.com/oge-ui/oge-ui): Nx monorepo — every package under `packages/`, docs app under `apps/dev-app`.

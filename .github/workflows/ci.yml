@@ -29,4 +29,8 @@ jobs:
       - run: npx playwright install --with-deps
 
       - run: npx nx format:check --base="remotes/origin/main"
+      # the committed llms.txt / sitemap artifacts must match their generator
+      - run: npx nx run docs-tools:llms-check
       - run: npx nx run-many -t lint test build typecheck e2e
+      # the ng-add bundle only ships if it builds — release runs this too
+      - run: npx nx run oge-schematics:schematics

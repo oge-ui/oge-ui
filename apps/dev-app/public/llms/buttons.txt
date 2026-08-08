@@ -1,0 +1,751 @@
+# @oge-ui/buttons
+
+> Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.
+
+Part of OGE UI v0.6.0.
+Docs and live demos: https://ogeui.com/components/buttons
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/buttons
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/buttons`
+
+- values: `OGE_BUTTONS_CONFIG`, `OGE_BUTTON_GROUP`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OgeButton`, `OgeButtonGroup`, `OgeButtonIcon`, `OgeDropDownButton`, `OgeDropDownContent`, `provideOgeButtonsConfig`
+- types: `OgeAutoRepeatOptions`, `OgeButtonActionDoneEvent`, `OgeButtonActionFailedEvent`, `OgeButtonClickEvent`, `OgeButtonGroupContext`, `OgeButtonGroupItem`, `OgeButtonGroupItemClickEvent`, `OgeButtonGroupSelectionChangedEvent`, `OgeButtonGroupSelectionMode`, `OgeButtonIconPosition`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeClickGuardOptions`, `OgeDropDownButtonItemClickEvent`, `OgeDropDownContentContext`, `OgeDropDownItemsFn`, `OgeDropDownSelectionChangedEvent`, `OgeHoldToConfirmOptions`
+
+## API reference
+
+### OgeButton — `<oge-button>`
+
+#### Properties
+
+_Appearance_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | `''` | Label text; alternative (or addition) to projecting content. |
+| `hint` | `string \| undefined` | `—` | Tooltip — rendered as the native `title` attribute. |
+| `stylingMode` | `OgeButtonStylingMode \| undefined` | `—` | Fill style; falls back to the enclosing group, then `contained`. |
+| `severity` | `OgeButtonSeverity \| undefined` | `—` | Semantic color; falls back to the enclosing group, then `normal`. |
+| `size` | `OgeButtonSize \| undefined` | `—` | Size preset; falls back to the enclosing group, then `md`. |
+| `color` | `string \| undefined` | `—` | Custom main color (any CSS color) — overrides the severity palette; the soft tint is derived via `color-mix`. |
+| `iconPosition` | `OgeButtonIconPosition` | `'before'` | Where `[ogeButtonIcon]` content renders relative to the label. |
+| `badge` | `string \| number \| boolean \| undefined` | `—` | String/number renders a pill (numbers cap at `99+` and join the accessible name); `true` renders a plain dot. |
+
+_Behavior_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the button. |
+| `loading` | `model<boolean>` | `false` | Busy state — two-way; managed automatically while `action` is pending. |
+| `action` | `(() => unknown) \| undefined` | `—` | Async click handler: sets `loading` while pending, single-flight; sync returns emit `actionDone` immediately. |
+| `clickGuard` | `boolean \| OgeClickGuardOptions` | `false` | Rate-limits the `clicked` output; `true` throttles with `config.clickGuardMs`. |
+| `holdToConfirm` | `boolean \| OgeHoldToConfirmOptions` | `false` | Fires `clicked` only after an uninterrupted press; wins over `autoRepeat`. `true` uses `config.holdToConfirmMs`. |
+| `autoRepeat` | `boolean \| OgeAutoRepeatOptions` | `false` | Repeats `clicked` while held; ignored when `holdToConfirm` is set. |
+| `useSubmitBehavior` | `boolean` | `false` | Renders `type="submit"` so the button submits the enclosing form. |
+| `buttonType` | `'button' \| 'submit' \| 'reset'` | `'button'` | Native button type; `useSubmitBehavior` is sugar for `submit`. |
+| `value` | `string \| undefined` | `—` | Selection key inside an ``; unused standalone. |
+| `tabIndex` | `number` | `0` | Tab order of the native button. |
+| `accessKey` | `string \| undefined` | `—` | Native `accesskey` of the inner button. |
+| `messages` | `Partial<OgeButtonsMessages> \| undefined` | `—` | Per-instance overrides of user-facing strings. |
+
+_Accessibility_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ariaLabel` | `string \| undefined` | Accessible name of the native button — required for icon-only buttons. |
+| `ariaHasPopup` | `string \| undefined` | `aria-haspopup` of the native button — for popup triggers. |
+| `ariaExpanded` | `boolean \| undefined` | `aria-expanded`; `undefined` omits the attribute. |
+| `ariaControls` | `string \| undefined` | `aria-controls` — id of the controlled popup. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the inner native button (`preventScroll: true`). |
+| `isDisabled` | `Signal<boolean>` | Read-only computed: disabled, busy, or inside a disabled group. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `clicked` | `OgeButtonClickEvent` | Fires after the gesture/guard pipeline accepts a click. Bind this instead of native `(click)`, which bypasses every guard. |
+| `actionDone` | `OgeButtonActionDoneEvent` | The `action` callback settled successfully. |
+| `actionFailed` | `OgeButtonActionFailedEvent` | The `action` callback threw or rejected. |
+| `loadingChange` | `boolean` | Implicit output of the `loading` model. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeButtonStylingMode` | `'contained' \| 'outlined' \| 'text'` | Fill style. |
+| `OgeButtonSeverity` | `'normal' \| 'accent' \| 'success' \| 'warning' \| 'danger'` | Semantic color mapped to the severity tokens. |
+| `OgeButtonSize` | `'sm' \| 'md' \| 'lg'` | Height/padding preset. |
+| `OgeButtonIconPosition` | `'before' \| 'after'` | Icon slot placement. |
+| `OgeButtonClickEvent` | `{ event: MouseEvent \| KeyboardEvent }` | `KeyboardEvent` when produced by Space/Enter during hold/repeat. |
+| `OgeButtonActionDoneEvent` | `{ result: unknown }` | Resolved value (or sync return) of `action`. |
+| `OgeButtonActionFailedEvent` | `{ error: unknown }` | Rejection reason or thrown error of `action`. |
+| `OgeClickGuardOptions` | `{ mode: 'debounce' \| 'throttle'; ms?: number }` | `ms` defaults to `config.clickGuardMs`; `true` shorthand ≡ throttle. |
+| `OgeHoldToConfirmOptions` | `{ ms?: number }` | Hold duration; defaults to `config.holdToConfirmMs`. |
+| `OgeAutoRepeatOptions` | `{ delayMs?: number; intervalMs?: number }` | Defaults from `config.autoRepeatDelayMs` / `autoRepeatIntervalMs`. |
+| `OgeButtonIcon` | `directive — [ogeButtonIcon]` | Marks projected content as the icon slot; placement follows `iconPosition`. |
+
+### OgeButtonGroup — `<oge-button-group>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeButtonGroupItem[] \| undefined` | `—` | Data-driven items rendered after projected `` children. |
+| `selectionMode` | `OgeButtonGroupSelectionMode` | `'none'` | Selection behavior; also drives the ARIA role (toolbar / radiogroup / group). |
+| `selectedKeys` | `model<readonly string[]>` | `[]` | Selected `value`s — two-way; `single` keeps at most one entry. |
+| `stylingMode` | `OgeButtonStylingMode` | `'contained'` | Cascaded to children without their own. |
+| `severity` | `OgeButtonSeverity` | `'normal'` | Cascaded to children without their own. |
+| `size` | `OgeButtonSize` | `'md'` | Cascaded to children without their own. |
+| `disabled` | `boolean` | `false` | Disables every button in the group. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the toolbar/radiogroup/group element. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the roving-tabindex target button. |
+| `isSelected(value: string \| undefined): boolean` | `boolean` | Whether the given button `value` is currently selected (reactive). |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeButtonGroupItemClickEvent` | Every accepted child click, before any selection change. |
+| `selectionChanged` | `OgeButtonGroupSelectionChangedEvent` | `selectedKeys` changed through user interaction. |
+| `selectedKeysChange` | `readonly string[]` | Implicit output of the `selectedKeys` model. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeButtonGroupSelectionMode` | `'none' \| 'single' \| 'multiple'` | Selection behavior of the group. |
+| `OgeButtonGroupItem` | `{ value: string; text?; hint?; disabled?; severity?; badge? }` | Data-driven item; icons require declarative children. |
+| `OgeButtonGroupItemClickEvent` | `{ value: string \| undefined; event: MouseEvent \| KeyboardEvent; item?: OgeButtonGroupItem; index: number }` | `index` is DOM-order; `-1` when unresolvable. |
+| `OgeButtonGroupSelectionChangedEvent` | `{ selectedKeys: readonly string[]; addedKeys: readonly string[]; removedKeys: readonly string[] }` | Full state plus diffs. |
+
+### OgeDropDownButton — `<oge-drop-down-button>`
+
+#### Properties
+
+_Trigger button_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | `''` | Label of the (main) trigger button. |
+| `hint` | `string \| undefined` | `—` | Tooltip of the trigger. |
+| `disabled` | `boolean` | `false` | Disables the whole control. |
+| `stylingMode` | `OgeButtonStylingMode \| undefined` | `—` | Same fallback chain as `OgeButton`. |
+| `severity` | `OgeButtonSeverity \| undefined` | `—` | Same fallback chain as `OgeButton`. |
+| `size` | `OgeButtonSize \| undefined` | `—` | Same fallback chain as `OgeButton`. |
+| `color` | `string \| undefined` | `—` | Custom main color — overrides the severity palette. |
+| `iconPosition` | `OgeButtonIconPosition` | `'before'` | Icon slot placement on the trigger. |
+| `badge` | `string \| number \| boolean \| undefined` | `—` | Badge on the trigger, as on `OgeButton`. |
+| `splitButton` | `boolean` | `false` | `true` renders a separate chevron toggle next to an action main button. |
+| `action` | `(() => unknown) \| undefined` | `—` | Async click handler of the split main button (single-flight, drives `loading`). |
+| `clickGuard` | `boolean \| OgeClickGuardOptions` | `false` | Click guard of the split main button. |
+| `loading` | `model<boolean>` | `false` | Busy state of the (main) button — two-way. |
+| `messages` | `Partial<OgeButtonsMessages> \| undefined` | `—` | Per-instance overrides of user-facing strings (status rows, toggle label). |
+
+_Drop-down panel_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeMenuItem[] \| OgeDropDownItemsFn \| undefined` | `—` | Menu items — an array, or a function invoked lazily on first open (result cached until the function reference changes). |
+| `opened` | `model<boolean>` | `false` | Panel visibility — two-way. |
+| `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred panel placement (flips/clamps automatically). |
+| `dropdownWidth` | `number \| 'anchor' \| undefined` | `—` | Fixed pixels or `'anchor'` to match the button width. |
+| `rememberLastAction` | `boolean` | `false` | Split mode: the last clicked item becomes the main button's label + action. |
+| `itemTemplate` | `TemplateRef<OgeMenuItemTemplateContext> \| undefined` | `—` | Custom rendering for menu items — see `OgeMenuList`. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(): void` | `void` | Opens the panel programmatically. |
+| `close(): void` | `void` | Closes the panel programmatically. |
+| `toggle(): void` | `void` | Toggles `opened`. |
+| `focus(): void` | `void` | Focuses the trigger (split mode: the chevron toggle). |
+| `panel` | `OgeAnchoredPanel` | The anchored-panel model — public so templates/tests can read `panelId`. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeDropDownButtonItemClickEvent` | Menu item activated; the panel closes afterwards. |
+| `selectionChanged` | `OgeDropDownSelectionChangedEvent` | `rememberLastAction` mode: the remembered item changed. |
+| `clicked` | `OgeButtonClickEvent` | Split mode only: the main action button was clicked. In non-split mode the trigger only toggles the panel. |
+| `actionDone` | `OgeButtonActionDoneEvent` | The split-button `action` settled successfully. |
+| `actionFailed` | `OgeButtonActionFailedEvent` | The split-button `action` threw or rejected. |
+| `openedChange` | `boolean` | Implicit output of the `opened` model — fires on both open and close. |
+| `loadingChange` | `boolean` | Implicit output of the `loading` model. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDropDownItemsFn` | `() => readonly OgeMenuItem[] \| Promise<readonly OgeMenuItem[]>` | Lazy items factory — invoked on first open. |
+| `OgeDropDownButtonItemClickEvent` | `{ item: OgeMenuItem; index: number; event: MouseEvent \| KeyboardEvent }` | Index within the resolved items list (separators included). |
+| `OgeDropDownSelectionChangedEvent` | `{ item: OgeMenuItem; previousItem: OgeMenuItem \| null }` | Remembered-item change in `rememberLastAction` mode. |
+| `OgeDropDownContent` | `directive — [ogeDropDownContent]` | Replaces the item menu with arbitrary panel content; context `{ $implicit: () => void }` closes the panel and restores focus. |
+
+### Buttons configuration
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeButtonsConfig(config: OgeButtonsConfigInput): Provider` | `Provider` | Application- or component-scoped defaults; deep-merges `messages` over the defaults. |
+
+#### Types
+
+_OgeButtonsConfig_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `clickGuardMs` | `number` | `500` | Default window for `clickGuard: true` and guard options without `ms`. |
+| `holdToConfirmMs` | `number` | `800` | Default hold duration for `holdToConfirm: true`. |
+| `autoRepeatDelayMs` | `number` | `400` | Delay before `autoRepeat` starts repeating. |
+| `autoRepeatIntervalMs` | `number` | `80` | Interval between repeated clicks. |
+| `messages` | `OgeButtonsMessages` | `—` | User-facing strings (see below). |
+
+_OgeButtonsMessages_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `loading` | `string` | `'Loading'` | Screen-reader text announced while a button is busy. |
+| `holdToConfirm` | `string` | `'Hold to confirm'` | Tooltip fragment when `holdToConfirm` is enabled. |
+| `dropDownLoading` | `string` | `'Loading…'` | Status row while a drop-down loads async items. |
+| `dropDownNoItems` | `string` | `'No items'` | Status row when a drop-down has no items. |
+| `dropDownLoadError` | `string` | `'Could not load items'` | Status row when async items failed to load. |
+| `dropDownToggle` | `string` | `'Open menu'` | Aria label of the split drop-down's chevron toggle. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Items
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeButtonGroup } from '@oge-ui/buttons';
+import type { OgeButtonGroupItem } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButtonGroup],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button-group
+      selectionMode="single"
+      [items]="periods"
+      [(selectedKeys)]="period"
+      size="sm"
+      ariaLabel="Period"
+    />
+  `,
+})
+export class Demo {
+  protected readonly periods: OgeButtonGroupItem[] = [
+    { value: 'day', text: 'Day' },
+    { value: 'week', text: 'Week' },
+    { value: 'month', text: 'Month' },
+    { value: 'year', text: 'Year', disabled: true },
+  ];
+
+  protected readonly period = signal<string[]>(['week']);
+}
+```
+
+### Multi
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeButton, OgeButtonGroup } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton, OgeButtonGroup],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button-group
+      selectionMode="multiple"
+      [(selectedKeys)]="styles"
+      stylingMode="outlined"
+      ariaLabel="Text styles"
+    >
+      <oge-button value="bold" text="B" hint="Bold" />
+      <oge-button value="italic" text="I" hint="Italic" />
+      <oge-button value="underline" text="U" hint="Underline" />
+    </oge-button-group>
+  `,
+})
+export class Demo {
+  protected readonly styles = signal<string[]>(['bold']);
+}
+```
+
+### Single
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeButton, OgeButtonGroup } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton, OgeButtonGroup],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button-group
+      selectionMode="single"
+      [(selectedKeys)]="align"
+      ariaLabel="Text alignment"
+    >
+      <oge-button value="left" text="Left" />
+      <oge-button value="center" text="Center" />
+      <oge-button value="right" text="Right" />
+    </oge-button-group>
+  `,
+})
+export class Demo {
+  protected readonly align = signal<string[]>(['center']);
+}
+```
+
+### Async
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeDropDownButton } from '@oge-ui/buttons';
+import type { OgeMenuItem } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDropDownButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-drop-down-button text="Branches" [items]="loadBranches" />
+  `,
+})
+export class Demo {
+  // invoked on first open, cached until the reference changes
+  protected readonly loadBranches = (): Promise<OgeMenuItem[]> =>
+    fetch('/api/branches').then((response) => response.json());
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeDropDownButton } from '@oge-ui/buttons';
+import type { OgeMenuItem } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDropDownButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-drop-down-button
+      text="Export"
+      severity="accent"
+      [items]="exportItems"
+      (itemClick)="exportAs($event.item.value)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly exportItems: OgeMenuItem[] = [
+    { text: 'Excel (.xlsx)', value: 'xlsx' },
+    { text: 'CSV', value: 'csv' },
+    { separator: true, text: '' },
+    { text: 'PDF', value: 'pdf' },
+  ];
+
+  protected exportAs(format: unknown): void {
+    console.log('export as', format);
+  }
+}
+```
+
+### Content
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton, OgeDropDownButton, OgeDropDownContent } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton, OgeDropDownButton, OgeDropDownContent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-drop-down-button text="Filters" [dropdownWidth]="260">
+      <div *ogeDropDownContent="let close" class="p-3">
+        …any content…
+        <oge-button text="Apply" size="sm" (clicked)="apply(); close()" />
+      </div>
+    </oge-drop-down-button>
+  `,
+})
+export class Demo {
+  protected apply(): void {
+    console.log('apply the filters');
+  }
+}
+```
+
+### Split
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeDropDownButton } from '@oge-ui/buttons';
+import type { OgeMenuItem } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDropDownButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-drop-down-button
+      text="Run"
+      [splitButton]="true"
+      [rememberLastAction]="true"
+      [items]="runTargets"
+      (clicked)="runCurrent()"
+      (itemClick)="run($event.item.value)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly runTargets: OgeMenuItem[] = [
+    { text: 'Run tests', value: 'test' },
+    { text: 'Run build', value: 'build' },
+    { text: 'Run lint', value: 'lint' },
+  ];
+
+  protected runCurrent(): void {
+    console.log('run the remembered target');
+  }
+
+  protected run(target: unknown): void {
+    console.log('run', target);
+  }
+}
+```
+
+### Action
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button
+      text="Save changes"
+      severity="accent"
+      [action]="save"
+      (actionDone)="log('saved!')"
+      (actionFailed)="log('failed')"
+    />
+  `,
+})
+export class Demo {
+  protected readonly save = () =>
+    new Promise<void>((resolve) => setTimeout(resolve, 1500));
+
+  protected log(message: string): void {
+    console.log(message);
+  }
+}
+```
+
+### Guard
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- true = throttle with the 500ms config default -->
+    <oge-button text="Submit once" [clickGuard]="true" (clicked)="count()" />
+
+    <!-- trailing debounce -->
+    <oge-button
+      text="Debounced"
+      [clickGuard]="{ mode: 'debounce', ms: 400 }"
+      (clicked)="count()"
+    />
+  `,
+})
+export class Demo {
+  protected readonly clicks = signal(0);
+
+  protected count(): void {
+    this.clicks.update((value) => value + 1);
+  }
+}
+```
+
+### Hold
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button
+      text="Delete account"
+      severity="danger"
+      [holdToConfirm]="{ ms: 1200 }"
+      (clicked)="destroyEverything()"
+    />
+  `,
+})
+export class Demo {
+  protected destroyEverything(): void {
+    console.warn('boom');
+  }
+}
+```
+
+### Repeat
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button
+      text="+"
+      hint="Increment"
+      [autoRepeat]="{ delayMs: 400, intervalMs: 80 }"
+      (clicked)="value = value + 1"
+    />
+  `,
+})
+export class Demo {
+  protected value = 0;
+}
+```
+
+### Badge
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button text="Inbox" [badge]="7" />
+    <oge-button text="Alerts" [badge]="120" severity="accent" stylingMode="outlined" />
+    <oge-button text="Live" [badge]="true" stylingMode="text" />
+  `,
+})
+export class Demo {}
+```
+
+### Color
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- any CSS color; the soft tint derives automatically -->
+    <oge-button text="Purple" color="#7c3aed" />
+    <oge-button text="Teal" color="#0d9488" stylingMode="outlined" />
+
+    <!-- or override the design tokens per instance / theme-wide -->
+    <oge-button
+      text="Brand token"
+      severity="accent"
+      style="--oge-accent: #ea580c; --oge-accent-soft: rgba(234, 88, 12, 0.14)"
+    />
+  `,
+})
+export class Demo {}
+```
+
+### Icon
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton, OgeButtonIcon } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton, OgeButtonIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button text="Download" severity="accent">
+      <svg ogeButtonIcon viewBox="0 0 24 24" width="14" height="14" fill="none"
+           stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
+    </oge-button>
+
+    <!-- icon after the label -->
+    <oge-button text="Next" iconPosition="after">
+      <svg ogeButtonIcon viewBox="0 0 24 24" width="14" height="14" fill="none"
+           stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+    </oge-button>
+
+    <!-- icon-only: give it an accessible name via hint -->
+    <oge-button hint="Settings">
+      <svg ogeButtonIcon viewBox="0 0 24 24" width="14" height="14" fill="none"
+           stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    </oge-button>
+  `,
+})
+export class Demo {}
+```
+
+### Sizes
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button text="Small" size="sm" />
+    <oge-button text="Medium" />
+    <oge-button text="Large" size="lg" />
+  `,
+})
+export class Demo {}
+```
+
+### Variants
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button text="Contained" severity="accent" />
+    <oge-button text="Outlined" severity="accent" stylingMode="outlined" />
+    <oge-button text="Text" severity="accent" stylingMode="text" />
+    <oge-button text="Success" severity="success" />
+    <oge-button text="Warning" severity="warning" />
+    <oge-button text="Danger" severity="danger" />
+  `,
+})
+export class Demo {}
+```
+

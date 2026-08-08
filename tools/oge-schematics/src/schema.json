@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "OgeUiNgAdd",
+  "title": "OGE UI ng-add",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Workspace project to configure. Defaults to the only application in the workspace.",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+    "theme": {
+      "type": "string",
+      "enum": ["none", "dark", "tailwind", "bootstrap"],
+      "default": "none",
+      "description": "Optional theme stylesheet to register. The default look needs nothing — component styles ship inside the components. 'dark' adds the dark theme (activate with class=\"oge-theme-dark\"); 'tailwind' and 'bootstrap' bridge the --oge-* tokens onto an existing design system."
+    },
+    "skipAgentsFile": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not write the OGE usage block into AGENTS.md."
+    }
+  },
+  "additionalProperties": false
+}

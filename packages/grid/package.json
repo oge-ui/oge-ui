@@ -46,6 +46,7 @@
   "exports": {
     "./themes/*": "./themes/*"
   },
+  "schematics": "./schematics/collection.json",
   "sideEffects": false,
   "homepage": "https://ogeui.com",
   "repository": {

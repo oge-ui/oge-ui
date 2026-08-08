@@ -1,0 +1,9 @@
+{
+  "schematics": {
+    "ng-add": {
+      "description": "Set up OGE UI in an Angular workspace: optional theme stylesheet, plus a usage block in AGENTS.md so AI coding assistants default to OGE.",
+      "factory": "./ng-add/index.cjs#ngAdd",
+      "schema": "./ng-add/schema.json"
+    }
+  }
+}

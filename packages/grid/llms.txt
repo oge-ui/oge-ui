@@ -1,0 +1,1547 @@
+# @oge-ui/grid
+
+> Virtualized data grid: 100k+ rows, sorting, filtering, grouping with summaries, inline/batch/form editing, selection, master-detail, state persistence and CSV/Excel/PDF export.
+
+Part of OGE UI v0.6.0.
+Docs and live demos: https://ogeui.com/components/data-grid
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/grid
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/grid`
+
+- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgeRowTemplate`, `OgeToolbarItem`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `operatorsFor`, `provideOgeGridConfig`
+- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellTemplateContext`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeContextMenuEvent`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePagingOptions`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortingOptions`, `OgeStateStorage`
+
+`@oge-ui/grid/export-pdf`
+
+- values: `buildPdfDocument`, `exportGridToPdf`
+- types: `OgePdfExportOptions`
+
+`@oge-ui/grid/foundation`
+
+- values: `CHECKBOX_WIDTH`, `COMMAND_WIDTH`, `ColumnLayoutModel`, `ColumnModel`, `DRAG_WIDTH`, `DeferredChildrenLoader`, `EXPANDER_WIDTH`, `EditingModel`, `KeyboardNavModel`, `OGE_STATE_STORAGE`, `OgeEditingSlice`, `RowVirtualizerModel`, `buildRowFilterExpr`, `createStatePersistence`, `dateFilterExpr`, `defaultOperatorFor`, `humanize`, `isDataSource`, `lookupTextOf`, `mapLookupItems`, `resolveLookupItems`
+- types: `ColumnDefLike`, `ColumnLayoutModelDeps`, `ColumnModelDeps`, `ColumnSource`, `DeferredBaseOptions`, `DeferredChildrenLoaderDeps`, `EditingModelDeps`, `KeyboardNavModelDeps`, `KeyboardNavTreeHooks`, `LookupItem`, `OgeColumnLookup`, `OgeDataChange`, `OgeDataType`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeStateStorage`, `PendingChildRequest`, `ResolvedColumn`, `RowVirtualizerModelDeps`, `RowVirtualizerWindowAdapter`, `StatePersistenceOptions`
+
+`@oge-ui/grid/export-excel`
+
+- values: `buildExcelWorkbook`, `exportGridToExcel`
+- types: `OgeExcelExportOptions`
+
+## API reference
+
+### OgeGrid — `<oge-grid>`
+
+#### Properties
+
+_Data & columns_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `readonly T[] \| DataSource<T>` | `[]` | Rows to render: a static array or any DataSource implementation (remote, OData…). |
+| `columns` | `readonly (string \| OgeColumnDef)[] \| undefined` | `—` | Programmatic columns; used only when no declarative `` children exist. When both are absent, columns derive from the first row. |
+| `keyField` | `keyof T \| ((row: T) => RowKey) \| undefined` | `—` | Field (or selector) producing a stable row key; falls back to the row index. |
+
+_Sorting, filtering & search_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `sortable` | `boolean \| 'single' \| 'multi'` | `'multi'` | `false` disables sorting; `'single'` restricts to one column. |
+| `sorting` | `OgeSortingOptions \| undefined` | `—` | Sorting options; overrides the `sortable` shorthand. |
+| `filterRow` | `boolean \| OgeFilterRowOptions` | `false` | Per-column filter editors below the header. |
+| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style distinct-value filter button in headers. |
+| `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
+| `filterPanel` | `boolean` | `false` | Filter panel bar with the filter-builder entry point. |
+| `filterValue` | `model<FilterExpr \| null>` | `null` | Two-way binding of the builder/programmatic filter expression. |
+| `filterDebounce` | `number \| undefined` | `—` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
+
+_Paging & scrolling_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `paging` | `false \| OgePagingOptions` | `false` | Client/server paging with the built-in pager. |
+| `virtualScroll` | `boolean` | `false` | Renders only the rows inside the scroll viewport (plus overscan). Needs a bounded height. |
+| `scrolling` | `OgeScrollingOptions \| undefined` | `—` | Scrolling options (`standard/virtual/infinite`, remote windowing, column virtualization); overrides the shorthand. |
+| `rowHeight` | `number \| undefined` | `—` | Fixed row height in px used by the virtualizer. Defaults from global config. |
+| `autoRowHeight` | `boolean` | `false` | Measures real row heights with scroll anchoring. Virtual mode only. |
+| `detailRowHeight` | `number \| undefined` | `—` | Height assumed for expanded master-detail rows in virtual mode. |
+| `overscan` | `number \| undefined` | `—` | Extra rows rendered above/below the virtual window. |
+
+_Grouping_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `groupPanel` | `boolean` | `false` | Drop area for drag-and-drop row grouping. |
+| `groupBy` | `readonly string[] \| undefined` | `—` | Initial/programmatic grouping by field names. |
+| `grouping` | `OgeGroupingOptions \| undefined` | `—` | `autoExpandAll: false` starts collapsed and enables deferred child loading. |
+
+_Selection & focus_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `OgeSelectionMode` | `'none'` | Row selection: none \| single \| multiple (ctrl/shift) \| checkbox column. |
+| `selectedKeys` | `model<RowKey[]>` | `[]` | Two-way binding of the selected row keys. |
+| `selectAllMode` | `'allPages' \| 'page'` | `'allPages'` | Header select-all scope. |
+| `selectionDeferred` | `boolean` | `false` | Selection tracked as a serializable `selectionFilter` expression — no key set. Requires a string `keyField`. |
+| `selectionFilter` | `model<FilterExpr \| null>` | `null` | Two-way selection expression (deferred mode). |
+| `focusedRowEnabled` | `boolean` | `false` | Highlights and tracks a single focused row. |
+| `focusedRowKey` | `model<RowKey \| null>` | `null` | Two-way binding of the focused row's key. |
+
+_Editing & rows_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `editing` | `false \| OgeEditingOptions` | `false` | Enables editing: `{ mode: 'cell' \| 'row' \| 'batch' \| 'popup' \| 'form', allow… }`. |
+| `commandButtons` | `readonly OgeCommandButton<T>[] \| undefined` | `—` | Customizes the trailing command column: built-in 'edit'/'delete' plus custom buttons with per-row `visible`. |
+| `rowDragging` | `boolean` | `false` | Drag-handle column for reordering rows. Arrays mutate in place; DataSources handle `rowReordered`. |
+
+_Columns UX_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `columnChooser` | `boolean` | `false` | Column visibility chooser button. |
+| `columnResize` | `boolean` | `true` | Drag-resize handles on header edges. |
+| `columnReorder` | `boolean` | `true` | Drag-and-drop column reordering. |
+| `columnMinWidth` | `number \| undefined` | `—` | Track minimum for columns without an explicit width. |
+
+_Appearance & misc_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `stateKey` | `string \| undefined` | `—` | Persists user state (sort, filters, grouping, layout) via `OGE_STATE_STORAGE`. |
+| `messages` | `Partial<OgeGridMessages> \| undefined` | `—` | Per-grid overrides of the UI strings. |
+| `loadPanel` | `boolean` | `false` | Spinner overlay while a load is in flight. |
+| `wordWrap` | `boolean` | `false` | Cells wrap instead of truncating. |
+| `rowAlternation` | `boolean` | `false` | Zebra striping, stable under virtualization. |
+| `highlightChanges` | `boolean` | `false` | Briefly flashes cells patched by push updates. |
+| `rtlEnabled` | `boolean \| undefined` | `—` | `undefined` auto-detects the inherited CSS `direction`. |
+
+#### Methods
+
+_Data & view_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `refresh(): void` | `void` | Re-runs the current load against the DataSource. |
+| `getVisibleRows(): readonly T[]` | `readonly T[]` | Data rows of the currently rendered page, in display order. |
+| `getRowByKey(key: RowKey): T \| undefined` | `T \| undefined` | The loaded row carrying `key`, if currently rendered. |
+| `totalCount(): number` | `Signal<number>` | Data row count of the current filtered set, across all pages. |
+
+_Navigation & expansion_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `scrollToRow(target: number \| RowKey): void` | `void` | Scrolls a row into the viewport by flat index or key. |
+| `navigateToRow(key: RowKey): void` | `void` | Scrolls to the row and focuses it when `focusedRowEnabled`. |
+| `expandRow(key) / collapseRow(key)` | `void` | Expands/collapses a group row (group node key) or master-detail row. |
+| `isRowExpanded(key): boolean` | `boolean` | Expansion state of a group or master-detail row. |
+| `expandAllGroups() / collapseAllGroups()` | `void` | Expands/collapses every group row (all levels). |
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectAll(): void` | `void` | Selects the current filtered set; honors `selectAllMode` and deferred mode. |
+| `deselectAll() / clearSelection()` | `void` | Clears the selection (deferred mode: resets `selectionFilter`). |
+| `isRowSelected(key): boolean` | `boolean` | Whether the row is currently selected. |
+| `getSelectedRowsData(): T[]` | `T[]` | Data of the selected rows among the loaded rows. |
+| `copyToClipboard(): Promise<void>` | `Promise<void>` | Copies the selected rows (or the focused cell) as tab-separated values. |
+
+_Editing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addRow(): void` | `void` | Adds a new (unsaved) row and opens its editors; `initNewRow` can prefill. Requires `allowAdding`. |
+| `editRow(key: RowKey): void` | `void` | Opens the row editor (row/form/popup modes). Requires `allowUpdating`. |
+| `deleteRow(key: RowKey): void` | `void` | Deletes the row: staged in batch mode (toggle = undelete), saved immediately otherwise. Requires `allowDeleting`. |
+| `saveChanges(): void` | `void` | Commits the open editor and (batch) saves the staged change set. `savingChanges` can cancel. |
+| `discardChanges(): void` | `void` | Discards pending changes and closes any open editor; emits `editCanceled`. |
+| `hasChanges(): boolean` | `boolean` | Whether unsaved edits exist. |
+
+_Paging_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pageIndex(): number / setPageIndex(index)` | `number / void` | Zero-based page getter / clamped setter. |
+| `pageSize(): number / setPageSize(size)` | `number / void` | Page size getter / setter; `0` turns paging off. |
+| `pageCount(): number` | `Signal<number>` | Number of pages; `1` when paging is off. |
+
+_Loading, state & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `beginCustomLoading(message?) / endCustomLoading()` | `void` | Shows/hides the load panel with an optional message — independent of data activity. |
+| `state(): GridStateSnapshot / applyState(snapshot)` | `GridStateSnapshot / void` | Captures / applies the persistable UI state. |
+| `clearFilters() / clearSorting()` | `void` | Clears every filter (row, header, builder, search) / the sort order. |
+| `getExportData(options?): Promise<OgeExportData<T>>` | `Promise` | Rows + column metadata of the current view; `scope: 'all' \| 'page' \| 'selection'`. |
+| `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. |
+| `exportCsv(filename = 'grid.csv'): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. |
+
+#### Events
+
+_Interaction_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `rowClick / rowDblClick` | `OgeRowClickEvent<T>` | `{ row, key, event }`. |
+| `cellClick / cellDblClick` | `OgeCellClickEvent<T>` | `{ row, key, field, value, event }`. |
+| `rowContextMenu` | `OgeContextMenuEvent<T>` | Row right-click; push into `items` to open the built-in menu. |
+| `headerContextMenu` | `OgeHeaderContextMenuEvent` | Prebuilt, mutable header menu items (sort/group/pin/hide). |
+| `rowReordered` | `OgeRowReorderedEvent<T>` | A row was dropped in a new position (`rowDragging`). |
+
+_Selection & focus_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectionChanged` | `OgeSelectionChangedEvent` | `{ selectedKeys, addedKeys, removedKeys }` after every selection change. |
+| `focusedRowChanged` | `OgeFocusedRowChangedEvent<T>` | `{ key, row }` after the focused row changed. |
+| `selectedKeysChange / focusedRowKeyChange / filterValueChange / selectionFilterChange` | `model outputs` | Implicit outputs of the two-way models. |
+
+_Editing lifecycle_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `editingStart` | `OgeEditingStartEvent<T>` | Cancelable — before a cell or row editor opens. |
+| `initNewRow` | `OgeInitNewRowEvent` | Write into `values` to prefill rows created by `addRow()`. |
+| `rowInserting / rowInserted` | `OgeRowInserting/-edEvent` | Around each DataSource insert; `rowInserting` cancelable. |
+| `rowUpdating / rowUpdated` | `OgeRowUpdating/-edEvent` | Around each DataSource update; `rowUpdating` cancelable (carries `row` + `values`). |
+| `rowRemoving / rowRemoved` | `OgeRowRemoving/-edEvent` | Around each DataSource remove; `rowRemoving` cancelable. |
+| `savingChanges / savedChanges` | `OgeSaving/-edChangesEvent<T>` | Whole batch before (cancelable) / after the save. |
+| `editCanceled` | `void` | An edit session ended without saving. |
+
+_Lifecycle & errors_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `contentReady` | `void` | A new result set finished rendering (post-render notification). |
+| `stateChange` | `GridStateSnapshot` | Debounced — the persistable UI state changed. |
+| `exporting` | `OgeExportingEvent` | Cancelable, mutable `fileName` — before a CSV export. |
+| `dataErrorOccurred` | `OgeDataErrorEvent` | `{ error }` — a DataSource load or save failed. |
+
+### OgeColumn — `<oge-column>`
+
+#### Properties
+
+_Basics_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `field` | `string \| undefined` | `—` | Data field (dot paths supported via accessors). |
+| `caption` | `string \| undefined` | `—` | Header text; humanized from `field` when omitted. |
+| `dataType` | `OgeDataType` | `'string'` | 'string' \| 'number' \| 'date' \| 'boolean' — drives editors, filters and alignment. |
+| `width / minWidth` | `number \| string / number` | `—` | Track size; `minWidth` guards resizing. |
+| `visible` | `model<boolean>` | `true` | Two-way visibility (column chooser writes it). |
+| `format` | `(value: unknown) => string \| undefined` | `—` | Display formatter for cells, group rows, export. |
+| `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge. |
+| `hidingPriority` | `number \| undefined` | `—` | Adaptive hiding order when width runs out (higher survives longer). |
+| `lookup` | `OgeColumnLookup \| undefined` | `—` | Display + dropdown editor from a value list; cascading via function dataSource. |
+
+_Sort, filter & group_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `sortable / filterable` | `boolean` | `true` | Per-column opt-outs. |
+| `sortOrder / sortIndex` | `'asc' \| 'desc' / number` | `—` | Initial sort (stateKey/user wins). |
+| `groupIndex` | `number \| undefined` | `—` | Initial grouping position. |
+| `filterOperator` | `FilterOperator \| undefined` | `—` | Initial operator of the filter-row cell. |
+| `calculateCellValue` | `(row: T) => unknown` | `—` | Calculated column value. |
+| `calculateSortValue` | `(row: T) => unknown` | `—` | Custom sort key. |
+| `calculateFilterExpression` | `(value, operator) => FilterExpr \| null` | `—` | Custom filter expression builder. |
+
+_Summaries & editing_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `groupSummary / totalSummary` | `SummaryType \| readonly SummaryType[]` | `—` | sum/avg/min/max/count/custom aggregates per column. |
+| `groupSummaryPosition` | `'row' \| 'footer'` | `'row'` | Group aggregates inline or in a footer row. |
+| `calculateCustomSummary` | `(rows: readonly T[]) => unknown` | `—` | Reducer for `type: 'custom'`. |
+| `editable` | `boolean` | `true` | Per-column editing opt-out. |
+| `required / validators` | `boolean / readonly ValidatorFn[]` | `—` | Editor validation. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `<oge-column-group caption="…">` | `component` | Banded (multi-row) headers — wraps child ``s. |
+| `*ogeCellTemplate` | `OgeCellTemplateContext<T>` | `{ $implicit: value, row, rowIndex, column }`. |
+| `*ogeHeaderTemplate` | `OgeHeaderTemplateContext<T>` | `{ $implicit: column }`. |
+| `*ogeEditTemplate` | `OgeEditTemplateContext<T>` | `{ $implicit: FormControl, row, column }`. |
+| `*ogeDetailTemplate` | `OgeDetailTemplateContext<T>` | Master-detail content; `{ $implicit: row }`. |
+| `*ogeRowTemplate` | `OgeRowTemplateContext<T>` | Full-row replacement; `{ $implicit: row, index, key }`. |
+| `*ogeNoDataTemplate` | `TemplateRef` | Custom empty state. |
+| `[ogeToolbar]` | `marker directive` | Projects custom controls into the grid toolbar. |
+
+### Grid types & configuration
+
+#### Types
+
+_Option objects (boolean shorthands stay valid)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePagingOptions` | `{ pageSize: number; pageSizes?: readonly (number \| 'all')[]; showInfo?; displayMode?: 'full' \| 'compact' \| 'adaptive' }` | Pager configuration. |
+| `OgeSortingOptions` | `{ mode?: 'none' \| 'single' \| 'multi'; allowUnsorting?: boolean }` | Sorting behavior. |
+| `OgeFilterRowOptions` | `{ visible?: boolean; debounce?: number }` | Filter row. |
+| `OgeHeaderFilterOptions` | `{ visible?: boolean; valueLimit?: number }` | Header filter. |
+| `OgeSearchPanelOptions` | `{ visible?: boolean; placeholder?: string; width?: number }` | Search panel. |
+| `OgeScrollingOptions` | `{ mode?: 'standard' \| 'virtual' \| 'infinite'; remote?: boolean; columnRenderingMode?: 'standard' \| 'virtual' }` | Scrolling engine. |
+| `OgeGroupingOptions` | `{ autoExpandAll?: boolean }` | `false` starts collapsed and defers child loading. |
+| `OgeEditingOptions` | `{ mode: OgeEditMode; allowUpdating?; allowAdding?; allowDeleting?; confirmDelete?; formItems?; formColCount? }` | Editing configuration; `OgeEditMode` = cell \| row \| batch \| popup \| form. |
+| `OgeCommandButton<T>` | `{ name?: 'edit' \| 'delete'; text?; onClick?(row, key); visible?(row) }` | Command column entries. |
+| `OgeColumnLookup` | `{ dataSource: readonly unknown[] \| ((row) => readonly unknown[]); valueExpr?; displayExpr? }` | Lookup source. |
+
+_Export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeExportOptions<T>` | `{ scope?: 'all' \| 'page' \| 'selection'; customizeCell?(args) }` | Shared by CSV/Excel/PDF. |
+| `OgeExportData<T> / OgeExportColumn<T> / OgeExportCellArgs<T>` | `interfaces` | Rows + resolved column metadata handed to exporters. |
+| `exportGridToExcel(grid, options?)` | `@oge-ui/grid/export-excel` | Lazy Excel export (exceljs peer); `buildExcelWorkbook(data)` for custom pipelines. |
+| `exportGridToPdf(grid, options?)` | `@oge-ui/grid/export-pdf` | Lazy PDF export (jspdf peer); `buildPdfDocument(data)` for custom pipelines. |
+
+_Configuration_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeGridConfig(config)` | `Provider` | App/component-scoped defaults; deep-merges `messages`. |
+| `OgeGridConfig` | `{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; messages }` | Defaults shown inline. |
+| `OgeGridMessages` | `60+ string keys` | Every user-facing string, incl. aria labels, filter operators, summary patterns — see `OGE_DEFAULT_MESSAGES` in the source. |
+| `OGE_STATE_STORAGE / OgeStateStorage` | `InjectionToken` | Pluggable sync/async persistence backend for `stateKey`. |
+
+_Filter builder_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `builderToExpr / exprToBuilder / describeExpr / operatorsFor` | `functions` | Convert between builder trees and `FilterExpr`; humanize expressions. |
+| `OgeBuilderGroup / OgeBuilderCondition / OgeFilterBuilderField` | `interfaces` | Filter-builder data model. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Columns
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeColumnGroup, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeColumnGroup, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id" [wordWrap]="true"
+              [editing]="{ mode: 'cell' }" [filterRow]="true">
+      <oge-column field="id" [width]="70" dataType="number" sortOrder="desc" />
+
+      <!-- banded columns: one shared header over several columns -->
+      <oge-column-group caption="Person">
+        <oge-column field="firstName" />
+        <oge-column field="lastName" [hidingPriority]="1" />
+      </oge-column-group>
+
+      <!-- lookup: store a code, display (and edit/filter with) a label -->
+      <oge-column field="department" caption="Department"
+                  [lookup]="{ dataSource: departments, valueExpr: 'code', displayExpr: 'label' }" />
+
+      <!-- calculated column: display-only derived value -->
+      <oge-column caption="Yearly" dataType="number" [calculateCellValue]="yearly" />
+
+      <!-- responsive: lowest hidingPriority disappears first on narrow screens -->
+      <oge-column field="city" [hidingPriority]="0" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly departments = [
+    { code: 'Engineering', label: 'Engineering' },
+    { code: 'Sales', label: 'Sales' },
+    { code: 'Finance', label: 'Finance' },
+    { code: 'Support', label: 'Support' },
+  ];
+
+  protected readonly yearly = (row: { salary: number }): number => row.salary * 12;
+}
+```
+
+### Header menu
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeHeaderContextMenuEvent } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id" [groupPanel]="true"
+              (headerContextMenu)="onHeaderMenu($event)">
+      <oge-column field="department" />
+      <oge-column field="salary" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected onHeaderMenu(event: OgeHeaderContextMenuEvent): void {
+    // the built-in items (sort / group / pin / hide) arrive prebuilt —
+    // extend, filter or replace them before the menu opens
+    event.items.push({
+      text: `Reset ${event.caption} filter`,
+      action: () => this.clearFilterFor(event.field),
+    });
+    if (event.field === 'salary') {
+      event.items = event.items.filter((item) => !item.text.startsWith('Pin'));
+    }
+  }
+
+  private clearFilterFor(field: string | undefined): void {
+    console.log('clear filter for', field);
+  }
+}
+```
+
+### Row menu
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeContextMenuEvent } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              (rowContextMenu)="onRowMenu($event)">
+      <oge-column field="firstName" />
+      <oge-column field="department" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected onRowMenu(event: OgeContextMenuEvent<Employee>): void {
+    // push items to open the built-in menu at the cursor;
+    // leave the array empty to fall back to the native browser menu
+    event.items.push(
+      { text: `Open ${event.row.firstName}`, action: () => this.open(event.row) },
+      { text: 'Duplicate', action: () => this.duplicate(event.key) },
+      { text: 'Delete (no permission)', disabled: true },
+    );
+  }
+
+  private open(row: Employee): void {
+    console.log('open', row.id);
+  }
+
+  private duplicate(key: unknown): void {
+    console.log('duplicate', key);
+  }
+}
+```
+
+### Lookup
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeCommandButton } from '@oge-ui/grid';
+
+interface Assignment {
+  id: number;
+  countryId: number;
+  cityId: number;
+  done: boolean;
+}
+
+const CITIES = [
+  { id: 1, countryId: 1, name: 'Hamburg' },
+  { id: 2, countryId: 1, name: 'Berlin' },
+  { id: 3, countryId: 2, name: 'İzmir' },
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="assignments" keyField="id"
+              [editing]="{ mode: 'row', allowUpdating: true, allowDeleting: true }"
+              [commandButtons]="commandButtons">
+      <oge-column field="countryId" caption="Country"
+                  [lookup]="{ dataSource: countries, valueExpr: 'id', displayExpr: 'name' }" />
+      <!-- cascading: the city list depends on the row's (draft) country -->
+      <oge-column field="cityId" caption="City"
+                  [lookup]="{ dataSource: citiesOf, valueExpr: 'id', displayExpr: 'name' }" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  protected readonly assignments: Assignment[] = [
+    { id: 1, countryId: 1, cityId: 1, done: false },
+    { id: 2, countryId: 2, cityId: 3, done: true },
+  ];
+
+  protected readonly countries = [
+    { id: 1, name: 'Germany' },
+    { id: 2, name: 'Türkiye' },
+  ];
+
+  protected readonly citiesOf = (row: Assignment) =>
+    CITIES.filter((c) => c.countryId === row.countryId);
+
+  protected readonly commandButtons: OgeCommandButton<Assignment>[] = [
+    { name: 'edit' },
+    { name: 'delete' },
+    {
+      text: 'Archive',
+      visible: (row) => !row.done,
+      onClick: (row) => this.archive(row),
+    },
+  ];
+
+  private archive(row: Assignment): void {
+    console.log('archive', row.id);
+  }
+}
+```
+
+### Editing
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+import { OgeColumn, OgeEditTemplate, OgeGrid } from '@oge-ui/grid';
+import type { OgeSavingChangesEvent } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [ReactiveFormsModule, OgeColumn, OgeEditTemplate, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              [editing]="{ mode: 'batch', allowUpdating: true, allowAdding: true, allowDeleting: true }"
+              (savingChanges)="onSaving($event)">
+      <oge-column field="id" [editable]="false" />
+      <oge-column field="firstName" [required]="true" />
+      <oge-column field="department">
+        <!-- custom editor gets the reactive FormControl -->
+        <select *ogeEditTemplate="let control" [formControl]="control">
+          <option>Engineering</option><option>Sales</option>
+        </select>
+      </oge-column>
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected onSaving(event: OgeSavingChangesEvent<Employee>): void {
+    // event.changes = [{ type: 'update' | 'insert' | 'remove', key, data }]
+    // set event.cancel = true to abort; otherwise the DataSource
+    // (insert/update/remove) is called and the grid reloads.
+    console.log(event.changes);
+  }
+}
+```
+
+### Filtering
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { FilterExpr } from '@oge-ui/core';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- filterRow    — per-column editors + operator menu
+         headerFilter — distinct values with a search box
+         searchPanel  — global search + highlighting
+         filterPanel  — filter builder entry point
+         filterValue  — programmatic and/or tree -->
+    <oge-grid [data]="employees" keyField="id"
+              [filterRow]="true"
+              [headerFilter]="true"
+              [searchPanel]="true"
+              [filterPanel]="true"
+              [(filterValue)]="filter">
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  // filterValue is a serializable and/or expression tree
+  protected readonly filter = signal<FilterExpr | null>({
+    type: 'and',
+    operands: [
+      { type: 'binary', field: 'department', op: 'eq', value: 'Engineering' },
+      { type: 'binary', field: 'salary', op: 'ge', value: 60000 },
+    ],
+  });
+}
+```
+
+### Deferred
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { CustomDataSource } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  city: string;
+  department: string;
+  salary: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="source" keyField="id"
+              [groupBy]="['department']"
+              [grouping]="{ autoExpandAll: false }">
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="lastName" caption="Last Name" />
+      <oge-column field="city" caption="City" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  // grouped request → headers only (items: null, count);
+  // expanding a group fetches its rows with an eq-filter
+  protected readonly source = new CustomDataSource<Employee>({
+    key: 'id',
+    load: async (options) => {
+      if (options.group?.length) {
+        const groups = await fetch('/api/employees/groups?by=department');
+        return { data: await groups.json() }; // [{ key, items: null, count }]
+      }
+      const rows = await fetch(
+        '/api/employees?' + JSON.stringify(options.filter ?? null),
+      );
+      return { data: await rows.json() };
+    },
+  });
+}
+```
+
+### Grouping
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              [groupPanel]="true" [groupBy]="['department']" [columnChooser]="true">
+      <oge-column field="id" caption="Id" [width]="80" dataType="number" pinned="left" />
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="salary" caption="Salary" dataType="number"
+                  groupSummary="avg" totalSummary="sum" [format]="money" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly money = (value: unknown): string =>
+    Number(value).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+}
+```
+
+### Summary
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+interface Employee {
+  city: string;
+  salary: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id" [groupBy]="['department']">
+      <!-- custom aggregate: any reducer over the group's rows -->
+      <oge-column field="city" groupSummary="custom"
+                  [calculateCustomSummary]="distinctCities" />
+      <!-- several aggregates at once, rendered on a footer row after the group -->
+      <oge-column field="salary" dataType="number"
+                  [groupSummary]="['min', 'max']" groupSummaryPosition="footer"
+                  [totalSummary]="['sum', 'avg']" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly distinctCities = (rows: readonly Employee[]): string =>
+    `${new Set(rows.map((r) => r.city)).size} cities`;
+}
+```
+
+### Master detail
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeDetailTemplate, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeDetailTemplate, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id">
+      <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+      <oge-column field="firstName" caption="First Name" />
+
+      <!-- "of: employees" only feeds type inference — "employee" is fully typed -->
+      <div *ogeDetailTemplate="let employee; of: employees" class="grid grid-cols-3 gap-4">
+        <div>{{ employee.firstName }} {{ employee.lastName }}</div>
+        <div>{{ employee.department }}</div>
+        <div>{{ employee.city }}</div>
+      </div>
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+```
+
+### Quick start
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'app-employees',
+  imports: [OgeCellTemplate, OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id">
+      <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="department" caption="Department">
+        <!-- cell templates are plain Angular templates — Tailwind classes just work -->
+        <span *ogeCellTemplate="let value"
+              class="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+          {{ value }}
+        </span>
+      </oge-column>
+      <oge-column field="salary" caption="Salary" dataType="number" [format]="money" />
+    </oge-grid>
+  `,
+})
+export class EmployeesPage {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly money = (value: unknown): string =>
+    `₺${(value as number).toLocaleString('tr-TR')}`;
+}
+```
+
+### Custom storage
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid, OGE_STATE_STORAGE } from '@oge-ui/grid';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import type { ApplicationConfig } from '@angular/core';
+import type { OgeStateStorage } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id" stateKey="orders-grid">
+      <oge-column field="firstName" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+
+// Persist wherever you want — the backend may be fully async.
+export function provideRemoteGridState(http: HttpClient): ApplicationConfig {
+  return {
+    providers: [
+      {
+        provide: OGE_STATE_STORAGE,
+        useValue: {
+          get: (key: string) =>
+            firstValueFrom(
+              http.get(`/api/grid-state/${key}`, { responseType: 'text' }),
+            ),
+          set: (key: string, value: string) =>
+            firstValueFrom(http.put(`/api/grid-state/${key}`, value)).then(
+              () => undefined,
+            ),
+        } satisfies OgeStateStorage,
+      },
+    ],
+  };
+}
+```
+
+### Imperative
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { GridStateSnapshot } from '@oge-ui/core';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- full control, no token needed -->
+    <oge-grid #grid [data]="employees" keyField="id"
+              (stateChange)="saveToBackend($event)">
+      <oge-column field="firstName" />
+    </oge-grid>
+    <button type="button" (click)="capture(grid.state())">Capture</button>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  private snapshot: GridStateSnapshot | null = null;
+
+  // capture / restore programmatically — the snapshot is serializable
+  protected capture(snapshot: GridStateSnapshot): void {
+    this.snapshot = snapshot;
+  }
+
+  // stateChange fires debounced on every user-driven change
+  protected saveToBackend(snapshot: GridStateSnapshot): void {
+    void fetch('/api/me/grid-state', {
+      method: 'PUT',
+      body: JSON.stringify(snapshot),
+    });
+  }
+}
+```
+
+### State key
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- everything the user changes — sort, filters, grouping, column
+         widths/order/pins/visibility — is saved under this key and restored
+         on the next visit. Default backend: localStorage. -->
+    <oge-grid [data]="employees" keyField="id" stateKey="orders-grid"
+              [groupPanel]="true" [filterRow]="true" [columnChooser]="true">
+      <oge-column field="firstName" />
+      <oge-column field="department" />
+      <oge-column field="salary" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+```
+
+### Drag
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { RowKey } from '@oge-ui/core';
+import type { OgeRowReorderedEvent } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              [rowDragging]="true" (rowReordered)="onReordered($event)"
+              [focusedRowEnabled]="true" [(focusedRowKey)]="focusedKey">
+      <oge-column field="firstName" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly focusedKey = signal<RowKey | null>(null);
+
+  protected onReordered(event: OgeRowReorderedEvent<unknown>): void {
+    console.log(event.fromIndex, '→', event.toIndex);
+  }
+}
+```
+
+### Nodata
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid, OgeNoDataTemplate } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid, OgeNoDataTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id" [loadPanel]="true">
+      <oge-column field="firstName" />
+      <div *ogeNoDataTemplate class="empty-state">
+        No employees match — adjust the filter or add a new record.
+      </div>
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+```
+
+### Row template
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid, OgeRowTemplate } from '@oge-ui/grid';
+
+interface Employee {
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid, OgeRowTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id" [rowAlternation]="true">
+      <oge-column field="firstName" caption="Employee" />
+      <oge-column field="department" caption="Department" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+      <!-- replaces the whole row; columns still drive header, sorting & filtering -->
+      <div *ogeRowTemplate="let employee; of: employees; index as i" class="flex items-center gap-3 px-3 py-2">
+        <span class="avatar">{{ initials(employee) }}</span>
+        <div>
+          <div>{{ employee.firstName }} {{ employee.lastName }}</div>
+          <div class="muted">{{ employee.department }} · {{ employee.city }}</div>
+        </div>
+        <span class="ml-auto">{{ money(employee.salary) }}</span>
+      </div>
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected initials(employee: Employee): string {
+    return `${employee.firstName[0]}${employee.lastName[0]}`;
+  }
+
+  protected money(value: number): string {
+    return value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+  }
+}
+```
+
+### Deferred
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { FilterExpr } from '@oge-ui/core';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              selectionMode="checkbox"
+              [selectionDeferred]="true" [(selectionFilter)]="selectionFilter">
+      <oge-column field="firstName" />
+    </oge-grid>
+
+    <!-- selectionFilter is a plain FilterExpr — POST it to your backend:
+         null                                  → nothing selected
+         { field: 'id', op: 'isnotnull' }      → select-all (no filter active)
+         { and: [all, { not: { id eq 42 } }] } → all except #42 -->
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly selectionFilter = signal<FilterExpr | null>(null);
+}
+```
+
+### Selection
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { RowKey } from '@oge-ui/core';
+import type { OgeContextMenuEvent } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              selectionMode="checkbox" [(selectedKeys)]="selected"
+              (rowContextMenu)="onContextMenu($event)">
+      <oge-column field="firstName" />
+      <oge-column field="lastName" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly selected = signal<RowKey[]>([]);
+
+  protected onContextMenu(event: OgeContextMenuEvent<Employee>): void {
+    // push items to open the built-in menu; leave empty for the browser menu
+    event.items.push({
+      text: 'Copy name',
+      action: () => this.copy(event.row),
+    });
+  }
+
+  private copy(row: Employee): void {
+    void navigator.clipboard.writeText(`${row.firstName} ${row.lastName}`);
+  }
+}
+```
+
+### Infinite scroll
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { CustomDataSource } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+const TOTAL = 1_000_000;
+
+@Component({
+  selector: 'app-employees',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- remote virtual scrolling: sparse 100-row blocks over 1M rows -->
+    <oge-grid [data]="employees" keyField="id"
+              [scrolling]="{ mode: 'virtual', remote: true }"
+              [sortable]="false" class="h-[560px]">
+      <oge-column field="id" caption="Id" [width]="110" dataType="number" />
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="lastName" caption="Last Name" />
+      <oge-column field="department" caption="Department" />
+      <oge-column field="city" caption="City" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class EmployeesComponent {
+  // The grid asks for 100-row blocks as you scroll; nothing else is fetched.
+  readonly employees = new CustomDataSource<Employee>({
+    key: 'id',
+    load: async ({ skip = 0, take = 100 }) => {
+      const response = await fetch(`/api/employees?skip=${skip}&take=${take}`);
+      const { data } = await response.json();
+      return { data, totalCount: TOTAL };
+    },
+  });
+}
+```
+
+### Live updates
+
+```ts
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { ArrayDataSource } from '@oge-ui/core';
+
+interface Stock {
+  id: number;
+  symbol: string;
+  price: number;
+  change: number;
+  changePercent: number;
+}
+
+const SEED_STOCKS: Stock[] = [
+  { id: 1, symbol: 'AAPL', price: 227.4, change: 0, changePercent: 0 },
+  { id: 2, symbol: 'MSFT', price: 415.2, change: 0, changePercent: 0 },
+];
+
+@Component({
+  selector: 'app-ticker',
+  imports: [OgeCellTemplate, OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- pure updates patch rows in place — no reload, no scroll jump.
+         highlightChanges flashes every patched cell -->
+    <oge-grid [data]="stocks" keyField="id" [highlightChanges]="true">
+      <oge-column field="symbol" caption="Symbol" [width]="100" />
+      <oge-column field="price" caption="Price" dataType="number" [format]="money" />
+      <oge-column field="change" caption="Change" dataType="number">
+        <span *ogeCellTemplate="let value; row as row"
+              [class]="asStock(row).change >= 0 ? 'text-emerald-600' : 'text-red-600'">
+          {{ value }} ({{ asStock(row).changePercent }}%)
+        </span>
+      </oge-column>
+    </oge-grid>
+  `,
+})
+export class TickerComponent {
+  readonly stocks = new ArrayDataSource(SEED_STOCKS, { key: 'id' });
+
+  // the cell template's row context is untyped — narrow it once
+  protected asStock(row: unknown): Stock {
+    return row as Stock;
+  }
+
+  protected readonly money = (value: unknown): string =>
+    Number(value).toFixed(2);
+
+  constructor() {
+    // any push source works: WebSocket, SSE, SignalR…
+    const timer = setInterval(() => {
+      const stock = SEED_STOCKS[Math.floor(Math.random() * SEED_STOCKS.length)];
+      const change = Number((Math.random() * 2 - 1).toFixed(2));
+      this.stocks.push([
+        {
+          type: 'update',
+          key: stock.id,
+          patch: {
+            price: stock.price + change,
+            change,
+            changePercent: Number(((change / stock.price) * 100).toFixed(2)),
+          },
+        },
+      ]);
+    }, 600);
+    inject(DestroyRef).onDestroy(() => clearInterval(timer));
+  }
+}
+```
+
+### Remote data
+
+```ts
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { HttpClient } from '@angular/common/http';
+import { CustomDataSource } from '@oge-ui/core';
+import { firstValueFrom } from 'rxjs';
+import type { LoadResult } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="source" keyField="id" [filterRow]="true" [searchPanel]="true">
+      <oge-column field="firstName" />
+      <oge-column field="department" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  private readonly http = inject(HttpClient);
+
+  protected readonly source = new CustomDataSource<Employee>({
+    key: 'id',
+    load: (options) =>
+      // options = { skip, take, sort, filter, searchText, … } — serialize as-is
+      firstValueFrom(
+        this.http.post<LoadResult<Employee>>('/api/employees/query', options),
+      ),
+  });
+}
+```
+
+### Sorting
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              [paging]="{ pageSize: 15, pageSizes: [15, 25, 50] }"
+              [sorting]="{ mode: 'multi', allowUnsorting: true }">
+      <oge-column field="id" caption="Id" [width]="80" dataType="number" />
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="lastName" caption="Last Name" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+```
+
+### Auto height
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rows size to their content; measured heights feed the virtualizer -->
+    <oge-grid [data]="notes" keyField="id"
+              [virtualScroll]="true" [autoRowHeight]="true" [wordWrap]="true"
+              class="h-[420px]">
+      <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+      <oge-column field="title" caption="Title" [width]="180" />
+      <oge-column field="body" caption="Body" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  protected readonly notes = [
+    { id: 1, title: 'Kickoff', body: 'Short note.' },
+    { id: 2, title: 'Retro', body: 'A much longer note that wraps over several lines and makes the row taller than its neighbours.' },
+  ];
+}
+```
+
+### Column
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGrid } from '@oge-ui/grid';
+import type { OgeColumnDef } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- 200 columns: only the ones near the horizontal viewport are rendered -->
+    <oge-grid [data]="wideRows" keyField="c0"
+              [columns]="wideColumns"
+              [scrolling]="{ mode: 'virtual', columnRenderingMode: 'virtual' }"
+              class="h-[420px]">
+    </oge-grid>
+  `,
+})
+export class Demo {
+  protected readonly wideColumns: OgeColumnDef[] = Array.from(
+    { length: 200 },
+    (_, i) => ({ field: `c${i}`, caption: `Column ${i}`, width: 120 }),
+  );
+
+  protected readonly wideRows = Array.from({ length: 500 }, (_, row) =>
+    Object.fromEntries(
+      this.wideColumns.map((column, i) => [column.field, row * 200 + i]),
+    ),
+  );
+}
+```
+
+### Virtual scroll
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- give the grid a bounded height and switch virtualScroll on -->
+    <oge-grid [data]="employees" keyField="id"
+              [virtualScroll]="true" [rowHeight]="36" [overscan]="6"
+              class="h-[560px]">
+      <oge-column field="id" caption="Id" [width]="90" dataType="number" />
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+```
+

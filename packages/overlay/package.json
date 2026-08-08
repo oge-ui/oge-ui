@@ -23,6 +23,7 @@
     "@angular/core": "^22.0.0"
   },
   "sideEffects": false,
+  "schematics": "./schematics/collection.json",
   "homepage": "https://ogeui.com",
   "repository": {
     "type": "git",

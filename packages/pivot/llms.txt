@@ -1,0 +1,316 @@
+# @oge-ui/pivot
+
+> Cross-tab analytics: rows × columns × measures, grand totals, field chooser, sorting and Excel export.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.6.0.
+Docs and live demos: https://ogeui.com/components/pivot-grid
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/pivot
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/pivot`
+
+- values: `OGE_DEFAULT_PIVOT_MESSAGES`, `OGE_PIVOT_FIELD_DRAG_TYPE`, `OGE_PIVOT_MESSAGES`, `OgePivotField`, `OgePivotGrid`, `OgePivotStateStore`, `provideOgePivotMessages`
+- types: `OgePivotAxisLine`, `OgePivotCellClickEvent`, `OgePivotCellPrepared`, `OgePivotHeaderCell`, `OgePivotMenuItem`, `OgePivotMessages`
+
+`@oge-ui/pivot/export-excel`
+
+- values: `buildPivotWorkbook`, `exportPivotToExcel`
+- types: `OgePivotExcelExportOptions`
+
+## API reference
+
+### OgePivotGrid — `<oge-pivot-grid>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `readonly T[] \| OgePivotStore<T>` | `[]` | Local rows, or any `OgePivotStore` for remote (pre-aggregated) data. |
+| `virtualScrolling` | `boolean` | `false` | Two-axis fixed-track windowing. |
+| `showRowTotals / showColumnTotals` | `boolean` | `true` | Sub-total lines per axis. |
+| `showRowGrandTotals / showColumnGrandTotals` | `boolean` | `true` | Grand-total lines per axis. |
+| `fieldPanel` | `boolean` | `true` | Collapsible drag & drop field panel. |
+| `fieldChooser` | `{ applyChangesMode?: 'instantly' \| 'onDemand' }` | `{}` | Field-chooser dialog behavior. |
+| `customizeCell` | `(cell: OgePivotCellPrepared) => void` | `—` | Appearance hook: mutate `text` / `cssClass` per cell (the DevExtreme `cellPrepared` equivalent). |
+| `stateKey` | `string \| undefined` | `—` | Persists the field layout + expansion via `OGE_STATE_STORAGE`. |
+| `messages` | `Partial<OgePivotMessages>` | `{}` | Per-instance overrides of the UI strings. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getResult(): PivotResult` | `PivotResult` | The materialized pivot exactly as rendered — for custom export integrations. |
+| `drillDown(args: PivotDrillDownArgs): T[]` | `T[]` | Raw rows behind a cell (local data only). |
+| `expandAll(area: 'row' \| 'column') / collapseAll(area)` | `void` | Axis-wide expansion; remote mode expands only what is loaded. |
+| `getFieldLayout(): readonly PivotFieldConfig[]` | `readonly PivotFieldConfig[]` | Declared fields merged with user overrides. |
+| `showFieldChooser(): void` | `void` | Opens the field-chooser dialog. |
+| `state() / applyState(snapshot)` | `PivotGridStateSnapshot / void` | Field layout + expansion snapshot. |
+| `getCsv(options?) / exportCsv(filename?)` | `string / void` | CSV of exactly what is on screen (multi-level headers flattened). |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `cellClick / cellDblClick` | `OgePivotCellClickEvent` | `{ rowPath, columnPath, measureIndex, value, event }`. |
+| `fieldLayoutChange` | `readonly PivotFieldConfig[]` | The field layout changed (drag, chooser, menus). |
+| `stateChange` | `PivotGridStateSnapshot` | Debounced — the persistable state changed. |
+
+#### Types
+
+_Cell & axis types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePivotCellPrepared` | `{ rowPath, columnPath, measureId, isTotal, isGrandTotal, value; mutable text, cssClass? }` | Args of the `customizeCell` hook. |
+| `OgePivotAxisLine` | `{ text, path, level, expanded, hasChildren, isTotal, isGrandTotal }` | One visible axis line, in matrix order. |
+| `OgePivotHeaderCell` | `OgePivotAxisLine & { rowStart, rowEnd, columnStart, span }` | Header cell with 1-based matrix coordinates. |
+| `OGE_PIVOT_FIELD_DRAG_TYPE` | `'application/x-oge-pivot-field'` | DataTransfer type of field chips. |
+
+_Configuration & engine_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgePivotMessages(messages)` | `Provider` | App-scoped overrides of `OgePivotMessages` (39 keys — areas, menus, chooser, export…). |
+| `PivotFieldConfig / PivotResult / PivotLoadOptions / OgePivotStore…` | `from @oge-ui/core` | The serializable engine contract lives in `@oge-ui/core`, not in this package. |
+| `exportPivotToExcel(grid, options?)` | `@oge-ui/pivot/export-excel` | Lazy Excel export with merged multi-level headers; `buildPivotWorkbook(result)` for custom pipelines. |
+
+### OgePivotField — `<oge-pivot-field>`
+
+#### Properties
+
+_Placement_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataField` | `string (required)` | `—` | Source field; dotted paths supported. |
+| `id` | `string \| undefined` | `—` | Stable field id (defaults to `dataField`). |
+| `caption` | `string \| undefined` | `—` | Chip/header label. |
+| `area` | `PivotArea \| null` | `null` | row \| column \| data \| filter; `null` keeps the field available in the chooser only. |
+| `areaIndex` | `number \| undefined` | `—` | Order within the area. |
+| `dataType` | `'string' \| 'number' \| 'date' \| 'boolean' \| undefined` | `—` | Drives group intervals and formatting. |
+| `groupInterval` | `PivotGroupInterval \| undefined` | `—` | year/quarter/month/day/dayOfWeek or a numeric bucket size. |
+
+_Measures (area="data")_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `summaryType` | `SummaryType` | `'sum'` | sum/avg/min/max/count/custom. |
+| `summaryName` | `string \| undefined` | `—` | Registered custom-summary name. |
+| `summaryDisplayMode` | `PivotSummaryDisplayMode` | `'none'` | percent-of/running-total/variation post-processing. |
+| `runningTotal` | `PivotRunningTotal \| undefined` | `—` | Running totals with per-group reset. |
+| `calculateCustomSummary` | `CustomSummaryFn<T> \| undefined` | `—` | Out-of-band custom reducer. |
+
+_Row/column fields_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `sortOrder` | `SortDirection \| undefined` | `—` | Label sort. |
+| `sortBySummaryField / sortBySummaryPath` | `string / PivotPath` | `—` | Sort by a summary value at an opposite-axis path. |
+| `filterValues / filterType` | `readonly unknown[] / 'include' \| 'exclude'` | `—` | Field filter. |
+| `showTotals` | `boolean` | `true` | Sub-totals for this field. |
+| `selector / format / customizeText` | `functions` | `—` | Out-of-band value selector, display formatter and text hook. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Analytics
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgePivotField, OgePivotGrid } from '@oge-ui/pivot';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePivotField, OgePivotGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-pivot-grid [data]="sales">
+      <oge-pivot-field dataField="region" area="row" />
+      <oge-pivot-field dataField="date" area="column" groupInterval="year" />
+
+      <!-- measures can post-process their values -->
+      <oge-pivot-field
+        dataField="amount" caption="% of Column" area="data"
+        summaryType="sum" summaryDisplayMode="percentOfColumnGrandTotal" />
+      <oge-pivot-field
+        dataField="amount" caption="Running" area="data"
+        summaryType="sum" [runningTotal]="{ direction: 'row' }" />
+    </oge-pivot-grid>
+  `,
+})
+export class Demo {
+  protected readonly sales = [
+    { region: 'EMEA', date: '2026-02-11', amount: 1249 },
+    { region: 'EMEA', date: '2026-05-02', amount: 890 },
+    { region: 'APAC', date: '2025-11-19', amount: 2140 },
+  ];
+}
+```
+
+### Export
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgePivotField, OgePivotGrid } from '@oge-ui/pivot';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePivotField, OgePivotGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- layout + expansion survive reloads via stateKey -->
+    <oge-pivot-grid #pivot [data]="sales" stateKey="sales-report">
+      <oge-pivot-field dataField="region" area="row" />
+      <oge-pivot-field dataField="amount" area="data" summaryType="sum" />
+    </oge-pivot-grid>
+
+    <button type="button" (click)="exportCsv()">CSV</button>
+    <button type="button" (click)="exportExcel()">Excel</button>
+  `,
+})
+export class Demo {
+  protected readonly sales = [
+    { region: 'EMEA', date: '2026-02-11', amount: 1249 },
+    { region: 'EMEA', date: '2026-05-02', amount: 890 },
+    { region: 'APAC', date: '2025-11-19', amount: 2140 },
+  ];
+
+  private readonly pivot = viewChild.required(OgePivotGrid);
+
+  // CSV ships in the package…
+  protected exportCsv(): void {
+    this.pivot().exportCsv('sales.csv');
+  }
+
+  // …Excel lives in a lazy secondary entry, so exceljs stays out of the bundle
+  protected async exportExcel(): Promise<void> {
+    const { exportPivotToExcel } = await import('@oge-ui/pivot/export-excel');
+    await exportPivotToExcel(this.pivot(), { filename: 'sales.xlsx' });
+  }
+}
+```
+
+### Overview
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgePivotField, OgePivotGrid } from '@oge-ui/pivot';
+import type { OgePivotCellClickEvent } from '@oge-ui/pivot';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePivotField, OgePivotGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-pivot-grid #pivot [data]="sales" (cellDblClick)="onDrillDown($event)">
+      <!-- four areas: row / column / data / filter -->
+      <oge-pivot-field dataField="region" area="row" />
+      <oge-pivot-field dataField="country" area="row" />
+      <oge-pivot-field dataField="city" area="row" />
+      <oge-pivot-field dataField="date" area="column" groupInterval="year" />
+      <oge-pivot-field dataField="amount" area="data" summaryType="sum" [format]="money" />
+    </oge-pivot-grid>
+  `,
+})
+export class Demo {
+  protected readonly sales = [
+    { region: 'EMEA', country: 'Germany', city: 'Berlin', date: '2026-02-11', amount: 1249 },
+    { region: 'EMEA', country: 'Türkiye', city: 'İzmir', date: '2026-05-02', amount: 890 },
+    { region: 'APAC', country: 'Japan', city: 'Tokyo', date: '2025-11-19', amount: 2140 },
+  ];
+
+  private readonly pivot = viewChild.required(OgePivotGrid);
+
+  protected readonly money = (value: unknown): string =>
+    Number(value).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+
+  // every cell knows its coordinates — perfect for drill-down
+  protected onDrillDown(event: OgePivotCellClickEvent): void {
+    const rows = this.pivot().drillDown({
+      rowPath: event.rowPath,
+      columnPath: event.columnPath,
+    });
+    console.log(rows);
+  }
+}
+```
+

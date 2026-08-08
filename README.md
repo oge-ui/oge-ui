@@ -56,6 +56,9 @@ npm install @oge-ui/grid        # data grid (+ @oge-ui/core)
 npm install @oge-ui/tree-list   # hierarchical grid
 npm install @oge-ui/buttons     # buttons, groups, drop-downs (+ @oge-ui/overlay)
 npm install @oge-ui/inputs      # text, number, select, tag, date and toggle editors
+npm install @oge-ui/tabs        # tab strip and tab panel
+npm install @oge-ui/layout      # accordion (layout containers)
+npm install @oge-ui/navigation  # tree view (navigation controls)
 npm install @oge-ui/pivot       # pivot table (commercial — see Licensing)
 ```
 
@@ -98,16 +101,19 @@ No modules, no forms boilerplate — `[(value)]` binds straight to a
 All packages are MIT except `@oge-ui/pivot`, which is commercial (free for
 evaluation and development) — see [Licensing](#licensing).
 
-| Package                                   | Description                                                                                | npm                                                    |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| [`oge-ui`](packages/ui)                   | **Umbrella**: one install + one import path for the whole MIT suite                        | [npm](https://www.npmjs.com/package/oge-ui)            |
-| [`@oge-ui/grid`](packages/grid)           | Virtualized Data Grid: sorting, filtering, grouping, editing, master-detail, export        | [npm](https://www.npmjs.com/package/@oge-ui/grid)      |
-| [`@oge-ui/tree-list`](packages/tree-list) | Hierarchical grid: lazy loading, tri-state selection, drag & drop                          | [npm](https://www.npmjs.com/package/@oge-ui/tree-list) |
-| [`@oge-ui/pivot`](packages/pivot)         | Pivot Grid (commercial): rows × columns × measures, totals, two-axis virtualization        | [npm](https://www.npmjs.com/package/@oge-ui/pivot)     |
-| [`@oge-ui/buttons`](packages/buttons)     | Buttons, groups & drop-down/split buttons: async actions, click guards, hold-to-confirm    | [npm](https://www.npmjs.com/package/@oge-ui/buttons)   |
-| [`@oge-ui/inputs`](packages/inputs)       | Form editors: text, textarea, number, select/tag/autocomplete, date, checkbox/switch/radio | [npm](https://www.npmjs.com/package/@oge-ui/inputs)    |
-| [`@oge-ui/overlay`](packages/overlay)     | Anchored popups, menus, tooltips, context menus, modal dialogs and toasts                  | [npm](https://www.npmjs.com/package/@oge-ui/overlay)   |
-| [`@oge-ui/core`](packages/core)           | Framework-free data engine: data sources, filtering, pivot math, virtualization            | [npm](https://www.npmjs.com/package/@oge-ui/core)      |
+| Package                                     | Description                                                                                        | npm                                                     |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [`oge-ui`](packages/ui)                     | **Umbrella**: one install + one import path for the whole MIT suite                                | [npm](https://www.npmjs.com/package/oge-ui)             |
+| [`@oge-ui/grid`](packages/grid)             | Virtualized Data Grid: sorting, filtering, grouping, editing, master-detail, export                | [npm](https://www.npmjs.com/package/@oge-ui/grid)       |
+| [`@oge-ui/tree-list`](packages/tree-list)   | Hierarchical grid: lazy loading, tri-state selection, drag & drop                                  | [npm](https://www.npmjs.com/package/@oge-ui/tree-list)  |
+| [`@oge-ui/pivot`](packages/pivot)           | Pivot Grid (commercial): rows × columns × measures, totals, two-axis virtualization                | [npm](https://www.npmjs.com/package/@oge-ui/pivot)      |
+| [`@oge-ui/buttons`](packages/buttons)       | Buttons, groups & drop-down/split buttons: async actions, click guards, hold-to-confirm            | [npm](https://www.npmjs.com/package/@oge-ui/buttons)    |
+| [`@oge-ui/inputs`](packages/inputs)         | Form editors: text, number, select / tree select / tag / autocomplete, date, checkbox/switch/radio | [npm](https://www.npmjs.com/package/@oge-ui/inputs)     |
+| [`@oge-ui/overlay`](packages/overlay)       | Anchored popups, menus, tooltips, context menus, modal dialogs and toasts                          | [npm](https://www.npmjs.com/package/@oge-ui/overlay)    |
+| [`@oge-ui/tabs`](packages/tabs)             | Tabs & TabPanel: lazy render, closable tabs with async guards, overflow, drag reorder              | [npm](https://www.npmjs.com/package/@oge-ui/tabs)       |
+| [`@oge-ui/layout`](packages/layout)         | Accordion: single/multiple expansion, lazy render, async expand guards, invalid sections           | [npm](https://www.npmjs.com/package/@oge-ui/layout)     |
+| [`@oge-ui/navigation`](packages/navigation) | TreeView: flat or nested data, tri-state checkboxes, search, lazy load, virtual scroll, DnD        | [npm](https://www.npmjs.com/package/@oge-ui/navigation) |
+| [`@oge-ui/core`](packages/core)             | Framework-free data engine: data sources, filtering, pivot math, virtualization                    | [npm](https://www.npmjs.com/package/@oge-ui/core)       |
 
 ## Theming
 
@@ -131,6 +137,22 @@ All user-facing strings (including aria labels) live in per-package message
 catalogs — override globally with `provideOge<X>Config()` or per instance via
 `[messages]`. See the
 [localization guide](https://ogeui.com/getting-started/localization).
+
+## For AI coding assistants
+
+OGE ships a machine-readable reference so an assistant can write correct code
+without guessing:
+
+| File                                                | What it is                                                             |
+| --------------------------------------------------- | ---------------------------------------------------------------------- |
+| [`/llms.txt`](https://ogeui.com/llms.txt)           | [llmstxt.org](https://llmstxt.org) index — packages and every doc page |
+| [`/llms-full.txt`](https://ogeui.com/llms-full.txt) | conventions, every documented API member and every demo, in one file   |
+| `https://ogeui.com/llms/<package>.txt`              | one self-contained reference per package                               |
+| `node_modules/@oge-ui/<package>/llms.txt`           | the same per-package file, inside the installed tarball                |
+
+`ng add @oge-ui/<package>` also writes a short usage block into your
+`AGENTS.md`, so assistants working in your repo reach for OGE by default. Pass
+`--skip-agents-file` to opt out.
 
 ## Compatibility
 
@@ -162,7 +184,8 @@ OGE UI is **open-core**:
 
 - **MIT — free forever.** `oge-ui`, `@oge-ui/core`, `@oge-ui/grid`
   (including Excel/PDF export, master-detail and server-side operations),
-  `@oge-ui/tree-list`, `@oge-ui/inputs`, `@oge-ui/buttons` and
+  `@oge-ui/tree-list`, `@oge-ui/inputs`, `@oge-ui/buttons`,
+  `@oge-ui/tabs`, `@oge-ui/layout`, `@oge-ui/navigation` and
   `@oge-ui/overlay` are [MIT-licensed](LICENSE). This is a commitment:
   these packages and every feature currently in them will remain MIT.
 - **Commercial — `@oge-ui/pivot`.** The pivot grid is source-available

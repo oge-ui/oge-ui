@@ -204,6 +204,13 @@ max visible per region live in `provideOgeOverlayConfig` (`toastPosition`,
 - `OgeMenuItem` here is the canonical successor of the grid's internal menu
   item type; the grid migrates to it in a future wave.
 
+## For AI coding assistants
+
+The complete machine-readable API reference ships inside the package at
+`node_modules/@oge-ui/overlay/llms.txt` — conventions, every documented member and
+copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
+<https://ogeui.com/llms-full.txt> (the whole suite).
+
 ## License
 
 MIT

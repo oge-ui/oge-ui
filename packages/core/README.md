@@ -39,6 +39,13 @@ A few smaller pieces round it out:
 npm install @oge-ui/core
 ```
 
+## For AI coding assistants
+
+The complete machine-readable API reference ships inside the package at
+`node_modules/@oge-ui/core/llms.txt` — conventions, every documented member and
+copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
+<https://ogeui.com/llms-full.txt> (the whole suite).
+
 ## License
 
 MIT
