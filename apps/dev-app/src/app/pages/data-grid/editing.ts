@@ -11,25 +11,7 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
-
-const SNIPPET = `<oge-grid [data]="employees" keyField="id"
-          [editing]="{ mode: 'batch', allowUpdating: true, allowAdding: true, allowDeleting: true }"
-          (savingChanges)="onSaving($event)">
-  <oge-column field="id" [editable]="false" />
-  <oge-column field="firstName" [required]="true" />
-  <oge-column field="department">
-    <!-- custom editor gets the reactive FormControl -->
-    <select *ogeEditTemplate="let control" [formControl]="control">
-      <option>Engineering</option><option>Sales</option>
-    </select>
-  </oge-column>
-</oge-grid>
-
-onSaving(event: OgeSavingChangesEvent<Employee>) {
-  // event.changes = [{ type: 'update'|'insert'|'remove', key, data }]
-  // set event.cancel = true to abort; otherwise the DataSource
-  // (insert/update/remove) is called and the grid reloads.
-}`;
+import { LOOKUP_SNIPPET, SNIPPET } from './editing-snippets';
 
 interface Assignment {
   id: number;
@@ -44,24 +26,6 @@ interface City {
   countryId: number;
   name: string;
 }
-
-const LOOKUP_SNIPPET = `<oge-grid [data]="assignments" keyField="id"
-          [editing]="{ mode: 'row', allowUpdating: true, allowDeleting: true }"
-          [commandButtons]="commandButtons">
-  <oge-column field="countryId" caption="Country"
-              [lookup]="{ dataSource: countries, valueExpr: 'id', displayExpr: 'name' }" />
-  <!-- cascading: the city list depends on the row's (draft) country -->
-  <oge-column field="cityId" caption="City"
-              [lookup]="{ dataSource: citiesOf, valueExpr: 'id', displayExpr: 'name' }" />
-</oge-grid>
-
-citiesOf = (row: Assignment) => CITIES.filter(c => c.countryId === row.countryId);
-
-commandButtons: OgeCommandButton<Assignment>[] = [
-  { name: 'edit' },
-  { name: 'delete' },
-  { text: 'Archive', visible: (row) => !row.done, onClick: (row) => archive(row) },
-];`;
 
 @Component({
   selector: 'app-editing',
@@ -186,6 +150,7 @@ commandButtons: OgeCommandButton<Assignment>[] = [
     <app-demo-card
       [chips]="['lookup', 'cascading', 'commandButtons']"
       [code]="lookupSnippet"
+      language="ts"
     >
       <oge-grid
         [data]="assignments"

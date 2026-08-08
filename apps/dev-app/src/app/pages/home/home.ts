@@ -15,9 +15,12 @@ import { ArrayDataSource } from '@oge-ui/core';
 import { OgeButton } from '@oge-ui/buttons';
 import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { OgeSelectBox } from '@oge-ui/inputs';
+import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
+import type { OgeTabSelectionChangedEvent } from '@oge-ui/tabs';
 import { OgeTreeList } from '@oge-ui/tree-list';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 import { Icon, type IconName } from '../../shared/icon';
+import { SITE_VERSION } from '../../shared/site-version';
 
 interface TickerRow {
   id: number;
@@ -42,8 +45,6 @@ interface ComponentTile {
   desc: string;
   path: string;
 }
-
-type DemoTab = 'grid' | 'tree' | 'select' | 'buttons';
 
 const BASE_ROWS: TickerRow[] = [
   // prettier-ignore
@@ -75,12 +76,17 @@ const ORG: OrgNode[] = [
 ];
 
 /**
- * Landing page: asymmetric hero over a 3D particle-wave canvas, a tabbed
- * live-component window with pointer parallax, bento feature cells with
- * cursor spotlight, and count-up stats — all in the logo's
- * cyan→violet→magenta palette. Rendered without the sidebar shell
- * (see App.isHome). The wave and parallax are hand-rolled on canvas/rAF —
- * no 3D library, no bundle cost, and they pause under reduced motion.
+ * Landing page in the brand's own palette (the logo's cyan→violet→magenta
+ * ramp, indigo primary): white by day, deep slate by night via CSS
+ * variables under `.dark`. Copy sits beside a corner-ticked live component
+ * window with pointer tilt and glare; a package marquee runs under the
+ * hero; features are a compact `01…05` numbered grid; component rows carry
+ * their family icons; and live monthly npm download tiles are fetched
+ * client-side from api.npmjs.org (graceful '—' fallback). Motion runs on
+ * native listeners + rAF outside change detection and settles under
+ * prefers-reduced-motion; the window tilt is dropped while the select tab
+ * is active (a transformed ancestor would misplace the popup's fixed
+ * positioning).
  */
 @Component({
   selector: 'app-home',
@@ -93,34 +99,27 @@ const ORG: OrgNode[] = [
     OgeTreeList,
     OgeButton,
     OgeSelectBox,
+    OgeTabPanel,
+    OgeTab,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   template: `
-    <!-- ═══ Hero ═══ -->
-    <section class="home-hero relative overflow-hidden">
-      <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-        <span class="home-blob home-blob-1"></span>
-        <span class="home-blob home-blob-2"></span>
-        <canvas class="home-fx absolute inset-0"></canvas>
-        <span class="home-noise"></span>
-      </div>
-
+    <!-- ═══ Hero: copy beside the live window ═══ -->
+    <section class="og-hero relative overflow-hidden">
       <div
-        class="relative mx-auto grid max-w-6xl grid-cols-[1.02fr_1fr] items-center gap-14 px-6 pb-20 pt-20 max-lg:grid-cols-1 max-lg:gap-10 max-lg:pt-12"
+        class="relative mx-auto grid max-w-6xl grid-cols-[1.02fr_1fr] items-center gap-12 px-6 pb-14 pt-14 max-lg:grid-cols-1 max-lg:gap-10 max-lg:pt-10"
       >
         <!-- Left: copy -->
         <div>
-          <h1
-            class="home-in home-d1 text-[52px] font-bold leading-[1.08] tracking-tight text-gray-900 max-md:text-4xl dark:text-white"
-          >
+          <h1 class="home-in home-d1 og-display">
             Angular components
             <br />
             built for
             <span class="home-rotator" aria-hidden="true">
               <span class="home-rotator-track">
                 @for (word of rotatorWords; track $index) {
-                  <span class="home-gradient-text">{{ word }}</span>
+                  <span class="og-gilded">{{ word }}</span>
                 }
               </span>
             </span>
@@ -128,52 +127,30 @@ const ORG: OrgNode[] = [
           </h1>
 
           <p
-            class="home-in home-d3 mt-5 max-w-lg text-[15.5px] leading-relaxed text-gray-600 dark:text-gray-400"
+            class="home-in home-d3 mt-5 max-w-lg text-[15.5px] leading-relaxed text-[color:var(--og-mut)]"
           >
             A virtualized data grid, tree list, pivot table, buttons and form
             editors. Signal APIs end to end, zoneless by default, themed with
-            CSS tokens — and every docs page is axe-tested.
+            CSS tokens.
           </p>
 
           <div class="home-in home-d4 mt-7 flex flex-wrap items-center gap-4">
-            <a
-              routerLink="/getting-started"
-              class="home-btn-primary flex items-center gap-2 rounded-lg px-5 py-2.5 text-[13.5px] font-semibold text-white"
-            >
+            <a routerLink="/getting-started" class="og-btn-gold">
               Get started
               <app-icon name="arrow-right" [size]="14" />
             </a>
-            <a
-              routerLink="/components"
-              class="group flex items-center gap-1.5 text-[13.5px] font-semibold text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+            <a routerLink="/components" class="og-btn-stone"
+              >Browse components</a
             >
-              Browse components
-              <span
-                class="transition-transform duration-200 group-hover:translate-x-0.5"
-              >
-                <app-icon name="arrow-right" [size]="14" />
-              </span>
-            </a>
-            <a
-              href="https://www.npmjs.com/package/@oge-ui/grid"
-              target="_blank"
-              rel="noopener"
-              class="group flex items-center gap-1.5 text-[13.5px] font-semibold text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
-            >
-              <app-icon name="package" [size]="14" />
-              View on npm
-            </a>
           </div>
 
-          <div
-            class="home-in home-d5 mt-5 inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white/70 py-1.5 pl-3.5 pr-1.5 font-mono text-[13px] text-gray-700 backdrop-blur dark:border-gray-800 dark:bg-gray-900/70 dark:text-gray-300"
-          >
-            <span class="select-none text-cyan-600 dark:text-cyan-400">$</span>
+          <div class="home-in home-d5 og-install mt-6">
+            <span class="select-none text-[color:var(--og-turk)]">$</span>
             <span>npm install</span>
             <span class="relative">
               <select
                 aria-label="Package to install"
-                class="appearance-none rounded-md bg-transparent py-0.5 pl-1.5 pr-6 font-mono text-[13px] text-indigo-600 outline-none transition-colors hover:bg-indigo-50 focus-visible:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-500/10 dark:focus-visible:bg-indigo-500/10"
+                class="og-install-select"
                 [value]="installPkg()"
                 (change)="installPkg.set($any($event.target).value)"
               >
@@ -182,7 +159,7 @@ const ORG: OrgNode[] = [
                 }
               </select>
               <span
-                class="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                class="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[color:var(--og-faint)]"
               >
                 <app-icon name="chevron-down" [size]="12" />
               </span>
@@ -191,10 +168,10 @@ const ORG: OrgNode[] = [
               type="button"
               (click)="copyInstall()"
               [attr.aria-label]="copied() ? 'Copied' : 'Copy install command'"
-              class="flex h-7 w-7 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              class="og-install-copy"
             >
               @if (copied()) {
-                <span class="text-emerald-500">
+                <span class="text-[color:var(--og-turk)]">
                   <app-icon name="check" [size]="14" />
                 </span>
               } @else {
@@ -202,179 +179,222 @@ const ORG: OrgNode[] = [
               }
             </button>
           </div>
-
-          <p
-            class="home-in home-d5 mt-4 text-[12px] text-gray-400 dark:text-gray-600"
-          >
-            Every package installs standalone — shared engines
-            (<code>core</code>, <code>overlay</code>) come along automatically.
-          </p>
         </div>
 
-        <!-- Right: tabbed live-component window with pointer parallax.
-             The tilt's perspective transform would become the containing
-             block for the select popup (position: fixed), so it is dropped
-             while the select tab is active. -->
+        <!-- Right: the tilted live window. The tilt's perspective transform
+             would become the containing block for the select popup
+             (position: fixed), so it is dropped on the select tab. -->
         <div class="home-in-fade home-d6 min-w-0">
-          <div [class.home-tilt]="demoTab() !== 'select'">
-            <div class="home-window-frame">
-              <div
-                class="overflow-hidden rounded-[11px] bg-white dark:bg-gray-950"
+          <div [class.og-tilt]="demoKey() !== 'select'">
+            <div class="og-stele">
+              <span class="og-glare" aria-hidden="true"></span>
+              <!-- the demo chrome IS an oge component: oge-tab-panel -->
+              <oge-tab-panel
+                class="og-demo-tabs"
+                ariaLabel="Live demo"
+                stylingMode="secondary"
+                size="sm"
+                [(selectedKey)]="demoKey"
+                (selectionChanged)="onDemoTab($event)"
               >
-                <div
-                  class="flex items-center border-b border-gray-200 pr-3 dark:border-gray-800"
-                >
-                  <div class="flex items-center gap-1.5 px-3.5">
-                    <span class="h-2.5 w-2.5 rounded-full bg-red-400/80"></span>
-                    <span
-                      class="h-2.5 w-2.5 rounded-full bg-amber-400/80"
-                    ></span>
-                    <span
-                      class="h-2.5 w-2.5 rounded-full bg-emerald-400/80"
-                    ></span>
-                  </div>
-                  <div class="flex">
-                    @for (tab of demoTabs; track tab.id) {
-                      <button
-                        type="button"
-                        [attr.aria-pressed]="demoTab() === tab.id"
-                        (click)="setDemoTab(tab.id)"
-                        class="border-b-2 px-3.5 py-2.5 font-mono text-[12px] transition-colors"
-                        [class]="
-                          demoTab() === tab.id
-                            ? 'border-indigo-500 text-gray-900 dark:text-gray-100'
-                            : 'border-transparent text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                        "
-                      >
-                        {{ tab.file }}
-                      </button>
-                    }
-                  </div>
-                  @if (demoTab() === 'grid') {
-                    <span
-                      class="ml-auto flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-400"
+                <oge-tab text="Data Grid" key="grid">
+                  <div class="home-pane og-demo-surface p-3">
+                    <oge-grid
+                      [data]="heroSource"
+                      keyField="id"
+                      [highlightChanges]="true"
                     >
-                      <span class="home-live-dot" aria-hidden="true"></span>
-                      LIVE
-                    </span>
-                  }
-                </div>
-                <div class="min-h-[272px]">
-                  @switch (demoTab()) {
-                    @case ('grid') {
-                      <div class="home-pane p-3">
-                        <oge-grid
-                          [data]="heroSource"
-                          keyField="id"
-                          [highlightChanges]="true"
-                        >
-                          <oge-column field="product" caption="Product" />
-                          <oge-column
-                            field="region"
-                            caption="Region"
-                            [width]="86"
-                          />
-                          <oge-column
-                            field="price"
-                            caption="Price"
-                            dataType="number"
-                            [width]="82"
-                          />
-                          <oge-column
-                            field="change"
-                            caption="24h"
-                            dataType="number"
-                            [width]="86"
-                          >
-                            <span
-                              *ogeCellTemplate="let change"
-                              class="home-trend"
-                              [class.home-trend-up]="$any(change) > 0"
-                              [class.home-trend-down]="$any(change) < 0"
-                              >{{
-                                $any(change) > 0
-                                  ? '▲'
-                                  : $any(change) < 0
-                                    ? '▼'
-                                    : '—'
-                              }}
-                              {{
-                                $any(change) === 0
-                                  ? ''
-                                  : ($any(change) > 0 ? '+' : '') +
-                                    $any(change) +
-                                    '%'
-                              }}</span
-                            >
-                          </oge-column>
-                          <oge-column
-                            field="qty"
-                            caption="Qty"
-                            dataType="number"
-                            [width]="72"
-                          />
-                        </oge-grid>
-                      </div>
-                    }
-                    @case ('tree') {
-                      <div class="home-pane p-3">
-                        <oge-tree-list
-                          [data]="org"
-                          keyExpr="id"
-                          parentIdExpr="parentId"
-                          [autoExpandAll]="true"
-                        >
-                          <oge-column field="name" caption="Name" />
-                          <oge-column
-                            field="title"
-                            caption="Title"
-                            [width]="140"
-                          />
-                        </oge-tree-list>
-                      </div>
-                    }
-                    @case ('select') {
-                      <div
-                        class="home-pane flex min-h-[272px] flex-wrap content-center items-start justify-center gap-5 p-6"
+                      <oge-column field="product" caption="Product" />
+                      <oge-column
+                        field="region"
+                        caption="Region"
+                        [width]="82"
+                      />
+                      <oge-column
+                        field="price"
+                        caption="Price"
+                        dataType="number"
+                        [width]="76"
+                      />
+                      <oge-column
+                        field="change"
+                        caption="24h"
+                        dataType="number"
+                        [width]="84"
                       >
-                        <oge-select-box
-                          label="City"
-                          [items]="heroCities"
-                          [showClearButton]="true"
-                          [(value)]="heroCity"
-                        />
-                        <oge-select-box
-                          label="Assignee"
-                          [items]="heroUsers"
-                          displayExpr="name"
-                          valueExpr="id"
-                          [searchEnabled]="true"
-                          placeholder="Type to search…"
-                          [(value)]="heroUserId"
-                        />
-                      </div>
-                    }
-                    @case ('buttons') {
-                      <div
-                        class="home-pane flex min-h-[272px] flex-wrap content-center items-center justify-center gap-3 p-6"
-                      >
-                        <oge-button text="Accent" severity="accent" />
-                        <oge-button
-                          text="Success"
-                          severity="success"
-                          stylingMode="outlined"
-                        />
-                        <oge-button
-                          text="Danger"
-                          severity="danger"
-                          stylingMode="outlined"
-                        />
-                        <oge-button
-                          text="Inbox"
-                          badge="12"
-                          stylingMode="outlined"
-                        />
-                        <oge-button text="Async save" [action]="fakeSave" />
+                        <span
+                          *ogeCellTemplate="let change"
+                          class="home-trend"
+                          [class.home-trend-up]="$any(change) > 0"
+                          [class.home-trend-down]="$any(change) < 0"
+                          >{{
+                            $any(change) > 0
+                              ? '▲'
+                              : $any(change) < 0
+                                ? '▼'
+                                : '—'
+                          }}
+                          {{
+                            $any(change) === 0
+                              ? ''
+                              : ($any(change) > 0 ? '+' : '') +
+                                $any(change) +
+                                '%'
+                          }}</span
+                        >
+                      </oge-column>
+                      <oge-column
+                        field="qty"
+                        caption="Qty"
+                        dataType="number"
+                        [width]="66"
+                      />
+                    </oge-grid>
+                  </div>
+                </oge-tab>
+                <oge-tab text="Tree List" key="tree">
+                  <div class="home-pane og-demo-surface p-3">
+                    <oge-tree-list
+                      [data]="org"
+                      keyExpr="id"
+                      parentIdExpr="parentId"
+                      [autoExpandAll]="true"
+                    >
+                      <oge-column field="name" caption="Name" />
+                      <oge-column field="title" caption="Title" [width]="140" />
+                    </oge-tree-list>
+                  </div>
+                </oge-tab>
+                <oge-tab text="Select" key="select">
+                  <div
+                    class="home-pane og-demo-surface flex min-h-[276px] flex-wrap content-center items-start justify-center gap-5 p-6"
+                  >
+                    <oge-select-box
+                      label="City"
+                      [items]="heroCities"
+                      [showClearButton]="true"
+                      [(value)]="heroCity"
+                    />
+                    <oge-select-box
+                      label="Assignee"
+                      [items]="heroUsers"
+                      displayExpr="name"
+                      valueExpr="id"
+                      [searchEnabled]="true"
+                      placeholder="Type to search…"
+                      [(value)]="heroUserId"
+                    />
+                  </div>
+                </oge-tab>
+                <oge-tab text="Buttons" key="buttons">
+                  <div
+                    class="home-pane og-demo-surface flex min-h-[276px] flex-col items-center justify-center gap-5 p-6"
+                  >
+                    <div
+                      class="flex flex-wrap items-center justify-center gap-3"
+                    >
+                      <oge-button text="Accent" severity="accent" />
+                      <oge-button
+                        text="Success"
+                        severity="success"
+                        stylingMode="outlined"
+                      />
+                      <oge-button
+                        text="Danger"
+                        severity="danger"
+                        stylingMode="outlined"
+                      />
+                      <oge-button
+                        text="Inbox"
+                        badge="12"
+                        stylingMode="outlined"
+                      />
+                    </div>
+                    <div
+                      class="flex flex-wrap items-center justify-center gap-3"
+                    >
+                      <oge-button text="Async save" [action]="fakeSave" />
+                      <oge-button
+                        text="Hold to confirm"
+                        severity="danger"
+                        [holdToConfirm]="true"
+                      />
+                    </div>
+                    <p class="text-[12px] text-[color:var(--og-faint)]">
+                      Click “Async save” — loading is automatic. Hold the red
+                      one.
+                    </p>
+                  </div>
+                </oge-tab>
+              </oge-tab-panel>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- package marquee -->
+      <div class="og-marquee relative overflow-hidden py-3">
+        <div class="og-marquee-track">
+          @for (half of [0, 1]; track half) {
+            <div
+              class="flex items-center gap-10 pr-10"
+              [attr.aria-hidden]="half === 1 ? true : null"
+            >
+              @for (pkg of packages; track pkg) {
+                <span
+                  class="font-mono text-[12px] text-[color:var(--og-faint)]"
+                  >{{ pkg }}</span
+                >
+                <span class="og-marquee-sep" aria-hidden="true"></span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Features as a compact numbered grid ═══ -->
+    <section class="og-body">
+      <div class="mx-auto max-w-6xl px-6 py-14">
+        <h2 class="home-reveal og-h2 text-center">
+          Modern Angular, <span class="og-gilded">no compromises</span>
+        </h2>
+
+        <div
+          class="mt-10 grid grid-cols-3 gap-x-8 gap-y-2 max-lg:grid-cols-2 max-md:grid-cols-1"
+        >
+          <div class="home-reveal og-entry">
+            <span class="og-entry-no">01</span>
+            <div>
+              <h3 class="og-h3">Signal APIs end to end</h3>
+              <p class="og-p mt-2 max-w-lg">
+                Inputs, outputs and state are signals. Derive totals with
+                <code>computed()</code> — no lifecycle hooks, no subscriptions
+                to leak.
+              </p>
+              <p class="og-note mt-4">
+                total = computed(() =&gt; …)<span
+                  class="home-caret"
+                  aria-hidden="true"
+                ></span>
+              </p>
+            </div>
+          </div>
+
+          <div class="home-reveal og-entry">
+            <span class="og-entry-no">02</span>
+            <div>
+              <h3 class="og-h3">Virtualized into the millions</h3>
+              <p class="og-p mt-2 max-w-lg">
+                Row and column virtualization from a framework-free core — the
+                DOM only ever holds what you see.
+              </p>
+              <div class="home-virt mt-5" aria-hidden="true">
+                <div class="home-virt-track">
+                  @for (half of [0, 1]; track half) {
+                    @for (row of virtRows; track row) {
+                      <div class="home-virt-row">
+                        <span></span><span></span><span></span>
                       </div>
                     }
                   }
@@ -382,390 +402,249 @@ const ORG: OrgNode[] = [
               </div>
             </div>
           </div>
-          <p
-            class="mt-4 text-center text-[12.5px] text-gray-400 dark:text-gray-500"
-          >
-            Real components, not screenshots — sort a column, expand a node,
-            click “Async save”.
-          </p>
+
+          <div class="home-reveal og-entry">
+            <span class="og-entry-no">03</span>
+            <div>
+              <h3 class="og-h3">Zoneless by default</h3>
+              <p class="og-p mt-2 max-w-lg">
+                No Zone.js, no global change-detection sweeps. Components mark
+                exactly what moved.
+              </p>
+              <p class="og-note mt-4">
+                <span class="line-through">import 'zone.js';</span>
+                <span class="text-[color:var(--og-turk)]"> // not needed</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="home-reveal og-entry">
+            <span class="og-entry-no">04</span>
+            <div>
+              <h3 class="og-h3">Design-token theming</h3>
+              <p class="og-p mt-2 max-w-lg">
+                One set of CSS variables drives every component. Dark, Tailwind
+                and Bootstrap bridges ship in the box.
+              </p>
+              <div class="mt-4 flex items-center gap-2.5">
+                @for (swatch of swatches; track swatch.name) {
+                  <span
+                    class="og-swatch"
+                    [style.background]="swatch.color"
+                    [title]="swatch.name"
+                  ></span>
+                }
+                <span
+                  class="ml-1 font-mono text-[11.5px] text-[color:var(--og-faint)]"
+                  >--oge-accent</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="home-reveal og-entry">
+            <span class="og-entry-no">05</span>
+            <div>
+              <h3 class="og-h3">Keyboard-first accessibility</h3>
+              <p class="og-p mt-2 max-w-lg">
+                WAI-ARIA grid semantics, focus management and full keyboard
+                navigation — verified with axe.
+              </p>
+              <div class="mt-4 flex items-center gap-1.5" aria-hidden="true">
+                @for (key of kbdKeys; track key) {
+                  <kbd class="home-kbd">{{ key }}</kbd>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="home-reveal og-entry">
+            <span class="og-entry-no">06</span>
+            <div>
+              <h3 class="og-h3">MIT, and it stays MIT</h3>
+              <p class="og-p mt-2 max-w-lg">
+                Every core package carries a public "will remain MIT"
+                commitment. No license keys, no runtime checks, no telemetry.
+              </p>
+              <p class="og-note mt-4">
+                "license": "MIT"
+                <span class="text-[color:var(--og-turk)]">// forever</span>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- ═══ Package marquee ═══ -->
-    <div
-      class="home-marquee overflow-hidden border-y border-gray-200 bg-gray-50/60 py-3 dark:border-gray-800 dark:bg-gray-900/30"
-    >
-      <div class="home-marquee-track">
-        @for (half of [0, 1]; track half) {
+      <!-- ═══ Playground ═══ -->
+      <div>
+        <div class="mx-auto max-w-6xl px-6 py-14">
           <div
-            class="flex items-center gap-10 pr-10"
-            [attr.aria-hidden]="half === 1 ? true : null"
+            class="home-reveal flex flex-wrap items-end justify-between gap-4"
           >
-            @for (pkg of packages; track pkg) {
+            <div>
+              <p class="og-eyebrow">Playground</p>
+              <h2 class="og-h2 mt-3">
+                Flip a switch — <span class="og-gilded">it's live</span>
+              </h2>
+            </div>
+            <a
+              routerLink="/components/data-grid/playground"
+              class="group flex shrink-0 items-center gap-1.5 text-[13.5px] font-semibold text-[color:var(--og-gold)] transition-colors hover:text-[color:var(--og-gold-hi)]"
+            >
+              Full playground
               <span
-                class="font-mono text-[12.5px] text-gray-400 dark:text-gray-500"
-                >{{ pkg }}</span
+                class="transition-transform duration-200 group-hover:translate-x-0.5"
               >
-              <span class="home-marquee-dot" aria-hidden="true"></span>
+                <app-icon name="arrow-right" [size]="13" />
+              </span>
+            </a>
+          </div>
+
+          <!-- opacity-only reveal: a transform animation would turn this
+               into the containing block for the grid's fixed popups -->
+          <div class="home-reveal-fade og-slab mt-10 p-5">
+            <div class="mb-4 flex flex-wrap items-center gap-2">
+              @for (option of pgToggles; track option.key) {
+                <button
+                  type="button"
+                  [attr.aria-pressed]="option.state()"
+                  (click)="option.state.set(!option.state())"
+                  class="og-toggle"
+                  [class.og-toggle-on]="option.state()"
+                >
+                  <app-icon [name]="option.icon" [size]="13" />
+                  {{ option.label }}
+                </button>
+              }
+            </div>
+            <oge-grid
+              [data]="pgEmployees()"
+              keyField="id"
+              [filterRow]="pgFilterRow()"
+              [headerFilter]="pgHeaderFilter()"
+              [searchPanel]="pgSearch()"
+              [paging]="pgPaging() ? { pageSize: 8 } : false"
+              [virtualScroll]="pgVirtual()"
+              [selectionMode]="pgSelection() ? 'checkbox' : 'none'"
+              [groupPanel]="pgGrouping()"
+              [groupBy]="pgGrouping() ? ['department'] : []"
+              [columnChooser]="pgColumnChooser()"
+              [editing]="
+                pgEditing()
+                  ? {
+                      mode: 'batch',
+                      allowUpdating: true,
+                      allowAdding: true,
+                      allowDeleting: true,
+                    }
+                  : false
+              "
+              [focusedRowEnabled]="pgFocusedRow()"
+              [rowDragging]="pgRowDrag()"
+              [rowAlternation]="pgStriping()"
+              [style.height]="pgVirtual() ? '420px' : null"
+            >
+              <oge-column field="firstName" caption="First Name" />
+              <oge-column field="lastName" caption="Last Name" />
+              <oge-column field="department" caption="Department" />
+              <oge-column field="city" caption="City" />
+              <oge-column
+                field="salary"
+                caption="Salary"
+                dataType="number"
+                [width]="110"
+              />
+            </oge-grid>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Components: the family index ═══ -->
+      <div>
+        <div class="mx-auto max-w-5xl px-6 py-14">
+          <div class="home-reveal text-center">
+            <p class="og-eyebrow">Components</p>
+            <h2 class="og-h2 mt-3">
+              Nine families, <span class="og-gilded">one design system</span>
+            </h2>
+          </div>
+
+          <!-- three columns keep the section three rows tall no matter how
+               many families ship — the page must not grow with the suite -->
+          <div
+            class="mt-8 grid grid-cols-3 gap-x-6 max-lg:grid-cols-2 max-sm:grid-cols-1"
+          >
+            @for (tile of tiles; track tile.path) {
+              <a [routerLink]="tile.path" class="home-reveal og-row group">
+                <span class="og-row-icon shrink-0" aria-hidden="true">
+                  <app-icon [name]="tile.icon" [size]="16" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="flex items-baseline gap-3">
+                    <span class="og-row-name">{{ tile.name }}</span>
+                    <span
+                      class="ml-auto shrink-0 text-[color:var(--og-faint)] transition-all duration-200 group-hover:translate-x-1 group-hover:text-[color:var(--og-gold)]"
+                    >
+                      <app-icon name="arrow-right" [size]="15" />
+                    </span>
+                  </span>
+                  <span class="og-row-desc mt-1.5 block">{{ tile.desc }}</span>
+                </span>
+              </a>
             }
           </div>
-        }
-      </div>
-    </div>
-
-    <!-- ═══ Bento features ═══ -->
-    <section class="mx-auto max-w-6xl px-6 py-20">
-      <div class="home-reveal flex items-center gap-5">
-        <div>
-          <p
-            class="font-mono text-[12px] font-semibold uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400"
-          >
-            Why oge
-          </p>
-          <h2
-            class="mt-1.5 whitespace-nowrap text-[28px] font-bold tracking-tight text-gray-900 dark:text-white"
-          >
-            Modern Angular, no compromises
-          </h2>
         </div>
-        <span class="home-rule" aria-hidden="true"></span>
       </div>
 
-      <div
-        class="mt-10 grid grid-cols-3 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1"
-      >
-        <!-- signals + code -->
-        <div class="home-cell home-reveal col-span-2 max-sm:col-span-1">
-          <div class="p-6 pb-0">
-            <h3
-              class="text-[15px] font-semibold text-gray-900 dark:text-gray-100"
-            >
-              Signal APIs end to end
-            </h3>
-            <p
-              class="mt-1.5 max-w-md text-[13.5px] text-gray-500 dark:text-gray-400"
-            >
-              Inputs, outputs and state are signals. Derive totals with
-              <code>computed()</code> — no lifecycle hooks, no subscriptions to
-              leak.
-            </p>
+      <!-- ═══ Live npm downloads ═══ -->
+      <div>
+        <div class="mx-auto max-w-5xl px-6 py-14">
+          <div class="home-reveal text-center">
+            <p class="og-eyebrow">On npm</p>
+            <h2 class="og-h2 mt-3">
+              Open source, <span class="og-gilded">in the wild</span>
+            </h2>
           </div>
-          <pre
-            class="home-code m-6 mt-4"
-          ><code><span class="hc-c">// live totals, no lifecycle hooks</span>
-<span class="hc-k">readonly</span> rows = <span class="hc-f">signal</span>&lt;Order[]&gt;([]);
-<span class="hc-k">readonly</span> total = <span class="hc-f">computed</span>(() =&gt;
-  <span class="hc-k">this</span>.rows().reduce((sum, r) =&gt; sum + r.amount, <span class="hc-n">0</span>),
-);<span class="home-caret" aria-hidden="true"></span></code></pre>
-        </div>
 
-        <!-- virtualization -->
-        <div class="home-cell home-reveal">
-          <div class="p-6 pb-0">
-            <h3
-              class="text-[15px] font-semibold text-gray-900 dark:text-gray-100"
-            >
-              Virtualized into the millions
-            </h3>
-            <p class="mt-1.5 text-[13.5px] text-gray-500 dark:text-gray-400">
-              Row and column virtualization from a framework-free core — the DOM
-              only ever holds what you see.
-            </p>
-          </div>
-          <div class="home-virt mx-6 mb-6 mt-4" aria-hidden="true">
-            <div class="home-virt-track">
-              @for (half of [0, 1]; track half) {
-                @for (row of virtRows; track row) {
-                  <div class="home-virt-row">
-                    <span></span><span></span><span></span>
-                  </div>
-                }
-              }
-            </div>
-          </div>
-        </div>
-
-        <!-- zoneless -->
-        <div class="home-cell home-reveal">
-          <div class="p-6">
-            <h3
-              class="text-[15px] font-semibold text-gray-900 dark:text-gray-100"
-            >
-              Zoneless by default
-            </h3>
-            <p class="mt-1.5 text-[13.5px] text-gray-500 dark:text-gray-400">
-              No Zone.js, no global change detection sweeps. Components mark
-              exactly what moved.
-            </p>
-            <p
-              class="mt-4 rounded-lg bg-gray-100 px-3 py-2 font-mono text-[12px] text-gray-400 dark:bg-gray-900 dark:text-gray-500"
-            >
-              <span class="line-through">import 'zone.js';</span>
-              <span class="text-emerald-600 dark:text-emerald-400">
-                // not needed</span
-              >
-            </p>
-          </div>
-        </div>
-
-        <!-- theming -->
-        <div class="home-cell home-reveal">
-          <div class="p-6">
-            <h3
-              class="text-[15px] font-semibold text-gray-900 dark:text-gray-100"
-            >
-              Design-token theming
-            </h3>
-            <p class="mt-1.5 text-[13.5px] text-gray-500 dark:text-gray-400">
-              One set of CSS variables drives every component. Dark, Tailwind
-              and Bootstrap bridges ship in the box.
-            </p>
-            <div class="mt-4 flex items-center gap-2.5">
-              @for (swatch of swatches; track swatch.name) {
-                <span
-                  class="home-swatch"
-                  [style.background]="swatch.color"
-                  [title]="swatch.name"
-                ></span>
-              }
-              <span
-                class="ml-1 font-mono text-[11.5px] text-gray-400 dark:text-gray-500"
-                >--oge-accent</span
+          <div class="home-reveal og-npm mx-auto mt-8 max-w-3xl">
+            <div class="og-npm-total" aria-live="polite">
+              <span class="og-total-value">{{ npmTotal() }}</span>
+              <span class="og-total-label">total downloads</span>
+              <span class="og-npm-sub"
+                >across {{ npmCounted() || packages.length }} packages · live
+                from npm, since the first release</span
               >
             </div>
-          </div>
-        </div>
-
-        <!-- a11y -->
-        <div class="home-cell home-reveal">
-          <div class="p-6">
-            <h3
-              class="text-[15px] font-semibold text-gray-900 dark:text-gray-100"
-            >
-              Keyboard-first accessibility
-            </h3>
-            <p class="mt-1.5 text-[13.5px] text-gray-500 dark:text-gray-400">
-              WAI-ARIA grid semantics, focus management and full keyboard
-              navigation — verified with axe.
-            </p>
-            <div class="mt-4 flex items-center gap-1.5" aria-hidden="true">
-              @for (key of kbdKeys; track key) {
-                <kbd class="home-kbd">{{ key }}</kbd>
+            <div class="og-npm-list">
+              @for (stat of npmStats(); track stat.pkg) {
+                <a
+                  [href]="'https://www.npmjs.com/package/' + stat.pkg"
+                  target="_blank"
+                  rel="noopener"
+                  class="og-npm-row"
+                >
+                  <span class="flex items-center gap-2.5">
+                    <span class="og-npm-icon" aria-hidden="true">
+                      <app-icon [name]="stat.icon" [size]="13" />
+                    </span>
+                    <span class="og-npm-pkg">{{ stat.pkg }}</span>
+                  </span>
+                  <span class="og-npm-count">{{ stat.downloads }}</span>
+                </a>
               }
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ═══ Mini playground ═══ -->
-    <section class="mx-auto max-w-6xl px-6 pb-20">
-      <div class="home-reveal flex items-center gap-5">
-        <div>
-          <p
-            class="font-mono text-[12px] font-semibold uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400"
-          >
-            Playground
-          </p>
-          <h2
-            class="mt-1.5 whitespace-nowrap text-[28px] font-bold tracking-tight text-gray-900 dark:text-white"
-          >
-            Flip a switch — it's live
-          </h2>
-        </div>
-        <span class="home-rule" aria-hidden="true"></span>
-        <a
-          routerLink="/components/data-grid/playground"
-          class="group flex shrink-0 items-center gap-1.5 text-[13px] font-semibold text-indigo-600 transition-colors hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-        >
-          Full playground
-          <span
-            class="transition-transform duration-200 group-hover:translate-x-0.5"
-          >
-            <app-icon name="arrow-right" [size]="13" />
-          </span>
-        </a>
-      </div>
-
-      <!-- opacity-only reveal: a transform animation would turn this cell into
-           the containing block for the grid's position:fixed popups -->
-      <div class="home-cell home-reveal-fade mt-10 p-5">
-        <div class="mb-4 flex flex-wrap items-center gap-2">
-          @for (option of pgToggles; track option.key) {
-            <button
-              type="button"
-              [attr.aria-pressed]="option.state()"
-              (click)="option.state.set(!option.state())"
-              class="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] font-medium transition-all"
-              [class]="
-                option.state()
-                  ? 'border-indigo-500/60 bg-indigo-600 text-white shadow-[0_4px_14px_-6px_rgba(99,102,241,0.6)]'
-                  : 'border-gray-200 text-gray-500 hover:border-indigo-300 hover:text-indigo-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-indigo-500/50 dark:hover:text-indigo-300'
-              "
-            >
-              <app-icon [name]="option.icon" [size]="13" />
-              {{ option.label }}
-            </button>
-          }
-        </div>
-        <oge-grid
-          [data]="pgEmployees()"
-          keyField="id"
-          [filterRow]="pgFilterRow()"
-          [headerFilter]="pgHeaderFilter()"
-          [searchPanel]="pgSearch()"
-          [paging]="pgPaging() ? { pageSize: 8 } : false"
-          [virtualScroll]="pgVirtual()"
-          [selectionMode]="pgSelection() ? 'checkbox' : 'none'"
-          [groupPanel]="pgGrouping()"
-          [groupBy]="pgGrouping() ? ['department'] : []"
-          [columnChooser]="pgColumnChooser()"
-          [editing]="
-            pgEditing()
-              ? {
-                  mode: 'batch',
-                  allowUpdating: true,
-                  allowAdding: true,
-                  allowDeleting: true,
-                }
-              : false
-          "
-          [focusedRowEnabled]="pgFocusedRow()"
-          [rowDragging]="pgRowDrag()"
-          [rowAlternation]="pgStriping()"
-          [style.height]="pgVirtual() ? '420px' : null"
-        >
-          <oge-column field="firstName" caption="First Name" />
-          <oge-column field="lastName" caption="Last Name" />
-          <oge-column field="department" caption="Department" />
-          <oge-column field="city" caption="City" />
-          <oge-column
-            field="salary"
-            caption="Salary"
-            dataType="number"
-            [width]="110"
-          />
-        </oge-grid>
-      </div>
-    </section>
-
-    <!-- ═══ Stats ═══ -->
-    <section
-      class="border-y border-gray-200 bg-gray-50/60 dark:border-gray-800 dark:bg-gray-900/30"
-    >
-      <div
-        class="home-stats-row mx-auto grid max-w-5xl grid-cols-4 px-6 py-10 max-md:grid-cols-2 max-md:gap-y-8"
-      >
-        @for (stat of statTargets; track stat.label; let i = $index) {
+      <!-- ═══ Closing: CTA + the name ═══ -->
+      <div>
+        <div class="mx-auto max-w-3xl px-6 py-14 text-center">
+          <h2 class="home-reveal og-h2">Start building with oge</h2>
           <div
-            [class]="
-              i > 0
-                ? 'text-center md:border-l md:border-gray-200 md:dark:border-gray-800'
-                : 'text-center'
-            "
+            class="home-reveal mt-8 flex flex-wrap items-center justify-center gap-4"
           >
-            <div
-              class="home-gradient-text text-[34px] font-bold tracking-tight"
-            >
-              {{ statValues()[i] }}{{ stat.suffix }}
-            </div>
-            <div class="mt-1 text-[12.5px] text-gray-500 dark:text-gray-400">
-              {{ stat.label }}
-            </div>
-          </div>
-        }
-      </div>
-    </section>
-
-    <!-- ═══ Component tiles ═══ -->
-    <section class="mx-auto max-w-6xl px-6 py-20">
-      <div class="home-reveal flex items-center gap-5">
-        <div>
-          <p
-            class="font-mono text-[12px] font-semibold uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400"
-          >
-            Components
-          </p>
-          <h2
-            class="mt-1.5 whitespace-nowrap text-[28px] font-bold tracking-tight text-gray-900 dark:text-white"
-          >
-            Six families, one design system
-          </h2>
-        </div>
-        <span class="home-rule" aria-hidden="true"></span>
-      </div>
-
-      <div
-        class="mt-10 grid grid-cols-3 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1"
-      >
-        @for (tile of tiles; track tile.path) {
-          <a [routerLink]="tile.path" class="home-cell home-reveal group p-6">
-            <div class="flex items-center gap-3">
-              <span
-                class="home-feature-icon flex h-9 w-9 items-center justify-center rounded-lg"
-              >
-                <app-icon [name]="tile.icon" [size]="17" />
-              </span>
-              <span
-                class="text-[14.5px] font-semibold text-gray-900 dark:text-gray-100"
-              >
-                {{ tile.name }}
-              </span>
-              <span
-                class="ml-auto text-gray-300 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-indigo-500 dark:text-gray-600 dark:group-hover:text-indigo-400"
-              >
-                <app-icon name="arrow-right" [size]="15" />
-              </span>
-            </div>
-            <p
-              class="mt-3 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"
-            >
-              {{ tile.desc }}
-            </p>
-          </a>
-        }
-      </div>
-    </section>
-
-    <!-- ═══ Final CTA ═══ -->
-    <section class="mx-auto max-w-4xl px-6 pb-20">
-      <div class="home-reveal home-window-frame">
-        <div
-          class="relative overflow-hidden rounded-[11px] bg-white px-8 py-12 text-center dark:bg-gray-950"
-        >
-          <div class="pointer-events-none absolute inset-0" aria-hidden="true">
-            <span class="home-blob home-blob-cta"></span>
-            <span class="home-noise"></span>
-          </div>
-          <div class="home-logo-wrap relative mx-auto w-fit">
-            <span class="home-logo-ring" aria-hidden="true"></span>
-            <img
-              src="logo.png"
-              alt=""
-              width="72"
-              height="72"
-              class="home-logo relative h-18 w-18 rounded-full object-cover"
-            />
-          </div>
-          <h2
-            class="relative mt-6 text-[28px] font-bold tracking-tight text-gray-900 dark:text-white"
-          >
-            Start building with oge
-          </h2>
-          <p
-            class="relative mx-auto mt-2.5 max-w-md text-[14.5px] text-gray-600 dark:text-gray-400"
-          >
-            Install a package, import a component, bind a signal. That is the
-            whole setup.
-          </p>
-          <div
-            class="relative mt-7 flex flex-wrap items-center justify-center gap-4"
-          >
-            <a
-              routerLink="/getting-started/setup"
-              class="home-btn-primary flex items-center gap-2 rounded-lg px-5 py-2.5 text-[13.5px] font-semibold text-white"
-            >
+            <a routerLink="/getting-started/setup" class="og-btn-gold">
               Set up your project
               <app-icon name="arrow-right" [size]="14" />
             </a>
@@ -773,7 +652,7 @@ const ORG: OrgNode[] = [
               href="https://github.com/oge-ui/oge-ui"
               target="_blank"
               rel="noopener"
-              class="flex items-center gap-2 text-[13.5px] font-semibold text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+              class="og-btn-stone"
             >
               <app-icon name="github" [size]="15" />
               GitHub
@@ -782,7 +661,7 @@ const ORG: OrgNode[] = [
               href="https://www.npmjs.com/package/@oge-ui/grid"
               target="_blank"
               rel="noopener"
-              class="flex items-center gap-2 text-[13.5px] font-semibold text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+              class="og-btn-stone"
             >
               <app-icon name="package" [size]="15" />
               npm
@@ -790,196 +669,225 @@ const ORG: OrgNode[] = [
           </div>
         </div>
       </div>
-      <div
-        class="mx-auto mt-12 max-w-2xl border-t border-gray-200 pt-8 text-center dark:border-gray-800"
-      >
-        <p class="text-[13px] leading-relaxed text-gray-400 dark:text-gray-500">
-          <span class="font-semibold text-gray-500 dark:text-gray-400"
-            >oge</span
+
+      <!-- ═══ Footer: always on the deep brand slate, whatever the theme ═══ -->
+      <footer class="og-footer">
+        <div
+          class="mx-auto grid max-w-6xl grid-cols-[1.4fr_1fr_1fr_1fr] gap-10 px-6 pb-10 pt-14 max-lg:grid-cols-2 max-sm:grid-cols-1"
+        >
+          <!-- brand column -->
+          <div class="max-lg:col-span-2 max-sm:col-span-1">
+            <a routerLink="/" class="flex items-center gap-2.5">
+              <img src="favicon-192.png" alt="OGE logo" class="h-8 w-8" />
+              <span class="text-[16px] font-bold tracking-tight text-[#e6e9f3]"
+                >OGE</span
+              >
+            </a>
+            <p class="mt-4 max-w-xs text-[13px] leading-relaxed text-[#8b93a5]">
+              Angular components built for serious data — signal APIs end to
+              end, zoneless by default, MIT forever.
+            </p>
+            <p class="mt-5 max-w-xs text-[12px] leading-relaxed text-[#555d6b]">
+              <span class="og-gilded font-semibold">oge</span> is the Turkish
+              <em>öge</em> — from the Old Turkic root <em>ög</em>, “mind, to
+              think”; today it means “element”.
+              <!-- inline SVG flag: Windows renders 🇹🇷 as plain "TR" letters -->
+              <svg
+                viewBox="0 0 30 20"
+                width="15"
+                height="10"
+                role="img"
+                aria-label="Türkiye"
+                class="inline-block rounded-[2px] align-[-1px]"
+              >
+                <rect width="30" height="20" fill="#E30A17" />
+                <circle cx="11" cy="10" r="5" fill="#fff" />
+                <circle cx="12.3" cy="10" r="4" fill="#E30A17" />
+                <path
+                  fill="#fff"
+                  transform="rotate(90 18.3 10)"
+                  d="M18.3 7.4l.66 2.03h2.13l-1.72 1.25.66 2.03-1.73-1.25-1.73 1.25.66-2.03-1.72-1.25h2.13z"
+                />
+              </svg>
+            </p>
+          </div>
+
+          <!-- link columns -->
+          <nav aria-label="Documentation links">
+            <p class="og-footer-head">Docs</p>
+            <ul class="og-footer-list">
+              <li><a routerLink="/getting-started">Introduction</a></li>
+              <li>
+                <a routerLink="/getting-started/setup">Set up your project</a>
+              </li>
+              <li><a routerLink="/getting-started/styling">Theming</a></li>
+              <li>
+                <a routerLink="/getting-started/localization">Localization</a>
+              </li>
+              <li>
+                <a routerLink="/components/data-grid/playground">Playground</a>
+              </li>
+            </ul>
+          </nav>
+
+          <nav aria-label="Component links">
+            <p class="og-footer-head">Components</p>
+            <ul class="og-footer-list">
+              <li><a routerLink="/components/data-grid">Data Grid</a></li>
+              <li><a routerLink="/components/tree-list">Tree List</a></li>
+              <li><a routerLink="/components/pivot-grid">Pivot Grid</a></li>
+              <li><a routerLink="/components/buttons">Buttons</a></li>
+              <li><a routerLink="/components/inputs">Inputs</a></li>
+              <li><a routerLink="/components/overlay">Overlay</a></li>
+            </ul>
+          </nav>
+
+          <nav aria-label="Resource links">
+            <p class="og-footer-head">Resources</p>
+            <ul class="og-footer-list">
+              <li>
+                <a
+                  href="https://github.com/oge-ui/oge-ui"
+                  target="_blank"
+                  rel="noopener"
+                  >GitHub</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://www.npmjs.com/package/oge-ui"
+                  target="_blank"
+                  rel="noopener"
+                  >npm</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/oge-ui/oge-ui/blob/main/ROADMAP.md"
+                  target="_blank"
+                  rel="noopener"
+                  >Roadmap</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/oge-ui/oge-ui/blob/main/LICENSE"
+                  target="_blank"
+                  rel="noopener"
+                  >MIT License</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/oge-ui/oge-ui/issues"
+                  target="_blank"
+                  rel="noopener"
+                  >Report an issue</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/sponsors/kaya2m"
+                  target="_blank"
+                  rel="noopener"
+                  >Sponsor</a
+                >
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <!-- bottom bar -->
+        <div class="border-t border-white/[0.08]">
+          <div
+            class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-4"
           >
-          is the Turkish <em>öge</em> — from the Old Turkic root <em>ög</em>,
-          “mind, to think”. It was once the title of a wise counselor; today it
-          means “element”, a part that makes up a whole. We went with the
-          meaning that fit best.
-          <!-- inline SVG flag: Windows renders 🇹🇷 as plain "TR" letters -->
-          <svg
-            viewBox="0 0 30 20"
-            width="18"
-            height="12"
-            role="img"
-            aria-label="Türkiye"
-            class="inline-block rounded-[2px] align-[-1px]"
-          >
-            <rect width="30" height="20" fill="#E30A17" />
-            <circle cx="11" cy="10" r="5" fill="#fff" />
-            <circle cx="12.3" cy="10" r="4" fill="#E30A17" />
-            <path
-              fill="#fff"
-              transform="rotate(90 18.3 10)"
-              d="M18.3 7.4l.66 2.03h2.13l-1.72 1.25.66 2.03-1.73-1.25-1.73 1.25.66-2.03-1.72-1.25h2.13z"
-            />
-          </svg>
-        </p>
-        <p class="mt-4 text-[12px] text-gray-400 dark:text-gray-600">
-          OGE UI &middot; signals all the way down
-        </p>
-      </div>
+            <span class="text-[12px] text-[#555d6b]"
+              >© 2026 OGE UI · MIT License</span
+            >
+            <span class="font-mono text-[11px] text-[#555d6b] max-sm:hidden"
+              >v{{ version }}</span
+            >
+            <span class="ml-auto font-mono text-[11px] text-[#555d6b]"
+              >signals all the way down</span
+            >
+          </div>
+        </div>
+      </footer>
     </section>
   `,
   styles: `
-    /* ── entrance stagger ─────────────────────────────────────────── */
-    @keyframes home-fade-up {
-      from {
-        opacity: 0;
-        transform: translateY(16px);
-      }
-      to {
-        opacity: 1;
-        transform: none;
-      }
+    /* ═══ brand palette, matched to the logo: white by day, deep slate by
+       night, indigo primary with the logo's cyan→violet→magenta ramp ═══ */
+    app-home {
+      --og-stone: #ffffff;
+      --og-stone-2: #f8fafc;
+      --og-line: rgba(15, 23, 42, 0.1);
+      --og-bone: #0f172a;
+      --og-mut: #64748b;
+      --og-faint: #94a3b8;
+      --og-gold: #6366f1;
+      --og-gold-hi: #818cf8;
+      --og-gold-deep: #4f46e5;
+      --og-turk: #0891b2;
+      --og-magenta: #c026d3;
+      display: block;
+      background: var(--og-stone);
+      color: var(--og-bone);
     }
 
-    app-home .home-in {
-      animation: home-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    .dark app-home {
+      --og-stone: #0b0d14;
+      --og-stone-2: #0f121b;
+      --og-line: rgba(255, 255, 255, 0.08);
+      --og-bone: #e6e9f3;
+      --og-mut: #8b93a5;
+      --og-faint: #555d6b;
+      --og-gold: #818cf8;
+      --og-gold-hi: #a5b4fc;
+      --og-gold-deep: #6366f1;
+      --og-turk: #22d3ee;
+      --og-magenta: #e879f9;
     }
 
-    /* opacity-only entrance for containers of position:fixed popups */
-    app-home .home-in-fade {
-      animation: home-fade 0.65s ease both;
+    app-home .og-entry-no {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
 
-    app-home .home-d2 {
-      animation-delay: 0.07s;
-    }
-    app-home .home-d3 {
-      animation-delay: 0.14s;
-    }
-    app-home .home-d4 {
-      animation-delay: 0.21s;
-    }
-    app-home .home-d5 {
-      animation-delay: 0.28s;
-    }
-    app-home .home-d6 {
-      animation-delay: 0.2s;
+    /* ═══ hero ═══ */
+    app-home .og-hero {
+      background: var(--og-stone);
     }
 
-    /* ── reveal-on-scroll (progressive: Chromium scroll timelines) ── */
-    @keyframes home-fade {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
+    /* display type: bold modern sans, tight tracking */
+    app-home .og-display {
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1.07;
+      letter-spacing: -0.03em;
+      color: var(--og-bone);
+      text-wrap: balance;
     }
 
-    @supports (animation-timeline: view()) {
-      app-home .home-reveal {
-        animation: home-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-        animation-timeline: view();
-        animation-range: entry 5% entry 32%;
-      }
-
-      /* opacity-only variant for containers of position:fixed popups —
-         an animated transform would become their containing block */
-      app-home .home-reveal-fade {
-        animation: home-fade 0.7s ease both;
-        animation-timeline: view();
-        animation-range: entry 5% entry 32%;
+    @media (max-width: 48rem) {
+      app-home .og-display {
+        font-size: 38px;
       }
     }
 
-    /* ── hero background: blobs, glyph canvas, grain ──────────────── */
-    app-home .home-blob {
-      position: absolute;
-      border-radius: 9999px;
-      filter: blur(90px);
-      opacity: 0.13;
-    }
-
-    .dark app-home .home-blob {
-      opacity: 0.2;
-    }
-
-    app-home .home-blob-1 {
-      top: -9rem;
-      right: -7rem;
-      height: 30rem;
-      width: 30rem;
-      background: radial-gradient(
-        circle,
-        #22d3ee 0%,
-        #6366f1 55%,
-        transparent 75%
+    /* accent words: the logo's cyan→violet→magenta ramp */
+    app-home .og-gilded {
+      background-image: linear-gradient(
+        90deg,
+        var(--og-turk),
+        var(--og-gold),
+        var(--og-magenta)
       );
-      animation: home-drift-1 18s ease-in-out infinite alternate;
-    }
-
-    app-home .home-blob-2 {
-      bottom: -12rem;
-      left: -9rem;
-      height: 30rem;
-      width: 30rem;
-      background: radial-gradient(
-        circle,
-        #a855f7 0%,
-        #ec4899 55%,
-        transparent 75%
-      );
-      animation: home-drift-2 22s ease-in-out infinite alternate;
-    }
-
-    app-home .home-blob-cta {
-      top: -9rem;
-      left: 50%;
-      height: 20rem;
-      width: 28rem;
-      transform: translateX(-50%);
-      background: radial-gradient(circle, #8b5cf6, transparent 70%);
-    }
-
-    @keyframes home-drift-1 {
-      to {
-        transform: translate(-3.5rem, 2.5rem) scale(1.1);
-      }
-    }
-
-    @keyframes home-drift-2 {
-      to {
-        transform: translate(3rem, -2rem) scale(1.12);
-      }
-    }
-
-    app-home .home-fx {
-      width: 100%;
-      height: 100%;
-    }
-
-    app-home .home-noise {
-      position: absolute;
-      inset: 0;
-      opacity: 0.04;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-    }
-
-    .dark app-home .home-noise {
-      opacity: 0.06;
-    }
-
-    /* ── gradient text ────────────────────────────────────────────── */
-    app-home .home-gradient-text {
-      background-image: linear-gradient(90deg, #0891b2, #6366f1, #c026d3);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
 
-    .dark app-home .home-gradient-text {
-      background-image: linear-gradient(90deg, #22d3ee, #818cf8, #e879f9);
-    }
-
-    /* ── rotating headline word ───────────────────────────────────── */
     app-home .home-rotator {
       display: inline-flex;
       height: 1.2em;
@@ -1026,24 +934,567 @@ const ORG: OrgNode[] = [
       }
     }
 
-    /* ── primary CTA button ───────────────────────────────────────── */
-    app-home .home-btn-primary {
-      background-image: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
-      background-size: 200% 100%;
-      box-shadow: 0 6px 24px -8px rgba(139, 92, 246, 0.55);
+    /* ═══ buttons: indigo primary + quiet secondary ═══ */
+    app-home .og-btn-gold {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: 9px;
+      background: linear-gradient(
+        95deg,
+        var(--og-gold-deep),
+        var(--og-gold) 60%,
+        var(--og-magenta) 150%
+      );
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #fff;
+      box-shadow: 0 10px 28px -12px
+        color-mix(in srgb, var(--og-gold) 65%, transparent);
       transition:
-        background-position 0.4s ease,
-        box-shadow 0.3s ease,
-        transform 0.2s ease;
+        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
     }
 
-    app-home .home-btn-primary:hover {
-      background-position: 100% 0;
-      box-shadow: 0 8px 30px -8px rgba(217, 70, 239, 0.5);
+    app-home .og-btn-gold:hover {
       transform: translateY(-1px);
+      filter: brightness(1.07);
+      box-shadow: 0 14px 34px -12px
+        color-mix(in srgb, var(--og-gold) 75%, transparent);
     }
 
-    /* ── live trend cell ──────────────────────────────────────────── */
+    app-home .og-btn-stone {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid color-mix(in srgb, var(--og-bone) 18%, transparent);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: color-mix(in srgb, var(--og-bone) 82%, var(--og-mut));
+      transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease,
+        color 0.2s ease;
+    }
+
+    app-home .og-btn-stone:hover {
+      border-color: color-mix(in srgb, var(--og-gold) 55%, transparent);
+      background: color-mix(in srgb, var(--og-gold) 7%, transparent);
+      color: var(--og-gold-hi);
+    }
+
+    /* ═══ install strip ═══ */
+    app-home .og-install {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--og-line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--og-stone-2) 70%, transparent);
+      padding: 7px 8px 7px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      color: color-mix(in srgb, var(--og-bone) 85%, var(--og-mut));
+    }
+
+    app-home .og-install-select {
+      appearance: none;
+      background: transparent;
+      border: none;
+      outline: none;
+      border-radius: 3px;
+      padding: 2px 22px 2px 6px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--og-gold-hi);
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    app-home .og-install-select:hover,
+    app-home .og-install-select:focus-visible {
+      background: color-mix(in srgb, var(--og-gold) 10%, transparent);
+    }
+
+    app-home .og-install-select > option {
+      background: var(--og-stone-2);
+      color: var(--og-bone);
+    }
+
+    app-home .og-install-copy {
+      display: flex;
+      height: 28px;
+      width: 28px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      color: var(--og-faint);
+      transition:
+        color 0.15s ease,
+        background-color 0.15s ease;
+    }
+
+    app-home .og-install-copy:hover {
+      color: var(--og-bone);
+      background: color-mix(in srgb, var(--og-bone) 7%, transparent);
+    }
+
+    /* ═══ the live window: brand frame with corner ticks ═══ */
+    @media (min-width: 64rem) and (hover: hover) {
+      app-home .og-tilt {
+        transform: perspective(1600px) rotateY(-7deg) rotateX(3deg);
+        will-change: transform;
+      }
+    }
+
+    app-home .og-stele {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--og-line);
+      border-radius: 16px;
+      background: var(--og-stone);
+      box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.05),
+        0 32px 72px -32px color-mix(in srgb, var(--og-gold) 38%, transparent),
+        0 12px 28px -18px rgba(15, 23, 42, 0.18);
+    }
+
+    .dark app-home .og-stele {
+      background: var(--og-stone-2);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 32px 72px -28px color-mix(in srgb, var(--og-gold) 35%, transparent),
+        0 16px 36px -20px rgba(0, 0, 0, 0.7);
+    }
+
+    /* each demo sits on its own soft inset surface */
+    app-home .og-demo-surface {
+      border: 1px solid var(--og-line);
+      border-radius: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .dark app-home .og-demo-surface {
+      background: rgb(3 7 18);
+    }
+
+    app-home .og-glare {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: radial-gradient(
+        440px circle at var(--gx, 55%) var(--gy, 0%),
+        color-mix(in srgb, var(--og-gold-hi) 9%, transparent),
+        transparent 60%
+      );
+    }
+
+    .dark app-home .og-glare {
+      mix-blend-mode: screen;
+    }
+
+    /* the demo chrome is our own oge-tab-panel in its soft-pill mode,
+       dressed as a segmented control for the hero card */
+    app-home .og-demo-tabs {
+      display: block;
+      --oge-radius: 8px;
+    }
+
+    app-home .og-demo-tabs .oge-tab-strip {
+      border-bottom: 1px solid var(--og-line) !important;
+      background: color-mix(in srgb, var(--og-bone) 2%, transparent);
+      padding: 8px 10px;
+    }
+
+    app-home .og-demo-tabs .oge-tab {
+      margin: 0 3px 0 0;
+      font-weight: 500;
+    }
+
+    app-home .og-demo-tabs .oge-tab-panel-body {
+      padding: 12px;
+    }
+
+    /* the demo grid never needs to scroll — size to content */
+    app-home .og-demo-surface .oge-viewport {
+      overflow: hidden;
+    }
+
+    /* tab pane crossfade (opacity only — popups position:fixed inside) */
+    app-home .home-pane {
+      animation: home-fade 0.3s ease both;
+    }
+
+    /* ═══ body sections ═══ */
+    app-home .og-body {
+      background: var(--og-stone);
+      color: var(--og-bone);
+    }
+
+    app-home .og-eyebrow {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--og-turk);
+    }
+
+    app-home .og-h2 {
+      font-size: 34px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--og-bone);
+    }
+
+    app-home .og-h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--og-bone);
+    }
+
+    app-home .og-p {
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: var(--og-mut);
+    }
+
+    app-home .og-note {
+      border: 1px solid var(--og-line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--og-bone) 2%, transparent);
+      padding: 8px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: var(--og-faint);
+      width: fit-content;
+    }
+
+    /* inscription entries: gold numeral + gold left rule */
+    app-home .og-entry {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 16px;
+      border-left: 1px solid color-mix(in srgb, var(--og-gold) 25%, transparent);
+      padding: 20px 0 20px 28px;
+      transition:
+        border-color 0.25s ease,
+        background-color 0.25s ease;
+    }
+
+    app-home .og-entry:hover {
+      border-left-color: color-mix(in srgb, var(--og-gold) 70%, transparent);
+      background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--og-gold) 5%, transparent),
+        transparent 55%
+      );
+    }
+
+    @media (max-width: 48rem) {
+      app-home .og-entry {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding-left: 20px;
+      }
+    }
+
+    app-home .og-entry-no {
+      font-size: 42px;
+      line-height: 1;
+      color: color-mix(in srgb, var(--og-gold) 60%, transparent);
+    }
+
+    /* ═══ playground slab + toggles ═══ */
+    app-home .og-slab {
+      border: 1px solid var(--og-line);
+      border-radius: 12px;
+      background: var(--og-stone-2);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 24px 60px -36px rgba(60, 50, 30, 0.35);
+    }
+
+    .dark app-home .og-slab {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 24px 60px -32px rgba(0, 0, 0, 0.8);
+    }
+
+    app-home .og-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--og-line);
+      border-radius: 8px;
+      background: transparent;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--og-mut);
+      cursor: pointer;
+      transition:
+        color 0.18s ease,
+        border-color 0.18s ease,
+        background-color 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    app-home .og-toggle:hover {
+      border-color: color-mix(in srgb, var(--og-gold) 50%, transparent);
+      color: var(--og-gold-hi);
+    }
+
+    app-home .og-toggle-on {
+      background: color-mix(in srgb, var(--og-gold) 15%, transparent);
+      border-color: color-mix(in srgb, var(--og-gold) 60%, transparent);
+      color: color-mix(in srgb, var(--og-gold-deep) 80%, var(--og-bone));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .dark app-home .og-toggle-on {
+      color: var(--og-gold-hi);
+    }
+
+    /* ═══ component rows ═══ */
+    app-home .og-row {
+      display: flex;
+      gap: 11px;
+      border-radius: 10px;
+      padding: 12px 11px;
+      transition: background-color 0.2s ease;
+    }
+
+    app-home .og-row:hover {
+      background: color-mix(in srgb, var(--og-gold) 4%, transparent);
+    }
+
+    app-home .og-row-icon {
+      display: flex;
+      height: 28px;
+      width: 28px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid color-mix(in srgb, var(--og-gold) 35%, transparent);
+      border-radius: 8px;
+      color: var(--og-gold);
+      background: color-mix(in srgb, var(--og-gold) 8%, transparent);
+    }
+
+    app-home .og-row-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--og-bone);
+    }
+
+    /* clamped to two lines so every row is exactly the same height and the
+       grid stays a tidy 3 × 3 */
+    app-home .og-row-desc {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--og-mut);
+    }
+
+    /* ═══ footer: fixed deep brand slate in both themes ═══ */
+    app-home .og-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: #0b0d14;
+    }
+
+    app-home .og-footer-head {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e6e9f3;
+    }
+
+    app-home .og-footer-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      list-style: none;
+      padding: 0;
+    }
+
+    app-home .og-footer-list a {
+      font-size: 13px;
+      color: #8b93a5;
+      transition: color 0.15s ease;
+    }
+
+    app-home .og-footer-list a:hover {
+      color: #a5b4fc;
+    }
+
+    /* the gilded word keeps the bright dark-mode ramp on the slate */
+    app-home .og-footer .og-gilded {
+      background-image: linear-gradient(90deg, #22d3ee, #818cf8, #e879f9);
+    }
+
+    /* ═══ package marquee ═══ */
+    app-home .og-marquee {
+      mask-image: linear-gradient(
+        90deg,
+        transparent,
+        black 10%,
+        black 90%,
+        transparent
+      );
+    }
+
+    app-home .og-marquee-track {
+      display: flex;
+      width: max-content;
+      animation: og-marquee 36s linear infinite;
+    }
+
+    /* a leaning hairline instead of a dot — reads as the separator in a
+       package path and carries the brand gradient across the ticker */
+    app-home .og-marquee-sep {
+      height: 0.9rem;
+      width: 1px;
+      flex: none;
+      transform: rotate(18deg);
+      background: linear-gradient(
+        180deg,
+        transparent,
+        var(--og-gold),
+        var(--og-turk),
+        transparent
+      );
+    }
+
+    @keyframes og-marquee {
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* ═══ npm downloads band: big total beside a quiet package list ═══ */
+    app-home .og-npm {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      overflow: hidden;
+      border: 1px solid var(--og-line);
+      border-radius: 14px;
+      background: var(--og-stone-2);
+    }
+
+    @media (max-width: 48rem) {
+      app-home .og-npm {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    app-home .og-npm-total {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 32px 24px;
+      text-align: center;
+      border-right: 1px solid var(--og-line);
+    }
+
+    @media (max-width: 48rem) {
+      app-home .og-npm-total {
+        border-right: none;
+        border-bottom: 1px solid var(--og-line);
+      }
+    }
+
+    app-home .og-total-value {
+      font-size: 46px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      background-image: linear-gradient(
+        90deg,
+        var(--og-turk),
+        var(--og-gold),
+        var(--og-magenta)
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    app-home .og-total-label {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--og-bone);
+    }
+
+    app-home .og-npm-sub {
+      font-size: 11.5px;
+      color: var(--og-faint);
+    }
+
+    app-home .og-npm-list {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 12px 8px;
+    }
+
+    app-home .og-npm-icon {
+      display: flex;
+      height: 26px;
+      width: 26px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 7px;
+      color: var(--og-gold);
+      background: color-mix(in srgb, var(--og-gold) 9%, transparent);
+    }
+
+    app-home .og-npm-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-radius: 8px;
+      padding: 9px 14px;
+      transition: background-color 0.15s ease;
+    }
+
+    app-home .og-npm-row:hover {
+      background: color-mix(in srgb, var(--og-gold) 6%, transparent);
+    }
+
+    app-home .og-npm-pkg {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      color: var(--og-mut);
+    }
+
+    app-home .og-npm-row:hover .og-npm-pkg {
+      color: var(--og-bone);
+    }
+
+    app-home .og-npm-count {
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--og-bone);
+    }
+
+    /* ═══ trend cell, code, virt stream, kbd, swatches ═══ */
     app-home .home-trend {
       font-size: 11.5px;
       font-weight: 600;
@@ -1061,199 +1512,31 @@ const ORG: OrgNode[] = [
       color: #f43f5e;
     }
 
-    /* ── live pulse dot ───────────────────────────────────────────── */
-    app-home .home-live-dot {
-      position: relative;
-      display: inline-block;
-      height: 0.4rem;
-      width: 0.4rem;
-      border-radius: 9999px;
-      background: #10b981;
-    }
-
-    app-home .home-live-dot::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 9999px;
-      background: inherit;
-      animation: home-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-    }
-
-    @keyframes home-ping {
-      75%,
-      100% {
-        transform: scale(2.3);
-        opacity: 0;
-      }
-    }
-
-    /* ── tilted demo window with gradient frame ───────────────────── */
-    @media (min-width: 64rem) and (hover: hover) {
-      app-home .home-tilt {
-        transform: perspective(1600px) rotateY(-7deg) rotateX(3deg);
-        will-change: transform;
-      }
-    }
-
-    app-home .home-window-frame {
-      border-radius: 12px;
-      padding: 1px;
-      background-image: linear-gradient(
-        120deg,
-        rgba(34, 211, 238, 0.45),
-        rgba(99, 102, 241, 0.45),
-        rgba(236, 72, 153, 0.45),
-        rgba(34, 211, 238, 0.45)
-      );
-      background-size: 300% 100%;
-      animation: home-border 9s linear infinite;
-      box-shadow: 0 22px 60px -28px rgba(99, 102, 241, 0.4);
-    }
-
-    @keyframes home-border {
-      to {
-        background-position: 300% 0;
-      }
-    }
-
-    /* tab pane crossfade on switch */
-    app-home .home-pane {
-      animation: home-pane-in 0.35s ease both;
-    }
-
-    /* opacity-only: a filled transform animation would make the pane the
-       containing block for the select popup's fixed positioning */
-    @keyframes home-pane-in {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    /* ── marquee with soft edges ──────────────────────────────────── */
-    app-home .home-marquee {
-      mask-image: linear-gradient(
-        90deg,
-        transparent,
-        black 10%,
-        black 90%,
-        transparent
-      );
-    }
-
-    app-home .home-marquee-track {
-      display: flex;
-      width: max-content;
-      animation: home-marquee 36s linear infinite;
-    }
-
-    app-home .home-marquee-dot {
-      height: 0.28rem;
-      width: 0.28rem;
-      border-radius: 9999px;
-      background-image: linear-gradient(90deg, #22d3ee, #e879f9);
-    }
-
-    @keyframes home-marquee {
-      to {
-        transform: translateX(-50%);
-      }
-    }
-
-    /* ── section rule line ────────────────────────────────────────── */
-    app-home .home-rule {
-      height: 1px;
-      flex: 1;
-      background-image: linear-gradient(
-        90deg,
-        rgba(129, 140, 248, 0.4),
-        rgba(129, 140, 248, 0.08) 60%,
-        transparent
-      );
-    }
-
-    /* ── bento cells & tiles with cursor spotlight ────────────────── */
-    app-home .home-cell {
-      position: relative;
-      display: block;
-      overflow: hidden;
-      border-radius: 14px;
-      border: 1px solid rgb(229 231 235);
-      background: #fff;
-      transition:
-        border-color 0.3s ease,
-        box-shadow 0.3s ease;
-    }
-
-    .dark app-home .home-cell {
-      border-color: rgb(31 41 55);
-      background: rgb(17 24 39 / 0.4);
-    }
-
-    app-home .home-cell::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(
-        260px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(129, 140, 248, 0.12),
-        transparent 65%
-      );
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    app-home .home-cell:hover {
-      border-color: rgba(129, 140, 248, 0.45);
-      box-shadow: 0 10px 34px -16px rgba(99, 102, 241, 0.3);
-    }
-
-    app-home .home-cell:hover::before {
-      opacity: 1;
-    }
-
-    app-home .home-feature-icon {
-      color: #6366f1;
-      background: linear-gradient(
-        135deg,
-        rgba(34, 211, 238, 0.1),
-        rgba(139, 92, 246, 0.1),
-        rgba(236, 72, 153, 0.1)
-      );
-      border: 1px solid rgba(129, 140, 248, 0.22);
-    }
-
-    .dark app-home .home-feature-icon {
-      color: #a5b4fc;
-    }
-
-    /* ── code block (always dark, editor-style) ───────────────────── */
+    /* the code block stays an editor-dark surface in both moods */
     app-home .home-code {
       overflow-x: auto;
-      border-radius: 10px;
-      background: #0b1120;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      background: #0a0d14;
       padding: 14px 16px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 12.5px;
       line-height: 1.65;
-      color: #cbd5e1;
+      color: #c3c9d4;
+      max-width: 560px;
     }
 
     app-home .home-code .hc-c {
-      color: #64748b;
+      color: #565c69;
     }
     app-home .home-code .hc-k {
-      color: #e879f9;
+      color: #e8bd6d;
     }
     app-home .home-code .hc-f {
-      color: #67e8f9;
+      color: #2dd4bf;
     }
     app-home .home-code .hc-n {
-      color: #fbbf24;
+      color: #f0d29a;
     }
 
     app-home .home-caret {
@@ -1262,7 +1545,7 @@ const ORG: OrgNode[] = [
       height: 13px;
       margin-left: 2px;
       vertical-align: -2px;
-      background: #818cf8;
+      background: #d4a24a;
       animation: home-blink 1.1s steps(1) infinite;
     }
 
@@ -1272,9 +1555,9 @@ const ORG: OrgNode[] = [
       }
     }
 
-    /* ── virtualization vignette: endless row stream ──────────────── */
     app-home .home-virt {
-      height: 6.5rem;
+      height: 5.5rem;
+      max-width: 420px;
       overflow: hidden;
       mask-image: linear-gradient(
         180deg,
@@ -1296,13 +1579,9 @@ const ORG: OrgNode[] = [
     }
 
     app-home .home-virt-row > span {
-      height: 8px;
-      border-radius: 4px;
-      background: rgb(229 231 235);
-    }
-
-    .dark app-home .home-virt-row > span {
-      background: rgb(55 65 81);
+      height: 7px;
+      border-radius: 2px;
+      background: color-mix(in srgb, var(--og-bone) 11%, transparent);
     }
 
     app-home .home-virt-row > span:nth-child(1) {
@@ -1316,8 +1595,8 @@ const ORG: OrgNode[] = [
     }
 
     app-home .home-virt-row:nth-child(3n) > span:first-child {
-      background: linear-gradient(90deg, #818cf8, #e879f9);
-      opacity: 0.55;
+      background: linear-gradient(90deg, var(--og-turk), var(--og-gold));
+      opacity: 0.6;
     }
 
     @keyframes home-virt-scroll {
@@ -1326,36 +1605,29 @@ const ORG: OrgNode[] = [
       }
     }
 
-    /* ── theme swatches ───────────────────────────────────────────── */
-    app-home .home-swatch {
+    app-home .og-swatch {
       display: inline-block;
       height: 22px;
       width: 22px;
-      border-radius: 7px;
-      box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+      border-radius: 8px;
+      box-shadow: inset 0 0 0 1px
+        color-mix(in srgb, var(--og-bone) 18%, transparent);
       transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    app-home .home-swatch:hover {
-      transform: translateY(-3px) scale(1.12);
+    app-home .og-swatch:hover {
+      transform: translateY(-3px) scale(1.1);
     }
 
-    /* ── keyboard keys with sequential press pulse ────────────────── */
     app-home .home-kbd {
-      border-radius: 6px;
-      border: 1px solid rgb(209 213 219);
-      background: rgb(243 244 246);
+      border: 1px solid var(--og-line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--og-bone) 4%, transparent);
       padding: 3px 8px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 11.5px;
-      color: rgb(75 85 99);
+      color: var(--og-mut);
       animation: home-keypress 3.2s ease-in-out infinite;
-    }
-
-    .dark app-home .home-kbd {
-      border-color: rgb(75 85 99);
-      background: rgb(31 41 55);
-      color: rgb(156 163 175);
     }
 
     app-home .home-kbd:nth-child(1) {
@@ -1382,54 +1654,70 @@ const ORG: OrgNode[] = [
       }
       5% {
         transform: translateY(2px);
-        border-color: rgba(129, 140, 248, 0.7);
-        color: rgb(99 102 241);
+        border-color: color-mix(in srgb, var(--og-gold) 70%, transparent);
+        color: var(--og-gold-hi);
       }
     }
 
-    /* ── glowing logo medallion (final CTA) ───────────────────────── */
-    app-home .home-logo-wrap {
-      position: relative;
-    }
-
-    app-home .home-logo-ring {
-      position: absolute;
-      inset: -0.35rem;
-      border-radius: 9999px;
-      background: conic-gradient(
-        from 0deg,
-        #22d3ee,
-        #6366f1,
-        #d946ef,
-        #ec4899,
-        #22d3ee
-      );
-      filter: blur(10px);
-      opacity: 0.5;
-      animation: home-spin 9s linear infinite;
-    }
-
-    @keyframes home-spin {
+    /* ═══ entrances ═══ */
+    @keyframes home-fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
       to {
-        transform: rotate(1turn);
+        opacity: 1;
+        transform: none;
       }
     }
 
-    app-home .home-logo {
-      animation: home-glow 4s ease-in-out infinite;
-    }
-
-    @keyframes home-glow {
-      0%,
-      100% {
-        filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.4));
+    @keyframes home-fade {
+      from {
+        opacity: 0;
       }
-      50% {
-        filter: drop-shadow(0 0 24px rgba(217, 70, 239, 0.5));
+      to {
+        opacity: 1;
       }
     }
 
-    /* ── reduced motion: settle everything instantly ──────────────── */
+    app-home .home-in {
+      animation: home-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    app-home .home-in-fade {
+      animation: home-fade 0.65s ease both;
+    }
+
+    app-home .home-d1 {
+      animation-delay: 0.06s;
+    }
+    app-home .home-d3 {
+      animation-delay: 0.14s;
+    }
+    app-home .home-d4 {
+      animation-delay: 0.2s;
+    }
+    app-home .home-d6 {
+      animation-delay: 0.22s;
+    }
+
+    @supports (animation-timeline: view()) {
+      app-home .home-reveal {
+        animation: home-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-timeline: view();
+        animation-range: entry 5% entry 32%;
+      }
+
+      /* opacity-only variant for containers of position:fixed popups —
+         an animated transform would become their containing block */
+      app-home .home-reveal-fade {
+        animation: home-fade 0.7s ease both;
+        animation-timeline: view();
+        animation-range: entry 5% entry 32%;
+      }
+    }
+
+    /* ═══ reduced motion: settle instantly ═══ */
     @media (prefers-reduced-motion: reduce) {
       app-home *,
       app-home *::before,
@@ -1442,6 +1730,9 @@ const ORG: OrgNode[] = [
   `,
 })
 export class HomePage {
+  /** Single source: `shared/site-version.ts`, bumped with `nx release`. */
+  protected readonly version = SITE_VERSION;
+
   protected readonly rotatorWords = [
     'data grids',
     'tree lists',
@@ -1451,6 +1742,7 @@ export class HomePage {
     'data grids', // duplicate of the first word for a seamless loop
   ];
 
+  /** Every published package, looping in the hero marquee. */
   protected readonly packages = [
     'oge-ui',
     '@oge-ui/core',
@@ -1460,14 +1752,32 @@ export class HomePage {
     '@oge-ui/buttons',
     '@oge-ui/inputs',
     '@oge-ui/overlay',
+    '@oge-ui/tabs',
+    '@oge-ui/layout',
+    '@oge-ui/navigation',
   ];
 
-  protected readonly demoTabs: { id: DemoTab; file: string }[] = [
-    { id: 'grid', file: 'data-grid.ts' },
-    { id: 'tree', file: 'tree-list.ts' },
-    { id: 'select', file: 'select-box.ts' },
-    { id: 'buttons', file: 'buttons.ts' },
+  /** Packages surfaced in the live download-count rows, with their icons. */
+  private readonly statPkgs: { pkg: string; icon: IconName }[] = [
+    { pkg: 'oge-ui', icon: 'package' },
+    { pkg: '@oge-ui/grid', icon: 'table' },
+    { pkg: '@oge-ui/inputs', icon: 'text-cursor' },
+    { pkg: '@oge-ui/overlay', icon: 'layers' },
   ];
+
+  /** All-time npm downloads per stat package; '—' until the fetch lands. */
+  protected readonly npmStats = signal(
+    this.statPkgs.map(({ pkg, icon }) => ({ pkg, icon, downloads: '—' })),
+  );
+
+  /** All-time downloads summed across every package that reported; '—' until fetched. */
+  protected readonly npmTotal = signal('—');
+
+  /** How many packages actually contributed to the total (0 until fetched). */
+  protected readonly npmCounted = signal(0);
+
+  /** Selected demo tab key — two-way with the oge-tab-panel chrome. */
+  protected readonly demoKey = signal<string | undefined>('grid');
 
   protected readonly heroCities = [
     'Ankara',
@@ -1487,8 +1797,6 @@ export class HomePage {
   protected readonly heroCity = signal<unknown>('Lisbon');
   protected readonly heroUserId = signal<unknown>(null);
 
-  protected readonly demoTab = signal<DemoTab>('grid');
-
   protected readonly virtRows = [0, 1, 2, 3, 4, 5, 6, 7];
 
   protected readonly kbdKeys = ['↑', '↓', 'PgUp', 'Enter', 'Esc'];
@@ -1498,13 +1806,6 @@ export class HomePage {
     { name: 'Dark', color: '#0f172a' },
     { name: 'Tailwind', color: '#0ea5e9' },
     { name: 'Bootstrap', color: '#7c3aed' },
-  ];
-
-  protected readonly statTargets = [
-    { target: 8, suffix: '', label: 'npm packages' },
-    { target: 6, suffix: '', label: 'component families' },
-    { target: 0, suffix: '', label: 'runtime dependencies' },
-    { target: 100, suffix: '%', label: 'signal-based API' },
   ];
 
   protected readonly tiles: ComponentTile[] = [
@@ -1535,14 +1836,32 @@ export class HomePage {
     {
       icon: 'text-cursor',
       name: 'Inputs',
-      desc: 'Text, textarea, number and select editors with floating labels, search and three form-binding modes.',
+      desc: 'Text, number, select, tag, date and toggle editors on one field chrome.',
       path: '/components/inputs',
     },
     {
       icon: 'layers',
       name: 'Overlay',
-      desc: 'Anchored panels, popups, menus, tooltips and context menus for any element.',
+      desc: 'Modals, toasts, anchored panels, menus, tooltips and context menus.',
       path: '/components/overlay',
+    },
+    {
+      icon: 'tabs',
+      name: 'Tabs',
+      desc: 'Lazy panels, closable tabs with async guards, overflow nav and drag reorder.',
+      path: '/components/tabs',
+    },
+    {
+      icon: 'accordion',
+      name: 'Accordion',
+      desc: 'Single or multiple expansion, lazy content, async expand guards.',
+      path: '/components/accordion',
+    },
+    {
+      icon: 'tree',
+      name: 'Tree View',
+      desc: 'Tri-state checkboxes, search, load-on-demand and drag & drop reparenting.',
+      path: '/components/tree-view',
     },
   ];
 
@@ -1663,22 +1982,12 @@ export class HomePage {
 
   protected readonly installPkg = signal('oge-ui');
 
-  /** 0→1 easing progress for the count-up stats, driven on first scroll into view. */
-  private readonly statProgress = signal(1);
-
-  protected readonly statValues = computed(() => {
-    const progress = this.statProgress();
-    return this.statTargets.map((stat) => Math.round(stat.target * progress));
-  });
-
   protected readonly fakeSave = (): Promise<void> =>
     new Promise((resolve) => setTimeout(resolve, 1200));
 
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** Pointer position in hero coordinates; parked far away when outside. */
-  private pointer = { x: -9999, y: -9999 };
   private tiltTarget = { rx: 3, ry: -7 };
   private tiltCurrent = { rx: 3, ry: -7 };
   private tiltEl: HTMLElement | null = null;
@@ -1688,17 +1997,103 @@ export class HomePage {
    * select tab — a popup opened before the next rAF frame would otherwise
    * measure its anchor under the residual transform and land offset.
    */
-  protected setDemoTab(tab: DemoTab): void {
-    this.demoTab.set(tab);
-    if (tab === 'select' && this.tiltEl) this.tiltEl.style.transform = '';
+  protected onDemoTab(event: OgeTabSelectionChangedEvent): void {
+    if (event.key === 'select' && this.tiltEl) {
+      this.tiltEl.style.transform = '';
+    }
   }
 
   constructor() {
     const id = setInterval(() => this.tick(), 1500);
     this.destroyRef.onDestroy(() => clearInterval(id));
     afterNextRender(() => {
-      this.setupStatCountUp();
       this.setupPointerFx();
+      this.loadNpmStats();
+    });
+  }
+
+  /** First month an `@oge-ui` package hit npm — the base of every total. */
+  private static readonly NPM_SINCE = '2026-01-01';
+
+  /**
+   * npm caps a `point/{from}:{to}` range at 18 months, so the span from the
+   * first release to today is split into 12-month windows and summed — the
+   * total stays correct as the project ages, with no date to maintain.
+   */
+  private static downloadWindows(): string[] {
+    const iso = (date: Date): string => date.toISOString().slice(0, 10);
+    const today = new Date();
+    const windows: string[] = [];
+    let from = new Date(`${HomePage.NPM_SINCE}T00:00:00Z`);
+    while (from <= today) {
+      const to = new Date(from);
+      to.setUTCFullYear(to.getUTCFullYear() + 1);
+      to.setUTCDate(to.getUTCDate() - 1);
+      const end = to < today ? to : today;
+      windows.push(`${iso(from)}:${iso(end)}`);
+      from = new Date(end);
+      from.setUTCDate(from.getUTCDate() + 1);
+    }
+    return windows;
+  }
+
+  /**
+   * Fetches all-time download counts from api.npmjs.org (CORS-open): npm
+   * refreshes its counters daily, so every page load shows the latest figure.
+   * Failures leave the '—' placeholder — the section degrades gracefully
+   * offline or under rate limiting.
+   */
+  private loadNpmStats(): void {
+    const format = (n: number): string =>
+      n >= 1_000_000
+        ? `${(n / 1_000_000).toFixed(1)}M`
+        : n >= 1_000
+          ? `${(n / 1_000).toFixed(1)}k`
+          : String(n);
+    const windows = HomePage.downloadWindows();
+    void Promise.all(
+      this.packages.map(async (pkg) => {
+        try {
+          const perWindow = await Promise.all(
+            windows.map(async (range) => {
+              const res = await fetch(
+                `https://api.npmjs.org/downloads/point/${range}/${pkg}`,
+              );
+              if (!res.ok) return null;
+              const body = (await res.json()) as { downloads?: number };
+              return typeof body.downloads === 'number' ? body.downloads : null;
+            }),
+          );
+          // A missing window would silently understate the total — bail out.
+          if (perWindow.some((value) => value === null)) {
+            return { pkg, count: null };
+          }
+          return {
+            pkg,
+            count: perWindow.reduce<number>(
+              (sum, value) => sum + (value ?? 0),
+              0,
+            ),
+          };
+        } catch {
+          return { pkg, count: null };
+        }
+      }),
+    ).then((results) => {
+      const counts = new Map(results.map((r) => [r.pkg, r.count]));
+      this.npmStats.set(
+        this.statPkgs.map(({ pkg, icon }) => {
+          const count = counts.get(pkg);
+          return { pkg, icon, downloads: count == null ? '—' : format(count) };
+        }),
+      );
+      const known = results.filter(
+        (r): r is { pkg: string; count: number } => r.count !== null,
+      );
+      if (known.length > 0) {
+        this.npmTotal.set(format(known.reduce((sum, r) => sum + r.count, 0)));
+        this.npmCounted.set(known.length);
+      }
     });
   }
 
@@ -1737,49 +2132,18 @@ export class HomePage {
     );
   }
 
-  private setupStatCountUp(): void {
-    const row = this.hostRef.nativeElement.querySelector('.home-stats-row');
-    if (
-      !row ||
-      typeof IntersectionObserver === 'undefined' ||
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      return;
-    }
-    this.statProgress.set(0);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        observer.disconnect();
-        const start = performance.now();
-        const step = (now: number): void => {
-          const t = Math.min(1, (now - start) / 1100);
-          this.statProgress.set(1 - Math.pow(1 - t, 3));
-          if (t < 1) requestAnimationFrame(step);
-        };
-        requestAnimationFrame(step);
-      },
-      { threshold: 0.4 },
-    );
-    observer.observe(row);
-    this.destroyRef.onDestroy(() => observer.disconnect());
-  }
-
   /**
-   * Hand-rolled 3D-ish effects, all outside Angular change detection:
-   * a perspective particle wave on the hero canvas, pointer parallax on the
-   * demo window, and the cursor spotlight on cards. Native listeners keep
-   * mousemove from triggering CD; rAF stops on destroy and never starts
-   * under prefers-reduced-motion (a single static frame is drawn instead).
+   * The window tilt and glare sheen, outside Angular change detection:
+   * native mousemove listeners feed the targets, one rAF loop eases toward
+   * them. Stops on destroy and never starts under prefers-reduced-motion.
    */
   private setupPointerFx(): void {
     const host = this.hostRef.nativeElement;
-    const hero = host.querySelector<HTMLElement>('.home-hero');
-    const canvas = host.querySelector<HTMLCanvasElement>('.home-fx');
-    const tilt = host.querySelector<HTMLElement>('.home-tilt');
+    const hero = host.querySelector<HTMLElement>('.og-hero');
+    const tilt = host.querySelector<HTMLElement>('.og-tilt');
+    const glare = host.querySelector<HTMLElement>('.og-glare');
     this.tiltEl = tilt;
-    const ctx = canvas?.getContext('2d');
-    if (!hero || !canvas || !ctx) return;
+    if (!hero || !tilt) return;
 
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
@@ -1787,44 +2151,34 @@ export class HomePage {
     const canTilt = window.matchMedia(
       '(min-width: 64rem) and (hover: hover)',
     ).matches;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    const resize = (): void => {
-      const rect = hero.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.round(rect.width * dpr));
-      canvas.height = Math.max(1, Math.round(rect.height * dpr));
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(hero);
-    this.destroyRef.onDestroy(() => ro.disconnect());
+    if (reduced || !canTilt) return;
 
     const onMove = (event: MouseEvent): void => {
-      // cursor spotlight on any card under the pointer
-      const cell = (event.target as HTMLElement | null)?.closest?.(
-        '.home-cell',
-      ) as HTMLElement | null;
-      if (cell) {
-        const rect = cell.getBoundingClientRect();
-        cell.style.setProperty('--mx', `${event.clientX - rect.left}px`);
-        cell.style.setProperty('--my', `${event.clientY - rect.top}px`);
+      // sheen follows the pointer across the window
+      if (glare?.parentElement) {
+        const frame = glare.parentElement.getBoundingClientRect();
+        glare.style.setProperty(
+          '--gx',
+          `${(((event.clientX - frame.left) / frame.width) * 100).toFixed(1)}%`,
+        );
+        glare.style.setProperty(
+          '--gy',
+          `${(((event.clientY - frame.top) / frame.height) * 100).toFixed(1)}%`,
+        );
       }
-      // wave + parallax react only inside the hero
+      // tilt reacts only inside the hero
       const rect = hero.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
       if (x >= 0 && y >= 0 && x <= rect.width && y <= rect.height) {
-        this.pointer = { x, y };
         const nx = x / rect.width - 0.5;
         const ny = y / rect.height - 0.5;
         this.tiltTarget = { rx: 3 - ny * 7, ry: -7 + nx * 9 };
       } else {
-        this.pointer = { x: -9999, y: -9999 };
         this.tiltTarget = { rx: 3, ry: -7 };
       }
     };
     const onLeave = (): void => {
-      this.pointer = { x: -9999, y: -9999 };
       this.tiltTarget = { rx: 3, ry: -7 };
     };
     host.addEventListener('mousemove', onMove, { passive: true });
@@ -1834,195 +2188,22 @@ export class HomePage {
       host.removeEventListener('mouseleave', onLeave);
     });
 
-    if (reduced) {
-      this.drawWave(ctx, canvas, dpr, 0);
-      return;
-    }
-
     let raf = 0;
-    const t0 = performance.now();
-    const frame = (now: number): void => {
-      this.drawWave(ctx, canvas, dpr, (now - t0) / 1000);
-      if (canTilt && tilt) {
-        if (this.demoTab() === 'select') {
-          // no transform while the select tab is open — a transformed
-          // ancestor would misplace the popup's fixed positioning
-          if (tilt.style.transform) tilt.style.transform = '';
-        } else {
-          const current = this.tiltCurrent;
-          const target = this.tiltTarget;
-          current.rx += (target.rx - current.rx) * 0.08;
-          current.ry += (target.ry - current.ry) * 0.08;
-          tilt.style.transform = `perspective(1600px) rotateX(${current.rx.toFixed(2)}deg) rotateY(${current.ry.toFixed(2)}deg)`;
-        }
+    const frame = (): void => {
+      if (this.demoKey() === 'select') {
+        // no transform while the select tab is open — a transformed
+        // ancestor would misplace the popup's fixed positioning
+        if (tilt.style.transform) tilt.style.transform = '';
+      } else {
+        const current = this.tiltCurrent;
+        const target = this.tiltTarget;
+        current.rx += (target.rx - current.rx) * 0.08;
+        current.ry += (target.ry - current.ry) * 0.08;
+        tilt.style.transform = `perspective(1600px) rotateX(${current.rx.toFixed(2)}deg) rotateY(${current.ry.toFixed(2)}deg)`;
       }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
     this.destroyRef.onDestroy(() => cancelAnimationFrame(raf));
-  }
-
-  /** Deterministic pseudo-random glyph field, reseeded per canvas size. */
-  private glyphs: {
-    x: number;
-    y: number;
-    depth: number;
-    type: number;
-    phase: number;
-  }[] = [];
-  private glyphSeedKey = '';
-
-  private seedGlyphs(w: number, h: number): void {
-    const key = `${Math.round(w)}x${Math.round(h)}`;
-    if (this.glyphSeedKey === key) return;
-    this.glyphSeedKey = key;
-    // deterministic layout: a hash noise over the index keeps SSR/tests stable
-    const noise = (i: number, salt: number): number => {
-      const v = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
-      return v - Math.floor(v);
-    };
-    const count = Math.max(22, Math.floor(w / 46));
-    this.glyphs = Array.from({ length: count }, (_, i) => ({
-      x: noise(i, 1) * w,
-      y: h * 0.16 + noise(i, 2) * h * 0.8,
-      depth: 0.25 + noise(i, 3) * 0.75,
-      type: Math.floor(noise(i, 4) * 6),
-      phase: noise(i, 5) * Math.PI * 2,
-    }));
-  }
-
-  /**
-   * Floating field of wireframe UI glyphs — checkboxes, toggles, radios,
-   * sliders, input fields and chart bars — the component-library take on a
-   * particle background. Glyphs bob slowly, dodge the cursor and keep the
-   * cyan→violet→magenta hue ramp; a single static frame under
-   * prefers-reduced-motion.
-   */
-  private drawWave(
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    dpr: number,
-    t: number,
-  ): void {
-    const w = canvas.width / dpr;
-    const h = canvas.height / dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    this.seedGlyphs(w, h);
-    const dark = document.documentElement.classList.contains('dark');
-    const { x: mx, y: my } = this.pointer;
-
-    for (const glyph of this.glyphs) {
-      const bobX = Math.sin(t * 0.35 + glyph.phase) * 10 * glyph.depth;
-      const bobY =
-        Math.cos(t * 0.28 + glyph.phase * 1.7) * 8 * glyph.depth +
-        Math.sin(t * 0.12 + glyph.phase) * 4;
-      let x = glyph.x + bobX;
-      let y = glyph.y + bobY;
-      // dodge the cursor gently
-      const dx = x - mx;
-      const dy = y - my;
-      const dist2 = dx * dx + dy * dy;
-      const push = Math.exp(-dist2 / 26000) * 30;
-      if (push > 0.5) {
-        const len = Math.sqrt(dist2) || 1;
-        x += (dx / len) * push;
-        y += (dy / len) * push;
-      }
-      const size = 7 + glyph.depth * 12;
-      const hue = 190 + (x / w) * 130; // cyan → indigo → magenta
-      const alpha = (dark ? 0.4 : 0.3) * (0.35 + 0.65 * glyph.depth);
-      ctx.strokeStyle = `hsla(${hue.toFixed(0)}, 80%, ${dark ? 68 : 50}%, ${alpha.toFixed(3)})`;
-      ctx.fillStyle = ctx.strokeStyle;
-      ctx.lineWidth = 1.1;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      this.drawGlyph(ctx, glyph.type, x, y, size, t + glyph.phase);
-    }
-  }
-
-  /** One wireframe UI control at (x, y); `s` is the glyph width. */
-  private drawGlyph(
-    ctx: CanvasRenderingContext2D,
-    type: number,
-    x: number,
-    y: number,
-    s: number,
-    t: number,
-  ): void {
-    ctx.beginPath();
-    switch (type) {
-      case 0: {
-        // checkbox: rounded square + check
-        const r = s * 0.22;
-        ctx.roundRect(x - s / 2, y - s / 2, s, s, r);
-        ctx.moveTo(x - s * 0.24, y);
-        ctx.lineTo(x - s * 0.06, y + s * 0.2);
-        ctx.lineTo(x + s * 0.26, y - s * 0.18);
-        ctx.stroke();
-        break;
-      }
-      case 1: {
-        // toggle: pill + thumb sliding with time
-        const height = s * 0.55;
-        ctx.roundRect(x - s / 2, y - height / 2, s, height, height / 2);
-        ctx.stroke();
-        const knob = Math.sin(t * 0.6) > 0 ? 1 : -1;
-        ctx.beginPath();
-        ctx.arc(
-          x + knob * (s / 2 - height / 2),
-          y,
-          height * 0.32,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-        break;
-      }
-      case 2: {
-        // radio: ring + dot
-        ctx.arc(x, y, s * 0.42, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(x, y, s * 0.16, 0, Math.PI * 2);
-        ctx.fill();
-        break;
-      }
-      case 3: {
-        // slider: track + knob drifting with time
-        ctx.moveTo(x - s / 2, y);
-        ctx.lineTo(x + s / 2, y);
-        ctx.stroke();
-        const kx = x + Math.sin(t * 0.5) * s * 0.34;
-        ctx.beginPath();
-        ctx.arc(kx, y, s * 0.16, 0, Math.PI * 2);
-        ctx.fill();
-        break;
-      }
-      case 4: {
-        // input field: rounded rect + caret line
-        const height = s * 0.5;
-        ctx.roundRect(x - s / 2, y - height / 2, s, height, height * 0.3);
-        ctx.moveTo(x - s * 0.28, y - height * 0.22);
-        ctx.lineTo(x - s * 0.28, y + height * 0.22);
-        ctx.stroke();
-        break;
-      }
-      default: {
-        // chart: three bars breathing with time
-        const bw = s * 0.18;
-        const heights = [0.5, 0.85, 0.65].map(
-          (base, index) => base + Math.sin(t * 0.7 + index) * 0.12,
-        );
-        heights.forEach((hn, index) => {
-          const bx = x - s * 0.35 + index * s * 0.35;
-          ctx.moveTo(bx, y + s * 0.4);
-          ctx.lineTo(bx, y + s * 0.4 - hn * s * 0.8);
-        });
-        ctx.lineWidth = bw;
-        ctx.stroke();
-        break;
-      }
-    }
   }
 }

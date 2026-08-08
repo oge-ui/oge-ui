@@ -3,18 +3,7 @@ import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeOrgTree } from './tree-data';
-
-const SNIPPET = `<oge-tree-list
-  [data]="org"
-  keyExpr="id"
-  parentIdExpr="parentId"
-  [autoExpandAll]="true"
->
-  <oge-column field="name" caption="Name" />
-  <oge-column field="title" caption="Title" [width]="140" />
-  <oge-column field="office" caption="Office" [width]="140" />
-  <oge-column field="headcount" caption="Reports" dataType="number" [width]="110" />
-</oge-tree-list>`;
+import { SNIPPET } from './overview-snippets';
 
 @Component({
   selector: 'app-tree-overview',
@@ -36,6 +25,7 @@ const SNIPPET = `<oge-tree-list
     <app-demo-card
       [chips]="['flat id/parentId data', 'sibling-scoped sorting']"
       [code]="snippet"
+      language="ts"
     >
       <oge-tree-list
         style="max-height: 480px"

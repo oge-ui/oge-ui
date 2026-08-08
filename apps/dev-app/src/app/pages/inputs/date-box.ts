@@ -8,54 +8,14 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
-
-const CALENDAR_SNIPPET = `<oge-calendar [(value)]="date" />
-
-<oge-calendar
-  [min]="min"
-  [disabledDates]="isWeekend"
-  [showTodayButton]="true"
-  [showWeekNumbers]="true"
-  [firstDayOfWeek]="1"
-  [(value)]="date"
-/>`;
-
-const DATEBOX_SNIPPET = `<oge-date-box label="Start date" [(value)]="start" />
-
-<!-- typed text parses locale-aware through Intl — never Date.parse -->
-<oge-date-box
-  label="Delivery"
-  [min]="today"
-  [showClearButton]="true"
-  [(value)]="delivery"
-/>`;
-
-const TYPES_SNIPPET = `<oge-date-box label="Meeting" type="datetime" [interval]="15" [(value)]="at" />
-<oge-date-box label="Alarm" type="time" [interval]="30" [(value)]="alarm" />
-
-<!-- OK/Cancel commit policy -->
-<oge-date-box label="Due" applyValueMode="useButtons" [(value)]="due" />`;
-
-const GRID_SNIPPET = `<!-- grid date editors and the filter row now run on <oge-date-box> -->
-<oge-grid [data]="rows" [filterRow]="true" [editing]="{ mode: 'cell' }">
-  <oge-column field="shipped" dataType="date" />
-</oge-grid>
-<!-- filtering builds a timezone-safe local day-range: [startOfDay, nextDay) -->`;
-
-const RANGE_SNIPPET = `<!-- two-view range calendar with hover preview -->
-<oge-calendar selectionMode="range" [viewsCount]="2" [(range)]="range" />
-
-<!-- start–end on one field; typed or picked, reversed pairs reorder -->
-<oge-date-range-box label="Period" [(value)]="period" />
-
-<!-- datetime range: start/end time lists + OK, commits as a draft -->
-<oge-date-range-box type="datetime" [interval]="30" [(value)]="window" />`;
-
-const TIMEVIEW_SNIPPET = `<!-- one interval list (default) … -->
-<oge-date-box type="time" timeView="list" [interval]="30" [(value)]="t1" />
-
-<!-- … or hour + minute columns -->
-<oge-date-box type="time" timeView="columns" [interval]="5" [(value)]="t2" />`;
+import {
+  CALENDAR_SNIPPET,
+  DATEBOX_SNIPPET,
+  GRID_SNIPPET,
+  RANGE_SNIPPET,
+  TIMEVIEW_SNIPPET,
+  TYPES_SNIPPET,
+} from './date-box-snippets';
 
 const SECTIONS = [
   'Calendar',
@@ -100,6 +60,7 @@ const SECTIONS = [
       description="WAI-ARIA date grid with a roving-tabindex day: arrows move ±1/±7 days, <kbd>PgUp</kbd>/<kbd>PgDn</kbd> ±1 month (<kbd>Shift</kbd> ±1 year), <kbd>Home</kbd>/<kbd>End</kbd> week edges. The header drills out to year and decade views. <code>min</code>/<code>max</code>/<code>disabledDates</code> gate selection; week numbers follow a configurable rule."
       [chips]="['roving tabindex', 'min/max', 'showWeekNumbers']"
       [code]="calendarSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-8">
         <oge-calendar [(value)]="date" />
@@ -122,6 +83,7 @@ const SECTIONS = [
       description="The value is always a local <code>Date | null</code> — serialization is the app's concern. Typed text parses by the locale's own part order (dd/mm vs mm/dd) incl. month names; unparseable or out-of-range text shows the invalid state and reverts on blur — a wrong date is never committed. The popup follows the APG date-picker-dialog pattern: focus moves into the calendar, <kbd>Esc</kbd> returns it."
       [chips]="['Date | null', 'Intl parse', 'blur revert']"
       [code]="dateBoxSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-date-box label="Start date" [(value)]="start" />
@@ -145,6 +107,7 @@ const SECTIONS = [
         'type: datetime',
       ]"
       [code]="rangeSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-8">
         <oge-calendar
@@ -189,6 +152,7 @@ const SECTIONS = [
       description="<code>type</code> switches the editor: <code>time</code> shows a time picker (clock rail icon), <code>datetime</code> pairs it with the calendar — picking a date keeps the popup open for the time. <code>timeView</code> selects the picker layout: one interval <code>list</code>, or iOS-style hour + minute <code>columns</code>. <code>applyValueMode: 'useButtons'</code> collects picks in a draft and commits on OK."
       [chips]="['type', 'interval', 'timeView', 'applyValueMode']"
       [code]="timeViewSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-date-box

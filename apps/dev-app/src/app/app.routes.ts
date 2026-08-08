@@ -32,6 +32,12 @@ export const appRoutes: Route[] = [
     title: 'OGE — Style the app',
   },
   {
+    path: 'ai',
+    loadComponent: () =>
+      import('./pages/ai/overview').then((m) => m.AiOverviewPage),
+    title: 'OGE — AI coding assistants',
+  },
+  {
     path: 'getting-started/localization',
     loadComponent: () =>
       import('./pages/getting-started/localization').then(
@@ -272,6 +278,83 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/tabs',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/tabs/overview').then((m) => m.TabsOverviewPage),
+        title: 'OGE — Tabs',
+      },
+      {
+        path: 'routed',
+        loadComponent: () =>
+          import('./pages/tabs/routed').then((m) => m.TabsRoutedPage),
+        title: 'OGE — Routed Tabs',
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'overview' },
+          {
+            path: 'overview',
+            loadComponent: () =>
+              import('./pages/tabs/routed').then((m) => m.TabsRoutedOverview),
+          },
+          {
+            path: 'members',
+            loadComponent: () =>
+              import('./pages/tabs/routed').then((m) => m.TabsRoutedMembers),
+          },
+          {
+            path: 'settings',
+            loadComponent: () =>
+              import('./pages/tabs/routed').then((m) => m.TabsRoutedSettings),
+          },
+        ],
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/tabs/api').then((m) => m.TabsApiPage),
+        title: 'OGE — Tabs API',
+      },
+    ],
+  },
+  {
+    path: 'components/accordion',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/overview').then((m) => m.LayoutOverviewPage),
+        title: 'OGE — Accordion',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/api').then((m) => m.LayoutApiPage),
+        title: 'OGE — Accordion API',
+      },
+    ],
+  },
+  {
+    path: 'components/tree-view',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/navigation/overview').then(
+            (m) => m.NavigationOverviewPage,
+          ),
+        title: 'OGE — Tree View',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/navigation/api').then((m) => m.NavigationApiPage),
+        title: 'OGE — Tree View API',
+      },
+    ],
+  },
+  {
     path: 'components/inputs',
     children: [
       {
@@ -295,6 +378,14 @@ export const appRoutes: Route[] = [
             (m) => m.InputsSelectBoxPage,
           ),
         title: 'OGE — Select Box',
+      },
+      {
+        path: 'tree-select',
+        loadComponent: () =>
+          import('./pages/inputs/tree-select').then(
+            (m) => m.InputsTreeSelectPage,
+          ),
+        title: 'OGE — Tree Select',
       },
       {
         path: 'autocomplete',

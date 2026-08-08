@@ -3,16 +3,7 @@ import { OgeColumn, OgeDetailTemplate, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees } from '../../shared/demo-data';
-
-const SNIPPET = `<oge-grid [data]="employees" keyField="id">
-  <oge-column field="id" caption="Id" [width]="70" dataType="number" />
-  <oge-column field="firstName" caption="First Name" />
-
-  <!-- \`of: employees\` only feeds type inference — \`employee\` is fully typed -->
-  <div *ogeDetailTemplate="let employee; of: employees" class="grid grid-cols-3 gap-4">
-    <app-employee-card [employee]="employee" />
-  </div>
-</oge-grid>`;
+import { SNIPPET } from './master-detail-snippets';
 
 @Component({
   selector: 'app-master-detail',
@@ -30,7 +21,7 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id">
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['typed context']" [code]="snippet">
+    <app-demo-card [chips]="['typed context']" [code]="snippet" language="ts">
       <oge-grid [data]="employees" keyField="id">
         <oge-column field="id" caption="Id" [width]="70" dataType="number" />
         <oge-column field="firstName" caption="First Name" />

@@ -18,6 +18,15 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  BASIC_SNIPPET,
+  BUSY_SNIPPET,
+  FORM_SNIPPET,
+  GUARD_SNIPPET,
+  RESULT_SNIPPET,
+  SIZING_SNIPPET,
+  WINDOW_SNIPPET,
+} from './modal-snippets';
 
 /** Content of the service demo — gets its data and ref via DI. */
 @Component({
@@ -48,86 +57,6 @@ const SECTIONS = [
   'Busy state',
   'Typed result',
 ] as const;
-
-const BASIC_SNIPPET = `<oge-button text="Open" (clicked)="modal.open()" />
-
-<oge-modal #modal title="Team settings" [(opened)]="opened">
-  <p>Centered dialog with backdrop, focus trap and scroll lock.</p>
-  <div *ogeModalFooter="let close">
-    <oge-button text="Cancel" stylingMode="text" (clicked)="close()" />
-    <oge-button text="Save" (clicked)="close()" />
-  </div>
-</oge-modal>
-
-<!-- Escape and backdrop clicks close it (closeOnEscape /
-     closeOnBackdropClick); focus returns to the opener. -->`;
-
-const FORM_SNIPPET = `<oge-modal title="Edit record" [(opened)]="opened" [width]="420">
-  <oge-select-box label="Status" [items]="statuses" [(value)]="status" />
-  <!-- the select popup renders above the modal; the first Escape
-       closes the popup, the second closes the modal -->
-</oge-modal>`;
-
-const SIZING_SNIPPET = `<!-- maximize/restore toggle in the title bar drives [(fullScreen)] -->
-<oge-modal title="Report" [(opened)]="opened" [(fullScreen)]="max"
-           [showMaximizeButton]="true"
-           [width]="480" [minHeight]="240" [maxWidth]="'90vw'" />
-
-<!-- pinned near the top edge, command-palette style -->
-<oge-modal title="Search" [(opened)]="opened" placement="top" />
-
-<!-- transparent backdrop — still modal (focus trap + scroll lock) -->
-<oge-modal title="Quiet" [(opened)]="opened" [shading]="false" />`;
-
-const WINDOW_SNIPPET = `<!-- drag by the title bar, resize by the corner handle -->
-<oge-modal title="Window" [(opened)]="opened"
-           [dragEnabled]="true" [resizeEnabled]="true"
-           (resized)="onResized($event)" />
-
-// imperative, body-appended — for transformed ancestors & prompt flows
-private readonly modals = inject(OgeModalService);
-
-async openPrompt(): Promise<void> {
-  const ref = this.modals.open<string>(RenameDialog, {
-    title: 'Rename file', width: 380, data: { name: 'report.xlsx' },
-  });
-  const { result } = await ref.closed;
-  if (result) this.rename(result);
-}
-
-// content component: inject its data + the ref to close with a result
-class RenameDialog {
-  readonly data = inject(OGE_MODAL_DATA);
-  readonly ref = inject(OgeModalRef);
-}`;
-
-const GUARD_SNIPPET = `<oge-modal title="Draft" [(opened)]="opened" [closeGuard]="confirmDiscard">
-  …
-</oge-modal>
-
-// component — runs for every close reason (Escape, backdrop, ✕, close());
-// may be async: the modal stays open until the promise resolves
-protected readonly confirmDiscard = (): boolean =>
-  !this.dirty() || confirm('Discard unsaved changes?');`;
-
-const BUSY_SNIPPET = `<oge-modal title="Publishing…" [(opened)]="opened" [busy]="saving()">
-  <!-- spinner veil + aria-busy; Escape/backdrop/✕ are blocked
-       while busy — programmatic close() still works -->
-</oge-modal>`;
-
-const RESULT_SNIPPET = `<oge-modal #confirm title="Delete file?" [(opened)]="opened"
-           (closed)="onClosed($event)">
-  <p>This cannot be undone.</p>
-  <div *ogeModalFooter="let close">
-    <oge-button text="Cancel" stylingMode="text" (clicked)="close()" />
-    <oge-button text="Delete" severity="danger" (clicked)="close('delete')" />
-  </div>
-</oge-modal>
-
-// $event: { reason: 'api' | 'escape' | 'backdrop' | 'closeButton', result? }
-protected onClosed(event: OgeModalClosedEvent): void {
-  if (event.result === 'delete') this.remove();
-}`;
 
 @Component({
   selector: 'app-overlay-modal',
@@ -165,6 +94,7 @@ protected onClosed(event: OgeModalClosedEvent): void {
       heading="Basics"
       description="Open declaratively via the two-way <code>opened</code> model or imperatively with <code>open()</code>/<code>close()</code>/<code>toggle()</code>. The footer slot's <code>let close</code> function closes the modal; <code>Escape</code>, backdrop clicks and the ✕ button work out of the box and focus returns to the opener."
       [code]="basicSnippet"
+      language="ts"
     >
       <oge-button text="Open modal" (clicked)="basicOpen.set(true)" />
       <oge-modal title="Team settings" [(opened)]="basicOpen">
@@ -184,6 +114,7 @@ protected onClosed(event: OgeModalClosedEvent): void {
       heading="Form content & stacked popups"
       description="Any content projects into the body — including dropdown editors. Their popups render <em>above</em> the modal, and the shared Escape stack closes the topmost surface first: one <kbd>Escape</kbd> for the open select popup, a second for the modal."
       [code]="formSnippet"
+      language="ts"
     >
       <oge-button
         text="Edit record"
@@ -214,6 +145,7 @@ protected onClosed(event: OgeModalClosedEvent): void {
       heading="Full screen, placement & sizing"
       description='<code>showMaximizeButton</code> puts a maximize/restore toggle in the title bar, driving the two-way <code>fullScreen</code> model (size inputs are ignored while full screen). <code>placement="top"</code> pins the dialog near the top edge — command-palette style — and <code>[shading]="false"</code> keeps the backdrop transparent while staying fully modal. Sizing accepts <code>width/height</code> plus <code>min/max</code> variants, as numbers (px) or CSS strings.'
       [code]="sizingSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button
@@ -270,6 +202,7 @@ protected onClosed(event: OgeModalClosedEvent): void {
       heading="Window mode & modal service"
       description="<code>dragEnabled</code> makes the title bar a drag handle (viewport-clamped unless <code>dragOutsideBoundary</code>), <code>resizeEnabled</code> adds a corner handle with <code>resizeStarted</code>/<code>resized</code> events, and <code>restorePosition</code> resets both on reopen. For imperative flows — or <code>transform</code>ed ancestors — <code>OgeModalService.open(component, config)</code> renders a body-appended modal; the content injects <code>OGE_MODAL_DATA</code> and closes itself via <code>OgeModalRef</code>, whose <code>closed</code> promise carries the typed result. <code>inertBackground</code> additionally marks the page behind the modal <code>inert</code>."
       [code]="windowSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button
@@ -319,6 +252,7 @@ protected onClosed(event: OgeModalClosedEvent): void {
       heading="Async close guard"
       description="<code>closeGuard</code> runs before every close — <code>Escape</code>, backdrop, ✕ and <code>close()</code> alike — and may return a <code>Promise&lt;boolean&gt;</code>: the modal stays open until it resolves, single-flight guarded. No other library covers the async unsaved-changes veto without hand-rolled plumbing. A direct <code>opened</code> model write bypasses the guard (the app already decided)."
       [code]="guardSnippet"
+      language="ts"
     >
       <oge-button
         text="Open guarded draft"
@@ -349,6 +283,7 @@ protected onClosed(event: OgeModalClosedEvent): void {
       heading="Busy state"
       description="While <code>busy</code> is true the modal shows a spinner veil, sets <code>aria-busy</code> and blocks user-initiated closes — programmatic <code>close()</code> still works, so finish your async work and close. Pairs naturally with the button family's async <code>action</code>."
       [code]="busySnippet"
+      language="ts"
     >
       <oge-button
         text="Simulate save (2s)"
@@ -371,6 +306,7 @@ protected onClosed(event: OgeModalClosedEvent): void {
       heading="Typed result"
       description="<code>close(result)</code> — from code or the footer slot — carries a typed value into <code>closed</code>, alongside the close <code>reason</code>. Declarative confirm/prompt flows no longer need side-channel component state."
       [code]="resultSnippet"
+      language="ts"
     >
       <div class="flex items-center gap-4">
         <oge-button

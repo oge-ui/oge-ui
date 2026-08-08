@@ -6,6 +6,7 @@ import {
 } from '@oge-ui/pivot';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { SNIPPET } from './overview-snippets';
 
 interface Sale {
   region: string;
@@ -49,22 +50,6 @@ function makeSales(count: number): Sale[] {
   });
 }
 
-const SNIPPET = `<oge-pivot-grid [data]="sales" (cellDblClick)="onDrillDown($event)">
-  <!-- four areas: row / column / data / filter -->
-  <oge-pivot-field dataField="region" area="row" />
-  <oge-pivot-field dataField="country" area="row" />
-  <oge-pivot-field dataField="city" area="row" />
-  <oge-pivot-field dataField="date" area="column" groupInterval="year" />
-  <oge-pivot-field dataField="amount" area="data" summaryType="sum" [format]="money" />
-</oge-pivot-grid>
-
-// every cell knows its coordinates — perfect for drill-down:
-onDrillDown(event: OgePivotCellClickEvent) {
-  const rows = this.pivot().drillDown({
-    rowPath: event.rowPath, columnPath: event.columnPath,
-  });
-}`;
-
 @Component({
   selector: 'app-pivot-overview',
   imports: [OgePivotGrid, OgePivotField, DemoCard, DocHeader],
@@ -87,6 +72,7 @@ onDrillDown(event: OgePivotCellClickEvent) {
     <app-demo-card
       [chips]="['5.000 rows', '3 row fields', 'year columns']"
       [code]="snippet"
+      language="ts"
     >
       <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
         Click headers to expand / collapse.

@@ -8,22 +8,7 @@ import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeOrgTree, type OrgNode } from './tree-data';
-
-const SNIPPET = `<oge-tree-list
-  [data]="org"
-  keyExpr="id"
-  parentIdExpr="parentId"
-  [editing]="{
-    mode: 'form',
-    allowUpdating: true,
-    allowAdding: true,
-    allowDeleting: true,
-    formColCount: 2,
-    formItems: ['name', 'title', { field: 'office', colSpan: 2 }]
-  }"
-  (initNewRow)="$event.values.title = 'Engineer'"
-/>
-<!-- treeList.addRow(parentKey) inserts under a chosen node -->`;
+import { SNIPPET } from './editing-snippets';
 
 @Component({
   selector: 'app-tree-editing',
@@ -45,6 +30,7 @@ const SNIPPET = `<oge-tree-list
     <app-demo-card
       [chips]="['form mode', 'prefill', 'insert under parent']"
       [code]="snippet"
+      language="ts"
     >
       <div class="mb-3 flex items-center gap-2">
         <button

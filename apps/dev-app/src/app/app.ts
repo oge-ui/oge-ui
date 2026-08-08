@@ -1,4 +1,12 @@
-import { Component, DOCUMENT, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DOCUMENT,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   NavigationEnd,
@@ -17,12 +25,32 @@ interface NavItem {
   path: string;
   label: string;
   icon: IconName;
+  /**
+   * Static file served from `public/` rather than an Angular route — rendered
+   * as a plain anchor so the browser fetches the file instead of the router
+   * trying (and failing) to match it.
+   */
+  file?: boolean;
 }
 
 interface NavSection {
   title: string;
+  /**
+   * Sections without a group sit at the top of the sidebar; grouped ones render
+   * under a shared label. Component families are grouped so the guides stay
+   * visible as the suite grows.
+   */
+  group?: string;
   items: NavItem[];
 }
+
+/** A group label plus the sections under it — `null` for the ungrouped lead-in. */
+interface NavGroup {
+  label: string | null;
+  sections: NavSection[];
+}
+
+const COMPONENTS_GROUP = 'Components';
 
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon],
@@ -56,7 +84,21 @@ export class App {
       ],
     },
     {
+      title: 'AI',
+      items: [
+        { path: '/ai', label: 'Coding assistants', icon: 'code' },
+        { path: '/llms.txt', label: 'llms.txt', icon: 'list', file: true },
+        {
+          path: '/llms-full.txt',
+          label: 'llms-full.txt',
+          icon: 'book',
+          file: true,
+        },
+      ],
+    },
+    {
       title: 'Data Grid',
+      group: COMPONENTS_GROUP,
       items: [
         { path: '/components/data-grid', label: 'Overview', icon: 'table' },
         {
@@ -143,6 +185,7 @@ export class App {
     },
     {
       title: 'Tree List',
+      group: COMPONENTS_GROUP,
       items: [
         { path: '/components/tree-list', label: 'Overview', icon: 'layout' },
         {
@@ -184,6 +227,7 @@ export class App {
     },
     {
       title: 'Pivot Grid',
+      group: COMPONENTS_GROUP,
       items: [
         { path: '/components/pivot-grid', label: 'Overview', icon: 'gauge' },
         {
@@ -200,6 +244,7 @@ export class App {
     },
     {
       title: 'Buttons',
+      group: COMPONENTS_GROUP,
       items: [
         { path: '/components/buttons', label: 'Overview', icon: 'pointer' },
         {
@@ -225,7 +270,49 @@ export class App {
       ],
     },
     {
+      title: 'Tabs',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/tabs', label: 'Overview', icon: 'tabs' },
+        {
+          path: '/components/tabs/routed',
+          label: 'Routed Tabs',
+          icon: 'globe',
+        },
+        { path: '/components/tabs/api', label: 'API Reference', icon: 'code' },
+      ],
+    },
+    {
+      title: 'Accordion',
+      group: COMPONENTS_GROUP,
+      items: [
+        {
+          path: '/components/accordion',
+          label: 'Overview',
+          icon: 'accordion',
+        },
+        {
+          path: '/components/accordion/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Tree View',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/tree-view', label: 'Overview', icon: 'tree' },
+        {
+          path: '/components/tree-view/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Inputs',
+      group: COMPONENTS_GROUP,
       items: [
         { path: '/components/inputs', label: 'Overview', icon: 'text-cursor' },
         {
@@ -237,6 +324,11 @@ export class App {
           path: '/components/inputs/select-box',
           label: 'Select Box',
           icon: 'chevron-down',
+        },
+        {
+          path: '/components/inputs/tree-select',
+          label: 'Tree Select',
+          icon: 'tree',
         },
         {
           path: '/components/inputs/autocomplete',
@@ -267,6 +359,7 @@ export class App {
     },
     {
       title: 'Overlay',
+      group: COMPONENTS_GROUP,
       items: [
         { path: '/components/overlay', label: 'Overview', icon: 'layers' },
         {
@@ -298,13 +391,15 @@ export class App {
   private readonly seo = inject(SeoService);
 
   /** Landing page renders full-bleed without the docs sidebar shell. */
-  protected readonly isHome = toSignal(
+  private readonly path = toSignal(
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-      map((event) => event.urlAfterRedirects.split(/[?#]/)[0] === '/'),
+      map((event) => event.urlAfterRedirects.split(/[?#]/)[0]),
     ),
-    { initialValue: inject(DOCUMENT).location?.pathname === '/' },
+    { initialValue: inject(DOCUMENT).location?.pathname ?? '/' },
   );
+
+  protected readonly isHome = computed(() => this.path() === '/');
 
   protected readonly themeService = inject(ThemeService);
   protected readonly themes: { value: GridTheme; label: string }[] = [
@@ -314,7 +409,52 @@ export class App {
   ];
 
   protected readonly navQuery = signal('');
-  protected readonly collapsed = signal<ReadonlySet<string>>(new Set());
+
+  /**
+   * Component families start collapsed — nine expanded families would bury the
+   * guides under hundreds of pixels of links. The family you are actually
+   * reading opens itself (see the effect below); the guides stay open.
+   */
+  protected readonly collapsed = signal<ReadonlySet<string>>(
+    new Set(
+      this.allSections
+        .filter((section) => section.group === COMPONENTS_GROUP)
+        .map((section) => section.title),
+    ),
+  );
+
+  /** True once the page is scrolled — the header then settles onto its rule. */
+  protected readonly scrolled = signal(false);
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      const onScroll = (): void => {
+        const isScrolled = window.scrollY > 4;
+        if (isScrolled !== this.scrolled()) this.scrolled.set(isScrolled);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+  }
+
+  /**
+   * Opens the family that owns the current page. Runs on every navigation so a
+   * deep link lands with its section expanded, but never re-closes anything the
+   * reader opened by hand.
+   */
+  private readonly revealActiveSection = effect(() => {
+    const path = this.path();
+    const active = this.allSections.find((section) =>
+      section.items.some((item) => item.path === path),
+    );
+    if (!active) return;
+    untracked(() => {
+      if (!this.collapsed().has(active.title)) return;
+      const next = new Set(this.collapsed());
+      next.delete(active.title);
+      this.collapsed.set(next);
+    });
+  });
 
   protected toggleSection(title: string): void {
     const next = new Set(this.collapsed());
@@ -322,7 +462,7 @@ export class App {
     this.collapsed.set(next);
   }
 
-  protected readonly sections = computed<NavSection[]>(() => {
+  private readonly sections = computed<NavSection[]>(() => {
     const query = this.navQuery().trim().toLocaleLowerCase();
     if (!query) return this.allSections;
     return this.allSections
@@ -333,5 +473,25 @@ export class App {
         ),
       }))
       .filter((section) => section.items.length > 0);
+  });
+
+  /**
+   * Sidebar layout: ungrouped guides first, then one labelled group per family
+   * bucket. Component families are sorted A→Z so a new one lands in a
+   * predictable place instead of at the bottom.
+   */
+  protected readonly navGroups = computed<NavGroup[]>(() => {
+    const groups: NavGroup[] = [];
+    for (const section of this.sections()) {
+      const label = section.group ?? null;
+      const last = groups[groups.length - 1];
+      if (last && last.label === label) last.sections.push(section);
+      else groups.push({ label, sections: [section] });
+    }
+    for (const group of groups) {
+      if (group.label === null) continue;
+      group.sections.sort((a, b) => a.title.localeCompare(b.title));
+    }
+    return groups;
   });
 }

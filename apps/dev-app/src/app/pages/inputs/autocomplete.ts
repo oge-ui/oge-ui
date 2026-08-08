@@ -3,6 +3,14 @@ import { OgeAutocomplete, OgeSelectBox } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  BASIC_SNIPPET,
+  CHROME_SNIPPET,
+  FORCE_SNIPPET,
+  LAZY_SNIPPET,
+  TUNING_SNIPPET,
+  VIRTUAL_SNIPPET,
+} from './autocomplete-snippets';
 
 const SECTIONS = [
   'Basic usage',
@@ -13,79 +21,6 @@ const SECTIONS = [
   'Field chrome',
   'Keyboard & accessibility',
 ] as const;
-
-const BASIC_SNIPPET = `<oge-autocomplete
-  label="City"
-  [items]="cities"
-  [(value)]="cityName"
-/>
-
-<!-- the committed value is the TEXT itself, not an item value -->
-cityName = signal('');`;
-
-const TUNING_SNIPPET = `<oge-autocomplete
-  label="Product"
-  [items]="products"
-  displayExpr="name"
-  searchMode="startswith"
-  [minSearchLength]="2"
-  [maxItemCount]="5"
-  [(value)]="productName"
-/>`;
-
-const FORCE_SNIPPET = `<oge-autocomplete
-  label="Assignee"
-  [items]="users"
-  displayExpr="name"
-  [forceSelection]="true"
-  [(value)]="assigneeName"
-  (selectionChanged)="assignee = $event.item"
-/>
-
-<!-- non-matching text reverts on blur; an exact match resolves
-     to the item (canonical casing) and fires selectionChanged -->`;
-
-const VIRTUAL_SNIPPET = `<!-- 10 000 rows, ~15 in the DOM -->
-<oge-autocomplete
-  label="Account"
-  [items]="accounts"
-  [virtualScroll]="true"
-  [maxItemCount]="10000"
-  [(value)]="accountName"
-/>
-
-<oge-select-box
-  label="Account"
-  [items]="accounts"
-  [searchEnabled]="true"
-  [virtualScroll]="{ overscan: 6 }"
-  [(value)]="accountId"
-/>`;
-
-const LAZY_SNIPPET = `<oge-autocomplete
-  label="Repository"
-  [items]="loadRepos"
-  [(value)]="repo"
-/>
-
-// or fully server-side: keep [items] in sync yourself
-<oge-autocomplete
-  [items]="serverItems()"
-  [loading]="serverLoading()"
-  [searchTimeout]="300"
-  (searchChanged)="queryServer($event.text)"
-/>`;
-
-const CHROME_SNIPPET = `<oge-autocomplete
-  label="Tag"
-  labelMode="floating"
-  [showClearButton]="true"
-  [showDropDownButton]="true"
-  [openOnFieldClick]="true"
-  hint="Start typing to search"
-  [items]="tags"
-  [(value)]="tag"
-/>`;
 
 interface DemoUser {
   id: number;
@@ -124,6 +59,7 @@ interface DemoUser {
       description="Type to see suggestions (from <code>minSearchLength</code> = 1 character on). <kbd>Enter</kbd> or blur commits the text; picking a suggestion commits its display text. The chevron and field-click opening are off by default."
       [chips]="['value: string', '[(value)]']"
       [code]="basicSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-autocomplete label="City" [items]="cities" [(value)]="cityName" />
@@ -138,6 +74,7 @@ interface DemoUser {
       description="<code>minSearchLength</code> keeps the list closed until enough is typed, <code>maxItemCount</code> caps it (default 10), <code>searchMode</code> switches contains/startswith and <code>searchTimeout</code> debounces the filter. <code>groupBy</code> and <code>itemTemplate</code> work exactly like the select box."
       [chips]="['minSearchLength', 'maxItemCount', 'searchMode']"
       [code]="tuningSnippet"
+      language="ts"
     >
       <oge-autocomplete
         label="Product"
@@ -155,6 +92,7 @@ interface DemoUser {
       description="<code>forceSelection</code> turns free text off: on blur, text that matches no suggestion reverts to the last committed value, and an exact match resolves to the item with its canonical casing. <code>selectionChanged</code> reports the picked item — or <code>null</code> once the text diverges."
       [chips]="['forceSelection', 'selectionChanged', 'selectedItem']"
       [code]="forceSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-autocomplete
@@ -176,6 +114,7 @@ interface DemoUser {
       description="<code>virtualScroll</code> windows the dropdown: 10&nbsp;000 rows here, ~15 in the DOM inside a full-height spacer. Available on the select box, tag box and autocomplete alike — pass <code>true</code> or <code>{ itemHeight, overscan }</code>. Raise <code>maxItemCount</code> on the autocomplete, which otherwise caps the list at 10. Rows get a fixed size-matched height; <code>groupBy</code>/<code>wrapItemText</code> are ignored while active."
       [chips]="['virtualScroll', '10k rows', 'fixed itemHeight']"
       [code]="virtualSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-autocomplete
@@ -200,6 +139,7 @@ interface DemoUser {
       description="A function as <code>[items]</code> loads once on first open with localized loading/error rows. For fully server-driven suggestions, listen to <code>searchChanged</code>, keep <code>[items]</code> in sync and flag <code>[loading]</code> while the request runs."
       [chips]="['items: () => Promise', 'searchChanged', 'loading']"
       [code]="lazySnippet"
+      language="ts"
     >
       <oge-autocomplete
         label="Repository"
@@ -214,6 +154,7 @@ interface DemoUser {
       description="The shared chrome applies unchanged: label modes, sizes, styling modes, clear button, hints and validation. <code>showDropDownButton</code> + <code>openOnFieldClick</code> opt into select-box-like opening."
       [chips]="['labelMode', 'showDropDownButton', 'openOnFieldClick']"
       [code]="chromeSnippet"
+      language="ts"
     >
       <oge-autocomplete
         label="Tag"

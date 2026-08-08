@@ -1,61 +1,14 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CustomDataSource } from '@oge-ui/core';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
-import { DemoCard, type DemoFile } from '../../shared/demo-card';
+import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
-
-const SNIPPET = `<oge-grid [data]="employees" keyField="id"
-          [groupPanel]="true" [groupBy]="['department']" [columnChooser]="true">
-  <oge-column field="id" caption="Id" [width]="80" dataType="number" pinned="left" />
-  <oge-column field="firstName" caption="First Name" />
-  <oge-column field="salary" caption="Salary" dataType="number"
-              groupSummary="avg" totalSummary="sum" [format]="money" />
-</oge-grid>`;
-
-const SUMMARY_SNIPPET = `<oge-grid [data]="rows" keyField="id" [groupBy]="['department']">
-  <!-- custom aggregate: any reducer over the group's rows -->
-  <oge-column field="city" groupSummary="custom"
-              [calculateCustomSummary]="distinctCities" />
-  <!-- several aggregates at once, rendered on a footer row after the group -->
-  <oge-column field="salary" dataType="number"
-              [groupSummary]="['min', 'max']" groupSummaryPosition="footer"
-              [totalSummary]="['sum', 'avg']" />
-</oge-grid>
-
-distinctCities = (rows: Employee[]) => new Set(rows.map(r => r.city)).size + ' cities';`;
-
-const DEFERRED_FILES: DemoFile[] = [
-  {
-    name: 'deferred.component.ts',
-    language: 'ts',
-    code: `// grouped request → headers only (items: null, count);
-// expanding a group fetches its rows with an eq-filter
-readonly source = new CustomDataSource<Employee>({
-  key: 'id',
-  load: async (options) => {
-    if (options.group?.length) {
-      const res = await fetch('/api/employees/groups?by=department');
-      return { data: await res.json() }; // [{ key, items: null, count }]
-    }
-    const res = await fetch('/api/employees?' + toQuery(options.filter));
-    return { data: await res.json() };
-  },
-});`,
-  },
-  {
-    name: 'deferred.component.html',
-    language: 'html',
-    code: `<oge-grid [data]="source" keyField="id"
-          [groupBy]="['department']"
-          [grouping]="{ autoExpandAll: false }">
-  <oge-column field="firstName" caption="First Name" />
-  <oge-column field="lastName" caption="Last Name" />
-  <oge-column field="city" caption="City" />
-  <oge-column field="salary" caption="Salary" dataType="number" />
-</oge-grid>`,
-  },
-];
+import {
+  DEFERRED_SNIPPET,
+  SNIPPET,
+  SUMMARY_SNIPPET,
+} from './grouping-snippets';
 
 @Component({
   selector: 'app-grouping',
@@ -81,7 +34,11 @@ readonly source = new CustomDataSource<Employee>({
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['500 rows', '2-level grouping']" [code]="snippet">
+    <app-demo-card
+      [chips]="['500 rows', '2-level grouping']"
+      [code]="snippet"
+      language="ts"
+    >
       <oge-grid
         [data]="employees"
         keyField="id"
@@ -124,6 +81,7 @@ readonly source = new CustomDataSource<Employee>({
     <app-demo-card
       [chips]="['multiple aggregates', 'group footer', 'custom summary']"
       [code]="summarySnippet"
+      language="ts"
     >
       <oge-grid [data]="summaryRows" keyField="id" [groupBy]="['department']">
         <oge-column field="firstName" caption="First Name" />
@@ -159,7 +117,8 @@ readonly source = new CustomDataSource<Employee>({
 
     <app-demo-card
       [chips]="['deferred', 'autoExpandAll: false', '300ms latency']"
-      [files]="deferredFiles"
+      [code]="deferredSnippet"
+      language="ts"
     >
       <oge-grid
         [data]="deferredSource"
@@ -206,7 +165,7 @@ export class GroupingPage {
   protected readonly employees = makeEmployees(500);
   protected readonly snippet = SNIPPET;
   protected readonly summarySnippet = SUMMARY_SNIPPET;
-  protected readonly deferredFiles = DEFERRED_FILES;
+  protected readonly deferredSnippet = DEFERRED_SNIPPET;
   protected readonly summaryRows = makeEmployees(40, 3);
 
   /** Custom summary: distinct city count per group. */

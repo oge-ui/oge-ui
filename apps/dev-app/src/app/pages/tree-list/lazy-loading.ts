@@ -10,15 +10,7 @@ import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeOrgTree, type OrgNode } from './tree-data';
-
-const SNIPPET = `<!-- children are fetched per expansion:
-     load({ filter: ['parentId', '=', parentKey] }) -->
-<oge-tree-list
-  [data]="source"
-  keyExpr="id"
-  parentIdExpr="parentId"
-  hasItemsExpr="hasReports"
-/>`;
+import { SNIPPET } from './lazy-loading-snippets';
 
 interface LazyNode extends OrgNode {
   hasReports: boolean;
@@ -80,6 +72,7 @@ class OrgLazySource implements DataSource<LazyNode> {
     <app-demo-card
       [chips]="['350ms fake server', 'per-expansion requests']"
       [code]="snippet"
+      language="ts"
     >
       <oge-tree-list
         style="max-height: 480px"

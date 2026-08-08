@@ -1750,3 +1750,197 @@ export const OGE_TAG_BOX_API: ApiSections = {
     COMMON_EVENTS,
   ],
 };
+
+export const OGE_TREE_SELECT_API: ApiSections = {
+  properties: [
+    {
+      title: 'Value & data',
+      entries: [
+        {
+          name: 'value',
+          type: 'RowKey | readonly RowKey[] | null',
+          default: 'null',
+          description:
+            "Committed value — two-way. The selected node's key in <code>single</code> mode, an array of keys in <code>multiple</code>.",
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[] | undefined',
+          description:
+            'Nodes to display — a flat parent-referencing list or nested children.',
+        },
+        {
+          name: 'keyExpr / parentIdExpr / itemsExpr',
+          type: 'string | ((row: TItem) => …)',
+          description:
+            'Identity and structure accessors, forwarded to the popup tree. <code>itemsExpr</code> switches to hierarchical data.',
+        },
+        {
+          name: 'displayExpr',
+          type: 'string | ((row: TItem) => unknown)',
+          default: "'text'",
+          description:
+            'Node label, used both in the tree and for the text shown in the closed field.',
+        },
+        {
+          name: 'disabledExpr / hasItemsExpr / iconExpr / rootValue / dataStructure',
+          type: 'see OgeTreeView',
+          description: 'Forwarded verbatim to the popup tree.',
+        },
+      ],
+    },
+    {
+      title: 'Selection',
+      entries: [
+        {
+          name: 'selectionMode',
+          type: "'single' | 'multiple'",
+          default: "'single'",
+          description:
+            '<code>multiple</code> makes <code>value</code> an array and keeps the popup open while picking.',
+        },
+        {
+          name: 'showCheckBoxes',
+          type: "'none' | 'normal' | 'selectAll'",
+          default: "'none'",
+          description: 'Checkbox column inside the popup.',
+        },
+        {
+          name: 'selectNodesRecursive',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Cascades selection down to descendants and up to fully-selected parents.',
+        },
+        {
+          name: 'selectedKeysMode',
+          type: "'all' | 'leavesOnly' | 'excludeRecursive'",
+          default: "'all'",
+          description:
+            'Projection applied to the committed keys — <code>leavesOnly</code> is usually what you want to store from a cascade.',
+        },
+        {
+          name: 'displayMode',
+          type: "'text' | 'count'",
+          default: "'text'",
+          description:
+            'Closed-field rendering for a multiple selection: the joined labels, or just how many are picked.',
+        },
+      ],
+    },
+    {
+      title: 'Popup',
+      entries: [
+        {
+          name: 'opened',
+          type: 'boolean',
+          default: 'false',
+          description: 'Whether the popup is open — two-way.',
+        },
+        {
+          name: 'expandedKeys',
+          type: 'readonly RowKey[]',
+          default: '[]',
+          description:
+            'Expanded nodes — two-way, so the shape survives close and reopen.',
+        },
+        {
+          name: 'expandEvent',
+          type: "'click' | 'dblclick'",
+          default: "'dblclick'",
+          description:
+            'Which gesture expands inside the popup. Unlike the bare tree this defaults to <code>dblclick</code> — in a picker a single click should choose, and the chevron expands either way.',
+        },
+        {
+          name: 'searchEnabled / searchMode / filterMode',
+          type: 'see OgeTreeView',
+          description: "Puts the tree's own search box inside the popup.",
+        },
+        {
+          name: 'loadChildren',
+          type: '(parent: TItem, key: RowKey) => Promise&lt;readonly TItem[]&gt;',
+          description: 'Lazy children, fetched on first expand.',
+        },
+        {
+          name: 'virtualScroll',
+          type: 'boolean | { itemHeight: number }',
+          default: 'false',
+          description:
+            'Windowed rendering inside the popup for very large trees.',
+        },
+        {
+          name: 'dropdownPlacement / dropdownWidth / dropdownMaxHeight',
+          type: "OgePopupPlacement | number | 'anchor'",
+          description:
+            "Popup geometry. Width defaults to <code>'anchor'</code> (matches the field), max height to 320px.",
+        },
+        {
+          name: 'openOnFieldClick',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Opens on a click anywhere in the field, not only on the chevron.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'open() / close() / toggle()',
+          type: '() => void',
+          description: 'Imperative popup control.',
+        },
+        {
+          name: 'focus() / blur() / reset()',
+          type: '() => void',
+          description: 'Inherited field-chrome control methods.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'selectionChanged',
+          type: 'OgeTreeSelectSelectionChangedEvent',
+          description:
+            'Emitted after the committed selection changed, with <code>keys</code> and <code>previousKeys</code> (always arrays, even in single mode).',
+        },
+        {
+          name: 'dropDownOpened / dropDownClosed',
+          type: 'void',
+          description: 'Popup lifecycle.',
+        },
+        {
+          name: 'valueCommitted',
+          type: 'OgeInputValueCommittedEvent',
+          description: 'Inherited commit event carrying the previous value.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeTreeSelectSelectionMode',
+          type: "'single' | 'multiple'",
+          description: 'How many nodes may be committed.',
+        },
+        {
+          name: 'OgeTreeSelectDisplayMode',
+          type: "'text' | 'count'",
+          description: 'Closed-field rendering of a multiple selection.',
+        },
+        {
+          name: 'OgeTreeSelectSelectionChangedEvent',
+          type: '{ keys, previousKeys }',
+          description: 'Payload of <code>selectionChanged</code>.',
+        },
+      ],
+    },
+  ],
+};

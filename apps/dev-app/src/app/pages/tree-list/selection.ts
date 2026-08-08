@@ -4,16 +4,7 @@ import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeOrgTree } from './tree-data';
-
-const SNIPPET = `<oge-tree-list
-  [data]="org"
-  keyExpr="id"
-  parentIdExpr="parentId"
-  [autoExpandAll]="true"
-  selectionMode="checkbox"
-  [selectionRecursive]="true"
-  [(selectedKeys)]="selectedKeys"
-/>`;
+import { SNIPPET } from './selection-snippets';
 
 @Component({
   selector: 'app-tree-selection',
@@ -32,7 +23,11 @@ const SNIPPET = `<oge-tree-list
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['tri-state', 'cascade']" [code]="snippet">
+    <app-demo-card
+      [chips]="['tri-state', 'cascade']"
+      [code]="snippet"
+      language="ts"
+    >
       <oge-tree-list
         style="max-height: 480px"
         [data]="org"

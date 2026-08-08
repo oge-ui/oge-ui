@@ -17,9 +17,9 @@ test.describe('home / landing page', () => {
 
   test('demo window tabs switch the live component', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: 'tree-list.ts' }).click();
+    await page.getByRole('tab', { name: 'Tree List' }).click();
     await expect(page.locator('app-home oge-tree-list')).toBeVisible();
-    await page.getByRole('button', { name: 'buttons.ts' }).click();
+    await page.getByRole('tab', { name: 'Buttons' }).click();
     await expect(
       page.locator('app-home oge-button', { hasText: 'Async save' }),
     ).toBeVisible();
@@ -29,7 +29,7 @@ test.describe('home / landing page', () => {
     page,
   }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: 'select-box.ts' }).click();
+    await page.getByRole('tab', { name: 'Select' }).click();
     const select = page.locator('app-home oge-select-box').first();
     await select.locator('.oge-input-native').click();
     const popup = page.locator('app-home .oge-popup');

@@ -3,13 +3,25 @@ import { RouterLink } from '@angular/router';
 import { OgeButton } from '@oge-ui/buttons';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { OgeNumberBox, OgeTextBox } from '@oge-ui/inputs';
+import { OgeAccordion, OgeAccordionItem } from '@oge-ui/layout';
+import { OgeTreeView } from '@oge-ui/navigation';
 import { OgeContextMenu, OgeTooltip, type OgeMenuItem } from '@oge-ui/overlay';
+import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
 import { OgeTreeList } from '@oge-ui/tree-list';
 import { Icon, type IconName } from '../../shared/icon';
 import { SITE_VERSION } from '../../shared/site-version';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 
-type FamilyKey = 'grid' | 'tree' | 'buttons' | 'inputs' | 'pivot' | 'overlay';
+type FamilyKey =
+  | 'grid'
+  | 'tree'
+  | 'buttons'
+  | 'inputs'
+  | 'tabs'
+  | 'accordion'
+  | 'tree-view'
+  | 'pivot'
+  | 'overlay';
 
 interface Family {
   key: FamilyKey;
@@ -44,6 +56,11 @@ interface OrgNode {
     OgeNumberBox,
     OgeTooltip,
     OgeContextMenu,
+    OgeTabPanel,
+    OgeTab,
+    OgeAccordion,
+    OgeAccordionItem,
+    OgeTreeView,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -68,6 +85,9 @@ interface OrgNode {
       </div>
     </div>
 
+    <!-- the card titles are spans, and previews (the accordion) bring their own
+         h3 — this gives the page a real h1 → h2 → h3 outline -->
+    <h2 class="sr-only">Component families</h2>
     <div
       class="mt-8 grid grid-cols-3 gap-6 max-xl:grid-cols-2 max-lg:grid-cols-1"
     >
@@ -200,6 +220,52 @@ interface OrgNode {
                     </div>
                   </div>
                 }
+                @case ('tabs') {
+                  <div class="w-full self-start">
+                    <oge-tab-panel stylingMode="secondary" size="sm">
+                      <oge-tab text="Overview">
+                        <p class="!my-0 p-2 text-sm text-gray-500">
+                          Panels render on first visit and stay alive.
+                        </p>
+                      </oge-tab>
+                      <oge-tab text="Activity">
+                        <p class="!my-0 p-2 text-sm text-gray-500">
+                          Arrow keys move, Home/End jump.
+                        </p>
+                      </oge-tab>
+                      <oge-tab text="Settings" [disabled]="true">…</oge-tab>
+                    </oge-tab-panel>
+                  </div>
+                }
+                @case ('accordion') {
+                  <div class="w-full self-start">
+                    <oge-accordion size="sm">
+                      <oge-accordion-item title="Account" [badge]="2">
+                        <p class="!my-0 text-sm text-gray-500">
+                          Name, e-mail and password.
+                        </p>
+                      </oge-accordion-item>
+                      <oge-accordion-item title="Notifications">
+                        <p class="!my-0 text-sm text-gray-500">
+                          Per-channel delivery rules.
+                        </p>
+                      </oge-accordion-item>
+                    </oge-accordion>
+                  </div>
+                }
+                @case ('tree-view') {
+                  <div class="w-full self-start">
+                    <oge-tree-view
+                      [items]="org"
+                      keyExpr="id"
+                      parentIdExpr="parentId"
+                      displayExpr="name"
+                      selectionMode="multiple"
+                      showCheckBoxes="normal"
+                      [expandedKeys]="[1, 2]"
+                    />
+                  </div>
+                }
               }
             </div>
           </div>
@@ -283,6 +349,30 @@ export class ComponentsIndexPage {
       path: '/components/inputs',
       description:
         'TextBox, TextArea, NumberBox and SelectBox on one field chrome: floating labels, counters, password reveal, locale-aware numbers and a searchable WAI-ARIA combobox.',
+    },
+    {
+      key: 'tabs',
+      name: 'Tabs',
+      icon: 'tabs',
+      path: '/components/tabs',
+      description:
+        'Declarative or data-driven tabs with deferred rendering, keep-alive panels, closable tabs with async guards, overflow navigation and drag reorder.',
+    },
+    {
+      key: 'accordion',
+      name: 'Accordion',
+      icon: 'accordion',
+      path: '/components/accordion',
+      description:
+        'Single or multiple expansion following the WAI-ARIA pattern: lazy content, async expand guards, header actions and invalid-section jumping.',
+    },
+    {
+      key: 'tree-view',
+      name: 'Tree View',
+      icon: 'tree',
+      path: '/components/tree-view',
+      description:
+        'Flat or nested data with tri-state checkboxes, ancestor-preserving search, load-on-demand children, virtual scrolling and drag & drop reparenting.',
     },
     {
       key: 'pivot',

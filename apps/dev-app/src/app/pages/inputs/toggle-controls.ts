@@ -8,48 +8,12 @@ import { OgeCheckBox, OgeRadioGroup, OgeSwitch } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
-
-const CHECKBOX_SNIPPET = `<oge-check-box [(value)]="agreed">I agree to the terms</oge-check-box>
-
-<!-- tri-state: null renders the indeterminate dash;
-     threeState lets USERS cycle null → true → false → null -->
-<oge-check-box
-  [threeState]="true"
-  text="Select all"
-  [(value)]="all"
-/>`;
-
-const SWITCH_SNIPPET = `<!-- label feeds aria-label — always name your switch -->
-<oge-switch label="Notifications" [(value)]="notify" />
-
-<!-- track texts come from the localized messages (ON/OFF);
-     override per instance, empty string hides them -->
-<oge-switch label="Localized" onText="AÇIK" offText="KAPALI" [(value)]="enabled" />
-<oge-switch label="Plain" onText="" offText="" [(value)]="plain" />`;
-
-const RADIO_SNIPPET = `<oge-radio-group
-  label="Plan"
-  [items]="plans"
-  displayExpr="name"
-  valueExpr="id"
-  disabledExpr="soldOut"
-  [(value)]="planId"
-/>
-
-<oge-radio-group
-  label="Priority"
-  layout="horizontal"
-  [items]="['Low', 'Normal', 'High']"
-  [(value)]="priority"
-/>`;
-
-const FORMS_SNIPPET = `// Signal Forms — auto-binds errors/touched/disabled
-<oge-check-box [formField]="form.terms">Accept terms</oge-check-box>
-<oge-switch label="Marketing" [formField]="form.marketing" />
-<oge-radio-group [items]="plans" valueExpr="id" [formField]="form.plan" />
-
-// reactive forms work unchanged
-<oge-check-box [formControl]="termsCtrl" text="Accept terms" />`;
+import {
+  CHECKBOX_SNIPPET,
+  FORMS_SNIPPET,
+  RADIO_SNIPPET,
+  SWITCH_SNIPPET,
+} from './toggle-controls-snippets';
 
 const SECTIONS = [
   'Check Box',
@@ -100,6 +64,7 @@ interface DemoPlan {
       description="A real (visually hidden) native checkbox drives semantics — label clicks, <kbd>Space</kbd> and <code>aria-checked='mixed'</code> come for free. <code>value</code> is <code>boolean | null</code>: <code>null</code> always renders the indeterminate dash, and <code>threeState</code> lets users cycle into it."
       [chips]="['boolean | null', 'threeState', 'indeterminate']"
       [code]="checkboxSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-8">
         <oge-check-box [(value)]="agreed">I agree to the terms</oge-check-box>
@@ -115,6 +80,7 @@ interface DemoPlan {
       description="A native <code>&lt;button role='switch'&gt;</code> with <code>aria-checked</code> and a sliding thumb. Track texts default to the localized <code>switchOn</code>/<code>switchOff</code> messages ('ON'/'OFF'); override per instance or pass empty strings to hide them. The DevExtreme swipe gesture is deliberately not replicated."
       [chips]="['role=switch', 'onText / offText', 'messages']"
       [code]="switchSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-8">
         <oge-switch label="Notifications" [(value)]="notify" />
@@ -135,6 +101,7 @@ interface DemoPlan {
       description="Flat items with <code>displayExpr</code>/<code>valueExpr</code>/<code>disabledExpr</code>; <code>layout</code> switches column/row. Arrows move focus <em>and</em> selection (wrapping, disabled skipped, RTL-aware) per the WAI-ARIA radio-group pattern."
       [chips]="['displayExpr / valueExpr', 'layout', 'roving tabindex']"
       [code]="radioSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-10">
         <oge-radio-group
@@ -151,7 +118,10 @@ interface DemoPlan {
           [items]="priorities"
           [(value)]="priority"
         />
-        <div class="pt-1 text-sm text-gray-500 dark:text-gray-400">
+        <div
+          class="pt-1 text-sm text-gray-500 dark:text-gray-400"
+          data-testid="plan-output"
+        >
           plan: <code>{{ planId() ?? 'null' }}</code>
         </div>
       </div>
@@ -162,6 +132,7 @@ interface DemoPlan {
       description="All three implement Signal Forms' <code>FormValueControl</code> and the classic CVA (constructor-assignment pattern) — <code>[formField]</code>, <code>formControl</code> and <code>ngModel</code> all work. <code>valueCommitted</code> carries <code>previousValue</code> and the originating event."
       [chips]="['FormValueControl', 'CVA', 'valueCommitted']"
       [code]="formsSnippet"
+      language="ts"
     >
       <div class="text-sm text-gray-500 dark:text-gray-400">
         See the

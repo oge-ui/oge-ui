@@ -16,40 +16,11 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees } from '../../shared/demo-data';
-
-const STATE_KEY_SNIPPET = `<!-- everything the user changes — sort, filters, grouping, column
-     widths/order/pins/visibility — is saved under this key and restored
-     on the next visit. Default backend: localStorage. -->
-<oge-grid [data]="employees" keyField="id" stateKey="orders-grid"
-          [groupPanel]="true" [filterRow]="true" [columnChooser]="true">
-  …
-</oge-grid>`;
-
-const CUSTOM_STORAGE_SNIPPET = `// Persist wherever you want — the backend may be fully async.
-providers: [{
-  provide: OGE_STATE_STORAGE,
-  useValue: {
-    get: (key) => firstValueFrom(
-      http.get(\`/api/grid-state/\${key}\`, { responseType: 'text' })),
-    set: (key, value) =>
-      firstValueFrom(http.put(\`/api/grid-state/\${key}\`, value)),
-  } satisfies OgeStateStorage,
-}]
-
-<oge-grid [data]="employees" keyField="id" stateKey="orders-grid">…</oge-grid>`;
-
-const IMPERATIVE_SNIPPET = `<!-- full control, no token needed -->
-<oge-grid #grid [data]="employees" keyField="id"
-          (stateChange)="saveToBackend($event)">…</oge-grid>
-
-// capture / restore programmatically:
-const snapshot = grid.state();      // serializable GridStateSnapshot
-grid.applyState(snapshot);          // apply it back (or on another grid)
-
-// stateChange fires debounced on every user-driven change:
-saveToBackend(snapshot: GridStateSnapshot) {
-  this.http.put('/api/me/grid-state', snapshot).subscribe();
-}`;
+import {
+  CUSTOM_STORAGE_SNIPPET,
+  IMPERATIVE_SNIPPET,
+  STATE_KEY_SNIPPET,
+} from './persistence-snippets';
 
 interface LoggingStorage extends OgeStateStorage {
   readonly log: ReturnType<typeof signal<readonly string[]>>;
@@ -188,6 +159,7 @@ export class PersistenceApiDemo {
     <app-demo-card
       [chips]="['OGE_STATE_STORAGE', 'async']"
       [code]="customStorageSnippet"
+      language="ts"
     >
       <app-persistence-api-demo />
     </app-demo-card>
@@ -202,6 +174,7 @@ export class PersistenceApiDemo {
     <app-demo-card
       [chips]="['state()', 'applyState()', 'stateChange']"
       [code]="imperativeSnippet"
+      language="ts"
     >
       <div class="mb-2 flex flex-wrap items-center gap-2">
         <button

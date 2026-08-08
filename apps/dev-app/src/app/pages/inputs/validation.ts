@@ -10,6 +10,13 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  LINKED_SNIPPET,
+  PENDING_SNIPPET,
+  REACTIVE_SNIPPET,
+  SIGNAL_SNIPPET,
+  STANDALONE_SNIPPET,
+} from './validation-snippets';
 
 const SECTIONS = [
   'Standalone validation',
@@ -18,66 +25,6 @@ const SECTIONS = [
   'Linked fields',
   'Async validation indicator',
 ] as const;
-
-const STANDALONE_SNIPPET = `<!-- no forms library: drive state via inputs -->
-<oge-text-box
-  label="Username"
-  [(value)]="username"
-  [invalid]="username().length > 0 && username().length < 3"
-  errorText="At least 3 characters"
-  errorDisplay="always"
-/>`;
-
-const REACTIVE_SNIPPET = `// classic reactive forms — the CVA bridge renders control errors
-readonly email = new FormControl('', {
-  nonNullable: true,
-  validators: [Validators.required, Validators.email],
-});
-
-<oge-text-box label="E-mail" mode="email" [formControl]="email" hint="required + email" />`;
-
-const LINKED_SNIPPET = `<!-- cross-field rules: bind state to state — no callbacks needed -->
-<oge-button-group selectionMode="single" [(selectedKeys)]="invoiceType">…</oge-button-group>
-<oge-text-box label="Tax ID" [disabled]="!invoiceType().includes('company')" />
-
-<!-- Max takes its lower bound from Min -->
-<oge-number-box label="Min" [(value)]="minValue" />
-<oge-number-box
-  label="Max"
-  [min]="minValue() ?? undefined"
-  (valueCommitted)="onMaxChanged($event)"
-/>
-
-// rich change payload: { value, previousValue, event }
-onMaxChanged(e: OgeInputValueCommittedEvent<number | null>) {
-  console.log(e.previousValue, '→', e.value, e.event ? 'user' : 'programmatic');
-}`;
-
-const PENDING_SNIPPET = `<oge-text-box
-  label="API key"
-  [(value)]="apiKey"
-  [pending]="checking()"
-  [showSuccessIcon]="'always'"
-  hint="type to trigger a fake async check"
-  (inputChange)="simulateCheck()"
-/>
-
-// component — \`pending\` shows a rail spinner; pair it with async validation
-protected simulateCheck(): void {
-  this.checking.set(true);
-  clearTimeout(this.checkTimer);
-  this.checkTimer = setTimeout(() => this.checking.set(false), 900);
-}`;
-
-const SIGNAL_SNIPPET = `// Angular Signal Forms — schema constraints auto-bind
-readonly model = signal({ username: '', age: null as number | null });
-readonly f = form(this.model, (p) => {
-  required(p.username);
-  minLength(p.username, 3);
-});
-
-<oge-text-box label="Username" [formField]="f.username" />
-<oge-number-box label="Age" [formField]="f.age" />`;
 
 @Component({
   selector: 'app-inputs-validation',
@@ -121,6 +68,7 @@ readonly f = form(this.model, (p) => {
       heading="Standalone validation"
       description="No forms library required: drive the error state yourself with the <code>invalid</code> flag and an explicit <code>errorText</code> message. <code>errorDisplay</code> chooses when errors surface — after the first blur (<code>touched</code>, the default), after the first edit (<code>dirty</code>), or immediately (<code>always</code>)."
       [code]="standaloneSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box
@@ -138,6 +86,7 @@ readonly f = form(this.model, (p) => {
       heading="Reactive Forms"
       description="Bind with <code>formControl</code>/<code>formControlName</code> as usual — the editor renders the control's validation errors in its own subscript, localized through the messages config (<code>required</code>, <code>email</code>, <code>minlength</code>, <code>min</code>/<code>max</code>…). Touched state, <code>markAllAsTouched()</code>, disable/enable and form resets all flow through automatically."
       [code]="reactiveSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box
@@ -164,6 +113,7 @@ readonly f = form(this.model, (p) => {
       heading="Signal Forms"
       description="The editors implement Angular's <code>FormValueControl</code> contract, so <code>[formField]</code> binds them natively: schema rules like <code>required()</code>, <code>minLength()</code> and <code>max()</code> push their errors <em>and</em> their constraints (native attributes, number clamping bounds) straight into the editor. Blur emits the contract's <code>touch</code>, driving the field's touched state."
       [code]="signalSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box label="Username" [formField]="f.username" />
@@ -185,6 +135,7 @@ readonly f = form(this.model, (p) => {
       heading="Linked fields"
       description="Cross-field rules need no event wiring: bind one field's state to another's signal (<code>[disabled]</code>, <code>[min]</code>…) and the relationship stays live. When you do want an imperative hook, <code>valueCommitted</code> delivers <code>value</code>, <code>previousValue</code> and the originating DOM <code>event</code> — <code>undefined</code> event means the change was programmatic, not typed."
       [code]="linkedSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-button-group
@@ -232,6 +183,7 @@ readonly f = form(this.model, (p) => {
       heading="Async validation indicator"
       description="While a server-side check runs, set <code>pending</code> and a spinner appears in the suffix rail (with screen-reader text). Pair it with <code>showSuccessIcon</code> to confirm a passing value — the success mark hides automatically whenever the field is empty, invalid or pending."
       [code]="pendingSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box

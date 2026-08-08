@@ -13,6 +13,13 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  ACTION_SNIPPET,
+  BASIC_SNIPPET,
+  COALESCE_SNIPPET,
+  POSITION_SNIPPET,
+  PROMISE_SNIPPET,
+} from './toast-snippets';
 
 const SECTIONS = [
   'Severities',
@@ -21,43 +28,6 @@ const SECTIONS = [
   'Promise toasts',
   'Coalescing & progress',
 ] as const;
-
-const BASIC_SNIPPET = `private readonly toasts = inject(OgeToastService);
-
-save(): void {
-  this.toasts.success('Saved');
-  this.toasts.warning('Quota at 90%', { title: 'Heads up' });
-  this.toasts.error('Save failed');          // announces assertively
-  this.toasts.show({ message: 'Plain info toast' });
-}`;
-
-const POSITION_SNIPPET = `// 6 logical positions (RTL-aware); default from config
-this.toasts.info('Top center', { position: 'top-center' });
-provideOgeOverlayConfig({ toastPosition: 'bottom-end', toastMaxVisible: 5 })
-
-// extras beyond toastMaxVisible queue FIFO and promote as slots free up`;
-
-const ACTION_SNIPPET = `const ref = this.toasts.show({
-  message: 'Row deleted',
-  sticky: true,                              // action toasts should stick
-  action: { text: 'Undo', handler: () => this.restore() },
-});
-const { reason } = await ref.closed;         // 'action' | 'closeButton' | …`;
-
-const PROMISE_SNIPPET = `// spinner → severity morph in place; timer starts on settle
-this.toasts.promise(this.api.publish(), {
-  loading: 'Publishing…',
-  success: (r) => \`Published \${r.count} pages\`,
-  error: (e) => ({ title: 'Publish failed', message: String(e) }),
-});`;
-
-const COALESCE_SNIPPET = `// identical toasts merge into one with a live ×N badge
-for (const row of failedRows) {
-  this.toasts.error('Import row failed', { coalesce: true });
-}
-
-// remaining-time progress bar; pauses with the timer on hover/focus
-this.toasts.info('With progress', { progressBar: true, displayTime: 6000 });`;
 
 @Component({
   selector: 'app-overlay-toast',
@@ -87,6 +57,7 @@ this.toasts.info('With progress', { progressBar: true, displayTime: 6000 });`;
       heading="Severities"
       description="One sugar method per severity — the accent bar, icon and screen-reader mode follow. <code>title</code> adds a bold first line; <code>announce</code> overrides the politeness (errors assert by default)."
       [code]="basicSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         @for (severity of severities; track severity) {
@@ -104,6 +75,7 @@ this.toasts.info('With progress', { progressBar: true, displayTime: 6000 });`;
       heading="Positions & stacking"
       description="Six logical positions (<code>top/bottom × start/center/end</code>) — RTL flips start/end automatically. The newest toast lands nearest the screen edge; extras beyond <code>toastMaxVisible</code> wait in a lossless FIFO queue and promote as slots free up. Try the burst button."
       [code]="positionSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         @for (position of positions; track position) {
@@ -122,6 +94,7 @@ this.toasts.info('With progress', { progressBar: true, displayTime: 6000 });`;
       heading="Sticky, action & undo"
       description="<code>sticky</code> disables auto-dismiss — recommended whenever there's an <code>action</code>, so keyboard users can reach it. The action press closes with reason <code>'action'</code>; awaiting <code>ref.closed</code> gives a clean undo pattern without extra state."
       [code]="actionSnippet"
+      language="ts"
     >
       <div class="flex items-center gap-4">
         <oge-button
@@ -139,6 +112,7 @@ this.toasts.info('With progress', { progressBar: true, displayTime: 6000 });`;
       heading="Promise toasts"
       description="<code>promise()</code> shows a sticky spinner toast and morphs it in place when the promise settles — success or error accepts a message or a function returning a message or a full patch. The auto-dismiss timer only starts on settle. Under the hood it's the public <code>ref.update()</code> — usable for any live-updating toast."
       [code]="promiseSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button text="Publish (succeeds)" (clicked)="runPromise(true)" />
@@ -155,6 +129,7 @@ this.toasts.info('With progress', { progressBar: true, displayTime: 6000 });`;
       heading="Coalescing & progress"
       description="With <code>coalesce</code> an identical toast doesn't pile up — the existing one gains a live <code>×N</code> badge, restarts its timer and re-announces. <code>progressBar</code> shows the remaining time as a compositor-only bar that freezes exactly in sync with the paused timer."
       [code]="coalesceSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button

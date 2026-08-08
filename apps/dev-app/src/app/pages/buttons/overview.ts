@@ -3,6 +3,13 @@ import { OgeButton, OgeButtonIcon } from '@oge-ui/buttons';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  BADGE_SNIPPET,
+  COLOR_SNIPPET,
+  ICON_SNIPPET,
+  SIZES_SNIPPET,
+  VARIANTS_SNIPPET,
+} from './overview-snippets';
 
 const SECTIONS = [
   'Severities & styling modes',
@@ -11,46 +18,6 @@ const SECTIONS = [
   'Custom colors',
   'Badges',
 ] as const;
-
-const VARIANTS_SNIPPET = `<oge-button text="Contained" severity="accent" />
-<oge-button text="Outlined" severity="accent" stylingMode="outlined" />
-<oge-button text="Text" severity="accent" stylingMode="text" />
-<oge-button text="Success" severity="success" />
-<oge-button text="Warning" severity="warning" />
-<oge-button text="Danger" severity="danger" />`;
-
-const SIZES_SNIPPET = `<oge-button text="Small" size="sm" />
-<oge-button text="Medium" />
-<oge-button text="Large" size="lg" />`;
-
-const ICON_SNIPPET = `<oge-button text="Download" severity="accent">
-  <svg ogeButtonIcon viewBox="0 0 24 24" width="14" height="14" fill="none"
-       stroke="currentColor" stroke-width="2" aria-hidden="true">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-  </svg>
-</oge-button>
-
-<!-- icon after the label -->
-<oge-button text="Next" iconPosition="after">…</oge-button>
-
-<!-- icon-only: give it an accessible name via hint -->
-<oge-button hint="Settings">…</oge-button>`;
-
-const COLOR_SNIPPET = `<!-- any CSS color; the soft tint derives automatically -->
-<oge-button text="Purple" color="#7c3aed" />
-<oge-button text="Teal" color="#0d9488" stylingMode="outlined" />
-
-<!-- or override the design tokens per instance / theme-wide -->
-<oge-button
-  text="Brand token"
-  severity="accent"
-  style="--oge-accent: #ea580c; --oge-accent-soft: rgba(234, 88, 12, 0.14)"
-/>`;
-
-const BADGE_SNIPPET = `<oge-button text="Inbox" [badge]="7" />
-<oge-button text="Alerts" [badge]="120" severity="accent" stylingMode="outlined" />
-<oge-button text="Live" [badge]="true" stylingMode="text" />`;
 
 @Component({
   selector: 'app-buttons-overview',
@@ -84,6 +51,7 @@ const BADGE_SNIPPET = `<oge-button text="Inbox" [badge]="7" />
       heading="Severities & styling modes"
       description="Five semantic severities (<code>normal</code>, <code>accent</code>, <code>success</code>, <code>warning</code>, <code>danger</code>) map straight to the design tokens, so every theme restyles them automatically. Each severity combines with three fill styles — <code>contained</code> (solid, the default), <code>outlined</code> and <code>text</code> — giving you the full action hierarchy of a page from one component."
       [code]="variantsSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button text="Contained" severity="accent" />
@@ -102,6 +70,7 @@ const BADGE_SNIPPET = `<oge-button text="Inbox" [badge]="7" />
       description="Three presets — <code>sm</code> (28px), <code>md</code> (34px, default) and <code>lg</code> (42px). The scale is shared with the input editors, so a button placed next to a text box of the same size lines up pixel-perfect in form rows."
       [chips]="['size: sm | md | lg']"
       [code]="sizesSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button text="Small" size="sm" />
@@ -121,6 +90,7 @@ const BADGE_SNIPPET = `<oge-button text="Inbox" [badge]="7" />
       heading="Icons"
       description="There is no icon-font dependency: project any inline SVG with the <code>ogeButtonIcon</code> attribute and it inherits the button's color. <code>iconPosition</code> places it before or after the label. Icon-only buttons must provide an accessible name via <code>ariaLabel</code> (or a <code>hint</code> tooltip)."
       [code]="iconSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button text="Download" severity="accent">
@@ -184,6 +154,7 @@ const BADGE_SNIPPET = `<oge-button text="Inbox" [badge]="7" />
       heading="Custom colors"
       description="The <code>color</code> input accepts any CSS color and overrides the severity palette for that one button — the hover shade and focus ring derive automatically. For brand-wide changes, override the <code>--oge-*</code> tokens instead: globally, per theme file, or inline on a single element."
       [code]="colorSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button text="Purple" color="#7c3aed" />
@@ -202,6 +173,7 @@ const BADGE_SNIPPET = `<oge-button text="Inbox" [badge]="7" />
       heading="Badges"
       description="A number or string renders a pill in the button's corner; numbers cap at <code>99+</code>. The value joins the button's accessible name through a visually hidden span, so screen readers announce it. Passing <code>true</code> renders a plain attention dot instead."
       [code]="badgeSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-4">
         <oge-button text="Inbox" [badge]="7" />

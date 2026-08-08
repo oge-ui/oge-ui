@@ -15,35 +15,11 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
-
-const ROW_TEMPLATE_SNIPPET = `<oge-grid [data]="employees" keyField="id" [rowAlternation]="true">
-  <oge-column field="firstName" caption="Employee" />
-  <oge-column field="department" caption="Department" />
-  <oge-column field="salary" caption="Salary" dataType="number" />
-  <!-- replaces the whole row; columns still drive header, sorting & filtering -->
-  <div *ogeRowTemplate="let employee; index as i" class="flex items-center gap-3 px-3 py-2">
-    <span class="avatar">{{ initials(employee) }}</span>
-    <div>
-      <div>{{ employee.firstName }} {{ employee.lastName }}</div>
-      <div class="muted">{{ employee.department }} · {{ employee.city }}</div>
-    </div>
-    <span class="ml-auto">{{ money(employee.salary) }}</span>
-  </div>
-</oge-grid>`;
-
-const DRAG_SNIPPET = `<oge-grid [data]="rows" keyField="id"
-          [rowDragging]="true" (rowReordered)="onReordered($event)"
-          [focusedRowEnabled]="true" [(focusedRowKey)]="focusedKey">
-  …
-</oge-grid>`;
-
-const NODATA_SNIPPET = `<oge-grid [data]="slowSource" keyField="id" [loadPanel]="true">
-  …
-  <div *ogeNoDataTemplate class="empty-state">
-    <svg><!-- illustration --></svg>
-    No employees match — adjust the filter or add a new record.
-  </div>
-</oge-grid>`;
+import {
+  DRAG_SNIPPET,
+  NODATA_SNIPPET,
+  ROW_TEMPLATE_SNIPPET,
+} from './rows-snippets';
 
 @Component({
   selector: 'app-rows',
@@ -78,6 +54,7 @@ const NODATA_SNIPPET = `<oge-grid [data]="slowSource" keyField="id" [loadPanel]=
     <app-demo-card
       [chips]="['ogeRowTemplate', 'rowAlternation']"
       [code]="rowTemplateSnippet"
+      language="ts"
     >
       <oge-grid
         [data]="cards"
@@ -116,6 +93,7 @@ const NODATA_SNIPPET = `<oge-grid [data]="slowSource" keyField="id" [loadPanel]=
     <app-demo-card
       [chips]="['rowDragging', 'focusedRowEnabled']"
       [code]="dragSnippet"
+      language="ts"
     >
       <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
         Focused row key:
@@ -149,6 +127,7 @@ const NODATA_SNIPPET = `<oge-grid [data]="slowSource" keyField="id" [loadPanel]=
     <app-demo-card
       [chips]="['ogeNoDataTemplate', 'loadPanel', '800ms latency']"
       [code]="noDataSnippet"
+      language="ts"
     >
       <div class="mb-2">
         <button

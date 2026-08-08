@@ -7,8 +7,9 @@ import {
 } from '@angular/core';
 import { ArrayDataSource } from '@oge-ui/core';
 import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
-import { DemoCard, type DemoFile } from '../../shared/demo-card';
+import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { SNIPPET } from './live-updates-snippets';
 
 interface Stock {
   id: number;
@@ -33,45 +34,6 @@ const SEED: Omit<Stock, 'change' | 'changePercent' | 'volume'>[] = [
   { id: 10, symbol: 'CRM', name: 'Salesforce Inc.', price: 263.1 },
   { id: 11, symbol: 'AMD', name: 'Advanced Micro Devices', price: 155.8 },
   { id: 12, symbol: 'INTC', name: 'Intel Corp.', price: 30.2 },
-];
-
-const FILES: DemoFile[] = [
-  {
-    name: 'ticker.component.ts',
-    language: 'ts',
-    code: `import { ArrayDataSource } from '@oge-ui/core';
-
-export class TickerComponent {
-  readonly stocks = new ArrayDataSource(SEED_STOCKS, { key: 'id' });
-
-  constructor() {
-    // any push source works: WebSocket, SSE, SignalR…
-    setInterval(() => {
-      const delta = randomDelta();
-      this.stocks.push([
-        { type: 'update', key: randomId(), patch: { price, change: delta, changePercent } },
-      ]);
-    }, 600);
-  }
-}`,
-  },
-  {
-    name: 'ticker.component.html',
-    language: 'html',
-    code: `<!-- pure updates patch rows in place — no reload, no scroll jump.
-     highlightChanges flashes every patched cell -->
-<oge-grid [data]="stocks" keyField="id" [highlightChanges]="true">
-  <oge-column field="symbol" caption="Symbol" [width]="100" />
-  <oge-column field="price" caption="Price" dataType="number" [format]="money" />
-  <oge-column field="change" caption="Change" dataType="number">
-    <span *ogeCellTemplate="let value; row as stock"
-          [class]="value >= 0 ? 'text-emerald-600' : 'text-red-600'">
-      <svg><!-- up/down arrow --></svg>
-      {{ value }} ({{ stock.changePercent }}%)
-    </span>
-  </oge-column>
-</oge-grid>`,
-  },
 ];
 
 @Component({
@@ -100,7 +62,8 @@ export class TickerComponent {
         updateCount() + ' pushed',
         'highlightChanges',
       ]"
-      [files]="files"
+      [code]="snippet"
+      language="ts"
     >
       <oge-grid
         [data]="stocks"
@@ -203,7 +166,7 @@ export class TickerComponent {
   `,
 })
 export class LiveUpdatesPage {
-  protected readonly files = FILES;
+  protected readonly snippet = SNIPPET;
   protected readonly updateCount = signal(0);
 
   private readonly rows: Stock[] = SEED.map((stock) => ({

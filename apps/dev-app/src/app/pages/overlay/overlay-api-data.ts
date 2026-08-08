@@ -810,6 +810,18 @@ export const OGE_TOAST_API: ApiSections = {
             "<code>'assertive'</code> for errors, <code>'polite'</code> otherwise; <code>'off'</code> silences.",
         },
         {
+          name: 'announceText',
+          type: 'string | undefined',
+          description:
+            'Screen-reader text override — announced instead of <code>title</code> + <code>message</code>, so the visual text can stay short.',
+        },
+        {
+          name: 'icon',
+          type: 'TemplateRef&lt;void&gt; | undefined',
+          description:
+            'Replaces the severity icon (the <code>loading</code> spinner still wins).',
+        },
+        {
           name: 'loading',
           type: 'boolean',
           default: 'false',

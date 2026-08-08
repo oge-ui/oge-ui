@@ -4,19 +4,7 @@ import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeOrgTree } from './tree-data';
-
-const SNIPPET = `<oge-tree-list
-  [data]="org"
-  keyExpr="id"
-  parentIdExpr="parentId"
-  [autoExpandAll]="true"
-  [filterRow]="true"
-  [searchPanel]="true"
-  filterMode="withAncestors"
->
-  <oge-column field="name" caption="Name" />
-  <oge-column field="office" caption="Office" />
-</oge-tree-list>`;
+import { SNIPPET } from './filtering-snippets';
 
 @Component({
   selector: 'app-tree-filtering',
@@ -38,6 +26,7 @@ const SNIPPET = `<oge-tree-list
     <app-demo-card
       [chips]="['ancestors preserved', 'fullBranch']"
       [code]="snippet"
+      language="ts"
     >
       <div class="mb-3 flex items-center gap-2 text-sm">
         <span class="text-gray-500 dark:text-gray-400">filterMode:</span>

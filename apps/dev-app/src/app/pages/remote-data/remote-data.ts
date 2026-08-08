@@ -5,13 +5,7 @@ import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FakeEmployeeServer } from '../../shared/fake-server';
 import type { Employee } from '../../shared/demo-data';
-
-const SNIPPET = `const source = new CustomDataSource<Employee>({
-  key: 'id',
-  load: (options) =>
-    // options = { skip, take, sort, filter, searchText, ... } — serialize as-is
-    http.post<LoadResult<Employee>>('/api/employees/query', options),
-});`;
+import { SNIPPET } from './remote-data-snippets';
 
 @Component({
   selector: 'app-remote-data',

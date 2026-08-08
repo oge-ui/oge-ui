@@ -3,52 +3,16 @@ import { RouterLink } from '@angular/router';
 import { CodeBlock } from '../../shared/code-block';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import { INSTALL, NG_ADD, OPTIONAL, PROVIDERS, VERIFY } from './setup-snippets';
 
 const SECTIONS = [
   'Requirements',
   'Install the packages',
+  'ng add',
   'Optional dependencies',
   'Application providers',
   'Verify the setup',
 ] as const;
-
-const INSTALL = `# everything at once — one install, one import path
-npm install oge-ui
-
-# …or install only what you use — every package is standalone
-npm install @oge-ui/grid        # data grid (+ @oge-ui/core)
-npm install @oge-ui/tree-list   # hierarchical grid
-npm install @oge-ui/pivot       # pivot table
-npm install @oge-ui/buttons     # buttons, groups, drop-downs (+ @oge-ui/overlay)
-npm install @oge-ui/inputs      # text, textarea, number and select editors`;
-
-const OPTIONAL = `# Excel export (grid + tree list secondary entries)
-npm install exceljs
-
-# PDF export (grid secondary entry)
-npm install jspdf`;
-
-const PROVIDERS = `import { ApplicationConfig } from '@angular/core';
-import { provideOgeGridConfig } from '@oge-ui/grid';
-import { provideOgeInputsConfig } from '@oge-ui/inputs';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    // optional — components work with sensible defaults out of the box
-    provideOgeGridConfig({ rowHeight: 32, allowUnsorting: false }),
-    provideOgeInputsConfig({ spinRepeatDelayMs: 300 }),
-  ],
-};`;
-
-const VERIFY = `import { Component } from '@angular/core';
-import { OgeButton } from '@oge-ui/buttons';
-
-@Component({
-  selector: 'app-root',
-  imports: [OgeButton],
-  template: \`<oge-button text="It works" severity="accent" />\`,
-})
-export class App {}`;
 
 @Component({
   selector: 'app-getting-started-setup',
@@ -62,9 +26,10 @@ export class App {}`;
       [chips]="['npm install', 'standalone', 'zoneless-ready']"
     >
       <p>
-        Add OGE to a new or existing Angular application. There is no schematic
-        step, no required global stylesheet and no module to import — install a
-        package, import a component class, done.
+        Add OGE to a new or existing Angular application. There is no required
+        global stylesheet and no module to import — install a package, import a
+        component class, done. <code>ng add</code> works too, and does a little
+        extra for the AI assistants working in your repo.
       </p>
     </app-doc-header>
     <app-page-toc [sections]="sections" />
@@ -93,6 +58,37 @@ export class App {}`;
       dependencies and install automatically.
     </p>
     <app-code-block [code]="install" language="bash" />
+
+    <h2 id="ng-add" class="scroll-mt-20">ng add</h2>
+    <p>
+      Every package ships an <code>ng add</code> schematic. It installs the
+      package, optionally registers a theme stylesheet, and writes a short usage
+      block into your <code>AGENTS.md</code> so AI coding assistants working in
+      the repo reach for OGE — and read the API reference that ships in
+      <code>node_modules</code> instead of guessing.
+    </p>
+    <app-code-block [code]="ngAdd" language="bash" />
+    <ul>
+      <li>
+        <code>--theme</code> — <code>dark</code>, <code>tailwind</code> or
+        <code>bootstrap</code>. Omit it for the default light theme, which is
+        built into the components.
+      </li>
+      <li>
+        <code>--skip-agents-file</code> — leave <code>AGENTS.md</code> alone.
+      </li>
+      <li>
+        <code>--project</code> — which workspace project to configure, when the
+        workspace has more than one application.
+      </li>
+    </ul>
+    <p>
+      The block is written between <code>&lt;!-- oge-ui:start --&gt;</code>
+      markers and regenerated from the OGE packages in your
+      <code>package.json</code>, so adding a second family grows the table
+      instead of duplicating it. Everything outside the markers is left
+      untouched.
+    </p>
 
     <h2 id="optional-dependencies" class="scroll-mt-20">
       Optional dependencies
@@ -155,6 +151,7 @@ export class App {}`;
 export class GettingStartedSetupPage {
   protected readonly sections = SECTIONS;
   protected readonly install = INSTALL;
+  protected readonly ngAdd = NG_ADD;
   protected readonly optional = OPTIONAL;
   protected readonly providers = PROVIDERS;
   protected readonly verify = VERIFY;

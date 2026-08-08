@@ -8,34 +8,7 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
-
-const ROW_MENU_SNIPPET = `<oge-grid [data]="employees" keyField="id"
-          (rowContextMenu)="onRowMenu($event)">…</oge-grid>
-
-onRowMenu(event: OgeContextMenuEvent<Employee>) {
-  // push items to open the built-in menu at the cursor;
-  // leave the array empty to fall back to the native browser menu
-  event.items.push(
-    { text: \`Open \${event.row.firstName}\`, action: () => open(event.row) },
-    { text: 'Duplicate', action: () => duplicate(event.key) },
-    { text: 'Delete (no permission)', disabled: true },
-  );
-}`;
-
-const HEADER_MENU_SNIPPET = `<oge-grid [data]="employees" keyField="id" [groupPanel]="true"
-          (headerContextMenu)="onHeaderMenu($event)">…</oge-grid>
-
-onHeaderMenu(event: OgeHeaderContextMenuEvent) {
-  // the built-in items (sort / group / pin / hide) arrive prebuilt —
-  // extend, filter or replace them before the menu opens
-  event.items.push({
-    text: \`Reset \${event.caption} filter\`,
-    action: () => this.clearFilterFor(event.field),
-  });
-  if (event.field === 'salary') {
-    event.items = event.items.filter((item) => !item.text.startsWith('Pin'));
-  }
-}`;
+import { HEADER_MENU_SNIPPET, ROW_MENU_SNIPPET } from './context-menu-snippets';
 
 @Component({
   selector: 'app-context-menu',
@@ -55,7 +28,11 @@ onHeaderMenu(event: OgeHeaderContextMenuEvent) {
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['rowContextMenu']" [code]="rowMenuSnippet">
+    <app-demo-card
+      [chips]="['rowContextMenu']"
+      [code]="rowMenuSnippet"
+      language="ts"
+    >
       <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
         Right-click any row.
         @if (lastAction()) {
@@ -87,6 +64,7 @@ onHeaderMenu(event: OgeHeaderContextMenuEvent) {
     <app-demo-card
       [chips]="['headerContextMenu', 'built-ins + custom']"
       [code]="headerMenuSnippet"
+      language="ts"
     >
       <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
         Right-click a column header — try Salary, its pin items are removed.

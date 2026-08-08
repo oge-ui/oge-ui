@@ -7,15 +7,7 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeOrgTree, type OrgNode } from './tree-data';
-
-const SNIPPET = `<oge-tree-list
-  [data]="org"
-  keyExpr="id"
-  parentIdExpr="parentId"
-  [autoExpandAll]="true"
-  [rowDragging]="true"
-  (rowReparented)="onReparent($event)"
-/>`;
+import { SNIPPET } from './drag-drop-snippets';
 
 @Component({
   selector: 'app-tree-drag',
@@ -36,6 +28,7 @@ const SNIPPET = `<oge-tree-list
     <app-demo-card
       [chips]="['reparenting', 'descendant guard']"
       [code]="snippet"
+      language="ts"
     >
       <oge-tree-list
         style="max-height: 480px"

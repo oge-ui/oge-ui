@@ -9,6 +9,12 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  BASIC_SNIPPET,
+  LABEL_SNIPPET,
+  PREFIX_SNIPPET,
+  STYLING_SNIPPET,
+} from './overview-snippets';
 
 const SECTIONS = [
   'The three editors',
@@ -16,32 +22,6 @@ const SECTIONS = [
   'Label modes',
   'Prefix & suffix slots',
 ] as const;
-
-const BASIC_SNIPPET = `<oge-text-box label="Name" [(value)]="name" placeholder="Jane Doe" />
-<oge-text-box label="E-mail" mode="email" hint="We never share it" [showClearButton]="true" />
-<oge-number-box label="Amount" [(value)]="amount" [min]="0" [showSpinButtons]="true" />
-<oge-text-area label="Notes" [(value)]="notes" [autoResize]="true" [maxRows]="6" />`;
-
-const STYLING_SNIPPET = `<oge-text-box label="Outlined" stylingMode="outlined" />
-<oge-text-box label="Filled" stylingMode="filled" />
-<oge-text-box label="Underlined" stylingMode="underlined" />
-
-<!-- sizes match the button scale: 28 / 34 / 42px -->
-<oge-text-box label="Small" size="sm" />
-<oge-text-box label="Large" size="lg" />`;
-
-const LABEL_SNIPPET = `<oge-text-box label="Static (default)" labelMode="static" />
-<oge-text-box label="Floating" labelMode="floating" />
-<oge-text-box label="Outside" labelMode="outside" />
-<oge-text-box label="Hidden (aria-label)" labelMode="hidden" placeholder="Search…" />`;
-
-const PREFIX_SNIPPET = `<oge-text-box label="Price">
-  <span ogeInputPrefix>€</span>
-</oge-text-box>
-
-<oge-text-box label="Website" placeholder="example.com">
-  <span ogeInputPrefix>https://</span>
-</oge-text-box>`;
 
 @Component({
   selector: 'app-inputs-overview',
@@ -92,6 +72,7 @@ const PREFIX_SNIPPET = `<oge-text-box label="Price">
       heading="The three editors"
       description="<code>oge-text-box</code>, <code>oge-text-area</code> and <code>oge-number-box</code> share one field chrome, so labels, hints, errors and adornments behave identically. All three bind three ways: standalone <code>[(value)]</code>, Signal Forms via <code>[formField]</code>, or classic reactive forms via <code>formControl</code>. The number editor treats empty as <code>null</code> — never <code>0</code>."
       [code]="basicSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box label="Name" [(value)]="name" placeholder="Jane Doe" />
@@ -121,6 +102,7 @@ const PREFIX_SNIPPET = `<oge-text-box label="Price">
       heading="Styling modes & sizes"
       description="<code>outlined</code> (default), <code>filled</code> and <code>underlined</code> cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes <code>sm</code>/<code>md</code>/<code>lg</code> (28/34/42px) match the button scale exactly, so mixed button-and-field rows align without manual tweaks."
       [code]="stylingSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box label="Outlined" stylingMode="outlined" />
@@ -136,6 +118,7 @@ const PREFIX_SNIPPET = `<oge-text-box label="Price">
       heading="Label modes"
       description="Four placements: <code>static</code> renders a compact caption above the field, <code>outside</code> a conventional block label, <code>floating</code> starts in the placeholder position and lifts on focus or content, and <code>hidden</code> keeps the field visually clean while exposing the label to screen readers via <code>aria-label</code>. Avoid mixing modes within one row — floating fields are taller."
       [code]="labelSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box label="Static (default)" labelMode="static" />
@@ -154,6 +137,7 @@ const PREFIX_SNIPPET = `<oge-text-box label="Price">
       heading="Prefix & suffix slots"
       description="Project any content — symbols, icons, units — into the leading or trailing slot with the <code>ogeInputPrefix</code> / <code>ogeInputSuffix</code> attributes. Custom suffixes render at the end of the built-in rail, after the clear, reveal and copy buttons, so the ordering stays predictable."
       [code]="prefixSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box label="Price">

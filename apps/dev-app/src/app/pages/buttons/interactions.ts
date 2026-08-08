@@ -3,6 +3,12 @@ import { OgeButton } from '@oge-ui/buttons';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  ACTION_SNIPPET,
+  GUARD_SNIPPET,
+  HOLD_SNIPPET,
+  REPEAT_SNIPPET,
+} from './interactions-snippets';
 
 const SECTIONS = [
   'Async actions & loading',
@@ -10,42 +16,6 @@ const SECTIONS = [
   'Hold to confirm',
   'Auto-repeat',
 ] as const;
-
-const ACTION_SNIPPET = `<oge-button
-  text="Save changes"
-  severity="accent"
-  [action]="save"
-  (actionDone)="log('saved!')"
-  (actionFailed)="log('failed')"
-/>
-
-// component
-protected readonly save = () =>
-  new Promise((resolve) => setTimeout(resolve, 1500));`;
-
-const GUARD_SNIPPET = `<!-- true = throttle with the 500ms config default -->
-<oge-button text="Submit once" [clickGuard]="true" (clicked)="count()" />
-
-<!-- trailing debounce -->
-<oge-button
-  text="Debounced"
-  [clickGuard]="{ mode: 'debounce', ms: 400 }"
-  (clicked)="count()"
-/>`;
-
-const HOLD_SNIPPET = `<oge-button
-  text="Delete account"
-  severity="danger"
-  [holdToConfirm]="{ ms: 1200 }"
-  (clicked)="destroyEverything()"
-/>`;
-
-const REPEAT_SNIPPET = `<oge-button
-  text="+"
-  hint="Increment"
-  [autoRepeat]="{ delayMs: 400, intervalMs: 80 }"
-  (clicked)="value = value + 1"
-/>`;
 
 @Component({
   selector: 'app-buttons-interactions',
@@ -78,6 +48,7 @@ const REPEAT_SNIPPET = `<oge-button
       heading="Async actions & loading"
       description="Bind a promise-returning function to <code>action</code> and the button manages the async lifecycle for you: it flips <code>loading</code> on, disables itself, silently ignores further clicks until the promise settles (single-flight), then emits <code>actionDone</code> with the resolved value or <code>actionFailed</code> with the error. No flags to manage in your component."
       [code]="actionSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button
@@ -105,6 +76,7 @@ const REPEAT_SNIPPET = `<oge-button
       heading="Click guard"
       description="Rate-limits the <code>clicked</code> output against double submissions and spam. <code>true</code> is a ready-made 500ms throttle (first click wins, the window swallows the rest); <code>{ mode: 'debounce', ms }</code> waits for the clicks to stop and fires once. The guard also applies to hold completions and auto-repeat ticks."
       [code]="guardSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button
@@ -129,6 +101,7 @@ const REPEAT_SNIPPET = `<oge-button
       heading="Hold to confirm"
       description="Arms destructive actions behind an uninterrupted press: a fill sweeps across the button while held and brightens when the duration elapses — releasing then fires <code>clicked</code>. Quick taps do nothing. Escape, dragging away or pointer-cancel aborts; keyboard users hold Space or Enter. The fill is pure CSS (transform-only), so it costs no script time."
       [code]="holdSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button
@@ -149,6 +122,7 @@ const REPEAT_SNIPPET = `<oge-button
       heading="Auto-repeat"
       description="For stepper and counter buttons: holding the button re-fires <code>clicked</code> — once immediately, then repeatedly after <code>delayMs</code> at <code>intervalMs</code>. Repeating stops on release, on pointer-cancel, or the moment the button becomes disabled. Mutually exclusive with <code>holdToConfirm</code> (hold wins)."
       [code]="repeatSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-button

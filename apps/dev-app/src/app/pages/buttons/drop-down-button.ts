@@ -8,6 +8,12 @@ import type { OgeMenuItem } from '@oge-ui/overlay';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  ASYNC_SNIPPET,
+  BASIC_SNIPPET,
+  CONTENT_SNIPPET,
+  SPLIT_SNIPPET,
+} from './drop-down-button-snippets';
 
 const SECTIONS = [
   'Items & menu basics',
@@ -15,43 +21,6 @@ const SECTIONS = [
   'Async items',
   'Custom panel content',
 ] as const;
-
-const BASIC_SNIPPET = `<oge-drop-down-button
-  text="Export"
-  severity="accent"
-  [items]="exportItems"
-  (itemClick)="export($event.item.value)"
-/>
-
-// component
-protected readonly exportItems: OgeMenuItem[] = [
-  { text: 'Excel (.xlsx)', value: 'xlsx' },
-  { text: 'CSV', value: 'csv' },
-  { separator: true, text: '' },
-  { text: 'PDF', value: 'pdf' },
-];`;
-
-const SPLIT_SNIPPET = `<oge-drop-down-button
-  text="Run"
-  [splitButton]="true"
-  [rememberLastAction]="true"
-  [items]="runTargets"
-  (clicked)="runCurrent()"
-  (itemClick)="run($event.item.value)"
-/>`;
-
-const ASYNC_SNIPPET = `<oge-drop-down-button text="Branches" [items]="loadBranches" />
-
-// invoked on first open, cached until the reference changes
-protected readonly loadBranches = () =>
-  fetch('/api/branches').then((r) => r.json());`;
-
-const CONTENT_SNIPPET = `<oge-drop-down-button text="Filters" [dropdownWidth]="260">
-  <div *ogeDropDownContent="let close" class="p-3">
-    …any content…
-    <oge-button text="Apply" size="sm" (clicked)="apply(); close()" />
-  </div>
-</oge-drop-down-button>`;
 
 @Component({
   selector: 'app-buttons-drop-down',
@@ -90,6 +59,7 @@ const CONTENT_SNIPPET = `<oge-drop-down-button text="Filters" [dropdownWidth]="2
       heading="Items & menu basics"
       description="Pass an <code>items</code> array of menu entries — plain actions, separators, checkable state (<code>checked</code>) and destructive styling (<code>severity: 'danger'</code>). The panel positions itself with flip-aware math, repositions on scroll, closes on outside click or Escape, and restores focus to the trigger. <code>itemClick</code> delivers the chosen item, then the panel closes."
       [code]="basicSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-drop-down-button
@@ -118,6 +88,7 @@ const CONTENT_SNIPPET = `<oge-drop-down-button text="Filters" [dropdownWidth]="2
       heading="Split button & remembered action"
       description="<code>splitButton</code> separates the control into an action button and a chevron toggle — the main button emits <code>clicked</code> (with full <code>action</code>/<code>clickGuard</code> support) without opening the menu. Add <code>rememberLastAction</code> and the last chosen item becomes the main button's label and action for the session; <code>selectionChanged</code> reports each swap with the previous item."
       [code]="splitSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3" data-testid="split-demo">
         <oge-drop-down-button
@@ -141,6 +112,7 @@ const CONTENT_SNIPPET = `<oge-drop-down-button text="Filters" [dropdownWidth]="2
       heading="Async items"
       description="Instead of an array, <code>items</code> accepts a function returning a promise. It is invoked on the first open — the panel shows a localized loading row, then the items; failures show an error row and the next open retries. Results are cached until the function reference changes, and stale responses from superseded requests are discarded."
       [code]="asyncSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-drop-down-button
@@ -160,6 +132,7 @@ const CONTENT_SNIPPET = `<oge-drop-down-button text="Filters" [dropdownWidth]="2
       heading="Custom panel content"
       description="For panels that are not menus — filter forms, pickers, mini toolbars — project a template with <code>*ogeDropDownContent</code>. It replaces the item list entirely and receives a close function as the implicit template variable, so any element inside can dismiss the panel and hand focus back to the trigger."
       [code]="contentSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-center gap-3">
         <oge-drop-down-button

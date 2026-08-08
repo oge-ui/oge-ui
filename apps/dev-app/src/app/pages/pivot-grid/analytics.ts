@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
 import { OgePivotField, OgePivotGrid } from '@oge-ui/pivot';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { ANALYTICS_SNIPPET, EXPORT_SNIPPET } from './analytics-snippets';
 
 interface Sale {
   region: string;
@@ -34,22 +35,6 @@ function makeSales(count: number): Sale[] {
   }));
 }
 
-const ANALYTICS_SNIPPET = `<!-- measures can post-process their values -->
-<oge-pivot-field
-  dataField="amount" caption="% of Column" area="data"
-  summaryType="sum" summaryDisplayMode="percentOfColumnGrandTotal" />
-<oge-pivot-field
-  dataField="amount" caption="Running" area="data"
-  summaryType="sum" [runningTotal]="{ direction: 'row' }" />`;
-
-const EXPORT_SNIPPET = `<!-- layout + expansion survive reloads via stateKey -->
-<oge-pivot-grid [data]="sales" stateKey="sales-report" #pivot>...</oge-pivot-grid>
-
-// CSV ships in the package; Excel lives in a lazy secondary entry
-pivot.exportCsv('sales.csv');
-const { exportPivotToExcel } = await import('@oge-ui/pivot/export-excel');
-await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
-
 @Component({
   selector: 'app-pivot-analytics',
   imports: [OgePivotGrid, OgePivotField, DemoCard, DocHeader],
@@ -77,6 +62,7 @@ await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
     <app-demo-card
       [chips]="['50.000 rows', 'percent of column', 'running total', 'virtual']"
       [code]="analyticsSnippet"
+      language="ts"
     >
       <div class="mb-2 flex items-center justify-between gap-3">
         <span class="text-sm text-gray-500 dark:text-gray-400">
@@ -146,6 +132,7 @@ await exportPivotToExcel(pivot, { filename: 'sales.xlsx' });`;
     <app-demo-card
       [chips]="['stateKey', 'exportCsv', 'export-excel entry']"
       [code]="exportSnippet"
+      language="ts"
     >
       <div class="mb-2 flex items-center justify-between gap-3">
         <span class="text-sm text-gray-500 dark:text-gray-400">

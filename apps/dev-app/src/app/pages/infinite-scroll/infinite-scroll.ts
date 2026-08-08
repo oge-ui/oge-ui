@@ -1,48 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CustomDataSource } from '@oge-ui/core';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
-import { DemoCard, type DemoFile } from '../../shared/demo-card';
+import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployeeAt, type Employee } from '../../shared/demo-data';
+import { SNIPPET } from './infinite-scroll-snippets';
 
 const TOTAL = 1_000_000;
-
-const FILES: DemoFile[] = [
-  {
-    name: 'employees.component.ts',
-    language: 'ts',
-    code: `import { CustomDataSource } from '@oge-ui/core';
-
-const TOTAL = 1_000_000;
-
-export class EmployeesComponent {
-  // The grid asks for 100-row blocks as you scroll; nothing else is fetched.
-  readonly employees = new CustomDataSource<Employee>({
-    key: 'id',
-    load: async ({ skip = 0, take = 100 }) => {
-      const response = await fetch(\`/api/employees?skip=\${skip}&take=\${take}\`);
-      const { data } = await response.json();
-      return { data, totalCount: TOTAL };
-    },
-  });
-}`,
-  },
-  {
-    name: 'employees.component.html',
-    language: 'html',
-    code: `<!-- remote virtual scrolling: sparse 100-row blocks over 1M rows -->
-<oge-grid [data]="employees" keyField="id"
-          [scrolling]="{ mode: 'virtual', remote: true }"
-          [sortable]="false" class="h-[560px]">
-  <oge-column field="id" caption="Id" [width]="110" dataType="number" />
-  <oge-column field="firstName" caption="First Name" />
-  <oge-column field="lastName" caption="Last Name" />
-  <oge-column field="department" caption="Department" />
-  <oge-column field="city" caption="City" />
-  <oge-column field="salary" caption="Salary" dataType="number" />
-</oge-grid>`,
-  },
-];
 
 @Component({
   selector: 'app-infinite-scroll',
@@ -63,7 +27,8 @@ export class EmployeesComponent {
 
     <app-demo-card
       [chips]="['1.000.000 rows', '150ms latency']"
-      [files]="files"
+      [code]="snippet"
+      language="ts"
     >
       <oge-grid
         [data]="employees"
@@ -102,7 +67,7 @@ export class EmployeesComponent {
   `,
 })
 export class InfiniteScrollPage {
-  protected readonly files = FILES;
+  protected readonly snippet = SNIPPET;
 
   protected readonly employees = new CustomDataSource<Employee>({
     key: 'id',

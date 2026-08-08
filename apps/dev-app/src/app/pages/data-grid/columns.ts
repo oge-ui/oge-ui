@@ -4,6 +4,7 @@ import { OgeColumn, OgeColumnGroup, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
+import { SNIPPET } from './columns-snippets';
 
 const DEPARTMENTS = [
   { code: 'Engineering', label: 'Mühendislik' },
@@ -12,27 +13,6 @@ const DEPARTMENTS = [
   { code: 'Finance', label: 'Finans' },
   { code: 'Support', label: 'Destek' },
 ];
-
-const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
-          [editing]="{ mode: 'cell' }" [filterRow]="true">
-  <oge-column field="id" [width]="70" dataType="number" sortOrder="desc" />
-
-  <!-- banded columns: one shared header over several columns -->
-  <oge-column-group caption="Person">
-    <oge-column field="firstName" />
-    <oge-column field="lastName" [hidingPriority]="1" />
-  </oge-column-group>
-
-  <!-- lookup: store a code, display (and edit/filter with) a label -->
-  <oge-column field="department" caption="Department"
-              [lookup]="{ dataSource: departments, valueExpr: 'code', displayExpr: 'label' }" />
-
-  <!-- calculated column: display-only derived value -->
-  <oge-column caption="Yearly" dataType="number" [calculateCellValue]="yearly" />
-
-  <!-- responsive: lowest hidingPriority disappears first on narrow screens -->
-  <oge-column field="city" [hidingPriority]="0" />
-</oge-grid>`;
 
 @Component({
   selector: 'app-columns',
@@ -119,6 +99,7 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
     <app-demo-card
       [chips]="['calculateSortValue', 'calculateFilterExpression']"
       [code]="calcSnippet"
+      language="ts"
     >
       <oge-grid
         [data]="employees"
@@ -155,7 +136,11 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id" [wordWrap]="true"
       mirror; the library uses CSS logical properties throughout.
     </p>
 
-    <app-demo-card [chips]="['rtlEnabled', 'pinned']" [code]="rtlSnippet">
+    <app-demo-card
+      [chips]="['rtlEnabled', 'pinned']"
+      [code]="rtlSnippet"
+      language="ts"
+    >
       <oge-grid
         [data]="employees"
         keyField="id"

@@ -13,6 +13,7 @@ import {
   OGE_NUMBER_BOX_API,
   OGE_RADIO_GROUP_API,
   OGE_SELECT_BOX_API,
+  OGE_TREE_SELECT_API,
   OGE_SWITCH_API,
   OGE_TAG_BOX_API,
   OGE_TEXT_AREA_API,
@@ -24,6 +25,7 @@ const SECTIONS = [
   'OgeTextArea',
   'OgeNumberBox',
   'OgeSelectBox',
+  'OgeTreeSelect',
   'OgeTagBox',
   'OgeAutocomplete',
   'OgeCheckBox',
@@ -78,6 +80,11 @@ const SECTIONS = [
       title="OgeSelectBox"
       selector="oge-select-box"
       [sections]="selectBoxApi"
+    />
+    <app-api-reference
+      title="OgeTreeSelect"
+      selector="oge-tree-select"
+      [sections]="treeSelectApi"
     />
     <app-api-reference
       title="OgeTagBox"
@@ -144,6 +151,7 @@ export class InputsApiPage {
   protected readonly textAreaApi = OGE_TEXT_AREA_API;
   protected readonly numberBoxApi = OGE_NUMBER_BOX_API;
   protected readonly selectBoxApi = OGE_SELECT_BOX_API;
+  protected readonly treeSelectApi = OGE_TREE_SELECT_API;
   protected readonly tagBoxApi = OGE_TAG_BOX_API;
   protected readonly autocompleteApi = OGE_AUTOCOMPLETE_API;
   protected readonly checkBoxApi = OGE_CHECK_BOX_API;

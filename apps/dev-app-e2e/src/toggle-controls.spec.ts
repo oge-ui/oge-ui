@@ -25,13 +25,16 @@ test.describe('toggle controls page', () => {
     await notify.click();
     await expect(notify).toHaveAttribute('aria-checked', 'false');
 
-    // radio group: arrows move focus and selection, skipping disabled
+    // radio group: arrows move focus and selection, skipping disabled.
+    // Scope to the demo's own output — the Code tab renders snippet sources
+    // that also contain the word "plan".
     const group = page.locator('oge-radio-group', { hasText: 'Starter' });
+    const planOutput = page.getByTestId('plan-output');
     await group.locator('.oge-radio', { hasText: 'Team' }).click();
-    await expect(page.getByText('plan:')).toContainText('team');
+    await expect(planOutput).toContainText('team');
     await group.locator('.oge-radio', { hasText: 'Team' }).press('ArrowDown');
     // "Scale (sold out)" is disabled → lands on Enterprise
-    await expect(page.getByText('plan:')).toContainText('enterprise');
+    await expect(planOutput).toContainText('enterprise');
   });
 
   test('has no axe violations', async ({ page }) => {

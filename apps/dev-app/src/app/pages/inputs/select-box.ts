@@ -7,6 +7,15 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  BASIC_SNIPPET,
+  CHROME_SNIPPET,
+  GROUP_SNIPPET,
+  LAZY_SNIPPET,
+  MAPPING_SNIPPET,
+  STATES_SNIPPET,
+  TAGBOX_SNIPPET,
+} from './select-box-snippets';
 
 const SECTIONS = [
   'Basic usage',
@@ -18,114 +27,6 @@ const SECTIONS = [
   'Field chrome',
   'Keyboard & accessibility',
 ] as const;
-
-const BASIC_SNIPPET = `<oge-select-box
-  label="City"
-  [items]="cities"
-  [(value)]="city"
-/>
-
-cities = ['Ankara', 'Berlin', 'Lisbon', 'Oslo', 'Tokyo'];`;
-
-const MAPPING_SNIPPET = `<oge-select-box
-  label="Assignee"
-  [items]="users"
-  displayExpr="name"
-  valueExpr="id"
-  [searchEnabled]="true"
-  [showClearButton]="true"
-  [(value)]="assigneeId"
-  (searchChanged)="onSearch($event.text)"
-/>
-
-users = [
-  { id: 1, name: 'Elif Kaya', role: 'Engineering' },
-  { id: 2, name: 'Mert Demir', role: 'Design' },
-  // …
-];`;
-
-const GROUP_SNIPPET = `<!-- flat data, grouped on the fly -->
-<oge-select-box
-  label="Team member"
-  [items]="users"
-  displayExpr="name"
-  valueExpr="id"
-  groupBy="role"
-  [(value)]="memberId"
-/>
-
-<!-- typed text becomes a new item -->
-<oge-select-box
-  label="Tag"
-  [items]="tags()"
-  [searchEnabled]="true"
-  [acceptCustomValue]="true"
-  (customItemCreating)="createTag($event)"
-  [(value)]="tag"
-/>
-
-createTag(event: OgeSelectBoxCustomItemEvent<string>) {
-  event.customItem = event.text;      // or a promise, or null to reject
-  this.tags.update((t) => [...t, event.text]);
-}`;
-
-const LAZY_SNIPPET = `<oge-select-box
-  label="Warehouse"
-  [items]="loadWarehouses"
-  [(value)]="warehouse"
-/>
-
-// invoked once, on first open — loading/error rows render while pending
-loadWarehouses = () =>
-  new Promise<string[]>((resolve) =>
-    setTimeout(() => resolve(['Hamburg', 'İzmir', 'Rotterdam']), 900),
-  );`;
-
-const TAGBOX_SNIPPET = `<oge-tag-box
-  label="Skills"
-  [items]="skills"
-  [searchEnabled]="true"
-  [showClearButton]="true"
-  [(value)]="selectedSkills"
-  (selectionChanged)="onDelta($event.addedItems, $event.removedItems)"
-/>
-
-<oge-tag-box
-  label="Team"
-  [items]="users"
-  displayExpr="name"
-  valueExpr="id"
-  imageExpr="avatar"
-  [maxDisplayedTags]="3"
-  [(value)]="teamIds"
-/>`;
-
-const STATES_SNIPPET = `<oge-select-box
-  label="Plan"
-  [items]="plans"
-  displayExpr="name"
-  valueExpr="id"
-  disabledExpr="soldOut"
-  [(value)]="planId"
-/>`;
-
-const CHROME_SNIPPET = `<oge-select-box
-  label="Country"
-  labelMode="floating"
-  [items]="countries"
-  [showClearButton]="true"
-  hint="Shipping destination"
-  [(value)]="country"
-/>
-
-<oge-select-box
-  label="Country"
-  size="sm"
-  stylingMode="filled"
-  subscriptSizing="none"
-  [items]="countries"
-  [(value)]="country"
-/>`;
 
 interface DemoUser {
   id: number;
@@ -170,6 +71,7 @@ interface DemoPlan {
       description="Bind an array of strings and <code>[(value)]</code> — no mapping needed. Open with the mouse, <kbd>&darr;</kbd>, <kbd>Enter</kbd> or by typing a letter (type-ahead)."
       [chips]="['[(value)]']"
       [code]="basicSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-select-box label="City" [items]="cities" [(value)]="city" />
@@ -184,6 +86,7 @@ interface DemoPlan {
       description="Objects map through <code>displayExpr</code>/<code>valueExpr</code> (field name or function). <code>searchEnabled</code> turns the input editable and filters client-side; <code>searchChanged</code> + <code>[loading]</code> are the server-side escape hatch."
       [chips]="['displayExpr', 'valueExpr', 'searchEnabled']"
       [code]="mappingSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-select-box
@@ -206,6 +109,7 @@ interface DemoPlan {
       description="<code>groupBy</code> (field name or function) groups flat data under headers on the fly — no pre-shaping. <code>acceptCustomValue</code> lets typed text that matches nothing become the value: <code>customItemCreating</code> maps it to an item (sync, async, or <code>null</code> to reject)."
       [chips]="['groupBy', 'acceptCustomValue', 'customItemCreating']"
       [code]="groupSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-select-box
@@ -234,6 +138,7 @@ interface DemoPlan {
       description="Pass a function as <code>[items]</code> — it runs once on first open; the popup shows a localized loading row while pending and an error row on rejection. <code>selectedItem</code> resolves as soon as the data lands."
       [chips]="['items: () => Promise', 'deferred']"
       [code]="lazySnippet"
+      language="ts"
     >
       <oge-select-box
         label="Warehouse"
@@ -252,6 +157,7 @@ interface DemoPlan {
         'selectionChanged',
       ]"
       [code]="tagBoxSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-tag-box
@@ -278,6 +184,7 @@ interface DemoPlan {
       description="<code>disabledExpr</code> marks rows non-selectable (skipped by keyboard navigation too). The selected value stays resolvable even while the visible list is filtered."
       [chips]="['disabledExpr']"
       [code]="statesSnippet"
+      language="ts"
     >
       <oge-select-box
         label="Plan"
@@ -295,6 +202,7 @@ interface DemoPlan {
       description="Everything from the shared chrome applies: label modes, sizes, styling modes, clear button, hints, validation subscript and the <code>sm + subscriptSizing=none</code> compact grid-editor shape."
       [chips]="['labelMode', 'size', 'stylingMode']"
       [code]="chromeSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <oge-select-box

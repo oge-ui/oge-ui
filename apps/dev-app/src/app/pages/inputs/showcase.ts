@@ -3,6 +3,12 @@ import { OgeNumberBox, OgeTextArea, OgeTextBox } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import {
+  COUNTER_SNIPPET,
+  DEBOUNCE_SNIPPET,
+  NUMBER_SNIPPET,
+  PASSWORD_SNIPPET,
+} from './showcase-snippets';
 
 const SECTIONS = [
   'Character counter',
@@ -10,32 +16,6 @@ const SECTIONS = [
   'Locale-aware numbers',
   'Debounced commits',
 ] as const;
-
-const COUNTER_SNIPPET = `<!-- grapheme-accurate: a family emoji counts as 1 character, not 8 code units -->
-<oge-text-box label="Bio" [(value)]="bio" [showCounter]="true" [maxLength]="40" />
-
-<!-- soft mode: typing past the limit is allowed, the counter turns red -->
-<oge-text-area label="Tweet" [showCounter]="true" [maxLength]="140" counterMode="soft" />`;
-
-const PASSWORD_SNIPPET = `<oge-text-box label="Password" mode="password" [(value)]="password" />
-<oge-text-box label="API token" [(value)]="token" [showCopyButton]="true" [readonly]="true" />`;
-
-const NUMBER_SNIPPET = `<!-- Intl.NumberFormat display on blur, raw editing on focus -->
-<oge-number-box
-  label="Price (de-DE)"
-  locale="de-DE"
-  [format]="{ style: 'currency', currency: 'EUR' }"
-  [(value)]="price"
-/>
-<oge-number-box label="Percentage" [format]="{ style: 'percent' }" [step]="0.01" />`;
-
-const DEBOUNCE_SNIPPET = `<oge-text-box
-  label="Search"
-  [(value)]="query"
-  [debounce]="400"
-  (inputChange)="keystrokes = keystrokes + 1"
-/>
-<!-- value commits 400ms after the last keystroke; blur/Enter flush instantly -->`;
 
 @Component({
   selector: 'app-inputs-showcase',
@@ -74,6 +54,7 @@ const DEBOUNCE_SNIPPET = `<oge-text-box
       heading="Character counter"
       description="<code>showCounter</code> renders a live counter in the subscript end slot. It counts what users perceive — grapheme clusters — so a multi-codepoint family emoji or a flag counts as one character, not eight code units. The default <code>limit</code> mode enforces <code>maxLength</code> natively; <code>soft</code> mode lets typing continue past the limit and turns the counter red instead."
       [code]="counterSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box
@@ -98,6 +79,7 @@ const DEBOUNCE_SNIPPET = `<oge-text-box
       heading="Password reveal & copy"
       description="<code>mode='password'</code> automatically adds a reveal toggle that flips the input type in place — the caret position survives and password managers stay attached. <code>showCopyButton</code> adds one-click copy with a transient confirmation announced to screen readers; ideal for API keys and tokens, especially combined with <code>readonly</code>."
       [code]="passwordSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box label="Password" mode="password" [(value)]="password" />
@@ -115,6 +97,7 @@ const DEBOUNCE_SNIPPET = `<oge-text-box
       heading="Locale-aware numbers"
       description="<code>format</code> takes standard <code>Intl.NumberFormatOptions</code> (currency, precision, units) and renders it while the field is unfocused; focusing switches to a raw editable number in the locale's decimal notation. Parsing understands grouped input like <code>1.234,56</code>. Spin buttons and arrow keys step by <code>step</code> with hold-to-repeat, and values clamp to <code>min</code>/<code>max</code> on commit."
       [code]="numberSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-number-box
@@ -141,6 +124,7 @@ const DEBOUNCE_SNIPPET = `<oge-text-box
       heading="Debounced commits"
       description="<code>debounce</code> delays the committed value (the model, forms and <code>valueCommitted</code>) until typing pauses — ideal for search fields that trigger requests. Blur and Enter flush immediately so nothing is ever lost, while <code>inputChange</code> keeps streaming every raw keystroke if you need it."
       [code]="debounceSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-4">
         <oge-text-box

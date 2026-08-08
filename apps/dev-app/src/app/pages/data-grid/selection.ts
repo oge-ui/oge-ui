@@ -5,28 +5,7 @@ import { OgeColumn, OgeGrid, type OgeContextMenuEvent } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
-
-const SNIPPET = `<oge-grid [data]="employees" keyField="id"
-          selectionMode="checkbox" [(selectedKeys)]="selected"
-          (rowContextMenu)="onContextMenu($event)">
-  …
-</oge-grid>
-
-onContextMenu(event: OgeContextMenuEvent<Employee>) {
-  // push items to open the built-in menu; leave empty for the browser menu
-  event.items.push({ text: 'Copy name', action: () => copy(event.row) });
-}`;
-
-const DEFERRED_SNIPPET = `<oge-grid [data]="rows" keyField="id"
-          selectionMode="checkbox"
-          [selectionDeferred]="true" [(selectionFilter)]="selectionFilter">
-  …
-</oge-grid>
-
-<!-- selectionFilter is a plain FilterExpr — POST it to your backend:
-     null                                        → nothing selected
-     { field: 'id', op: 'isnotnull' }            → select-all (no filter active)
-     { and: [all, { not: { id eq 42 } }] }       → all except #42 -->`;
+import { DEFERRED_SNIPPET, SNIPPET } from './selection-snippets';
 
 @Component({
   selector: 'app-selection',
@@ -96,6 +75,7 @@ const DEFERRED_SNIPPET = `<oge-grid [data]="rows" keyField="id"
     <app-demo-card
       [chips]="['selectionDeferred', 'selectionFilter']"
       [code]="deferredSnippet"
+      language="ts"
     >
       <div
         class="grid grid-cols-[minmax(0,2fr)_minmax(260px,1fr)] items-start gap-4 max-lg:grid-cols-1"

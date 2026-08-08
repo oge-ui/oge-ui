@@ -3,15 +3,7 @@ import { OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees } from '../../shared/demo-data';
-
-const SNIPPET = `<oge-grid [data]="employees" keyField="id"
-          [paging]="{ pageSize: 15, pageSizes: [15, 25, 50] }"
-          [sorting]="{ mode: 'multi', allowUnsorting: true }">
-  <oge-column field="id" caption="Id" [width]="80" dataType="number" />
-  <oge-column field="firstName" caption="First Name" />
-  <oge-column field="lastName" caption="Last Name" />
-  <oge-column field="salary" caption="Salary" dataType="number" />
-</oge-grid>`;
+import { SNIPPET } from './sorting-snippets';
 
 @Component({
   selector: 'app-sorting',
@@ -33,6 +25,7 @@ const SNIPPET = `<oge-grid [data]="employees" keyField="id"
     <app-demo-card
       [chips]="['10.000 rows', 'multi-sort', 'stateKey']"
       [code]="snippet"
+      language="ts"
     >
       <oge-grid
         [data]="employees"

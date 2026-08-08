@@ -3,16 +3,7 @@ import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeBigTree } from './tree-data';
-
-const SNIPPET = `<!-- 100 branches × 999 rows = 100.000 nodes -->
-<oge-tree-list
-  [data]="rows"
-  keyExpr="id"
-  parentIdExpr="parentId"
-  [autoExpandAll]="true"
-  [virtualScroll]="true"
-  style="height: 480px"
-/>`;
+import { SNIPPET } from './virtual-scroll-snippets';
 
 @Component({
   selector: 'app-tree-virtual',
@@ -33,6 +24,7 @@ const SNIPPET = `<!-- 100 branches × 999 rows = 100.000 nodes -->
     <app-demo-card
       [chips]="['O(visible) flatten', 'windowed DOM']"
       [code]="snippet"
+      language="ts"
     >
       <oge-tree-list
         style="height: 480px"

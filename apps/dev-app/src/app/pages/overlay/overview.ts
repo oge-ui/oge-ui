@@ -20,46 +20,9 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
+import { MENU_SNIPPET, PANEL_SNIPPET } from './overview-snippets';
 
 const SECTIONS = ['Anchored panel', 'Menu list'] as const;
-
-const PANEL_SNIPPET = `// component
-readonly open = signal(false);
-private readonly anchorRef = viewChild.required<ElementRef<HTMLElement>>('anchor');
-private readonly popupRef = viewChild(OgePopup, { read: ElementRef });
-
-readonly panel = new OgeAnchoredPanel({
-  anchor: () => this.anchorRef().nativeElement,
-  panel: () => this.popupRef()?.nativeElement ?? null,
-  placement: () => this.placement(),
-  onClosed: () => this.open.set(false),
-});
-
-// template
-<span #anchor class="inline-flex">
-  <oge-button text="Toggle panel" ariaHasPopup="dialog"
-    [ariaExpanded]="open()" [ariaControls]="panel.panelId"
-    (clicked)="open.set(!open())" />
-</span>
-@if (open()) {
-  <oge-popup [panel]="panel">
-    <div class="w-56 p-3">Anchored content…</div>
-  </oge-popup>
-}`;
-
-const MENU_SNIPPET = `<oge-menu-list
-  [items]="items"
-  ariaLabel="Demo actions"
-  (itemClick)="last.set($event.item.text)"
-/>
-
-// component
-protected readonly items: OgeMenuItem[] = [
-  { text: 'Duplicate', checked: false },
-  { text: 'Move to…' },
-  { text: '', separator: true },
-  { text: 'Delete', severity: 'danger' },
-];`;
 
 @Component({
   selector: 'app-overlay-overview',
@@ -142,6 +105,7 @@ protected readonly items: OgeMenuItem[] = [
       heading="Menu list"
       description="<code>&lt;oge-menu-list&gt;</code> implements the WAI-ARIA menu pattern with <code>aria-activedescendant</code>: the container holds real focus, arrows wrap and skip disabled items and separators, Home/End jump, printable keys type-ahead, Enter/Space activate. It is presentation-only — closing is delegated to the owner via <code>closeRequest</code>. Here it renders standalone (no popup) so the keyboard behavior is easy to try."
       [code]="menuSnippet"
+      language="ts"
     >
       <div class="flex flex-wrap items-start gap-6">
         <div

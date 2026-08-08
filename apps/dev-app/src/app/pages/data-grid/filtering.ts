@@ -4,25 +4,7 @@ import { OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees } from '../../shared/demo-data';
-
-const SNIPPET = `<oge-grid [data]="employees" keyField="id"
-          [filterRow]="true"            <!-- per-column editors + operator menu -->
-          [headerFilter]="true"         <!-- distinct values with search box -->
-          [searchPanel]="true"          <!-- global search + highlighting -->
-          [filterPanel]="true"          <!-- filter builder entry point -->
-          [(filterValue)]="filter">     <!-- programmatic and/or tree -->
-  <oge-column field="firstName" caption="First Name" />
-  <oge-column field="salary" caption="Salary" dataType="number" />
-</oge-grid>
-
-// filterValue is a serializable and/or expression tree:
-filter: FilterExpr = {
-  type: 'and',
-  operands: [
-    { type: 'binary', field: 'department', op: 'eq', value: 'Engineering' },
-    { type: 'binary', field: 'salary', op: 'ge', value: 60000 },
-  ],
-};`;
+import { SNIPPET } from './filtering-snippets';
 
 @Component({
   selector: 'app-filtering',
