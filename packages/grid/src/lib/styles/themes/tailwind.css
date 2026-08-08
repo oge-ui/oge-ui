@@ -23,6 +23,10 @@
 .oge-modal-layer,
 .oge-toast-region,
 .oge-tooltip,
+.oge-tabs,
+.oge-tab-panel,
+.oge-accordion,
+.oge-tree-view,
 .oge-pivot-grid {
   --oge-border-color: var(--color-slate-200, #e2e8f0);
   --oge-header-bg: var(--color-slate-50, #f8fafc);

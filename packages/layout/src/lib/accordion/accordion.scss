@@ -1,0 +1,397 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a standalone accordion is fully themed
+// without any other oge component on the page.
+.oge-accordion {
+  @include tokens.core-tokens;
+
+  --oge-accordion-pad-x: 14px;
+  --oge-accordion-pad-y: 12px;
+  --oge-accordion-transition: 200ms;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: var(--oge-font-size);
+  color: var(--oge-text-color);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  &.oge-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  &[data-size='sm'] {
+    --oge-accordion-pad-x: 10px;
+    --oge-accordion-pad-y: 8px;
+  }
+
+  &[data-size='lg'] {
+    --oge-accordion-pad-x: 18px;
+    --oge-accordion-pad-y: 16px;
+  }
+}
+
+// flat: no gutters, panels share borders as one stack
+.oge-accordion-flat {
+  gap: 0;
+
+  .oge-accordion-item {
+    border-radius: 0;
+
+    & + .oge-accordion-item {
+      border-block-start: none;
+    }
+
+    &:first-child {
+      border-start-start-radius: var(--oge-radius);
+      border-start-end-radius: var(--oge-radius);
+    }
+
+    &:last-child {
+      border-end-start-radius: var(--oge-radius);
+      border-end-end-radius: var(--oge-radius);
+    }
+  }
+}
+
+.oge-accordion-empty {
+  padding: var(--oge-accordion-pad-y) var(--oge-accordion-pad-x);
+  color: var(--oge-muted-color);
+}
+
+.oge-accordion-item {
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  overflow: hidden;
+}
+
+[data-styling-mode='filled'] .oge-accordion-item {
+  background: var(--oge-header-bg);
+  border-color: transparent;
+}
+
+[data-styling-mode='flat'] .oge-accordion-item {
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+  border-block-end: 1px solid var(--oge-border-color);
+}
+
+.oge-accordion-item-disabled {
+  opacity: 0.55;
+}
+
+// invalid section: a danger rail plus a dot next to the title
+.oge-accordion-item-invalid {
+  border-color: var(--oge-danger);
+  box-shadow: inset 3px 0 0 0 var(--oge-danger);
+}
+
+.oge-accordion-header {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+// the heading (native h1–h6 or a role=heading div) is a pure wrapper —
+// the button owns the row
+.oge-accordion-heading {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  font: inherit;
+}
+
+.oge-accordion-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  min-block-size: var(--oge-accordion-header-height, auto);
+  padding: var(--oge-accordion-pad-y) var(--oge-accordion-pad-x);
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
+}
+
+.oge-accordion-item-disabled .oge-accordion-toggle {
+  cursor: not-allowed;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+// togglePosition: logical order, so RTL mirrors it for free. The button
+// carries the resolved per-panel value, which is why it wins over the host.
+.oge-accordion-toggle[data-toggle-position='end'] .oge-accordion-toggle-icon {
+  order: 10;
+  margin-inline-start: auto;
+}
+
+.oge-accordion-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--oge-muted-color);
+  transition: transform var(--oge-accordion-transition) ease;
+}
+
+.oge-accordion-item-expanded .oge-accordion-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.oge-accordion-icon {
+  flex: none;
+  color: var(--oge-muted-color);
+}
+
+.oge-accordion-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.oge-accordion-title {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-accordion-description {
+  font-size: 0.85em;
+  color: var(--oge-muted-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-accordion-badge {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.75em;
+  line-height: 1.6;
+  background: var(--oge-badge-bg);
+  color: var(--oge-badge-color);
+}
+
+.oge-accordion-invalid-dot {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--oge-danger);
+}
+
+.oge-accordion-spinner {
+  flex: none;
+  inline-size: 14px;
+  block-size: 14px;
+  border: 2px solid var(--oge-accent-25);
+  border-block-start-color: var(--oge-accent);
+  border-radius: 50%;
+  animation: oge-accordion-spin 700ms linear infinite;
+}
+
+.oge-accordion-item-pending .oge-accordion-toggle {
+  pointer-events: none;
+}
+
+@keyframes oge-accordion-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Real, focusable buttons living beside the toggle — never inside it.
+.oge-accordion-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding-inline-end: var(--oge-accordion-pad-x);
+}
+
+// Height animation via grid-template-rows: unlike a measured block-size this
+// needs no JS and keeps working when the content resizes while open.
+.oge-accordion-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+.oge-accordion-panel-animated {
+  transition:
+    grid-template-rows var(--oge-accordion-transition) ease,
+    opacity var(--oge-accordion-transition) ease;
+  opacity: 0;
+}
+
+.oge-accordion-panel-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.oge-accordion-panel-inner {
+  overflow: hidden;
+  min-block-size: 0;
+}
+
+.oge-accordion-panel-body {
+  padding: 0 var(--oge-accordion-pad-x) var(--oge-accordion-pad-y);
+}
+
+// Two identical keyframes alternated by the component so a late-resolving
+// contentLoader replays the fade — a plain class toggle would not restart it.
+@keyframes oge-accordion-fade-a {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes oge-accordion-fade-b {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.oge-accordion-fade-a {
+  animation: oge-accordion-fade-a var(--oge-accordion-transition) ease;
+}
+
+.oge-accordion-fade-b {
+  animation: oge-accordion-fade-b var(--oge-accordion-transition) ease;
+}
+
+// Material's mat-action-row counterpart: a divided footer inside the panel.
+.oge-accordion-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-block-start: var(--oge-accordion-pad-y);
+  padding-block-start: var(--oge-accordion-pad-y);
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+.oge-accordion-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-block: 4px;
+}
+
+.oge-accordion-skeleton-line {
+  block-size: 10px;
+  border-radius: var(--oge-radius);
+  background: linear-gradient(
+    90deg,
+    var(--oge-header-bg) 25%,
+    var(--oge-row-hover-bg) 37%,
+    var(--oge-header-bg) 63%
+  );
+  background-size: 400% 100%;
+  animation: oge-accordion-shimmer 1400ms ease infinite;
+
+  &:nth-child(3) {
+    inline-size: 80%;
+  }
+
+  &:last-child {
+    inline-size: 55%;
+  }
+}
+
+@keyframes oge-accordion-shimmer {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0 50%;
+  }
+}
+
+.oge-accordion-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--oge-danger);
+}
+
+.oge-accordion-retry {
+  padding: 4px 10px;
+  border: 1px solid currentcolor;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+// Visually hidden, still announced.
+.oge-accordion-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-accordion-panel-animated,
+  .oge-accordion-toggle,
+  .oge-accordion-toggle-icon {
+    transition: none;
+  }
+
+  .oge-accordion-fade-a,
+  .oge-accordion-fade-b,
+  .oge-accordion-skeleton-line,
+  .oge-accordion-spinner {
+    animation: none;
+  }
+}

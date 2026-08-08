@@ -1,5 +1,6 @@
 export { OgeTextBox } from './lib/text-box/text-box';
 export { OgeSelectBox } from './lib/select-box/select-box';
+export { OgeTreeSelect } from './lib/tree-select/tree-select';
 export { OgeTagBox } from './lib/tag-box/tag-box';
 export { OgeAutocomplete } from './lib/autocomplete/autocomplete';
 export {
@@ -90,3 +91,8 @@ export {
   type OgeInputsConfigInput,
   type OgeInputsMessages,
 } from './lib/config';
+export type {
+  OgeTreeSelectDisplayMode,
+  OgeTreeSelectSelectionChangedEvent,
+  OgeTreeSelectSelectionMode,
+} from './lib/tree-select/tree-select-types';

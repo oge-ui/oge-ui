@@ -1,0 +1,596 @@
+# @oge-ui/tabs
+
+> Tab strip and tab panel: declarative or data-driven tabs, deferred rendering with keep-alive, closable and reorderable tabs, router integration.
+
+Part of OGE UI v0.6.0.
+Docs and live demos: https://ogeui.com/components/tabs
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/tabs
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/tabs`
+
+- values: `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_TABS_CONFIG`, `OgeTab`, `OgeTabContentTemplate`, `OgeTabHeaderTemplate`, `OgeTabPanel`, `OgeTabs`, `provideOgeTabsConfig`
+- types: `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabContentTemplateContext`, `OgeTabHeaderTemplateContext`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`
+
+## API reference
+
+### OgeTabPanel — `<oge-tab-panel>`
+
+#### Properties
+
+_Tabs & selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeTabItem[] \| undefined` | `—` | Data-driven tabs rendered after the projected `` children. |
+| `selectedIndex` | `number` | `0` | Index of the selected tab — two-way. `-1` selects none; clamped when tabs are removed. |
+| `selectedKey` | `string \| undefined` | `undefined` | Key of the selected tab — two-way, reconciled with `selectedIndex` both ways. |
+| `activation` | `'automatic' \| 'manual'` | `'automatic'` | APG activation: arrows select immediately, or move focus only until Enter/Space commits. |
+| `disabled` | `boolean` | `false` | Disables the whole component. |
+| `ariaLabel` | `string \| undefined` | `—` | Aria label of the tablist. |
+| `messages` | `Partial<OgeTabsMessages>` | `{}` | Per-instance overrides of the config `messages`. |
+
+_Closing, overflow & order_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `closable` | `boolean` | `false` | Default closability; overridable per tab / per item. Closed tabs are removed by the app in `tabClosed`. The ✕ is presentational — the keyboard path is Delete/Backspace on the focused tab. |
+| `showNavButtons` | `'auto' \| 'always' \| 'never'` | `'auto'` | Overflow nav arrows; `auto` shows them only while the strip overflows. |
+| `showTabListButton` | `boolean` | `false` | Shows the all-tabs overflow menu (an `oge-menu-list` with the active tab checked). |
+| `allowTabReordering` | `boolean` | `false` | Enables drag & drop reordering of tab headers; Escape cancels an in-flight drag. |
+
+_Appearance_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `stylingMode` | `'primary' \| 'secondary'` | `'primary'` | Visual variant: underline ink (`primary`) or soft pills (`secondary`). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the tab strip. |
+| `tabAlignment` | `'start' \| 'center' \| 'end' \| 'justify' \| 'stretch'` | `'start'` | Distribution of the tabs while they fit: `justify` spreads them to the edges, `stretch` gives every tab an equal share. |
+| `indicatorFit` | `'tab' \| 'content'` | `'tab'` | Whether the selected-tab indicator spans the whole tab or only its label area. |
+
+_Panel rendering (oge-tab-panel only)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tabsPosition` | `'top' \| 'bottom' \| 'start' \| 'end'` | `'top'` | Side the strip sits on — logical values, so RTL flips `start`/`end`. Vertical positions switch the arrow keys to Up/Down. |
+| `deferRendering` | `boolean` | `true` | Instantiate a panel's content only when its tab first activates (lazy templates via `ogeTabContentTemplate`). |
+| `keepAlive` | `boolean` | `true` | Keep once-rendered panels mounted (hidden) so state survives switches; `false` destroys lazy content on deactivation. |
+| `panelAnimation` | `'none' \| 'fade' \| 'slide'` | `'none'` | Transition played by the incoming panel; `slide` enters from the direction of travel (mirrored in RTL). Duration comes from `--oge-tab-panel-transition` (180ms) and is suppressed under `prefers-reduced-motion`. |
+| `dynamicHeight` | `boolean` | `false` | Animates the content box between the outgoing and incoming panel heights instead of jumping; async content is tracked with a `ResizeObserver`. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Focuses the active tab header (roving-tabindex target). |
+| `closeTab(target: number \| string): void` | `void` | Runs the close pipeline (`tabClosing` → `closeGuard` → `tabClosed`) for an index or key. |
+| `scrollToTab(target: number \| string): void` | `void` | Scrolls the tab at an index or with a key into view. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectionChanging` | `OgeTabSelectionChangingEvent` | Cancelable pre-event of a user-gesture selection change (`cancel = true` keeps the current tab). Programmatic model writes bypass it. |
+| `selectionChanged` | `OgeTabSelectionChangedEvent` | After the selection committed — `index/key/previousIndex/previousKey/item/event`. |
+| `tabClick` | `OgeTabClickEvent` | A tab header was activated by pointer or keyboard (Enter/Space). |
+| `tabClosing` | `OgeTabClosingEvent` | Cancelable pre-event of a close, before the async `closeGuard` runs. |
+| `tabClosed` | `OgeTabClosedEvent` | The close passed all guards — remove the `items` entry or `` here. |
+| `tabReordering` | `OgeTabReorderingEvent` | Cancelable pre-event of a drag-reorder drop (`fromIndex/toIndex/key`). |
+| `tabReordered` | `OgeTabReorderedEvent` | A drag reorder committed to the display order. |
+
+### OgeTabs — `<oge-tabs>`
+
+#### Properties
+
+_Strip (oge-tabs only)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Strip direction; `vertical` renders a column, maps arrows to Up/Down and sets `aria-orientation`. |
+
+_Tabs & selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeTabItem[] \| undefined` | `—` | Data-driven tabs rendered after the projected `` children. |
+| `selectedIndex` | `number` | `0` | Index of the selected tab — two-way. `-1` selects none; clamped when tabs are removed. |
+| `selectedKey` | `string \| undefined` | `undefined` | Key of the selected tab — two-way, reconciled with `selectedIndex` both ways. |
+| `activation` | `'automatic' \| 'manual'` | `'automatic'` | APG activation: arrows select immediately, or move focus only until Enter/Space commits. |
+| `disabled` | `boolean` | `false` | Disables the whole component. |
+| `ariaLabel` | `string \| undefined` | `—` | Aria label of the tablist. |
+| `messages` | `Partial<OgeTabsMessages>` | `{}` | Per-instance overrides of the config `messages`. |
+
+_Closing, overflow & order_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `closable` | `boolean` | `false` | Default closability; overridable per tab / per item. Closed tabs are removed by the app in `tabClosed`. The ✕ is presentational — the keyboard path is Delete/Backspace on the focused tab. |
+| `showNavButtons` | `'auto' \| 'always' \| 'never'` | `'auto'` | Overflow nav arrows; `auto` shows them only while the strip overflows. |
+| `showTabListButton` | `boolean` | `false` | Shows the all-tabs overflow menu (an `oge-menu-list` with the active tab checked). |
+| `allowTabReordering` | `boolean` | `false` | Enables drag & drop reordering of tab headers; Escape cancels an in-flight drag. |
+
+_Appearance_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `stylingMode` | `'primary' \| 'secondary'` | `'primary'` | Visual variant: underline ink (`primary`) or soft pills (`secondary`). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the tab strip. |
+| `tabAlignment` | `'start' \| 'center' \| 'end' \| 'justify' \| 'stretch'` | `'start'` | Distribution of the tabs while they fit: `justify` spreads them to the edges, `stretch` gives every tab an equal share. |
+| `indicatorFit` | `'tab' \| 'content'` | `'tab'` | Whether the selected-tab indicator spans the whole tab or only its label area. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Focuses the active tab header (roving-tabindex target). |
+| `closeTab(target: number \| string): void` | `void` | Runs the close pipeline (`tabClosing` → `closeGuard` → `tabClosed`) for an index or key. |
+| `scrollToTab(target: number \| string): void` | `void` | Scrolls the tab at an index or with a key into view. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectionChanging` | `OgeTabSelectionChangingEvent` | Cancelable pre-event of a user-gesture selection change (`cancel = true` keeps the current tab). Programmatic model writes bypass it. |
+| `selectionChanged` | `OgeTabSelectionChangedEvent` | After the selection committed — `index/key/previousIndex/previousKey/item/event`. |
+| `tabClick` | `OgeTabClickEvent` | A tab header was activated by pointer or keyboard (Enter/Space). |
+| `tabClosing` | `OgeTabClosingEvent` | Cancelable pre-event of a close, before the async `closeGuard` runs. |
+| `tabClosed` | `OgeTabClosedEvent` | The close passed all guards — remove the `items` entry or `` here. |
+| `tabReordering` | `OgeTabReorderingEvent` | Cancelable pre-event of a drag-reorder drop (`fromIndex/toIndex/key`). |
+| `tabReordered` | `OgeTabReorderedEvent` | A drag reorder committed to the display order. |
+
+### OgeTab — `<oge-tab>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | `''` | Tab label; alternative to an inline `[ogeTabHeaderTemplate]`. |
+| `key` | `string \| undefined` | `—` | Stable identity used by `selectedKey`, reorder tracking and DOM ids. |
+| `disabled` | `boolean` | `false` | Disabled tabs are skipped by keyboard navigation and selection. |
+| `visible` | `boolean` | `true` | `false` removes the tab (and its panel) entirely. |
+| `closable` | `boolean \| undefined` | `undefined` | Shows a close button; `undefined` falls back to the component-level `closable`. |
+| `badge` | `string \| number \| undefined` | `—` | Badge rendered after the label. |
+| `dirty` | `boolean` | `false` | Renders the unsaved-changes dot and announces it to screen readers (`messages.dirty`). |
+| `hint` | `string \| undefined` | `—` | Tooltip — rendered as the native `title` attribute. |
+| `closeGuard` | `() => boolean \| Promise<boolean>` | `—` | Veto hook run before this tab closes; may be async (single-flight, rejection = veto, pending spinner on the ✕). |
+
+#### Types
+
+_Template slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `[ogeTabHeaderTemplate]` | `OgeTabHeaderTemplateContext` | Custom tab header (icons, rich markup). Inside an ``: that tab only; directly inside the component: every `items` tab. Context: `{ $implicit: item, index, selected, text }`. |
+| `[ogeTabContentTemplate]` | `OgeTabContentTemplateContext` | Lazily instantiated panel content. Inside an `` it replaces the projected content; directly inside `oge-tab-panel` it renders every `items` tab. Context: `{ $implicit: item, index }`. |
+
+### Tabs configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeTabsConfig(config)` | `(config: OgeTabsConfigInput) => Provider` | Application- or component-scoped defaults; shallow-merges `messages` over the built-ins. |
+| `messages` | `OgeTabsMessages` | Every user-facing string: `closeTab`, `scrollBackward`, `scrollForward`, `tabListMenu`, `dirty`, `noData`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabItem` | `{ key?, text?, badge?, hint?, disabled?, visible?, closable?, dirty?, closeGuard? }` | One data-driven tab of the `items` input. |
+| `OgeTabCloseGuard` | `() => boolean \| Promise<boolean>` | Per-tab veto hook; resolving `false` (or rejecting) keeps the tab open. |
+| `OgeTabsActivation` | `'automatic' \| 'manual'` | How keyboard focus interacts with selection (APG). |
+| `OgeTabsPosition` | `'top' \| 'bottom' \| 'start' \| 'end'` | Logical strip placement of `oge-tab-panel`. |
+| `OgeTabsOrientation` | `'horizontal' \| 'vertical'` | Direction of a stand-alone `oge-tabs` strip. |
+| `OgeTabsNavButtonsMode` | `'auto' \| 'always' \| 'never'` | When the overflow nav arrows are shown. |
+| `OgeTabsAlignment` | `'start' \| 'center' \| 'end' \| 'justify' \| 'stretch'` | How tabs are distributed along the strip. |
+| `OgeTabsIndicatorFit` | `'tab' \| 'content'` | Width of the selected-tab indicator. |
+| `OgeTabPanelAnimation` | `'none' \| 'fade' \| 'slide'` | Transition played by the newly displayed panel. |
+| `OgeTabsStylingMode / OgeTabsSize` | `'primary' \| 'secondary' / 'sm' \| 'md' \| 'lg'` | Visual variant and density unions. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Alignment
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTabs } from '@oge-ui/tabs';
+import type { OgeTabItem } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTabs],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- start (default) · center · end · justify · stretch -->
+    <oge-tabs
+      [items]="tabs"
+      tabAlignment="stretch"
+      indicatorFit="content"
+      [(selectedIndex)]="index"
+    />
+
+    <!-- with no visible tabs the strip renders messages.noData -->
+    <oge-tabs [items]="[]" />
+  `,
+})
+export class Demo {
+  protected readonly tabs: OgeTabItem[] = [
+    { key: 'one', text: 'One' },
+    { key: 'two', text: 'Two' },
+  ];
+
+  protected readonly index = signal(0);
+}
+```
+
+### Animation
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTab, OgeTabPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tab-panel
+      panelAnimation="slide"
+      [dynamicHeight]="true"
+      [(selectedIndex)]="index"
+    >
+      <oge-tab text="Short">One line.</oge-tab>
+      <oge-tab text="Tall">Several lines of taller content…</oge-tab>
+    </oge-tab-panel>
+  `,
+})
+export class Demo {
+  protected readonly index = signal(0);
+}
+
+/* duration is a CSS variable, not an input:
+   .oge-tab-panel-content { --oge-tab-panel-transition: 240ms; } */
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
+import type { OgeTabSelectionChangedEvent } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTab, OgeTabPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tab-panel [(selectedIndex)]="index" (selectionChanged)="onChanged($event)">
+      <oge-tab text="Overview">Project overview…</oge-tab>
+      <oge-tab text="Activity">Latest activity…</oge-tab>
+      <oge-tab text="Settings" [disabled]="true">Settings…</oge-tab>
+    </oge-tab-panel>
+  `,
+})
+export class Demo {
+  protected readonly index = signal(0);
+
+  protected onChanged(event: OgeTabSelectionChangedEvent): void {
+    console.log('now on', event.index);
+  }
+}
+```
+
+### Close
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTabPanel } from '@oge-ui/tabs';
+import type { OgeTabClosedEvent, OgeTabItem } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTabPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tab-panel [items]="files()" [closable]="true" (tabClosed)="remove($event)" />
+  `,
+})
+export class Demo {
+  // the tab is removed by the app, after the guard allowed it
+  protected readonly files = signal<OgeTabItem[]>([
+    { key: 'a.ts', text: 'a.ts' },
+    // async closeGuard: resolve(false) keeps the tab, rejection = veto
+    {
+      key: 'b.ts',
+      text: 'b.ts (guarded)',
+      dirty: true,
+      closeGuard: () => this.confirmDiscard(),
+    },
+  ]);
+
+  protected remove(e: OgeTabClosedEvent): void {
+    this.files.set(this.files().filter((f) => f.key !== e.key));
+  }
+
+  private confirmDiscard(): boolean {
+    return confirm('Discard unsaved changes?');
+  }
+}
+```
+
+### Items
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTabContentTemplate, OgeTabPanel } from '@oge-ui/tabs';
+import type { OgeTabItem } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTabContentTemplate, OgeTabPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tab-panel [items]="docs" [(selectedKey)]="active">
+      <ng-template ogeTabContentTemplate let-item>
+        Editing <b>{{ item?.text }}</b>…
+      </ng-template>
+    </oge-tab-panel>
+  `,
+})
+export class Demo {
+  protected readonly docs: OgeTabItem[] = [
+    { key: 'readme', text: 'README.md' },
+    { key: 'spec', text: 'spec.ts', badge: 3 },
+    { key: 'draft', text: 'draft.md', dirty: true },
+  ];
+
+  protected readonly active = signal('readme');
+}
+```
+
+### Lazy
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTab, OgeTabContentTemplate, OgeTabPanel } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTab, OgeTabContentTemplate, OgeTabPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- deferRendering (default true): a panel is created on first visit.
+         keepAlive (default true): it then stays mounted while hidden. -->
+    <oge-tab-panel [keepAlive]="keepAlive()">
+      <oge-tab text="First">
+        <ng-template ogeTabContentTemplate>Created at {{ stamp() }}</ng-template>
+      </oge-tab>
+      <oge-tab text="Second">
+        <ng-template ogeTabContentTemplate>Created at {{ stamp() }}</ng-template>
+      </oge-tab>
+    </oge-tab-panel>
+  `,
+})
+export class Demo {
+  protected readonly keepAlive = signal(true);
+
+  protected stamp(): string {
+    return new Date().toLocaleTimeString();
+  }
+}
+```
+
+### Overflow
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeTabs } from '@oge-ui/tabs';
+import type { OgeTabItem } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTabs],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tabs
+      [items]="manyTabs"
+      [(selectedIndex)]="index"
+      showNavButtons="auto"
+      [showTabListButton]="true"
+    />
+  `,
+})
+export class Demo {
+  protected readonly manyTabs: OgeTabItem[] = Array.from(
+    { length: 20 },
+    (_, i) => ({ key: `t${i}`, text: `Section ${i + 1}` }),
+  );
+
+  protected readonly index = signal(0);
+}
+```
+
+### Position
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTab, OgeTabPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tab-panel tabsPosition="start" stylingMode="secondary" size="sm">
+      <oge-tab text="General">General settings…</oge-tab>
+      <oge-tab text="Members">Team members…</oge-tab>
+    </oge-tab-panel>
+  `,
+})
+export class Demo {}
+```
+
+### Reorder
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeTabPanel } from '@oge-ui/tabs';
+import type { OgeTabItem, OgeTabReorderedEvent } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeTabPanel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tab-panel
+      [items]="stages"
+      [allowTabReordering]="true"
+      (tabReordered)="log($event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly stages: OgeTabItem[] = [
+    { key: 'plan', text: 'Plan' },
+    { key: 'build', text: 'Build' },
+    { key: 'ship', text: 'Ship' },
+  ];
+
+  protected log(event: OgeTabReorderedEvent): void {
+    console.log(event.fromIndex, '→', event.toIndex);
+  }
+}
+```
+
+### Routed
+
+```ts
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterOutlet, NavigationEnd, Router } from '@angular/router';
+import { OgeTabs } from '@oge-ui/tabs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
+import type { OgeTabItem, OgeTabSelectionChangedEvent } from '@oge-ui/tabs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [RouterOutlet, OgeTabs],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-tabs
+      [items]="tabs"
+      [selectedKey]="activeKey()"
+      (selectionChanged)="go($event)"
+      ariaLabel="Project sections"
+    />
+    <router-outlet />
+  `,
+})
+export class Demo {
+  protected readonly tabs: OgeTabItem[] = [
+    { key: 'overview', text: 'Overview' },
+    { key: 'activity', text: 'Activity' },
+    { key: 'settings', text: 'Settings' },
+  ];
+
+  // the URL is the single source of truth
+  private readonly router = inject(Router);
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  protected readonly activeKey = computed(() => {
+    const segment = this.url().split(/[?#]/)[0].split('/').pop() ?? '';
+    return this.tabs.some((t) => t.key === segment) ? segment : 'overview';
+  });
+
+  protected go(event: OgeTabSelectionChangedEvent): void {
+    if (event.key) {
+      void this.router.navigate(['/components/tabs/routed', event.key]);
+    }
+  }
+}
+```
+

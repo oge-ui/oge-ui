@@ -1,0 +1,36 @@
+{
+  "name": "@oge-ui/layout",
+  "version": "0.6.0",
+  "description": "Signal-based Angular layout family: OgeAccordion with declarative <oge-accordion-item> children or data-driven items, APG keyboard support, single/multiple expansion, lazy rendering, async expand guards, invalid-section indicators and per-panel async content loaders.",
+  "keywords": [
+    "angular",
+    "accordion",
+    "expansion-panel",
+    "collapse",
+    "disclosure",
+    "layout",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/core": "0.6.0"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/layout"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

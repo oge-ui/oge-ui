@@ -144,6 +144,8 @@ export class OgeToastRef<D = unknown> {
               <span class="oge-toast-icon" aria-hidden="true">
                 @if (entry.options().loading) {
                   <span class="oge-toast-spinner"></span>
+                } @else if (entry.options().icon) {
+                  <ng-container [ngTemplateOutlet]="entry.options().icon!" />
                 } @else {
                   @switch (entry.options().severity) {
                     @case ('success') {
@@ -698,7 +700,12 @@ export class OgeToastService {
     const next = merged as unknown as ResolvedToastOptions;
     entry.options.set(next);
     entry.slotContext.data = next.data;
-    if (next.message !== previous.message) this.announce(next);
+    if (
+      next.message !== previous.message ||
+      next.announceText !== previous.announceText
+    ) {
+      this.announce(next);
+    }
     const timingChanged =
       next.displayTime !== previous.displayTime ||
       next.sticky !== previous.sticky ||
@@ -746,9 +753,11 @@ export class OgeToastService {
     if (mode === 'off') return;
     const el = mode === 'assertive' ? this.assertiveEl : this.politeEl;
     if (!el) return;
-    const text = options.title
-      ? `${options.title}. ${options.message}`
-      : options.message;
+    const text =
+      options.announceText ??
+      (options.title
+        ? `${options.title}. ${options.message}`
+        : options.message);
     // Clear-then-set (delayed) forces re-announcement of repeated messages.
     el.textContent = '';
     setTimeout(() => {

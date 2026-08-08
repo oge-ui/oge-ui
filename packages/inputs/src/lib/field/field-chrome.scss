@@ -689,3 +689,14 @@
 .oge-tag-checkbox-on {
   @include selection-glyph.selection-glyph-on;
 }
+
+// Tree select popup: the tree brings its own tokens and row chrome, so this
+// only owns the panel box the anchored popup positions.
+.oge-tree-select-panel {
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  box-shadow: var(--oge-shadow-popup);
+}

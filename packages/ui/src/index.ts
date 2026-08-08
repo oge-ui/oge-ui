@@ -10,7 +10,7 @@
  * ```
  *
  * Star re-exports are the deliberate exception to the house "named exports
- * only" barrel rule — this package mirrors six APIs verbatim and must never
+ * only" barrel rule — this package mirrors nine APIs verbatim and must never
  * drift from them. `@oge-ui/tree-list` re-exports the grid's column API, so
  * its unique symbols are re-exported by name to avoid ambiguous star exports
  * (ESM silently drops names exported by two stars). The scoped packages
@@ -24,6 +24,9 @@ export * from '@oge-ui/grid';
 export * from '@oge-ui/overlay';
 export * from '@oge-ui/buttons';
 export * from '@oge-ui/inputs';
+export * from '@oge-ui/tabs';
+export * from '@oge-ui/layout';
+export * from '@oge-ui/navigation';
 // both grid (legacy context-menu shape) and overlay export an `OgeMenuItem`;
 // the overlay one is the canonical shape — an explicit re-export wins the tie
 export { type OgeMenuItem } from '@oge-ui/overlay';

@@ -1,4 +1,9 @@
-import { ApplicationRef } from '@angular/core';
+import {
+  ApplicationRef,
+  Component,
+  TemplateRef,
+  viewChild,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { OgeToastService } from './toast-service';
 
@@ -105,6 +110,42 @@ describe('OgeToastService basics', () => {
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect((await a.closed).reason).toBe('clear');
     expect((await b.closed).reason).toBe('clear');
+  });
+
+  it('announceText overrides the announced message', async () => {
+    const service = TestBed.inject(OgeToastService);
+    service.show({
+      message: 'Saved',
+      announceText: 'Document saved to Drafts',
+    });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    tick();
+
+    expect(document.querySelector('.oge-toast-message')?.textContent).toContain(
+      'Saved',
+    );
+    expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe(
+      'Document saved to Drafts',
+    );
+  });
+
+  it('a custom icon template replaces the severity icon', async () => {
+    @Component({
+      template: `<ng-template #star>★</ng-template>`,
+    })
+    class IconHost {
+      readonly star = viewChild.required<TemplateRef<void>>('star');
+    }
+    const fixture = TestBed.createComponent(IconHost);
+    fixture.detectChanges();
+
+    const service = TestBed.inject(OgeToastService);
+    service.success('Starred', { icon: fixture.componentInstance.star() });
+    await flush();
+
+    const icon = document.querySelector('.oge-toast-icon');
+    expect(icon?.textContent).toContain('★');
+    expect(icon?.querySelector('svg')).toBeNull();
   });
 
   it('announces politely by default and assertively for errors', async () => {

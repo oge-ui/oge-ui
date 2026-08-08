@@ -1,0 +1,508 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// Hosts carry the tokens so a standalone strip/panel is fully themed without
+// any other oge component on the page.
+.oge-tabs,
+.oge-tab-panel {
+  @include tokens.core-tokens;
+
+  display: flex;
+  font-size: var(--oge-font-size);
+  color: var(--oge-text-color);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  &.oge-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+.oge-tabs {
+  &.oge-tabs-vertical {
+    flex-direction: column;
+    inline-size: max-content;
+  }
+}
+
+.oge-tab-panel {
+  flex-direction: column;
+
+  &.oge-tab-panel-bottom {
+    flex-direction: column-reverse;
+  }
+
+  &.oge-tab-panel-start {
+    flex-direction: row;
+  }
+
+  &.oge-tab-panel-end {
+    flex-direction: row-reverse;
+  }
+}
+
+.oge-tab-strip {
+  display: flex;
+  align-items: stretch;
+  min-inline-size: 0;
+  border-block-end: 1px solid var(--oge-border-color);
+
+  // Shared by the tab padding and the content-fitted indicator inset, so the
+  // two can never drift apart across the size variants.
+  --oge-tab-pad-x: 14px;
+  --oge-tab-pad-y: 8px;
+}
+
+// Vertical strips (oge-tabs vertical / tab-panel start-end) swap the axis.
+.oge-tabs-vertical .oge-tab-strip,
+.oge-tab-panel-start .oge-tab-strip,
+.oge-tab-panel-end .oge-tab-strip {
+  flex-direction: column;
+  border-block-end: none;
+  border-inline-end: 1px solid var(--oge-border-color);
+}
+
+.oge-tab-panel-end .oge-tab-strip {
+  border-inline-end: none;
+  border-inline-start: 1px solid var(--oge-border-color);
+}
+
+.oge-tab-strip-scroll {
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.oge-tab-strip-list {
+  display: flex;
+  // Natural width, but never narrower than the strip — otherwise the
+  // alignment modes below would have no free space to distribute.
+  inline-size: max-content;
+  min-inline-size: 100%;
+}
+
+.oge-tab-strip-empty {
+  padding: var(--oge-tab-pad-y) var(--oge-tab-pad-x);
+  color: var(--oge-muted-color);
+  font-size: 0.9em;
+}
+
+// ── Alignment (only observable while the tabs fit) ──
+.oge-tab-strip[data-alignment='center'] .oge-tab-strip-list {
+  justify-content: center;
+}
+
+.oge-tab-strip[data-alignment='end'] .oge-tab-strip-list {
+  justify-content: flex-end;
+}
+
+.oge-tab-strip[data-alignment='justify'] .oge-tab-strip-list {
+  justify-content: space-between;
+}
+
+.oge-tab-strip[data-alignment='stretch'] {
+  .oge-tab-strip-list {
+    inline-size: 100%;
+  }
+
+  .oge-tab {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    justify-content: center;
+  }
+}
+
+.oge-tabs-vertical .oge-tab-strip-list,
+.oge-tab-panel-start .oge-tab-strip-list,
+.oge-tab-panel-end .oge-tab-strip-list {
+  flex-direction: column;
+  inline-size: auto;
+  min-inline-size: 0;
+  min-block-size: 100%;
+}
+
+.oge-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--oge-tab-pad-y) var(--oge-tab-pad-x);
+  border: none;
+  border-block-end: 2px solid transparent;
+  background: transparent;
+  color: var(--oge-muted-color);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  outline: none;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover:not(.oge-tab-disabled) {
+    color: var(--oge-text-color);
+    background: var(--oge-row-hover-bg);
+  }
+
+  // Pointer/programmatic focus: soft ring. Keyboard focus: strong ring.
+  &:focus {
+    box-shadow: inset 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &.oge-tab-selected {
+    color: var(--oge-accent);
+    border-block-end-color: var(--oge-accent);
+  }
+
+  &.oge-tab-disabled {
+    color: var(--oge-muted-color);
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &.oge-tab-dragging {
+    opacity: 0.4;
+  }
+
+  &.oge-tab-drop-target::before {
+    content: '';
+    position: absolute;
+    inset-block: 4px;
+    inset-inline-start: -1px;
+    inline-size: 2px;
+    background: var(--oge-accent);
+    border-radius: 1px;
+  }
+}
+
+// Vertical strips: the ink moves to the inline edge.
+.oge-tabs-vertical .oge-tab,
+.oge-tab-panel-start .oge-tab,
+.oge-tab-panel-end .oge-tab {
+  border-block-end: none;
+  border-inline-end: 2px solid transparent;
+  justify-content: flex-start;
+
+  &.oge-tab-selected {
+    border-inline-end-color: var(--oge-accent);
+  }
+
+  &.oge-tab-drop-target::before {
+    inset-inline: 4px;
+    inset-block-start: -1px;
+    inset-block-end: auto;
+    block-size: 2px;
+    inline-size: auto;
+  }
+}
+
+.oge-tab-panel-end .oge-tab {
+  border-inline-end: none;
+  border-inline-start: 2px solid transparent;
+
+  &.oge-tab-selected {
+    border-inline-start-color: var(--oge-accent);
+  }
+}
+
+// Secondary styling: soft pills instead of the underline ink.
+.oge-tab-strip-secondary {
+  border: none !important;
+
+  .oge-tab {
+    border: none;
+    border-radius: var(--oge-radius);
+    margin: 4px 2px;
+
+    &.oge-tab-selected {
+      background: var(--oge-accent-soft);
+      color: var(--oge-accent);
+    }
+  }
+}
+
+// Density.
+.oge-tab-strip-sm {
+  --oge-tab-pad-x: 10px;
+  --oge-tab-pad-y: 5px;
+
+  .oge-tab {
+    gap: 4px;
+  }
+}
+
+.oge-tab-strip-lg {
+  --oge-tab-pad-x: 18px;
+  --oge-tab-pad-y: 11px;
+
+  .oge-tab {
+    gap: 8px;
+  }
+}
+
+// Indicator fitted to the label instead of the whole tab (Material's
+// fitInkBarToContent): drop the border ink and draw it inset by the padding.
+.oge-tab-strip-ink-content .oge-tab {
+  border-block-end-color: transparent;
+
+  &.oge-tab-selected::after {
+    content: '';
+    position: absolute;
+    inset-inline: var(--oge-tab-pad-x);
+    inset-block-end: -2px;
+    block-size: 2px;
+    background: var(--oge-accent);
+  }
+}
+
+.oge-tabs-vertical .oge-tab-strip-ink-content .oge-tab,
+.oge-tab-panel-start .oge-tab-strip-ink-content .oge-tab,
+.oge-tab-panel-end .oge-tab-strip-ink-content .oge-tab {
+  border-inline-end-color: transparent;
+  border-inline-start-color: transparent;
+
+  &.oge-tab-selected::after {
+    inset-inline: auto;
+    inset-block: var(--oge-tab-pad-y);
+    inline-size: 2px;
+    block-size: auto;
+  }
+}
+
+.oge-tabs-vertical .oge-tab-strip-ink-content .oge-tab.oge-tab-selected::after,
+.oge-tab-panel-start
+  .oge-tab-strip-ink-content
+  .oge-tab.oge-tab-selected::after {
+  inset-inline-end: -2px;
+}
+
+.oge-tab-panel-end .oge-tab-strip-ink-content .oge-tab.oge-tab-selected::after {
+  inset-inline-start: -2px;
+}
+
+.oge-tab-text {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oge-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 18px;
+  block-size: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--oge-badge-bg);
+  color: var(--oge-badge-color);
+  font-size: 0.75em;
+  line-height: 1;
+}
+
+.oge-tab-dirty-dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--oge-warning);
+  flex: none;
+}
+
+.oge-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 18px;
+  block-size: 18px;
+  padding: 0;
+  margin-inline-end: -4px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-accent-25);
+  }
+}
+
+// While an async closeGuard is pending the ✕ spins and stops responding —
+// the component ignores repeat requests for the same tab anyway.
+.oge-tab-close-pending .oge-tab-close {
+  cursor: default;
+  opacity: 0.5;
+  pointer-events: none;
+
+  svg {
+    animation: oge-tab-close-spin 0.8s linear infinite;
+  }
+}
+
+@keyframes oge-tab-close-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-tab,
+  .oge-tab-close {
+    transition: none;
+  }
+
+  .oge-tab-close-pending .oge-tab-close svg {
+    animation: none;
+  }
+}
+
+.oge-tab-strip-nav,
+.oge-tab-strip-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  flex: none;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  outline: none;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover:not(:disabled) {
+    color: var(--oge-text-color);
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    box-shadow: inset 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+// RTL: the chevron glyphs point by physical direction — mirror them.
+[dir='rtl'] .oge-tab-strip-nav svg {
+  transform: scaleX(-1);
+}
+
+.oge-tab-panel-content {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+
+  --oge-tab-panel-transition: 180ms;
+}
+
+// ── Panel transition ──
+// Two identical keyframes alternate on every selection change: re-assigning
+// animation-name is what replays a CSS animation — toggling a single class
+// would not.
+@keyframes oge-tab-anim-a {
+  from {
+    opacity: 0;
+    transform: translateX(var(--oge-tab-slide-from, 0));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes oge-tab-anim-b {
+  from {
+    opacity: 0;
+    transform: translateX(var(--oge-tab-slide-from, 0));
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.oge-tab-panel-anim-slide {
+  --oge-tab-slide-from: 12px;
+
+  &[data-anim-dir='backward'] {
+    --oge-tab-slide-from: -12px;
+  }
+}
+
+// transform has no logical axis — mirror the slide by hand under RTL.
+[dir='rtl'] .oge-tab-panel-anim-slide {
+  --oge-tab-slide-from: -12px;
+
+  &[data-anim-dir='backward'] {
+    --oge-tab-slide-from: 12px;
+  }
+}
+
+.oge-tab-panel-animated.oge-tab-anim-a .oge-tab-panel-body:not([hidden]) {
+  animation: oge-tab-anim-a var(--oge-tab-panel-transition) ease;
+}
+
+.oge-tab-panel-animated.oge-tab-anim-b .oge-tab-panel-body:not([hidden]) {
+  animation: oge-tab-anim-b var(--oge-tab-panel-transition) ease;
+}
+
+// ── dynamicHeight ──
+.oge-tab-panel-dynamic-height {
+  overflow: hidden;
+  transition: block-size var(--oge-tab-panel-transition) ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-tab-panel-animated .oge-tab-panel-body:not([hidden]) {
+    animation: none;
+  }
+
+  .oge-tab-panel-dynamic-height {
+    transition: none;
+  }
+}
+
+.oge-tab-panel-body {
+  padding: 12px 2px;
+  outline: none;
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+    border-radius: var(--oge-radius);
+  }
+}
+
+.oge-tab-panel-start .oge-tab-panel-body,
+.oge-tab-panel-end .oge-tab-panel-body {
+  padding: 2px 12px;
+}

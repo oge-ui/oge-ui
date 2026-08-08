@@ -11,9 +11,10 @@
   position: fixed;
   z-index: var(--oge-z-toast, 1200);
   display: flex;
-  gap: 8px;
+  gap: var(--oge-toast-gap, 8px);
   width: min(var(--oge-toast-width, 360px), calc(100vw - 32px));
-  padding: 16px;
+  /* edge distance and inter-toast spacing are themable without new tokens */
+  padding: var(--oge-toast-offset, 16px);
   /* the region never blocks the page — only toasts themselves are clickable */
   pointer-events: none;
 

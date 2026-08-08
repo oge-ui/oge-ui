@@ -1,0 +1,266 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a standalone tree is fully themed without
+// any other oge component on the page.
+.oge-tree-view {
+  @include tokens.core-tokens;
+
+  --oge-tree-item-height: 30px;
+  --oge-tree-pad-x: 8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--oge-font-size);
+  color: var(--oge-text-color);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  &.oge-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  &[data-size='sm'] {
+    --oge-tree-item-height: 24px;
+  }
+
+  &[data-size='lg'] {
+    --oge-tree-item-height: 36px;
+  }
+}
+
+.oge-tree-view-search-input {
+  inline-size: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-tree-view-scroll {
+  overflow: auto;
+  position: relative;
+}
+
+.oge-tree-view-virtual {
+  // a fixed row height is what makes the window math correct
+  .oge-tree-view-item {
+    block-size: var(--oge-tree-item-height);
+  }
+}
+
+.oge-tree-view-list {
+  position: relative;
+}
+
+.oge-tree-view-viewport {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+}
+
+.oge-tree-view-scroll:not(.oge-tree-view-virtual) .oge-tree-view-viewport {
+  position: static;
+}
+
+.oge-tree-view-empty {
+  padding: 8px var(--oge-tree-pad-x);
+  color: var(--oge-muted-color);
+}
+
+.oge-tree-view-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-block-size: var(--oge-tree-item-height);
+  padding-inline-end: var(--oge-tree-pad-x);
+  border-radius: var(--oge-radius);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-tree-view-item-selected {
+  background: var(--oge-selected-bg);
+}
+
+.oge-tree-view-item-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+.oge-tree-view-item-filler {
+  cursor: default;
+  color: var(--oge-muted-color);
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+// The chevron rotates rather than mirroring, so RTL needs the start position.
+.oge-tree-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: 18px;
+  block-size: 18px;
+  color: var(--oge-muted-color);
+  transition: transform 120ms ease;
+}
+
+.oge-tree-view-toggle-hidden {
+  visibility: hidden;
+}
+
+[dir='rtl'] .oge-tree-view-toggle svg {
+  transform: scaleX(-1);
+}
+
+.oge-tree-view-item[aria-expanded='true'] > .oge-tree-view-toggle {
+  transform: rotate(90deg);
+}
+
+[dir='rtl'] .oge-tree-view-item[aria-expanded='true'] > .oge-tree-view-toggle {
+  transform: rotate(-90deg);
+}
+
+// Decorative only — the state lives on the row as aria-checked, because a
+// real checkbox inside role="treeitem" would be nested-interactive.
+.oge-tree-view-check {
+  position: relative;
+  flex: none;
+  inline-size: 15px;
+  block-size: 15px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: 3px;
+  background: var(--oge-bg);
+
+  &[data-state='checked'],
+  &[data-state='indeterminate'] {
+    border-color: var(--oge-accent);
+    background: var(--oge-accent);
+  }
+
+  &[data-state='checked']::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 4px;
+    inset-block-start: 1px;
+    inline-size: 4px;
+    block-size: 8px;
+    border: solid var(--oge-severity-contrast);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  &[data-state='indeterminate']::after {
+    content: '';
+    position: absolute;
+    inset-inline: 3px;
+    inset-block-start: 6px;
+    block-size: 2px;
+    background: var(--oge-severity-contrast);
+  }
+}
+
+.oge-tree-view-icon {
+  flex: none;
+  color: var(--oge-muted-color);
+}
+
+.oge-tree-view-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-tree-view-select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--oge-tree-pad-x);
+  border-block-end: 1px solid var(--oge-border-color);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-tree-view-spinner {
+  flex: none;
+  inline-size: 12px;
+  block-size: 12px;
+  border: 2px solid var(--oge-accent-25);
+  border-block-start-color: var(--oge-accent);
+  border-radius: 50%;
+  animation: oge-tree-view-spin 700ms linear infinite;
+}
+
+@keyframes oge-tree-view-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Drag & drop affordances.
+.oge-tree-view-item-dragging {
+  opacity: 0.5;
+}
+
+.oge-tree-view-item-drop-inside {
+  box-shadow: inset 0 0 0 2px var(--oge-accent);
+}
+
+.oge-tree-view-item-drop-before {
+  box-shadow: inset 0 2px 0 0 var(--oge-accent);
+}
+
+.oge-tree-view-item-drop-after {
+  box-shadow: inset 0 -2px 0 0 var(--oge-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-tree-view-item,
+  .oge-tree-view-toggle {
+    transition: none;
+  }
+
+  .oge-tree-view-spinner {
+    animation: none;
+  }
+}

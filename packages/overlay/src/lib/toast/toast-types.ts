@@ -79,6 +79,14 @@ export interface OgeToastOptions<D = unknown> {
   position?: OgeToastPosition;
   /** Announcement mode override. Default derives from severity. */
   announce?: OgeToastAnnounce;
+  /**
+   * Screen-reader text override — announced instead of `title` + `message`.
+   * Lets the visual text stay short while the announcement carries full
+   * context ("Saved" vs "Document saved to Drafts").
+   */
+  announceText?: string;
+  /** Replaces the severity icon (the `loading` spinner still wins). */
+  icon?: TemplateRef<void>;
   /** Spinner instead of the severity icon; implicitly sticky while `true`. */
   loading?: boolean;
   /** Merge with an identical visible toast into one with a ×N badge. Default: config `toastCoalesceDuplicates`. */

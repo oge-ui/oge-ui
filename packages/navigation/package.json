@@ -1,0 +1,36 @@
+{
+  "name": "@oge-ui/navigation",
+  "version": "0.6.0",
+  "description": "Signal-based Angular navigation family: OgeTreeView with flat or nested data, WAI-ARIA APG treeview keyboard support, tri-state cascade checkboxes, search, lazy load-on-demand, virtual scrolling and drag & drop reparenting.",
+  "keywords": [
+    "angular",
+    "treeview",
+    "tree",
+    "navigation",
+    "hierarchy",
+    "virtual-scroll",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/core": "0.6.0"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/navigation"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

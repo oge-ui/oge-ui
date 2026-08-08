@@ -17,6 +17,8 @@
       "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
       "@oge-ui/core": ["./packages/core/src/index.ts"],
       "@oge-ui/inputs": ["./packages/inputs/src/index.ts"],
+      "@oge-ui/layout": ["./packages/layout/src/index.ts"],
+      "@oge-ui/navigation": ["./packages/navigation/src/index.ts"],
       "@oge-ui/overlay": ["./packages/overlay/src/index.ts"],
       "@oge-ui/grid": ["./packages/grid/src/index.ts"],
       "@oge-ui/grid/export-excel": [
@@ -28,6 +30,7 @@
         "./packages/pivot/export-excel/src/index.ts"
       ],
       "@oge-ui/grid/export-pdf": ["./packages/grid/export-pdf/src/index.ts"],
+      "@oge-ui/tabs": ["./packages/tabs/src/index.ts"],
       "@oge-ui/tree-list": ["./packages/tree-list/src/index.ts"],
       "@oge-ui/tree-list/export-excel": [
         "./packages/tree-list/export-excel/src/index.ts"
