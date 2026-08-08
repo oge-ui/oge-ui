@@ -2,7 +2,7 @@
 
 > Layout containers — accordion panels with single or multiple expansion.
 
-Part of OGE UI v0.6.0.
+Part of OGE UI v0.7.0.
 Docs and live demos: https://ogeui.com/components/accordion
 Whole-suite reference: https://ogeui.com/llms-full.txt
 

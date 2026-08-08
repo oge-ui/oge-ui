@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/layout",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Signal-based Angular layout family: OgeAccordion with declarative <oge-accordion-item> children or data-driven items, APG keyboard support, single/multiple expansion, lazy rendering, async expand guards, invalid-section indicators and per-panel async content loaders.",
   "keywords": [
     "angular",
@@ -21,7 +21,7 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "0.6.0"
+    "@oge-ui/core": "0.7.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

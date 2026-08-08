@@ -1,7 +1,7 @@
 {
   "name": "@oge-ui/inputs",
-  "version": "0.6.0",
-  "description": "Signal-based Angular form editors on one shared field chrome: text/number boxes, select box, tag box, autocomplete, checkbox, switch, radio group, calendar and date editors \u2014 native Date + Intl, no date library.",
+  "version": "0.7.0",
+  "description": "Signal-based Angular form editors on one shared field chrome: text/number boxes, select box, tag box, autocomplete, checkbox, switch, radio group, calendar and date editors — native Date + Intl, no date library.",
   "keywords": [
     "angular",
     "forms",
@@ -25,9 +25,9 @@
     "@angular/forms": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "0.6.0",
-    "@oge-ui/overlay": "0.6.0",
-    "@oge-ui/navigation": "0.6.0"
+    "@oge-ui/core": "0.7.0",
+    "@oge-ui/overlay": "0.7.0",
+    "@oge-ui/navigation": "0.7.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",
