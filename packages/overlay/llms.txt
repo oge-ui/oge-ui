@@ -94,6 +94,14 @@ Predictable wrong guesses, and what to write instead.
 
 #### Properties
 
+_Content slots (structural directives)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `*ogeModalTitle` | `OgeModalTitle` | Rich title slot, replacing the plain `title` text. |
+| `*ogeModalHeaderActions` | `OgeModalHeaderActions` | Extra buttons rendered next to ✕. Presses that start here never begin a header drag. |
+| `*ogeModalFooter` | `OgeModalFooter` | Footer slot; `$implicit` is a close function whose optional argument becomes `closed.result` — ``. |
+
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `opened` | `model<boolean>` | `false` | Two-way open state. Setting it `false` directly closes without the guard pipeline. |
@@ -227,6 +235,36 @@ _OgeToastRef_
 | `OgeToastAction<D>` | `{ text: string; handler?: (event: OgeToastActionEvent<D>) => void }` | Inline action button. |
 | `OgeToastSlotContext<D>` | `{ $implicit: () => void; data?: D }` | Context of a `template` toast body. |
 | `Config keys` | `toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates` | Defaults via `provideOgeOverlayConfig()`; strings via `messages.toastClose/toastRegionLabel/toastCountBadge`. |
+
+### OgeTooltip — `<[ogeTooltip]>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `ogeTooltip` | `string (required)` | `—` | Tooltip text. Applied to any element — the host gets `aria-describedby` pointing at the panel while it is shown. |
+| `tooltipPlacement` | `OgePopupPlacement` | `'top'` | Preferred side; flips and clamps against the viewport like every anchored panel. |
+| `tooltipShowDelay` | `number \| undefined` | `—` | Hover dwell before showing, in ms. Falls back to `tooltipShowDelayMs` from the overlay config. Keyboard focus always shows immediately. |
+| `tooltipHideDelay` | `number \| undefined` | `—` | Grace period after the pointer leaves, in ms; falls back to `tooltipHideDelayMs`. |
+| `tooltipDisabled` | `boolean` | `false` | Suppresses the tooltip without removing the directive — hides an already open panel. |
+
+### OgeContextMenu — `<[ogeContextMenu]>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `ogeContextMenu` | `readonly OgeMenuItem[] (required)` | `—` | Items of the menu opened on right-click or Shift+F10. An empty array falls back to the native browser menu. |
+| `contextMenuAriaLabel` | `string \| undefined` | `—` | Accessible name of the menu. |
+| `contextMenuDisabled` | `boolean` | `false` | Leaves the browser menu in charge without removing the directive. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `contextMenuItemClick` | `OgeMenuListItemClickEvent` | An item was activated — same payload as `OgeMenuList`. The menu closes afterwards and focus returns to the host. |
+| `contextMenuOpened` | `void` | The menu opened at the pointer (or at the host for Shift+F10). |
+| `contextMenuClosed` | `void` | The menu closed — by selection, Escape, an outside click or a scroll. |
 
 ### OgeMenuList — `<oge-menu-list>`
 

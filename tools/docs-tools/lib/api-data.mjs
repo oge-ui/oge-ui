@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createJiti } from 'jiti';
 import ts from 'typescript';
+import { decodeEntities } from './markdown.mjs';
 
 /**
  * @typedef {{ name: string, type: string, default?: string, description: string }} ApiEntry
@@ -170,6 +171,9 @@ export function documentedNames(blocks) {
     add(block.title);
     for (const groups of Object.values(block.sections)) {
       for (const group of groups ?? []) {
+        // a group title is how a symbol with only a few members is documented
+        // (`OgeToastRef`, `OgeAnchoredPanelOptions`) — it counts as coverage
+        if (group.title) add(group.title);
         for (const entry of group.entries ?? []) add(entry.name);
       }
     }
@@ -177,7 +181,15 @@ export function documentedNames(blocks) {
   return names;
 }
 
-/** `*ogeCellTemplate`, `OgeCellTemplate` and `oge-cell-template` all collapse. */
+/**
+ * `*ogeCellTemplate`, `OgeCellTemplate` and `oge-cell-template` all collapse.
+ * Entities are decoded first: table names carry escaped generics
+ * (`OgeModalRef&lt;R&gt;`), and without decoding the `lt`/`gt` letters survive
+ * the strip and never match the exported symbol.
+ */
 export function normalizeName(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return decodeEntities(name)
+    .replace(/[<(].*$/s, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
 }

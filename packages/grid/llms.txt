@@ -297,6 +297,13 @@ _Lifecycle & errors_
 
 #### Properties
 
+_Companion directives_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeColumnGroup` | `oge-column-group — input: caption (required)` | Banded header: wraps sibling `` elements under one shared caption. Re-exported by `@oge-ui/tree-list`. |
+| `OgeToolbarItem` | `directive — [ogeToolbar]` | Marks projected content as a toolbar item. The toolbar appears as soon as one item exists, alongside the built-in controls. |
+
 _Basics_
 
 | Name | Type | Default | Description |
@@ -349,6 +356,23 @@ _Summaries & editing_
 ### Grid types & configuration
 
 #### Types
+
+_Standalone building blocks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCellEditor` | `oge-cell-editor — inputs: control (required), dataType, lookupItems, label, surface, invalid, errorTitle; outputs: enterKey, escapeKey, tabKey` | The editor the grid renders in a cell: picks the `dataType`-matched `oge-*-box` from `@oge-ui/inputs` and binds it to a reactive `FormControl`. Usable on its own to get grid-identical editing in a form. |
+| `OgePager` | `oge-pager — inputs: pageIndex, pageCount, totalCount (required), pageSize, pageSizes, showInfo, displayMode, messages; outputs: pageChange, pageSizeChange` | The grid's pager as a standalone component — reuse it under a list or a card grid so paging looks identical everywhere. |
+| `OgeFilterBuilderGroup` | `oge-filter-builder-group` | Recursive node of the filter builder (a group of conditions plus nested groups). Exported so a custom filter UI can reuse the same tree editor. |
+| `formatCellValue(value, dataType, format?)` | `(value: unknown, dataType: OgeDataType, format?: (value: unknown) => string) => string` | The exact formatting the grid applies to a cell. Use it to keep exports, tooltips or custom templates byte-identical with the rendered grid. |
+
+_Internals — not a supported API_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `GridStateStore` | `component-scoped service` | Composes the state slices; `loadOptions` is the single choke point through which every data-affecting change triggers exactly one load. Injected by the grid, not by applications — use `state()` / `applyState()` instead. |
+| `GridDataAdapter` | `component-scoped service` | Bridges the reactive state to the pull-based `DataSource` contract with switchMap semantics, so a stale response can never win over a newer one. |
+| `SortSlice / FilterSlice / GroupingSlice / PagingSlice / ColumnsSlice / SelectionSlice / ExpansionSlice / OgeEditingSlice` | `state slices` | Read-only signals plus intent methods behind `GridStateStore`. Exported for the suite's own packages (tree-list, pivot) — treat them as internal: they may change in any release. |
 
 _Option objects (boolean shorthands stay valid)_
 

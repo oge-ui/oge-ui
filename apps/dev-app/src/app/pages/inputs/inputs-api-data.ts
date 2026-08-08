@@ -1221,6 +1221,23 @@ export const OGE_RADIO_GROUP_API: ApiSections = {
 export const OGE_CALENDAR_API: ApiSections = {
   properties: [
     {
+      title: 'Slot & locale helper',
+      entries: [
+        {
+          name: '*ogeCalendarCellTemplate',
+          type: 'OgeCalendarCellTemplate',
+          description:
+            'Replaces the default day-cell rendering — badges, prices, availability dots. Also usable on <code>oge-date-box</code> and <code>oge-date-range-box</code>, which project into the same calendar.',
+        },
+        {
+          name: 'datePartOrder(locale, kind)',
+          type: "(locale: string | undefined, kind: 'date' | 'datetime' | 'time') =&gt; string[]",
+          description:
+            'The order a locale writes date parts in, derived from <code>Intl</code>. Drives locale-aware typed parsing; exported so consumers can build their own date editors on the same rules.',
+        },
+      ],
+    },
+    {
       title: 'OgeCalendar',
       entries: [
         {

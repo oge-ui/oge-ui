@@ -935,6 +935,13 @@ _Common (all editors)_
 
 #### Properties
 
+_Slot & locale helper_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `*ogeCalendarCellTemplate` | `OgeCalendarCellTemplate` | Replaces the default day-cell rendering — badges, prices, availability dots. Also usable on `oge-date-box` and `oge-date-range-box`, which project into the same calendar. |
+| `datePartOrder(locale, kind)` | `(locale: string \| undefined, kind: 'date' \| 'datetime' \| 'time') => string[]` | The order a locale writes date parts in, derived from `Intl`. Drives locale-aware typed parsing; exported so consumers can build their own date editors on the same rules. |
+
 _OgeCalendar_
 
 | Name | Type | Default | Description |

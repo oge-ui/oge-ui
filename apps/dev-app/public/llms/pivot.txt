@@ -156,6 +156,12 @@ _Configuration & engine_
 
 #### Properties
 
+_Internals — not a supported API_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePivotStateStore` | `component-scoped service` | UI state of a pivot grid: field-layout overrides on top of the declared `` configuration, the expansion of both axes (kept as key → path so remote contracts get real paths back) and the field-panel collapse flag. Injected by the grid — applications should use `stateKey` or `state()`/`applyState()`. |
+
 _Placement_
 
 | Name | Type | Default | Description |

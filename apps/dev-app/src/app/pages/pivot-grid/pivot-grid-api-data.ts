@@ -188,6 +188,17 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
 export const OGE_PIVOT_FIELD_API: ApiSections = {
   properties: [
     {
+      title: 'Internals — not a supported API',
+      entries: [
+        {
+          name: 'OgePivotStateStore',
+          type: 'component-scoped service',
+          description:
+            'UI state of a pivot grid: field-layout overrides on top of the declared <code>&lt;oge-pivot-field&gt;</code> configuration, the expansion of both axes (kept as key → path so remote contracts get real paths back) and the field-panel collapse flag. Injected by the grid — applications should use <code>stateKey</code> or <code>state()</code>/<code>applyState()</code>.',
+        },
+      ],
+    },
+    {
       title: 'Placement',
       entries: [
         {

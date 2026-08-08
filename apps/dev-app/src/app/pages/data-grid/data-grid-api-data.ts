@@ -634,6 +634,23 @@ export const OGE_GRID_API: ApiSections = {
 export const OGE_COLUMN_API: ApiSections = {
   properties: [
     {
+      title: 'Companion directives',
+      entries: [
+        {
+          name: 'OgeColumnGroup',
+          type: 'oge-column-group — input: caption (required)',
+          description:
+            'Banded header: wraps sibling <code>&lt;oge-column&gt;</code> elements under one shared caption. Re-exported by <code>&#64;oge-ui/tree-list</code>.',
+        },
+        {
+          name: 'OgeToolbarItem',
+          type: 'directive — [ogeToolbar]',
+          description:
+            'Marks projected content as a toolbar item. The toolbar appears as soon as one item exists, alongside the built-in controls.',
+        },
+      ],
+    },
+    {
       title: 'Basics',
       entries: [
         {
@@ -818,6 +835,58 @@ export const OGE_COLUMN_API: ApiSections = {
 
 export const OGE_GRID_TYPES_API: ApiSections = {
   types: [
+    {
+      title: 'Standalone building blocks',
+      entries: [
+        {
+          name: 'OgeCellEditor',
+          type: 'oge-cell-editor — inputs: control (required), dataType, lookupItems, label, surface, invalid, errorTitle; outputs: enterKey, escapeKey, tabKey',
+          description:
+            'The editor the grid renders in a cell: picks the <code>dataType</code>-matched <code>oge-*-box</code> from <code>&#64;oge-ui/inputs</code> and binds it to a reactive <code>FormControl</code>. Usable on its own to get grid-identical editing in a form.',
+        },
+        {
+          name: 'OgePager',
+          type: 'oge-pager — inputs: pageIndex, pageCount, totalCount (required), pageSize, pageSizes, showInfo, displayMode, messages; outputs: pageChange, pageSizeChange',
+          description:
+            "The grid's pager as a standalone component — reuse it under a list or a card grid so paging looks identical everywhere.",
+        },
+        {
+          name: 'OgeFilterBuilderGroup',
+          type: 'oge-filter-builder-group',
+          description:
+            'Recursive node of the filter builder (a group of conditions plus nested groups). Exported so a custom filter UI can reuse the same tree editor.',
+        },
+        {
+          name: 'formatCellValue(value, dataType, format?)',
+          type: '(value: unknown, dataType: OgeDataType, format?: (value: unknown) =&gt; string) =&gt; string',
+          description:
+            'The exact formatting the grid applies to a cell. Use it to keep exports, tooltips or custom templates byte-identical with the rendered grid.',
+        },
+      ],
+    },
+    {
+      title: 'Internals — not a supported API',
+      entries: [
+        {
+          name: 'GridStateStore',
+          type: 'component-scoped service',
+          description:
+            'Composes the state slices; <code>loadOptions</code> is the single choke point through which every data-affecting change triggers exactly one load. Injected by the grid, not by applications — use <code>state()</code> / <code>applyState()</code> instead.',
+        },
+        {
+          name: 'GridDataAdapter',
+          type: 'component-scoped service',
+          description:
+            'Bridges the reactive state to the pull-based <code>DataSource</code> contract with switchMap semantics, so a stale response can never win over a newer one.',
+        },
+        {
+          name: 'SortSlice / FilterSlice / GroupingSlice / PagingSlice / ColumnsSlice / SelectionSlice / ExpansionSlice / OgeEditingSlice',
+          type: 'state slices',
+          description:
+            "Read-only signals plus intent methods behind <code>GridStateStore</code>. Exported for the suite's own packages (tree-list, pivot) — treat them as internal: they may change in any release.",
+        },
+      ],
+    },
     {
       title: 'Option objects (boolean shorthands stay valid)',
       entries: [

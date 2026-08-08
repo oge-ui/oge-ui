@@ -422,6 +422,29 @@ export const OGE_OVERLAY_CONFIG_API: ApiSections = {
 export const OGE_MODAL_API: ApiSections = {
   properties: [
     {
+      title: 'Content slots (structural directives)',
+      entries: [
+        {
+          name: '*ogeModalTitle',
+          type: 'OgeModalTitle',
+          description:
+            'Rich title slot, replacing the plain <code>title</code> text.',
+        },
+        {
+          name: '*ogeModalHeaderActions',
+          type: 'OgeModalHeaderActions',
+          description:
+            'Extra buttons rendered next to ✕. Presses that start here never begin a header drag.',
+        },
+        {
+          name: '*ogeModalFooter',
+          type: 'OgeModalFooter',
+          description:
+            'Footer slot; <code>$implicit</code> is a close function whose optional argument becomes <code>closed.result</code> — <code>&lt;div *ogeModalFooter="let close"&gt;</code>.',
+        },
+      ],
+    },
+    {
       entries: [
         {
           name: 'opened',
@@ -946,6 +969,101 @@ export const OGE_TOAST_API: ApiSections = {
           type: 'toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates',
           description:
             'Defaults via <code>provideOgeOverlayConfig()</code>; strings via <code>messages.toastClose/toastRegionLabel/toastCountBadge</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_TOOLTIP_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'ogeTooltip',
+          type: 'string (required)',
+          description:
+            'Tooltip text. Applied to any element — the host gets <code>aria-describedby</code> pointing at the panel while it is shown.',
+        },
+        {
+          name: 'tooltipPlacement',
+          type: 'OgePopupPlacement',
+          default: "'top'",
+          description:
+            'Preferred side; flips and clamps against the viewport like every anchored panel.',
+        },
+        {
+          name: 'tooltipShowDelay',
+          type: 'number | undefined',
+          default: '—',
+          description:
+            'Hover dwell before showing, in ms. Falls back to <code>tooltipShowDelayMs</code> from the overlay config. Keyboard focus always shows immediately.',
+        },
+        {
+          name: 'tooltipHideDelay',
+          type: 'number | undefined',
+          default: '—',
+          description:
+            'Grace period after the pointer leaves, in ms; falls back to <code>tooltipHideDelayMs</code>.',
+        },
+        {
+          name: 'tooltipDisabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Suppresses the tooltip without removing the directive — hides an already open panel.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_CONTEXT_MENU_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'ogeContextMenu',
+          type: 'readonly OgeMenuItem[] (required)',
+          description:
+            'Items of the menu opened on right-click or Shift+F10. An empty array falls back to the native browser menu.',
+        },
+        {
+          name: 'contextMenuAriaLabel',
+          type: 'string | undefined',
+          default: '—',
+          description: 'Accessible name of the menu.',
+        },
+        {
+          name: 'contextMenuDisabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Leaves the browser menu in charge without removing the directive.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'contextMenuItemClick',
+          type: 'OgeMenuListItemClickEvent',
+          description:
+            'An item was activated — same payload as <code>OgeMenuList</code>. The menu closes afterwards and focus returns to the host.',
+        },
+        {
+          name: 'contextMenuOpened',
+          type: 'void',
+          description:
+            'The menu opened at the pointer (or at the host for Shift+F10).',
+        },
+        {
+          name: 'contextMenuClosed',
+          type: 'void',
+          description:
+            'The menu closed — by selection, Escape, an outside click or a scroll.',
         },
       ],
     },
