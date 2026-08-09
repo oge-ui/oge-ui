@@ -41,11 +41,11 @@ import { QUICK_START_SNIPPET } from './overview-snippets';
     </app-doc-header>
 
     <app-demo-card
-      [chips]="['50 rows', 'cell template']"
+      [chips]="['50 rows', 'paging', 'cell template']"
       [code]="quickStartSnippet"
       language="ts"
     >
-      <oge-grid [data]="employees" keyField="id">
+      <oge-grid [data]="employees" keyField="id" [paging]="{ pageSize: 10 }">
         <oge-column field="id" caption="Id" [width]="70" dataType="number" />
         <oge-column field="firstName" caption="First Name" />
         <oge-column field="lastName" caption="Last Name" />

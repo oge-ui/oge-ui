@@ -564,8 +564,10 @@ const ORG: OrgNode[] = [
         <div class="mx-auto max-w-5xl px-6 py-14">
           <div class="home-reveal text-center">
             <p class="og-eyebrow">Components</p>
+            <!-- derived from the tile list, so the count can never rot -->
             <h2 class="og-h2 mt-3">
-              Ten families, <span class="og-gilded">one design system</span>
+              {{ tiles.length }} families,
+              <span class="og-gilded">one design system</span>
             </h2>
           </div>
 
@@ -606,6 +608,8 @@ const ORG: OrgNode[] = [
             </h2>
           </div>
 
+          <!-- one headline number; the per-package rows were noise — the
+               breakdown lives on npmjs.com itself -->
           <div class="home-reveal og-npm mx-auto mt-8 max-w-3xl">
             <div class="og-npm-total" aria-live="polite">
               <span class="og-total-value">{{ npmTotal() }}</span>
@@ -614,24 +618,6 @@ const ORG: OrgNode[] = [
                 >across {{ npmCounted() || packages.length }} packages · live
                 from npm, since the first release</span
               >
-            </div>
-            <div class="og-npm-list">
-              @for (stat of npmStats(); track stat.pkg) {
-                <a
-                  [href]="'https://www.npmjs.com/package/' + stat.pkg"
-                  target="_blank"
-                  rel="noopener"
-                  class="og-npm-row"
-                >
-                  <span class="flex items-center gap-2.5">
-                    <span class="og-npm-icon" aria-hidden="true">
-                      <app-icon [name]="stat.icon" [size]="13" />
-                    </span>
-                    <span class="og-npm-pkg">{{ stat.pkg }}</span>
-                  </span>
-                  <span class="og-npm-count">{{ stat.downloads }}</span>
-                </a>
-              }
             </div>
           </div>
         </div>
@@ -1865,6 +1851,12 @@ export class HomePage {
       path: '/components/accordion',
     },
     {
+      icon: 'card',
+      name: 'Card',
+      desc: 'Content surface with media, actions and footer as attribute slots.',
+      path: '/components/card',
+    },
+    {
       icon: 'splitter',
       name: 'Splitter',
       desc: 'Resizable, collapsible, nestable panes with full keyboard control.',
@@ -1881,6 +1873,18 @@ export class HomePage {
       name: 'Tree View',
       desc: 'Tri-state checkboxes, search, load-on-demand and drag & drop reparenting.',
       path: '/components/tree-view',
+    },
+    {
+      icon: 'drawer',
+      name: 'Drawer',
+      desc: 'Overlay, push or side panel — the modality follows the mode.',
+      path: '/components/drawer',
+    },
+    {
+      icon: 'stepper',
+      name: 'Stepper',
+      desc: 'Linear or free wizard with async leave guards and refusals that say why.',
+      path: '/components/stepper',
     },
   ];
 

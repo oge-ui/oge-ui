@@ -86,9 +86,9 @@ interface Order extends Record<string, unknown> {
     <app-page-toc [sections]="sections" />
 
     <app-demo-card
-      [chips]="['activeIndex', 'showNavigation', 'optional']"
+      [chips]="['activeIndex', 'showNavigation', 'icon', 'optional']"
       heading="Commands"
-      description="The built-in Back / Next bar becomes Finish on the last step. None of Angular Material, Kendo or PrimeNG ships navigation buttons at all — every one of them makes you hand-roll a wizard's most predictable part."
+      description="The built-in Back / Next bar becomes Finish on the last step. None of Angular Material, Kendo or PrimeNG ships navigation buttons at all — every one of them makes you hand-roll a wizard's most predictable part. <code>icon</code> takes SVG path data and replaces the step number."
       [code]="basicSnippet"
       language="ts"
     >
@@ -97,13 +97,18 @@ interface Order extends Record<string, unknown> {
         [showNavigation]="true"
         ariaLabel="Checkout"
       >
-        <oge-step label="Account" description="Who you are">
+        <oge-step label="Account" description="Who you are" [icon]="userIcon">
           <p class="text-sm opacity-70">Account fields…</p>
         </oge-step>
-        <oge-step label="Shipping" [optional]="true">
+        <oge-step
+          label="Shipping"
+          description="Where it goes"
+          [optional]="true"
+          [icon]="boxIcon"
+        >
           <p class="text-sm opacity-70">Shipping fields…</p>
         </oge-step>
-        <oge-step label="Review">
+        <oge-step label="Review" description="One last look" [icon]="starIcon">
           <p class="text-sm opacity-70">Confirm and submit…</p>
         </oge-step>
       </oge-stepper>
@@ -116,14 +121,24 @@ interface Order extends Record<string, unknown> {
       [code]="linearSnippet"
       language="ts"
     >
-      <label class="mb-3 flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          [checked]="accountDone()"
-          (change)="accountDone.set(!accountDone())"
-        />
-        step 1 is complete
-      </label>
+      <div class="mb-3 flex flex-wrap gap-4">
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            [checked]="accountDone()"
+            (change)="accountDone.set(!accountDone())"
+          />
+          Account is complete
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            [checked]="paymentDone()"
+            (change)="paymentDone.set(!paymentDone())"
+          />
+          Payment is complete
+        </label>
+      </div>
       <oge-stepper
         [(activeIndex)]="linearStep"
         [linear]="true"
@@ -131,8 +146,12 @@ interface Order extends Record<string, unknown> {
         ariaLabel="Linear flow"
         (stepBlocked)="onBlocked($event)"
       >
-        <oge-step label="Account" [completed]="accountDone()" />
-        <oge-step label="Payment" />
+        <oge-step
+          label="Account"
+          [completed]="accountDone()"
+          [editable]="false"
+        />
+        <oge-step label="Payment" [completed]="paymentDone()" />
         <oge-step label="Review" />
       </oge-stepper>
       <p class="mt-2 text-sm opacity-70">
@@ -316,7 +335,15 @@ export class NavigationStepperPage {
   protected readonly orientation = signal<OgeStepperOrientation>('vertical');
 
   protected readonly accountDone = signal(false);
+  protected readonly paymentDone = signal(false);
   protected readonly dirty = signal(true);
+
+  // Filled 16-viewBox glyphs for the step `icon` input (SVG path data).
+  protected readonly userIcon =
+    'M8 7.5A2.75 2.75 0 1 0 8 2a2.75 2.75 0 0 0 0 5.5ZM2.5 14c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5Z';
+  protected readonly boxIcon = 'M8 1.5 14 4.5v7L8 14.5 2 11.5v-7Z';
+  protected readonly starIcon =
+    'm8 1.5 1.9 3.9 4.3.6-3.1 3 .7 4.2L8 11.2l-3.8 2 .7-4.2-3.1-3 4.3-.6Z';
   protected readonly blockedReason = signal<string | undefined>(undefined);
   protected readonly order = signal<Order>({ email: '', card: '' });
 

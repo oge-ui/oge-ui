@@ -14,7 +14,7 @@ For code generation, prefer the full reference — it inlines every API table an
 - [@oge-ui/buttons](https://ogeui.com/components/buttons): Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.
 - [@oge-ui/overlay](https://ogeui.com/components/overlay): Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus, tooltips, context menus, the `oge-modal` dialog with `OgeModalService`, and `OgeToastService` notifications.
 - [@oge-ui/tabs](https://ogeui.com/components/tabs): Tab strip and tab panel: declarative or data-driven tabs, deferred rendering with keep-alive, closable and reorderable tabs, router integration.
-- [@oge-ui/layout](https://ogeui.com/components/accordion): Layout containers — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, and a toolbar with an overflow menu.
+- [@oge-ui/layout](https://ogeui.com/components/accordion): Layout containers — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, and a card content surface with attribute-slot sections.
 - [@oge-ui/forms](https://ogeui.com/components/forms): Form layout over the editors — responsive columns, fieldset groups, declarative validation rules and a validation summary.
 - [@oge-ui/navigation](https://ogeui.com/components/tree-view): Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, plus a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row).
 - [@oge-ui/pivot](https://ogeui.com/components/pivot-grid): Cross-tab analytics: rows × columns × measures, grand totals, field chooser, sorting and Excel export. **Commercial licence.**
@@ -123,6 +123,8 @@ For code generation, prefer the full reference — it inlines every API table an
 ## Other pages
 
 - [Components](https://ogeui.com/components)
+- [Card](https://ogeui.com/components/card): Angular Card: a content surface with header, full-bleed media, action row and footer as attribute slots — outlined, raised, filled or flat chrome, horizontal orientation, and an accessible clickable-card pattern instead of a nested-interactive trap.
+- [Card API](https://ogeui.com/components/card/api): Angular Card API reference: every property and type of oge-card, the attribute slot directives (media, avatar, header actions, actions, footer, separator) and the config provider.
 - [Splitter](https://ogeui.com/components/splitter): Angular Splitter: resizable, collapsible and nestable panes on the WAI-ARIA window splitter pattern — ratio or pixel sizing, arrow-key resizing, RTL and touch support, signal-based and zoneless.
 - [Splitter API](https://ogeui.com/components/splitter/api): Angular Splitter API reference: every property, method, event and type of oge-splitter and oge-splitter-pane, including the WAI-ARIA separator attributes and the config provider.
 - [Toolbar](https://ogeui.com/components/toolbar): Angular Toolbar: a WAI-ARIA APG command bar with roving tabindex, before/center/after groups and an overflow menu for the commands that stop fitting — signal-based, RTL-aware and zoneless.

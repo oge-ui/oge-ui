@@ -28,11 +28,17 @@
   padding: 10px 40px 10px 12px;
   border-bottom: 1px solid var(--oge-border-color);
   background: var(--oge-header-bg);
+  // Above the viewport's sticky column headers (z-index 2/3): the toggle
+  // button must stay visible and clickable next to them.
+  z-index: 4;
 }
 
 .oge-pivot-panel-collapsed {
   padding-block: 6px;
-  min-height: 18px;
+  // Tall enough to contain the absolutely-positioned toggle (top 8 + 22px);
+  // anything less lets the button hang into the grid, where the sticky
+  // column headers used to paint over it and swallow its clicks.
+  min-height: 26px;
 }
 
 .oge-pivot-panel-toggle {

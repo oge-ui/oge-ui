@@ -1029,16 +1029,25 @@ import { OgeStepper, OgeStep } from '@oge-ui/navigation';
   template: `
     <!-- Steps come from projected children, from a [steps] array, or
          both (children first). The built-in Back / Next bar is opt-in — none of
-         the reference steppers ships one at all. -->
+         the reference steppers ships one at all. icon takes SVG path data and
+         replaces the step number in the indicator. -->
     <oge-stepper [(activeIndex)]="step" [showNavigation]="true">
-      <oge-step label="Account" description="Who you are">Account fields…</oge-step>
-      <oge-step label="Shipping" [optional]="true">Shipping fields…</oge-step>
-      <oge-step label="Review">Confirm and submit…</oge-step>
+      <oge-step label="Account" description="Who you are" [icon]="userIcon">
+        Account fields…
+      </oge-step>
+      <oge-step label="Shipping" description="Where it goes" [optional]="true">
+        Shipping fields…
+      </oge-step>
+      <oge-step label="Review" description="One last look">
+        Confirm and submit…
+      </oge-step>
     </oge-stepper>
   `,
 })
 export class Demo {
   protected readonly step = signal(0);
+  protected readonly userIcon =
+    'M8 7.5A2.75 2.75 0 1 0 8 2a2.75 2.75 0 0 0 0 5.5ZM2.5 14c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5Z';
 }
 ```
 

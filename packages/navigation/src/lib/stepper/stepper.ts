@@ -97,7 +97,11 @@ let nextStepperId = 0;
       (keydown)="onKeydown($event)"
     >
       @for (d of descriptors(); track d.id; let i = $index) {
-        <li class="oge-stepper-item" [class]="d.cssClass">
+        <li
+          class="oge-stepper-item"
+          [class]="d.cssClass"
+          [class.oge-stepper-item-done]="stateOf(d, i) === 'done'"
+        >
           <button
             type="button"
             class="oge-stepper-header"

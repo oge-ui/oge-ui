@@ -7,6 +7,8 @@
 
   --oge-stepper-gap: 8px;
   --oge-stepper-indicator-size: 28px;
+  --oge-stepper-header-pad-x: 8px;
+  --oge-stepper-header-pad-y: 6px;
   --oge-stepper-transition: 120ms ease;
 
   display: block;
@@ -37,19 +39,35 @@
 .oge-stepper-item {
   display: flex;
   flex: 1 1 0;
-  align-items: center;
+  align-items: flex-start;
   min-inline-size: 0;
 }
 
 // The connector between two steps. A pseudo-element rather than an extra node,
-// so the list stays one <li> per step for assistive tech.
+// so the list stays one <li> per step for assistive tech. Its offset is
+// derived from the header padding and the indicator size, so it runs exactly
+// through the indicator's centre — including on two-line headers, where the
+// item's own centre would sit visibly lower.
 .oge-stepper-item + .oge-stepper-item::before {
   content: '';
   flex: 1 1 auto;
-  block-size: 1px;
+  align-self: flex-start;
+  block-size: 2px;
   min-inline-size: 12px;
   margin-inline: 4px;
+  // pad + border(1px) + half the indicator − half the 2px line itself.
+  margin-block-start: calc(
+    var(--oge-stepper-header-pad-y) + var(--oge-stepper-indicator-size) / 2
+  );
+  border-radius: 1px;
   background: var(--oge-border-color);
+  transition: background-color var(--oge-stepper-transition);
+}
+
+// The line out of a completed step turns accent, so the rail itself shows how
+// far the process has come.
+.oge-stepper-item-done + .oge-stepper-item::before {
+  background: var(--oge-accent-25);
 }
 
 .oge-stepper-vertical {
@@ -65,10 +83,15 @@
   }
 
   .oge-stepper-item + .oge-stepper-item::before {
-    inline-size: 1px;
-    block-size: 12px;
+    align-self: auto;
+    inline-size: 2px;
+    block-size: 14px;
     min-inline-size: 0;
-    margin-inline: calc(var(--oge-stepper-indicator-size) / 2);
+    // Same derivation on the inline axis: header padding + half the
+    // indicator, so the rail is flush with the indicator column in RTL too.
+    margin-inline-start: calc(
+      var(--oge-stepper-header-pad-x) + var(--oge-stepper-indicator-size) / 2
+    );
     margin-block: 2px;
   }
 }
@@ -77,10 +100,13 @@
 
 .oge-stepper-header {
   display: inline-flex;
-  align-items: center;
+  // The indicator is pinned to the top so its centre is a constant the
+  // connector can be derived from; the text block centres itself against the
+  // indicator instead (see .oge-stepper-text).
+  align-items: flex-start;
   gap: 8px;
   min-inline-size: 0;
-  padding: 6px 8px;
+  padding: var(--oge-stepper-header-pad-y) var(--oge-stepper-header-pad-x);
   border: 1px solid transparent;
   border-radius: var(--oge-radius);
   background: none;
@@ -140,6 +166,8 @@
   border-color: var(--oge-accent);
   background: var(--oge-accent);
   color: var(--oge-severity-contrast);
+  // A soft halo marks the current step even when color alone is hard to read.
+  box-shadow: 0 0 0 4px var(--oge-accent-soft);
 }
 
 .oge-stepper-header[data-state='done'] .oge-stepper-indicator {
@@ -159,7 +187,12 @@
 .oge-stepper-text {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   min-inline-size: 0;
+  // As tall as the indicator (incl. its borders): a single-line label sits
+  // vertically centred next to it, a multi-line one grows downward from the
+  // same top edge — which is what keeps the connector maths exact.
+  min-block-size: calc(var(--oge-stepper-indicator-size) + 2px);
 }
 
 .oge-stepper-label {

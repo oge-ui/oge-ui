@@ -911,7 +911,7 @@ import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
   imports: [OgeCellTemplate, OgeColumn, OgeGrid],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <oge-grid [data]="employees" keyField="id">
+    <oge-grid [data]="employees" keyField="id" [paging]="{ pageSize: 10 }">
       <oge-column field="id" caption="Id" [width]="70" dataType="number" />
       <oge-column field="firstName" caption="First Name" />
       <oge-column field="department" caption="Department">

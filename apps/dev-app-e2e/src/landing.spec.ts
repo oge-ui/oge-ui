@@ -10,5 +10,7 @@ test('root shows the landing page and the data grid overview renders rows', asyn
   await page.goto('/components/data-grid');
   await expect(page.locator('oge-grid')).toBeVisible();
   await expect(page.locator('.oge-header-cell').first()).toHaveText('Id');
-  await expect(page.locator('.oge-row')).toHaveCount(50);
+  // The overview grid pages its 50 rows, so the page stays scannable.
+  await expect(page.locator('.oge-row')).toHaveCount(10);
+  await expect(page.locator('.oge-pager')).toBeVisible();
 });

@@ -8,6 +8,8 @@
   --oge-drawer-size: 260px;
   --oge-drawer-min-size: 0px;
   --oge-drawer-duration: 240ms;
+  // Standard decelerate curve: fast out of the gate, soft landing.
+  --oge-drawer-easing: cubic-bezier(0.2, 0, 0, 1);
   // The panel's own size right now: the rail while closed, the full size while
   // open. Every mode below lays out from this one value.
   --oge-drawer-current: var(--oge-drawer-min-size);
@@ -62,9 +64,9 @@
   background: var(--oge-header-bg);
   outline: none;
   transition:
-    inline-size var(--oge-drawer-duration) ease,
-    block-size var(--oge-drawer-duration) ease,
-    translate var(--oge-drawer-duration) ease;
+    inline-size var(--oge-drawer-duration) var(--oge-drawer-easing),
+    block-size var(--oge-drawer-duration) var(--oge-drawer-easing),
+    translate var(--oge-drawer-duration) var(--oge-drawer-easing);
 
   &:focus-visible {
     outline: none;
@@ -148,7 +150,19 @@
   flex: 1 1 auto;
   min-inline-size: 0;
   min-block-size: 0;
-  transition: translate var(--oge-drawer-duration) ease;
+  transition: translate var(--oge-drawer-duration) var(--oge-drawer-easing);
+}
+
+// Out-of-flow modes: the panel keeps its full size and ONLY translates — a
+// compositor-only animation, so the projected content never reflows or
+// squishes mid-gesture. (`minSize` rails are a side-mode concept by contract,
+// so pinning the size here breaks nothing.) Top/bottom already get their
+// fixed block-size from the mode rules below.
+.oge-drawer[data-mode='push'][data-position='start'] .oge-drawer-panel,
+.oge-drawer[data-mode='push'][data-position='end'] .oge-drawer-panel,
+.oge-drawer[data-mode='overlay'][data-position='start'] .oge-drawer-panel,
+.oge-drawer[data-mode='overlay'][data-position='end'] .oge-drawer-panel {
+  inline-size: var(--oge-drawer-size);
 }
 
 // --- mode: 'side' -------------------------------------------------------------
@@ -307,7 +321,13 @@
   inset: 0;
   z-index: calc(var(--oge-z-drawer) - 1);
   background: var(--oge-modal-backdrop-bg);
-  animation: oge-drawer-fade var(--oge-drawer-duration) ease;
+  animation: oge-drawer-fade var(--oge-drawer-duration) var(--oge-drawer-easing);
+
+  // The modern frosted scrim. Scoped to the drawer's own box, so the cost
+  // stays proportional to the container, not the page.
+  @supports (backdrop-filter: blur(2px)) {
+    backdrop-filter: blur(2px);
+  }
 }
 
 @keyframes oge-drawer-fade {

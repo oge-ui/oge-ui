@@ -50,7 +50,7 @@ test('linear refuses a move and says why', async ({ page }) => {
   await expect(card.locator('p').last()).toContainText('linear');
 
   // completing step 1 opens the NEXT step only — step 3 still waits on step 2
-  await card.getByRole('checkbox').check();
+  await card.getByRole('checkbox', { name: 'Account is complete' }).check();
   await expect(headers.nth(1)).not.toHaveAttribute('aria-disabled', /.*/);
   await expect(headers.nth(2)).toHaveAttribute('aria-disabled', 'true');
   await headers.nth(1).click();

@@ -5,7 +5,7 @@ export const QUICK_START_SNIPPET = demoSource({
   selector: 'app-employees',
   className: 'EmployeesPage',
   dataset: 'employees',
-  template: `<oge-grid [data]="employees" keyField="id">
+  template: `<oge-grid [data]="employees" keyField="id" [paging]="{ pageSize: 10 }">
   <oge-column field="id" caption="Id" [width]="70" dataType="number" />
   <oge-column field="firstName" caption="First Name" />
   <oge-column field="department" caption="Department">
