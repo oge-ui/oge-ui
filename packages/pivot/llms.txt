@@ -109,7 +109,7 @@ Predictable wrong guesses, and what to write instead.
 | `showRowGrandTotals / showColumnGrandTotals` | `boolean` | `true` | Grand-total lines per axis. |
 | `fieldPanel` | `boolean` | `true` | Collapsible drag & drop field panel. |
 | `fieldChooser` | `{ applyChangesMode?: 'instantly' \| 'onDemand' }` | `{}` | Field-chooser dialog behavior. |
-| `customizeCell` | `(cell: OgePivotCellPrepared) => void` | `—` | Appearance hook: mutate `text` / `cssClass` per cell (the DevExtreme `cellPrepared` equivalent). |
+| `customizeCell` | `(cell: OgePivotCellPrepared) => void` | `—` | Appearance hook: mutate `text` / `cssClass` per cell (the reference `cellPrepared` equivalent). |
 | `stateKey` | `string \| undefined` | `—` | Persists the field layout + expansion via `OGE_STATE_STORAGE`. |
 | `messages` | `Partial<OgePivotMessages>` | `{}` | Per-instance overrides of the UI strings. |
 

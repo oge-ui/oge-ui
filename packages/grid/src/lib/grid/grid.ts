@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import {
   ChangeDetectionStrategy,
@@ -20,6 +20,7 @@ import {
   signal,
   untracked,
   viewChild,
+  type TemplateRef,
 } from '@angular/core';
 import {
   ArrayDataSource,
@@ -111,6 +112,7 @@ import {
   type OgeMenuItem,
   type OgeMenuListItemClickEvent,
 } from '@oge-ui/overlay';
+import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
 import { OgeCellEditor } from '../editing/cell-editor';
 import { OgePager } from '../pager/pager';
 import { GridStateStore } from '../state/grid-state.store';
@@ -123,7 +125,8 @@ import {
 } from '../templates/detail-template';
 import { OgeNoDataTemplate } from '../templates/no-data-template';
 import { OgeRowTemplate } from '../templates/row-template';
-import { OgeToolbarItem } from '../templates/toolbar-item';
+import { OgeToolbar } from '@oge-ui/layout';
+import { OgeGridToolbarItem } from '../templates/toolbar-item';
 import type { OgeHeaderTemplateContext } from '../templates/header-template';
 
 /** Programmatic column definition (alternative to declarative `<oge-column>`). */
@@ -354,6 +357,7 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
     ReactiveFormsModule,
     OgeFilterBuilderGroup,
     OgeCellEditor,
+    OgeForm,
     OgeCheckBox,
     OgeDateBox,
     OgeSelectBox,
@@ -363,6 +367,7 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
     OgeMenuList,
     OgeModal,
     OgeModalFooter,
+    OgeToolbar,
   ],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -653,6 +658,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly destroyRef = inject(DestroyRef);
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly viewportRef = viewChild<ElementRef<HTMLElement>>('viewport');
+  /** One adapter template, reused for every column that has an edit template. */
+  private readonly editAdapterTemplate =
+    viewChild<TemplateRef<unknown>>('editAdapter');
 
   protected readonly scrollTop = signal(0);
   protected readonly scrollLeft = signal(0);
@@ -737,7 +745,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected readonly noDataTemplate = contentChild(OgeNoDataTemplate);
   protected readonly rowTemplate = contentChild(OgeRowTemplate<T>);
-  protected readonly toolbarItems = contentChildren(OgeToolbarItem);
+  protected readonly toolbarItems = contentChildren(OgeGridToolbarItem);
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -1296,7 +1304,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.store.selection.clear();
   }
 
-  /** Deselects every row — same as `clearSelection()` (DevExtreme-parity name). */
+  /** Deselects every row — same as `clearSelection()` (parity alias). */
   deselectAll(): void {
     this.clearSelection();
   }
@@ -2673,11 +2681,83 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     });
   });
 
-  /** Explicit form grid template when `editing.formColCount` is set. */
-  protected readonly formGridTemplate = computed<string | null>(() => {
-    const count = this.editingOptions()?.formColCount;
-    return count && count > 0 ? `repeat(${count}, minmax(0, 1fr))` : null;
+  /**
+   * The row currently rendered as an inline edit form, if any. Both the inline
+   * form and the popup edit exactly one row at a time, which is what lets a
+   * single `FormGroup` back either surface.
+   */
+  protected readonly editFormNode = computed<DataRowNode<T> | null>(() => {
+    if (this.editMode() === 'popup') return this.popupNode();
+    if (this.editMode() !== 'form') return null;
+    const key = this.store.editing.editRowKey();
+    if (key === null) return null;
+    return (
+      this.flatNodes().find(
+        (node): node is DataRowNode<T> =>
+          node.kind === 'data' && node.key === key,
+      ) ?? null
+    );
   });
+
+  /**
+   * The edited row's controls as one `FormGroup`, so `<oge-form>` can lay the
+   * row out. The controls themselves still come from `EditingModel` — this is
+   * only the shape `[formGroup]` expects.
+   */
+  protected readonly editFormGroup = computed<FormGroup | null>(() => {
+    const node = this.editFormNode();
+    if (!node) return null;
+    const controls: Record<string, FormControl<unknown>> = {};
+    for (const item of this.editFormItems()) {
+      const field = item.column.field;
+      if (!field) continue;
+      controls[field] = this.editControl(node, item.column);
+    }
+    return new FormGroup(controls);
+  });
+
+  /** `editing.formItems` translated into the forms package's item model. */
+  protected readonly editFormFields = computed<readonly OgeFormItemData[]>(
+    () => {
+      const node = this.editFormNode();
+      if (!node) return [];
+      const adapter = this.editAdapterTemplate();
+      return this.editFormItems().flatMap((item) => {
+        const field = item.column.field;
+        if (!field) return [];
+        const lookupItems = this.lookupItemsFor(node, item.column);
+        return [
+          {
+            field,
+            label: item.label,
+            colSpan: item.colSpan,
+            dataType: item.column.dataType,
+            editorType: lookupItems ? ('selectBox' as const) : undefined,
+            editorOptions: lookupItems
+              ? { items: lookupItems, displayExpr: 'text', valueExpr: 'value' }
+              : undefined,
+            // a column's own *ogeEditTemplate keeps its documented context;
+            // one adapter template resolves the column back from the field
+            editorTemplate: item.column.editTemplate ? adapter : undefined,
+          },
+        ];
+      });
+    },
+  );
+
+  /** Layout columns for the edit form; `undefined` keeps the auto-fit default. */
+  protected readonly editFormColCount = computed<number | 'auto'>(() => {
+    const count = this.editingOptions()?.formColCount;
+    return count && count > 0 ? count : 'auto';
+  });
+
+  /** Resolves a column back from an item field, for the edit-template adapter. */
+  protected editColumnFor(field: string): ResolvedColumn<T> | null {
+    return (
+      this.editFormItems().find((item) => item.column.field === field)
+        ?.column ?? null
+    );
+  }
 
   /** Trailing command column (edit/delete/save/cancel buttons). */
   protected readonly hasCommandColumn = computed(() => {

@@ -1,12 +1,18 @@
 @if (searchPanelVisible() || canAdd() || columnChooser() ||
 toolbarItems().length > 0 || (editMode() === 'batch' &&
 store.editing.hasPending())) {
-<div class="oge-toolbar">
-  <ng-content select="[ogeToolbar]" />
+<oge-toolbar
+  class="oge-tree-list-toolbar"
+  stylingMode="flat"
+  [ariaLabel]="msg().toolbar"
+  [messages]="{ overflowMenu: msg().moreCommands }"
+>
+  <ng-content select="[ogeToolbar]" ngProjectAs="[ogeToolbarBefore]" />
   @if (columnChooser()) {
   <button
+    ogeToolbarBefore
     type="button"
-    class="oge-toolbar-btn"
+    class="oge-tool-btn"
     [attr.aria-label]="msg().columnChooser"
     [attr.title]="msg().columnChooser"
     (click)="toggleChooser($event)"
@@ -26,28 +32,36 @@ store.editing.hasPending())) {
     </svg>
   </button>
   } @if (canAdd()) {
-  <button type="button" class="oge-toolbar-text-btn" (click)="addRow()">
+  <button
+    ogeToolbarBefore
+    type="button"
+    class="oge-tool-text-btn"
+    (click)="addRow()"
+  >
     {{ msg().addRow }}
   </button>
   } @if (editMode() === 'batch' && store.editing.hasPending()) {
-  <button
-    type="button"
-    class="oge-toolbar-text-btn oge-btn-accent"
-    (click)="saveAllChanges()"
-  >
-    {{ msg().saveChanges }}
-  </button>
-  <button
-    type="button"
-    class="oge-toolbar-text-btn"
-    (click)="discardAllChanges()"
-  >
-    {{ msg().discardChanges }}
-  </button>
-  }
-  <div class="oge-toolbar-spacer"></div>
-  @if (searchPanelVisible()) {
+  <!-- one wrapper per conditional group: Angular projects a multi-root @if
+       block into the default slot, not the named one -->
+  <span ogeToolbarBefore class="oge-toolbar-cluster">
+    <button
+      type="button"
+      class="oge-tool-text-btn oge-btn-accent"
+      (click)="saveAllChanges()"
+    >
+      {{ msg().saveChanges }}
+    </button>
+    <button
+      type="button"
+      class="oge-tool-text-btn"
+      (click)="discardAllChanges()"
+    >
+      {{ msg().discardChanges }}
+    </button>
+  </span>
+  } @if (searchPanelVisible()) {
   <input
+    ogeToolbarAfter
     class="oge-search-input"
     type="search"
     [placeholder]="searchPanelOptions().placeholder ?? msg().search"
@@ -56,7 +70,7 @@ store.editing.hasPending())) {
     (input)="onSearchInput($any($event.target).value)"
   />
   }
-</div>
+</oge-toolbar>
 } @if (filterPanel()) {
 <div class="oge-filter-panel">
   <svg
@@ -359,62 +373,37 @@ store.editing.hasPending())) {
       @for (node of viewNodes(); track node.key; let nodeIndex = $index) {
       @switch (node.kind) { @case ('data') { @if (isFormRow(node.key)) {
       <div
-        class="oge-row oge-form-row"
+        class="oge-row oge-edit-form-row"
         role="row"
         [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
         [attr.data-rowindex]="viewStart() + nodeIndex"
       >
         <div
-          class="oge-form-cell"
+          class="oge-edit-form-cell"
           role="gridcell"
           [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
           [style.max-width.px]="hostWidth() || null"
         >
-          <div
-            class="oge-form-fields"
-            [style.grid-template-columns]="formGridTemplate()"
-          >
-            @for (item of editFormItems(); track item.column.id) { @if
-            (item.column; as column) {
-            <div
-              class="oge-form-field"
-              [style.grid-column]="item.colSpan > 1 ? 'span ' + item.colSpan : null"
-            >
-              <span class="oge-form-label">{{ item.label }}</span>
-              @if (column.editTemplate) {
-              <ng-container
-                *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
-              />
-              } @else {
-              <oge-cell-editor
-                surface="form"
-                [control]="editControl(node, column)"
-                [dataType]="column.dataType"
-                [lookupItems]="lookupItemsFor(node, column)"
-                [label]="item.label"
-                [invalid]="
-                  editControl(node, column).touched && editControl(node, column).invalid
-                "
-                (enterKey)="onEditorEnter()"
-                (escapeKey)="cancelActiveEditor()"
-              />
-              } @if (editorErrorText(editControl(node, column)); as error) {
-              <span class="oge-form-error">{{ error }}</span>
-              }
-            </div>
-            } }
-          </div>
-          <div class="oge-form-actions">
+          <oge-form
+            class="oge-edit-form-fields"
+            [formGroup]="editFormGroup()!"
+            [items]="editFormFields()"
+            [colCount]="editFormColCount()"
+            [renderFormElement]="false"
+            [subscriptSizing]="'dynamic'"
+            (editorEnterKey)="onEditorEnter()"
+          />
+          <div class="oge-edit-form-actions">
             <button
               type="button"
-              class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+              class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
               (click)="commitActiveRow()"
             >
               {{ msg().saveRow }}
             </button>
             <button
               type="button"
-              class="oge-toolbar-btn oge-toolbar-text-btn"
+              class="oge-tool-btn oge-tool-text-btn"
               (click)="cancelActiveEditor()"
             >
               {{ msg().cancelEdit }}
@@ -774,49 +763,25 @@ store.editing.hasPending())) {
   [width]="420"
   (closed)="cancelActiveEditor()"
 >
-  <div
+  <oge-form
     class="oge-popup-fields"
-    [style.grid-template-columns]="formGridTemplate()"
-  >
-    @for (item of editFormItems(); track item.column.id) { @if (item.column; as
-    column) {
-    <div
-      class="oge-popup-field"
-      [style.grid-column]="item.colSpan > 1 ? 'span ' + item.colSpan : null"
-    >
-      <span class="oge-popup-label">{{ item.label }}</span>
-      @if (column.editTemplate) {
-      <ng-container
-        *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
-      />
-      } @else {
-      <oge-cell-editor
-        surface="popup"
-        [control]="editControl(node, column)"
-        [dataType]="column.dataType"
-        [lookupItems]="lookupItemsFor(node, column)"
-        [label]="item.label"
-        [invalid]="
-          editControl(node, column).touched && editControl(node, column).invalid
-        "
-      />
-      } @if (editorErrorText(editControl(node, column)); as error) {
-      <span class="oge-popup-error">{{ error }}</span>
-      }
-    </div>
-    } }
-  </div>
+    [formGroup]="editFormGroup()!"
+    [items]="editFormFields()"
+    [colCount]="editFormColCount()"
+    [renderFormElement]="false"
+    [subscriptSizing]="'dynamic'"
+  />
   <ng-container *ogeModalFooter>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
       (click)="commitActiveRow()"
     >
       {{ msg().saveRow }}
     </button>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn"
+      class="oge-tool-btn oge-tool-text-btn"
       (click)="cancelActiveEditor()"
     >
       {{ msg().cancelEdit }}
@@ -946,17 +911,28 @@ store.editing.hasPending())) {
   <ng-container *ogeModalFooter>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
       (click)="applyFilterBuilder()"
     >
       {{ msg().apply }}
     </button>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn"
+      class="oge-tool-btn oge-tool-text-btn"
       (click)="builderOpen.set(false)"
     >
       {{ msg().cancelEdit }}
     </button>
   </ng-container>
 </oge-modal>
+
+<!-- one adapter for every column that brings its own *ogeEditTemplate: the
+     forms package hands us the item, we hand the column its documented
+     { $implicit: control, row, column } context back -->
+<ng-template #editAdapter let-item let-control="control">
+  @if (editColumnFor(item.field); as column) { @if (editFormNode(); as node) {
+  <ng-container
+    *ngTemplateOutlet="column.editTemplate!; context: editContextFor(node, column)"
+  />
+  } }
+</ng-template>

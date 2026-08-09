@@ -1,0 +1,239 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a standalone splitter is fully themed without
+// any other oge component on the page.
+.oge-splitter {
+  @include tokens.core-tokens;
+
+  --oge-splitter-separator-bg: transparent;
+  --oge-splitter-separator-line: var(--oge-border-color);
+  --oge-splitter-separator-hover: var(--oge-accent-soft);
+  --oge-splitter-separator-line-hover: var(--oge-accent);
+  --oge-splitter-transition: 120ms ease;
+
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+  font-size: var(--oge-font-size);
+  color: var(--oge-text-color);
+  background: var(--oge-bg);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  &.oge-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  // While a separator is being dragged the pointer may leave it — keep the
+  // resize cursor and stop the gesture from selecting text in the panes.
+  &.oge-splitter-resizing {
+    user-select: none;
+  }
+
+  &.oge-splitter-resizing[data-orientation='horizontal'] {
+    cursor: col-resize;
+  }
+
+  &.oge-splitter-resizing[data-orientation='vertical'] {
+    cursor: row-resize;
+  }
+}
+
+.oge-splitter-pane {
+  position: relative;
+  // A grid item defaults to min-content in its axis, which would stop a pane
+  // from ever shrinking below its content.
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.oge-splitter-pane-scroll {
+  overflow: auto;
+}
+
+.oge-splitter-pane-collapsed {
+  overflow: hidden;
+}
+
+.oge-splitter-empty {
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  color: var(--oge-muted-text-color, var(--oge-text-color));
+  opacity: 0.7;
+}
+
+// --- separator ---------------------------------------------------------------
+
+.oge-splitter-separator {
+  position: relative;
+  display: flex;
+  // two grips sit end to end along the bar, centered as a pair
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--oge-splitter-separator-bg);
+  // Without this a touch drag scrolls the page instead of moving the separator.
+  touch-action: none;
+  transition: background var(--oge-splitter-transition);
+
+  &:hover {
+    background: var(--oge-splitter-separator-hover);
+  }
+
+  // Pointer/programmatic focus gets the soft ring…
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  // …keyboard focus the strong one.
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    z-index: 2;
+  }
+}
+
+.oge-splitter-separator-active {
+  background: var(--oge-splitter-separator-hover);
+}
+
+.oge-splitter-separator-locked {
+  cursor: default;
+
+  &:hover {
+    background: var(--oge-splitter-separator-bg);
+  }
+}
+
+.oge-splitter[data-orientation='horizontal'] .oge-splitter-separator {
+  cursor: col-resize;
+}
+
+.oge-splitter[data-orientation='vertical'] .oge-splitter-separator {
+  cursor: row-resize;
+}
+
+.oge-splitter[data-orientation='horizontal'] .oge-splitter-separator-locked,
+.oge-splitter[data-orientation='vertical'] .oge-splitter-separator-locked {
+  cursor: default;
+}
+
+// The hairline is a child rather than a border so the hit area can stay wider
+// than the line the user sees. It is also the affordance: on hover and while
+// dragging it takes the accent, which is the feedback that tells the user the
+// thin line — not the whole pad — is what will move.
+.oge-splitter-separator-line {
+  position: absolute;
+  border-radius: 999px;
+  background: var(--oge-splitter-separator-line);
+  transition:
+    background var(--oge-splitter-transition),
+    inline-size var(--oge-splitter-transition),
+    block-size var(--oge-splitter-transition);
+}
+
+.oge-splitter-separator:hover:not(.oge-splitter-separator-locked)
+  .oge-splitter-separator-line,
+.oge-splitter-separator:focus-visible .oge-splitter-separator-line,
+.oge-splitter-separator-active .oge-splitter-separator-line {
+  background: var(--oge-splitter-separator-line-hover);
+}
+
+// Grow the line along its short axis so the target reads as grabbable.
+.oge-splitter[data-orientation='horizontal']
+  .oge-splitter-separator:hover:not(.oge-splitter-separator-locked)
+  .oge-splitter-separator-line,
+.oge-splitter[data-orientation='horizontal']
+  .oge-splitter-separator-active
+  .oge-splitter-separator-line {
+  inline-size: 3px;
+}
+
+.oge-splitter[data-orientation='vertical']
+  .oge-splitter-separator:hover:not(.oge-splitter-separator-locked)
+  .oge-splitter-separator-line,
+.oge-splitter[data-orientation='vertical']
+  .oge-splitter-separator-active
+  .oge-splitter-separator-line {
+  block-size: 3px;
+}
+
+// A pane that cannot be resized should not advertise a grab target.
+.oge-splitter-separator-locked .oge-splitter-separator-line {
+  opacity: 0.6;
+}
+
+.oge-splitter[data-orientation='horizontal'] .oge-splitter-separator-line {
+  inset-block: 0;
+  inline-size: 1px;
+}
+
+.oge-splitter[data-orientation='vertical'] .oge-splitter-separator-line {
+  inset-inline: 0;
+  block-size: 1px;
+}
+
+// On a horizontal splitter the bar is a narrow column, so the two grips stack
+// along it rather than sitting side by side.
+.oge-splitter[data-orientation='horizontal'] .oge-splitter-separator {
+  flex-direction: column;
+}
+
+// The collapse grips are a secondary affordance: legible while the pointer is
+// near the bar, out of the way otherwise. They stay fully visible on keyboard
+// focus and on touch, where there is no hover to reveal them.
+.oge-splitter-grip {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 14px;
+  block-size: 14px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  border: 1px solid var(--oge-border-color);
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  opacity: 0.75;
+  transition:
+    background var(--oge-splitter-transition),
+    border-color var(--oge-splitter-transition),
+    color var(--oge-splitter-transition),
+    opacity var(--oge-splitter-transition);
+
+  &:hover {
+    border-color: var(--oge-accent);
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+    opacity: 1;
+  }
+}
+
+.oge-splitter-separator:hover .oge-splitter-grip,
+.oge-splitter-separator:focus-visible .oge-splitter-grip,
+.oge-splitter-separator-active .oge-splitter-grip {
+  opacity: 1;
+}
+
+// Hover is not a thing on touch, so never hide the grips there.
+@media (hover: none) {
+  .oge-splitter-grip {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-splitter-separator,
+  .oge-splitter-separator-line,
+  .oge-splitter-grip {
+    transition: none;
+  }
+}

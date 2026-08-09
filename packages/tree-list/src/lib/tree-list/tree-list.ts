@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ReactiveFormsModule, type FormControl } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
   OgeCheckBox,
   OgeDateBox,
@@ -35,6 +35,7 @@ import {
   signal,
   untracked,
   viewChild,
+  type TemplateRef,
 } from '@angular/core';
 import {
   ArrayDataSource,
@@ -85,6 +86,8 @@ import {
   type PendingChildRequest,
   type ResolvedColumn as FoundationResolvedColumn,
 } from '@oge-ui/grid/foundation';
+import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
+import { OgeToolbar } from '@oge-ui/layout';
 import {
   GridDataAdapter,
   GridStateStore,
@@ -93,9 +96,9 @@ import {
   OgeColumn,
   OgeColumnGroup,
   OgeFilterBuilderGroup,
+  OgeGridToolbarItem,
   OgeNoDataTemplate,
   OgePager,
-  OgeToolbarItem,
   builderToExpr,
   describeExpr,
   exprToBuilder,
@@ -240,6 +243,7 @@ function treeSource<T>(
     OgeFilterBuilderGroup,
     OgePager,
     OgeCellEditor,
+    OgeForm,
     OgeCheckBox,
     OgeDateBox,
     OgeSelectBox,
@@ -249,6 +253,7 @@ function treeSource<T>(
     OgeMenuList,
     OgeModal,
     OgeModalFooter,
+    OgeToolbar,
   ],
   providers: [GridStateStore, GridDataAdapter],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -275,6 +280,9 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   private readonly destroyRef = inject(DestroyRef);
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly viewportRef = viewChild<ElementRef<HTMLElement>>('viewport');
+  /** One adapter template, reused for every column that has an edit template. */
+  private readonly editAdapterTemplate =
+    viewChild<TemplateRef<unknown>>('editAdapter');
 
   // --- inputs / outputs -----------------------------------------------------
 
@@ -529,7 +537,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected readonly columnGroups =
     contentChildren<OgeColumnGroup<T>>(OgeColumnGroup);
   protected readonly noDataTemplate = contentChild(OgeNoDataTemplate);
-  protected readonly toolbarItems = contentChildren(OgeToolbarItem);
+  protected readonly toolbarItems = contentChildren(OgeGridToolbarItem);
 
   // --- viewport state -------------------------------------------------------
 
@@ -1473,7 +1481,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.store.selection.clear();
   }
 
-  /** Deselects every row — same as `clearSelection()` (DevExtreme-parity name). */
+  /** Deselects every row — same as `clearSelection()` (parity alias). */
   deselectAll(): void {
     this.clearSelection();
   }
@@ -2525,7 +2533,78 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     });
   });
 
-  /** Explicit form grid template when `editing.formColCount` is set. */
+  /**
+   * The row currently rendered as an edit form — inline or in the popup. Both
+   * edit exactly one row at a time, which is what lets a single `FormGroup`
+   * back either surface.
+   */
+  protected readonly editFormNode = computed<DataRowNode<T> | null>(() => {
+    if (this.editMode() === 'popup') return this.popupNode();
+    if (this.editMode() !== 'form') return null;
+    const key = this.store.editing.editRowKey();
+    if (key === null) return null;
+    return (
+      this.flatNodes().find(
+        (node): node is DataRowNode<T> =>
+          node.kind === 'data' && node.key === key,
+      ) ?? null
+    );
+  });
+
+  /** The edited row's controls as one `FormGroup`, for `<oge-form>`. */
+  protected readonly editFormGroup = computed<FormGroup | null>(() => {
+    const node = this.editFormNode();
+    if (!node) return null;
+    const controls: Record<string, FormControl<unknown>> = {};
+    for (const item of this.editFormItems()) {
+      const field = item.column.field;
+      if (!field) continue;
+      controls[field] = this.editControl(node, item.column);
+    }
+    return new FormGroup(controls);
+  });
+
+  /** `editing.formItems` translated into the forms package's item model. */
+  protected readonly editFormFields = computed<readonly OgeFormItemData[]>(
+    () => {
+      const node = this.editFormNode();
+      if (!node) return [];
+      const adapter = this.editAdapterTemplate();
+      return this.editFormItems().flatMap((item) => {
+        const field = item.column.field;
+        if (!field) return [];
+        const lookupItems = this.lookupItemsFor(node, item.column);
+        return [
+          {
+            field,
+            label: item.label,
+            colSpan: item.colSpan,
+            dataType: item.column.dataType,
+            editorType: lookupItems ? ('selectBox' as const) : undefined,
+            editorOptions: lookupItems
+              ? { items: lookupItems, displayExpr: 'text', valueExpr: 'value' }
+              : undefined,
+            editorTemplate: item.column.editTemplate ? adapter : undefined,
+          },
+        ];
+      });
+    },
+  );
+
+  /** Layout columns for the edit form; `undefined` keeps the auto-fit default. */
+  protected readonly editFormColCount = computed<number | 'auto'>(() => {
+    const count = this.editingModel.editingOptions()?.formColCount;
+    return count && count > 0 ? count : 'auto';
+  });
+
+  /** Resolves a column back from an item field, for the edit-template adapter. */
+  protected editColumnFor(field: string): ResolvedColumn<T> | null {
+    return (
+      this.editFormItems().find((item) => item.column.field === field)
+        ?.column ?? null
+    );
+  }
+
   protected readonly formGridTemplate = computed<string | null>(() => {
     const count = this.editingModel.editingOptions()?.formColCount;
     return count && count > 0 ? `repeat(${count}, minmax(0, 1fr))` : null;
@@ -2922,7 +3001,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /**
    * Expands the path to `key`, scrolls to it and focuses it — same as
-   * `focusRow()` (DevExtreme-parity name).
+   * `focusRow()` (parity alias).
    */
   navigateToRow(key: RowKey): void {
     this.focusRow(key);

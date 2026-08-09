@@ -74,7 +74,7 @@ describe('OgeTreeList editing', () => {
     cell?.click();
     await settle(fixture);
     const editor = el.querySelector<HTMLInputElement>(
-      '.oge-editor .oge-input-native',
+      '.oge-editor .oge-input-native, oge-form-field .oge-input-native',
     );
     expect(editor).toBeTruthy();
     if (!editor) return;
@@ -99,7 +99,7 @@ describe('OgeTreeList editing', () => {
       ?.click();
     await settle(fixture);
     const editors = el.querySelectorAll<HTMLInputElement>(
-      '.oge-editor .oge-input-native',
+      '.oge-editor .oge-input-native, oge-form-field .oge-input-native',
     );
     expect(editors.length).toBe(2);
     editors[1].value = '9';
@@ -120,7 +120,7 @@ describe('OgeTreeList editing', () => {
     await settle(fixture);
     // the new row renders on top with open editors
     const editors = el.querySelectorAll<HTMLInputElement>(
-      '.oge-editor .oge-input-native',
+      '.oge-editor .oge-input-native, oge-form-field .oge-input-native',
     );
     expect(editors.length).toBe(2);
     editors[0].value = 'New child';
@@ -143,26 +143,26 @@ describe('OgeTreeList editing', () => {
       ?.querySelector<HTMLButtonElement>('.oge-command-btn')
       ?.click();
     await settle(fixture);
-    const form = el.querySelector<HTMLElement>('.oge-form-row');
+    const form = el.querySelector<HTMLElement>('.oge-edit-form-row');
     expect(form).toBeTruthy();
-    const labels = Array.from(el.querySelectorAll('.oge-form-label')).map(
+    const labels = Array.from(el.querySelectorAll('.oge-input-label')).map(
       (label) => label.textContent?.trim(),
     );
     expect(labels).toEqual(['Title', 'Effort']);
     const editors = form?.querySelectorAll<HTMLInputElement>(
-      '.oge-editor .oge-input-native',
+      '.oge-editor .oge-input-native, oge-form-field .oge-input-native',
     );
     if (!editors) throw new Error('form editors missing');
     editors[0].value = 'Renamed B';
     editors[0].dispatchEvent(new Event('input', { bubbles: true }));
     Array.from(
-      el.querySelectorAll<HTMLButtonElement>('.oge-form-actions button'),
+      el.querySelectorAll<HTMLButtonElement>('.oge-edit-form-actions button'),
     )[0].click();
     await settle(fixture);
     await flush();
     await settle(fixture);
     expect(host.data[2].title).toBe('Renamed B');
-    expect(el.querySelector('.oge-form-row')).toBeNull();
+    expect(el.querySelector('.oge-edit-form-row')).toBeNull();
   });
 
   it('popup mode: a modal dialog edits the row and saves through the source', async () => {
@@ -176,7 +176,7 @@ describe('OgeTreeList editing', () => {
     const popup = el.querySelector<HTMLElement>('.oge-edit-modal .oge-modal');
     expect(popup).toBeTruthy();
     const editors = popup?.querySelectorAll<HTMLInputElement>(
-      '.oge-editor .oge-input-native',
+      '.oge-editor .oge-input-native, oge-form-field .oge-input-native',
     );
     if (!editors) throw new Error('popup editors missing');
     editors[1].value = '7';

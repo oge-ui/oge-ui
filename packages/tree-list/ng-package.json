@@ -5,6 +5,8 @@
     "@oge-ui/core",
     "@oge-ui/grid",
     "@oge-ui/inputs",
+    "@oge-ui/forms",
+    "@oge-ui/layout",
     "@oge-ui/overlay"
   ],
   "assets": ["llms.txt"],

@@ -19,7 +19,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
 }
 
-describe('OgeGrid events (DevExtreme events parity)', () => {
+describe('OgeGrid events (reference events parity)', () => {
   async function render(inputs: Record<string, unknown> = {}): Promise<{
     fixture: ComponentFixture<OgeGrid<Row>>;
     el: HTMLElement;

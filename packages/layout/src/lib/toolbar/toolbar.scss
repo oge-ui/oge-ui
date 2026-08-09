@@ -1,0 +1,413 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a standalone toolbar is fully themed without
+// any other oge component on the page.
+.oge-toolbar {
+  @include tokens.core-tokens;
+
+  --oge-toolbar-gap: 6px;
+  --oge-toolbar-padding: 6px 8px;
+  --oge-toolbar-item-padding: 6px 10px;
+  --oge-toolbar-icon-size: 16px;
+  --oge-toolbar-separator-inset: 5px;
+  --oge-toolbar-transition: 120ms ease;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  column-gap: var(--oge-toolbar-gap);
+  padding: var(--oge-toolbar-padding);
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-header-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  min-inline-size: 0;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  &.oge-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+// --- chrome presets --------------------------------------------------------
+
+.oge-toolbar-filled {
+  background: var(--oge-accent-soft);
+}
+
+.oge-toolbar-flat {
+  border-color: transparent;
+  background: transparent;
+}
+
+.oge-toolbar-sm {
+  --oge-toolbar-gap: 4px;
+  --oge-toolbar-padding: 4px 6px;
+  --oge-toolbar-item-padding: 4px 8px;
+  --oge-toolbar-icon-size: 14px;
+  --oge-toolbar-separator-inset: 4px;
+
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-toolbar-lg {
+  --oge-toolbar-gap: 8px;
+  --oge-toolbar-padding: 10px 12px;
+  --oge-toolbar-item-padding: 9px 14px;
+  --oge-toolbar-icon-size: 18px;
+  --oge-toolbar-separator-inset: 7px;
+}
+
+// --- layout ----------------------------------------------------------------
+
+// The declarative config children are queried, never rendered here.
+.oge-toolbar-defs {
+  display: none;
+}
+
+// Deliberately not `overflow: hidden`: entries the toolbar owns collapse into
+// the menu before they run out of room, but `locateInMenu: 'never'` entries
+// and projected slot content are contract-bound to stay on the bar. Clipping
+// them would hide a control that is still focusable and clickable.
+.oge-toolbar-sections {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  column-gap: var(--oge-toolbar-gap);
+  min-inline-size: 0;
+}
+
+.oge-toolbar-section {
+  display: flex;
+  align-items: center;
+  column-gap: var(--oge-toolbar-gap);
+  min-inline-size: 0;
+}
+
+// `before` and `after` take their natural width; `center` claims the rest and
+// centres inside it — the reference semantics, and it mirrors in RTL for free
+// because the row follows the writing mode.
+.oge-toolbar-section-center {
+  flex: 1;
+  justify-content: center;
+}
+
+.oge-toolbar-section-after {
+  margin-inline-start: auto;
+}
+
+// `overflow: 'wrap'` — the reference `multiline` mode.
+.oge-toolbar-wrap {
+  .oge-toolbar-sections,
+  .oge-toolbar-section {
+    flex-wrap: wrap;
+    row-gap: var(--oge-toolbar-gap);
+    overflow: visible;
+  }
+}
+
+.oge-toolbar-vertical {
+  flex-direction: column;
+  align-items: stretch;
+
+  .oge-toolbar-sections,
+  .oge-toolbar-section {
+    flex-direction: column;
+    align-items: stretch;
+    row-gap: var(--oge-toolbar-gap);
+  }
+
+  .oge-toolbar-section-after {
+    margin-inline-start: 0;
+    margin-block-start: auto;
+  }
+}
+
+// --- items -----------------------------------------------------------------
+
+// `flex: none` is load-bearing, not cosmetic. A shrinkable item squeezes to fit
+// instead of overflowing, so the measured row never exceeds the container and
+// `fitToolbarItems` is handed a shortfall that does not exist — the toolbar
+// would silently never collapse anything. Projected slot content keeps the
+// default `flex: 0 1 auto`: it cannot move into the menu, so shrinking is the
+// better failure mode for it.
+.oge-toolbar-item {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+.oge-toolbar-item-spacer {
+  flex: 1 1 auto;
+}
+
+.oge-toolbar-gap {
+  display: block;
+  inline-size: 100%;
+}
+
+// Wrapper for a group of controls projected into one slot. Required whenever
+// the group sits inside an `@if`: Angular projects a control-flow block with
+// more than one root node into the *default* slot, even when every root
+// carries the slot attribute (verified against Angular 22).
+.oge-toolbar-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--oge-toolbar-gap);
+}
+
+.oge-toolbar-label {
+  padding-inline: 2px;
+  color: var(--oge-muted-color);
+  white-space: nowrap;
+}
+
+// The rule is inset from the bar's padding rather than full-bleed, so it
+// separates the commands without cutting the bar in half. The wrapper has to
+// stretch too: the item row is `align-items: center`, so a child with no
+// content of its own would otherwise collapse to zero height.
+.oge-toolbar-item-separator {
+  align-self: stretch;
+}
+
+.oge-toolbar-separator {
+  display: block;
+  inline-size: 1px;
+  align-self: stretch;
+  margin-block: var(--oge-toolbar-separator-inset);
+  margin-inline: 2px;
+  background: var(--oge-border-color);
+}
+
+.oge-toolbar-vertical .oge-toolbar-item-separator {
+  align-self: stretch;
+}
+
+.oge-toolbar-vertical .oge-toolbar-separator {
+  inline-size: auto;
+  block-size: 1px;
+  margin-block: 2px;
+  margin-inline: var(--oge-toolbar-separator-inset);
+}
+
+// A command bar reads as a row of *actions*, not a row of boxes: the default
+// button is flat and only materialises a surface on hover, focus or press.
+// Boxing every command competes with the content the toolbar sits above, and
+// it is what makes a dense bar look noisy.
+.oge-toolbar-btn,
+.oge-toolbar-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--oge-toolbar-item-padding);
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-text-color);
+  font: inherit;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--oge-toolbar-transition),
+    color var(--oge-toolbar-transition),
+    border-color var(--oge-toolbar-transition),
+    box-shadow var(--oge-toolbar-transition);
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  // Pressed feedback, so a click feels like it landed.
+  &:active:not(:disabled) {
+    background: var(--oge-accent-soft);
+  }
+
+  // Two rings, per the house focus convention: soft for pointer/programmatic
+  // focus, strong for keyboard.
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  // A toggle that is on stays visibly on — a tinted surface plus an accent
+  // hairline, so it survives next to a hovered neighbour.
+  &[aria-pressed='true'] {
+    background: var(--oge-accent-soft);
+    border-color: var(--oge-accent-25);
+    color: var(--oge-accent);
+  }
+}
+
+// Icon-only commands stay square, so a row of them lines up on a grid.
+.oge-toolbar-btn-icon-only {
+  padding: var(--oge-toolbar-item-padding);
+  aspect-ratio: 1;
+  justify-content: center;
+}
+
+// The one command that is the point of the bar keeps a solid surface.
+.oge-toolbar-btn-accent {
+  background: var(--oge-accent);
+  border-color: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+  box-shadow: var(--oge-shadow-btn);
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent);
+    border-color: var(--oge-accent);
+    box-shadow: var(--oge-shadow-btn-hover);
+    filter: brightness(1.06);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--oge-accent);
+    filter: brightness(0.96);
+  }
+}
+
+// Destructive stays flat like its neighbours until touched — a permanently
+// red button in a toolbar reads as an error state, not an action.
+.oge-toolbar-btn-danger {
+  color: var(--oge-danger);
+
+  &:hover:not(:disabled) {
+    background: var(--oge-danger-soft);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--oge-danger-soft);
+  }
+}
+
+.oge-toolbar-menu-btn,
+.oge-toolbar-scroll-btn,
+.oge-toolbar-extend-btn {
+  flex: none;
+  padding: 5px;
+  justify-content: center;
+}
+
+// While its menu is open the button is that surface's visible owner, so it
+// carries the same "on" chrome a pressed toggle does. Without this the only
+// cue that the popup belongs to this button is the popup's position.
+.oge-toolbar-menu-btn[aria-expanded='true'] {
+  background: var(--oge-accent-soft);
+  border-color: var(--oge-accent-25);
+  color: var(--oge-accent);
+}
+
+// --- overflow: 'scroll' ----------------------------------------------------
+
+.oge-toolbar-scroll .oge-toolbar-sections {
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  // Snap to whole commands rather than leaving one sliced in half.
+  scroll-snap-type: inline proximity;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .oge-toolbar-item {
+    scroll-snap-align: start;
+  }
+}
+
+.oge-toolbar-scroll.oge-toolbar-vertical .oge-toolbar-sections {
+  overflow-x: visible;
+  overflow-y: auto;
+}
+
+// --- overflow: 'extended' --------------------------------------------------
+
+.oge-toolbar-extended {
+  flex-wrap: wrap;
+}
+
+.oge-toolbar-extend-btn svg {
+  transition: transform var(--oge-toolbar-transition);
+}
+
+.oge-toolbar-extend-open svg {
+  transform: rotate(180deg);
+}
+
+// The second row is a full-width flex line under the bar — the toolbar host
+// wraps, so it needs no absolute positioning and never overlays the page.
+.oge-toolbar-extended-row {
+  display: flex;
+  flex: 0 0 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--oge-toolbar-gap);
+  margin-block-start: var(--oge-toolbar-gap);
+  padding-block-start: var(--oge-toolbar-gap);
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+// The overflow and second-row buttons are chrome, not commands: muted until
+// they matter, so they never compete with the actions beside them.
+.oge-toolbar-menu-btn,
+.oge-toolbar-scroll-btn,
+.oge-toolbar-extend-btn {
+  color: var(--oge-muted-color);
+
+  &:hover:not(:disabled) {
+    color: var(--oge-text-color);
+  }
+}
+
+// A scroll button with nothing left to reveal fades rather than vanishing,
+// so the bar does not change width at the ends of a scroll.
+.oge-toolbar-scroll-btn:disabled {
+  opacity: 0.35;
+}
+
+// --- icons -----------------------------------------------------------------
+
+.oge-toolbar-icon {
+  flex: none;
+  inline-size: var(--oge-toolbar-icon-size);
+  block-size: var(--oge-toolbar-icon-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oge-toolbar-empty {
+  color: var(--oge-muted-color);
+  padding-block: 2px;
+  font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-toolbar-btn,
+  .oge-toolbar-menu-btn,
+  .oge-toolbar-scroll-btn,
+  .oge-toolbar-extend-btn,
+  .oge-toolbar-extend-btn svg {
+    transition: none;
+  }
+
+  .oge-toolbar-scroll .oge-toolbar-sections {
+    scroll-behavior: auto;
+  }
+}

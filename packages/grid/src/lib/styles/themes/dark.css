@@ -25,6 +25,11 @@
 .oge-theme-dark .oge-tabs,
 .oge-theme-dark .oge-tab-panel,
 .oge-theme-dark .oge-accordion,
+.oge-theme-dark .oge-drawer,
+.oge-theme-dark .oge-stepper,
+.oge-theme-dark .oge-splitter,
+.oge-theme-dark .oge-toolbar,
+.oge-theme-dark .oge-form,
 .oge-theme-dark .oge-tree-view,
 .oge-theme-dark .oge-pivot-grid,
 .oge-grid.oge-theme-dark,
@@ -45,6 +50,11 @@
 .oge-tabs.oge-theme-dark,
 .oge-tab-panel.oge-theme-dark,
 .oge-accordion.oge-theme-dark,
+.oge-drawer.oge-theme-dark,
+.oge-stepper.oge-theme-dark,
+.oge-splitter.oge-theme-dark,
+.oge-toolbar.oge-theme-dark,
+.oge-form.oge-theme-dark,
 .oge-tree-view.oge-theme-dark,
 .oge-pivot-grid.oge-theme-dark {
   /* native form controls (checkboxes, selects, date pickers) follow suit */

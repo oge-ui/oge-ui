@@ -82,7 +82,7 @@ export {
   OgeRowTemplate,
   type OgeRowTemplateContext,
 } from './lib/templates/row-template';
-export { OgeToolbarItem } from './lib/templates/toolbar-item';
+export { OgeGridToolbarItem } from './lib/templates/toolbar-item';
 export { OgePager } from './lib/pager/pager';
 export {
   OgeCellEditor,

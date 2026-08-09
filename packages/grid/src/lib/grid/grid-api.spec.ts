@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { OgeToolbarItem } from '../templates/toolbar-item';
+import { OgeGridToolbarItem } from '../templates/toolbar-item';
 import { OgeGrid } from './grid';
 
 interface Row {
@@ -94,7 +94,7 @@ describe('OgeGrid imperative API & events', () => {
 
   it('projects [ogeToolbar] content into the grid toolbar', async () => {
     @Component({
-      imports: [OgeGrid, OgeToolbarItem],
+      imports: [OgeGrid, OgeGridToolbarItem],
       template: `
         <oge-grid [data]="rows" keyField="id" [columns]="['name']">
           <button ogeToolbar type="button" class="my-export">Export</button>
@@ -112,6 +112,44 @@ describe('OgeGrid imperative API & events', () => {
     expect(
       el.querySelector('.oge-toolbar .my-export')?.textContent?.trim(),
     ).toBe('Export');
+  });
+
+  it('renders its command bar as the shared APG toolbar component', async () => {
+    @Component({
+      imports: [OgeGrid],
+      template: `
+        <oge-grid
+          [data]="rows"
+          keyField="id"
+          [columns]="['name']"
+          [columnChooser]="true"
+          [searchPanel]="true"
+        />
+      `,
+    })
+    class Host {
+      rows = ROWS;
+    }
+    const fixture = TestBed.createComponent(Host);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    const bar = el.querySelector('.oge-toolbar') as HTMLElement;
+    // `<oge-toolbar>` from @oge-ui/layout, not the retired hand-rolled div
+    expect(bar.tagName.toLowerCase()).toBe('oge-toolbar');
+    expect(bar.getAttribute('role')).toBe('toolbar');
+    expect(bar.getAttribute('aria-label')).toBe('Grid toolbar');
+    // the chooser and the search box land in the toolbar's after group
+    expect(
+      bar.querySelector('.oge-toolbar-section-after .oge-tool-btn'),
+    ).not.toBeNull();
+    expect(
+      bar.querySelector('.oge-toolbar-section-after .oge-search-input'),
+    ).not.toBeNull();
+    // one roving stop, per the APG toolbar pattern
+    const stops = Array.from(
+      bar.querySelectorAll<HTMLElement>('button, input'),
+    ).filter((n) => n.getAttribute('tabindex') === '0');
+    expect(stops.length).toBe(1);
   });
 
   it('getExportData ignores paging by default and honors page/selection scopes', async () => {

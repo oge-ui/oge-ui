@@ -1,8 +1,14 @@
 @if ( searchPanelVisible() || groupPanel() || columnChooser() || canAdd() ||
 editMode() === 'batch' || toolbarItems().length > 0 ) {
-<div class="oge-toolbar">
+<oge-toolbar
+  class="oge-grid-toolbar"
+  stylingMode="flat"
+  [ariaLabel]="msg().toolbar"
+  [messages]="{ overflowMenu: msg().moreCommands }"
+>
   @if (groupPanel()) {
   <div
+    ogeToolbarBefore
     class="oge-group-panel"
     (dragover)="onColumnDragOver($event)"
     (drop)="onGroupPanelDrop($event)"
@@ -34,55 +40,59 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     }
   </div>
   }
-  <span class="oge-toolbar-spacer"></span>
-  <ng-content select="[ogeToolbar]" />
+  <ng-content select="[ogeToolbar]" ngProjectAs="[ogeToolbarAfter]" />
   @if (store.grouping.descriptors().length) {
-  <button
-    type="button"
-    class="oge-toolbar-btn"
-    [attr.aria-label]="msg().expandAllGroups"
-    [title]="msg().expandAllGroups"
-    (click)="expandAllGroups()"
-  >
-    <svg
-      viewBox="0 0 16 16"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
+  <!-- one wrapper per conditional group: Angular projects a multi-root @if
+       block into the default slot, not the named one -->
+  <span ogeToolbarAfter class="oge-toolbar-cluster">
+    <button
+      type="button"
+      class="oge-tool-btn"
+      [attr.aria-label]="msg().expandAllGroups"
+      [title]="msg().expandAllGroups"
+      (click)="expandAllGroups()"
     >
-      <path d="m4 3.5 4 3.5 4-3.5M4 9l4 3.5L12 9" />
-    </svg>
-  </button>
-  <button
-    type="button"
-    class="oge-toolbar-btn"
-    [attr.aria-label]="msg().collapseAllGroups"
-    [title]="msg().collapseAllGroups"
-    (click)="collapseAllGroups()"
-  >
-    <svg
-      viewBox="0 0 16 16"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
+      <svg
+        viewBox="0 0 16 16"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m4 3.5 4 3.5 4-3.5M4 9l4 3.5L12 9" />
+      </svg>
+    </button>
+    <button
+      type="button"
+      class="oge-tool-btn"
+      [attr.aria-label]="msg().collapseAllGroups"
+      [title]="msg().collapseAllGroups"
+      (click)="collapseAllGroups()"
     >
-      <path d="m4 7 4-3.5L12 7M4 12.5 8 9l4 3.5" />
-    </svg>
-  </button>
+      <svg
+        viewBox="0 0 16 16"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m4 7 4-3.5L12 7M4 12.5 8 9l4 3.5" />
+      </svg>
+    </button>
+  </span>
   } @if (canAdd()) {
   <button
+    ogeToolbarAfter
     type="button"
-    class="oge-toolbar-btn oge-toolbar-text-btn"
+    class="oge-tool-btn oge-tool-text-btn"
     (click)="addNewRow()"
   >
     <svg
@@ -100,24 +110,27 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     {{ msg().addRow }}
   </button>
   } @if (editMode() === 'batch' && store.editing.hasPending()) {
-  <button
-    type="button"
-    class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
-    (click)="saveAllChanges()"
-  >
-    {{ msg().saveChanges }}
-  </button>
-  <button
-    type="button"
-    class="oge-toolbar-btn oge-toolbar-text-btn"
-    (click)="discardAllChanges()"
-  >
-    {{ msg().discardChanges }}
-  </button>
+  <span ogeToolbarAfter class="oge-toolbar-cluster">
+    <button
+      type="button"
+      class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
+      (click)="saveAllChanges()"
+    >
+      {{ msg().saveChanges }}
+    </button>
+    <button
+      type="button"
+      class="oge-tool-btn oge-tool-text-btn"
+      (click)="discardAllChanges()"
+    >
+      {{ msg().discardChanges }}
+    </button>
+  </span>
   } @if (columnChooser()) {
   <button
+    ogeToolbarAfter
     type="button"
-    class="oge-toolbar-btn"
+    class="oge-tool-btn"
     [attr.aria-label]="msg().columnChooser"
     (click)="toggleChooser($event)"
   >
@@ -136,6 +149,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   </button>
   } @if (searchPanelVisible()) {
   <input
+    ogeToolbarAfter
     class="oge-search-input"
     type="search"
     [placeholder]="searchPanelOptions().placeholder ?? msg().search"
@@ -144,7 +158,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     (input)="onSearchInput($any($event.target).value)"
   />
   }
-</div>
+</oge-toolbar>
 } @if (filterPanel()) {
 <div class="oge-filter-panel">
   <svg
@@ -455,62 +469,37 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       @for (node of viewNodes(); track node.key; let nodeIndex = $index) {
       @switch (node.kind) { @case ('data') { @if (isFormRow(node.key)) {
       <div
-        class="oge-row oge-form-row"
+        class="oge-row oge-edit-form-row"
         role="row"
         [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
         [attr.data-rowindex]="viewStart() + nodeIndex"
       >
         <div
-          class="oge-form-cell"
+          class="oge-edit-form-cell"
           role="gridcell"
           [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
           [style.max-width.px]="hostWidth() || null"
         >
-          <div
-            class="oge-form-fields"
-            [style.grid-template-columns]="formGridTemplate()"
-          >
-            @for (item of editFormItems(); track item.column.id) { @if
-            (item.column; as column) {
-            <div
-              class="oge-form-field"
-              [style.grid-column]="item.colSpan > 1 ? 'span ' + item.colSpan : null"
-            >
-              <span class="oge-form-label">{{ item.label }}</span>
-              @if (column.editTemplate) {
-              <ng-container
-                *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
-              />
-              } @else {
-              <oge-cell-editor
-                surface="form"
-                [control]="editControl(node, column)"
-                [dataType]="column.dataType"
-                [lookupItems]="lookupItemsFor(node, column)"
-                [label]="item.label"
-                [invalid]="
-                                    editControl(node, column).touched && editControl(node, column).invalid
-                                  "
-                (enterKey)="onEditorEnter()"
-                (escapeKey)="cancelActiveEditor()"
-              />
-              } @if (editorErrorText(editControl(node, column)); as error) {
-              <span class="oge-form-error">{{ error }}</span>
-              }
-            </div>
-            } }
-          </div>
-          <div class="oge-form-actions">
+          <oge-form
+            class="oge-edit-form-fields"
+            [formGroup]="editFormGroup()!"
+            [items]="editFormFields()"
+            [colCount]="editFormColCount()"
+            [renderFormElement]="false"
+            [subscriptSizing]="'dynamic'"
+            (editorEnterKey)="onEditorEnter()"
+          />
+          <div class="oge-edit-form-actions">
             <button
               type="button"
-              class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+              class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
               (click)="commitActiveRow()"
             >
               {{ msg().saveRow }}
             </button>
             <button
               type="button"
-              class="oge-toolbar-btn oge-toolbar-text-btn"
+              class="oge-tool-btn oge-tool-text-btn"
               (click)="cancelActiveEditor()"
             >
               {{ msg().cancelEdit }}
@@ -1115,49 +1104,25 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   [width]="420"
   (closed)="cancelActiveEditor()"
 >
-  <div
+  <oge-form
     class="oge-popup-fields"
-    [style.grid-template-columns]="formGridTemplate()"
-  >
-    @for (item of editFormItems(); track item.column.id) { @if (item.column; as
-    column) {
-    <div
-      class="oge-popup-field"
-      [style.grid-column]="item.colSpan > 1 ? 'span ' + item.colSpan : null"
-    >
-      <span class="oge-popup-label">{{ item.label }}</span>
-      @if (column.editTemplate) {
-      <ng-container
-        *ngTemplateOutlet="column.editTemplate; context: editContextFor(node, column)"
-      />
-      } @else {
-      <oge-cell-editor
-        surface="popup"
-        [control]="editControl(node, column)"
-        [dataType]="column.dataType"
-        [lookupItems]="lookupItemsFor(node, column)"
-        [label]="item.label"
-        [invalid]="
-                      editControl(node, column).touched && editControl(node, column).invalid
-                    "
-      />
-      } @if (editorErrorText(editControl(node, column)); as error) {
-      <span class="oge-popup-error">{{ error }}</span>
-      }
-    </div>
-    } }
-  </div>
+    [formGroup]="editFormGroup()!"
+    [items]="editFormFields()"
+    [colCount]="editFormColCount()"
+    [renderFormElement]="false"
+    [subscriptSizing]="'dynamic'"
+  />
   <ng-container *ogeModalFooter>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
       (click)="commitActiveRow()"
     >
       {{ msg().saveRow }}
     </button>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn"
+      class="oge-tool-btn oge-tool-text-btn"
       (click)="cancelActiveEditor()"
     >
       {{ msg().cancelEdit }}
@@ -1191,14 +1156,14 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   <ng-container *ogeModalFooter>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
       (click)="applyFilterBuilder()"
     >
       {{ msg().apply }}
     </button>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn"
+      class="oge-tool-btn oge-tool-text-btn"
       (click)="builderOpen.set(false)"
     >
       {{ msg().cancelEdit }}
@@ -1218,3 +1183,14 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   />
 </oge-popup>
 }
+
+<!-- one adapter for every column that brings its own *ogeEditTemplate: the
+     forms package hands us the item, we hand the column its documented
+     { $implicit: control, row, column } context back -->
+<ng-template #editAdapter let-item let-control="control">
+  @if (editColumnFor(item.field); as column) { @if (editFormNode(); as node) {
+  <ng-container
+    *ngTemplateOutlet="column.editTemplate!; context: editContextFor(node, column)"
+  />
+  } }
+</ng-template>

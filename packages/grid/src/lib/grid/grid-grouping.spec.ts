@@ -95,7 +95,7 @@ describe('OgeGrid grouping', () => {
     const { fixture, el } = await render();
     const button = (label: string) =>
       el.querySelector(
-        `.oge-toolbar-btn[aria-label="${label}"]`,
+        `.oge-tool-btn[aria-label="${label}"]`,
       ) as HTMLButtonElement;
 
     button('Collapse all groups').click();
@@ -340,7 +340,7 @@ describe('OgeGrid column operations', () => {
     const { fixture, el } = await render();
     (
       el.querySelector(
-        '.oge-toolbar-btn[aria-label="Column chooser"]',
+        '.oge-tool-btn[aria-label="Column chooser"]',
       ) as HTMLButtonElement
     ).click();
     await settle(fixture);

@@ -20,7 +20,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
 }
 
-describe('OgeTreeList events (DevExtreme events parity)', () => {
+describe('OgeTreeList events (reference events parity)', () => {
   async function render(inputs: Record<string, unknown> = {}): Promise<{
     fixture: ComponentFixture<OgeTreeList<Node>>;
     el: HTMLElement;

@@ -1,6 +1,6 @@
 # @oge-ui/layout
 
-> Layout containers — accordion panels with single or multiple expansion.
+> Layout containers — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, and a toolbar with an overflow menu.
 
 Part of OGE UI v0.7.0.
 Docs and live demos: https://ogeui.com/components/accordion
@@ -85,8 +85,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/layout`
 
-- values: `OGE_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `provideOgeAccordionConfig`
-- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`
+- values: `OGE_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_SPLITTER_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeSplitterConfig`, `provideOgeToolbarConfig`
+- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
 
 ## API reference
 
@@ -187,7 +187,7 @@ _Types_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `title` | `string` | `''` | Header title; alternative to an inline `[ogeAccordionHeaderTemplate]`. |
-| `text` | `string \| undefined` | `—` | Plain-text panel body, rendered when there is no projected content or content template. The DevExtreme `html` item field has no counterpart on purpose. |
+| `text` | `string \| undefined` | `—` | Plain-text panel body, rendered when there is no projected content or content template. The reference `html` item field has no counterpart on purpose. |
 | `description` | `string \| undefined` | `—` | Secondary line rendered under the title. |
 | `key` | `string \| undefined` | `—` | Stable identity used by `expandedKeys` and DOM ids. |
 | `icon` | `string \| undefined` | `—` | SVG path data (`d`) rendered as a 24×24 aria-hidden icon before the title. |
@@ -220,7 +220,7 @@ _Template slots_
 | `[ogeAccordionContentTemplate]` | `{ $implicit, index, data }` | Panel body; marks the content lazy. `data` carries the panel's `contentLoader` result. |
 | `[ogeAccordionToggleIconTemplate]` | `{ $implicit: boolean, index }` | Replaces the chevron. Accordion-level chrome — a component-level instance applies to declarative children too. |
 | `[ogeAccordionHeaderActionsTemplate]` | `{ $implicit, index, expanded }` | Per-panel actions rendered _beside_ the toggle button, never inside it — real focusable controls without a `nested-interactive` violation. |
-| `[ogeAccordionActionRow]` | `directive` | Marks a row of buttons at the end of a panel body as its action bar (divider above, actions at the inline end) — Angular Material's `mat-action-row`. Inside the panel, so only reachable while expanded. |
+| `[ogeAccordionActionRow]` | `directive` | Marks a row of buttons at the end of a panel body as its action bar (divider above, actions at the inline end) — the references' action-row slot. Inside the panel, so only reachable while expanded. |
 
 ### Accordion configuration
 
@@ -251,6 +251,310 @@ _Behavioural defaults_
 | --- | --- | --- |
 | `provideOgeAccordionConfig(config)` | `(config: OgeAccordionConfigInput) => Provider` | Application- or component-scoped defaults; shallow-merges `messages` over the built-ins. |
 | `OGE_ACCORDION_CONFIG` | `InjectionToken<OgeAccordionConfig>` | The token itself, with a factory default — inject it to read the effective config. |
+
+### OgeSplitter — `<oge-splitter>`
+
+#### Properties
+
+_Panes & sizing_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `panes` | `readonly OgeSplitterPaneData[] \| undefined` | `—` | Data-driven panes rendered after the projected `` children. |
+| `dataSource` | `DataSource<OgeSplitterPaneData> \| undefined` | `—` | Remote pane list, loaded through `@oge-ui/core`&rsquo;s `DataSource` contract and merged after `panes`. A source that publishes `changes` triggers a reload. |
+| `itemHoldTimeout` | `number` | `750` | Milliseconds a pointer must rest on a pane before `paneHold` fires. |
+| `sizes` | `readonly OgeSplitterSize[] \| undefined` | `—` | Current pane sizes — two-way, and the whole persistable state. Setting it overrides the per-pane `size` inputs. Numbers are ratios; `'240px'` pins a pane. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis the panes are laid out along. Also drives which arrow keys move a separator. |
+| `separatorSize` | `number` | `6` | Thickness of each separator in pixels — a real grid track, so it never eats into a pane. |
+
+_Interaction_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `resizable` | `boolean` | `true` | Pins every separator when `false`. |
+| `step` | `number` | `5` | Share points one arrow-key press moves a separator. |
+| `keyboardNavigation` | `boolean` | `true` | Enables Arrow / Home / End / Enter / Ctrl+Arrow on the separators. While off they also leave the Tab sequence. |
+| `showCollapseGrips` | `boolean` | `true` | Renders an `aria-hidden` chevron on the separator for each collapsible neighbour — one for the pane before it, one for the pane after. The keyboard paths (Enter, Ctrl+Arrow) stay available either way. |
+| `disabled` | `boolean` | `false` | Disables the whole splitter — no dragging, no keyboard, no collapsing. |
+
+_Accessibility & text_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the splitter container. |
+| `messages` | `Partial<OgeSplitterMessages>` | `{}` | Per-instance overrides of the config strings, including the separators’ accessible names. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `collapse(target)` | `(target: number \| string) => boolean` | Collapses a pane by index or key. Returns `false` when the pane is not collapsible or `paneCollapsing` vetoed it. |
+| `expand(target)` | `(target: number \| string) => boolean` | Expands a collapsed pane, restoring the size it had when it collapsed and scaling its siblings back down to fit. |
+| `toggle(target)` | `(target: number \| string) => boolean` | Collapses the pane if expanded, expands it otherwise. |
+| `isCollapsed(target)` | `(target: number \| string) => boolean` | Whether a pane is currently collapsed. |
+| `resize(separatorIndex, delta)` | `(separatorIndex: number, delta: number) => boolean` | Moves a separator by `delta` share points — the programmatic equivalent of an arrow key. `false` when that separator cannot move. |
+| `focus(separatorIndex?)` | `(separatorIndex?: number) => void` | Focuses a separator, the first one by default. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `resizeStarted` | `OgeSplitterResizeStartEvent` | Emitted once when a drag or keyboard resize begins. The reference `onResizeStart`. |
+| `resized` | `OgeSplitterResizeEvent` | Emitted every time the sizes change during a resize — once per pointer move. The reference `onResize`. |
+| `resizeEnded` | `OgeSplitterResizeEvent` | Emitted once when the gesture finishes, after the sizes model has been published. The reference `onResizeEnd`. |
+| `paneCollapsing` | `OgeSplitterPaneCollapsingEvent` | Cancelable pre-event of a pane collapsing — set `cancel = true` to block it. |
+| `paneExpanding` | `OgeSplitterPaneCollapsingEvent` | Cancelable pre-event of a pane expanding. |
+| `paneCollapsed` | `OgeSplitterPaneCollapsedEvent` | Emitted after a pane collapsed. |
+| `paneExpanded` | `OgeSplitterPaneCollapsedEvent` | Emitted after a pane expanded. |
+| `paneClick` | `OgeSplitterPaneClickEvent` | Emitted when a pane is clicked. A nested splitter reports its own panes — the event does not surface on the parent. |
+| `sizesChange` | `readonly OgeSplitterSize[] \| undefined` | Two-way model output of `sizes`. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSplitterOrientation` | `'horizontal' \| 'vertical'` | Axis the panes are laid out along. |
+| `OgeSplitterGripSide` | `'start' \| 'end'` | Which neighbour a separator's collapse grip acts on: `'start'` is the pane before it (the APG primary pane), `'end'` the one after. |
+| `OgeSplitterSize` | `number \| string` | A number (or `'%'`) is a **ratio** of the space the flexible panes share, so `[30, 30]` lays out like `[50, 50]`. `'px'` pins the pane to a fixed track. Any other string is ignored with a dev-mode warning. |
+| `OgeSplitterPaneData` | `interface` | Data-driven counterpart of a declarative pane: `key`, `size`, `minSize`, `maxSize`, `collapsible`, `collapsed`, `collapsedSize`, `resizable`, `scrollable`, `visible`, `text`, `cssClass`, `htmlAttributes`, `panes`, `orientation`. |
+| `OgeSplitterPaneTemplateContext` | `interface` | Context of `[ogeSplitterPaneTemplate]`: `$implicit` (the pane entry), `index`, `collapsed`. |
+| `OgeSplitterResizeStartEvent` | `interface` | `separatorIndex`, `sizes` at the start of the gesture, and the originating `event` (absent for a keyboard resize). |
+| `OgeSplitterResizeEvent` | `interface` | `separatorIndex`, current `sizes`, `previousSizes` from the start of the gesture, and the originating `event`. |
+| `OgeSplitterPaneCollapsingEvent` | `interface` | `index`, `key`, `item`, `event`, and a mutable `cancel` flag. |
+| `OgeSplitterPaneCollapsedEvent` | `interface` | `index`, `key`, `item`, `event`. |
+| `OgeSplitterPaneHoldEvent` | `interface` | Payload of `paneHold` and `paneContextMenu`: `index`, `key?`, `item?`, `event`. |
+| `OgeSplitterPaneClickEvent` | `interface` | `index`, `key`, `item` and the originating `event`. |
+
+### OgeSplitterPane — `<oge-splitter-pane>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `key` | `string \| undefined` | `—` | Stable identity used by DOM ids and by the collapse API’s string targets. |
+| `size` | `OgeSplitterSize \| undefined` | `—` | Initial size — a ratio number, `'40%'` or `'240px'`. Panes without one split whatever the sized ones leave. |
+| `minSize` | `OgeSplitterSize \| undefined` | `—` | Smallest size a resize may leave this pane at. A pixel value also becomes the grid track’s floor. |
+| `maxSize` | `OgeSplitterSize \| undefined` | `—` | Largest size a resize may grow this pane to. |
+| `collapsible` | `boolean` | `false` | Allows the pane to be collapsed from its separator — Enter, the grip, or a double click. |
+| `collapsed` | `boolean` | `false` | Collapsed state — two-way. Writes run the splitter’s pipeline, so a vetoed change reverts the binding. |
+| `collapsedSize` | `OgeSplitterSize \| undefined` | `0` | Size the pane keeps while collapsed. |
+| `resizable` | `boolean` | `true` | Pins the pane — both of its separators refuse to drag and report `aria-disabled`. |
+| `scrollable` | `boolean` | `true` | Clips overflowing content instead of scrolling it when `false`. |
+| `disabled` | `boolean` | `false` | Disabled panes cannot be collapsed and their separators are inert. |
+| `visible` | `boolean` | `true` | Removes the pane entirely when `false`. |
+| `text` | `string \| undefined` | `—` | Plain-text body, rendered when the pane has no projected content. |
+| `htmlAttributes` | `Readonly<Record<string, string>> \| undefined` | `—` | Extra attributes on the pane element. Keys removed from the bag are removed from the DOM, so clearing it clears the element. |
+| `cssClass` | `string \| undefined` | `—` | Extra class on the pane element. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `collapse()` | `() => void` | Collapses this pane, subject to the splitter’s pipeline. |
+| `expand()` | `() => void` | Expands this pane, subject to the splitter’s pipeline. |
+| `toggle()` | `() => void` | Collapses the pane if expanded, expands it otherwise. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `collapsedChange` | `boolean` | Two-way model output of `collapsed`. |
+
+#### Types
+
+_Directives_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSplitterPaneTemplate` | `[ogeSplitterPaneTemplate]` | Structural directive rendering the body of every data-driven `panes` entry. Declarative children use their projected content instead. |
+
+### Splitter configuration
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `provideOgeSplitterConfig(config)` | `(config: OgeSplitterConfigInput) => Provider` | `—` | Application- or component-scoped defaults. `messages` is shallow-merged over the built-in strings. |
+| `separatorSize` | `number \| undefined` | `6` | Default for the `separatorSize` input. |
+| `step` | `number \| undefined` | `5` | Default for the `step` input. |
+| `showCollapseGrips` | `boolean \| undefined` | `true` | Default for the `showCollapseGrips` input. |
+| `messages` | `OgeSplitterMessages` | `—` | Every user-facing string: `separator` (with `{{first}}` / `{{second}}` placeholders), `collapsed`, `collapsePane`, `expandPane`, `noData`. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSplitterConfig` | `interface` | Shape held by `OGE_SPLITTER_CONFIG`: `messages` plus the optional input defaults. |
+| `OgeSplitterConfigInput` | `interface` | Argument of `provideOgeSplitterConfig()` — every field optional, `messages` partial. |
+| `OgeSplitterMessages` | `interface` | Every user-facing string in the splitter, including the separators’ accessible names. |
+| `OGE_SPLITTER_CONFIG` | `InjectionToken<OgeSplitterConfig>` | The token itself — inject it to read the effective defaults. |
+| `OGE_DEFAULT_SPLITTER_CONFIG` | `OgeSplitterConfig` | The built-in defaults, exported for composition. |
+| `OGE_DEFAULT_SPLITTER_MESSAGES` | `OgeSplitterMessages` | The built-in English strings. |
+
+### OgeToolbar — `<oge-toolbar>`
+
+#### Properties
+
+_Items_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeToolbarItemData[] \| undefined` | `—` | Data-driven entries, rendered after the declarative `` children. |
+| `dataSource` | `DataSource<OgeToolbarItemData> \| undefined` | `—` | Remote command list, loaded through `@oge-ui/core`&rsquo;s `DataSource` contract and merged after `items`. A source that publishes `changes` triggers a reload. |
+| `showText` | `'always' \| 'onBar' \| 'inMenu' \| 'never'` | `'always'` | Default for every item&rsquo;s `showText`: both places, the bar only, the menu only, or neither. An item that renders icon-only keeps its `text` as the accessible name. |
+| `showIcon` | `'always' \| 'onBar' \| 'inMenu' \| 'never'` | `'always'` | Default for every item&rsquo;s `showIcon`. It resolves separately for the bar and the overflow menu, so a collapsed command keeps its icon on its menu row unless you say `&apos;onBar&apos;`. |
+
+_Layout & overflow_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `overflow` | `'menu' \| 'scroll' \| 'wrap' \| 'extended' \| 'none'` | `'menu'` | `menu` collapses what does not fit into an overflow menu, `scroll` keeps one line and adds scroll buttons, `wrap` flows onto more lines (the reference `multiline` mode), `extended` hides the remainder in a second row behind a toggle, `none` lets the row overflow. |
+| `scrollStep` | `number` | `120` | Pixels a scroll button moves the row in `overflow: 'scroll'`. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Main axis. Drives the arrow keys and `aria-orientation` (written only when vertical, since horizontal is the ARIA default). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset. Falls back to `provideOgeToolbarConfig({ size })`. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'flat'` | `'outlined'` | Container chrome. Falls back to `provideOgeToolbarConfig({ stylingMode })`. |
+
+_State & accessibility_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables every item and takes the whole toolbar out of the Tab sequence. |
+| `wrap` | `boolean` | `true` | Whether arrow navigation wraps around the ends — optional in the APG toolbar pattern, on by default here. |
+| `keyboardNavigation` | `boolean` | `true` | Turns arrow/Home/End handling off entirely. The controls then keep their natural Tab order instead of a roving tabindex. |
+| `itemHoldTimeout` | `number` | `750` | Milliseconds a pointer must rest on an item before `itemHold` fires. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the toolbar; falls back to `messages.toolbar`. |
+| `ariaLabelledBy` | `string \| undefined` | `—` | Id of a visible label. Wins over `ariaLabel`, which is then omitted. |
+| `messages` | `Partial<OgeToolbarMessages> \| undefined` | `—` | Per-instance overrides of the config strings (`toolbar`, `overflowMenu`, `noData`). |
+
+_Template slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeToolbarBefore` | `attribute slot` | Projects any control into the leading group. Slot content always stays on the bar — the toolbar cannot re-stamp DOM it does not own. |
+| `ogeToolbarCenter` | `attribute slot` | Projects any control into the centre group. |
+| `ogeToolbarAfter` | `attribute slot` | Projects any control into the trailing group. |
+| `ogeToolbarItemTemplate` | `TemplateRef<OgeToolbarItemTemplateContext>` | Replaces the default rendering of every `items` entry — the curated stand-in for the reference libraries&rsquo; string-keyed `widget` + `options` bag. Declared inside an `` it renders that one item instead, and stays re-stampable into the menu. |
+| `ogeToolbarMenuItemTemplate` | `TemplateRef<OgeToolbarItemTemplateContext>` | Replaces the default rendering of an item inside the overflow menu (the reference `menuItemTemplate`). |
+
+#### Methods
+
+_Methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `(): void` | Focuses the toolbar&rsquo;s current roving-tabindex stop. |
+| `openMenu()` | `(event?: Event): void` | Opens the overflow menu. Runs the `menuOpening` pipeline, so it can be vetoed. |
+| `closeMenu()` | `(reason?: OgeToolbarMenuCloseReason): void` | Closes the overflow menu, subject to `menuClosing`. Defaults to reason `'api'`. |
+| `toggleMenu()` | `(event?: Event): void` | Opens the menu when closed, closes it otherwise — the reference `toggle()` method. |
+| `toggleExtendedRow()` | `(): void` | Shows or hides the second row of `overflow: 'extended'`. |
+| `refreshOverflow()` | `(): void` | Drops the measurement cache and re-measures. Signal changes and container resizes already do this — call it after something the toolbar cannot observe changed a control&rsquo;s size (a late web font, a stylesheet swap). |
+| `addItem()` | `(item: OgeToolbarItemData): void` | Appends a runtime entry, merged after `items`. `items` stays the declared source of truth, so a re-supplied array does not drop it. |
+| `removeItem()` | `(key: string): void` | Drops an entry added by `addItem()`, or hides an `items` entry. |
+| `hideItem()` | `(key: string, hidden?: boolean): void` | Hides (or re-shows) an entry without touching the `items` array. |
+| `enableItem()` | `(key: string, enabled?: boolean): void` | Enables (or disables) an entry without touching the `items` array. |
+| `clearItemOverrides()` | `(): void` | Drops every `hideItem()` / `enableItem()` override. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeToolbarItemClickEvent` | An item was activated on the bar or from the menu. Payload: `index`, `key`, `item`, `inMenu`, `event`. |
+| `menuOpening` | `OgeToolbarMenuOpeningEvent` | Cancelable — set `cancel` to keep the overflow menu closed. |
+| `menuOpened` | `void` | The overflow menu opened. |
+| `menuClosing` | `OgeToolbarMenuClosingEvent` | Cancelable — set `cancel` to keep the overflow menu open. Carries the close `reason`. |
+| `menuClosed` | `OgeToolbarMenuClosedEvent` | The overflow menu closed, with its reason. |
+| `overflowChanged` | `OgeToolbarOverflowChangedEvent` | The set of items living in the overflow menu changed. Payload: `keys`, `count`. |
+| `activeChanged` | `OgeToolbarItemActiveChangedEvent` | A toggle item&rsquo;s pressed state changed. `items` entries are data the toolbar must not mutate, so this is how the new value reaches the app; a declarative child also writes its two-way `active` model. |
+| `itemHold` | `OgeToolbarItemHoldEvent` | An item was held for `itemHoldTimeout` — touch long-press or mouse hold. |
+| `itemContextMenu` | `OgeToolbarItemHoldEvent` | An item was right-clicked or long-pressed. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeToolbarItemData` | `interface` | One data-driven entry: `key`, `type`, `text`, `icon`, `suffixIcon`, `iconClass`, `suffixIconClass`, `hint`, `width`, `htmlAttributes`, `location`, `locateInMenu`, `overflowPriority`, `showText`, `showIcon`, `disabled`, `visible`, `cssClass`, `severity`, `active`, `data`. |
+| `OgeToolbarItemType` | `'button' \| 'separator' \| 'spacer' \| 'label'` | What the toolbar renders for an item it owns. |
+| `OgeToolbarItemLocation` | `'before' \| 'center' \| 'after'` | Which of the three groups an item belongs to. |
+| `OgeToolbarLocateInMenu` | `'auto' \| 'always' \| 'never'` | Whether an item may move into the overflow menu. Structurally core&rsquo;s `OgeToolbarOverflowPolicy`, which `fitToolbarItems()` consumes. |
+| `OgeToolbarDisplayMode` | `'always' \| 'onBar' \| 'inMenu' \| 'never'` | Where an item&rsquo;s text or icon is rendered: both places, the bar only, the menu only, or neither. |
+| `OgeToolbarItemSeverity` | `'default' \| 'accent' \| 'danger'` | Emphasis of an item the toolbar renders itself. |
+| `OgeToolbarOverflow` | `'menu' \| 'scroll' \| 'wrap' \| 'extended' \| 'none'` | How the toolbar reacts to more items than room. |
+| `OgeToolbarOrientation` | `'horizontal' \| 'vertical'` | Main axis of the toolbar. |
+| `OgeToolbarSize` | `'sm' \| 'md' \| 'lg'` | Density preset. |
+| `OgeToolbarStylingMode` | `'outlined' \| 'filled' \| 'flat'` | Container chrome preset. |
+| `OgeToolbarMenuCloseReason` | `'api' \| 'outside' \| 'escape' \| 'select' \| 'tab'` | Why the overflow menu closed — the overlay package&rsquo;s canonical reason set. |
+| `OgeToolbarItemClickEvent` | `interface` | `index`, `key?`, `item?`, `inMenu`, `event`. |
+| `OgeToolbarOverflowChangedEvent` | `interface` | `keys`, `count`. |
+| `OgeToolbarItemActiveChangedEvent` | `interface` | `index`, `key?`, `item?`, `active`, `event`. |
+| `OgeToolbarItemHoldEvent` | `interface` | Payload of `itemHold` and `itemContextMenu`: `index`, `key?`, `item?`, `event`. |
+| `OgeToolbarMenuOpeningEvent` | `interface` | `cancel`, `event?`. |
+| `OgeToolbarMenuClosingEvent` | `interface` | `cancel`, `reason`. |
+| `OgeToolbarMenuClosedEvent` | `interface` | `reason`. |
+| `OgeToolbarItemTemplateContext` | `interface` | `$implicit` (the `items` entry, `undefined` for declarative children), `index`, `inMenu`. |
+| `fitToolbarItems` | `(options: OgeToolbarFitOptions) => OgeToolbarFitResult` | The framework-free fitting math in `@oge-ui/core`: which items fit and which collapse. Pure arithmetic, so it is unit-testable without a DOM — the component only feeds it measurements. |
+
+### OgeToolbarItem — `<oge-toolbar-item>`
+
+#### Properties
+
+_Inputs_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `key` | `string \| undefined` | `—` | Stable identity echoed on `itemClick` and used for DOM ids. |
+| `type` | `'button' \| 'separator' \| 'spacer' \| 'label'` | `'button'` | What the toolbar renders when the item has no inline template. |
+| `text` | `string \| undefined` | `—` | Label; also the accessible name when the item renders icon-only. |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading aria-hidden 16×16 icon. |
+| `suffixIcon` | `string \| undefined` | `—` | SVG path data (`d`) for a trailing icon, rendered after the text. |
+| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon rendered as an empty `_` — the hook for an icon font the application already ships. `icon` stays the dependency-free default. |
+| `suffixIconClass` | `string \| undefined` | `—` | Class(es) for a trailing icon element. |
+| `width` | `number \| string \| undefined` | `—` | Fixed main-axis size of the item — a bare number is pixels. |
+| `htmlAttributes` | `Readonly<Record<string, string>> \| undefined` | `—` | Extra attributes on the item element. Keys removed from the bag are removed from the DOM, so clearing it clears the element. |
+| `hint` | `string \| undefined` | `—` | Tooltip — the native `title` attribute. |
+| `location` | `'before' \| 'center' \| 'after'` | `'before'` | Which of the toolbar&rsquo;s three groups the item joins. |
+| `locateInMenu` | `'auto' \| 'always' \| 'never'` | `'auto'` | Whether the item may move into the overflow menu. The default diverges from the reference `never` on purpose — collapsing is the point. |
+| `overflowPriority` | `number \| undefined` | `0` | How hard the item holds its place on the bar; higher survives longer. The default makes the trailing item yield first, as in every reference toolbar. Raise it to keep a primary command visible without moving it to the front of the bar. |
+| `showText` | `'always' \| 'onBar' \| 'inMenu' \| 'never' \| undefined` | `—` | Overrides the toolbar&rsquo;s `showText`. |
+| `showIcon` | `'always' \| 'onBar' \| 'inMenu' \| 'never' \| undefined` | `—` | Overrides the toolbar&rsquo;s `showIcon`. |
+| `disabled` | `boolean` | `false` | Not clickable, and skipped by the toolbar&rsquo;s arrow navigation. |
+| `visible` | `boolean` | `true` | `false` removes the item entirely. |
+| `cssClass` | `string \| undefined` | `—` | Extra class on the item element. |
+| `severity` | `'default' \| 'accent' \| 'danger'` | `'default'` | Emphasis of a toolbar-rendered button. |
+| `active` | `boolean \| undefined (two-way)` | `—` | Toggle-button state. Defining it is what makes the item a toggle: it renders `aria-pressed` on the bar and a checkmark in the menu, and every activation flips the value. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeToolbarItemClickEvent` | This item was activated, on the bar or from the overflow menu. Saves the `index` lookup the toolbar-level event needs. |
+| `activeChanged` | `OgeToolbarItemActiveChangedEvent` | This toggle item&rsquo;s pressed state changed. |
+
+### Toolbar configuration
+
+#### Properties
+
+_provideOgeToolbarConfig()_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `'sm' \| 'md' \| 'lg' \| undefined` | `—` | Default for every toolbar&rsquo;s `size`. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'flat' \| undefined` | `—` | Default for every toolbar&rsquo;s `stylingMode`. |
+| `messages.toolbar` | `string` | `'Toolbar'` | Accessible name used when neither `ariaLabel` nor `ariaLabelledBy` is set. |
+| `messages.overflowMenu` | `string` | `'More commands'` | Accessible name and tooltip of the overflow button, and the menu&rsquo;s label. |
+| `messages.moreCommands` | `string` | `'Show more commands'` | Accessible name of the `overflow: 'extended'` second-row toggle. |
+| `messages.scrollBackward` | `string` | `'Scroll backward'` | Accessible name of the back scroll button in `overflow: 'scroll'`. |
+| `messages.scrollForward` | `string` | `'Scroll forward'` | Accessible name of the forward scroll button. |
+| `messages.noData` | `string` | `'No commands to display'` | Shown when the toolbar has no items of its own and nothing is projected into a slot (the reference `noDataText`). |
 
 ## Demos
 
@@ -554,6 +858,694 @@ export class Demo {
     { key: 'a', title: 'First' },
     { key: 'b', title: 'Second' },
   ];
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-splitter [(sizes)]="sizes">
+      <oge-splitter-pane key="list" [minSize]="15">
+        Result list…
+      </oge-splitter-pane>
+      <oge-splitter-pane key="detail" [minSize]="25">
+        Detail view…
+      </oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {
+  // Sizes are ratios, not percentages — [30, 30] lays out like [50, 50],
+  // so a configuration that does not add up to 100 is never an error.
+  protected readonly sizes = signal([35, 65]);
+}
+```
+
+### Collapse
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+import type { OgeSplitterPaneCollapsedEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Enter on the separator, the grip, or a double click all collapse the
+         pane before it. It comes back at the size it left, and stays in the DOM
+         as an inert element so aria-controls keeps pointing at something real. -->
+    <oge-splitter (paneCollapsed)="onCollapsed($event)">
+      <oge-splitter-pane
+        key="side"
+        [size]="30"
+        [collapsible]="true"
+        collapsedSize="28px"
+        [(collapsed)]="sideCollapsed"
+      >
+        Navigation…
+      </oge-splitter-pane>
+      <oge-splitter-pane key="main">Editor…</oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {
+  protected readonly sideCollapsed = signal(false);
+
+  protected onCollapsed(event: OgeSplitterPaneCollapsedEvent): void {
+    console.log('collapsed', event.key);
+  }
+}
+```
+
+### Config
+
+```ts
+import { provideOgeSplitterConfig } from '@oge-ui/layout';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideOgeSplitterConfig({
+      separatorSize: 8,
+      step: 10,
+      messages: {
+        separator: '{{first}} ile {{second}} arasını yeniden boyutlandır',
+        collapsePane: 'Paneli daralt',
+        expandPane: 'Paneli aç',
+      },
+    }),
+  ],
+};
+```
+
+### Events
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+import type { OgeSplitterPaneCollapsingEvent, OgeSplitterResizeEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-splitter
+      (resizeStarted)="log('start')"
+      (resized)="onResized($event)"
+      (resizeEnded)="log('end')"
+      (paneCollapsing)="onCollapsing($event)"
+    >
+      <oge-splitter-pane key="a" [collapsible]="true">A</oge-splitter-pane>
+      <oge-splitter-pane key="b">B</oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {
+  protected readonly locked = signal(true);
+
+  protected onResized(event: OgeSplitterResizeEvent): void {
+    console.log(event.sizes, event.previousSizes);
+  }
+
+  // paneCollapsing / paneExpanding are cancelable — set cancel to veto.
+  protected onCollapsing(event: OgeSplitterPaneCollapsingEvent): void {
+    if (this.locked()) event.cancel = true;
+  }
+
+  protected log(phase: string): void {
+    console.log(phase);
+  }
+}
+```
+
+### Fixed
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A '<n>px' size pins the pane: it becomes a fixed grid track and
+         drops out of the share pool, while '<n>%' and plain numbers stay ratios.
+         min and max accept either unit, so a px floor on a ratio pane is fine. -->
+    <oge-splitter>
+      <oge-splitter-pane size="240px" minSize="160px" maxSize="420px">
+        Fixed sidebar — dragged in pixels
+      </oge-splitter-pane>
+      <oge-splitter-pane [minSize]="20">Fluid content</oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {}
+```
+
+### Form
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A pane is a plain block box, never a query container, so a form
+         inside one keeps resolving its @container queries against itself.
+         Drag the separator and the column count follows the PANE width —
+         the window never moves. -->
+    <oge-splitter>
+      <oge-splitter-pane [size]="78">
+        <oge-form
+          [(formData)]="server"
+          [items]="fields"
+          [colCountByScreen]="{ xs: 1, sm: 2, md: 3 }"
+        />
+      </oge-splitter-pane>
+      <oge-splitter-pane [size]="22">Preview…</oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {
+  protected readonly server = signal({ host: '', port: 5432, user: '' });
+
+  protected readonly fields: OgeFormItemData[] = [
+    { field: 'host', label: 'Host' },
+    { field: 'port', label: 'Port' },
+    { field: 'user', label: 'User' },
+  ];
+}
+```
+
+### Keyboard
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- WAI-ARIA APG window splitter: every separator is a focusable
+         role="separator" with aria-controls on the pane before it and
+         aria-valuenow/min/max on one 0-100 scale.
+           Arrow keys    move it by [step] share points (RTL mirrored)
+           Home / End    jump to the primary pane's smallest / largest size
+           Enter         collapse the primary pane, or restore it
+           Ctrl + Arrow  collapse the pane the arrow points at, or restore
+                         the collapsed one it points away from -->
+    <oge-splitter [step]="10" ariaLabel="Editor layout">
+      <oge-splitter-pane [minSize]="20" [maxSize]="70" [collapsible]="true">
+        Primary
+      </oge-splitter-pane>
+      <oge-splitter-pane [minSize]="20" [collapsible]="true">
+        Secondary
+      </oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {}
+```
+
+### Nested
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Nesting needs no second component: a splitter inside a pane just
+         works, and a data-driven pane nests by carrying its own panes array
+         (which defaults to the opposite axis). -->
+    <oge-splitter>
+      <oge-splitter-pane size="220px" [collapsible]="true">
+        Sidebar
+      </oge-splitter-pane>
+      <oge-splitter-pane>
+        <oge-splitter orientation="vertical">
+          <oge-splitter-pane [size]="70">Editor</oge-splitter-pane>
+          <oge-splitter-pane [size]="30" [collapsible]="true">
+            Terminal
+          </oge-splitter-pane>
+        </oge-splitter>
+      </oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {}
+```
+
+### Orientation
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+import type { OgeSplitterOrientation } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-splitter [orientation]="orientation()">
+      <oge-splitter-pane>Top / left</oge-splitter-pane>
+      <oge-splitter-pane>Bottom / right</oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {
+  protected readonly orientation = signal<OgeSplitterOrientation>('vertical');
+}
+```
+
+### Panes
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeSplitter, OgeSplitterPaneTemplate } from '@oge-ui/layout';
+import type { OgeSplitterPaneData } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPaneTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-splitter [panes]="areas">
+      <ng-template ogeSplitterPaneTemplate let-pane let-index="index">
+        <h4>{{ index }} — {{ pane.key }}</h4>
+      </ng-template>
+    </oge-splitter>
+  `,
+})
+export class Demo {
+  protected readonly areas: OgeSplitterPaneData[] = [
+    { key: 'explorer', size: 25, minSize: 15, collapsible: true },
+    { key: 'editor', size: 50 },
+    { key: 'inspector', size: 25, minSize: 15 },
+  ];
+}
+```
+
+### Persist
+
+```ts
+import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
+import { OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-splitter [(sizes)]="sizes">
+      <oge-splitter-pane>Left</oge-splitter-pane>
+      <oge-splitter-pane>Right</oge-splitter-pane>
+    </oge-splitter>
+  `,
+})
+export class Demo {
+  // [(sizes)] is the whole persistable state, so there is no stateKey to
+  // learn and no storage token to provide — save it wherever you like.
+  protected readonly sizes = signal<(number | string)[]>(
+    JSON.parse(localStorage.getItem('editor-layout') ?? 'null') ?? [30, 70],
+  );
+
+  constructor() {
+    effect(() =>
+      localStorage.setItem('editor-layout', JSON.stringify(this.sizes())),
+    );
+  }
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-toolbar ariaLabel="Document actions">
+      <oge-toolbar-item text="New" (itemClick)="create()" />
+      <oge-toolbar-item text="Open" (itemClick)="open()" />
+      <oge-toolbar-item type="separator" />
+      <oge-toolbar-item text="Save" severity="accent" (itemClick)="save()" />
+      <oge-toolbar-item text="Delete" severity="danger" location="after" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {
+  protected create(): void {}
+  protected open(): void {}
+  protected save(): void {}
+}
+```
+
+### Config
+
+```ts
+import { provideOgeToolbarConfig } from '@oge-ui/layout';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideOgeToolbarConfig({
+      size: 'sm',
+      stylingMode: 'flat',
+      messages: {
+        toolbar: 'Araç çubuğu',
+        overflowMenu: 'Daha fazla komut',
+        noData: 'Gösterilecek komut yok',
+      },
+    }),
+  ],
+};
+```
+
+### Icon
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showText="inMenu" renders the bar entry icon-only and keeps the
+         label for the overflow menu. The button never loses its accessible
+         name: the text becomes its aria-label. -->
+    <oge-toolbar showText="inMenu">
+      <oge-toolbar-item text="Bold" [icon]="boldPath" />
+      <oge-toolbar-item text="Italic" [icon]="italicPath" />
+      <oge-toolbar-item text="Underline" [icon]="underlinePath" showText="always" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {
+  // Icons are SVG path data — there is no icon font or icon package.
+  protected readonly boldPath = 'M5 3h4a3 3 0 0 1 0 6H5zM5 9h5a3 3 0 0 1 0 6H5z';
+  protected readonly italicPath = 'M10 3H6m4 0-3 10m0 0H3m4 0h3';
+  protected readonly underlinePath = 'M4 3v5a4 4 0 0 0 8 0V3M3 14h10';
+}
+```
+
+### Items
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeToolbar } from '@oge-ui/layout';
+import type { OgeToolbarItemClickEvent, OgeToolbarItemData } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-toolbar [items]="tools" (itemClick)="onTool($event)" />
+  `,
+})
+export class Demo {
+  // Declarative children and [items] can be used together: children render
+  // first, exactly like the tabs and accordion families.
+  protected readonly tools: readonly OgeToolbarItemData[] = [
+    { key: 'undo', text: 'Undo' },
+    { key: 'redo', text: 'Redo' },
+    { key: 'sep', type: 'separator' },
+    { key: 'bold', text: 'Bold', active: true },
+    { key: 'note', type: 'label', text: 'Draft' },
+    { key: 'publish', text: 'Publish', location: 'after', severity: 'accent' },
+  ];
+
+  protected onTool(event: OgeToolbarItemClickEvent): void {
+    console.log(event.key, 'clicked from the menu?', event.inMenu);
+  }
+}
+```
+
+### Keyboard
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One Tab stop for the whole toolbar (APG roving tabindex), arrow
+         keys between the controls, Home/End to the ends, disabled controls
+         skipped. Vertical toolbars use Up/Down and report aria-orientation.
+         A text input inside keeps its own arrow and Home/End keys. -->
+    <oge-toolbar orientation="vertical" ariaLabel="Tools" [wrap]="false">
+      <oge-toolbar-item text="Select" />
+      <oge-toolbar-item text="Move" [disabled]="true" />
+      <oge-toolbar-item text="Zoom" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {}
+```
+
+### Location
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- before and after take their natural width; center claims the
+         rest and centres inside it. All three follow the writing mode, so
+         the order mirrors in RTL with no flag to set. -->
+    <oge-toolbar>
+      <oge-toolbar-item text="Back" location="before" />
+      <oge-toolbar-item type="label" text="report.xlsx" location="center" />
+      <oge-toolbar-item text="Share" location="after" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {}
+```
+
+### Modes
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem } from '@oge-ui/layout';
+import type { OgeToolbarOverflow } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Five modes, one input. 'menu' collapses into an overlay menu,
+         'scroll' keeps one line and adds arrows, 'wrap' flows onto more
+         lines (the reference multiline mode), 'extended' hides the remainder in a
+         second row behind a toggle, 'none' simply overflows. -->
+    <oge-toolbar [overflow]="mode()">
+      <oge-toolbar-item text="Cut" />
+      <oge-toolbar-item text="Copy" />
+      <oge-toolbar-item text="Paste" />
+      <oge-toolbar-item text="Paste special" />
+      <oge-toolbar-item text="Print preview" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {
+  protected readonly mode = signal<OgeToolbarOverflow>('extended');
+}
+```
+
+### Overflow
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem } from '@oge-ui/layout';
+import type { OgeToolbarOverflowChangedEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Narrow the container and the trailing commands collapse into the
+         overflow menu. locateInMenu defaults to 'auto'; 'always' pins an item
+         to the menu whatever the width, 'never' keeps it on the bar even if
+         the row has to overflow. -->
+    <oge-toolbar overflow="menu" (overflowChanged)="onOverflow($event)">
+      <oge-toolbar-item text="Cut" locateInMenu="never" />
+      <oge-toolbar-item text="Copy" />
+      <oge-toolbar-item text="Paste" />
+      <oge-toolbar-item text="Paste special" />
+      <oge-toolbar-item text="Print preview" />
+      <oge-toolbar-item text="Document settings" locateInMenu="always" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {
+  protected onOverflow(event: OgeToolbarOverflowChangedEvent): void {
+    console.log(event.count, 'commands are in the menu');
+  }
+}
+```
+
+### Priority
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Every reference toolbar drops strictly from the end of the row, so
+         keeping a primary command means moving it to the front. overflowPriority
+         separates yield order from visual order: higher survives longer, and
+         equal priorities fall back to end-first (the reference behaviour). -->
+    <oge-toolbar overflow="menu">
+      <oge-toolbar-item text="Open" />
+      <oge-toolbar-item text="Print preview" [overflowPriority]="-1" />
+      <oge-toolbar-item text="Document settings" [overflowPriority]="-1" />
+      <!-- Save sits last on the bar and is still the last to collapse. -->
+      <oge-toolbar-item text="Save" severity="accent" [overflowPriority]="10" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {}
+```
+
+### Runtime
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeToolbar } from '@oge-ui/layout';
+import type { OgeToolbarItemData } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- items stays the declared source of truth; the imperative calls
+         are an override layer on top of it, so a re-supplied array cannot
+         silently undo hideItem(). refreshOverflow() re-measures after
+         something the toolbar cannot observe changed a control's size. -->
+    <oge-toolbar #bar [items]="tools" />
+    <button type="button" (click)="bar.addItem({ key: 'new', text: 'Added' })">
+      addItem
+    </button>
+    <button type="button" (click)="bar.hideItem('copy')">hideItem</button>
+    <button type="button" (click)="bar.enableItem('paste', false)">disable</button>
+    <button type="button" (click)="bar.clearItemOverrides()">reset</button>
+    <button type="button" (click)="bar.refreshOverflow()">refreshOverflow</button>
+  `,
+})
+export class Demo {
+  protected readonly tools: readonly OgeToolbarItemData[] = [
+    { key: 'cut', text: 'Cut' },
+    { key: 'copy', text: 'Copy' },
+    { key: 'paste', text: 'Paste' },
+  ];
+}
+```
+
+### Slots
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem, OgeToolbarItemTemplate } from '@oge-ui/layout';
+import { OgeSelectBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem, OgeToolbarItemTemplate, OgeSelectBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Two escape hatches, for two different needs.
+         [ogeToolbarBefore | ogeToolbarCenter | ogeToolbarAfter] project any
+         control straight onto the bar — it always stays there, because the
+         toolbar cannot re-stamp DOM it does not own.
+         An <ng-template ogeToolbarItemTemplate> inside an item *is* re-stampable,
+         so that entry can still collapse into the overflow menu. -->
+    <oge-toolbar>
+      <oge-toolbar-item text="Filter">
+        <ng-template ogeToolbarItemTemplate>
+          <oge-select-box [items]="views" [value]="view()" size="sm" />
+        </ng-template>
+      </oge-toolbar-item>
+      <input ogeToolbarAfter type="search" placeholder="Search…" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {
+  protected readonly views = ['All', 'Mine', 'Archived'];
+  protected readonly view = signal('All');
+}
+```
+
+### Toggle
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeToolbar, OgeToolbarItem } from '@oge-ui/layout';
+import type { OgeToolbarItemActiveChangedEvent } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeToolbar, OgeToolbarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A defined 'active' is what makes an item a toggle: it renders
+         aria-pressed on the bar and a checkmark in the overflow menu, and
+         every activation flips it. Declarative children own a two-way
+         model; items[] entries are data, so the toolbar reports instead. -->
+    <oge-toolbar (activeChanged)="onToggle($event)">
+      <oge-toolbar-item text="Bold" [(active)]="bold" />
+      <oge-toolbar-item text="Italic" [(active)]="italic" />
+    </oge-toolbar>
+  `,
+})
+export class Demo {
+  protected readonly bold = signal(true);
+  protected readonly italic = signal(false);
+
+  protected onToggle(event: OgeToolbarItemActiveChangedEvent): void {
+    console.log(event.key, 'is now', event.active);
+  }
 }
 ```
 

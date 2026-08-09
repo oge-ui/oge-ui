@@ -36,3 +36,64 @@ export type {
   OgeAccordionTogglePosition,
   OgeAccordionToggleIconTemplateContext,
 } from './lib/accordion/accordion-types';
+export { OgeSplitter } from './lib/splitter/splitter';
+export { OgeSplitterPane } from './lib/splitter/splitter-pane';
+export { OgeSplitterPaneTemplate } from './lib/splitter/templates';
+export {
+  OGE_DEFAULT_SPLITTER_CONFIG,
+  OGE_DEFAULT_SPLITTER_MESSAGES,
+  OGE_SPLITTER_CONFIG,
+  provideOgeSplitterConfig,
+  type OgeSplitterConfig,
+  type OgeSplitterConfigInput,
+  type OgeSplitterMessages,
+} from './lib/splitter/config';
+export type {
+  OgeSplitterGripSide,
+  OgeSplitterOrientation,
+  OgeSplitterPaneClickEvent,
+  OgeSplitterPaneCollapsedEvent,
+  OgeSplitterPaneCollapsingEvent,
+  OgeSplitterPaneData,
+  OgeSplitterPaneHoldEvent,
+  OgeSplitterPaneTemplateContext,
+  OgeSplitterResizeEvent,
+  OgeSplitterResizeStartEvent,
+  OgeSplitterSize,
+} from './lib/splitter/splitter-types';
+export { OgeToolbar } from './lib/toolbar/toolbar';
+export { OgeToolbarItem } from './lib/toolbar/toolbar-item';
+export {
+  OgeToolbarItemTemplate,
+  OgeToolbarMenuItemTemplate,
+} from './lib/toolbar/templates';
+export {
+  OGE_DEFAULT_TOOLBAR_CONFIG,
+  OGE_DEFAULT_TOOLBAR_MESSAGES,
+  OGE_TOOLBAR_CONFIG,
+  provideOgeToolbarConfig,
+  type OgeToolbarConfig,
+  type OgeToolbarConfigInput,
+  type OgeToolbarMessages,
+} from './lib/toolbar/config';
+export type {
+  OgeToolbarDisplayMode,
+  OgeToolbarItemActiveChangedEvent,
+  OgeToolbarItemClickEvent,
+  OgeToolbarItemData,
+  OgeToolbarItemHoldEvent,
+  OgeToolbarItemLocation,
+  OgeToolbarItemSeverity,
+  OgeToolbarItemTemplateContext,
+  OgeToolbarItemType,
+  OgeToolbarLocateInMenu,
+  OgeToolbarMenuClosedEvent,
+  OgeToolbarMenuCloseReason,
+  OgeToolbarMenuClosingEvent,
+  OgeToolbarMenuOpeningEvent,
+  OgeToolbarOrientation,
+  OgeToolbarOverflow,
+  OgeToolbarOverflowChangedEvent,
+  OgeToolbarSize,
+  OgeToolbarStylingMode,
+} from './lib/toolbar/toolbar-types';

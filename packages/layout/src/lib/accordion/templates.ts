@@ -107,8 +107,8 @@ export class OgeAccordionToggleIconTemplate {
  */
 /**
  * Marks a row of buttons at the end of a panel body as its action bar — a
- * divider above, actions aligned to the inline end. The counterpart of
- * Angular Material's `mat-action-row`:
+ * divider above, actions aligned to the inline end. The counterpart of the
+ * references' action-row slot:
  *
  * ```html
  * <oge-accordion-item title="Profile">

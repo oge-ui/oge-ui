@@ -13,6 +13,10 @@ export interface OgeGridMessages {
   blankValue: string;
   columnChooser: string;
   columnChooserTitle: string;
+  /** Accessible name of the grid's `role="toolbar"` command bar. */
+  toolbar: string;
+  /** Accessible name of the toolbar's overflow button. */
+  moreCommands: string;
   groupPanelHint: string;
   ungroupPrefix: string;
   expandAllGroups: string;
@@ -82,6 +86,8 @@ export const OGE_DEFAULT_MESSAGES: OgeGridMessages = {
   blankValue: '(Blank)',
   columnChooser: 'Column chooser',
   columnChooserTitle: 'Columns',
+  toolbar: 'Grid toolbar',
+  moreCommands: 'More commands',
   groupPanelHint: 'Drag a column header here to group',
   ungroupPrefix: 'Ungroup',
   expandAllGroups: 'Expand all groups',

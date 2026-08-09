@@ -70,8 +70,12 @@ function editorInput(root: HTMLElement | Element): HTMLInputElement {
 }
 
 function editorInputs(root: HTMLElement | Element): HTMLInputElement[] {
+  // cell/row surfaces render OgeCellEditor (.oge-editor); the form and popup
+  // surfaces render <oge-form>, whose fields carry the same native input
   return Array.from(
-    root.querySelectorAll<HTMLInputElement>('.oge-editor .oge-input-native'),
+    root.querySelectorAll<HTMLInputElement>(
+      '.oge-editor .oge-input-native, oge-form-field .oge-input-native',
+    ),
   );
 }
 
@@ -184,9 +188,13 @@ describe('OgeGrid editing — batch mode', () => {
     expect(el.querySelectorAll('.oge-row-removed').length).toBe(1);
 
     // save everything
-    const save = Array.from(el.querySelectorAll('.oge-toolbar-text-btn')).find(
+    const save = Array.from(el.querySelectorAll('.oge-tool-text-btn')).find(
       (b) => b.textContent?.includes('Save changes'),
     ) as HTMLButtonElement;
+    // The batch buttons appear only once there is something to save, i.e. from
+    // an `@if` that flips after the toolbar first rendered. They must still
+    // land in the toolbar's trailing group, not in its hidden default slot.
+    expect(save.closest('.oge-toolbar-section-after')).not.toBeNull();
     save.click();
     await settle(fixture);
     await settle(fixture);
@@ -212,9 +220,9 @@ describe('OgeGrid editing — batch mode', () => {
     await settle(fixture);
     expect(el.querySelectorAll('.oge-cell-dirty').length).toBe(1);
 
-    const discard = Array.from(
-      el.querySelectorAll('.oge-toolbar-text-btn'),
-    ).find((b) => b.textContent?.includes('Discard')) as HTMLButtonElement;
+    const discard = Array.from(el.querySelectorAll('.oge-tool-text-btn')).find(
+      (b) => b.textContent?.includes('Discard'),
+    ) as HTMLButtonElement;
     discard.click();
     await settle(fixture);
     expect(el.querySelectorAll('.oge-cell-dirty').length).toBe(0);
@@ -270,7 +278,7 @@ describe('OgeGrid editing — row mode', () => {
       mode: 'row',
       allowAdding: true,
     });
-    const add = Array.from(el.querySelectorAll('.oge-toolbar-text-btn')).find(
+    const add = Array.from(el.querySelectorAll('.oge-tool-text-btn')).find(
       (b) => b.textContent?.includes('Add'),
     ) as HTMLButtonElement;
     add.click();
@@ -300,7 +308,8 @@ describe('OgeGrid editing — popup mode', () => {
     await settle(fixture);
     const popup = el.querySelector('.oge-edit-modal .oge-modal') as HTMLElement;
     expect(popup).toBeTruthy();
-    const editors = popup.querySelectorAll('.oge-editor');
+    // the popup body is an <oge-form>, so the editors are its fields
+    const editors = popup.querySelectorAll('oge-form-field');
     expect(editors.length).toBe(2);
 
     typeInto(editorInputs(popup)[0], 'Popup Adı');

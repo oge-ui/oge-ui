@@ -29,7 +29,9 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 }
 
 function rowTitles(el: HTMLElement): string[] {
-  return Array.from(el.querySelectorAll('.oge-row:not(.oge-form-row)')).map(
+  return Array.from(
+    el.querySelectorAll('.oge-row:not(.oge-edit-form-row)'),
+  ).map(
     (row) =>
       row.querySelector('.oge-tree-cell-text')?.textContent?.trim() ?? '',
   );
@@ -132,7 +134,7 @@ describe('OgeTreeList API & events wave', () => {
     await settle(fixture);
     expect(host.lastInit).toMatchObject({ parentKey: 1 });
     const editors = el.querySelectorAll<HTMLInputElement>(
-      '.oge-editor .oge-input-native',
+      '.oge-editor .oge-input-native, oge-form-field .oge-input-native',
     );
     expect(editors[0].value).toBe('Prefilled');
     expect(editors[1].value).toBe('9');
@@ -149,13 +151,15 @@ describe('OgeTreeList API & events wave', () => {
     });
     el.querySelector<HTMLButtonElement>('.oge-command-btn')?.click();
     await settle(fixture);
-    const labels = Array.from(el.querySelectorAll('.oge-form-label')).map(
+    const labels = Array.from(el.querySelectorAll('.oge-input-label')).map(
       (label) => label.textContent?.trim(),
     );
     expect(labels).toEqual(['Effort (days)']);
-    const fields = el.querySelector<HTMLElement>('.oge-form-fields');
+    const fields = el.querySelector<HTMLElement>(
+      '.oge-edit-form-fields .oge-form-fields',
+    );
     expect(fields?.style.gridTemplateColumns).toBe('repeat(2, minmax(0, 1fr))');
-    const field = el.querySelector<HTMLElement>('.oge-form-field');
+    const field = el.querySelector<HTMLElement>('oge-form-field');
     expect(field?.style.gridColumn).toBe('span 2');
   });
 

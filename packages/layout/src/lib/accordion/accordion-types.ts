@@ -30,7 +30,7 @@ export interface OgeAccordionItemData {
   title?: string;
   /**
    * Plain-text panel body, rendered when no content template is supplied.
-   * The DevExtreme `html` field has no counterpart — interpolate or use a
+   * The reference `html` field has no counterpart — interpolate or use a
    * template instead of injecting markup.
    */
   text?: string;

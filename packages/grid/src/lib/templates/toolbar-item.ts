@@ -9,6 +9,11 @@ import { Directive } from '@angular/core';
  *   <button ogeToolbar type="button" (click)="export()">Export</button>
  * </oge-grid>
  * ```
+ *
+ * The class is prefixed `OgeGrid…` while the selector stays `[ogeToolbar]`
+ * because `@oge-ui/layout` owns the unqualified `OgeToolbarItem` — the
+ * declarative child of `<oge-toolbar>`. Two symbols of the same name would be
+ * silently dropped by the `oge-ui` umbrella's star re-exports.
  */
 @Directive({ selector: '[ogeToolbar]' })
-export class OgeToolbarItem {}
+export class OgeGridToolbarItem {}

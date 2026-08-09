@@ -26,6 +26,11 @@
 .oge-tabs,
 .oge-tab-panel,
 .oge-accordion,
+.oge-drawer,
+.oge-stepper,
+.oge-splitter,
+.oge-toolbar,
+.oge-form,
 .oge-tree-view,
 .oge-pivot-grid {
   --oge-border-color: var(--color-slate-200, #e2e8f0);

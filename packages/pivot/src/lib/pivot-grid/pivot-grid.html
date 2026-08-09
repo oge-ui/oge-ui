@@ -275,14 +275,14 @@
   <div class="oge-pivot-popup-actions">
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
       (click)="applyFilterPopup()"
     >
       {{ msg().apply }}
     </button>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn"
+      class="oge-tool-btn oge-tool-text-btn"
       (click)="clearFilterPopup()"
     >
       {{ msg().clearFilter }}
@@ -352,14 +352,14 @@
     @if (chooserDraft()) {
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+      class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
       (click)="applyFieldChooser()"
     >
       {{ msg().apply }}
     </button>
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn"
+      class="oge-tool-btn oge-tool-text-btn"
       (click)="closeFieldChooser()"
     >
       {{ msg().cancel }}
@@ -367,7 +367,7 @@
     } @else {
     <button
       type="button"
-      class="oge-toolbar-btn oge-toolbar-text-btn"
+      class="oge-tool-btn oge-tool-text-btn"
       (click)="closeFieldChooser()"
     >
       {{ msg().apply }}

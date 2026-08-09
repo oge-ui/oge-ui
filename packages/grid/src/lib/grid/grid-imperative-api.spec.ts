@@ -19,7 +19,7 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();
 }
 
-describe('OgeGrid imperative API (DevExtreme methods parity)', () => {
+describe('OgeGrid imperative API (reference methods parity)', () => {
   async function render(inputs: Record<string, unknown> = {}): Promise<{
     fixture: ComponentFixture<OgeGrid<Row>>;
     el: HTMLElement;

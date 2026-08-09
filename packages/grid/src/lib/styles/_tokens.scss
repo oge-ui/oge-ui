@@ -49,6 +49,8 @@
   --oge-z-popup: 1000;
   /* modal layer (above anchored popups; legacy grid dialogs sit at 1090/1100) */
   --oge-z-modal: 1100;
+  /* drawer panel; shares the modal layer, ordering comes from the shared stack */
+  --oge-z-drawer: 1100;
   --oge-modal-backdrop-bg: rgb(15 23 42 / 0.32);
   /* toast regions (above modals — failure toasts must show over open dialogs) */
   --oge-z-toast: 1200;

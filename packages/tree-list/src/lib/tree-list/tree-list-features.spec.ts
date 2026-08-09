@@ -163,11 +163,24 @@ describe('OgeTreeList parity features', () => {
     expect(el.querySelector('.oge-no-data')).toBeTruthy();
   });
 
+  it('renders its command bar as the shared APG toolbar component', async () => {
+    const { el } = await render();
+    const bar = must(el.querySelector('.oge-toolbar'));
+    // `<oge-toolbar>` from @oge-ui/layout, not the retired hand-rolled div
+    expect(bar.tagName.toLowerCase()).toBe('oge-toolbar');
+    expect(bar.getAttribute('role')).toBe('toolbar');
+    expect(
+      bar.querySelector(
+        '.oge-toolbar-section-before .oge-tool-btn[aria-label="Column chooser"]',
+      ),
+    ).not.toBeNull();
+  });
+
   it('the column chooser hides and restores a column', async () => {
     const { fixture, el } = await render();
     must(
       el.querySelector<HTMLButtonElement>(
-        '.oge-toolbar-btn[aria-label="Column chooser"]',
+        '.oge-tool-btn[aria-label="Column chooser"]',
       ),
     ).click();
     await settle(fixture);
