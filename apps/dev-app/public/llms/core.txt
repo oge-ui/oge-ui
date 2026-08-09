@@ -2,7 +2,7 @@
 
 > Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
 
-Part of OGE UI v0.7.0.
+Part of OGE UI v0.8.0.
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
 ```sh

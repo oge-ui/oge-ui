@@ -45,6 +45,7 @@ import {
   MISTAKES,
   SUMMARY,
   readSiteVersion,
+  buildSiteVersionFile,
 } from './lib/prose.mjs';
 import { readRoutes, readSeoDescriptions } from './lib/routes.mjs';
 import { readSnippets } from './lib/snippets.mjs';
@@ -53,10 +54,10 @@ const workspaceRoot = process.cwd();
 const checkOnly = process.argv.includes('--check');
 const abs = (...parts) => path.join(workspaceRoot, ...parts);
 
-const version = readSiteVersion(
-  abs('apps/dev-app/src/app/shared/site-version.ts'),
-  readFileSync,
-);
+// One source of truth for the version: the file `nx release` bumps. Every
+// other place it appears — the site badge, the llms artifacts — is generated
+// from here, so a release cannot leave one of them behind.
+const version = readSiteVersion(abs('packages/ui/package.json'), readFileSync);
 const routes = readRoutes(abs(PATHS.routes));
 const seoDescriptions = readSeoDescriptions(abs(PATHS.seo));
 const entryPoints = readEntryPoints(workspaceRoot);
@@ -104,6 +105,10 @@ for (const [dir, doc] of docs) {
   artifacts.set(`packages/${dir}/llms.txt`, contents);
 }
 artifacts.set(`${PATHS.publicDir}/sitemap.xml`, buildSitemap());
+artifacts.set(
+  'apps/dev-app/src/app/shared/site-version.ts',
+  buildSiteVersionFile(version),
+);
 
 reportGaps();
 

@@ -100,13 +100,34 @@ Predictable wrong guesses, and what to write instead.
 | importing a theme to get default styles | not needed — styles ship with the components |`;
 
 /** Reads the single source of truth for the site/docs version. */
-export function readSiteVersion(siteVersionFile, readFileSync) {
-  const text = readFileSync(siteVersionFile, 'utf8');
-  const match = /SITE_VERSION\s*=\s*'([^']+)'/.exec(text);
-  if (!match) {
-    throw new Error(`Could not read SITE_VERSION from ${siteVersionFile}`);
+export function readSiteVersion(packageJsonFile, readFileSync) {
+  const { version } = JSON.parse(readFileSync(packageJsonFile, 'utf8'));
+  if (!version) {
+    throw new Error(`Could not read "version" from ${packageJsonFile}`);
   }
-  return match[1];
+  return version;
+}
+
+/**
+ * The docs site's version constant, generated rather than hand-maintained.
+ *
+ * It used to be typed in by hand next to a comment saying "bump together with
+ * `nx release version`" — and it drifted at the first release that forgot,
+ * shipping a v0.7.0 line inside the v0.8.0 tarballs. The version now has one
+ * source, `packages/ui/package.json`, which is the file `nx release` itself
+ * bumps; everything downstream derives from it and `docs-tools:llms-check`
+ * fails the build when this file no longer matches.
+ */
+export function buildSiteVersionFile(version) {
+  return `/**
+ * The published @oge-ui package version shown across the docs site.
+ *
+ * GENERATED — do not edit. Derived from packages/ui/package.json (the version
+ * \`nx release\` bumps) by \`npx nx run docs-tools:llms\`, and checked by
+ * \`docs-tools:llms-check\`.
+ */
+export const SITE_VERSION = '${version}';
+`;
 }
 
 export const COMMERCIAL_NOTE =

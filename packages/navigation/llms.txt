@@ -2,7 +2,7 @@
 
 > Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, plus a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row).
 
-Part of OGE UI v0.7.0.
+Part of OGE UI v0.8.0.
 Docs and live demos: https://ogeui.com/components/tree-view
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
