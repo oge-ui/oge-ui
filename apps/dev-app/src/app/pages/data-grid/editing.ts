@@ -8,6 +8,7 @@ import {
   type OgeEditMode,
   type OgeSavingChangesEvent,
 } from '@oge-ui/grid';
+import { OgeCard } from '@oge-ui/layout';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
@@ -33,6 +34,7 @@ interface City {
     OgeGrid,
     OgeColumn,
     OgeEditTemplate,
+    OgeCard,
     DemoCard,
     DocHeader,
     ReactiveFormsModule,
@@ -121,8 +123,12 @@ interface City {
           </oge-column>
           <oge-column field="salary" caption="Salary" dataType="number" />
         </oge-grid>
-        <aside
-          class="save-log max-h-[480px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-900"
+        <oge-card
+          stylingMode="filled"
+          size="sm"
+          class="save-log max-h-[480px]"
+          style="overflow: auto"
+          role="complementary"
         >
           <h3 class="!mt-0 mb-2 text-sm font-semibold">savingChanges log</h3>
           <ol class="m-0 list-decimal pl-4 font-mono text-xs leading-relaxed">
@@ -132,7 +138,7 @@ interface City {
               <li class="list-none text-gray-400">No saves yet</li>
             }
           </ol>
-        </aside>
+        </oge-card>
       </div>
     </app-demo-card>
 

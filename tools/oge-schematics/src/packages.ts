@@ -86,6 +86,14 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       need: 'resizable split panes / sidebar layout',
       use: '`<oge-splitter [(sizes)]>` with `<oge-splitter-pane>` children; sizes are ratios, `"240px"` pins a pane',
     },
+    {
+      need: 'command bar / toolbar with overflow',
+      use: '`<oge-toolbar [items]="commands">` with `<oge-toolbar-item>` children; project editors into the `[ogeToolbarBefore|Center|After]` slots',
+    },
+    {
+      need: 'card / content surface (header, media, actions, footer)',
+      use: '`<oge-card header="…" stylingMode="outlined|raised|filled|flat">` — sections are the `[ogeCardMedia]`, `[ogeCardActions]`, `[ogeCardFooter]` attribute slots, everything else projected is the content',
+    },
   ],
   '@oge-ui/forms': [
     {

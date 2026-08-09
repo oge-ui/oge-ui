@@ -25,6 +25,7 @@
 .oge-theme-dark .oge-tabs,
 .oge-theme-dark .oge-tab-panel,
 .oge-theme-dark .oge-accordion,
+.oge-theme-dark .oge-card,
 .oge-theme-dark .oge-drawer,
 .oge-theme-dark .oge-stepper,
 .oge-theme-dark .oge-splitter,
@@ -50,6 +51,7 @@
 .oge-tabs.oge-theme-dark,
 .oge-tab-panel.oge-theme-dark,
 .oge-accordion.oge-theme-dark,
+.oge-card.oge-theme-dark,
 .oge-drawer.oge-theme-dark,
 .oge-stepper.oge-theme-dark,
 .oge-splitter.oge-theme-dark,
@@ -91,6 +93,8 @@
   --oge-badge-color: #0b1220;
   --oge-shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.4);
   --oge-shadow-btn-hover: 0 2px 6px rgba(0, 0, 0, 0.5);
+  --oge-shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.35), 0 4px 12px -4px rgba(0, 0, 0, 0.3);
   --oge-input-filled-bg: rgba(148, 163, 184, 0.08);
   --oge-tooltip-bg: #334155;
   --oge-tooltip-color: #f1f5f9;

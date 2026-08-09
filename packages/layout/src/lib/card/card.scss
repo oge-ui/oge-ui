@@ -1,0 +1,321 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a standalone card is fully themed without
+// any other oge component on the page.
+.oge-card {
+  @include tokens.core-tokens;
+
+  --oge-card-pad: 16px;
+  --oge-card-gap: 8px;
+  --oge-card-media-size: 200px;
+  --oge-card-transition: 160ms ease;
+
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  // Clips full-bleed media (and the filled footer strip) to the radius.
+  overflow: hidden;
+  min-inline-size: 0;
+  transition:
+    box-shadow var(--oge-card-transition),
+    translate var(--oge-card-transition),
+    border-color var(--oge-card-transition);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+// --- chrome presets --------------------------------------------------------
+
+.oge-card-raised {
+  border-color: transparent;
+  box-shadow: var(--oge-shadow-card);
+}
+
+.oge-card-filled {
+  border-color: transparent;
+  background: var(--oge-header-bg);
+}
+
+.oge-card-flat {
+  border-color: transparent;
+  background: transparent;
+}
+
+// --- density ---------------------------------------------------------------
+
+.oge-card-sm {
+  --oge-card-pad: 12px;
+  --oge-card-gap: 6px;
+
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-card-lg {
+  --oge-card-pad: 22px;
+  --oge-card-gap: 10px;
+}
+
+// --- severity rail ---------------------------------------------------------
+
+// The toast's rail idiom on a static surface: a status accent that survives
+// every chrome preset because it widens the logical start border only.
+.oge-card-severity-accent,
+.oge-card-severity-success,
+.oge-card-severity-warning,
+.oge-card-severity-danger {
+  border-inline-start-width: 3px;
+  border-inline-start-style: solid;
+}
+
+.oge-card-severity-accent {
+  border-inline-start-color: var(--oge-accent);
+}
+
+.oge-card-severity-success {
+  border-inline-start-color: var(--oge-success);
+}
+
+.oge-card-severity-warning {
+  border-inline-start-color: var(--oge-warning);
+}
+
+.oge-card-severity-danger {
+  border-inline-start-color: var(--oge-danger);
+}
+
+// --- interactive lift ------------------------------------------------------
+
+// Purely visual: the affordance for the documented stretched-link pattern.
+// The ring rides :focus-within because the focusable thing is the projected
+// link, never the card itself.
+.oge-card-interactive {
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--oge-accent-25);
+    box-shadow: var(--oge-shadow-card);
+    translate: 0 -2px;
+  }
+
+  &:focus-within {
+    border-color: var(--oge-accent-25);
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-card-raised.oge-card-interactive:hover {
+  border-color: transparent;
+  box-shadow: var(--oge-shadow-popup);
+}
+
+// --- header ----------------------------------------------------------------
+
+.oge-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--oge-card-pad) var(--oge-card-pad) 0;
+}
+
+.oge-card-titles {
+  min-inline-size: 0;
+}
+
+.oge-card-title {
+  font-size: calc(var(--oge-font-size) + 1px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.oge-card-subtitle {
+  margin-block-start: 2px;
+  color: var(--oge-muted-color);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-card-avatar {
+  flex: none;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.oge-card-sm .oge-card-avatar {
+  inline-size: 32px;
+  block-size: 32px;
+}
+
+.oge-card-header-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: auto;
+}
+
+// --- media -----------------------------------------------------------------
+
+// Full-bleed on purpose: media touches the card edges, the sections around it
+// carry the padding. Size it from user CSS (`aspect-ratio`, `block-size`).
+.oge-card-media {
+  display: block;
+}
+
+img.oge-card-media,
+video.oge-card-media,
+.oge-card-media > img,
+.oge-card-media > video {
+  display: block;
+  inline-size: 100%;
+  object-fit: cover;
+}
+
+.oge-card-header + .oge-card-media {
+  margin-block-start: var(--oge-card-pad);
+}
+
+// --- content ---------------------------------------------------------------
+
+.oge-card-content {
+  flex: 1 1 auto;
+  padding: var(--oge-card-pad);
+
+  // A card built only from slots (media + actions) projects nothing here;
+  // Angular drops whitespace-only nodes, so `:empty` holds.
+  &:empty {
+    display: none;
+  }
+}
+
+// Full-bleed hairline inside the padded content.
+.oge-card-separator {
+  display: block;
+  block-size: 1px;
+  border: 0;
+  margin-block: var(--oge-card-pad);
+  margin-inline: calc(-1 * var(--oge-card-pad));
+  background: var(--oge-border-color);
+}
+
+// --- skeleton --------------------------------------------------------------
+
+// `loading` swaps the content and actions for shimmer lines; header, media
+// and footer keep the card's footprint while the data arrives.
+.oge-card-skeleton {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--oge-card-pad);
+}
+
+.oge-card-skeleton-line {
+  block-size: 10px;
+  border-radius: var(--oge-radius);
+  background: linear-gradient(
+    90deg,
+    var(--oge-header-bg) 25%,
+    var(--oge-row-hover-bg) 37%,
+    var(--oge-header-bg) 63%
+  );
+  background-size: 400% 100%;
+  animation: oge-card-shimmer 1400ms ease infinite;
+
+  &:nth-child(2) {
+    inline-size: 80%;
+  }
+
+  &:last-child {
+    inline-size: 55%;
+  }
+}
+
+@keyframes oge-card-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: 0 0;
+  }
+}
+
+// --- actions ---------------------------------------------------------------
+
+.oge-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--oge-card-gap);
+  padding: calc(var(--oge-card-pad) / 2) var(--oge-card-pad);
+}
+
+.oge-card-content + .oge-card-actions,
+.oge-card-media + .oge-card-actions {
+  padding-block-start: 0;
+}
+
+.oge-card-actions-center {
+  justify-content: center;
+}
+
+.oge-card-actions-end {
+  justify-content: flex-end;
+}
+
+.oge-card-actions-stretched > * {
+  flex: 1 1 0;
+}
+
+// --- footer ----------------------------------------------------------------
+
+.oge-card-footer {
+  padding: 12px var(--oge-card-pad);
+  border-block-start: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  color: var(--oge-header-color);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+// --- horizontal ------------------------------------------------------------
+
+// Only a card that actually has media changes shape; without one the flex
+// column already renders the right thing.
+.oge-card-horizontal:has(> .oge-card-media) {
+  display: grid;
+  grid-template-columns: var(--oge-card-media-size) minmax(0, 1fr);
+
+  > .oge-card-media {
+    grid-column: 1;
+    // One implicit row per possible sibling section (header, content or
+    // skeleton, actions, footer); unused rows collapse to zero height.
+    grid-row: 1 / span 4;
+    block-size: 100%;
+    margin-block-start: 0;
+  }
+
+  > :not(.oge-card-media) {
+    grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-card {
+    transition: none;
+  }
+
+  .oge-card-interactive:hover {
+    translate: none;
+  }
+
+  .oge-card-skeleton-line {
+    animation: none;
+  }
+}

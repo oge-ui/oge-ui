@@ -38,6 +38,7 @@ export type IconName =
   | 'calendar'
   | 'tabs'
   | 'accordion'
+  | 'card'
   | 'splitter'
   | 'drawer'
   | 'stepper'
@@ -206,6 +207,11 @@ export type IconName =
           <path d="M5.5 9h1.5" />
           <path d="M5.5 12h1.5" />
           <path d="M5.5 15h1.5" />
+        }
+        @case ('card') {
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M3 10h18" />
+          <path d="M7 15h6" />
         }
         @case ('toolbar') {
           <rect x="3" y="4" width="18" height="6" rx="1" />

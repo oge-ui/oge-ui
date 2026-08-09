@@ -996,6 +996,81 @@ house rule.
 | **Icons survive the collapse into the overflow menu**                                     | partial   | Done    | dx renders menu icons, Kendo/PrimeNG/Material have no overflow menu at all. `showIcon` resolves separately for the bar and the menu row (`'onBar'` / `'inMenu'`), and one icon anywhere gives every row an icon column so labels stay aligned                 |
 | **Style and item measurement kept off the resize path**                                   | No        | Done    | OGE extra: a drag-resize reads only the container box — `getComputedStyle` and the per-item layout reads run on content/density changes instead, and notifications coalesce to one pass per frame (locked in by `toolbar-perf.spec.ts`)                       |
 
+## Card (`@oge-ui/layout`) — Feature Parity
+
+`OgeCard` against Angular Material `MatCard`, Kendo `CardComponent`, PrimeNG
+`Card` — and **no DevExtreme column to fake**: DevExtreme ships no single-card
+container. Its `dxCardView` (v24+) is a _data-collection_ view — the grid
+family's card-layout sibling, with columns, a toolbar and methods — and its
+Tile View / Drawer are equally not this component, so rows below cite the three
+references that actually have one (the Kendo-Wizard rule: absence is written
+down, not painted over).
+
+**There is no WAI-ARIA card pattern** — no APG entry, no ARIA role, no `<card>`
+element. That absence is a design input, the same way it was for the drawer and
+the stepper. It means the card must stay a plain container: no role of its own
+(PrimeNG draws the same conclusion; the consumer adds `role="article"` for an
+independently distributable piece of content, or `role="region"` + a label for
+a page landmark, and most cards correctly carry neither), and **no "clickable
+card" API**. Wrapping the whole card in an `<a>`/`<button>` is the
+`nested-interactive` axe violation as soon as the card contains a second
+control, breaks text selection, and reads the entire card contents as one link
+name to a screen reader. None of the three references ships such an input
+either. The accessible pattern — one primary `<a>` in the content, its hit
+area stretched over the card with a CSS pseudo-element — is a documented demo
+instead of an API. Related guidance baked into the docs: card collections
+belong in `<ul>`/`<li>`, and the heading stays before the media in DOM order
+even when the image renders on top.
+
+The retired duplication is the other half of the change, per the toolbar
+precedent: the dev-app's hand-rolled card boxes — the playground's four stat
+tiles and its feature sidebar, and the five scroll-log/state panels on the
+editing, persistence, selection and remote-data pages — now render
+`<oge-card>` (the log panels as `stylingMode="filled" size="sm"`, keeping
+their e2e hook classes on the host). The docs `app-demo-card` deliberately
+stays hand-rolled: it is a tabbed editor frame whose header swaps to VS Code
+chrome when the Code tab opens — wrapping it in `OgeCard` would mean
+overriding nearly all of the card's chrome, which is costume, not reuse.
+
+The shape is the drawer's, not Material's: **one component, not a sub-component
+army**. Material needs eleven directives; here the sections are attribute slots
+(`[ogeCardMedia]`, `[ogeCardActions]`, `[ogeCardFooter]`, `[ogeCardAvatar]`,
+`[ogeCardHeaderActions]`, `[ogeCardSeparator]`) and everything else projected
+is the content. Unlike the drawer's bare `ng-content` attributes the slots are
+minimal host-class directives, because the card must _detect_ a slot to skip
+an empty section wrapper — queried with `descendants: false` so a nested
+card's slots never leak into the outer header, mirroring what `ng-content
+select` projects.
+
+| Feature                                                                                    | Reference | OGE     | Notes                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------ | --------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mat `appearance: 'raised' \| 'outlined' \| 'filled'`                                       | Yes       | Done    | `stylingMode: 'outlined' \| 'raised' \| 'filled' \| 'flat'` — the house word and the layout family's values plus Material's `raised`; the default is `outlined`, not Material's `raised`, matching every other oge surface                     |
+| PrimeNG `header` / `subheader` inputs                                                      | Yes       | Done    | same names on purpose — a `title` input would double as a native tooltip when bound statically                                                                                                                                                 |
+| Mat `mat-card-header/title/subtitle` / Kendo `kendoCardTitle/Subtitle`                     | Yes       | covered | the `header`/`subheader` inputs render the title block; richer headers are plain projection — the drawer's call: any markup goes in directly, no template indirection                                                                          |
+| Mat `mat-card-content` / Kendo `kendo-card-body`                                           | Yes       | Done    | the default projection **is** the content — no marker element to remember                                                                                                                                                                      |
+| Mat `mat-card-actions` (`align: 'start' \| 'end'`) / Kendo `kendo-card-actions` (`layout`) | Yes       | Done    | `[ogeCardActions]` with `align: 'start' \| 'center' \| 'end' \| 'stretched'` — the Kendo superset; Material only has two of the four                                                                                                           |
+| Kendo actions `orientation: 'horizontal' \| 'vertical'`                                    | Yes       | Skipped | a vertical button stack inside a card is a layout the consumer's own flex rule expresses in one line                                                                                                                                           |
+| Kendo actions `actions: CardAction[]` + `action` event                                     | Yes       | Skipped | deliberate — real projected buttons with real click handlers; a data-driven button bag would re-wrap what `@oge-ui/buttons` already ships (the toolbar's `widget`+`options` call)                                                              |
+| Mat `mat-card-footer` / Kendo `kendo-card-footer`                                          | Yes       | Done    | `[ogeCardFooter]` — a divided strip on the header surface, for metadata rather than commands                                                                                                                                                   |
+| Mat `[mat-card-image]` + `sm/md/lg/xl` variants / Kendo `kendo-card-media`                 | Yes       | Done    | `[ogeCardMedia]`, full-bleed; sized by consumer CSS (`aspect-ratio`, `block-size`) instead of four fixed-size directives                                                                                                                       |
+| Mat `[mat-card-avatar]`                                                                    | Yes       | Done    | `[ogeCardAvatar]` — the round header image before the titles                                                                                                                                                                                   |
+| Mat `mat-card-title-group`                                                                 | Yes       | covered | titles + header actions + avatar already compose the same row; a dedicated grouping component would exist only to exist                                                                                                                        |
+| Kendo `orientation: 'horizontal' \| 'vertical'`                                            | Yes       | Done    | `orientation`, Material has no counterpart; horizontal is a two-column grid with the media spanning the inline-start column                                                                                                                    |
+| Kendo `width` (default `'285px'`)                                                          | Yes       | Skipped | deliberate — size is the parent layout's job; a card that defaults to 285px fights every grid it is dropped into                                                                                                                               |
+| Kendo `kendo-card-separator` (`orientation`)                                               | Yes       | Done    | `[ogeCardSeparator]` on an `<hr>` — full-bleed inside the padded content; the vertical variant falls with actions `orientation` above                                                                                                          |
+| PrimeNG `style` / `styleClass`                                                             | Yes       | covered | plain `class`/`style` on the host — an Angular component element takes them directly                                                                                                                                                           |
+| DevExtreme single-card container                                                           | —         | —       | does not exist: `dxCardView` is a data-collection view (the grid family's concern), Tile View is a tiled scroller — neither is a content surface, so there is nothing to match                                                                 |
+| No enforced role (PrimeNG)                                                                 | Yes       | Done    | no `role`, no `tabindex`; consumer-set `role="article"` / `role="region"` passes through untouched, locked in by `card-parity.spec.ts`                                                                                                         |
+| Clickable-card input                                                                       | No        | covered | none of the references has one, and neither does this — the `nested-interactive` trap; the accessible stretched-link pattern is a documented demo instead                                                                                      |
+| Config provider                                                                            | partial   | Done    | `provideOgeCardConfig()` carries `stylingMode` and `orientation`. **No messages block, deliberately**: the card renders no user-facing string and no interactive chrome — the first string to appear must bring the messages interface with it |
+| **`flat` chrome preset**                                                                   | No        | Done    | OGE extra: a border-less, background-less card for nesting inside another surface — the accordion/toolbar `stylingMode` vocabulary completed                                                                                                   |
+| **Empty sections render nothing**                                                          | No        | Done    | OGE extra: the header row appears only when titles, an avatar or header actions exist, and an empty content wrapper hides itself — Material renders whatever empty elements you leave in                                                       |
+| **Card elevation as a theme token**                                                        | No        | Done    | OGE extra: `raised` rests on `--oge-shadow-card` (dark theme overrides it), so an app re-themes elevation without touching the component                                                                                                       |
+| **`size` density preset**                                                                  | No        | Done    | OGE extra: `'sm' \| 'md' \| 'lg'` — the accordion/toolbar density vocabulary; scales padding and type ramp together, `--oge-card-pad` is the per-card escape hatch. No reference card has density at all                                       |
+| **`severity` status rail**                                                                 | No        | Done    | OGE extra: the toast's inline-start rail idiom on a static surface (`accent`/`success`/`warning`/`danger` from the shared severity tokens) — a status card without hand-rolled CSS                                                             |
+| **`interactive` visual lift**                                                              | No        | Done    | OGE extra: hover/focus-within elevation and ring for the stretched-link pattern — visual only, no role/tabindex/wrapper, so it cannot recreate the nested-interactive trap; honours `prefers-reduced-motion`                                   |
+| **`loading` skeleton state**                                                               | No        | Done    | OGE extra: shimmer lines replace content and actions under `aria-busy`, header/media/footer keep the footprint — the accordion `contentLoader` skeleton, without the loader machinery                                                          |
+
 ## TreeView (`@oge-ui/navigation`) — Feature Parity
 
 `OgeTreeView` against DevExtreme `dxTreeView`, Kendo `TreeViewComponent`,

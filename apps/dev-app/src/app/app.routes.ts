@@ -365,6 +365,23 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/card',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/card').then((m) => m.LayoutCardPage),
+        title: 'OGE — Card',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/card-api').then((m) => m.LayoutCardApiPage),
+        title: 'OGE — Card API',
+      },
+    ],
+  },
+  {
     path: 'components/splitter',
     children: [
       {

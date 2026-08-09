@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CustomDataSource } from '@oge-ui/core';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { OgeCard } from '@oge-ui/layout';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FakeEmployeeServer } from '../../shared/fake-server';
@@ -9,7 +10,7 @@ import { SNIPPET } from './remote-data-snippets';
 
 @Component({
   selector: 'app-remote-data',
-  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader],
+  imports: [OgeGrid, OgeColumn, OgeCard, DemoCard, DocHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -52,8 +53,12 @@ import { SNIPPET } from './remote-data-snippets';
           <oge-column field="city" caption="City" />
           <oge-column field="salary" caption="Salary" dataType="number" />
         </oge-grid>
-        <aside
-          class="request-log max-h-[560px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-900"
+        <oge-card
+          stylingMode="filled"
+          size="sm"
+          class="request-log max-h-[560px]"
+          style="overflow: auto"
+          role="complementary"
         >
           <h3 class="!mt-0 mb-2 text-sm font-semibold">Request log</h3>
           <ol
@@ -64,7 +69,7 @@ import { SNIPPET } from './remote-data-snippets';
               <li class="break-all">{{ entry }}</li>
             }
           </ol>
-        </aside>
+        </oge-card>
       </div>
     </app-demo-card>
 

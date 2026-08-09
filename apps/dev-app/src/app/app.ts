@@ -325,6 +325,22 @@ export class App {
       ],
     },
     {
+      title: 'Card',
+      group: COMPONENTS_GROUP,
+      items: [
+        {
+          path: '/components/card',
+          label: 'Overview',
+          icon: 'card',
+        },
+        {
+          path: '/components/card/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Splitter',
       group: COMPONENTS_GROUP,
       items: [

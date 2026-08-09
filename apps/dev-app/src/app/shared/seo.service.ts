@@ -51,6 +51,14 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Toolbar API reference: every property, method, event and type of oge-toolbar and oge-toolbar-item, the projection slots, the overflow model and the config provider.',
   ],
   [
+    '/components/card/api',
+    'Angular Card API reference: every property and type of oge-card, the attribute slot directives (media, avatar, header actions, actions, footer, separator) and the config provider.',
+  ],
+  [
+    '/components/card',
+    'Angular Card: a content surface with header, full-bleed media, action row and footer as attribute slots — outlined, raised, filled or flat chrome, horizontal orientation, and an accessible clickable-card pattern instead of a nested-interactive trap.',
+  ],
+  [
     '/components/stepper',
     'Angular Stepper: a linear or free wizard whose ARIA model stays the same in both orientations — an ordered list of buttons with aria-current="step", async leave guards, and refusals that say why.',
   ],

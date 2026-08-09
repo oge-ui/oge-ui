@@ -4,8 +4,8 @@ Layout containers for the [OGE](https://ogeui.com) Angular UI suite. Signal-base
 standalone, zoneless-ready, MIT.
 
 Today the package ships **`OgeAccordion`** with its declarative child
-**`OgeAccordionItem`**, **`OgeSplitter`** with **`OgeSplitterPane`**, and
-**`OgeToolbar`** with **`OgeToolbarItem`**.
+**`OgeAccordionItem`**, **`OgeCard`** with its attribute slots, **`OgeSplitter`**
+with **`OgeSplitterPane`**, and **`OgeToolbar`** with **`OgeToolbarItem`**.
 
 ```sh
 npm install @oge-ui/layout
@@ -61,6 +61,51 @@ protected readonly sections: OgeAccordionItemData[] = [
   shared `--oge-*` design tokens.
 
 See the [API reference](https://ogeui.com/components/accordion/api) for the full
+surface.
+
+## Card
+
+```html
+<oge-card header="Mountains" subheader="Alps, 2026" stylingMode="raised">
+  <img ogeCardMedia src="alps.jpg" alt="" style="aspect-ratio: 16 / 9" />
+  <p>Four days above the tree line.</p>
+  <div ogeCardActions align="end">
+    <button type="button">Share</button>
+  </div>
+</oge-card>
+```
+
+One component, not a sub-component trio: the sections are attribute slots —
+`[ogeCardMedia]`, `[ogeCardActions]`, `[ogeCardFooter]`, `[ogeCardAvatar]`,
+`[ogeCardHeaderActions]`, `[ogeCardSeparator]` — and everything else projected
+is the content.
+
+### What it does
+
+- **Chrome** — `stylingMode` (`'outlined' | 'raised' | 'filled' | 'flat'`);
+  `raised` rests on the `--oge-shadow-card` token. Simple titles come from the
+  `header` / `subheader` inputs, richer headers from the avatar and
+  header-actions slots. `size` (`'sm' | 'md' | 'lg'`) scales padding and type
+  together.
+- **States** — `severity` draws a status rail on the inline-start edge
+  (`accent`/`success`/`warning`/`danger`), `loading` swaps content and actions
+  for an `aria-busy` shimmer skeleton, and `interactive` adds the
+  hover/focus-within lift for the stretched-link pattern — visual only, no
+  role or wrapper.
+- **Media** — full-bleed, sized by your own CSS (`aspect-ratio`,
+  `block-size`); `orientation="horizontal"` moves it into an inline-start
+  column spanning every other section.
+- **Actions** — `align` on the actions row: `'start' | 'center' | 'end' |
+'stretched'`.
+- **Accessibility** — there is no WAI-ARIA card pattern, so the card renders no
+  role and never wraps itself in a link or button (that is the
+  `nested-interactive` trap). Give a clickable card one primary `<a>` in its
+  content and stretch its hit area with CSS; add `role="article"` or
+  `role="region"` on the host where the context calls for it.
+- **Theming** — the shared `--oge-*` design tokens, logical properties for RTL,
+  and `--oge-card-pad` / `--oge-card-media-size` sub-tokens for per-card tuning.
+
+See the [API reference](https://ogeui.com/components/card/api) for the full
 surface.
 
 ## Splitter

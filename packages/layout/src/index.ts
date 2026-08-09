@@ -36,6 +36,29 @@ export type {
   OgeAccordionTogglePosition,
   OgeAccordionToggleIconTemplateContext,
 } from './lib/accordion/accordion-types';
+export { OgeCard } from './lib/card/card';
+export {
+  OgeCardActions,
+  OgeCardAvatar,
+  OgeCardFooter,
+  OgeCardHeaderActions,
+  OgeCardMedia,
+  OgeCardSeparator,
+} from './lib/card/templates';
+export {
+  OGE_CARD_CONFIG,
+  OGE_DEFAULT_CARD_CONFIG,
+  provideOgeCardConfig,
+  type OgeCardConfig,
+  type OgeCardConfigInput,
+} from './lib/card/config';
+export type {
+  OgeCardActionsAlign,
+  OgeCardOrientation,
+  OgeCardSeverity,
+  OgeCardSize,
+  OgeCardStylingMode,
+} from './lib/card/card-types';
 export { OgeSplitter } from './lib/splitter/splitter';
 export { OgeSplitterPane } from './lib/splitter/splitter-pane';
 export { OgeSplitterPaneTemplate } from './lib/splitter/templates';

@@ -2,6 +2,7 @@ import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import type { FilterExpr, RowKey } from '@oge-ui/core';
 import { OgeColumn, OgeGrid, type OgeContextMenuEvent } from '@oge-ui/grid';
+import { OgeCard } from '@oge-ui/layout';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
@@ -9,7 +10,7 @@ import { DEFERRED_SNIPPET, SNIPPET } from './selection-snippets';
 
 @Component({
   selector: 'app-selection',
-  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader, JsonPipe],
+  imports: [OgeGrid, OgeColumn, OgeCard, DemoCard, DocHeader, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -94,8 +95,12 @@ import { DEFERRED_SNIPPET, SNIPPET } from './selection-snippets';
           <oge-column field="department" caption="Department" />
           <oge-column field="salary" caption="Salary" dataType="number" />
         </oge-grid>
-        <aside
-          class="max-h-[420px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-900"
+        <oge-card
+          stylingMode="filled"
+          size="sm"
+          class="max-h-[420px]"
+          style="overflow: auto"
+          role="complementary"
         >
           <h3 class="!mt-0 mb-2 text-sm font-semibold">selectionFilter</h3>
           <pre
@@ -105,7 +110,7 @@ import { DEFERRED_SNIPPET, SNIPPET } from './selection-snippets';
                 ? 'null  (nothing selected)'
                 : (selectionFilter() | json)
             }}</pre>
-        </aside>
+        </oge-card>
       </div>
     </app-demo-card>
 

@@ -10,6 +10,7 @@ import {
   type WritableSignal,
 } from '@angular/core';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { OgeCard } from '@oge-ui/layout';
 import { CodeBlock } from '../../shared/code-block';
 import { DocHeader } from '../../shared/doc-header';
 import { Icon, type IconName } from '../../shared/icon';
@@ -28,7 +29,7 @@ interface Toggle {
  */
 @Component({
   selector: 'app-playground',
-  imports: [OgeGrid, OgeColumn, CodeBlock, Icon, DocHeader],
+  imports: [OgeGrid, OgeColumn, OgeCard, CodeBlock, Icon, DocHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header title="Playground" category="Data Grid">
@@ -40,7 +41,7 @@ interface Toggle {
     </app-doc-header>
 
     <div class="mb-4 grid grid-cols-4 gap-3 max-md:grid-cols-2">
-      <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+      <oge-card size="sm">
         <div
           class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
         >
@@ -52,8 +53,8 @@ interface Toggle {
           {{ rowCount().toLocaleString() }}
         </div>
         <div class="text-xs text-gray-400">rows in memory</div>
-      </div>
-      <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+      </oge-card>
+      <oge-card size="sm">
         <div
           class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
         >
@@ -65,8 +66,8 @@ interface Toggle {
           {{ domRows() }}
         </div>
         <div class="text-xs text-gray-400">row elements rendered</div>
-      </div>
-      <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+      </oge-card>
+      <oge-card size="sm">
         <div
           class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
         >
@@ -78,8 +79,8 @@ interface Toggle {
           {{ domRatio() }}
         </div>
         <div class="text-xs text-gray-400">of the data is in the DOM</div>
-      </div>
-      <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+      </oge-card>
+      <oge-card size="sm">
         <div
           class="text-[11px] font-semibold uppercase tracking-wider text-gray-400"
         >
@@ -92,15 +93,13 @@ interface Toggle {
           }}<span class="text-sm text-gray-400">/{{ toggles.length }}</span>
         </div>
         <div class="text-xs text-gray-400">enabled</div>
-      </div>
+      </oge-card>
     </div>
 
     <div
       class="grid grid-cols-[250px_minmax(0,1fr)] items-start gap-5 max-lg:grid-cols-1"
     >
-      <aside
-        class="rounded-lg border border-gray-200 p-4 max-lg:order-first dark:border-gray-800"
-      >
+      <oge-card class="max-lg:order-first" role="complementary">
         <div
           class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400"
         >
@@ -190,7 +189,7 @@ interface Toggle {
             never holds more than ~30 rows while scrolling.
           </span>
         </div>
-      </aside>
+      </oge-card>
 
       <div class="min-w-0">
         <oge-grid

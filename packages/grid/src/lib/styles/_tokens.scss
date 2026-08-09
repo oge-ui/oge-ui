@@ -41,6 +41,9 @@
   /* elevation of contained buttons (dark theme overrides with black-based) */
   --oge-shadow-btn: 0 1px 2px rgba(15, 23, 42, 0.12);
   --oge-shadow-btn-hover: 0 2px 6px rgba(15, 23, 42, 0.16);
+  /* resting elevation of raised cards — lighter than --oge-shadow-popup */
+  --oge-shadow-card:
+    0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 12px -4px rgba(15, 23, 42, 0.1);
   /* readable muted text (labels/placeholders/hints — WCAG-safe) */
   --oge-input-muted: var(--oge-header-color);
   /* filled-field surface; dark theme overrides with a surface-independent tint */

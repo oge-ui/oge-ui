@@ -13,6 +13,7 @@ import {
   OgeGrid,
   type OgeStateStorage,
 } from '@oge-ui/grid';
+import { OgeCard } from '@oge-ui/layout';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { makeEmployees } from '../../shared/demo-data';
@@ -49,7 +50,7 @@ function createFakeApiStorage(): LoggingStorage {
 /** Isolated provider scope: this grid persists through a fake async API. */
 @Component({
   selector: 'app-persistence-api-demo',
-  imports: [OgeGrid, OgeColumn],
+  imports: [OgeGrid, OgeColumn, OgeCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: OGE_STATE_STORAGE, useFactory: createFakeApiStorage }],
   template: `
@@ -67,8 +68,12 @@ function createFakeApiStorage(): LoggingStorage {
         <oge-column field="department" caption="Department" />
         <oge-column field="salary" caption="Salary" dataType="number" />
       </oge-grid>
-      <aside
-        class="max-h-[360px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-900"
+      <oge-card
+        stylingMode="filled"
+        size="sm"
+        class="max-h-[360px]"
+        style="overflow: auto"
+        role="complementary"
       >
         <h3 class="!mt-0 mb-2 text-sm font-semibold">
           Fake API log (250ms latency)
@@ -80,7 +85,7 @@ function createFakeApiStorage(): LoggingStorage {
             <li class="text-gray-400">Sort or filter the grid…</li>
           }
         </ol>
-      </aside>
+      </oge-card>
     </div>
   `,
 })
@@ -95,6 +100,7 @@ export class PersistenceApiDemo {
   imports: [
     OgeGrid,
     OgeColumn,
+    OgeCard,
     PersistenceApiDemo,
     DemoCard,
     DocHeader,
@@ -214,8 +220,12 @@ export class PersistenceApiDemo {
           <oge-column field="city" caption="City" />
           <oge-column field="salary" caption="Salary" dataType="number" />
         </oge-grid>
-        <aside
-          class="max-h-[360px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-900"
+        <oge-card
+          stylingMode="filled"
+          size="sm"
+          class="max-h-[360px]"
+          style="overflow: auto"
+          role="complementary"
         >
           <h3 class="!mt-0 mb-2 text-sm font-semibold">
             Last stateChange payload
@@ -223,7 +233,7 @@ export class PersistenceApiDemo {
           <pre
             class="m-0 whitespace-pre-wrap break-all font-mono text-xs leading-relaxed"
             >{{ lastState() ? (lastState() | json) : '—' }}</pre>
-        </aside>
+        </oge-card>
       </div>
     </app-demo-card>
 

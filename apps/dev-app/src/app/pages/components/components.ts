@@ -6,6 +6,9 @@ import { OgeNumberBox, OgeTextBox } from '@oge-ui/inputs';
 import {
   OgeAccordion,
   OgeAccordionItem,
+  OgeCard,
+  OgeCardActions,
+  OgeCardMedia,
   OgeSplitter,
   OgeSplitterPane,
   OgeToolbar,
@@ -33,6 +36,7 @@ type FamilyKey =
   | 'tabs'
   | 'forms'
   | 'accordion'
+  | 'card'
   | 'splitter'
   | 'toolbar'
   | 'tree-view'
@@ -80,6 +84,9 @@ interface OrgNode {
     OgeFormItem,
     OgeAccordion,
     OgeAccordionItem,
+    OgeCard,
+    OgeCardActions,
+    OgeCardMedia,
     OgeSplitter,
     OgeSplitterPane,
     OgeToolbar,
@@ -300,6 +307,33 @@ interface OrgNode {
                     </oge-accordion>
                   </div>
                 }
+                @case ('card') {
+                  <div class="w-full max-w-60 self-start">
+                    <oge-card
+                      header="Mountains"
+                      subheader="Alps, 2026"
+                      size="sm"
+                    >
+                      <img
+                        ogeCardMedia
+                        src="https://picsum.photos/seed/oge-alps/480/200"
+                        alt=""
+                        class="h-14"
+                      />
+                      <p class="!my-0 text-sm text-gray-500">
+                        Four days above the tree line.
+                      </p>
+                      <div ogeCardActions align="end">
+                        <button
+                          type="button"
+                          class="rounded border border-gray-200 px-2 py-1 text-xs dark:border-gray-700"
+                        >
+                          Share
+                        </button>
+                      </div>
+                    </oge-card>
+                  </div>
+                }
                 @case ('splitter') {
                   <div class="h-28 w-full self-start">
                     <oge-splitter class="h-full rounded border">
@@ -480,6 +514,14 @@ export class ComponentsIndexPage {
       path: '/components/accordion',
       description:
         'Single or multiple expansion following the WAI-ARIA pattern: lazy content, async expand guards, header actions and invalid-section jumping.',
+    },
+    {
+      key: 'card',
+      name: 'Card',
+      icon: 'card',
+      path: '/components/card',
+      description:
+        'Content surface with header, full-bleed media, action row and footer as attribute slots — one component, outlined/raised/filled/flat chrome, horizontal orientation, and no nested-interactive trap.',
     },
     {
       key: 'splitter',
