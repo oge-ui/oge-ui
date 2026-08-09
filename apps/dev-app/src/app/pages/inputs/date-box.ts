@@ -99,7 +99,7 @@ const SECTIONS = [
 
     <app-demo-card
       heading="Range selection"
-      description="<code>selectionMode: 'range'</code> turns the calendar into a start–end picker with a live hover preview; <code>viewsCount: 2</code> lays two months side by side. <code>&lt;oge-date-range-box&gt;</code> puts the same picker behind a single field with two parsed inputs — a reversed pair reorders on commit, either end may stay open. <code>type: 'datetime'</code> adds start/end time lists: day and time picks collect in a draft and commit together on OK."
+      description="<code>selectionMode: 'range'</code> turns the calendar into a start–end picker with a live hover preview; <code>viewsCount: 2</code> lays two months side by side. <code>&amp;lt;oge-date-range-box&amp;gt;</code> puts the same picker behind a single field with two parsed inputs — a reversed pair reorders on commit, either end may stay open. <code>type: 'datetime'</code> adds start/end time lists: day and time picks collect in a draft and commit together on OK."
       [chips]="[
         'selectionMode: range',
         'viewsCount',

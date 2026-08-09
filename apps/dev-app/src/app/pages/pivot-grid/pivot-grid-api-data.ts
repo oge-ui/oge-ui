@@ -50,7 +50,7 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
           name: 'customizeCell',
           type: '(cell: OgePivotCellPrepared) =&gt; void',
           description:
-            'Appearance hook: mutate <code>text</code> / <code>cssClass</code> per cell (the DevExtreme <code>cellPrepared</code> equivalent).',
+            'Appearance hook: mutate <code>text</code> / <code>cssClass</code> per cell (the reference <code>cellPrepared</code> equivalent).',
         },
         {
           name: 'stateKey',

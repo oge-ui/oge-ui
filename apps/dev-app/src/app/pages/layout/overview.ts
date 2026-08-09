@@ -276,7 +276,7 @@ class CreatedAt {
     <app-demo-card
       [chips]="['ogeAccordionHeaderActionsTemplate', 'no nested-interactive']"
       heading="Header actions"
-      description="The APG puts the panel title in a <code>&lt;button&gt;</code>, so a second focusable control cannot live inside it — axe flags that as <code>nested-interactive</code>. Header actions are therefore rendered as siblings of the toggle: real buttons, reachable with Tab, skipped by the accordion's arrow navigation."
+      description="The APG puts the panel title in a <code>&amp;lt;button&amp;gt;</code>, so a second focusable control cannot live inside it — axe flags that as <code>nested-interactive</code>. Header actions are therefore rendered as siblings of the toggle: real buttons, reachable with Tab, skipped by the accordion's arrow navigation."
       [code]="actionsSnippet"
       language="ts"
     >
@@ -313,7 +313,7 @@ class CreatedAt {
         'afterExpand',
       ]"
       heading="Panel-level control"
-      description="Each panel owns a two-way <code>[(expanded)]</code> and imperative <code>open()</code>/<code>close()</code>/<code>toggle()</code> — writes go through the same pipeline, so a guard veto reverts the binding. <code>[ogeAccordionActionRow]</code> is the footer action bar (Material's <code>mat-action-row</code>), and <code>afterExpand</code>/<code>afterCollapse</code> fire once the height animation settles. Collapsing a panel that holds focus hands focus back to its header."
+      description="Each panel owns a two-way <code>[(expanded)]</code> and imperative <code>open()</code>/<code>close()</code>/<code>toggle()</code> — writes go through the same pipeline, so a guard veto reverts the binding. <code>[ogeAccordionActionRow]</code> is the footer action bar (the references' action-row slot), and <code>afterExpand</code>/<code>afterCollapse</code> fire once the height animation settles. Collapsing a panel that holds focus hands focus back to its header."
       [code]="panelSnippet"
       language="ts"
     >

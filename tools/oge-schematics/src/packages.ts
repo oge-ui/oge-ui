@@ -82,11 +82,37 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       need: 'accordion / expansion panels',
       use: '`<oge-accordion>` with `<oge-accordion-item title="…">` children',
     },
+    {
+      need: 'resizable split panes / sidebar layout',
+      use: '`<oge-splitter [(sizes)]>` with `<oge-splitter-pane>` children; sizes are ratios, `"240px"` pins a pane',
+    },
+  ],
+  '@oge-ui/forms': [
+    {
+      need: 'form layout / field groups',
+      use: '`<oge-form [(formData)]="model">` with `<oge-form-item field="…">` children, or a data-driven `[items]` array',
+    },
+    {
+      need: 'form validation',
+      use: '`[validationRules]` on an item (rules compile to Signal Forms), or bind `[fieldTree]` to an Angular Signal Forms `form()`',
+    },
+    {
+      need: 'validation summary',
+      use: '`<oge-validation-summary [errors]="form.errors()" />`, or `[showValidationSummary]` on the form',
+    },
   ],
   '@oge-ui/navigation': [
     {
       need: 'tree view / navigation tree',
       use: '`<oge-tree-view [items]="nodes">`',
+    },
+    {
+      need: 'wizard / multi-step flow',
+      use: '`<oge-stepper [(activeIndex)]="i" [linear]="true">` with `<oge-step label="…">` children; inside a form use `<oge-form-steps>`',
+    },
+    {
+      need: 'side panel / sidenav / off-canvas menu',
+      use: '`<oge-drawer [(opened)]="open" mode="overlay|push|side">` — the panel goes in the `[ogeDrawerPanel]` slot, everything else projected is the content; modality follows `mode`',
     },
   ],
 };
@@ -102,6 +128,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/tabs',
   '@oge-ui/layout',
   '@oge-ui/navigation',
+  '@oge-ui/forms',
 ];
 
 /** The umbrella package re-exports every MIT family from one import path. */
@@ -117,4 +144,5 @@ export const UMBRELLA_FAMILIES: readonly string[] = [
   '@oge-ui/tabs',
   '@oge-ui/layout',
   '@oge-ui/navigation',
+  '@oge-ui/forms',
 ];

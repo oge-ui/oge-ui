@@ -86,7 +86,7 @@ class CreatedAt {
     <app-demo-card
       [chips]="['two-way selection', 'cancelable selectionChanging']"
       heading="Declarative tabs"
-      description="Projected <code>&lt;oge-tab&gt;</code> children carry their content. <code>selectedIndex</code> is a two-way model; a user gesture first fires the cancelable <code>selectionChanging</code>, then <code>selectionChanged</code>. Disabled tabs are skipped by clicks and arrow keys."
+      description="Projected <code>&amp;lt;oge-tab&amp;gt;</code> children carry their content. <code>selectedIndex</code> is a two-way model; a user gesture first fires the cancelable <code>selectionChanging</code>, then <code>selectionChanged</code>. Disabled tabs are skipped by clicks and arrow keys."
       [code]="basicSnippet"
       language="ts"
     >
@@ -229,7 +229,7 @@ class CreatedAt {
     <app-demo-card
       [chips]="['tabAlignment', 'indicatorFit', 'empty state']"
       heading="Alignment, indicator & empty state"
-      description="<code>tabAlignment</code> distributes the tabs while they fit — <code>justify</code> spreads them to the edges, <code>stretch</code> gives each an equal share (Material's <code>stretchTabs</code>, Kendo's <code>tabAlignment</code>). <code>indicatorFit='content'</code> shrinks the selected-tab underline to the label (Material's <code>fitInkBarToContent</code>). With no visible tabs the strip renders <code>messages.noData</code>."
+      description="<code>tabAlignment</code> distributes the tabs while they fit — <code>justify</code> spreads them to the edges, <code>stretch</code> gives each an equal share (the reference <code>stretchTabs</code> / <code>tabAlignment</code> options). <code>indicatorFit='content'</code> shrinks the selected-tab underline to the label (the reference <code>fitInkBarToContent</code>). With no visible tabs the strip renders <code>messages.noData</code>."
       [code]="alignmentSnippet"
       language="ts"
     >

@@ -67,13 +67,23 @@ const docs = new Map();
 for (const pkg of PACKAGES) {
   // A package can land in the manifest before its docs page exists (a family
   // still being built). Warn and carry on rather than blocking the whole set.
-  const hasApiPage = pkg.apiPage && existsSync(abs(pkg.apiPage));
-  if (pkg.apiPage && !hasApiPage) {
-    console.warn(
-      `! ${pkg.npm}: API page ${pkg.apiPage} does not exist yet — no API reference in its llms.txt`,
-    );
+  // A package with more than one family (layout: accordion + splitter) lists
+  // one API page per family, in the order they should appear.
+  const apiPages = pkg.apiPage
+    ? Array.isArray(pkg.apiPage)
+      ? pkg.apiPage
+      : [pkg.apiPage]
+    : [];
+  const blocks = [];
+  for (const apiPage of apiPages) {
+    if (!existsSync(abs(apiPage))) {
+      console.warn(
+        `! ${pkg.npm}: API page ${apiPage} does not exist yet — no API reference in its llms.txt`,
+      );
+      continue;
+    }
+    blocks.push(...(await readApiBlocks(abs(apiPage))));
   }
-  const blocks = hasApiPage ? await readApiBlocks(abs(pkg.apiPage)) : [];
   const entries = (entryPoints.get(pkg.dir) ?? []).map((entry) => ({
     ...entry,
     exports: readEntryExports(entry.entryFile),

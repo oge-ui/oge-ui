@@ -17,7 +17,7 @@ interaction guards no other button ships out of the box.
 - **Hold-to-confirm** — `holdToConfirm` arms destructive actions behind an
   uninterrupted press with a CSS-only progress bar; Escape and pointer-cancel
   abort, Space/Enter holds work for keyboard users.
-- **Auto-repeat** — `autoRepeat` re-fires while held (stepper/counter buttons)
+- **Auto-repeat** — `autoRepeat` re-fires while held (spinner/counter buttons)
   with configurable delay and interval.
 - **Badge** — number/string pills (capped at `99+`, part of the accessible
   name) or a plain dot.

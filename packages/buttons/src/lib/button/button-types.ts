@@ -55,7 +55,7 @@ export interface OgeHoldToConfirmOptions {
 }
 
 /**
- * Repeats `click` while the button is held (stepper use case). The `true`
+ * Repeats `click` while the button is held (spinner use case). The `true`
  * shorthand uses `config.autoRepeatDelayMs` / `config.autoRepeatIntervalMs`.
  */
 export interface OgeAutoRepeatOptions {

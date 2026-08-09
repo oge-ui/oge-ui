@@ -26,7 +26,7 @@ export interface ApiGroup {
   entries: readonly ApiEntry[];
 }
 
-/** The four DevExtreme-style API reference sections. */
+/** The four API reference sections. */
 export interface ApiSections {
   properties?: readonly ApiGroup[];
   methods?: readonly ApiGroup[];
@@ -50,7 +50,7 @@ const SECTION_ORDER = [
 ] as const;
 
 /**
- * DevExtreme-style API reference block: Properties / Methods / Events / Types
+ * API reference block: Properties / Methods / Events / Types
  * tables for one component, with a name filter box. Section anchors reuse the
  * demo-card slugifier, so headings can be linked from `app-page-toc`
  * (`#<title>-properties`, `#<title>-methods`, …).

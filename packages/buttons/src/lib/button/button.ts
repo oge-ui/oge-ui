@@ -210,7 +210,7 @@ export class OgeButton {
    */
   readonly holdToConfirm = input<boolean | OgeHoldToConfirmOptions>(false);
   /**
-   * Repeats `click` while the button is held (stepper/counter buttons).
+   * Repeats `click` while the button is held (spinner/counter buttons).
    * Ignored when `holdToConfirm` is also set. `true` = config delay/interval.
    */
   readonly autoRepeat = input<boolean | OgeAutoRepeatOptions>(false);

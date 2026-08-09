@@ -37,7 +37,7 @@ const SECTIONS = [
         promise-aware <code>action</code> with automatic loading and
         single-flight protection, <code>clickGuard</code> throttle/debounce,
         <code>holdToConfirm</code> for destructive actions and
-        <code>autoRepeat</code> for stepper buttons. All of them funnel into the
+        <code>autoRepeat</code> for spinner buttons. All of them funnel into the
         <code>(clicked)</code> output.
       </p>
     </app-doc-header>
@@ -118,9 +118,9 @@ const SECTIONS = [
     </app-demo-card>
 
     <app-demo-card
-      [chips]="['autoRepeat', 'delay + interval', 'stepper pattern']"
+      [chips]="['autoRepeat', 'delay + interval', 'spinner pattern']"
       heading="Auto-repeat"
-      description="For stepper and counter buttons: holding the button re-fires <code>clicked</code> — once immediately, then repeatedly after <code>delayMs</code> at <code>intervalMs</code>. Repeating stops on release, on pointer-cancel, or the moment the button becomes disabled. Mutually exclusive with <code>holdToConfirm</code> (hold wins)."
+      description="For spinner and counter buttons: holding the button re-fires <code>clicked</code> — once immediately, then repeatedly after <code>delayMs</code> at <code>intervalMs</code>. Repeating stops on release, on pointer-cancel, or the moment the button becomes disabled. Mutually exclusive with <code>holdToConfirm</code> (hold wins)."
       [code]="repeatSnippet"
       language="ts"
     >

@@ -319,6 +319,35 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/forms',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/forms/overview').then((m) => m.FormsOverviewPage),
+        title: 'OGE — Form',
+      },
+      {
+        path: 'layout',
+        loadComponent: () =>
+          import('./pages/forms/layout').then((m) => m.FormsLayoutPage),
+        title: 'OGE — Form Layout',
+      },
+      {
+        path: 'validation',
+        loadComponent: () =>
+          import('./pages/forms/validation').then((m) => m.FormsValidationPage),
+        title: 'OGE — Form Validation',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/forms/api').then((m) => m.FormsApiPage),
+        title: 'OGE — Forms API',
+      },
+    ],
+  },
+  {
     path: 'components/accordion',
     children: [
       {
@@ -332,6 +361,70 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/layout/api').then((m) => m.LayoutApiPage),
         title: 'OGE — Accordion API',
+      },
+    ],
+  },
+  {
+    path: 'components/splitter',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/splitter').then((m) => m.LayoutSplitterPage),
+        title: 'OGE — Splitter',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/splitter-api').then(
+            (m) => m.LayoutSplitterApiPage,
+          ),
+        title: 'OGE — Splitter API',
+      },
+    ],
+  },
+  {
+    path: 'components/toolbar',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/toolbar').then((m) => m.LayoutToolbarPage),
+        title: 'OGE — Toolbar',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/toolbar-api').then(
+            (m) => m.LayoutToolbarApiPage,
+          ),
+        title: 'OGE — Toolbar API',
+      },
+    ],
+  },
+  {
+    path: 'components/stepper',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/navigation/stepper').then(
+            (m) => m.NavigationStepperPage,
+          ),
+        title: 'OGE — Stepper',
+      },
+    ],
+  },
+  {
+    path: 'components/drawer',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/navigation/drawer').then(
+            (m) => m.NavigationDrawerPage,
+          ),
+        title: 'OGE — Drawer',
       },
     ],
   },

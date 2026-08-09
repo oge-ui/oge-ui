@@ -16,6 +16,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [
         "grid:build",
+        "forms:build",
         "tree-list:build",
         "pivot:build",
         "inputs:build",

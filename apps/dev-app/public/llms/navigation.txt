@@ -1,6 +1,6 @@
 # @oge-ui/navigation
 
-> Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting.
+> Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, plus a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row).
 
 Part of OGE UI v0.7.0.
 Docs and live demos: https://ogeui.com/components/tree-view
@@ -85,8 +85,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/navigation`
 
-- values: `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_TREE_VIEW_CONFIG`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeTreeViewConfig`
-- types: `CheckState`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
+- values: `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeDrawer`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeDrawerConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
+- types: `CheckState`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
 
 ## API reference
 
@@ -253,9 +253,446 @@ _Behavioural defaults_
 | `provideOgeTreeViewConfig(config)` | `(config: OgeTreeViewConfigInput) => Provider` | Application- or component-scoped defaults; shallow-merges `messages` over the built-ins. |
 | `OGE_TREE_VIEW_CONFIG` | `InjectionToken<OgeTreeViewConfig>` | The token itself, with a factory default — inject it to read the effective config. |
 
+### OgeDrawer — `<oge-drawer>`
+
+#### Properties
+
+_Layout_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `opened` | `boolean (two-way)` | `false` | Whether the drawer is open. Two-way, so `[(opened)]` is the whole state. |
+| `mode` | `'overlay' \| 'push' \| 'side'` | `'overlay'` | `overlay` floats over the content, `push` shifts it aside without resizing it, `side` shrinks it so both share the row. **This also decides modality** — see the accessibility group. |
+| `position` | `'start' \| 'end' \| 'top' \| 'bottom'` | `'start'` | Edge the panel is attached to. Logical, so `start`/`end` mirror in RTL with no flag to set. |
+| `size` | `number \| string` | `260` | Size of the open panel along its cross axis. A number means pixels. |
+| `minSize` | `number \| string \| undefined` | `—` | Size of the _closed_ panel — the compact rail that keeps icons visible. Only meaningful for `mode: 'side'`: a rail belongs to the layout, and a modal drawer still partly on screen is not closed. |
+| `compactBelow` | `number \| undefined` | `—` | Below this **container** inline size the drawer downgrades to `'overlay'` and closes. Measured against the drawer's own box, never the window, so a drawer nested in a dialog or a split pane adapts to the room it actually has. |
+| `animationEnabled` | `boolean` | `true` | Enables the open/close transition. |
+| `animationDuration` | `number` | `240` | Duration of that transition in milliseconds. Suppressed entirely under `prefers-reduced-motion`. |
+
+_Dismissal_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `shading` | `boolean` | `true` | Renders the backdrop of a modal drawer. A persistent drawer never shades the content it shares the row with. |
+| `closeOnEscape` | `boolean` | `true` | Escape closes a modal drawer, and only when it is the topmost overlay — a popup opened inside it closes first. A persistent drawer never takes Escape from the page. |
+| `closeOnBackdropClick` | `boolean` | `true` | A click on the backdrop closes the drawer. Only a press that _started_ on the backdrop counts, so a drag ending there does not close it. |
+| `closeGuard` | `(() => boolean \| Promise<boolean>) \| undefined` | `—` | Vetoes a close. Return `false`, throw, or reject to keep the drawer open; a promise reports pending through `closePending` and a second gesture meanwhile is dropped. |
+| `scrollLock` | `boolean` | `true` | Locks body scroll while a modal drawer is open, through the same ref-counted lock every other OGE overlay uses. |
+
+_Accessibility_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `landmark` | `'navigation' \| 'complementary' \| 'region'` | `'navigation'` | Landmark role while persistent. Ignored while modal, which is always `role="dialog"`. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the panel. Falls back to the `drawer` message. |
+| `ariaLabelledBy` | `string \| undefined` | `—` | id of an element naming the panel. Wins over `ariaLabel`, which is then cleared so there is only one name. |
+| `autoFocus` | `'first-tabbable' \| 'panel' \| 'none' \| string` | `'first-tabbable'` | Where focus lands when a _modal_ drawer opens; any other string is a CSS selector, and an `[autofocus]` element always wins. A persistent drawer never moves focus. |
+| `restoreFocus` | `boolean` | `true` | Returns focus to the opener on close, but only when focus would otherwise be orphaned — it never steals a target the user has moved to. |
+| `inertBackground` | `boolean` | `true` | Marks the page behind a modal drawer `inert`, so neither Tab nor assistive tech can reach it. None of the four reference drawers does this. |
+| `drawerId` | `string (readonly)` | `—` | id of the panel element. The panel stays in the DOM while closed, so a trigger's `aria-controls` always resolves to a real element. |
+
+#### Methods
+
+_Methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open()` | `void` | Opens the drawer through the cancelable pre-event. |
+| `close()` | `void` | Closes through the full pipeline (`closing` → `closeGuard`) with reason `'api'`. |
+| `toggle()` | `void` | Opens when closed, closes when open. |
+| `focus()` | `void` | Re-applies the initial-focus resolution. No-op unless the drawer is open and modal. |
+| `closePending` | `Signal<boolean>` | True while an async `closeGuard` is in flight. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `opening` | `OgeDrawerOpeningEvent` | Cancelable — set `cancel` to keep the drawer closed; the two-way model is reset for you. |
+| `afterOpened` | `void` | The drawer finished opening. Fires on a render hook rather than `transitionend`, because the transition is CSS-only and `prefers-reduced-motion` zeroes it. |
+| `closing` | `OgeDrawerClosingEvent` | Cancelable, carries the `reason`. Runs before `closeGuard`. |
+| `closed` | `OgeDrawerClosedEvent` | The drawer finished closing. |
+| `modeChanged` | `OgeDrawerModeChangedEvent` | The resolved layout mode changed, carrying the requested mode and whether `compactBelow` forced it. |
+
+#### Types
+
+_Content slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `[ogeDrawerPanel]` | `attribute` | Marks the element that becomes the drawer panel. Everything else projected into `` is the content. |
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDrawerMode` | `'overlay' \| 'push' \| 'side'` | Layout mode, and therefore modality. |
+| `OgeDrawerPosition` | `'start' \| 'end' \| 'top' \| 'bottom'` | Edge the panel attaches to; logical for RTL. |
+| `OgeDrawerLandmark` | `'navigation' \| 'complementary' \| 'region'` | Landmark role of a persistent drawer. |
+| `OgeDrawerAutoFocus` | `'first-tabbable' \| 'panel' \| 'none' \| string` | Initial-focus strategy of a modal drawer. |
+| `OgeDrawerCloseReason` | `'api' \| 'escape' \| 'backdrop' \| 'outside' \| 'compact'` | Why the drawer closed. |
+| `OgeDrawerOpeningEvent` | `{ cancel: boolean }` | Cancelable pre-event for opening. |
+| `OgeDrawerClosingEvent` | `{ cancel: boolean; reason: OgeDrawerCloseReason }` | Cancelable pre-event for closing. |
+| `OgeDrawerClosedEvent` | `{ reason: OgeDrawerCloseReason }` | Payload of `closed`. |
+| `OgeDrawerModeChangedEvent` | `{ mode; requestedMode; compact: boolean }` | Payload of `modeChanged`. |
+| `resolveDrawerMode()` | `(request: OgeDrawerModeRequest) => OgeDrawerModeResult` | The pure function in `@oge-ui/core` that decides whether a drawer keeps its mode or goes compact. DOM-free, so the rule is unit-tested on its own. A non-positive `containerSize` means &ldquo;not measured yet&rdquo; and the requested mode is returned unchanged. |
+
+### Drawer configuration
+
+#### Properties
+
+_provideOgeDrawerConfig()_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `OgeDrawerMode` | `—` | Default for the `mode` input. |
+| `position` | `OgeDrawerPosition` | `—` | Default for the `position` input. |
+| `size` | `number \| string` | `—` | Default for the `size` input. |
+| `messages.drawer` | `string` | `'Drawer'` | Accessible name of the panel when the application supplies none. |
+| `messages.close` | `string` | `'Close drawer'` | Label of a close affordance rendered in the panel. |
+
+### OgeStepper — `<oge-stepper>`
+
+#### Properties
+
+_Steps & selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `activeIndex` | `number (two-way)` | `0` | Index of the active step. |
+| `activeKey` | `string \| undefined (two-way)` | `—` | Key of the active step. Reconciled before the index, so an initial key binding wins over the index default on first run. |
+| `steps` | `readonly OgeStepData[] \| undefined` | `—` | Data-driven steps, merged _after_ any declarative `` children. |
+| `linear` | `boolean` | `false` | Blocks moving past a step that is neither `completed` nor `optional`. The default matches Material and PrimeNG; Kendo is the outlier at `true`. |
+| `disabled` | `boolean` | `false` | Blocks every step change. |
+
+_Layout & chrome_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Main axis of the step list. **The ARIA semantics do not change with it** — see the accessibility group. |
+| `display` | `'full' \| 'label' \| 'indicator'` | `'full'` | How much of each header renders: label plus description, label only, or just the round indicator. |
+| `showNavigation` | `boolean` | `false` | Renders the built-in Back / Next bar, which becomes Finish on the last step. None of the three reference steppers ships one. |
+| `deferRendering` | `boolean` | `false` | Creates a step's body on first activation. |
+| `keepAlive` | `boolean` | `true` | Keeps a body mounted after the user leaves it. |
+
+_Accessibility_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `keyboardNavigation` | `boolean` | `false` | Adds arrow / Home / End over the headers. Off by default because the headers are buttons in a list, not tabs, so they are already Tab-reachable. It moves focus only, and deliberately does **not** wrap. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the step list. Falls back to the `stepper` message. |
+| `stepperId` | `string (readonly)` | `—` | id prefix of the generated header / panel pairs. |
+| `changePending` | `Signal<boolean>` | `—` | True while an async `stepGuard` is in flight. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `next(event?: Event)` | `void` | Advances one step, or confirms the finish when already on the last one. The guard runs either way, so a final step can still veto. |
+| `previous(event?: Event)` | `void` | Goes back one step, through the same pipeline. |
+| `goTo(target: number \| string, event?: Event)` | `void` | Moves to a step by index or key. |
+| `reset()` | `void` | Clears the rendered-body cache and returns to the first step. |
+| `focus()` | `void` | Focuses the active step's header. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `stepChanging` | `OgeStepChangingEvent` | Cancelable, emitted before the leaving step&rsquo;s `stepGuard` runs. |
+| `stepChanged` | `OgeStepChangedEvent` | The active step changed. |
+| `stepBlocked` | `OgeStepBlockedEvent` | A move was refused, carrying `reason: 'linear' \| 'editable' \| 'guard' \| 'disabled'`. Angular Material refuses silently. |
+| `finished` | `OgeStepperFinishEvent` | `next()` was confirmed on the last step. |
+
+#### Types
+
+_OgeStep (declarative child)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `key / label / description` | `string` | Identity and header text. |
+| `icon / iconClass` | `string \| undefined` | SVG path data, or class(es) for an icon font — replacing the step number. |
+| `completed / optional / editable` | `boolean` | The linear gate: `completed` lets a linear stepper past, `optional` lets it past regardless, and `editable: false` blocks coming _back_. |
+| `errorMessage` | `string \| undefined` | Shown under the label while `invalid`, replacing `description` so two sub-lines never compete. Angular Material has this; Kendo and PrimeNG do not. |
+| `invalid / disabled / visible` | `boolean` | Error state, non-activatable, and removal from the list. |
+| `stepGuard` | `() => boolean \| Promise<boolean>` | Veto hook run when leaving this step. A throw and a rejection both veto. |
+
+_Types & directives_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeStepState` | `'number' \| 'active' \| 'done' \| 'error'` | Derived indicator state; error outranks done, so a completed step that later fails still reads as needing attention. |
+| `OgeStepperOrientation` | `'horizontal' \| 'vertical'` | Main axis; the ARIA model is the same for both. |
+| `OgeStepperDisplay` | `'full' \| 'label' \| 'indicator'` | How much of a header renders. |
+| `OgeStepData` | `{ key?; label?; description?; icon?; iconClass?; disabled?; visible?; completed?; optional?; editable?; invalid?; cssClass?; stepGuard? }` | One data-driven step. |
+| `OgeStepGuard` | `() => boolean \| Promise<boolean>` | Core's `OgeAsyncGuard`, the same veto contract the tabs' close guard and the accordion's expand guard use. |
+| `[ogeStepperNext] / [ogeStepperPrevious]` | `directive` | Turn any button into a navigation control. They find the stepper by DI when written inside it, or take one explicitly (`ogeStepperNext [ogeStepperTarget]="wizard"`) from outside — which Material&rsquo;s equivalents cannot do. |
+| `[ogeStepHeaderTemplate] / [ogeStepIndicatorTemplate] / [ogeStepContentTemplate]` | `directive` | Replace the label block, the round indicator, or supply lazy body content. |
+| `<oge-form-steps>` | `directive (@oge-ui/forms)` | Wraps this component inside ``. Step completion comes from the form's own per-step error rollup, so it behaves identically in all three binding modes, and leaving a step touches only that step's fields. |
+
+### Stepper configuration
+
+#### Properties
+
+_provideOgeStepperConfig()_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation / display / linear` | `defaults` | `—` | Defaults for the matching inputs. |
+| `messages.stepper` | `string` | `'Steps'` | Accessible name of the step list. |
+| `messages.optional` | `string` | `'Optional'` | Sub-label of an optional step, wired through `aria-describedby`. |
+| `messages.completed / messages.invalid` | `string` | `'Completed' / 'Has errors'` | Announced in visually hidden text, because the indicator glyph is `aria-hidden`. |
+| `messages.previous / next / finish` | `string` | `'Back' / 'Next' / 'Finish'` | Labels of the built-in navigation bar. |
+
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### App shell
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer, OgeTreeView } from '@oge-ui/navigation';
+import { OgeToolbar, OgeToolbarItem, OgeSplitter, OgeSplitterPane } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer, OgeTreeView, OgeToolbar, OgeToolbarItem, OgeSplitter, OgeSplitterPane],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The whole app shell out of three OGE containers: a toolbar on
+         top, a drawer down the side holding the tree view that ships in the same
+         package, and a splitter dividing the workspace.
+
+         compactBelow makes the shell responsive to its own width, so the same
+         markup works full-page and inside a preview card. -->
+    <oge-toolbar ariaLabel="Application">
+      <oge-toolbar-item text="Menu" (itemClick)="menuOpen.set(!menuOpen())" />
+      <oge-toolbar-item text="Save" severity="accent" [overflowPriority]="10" />
+      <oge-toolbar-item text="Help" location="after" [overflowPriority]="-1" />
+    </oge-toolbar>
+
+    <oge-drawer
+      [(opened)]="menuOpen"
+      mode="side"
+      [size]="220"
+      [compactBelow]="720"
+      ariaLabel="Sections"
+    >
+      <oge-tree-view ogeDrawerPanel [items]="nav" />
+
+      <oge-splitter [(sizes)]="sizes">
+        <oge-splitter-pane key="list">Rows…</oge-splitter-pane>
+        <oge-splitter-pane key="detail">Details…</oge-splitter-pane>
+      </oge-splitter>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly menuOpen = signal(true);
+  protected readonly sizes = signal<readonly number[]>([60, 40]);
+  protected readonly nav = [
+    { id: 1, parentId: null, text: 'Reports' },
+    { id: 2, parentId: 1, text: 'Monthly' },
+    { id: 3, parentId: null, text: 'Settings' },
+  ];
+}
+```
+
+### Compact
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer } from '@oge-ui/navigation';
+import type { OgeDrawerModeChangedEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- compactBelow measures the drawer's OWN container, never the
+         window, so a drawer nested in a dialog or a split pane adapts to the room
+         it actually has. Below the threshold it downgrades to an overlay and
+         closes, rather than leaving a backdrop the user never asked for. -->
+    <oge-drawer
+      [(opened)]="opened"
+      mode="side"
+      [compactBelow]="720"
+      (modeChanged)="onMode($event)"
+    >
+      <div ogeDrawerPanel>Navigation</div>
+      <main>Content</main>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(true);
+
+  protected onMode(event: OgeDrawerModeChangedEvent): void {
+    console.log(event.mode, 'compact:', event.compact);
+  }
+}
+```
+
+### Config
+
+```ts
+import { provideOgeDrawerConfig } from '@oge-ui/navigation';
+
+bootstrapApplication(App, {
+  providers: [
+    provideOgeDrawerConfig({
+      mode: 'side',
+      size: 280,
+      messages: { drawer: 'Gezinme', close: 'Kapat' },
+    }),
+  ],
+});
+```
+
+### Guard
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- closeGuard follows the overlay package's veto semantics:
+         false, a throw and a rejection all mean "stay open", a promise reports
+         pending through closePending, and a second gesture meanwhile is dropped. -->
+    <oge-drawer [(opened)]="opened" [closeGuard]="confirmDiscard">
+      <form ogeDrawerPanel>Unsaved edits…</form>
+      <main>Content</main>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(true);
+  protected readonly dirty = signal(true);
+
+  protected readonly confirmDiscard = (): boolean =>
+    !this.dirty() || confirm('Discard your changes?');
+}
+```
+
+### Modal
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Modality is DERIVED from mode, never configured. overlay and
+         push cover or displace the content, so they are dialogs: role="dialog",
+         aria-modal, a focus trap, Escape and inert on the background. side is
+         part of the layout, so it is a landmark with none of those.
+
+         An independent "modal" flag is exactly what lets a panel claim
+         role="complementary" and aria-modal="true" at the same time. -->
+    <button type="button" [attr.aria-expanded]="opened()" (click)="opened.set(true)">
+      Menu
+    </button>
+
+    <oge-drawer [(opened)]="opened" mode="overlay" ariaLabel="Main menu">
+      <div ogeDrawerPanel>
+        <a href="#reports">Reports</a>
+      </div>
+      <main>Content</main>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(false);
+}
+```
+
+### Modes
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer } from '@oge-ui/navigation';
+import type { OgeDrawerMode } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One component, not the container/drawer/content trio the
+         reference libraries need. The panel is the [ogeDrawerPanel] slot;
+         everything else projected is the content. -->
+    <oge-drawer [(opened)]="opened" [mode]="mode()" [size]="240">
+      <div ogeDrawerPanel>Navigation…</div>
+      <main>Content that overlay covers, push shifts and side shrinks.</main>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(true);
+  protected readonly mode = signal<OgeDrawerMode>('side');
+}
+```
+
+### Position
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer } from '@oge-ui/navigation';
+import type { OgeDrawerPosition } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- start/end are logical: they mirror in RTL on their own,
+         because there is no rtlEnabled flag anywhere in this suite. -->
+    <oge-drawer [(opened)]="opened" mode="overlay" [position]="position()">
+      <div ogeDrawerPanel>Panel</div>
+      <main>Content</main>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(false);
+  protected readonly position = signal<OgeDrawerPosition>('start');
+}
+```
+
+### Rail
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeDrawer } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeDrawer],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- minSize is the closed size: the compact rail that keeps icons
+         visible. It only applies to mode="side", because a rail belongs to the
+         layout and a modal drawer still partly on screen is not closed. -->
+    <oge-drawer [(opened)]="opened" mode="side" [size]="240" [minSize]="56">
+      <div ogeDrawerPanel>Icons, then labels once open</div>
+      <main>Content</main>
+    </oge-drawer>
+  `,
+})
+export class Demo {
+  protected readonly opened = signal(false);
+}
+```
 
 ### Check
 
@@ -576,6 +1013,232 @@ export class Demo {
     { length: 10000 },
     (_, i) => ({ id: i + 1, parentId: null, name: `Item ${i + 1}` }),
   );
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeStepper, OgeStep } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeStepper, OgeStep],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Steps come from projected children, from a [steps] array, or
+         both (children first). The built-in Back / Next bar is opt-in — none of
+         the reference steppers ships one at all. -->
+    <oge-stepper [(activeIndex)]="step" [showNavigation]="true">
+      <oge-step label="Account" description="Who you are">Account fields…</oge-step>
+      <oge-step label="Shipping" [optional]="true">Shipping fields…</oge-step>
+      <oge-step label="Review">Confirm and submit…</oge-step>
+    </oge-stepper>
+  `,
+})
+export class Demo {
+  protected readonly step = signal(0);
+}
+```
+
+### Config
+
+```ts
+import { provideOgeStepperConfig } from '@oge-ui/navigation';
+
+bootstrapApplication(App, {
+  providers: [
+    provideOgeStepperConfig({
+      linear: true,
+      messages: { next: 'İleri', previous: 'Geri', finish: 'Bitir' },
+    }),
+  ],
+});
+```
+
+### Form
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem, OgeFormGroup, OgeFormSteps } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem, OgeFormGroup, OgeFormSteps],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- <oge-form-steps> wraps the stepper the way <oge-form-tabs>
+         wraps the tabs. Step completion comes from the form's own per-step error
+         rollup, so it works identically with [fieldTree], [formGroup] and
+         [(formData)] — and leaving a step touches only THAT step's fields, so the
+         steps ahead stay quiet instead of turning red. -->
+    <oge-form [(formData)]="order">
+      <oge-form-steps [linear]="true">
+        <oge-form-group caption="Account">
+          <oge-form-item field="email" label="E-mail" [isRequired]="true" />
+        </oge-form-group>
+        <oge-form-group caption="Payment">
+          <oge-form-item field="card" label="Card" [isRequired]="true" />
+        </oge-form-group>
+      </oge-form-steps>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly order = signal({ email: '', card: '' });
+}
+```
+
+### Guard
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeStepper, OgeStep } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeStepper, OgeStep],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- stepGuard runs when the user LEAVES a step, inside the same
+         pipeline the headers use. false, a throw and a rejection all veto; a
+         promise reports changePending and a second gesture meanwhile is dropped.
+         It gates the finish on the last step too. -->
+    <oge-stepper [(activeIndex)]="step" [showNavigation]="true">
+      <oge-step label="Details" [stepGuard]="confirmLeave">Details…</oge-step>
+      <oge-step label="Done">Done…</oge-step>
+    </oge-stepper>
+  `,
+})
+export class Demo {
+  protected readonly step = signal(0);
+  protected readonly dirty = signal(true);
+
+  protected readonly confirmLeave = (): boolean =>
+    !this.dirty() || confirm('Discard your changes?');
+}
+```
+
+### Linear
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeStepper, OgeStep } from '@oge-ui/navigation';
+import type { OgeStepBlockedEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeStepper, OgeStep],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- linear blocks moving past a step that is neither completed
+         nor optional, and editable:false blocks coming back. Every refusal says
+         WHY — Angular Material refuses silently and tells you to add your own
+         live region. -->
+    <oge-stepper
+      [(activeIndex)]="step"
+      [linear]="true"
+      [showNavigation]="true"
+      (stepBlocked)="onBlocked($event)"
+    >
+      <oge-step label="Account" [completed]="accountDone()" [editable]="false" />
+      <oge-step label="Payment" [completed]="paymentDone()" />
+      <oge-step label="Review" />
+    </oge-stepper>
+  `,
+})
+export class Demo {
+  protected readonly step = signal(0);
+  protected readonly accountDone = signal(false);
+  protected readonly paymentDone = signal(false);
+
+  protected onBlocked(event: OgeStepBlockedEvent): void {
+    console.log('refused because', event.reason);
+  }
+}
+```
+
+### Nav
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeStepper, OgeStep, OgeStepperNext, OgeStepperPrevious } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeStepper, OgeStep, OgeStepperNext, OgeStepperPrevious],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The directives route through the same pipeline the headers
+         use, so linear and stepGuard still apply. They work inside the stepper by
+         DI, or bound to it from outside — which Material's cannot do. -->
+    <oge-stepper #wizard [(activeIndex)]="step">
+      <oge-step label="One">
+        First body…
+        <button type="button" ogeStepperNext>Continue</button>
+      </oge-step>
+      <oge-step label="Two">Second body…</oge-step>
+    </oge-stepper>
+
+    <button type="button" ogeStepperPrevious [ogeStepperTarget]="wizard">Back</button>
+  `,
+})
+export class Demo {
+  protected readonly step = signal(0);
+}
+```
+
+### State
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeStepper, OgeStep } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeStepper, OgeStep],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The indicator state is derived: error outranks done, so a
+         completed step that later fails still reads as needing attention. The
+         glyph is aria-hidden, so the state is also announced in text. -->
+    <oge-stepper [activeIndex]="0" display="full">
+      <oge-step label="Active" description="the current step" />
+      <oge-step label="Done" [completed]="true" />
+      <oge-step label="Error" [completed]="true" [invalid]="true" />
+      <oge-step label="Upcoming" />
+    </oge-stepper>
+  `,
+})
+export class Demo {}
+```
+
+### Vertical
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeStepper, OgeStep } from '@oge-ui/navigation';
+import type { OgeStepperOrientation } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeStepper, OgeStep],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The ARIA semantics do NOT change with the orientation: it is
+         an ordered list of buttons with aria-current="step" either way. Angular
+         Material swaps to role="tablist" when horizontal, so the same widget
+         reads as two different things to a screen reader. -->
+    <oge-stepper [orientation]="orientation()" [(activeIndex)]="step">
+      <oge-step label="One">First body…</oge-step>
+      <oge-step label="Two">Second body…</oge-step>
+    </oge-stepper>
+  `,
+})
+export class Demo {
+  protected readonly step = signal(0);
+  protected readonly orientation = signal<OgeStepperOrientation>('vertical');
 }
 ```
 

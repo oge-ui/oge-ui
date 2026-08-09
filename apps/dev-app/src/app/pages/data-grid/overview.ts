@@ -4,7 +4,7 @@ import {
   OgeCellTemplate,
   OgeColumn,
   OgeGrid,
-  OgeToolbarItem,
+  OgeGridToolbarItem,
 } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -17,7 +17,7 @@ import { QUICK_START_SNIPPET } from './overview-snippets';
     OgeGrid,
     OgeColumn,
     OgeCellTemplate,
-    OgeToolbarItem,
+    OgeGridToolbarItem,
     DemoCard,
     DocHeader,
     RouterLink,
@@ -74,7 +74,7 @@ import { QUICK_START_SNIPPET } from './overview-snippets';
         <button
           ogeToolbar
           type="button"
-          class="oge-toolbar-btn oge-toolbar-text-btn"
+          class="oge-tool-btn oge-tool-text-btn"
           (click)="grid()?.exportCsv('employees.csv')"
         >
           <svg
@@ -100,7 +100,7 @@ import { QUICK_START_SNIPPET } from './overview-snippets';
         <button
           ogeToolbar
           type="button"
-          class="oge-toolbar-btn oge-toolbar-text-btn"
+          class="oge-tool-btn oge-tool-text-btn"
           (click)="exportExcel()"
         >
           <svg
@@ -124,7 +124,7 @@ import { QUICK_START_SNIPPET } from './overview-snippets';
         <button
           ogeToolbar
           type="button"
-          class="oge-toolbar-btn oge-toolbar-text-btn"
+          class="oge-tool-btn oge-tool-text-btn"
           (click)="exportPdf()"
         >
           <svg

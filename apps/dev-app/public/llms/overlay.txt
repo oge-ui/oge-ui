@@ -85,7 +85,7 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/overlay`
 
-- values: `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `provideOgeOverlayConfig`, `resolvePopupPosition`
+- values: `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
 - types: `OgeAnchoredPanelOptions`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopupAlign`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`
 
 ## API reference
@@ -294,7 +294,7 @@ _OgeToastRef_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; severity?; separator?; action?: () => void }` | Canonical menu item of the suite. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field. |
+| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void }` | Canonical menu item of the suite. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. |
 | `OgeMenuItemSeverity` | `'normal' \| 'danger'` | Destructive items render with the danger token. |
 | `OgeMenuListItemClickEvent` | `{ item: OgeMenuItem; index: number; event: MouseEvent \| KeyboardEvent }` | Index within the `items` input (separators included). |
 | `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. |
@@ -414,6 +414,32 @@ _OgeOverlayConfig_
 | `viewportPadding` | `number` | `8` | Minimum distance kept from viewport edges when clamping. |
 | `typeAheadMs` | `number` | `500` | Idle time after which the menu type-ahead buffer resets. |
 | `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons: `modalClose`, `modalMaximize`, `modalRestore`. |
+
+### Overlay primitives
+
+#### Methods
+
+_Escape stack_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pushOverlay(surface: object): void` | `void` | Registers a surface as the new topmost overlay. No-op if it is already in the stack. |
+| `removeOverlay(surface: object): void` | `void` | Removes a surface from the stack; tolerates surfaces that were never pushed. |
+| `isTopOverlay(surface: object): boolean` | `boolean` | True only for the topmost surface. Gate your Escape handler on this and a popup opened inside a modal or a drawer closes before its host does. |
+
+_Focus trap_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getTabbableElements(root: HTMLElement): HTMLElement[]` | `HTMLElement[]` | Tabbable descendants in DOM order. Recomputed per call rather than cached behind sentinel elements, so content added or removed after open is always accounted for. |
+| `trapTabKey(event, root, fallback): void` | `void` | Wraps Tab and Shift+Tab inside `root`. With no tabbable descendants it focuses `fallback`, so focus can never escape a modal surface. |
+
+_Scroll lock_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `lockBodyScroll(): void` | `void` | Locks body scroll and compensates for the scrollbar width. Ref-counted, so nested surfaces cannot unlock each other. |
+| `unlockBodyScroll(): void` | `void` | Releases one reference; the last release restores the inline styles exactly as they were. |
 
 ## Demos
 

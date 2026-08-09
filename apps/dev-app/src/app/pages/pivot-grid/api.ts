@@ -52,7 +52,7 @@ const SECTIONS = ['OgePivotGrid', 'OgePivotField'] as const;
         <code>getFieldLayout()</code>.
       </li>
       <li>
-        The DevExtreme <code>cellPrepared</code> callback maps to the
+        The reference <code>cellPrepared</code> callback maps to the
         <code>customizeCell</code> input; chart binding awaits a charting
         package (see ROADMAP).
       </li>

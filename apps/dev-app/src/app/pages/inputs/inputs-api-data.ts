@@ -233,7 +233,7 @@ const COMMON_EVENTS: ApiGroup = {
       name: 'valueCommitted',
       type: 'OgeInputValueCommittedEvent&lt;T&gt;',
       description:
-        'Every committed change with <code>previousValue</code> + originating DOM event (<code>undefined</code> for programmatic writes) — the DevExtreme <code>onValueChanged</code> shape.',
+        'Every committed change with <code>previousValue</code> + originating DOM event (<code>undefined</code> for programmatic writes) — the reference <code>onValueChanged</code> shape.',
     },
     {
       name: 'inputChange',
@@ -608,6 +608,18 @@ export const OGE_INPUTS_TYPES_API: ApiSections = {
           type: 'directive — [ogeInputSuffix]',
           description:
             'Trailing adornment; renders after the built-in rail buttons.',
+        },
+        {
+          name: 'resolveErrorMessage(sfErrors, cvaErrors, messages)',
+          type: 'string | null',
+          description:
+            'The single message a field displays. Signal Forms errors win over reactive-forms errors, and an explicit <code>message</code> wins over the kind→message map. Exported so a form-level error summary reads exactly like the inline text.',
+        },
+        {
+          name: 'formatPattern(pattern, values)',
+          type: 'string',
+          description:
+            'Interpolates <code>{token}</code> placeholders in a message — the same contract the grid uses for its message patterns.',
         },
         {
           name: 'OgeInputCounterState',
@@ -1009,7 +1021,7 @@ export const OGE_SELECT_BOX_API: ApiSections = {
           name: 'customItemCreating',
           type: 'OgeSelectBoxCustomItemEvent',
           description:
-            'Mutable payload (DevExtreme-style): assign <code>customItem</code> — an item, a promise of one, or <code>null</code> to reject the text. Left unset, the raw text becomes the item.',
+            'Mutable payload (as in the references): assign <code>customItem</code> — an item, a promise of one, or <code>null</code> to reject the text. Left unset, the raw text becomes the item.',
         },
       ],
     },
@@ -1058,7 +1070,7 @@ export const OGE_CHECK_BOX_API: ApiSections = {
           type: 'boolean',
           default: 'false',
           description:
-            'Lets users cycle into the indeterminate state: <code>null → true → false → null</code> (DevExtreme cycle).',
+            'Lets users cycle into the indeterminate state: <code>null → true → false → null</code> (the reference cycle).',
         },
         {
           name: 'text',
@@ -1568,7 +1580,7 @@ export const OGE_AUTOCOMPLETE_API: ApiSections = {
           type: 'boolean',
           default: 'false',
           description:
-            'Renders the chevron toggle in the field rail (off by default — DevExtreme parity).',
+            'Renders the chevron toggle in the field rail (off by default — reference parity).',
         },
         {
           name: 'openOnFieldClick',

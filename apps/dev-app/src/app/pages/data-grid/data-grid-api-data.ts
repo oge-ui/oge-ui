@@ -643,10 +643,10 @@ export const OGE_COLUMN_API: ApiSections = {
             'Banded header: wraps sibling <code>&lt;oge-column&gt;</code> elements under one shared caption. Re-exported by <code>&#64;oge-ui/tree-list</code>.',
         },
         {
-          name: 'OgeToolbarItem',
+          name: 'OgeGridToolbarItem',
           type: 'directive — [ogeToolbar]',
           description:
-            'Marks projected content as a toolbar item. The toolbar appears as soon as one item exists, alongside the built-in controls.',
+            'Marks projected content as a toolbar item. The toolbar appears as soon as one item exists, alongside the built-in controls. Named <code>OgeGridToolbarItem</code> so it cannot collide with <code>&#64;oge-ui/layout</code>&rsquo;s <code>OgeToolbarItem</code>; the selector is unchanged.',
         },
       ],
     },

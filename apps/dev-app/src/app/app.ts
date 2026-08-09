@@ -283,6 +283,32 @@ export class App {
       ],
     },
     {
+      title: 'Forms',
+      group: COMPONENTS_GROUP,
+      items: [
+        {
+          path: '/components/forms',
+          label: 'Overview',
+          icon: 'text-cursor',
+        },
+        {
+          path: '/components/forms/layout',
+          label: 'Form Layout',
+          icon: 'columns',
+        },
+        {
+          path: '/components/forms/validation',
+          label: 'Validation',
+          icon: 'check-square',
+        },
+        {
+          path: '/components/forms/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Accordion',
       group: COMPONENTS_GROUP,
       items: [
@@ -293,6 +319,62 @@ export class App {
         },
         {
           path: '/components/accordion/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Splitter',
+      group: COMPONENTS_GROUP,
+      items: [
+        {
+          path: '/components/splitter',
+          label: 'Overview',
+          icon: 'splitter',
+        },
+        {
+          path: '/components/splitter/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Toolbar',
+      group: COMPONENTS_GROUP,
+      items: [
+        {
+          path: '/components/toolbar',
+          label: 'Overview',
+          icon: 'toolbar',
+        },
+        {
+          path: '/components/toolbar/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Stepper',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/stepper', label: 'Overview', icon: 'stepper' },
+        {
+          path: '/components/tree-view/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Drawer',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/drawer', label: 'Overview', icon: 'drawer' },
+        {
+          path: '/components/tree-view/api',
           label: 'API Reference',
           icon: 'code',
         },

@@ -133,7 +133,7 @@ const SECTIONS = [
         fixed by that contract.
       </li>
       <li>
-        <code>(valueCommitted)</code> is the DevExtreme
+        <code>(valueCommitted)</code> is the reference
         <code>onValueChanged</code> equivalent; native
         <code>keydown</code>/<code>paste</code>/<code>cut</code> bubble from the
         inner input and can be bound on the host element directly.

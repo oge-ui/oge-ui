@@ -60,7 +60,7 @@ const SECTIONS = ['Anchored panel', 'Menu list'] as const;
     <app-demo-card
       [chips]="['OgeAnchoredPanel', 'oge-popup', 'flip + clamp']"
       heading="Anchored panel"
-      description="An <code>OgeAnchoredPanel</code> pairs an anchor element with a panel element and keeps the panel positioned: preferred placement, main-axis flip when the opposite side has more room, viewport clamping, repositioning on scroll/resize and panel growth. <code>&lt;oge-popup&gt;</code> supplies the fixed-position chrome and stays transparent until the first measure. Outside pointer-down and Escape close it by default."
+      description="An <code>OgeAnchoredPanel</code> pairs an anchor element with a panel element and keeps the panel positioned: preferred placement, main-axis flip when the opposite side has more room, viewport clamping, repositioning on scroll/resize and panel growth. <code>&amp;lt;oge-popup&amp;gt;</code> supplies the fixed-position chrome and stays transparent until the first measure. Outside pointer-down and Escape close it by default."
       [code]="panelSnippet"
       language="ts"
     >
@@ -103,7 +103,7 @@ const SECTIONS = ['Anchored panel', 'Menu list'] as const;
     <app-demo-card
       [chips]="['role=menu', 'activedescendant', 'type-ahead']"
       heading="Menu list"
-      description="<code>&lt;oge-menu-list&gt;</code> implements the WAI-ARIA menu pattern with <code>aria-activedescendant</code>: the container holds real focus, arrows wrap and skip disabled items and separators, Home/End jump, printable keys type-ahead, Enter/Space activate. It is presentation-only — closing is delegated to the owner via <code>closeRequest</code>. Here it renders standalone (no popup) so the keyboard behavior is easy to try."
+      description="<code>&amp;lt;oge-menu-list&amp;gt;</code> implements the WAI-ARIA menu pattern with <code>aria-activedescendant</code>: the container holds real focus, arrows wrap and skip disabled items and separators, Home/End jump, printable keys type-ahead, Enter/Space activate. It is presentation-only — closing is delegated to the owner via <code>closeRequest</code>. Here it renders standalone (no popup) so the keyboard behavior is easy to try."
       [code]="menuSnippet"
       language="ts"
     >

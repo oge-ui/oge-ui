@@ -71,7 +71,7 @@ function makeSales(count: number): Sale[] {
         </span>
         <button
           type="button"
-          class="oge-toolbar-btn oge-toolbar-text-btn"
+          class="oge-tool-btn oge-tool-text-btn"
           (click)="analytics().showFieldChooser()"
         >
           <svg
@@ -141,7 +141,7 @@ function makeSales(count: number): Sale[] {
         <span class="flex items-center gap-1.5">
           <button
             type="button"
-            class="oge-toolbar-btn oge-toolbar-text-btn"
+            class="oge-tool-btn oge-tool-text-btn"
             (click)="report().exportCsv('sales.csv')"
           >
             <svg
@@ -166,7 +166,7 @@ function makeSales(count: number): Sale[] {
           </button>
           <button
             type="button"
-            class="oge-toolbar-btn oge-toolbar-text-btn oge-btn-accent"
+            class="oge-tool-btn oge-tool-text-btn oge-btn-accent"
             (click)="downloadExcel()"
           >
             <svg

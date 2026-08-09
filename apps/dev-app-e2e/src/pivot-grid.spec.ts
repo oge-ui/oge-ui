@@ -78,7 +78,7 @@ test('virtual pivot keeps cells aligned with their headers after scrolling', asy
   await page.getByRole('button', { name: 'Field chooser' }).click();
   const chooser = page.locator('.oge-pivot-chooser');
   await expect(chooser).toBeVisible();
-  await chooser.locator('.oge-toolbar-text-btn').last().click();
+  await chooser.locator('.oge-tool-text-btn').last().click();
   await expect(chooser).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'CSV' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Excel' })).toBeVisible();

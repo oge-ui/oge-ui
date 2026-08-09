@@ -3,10 +3,23 @@ import { RouterLink } from '@angular/router';
 import { OgeButton } from '@oge-ui/buttons';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { OgeNumberBox, OgeTextBox } from '@oge-ui/inputs';
-import { OgeAccordion, OgeAccordionItem } from '@oge-ui/layout';
-import { OgeTreeView } from '@oge-ui/navigation';
+import {
+  OgeAccordion,
+  OgeAccordionItem,
+  OgeSplitter,
+  OgeSplitterPane,
+  OgeToolbar,
+  OgeToolbarItem,
+} from '@oge-ui/layout';
+import {
+  OgeDrawer,
+  OgeStep,
+  OgeStepper,
+  OgeTreeView,
+} from '@oge-ui/navigation';
 import { OgeContextMenu, OgeTooltip, type OgeMenuItem } from '@oge-ui/overlay';
 import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
 import { OgeTreeList } from '@oge-ui/tree-list';
 import { Icon, type IconName } from '../../shared/icon';
 import { SITE_VERSION } from '../../shared/site-version';
@@ -18,8 +31,13 @@ type FamilyKey =
   | 'buttons'
   | 'inputs'
   | 'tabs'
+  | 'forms'
   | 'accordion'
+  | 'splitter'
+  | 'toolbar'
   | 'tree-view'
+  | 'drawer'
+  | 'stepper'
   | 'pivot'
   | 'overlay';
 
@@ -58,9 +76,18 @@ interface OrgNode {
     OgeContextMenu,
     OgeTabPanel,
     OgeTab,
+    OgeForm,
+    OgeFormItem,
     OgeAccordion,
     OgeAccordionItem,
+    OgeSplitter,
+    OgeSplitterPane,
+    OgeToolbar,
+    OgeToolbarItem,
     OgeTreeView,
+    OgeDrawer,
+    OgeStepper,
+    OgeStep,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -163,6 +190,26 @@ interface OrgNode {
                     />
                   </div>
                 }
+                @case ('forms') {
+                  <div
+                    class="w-full self-start"
+                    style="--oge-input-width: 100%"
+                  >
+                    <oge-form [(formData)]="previewProfile" [colCount]="2">
+                      <oge-form-item
+                        field="firstName"
+                        label="First name"
+                        [isRequired]="true"
+                      />
+                      <oge-form-item field="lastName" label="Last name" />
+                      <oge-form-item
+                        field="email"
+                        label="E-mail"
+                        [colSpan]="2"
+                      />
+                    </oge-form>
+                  </div>
+                }
                 @case ('pivot') {
                   <!-- illustrative sketch; the live pivot renders on its own pages -->
                   <table
@@ -251,6 +298,66 @@ interface OrgNode {
                         </p>
                       </oge-accordion-item>
                     </oge-accordion>
+                  </div>
+                }
+                @case ('splitter') {
+                  <div class="h-28 w-full self-start">
+                    <oge-splitter class="h-full rounded border">
+                      <oge-splitter-pane size="38%" [collapsible]="true">
+                        <p class="!my-0 p-2 text-sm text-gray-500">Navigator</p>
+                      </oge-splitter-pane>
+                      <oge-splitter-pane>
+                        <oge-splitter orientation="vertical">
+                          <oge-splitter-pane [size]="60">
+                            <p class="!my-0 p-2 text-sm text-gray-500">
+                              Editor
+                            </p>
+                          </oge-splitter-pane>
+                          <oge-splitter-pane [size]="40">
+                            <p class="!my-0 p-2 text-sm text-gray-500">
+                              Output
+                            </p>
+                          </oge-splitter-pane>
+                        </oge-splitter>
+                      </oge-splitter-pane>
+                    </oge-splitter>
+                  </div>
+                }
+                @case ('toolbar') {
+                  <div class="w-full self-start">
+                    <oge-toolbar ariaLabel="Gallery preview">
+                      <oge-toolbar-item text="New" severity="accent" />
+                      <oge-toolbar-item text="Open" />
+                      <oge-toolbar-item type="separator" />
+                      <oge-toolbar-item text="Bold" [active]="true" />
+                      <oge-toolbar-item text="Print" locateInMenu="always" />
+                      <oge-toolbar-item text="Share" location="after" />
+                    </oge-toolbar>
+                  </div>
+                }
+                @case ('stepper') {
+                  <div class="w-full self-start">
+                    <oge-stepper [activeIndex]="1" ariaLabel="Checkout">
+                      <oge-step label="Account" [completed]="true" />
+                      <oge-step label="Payment" />
+                      <oge-step label="Review" />
+                    </oge-stepper>
+                  </div>
+                }
+                @case ('drawer') {
+                  <div
+                    class="h-28 w-full self-start overflow-hidden rounded border"
+                  >
+                    <oge-drawer
+                      class="h-full"
+                      [opened]="true"
+                      mode="side"
+                      [size]="88"
+                      ariaLabel="Sections"
+                    >
+                      <div ogeDrawerPanel class="p-2 text-xs">Menu</div>
+                      <div class="p-2 text-xs opacity-70">Content</div>
+                    </oge-drawer>
                   </div>
                 }
                 @case ('tree-view') {
@@ -359,12 +466,52 @@ export class ComponentsIndexPage {
         'Declarative or data-driven tabs with deferred rendering, keep-alive panels, closable tabs with async guards, overflow navigation and drag reorder.',
     },
     {
+      key: 'forms',
+      name: 'Forms',
+      icon: 'text-cursor',
+      path: '/components/forms',
+      description:
+        'Form layout over the OGE editors: responsive container-query columns, nested fieldset groups, declarative validation rules and an accessible validation summary.',
+    },
+    {
       key: 'accordion',
       name: 'Accordion',
       icon: 'accordion',
       path: '/components/accordion',
       description:
         'Single or multiple expansion following the WAI-ARIA pattern: lazy content, async expand guards, header actions and invalid-section jumping.',
+    },
+    {
+      key: 'splitter',
+      name: 'Splitter',
+      icon: 'splitter',
+      path: '/components/splitter',
+      description:
+        'Resizable, collapsible and nestable panes on the WAI-ARIA window splitter pattern: ratio or pixel sizing, full keyboard control, RTL and touch.',
+    },
+    {
+      key: 'toolbar',
+      name: 'Toolbar',
+      icon: 'toolbar',
+      path: '/components/toolbar',
+      description:
+        'WAI-ARIA APG command bar: roving tabindex, before/center/after groups and an overflow menu for the commands that stop fitting — which the presentation-only reference toolbars have no answer for.',
+    },
+    {
+      key: 'stepper',
+      name: 'Stepper',
+      icon: 'stepper',
+      path: '/components/stepper',
+      description:
+        'A linear or free wizard with async leave guards, refusals that say why, and one ARIA semantic in both directions — where Material swaps its roles with the layout.',
+    },
+    {
+      key: 'drawer',
+      name: 'Drawer',
+      icon: 'drawer',
+      path: '/components/drawer',
+      description:
+        'A side panel that floats above, pushes or shrinks its content — and whose modality follows that choice: a dialog with a focus trap when it covers, a landmark when it shares the row. None of the reference drawers gets that split right.',
     },
     {
       key: 'tree-view',
@@ -403,6 +550,11 @@ export class ComponentsIndexPage {
 
   protected readonly previewName = signal('Ada');
   protected readonly previewAmount = signal<number | null>(42);
+  protected readonly previewProfile = signal({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    email: 'ada@example.com',
+  });
 
   protected readonly previewMenu: OgeMenuItem[] = [
     { text: 'Duplicate' },

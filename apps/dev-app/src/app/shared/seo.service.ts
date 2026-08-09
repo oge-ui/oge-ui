@@ -31,6 +31,46 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Buttons with async actions and automatic loading, click guards, hold-to-confirm, badges, button groups and drop-down/split buttons.',
   ],
   [
+    '/components/forms/validation',
+    'Angular form validation: declarative rules compiled into Signal Forms, custom and cross-field rules, reactive-forms interop, and an accessible validation summary that focuses the first invalid field.',
+  ],
+  [
+    '/components/forms/layout',
+    'Angular form layout: fixed or auto-fit columns, colSpan, nested fieldset groups, and responsive column counts driven by container queries rather than window width.',
+  ],
+  [
+    '/components/forms',
+    'Angular form component: responsive column layout over the OGE editors, nestable fieldset groups, dataType-driven editor selection, validation summary, and Signal Forms, reactive forms or plain signal binding.',
+  ],
+  [
+    '/components/toolbar',
+    'Angular Toolbar: a WAI-ARIA APG command bar with roving tabindex, before/center/after groups and an overflow menu for the commands that stop fitting — signal-based, RTL-aware and zoneless.',
+  ],
+  [
+    '/components/toolbar/api',
+    'Angular Toolbar API reference: every property, method, event and type of oge-toolbar and oge-toolbar-item, the projection slots, the overflow model and the config provider.',
+  ],
+  [
+    '/components/stepper',
+    'Angular Stepper: a linear or free wizard whose ARIA model stays the same in both orientations — an ordered list of buttons with aria-current="step", async leave guards, and refusals that say why.',
+  ],
+  [
+    '/components/drawer',
+    'Angular Drawer: an overlay, push or side panel whose modality is derived from its mode — role="dialog" with a focus trap and inert background when it covers the content, a landmark when it shares the row. Responsive to its own container, not the window.',
+  ],
+  [
+    '/components/splitter/api',
+    'Angular Splitter API reference: every property, method, event and type of oge-splitter and oge-splitter-pane, including the WAI-ARIA separator attributes and the config provider.',
+  ],
+  [
+    '/components/splitter',
+    'Angular Splitter: resizable, collapsible and nestable panes on the WAI-ARIA window splitter pattern — ratio or pixel sizing, arrow-key resizing, RTL and touch support, signal-based and zoneless.',
+  ],
+  [
+    '/components/accordion',
+    'Angular Accordion: WAI-ARIA expansion panels with single or multiple expansion, lazy content, async expand guards, invalid-section jumping and header actions — signal-based and zoneless.',
+  ],
+  [
     '/components/inputs',
     'Angular form inputs on one field chrome: TextBox, TextArea, NumberBox and SelectBox with floating labels, validation, Signal Forms and reactive forms support.',
   ],

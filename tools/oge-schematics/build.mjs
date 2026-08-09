@@ -28,6 +28,7 @@ const PACKAGES = [
   { dir: 'tabs', npm: '@oge-ui/tabs' },
   { dir: 'layout', npm: '@oge-ui/layout' },
   { dir: 'navigation', npm: '@oge-ui/navigation' },
+  { dir: 'forms', npm: '@oge-ui/forms' },
   { dir: 'ui', npm: 'oge-ui' },
 ];
 

@@ -11,6 +11,7 @@ import {
   OGE_MODAL_SERVICE_API,
   OGE_TOAST_API,
   OGE_OVERLAY_CONFIG_API,
+  OVERLAY_PRIMITIVES_API,
   OGE_POPUP_API,
   OGE_TOOLTIP_API,
   RESOLVE_POPUP_POSITION_API,
@@ -27,6 +28,7 @@ const SECTIONS = [
   'OgePopup',
   'resolvePopupPosition',
   'Overlay configuration',
+  'Overlay primitives',
 ] as const;
 
 @Component({
@@ -83,6 +85,7 @@ const SECTIONS = [
     />
     <app-api-reference title="resolvePopupPosition" [sections]="positionApi" />
     <app-api-reference title="Overlay configuration" [sections]="configApi" />
+    <app-api-reference title="Overlay primitives" [sections]="primitivesApi" />
 
     <h3>Notes</h3>
     <ul>
@@ -110,4 +113,5 @@ export class OverlayApiPage {
   protected readonly popupApi = OGE_POPUP_API;
   protected readonly positionApi = RESOLVE_POPUP_POSITION_API;
   protected readonly configApi = OGE_OVERLAY_CONFIG_API;
+  protected readonly primitivesApi = OVERLAY_PRIMITIVES_API;
 }

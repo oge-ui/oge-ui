@@ -368,7 +368,7 @@ export const OGE_ACCORDION_ITEM_API: ApiSections = {
           name: 'text',
           type: 'string | undefined',
           description:
-            'Plain-text panel body, rendered when there is no projected content or content template. The DevExtreme <code>html</code> item field has no counterpart on purpose.',
+            'Plain-text panel body, rendered when there is no projected content or content template. The reference <code>html</code> item field has no counterpart on purpose.',
         },
         {
           name: 'description',
@@ -508,7 +508,7 @@ export const OGE_ACCORDION_ITEM_API: ApiSections = {
           name: '[ogeAccordionActionRow]',
           type: 'directive',
           description:
-            "Marks a row of buttons at the end of a panel body as its action bar (divider above, actions at the inline end) — Angular Material's <code>mat-action-row</code>. Inside the panel, so only reachable while expanded.",
+            "Marks a row of buttons at the end of a panel body as its action bar (divider above, actions at the inline end) — the references' action-row slot. Inside the panel, so only reachable while expanded.",
         },
       ],
     },

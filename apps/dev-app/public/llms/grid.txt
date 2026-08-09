@@ -85,7 +85,7 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/grid`
 
-- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgeRowTemplate`, `OgeToolbarItem`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `operatorsFor`, `provideOgeGridConfig`
+- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `operatorsFor`, `provideOgeGridConfig`
 - types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellTemplateContext`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeContextMenuEvent`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePagingOptions`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortingOptions`, `OgeStateStorage`
 
 `@oge-ui/grid/export-pdf`
@@ -302,7 +302,7 @@ _Companion directives_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeColumnGroup` | `oge-column-group — input: caption (required)` | Banded header: wraps sibling `` elements under one shared caption. Re-exported by `@oge-ui/tree-list`. |
-| `OgeToolbarItem` | `directive — [ogeToolbar]` | Marks projected content as a toolbar item. The toolbar appears as soon as one item exists, alongside the built-in controls. |
+| `OgeGridToolbarItem` | `directive — [ogeToolbar]` | Marks projected content as a toolbar item. The toolbar appears as soon as one item exists, alongside the built-in controls. Named `OgeGridToolbarItem` so it cannot collide with `@oge-ui/layout`&rsquo;s `OgeToolbarItem`; the selector is unchanged. |
 
 _Basics_
 

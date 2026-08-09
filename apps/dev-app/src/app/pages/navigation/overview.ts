@@ -173,7 +173,7 @@ const MANY: Folder[] = Array.from({ length: 10000 }, (_, i) => ({
     <app-demo-card
       [chips]="['searchEnabled', 'filterMode', 'highlight']"
       heading="Search"
-      description="Matching is accent- and locale-insensitive (core's <code>foldText</code>), the ancestors of a hit are auto-expanded so it is reachable, and the matched substring is wrapped in <code>&lt;mark&gt;</code>. <code>filterMode: 'fullBranch'</code> also keeps a match's descendants."
+      description="Matching is accent- and locale-insensitive (core's <code>foldText</code>), the ancestors of a hit are auto-expanded so it is reachable, and the matched substring is wrapped in <code>&amp;lt;mark&amp;gt;</code>. <code>filterMode: 'fullBranch'</code> also keeps a match's descendants."
       [code]="searchSnippet"
       language="ts"
     >

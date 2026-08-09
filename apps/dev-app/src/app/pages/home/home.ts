@@ -565,14 +565,14 @@ const ORG: OrgNode[] = [
           <div class="home-reveal text-center">
             <p class="og-eyebrow">Components</p>
             <h2 class="og-h2 mt-3">
-              Nine families, <span class="og-gilded">one design system</span>
+              Ten families, <span class="og-gilded">one design system</span>
             </h2>
           </div>
 
-          <!-- three columns keep the section three rows tall no matter how
-               many families ship — the page must not grow with the suite -->
+          <!-- the column count keeps the section short no matter how many
+               families ship — the page must not grow with the suite -->
           <div
-            class="mt-8 grid grid-cols-3 gap-x-6 max-lg:grid-cols-2 max-sm:grid-cols-1"
+            class="mt-8 grid grid-cols-4 gap-x-6 max-xl:grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1"
           >
             @for (tile of tiles; track tile.path) {
               <a [routerLink]="tile.path" class="home-reveal og-row group">
@@ -1755,6 +1755,7 @@ export class HomePage {
     '@oge-ui/tabs',
     '@oge-ui/layout',
     '@oge-ui/navigation',
+    '@oge-ui/forms',
   ];
 
   /** Packages surfaced in the live download-count rows, with their icons. */
@@ -1852,10 +1853,28 @@ export class HomePage {
       path: '/components/tabs',
     },
     {
+      icon: 'text-cursor',
+      name: 'Forms',
+      desc: 'Responsive form layout, fieldset groups, validation summary.',
+      path: '/components/forms',
+    },
+    {
       icon: 'accordion',
       name: 'Accordion',
       desc: 'Single or multiple expansion, lazy content, async expand guards.',
       path: '/components/accordion',
+    },
+    {
+      icon: 'splitter',
+      name: 'Splitter',
+      desc: 'Resizable, collapsible, nestable panes with full keyboard control.',
+      path: '/components/splitter',
+    },
+    {
+      icon: 'toolbar',
+      name: 'Toolbar',
+      desc: 'APG command bar with roving tabindex and a real overflow menu.',
+      path: '/components/toolbar',
     },
     {
       icon: 'tree',

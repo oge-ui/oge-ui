@@ -31,7 +31,8 @@ export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
  * - `dir` — folder under `packages/`, also the Nx project name.
  * - `npm` — published name.
  * - `apiPage` — the docs API page whose `<app-api-reference>` blocks document
- *   this package; `null` when the package has no reference page yet.
+ *   this package, or an array of them when the package ships more than one
+ *   family; `null` when the package has no reference page yet.
  * - `docsRoot` — route the docs live under; `null` for engine-only packages.
  * - `pageDirs` — folders under `pages/` whose demos belong to this package.
  * - `tier` — `'mit'` or `'commercial'`; drives the licence banner.
@@ -116,10 +117,25 @@ export const PACKAGES = [
     npm: '@oge-ui/layout',
     label: 'Layout',
     summary:
-      'Layout containers — accordion panels with single or multiple expansion.',
+      'Layout containers — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, and a toolbar with an overflow menu.',
     docsRoot: '/components/accordion',
     pageDirs: ['layout'],
-    apiPage: 'apps/dev-app/src/app/pages/layout/api.ts',
+    apiPage: [
+      'apps/dev-app/src/app/pages/layout/api.ts',
+      'apps/dev-app/src/app/pages/layout/splitter-api.ts',
+      'apps/dev-app/src/app/pages/layout/toolbar-api.ts',
+    ],
+    tier: 'mit',
+  },
+  {
+    dir: 'forms',
+    npm: '@oge-ui/forms',
+    label: 'Forms',
+    summary:
+      'Form layout over the editors — responsive columns, fieldset groups, declarative validation rules and a validation summary.',
+    docsRoot: '/components/forms',
+    pageDirs: ['forms'],
+    apiPage: 'apps/dev-app/src/app/pages/forms/api.ts',
     tier: 'mit',
   },
   {
@@ -127,7 +143,7 @@ export const PACKAGES = [
     npm: '@oge-ui/navigation',
     label: 'Navigation',
     summary:
-      'Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting.',
+      'Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, plus a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row).',
     docsRoot: '/components/tree-view',
     pageDirs: ['navigation'],
     apiPage: 'apps/dev-app/src/app/pages/navigation/api.ts',

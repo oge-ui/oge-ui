@@ -77,7 +77,7 @@ interface DemoPlan {
 
     <app-demo-card
       heading="Switch"
-      description="A native <code>&lt;button role='switch'&gt;</code> with <code>aria-checked</code> and a sliding thumb. Track texts default to the localized <code>switchOn</code>/<code>switchOff</code> messages ('ON'/'OFF'); override per instance or pass empty strings to hide them. The DevExtreme swipe gesture is deliberately not replicated."
+      description="A native <code>&amp;lt;button role='switch'&amp;gt;</code> with <code>aria-checked</code> and a sliding thumb. Track texts default to the localized <code>switchOn</code>/<code>switchOff</code> messages ('ON'/'OFF'); override per instance or pass empty strings to hide them. The reference swipe gesture is deliberately not replicated."
       [chips]="['role=switch', 'onText / offText', 'messages']"
       [code]="switchSnippet"
       language="ts"

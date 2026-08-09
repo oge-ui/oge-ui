@@ -250,7 +250,7 @@ const SECTIONS = [
     <app-demo-card
       [chips]="['closeGuard', 'closePending', 'async veto']"
       heading="Async close guard"
-      description="<code>closeGuard</code> runs before every close — <code>Escape</code>, backdrop, ✕ and <code>close()</code> alike — and may return a <code>Promise&lt;boolean&gt;</code>: the modal stays open until it resolves, single-flight guarded. No other library covers the async unsaved-changes veto without hand-rolled plumbing. A direct <code>opened</code> model write bypasses the guard (the app already decided)."
+      description="<code>closeGuard</code> runs before every close — <code>Escape</code>, backdrop, ✕ and <code>close()</code> alike — and may return a <code>Promise&amp;lt;boolean&amp;gt;</code>: the modal stays open until it resolves, single-flight guarded. No other library covers the async unsaved-changes veto without hand-rolled plumbing. A direct <code>opened</code> model write bypasses the guard (the app already decided)."
       [code]="guardSnippet"
       language="ts"
     >

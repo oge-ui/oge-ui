@@ -85,7 +85,7 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/inputs`
 
-- values: `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeSelectBox`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`
+- values: `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeSelectBox`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
 - types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
 
 ## API reference
@@ -168,7 +168,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -253,7 +253,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -335,7 +335,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -448,13 +448,13 @@ _OgeSelectBox events_
 | `itemClick` | `OgeSelectBoxItemClickEvent` | An option row was activated — `{ item, index, event }`; `index` is within the visible (filtered) list. |
 | `dropDownOpened / dropDownClosed` | `void` | Popup visibility changes, from any trigger. |
 | `searchChanged` | `OgeSelectBoxSearchChangedEvent` | Raw search text on every keystroke — drive server-side filtering from here. |
-| `customItemCreating` | `OgeSelectBoxCustomItemEvent` | Mutable payload (DevExtreme-style): assign `customItem` — an item, a promise of one, or `null` to reject the text. Left unset, the raw text becomes the item. |
+| `customItemCreating` | `OgeSelectBoxCustomItemEvent` | Mutable payload (as in the references): assign `customItem` — an item, a promise of one, or `null` to reject the text. Left unset, the raw text becomes the item. |
 
 _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -620,7 +620,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -645,7 +645,7 @@ _OgeAutocomplete_
 | `searchTimeout` | `number \| undefined` | `—` | Debounce before typed text filters the list; `undefined` = config default (250ms). The displayed text is never debounced. |
 | `forceSelection` | `boolean` | `false` | Reverts non-matching text to the last committed value on blur; an exact display match resolves to the item with its canonical casing. |
 | `searchHighlight` | `boolean` | `true` | Marks the matched part of each suggestion (``). |
-| `showDropDownButton` | `boolean` | `false` | Renders the chevron toggle in the field rail (off by default — DevExtreme parity). |
+| `showDropDownButton` | `boolean` | `false` | Renders the chevron toggle in the field rail (off by default — reference parity). |
 | `openOnFieldClick` | `boolean` | `false` | Clicking the field opens the suggestion list. |
 | `loading / dropdownPlacement / dropdownWidth / dropdownMaxHeight / wrapItemText / useItemTextAsTitle` | `shared with OgeSelectBox` | `—` | Popup configuration and list rendering. |
 | `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
@@ -723,7 +723,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -750,7 +750,7 @@ _OgeCheckBox_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `value` | `model<boolean \| null>` | `false` | `true`/`false`, or `null` for the indeterminate (dash) state — two-way. `null` renders regardless of `threeState`. |
-| `threeState` | `boolean` | `false` | Lets users cycle into the indeterminate state: `null → true → false → null` (DevExtreme cycle). |
+| `threeState` | `boolean` | `false` | Lets users cycle into the indeterminate state: `null → true → false → null` (the reference cycle). |
 | `text` | `string` | `''` | Label text; the default `` slot renders when unset. |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Glyph/font size preset. |
 | `tooltip` | `string \| undefined` | `—` | Native `title` on the label element. |
@@ -795,7 +795,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -857,7 +857,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -922,7 +922,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -1001,7 +1001,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -1107,7 +1107,7 @@ _Common (all editors)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the DevExtreme `onValueChanged` shape. |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
 | `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
 | `cleared` | `void` | Value cleared via the clear button / `clear()`. |
 | `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
@@ -1159,6 +1159,8 @@ _Slots & helpers_
 | --- | --- | --- |
 | `OgeInputPrefix` | `directive — [ogeInputPrefix]` | Leading adornment inside the field. |
 | `OgeInputSuffix` | `directive — [ogeInputSuffix]` | Trailing adornment; renders after the built-in rail buttons. |
+| `resolveErrorMessage(sfErrors, cvaErrors, messages)` | `string \| null` | The single message a field displays. Signal Forms errors win over reactive-forms errors, and an explicit `message` wins over the kind→message map. Exported so a form-level error summary reads exactly like the inline text. |
+| `formatPattern(pattern, values)` | `string` | Interpolates `{token}` placeholders in a message — the same contract the grid uses for its message patterns. |
 | `OgeInputCounterState` | `{ count: number; max: number \| undefined; over: boolean }` | Counter state rendered in the subscript end slot. |
 | `OgeInputRevealApi` | `{ visible; active; toggle() }` | Password-reveal API (text box only). |
 | `OgeInputCopyApi` | `{ visible; copied; trigger() }` | Copy-to-clipboard API (text box only). |

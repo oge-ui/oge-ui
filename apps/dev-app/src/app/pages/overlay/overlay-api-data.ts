@@ -69,9 +69,9 @@ export const OGE_MENU_LIST_API: ApiSections = {
       entries: [
         {
           name: 'OgeMenuItem&lt;T&gt;',
-          type: '{ text: string; value?: T; hint?; disabled?; checked?; severity?; separator?; action?: () =&gt; void }',
+          type: '{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () =&gt; void }',
           description:
-            'Canonical menu item of the suite. A defined <code>checked</code> renders <code>menuitemcheckbox</code>; <code>separator: true</code> ignores every other field.',
+            'Canonical menu item of the suite. A defined <code>checked</code> renders <code>menuitemcheckbox</code>; <code>separator: true</code> ignores every other field. <code>icon</code> takes SVG path data and <code>iconClass</code> hooks an icon font — one row with either gives every row an icon column, so labels stay aligned.',
         },
         {
           name: 'OgeMenuItemSeverity',
@@ -1064,6 +1064,74 @@ export const OGE_CONTEXT_MENU_API: ApiSections = {
           type: 'void',
           description:
             'The menu closed — by selection, Escape, an outside click or a scroll.',
+        },
+      ],
+    },
+  ],
+};
+
+/**
+ * The primitives a modal surface implemented in *another* package needs. They
+ * are public so such a surface joins this package's Escape stack and reuses
+ * this focus trap, rather than growing a second competing copy of either —
+ * `@oge-ui/navigation`'s drawer is the first consumer.
+ */
+export const OVERLAY_PRIMITIVES_API: ApiSections = {
+  methods: [
+    {
+      title: 'Escape stack',
+      entries: [
+        {
+          name: 'pushOverlay(surface: object): void',
+          type: 'void',
+          description:
+            'Registers a surface as the new topmost overlay. No-op if it is already in the stack.',
+        },
+        {
+          name: 'removeOverlay(surface: object): void',
+          type: 'void',
+          description:
+            'Removes a surface from the stack; tolerates surfaces that were never pushed.',
+        },
+        {
+          name: 'isTopOverlay(surface: object): boolean',
+          type: 'boolean',
+          description:
+            'True only for the topmost surface. Gate your Escape handler on this and a popup opened inside a modal or a drawer closes before its host does.',
+        },
+      ],
+    },
+    {
+      title: 'Focus trap',
+      entries: [
+        {
+          name: 'getTabbableElements(root: HTMLElement): HTMLElement[]',
+          type: 'HTMLElement[]',
+          description:
+            'Tabbable descendants in DOM order. Recomputed per call rather than cached behind sentinel elements, so content added or removed after open is always accounted for.',
+        },
+        {
+          name: 'trapTabKey(event, root, fallback): void',
+          type: 'void',
+          description:
+            'Wraps Tab and Shift+Tab inside <code>root</code>. With no tabbable descendants it focuses <code>fallback</code>, so focus can never escape a modal surface.',
+        },
+      ],
+    },
+    {
+      title: 'Scroll lock',
+      entries: [
+        {
+          name: 'lockBodyScroll(): void',
+          type: 'void',
+          description:
+            'Locks body scroll and compensates for the scrollbar width. Ref-counted, so nested surfaces cannot unlock each other.',
+        },
+        {
+          name: 'unlockBodyScroll(): void',
+          type: 'void',
+          description:
+            'Releases one reference; the last release restores the inline styles exactly as they were.',
         },
       ],
     },

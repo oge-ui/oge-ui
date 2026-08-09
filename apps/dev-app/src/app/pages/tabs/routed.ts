@@ -52,8 +52,8 @@ export class TabsRoutedSettings {}
       [chips]="['router-outlet', 'selectedKey', 'deep links']"
     >
       <p>
-        Angular Material ships a separate <code>mat-tab-nav-bar</code> for
-        router-driven tabs. <code>&lt;oge-tabs&gt;</code> needs no variant: bind
+        Some references ship a separate tab-nav-bar component for router-driven
+        tabs. <code>&lt;oge-tabs&gt;</code> needs no variant: bind
         <code>selectedKey</code> one-way from the URL and navigate in
         <code>selectionChanged</code>. Keyboard support, overflow and closable
         tabs all keep working, and the panels come from

@@ -38,6 +38,10 @@ export type IconName =
   | 'calendar'
   | 'tabs'
   | 'accordion'
+  | 'splitter'
+  | 'drawer'
+  | 'stepper'
+  | 'toolbar'
   | 'tree';
 
 /** Lucide-style inline SVG icons — no emoji, no icon-font dependency. */
@@ -182,6 +186,34 @@ export type IconName =
           <rect x="3" y="10" width="18" height="11" rx="1" />
           <path d="M15 5.5h3" />
           <path d="M15 12.5h3" />
+        }
+        @case ('splitter') {
+          <rect x="3" y="4" width="18" height="16" rx="1" />
+          <path d="M12 4v16" />
+          <path d="M9.5 10.5 7.5 12l2 1.5" />
+          <path d="m14.5 10.5 2 1.5-2 1.5" />
+        }
+        @case ('stepper') {
+          <circle cx="5" cy="12" r="2.5" />
+          <circle cx="12" cy="12" r="2.5" />
+          <circle cx="19" cy="12" r="2.5" />
+          <path d="M7.5 12h2" />
+          <path d="M14.5 12h2" />
+        }
+        @case ('drawer') {
+          <rect x="3" y="4" width="18" height="16" rx="1" />
+          <path d="M9 4v16" />
+          <path d="M5.5 9h1.5" />
+          <path d="M5.5 12h1.5" />
+          <path d="M5.5 15h1.5" />
+        }
+        @case ('toolbar') {
+          <rect x="3" y="4" width="18" height="6" rx="1" />
+          <path d="M6.5 7h2" />
+          <path d="M11 7h2" />
+          <path d="M18 7h.01" />
+          <path d="M3 14h18" />
+          <path d="M3 18h12" />
         }
         @case ('sun') {
           <circle cx="12" cy="12" r="4" />
