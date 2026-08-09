@@ -1,0 +1,200 @@
+@if (renderFormElement()) {
+<form
+  class="oge-form-body"
+  novalidate
+  [style]="breakpointStyle()"
+  (submit)="onSubmit($event)"
+>
+  @if (summaryVisible()) {
+  <oge-validation-summary
+    [errors]="errors()"
+    [messages]="messages()"
+    (errorClick)="onSummaryClick($event)"
+  />
+  }
+
+  <fieldset class="oge-form-fieldset" [disabled]="disabled()">
+    @if (hasItems()) {
+    <div class="oge-form-fields" [style.grid-template-columns]="gridStyle()">
+      <ng-container
+        [ngTemplateOutlet]="nodeList"
+        [ngTemplateOutletContext]="{ $implicit: nodes(), columns: columnsOf(colCount()) }"
+      />
+    </div>
+    } @else {
+    <p class="oge-form-empty">{{ msg().noItems }}</p>
+    }
+  </fieldset>
+
+  <div class="oge-form-actions">
+    <ng-content select="[ogeFormActions]" />
+  </div>
+</form>
+} @else {
+<div class="oge-form-body" [style]="breakpointStyle()">
+  @if (summaryVisible()) {
+  <oge-validation-summary
+    [errors]="errors()"
+    [messages]="messages()"
+    (errorClick)="onSummaryClick($event)"
+  />
+  }
+
+  <fieldset class="oge-form-fieldset" [disabled]="disabled()">
+    @if (hasItems()) {
+    <div class="oge-form-fields" [style.grid-template-columns]="gridStyle()">
+      <ng-container
+        [ngTemplateOutlet]="nodeList"
+        [ngTemplateOutletContext]="{ $implicit: nodes(), columns: columnsOf(colCount()) }"
+      />
+    </div>
+    } @else {
+    <p class="oge-form-empty">{{ msg().noItems }}</p>
+    }
+  </fieldset>
+
+  <div class="oge-form-actions">
+    <ng-content select="[ogeFormActions]" />
+  </div>
+</div>
+}
+
+<ng-template #nodeList let-list let-columns="columns">
+  @for (node of list; track node.id) { @if (node.kind === 'tabs') {
+  <oge-tab-panel
+    class="oge-form-section oge-form-tabs"
+    [class]="node.cssClass ?? ''"
+    [style.grid-column]="node.colSpan > 1 ? 'span ' + node.colSpan : null"
+    [selectedIndex]="node.section!.selectedIndex()"
+    (selectedIndexChange)="node.section!.selectedIndex.set($event)"
+    [deferRendering]="node.section!.deferRendering()"
+    [keepAlive]="node.section!.keepAlive()"
+  >
+    @for (panel of node.children; track panel.id) {
+    <oge-tab
+      [key]="panel.id"
+      [text]="panel.caption ?? ''"
+      [badge]="badgeFor(node, panel)"
+    >
+      <div
+        class="oge-form-fields"
+        [style.grid-template-columns]="columnsFor(panel.colCount)"
+      >
+        <ng-container
+          [ngTemplateOutlet]="nodeList"
+          [ngTemplateOutletContext]="{ $implicit: panel.children, columns: columnsOf(panel.colCount) }"
+        />
+      </div>
+    </oge-tab>
+    }
+  </oge-tab-panel>
+  } @else if (node.kind === 'steps') {
+  <oge-stepper
+    class="oge-form-section oge-form-steps"
+    [class]="node.cssClass ?? ''"
+    [style.grid-column]="node.colSpan > 1 ? 'span ' + node.colSpan : null"
+    [activeIndex]="node.section!.activeIndex()"
+    (activeIndexChange)="node.section!.activeIndex.set($event)"
+    [linear]="node.section!.linear()"
+    [orientation]="node.section!.orientation()"
+    [showNavigation]="node.section!.showNavigation()"
+    [deferRendering]="node.section!.deferRendering()"
+    [keepAlive]="node.section!.keepAlive()"
+    (stepChanging)="onFormStepChanging(node, $event)"
+  >
+    @for (panel of node.children; track panel.id) {
+    <oge-step
+      [key]="panel.id"
+      [label]="panel.caption ?? ''"
+      [invalid]="invalidSection(node, panel)"
+      [completed]="stepComplete(node, panel)"
+    >
+      <div
+        class="oge-form-fields"
+        [style.grid-template-columns]="columnsFor(panel.colCount)"
+      >
+        <ng-container
+          [ngTemplateOutlet]="nodeList"
+          [ngTemplateOutletContext]="{ $implicit: panel.children, columns: columnsOf(panel.colCount) }"
+        />
+      </div>
+    </oge-step>
+    }
+  </oge-stepper>
+  } @else if (node.kind === 'accordion') {
+  <oge-accordion
+    class="oge-form-section oge-form-accordion"
+    [class]="node.cssClass ?? ''"
+    [style.grid-column]="node.colSpan > 1 ? 'span ' + node.colSpan : null"
+    [expandedKeys]="node.section!.expandedKeys()"
+    (expandedKeysChange)="node.section!.expandedKeys.set($event)"
+    [multiple]="node.section!.multiple()"
+    [collapsible]="node.section!.collapsible()"
+    [deferRendering]="node.section!.deferRendering()"
+    [keepAlive]="node.section!.keepAlive()"
+  >
+    @for (panel of node.children; track panel.id) {
+    <oge-accordion-item
+      [key]="panel.id"
+      [title]="panel.caption ?? ''"
+      [invalid]="invalidSection(node, panel)"
+    >
+      <div
+        class="oge-form-fields"
+        [style.grid-template-columns]="columnsFor(panel.colCount)"
+      >
+        <ng-container
+          [ngTemplateOutlet]="nodeList"
+          [ngTemplateOutletContext]="{ $implicit: panel.children, columns: columnsOf(panel.colCount) }"
+        />
+      </div>
+    </oge-accordion-item>
+    }
+  </oge-accordion>
+  } @else if (node.kind === 'group') {
+  <fieldset
+    class="oge-form-group"
+    [class]="node.cssClass ?? ''"
+    [style.grid-column]="node.colSpan > 1 ? 'span ' + node.colSpan : null"
+  >
+    @if (node.caption) {
+    <legend class="oge-form-group-caption">
+      @if (node.captionTemplate ?? captionTemplate(); as captionTpl) {
+      <ng-container
+        [ngTemplateOutlet]="captionTpl"
+        [ngTemplateOutletContext]="{ $implicit: node.caption }"
+      />
+      } @else { {{ node.caption }} }
+    </legend>
+    }
+    <div
+      class="oge-form-fields"
+      [style.grid-template-columns]="columnsFor(node.colCount)"
+    >
+      <ng-container
+        [ngTemplateOutlet]="nodeList"
+        [ngTemplateOutletContext]="{ $implicit: node.children, columns: columnsOf(node.colCount) }"
+      />
+    </div>
+  </fieldset>
+  } @else {
+  <oge-form-field
+    [class]="nodeOf(node).cssClass ?? ''"
+    [item]="nodeOf(node)"
+    [field]="fieldNodeFor(nodeOf(node))"
+    [control]="controlFor(nodeOf(node))"
+    [appearance]="appearance()"
+    [labelLocation]="labelLocation()"
+    [messages]="msg()"
+    [showRequiredMark]="showRequiredMark()"
+    [showOptionalMark]="showOptionalMark()"
+    [showColonAfterLabel]="showColonAfterLabel()"
+    [error]="errorFor(nodeOf(node))"
+    [availableColumns]="columns"
+    [itemTemplate]="node.itemTemplate ?? itemTemplate()"
+    [editorTemplate]="node.editorTemplate ?? editorTemplate()"
+    [labelTemplate]="node.labelTemplate ?? labelTemplate()"
+    (enterKey)="onEnterKey(nodeOf(node).field, $event)"
+  />
+  } }
+</ng-template>

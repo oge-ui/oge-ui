@@ -1,0 +1,41 @@
+{
+  "name": "@oge-ui/forms",
+  "version": "0.7.0",
+  "description": "Signal-based Angular form layout: OgeForm with declarative <oge-form-item> children or a data-driven items array, responsive container-query columns, nestable fieldset groups, dataType-driven editor selection, a validation summary with focus-the-first-invalid-field, and first-class Angular Signal Forms, reactive forms and plain signal binding.",
+  "keywords": [
+    "angular",
+    "form",
+    "form-layout",
+    "signal-forms",
+    "reactive-forms",
+    "validation",
+    "form-builder",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/inputs": "0.7.0",
+    "@oge-ui/tabs": "0.7.0",
+    "@oge-ui/layout": "0.7.0",
+    "@oge-ui/navigation": "0.7.0"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/forms"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

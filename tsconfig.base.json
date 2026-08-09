@@ -16,6 +16,7 @@
     "paths": {
       "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
       "@oge-ui/core": ["./packages/core/src/index.ts"],
+      "@oge-ui/forms": ["./packages/forms/src/index.ts"],
       "@oge-ui/inputs": ["./packages/inputs/src/index.ts"],
       "@oge-ui/layout": ["./packages/layout/src/index.ts"],
       "@oge-ui/navigation": ["./packages/navigation/src/index.ts"],

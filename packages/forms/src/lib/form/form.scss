@@ -1,0 +1,203 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a standalone form is fully themed without
+// any other oge component on the page.
+.oge-form {
+  @include tokens.core-tokens;
+
+  --oge-form-gap-x: 16px;
+  --oge-form-gap-y: 4px;
+  --oge-form-min-col: 220px;
+  --oge-form-label-col: 160px;
+
+  // the column count keys off the FORM's width, not the window's — a form
+  // inside a dialog, a drawer or a grid cell still lays itself out correctly
+  container-type: inline-size;
+  container-name: oge-form;
+
+  display: block;
+  font-size: var(--oge-font-size);
+  color: var(--oge-text-color);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+// a bare fieldset must not introduce its own box
+.oge-form-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.oge-form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--oge-form-min-col), 1fr));
+  gap: var(--oge-form-gap-y) var(--oge-form-gap-x);
+  align-items: start;
+}
+
+// --- responsive column counts ------------------------------------------------
+// Each breakpoint only takes effect when the matching custom property is set
+// by `colCountByScreen`; otherwise the declared `grid-template-columns` wins.
+
+@container oge-form (min-width: 0px) {
+  .oge-form-fields {
+    grid-template-columns: var(--oge-form-cols-xs, revert-layer);
+  }
+}
+
+@container oge-form (min-width: 480px) {
+  .oge-form-fields {
+    grid-template-columns: var(--oge-form-cols-sm, revert-layer);
+  }
+}
+
+@container oge-form (min-width: 720px) {
+  .oge-form-fields {
+    grid-template-columns: var(--oge-form-cols-md, revert-layer);
+  }
+}
+
+@container oge-form (min-width: 960px) {
+  .oge-form-fields {
+    grid-template-columns: var(--oge-form-cols-lg, revert-layer);
+  }
+}
+
+@container oge-form (min-width: 1200px) {
+  .oge-form-fields {
+    grid-template-columns: var(--oge-form-cols-xl, revert-layer);
+  }
+}
+
+// --- groups ------------------------------------------------------------------
+
+.oge-form-group {
+  grid-column: 1 / -1;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  margin: 8px 0;
+  padding: 12px 14px 14px;
+  min-inline-size: 0;
+}
+
+.oge-form-group-caption {
+  padding: 0 6px;
+  font-weight: 600;
+  color: var(--oge-text-color);
+}
+
+// --- one field ---------------------------------------------------------------
+
+.oge-form-field {
+  display: block;
+  min-inline-size: 0;
+}
+
+.oge-form-control {
+  min-inline-size: 0;
+}
+
+.oge-form-label {
+  display: block;
+  margin-block-end: 4px;
+  font-weight: 500;
+  color: var(--oge-text-color);
+}
+
+.oge-form-required-mark {
+  margin-inline-start: 2px;
+  color: var(--oge-danger, #dc2626);
+}
+
+.oge-form-optional-mark {
+  margin-inline-start: 6px;
+  font-weight: 400;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+// side labels: a two-column field, optionally sharing one label width
+.oge-form-label-start .oge-form-field,
+.oge-form-label-end .oge-form-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0 10px;
+}
+
+.oge-form-label-end .oge-form-field {
+  grid-template-columns: minmax(0, 1fr) auto;
+
+  .oge-form-label {
+    order: 2;
+  }
+}
+
+.oge-form-align-labels.oge-form-label-start .oge-form-field {
+  grid-template-columns: var(--oge-form-label-col) minmax(0, 1fr);
+}
+
+.oge-form-align-labels.oge-form-label-end .oge-form-field {
+  grid-template-columns: minmax(0, 1fr) var(--oge-form-label-col);
+}
+
+.oge-form-label-start .oge-form-label,
+.oge-form-label-end .oge-form-label {
+  margin-block-end: 0;
+}
+
+// --- bare-control subscript --------------------------------------------------
+
+.oge-form-subscript {
+  margin-block-start: 2px;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+.oge-form-hint {
+  color: var(--oge-text-muted, #6b7280);
+}
+
+.oge-form-error {
+  color: var(--oge-danger, #dc2626);
+}
+
+.oge-form-empty {
+  margin: 0;
+  padding: 12px;
+  color: var(--oge-text-muted, #6b7280);
+}
+
+.oge-form-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.oge-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

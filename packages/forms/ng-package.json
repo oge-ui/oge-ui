@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/packages/forms",
+  "allowedNonPeerDependencies": [
+    "@oge-ui/inputs",
+    "@oge-ui/tabs",
+    "@oge-ui/layout",
+    "@oge-ui/navigation"
+  ],
+  "assets": ["llms.txt"],
+  "lib": {
+    "entryFile": "src/index.ts"
+  }
+}

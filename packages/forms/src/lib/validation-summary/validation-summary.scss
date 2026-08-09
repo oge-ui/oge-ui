@@ -1,0 +1,61 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a stand-alone summary is themed on its own.
+// --- validation summary ------------------------------------------------------
+
+.oge-validation-summary {
+  display: block;
+  border: 1px solid var(--oge-danger, #dc2626);
+  border-radius: var(--oge-radius);
+  padding: 10px 12px;
+  background: var(--oge-danger-soft, rgb(220 38 38 / 8%));
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.oge-validation-summary-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+  color: var(--oge-danger, #dc2626);
+}
+
+.oge-validation-summary-list {
+  margin: 0;
+  padding-inline-start: 18px;
+}
+
+.oge-validation-summary-item {
+  margin-block: 2px;
+}
+
+.oge-validation-summary-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: box-shadow 120ms ease;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-validation-summary-field {
+  font-weight: 600;
+
+  &::after {
+    content: ' — ';
+  }
+}

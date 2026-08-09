@@ -1,0 +1,1106 @@
+# @oge-ui/forms
+
+> Form layout over the editors — responsive columns, fieldset groups, declarative validation rules and a validation summary.
+
+Part of OGE UI v0.7.0.
+Docs and live demos: https://ogeui.com/components/forms
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/forms
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/forms`
+
+- values: `OGE_DEFAULT_FORMS_CONFIG`, `OGE_DEFAULT_FORMS_MESSAGES`, `OGE_FORMS_CONFIG`, `OGE_FORM_COL_SPAN`, `OGE_FORM_DATA_TYPE`, `OGE_FORM_EDITOR`, `OGE_FORM_EDITOR_OPTIONS`, `OGE_FORM_GROUP`, `OGE_FORM_HINT`, `OGE_FORM_LABEL`, `OGE_FORM_ORDER`, `OGE_FORM_PLACEHOLDER`, `OgeForm`, `OgeFormAccordion`, `OgeFormActions`, `OgeFormEditorTemplate`, `OgeFormGroup`, `OgeFormGroupCaptionTemplate`, `OgeFormItem`, `OgeFormItemTemplate`, `OgeFormLabelTemplate`, `OgeFormSteps`, `OgeFormTabs`, `OgeValidationSummary`, `itemFromMetadata`, `provideOgeFormsConfig`
+- types: `OgeFormColCount`, `OgeFormDataType`, `OgeFormEditorAppearance`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormFieldNode`, `OgeFormGroupCaptionTemplateContext`, `OgeFormGroupData`, `OgeFormItemData`, `OgeFormItemTemplateContext`, `OgeFormKeyEvent`, `OgeFormLabelLocation`, `OgeFormLabelTemplateContext`, `OgeFormMode`, `OgeFormScreenSize`, `OgeFormSubmittedEvent`, `OgeFormSubmittingEvent`, `OgeFormValidatedEvent`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeResolvedFormItem`, `OgeValidationContext`, `OgeValidationRule`
+
+## API reference
+
+### OgeForm — `<oge-form>`
+
+#### Properties
+
+_Binding_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fieldTree` | `FieldTree<T> \| undefined` | `undefined` | An Angular Signal Forms tree, as returned by `form()`. The caller owns validation, required marks, disabled and readonly state. |
+| `formGroup` | `FormGroup \| undefined` | `undefined` | A reactive `FormGroup`. Each item binds its matching control through the editors' control-value-accessor path. |
+| `formData` | `T \| undefined` | `undefined` | A plain model object — two-way. The form builds its own Signal Forms tree over it, compiling each item's `validationRules` into the schema. |
+| `items` | `readonly OgeFormItemData[] \| undefined` | `undefined` | Data-driven items, rendered after the projected `` children. |
+| `groups` | `readonly OgeFormGroupData[] \| undefined` | `undefined` | Data-driven groups, matched to items by `key` (or `caption`) through an item's `group`. |
+| `mode` | `Signal<OgeFormMode>` | `—` | Read-only: which binding the form resolved to. Derived from the bound inputs, never configured. |
+
+_Layout_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `colCount` | `number \| 'auto'` | `'auto'` | Layout columns. `'auto'` fits as many `minColWidth` tracks as the form is wide. |
+| `colCountByScreen` | `Partial<Record<OgeFormScreenSize, number>> \| undefined` | `undefined` | Column count per breakpoint. Implemented as container queries on the form itself, so a form in a dialog or a grid cell sizes from its own width — not the window's. |
+| `minColWidth` | `number` | `220` | Narrowest column `colCount: 'auto'` will produce, in pixels. |
+| `labelLocation` | `'top' \| 'start' \| 'end'` | `'top'` | `'top'` keeps each editor's own label chrome; the side values hand the label to the form, which draws a real `` in its own column. |
+| `labelMode` | `'static' \| 'floating' \| 'hidden' \| 'outside'` | `'static'` | Forwarded to every editor. Forced to `'hidden'` when `labelLocation` is a side value, so no label renders twice. |
+| `alignItemLabels` | `boolean` | `true` | Gives side labels one shared column width so the editors line up. |
+| `showColonAfterLabel` | `boolean` | `false` | Appends `messages.labelColon` to every label. |
+| `showRequiredMark` | `boolean` | `true` | Renders `messages.requiredMark` after a required label, `aria-hidden`, with a screen-reader-only word beside it. |
+| `showOptionalMark` | `boolean` | `false` | Renders `messages.optionalMark` after every non-required label. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Forwarded to every editor. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'underlined'` | `'outlined'` | Forwarded to every editor. |
+| `subscriptSizing` | `'fixed' \| 'dynamic' \| 'none'` | `'fixed'` | Forwarded to every editor. `'fixed'` reserves the hint/error line so an appearing error never shifts the layout. |
+
+_State_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `readOnly` | `boolean` | `false` | Makes every editor read-only, overridable per group and per item. In `[fieldTree]` mode use the schema's `readonly()` instead. |
+| `disabled` | `boolean` | `false` | Wraps the fields in a ``. In `[fieldTree]` mode use the schema's `disabled()` — the `FormField` directive writes the editor's `disabled` input itself. |
+| `showValidationSummary` | `boolean` | `false` | Renders an `` above the fields once a submit has failed. |
+| `scrollToFirstInvalid` | `boolean` | `true` | Scrolls the first invalid field into view when a submit fails. Focus moves there either way. |
+| `errors` | `Signal<readonly OgeFormErrorEntry[]>` | `—` | Read-only: one entry per invalid field, in layout order, regardless of whether the field is showing its error yet. |
+| `valid` | `Signal<boolean>` | `—` | Read-only: whether every bound field currently validates. |
+| `dirty` | `Signal<boolean>` | `—` | Read-only: whether any bound field has been edited since the last reset. Works in all three binding modes. |
+| `messages` | `Partial<OgeFormsMessages> \| undefined` | `undefined` | Per-instance string overrides, merged over `provideOgeFormsConfig()`. |
+| `renderFormElement` | `boolean` | `true` | Whether the fields are wrapped in a real ``. Set `false` inside another form — nested forms are invalid HTML; the grid's row editor does exactly this. With `false` there is no native submit, so drive it with `submit()`. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `submit(event?: Event)` | `Promise<boolean>` | Marks every field touched, validates, emits `submitting` and then `submitted`. Resolves `false` when the form was invalid or the submit was canceled, and focuses the first invalid field. |
+| `validate()` | `boolean` | Re-reads validity and emits `validated`. Does not move focus. |
+| `reset(values?: Partial<T>)` | `void` | Resets every field to `values`, or to the bound form's initial data, and hides the validation summary. |
+| `clear()` | `void` | Empties every editor using the per-`dataType` empty value (`''`, `null`, `false`, `[]`). |
+| `focus(field?: string)` | `void` | Focuses a named field, or the first one when called with no argument. |
+| `focusFirstInvalid()` | `boolean` | Focuses — and, with `scrollToFirstInvalid`, scrolls to — the first invalid field. Returns `false` when the form is valid. |
+| `itemOption(field: string)` | `OgeResolvedFormItem \| undefined` | The resolved configuration of one item, as the form actually renders it. Replaces the reference libraries' `getEditor()`, which hands out a component instance. |
+| `updateData(field: string, value: unknown)` | `void` | Writes one field. The overload `updateData(partial)` merges an object into the bound data. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `submitting` | `OgeFormSubmittingEvent<T>` | Cancelable pre-submit — `{ data, valid, cancel, event }`. Set `cancel` to stop the submit. |
+| `submitted` | `OgeFormSubmittedEvent<T>` | Emitted after a submit passed validation and was not canceled. |
+| `fieldChanged` | `OgeFormFieldChangedEvent` | One field's value changed — `{ field, value, previousValue }`. |
+| `validated` | `OgeFormValidatedEvent` | Emitted after `validate()` or a submit attempt — `{ valid, errors }`. |
+| `editorEnterKey` | `OgeFormKeyEvent` | Enter pressed inside an editor — `{ field, event }`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeFormMode` | `'fieldTree' \| 'formGroup' \| 'formData'` | Which binding the form resolved to. |
+| `OgeFormDataType` | `'string' \| 'number' \| 'boolean' \| 'date' \| 'datetime' \| 'dateRange' \| 'array' \| 'object'` | Value shape of an item. Inferred from the model value when not set. |
+| `OgeFormEditorType` | `'textBox' \| 'textArea' \| 'numberBox' \| 'selectBox' \| 'tagBox' \| 'autocomplete' \| 'treeSelect' \| 'dateBox' \| 'dateRangeBox' \| 'calendar' \| 'checkBox' \| 'switch' \| 'radioGroup'` | Which `@oge-ui/inputs` editor renders an item. House camelCase names, not the reference libraries' class names. |
+| `OgeFormLabelLocation` | `'top' \| 'start' \| 'end'` | Where an item's label sits relative to its editor. |
+| `OgeFormScreenSize` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | Container-query breakpoints: under 480, then 480 / 720 / 960 / 1200 pixels of form width. |
+| `OgeFormColCount` | `number \| 'auto'` | A fixed track count, or auto-fit by `minColWidth`. |
+| `OgeValidationRule` | `{ type: 'required' \| 'email' \| 'numeric' \| 'stringLength' \| 'pattern' \| 'range' \| 'custom' \| 'async'; … }` | A declarative rule. Compiled into an Angular Signal Forms schema — there is no second validation engine. |
+| `OgeValidationContext` | `{ value: unknown; data: Record<string, unknown> }` | What a `custom` rule sees: its own value and the whole model, which is what makes cross-field rules possible. |
+| `OgeFormErrorEntry` | `{ field: string; label: string; message: string }` | One row of the validation summary. |
+| `OgeResolvedFormItem` | `interface` | An item after label defaulting, dataType inference, editor selection and state inheritance — what `itemOption()` returns. |
+
+### OgeFormItem — `<oge-form-item>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `field` | `string` | `—` | Required. Model property this item edits; dot-notation reaches nested objects. |
+| `key` | `string \| undefined` | `undefined` | Stable identity; defaults to `field`. |
+| `label` | `string \| undefined` | `undefined` | Label text. Defaults to a title-cased `field` — `postalCode` becomes “Postal code”. |
+| `labelVisible` | `boolean` | `true` | Set `false` to render the editor with no label. |
+| `hint` | `string \| undefined` | `undefined` | Help text under the editor. Chrome editors render it in their own subscript; bare controls get it from the form. |
+| `placeholder` | `string \| undefined` | `undefined` | Placeholder forwarded to the editor. |
+| `dataType` | `OgeFormDataType \| undefined` | `undefined` | Value shape. Inferred from the current model value when omitted. |
+| `editorType` | `OgeFormEditorType \| undefined` | `undefined` | Explicit editor; beats both `editorOptions.items` and `dataType`. |
+| `editorOptions` | `OgeFormEditorOptions \| undefined` | `undefined` | A curated, typed subset of editor inputs (`items`, `displayExpr`, `min`, `max`, `rows`, …). Supplying `items` selects a select box or tag box. |
+| `colSpan` | `number` | `1` | Layout columns the item spans, clamped to the column count in force. |
+| `visible` | `boolean` | `true` | A hidden item is dropped from the layout entirely — no hidden input, no stale DOM value. |
+| `visibleIndex` | `number \| undefined` | `undefined` | Items with an index come first, in index order; everything else keeps its declaration order behind them. |
+| `isRequired` | `boolean` | `false` | Adds a `required` rule and shows the required mark. |
+| `validationRules` | `readonly OgeValidationRule[] \| undefined` | `undefined` | Declarative rules, compiled into the form's Signal Forms schema. Ignored — with a dev-mode warning — when the form is bound with `[fieldTree]` or `[formGroup]`. |
+| `readOnly` | `boolean \| undefined` | `undefined` | `undefined` falls back to the enclosing group, then the form. |
+| `disabled` | `boolean \| undefined` | `undefined` | `undefined` falls back to the enclosing group, then the form. |
+| `cssClass` | `string \| undefined` | `undefined` | Extra class on the item wrapper. |
+
+### OgeFormGroup — `<oge-form-group>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `caption` | `string` | `''` | Legend text. An empty caption renders an unlabelled section. |
+| `key` | `string \| undefined` | `undefined` | Stable identity; defaults to the caption. |
+| `colCount` | `OgeFormColCount \| undefined` | `undefined` | Columns inside this group; `undefined` inherits the form's count. |
+| `colSpan` | `number` | `1` | Columns the group itself spans in its parent layout. |
+| `visible` | `boolean` | `true` | Drops the whole section, and its items, from the layout. |
+| `disabled` | `boolean \| undefined` | `undefined` | Disables every item in the section, unless the item overrides it. |
+| `readOnly` | `boolean \| undefined` | `undefined` | Makes every item in the section read-only, unless the item overrides it. |
+| `visibleIndex` | `number \| undefined` | `undefined` | Explicit ordering among this group's siblings. Ordering is scoped per level, the way the reference libraries scope it. |
+| `cssClass` | `string \| undefined` | `undefined` | Extra class on the fieldset. |
+
+### OgeValidationSummary — `<oge-validation-summary>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `errors` | `readonly OgeFormErrorEntry[]` | `[]` | One entry per invalid field, in layout order. Bind `form.errors()`. |
+| `messages` | `Partial<OgeFormsMessages> \| undefined` | `undefined` | Per-instance string overrides. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `errorClick` | `OgeFormErrorEntry` | A summary row was activated. Bind it to `form.focus($event.field)`. |
+
+### Sections
+
+#### Properties
+
+_OgeFormTabs — <oge-form-tabs>_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectedIndex` | `number` | `0` | Open tab — two-way. A failed submit sets it to the tab holding the first invalid field. |
+| `deferRendering` | `boolean` | `false` | Deliberately the opposite of the tab panel's own default: a form usually wants every field in the DOM. Validation runs on the model either way. |
+| `keepAlive` | `boolean` | `true` | Keeps a rendered tab's fields mounted while it is hidden. |
+| `showErrorBadges` | `boolean` | `true` | Shows each tab's invalid-field count as a badge on the tab. |
+| `key / visible / visibleIndex / colSpan / cssClass` | `string \| boolean \| number \| undefined` | `—` | The same section-level knobs a group has. |
+
+_OgeFormSteps — <oge-form-steps>_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `activeIndex` | `number` | `0` | Active step — two-way. A failed submit moves to the step holding the first invalid field. |
+| `linear` | `boolean` | `false` | Blocks moving past a step that still has invalid fields. Completion comes from the form's own per-step error rollup, so it behaves identically in all three binding modes. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Passed through to the stepper. |
+| `showNavigation` | `boolean` | `true` | Renders the stepper's built-in Back / Next bar. On by default here, because a wizard inside a form almost always wants one. |
+| `touchOnLeave` | `boolean` | `true` | Touches only the leaving step's fields on each advance, so the steps ahead stay quiet instead of turning red — which a plain `markAllAsTouched()` would cause. |
+| `showInvalidSections` | `boolean` | `true` | Flags a step whose fields are invalid, driving the stepper's error indicator. |
+| `deferRendering / keepAlive` | `boolean` | `—` | See `OgeFormTabs` — same defaults, same reasoning. |
+| `key / visible / visibleIndex / colSpan / cssClass` | `string \| boolean \| number \| undefined` | `—` | The same section-level knobs a group has. |
+
+_OgeFormAccordion — <oge-form-accordion>_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `expandedKeys` | `readonly string[]` | `[]` | Expanded panels — two-way. A failed submit adds the panel holding the first invalid field. |
+| `multiple` | `boolean` | `true` | Whether more than one panel may be open at a time. |
+| `collapsible` | `boolean` | `true` | Whether the open panel may be closed again. |
+| `showInvalidSections` | `boolean` | `true` | Drives the accordion's own invalid indicator — danger rail, dot and screen-reader label — from the panel's field errors. |
+| `deferRendering / keepAlive` | `boolean` | `—` | As on ``. |
+
+### Template slots
+
+#### Properties
+
+_Slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ogeFormItemTemplate` | `directive — [ogeFormItemTemplate]` | Replaces a field entirely: label, editor and error text. Legal at form level (every item) or inside one ``, where it wins. |
+| `ogeFormEditorTemplate` | `directive — [ogeFormEditorTemplate]` | Replaces only the control, keeping the form's label, required mark and error chrome. The escape hatch for anything `editorOptions` cannot express. |
+| `ogeFormLabelTemplate` | `directive — [ogeFormLabelTemplate]` | Replaces the label content. The surrounding `` stays, so the control association and the required mark survive. |
+| `ogeFormGroupCaptionTemplate` | `directive — [ogeFormGroupCaptionTemplate]` | Replaces the content of a group's ``. The fieldset/legend pair itself stays — that is what makes the section a labelled group. |
+| `ogeFormActions` | `directive — [ogeFormActions]` | Marks the projected action bar (submit, reset, …). A typed marker rather than a bare attribute. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeFormItemTemplateContext` | `{ $implicit: OgeResolvedFormItem; item; field; control; error; editorId }` | Context of the item and editor slots. `field` is the Signal Forms node (bind with `[formField]`), `control` the reactive one, and `editorId` the id the form's `` points at. |
+| `OgeFormLabelTemplateContext` | `{ $implicit: string; item; required; editorId }` | Context of the label slot; `$implicit` is the resolved label text. |
+| `OgeFormGroupCaptionTemplateContext` | `{ $implicit: string }` | Context of the group caption slot. |
+
+### Schema metadata
+
+#### Properties
+
+_Schema-carried layout_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OGE_FORM_LABEL` | `MetadataKey<string>` | Label text, set with `metadata(path, OGE_FORM_LABEL, () => '…')` in a Signal Forms schema. |
+| `OGE_FORM_HINT` | `MetadataKey<string>` | Help text under the editor. |
+| `OGE_FORM_PLACEHOLDER` | `MetadataKey<string>` | Editor placeholder. |
+| `OGE_FORM_COL_SPAN` | `MetadataKey<number>` | Layout columns the field spans. |
+| `OGE_FORM_EDITOR` | `MetadataKey<OgeFormEditorType>` | Explicit editor for the field. |
+| `OGE_FORM_EDITOR_OPTIONS` | `MetadataKey<OgeFormEditorOptions>` | Curated editor inputs. |
+| `OGE_FORM_DATA_TYPE` | `MetadataKey<OgeFormDataType>` | Value shape, when the live value is not descriptive enough. |
+| `OGE_FORM_GROUP` | `MetadataKey<string>` | Caption of the group the field belongs to; the group is created on demand. |
+| `OGE_FORM_ORDER` | `MetadataKey<number>` | Ordering hint, equivalent to an item's `visibleIndex`. |
+| `itemFromMetadata(field, node)` | `OgeFormItemData \| undefined` | Builds one item description from a field's metadata; `undefined` for a field the schema hid with `hidden()`. |
+
+### Forms configuration
+
+#### Properties
+
+_provideOgeFormsConfig()_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `labelLocation` | `OgeFormLabelLocation \| undefined` | `'top'` | Application-wide default for the input of the same name. |
+| `minColWidth` | `number \| undefined` | `220` | Application-wide default for the input of the same name. |
+| `showRequiredMark` | `boolean \| undefined` | `true` | Application-wide default for the input of the same name. |
+| `showOptionalMark` | `boolean \| undefined` | `false` | Application-wide default for the input of the same name. |
+| `showColonAfterLabel` | `boolean \| undefined` | `false` | Application-wide default for the input of the same name. |
+
+_OgeFormsMessages_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `requiredMark` | `string` | `'*'` | Marker after a required label; rendered aria-hidden. |
+| `optionalMark` | `string` | `'optional'` | Marker after an optional label. |
+| `requiredLabel` | `string` | `'required'` | Screen-reader text beside the required mark. |
+| `optionalLabel` | `string` | `'optional'` | Screen-reader text beside the optional mark. |
+| `labelColon` | `string` | `':'` | Separator drawn when `showColonAfterLabel`. |
+| `validationSummaryTitle` | `string` | `'{count} fields need your attention'` | Summary heading; `{count}` is interpolated. |
+| `validationSummaryTitleOne` | `string` | `'1 field needs your attention'` | Summary heading when exactly one field is invalid. |
+| `validationSummaryLabel` | `string` | `'Validation summary'` | Accessible label of the summary region. |
+| `invalidError` | `string` | `'This value is invalid'` | Fallback text for an error with no resolvable message. |
+| `submitButton` | `string` | `'Submit'` | Label of the built-in submit button. |
+| `resetButton` | `string` | `'Reset'` | Label of the built-in reset button. |
+| `submitting` | `string` | `'Submitting…'` | Announced while an async submit handler is in flight. |
+| `noItems` | `string` | `'No fields to display'` | Shown when no visible item resolves. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Accordion section
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormAccordion, OgeFormGroup, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormAccordion, OgeFormGroup, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="employee">
+      <oge-form-accordion [expandedKeys]="[]">
+        <oge-form-group caption="Personal">
+          <oge-form-item field="firstName" label="First name" />
+        </oge-form-group>
+        <oge-form-group caption="Employment">
+          <oge-form-item field="title" label="Title" [isRequired]="true" />
+        </oge-form-group>
+      </oge-form-accordion>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly employee = signal({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    title: '',
+    salary: 120000,
+  });
+}
+```
+
+### Auto
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- the default: as many 260px columns as the FORM is wide -->
+    <oge-form
+      [(formData)]="server"
+      [items]="fields"
+      colCount="auto"
+      [minColWidth]="260"
+    />
+  `,
+})
+export class Demo {
+  protected readonly server = signal({
+    host: 'db.internal',
+    port: 5432,
+    user: 'postgres',
+    database: 'oge',
+  });
+
+  protected readonly fields: OgeFormItemData[] = [
+    { field: 'host', label: 'Host' },
+    { field: 'port', label: 'Port' },
+    { field: 'user', label: 'User' },
+    { field: 'database', label: 'Database' },
+  ];
+}
+```
+
+### Breakpoint
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- keyed to the form's own width, not the window's, so this
+         works identically inside a dialog, a drawer or a grid cell -->
+    <oge-form
+      [(formData)]="server"
+      [items]="fields"
+      [colCountByScreen]="{ xs: 1, sm: 2, md: 3, lg: 4 }"
+    />
+  `,
+})
+export class Demo {
+  protected readonly server = signal({
+    host: 'db.internal',
+    port: 5432,
+    user: 'postgres',
+    database: 'oge',
+  });
+
+  protected readonly fields: OgeFormItemData[] = [
+    { field: 'host', label: 'Host' },
+    { field: 'port', label: 'Port' },
+    { field: 'user', label: 'User' },
+    { field: 'database', label: 'Database' },
+  ];
+}
+```
+
+### Colcount
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="record" [colCount]="columns()">
+      <oge-form-item field="code" label="Code" />
+      <oge-form-item field="name" label="Name" />
+      <oge-form-item field="owner" label="Owner" />
+      <oge-form-item field="summary" label="Summary" [colSpan]="columns()" />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly columns = signal(3);
+
+  protected readonly record = signal({
+    code: 'OGE-1',
+    name: 'Form layout',
+    owner: 'Ada',
+    summary: '',
+  });
+}
+```
+
+### Nested
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormGroup, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormGroup, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="company" [colCount]="2">
+      <oge-form-group caption="Company" [colCount]="2">
+        <oge-form-item field="name" label="Name" [colSpan]="2" />
+        <oge-form-item field="taxId" label="Tax id" />
+        <oge-form-item field="employees" label="Employees" />
+
+        <oge-form-group caption="Billing address" [colCount]="2">
+          <oge-form-item field="street" label="Street" [colSpan]="2" />
+          <oge-form-item field="city" label="City" />
+          <oge-form-item field="postalCode" label="Postal code" />
+        </oge-form-group>
+      </oge-form-group>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly company = signal({
+    name: 'OGE UI',
+    taxId: '',
+    employees: 12,
+    street: '',
+    city: '',
+    postalCode: '',
+  });
+}
+```
+
+### Readonly
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form
+      [(formData)]="invoice"
+      [readOnly]="locked()"
+      [disabled]="archived()"
+      [colCount]="2"
+    >
+      <oge-form-item field="number" label="Number" />
+      <oge-form-item field="total" label="Total" />
+      <!-- an item may always opt out of the form-level state -->
+      <oge-form-item field="comment" label="Comment" [readOnly]="false" />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly locked = signal(true);
+  protected readonly archived = signal(false);
+
+  protected readonly invoice = signal({
+    number: 'INV-204',
+    total: 1290,
+    comment: '',
+  });
+}
+```
+
+### Sections
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormGroup, OgeFormItem, OgeFormTabs } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormGroup, OgeFormItem, OgeFormTabs],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- one tab per group; the tab strip, its keyboard handling and its
+         overflow come from @oge-ui/tabs, not from a copy of it -->
+    <oge-form [(formData)]="employee" [showValidationSummary]="true">
+      <oge-form-tabs>
+        <oge-form-group caption="Personal" [colCount]="2">
+          <oge-form-item field="firstName" label="First name" />
+          <oge-form-item field="lastName" label="Last name" />
+        </oge-form-group>
+        <oge-form-group caption="Employment" [colCount]="2">
+          <oge-form-item field="title" label="Title" [isRequired]="true" />
+          <oge-form-item field="salary" label="Salary" />
+        </oge-form-group>
+      </oge-form-tabs>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly employee = signal({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    title: '',
+    salary: 120000,
+  });
+}
+```
+
+### Visibility
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="shipment" [colCount]="2">
+      <oge-form-item field="carrier" label="Carrier" [visibleIndex]="1" />
+      <oge-form-item field="reference" label="Reference" [visibleIndex]="0" />
+      <oge-form-item
+        field="trackingNumber"
+        label="Tracking number"
+        [visible]="shipment().carrier !== ''"
+      />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly shipment = signal({
+    carrier: 'DHL',
+    reference: 'REF-9',
+    trackingNumber: '',
+  });
+}
+```
+
+### Actions
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem, OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form
+      #form
+      [(formData)]="signup"
+      [showValidationSummary]="true"
+      (submitted)="saved.set(true)"
+    >
+      <oge-form-item field="email" label="E-mail" [isRequired]="true" />
+      <oge-form-item field="password" label="Password" [isRequired]="true" />
+
+      <div ogeFormActions>
+        <oge-button
+          text="Create"
+          stylingMode="contained"
+          buttonType="submit"
+          [useSubmitBehavior]="true"
+        />
+        <oge-button text="Reset" (click)="form.reset()" />
+      </div>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly signup = signal({ email: '', password: '' });
+  protected readonly saved = signal(false);
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="employee" [colCount]="2">
+      <oge-form-item field="firstName" label="First name" [isRequired]="true" />
+      <oge-form-item field="lastName" label="Last name" />
+      <oge-form-item field="email" label="E-mail" hint="We never share it." />
+      <oge-form-item field="notes" editorType="textArea" [colSpan]="2" />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly employee = signal({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    email: '',
+    notes: '',
+  });
+}
+```
+
+### Editor
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="profile" [colCount]="2">
+      <!-- no dataType: inferred from the model value -->
+      <oge-form-item field="name" label="Name" />
+      <oge-form-item field="age" label="Age" />
+      <oge-form-item field="birthday" label="Birthday" />
+      <oge-form-item field="active" label="Active" />
+      <!-- an option list beats the inferred type -->
+      <oge-form-item
+        field="team"
+        label="Team"
+        [editorOptions]="{ items: teams }"
+      />
+      <!-- editorType beats everything -->
+      <oge-form-item field="bio" label="Bio" editorType="textArea" [colSpan]="2" />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly teams = ['Platform', 'Design', 'Support'];
+
+  protected readonly profile = signal({
+    name: 'Grace',
+    age: 45,
+    birthday: new Date(1980, 4, 12),
+    active: true,
+    team: 'Platform',
+    bio: '',
+  });
+}
+```
+
+### Group
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormGroup, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormGroup, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="account" [colCount]="2">
+      <oge-form-group caption="Identity" [colCount]="2">
+        <oge-form-item field="firstName" label="First name" />
+        <oge-form-item field="lastName" label="Last name" />
+      </oge-form-group>
+
+      <oge-form-group caption="Contact" [colCount]="2">
+        <oge-form-item field="email" label="E-mail" />
+        <oge-form-item field="phone" label="Phone" />
+        <oge-form-item field="address" label="Address" [colSpan]="2" />
+      </oge-form-group>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly account = signal({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    email: 'ada@example.com',
+    phone: '',
+    address: '',
+  });
+}
+```
+
+### Items
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="order" [items]="fields" [colCount]="2" />
+  `,
+})
+export class Demo {
+  protected readonly order = signal({
+    reference: '',
+    quantity: 1,
+    priority: 'normal',
+    shipped: false,
+  });
+
+  protected readonly fields: OgeFormItemData[] = [
+    { field: 'reference', label: 'Reference', isRequired: true },
+    { field: 'quantity', label: 'Quantity', editorOptions: { min: 1, max: 99 } },
+    {
+      field: 'priority',
+      label: 'Priority',
+      editorOptions: { items: ['low', 'normal', 'high'] },
+    },
+    { field: 'shipped', label: 'Shipped', dataType: 'boolean' },
+  ];
+}
+```
+
+### Label
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form
+      [(formData)]="settings"
+      labelLocation="start"
+      [alignItemLabels]="true"
+      [showColonAfterLabel]="true"
+      [colCount]="1"
+    >
+      <oge-form-item field="host" label="Host" [isRequired]="true" />
+      <oge-form-item field="port" label="Port" />
+      <oge-form-item field="secure" label="Use TLS" />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly settings = signal({
+    host: 'localhost',
+    port: 5432,
+    secure: true,
+  });
+}
+```
+
+### Template
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem, OgeFormEditorTemplate, OgeFormLabelTemplate } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem, OgeFormEditorTemplate, OgeFormLabelTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="ticket" labelLocation="start" [colCount]="1">
+      <oge-form-item field="title" label="Title" [isRequired]="true" />
+
+      <!-- replace only the editor; the form keeps the label, required mark
+           and error text, and hands you the id its <label for> points at -->
+      <oge-form-item field="rating" label="Rating">
+        <ng-template ogeFormLabelTemplate let-text>
+          <em>{{ text }}</em>
+        </ng-template>
+        <ng-template ogeFormEditorTemplate let-item let-editorId="editorId">
+          <input
+            type="range"
+            min="1"
+            max="5"
+            [id]="editorId"
+            [value]="ticket().rating"
+            (input)="setRating($any($event.target).value)"
+          />
+          <span>{{ ticket().rating }} / 5</span>
+        </ng-template>
+      </oge-form-item>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly ticket = signal({ title: '', rating: 3 });
+
+  protected setRating(value: string): void {
+    this.ticket.update((t) => ({ ...t, rating: Number(value) }));
+  }
+}
+```
+
+### Config
+
+```ts
+import { provideOgeFormsConfig } from '@oge-ui/forms';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideOgeFormsConfig({
+      labelLocation: 'start',
+      showOptionalMark: true,
+      messages: {
+        requiredMark: '•',
+        optionalMark: 'isteğe bağlı',
+        validationSummaryTitle: '{count} alan düzeltilmeli',
+        validationSummaryTitleOne: '1 alan düzeltilmeli',
+      },
+    }),
+  ],
+};
+```
+
+### Custom
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+import type { OgeValidationRule } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="account">
+      <oge-form-item field="password" label="Password" [isRequired]="true" />
+      <oge-form-item field="confirm" label="Confirm" [validationRules]="matchRule" />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly account = signal({ password: '', confirm: '' });
+
+  // a custom rule sees its own value and the whole model, so cross-field
+  // checks need no second engine
+  protected readonly matchRule: OgeValidationRule[] = [
+    {
+      type: 'custom',
+      validate: ({ value, data }) =>
+        value === data['password'] ? null : 'Passwords do not match',
+    },
+  ];
+}
+```
+
+### Metadata
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OGE_FORM_LABEL, OGE_FORM_HINT, OGE_FORM_GROUP, OGE_FORM_COL_SPAN, OGE_FORM_EDITOR } from '@oge-ui/forms';
+import { form, required, email, metadata } from '@angular/forms/signals';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- no items, no children: the schema IS the layout -->
+    <oge-form [fieldTree]="profile" [colCount]="2" />
+  `,
+})
+export class Demo {
+  protected readonly model = signal({ name: '', email: '', bio: '' });
+
+  protected readonly profile = form(this.model, (p) => {
+    required(p.name);
+    required(p.email);
+    email(p.email);
+
+    metadata(p.name, OGE_FORM_LABEL, () => 'Full name');
+    metadata(p.email, OGE_FORM_LABEL, () => 'E-mail address');
+    metadata(p.email, OGE_FORM_HINT, () => 'Work address, please');
+    metadata(p.email, OGE_FORM_GROUP, () => 'Contact');
+    metadata(p.bio, OGE_FORM_EDITOR, () => 'textArea' as const);
+    metadata(p.bio, OGE_FORM_COL_SPAN, () => 2);
+  });
+}
+```
+
+### Reactive
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [formGroup]="group" [colCount]="2">
+      <oge-form-item field="name" label="Name" />
+      <oge-form-item field="email" label="E-mail" />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly group = new FormGroup({
+    name: new FormControl('', Validators.required),
+    email: new FormControl('', [Validators.required, Validators.email]),
+  });
+}
+```
+
+### Rules
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="signup" [showValidationSummary]="true">
+      <oge-form-item
+        field="username"
+        label="Username"
+        [validationRules]="[
+          { type: 'required' },
+          { type: 'stringLength', min: 3, max: 20 },
+        ]"
+      />
+      <oge-form-item
+        field="email"
+        label="E-mail"
+        [validationRules]="[{ type: 'required' }, { type: 'email' }]"
+      />
+      <oge-form-item
+        field="age"
+        label="Age"
+        [validationRules]="[{ type: 'numeric', min: 18, max: 120 }]"
+      />
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly signup = signal({ username: '', email: '', age: 0 });
+}
+```
+
+### Signal forms
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem } from '@oge-ui/forms';
+import { form, required, email, minLength, disabled } from '@angular/forms/signals';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- the schema owns validation, required marks, disabled and readonly -->
+    <oge-form [fieldTree]="profile" [colCount]="2">
+      <oge-form-item field="name" label="Name" />
+      <oge-form-item field="email" label="E-mail" />
+      <oge-form-item field="tenant" label="Tenant" />
+    </oge-form>
+
+    <p>valid: {{ profile().valid() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly model = signal({ name: '', email: '', tenant: 'acme' });
+
+  protected readonly profile = form(this.model, (p) => {
+    required(p.name);
+    minLength(p.name, 2);
+    required(p.email);
+    email(p.email);
+    disabled(p.tenant, () => true);
+  });
+}
+```
+
+### Summary
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm, OgeFormItem, OgeValidationSummary } from '@oge-ui/forms';
+import { OgeButton } from '@oge-ui/buttons';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeFormItem, OgeValidationSummary, OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- place the summary yourself, or let the form render it with
+         [showValidationSummary]. Either way a row focuses its field. -->
+    <oge-validation-summary
+      [errors]="form.errors()"
+      (errorClick)="form.focus($event.field)"
+    />
+
+    <oge-form #form [(formData)]="ticket" [scrollToFirstInvalid]="true">
+      <oge-form-item field="title" label="Title" [isRequired]="true" />
+      <oge-form-item field="reporter" label="Reporter" [isRequired]="true" />
+      <div ogeFormActions>
+        <oge-button text="Save" buttonType="submit" [useSubmitBehavior]="true" />
+      </div>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly ticket = signal({ title: '', reporter: '' });
+}
+```
+
