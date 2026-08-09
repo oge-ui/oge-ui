@@ -608,16 +608,46 @@ const ORG: OrgNode[] = [
             </h2>
           </div>
 
-          <!-- one headline number; the per-package rows were noise — the
-               breakdown lives on npmjs.com itself -->
-          <div class="home-reveal og-npm mx-auto mt-8 max-w-3xl">
-            <div class="og-npm-total" aria-live="polite">
-              <span class="og-total-value">{{ npmTotal() }}</span>
-              <span class="og-total-label">total downloads</span>
-              <span class="og-npm-sub"
-                >across {{ npmCounted() || packages.length }} packages · live
-                from npm, since the first release</span
-              >
+          <!-- one headline number in a medallion; the per-package rows were
+               noise — the breakdown lives on npmjs.com itself -->
+          <div
+            class="home-reveal og-npm mx-auto mt-10 max-w-2xl"
+            aria-live="polite"
+          >
+            <span class="og-npm-eyelet" aria-hidden="true">
+              <app-icon name="package" [size]="15" />
+            </span>
+            <span class="og-total-value">{{ npmTotal() }}</span>
+            <span class="og-total-label">total downloads</span>
+            <span class="og-npm-rule" aria-hidden="true"></span>
+            <span class="og-npm-sub"
+              >across {{ npmCounted() || packages.length }} open-source packages
+              · live from npm, since the first release</span
+            >
+
+            <!-- endless package strip: two identical halves, translated by
+                 -50% for a seamless CSS-only loop; pauses on hover and falls
+                 back to a plain scrollable row under reduced motion -->
+            <div class="og-npm-marquee">
+              <div class="og-npm-track">
+                @for (stat of npmStats(); track stat.pkg) {
+                  <a
+                    [href]="'https://www.npmjs.com/package/' + stat.pkg"
+                    target="_blank"
+                    rel="noopener"
+                    class="og-npm-chip"
+                  >
+                    <span class="og-npm-pkg">{{ stat.pkg }}</span>
+                    <span class="og-npm-count">{{ stat.downloads }}</span>
+                  </a>
+                }
+                @for (stat of npmStats(); track stat.pkg + '-dup') {
+                  <span class="og-npm-chip" aria-hidden="true">
+                    <span class="og-npm-pkg">{{ stat.pkg }}</span>
+                    <span class="og-npm-count">{{ stat.downloads }}</span>
+                  </span>
+                }
+              </div>
             </div>
           </div>
         </div>
@@ -1369,42 +1399,66 @@ const ORG: OrgNode[] = [
       }
     }
 
-    /* ═══ npm downloads band: big total beside a quiet package list ═══ */
+    /* ═══ npm downloads band: a medallion total over an endless chip strip ═══ */
     app-home .og-npm {
-      display: grid;
-      grid-template-columns: 1fr 1.15fr;
-      overflow: hidden;
-      border: 1px solid var(--og-line);
-      border-radius: 14px;
-      background: var(--og-stone-2);
-    }
-
-    @media (max-width: 48rem) {
-      app-home .og-npm {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    app-home .og-npm-total {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 3px;
-      padding: 32px 24px;
+      gap: 4px;
+      overflow: hidden;
+      padding: 40px 0 28px;
       text-align: center;
-      border-right: 1px solid var(--og-line);
+      border: 1px solid var(--og-line);
+      border-radius: 20px;
+      background: var(--og-stone-2);
     }
 
-    @media (max-width: 48rem) {
-      app-home .og-npm-total {
-        border-right: none;
-        border-bottom: 1px solid var(--og-line);
-      }
+    /* a quiet radial halo behind the number */
+    app-home .og-npm::before {
+      content: '';
+      position: absolute;
+      inset: -55% 15% auto;
+      height: 120%;
+      background: radial-gradient(
+        closest-side,
+        color-mix(in srgb, var(--og-gold) 12%, transparent),
+        transparent 72%
+      );
+      pointer-events: none;
+    }
+
+    app-home .og-npm-eyelet {
+      position: relative;
+      display: flex;
+      height: 34px;
+      width: 34px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      border: 1px solid color-mix(in srgb, var(--og-gold) 35%, transparent);
+      border-radius: 999px;
+      color: var(--og-gold);
+      background: color-mix(in srgb, var(--og-gold) 9%, transparent);
+    }
+
+    app-home .og-npm-rule {
+      display: block;
+      height: 1px;
+      width: 72px;
+      margin-block: 10px 8px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        var(--og-gold),
+        transparent
+      );
+      opacity: 0.55;
     }
 
     app-home .og-total-value {
-      font-size: 46px;
+      position: relative;
+      font-size: 54px;
       font-weight: 700;
       letter-spacing: -0.03em;
       line-height: 1.1;
@@ -1427,57 +1481,98 @@ const ORG: OrgNode[] = [
     }
 
     app-home .og-npm-sub {
+      position: relative;
       font-size: 11.5px;
       color: var(--og-faint);
     }
 
-    app-home .og-npm-list {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 12px 8px;
+    /* the endless strip: edges dissolve, motion pauses under the pointer */
+    app-home .og-npm-marquee {
+      position: relative;
+      width: 100%;
+      margin-top: 24px;
+      overflow: hidden;
+      mask-image: linear-gradient(
+        90deg,
+        transparent,
+        #000 14%,
+        #000 86%,
+        transparent
+      );
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent,
+        #000 14%,
+        #000 86%,
+        transparent
+      );
     }
 
-    app-home .og-npm-icon {
+    app-home .og-npm-track {
       display: flex;
-      height: 26px;
-      width: 26px;
-      align-items: center;
-      justify-content: center;
-      border-radius: 7px;
-      color: var(--og-gold);
+      width: max-content;
+      animation: og-npm-scroll 36s linear infinite;
+    }
+
+    app-home .og-npm-marquee:hover .og-npm-track,
+    app-home .og-npm-marquee:focus-within .og-npm-track {
+      animation-play-state: paused;
+    }
+
+    @keyframes og-npm-scroll {
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    app-home .og-npm-chip {
+      display: inline-flex;
+      flex: none;
+      align-items: baseline;
+      gap: 8px;
+      margin-inline-end: 10px;
+      padding: 7px 14px;
+      border: 1px solid var(--og-line);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--og-gold) 4%, transparent);
+      transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease;
+    }
+
+    app-home a.og-npm-chip:hover {
+      border-color: color-mix(in srgb, var(--og-gold) 45%, transparent);
       background: color-mix(in srgb, var(--og-gold) 9%, transparent);
-    }
-
-    app-home .og-npm-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      border-radius: 8px;
-      padding: 9px 14px;
-      transition: background-color 0.15s ease;
-    }
-
-    app-home .og-npm-row:hover {
-      background: color-mix(in srgb, var(--og-gold) 6%, transparent);
     }
 
     app-home .og-npm-pkg {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 12.5px;
+      font-size: 12px;
       color: var(--og-mut);
     }
 
-    app-home .og-npm-row:hover .og-npm-pkg {
+    app-home a.og-npm-chip:hover .og-npm-pkg {
       color: var(--og-bone);
     }
 
     app-home .og-npm-count {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       color: var(--og-bone);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      app-home .og-npm-track {
+        animation: none;
+        width: auto;
+      }
+
+      app-home .og-npm-marquee {
+        overflow-x: auto;
+        mask-image: none;
+        -webkit-mask-image: none;
+      }
     }
 
     /* ═══ trend cell, code, virt stream, kbd, swatches ═══ */
@@ -1744,17 +1839,13 @@ export class HomePage {
     '@oge-ui/forms',
   ];
 
-  /** Packages surfaced in the live download-count rows, with their icons. */
-  private readonly statPkgs: { pkg: string; icon: IconName }[] = [
-    { pkg: 'oge-ui', icon: 'package' },
-    { pkg: '@oge-ui/grid', icon: 'table' },
-    { pkg: '@oge-ui/inputs', icon: 'text-cursor' },
-    { pkg: '@oge-ui/overlay', icon: 'layers' },
-  ];
-
-  /** All-time npm downloads per stat package; '—' until the fetch lands. */
+  /**
+   * All-time npm downloads per package; '—' until the fetch lands. Derived
+   * from `packages`, so registering a new package there is the only step —
+   * the chip strip and the total both follow.
+   */
   protected readonly npmStats = signal(
-    this.statPkgs.map(({ pkg, icon }) => ({ pkg, icon, downloads: '—' })),
+    this.packages.map((pkg) => ({ pkg, downloads: '—' })),
   );
 
   /** All-time downloads summed across every package that reported; '—' until fetched. */
@@ -2105,9 +2196,9 @@ export class HomePage {
     ).then((results) => {
       const counts = new Map(results.map((r) => [r.pkg, r.count]));
       this.npmStats.set(
-        this.statPkgs.map(({ pkg, icon }) => {
+        this.packages.map((pkg) => {
           const count = counts.get(pkg);
-          return { pkg, icon, downloads: count == null ? '—' : format(count) };
+          return { pkg, downloads: count == null ? '—' : format(count) };
         }),
       );
       const known = results.filter(
