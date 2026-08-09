@@ -5,6 +5,42 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## 0.9.0 — 2026-08-09
+
+### New components
+
+- **`OgeCard`** (`@oge-ui/layout`) — a content surface that is **one component,
+  not a sub-component army**: the sections are attribute slots
+  (`[ogeCardMedia]`, `[ogeCardActions]` with `align`, `[ogeCardFooter]`,
+  `[ogeCardAvatar]`, `[ogeCardHeaderActions]`, `[ogeCardSeparator]`) and
+  everything else projected is the content. `stylingMode`
+  `outlined | raised | filled | flat` rests on the new `--oge-shadow-card`
+  token, `size` scales density, `severity` draws a status rail, `loading`
+  swaps content for an `aria-busy` skeleton, and `interactive` is a
+  visual-only hover/focus-within lift. **No role and no clickable input, on
+  purpose** — there is no WAI-ARIA card pattern; the accessible stretched-link
+  pattern is a documented demo instead of an API.
+
+### Changed
+
+- New design token: `--oge-shadow-card` (resting card elevation, dark theme
+  override included).
+- The dev-app's hand-rolled card boxes — the playground stat tiles and
+  sidebar, and five scroll-log/state panels — now render `<oge-card>`.
+
+### Fixed
+
+- **Pivot**: the collapsed field panel now contains its toggle button and sits
+  above the sticky column headers, which used to paint over it and swallow its
+  clicks.
+- **Stepper**: the connector rail is derived from the header padding and
+  indicator size, so it runs exactly through every indicator centre in both
+  orientations; completed steps tint their outgoing rail, and the active
+  indicator gains a soft halo.
+- **Drawer**: `overlay`/`push` panels keep their full size and only translate —
+  a compositor-only animation with no mid-gesture reflow — on a decelerate
+  curve, with a scoped backdrop blur.
+
 ## 0.8.0 — 2026-08-09
 
 ### New package
