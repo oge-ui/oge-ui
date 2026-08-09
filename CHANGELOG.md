@@ -1,9 +1,75 @@
 # Changelog
 
 Notable changes to the OGE UI packages. Versions are tagged per package
-(`grid@0.7.0`, `core@0.7.0`, …); entries below group them by release wave.
+(`grid@0.8.0`, `core@0.8.0`, …); entries below group them by release wave.
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
+
+## 0.8.0 — 2026-08-09
+
+### New package
+
+- **`@oge-ui/forms`** — form layout over the `inputs` editors. `OgeForm` takes
+  three binding modes on one component: `[fieldTree]` (Angular Signal Forms),
+  `[formGroup]` (reactive forms) and `[(formData)]` (a plain model over an
+  internally owned `form()`); the mode is derived, never configured.
+  Validation is Signal Forms throughout — `validationRules` compiles to a
+  schema, so there is no second engine. Responsive columns are `@container`
+  queries on the form's own inline size rather than window width, and
+  `<oge-form-tabs>` / `<oge-form-accordion>` / `<oge-form-steps>` wrap the
+  tabs, layout and navigation components instead of copying them.
+
+### New components
+
+- **`OgeSplitter`** (`@oge-ui/layout`) — the WAI-ARIA APG window splitter:
+  focusable `role="separator"` tracks in one CSS grid, `fr`-ratio sizing with
+  `'<n>px'` / `'<n>%'` escape hatches, collapse-to-`inert`, pointer capture and
+  self-recursive nesting.
+- **`OgeToolbar`** (`@oge-ui/layout`) — the APG toolbar: `role="toolbar"`, a
+  roving tabindex over its own buttons _and_ the controls you project,
+  before/center/after groups, and an overflow menu for the commands that stop
+  fitting. Per-item `overflowPriority` decides which yield first, independently
+  of their position — the reference toolbars drop strictly from the end.
+- **`OgeDrawer`** (`@oge-ui/navigation`) — `overlay`, `push` or `side`, on four
+  logical edges. **Modality is derived from the mode**, not configured
+  separately: `overlay`/`push` cover or displace the content and are dialogs
+  (`role="dialog"`, `aria-modal`, focus trap, Escape, `inert`); `side` shares
+  the row and is a landmark. `compactBelow` measures the drawer's own container
+  rather than the window.
+- **`OgeStepper`** (`@oge-ui/navigation`) — a linear or free wizard. There is no
+  APG stepper pattern, so it is an ordered list of `<button>` headers carrying
+  `aria-current="step"` with `role="group"` bodies — **one semantic in both
+  orientations**, where Angular Material swaps `tablist` for `aria-current`
+  with the layout. `linear`, `editable` and an async `stepGuard` gate the flow,
+  and every refusal reports why through `stepBlocked`.
+
+### Changed
+
+- The `.oge-toolbar` markup was duplicated in the grid (14 uses), the tree list
+  (12) and the pivot grid (5). All three now render `<oge-toolbar>`, so they
+  gained the overflow menu and the APG keyboard model; the CSS namespace moved
+  to `@oge-ui/layout` and the grid's own toolbar buttons became `.oge-tool-*`.
+- The grid and the tree list render `<oge-form>` for their `form` and `popup`
+  edit surfaces, retiring that duplication too.
+- `@oge-ui/overlay` now exports the focus trap, the ref-counted scroll lock and
+  the shared Escape stack, so a modal surface in another package joins _that_
+  ordering rather than growing a second one — a popup opened inside a drawer
+  closes before the drawer does.
+- `OgeMenuItem` gained optional `icon` / `iconClass`, so a command keeps its
+  icon when it collapses into an overflow or context menu.
+- `@oge-ui/grid`'s `OgeToolbarItem` template directive is now
+  **`OgeGridToolbarItem`** (the selector `[ogeToolbar]` is unchanged), freeing
+  the name for the layout toolbar's declarative child.
+- The button `autoRepeat` docs call their use case "spinner/counter buttons"
+  rather than "stepper", now that a stepper component exists.
+
+### Fixed
+
+- The toolbar re-read `getComputedStyle` and every item's size on every resize
+  frame; style and per-item layout reads now stay off the resize path.
+- `overflowChanged` stopped firing when only the container width changed.
+- `hideItem()` / `enableItem()` silently did nothing for declarative
+  `<oge-toolbar-item>` children.
 
 ## 0.7.0 — 2026-08-08
 
