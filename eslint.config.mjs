@@ -35,6 +35,11 @@ export default [
                 'scope:core',
                 'scope:inputs',
                 'scope:overlay',
+                // the form/popup edit surfaces render <oge-form>; forms
+                // depends on inputs/tabs/layout, never on grid, so no cycle
+                'scope:forms',
+                'scope:tabs',
+                'scope:layout',
               ],
             },
             {
@@ -45,6 +50,9 @@ export default [
                 'scope:core',
                 'scope:inputs',
                 'scope:overlay',
+                'scope:forms',
+                'scope:tabs',
+                'scope:layout',
               ],
             },
             {
@@ -90,11 +98,39 @@ export default [
             },
             {
               sourceTag: 'scope:layout',
-              onlyDependOnLibsWithTags: ['scope:layout', 'scope:core'],
+              // the toolbar's overflow menu runs on OgeAnchoredPanel +
+              // oge-menu-list, the same surfaces tabs uses; overlay depends
+              // on core only, so this edge cannot close a cycle
+              onlyDependOnLibsWithTags: [
+                'scope:layout',
+                'scope:overlay',
+                'scope:core',
+              ],
             },
             {
               sourceTag: 'scope:navigation',
-              onlyDependOnLibsWithTags: ['scope:navigation', 'scope:core'],
+              // the drawer is a modal surface in two of its three modes, so it
+              // joins overlay's shared Escape stack and reuses its focus trap
+              // and scroll lock; overlay depends on core only, so this edge
+              // cannot close a cycle
+              onlyDependOnLibsWithTags: [
+                'scope:navigation',
+                'scope:overlay',
+                'scope:core',
+              ],
+            },
+            {
+              sourceTag: 'scope:forms',
+              onlyDependOnLibsWithTags: [
+                'scope:forms',
+                'scope:inputs',
+                'scope:buttons',
+                'scope:overlay',
+                'scope:tabs',
+                'scope:layout',
+                'scope:navigation',
+                'scope:core',
+              ],
             },
             {
               // umbrella package: re-exports every MIT family.
@@ -110,6 +146,7 @@ export default [
                 'scope:tabs',
                 'scope:layout',
                 'scope:navigation',
+                'scope:forms',
                 'scope:core',
               ],
             },
@@ -126,6 +163,7 @@ export default [
                 'scope:tabs',
                 'scope:layout',
                 'scope:navigation',
+                'scope:forms',
                 'scope:core',
               ],
             },

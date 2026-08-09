@@ -66,6 +66,7 @@ export {
   type OgeInputDropDownApi,
 } from './lib/field/input-host';
 export { OgeInputPrefix, OgeInputSuffix } from './lib/field/input-slots';
+export { resolveErrorMessage, formatPattern } from './lib/field/error-messages';
 export {
   type OgeInputLabelMode,
   type OgeInputStylingMode,

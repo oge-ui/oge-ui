@@ -1,0 +1,332 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a standalone drawer is fully themed without
+// any other oge component on the page.
+.oge-drawer {
+  @include tokens.core-tokens;
+
+  --oge-drawer-size: 260px;
+  --oge-drawer-min-size: 0px;
+  --oge-drawer-duration: 240ms;
+  // The panel's own size right now: the rail while closed, the full size while
+  // open. Every mode below lays out from this one value.
+  --oge-drawer-current: var(--oge-drawer-min-size);
+
+  position: relative;
+  display: flex;
+  min-inline-size: 0;
+  color: var(--oge-text-color);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+
+  // Deliberately NOT a `container-type` — that would re-target the `@container`
+  // queries of an `<oge-form>` projected inside, resolving them against the
+  // drawer instead of the form.
+}
+
+.oge-drawer-opened {
+  --oge-drawer-current: var(--oge-drawer-size);
+}
+
+// --- axis --------------------------------------------------------------------
+
+// start/end run along the inline axis, top/bottom along the block axis.
+.oge-drawer[data-position='start'],
+.oge-drawer[data-position='end'] {
+  flex-direction: row;
+}
+
+.oge-drawer[data-position='top'],
+.oge-drawer[data-position='bottom'] {
+  flex-direction: column;
+}
+
+// The panel is always first in the DOM (so it comes first in the Tab order,
+// which is what a navigation landmark wants); `order` moves it visually.
+.oge-drawer[data-position='end'] .oge-drawer-panel,
+.oge-drawer[data-position='bottom'] .oge-drawer-panel {
+  order: 1;
+}
+
+// --- panel -------------------------------------------------------------------
+
+.oge-drawer-panel {
+  // positioning context for the close button; the out-of-flow modes below
+  // override this with `absolute`, which is more specific
+  position: relative;
+  flex: none;
+  overflow: auto;
+  background: var(--oge-header-bg);
+  outline: none;
+  transition:
+    inline-size var(--oge-drawer-duration) ease,
+    block-size var(--oge-drawer-duration) ease,
+    translate var(--oge-drawer-duration) ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+// Only the animated host transitions; without the class the panel snaps.
+.oge-drawer:not(.oge-drawer-animated) .oge-drawer-panel,
+.oge-drawer:not(.oge-drawer-animated) .oge-drawer-content {
+  transition: none;
+}
+
+.oge-drawer[data-position='start'] .oge-drawer-panel,
+.oge-drawer[data-position='end'] .oge-drawer-panel {
+  inline-size: var(--oge-drawer-current);
+  block-size: 100%;
+}
+
+.oge-drawer[data-position='top'] .oge-drawer-panel,
+.oge-drawer[data-position='bottom'] .oge-drawer-panel {
+  block-size: var(--oge-drawer-current);
+  inline-size: 100%;
+}
+
+// A hairline between panel and content, on the edge that faces the content.
+.oge-drawer[data-position='start'] .oge-drawer-panel {
+  border-inline-end: 1px solid var(--oge-border-color);
+}
+.oge-drawer[data-position='end'] .oge-drawer-panel {
+  border-inline-start: 1px solid var(--oge-border-color);
+}
+.oge-drawer[data-position='top'] .oge-drawer-panel {
+  border-block-end: 1px solid var(--oge-border-color);
+}
+.oge-drawer[data-position='bottom'] .oge-drawer-panel {
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+// The close affordance sits in the panel's trailing top corner, out of the
+// content's flow so projected markup starts at the top edge as usual.
+.oge-drawer-close {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  transition:
+    background-color var(--oge-drawer-duration) ease,
+    color var(--oge-drawer-duration) ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.oge-drawer-content {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+  transition: translate var(--oge-drawer-duration) ease;
+}
+
+// --- mode: 'side' -------------------------------------------------------------
+// The panel is a flex track, so the content simply gets the rest of the row.
+// Nothing extra to declare: the base layout above already is `side`.
+
+// --- mode: 'push' -------------------------------------------------------------
+// The panel is taken out of flow and both it and the content are translated by
+// the panel's size, so the content keeps its width and only moves.
+.oge-drawer[data-mode='push'] {
+  overflow: hidden;
+
+  .oge-drawer-panel {
+    position: absolute;
+    inset-block: 0;
+    z-index: var(--oge-z-drawer);
+  }
+
+  .oge-drawer-content {
+    inline-size: 100%;
+  }
+}
+
+.oge-drawer[data-mode='push'][data-position='start'] {
+  .oge-drawer-panel {
+    inset-inline-start: 0;
+    translate: calc(-1 * var(--oge-drawer-size)) 0;
+  }
+  &.oge-drawer-opened .oge-drawer-panel {
+    translate: 0 0;
+  }
+  &.oge-drawer-opened .oge-drawer-content {
+    translate: var(--oge-drawer-size) 0;
+  }
+}
+
+.oge-drawer[data-mode='push'][data-position='end'] {
+  .oge-drawer-panel {
+    inset-inline-end: 0;
+    translate: var(--oge-drawer-size) 0;
+  }
+  &.oge-drawer-opened .oge-drawer-panel {
+    translate: 0 0;
+  }
+  &.oge-drawer-opened .oge-drawer-content {
+    translate: calc(-1 * var(--oge-drawer-size)) 0;
+  }
+}
+
+.oge-drawer[data-mode='push'][data-position='top'],
+.oge-drawer[data-mode='push'][data-position='bottom'] {
+  .oge-drawer-panel {
+    inset-block: auto;
+    inset-inline: 0;
+    block-size: var(--oge-drawer-size);
+  }
+}
+
+.oge-drawer[data-mode='push'][data-position='top'] {
+  .oge-drawer-panel {
+    inset-block-start: 0;
+    translate: 0 calc(-1 * var(--oge-drawer-size));
+  }
+  &.oge-drawer-opened .oge-drawer-panel {
+    translate: 0 0;
+  }
+  &.oge-drawer-opened .oge-drawer-content {
+    translate: 0 var(--oge-drawer-size);
+  }
+}
+
+.oge-drawer[data-mode='push'][data-position='bottom'] {
+  .oge-drawer-panel {
+    inset-block-end: 0;
+    translate: 0 var(--oge-drawer-size);
+  }
+  &.oge-drawer-opened .oge-drawer-panel {
+    translate: 0 0;
+  }
+  &.oge-drawer-opened .oge-drawer-content {
+    translate: 0 calc(-1 * var(--oge-drawer-size));
+  }
+}
+
+// --- mode: 'overlay' ----------------------------------------------------------
+// Same out-of-flow panel as push, but the content never moves.
+.oge-drawer[data-mode='overlay'] {
+  overflow: hidden;
+
+  .oge-drawer-panel {
+    position: absolute;
+    inset-block: 0;
+    z-index: var(--oge-z-drawer);
+    box-shadow: var(--oge-shadow-popup);
+  }
+
+  .oge-drawer-content {
+    inline-size: 100%;
+    translate: none;
+  }
+}
+
+.oge-drawer[data-mode='overlay'][data-position='start'] {
+  .oge-drawer-panel {
+    inset-inline-start: 0;
+    translate: calc(-1 * var(--oge-drawer-size)) 0;
+  }
+  &.oge-drawer-opened .oge-drawer-panel {
+    translate: 0 0;
+  }
+}
+
+.oge-drawer[data-mode='overlay'][data-position='end'] {
+  .oge-drawer-panel {
+    inset-inline-end: 0;
+    translate: var(--oge-drawer-size) 0;
+  }
+  &.oge-drawer-opened .oge-drawer-panel {
+    translate: 0 0;
+  }
+}
+
+.oge-drawer[data-mode='overlay'][data-position='top'],
+.oge-drawer[data-mode='overlay'][data-position='bottom'] {
+  .oge-drawer-panel {
+    inset-block: auto;
+    inset-inline: 0;
+    block-size: var(--oge-drawer-size);
+  }
+}
+
+.oge-drawer[data-mode='overlay'][data-position='top'] {
+  .oge-drawer-panel {
+    inset-block-start: 0;
+    translate: 0 calc(-1 * var(--oge-drawer-size));
+  }
+  &.oge-drawer-opened .oge-drawer-panel {
+    translate: 0 0;
+  }
+}
+
+.oge-drawer[data-mode='overlay'][data-position='bottom'] {
+  .oge-drawer-panel {
+    inset-block-end: 0;
+    translate: 0 var(--oge-drawer-size);
+  }
+  &.oge-drawer-opened .oge-drawer-panel {
+    translate: 0 0;
+  }
+}
+
+// --- backdrop -----------------------------------------------------------------
+
+.oge-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--oge-z-drawer) - 1);
+  background: var(--oge-modal-backdrop-bg);
+  animation: oge-drawer-fade var(--oge-drawer-duration) ease;
+}
+
+@keyframes oge-drawer-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+// --- reduced motion -----------------------------------------------------------
+// The reduction is CSS-only, which is why `afterOpened` fires on a render hook
+// rather than on `transitionend` — otherwise it would never arrive here.
+@media (prefers-reduced-motion: reduce) {
+  .oge-drawer-panel,
+  .oge-drawer-content,
+  .oge-drawer-close {
+    transition: none;
+  }
+
+  .oge-drawer-backdrop {
+    animation: none;
+  }
+}

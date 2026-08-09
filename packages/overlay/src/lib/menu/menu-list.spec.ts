@@ -167,3 +167,55 @@ describe('OgeMenuList', () => {
     expect(menuEl.getAttribute('aria-activedescendant')).toBe(buttons()[3].id);
   });
 });
+
+describe('OgeMenuList — icons', () => {
+  async function render(items: readonly OgeMenuItem[]) {
+    const fixture = TestBed.createComponent(MenuHost);
+    fixture.componentInstance.items.set(items);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    return {
+      buttons: Array.from(
+        el.querySelectorAll<HTMLButtonElement>('.oge-menu-item'),
+      ),
+    };
+  }
+
+  it('renders SVG path data and an icon-font class', async () => {
+    const { buttons } = await render([
+      { text: 'Copy', icon: 'M2 2h8v8H2z' },
+      { text: 'Paste', iconClass: 'fa fa-paste' },
+    ]);
+    const path = buttons[0].querySelector('.oge-menu-item-icon svg path');
+    expect(path?.getAttribute('d')).toBe('M2 2h8v8H2z');
+    expect(buttons[0].querySelector('svg')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    );
+    const i = buttons[1].querySelector('.oge-menu-item-icon i');
+    expect(i?.className).toBe('fa fa-paste');
+  });
+
+  it('gives every row an icon column once any row has an icon', async () => {
+    const { buttons } = await render([
+      { text: 'Copy', icon: 'M2 2h8v8H2z' },
+      { text: 'Rename' },
+    ]);
+    // The iconless row still gets the (empty) column, so labels stay aligned.
+    expect(buttons[1].querySelector('.oge-menu-item-icon')).not.toBeNull();
+    expect(buttons[1].querySelector('.oge-menu-item-icon svg')).toBeNull();
+  });
+
+  it('renders no icon column at all when no row has an icon', async () => {
+    const { buttons } = await render([{ text: 'Copy' }, { text: 'Rename' }]);
+    expect(buttons[0].querySelector('.oge-menu-item-icon')).toBeNull();
+  });
+
+  it('keeps the check mark alongside an icon', async () => {
+    const { buttons } = await render([
+      { text: 'Wrap', icon: 'M2 2h8v8H2z', checked: true },
+    ]);
+    expect(buttons[0].querySelector('.oge-menu-item-check svg')).not.toBeNull();
+    expect(buttons[0].querySelector('.oge-menu-item-icon svg')).not.toBeNull();
+    expect(buttons[0].getAttribute('role')).toBe('menuitemcheckbox');
+  });
+});

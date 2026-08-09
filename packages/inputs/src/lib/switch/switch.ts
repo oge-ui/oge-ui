@@ -23,7 +23,7 @@ import { OgeControlBase } from '../field/control-base';
  *
  * Click, Space and Enter toggle. Works standalone via `[(value)]`, with
  * Signal Forms via `[formField]`, and with reactive/template forms via
- * `formControl`/`ngModel`. The DevExtreme swipe gesture is deliberately not
+ * `formControl`/`ngModel`. The reference swipe gesture is deliberately not
  * replicated.
  */
 @Component({

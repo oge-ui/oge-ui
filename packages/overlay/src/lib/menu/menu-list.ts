@@ -96,6 +96,23 @@ let nextMenuId = 0;
                 }
               </span>
             }
+            @if (hasIcons()) {
+              <span class="oge-menu-item-icon">
+                @if (item.icon) {
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path [attr.d]="item.icon" />
+                  </svg>
+                } @else if (item.iconClass) {
+                  <i [class]="item.iconClass" aria-hidden="true"></i>
+                }
+              </span>
+            }
             <span class="oge-menu-item-text">{{ item.text }}</span>
           }
         </button>
@@ -125,6 +142,15 @@ export class OgeMenuList {
 
   protected readonly resolvedMenuId = computed(
     () => this.menuId() ?? this.generatedId,
+  );
+  /**
+   * One row with an icon gives every row an icon column, so labels stay on a
+   * single left edge instead of stepping in and out down the menu.
+   */
+  protected readonly hasIcons = computed(() =>
+    this.items().some(
+      (item) => !item.separator && (item.icon || item.iconClass),
+    ),
   );
   /** Resets whenever the items themselves change (async reloads etc.). */
   protected readonly activeIndex = linkedSignal({

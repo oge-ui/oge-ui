@@ -1,0 +1,274 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// The host carries the tokens so a standalone stepper is fully themed without
+// any other oge component on the page.
+.oge-stepper {
+  @include tokens.core-tokens;
+
+  --oge-stepper-gap: 8px;
+  --oge-stepper-indicator-size: 28px;
+  --oge-stepper-transition: 120ms ease;
+
+  display: block;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+// --- the step list ------------------------------------------------------------
+
+.oge-stepper-defs {
+  display: none;
+}
+
+.oge-stepper-list {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--oge-stepper-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-stepper-item {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-inline-size: 0;
+}
+
+// The connector between two steps. A pseudo-element rather than an extra node,
+// so the list stays one <li> per step for assistive tech.
+.oge-stepper-item + .oge-stepper-item::before {
+  content: '';
+  flex: 1 1 auto;
+  block-size: 1px;
+  min-inline-size: 12px;
+  margin-inline: 4px;
+  background: var(--oge-border-color);
+}
+
+.oge-stepper-vertical {
+  .oge-stepper-list {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .oge-stepper-item {
+    flex-direction: column;
+    align-items: stretch;
+    flex: none;
+  }
+
+  .oge-stepper-item + .oge-stepper-item::before {
+    inline-size: 1px;
+    block-size: 12px;
+    min-inline-size: 0;
+    margin-inline: calc(var(--oge-stepper-indicator-size) / 2);
+    margin-block: 2px;
+  }
+}
+
+// --- the header button --------------------------------------------------------
+
+.oge-stepper-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color var(--oge-stepper-transition),
+    color var(--oge-stepper-transition);
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  // Two rings, per the house focus convention: soft for pointer/programmatic
+  // focus, strong for keyboard.
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+// --- the indicator ------------------------------------------------------------
+
+.oge-stepper-indicator {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--oge-stepper-indicator-size);
+  block-size: var(--oge-stepper-indicator-size);
+  border: 1px solid var(--oge-border-color);
+  border-radius: 50%;
+  background: var(--oge-popup-bg);
+  color: var(--oge-muted-color);
+  font-size: calc(var(--oge-font-size) - 1px);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--oge-stepper-transition),
+    border-color var(--oge-stepper-transition),
+    color var(--oge-stepper-transition);
+}
+
+.oge-stepper-header[data-state='active'] .oge-stepper-indicator {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+}
+
+.oge-stepper-header[data-state='done'] .oge-stepper-indicator {
+  border-color: var(--oge-accent-25);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+}
+
+.oge-stepper-header[data-state='error'] .oge-stepper-indicator {
+  border-color: var(--oge-danger);
+  background: var(--oge-danger-soft);
+  color: var(--oge-danger);
+}
+
+// --- labels -------------------------------------------------------------------
+
+.oge-stepper-text {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.oge-stepper-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.oge-stepper-header[data-state='active'] .oge-stepper-label {
+  font-weight: 600;
+}
+
+.oge-stepper-header[data-state='error'] .oge-stepper-label {
+  color: var(--oge-danger);
+}
+
+.oge-stepper-description,
+.oge-stepper-optional,
+.oge-stepper-error {
+  color: var(--oge-muted-color);
+  font-size: calc(var(--oge-font-size) - 2px);
+}
+
+.oge-stepper-error {
+  color: var(--oge-danger);
+}
+
+// Visible only to assistive tech: the indicator glyph is aria-hidden, so the
+// done/error state has to be announced in text.
+.oge-stepper .oge-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// --- panels -------------------------------------------------------------------
+
+.oge-stepper-panel {
+  padding-block: 12px;
+}
+
+.oge-stepper-vertical .oge-stepper-panel {
+  // Indent under the indicator so the body reads as belonging to its step.
+  padding-inline-start: calc(var(--oge-stepper-indicator-size) + 8px);
+  padding-block: 4px 12px;
+}
+
+// --- the built-in nav bar -----------------------------------------------------
+
+.oge-stepper-nav {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+.oge-stepper-nav-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--oge-stepper-transition),
+    border-color var(--oge-stepper-transition);
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.oge-stepper-nav-next {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent);
+  color: var(--oge-severity-contrast);
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent);
+    filter: brightness(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-stepper-header,
+  .oge-stepper-indicator,
+  .oge-stepper-nav-btn {
+    transition: none;
+  }
+}

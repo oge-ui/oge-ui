@@ -577,7 +577,7 @@ export class OgeAutocomplete<TItem = unknown>
     this.list.setSearch(text);
     this.inputChange.emit({ text, event });
     this.searchChanged.emit({ text });
-    // typing below the threshold closes the list (DevExtreme behavior)
+    // typing below the threshold closes the list (reference behavior)
     if (text.trim().length >= this.minSearchLength()) {
       if (!this.opened()) this.open();
     } else if (this.opened()) {

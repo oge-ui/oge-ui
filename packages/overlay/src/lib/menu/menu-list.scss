@@ -50,6 +50,16 @@
   flex: none;
 }
 
+// Rendered on every row once any row has an icon, so the label column keeps a
+// single left edge down the whole menu.
+.oge-menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex: none;
+}
+
 .oge-menu-item-text {
   flex: 1 1 auto;
   white-space: nowrap;

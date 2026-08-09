@@ -572,7 +572,7 @@ export class OgeSelectBox<TItem = unknown>
       });
     });
     // selectionChanged fires on every resolved-item change, including
-    // programmatic value writes (DevExtreme parity) — but not on init.
+    // programmatic value writes (reference parity) — but not on init.
     let firstRun = true;
     let previousItem: TItem | null = null;
     effect(() => {

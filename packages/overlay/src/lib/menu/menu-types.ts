@@ -19,6 +19,17 @@ export interface OgeMenuItem<T = unknown> {
   checked?: boolean;
   /** `'danger'` renders the destructive style. Default `'normal'`. */
   severity?: OgeMenuItemSeverity;
+  /**
+   * SVG path data (`d`) for a leading `aria-hidden` icon. Rows without one stay
+   * aligned: the icon column only appears when some row in the menu has an icon.
+   */
+  icon?: string;
+  /**
+   * Class(es) for a leading icon rendered as an empty `<i>` — the hook for an
+   * icon font the application already ships. `icon` stays the dependency-free
+   * default.
+   */
+  iconClass?: string;
   /** Renders a divider; every other field is ignored. */
   separator?: boolean;
   /** Invoked when the item is activated, after `itemClick` emits. */

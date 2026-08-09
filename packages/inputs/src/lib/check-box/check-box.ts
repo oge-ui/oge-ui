@@ -145,7 +145,7 @@ export class OgeCheckBox
   private nextValue(): boolean | null {
     const current = this.value();
     if (this.threeState()) {
-      // DevExtreme cycle: indeterminate → checked → unchecked → indeterminate
+      // reference cycle: indeterminate → checked → unchecked → indeterminate
       if (current === null) return true;
       return current === true ? false : null;
     }

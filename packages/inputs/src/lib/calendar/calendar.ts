@@ -301,7 +301,7 @@ export class OgeCalendar
   readonly showWeekNumbers = input<boolean | OgeCalendarWeekNumberOptions>(
     false,
   );
-  /** The keyboard-focused day — two-way (Kendo-style controlled navigation). */
+  /** The keyboard-focused day — two-way (controlled navigation). */
   readonly focusedDate = model<Date | null>(null);
   /** BCP 47 locale for all texts; `undefined` = the runtime default. */
   readonly locale = input<string | undefined>(undefined);

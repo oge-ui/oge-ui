@@ -84,7 +84,7 @@ Predictable wrong guesses, and what to write instead.
 
 `oge-ui`
 
-- values: `OgeTreeList`
+- values: `OgeToolbarItem`, `OgeTreeList`
 - types: `OgeMenuItem`, `OgeTreeDropPosition`, `OgeTreeExportData`, `OgeTreeInitNewRowEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`
 
 

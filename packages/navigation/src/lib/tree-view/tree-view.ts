@@ -375,7 +375,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
    * Selects a node when its row is clicked, rather than only its checkbox.
    * `undefined` (the default) resolves to `true` without checkboxes and
    * `false` with them — otherwise clicking a label would silently tick the
-   * box next to it, which is why DevExtreme ships `selectByClick: false`.
+   * box next to it, which is why the references ship `selectByClick: false`.
    */
   readonly selectByClick = input<boolean | undefined>(undefined);
   /** Cascades selection down to descendants and up to fully-selected parents. */

@@ -13,6 +13,12 @@ export {
   type OgePopupCloseReason,
 } from './lib/panel/anchored-panel';
 export { OgePopup } from './lib/popup/popup';
+// Primitives a modal surface implemented in another package needs. They are
+// public so that surface can join *this* Escape stack and reuse *this* focus
+// trap rather than growing a second, competing copy of either.
+export { pushOverlay, removeOverlay, isTopOverlay } from './lib/overlay-stack';
+export { getTabbableElements, trapTabKey } from './lib/modal/focus-trap';
+export { lockBodyScroll, unlockBodyScroll } from './lib/modal/scroll-lock';
 export {
   type OgeMenuItem,
   type OgeMenuItemSeverity,

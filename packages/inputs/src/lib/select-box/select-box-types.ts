@@ -69,7 +69,7 @@ export type OgeSelectBoxItemsFn<TItem> = () =>
 export type OgeSelectBoxGroupExpr<TItem> = string | ((item: TItem) => string);
 
 /**
- * Payload of `customItemCreating` (mutable, DevExtreme-style): the handler
+ * Payload of `customItemCreating` (mutable, as in the references): the handler
  * assigns `customItem` — an item, a promise of one, or `null` to reject the
  * text. Left `undefined`, the raw text itself becomes the item.
  */

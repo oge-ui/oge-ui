@@ -1,3 +1,53 @@
+export { OgeStepper } from './lib/stepper/stepper';
+export { OgeStep } from './lib/stepper/step';
+export { OgeStepperNext, OgeStepperPrevious } from './lib/stepper/stepper-nav';
+export {
+  OgeStepHeaderTemplate,
+  OgeStepIndicatorTemplate,
+  OgeStepContentTemplate,
+} from './lib/stepper/templates';
+export {
+  OGE_STEPPER_CONFIG,
+  OGE_DEFAULT_STEPPER_CONFIG,
+  OGE_DEFAULT_STEPPER_MESSAGES,
+  provideOgeStepperConfig,
+  type OgeStepperConfig,
+  type OgeStepperConfigInput,
+  type OgeStepperMessages,
+} from './lib/stepper/config';
+export type {
+  OgeStepBlockedEvent,
+  OgeStepChangedEvent,
+  OgeStepChangingEvent,
+  OgeStepData,
+  OgeStepGuard,
+  OgeStepState,
+  OgeStepTemplateContext,
+  OgeStepperDisplay,
+  OgeStepperFinishEvent,
+  OgeStepperOrientation,
+} from './lib/stepper/stepper-types';
+export { OgeDrawer } from './lib/drawer/drawer';
+export {
+  OGE_DRAWER_CONFIG,
+  OGE_DEFAULT_DRAWER_CONFIG,
+  OGE_DEFAULT_DRAWER_MESSAGES,
+  provideOgeDrawerConfig,
+  type OgeDrawerConfig,
+  type OgeDrawerConfigInput,
+  type OgeDrawerMessages,
+} from './lib/drawer/config';
+export type {
+  OgeDrawerAutoFocus,
+  OgeDrawerClosedEvent,
+  OgeDrawerClosingEvent,
+  OgeDrawerCloseReason,
+  OgeDrawerLandmark,
+  OgeDrawerMode,
+  OgeDrawerModeChangedEvent,
+  OgeDrawerOpeningEvent,
+  OgeDrawerPosition,
+} from './lib/drawer/drawer-types';
 export { OgeTreeView } from './lib/tree-view/tree-view';
 export {
   OgeTreeExpandIconTemplate,
