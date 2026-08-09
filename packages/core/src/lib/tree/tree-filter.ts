@@ -2,7 +2,7 @@ import type { RowKey } from '../rows/row-node';
 import { ancestorsOf, type TreeIndex } from './tree-index';
 
 /**
- * How filtering expands the matched set for tree rendering (DevExtreme
+ * How filtering expands the matched set for tree rendering (the reference
  * `filterMode` naming):
  * - `'withAncestors'`: matched rows plus all their ancestors.
  * - `'fullBranch'`: matched rows, their ancestors, and *all* descendants of

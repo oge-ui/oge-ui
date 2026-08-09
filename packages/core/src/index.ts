@@ -39,3 +39,6 @@ export * from './lib/util/date-utils';
 export * from './lib/util/async-guard';
 export * from './lib/util/nav-index';
 export * from './lib/util/type-ahead';
+export * from './lib/util/split-sizes';
+export * from './lib/util/toolbar-fit';
+export * from './lib/util/drawer-mode';
