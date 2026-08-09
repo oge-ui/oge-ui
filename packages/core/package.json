@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/core",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Framework-free data engine behind the OGE UI suite: DataSource contract (array, custom, OData), filtering/sorting/grouping pipeline, virtualization math and CSV export.",
   "keywords": [
     "datasource",

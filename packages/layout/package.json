@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/layout",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Signal-based Angular layout family: OgeAccordion with declarative <oge-accordion-item> children or data-driven items, APG keyboard support, single/multiple expansion, lazy rendering, async expand guards, invalid-section indicators and per-panel async content loaders; OgeSplitter with resizable, collapsible and nestable panes following the WAI-ARIA window splitter pattern; OgeToolbar with a WAI-ARIA APG roving tabindex, before/center/after groups and an overflow menu for the commands that stop fitting; OgeCard, a content surface with header, full-bleed media, action row and footer as attribute slots, outlined/raised/filled/flat chrome and a horizontal orientation.",
   "keywords": [
     "angular",
@@ -27,8 +27,8 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "0.8.0",
-    "@oge-ui/overlay": "0.8.0"
+    "@oge-ui/core": "0.9.0",
+    "@oge-ui/overlay": "0.9.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

@@ -65,7 +65,8 @@
     ],
     "projectsRelationship": "independent",
     "version": {
-      "preVersionCommand": "npx nx run-many -t build && npx nx run oge-schematics:schematics"
+      "preVersionCommand": "npx nx run-many -t build && npx nx run oge-schematics:schematics",
+      "updateDependents": "never"
     },
     "changelog": {
       "workspaceChangelog": {

@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/tabs",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Signal-based Angular tab family: OgeTabs strip and OgeTabPanel with declarative <oge-tab> children or data-driven items, APG keyboard support, lazy rendering, closable tabs with async close guards and drag reorder.",
   "keywords": [
     "angular",
@@ -20,8 +20,8 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "0.8.0",
-    "@oge-ui/overlay": "0.8.0"
+    "@oge-ui/core": "0.9.0",
+    "@oge-ui/overlay": "0.9.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

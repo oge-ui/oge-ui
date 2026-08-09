@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/navigation",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Signal-based Angular navigation family: OgeTreeView with flat or nested data, WAI-ARIA APG treeview keyboard support, tri-state cascade checkboxes, search, lazy load-on-demand, virtual scrolling and drag & drop reparenting.",
   "keywords": [
     "angular",
@@ -21,8 +21,8 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "0.8.0",
-    "@oge-ui/overlay": "0.8.0"
+    "@oge-ui/core": "0.9.0",
+    "@oge-ui/overlay": "0.9.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",
