@@ -5,6 +5,64 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## 0.10.0 — 2026-08-10
+
+### New components
+
+- **`OgeMenubar`** (`@oge-ui/navigation`) — the WAI-ARIA APG menubar: roving
+  tabindex, the full keyboard walk (a leaf's ArrowRight hops to the next bar
+  item with its menu open, Escape unwinds one level at a time), `openMode`
+  `click | hover` on the top level only, and a **container-width** hamburger
+  collapse (`compactBelow`, core's pure `resolveMenubarCompact`). `url` items
+  are real links, `activeKey` renders `aria-current="page"` — no router
+  dependency. The docs open with the APG's own caveat that a `<nav>` of links
+  usually serves site navigation better.
+- **`OgeBreadcrumb`** (`@oge-ui/navigation`) — the APG breadcrumb verbatim:
+  a `<nav>` landmark, an ordered list of real links, `aria-current="page"` on
+  the non-interactive last crumb, and **no invented keyboard behavior**.
+  `collapseMode: 'auto'` folds the oldest middle crumbs against the
+  container width (core's `fitToolbarItems` reused, no second kernel) — and
+  unlike the references the collapsed crumbs stay reachable as links in the
+  ellipsis menu.
+- **`OgeSlider` + `OgeRangeSlider`** (`@oge-ui/inputs`) — the APG slider and
+  multi-thumb patterns as bare editors on `OgeControlBase` (Signal Forms,
+  reactive and `[(value)]` with zero new bridge code): live drag commits
+  throttled by `[debounce]`, `slideEnded` at release, **Escape cancels the
+  gesture** (no reference slider offers it), dynamic aria constraints between
+  range thumbs (`minRange`), `formatValue` feeding the bubble, the end labels
+  and `aria-valuetext` alike, ticks with labels, Kendo-style `showButtons`,
+  and `editorType: 'slider'` inside `<oge-form>`.
+- **`OgeProgressBar` + `OgeLoadIndicator` + `OgeSkeleton`**
+  (`@oge-ui/layout`) — the loading trio canonicalizing the hand-drawn
+  spinners and shimmers across the suite. `role="progressbar"` with the ARIA
+  rule most libraries miss: **indeterminate omits `aria-valuenow`** entirely
+  (`value: null`); `bufferValue` and `chunkCount` variants, `severity`
+  colors, a one-shot `completed`; the ring slows rather than freezes under
+  `prefers-reduced-motion`; the skeleton is always `aria-hidden` decoration
+  with a `lines` input rendering the tapered multi-line placeholder stack.
+
+### Changed
+
+- The canonical `OgeMenuItem` (`@oge-ui/overlay`) grew **nested submenus**
+  (`items` on any item — one anchored panel per level on the shared Escape
+  stack; `'escape'`/`'back'` absorbed per level, `'select'`/`'tab'` chained
+  to the root owner), plus `url` link rows, `badge` and
+  `shortcut`/`aria-keyshortcuts`. Every menu owner — grid and tree-list
+  context menus, the drop-down button, the toolbar overflow — inherits all of
+  it with zero consumer changes.
+- The grid's filler-row class is now `.oge-grid-skeleton` (the canonical
+  component owns `.oge-skeleton`), and the shared `.oge-spinner` gained its
+  missing `prefers-reduced-motion` rule.
+- The accordion docs page's first demo is `collapsible`, so the page's first
+  touch toggles intuitively; the non-collapsible contract lives in the
+  switches demo.
+
+### Fixed
+
+- Menubar/drop-down focus race: pending menu focus now applies after render,
+  so switching bar items never lands keyboard focus on a stale item list.
+- Splitter: removed a dead `?? []` that warned NG8102 on every build.
+
 ## 0.9.0 — 2026-08-09
 
 ### New components
