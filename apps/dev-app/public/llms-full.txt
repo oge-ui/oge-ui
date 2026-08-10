@@ -2,7 +2,7 @@
 
 > Signal-based Angular UI component suite for data-heavy applications: a virtualized Data Grid, Tree List, Pivot Grid, form editors, buttons, overlay surfaces (modal and toast), tabs and layout containers. Angular 22+, standalone components only, zoneless, zero runtime dependencies. MIT licensed, except @oge-ui/pivot which is commercial.
 
-Version 0.9.0. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://ogeui.com renders. Index: https://ogeui.com/llms.txt
+Version 0.10.0. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://ogeui.com renders. Index: https://ogeui.com/llms.txt
 
 ## Contents
 

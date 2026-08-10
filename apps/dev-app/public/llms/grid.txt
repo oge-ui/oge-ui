@@ -2,7 +2,7 @@
 
 > Virtualized data grid: 100k+ rows, sorting, filtering, grouping with summaries, inline/batch/form editing, selection, master-detail, state persistence and CSV/Excel/PDF export.
 
-Part of OGE UI v0.9.0.
+Part of OGE UI v0.10.0.
 Docs and live demos: https://ogeui.com/components/data-grid
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
