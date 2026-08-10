@@ -2358,7 +2358,7 @@ export class Demo {
 
 ## @oge-ui/inputs
 
-Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox and Switch — floating labels, validation, Signal Forms and reactive forms.
+Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
 
 Docs: https://ogeui.com/components/inputs
 
@@ -2366,8 +2366,8 @@ Docs: https://ogeui.com/components/inputs
 
 `@oge-ui/inputs`
 
-- values: `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeSelectBox`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
-- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
+- values: `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeRangeSlider`, `OgeSelectBox`, `OgeSlider`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
+- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeSliderDragStartedEvent`, `OgeSliderOrientation`, `OgeSliderSlideEndedEvent`, `OgeSliderValueIndicator`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
 
 ### OgeTextBox — `<oge-text-box>`
 
@@ -3069,6 +3069,154 @@ _Common (all editors)_
 | `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
 
 #### Events
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+### OgeSlider — `<oge-slider>`
+
+#### Properties
+
+_OgeSlider_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<number>` | `0` | The slider value — two-way. Programmatic writes clamp and snap to the step grid. |
+| `min / max` | `number \| undefined` | `0 / 100` | Scale bounds. Typed `number \| undefined` because the Signal Forms contract reserves these member names — `undefined` falls back to 0/100. |
+| `step` | `number` | `1` | Arrow-key and drag increment; thumbs always sit on this grid, with float-error correction (0.1-style steps never drift). |
+| `largeStep` | `number \| undefined` | `—` | PageUp/PageDown increment; `undefined` means `step × 10`. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | A vertical slider announces `aria-orientation="vertical"`; Up still increases (APG). |
+| `showRange` | `boolean` | `true` | Fills the selected portion of the track. |
+| `showTicks / tickStep` | `boolean / number \| undefined` | `false` | Tick marks on the `tickStep` grid — falling back to `largeStep`, then `step`; capped at 200 marks. |
+| `showTickLabels` | `boolean` | `false` | Formatted labels under each tick (Kendo's tick `title` callback, fed by `formatValue`). |
+| `showLabels` | `boolean` | `false` | Formatted `min`/`max` labels at the track ends. |
+| `valueIndicator` | `'none' \| 'active' \| 'always'` | `'none'` | The inline value bubble: `'active'` while focused, dragged **or hovered** (Material's discrete plus DevExtreme's `showMode: 'onHover'`), `'always'` permanent. |
+| `formatValue` | `(value: number) => string \| undefined` | `—` | Formats the bubble, the end labels **and** `aria-valuetext` — display and announcement never diverge. |
+| `showButtons` | `boolean` | `false` | Kendo-style increment/decrement buttons with press-and-hold repeat — the number box's spin timing config. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the thumb; the localized `sliderHandle` message is the fallback. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_OgeSlider events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `dragStarted` | `OgeSliderDragStartedEvent` | A drag gesture began on the thumb or the track. |
+| `slideEnded` | `OgeSliderSlideEndedEvent<number>` | Fires once per gesture at release — DevExtreme's `onHandleRelease` timing without a mode switch (live changes stream through `valueCommitted`, throttled by `debounce`). Not emitted when Escape cancels the gesture. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSliderOrientation` | `'horizontal' \| 'vertical'` | Axis the track lays along. |
+| `OgeSliderValueIndicator` | `'none' \| 'active' \| 'always'` | When the inline value bubble shows. |
+| `OgeSliderDragStartedEvent / OgeSliderSlideEndedEvent<T>` | `{ event } / { value; event }` | The drag gesture pair. |
+
+### OgeRangeSlider — `<oge-range-slider>`
+
+#### Properties
+
+_OgeRangeSlider_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<readonly [number, number]>` | `[0, 0]` | The `[start, end]` pair — two-way. Programmatic writes clamp, snap and sort. |
+| `minRange` | `number` | `0` | Minimum distance kept between the thumbs — reflected in each thumb&rsquo;s dynamic `aria-valuemin`/`aria-valuemax` (the APG multi-thumb constraint). |
+| `startAriaLabel / endAriaLabel` | `string \| undefined` | `—` | Accessible names of the thumbs; the localized `sliderStartHandle`/`sliderEndHandle` messages are the fallbacks. |
+| `startName / endName` | `string` | `''` | Hidden-input names for plain HTML form posts — DevExtreme's `startName`/`endName` contract (the single slider uses the inherited `name`). |
+
+_Shared with OgeSlider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `min / max / step / largeStep / orientation / showRange / showTicks / tickStep / showLabels / valueIndicator / formatValue` | `—` | The full scale/appearance surface of `OgeSlider`, identical semantics. `showButtons` is single-slider only (the Kendo split). Clicking the track moves the **nearest** thumb. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_OgeRangeSlider events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `dragStarted / slideEnded` | `OgeSliderSlideEndedEvent<readonly [number, number]>` | The drag gesture pair; an unchanged pair never re-emits `valueCommitted`. |
 
 _Common (all editors)_
 
@@ -4301,6 +4449,178 @@ import { OgeTextBox } from '@oge-ui/inputs';
 export class Demo {
   protected readonly password = signal('');
   protected readonly token = signal('oge_live_9f0b01cf');
+}
+```
+
+#### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The WAI-ARIA APG slider: a focusable role="slider" thumb —
+         arrows ±step (RTL-aware), PageUp/PageDown ±largeStep, Home/End to the
+         ends. Dragging commits live; [debounce] throttles it; Escape cancels the
+         gesture and restores the start value. -->
+    <oge-slider [(value)]="volume" [min]="0" [max]="100" ariaLabel="Volume" />
+  `,
+})
+export class Demo {
+  protected readonly volume = signal(40);
+}
+```
+
+#### Buttons
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showButtons adds Kendo-style increment/decrement buttons
+         with press-and-hold repeat (the number box's spin timing config).
+         orientation="vertical" keeps role and keys per the APG — Up increases. -->
+    <oge-slider [(value)]="volume" [showButtons]="true" ariaLabel="Volume" />
+
+    <div style="height: 200px">
+      <oge-slider
+        [(value)]="volume"
+        orientation="vertical"
+        ariaLabel="Volume (vertical)"
+      />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly volume = signal(40);
+}
+```
+
+#### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Inside <oge-form>: a bare editor — the form renders the
+         label/hint/error chrome around it. dataType 'number' still defaults to
+         the number box; the slider is an explicit editorType choice. -->
+    <oge-form [(formData)]="settings" [items]="items" />
+  `,
+})
+export class Demo {
+  protected readonly settings = signal({ brightness: 70 });
+  protected readonly items: OgeFormItemData[] = [
+    {
+      field: 'brightness',
+      label: 'Brightness',
+      editorType: 'slider',
+      editorOptions: { min: 0, max: 100, step: 5 },
+    },
+  ];
+}
+```
+
+#### Indicator
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- valueIndicator: 'active' shows the bubble while focused or
+         dragging (Material's discrete), 'always' keeps it up (DevExtreme's
+         tooltip.showMode). formatValue feeds the bubble, the end labels AND
+         aria-valuetext — one input, display and announcement never diverge. -->
+    <oge-slider
+      [(value)]="volume"
+      valueIndicator="active"
+      [formatValue]="asDecibels"
+      [showLabels]="true"
+      ariaLabel="Volume"
+    />
+  `,
+})
+export class Demo {
+  protected readonly volume = signal(40);
+  protected readonly asDecibels = (value: number): string => `${value} dB`;
+}
+```
+
+#### Range
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeRangeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeRangeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- APG multi-thumb: two focusable thumbs, each one's
+         aria-valuemin/max dynamically constrained by the other (plus minRange).
+         Clicking the track moves the NEAREST thumb. -->
+    <oge-range-slider
+      [(value)]="price"
+      [min]="0"
+      [max]="1000"
+      [step]="10"
+      [minRange]="50"
+    />
+  `,
+})
+export class Demo {
+  protected readonly price = signal<readonly [number, number]>([200, 600]);
+}
+```
+
+#### Ticks
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Ticks sit on the tickStep grid (falling back to largeStep,
+         then step). showTickLabels renders a formatted label under each tick
+         (Kendo's tick title callback, fed by formatValue); showLabels renders
+         just the min/max ends instead. -->
+    <oge-slider
+      [(value)]="rating"
+      [min]="0"
+      [max]="10"
+      [largeStep]="2"
+      [showTicks]="true"
+      [showTickLabels]="true"
+    />
+  `,
+})
+export class Demo {
+  protected readonly rating = signal(6);
 }
 ```
 
@@ -5616,10 +5936,10 @@ _OgeToastRef_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void }` | Canonical menu item of the suite. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. |
+| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. `url` renders the row as a real `` with `role="menuitem"` — keyboard activation clicks the link, so `preventDefault()` in `itemClick` hands navigation to a router exactly like a pointer click. `badge` renders a trailing counter pill; `shortcut` renders a right-aligned accelerator hint and is announced via `aria-keyshortcuts` (display only — the application owns the binding). `items` makes the row a **submenu parent** (trailing chevron, `aria-haspopup="menu"`, `aria-expanded`): activation or ArrowRight opens a nested `oge-menu-list`, hover opens after a dwell, and `checked`/`action`/`url` are ignored on it. |
 | `OgeMenuItemSeverity` | `'normal' \| 'danger'` | Destructive items render with the danger token. |
 | `OgeMenuListItemClickEvent` | `{ item: OgeMenuItem; index: number; event: MouseEvent \| KeyboardEvent }` | Index within the `items` input (separators included). |
-| `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. |
+| `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select' \| 'back'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. `'back'` is a nested submenu returning to its parent item — absorbed by the parent menu, it never reaches the root owner; `'select'` and `'tab'` chain up so the owner still receives exactly one request. |
 | `OgeMenuItemTemplateContext` | `{ $implicit: OgeMenuItem; index: number }` | Context of `itemTemplate`. |
 
 ### OgeAnchoredPanel
@@ -5735,6 +6055,8 @@ _OgeOverlayConfig_
 | `offset` | `number` | `4` | Gap between anchor and panel on the main axis. |
 | `viewportPadding` | `number` | `8` | Minimum distance kept from viewport edges when clamping. |
 | `typeAheadMs` | `number` | `500` | Idle time after which the menu type-ahead buffer resets. |
+| `menuShowDelayMs` | `number` | `50` | Hover dwell time before a submenu parent row opens its submenu. |
+| `menuHideDelayMs` | `number` | `300` | Grace period before an open submenu closes after hovering a sibling row — the diagonal-pointer allowance. |
 | `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons: `modalClose`, `modalMaximize`, `modalRestore`. |
 
 ### Overlay primitives
@@ -7743,7 +8065,10 @@ import { OgeAccordion, OgeAccordionItem } from '@oge-ui/layout';
   imports: [OgeAccordion, OgeAccordionItem],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <oge-accordion [(selectedIndex)]="index">
+    <!-- collapsible lets a second click close the open panel; without
+       it the last open panel deliberately stays open (dx behavior, APG-marked
+       aria-disabled). -->
+    <oge-accordion [(selectedIndex)]="index" [collapsible]="true">
       <oge-accordion-item title="Account" description="Name and e-mail">
         Account settings…
       </oge-accordion-item>
@@ -9718,7 +10043,7 @@ export class Demo {
 
 ## @oge-ui/navigation
 
-Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, plus a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row).
+Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, and an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links.
 
 Docs: https://ogeui.com/components/tree-view
 
@@ -9726,8 +10051,8 @@ Docs: https://ogeui.com/components/tree-view
 
 `@oge-ui/navigation`
 
-- values: `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeDrawer`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeDrawerConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
-- types: `CheckState`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
+- values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
+- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
 
 ### OgeTreeView — `<oge-tree-view>`
 
@@ -10084,9 +10409,353 @@ _provideOgeStepperConfig()_
 | `messages.completed / messages.invalid` | `string` | `'Completed' / 'Has errors'` | Announced in visually hidden text, because the indicator glyph is `aria-hidden`. |
 | `messages.previous / next / finish` | `string` | `'Back' / 'Next' / 'Finish'` | Labels of the built-in navigation bar. |
 
+### OgeMenubar — `<oge-menubar>`
+
+#### Properties
+
+_Data_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `items` | `readonly OgeMenubarItemData[] \| undefined` | Data-driven item tree; children at any depth open as nested submenus. Rendered **after** any declarative `` children — the house merge order. |
+| `activeKey` | `string \| undefined` | The item `key` rendered with `aria-current="page"` and the active style. Consumer-driven — bind it from the router; the menubar itself takes no router dependency. |
+| `messages` | `Partial<OgeMenubarMessages> \| undefined` | Per-instance overrides of the user-facing strings, merged over `provideOgeMenubarConfig()`. |
+
+_Behavior_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | A vertical bar announces `aria-orientation="vertical"` and swaps the arrow axes: Up/Down traverse, ArrowRight opens the submenu beside the bar. |
+| `openMode` | `'click' \| 'hover'` | `'click'` | How **top-level** submenus open. Nested levels always open on hover and on ArrowRight/Enter — the reference libraries&rsquo; first-vs-nested split baked in as behavior. With a menu open, hovering siblings switches it in either mode. |
+| `hoverDelay` | `number` | `100` | Hover dwell before a top-level submenu opens in `'hover'` mode, in ms. Nested levels use the overlay config's `menuShowDelayMs`/`menuHideDelayMs` (50/300). |
+| `compactBelow` | `number \| undefined` | `—` | Below this **container** inline size the whole bar collapses into a hamburger button opening the full tree as one nested menu. Measured against the menubar's own box, never the window. |
+| `disabled` | `boolean` | `false` | Disables the whole bar: every item goes inert and the bar leaves the Tab sequence. |
+| `submenuItemTemplate` | `TemplateRef<OgeMenuItemTemplateContext> \| undefined` | `—` | Custom rendering for submenu rows at **every depth** — the shared `oge-menu-list` context. Top-level bar items use `[ogeMenubarItemTemplate]` instead. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(target: number \| string)` | `void` | Opens the submenu of a top-level item, by index or `key`. Runs through the cancelable `submenuOpening` pipeline. |
+| `close()` | `void` | Closes any open submenu through the cancelable `submenuClosing` pipeline with `reason: 'api'`. |
+| `focus()` | `void` | Focuses the bar's roving tab target — or the hamburger button when compact. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeMenubarItemClickEvent` | A leaf item was activated, at any depth. Carries the item, its `key` and the hierarchical index `path` from the bar down. |
+| `submenuOpening` | `OgeMenubarSubmenuOpeningEvent` | **Cancelable** — set `cancel` to keep the submenu closed. `item` is `undefined` for the compact hamburger menu (empty `path`). |
+| `submenuOpened` | `OgeMenubarSubmenuOpenedEvent` | A top-level submenu (or the hamburger menu) opened. |
+| `submenuClosing` | `OgeMenubarSubmenuClosingEvent` | **Cancelable** — set `cancel` to keep the submenu open. Fires for closes the menubar itself initiates (`escape`, `select`, `navigation`, `api`); overlay-owned closes (`outside`) and Tab only report `submenuClosed`. |
+| `submenuClosed` | `OgeMenubarSubmenuClosedEvent` | A submenu closed, with its `reason`. |
+| `compactChanged` | `OgeMenubarCompactChangedEvent` | The bar collapsed into (or recovered from) the compact hamburger. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeMenubarItemData<T>` | `interface` | The canonical overlay `OgeMenuItem` narrowed recursively — `badge` and `shortcut` included — plus `key` (identity for `activeKey`/`open()`/events), `url` (renders the item as a real `` at the bar **and** at any submenu depth; `itemClick` fires first so `preventDefault()` hands navigation to a router) and `visible`. Submenus come from `items`. |
+| `OgeMenubarCloseReason` | `'escape' \| 'outside' \| 'select' \| 'tab' \| 'navigation' \| 'api'` | Why a submenu closed. `'navigation'` is a Left/Right or hover switch to a sibling top-level item. |
+| `OgeMenubarItemClickEvent` | `{ item; key?; index; path; event }` | `path` is the hierarchical index chain from the bar down to the item; `index` is its last entry. |
+| `OgeMenubarItemTemplate` | `directive — ng-template[ogeMenubarItemTemplate]` | Replaces the rendering of **top-level** bar items; context is `OgeMenubarItemTemplateContext`. Submenu rows keep the shared `oge-menu-list` rendering. |
+| `OgeMenubarItemTemplateContext` | `{ $implicit: OgeMenubarItemData; index: number }` | Context of `[ogeMenubarItemTemplate]`: the item and its top-level index. |
+
+### OgeMenubarItem — `<oge-menubar-item>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | `''` | Label of the item. |
+| `key` | `string \| undefined` | `—` | Stable identity used by `activeKey`, `open()` and event payloads. |
+| `value` | `unknown` | `—` | Consumer-defined value carried through click events. |
+| `url` | `string \| undefined` | `—` | Top-level items only: renders the item as a real link (``). |
+| `hint` | `string \| undefined` | `—` | Tooltip (native `title`) — e.g. why an item is disabled. |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading `aria-hidden` icon. |
+| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon element — the icon-font hook. |
+| `disabled` | `boolean` | `false` | Disabled items are exposed (`aria-disabled`) but inert and skipped by the arrow keys. |
+| `visible` | `boolean` | `true` | `false` removes the item and its subtree. |
+| `separator` | `boolean` | `false` | Renders a divider (`role="separator"`); every other input is ignored. |
+
+### Menubar configuration
+
+#### Properties
+
+_provideOgeMenubarConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeMenubarMessages` | Every user-facing string: `menubar` (accessible name of the bar, default `Menu bar`) and `hamburger` (aria label of the compact button, default `Menu`). |
+| `openMode` | `'click' \| 'hover' \| undefined` | Default for the `openMode` input. |
+| `hoverDelay` | `number \| undefined` | Default for the `hoverDelay` input, in ms. |
+| `orientation` | `'horizontal' \| 'vertical' \| undefined` | Default for the `orientation` input. |
+| `compactBelow` | `number \| undefined` | Default for the `compactBelow` input. |
+
+### OgeBreadcrumb — `<oge-breadcrumb>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeBreadcrumbItemData[] \| undefined` | `—` | Data-driven trail — a flat list, never nested. Rendered **after** any declarative `` children — the house merge order. |
+| `collapseMode` | `'auto' \| 'wrap' \| 'none'` | `'auto'` | `'auto'` collapses the **oldest middle** crumbs into an ellipsis menu against the breadcrumb's own **container** width (never the window) — the first and last crumb always stay visible, and the collapsed crumbs remain reachable as real links. `'wrap'` breaks onto multiple rows; `'none'` keeps one scrollable row. The fitting arithmetic is core's pure `fitToolbarItems`. |
+| `messages` | `Partial<OgeBreadcrumbMessages> \| undefined` | `—` | Per-instance overrides of the user-facing strings, merged over `provideOgeBreadcrumbConfig()`. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `void` | Focuses the first interactive crumb — or the ellipsis button when the trail is collapsed. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemClick` | `OgeBreadcrumbItemClickEvent` | A crumb (inline or inside the ellipsis menu) was activated. **Not fired** by disabled crumbs or by the last crumb — that is the current page. On `url` crumbs, `event.preventDefault()` hands navigation to a router. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBreadcrumbItemData<T>` | `{ text; key?; value?; url?; hint?; icon?; iconClass?; disabled?; visible? }` | A deliberately narrow interface — no submenu, checked or shortcut fields, because none of them mean anything on a trail. `url` renders the crumb as a real `` (ignored on the last crumb); `disabled` crumbs are exposed via `aria-disabled` but inert; `visible: false` removes the crumb. |
+| `OgeBreadcrumbCollapseMode` | `'auto' \| 'wrap' \| 'none'` | How the breadcrumb behaves when room runs out. |
+| `OgeBreadcrumbItemClickEvent` | `{ item; key?; index; event }` | `index` is the position within the full trail, collapsed crumbs included. |
+| `OgeBreadcrumbItemTemplate` | `directive — ng-template[ogeBreadcrumbItemTemplate]` | Replaces the crumb's interior only — the link/current/disabled element semantics stay with the component. Context: `OgeBreadcrumbItemTemplateContext` (`$implicit`, `index`, `last`). |
+| `OgeBreadcrumbSeparatorTemplate` | `directive — ng-template[ogeBreadcrumbSeparatorTemplate]` | Replaces the default chevron separator. Rendered `aria-hidden` — a separator is decoration, never content (APG). Context: `OgeBreadcrumbSeparatorTemplateContext`. |
+
+### OgeBreadcrumbItem — `<oge-breadcrumb-item>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | `''` | Label of the crumb. |
+| `key` | `string \| undefined` | `—` | Stable identity used in event payloads and DOM ids. |
+| `value` | `unknown` | `—` | Consumer-defined value carried through click events. |
+| `url` | `string \| undefined` | `—` | Renders the crumb as a real link (``). |
+| `hint` | `string \| undefined` | `—` | Tooltip (native `title`). |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading `aria-hidden` icon. |
+| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon element — the icon-font hook. |
+| `disabled` | `boolean` | `false` | Disabled crumbs are exposed (`aria-disabled`) but inert. |
+| `visible` | `boolean` | `true` | `false` removes the crumb entirely. |
+
+### Breadcrumb configuration
+
+#### Properties
+
+_provideOgeBreadcrumbConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeBreadcrumbMessages` | Every user-facing string: `breadcrumb` (accessible name of the `` landmark, default `Breadcrumb`) and `collapsed` (aria label of the ellipsis button, default `Show hidden items`). |
+| `collapseMode` | `'auto' \| 'wrap' \| 'none' \| undefined` | Default for the `collapseMode` input. |
+
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Breadcrumb routed
+
+```ts
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { OgeBreadcrumb } from '@oge-ui/navigation';
+import { RouterOutlet, NavigationEnd, Router } from '@angular/router';
+import type { OgeBreadcrumbItemData, OgeBreadcrumbItemClickEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBreadcrumb, RouterOutlet],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The breadcrumb takes no router dependency: derive the trail
+         from the URL, keep url crumbs real links (middle-click works) and hand
+         the primary click to the router with preventDefault. The last crumb is
+         the current page — non-interactive with aria-current="page". -->
+    <oge-breadcrumb [items]="trail()" (itemClick)="go($event)" />
+    <router-outlet />
+  `,
+})
+export class Demo {
+  private readonly router = inject(Router);
+
+  private readonly url = signal(this.router.url);
+
+  /** One crumb per URL segment — the last one is the current page. */
+  protected readonly trail = computed<OgeBreadcrumbItemData[]>(() => {
+    const segments = this.url().split(/[?#]/)[0].split('/').filter(Boolean);
+    return segments.map((segment, index) => ({
+      text: segment,
+      key: segment,
+      url: '/' + segments.slice(0, index + 1).join('/'),
+    }));
+  });
+
+  constructor() {
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) this.url.set(event.urlAfterRedirects);
+    });
+  }
+
+  protected go(event: OgeBreadcrumbItemClickEvent): void {
+    event.event.preventDefault();
+    if (event.item.url) void this.router.navigateByUrl(event.item.url);
+  }
+}
+```
+
+#### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBreadcrumb } from '@oge-ui/navigation';
+import type { OgeBreadcrumbItemData, OgeBreadcrumbItemClickEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBreadcrumb],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The APG breadcrumb: a nav landmark holding an ordered list of
+         links, the current page carrying aria-current="page". The last crumb is
+         never interactive — you are already there — and disabled crumbs stay
+         visible but inert. No roving tabindex: the APG defines no keyboard
+         behavior for a breadcrumb, so none is invented. -->
+    <oge-breadcrumb [items]="trail" (itemClick)="go($event)" />
+  `,
+})
+export class Demo {
+  protected readonly trail: OgeBreadcrumbItemData[] = [
+    { text: 'Home', key: 'home', url: '/', icon: 'M2 8 8 2l6 6M4 7v7h8V7' },
+    { text: 'Products', key: 'products', url: '/products' },
+    { text: 'Keyboards', key: 'keyboards', url: '/products/keyboards' },
+    { text: 'Mechanical' },
+  ];
+
+  protected go(event: OgeBreadcrumbItemClickEvent): void {
+    console.log(event.key, event.index);
+  }
+}
+```
+
+#### Collapse
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBreadcrumb } from '@oge-ui/navigation';
+import type { OgeBreadcrumbItemData } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBreadcrumb],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- collapseMode 'auto' (default) measures the breadcrumb's OWN
+         container, never the window. When room runs out the OLDEST middle crumbs
+         collapse first — first and last always stay visible — and unlike the
+         references the collapsed crumbs remain reachable: the ellipsis opens
+         them as real links. 'wrap' breaks onto rows, 'none' keeps one
+         scrollable row. -->
+    <oge-breadcrumb [items]="trail" collapseMode="auto" />
+  `,
+})
+export class Demo {
+  protected readonly trail: OgeBreadcrumbItemData[] = [
+    { text: 'Home', url: '/' },
+    { text: 'Products', url: '/products' },
+    { text: 'Peripherals', url: '/products/peripherals' },
+    { text: 'Keyboards', url: '/products/keyboards' },
+    { text: 'Mechanical' },
+  ];
+}
+```
+
+#### Config
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBreadcrumb, provideOgeBreadcrumbConfig } from '@oge-ui/navigation';
+import type { OgeBreadcrumbItemData } from '@oge-ui/navigation';
+
+// Every user-facing string lives in the messages block — the nav
+// landmark's label and the ellipsis button's label included.
+export const BREADCRUMB_PROVIDERS = [
+  provideOgeBreadcrumbConfig({
+    collapseMode: 'auto',
+    messages: { breadcrumb: 'İçerik haritası', collapsed: 'Gizli öğeleri göster' },
+  }),
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBreadcrumb],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-breadcrumb [items]="trail" />
+  `,
+})
+export class Demo {
+  protected readonly trail: OgeBreadcrumbItemData[] = [
+    { text: 'Giriş', url: '/' },
+    { text: 'Raporlar' },
+  ];
+}
+```
+
+#### Declarative
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBreadcrumb, OgeBreadcrumbItem } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBreadcrumb, OgeBreadcrumbItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Declarative children come first, then the items input — the
+         house merge order. A flat list, never nested. -->
+    <oge-breadcrumb>
+      <oge-breadcrumb-item text="Home" key="home" url="/" />
+      <oge-breadcrumb-item text="Reports" key="reports" url="/reports" />
+      <oge-breadcrumb-item text="Q3 summary" />
+    </oge-breadcrumb>
+  `,
+})
+export class Demo {}
+```
+
+#### Templates
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBreadcrumb, OgeBreadcrumbItemTemplate, OgeBreadcrumbSeparatorTemplate } from '@oge-ui/navigation';
+import type { OgeBreadcrumbItemData } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBreadcrumb, OgeBreadcrumbItemTemplate, OgeBreadcrumbSeparatorTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The item template replaces the crumb's interior only — the
+         link/current/disabled element semantics stay with the component. The
+         separator template renders aria-hidden: a separator is decoration. -->
+    <oge-breadcrumb [items]="trail">
+      <ng-template ogeBreadcrumbItemTemplate let-item let-last="last">
+        <strong [style.opacity]="last ? 1 : 0.75">{{ item.text }}</strong>
+      </ng-template>
+      <ng-template ogeBreadcrumbSeparatorTemplate>·</ng-template>
+    </oge-breadcrumb>
+  `,
+})
+export class Demo {
+  protected readonly trail: OgeBreadcrumbItemData[] = [
+    { text: 'Home', url: '/' },
+    { text: 'Library', url: '/library' },
+    { text: 'Data' },
+  ];
+}
+```
 
 #### App shell
 
@@ -10330,6 +10999,295 @@ import { OgeDrawer } from '@oge-ui/navigation';
 })
 export class Demo {
   protected readonly opened = signal(false);
+}
+```
+
+#### Menubar routed
+
+```ts
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { OgeMenubar } from '@oge-ui/navigation';
+import { RouterOutlet, NavigationEnd, Router } from '@angular/router';
+import type { OgeMenubarItemData, OgeMenubarItemClickEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar, RouterOutlet],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The menubar takes no router dependency: bind activeKey
+         one-way from the URL (it renders aria-current="page") and navigate in
+         itemClick. url items stay real links for middle-click and copy-address;
+         preventDefault hands the click to the router instead. -->
+    <oge-menubar
+      [items]="menu"
+      [activeKey]="activeKey()"
+      (itemClick)="go($event)"
+    />
+    <router-outlet />
+  `,
+})
+export class Demo {
+  private readonly router = inject(Router);
+
+  protected readonly menu: OgeMenubarItemData[] = [
+    { text: 'Overview', key: 'overview', url: '/app/overview' },
+    { text: 'Members', key: 'members', url: '/app/members' },
+    {
+      text: 'Reports',
+      items: [
+        { text: 'Monthly', key: 'monthly' },
+        { text: 'Annual', key: 'annual' },
+      ],
+    },
+  ];
+
+  private readonly url = signal(this.router.url);
+
+  protected readonly activeKey = computed(
+    () => this.url().split('/').pop() ?? 'overview',
+  );
+
+  constructor() {
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) this.url.set(event.urlAfterRedirects);
+    });
+  }
+
+  protected go(event: OgeMenubarItemClickEvent): void {
+    event.event.preventDefault();
+    if (event.key) void this.router.navigate(['/app', event.key]);
+  }
+}
+```
+
+#### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeMenubar } from '@oge-ui/navigation';
+import type { OgeMenubarItemData, OgeMenubarItemClickEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- role="menubar" with the full APG keyboard contract: roving
+         tabindex, Left/Right between items, Down/Enter opens, Escape unwinds,
+         type-ahead. Submenus run on the same oge-menu-list every other menu in
+         the suite uses. -->
+    <oge-menubar [items]="menu" (itemClick)="run($event)" />
+  `,
+})
+export class Demo {
+  protected readonly menu: OgeMenubarItemData[] = [
+    {
+      text: 'File',
+      items: [
+        // shortcut renders right-aligned and announces aria-keyshortcuts;
+        // the actual key binding stays the application's job.
+        { text: 'New', key: 'new', shortcut: 'Ctrl+N' },
+        { text: 'Open…', key: 'open', shortcut: 'Ctrl+O' },
+        { separator: true, text: '' },
+        { text: 'Share', badge: 2, items: [{ text: 'Email', key: 'email' }] },
+      ],
+    },
+    { text: 'Edit', items: [{ text: 'Undo', key: 'undo', shortcut: 'Ctrl+Z' }] },
+    { text: 'Help', key: 'help' },
+  ];
+
+  protected run(event: OgeMenubarItemClickEvent): void {
+    console.log(event.key, event.path);
+  }
+}
+```
+
+#### Compact
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeMenubar } from '@oge-ui/navigation';
+import type { OgeMenubarItemData, OgeMenubarCompactChangedEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- compactBelow measures the menubar's OWN container, never the
+         window (DevExtreme collapses on widget overflow, PrimeNG on a media
+         query). Below the threshold the whole bar becomes a hamburger button
+         opening the full tree as one nested menu — no second interaction model. -->
+    <oge-menubar
+      [items]="menu"
+      [compactBelow]="480"
+      (compactChanged)="onCompact($event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly menu: OgeMenubarItemData[] = [
+    { text: 'File', items: [{ text: 'New' }] },
+    { text: 'Edit', items: [{ text: 'Undo' }] },
+    { text: 'Help', key: 'help' },
+  ];
+
+  protected onCompact(event: OgeMenubarCompactChangedEvent): void {
+    console.log('compact:', event.compact);
+  }
+}
+```
+
+#### Config
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeMenubar, provideOgeMenubarConfig } from '@oge-ui/navigation';
+import type { OgeMenubarItemData } from '@oge-ui/navigation';
+
+// Every user-facing string lives in the messages block — the bar's
+// accessible name and the compact hamburger's label included.
+export const MENUBAR_PROVIDERS = [
+  provideOgeMenubarConfig({
+    openMode: 'hover',
+    compactBelow: 480,
+    messages: { menubar: 'Ana menü', hamburger: 'Menü' },
+  }),
+];
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-menubar [items]="menu" />
+  `,
+})
+export class Demo {
+  protected readonly menu: OgeMenubarItemData[] = [
+    { text: 'Dosya', items: [{ text: 'Yeni' }] },
+  ];
+}
+```
+
+#### Declarative
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeMenubar, OgeMenubarItem } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar, OgeMenubarItem],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Declarative children come first, then the items input — the
+         house merge order. Nesting oge-menubar-item builds the submenu tree. -->
+    <oge-menubar>
+      <oge-menubar-item text="File">
+        <oge-menubar-item text="New" key="new" />
+        <oge-menubar-item [separator]="true" />
+        <oge-menubar-item text="Exit" key="exit" />
+      </oge-menubar-item>
+      <oge-menubar-item text="Help" key="help" />
+    </oge-menubar>
+  `,
+})
+export class Demo {}
+```
+
+#### Events
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeMenubar } from '@oge-ui/navigation';
+import type { OgeMenubarItemData, OgeMenubarSubmenuOpeningEvent, OgeMenubarSubmenuClosingEvent } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The -ing pair is cancelable with the house mutable cancel
+         flag. Closes the menubar initiates (escape, select, navigation, api) run
+         through submenuClosing; pointer closes owned by the overlay (outside)
+         and Tab only report submenuClosed. -->
+    <oge-menubar
+      [items]="menu"
+      (submenuOpening)="onOpening($event)"
+      (submenuClosing)="onClosing($event)"
+    />
+  `,
+})
+export class Demo {
+  protected readonly locked = signal(false);
+  protected readonly menu: OgeMenubarItemData[] = [
+    { text: 'File', key: 'file', items: [{ text: 'New' }] },
+  ];
+
+  protected onOpening(event: OgeMenubarSubmenuOpeningEvent): void {
+    if (this.locked()) event.cancel = true;
+  }
+
+  protected onClosing(event: OgeMenubarSubmenuClosingEvent): void {
+    if (this.locked() && event.reason !== 'tab') event.cancel = true;
+  }
+}
+```
+
+#### Open mode
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeMenubar } from '@oge-ui/navigation';
+import type { OgeMenubarItemData } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- openMode applies to the TOP level only: 'click' is the
+         desktop-menubar default, 'hover' opens after hoverDelay. Nested levels
+         always open on hover and on ArrowRight/Enter — the reference libraries'
+         first-vs-nested split baked in as behavior, not a second input. Once a
+         menu is open, hovering siblings switches it in either mode. -->
+    <oge-menubar [items]="menu" openMode="hover" [hoverDelay]="150" />
+  `,
+})
+export class Demo {
+  protected readonly menu: OgeMenubarItemData[] = [
+    { text: 'File', items: [{ text: 'New' }] },
+    { text: 'Edit', items: [{ text: 'Undo' }] },
+  ];
+}
+```
+
+#### Vertical
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeMenubar } from '@oge-ui/navigation';
+import type { OgeMenubarItemData } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeMenubar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A vertical menubar keeps role="menubar" and announces
+         aria-orientation="vertical"; Up/Down traverse the bar and ArrowRight
+         opens the submenu beside it, exactly as the APG allows. -->
+    <oge-menubar orientation="vertical" [items]="menu" />
+  `,
+})
+export class Demo {
+  protected readonly menu: OgeMenubarItemData[] = [
+    { text: 'Dashboard', key: 'dashboard' },
+    { text: 'Reports', items: [{ text: 'Monthly' }, { text: 'Annual' }] },
+    { text: 'Settings', items: [{ text: 'Profile' }] },
+  ];
 }
 ```
 
@@ -11141,8 +12099,8 @@ Framework-free data engine shared by every package: sort/filter/group/aggregate 
 
 `@oge-ui/core`
 
-- values: `ArrayDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildTreeIndex`, `clampDate`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `groupNodeKey`, `groupRows`, `intervalKey`, `intervalRange`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeSplitTracks`, `pathKey`, `pathToFilterExpr`, `resizeSplitAt`, `resolveDrawerMode`, `resolveKeySelector`, `resolveSelectedKeys`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `serializeLikeOriginal`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `weekNumber`
-- types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeNavDirection`, `OgePivotStore`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
+- values: `ArrayDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildTreeIndex`, `clampDate`, `clampValue`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `groupNodeKey`, `groupRows`, `intervalKey`, `intervalRange`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeSplitTracks`, `pathKey`, `pathToFilterExpr`, `ratioToValue`, `resizeSplitAt`, `resolveDrawerMode`, `resolveKeySelector`, `resolveMenubarCompact`, `resolveSelectedKeys`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `weekNumber`
+- types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeNavDirection`, `OgePivotStore`, `OgeRangeThumb`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
 
 ## oge-ui
 

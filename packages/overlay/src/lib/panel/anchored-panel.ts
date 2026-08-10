@@ -7,9 +7,13 @@ import {
   type OgeResolvedPopupPosition,
 } from '../position/position';
 
-/** Why an anchored panel closed. */
+/**
+ * Why an anchored panel closed. `'back'` is a nested submenu closing toward
+ * its parent level; it deliberately does not trigger `restoreFocus` — the
+ * parent menu refocuses itself.
+ */
 export type OgePopupCloseReason =
-  'api' | 'outside' | 'escape' | 'select' | 'tab';
+  'api' | 'outside' | 'escape' | 'select' | 'tab' | 'back';
 
 export interface OgeAnchoredPanelOptions {
   /** Anchor element getter (`null` while not rendered). */

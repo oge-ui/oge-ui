@@ -48,6 +48,53 @@ export type {
   OgeDrawerOpeningEvent,
   OgeDrawerPosition,
 } from './lib/drawer/drawer-types';
+export { OgeBreadcrumb } from './lib/breadcrumb/breadcrumb';
+export { OgeBreadcrumbItem } from './lib/breadcrumb/breadcrumb-item';
+export {
+  OgeBreadcrumbItemTemplate,
+  OgeBreadcrumbSeparatorTemplate,
+} from './lib/breadcrumb/templates';
+export {
+  OGE_BREADCRUMB_CONFIG,
+  OGE_DEFAULT_BREADCRUMB_CONFIG,
+  OGE_DEFAULT_BREADCRUMB_MESSAGES,
+  provideOgeBreadcrumbConfig,
+  type OgeBreadcrumbConfig,
+  type OgeBreadcrumbConfigInput,
+  type OgeBreadcrumbMessages,
+} from './lib/breadcrumb/config';
+export type {
+  OgeBreadcrumbCollapseMode,
+  OgeBreadcrumbItemClickEvent,
+  OgeBreadcrumbItemData,
+  OgeBreadcrumbItemTemplateContext,
+  OgeBreadcrumbSeparatorTemplateContext,
+} from './lib/breadcrumb/breadcrumb-types';
+export { OgeMenubar } from './lib/menubar/menubar';
+export { OgeMenubarItem } from './lib/menubar/menubar-item';
+export { OgeMenubarItemTemplate } from './lib/menubar/templates';
+export {
+  OGE_MENUBAR_CONFIG,
+  OGE_DEFAULT_MENUBAR_CONFIG,
+  OGE_DEFAULT_MENUBAR_MESSAGES,
+  provideOgeMenubarConfig,
+  type OgeMenubarConfig,
+  type OgeMenubarConfigInput,
+  type OgeMenubarMessages,
+} from './lib/menubar/config';
+export type {
+  OgeMenubarCloseReason,
+  OgeMenubarCompactChangedEvent,
+  OgeMenubarItemClickEvent,
+  OgeMenubarItemData,
+  OgeMenubarItemTemplateContext,
+  OgeMenubarOpenMode,
+  OgeMenubarOrientation,
+  OgeMenubarSubmenuClosedEvent,
+  OgeMenubarSubmenuClosingEvent,
+  OgeMenubarSubmenuOpenedEvent,
+  OgeMenubarSubmenuOpeningEvent,
+} from './lib/menubar/menubar-types';
 export { OgeTreeView } from './lib/tree-view/tree-view';
 export {
   OgeTreeExpandIconTemplate,

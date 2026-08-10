@@ -14,6 +14,8 @@ import {
   OGE_RADIO_GROUP_API,
   OGE_SELECT_BOX_API,
   OGE_TREE_SELECT_API,
+  OGE_RANGE_SLIDER_API,
+  OGE_SLIDER_API,
   OGE_SWITCH_API,
   OGE_TAG_BOX_API,
   OGE_TEXT_AREA_API,
@@ -30,6 +32,8 @@ const SECTIONS = [
   'OgeAutocomplete',
   'OgeCheckBox',
   'OgeSwitch',
+  'OgeSlider',
+  'OgeRangeSlider',
   'OgeRadioGroup',
   'OgeCalendar',
   'OgeDateBox',
@@ -102,6 +106,16 @@ const SECTIONS = [
       [sections]="checkBoxApi"
     />
     <app-api-reference
+      title="OgeSlider"
+      selector="oge-slider"
+      [sections]="sliderApi"
+    />
+    <app-api-reference
+      title="OgeRangeSlider"
+      selector="oge-range-slider"
+      [sections]="rangeSliderApi"
+    />
+    <app-api-reference
       title="OgeSwitch"
       selector="oge-switch"
       [sections]="switchApi"
@@ -156,6 +170,8 @@ export class InputsApiPage {
   protected readonly autocompleteApi = OGE_AUTOCOMPLETE_API;
   protected readonly checkBoxApi = OGE_CHECK_BOX_API;
   protected readonly switchApi = OGE_SWITCH_API;
+  protected readonly sliderApi = OGE_SLIDER_API;
+  protected readonly rangeSliderApi = OGE_RANGE_SLIDER_API;
   protected readonly radioGroupApi = OGE_RADIO_GROUP_API;
   protected readonly calendarApi = OGE_CALENDAR_API;
   protected readonly dateBoxApi = OGE_DATE_BOX_API;

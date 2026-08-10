@@ -1,0 +1,217 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-menubar {
+  @include tokens.core-tokens;
+
+  display: block;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-menubar-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+
+  .oge-menubar-vertical & {
+    flex-direction: column;
+    align-items: stretch;
+    width: max-content;
+    min-width: 180px;
+  }
+}
+
+.oge-menubar-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: var(--oge-font-size);
+  font-weight: 500;
+  text-align: start;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  // Soft state layer instead of a hard color swap.
+  &:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:active:not(:disabled):not([aria-disabled='true']) {
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+
+  // The open item reads at a glance: accent tint, accent text, flipped caret.
+  &[aria-expanded='true'] {
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+
+    .oge-menubar-item-caret svg {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// aria-current="page": accent text plus an indicator bar on the bar's edge —
+// an underline in a horizontal bar, a start-edge rail in a vertical one.
+.oge-menubar-item-active:not(:disabled) {
+  color: var(--oge-accent);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: 10px;
+    inset-block-end: 1px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--oge-accent);
+  }
+
+  .oge-menubar-vertical &::after {
+    inset-inline: auto;
+    inset-inline-start: 1px;
+    inset-block: 8px;
+    height: auto;
+    width: 2px;
+  }
+}
+
+.oge-menubar-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex: none;
+}
+
+.oge-menubar-item-text {
+  flex: 1 1 auto;
+}
+
+.oge-menubar-item-badge {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.oge-menubar-item-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  flex: none;
+  color: var(--oge-muted-color);
+
+  svg {
+    transition: transform 120ms ease;
+  }
+
+  [aria-expanded='true'] & {
+    color: currentColor;
+  }
+
+  // Vertical bars open submenus to the side — point the caret there.
+  .oge-menubar-vertical & svg {
+    transform: rotate(-90deg);
+  }
+
+  .oge-menubar-vertical [aria-expanded='true'] & svg {
+    transform: rotate(-90deg);
+  }
+
+  .oge-menubar-vertical[dir='rtl'] & svg,
+  [dir='rtl'] .oge-menubar-vertical & svg {
+    transform: rotate(90deg);
+  }
+}
+
+.oge-menubar-separator {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
+  margin: 6px 4px;
+  background: var(--oge-border-color);
+
+  .oge-menubar-vertical & {
+    width: auto;
+    height: 1px;
+    margin: 4px 6px;
+  }
+}
+
+.oge-menubar-hamburger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &[aria-expanded='true'] {
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-menubar-disabled .oge-menubar-bar {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-menubar-item,
+  .oge-menubar-item-caret svg,
+  .oge-menubar-hamburger {
+    transition: none;
+  }
+}

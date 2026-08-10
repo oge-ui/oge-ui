@@ -1,6 +1,6 @@
 # @oge-ui/inputs
 
-> Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox and Switch — floating labels, validation, Signal Forms and reactive forms.
+> Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
 
 Part of OGE UI v0.9.0.
 Docs and live demos: https://ogeui.com/components/inputs
@@ -85,8 +85,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/inputs`
 
-- values: `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeSelectBox`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
-- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
+- values: `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeRangeSlider`, `OgeSelectBox`, `OgeSlider`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
+- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeSliderDragStartedEvent`, `OgeSliderOrientation`, `OgeSliderSlideEndedEvent`, `OgeSliderValueIndicator`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
 
 ## API reference
 
@@ -790,6 +790,154 @@ _Common (all editors)_
 | `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
 
 #### Events
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+### OgeSlider — `<oge-slider>`
+
+#### Properties
+
+_OgeSlider_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<number>` | `0` | The slider value — two-way. Programmatic writes clamp and snap to the step grid. |
+| `min / max` | `number \| undefined` | `0 / 100` | Scale bounds. Typed `number \| undefined` because the Signal Forms contract reserves these member names — `undefined` falls back to 0/100. |
+| `step` | `number` | `1` | Arrow-key and drag increment; thumbs always sit on this grid, with float-error correction (0.1-style steps never drift). |
+| `largeStep` | `number \| undefined` | `—` | PageUp/PageDown increment; `undefined` means `step × 10`. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | A vertical slider announces `aria-orientation="vertical"`; Up still increases (APG). |
+| `showRange` | `boolean` | `true` | Fills the selected portion of the track. |
+| `showTicks / tickStep` | `boolean / number \| undefined` | `false` | Tick marks on the `tickStep` grid — falling back to `largeStep`, then `step`; capped at 200 marks. |
+| `showTickLabels` | `boolean` | `false` | Formatted labels under each tick (Kendo's tick `title` callback, fed by `formatValue`). |
+| `showLabels` | `boolean` | `false` | Formatted `min`/`max` labels at the track ends. |
+| `valueIndicator` | `'none' \| 'active' \| 'always'` | `'none'` | The inline value bubble: `'active'` while focused, dragged **or hovered** (Material's discrete plus DevExtreme's `showMode: 'onHover'`), `'always'` permanent. |
+| `formatValue` | `(value: number) => string \| undefined` | `—` | Formats the bubble, the end labels **and** `aria-valuetext` — display and announcement never diverge. |
+| `showButtons` | `boolean` | `false` | Kendo-style increment/decrement buttons with press-and-hold repeat — the number box's spin timing config. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the thumb; the localized `sliderHandle` message is the fallback. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_OgeSlider events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `dragStarted` | `OgeSliderDragStartedEvent` | A drag gesture began on the thumb or the track. |
+| `slideEnded` | `OgeSliderSlideEndedEvent<number>` | Fires once per gesture at release — DevExtreme's `onHandleRelease` timing without a mode switch (live changes stream through `valueCommitted`, throttled by `debounce`). Not emitted when Escape cancels the gesture. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSliderOrientation` | `'horizontal' \| 'vertical'` | Axis the track lays along. |
+| `OgeSliderValueIndicator` | `'none' \| 'active' \| 'always'` | When the inline value bubble shows. |
+| `OgeSliderDragStartedEvent / OgeSliderSlideEndedEvent<T>` | `{ event } / { value; event }` | The drag gesture pair. |
+
+### OgeRangeSlider — `<oge-range-slider>`
+
+#### Properties
+
+_OgeRangeSlider_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<readonly [number, number]>` | `[0, 0]` | The `[start, end]` pair — two-way. Programmatic writes clamp, snap and sort. |
+| `minRange` | `number` | `0` | Minimum distance kept between the thumbs — reflected in each thumb&rsquo;s dynamic `aria-valuemin`/`aria-valuemax` (the APG multi-thumb constraint). |
+| `startAriaLabel / endAriaLabel` | `string \| undefined` | `—` | Accessible names of the thumbs; the localized `sliderStartHandle`/`sliderEndHandle` messages are the fallbacks. |
+| `startName / endName` | `string` | `''` | Hidden-input names for plain HTML form posts — DevExtreme's `startName`/`endName` contract (the single slider uses the inherited `name`). |
+
+_Shared with OgeSlider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `min / max / step / largeStep / orientation / showRange / showTicks / tickStep / showLabels / valueIndicator / formatValue` | `—` | The full scale/appearance surface of `OgeSlider`, identical semantics. `showButtons` is single-slider only (the Kendo split). Clicking the track moves the **nearest** thumb. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_OgeRangeSlider events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `dragStarted / slideEnded` | `OgeSliderSlideEndedEvent<readonly [number, number]>` | The drag gesture pair; an unchanged pair never re-emits `valueCommitted`. |
 
 _Common (all editors)_
 
@@ -2022,6 +2170,178 @@ import { OgeTextBox } from '@oge-ui/inputs';
 export class Demo {
   protected readonly password = signal('');
   protected readonly token = signal('oge_live_9f0b01cf');
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The WAI-ARIA APG slider: a focusable role="slider" thumb —
+         arrows ±step (RTL-aware), PageUp/PageDown ±largeStep, Home/End to the
+         ends. Dragging commits live; [debounce] throttles it; Escape cancels the
+         gesture and restores the start value. -->
+    <oge-slider [(value)]="volume" [min]="0" [max]="100" ariaLabel="Volume" />
+  `,
+})
+export class Demo {
+  protected readonly volume = signal(40);
+}
+```
+
+### Buttons
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showButtons adds Kendo-style increment/decrement buttons
+         with press-and-hold repeat (the number box's spin timing config).
+         orientation="vertical" keeps role and keys per the APG — Up increases. -->
+    <oge-slider [(value)]="volume" [showButtons]="true" ariaLabel="Volume" />
+
+    <div style="height: 200px">
+      <oge-slider
+        [(value)]="volume"
+        orientation="vertical"
+        ariaLabel="Volume (vertical)"
+      />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly volume = signal(40);
+}
+```
+
+### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Inside <oge-form>: a bare editor — the form renders the
+         label/hint/error chrome around it. dataType 'number' still defaults to
+         the number box; the slider is an explicit editorType choice. -->
+    <oge-form [(formData)]="settings" [items]="items" />
+  `,
+})
+export class Demo {
+  protected readonly settings = signal({ brightness: 70 });
+  protected readonly items: OgeFormItemData[] = [
+    {
+      field: 'brightness',
+      label: 'Brightness',
+      editorType: 'slider',
+      editorOptions: { min: 0, max: 100, step: 5 },
+    },
+  ];
+}
+```
+
+### Indicator
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- valueIndicator: 'active' shows the bubble while focused or
+         dragging (Material's discrete), 'always' keeps it up (DevExtreme's
+         tooltip.showMode). formatValue feeds the bubble, the end labels AND
+         aria-valuetext — one input, display and announcement never diverge. -->
+    <oge-slider
+      [(value)]="volume"
+      valueIndicator="active"
+      [formatValue]="asDecibels"
+      [showLabels]="true"
+      ariaLabel="Volume"
+    />
+  `,
+})
+export class Demo {
+  protected readonly volume = signal(40);
+  protected readonly asDecibels = (value: number): string => `${value} dB`;
+}
+```
+
+### Range
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeRangeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeRangeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- APG multi-thumb: two focusable thumbs, each one's
+         aria-valuemin/max dynamically constrained by the other (plus minRange).
+         Clicking the track moves the NEAREST thumb. -->
+    <oge-range-slider
+      [(value)]="price"
+      [min]="0"
+      [max]="1000"
+      [step]="10"
+      [minRange]="50"
+    />
+  `,
+})
+export class Demo {
+  protected readonly price = signal<readonly [number, number]>([200, 600]);
+}
+```
+
+### Ticks
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSlider } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSlider],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Ticks sit on the tickStep grid (falling back to largeStep,
+         then step). showTickLabels renders a formatted label under each tick
+         (Kendo's tick title callback, fed by formatValue); showLabels renders
+         just the min/max ends instead. -->
+    <oge-slider
+      [(value)]="rating"
+      [min]="0"
+      [max]="10"
+      [largeStep]="2"
+      [showTicks]="true"
+      [showTickLabels]="true"
+    />
+  `,
+})
+export class Demo {
+  protected readonly rating = signal(6);
 }
 ```
 

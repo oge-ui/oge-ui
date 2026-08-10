@@ -35,6 +35,14 @@ export { OgeNumberBox } from './lib/number-box/number-box';
 export { OgeCheckBox } from './lib/check-box/check-box';
 export { OgeSwitch } from './lib/switch/switch';
 export { OgeRadioGroup } from './lib/radio-group/radio-group';
+export { OgeSlider } from './lib/slider/slider';
+export { OgeRangeSlider } from './lib/slider/range-slider';
+export {
+  type OgeSliderDragStartedEvent,
+  type OgeSliderOrientation,
+  type OgeSliderSlideEndedEvent,
+  type OgeSliderValueIndicator,
+} from './lib/slider/slider-types';
 export { OgeCalendar, OgeCalendarCellTemplate } from './lib/calendar/calendar';
 export {
   type OgeCalendarZoomLevel,

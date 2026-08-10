@@ -106,6 +106,7 @@ const BARE_EDITORS: ReadonlySet<OgeFormEditorType> = new Set([
   'switch',
   'radioGroup',
   'calendar',
+  'slider', // chrome-free: the form supplies label/hint/error around it
 ]);
 
 /** Whether the form must render label/hint/error chrome around this editor. */

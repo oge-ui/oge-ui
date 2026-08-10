@@ -15,10 +15,14 @@ import {
   OgeToolbarItem,
 } from '@oge-ui/layout';
 import {
+  OgeBreadcrumb,
   OgeDrawer,
+  OgeMenubar,
   OgeStep,
   OgeStepper,
   OgeTreeView,
+  type OgeBreadcrumbItemData,
+  type OgeMenubarItemData,
 } from '@oge-ui/navigation';
 import { OgeContextMenu, OgeTooltip, type OgeMenuItem } from '@oge-ui/overlay';
 import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
@@ -41,6 +45,8 @@ type FamilyKey =
   | 'toolbar'
   | 'tree-view'
   | 'drawer'
+  | 'menubar'
+  | 'breadcrumb'
   | 'stepper'
   | 'pivot'
   | 'overlay';
@@ -93,6 +99,8 @@ interface OrgNode {
     OgeToolbarItem,
     OgeTreeView,
     OgeDrawer,
+    OgeMenubar,
+    OgeBreadcrumb,
     OgeStepper,
     OgeStep,
   ],
@@ -394,6 +402,16 @@ interface OrgNode {
                     </oge-drawer>
                   </div>
                 }
+                @case ('menubar') {
+                  <div class="w-full self-start">
+                    <oge-menubar [items]="menubarItems" />
+                  </div>
+                }
+                @case ('breadcrumb') {
+                  <div class="w-full self-start">
+                    <oge-breadcrumb [items]="breadcrumbItems" />
+                  </div>
+                }
                 @case ('tree-view') {
                   <div class="w-full self-start">
                     <oge-tree-view
@@ -556,6 +574,22 @@ export class ComponentsIndexPage {
         'A side panel that floats above, pushes or shrinks its content — and whose modality follows that choice: a dialog with a focus trap when it covers, a landmark when it shares the row. None of the reference drawers gets that split right.',
     },
     {
+      key: 'menubar',
+      name: 'Menubar',
+      icon: 'menubar',
+      path: '/components/menubar',
+      description:
+        'A persistent APG menubar with nested submenus on the suite’s shared menu machinery, a container-width hamburger collapse and cancelable open/close pairs. Material has no menubar at all — only the CDK offers the directives.',
+    },
+    {
+      key: 'breadcrumb',
+      name: 'Breadcrumb',
+      icon: 'breadcrumb',
+      path: '/components/breadcrumb',
+      description:
+        'The APG trail: a nav landmark of real links with aria-current on the current page, collapsing its oldest middle crumbs against its own container width — the hidden ones stay reachable as links. Neither DevExtreme nor Material ships one.',
+    },
+    {
       key: 'tree-view',
       name: 'Tree View',
       icon: 'tree',
@@ -582,6 +616,18 @@ export class ComponentsIndexPage {
   ];
 
   protected readonly employees: Employee[] = makeEmployees(4);
+
+  protected readonly menubarItems: readonly OgeMenubarItemData[] = [
+    { text: 'File', items: [{ text: 'New' }, { text: 'Open…' }] },
+    { text: 'Edit', items: [{ text: 'Undo' }] },
+    { text: 'Help' },
+  ];
+
+  protected readonly breadcrumbItems: readonly OgeBreadcrumbItemData[] = [
+    { text: 'Home', url: '/components/breadcrumb' },
+    { text: 'Products', url: '/components/breadcrumb' },
+    { text: 'Keyboards' },
+  ];
 
   protected readonly org: OrgNode[] = [
     { id: 1, parentId: null, name: 'Deniz Arslan', title: 'CTO' },

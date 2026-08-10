@@ -11,6 +11,8 @@
     "tagbox",
     "datepicker",
     "calendar",
+    "slider",
+    "range-slider",
     "checkbox",
     "switch",
     "signals"

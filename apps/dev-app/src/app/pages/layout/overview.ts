@@ -81,14 +81,15 @@ class CreatedAt {
     <app-page-toc [sections]="sections" />
 
     <app-demo-card
-      [chips]="['[(selectedIndex)]', 'description', 'badge', 'disabled']"
+      [chips]="['[(selectedIndex)]', 'collapsible', 'badge', 'disabled']"
       heading="Declarative panels"
-      description="Projected children carry their own content. <code>selectedIndex</code> is a two-way model for the single-expand case; a user gesture first fires the cancelable <code>itemExpanding</code>, then <code>itemExpanded</code>. Disabled panels are skipped by clicks and arrow keys."
+      description="Projected children carry their own content. <code>selectedIndex</code> is a two-way model for the single-expand case; a user gesture first fires the cancelable <code>itemExpanding</code>, then <code>itemExpanded</code>. <code>collapsible</code> lets a second click close the open panel — without it the last open panel deliberately stays open (see the third demo). Disabled panels are skipped by clicks and arrow keys."
       [code]="basicSnippet"
       language="ts"
     >
       <oge-accordion
         [(selectedIndex)]="basicIndex"
+        [collapsible]="true"
         (itemExpanded)="lastExpanded.set($event)"
       >
         <oge-accordion-item title="Account" description="Name and e-mail">

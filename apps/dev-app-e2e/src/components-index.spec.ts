@@ -13,6 +13,8 @@ const FAMILIES = [
   { name: 'Toolbar', preview: 'oge-toolbar' },
   { name: 'Tree View', preview: 'oge-tree-view' },
   { name: 'Drawer', preview: 'oge-drawer' },
+  { name: 'Menubar', preview: 'oge-menubar' },
+  { name: 'Breadcrumb', preview: 'oge-breadcrumb' },
   { name: 'Stepper', preview: 'oge-stepper' },
   { name: 'Overlay', preview: 'oge-button' },
 ] as const;

@@ -446,6 +446,89 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/breadcrumb',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/navigation/breadcrumb').then(
+            (m) => m.NavigationBreadcrumbPage,
+          ),
+        title: 'OGE — Breadcrumb',
+      },
+      {
+        path: 'routed',
+        loadComponent: () =>
+          import('./pages/navigation/breadcrumb-routed').then(
+            (m) => m.BreadcrumbRoutedPage,
+          ),
+        title: 'OGE — Routed Breadcrumb',
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'reports' },
+          {
+            path: 'reports',
+            loadComponent: () =>
+              import('./pages/navigation/breadcrumb-routed').then(
+                (m) => m.BreadcrumbRoutedReports,
+              ),
+          },
+          {
+            path: 'reports/monthly',
+            loadComponent: () =>
+              import('./pages/navigation/breadcrumb-routed').then(
+                (m) => m.BreadcrumbRoutedMonthly,
+              ),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: 'components/menubar',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/navigation/menubar').then(
+            (m) => m.NavigationMenubarPage,
+          ),
+        title: 'OGE — Menubar',
+      },
+      {
+        path: 'routed',
+        loadComponent: () =>
+          import('./pages/navigation/menubar-routed').then(
+            (m) => m.MenubarRoutedPage,
+          ),
+        title: 'OGE — Routed Menubar',
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'overview' },
+          {
+            path: 'overview',
+            loadComponent: () =>
+              import('./pages/navigation/menubar-routed').then(
+                (m) => m.MenubarRoutedOverview,
+              ),
+          },
+          {
+            path: 'members',
+            loadComponent: () =>
+              import('./pages/navigation/menubar-routed').then(
+                (m) => m.MenubarRoutedMembers,
+              ),
+          },
+          {
+            path: 'reports',
+            loadComponent: () =>
+              import('./pages/navigation/menubar-routed').then(
+                (m) => m.MenubarRoutedReports,
+              ),
+          },
+        ],
+      },
+    ],
+  },
+  {
     path: 'components/tree-view',
     children: [
       {
@@ -512,6 +595,12 @@ export const appRoutes: Route[] = [
             (m) => m.InputsToggleControlsPage,
           ),
         title: 'OGE — Toggle Controls',
+      },
+      {
+        path: 'slider',
+        loadComponent: () =>
+          import('./pages/inputs/slider').then((m) => m.InputsSliderPage),
+        title: 'OGE — Slider',
       },
       {
         path: 'date-box',

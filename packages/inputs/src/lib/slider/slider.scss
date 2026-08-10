@@ -1,0 +1,314 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-slider {
+  @include tokens.core-tokens;
+
+  display: block;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-slider-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .oge-slider-vertical & {
+    flex-direction: column;
+    height: 100%;
+    min-height: 160px;
+    width: max-content;
+  }
+}
+
+.oge-slider-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 28px;
+  cursor: pointer;
+  touch-action: none; // the gesture owns the pointer — no scroll hijack mid-drag
+
+  .oge-slider-vertical & {
+    height: auto;
+    width: 28px;
+    flex: 1 1 auto;
+    align-self: center;
+  }
+
+  .oge-disabled &,
+  .oge-slider-readonly & {
+    cursor: default;
+  }
+}
+
+.oge-slider-rail {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--oge-border-color);
+
+  .oge-slider-vertical & {
+    inset-inline: auto;
+    inset-block: 0;
+    left: 50%;
+    top: auto;
+    width: 4px;
+    height: auto;
+    transform: translateX(-50%);
+  }
+}
+
+.oge-slider-fill {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--oge-accent);
+  transition:
+    width 160ms ease,
+    height 160ms ease,
+    inset-inline-start 160ms ease,
+    inset-block-end 160ms ease;
+
+  .oge-slider-dragging & {
+    transition: none;
+  }
+
+  .oge-slider-vertical & {
+    top: auto;
+    left: 50%;
+    width: 4px;
+    height: auto;
+    transform: translateX(-50%);
+  }
+}
+
+.oge-slider-tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: var(--oge-muted-color);
+  opacity: 0.5;
+  pointer-events: none;
+
+  &.oge-slider-tick-in-range {
+    background: var(--oge-accent);
+    opacity: 0.6;
+  }
+
+  .oge-slider-vertical & {
+    top: auto;
+    left: 50%;
+    width: 8px;
+    height: 2px;
+    transform: translate(-50%, 50%);
+  }
+}
+
+.oge-slider-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--oge-accent);
+  border-radius: 50%;
+  background: var(--oge-bg);
+  cursor: grab;
+  outline: none;
+  // Discrete moves (keys, track clicks, buttons) glide; dragging is instant.
+  transition:
+    box-shadow 120ms ease,
+    background-color 120ms ease,
+    inset-inline-start 160ms ease,
+    inset-block-end 160ms ease;
+
+  .oge-slider-dragging & {
+    transition:
+      box-shadow 120ms ease,
+      background-color 120ms ease;
+  }
+
+  // Soft state layer: a growing accent halo instead of a size jump.
+  &:hover {
+    box-shadow: 0 0 0 6px var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  .oge-slider-dragging & {
+    cursor: grabbing;
+    background: var(--oge-accent);
+    box-shadow: 0 0 0 8px var(--oge-accent-25);
+  }
+
+  .oge-slider-vertical & {
+    top: auto;
+    left: 50%;
+    transform: translate(-50%, 50%);
+  }
+
+  .oge-disabled & {
+    border-color: var(--oge-muted-color);
+    cursor: default;
+    box-shadow: none;
+  }
+
+  .oge-slider-readonly & {
+    cursor: default;
+  }
+}
+
+@keyframes oge-slider-bubble-in {
+  from {
+    opacity: 0;
+    translate: 0 3px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.oge-slider-bubble {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  animation: oge-slider-bubble-in 120ms ease-out;
+  padding: 2px 8px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-text-color);
+  color: var(--oge-bg);
+  font-size: 0.85em;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  pointer-events: none;
+
+  .oge-slider-vertical & {
+    bottom: auto;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+// Formatted labels under the ticks; extra track height makes room for them.
+.oge-slider-tick-label {
+  position: absolute;
+  top: calc(50% + 10px);
+  transform: translateX(-50%);
+  color: var(--oge-muted-color);
+  font-size: 0.75em;
+  white-space: nowrap;
+  pointer-events: none;
+
+  .oge-slider-vertical & {
+    top: auto;
+    left: calc(50% + 12px);
+    transform: translateY(50%);
+  }
+}
+
+.oge-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  color: var(--oge-muted-color);
+  font-size: 0.85em;
+
+  .oge-slider-vertical & {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    margin-top: 0;
+    margin-inline-start: 4px;
+  }
+}
+
+.oge-slider-step-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+// Density presets — the 28/34/42 input scale mapped to track heights.
+.oge-slider-sm {
+  .oge-slider-track {
+    height: 22px;
+  }
+  .oge-slider-thumb {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+.oge-slider-lg {
+  .oge-slider-track {
+    height: 34px;
+  }
+  .oge-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+  &:not(.oge-slider-vertical) .oge-slider-rail,
+  &:not(.oge-slider-vertical) .oge-slider-fill {
+    height: 6px;
+  }
+}
+
+.oge-slider-invalid .oge-slider-thumb {
+  border-color: var(--oge-danger);
+}
+
+.oge-slider-invalid .oge-slider-fill {
+  background: var(--oge-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-slider-thumb,
+  .oge-slider-fill,
+  .oge-slider-step-button {
+    transition: none;
+  }
+
+  .oge-slider-bubble {
+    animation: none;
+  }
+}

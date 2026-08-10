@@ -19,6 +19,7 @@ import {
   OgeNumberBox,
   OgeRadioGroup,
   OgeSelectBox,
+  OgeSlider,
   OgeSwitch,
   OgeTagBox,
   OgeTextArea,
@@ -63,6 +64,7 @@ import type {
     OgeNumberBox,
     OgeRadioGroup,
     OgeSelectBox,
+    OgeSlider,
     OgeSwitch,
     OgeTagBox,
     OgeTextArea,
@@ -133,6 +135,9 @@ export class OgeFormEditor {
       ? (this.opts().min as number)
       : undefined,
   );
+  // The slider's scale defaults (0/100) apply when the item sets no bounds.
+  protected readonly sliderMin = computed(() => this.numberMin() ?? 0);
+  protected readonly sliderMax = computed(() => this.numberMax() ?? 100);
   protected readonly numberMax = computed(() =>
     typeof this.opts().max === 'number'
       ? (this.opts().max as number)

@@ -23,19 +23,47 @@
   font: inherit;
   font-size: var(--oge-font-size);
   text-align: start;
+  text-decoration: none; // link rows are real <a> elements
+  box-sizing: border-box;
   cursor: pointer;
   transition:
     background-color 120ms ease,
     color 120ms ease;
 
-  &:disabled {
+  &:disabled,
+  &.oge-menu-item-disabled {
     color: var(--oge-muted-color);
     cursor: default;
   }
 }
 
-.oge-menu-item-active:not(:disabled) {
+.oge-menu-item-active:not(:disabled):not(.oge-menu-item-disabled) {
   background: var(--oge-row-hover-bg);
+}
+
+// Accelerator hint — display only, announced via aria-keyshortcuts on the row.
+.oge-menu-item-shortcut {
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--oge-muted-color);
+  font-size: 0.85em;
+  letter-spacing: 0.02em;
+}
+
+.oge-menu-item-badge {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+// A shortcut already claims the trailing edge; the caret then follows it.
+.oge-menu-item-shortcut + .oge-menu-item-caret {
+  margin-inline-start: 0;
 }
 
 .oge-menu-item-danger:not(:disabled) {
@@ -58,6 +86,22 @@
   justify-content: center;
   width: 16px;
   flex: none;
+}
+
+// Trailing submenu chevron; mirrored by the browser's bidi handling is not
+// needed — the SVG is re-rendered per direction via logical row order.
+.oge-menu-item-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--oge-muted-color);
+
+  [dir='rtl'] & svg {
+    transform: scaleX(-1);
+  }
 }
 
 .oge-menu-item-text {

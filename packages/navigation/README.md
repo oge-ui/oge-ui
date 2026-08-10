@@ -3,7 +3,8 @@
 Navigation controls for the [OGE](https://ogeui.com) Angular UI suite.
 Signal-based, standalone, zoneless-ready, MIT.
 
-Today the package ships **`OgeTreeView`**, **`OgeDrawer`** and **`OgeStepper`**.
+Today the package ships **`OgeTreeView`**, **`OgeDrawer`**, **`OgeStepper`**,
+**`OgeMenubar`** and **`OgeBreadcrumb`**.
 
 ```sh
 npm install @oge-ui/navigation
@@ -136,6 +137,97 @@ Steps come from projected children, from a data-driven `steps` array, or both
 Inside a form, `<oge-form-steps>` wraps this component and derives each step's
 completion from the form's own error rollup — identically in all three binding
 modes — and touches only the step being left, so the steps ahead stay quiet.
+
+See the [API reference](https://ogeui.com/components/tree-view/api) for the full
+surface.
+
+## Menubar
+
+```html
+<oge-menubar [items]="menu" (itemClick)="run($event)" />
+```
+
+Items come from a data tree, from nested `<oge-menubar-item>` children, or both
+(children first). Children at any depth open as nested submenus.
+
+### What it does
+
+- **The full WAI-ARIA APG menubar pattern** — `role="menubar"` with a roving
+  tabindex, `Left`/`Right` between items, `Down`/`Enter` into a submenu (`Up`
+  opens focusing the last item), `Right` on a leaf hopping to the next bar
+  item with its menu open, `Escape` unwinding one level at a time, `Home`/`End`
+  and accent-insensitive type-ahead. A vertical bar keeps the same roles with
+  `aria-orientation="vertical"` and swapped axes.
+- **Know when not to use it** — the APG's own advice: for plain site
+  navigation, a `<nav>` of links (optionally with the disclosure pattern)
+  serves better than menubar semantics. This component is for
+  application-style command menus. (Angular Material has no menubar at all —
+  `MatMenu` is a button-triggered dropdown; the CDK's `cdkMenuBar` is the
+  closest reference.)
+- **Shared machinery, not a second menu** — submenus at every depth are the
+  suite's canonical `oge-menu-list` in an anchored panel on the one shared
+  Escape stack, so a menubar submenu, a grid context menu and a drop-down
+  button all behave — and can now all nest — identically.
+- **Open mode without the knob forest** — `openMode: 'click' | 'hover'`
+  governs the top level only; nested levels always open on hover (50/300 ms
+  show/hide dwell) and on `ArrowRight`/`Enter`, the reference libraries'
+  first-vs-nested split baked in as behavior.
+- **Responsive to its own container** — `compactBelow` measures the menubar's
+  own box, never the window; below it the whole bar becomes one hamburger
+  button opening the full tree as nested menus. The rule is core's pure
+  `resolveMenubarCompact()`.
+- **Router-friendly without a router dependency** — `url` items render as real
+  links, `activeKey` marks the current item with `aria-current="page"`, and
+  `itemClick` (with its hierarchical `path`) is where navigation happens.
+- **Cancelable pipeline** — `submenuOpening` / `submenuClosing` carry the
+  house mutable `cancel` flag; `submenuOpened` / `submenuClosed` report, with
+  the close reason.
+- **Accelerators and badges** — `shortcut` renders a right-aligned hint
+  announced via `aria-keyshortcuts` (no reference menu renders accelerator
+  text at all; the actual key binding stays the application's), `badge` adds a
+  counter pill — both live on the canonical `OgeMenuItem`, so every menu in
+  the suite gained them.
+
+See the [API reference](https://ogeui.com/components/tree-view/api) for the full
+surface.
+
+## Breadcrumb
+
+```html
+<oge-breadcrumb [items]="trail" (itemClick)="go($event)" />
+```
+
+Crumbs come from a flat data trail, from `<oge-breadcrumb-item>` children, or
+both (children first).
+
+### What it does
+
+- **The WAI-ARIA APG breadcrumb, verbatim** — a `<nav>` landmark holding an
+  ordered list of real links, the current page carrying
+  `aria-current="page"` and never interactive, separators `aria-hidden`
+  decoration. The APG defines **no keyboard behavior** for a breadcrumb, so
+  none is invented: crumbs are plain links in the Tab order, with no roving
+  tabindex. (Neither DevExtreme nor Angular Material/CDK ships a breadcrumb
+  at all — the parity references are Kendo and PrimeNG.)
+- **Container-width collapse that loses nothing** — `collapseMode: 'auto'`
+  (default) measures the breadcrumb's **own box**, never the window, and
+  collapses the **oldest middle** crumbs first; first and last always stay
+  visible. Unlike the references, the collapsed crumbs stay reachable: the
+  ellipsis button opens them as real links in the suite's shared menu. The
+  fitting arithmetic is core's pure `fitToolbarItems` — the same kernel the
+  toolbar's overflow uses. `'wrap'` breaks onto rows, `'none'` keeps one
+  scrollable row.
+- **Router-friendly without a router dependency** — `url` crumbs render as
+  real `<a href>` (middle-click and copy-address work); `preventDefault()` in
+  `itemClick` hands navigation to a router. `itemClick` carries
+  `{ item, key, index, event }` and never fires for disabled crumbs or the
+  last crumb.
+- **Templates that cannot break the semantics** — `[ogeBreadcrumbItemTemplate]`
+  replaces the crumb's interior only (link/current/disabled elements stay with
+  the component); `[ogeBreadcrumbSeparatorTemplate]` renders inside the
+  `aria-hidden` separator.
+- **Config** — `provideOgeBreadcrumbConfig()`; the nav landmark's label and
+  the ellipsis button's label live in `OgeBreadcrumbMessages`.
 
 See the [API reference](https://ogeui.com/components/tree-view/api) for the full
 surface.

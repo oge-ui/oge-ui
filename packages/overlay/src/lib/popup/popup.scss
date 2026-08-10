@@ -43,6 +43,15 @@
     transform: none;
   }
 
+  // A nested submenu popup is position:fixed inside this one; while the
+  // entrance transform is mid-transition this element becomes the child's
+  // containing block and mispositions/clips it — snap instead of animating
+  // whenever a nested popup is present.
+  &:has(.oge-popup) {
+    transform: none;
+    transition: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transform: none;
     transition: none;

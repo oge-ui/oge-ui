@@ -162,6 +162,19 @@
   [readonly]="readOnly()"
   [formControl]="ctrl"
 />
+} @case ('slider') {
+<oge-slider
+  [size]="size()"
+  [id]="editorId()"
+  [ariaLabel]="label()"
+  [min]="sliderMin()"
+  [max]="sliderMax()"
+  [step]="opts().step ?? 1"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
 } @case ('radioGroup') {
 <oge-radio-group
   [size]="size()"
@@ -362,6 +375,15 @@
   [size]="size()"
   [id]="editorId()"
   [label]="label()"
+  [formField]="node"
+/>
+} @case ('slider') {
+<!-- min/max flow from the schema metadata — [formField] owns those inputs. -->
+<oge-slider
+  [size]="size()"
+  [id]="editorId()"
+  [ariaLabel]="label()"
+  [step]="opts().step ?? 1"
   [formField]="node"
 />
 } @case ('radioGroup') {

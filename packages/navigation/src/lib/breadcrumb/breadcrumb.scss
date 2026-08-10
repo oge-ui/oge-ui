@@ -1,0 +1,160 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-breadcrumb {
+  @include tokens.core-tokens;
+
+  display: block;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-breadcrumb-nav {
+  display: block;
+}
+
+.oge-breadcrumb-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--oge-font-size);
+
+  .oge-breadcrumb-wrap & {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .oge-breadcrumb-scroll & {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+}
+
+.oge-breadcrumb-li {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.oge-breadcrumb-li-hidden {
+  display: none;
+}
+
+// Parked ellipsis: out of the visual flow but still measurable, so its size
+// is known before the first collapse ever needs it.
+.oge-breadcrumb-li-parked {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.oge-breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-muted-color);
+  font: inherit;
+  font-size: var(--oge-font-size);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &[aria-disabled='true'] {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+// Soft state layer: muted link rises to full text color on hover.
+.oge-breadcrumb-interactive {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+// The current page reads at a glance.
+.oge-breadcrumb-item-current {
+  color: var(--oge-text-color);
+  font-weight: 600;
+}
+
+.oge-breadcrumb-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex: none;
+}
+
+.oge-breadcrumb-item-text {
+  white-space: nowrap;
+}
+
+.oge-breadcrumb-separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  margin-inline: 2px;
+  color: var(--oge-muted-color);
+
+  [dir='rtl'] & svg {
+    transform: scaleX(-1);
+  }
+}
+
+.oge-breadcrumb-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &[aria-expanded='true'] {
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-breadcrumb-item,
+  .oge-breadcrumb-ellipsis {
+    transition: none;
+  }
+}

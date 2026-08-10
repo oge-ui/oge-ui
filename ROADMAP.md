@@ -1302,6 +1302,167 @@ opt-in enhancement that deliberately does **not** wrap.
 | **Nav buttons work from outside the component**            | No        | Done    | OGE extra: `[ogeStepperNext]="wizard"` takes an explicit target; Material's directives only work inside the stepper                                                                          |
 | **Per-step touched on advance (`<oge-form-steps>`)**       | No        | Done    | OGE extra: leaving step 1 touches only step 1, so the steps ahead stay quiet — the reason a naive wizard paints every later step red                                                         |
 
+## Menubar (`@oge-ui/navigation`) — Feature Parity
+
+`OgeMenubar` against DevExtreme `dxMenu`, Kendo UI for Angular `kendo-menu` and
+PrimeNG `p-menubar`, with the **WAI-ARIA APG menubar pattern as the backbone**
+of the keyboard and ARIA rows — this component, unlike the card or the stepper,
+has a real APG pattern to conform to.
+
+**Angular Material has no menubar.** `MatMenu` is a button-triggered dropdown
+panel, not a persistent horizontal bar — there is nothing to map a menubar row
+to (the dxCardView rule: absence is written down, not painted over). The CDK
+does ship unstyled directives (`cdkMenuBar` / `cdkMenu` / `cdkMenuItem` /
+`cdkMenuTriggerFor`), so where a "Material" comparison would be natural the CDK
+is the referent instead.
+
+The APG's editorial position is also written into the docs page rather than
+hidden: a menubar is **rarely the right pattern for site navigation** — a
+`<nav>` of links, optionally with the disclosure pattern, needs none of this
+keyboard machinery. `role="menubar"` is for application-style command menus,
+and the docs open by saying so.
+
+The submenu machinery was **built once, in the overlay package**: the canonical
+`OgeMenuItem` gained an additive `items` field and `oge-menu-list` now opens
+nested levels itself (one `OgeAnchoredPanel` per level on the shared Escape
+stack, `'escape'`/`'back'` absorbed per level, `'select'`/`'tab'` chained to
+the root owner). The grid's context menus, the drop-down button and the
+toolbar's overflow menu all inherit nesting from the same change — locked in by
+`menu-list-submenu.spec.ts`.
+
+| Feature                                                         | Reference | OGE     | Notes                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `items` / `dataSource` tree                                     | Yes       | Done    | `items: OgeMenubarItemData[]` — the canonical overlay `OgeMenuItem` narrowed recursively; no separate `dataSource`/expr layer, data shaping belongs to the application                                                                                                   |
+| Declarative items (`kendo-menu-item`, PrimeNG none)             | partial   | Done    | nestable `<oge-menubar-item>` children, merged **before** `items` — the house both-APIs rule; DevExtreme and PrimeNG are array-only                                                                                                                                      |
+| Nested submenus at any depth                                    | Yes       | Done    | `items` on any item, rendered by the shared `oge-menu-list` recursion — the same list the grid's context menu uses                                                                                                                                                       |
+| `orientation` `'horizontal' \| 'vertical'` (dxMenu)             | Yes       | Done    | `orientation`; vertical keeps `role="menubar"` + `aria-orientation="vertical"` with swapped arrow axes, as the APG allows. Kendo's `vertical` and PrimeNG's CSS-only vertical map here                                                                                   |
+| `showFirstSubmenuMode` onClick/onHover + delay (dxMenu)         | Yes       | Done    | `openMode: 'click' \| 'hover'` + `hoverDelay` (Kendo's 100 ms default) — applied to the **top level only**                                                                                                                                                               |
+| `showSubmenuMode` for nested levels (dxMenu)                    | Yes       | covered | nested levels always open on hover (overlay config `menuShowDelayMs`/`menuHideDelayMs`, DevExtreme's 50/300 defaults) and on ArrowRight/Enter — behavior, not a second input                                                                                             |
+| Kendo `openOnClick.toggle` `'select' \| 'leave' \| 'click'`     | Yes       | covered | `'select'` is the built-in close-on-select; `'click'` is `openMode: 'click'`; `'leave'` is the deliberately dropped hover-out close below                                                                                                                                |
+| `hideSubmenuOnMouseLeave` (dxMenu, default `false`)             | Yes       | Skipped | matches DevExtreme's own default: menus persist until outside click, Escape or select — the Windows-menu convention. A knob to leave that convention buys ambiguity, not capability                                                                                      |
+| PrimeNG `autoDisplay`                                           | Yes       | covered | once a root menu is open, hovering siblings switches without a click — in both open modes                                                                                                                                                                                |
+| `adaptivityEnabled` (dxMenu) / `breakpoint` (PrimeNG)           | Yes       | Done    | `compactBelow` — **container** inline size via ResizeObserver + core's pure `resolveMenubarCompact()`, never the window (PrimeNG's `'960px'` is a media query); the whole bar becomes one hamburger opening the full tree as nested menus, DevExtreme-style              |
+| `submenuDirection` (dxMenu)                                     | Yes       | covered | `resolvePopupPosition` flips and clamps per level (`'bottom-start'` at the bar, `'right-start'` nested) — an override input would fight the viewport                                                                                                                     |
+| `selectionMode` / `selectByClick` (dxMenu)                      | Yes       | Skipped | a menubar issues commands; persistent selection belongs to the application (`activeKey` covers the marked-current case)                                                                                                                                                  |
+| Item `url` / `linkAttr` (dxMenu, Kendo, PrimeNG)                | Yes       | Done    | `url` renders items as real `<a href>` at the bar **and at every submenu depth** (middle-click and copy-address work; keyboard activation clicks the link, so `preventDefault()` in `itemClick` hands navigation to a router). `routerLink` deliberately absent: no package takes a router dependency, the routed demo shows the two-line wiring |
+| PrimeNG `MenuItem.routerLink` + router integration              | Yes       | covered | `activeKey` bound from the URL renders `aria-current="page"`; navigation happens in `itemClick` (hierarchical `path` included) — the tabs family's routed pattern                                                                                                        |
+| Item `icon` / `svgIcon` / `iconClass`                           | Yes       | Done    | `icon` (SVG path data) + `iconClass` (icon-font hook), the suite's dependency-free pair, at every depth via `oge-menu-list`                                                                                                                                              |
+| Item `disabled` / `visible` / separator                         | Yes       | Done    | `disabled` (exposed via `aria-disabled`, skipped by arrows and type-ahead), `visible: false` prunes the subtree, `separator: true` renders `role="separator"`                                                                                                            |
+| `beginGroup` (dxMenu)                                           | Yes       | covered | `separator: true` between items expresses the same grouping                                                                                                                                                                                                              |
+| Item templates (`itemTemplate`, `#item`, Kendo three templates) | Yes       | Done    | `[ogeMenubarItemTemplate]` replaces top-level bar items and `submenuItemTemplate` replaces submenu rows at every depth (the shared `oge-menu-list` context). Kendo's link/content templates have no counterpart — they exist to escape the pattern                       |
+| Widget-level `disabled` (dxMenu)                                | Yes       | Done    | `disabled` — every item goes inert and the bar leaves the Tab sequence, matching dxMenu's non-focusable disabled state                                                                                                                                                  |
+| Item `badge` (PrimeNG)                                          | Yes       | Done    | `badge` on any item — a counter pill on the bar and in menu rows, via the canonical `OgeMenuItem`, so drop-down buttons and context menus gained it too                                                                                                                 |
+| `#start` / `#end` slots (PrimeNG)                               | Yes       | Skipped | that composition is `OgeToolbar`'s job — put the menubar inside a toolbar; a second start/end slot system would exist only to exist                                                                                                                                      |
+| Cancelable `onSubmenuShowing`/`onSubmenuHiding` (dxMenu, Kendo) | Yes       | Done    | `submenuOpening` / `submenuClosing` with the house mutable `cancel` flag (PrimeNG has no cancelable pair at all); plus `submenuOpened` / `submenuClosed` with the close `reason`. Fires for the top-level panel; per-nested-level cancelation is not exposed             |
+| `onItemClick` / `select`                                        | Yes       | Done    | `itemClick` with `{ item, key, index, path, event }` — `path` is the hierarchical index chain no reference event carries                                                                                                                                                 |
+| Methods (`selectItem`, Kendo `toggle(open, indices)`)           | Yes       | Done    | `open(index \| key)` / `close()` through the cancelable pipeline, plus `focus()`                                                                                                                                                                                         |
+| Messages / i18n (`MatMenu` none, Kendo messages)                | partial   | Done    | `provideOgeMenubarConfig()`; `OgeMenubarMessages` carries the bar's accessible name and the hamburger label — every user-facing string, aria included                                                                                                                    |
+| APG keyboard: Left/Right, Down/Enter, Up-opens-last, Home/End   | Yes       | Done    | full set incl. the optional Up-focuses-last; locked in by `menubar-keyboard.spec.ts`                                                                                                                                                                                     |
+| APG: Right on a leaf hops to the next bar item, menu open       | partial   | Done    | at **any** depth — the nested lists deliberately let the key bubble; ArrowLeft from a level-1 list hops backwards                                                                                                                                                        |
+| APG: Escape unwinds one level, focus returns to the opener      | Yes       | Done    | per-level absorption in `oge-menu-list`; the shared overlay stack keeps a document Escape away from lower surfaces                                                                                                                                                       |
+| Type-ahead                                                      | partial   | Done    | core's accent-folding `matchByPrefix` on the bar (so `o` matches `Ödeme`), the menu-list buffer inside panels; DevExtreme/PrimeNG have none on the bar                                                                                                                   |
+| Roving tabindex                                                 | Yes       | Done    | the tab-strip idiom — one `tabindex="0"` stop, `aria-haspopup="menu"`/`aria-expanded` on parents, `aria-controls` on the open one                                                                                                                                        |
+| Menu-aim / diagonal pointer tolerance (CDK `CdkTargetMenuAim`)  | partial   | Skipped | the 300 ms hide grace covers the common diagonal path; a trajectory heuristic is real complexity for a marginal gain — revisit only with evidence                                                                                                                        |
+| RTL                                                             | Yes       | covered | arrow meanings resolve against `direction` at keypress, placement flips in `resolvePopupPosition`, carets mirror in CSS                                                                                                                                                  |
+| **Container-width hamburger, not a media query**                | No        | Done    | OGE extra: `compactBelow` measures the menubar's own box — a bar inside a split pane adapts to the room it actually has; `compactChanged` reports the flip                                                                                                               |
+| **Hierarchical `path` in every event payload**                  | No        | Done    | OGE extra: `itemClick`/`submenu*` carry the index chain from the bar down — no reference event says _where_ in the tree its item lives                                                                                                                                   |
+| **Nesting shipped to every `oge-menu-list` owner**              | No        | Done    | OGE extra: grid/tree-list context menus and the drop-down button gained submenu support from the same additive overlay change, with zero consumer code churn                                                                                                             |
+| **`shortcut` accelerator hints + `aria-keyshortcuts`**          | No        | Done    | OGE extra: no reference menu renders accelerator text at all — a menubar-defining affordance (right-aligned hint, announced on the row; display only, the application owns the binding), locked in by `menu-list.spec.ts`                                                |
+
+## Breadcrumb (`@oge-ui/navigation`) — Feature Parity
+
+`OgeBreadcrumb` against Kendo UI for Angular `kendo-breadcrumb` and PrimeNG
+`p-breadcrumb`, with the **WAI-ARIA APG breadcrumb pattern as the backbone** —
+one of the few APG patterns whose keyboard section is literally
+"Not applicable", which is itself a parity decision: crumbs are plain links in
+the Tab order and **no roving tabindex is invented** (the ARCHITECTURE rule
+that not every APG pattern uses tab-strip focus machinery, applied verbatim).
+
+**Two references do not have the component at all.** DevExtreme ships no
+Breadcrumb widget — verified against the UI Components API index; its own
+support channel points users at composing Menu/Toolbar. Angular Material and
+the CDK have nothing either — verified against the `angular/components` source
+tree (`src/material`, `src/cdk`). Absence is written down, not painted over;
+the table below is measured against Kendo + PrimeNG + APG, with Bootstrap's
+markup conventions as a sanity check.
+
+The collapse machinery was **not written twice**: `collapseMode: 'auto'` is
+core's pure `fitToolbarItems` — first and last crumb pinned (`'never'`),
+middles yielding oldest-first via `priority` — measured against the
+breadcrumb's own container by ResizeObserver, and the ellipsis opens the
+collapsed crumbs in the suite's shared `oge-menu-list`, where the just-shipped
+`url` support keeps them real links. Locked in by `breadcrumb-collapse.spec.ts`.
+
+| Feature                                                        | Reference | OGE     | Notes                                                                                                                                                                                                                       |
+| -------------------------------------------------------------- | --------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items` trail                                                  | Yes       | Done    | `items: OgeBreadcrumbItemData[]` — a deliberately narrow interface (no submenu/checked fields, they mean nothing on a trail)                                                                                                   |
+| Declarative items                                              | No        | Done    | OGE extra: `<oge-breadcrumb-item>` children merged **before** `items` — the house both-APIs rule; Kendo and PrimeNG are array-only                                                                                             |
+| `collapseMode: 'auto' \| 'wrap' \| 'none'` (Kendo)             | Yes       | Done    | same three values, same default (`'auto'`), same first-and-last-stay-visible contract                                                                                                                                         |
+| **Collapsed crumbs stay reachable**                            | No        | Done    | OGE extra: Kendo documents only that items collapse; ours parks them in an ellipsis menu as **real links** (`aria-haspopup`/`aria-expanded`, ArrowDown focuses the menu) — nothing on the trail becomes unreachable            |
+| **Container-width measurement**                                | partial   | Done    | OGE extra: measured against the breadcrumb's **own box** (a trail inside a split pane adapts to its room), via core's `fitToolbarItems` — the same kernel the toolbar overflow uses, not a second implementation               |
+| PrimeNG separate `home` item                                   | Yes       | covered | the first crumb with an `icon` expresses the same thing; a second item-shaped input would exist only to exist (`homeAriaLabel` falls with it)                                                                                  |
+| Item `url` / `routerLink`                                      | Yes       | Done    | `url` renders real `<a href>` crumbs (middle-click and copy-address work); `preventDefault()` in `itemClick` hands navigation to a router. `routerLink` deliberately absent — no package takes a router dependency, the routed demo shows the wiring |
+| Item `icon` / `svgIcon` / `iconClass`                          | Yes       | Done    | `icon` (SVG path data) + `iconClass` (icon-font hook), the suite's dependency-free pair                                                                                                                                       |
+| Kendo `imageUrl`                                               | Yes       | Skipped | an image-by-URL item is what `iconClass`/custom templates are for; a third icon channel earns nothing                                                                                                                          |
+| Item `title` (Kendo) / `disabled` / `visible` (PrimeNG)        | Yes       | Done    | `hint` (the house word), `disabled` exposed via `aria-disabled` and inert, `visible: false` removes the crumb                                                                                                                  |
+| Kendo `size` density                                           | Yes       | Skipped | density on a one-line trail is token styling, not component state — the `--oge-*` tokens are the theming model                                                                                                                 |
+| `itemClick` (Kendo bare item / PrimeNG `onItemClick`)          | Yes       | Done    | `{ item, key, index, event }` — the house payload; like Kendo it never fires for disabled crumbs or the last crumb (the current page)                                                                                          |
+| Last crumb non-interactive + `aria-current="page"`             | partial   | Done    | Kendo makes it inert but the APG's `aria-current` isn't documented; PrimeNG's plain-anchor branch drops it in source. Ours is a `<span aria-current="page">`, locked in by `breadcrumb-a11y.spec.ts`                           |
+| Item template (`kendoBreadCrumbItemTemplate`, `#item`)         | Yes       | Done    | `[ogeBreadcrumbItemTemplate]` — replaces the crumb's **interior only**, so a template can never break the link/current/disabled semantics                                                                                      |
+| Separator template (`separatorIcon`, `#separator`)             | Yes       | Done    | `[ogeBreadcrumbSeparatorTemplate]`, rendered inside the `aria-hidden` separator — decoration stays decoration                                                                                                                 |
+| Keyboard: Tab/Enter only                                       | Yes       | Done    | the APG defines nothing more; the only addition is ArrowDown/ArrowUp on the ellipsis button focusing its menu — the suite's drop-down convention                                                                               |
+| Ellipsis menu opening/closing events                           | —         | Skipped | no reference has them and nothing needs vetoing — the menu is a view of the trail, not a state change worth a cancelable pipeline                                                                                              |
+| Messages / i18n                                                | partial   | Done    | `provideOgeBreadcrumbConfig()`; `OgeBreadcrumbMessages` carries the nav landmark's label and the ellipsis label — every user-facing string, aria included                                                                      |
+| RTL                                                            | Yes       | covered | logical properties throughout; the separator chevron mirrors via `[dir='rtl']`                                                                                                                                                |
+
+## Slider (`@oge-ui/inputs`) — Feature Parity
+
+`OgeSlider` + `OgeRangeSlider` against DevExtreme `dxSlider`/`dxRangeSlider`,
+Kendo `Slider`/`RangeSlider`, PrimeNG `p-slider` and Angular Material
+`MatSlider`, with **both WAI-ARIA APG patterns as the backbone**: `slider`
+(arrows ±step, PageUp/PageDown larger step, Home/End to the ends,
+`aria-valuenow/min/max` + `aria-valuetext`) and `slider-multithumb` (each
+thumb a separate focusable `role="slider"` whose `aria-valuemin`/`aria-valuemax`
+is dynamically updated by the sibling's value — quoted verbatim in the pattern).
+
+Two structural decisions up front. **Two components, not one** — a single
+component with a `range` flag would make the value type dishonest
+(PrimeNG's `number | number[]`); dx and Kendo also ship two widgets, and the
+shared machinery lives in an internal `OgeSliderBase`. **Custom render with
+manual ARIA, not Material's native `<input type="range">` per thumb** — the
+suite's controls are token-styled custom DOM (the splitter's
+`role="separator"` value-widget precedent), and the native input's styling
+model would fork the theming. The range pair deliberately omits the
+`FormValueControl` **clause** (the contract types `min`/`max` as
+`NonNullable<TValue>` — tuple-typed bounds are nonsense); runtime
+`[formField]` binding works regardless, and the single slider carries the
+clause exactly like the number box.
+
+| Feature                                                       | Reference | OGE     | Notes                                                                                                                                                                                        |
+| ------------------------------------------------------------- | --------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `min` / `max` / `step`                                        | Yes       | Done    | defaults 0/100/1 — the dx/Material consensus (Kendo's max=10 and PrimeNG's undefined step are the outliers). Thumbs always sit on the step grid, with float-error correction (core `slider-math.ts`) |
+| `keyStep` (dx) / `largeStep` (Kendo) for PageUp/PageDown      | Yes       | Done    | `largeStep`, `undefined` → `step × 10` — dx's `keyStep = 1` default makes PageUp equal an arrow key, which misses the APG's "larger than step" intent                                          |
+| `valueChangeMode: onHandleMove \| onHandleRelease` (dx)       | Yes       | covered | live commits stream through `valueCommitted` (throttled by the inherited `[debounce]`); release-time consumers use `slideEnded` — PrimeNG's two-event shape without a mode switch               |
+| `onSlideEnd` (PrimeNG) / `dragStart`/`dragEnd` (Material)     | Yes       | Done    | `dragStarted` + `slideEnded { value, event }`                                                                                                                                                  |
+| `tooltip {enabled, showMode, format}` (dx) / `discrete` (Mat) | Yes       | Done    | `valueIndicator: 'none' \| 'active' \| 'always'` — `'active'` covers focus, drag **and hover** (dx `showMode: 'onHover'` included); an inline element, not an overlay (a moving thumb is no anchor) |
+| `hint` (dx) / `dragHandleTitle` (Kendo)                       | Yes       | Done    | the family-wide inherited `tooltip` input renders as the thumb `title`; the range thumbs' accessible names come from `startAriaLabel`/`endAriaLabel` + messages                                 |
+| `name` / `startName` / `endName` (dx form posts)              | Yes       | Done    | hidden inputs rendered when set — the single slider uses the inherited `name`, the range pair dx's `startName`/`endName`                                                                       |
+| `label {visible, format}` (dx)                                | Yes       | Done    | `showLabels` renders the formatted `min`/`max` ends                                                                                                                                            |
+| `displayWith` (Material) / `format` (dx)                      | Yes       | Done    | one `formatValue` input feeds the bubble, the end labels **and** `aria-valuetext` — display and announcement cannot diverge                                                                     |
+| `showRange` (dx)                                              | Yes       | Done    | same name, same default (`true`); fills between the thumbs on the range pair                                                                                                                   |
+| `showButtons` + `incrementTitle`/`decrementTitle` (Kendo)     | Yes       | Done    | single slider only, like Kendo; press-and-hold repeats on the number box's spin timing config; titles come from the `sliderIncrement`/`sliderDecrement` messages                                |
+| Ticks (`tickPlacement`/`title`/`fixedTickWidth`, Kendo; `showTickMarks`, Mat) | Yes | Done | `showTicks` + `tickStep` (→ `largeStep` → `step`), capped at 200 marks; Kendo's tick `title` callback is `showTickLabels` fed by `formatValue`. `tickPlacement`'s four positions and `fixedTickWidth` are Skipped — one tick design is the design system's job, not a knob's |
+| `orientation` / `vertical`                                    | Yes       | Done    | `orientation: 'horizontal' \| 'vertical'`; vertical announces `aria-orientation` and Up still increases (APG)                                                                                  |
+| `minStepsBetweenHandles` (PrimeNG, version-dependent)         | partial   | Done    | `minRange` — a value distance, not a step count; reflected in each thumb's dynamic aria bounds. (The PrimeNG input exists in its docs but not in master — noted, not painted over)              |
+| Track click behavior                                          | Yes       | Done    | jumps to the position (single) / moves the **nearest** thumb (range) and starts dragging — with real focus following                                                                            |
+| Forms: CVA + ngModel + reactive                               | Yes       | Done    | inherited from `OgeControlBase` — zero new bridge code; `<oge-form>` gained `editorType: 'slider'` as a bare editor                                                                             |
+| RTL                                                           | Yes       | covered | horizontal arrows and pointer projection mirror against the computed `direction`; vertical is direction-agnostic                                                                               |
+| dx form/validation surface (`isValid`, `validationError`, …)  | Yes       | covered | the family-wide `invalid`/`errors`/`errorText`/`showError` state on `OgeControlBase` — sliders render the invalid accent like every other editor                                               |
+| Kendo `animate` / PrimeNG `animate` / Material ripples        | Yes       | covered | discrete moves (keys, track clicks, buttons) glide on 160ms token transitions while dragging stays instant, all suppressed under `prefers-reduced-motion` — the behavior the flag exists for, without the flag |
+| **Escape cancels the drag**                                   | No        | Done    | OGE extra: the splitter's gesture rule applied to a slider — Escape mid-drag restores the start value and emits no `slideEnded`. No reference slider offers it                                  |
+| **`formatValue` → `aria-valuetext`, always**                  | partial   | Done    | Material wires `displayWith` to the indicator only (the aria mapping is guide prose); ours is one input, locked in by `slider-a11y.spec.ts`                                                     |
+| **Signal Forms `FormValueControl` membership**                | No        | Done    | OGE extra: native contract membership (value/disabled/readonly/errors/touch) with schema `min`/`max` metadata flowing into the scale automatically inside `<oge-form>`                          |
+
 ## Forms (`@oge-ui/forms`) — Feature Parity
 
 `OgeForm` + declarative `OgeFormItem` / `OgeFormGroup` and `OgeValidationSummary`

@@ -2,7 +2,10 @@ import { demoSource } from '../../shared/demo-source';
 
 export const BASIC_SNIPPET = demoSource({
   use: { '@oge-ui/layout': ['OgeAccordion', 'OgeAccordionItem'] },
-  template: `<oge-accordion [(selectedIndex)]="index">
+  template: `<!-- collapsible lets a second click close the open panel; without
+   it the last open panel deliberately stays open (dx behavior, APG-marked
+   aria-disabled). -->
+<oge-accordion [(selectedIndex)]="index" [collapsible]="true">
   <oge-accordion-item title="Account" description="Name and e-mail">
     Account settings…
   </oge-accordion-item>

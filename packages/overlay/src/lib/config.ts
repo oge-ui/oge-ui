@@ -42,6 +42,10 @@ export interface OgeOverlayConfig {
   viewportPadding: number;
   /** Idle time after which the menu type-ahead buffer resets. */
   typeAheadMs: number;
+  /** Hover dwell time before a submenu parent row opens its submenu. */
+  menuShowDelayMs: number;
+  /** Grace period before an open submenu closes after hovering a sibling. */
+  menuHideDelayMs: number;
   /** Hover dwell time before a tooltip shows (focus shows immediately). */
   tooltipShowDelayMs: number;
   /** Grace period before a tooltip hides after the pointer leaves. */
@@ -64,6 +68,8 @@ export const OGE_DEFAULT_OVERLAY_CONFIG: OgeOverlayConfig = {
   offset: 4,
   viewportPadding: 8,
   typeAheadMs: 500,
+  menuShowDelayMs: 50,
+  menuHideDelayMs: 300,
   tooltipShowDelayMs: 400,
   tooltipHideDelayMs: 100,
   toastPosition: 'bottom-end',

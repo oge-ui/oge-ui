@@ -294,10 +294,10 @@ _OgeToastRef_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void }` | Canonical menu item of the suite. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. |
+| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. `url` renders the row as a real `` with `role="menuitem"` — keyboard activation clicks the link, so `preventDefault()` in `itemClick` hands navigation to a router exactly like a pointer click. `badge` renders a trailing counter pill; `shortcut` renders a right-aligned accelerator hint and is announced via `aria-keyshortcuts` (display only — the application owns the binding). `items` makes the row a **submenu parent** (trailing chevron, `aria-haspopup="menu"`, `aria-expanded`): activation or ArrowRight opens a nested `oge-menu-list`, hover opens after a dwell, and `checked`/`action`/`url` are ignored on it. |
 | `OgeMenuItemSeverity` | `'normal' \| 'danger'` | Destructive items render with the danger token. |
 | `OgeMenuListItemClickEvent` | `{ item: OgeMenuItem; index: number; event: MouseEvent \| KeyboardEvent }` | Index within the `items` input (separators included). |
-| `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. |
+| `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select' \| 'back'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. `'back'` is a nested submenu returning to its parent item — absorbed by the parent menu, it never reaches the root owner; `'select'` and `'tab'` chain up so the owner still receives exactly one request. |
 | `OgeMenuItemTemplateContext` | `{ $implicit: OgeMenuItem; index: number }` | Context of `itemTemplate`. |
 
 ### OgeAnchoredPanel
@@ -413,6 +413,8 @@ _OgeOverlayConfig_
 | `offset` | `number` | `4` | Gap between anchor and panel on the main axis. |
 | `viewportPadding` | `number` | `8` | Minimum distance kept from viewport edges when clamping. |
 | `typeAheadMs` | `number` | `500` | Idle time after which the menu type-ahead buffer resets. |
+| `menuShowDelayMs` | `number` | `50` | Hover dwell time before a submenu parent row opens its submenu. |
+| `menuHideDelayMs` | `number` | `300` | Grace period before an open submenu closes after hovering a sibling row — the diagonal-pointer allowance. |
 | `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons: `modalClose`, `modalMaximize`, `modalRestore`. |
 
 ### Overlay primitives

@@ -69,9 +69,9 @@ export const OGE_MENU_LIST_API: ApiSections = {
       entries: [
         {
           name: 'OgeMenuItem&lt;T&gt;',
-          type: '{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () =&gt; void }',
+          type: '{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () =&gt; void; url?; badge?; shortcut?; items?: readonly OgeMenuItem&lt;T&gt;[] }',
           description:
-            'Canonical menu item of the suite. A defined <code>checked</code> renders <code>menuitemcheckbox</code>; <code>separator: true</code> ignores every other field. <code>icon</code> takes SVG path data and <code>iconClass</code> hooks an icon font — one row with either gives every row an icon column, so labels stay aligned.',
+            'Canonical menu item of the suite. A defined <code>checked</code> renders <code>menuitemcheckbox</code>; <code>separator: true</code> ignores every other field. <code>icon</code> takes SVG path data and <code>iconClass</code> hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. <code>url</code> renders the row as a real <code>&lt;a href&gt;</code> with <code>role="menuitem"</code> — keyboard activation clicks the link, so <code>preventDefault()</code> in <code>itemClick</code> hands navigation to a router exactly like a pointer click. <code>badge</code> renders a trailing counter pill; <code>shortcut</code> renders a right-aligned accelerator hint and is announced via <code>aria-keyshortcuts</code> (display only — the application owns the binding). <code>items</code> makes the row a <strong>submenu parent</strong> (trailing chevron, <code>aria-haspopup="menu"</code>, <code>aria-expanded</code>): activation or ArrowRight opens a nested <code>oge-menu-list</code>, hover opens after a dwell, and <code>checked</code>/<code>action</code>/<code>url</code> are ignored on it.',
         },
         {
           name: 'OgeMenuItemSeverity',
@@ -86,8 +86,9 @@ export const OGE_MENU_LIST_API: ApiSections = {
         },
         {
           name: 'OgeMenuCloseRequestEvent',
-          type: "{ reason: 'escape' | 'tab' | 'select'; event: KeyboardEvent | MouseEvent }",
-          description: 'Why the menu wants to close.',
+          type: "{ reason: 'escape' | 'tab' | 'select' | 'back'; event: KeyboardEvent | MouseEvent }",
+          description:
+            "Why the menu wants to close. <code>'back'</code> is a nested submenu returning to its parent item — absorbed by the parent menu, it never reaches the root owner; <code>'select'</code> and <code>'tab'</code> chain up so the owner still receives exactly one request.",
         },
         {
           name: 'OgeMenuItemTemplateContext',
@@ -407,6 +408,20 @@ export const OGE_OVERLAY_CONFIG_API: ApiSections = {
           default: '500',
           description:
             'Idle time after which the menu type-ahead buffer resets.',
+        },
+        {
+          name: 'menuShowDelayMs',
+          type: 'number',
+          default: '50',
+          description:
+            'Hover dwell time before a submenu parent row opens its submenu.',
+        },
+        {
+          name: 'menuHideDelayMs',
+          type: 'number',
+          default: '300',
+          description:
+            'Grace period before an open submenu closes after hovering a sibling row — the diagonal-pointer allowance.',
         },
         {
           name: 'messages',

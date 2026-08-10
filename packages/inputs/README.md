@@ -1,11 +1,13 @@
 # @oge-ui/inputs
 
 Signal-based Angular form editors sharing one field chrome and working with
-three form systems at once. Twelve editors ship today: `oge-text-box`,
+three form systems at once. Fourteen editors ship today: `oge-text-box`,
 `oge-text-area`, `oge-number-box`, the dropdown family (`oge-select-box`,
 `oge-tag-box`, `oge-autocomplete`), toggle controls (`oge-check-box`,
-`oge-switch`, `oge-radio-group`) and date editors (`oge-calendar`,
-`oge-date-box`, `oge-date-range-box`).
+`oge-switch`, `oge-radio-group`), date editors (`oge-calendar`,
+`oge-date-box`, `oge-date-range-box`) and the APG sliders (`oge-slider`,
+`oge-range-slider` — arrows/PageUp/Home/End, live drag commits with
+Escape-to-cancel, dynamic aria constraints between range thumbs).
 
 ## Features
 

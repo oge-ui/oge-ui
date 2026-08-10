@@ -168,6 +168,111 @@ describe('OgeMenuList', () => {
   });
 });
 
+describe('OgeMenuList — links, badges and shortcuts', () => {
+  async function render(items: readonly OgeMenuItem[]) {
+    const fixture = TestBed.createComponent(MenuHost);
+    fixture.componentInstance.items.set(items);
+    await settle(fixture);
+    const el = fixture.nativeElement as HTMLElement;
+    return {
+      fixture,
+      host: fixture.componentInstance,
+      menuEl: el.querySelector('.oge-menu-list') as HTMLElement,
+      rows: () =>
+        Array.from(el.querySelectorAll<HTMLElement>('.oge-menu-item')),
+    };
+  }
+
+  it('renders a url item as a real link with menuitem semantics', async () => {
+    const { rows } = await render([
+      { text: 'Docs', url: '/docs' },
+      { text: 'Copy' },
+    ]);
+    expect(rows()[0].tagName).toBe('A');
+    expect(rows()[0].getAttribute('href')).toBe('/docs');
+    expect(rows()[0].getAttribute('role')).toBe('menuitem');
+    expect(rows()[1].tagName).toBe('BUTTON');
+  });
+
+  it('clicking a link row still emits itemClick and a select close', async () => {
+    const { host, rows } = await render([{ text: 'Docs', url: '/docs' }]);
+    rows()[0].addEventListener('click', (e) => e.preventDefault()); // no jsdom nav
+    rows()[0].dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }),
+    );
+    expect(host.clicks.map((c) => c.item.text)).toEqual(['Docs']);
+    expect(host.closes.map((c) => c.reason)).toEqual(['select']);
+  });
+
+  it('keyboard activation clicks the real link — native anchor semantics', async () => {
+    const { fixture, host, menuEl, rows } = await render([
+      { text: 'Docs', url: '/docs' },
+    ]);
+    let anchorClicks = 0;
+    rows()[0].addEventListener('click', (e) => {
+      anchorClicks++;
+      e.preventDefault(); // keep jsdom from attempting a real navigation
+    });
+    host.menu().focus();
+    key(menuEl, 'Enter');
+    await settle(fixture);
+    expect(anchorClicks).toBe(1); // Enter became one real anchor click
+    expect(host.clicks).toHaveLength(1); // which emitted itemClick once
+    expect(host.clicks[0].event).toBeInstanceOf(MouseEvent);
+    expect(host.closes.map((c) => c.reason)).toEqual(['select']);
+  });
+
+  it('a handler claiming navigation prevents the default like a pointer click', async () => {
+    const { host, menuEl, rows } = await render([
+      { text: 'Router', url: '/r' },
+    ]);
+    const sub = host
+      .menu()
+      .itemClick.subscribe((e) => e.event.preventDefault());
+    let prevented: boolean | null = null;
+    // Registered after Angular's own (click) handler, so it observes the
+    // handler's decision; the extra preventDefault only silences jsdom.
+    rows()[0].addEventListener('click', (e) => {
+      prevented = e.defaultPrevented;
+      e.preventDefault();
+    });
+    host.menu().focus();
+    key(menuEl, 'Enter');
+    expect(prevented).toBe(true);
+    sub.unsubscribe();
+  });
+
+  it('a disabled link row neither navigates nor emits', async () => {
+    const { host, rows } = await render([
+      { text: 'Docs', url: '/docs', disabled: true },
+    ]);
+    expect(rows()[0].classList.contains('oge-menu-item-disabled')).toBe(true);
+    expect(rows()[0].getAttribute('aria-disabled')).toBe('true');
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      detail: 1,
+    });
+    rows()[0].dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(host.clicks).toHaveLength(0);
+  });
+
+  it('renders badges and shortcuts, announcing the shortcut on the row', async () => {
+    const { rows } = await render([
+      { text: 'Inbox', badge: 12 },
+      { text: 'New', shortcut: 'Ctrl+N' },
+    ]);
+    expect(
+      rows()[0].querySelector('.oge-menu-item-badge')?.textContent?.trim(),
+    ).toBe('12');
+    const shortcutEl = rows()[1].querySelector('.oge-menu-item-shortcut');
+    expect(shortcutEl?.textContent?.trim()).toBe('Ctrl+N');
+    expect(shortcutEl?.getAttribute('aria-hidden')).toBe('true');
+    expect(rows()[1].getAttribute('aria-keyshortcuts')).toBe('Ctrl+N');
+  });
+});
+
 describe('OgeMenuList — icons', () => {
   async function render(items: readonly OgeMenuItem[]) {
     const fixture = TestBed.createComponent(MenuHost);

@@ -955,7 +955,10 @@ import { OgeAccordion, OgeAccordionItem } from '@oge-ui/layout';
   imports: [OgeAccordion, OgeAccordionItem],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <oge-accordion [(selectedIndex)]="index">
+    <!-- collapsible lets a second click close the open panel; without
+       it the last open panel deliberately stays open (dx behavior, APG-marked
+       aria-disabled). -->
+    <oge-accordion [(selectedIndex)]="index" [collapsible]="true">
       <oge-accordion-item title="Account" description="Name and e-mail">
         Account settings…
       </oge-accordion-item>

@@ -157,8 +157,9 @@ const FULL_TRAVEL = 1e9;
           [attr.inert]="isCollapsedId(d.id) ? '' : null"
         >
           @if (d.panes?.length) {
+            <!-- The @if guard already narrowed d.panes to non-undefined. -->
             <oge-splitter
-              [panes]="d.panes ?? []"
+              [panes]="d.panes"
               [orientation]="d.orientation ?? flippedOrientation()"
               [separatorSize]="separatorSize()"
               [step]="step()"

@@ -59,6 +59,7 @@ export type OgeFormEditorType =
   | 'textBox'
   | 'textArea'
   | 'numberBox'
+  | 'slider'
   | 'selectBox'
   | 'tagBox'
   | 'autocomplete'

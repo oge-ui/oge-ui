@@ -1972,6 +1972,18 @@ export class HomePage {
       path: '/components/drawer',
     },
     {
+      icon: 'breadcrumb',
+      name: 'Breadcrumb',
+      desc: 'The APG trail with container-width collapse; hidden crumbs stay reachable as links.',
+      path: '/components/breadcrumb',
+    },
+    {
+      icon: 'menubar',
+      name: 'Menubar',
+      desc: 'APG menubar with nested submenus and a container-width hamburger collapse.',
+      path: '/components/menubar',
+    },
+    {
       icon: 'stepper',
       name: 'Stepper',
       desc: 'Linear or free wizard with async leave guards and refusals that say why.',

@@ -1973,3 +1973,206 @@ export const OGE_TREE_SELECT_API: ApiSections = {
     },
   ],
 };
+
+export const OGE_SLIDER_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeSlider',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;number&gt;',
+          default: '0',
+          description:
+            'The slider value — two-way. Programmatic writes clamp and snap to the step grid.',
+        },
+        {
+          name: 'min / max',
+          type: 'number | undefined',
+          default: '0 / 100',
+          description:
+            'Scale bounds. Typed <code>number | undefined</code> because the Signal Forms contract reserves these member names — <code>undefined</code> falls back to 0/100.',
+        },
+        {
+          name: 'step',
+          type: 'number',
+          default: '1',
+          description:
+            'Arrow-key and drag increment; thumbs always sit on this grid, with float-error correction (0.1-style steps never drift).',
+        },
+        {
+          name: 'largeStep',
+          type: 'number | undefined',
+          description:
+            'PageUp/PageDown increment; <code>undefined</code> means <code>step × 10</code>.',
+        },
+        {
+          name: 'orientation',
+          type: "'horizontal' | 'vertical'",
+          default: "'horizontal'",
+          description:
+            'A vertical slider announces <code>aria-orientation="vertical"</code>; Up still increases (APG).',
+        },
+        {
+          name: 'showRange',
+          type: 'boolean',
+          default: 'true',
+          description: 'Fills the selected portion of the track.',
+        },
+        {
+          name: 'showTicks / tickStep',
+          type: 'boolean / number | undefined',
+          default: 'false',
+          description:
+            'Tick marks on the <code>tickStep</code> grid — falling back to <code>largeStep</code>, then <code>step</code>; capped at 200 marks.',
+        },
+        {
+          name: 'showTickLabels',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Formatted labels under each tick (Kendo's tick <code>title</code> callback, fed by <code>formatValue</code>).",
+        },
+        {
+          name: 'showLabels',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Formatted <code>min</code>/<code>max</code> labels at the track ends.',
+        },
+        {
+          name: 'valueIndicator',
+          type: "'none' | 'active' | 'always'",
+          default: "'none'",
+          description:
+            "The inline value bubble: <code>'active'</code> while focused, dragged <strong>or hovered</strong> (Material's discrete plus DevExtreme's <code>showMode: 'onHover'</code>), <code>'always'</code> permanent.",
+        },
+        {
+          name: 'formatValue',
+          type: '(value: number) =&gt; string | undefined',
+          description:
+            'Formats the bubble, the end labels <strong>and</strong> <code>aria-valuetext</code> — display and announcement never diverge.',
+        },
+        {
+          name: 'showButtons',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Kendo-style increment/decrement buttons with press-and-hold repeat — the number box's spin timing config.",
+        },
+        {
+          name: 'ariaLabel',
+          type: 'string | undefined',
+          description:
+            'Accessible name of the thumb; the localized <code>sliderHandle</code> message is the fallback.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [COMMON_METHODS],
+  events: [
+    {
+      title: 'OgeSlider events',
+      entries: [
+        {
+          name: 'dragStarted',
+          type: 'OgeSliderDragStartedEvent',
+          description: 'A drag gesture began on the thumb or the track.',
+        },
+        {
+          name: 'slideEnded',
+          type: 'OgeSliderSlideEndedEvent&lt;number&gt;',
+          description:
+            "Fires once per gesture at release — DevExtreme's <code>onHandleRelease</code> timing without a mode switch (live changes stream through <code>valueCommitted</code>, throttled by <code>debounce</code>). Not emitted when Escape cancels the gesture.",
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeSliderOrientation',
+          type: "'horizontal' | 'vertical'",
+          description: 'Axis the track lays along.',
+        },
+        {
+          name: 'OgeSliderValueIndicator',
+          type: "'none' | 'active' | 'always'",
+          description: 'When the inline value bubble shows.',
+        },
+        {
+          name: 'OgeSliderDragStartedEvent / OgeSliderSlideEndedEvent&lt;T&gt;',
+          type: '{ event } / { value; event }',
+          description: 'The drag gesture pair.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_RANGE_SLIDER_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeRangeSlider',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;readonly [number, number]&gt;',
+          default: '[0, 0]',
+          description:
+            'The <code>[start, end]</code> pair — two-way. Programmatic writes clamp, snap and sort.',
+        },
+        {
+          name: 'minRange',
+          type: 'number',
+          default: '0',
+          description:
+            'Minimum distance kept between the thumbs — reflected in each thumb&rsquo;s dynamic <code>aria-valuemin</code>/<code>aria-valuemax</code> (the APG multi-thumb constraint).',
+        },
+        {
+          name: 'startAriaLabel / endAriaLabel',
+          type: 'string | undefined',
+          description:
+            'Accessible names of the thumbs; the localized <code>sliderStartHandle</code>/<code>sliderEndHandle</code> messages are the fallbacks.',
+        },
+        {
+          name: 'startName / endName',
+          type: 'string',
+          default: "''",
+          description:
+            "Hidden-input names for plain HTML form posts — DevExtreme's <code>startName</code>/<code>endName</code> contract (the single slider uses the inherited <code>name</code>).",
+        },
+      ],
+    },
+    {
+      title: 'Shared with OgeSlider',
+      entries: [
+        {
+          name: 'min / max / step / largeStep / orientation / showRange / showTicks / tickStep / showLabels / valueIndicator / formatValue',
+          type: '—',
+          description:
+            'The full scale/appearance surface of <code>OgeSlider</code>, identical semantics. <code>showButtons</code> is single-slider only (the Kendo split). Clicking the track moves the <strong>nearest</strong> thumb.',
+        },
+      ],
+    },
+    COMMON_STATE,
+  ],
+  methods: [COMMON_METHODS],
+  events: [
+    {
+      title: 'OgeRangeSlider events',
+      entries: [
+        {
+          name: 'dragStarted / slideEnded',
+          type: 'OgeSliderSlideEndedEvent&lt;readonly [number, number]&gt;',
+          description:
+            'The drag gesture pair; an unchanged pair never re-emits <code>valueCommitted</code>.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+};

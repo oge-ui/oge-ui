@@ -119,3 +119,67 @@ test.describe('overlay pages', () => {
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 });
+
+test.describe('menubar API reference', () => {
+  test('renders the menubar sections on the navigation API page and filters', async ({
+    page,
+  }) => {
+    await page.goto('/components/tree-view/api');
+    await expect(page.locator('#ogemenubar-properties')).toBeVisible();
+    await expect(page.locator('#ogemenubar-events')).toBeVisible();
+    await expect(page.locator('#ogemenubar-methods')).toBeVisible();
+    await expect(page.locator('#ogemenubaritem-properties')).toBeVisible();
+
+    const filter = page.locator('#ogemenubar input[type="search"]').first();
+    await filter.fill('compactBelow');
+    await expect(
+      page.locator('#ogemenubar td code', { hasText: 'compactBelow' }).first(),
+    ).toBeVisible();
+    await expect(page.locator('#ogemenubar-events')).toHaveCount(0);
+    await filter.fill('');
+    await expect(page.locator('#ogemenubar-events')).toBeVisible();
+  });
+});
+
+test.describe('breadcrumb API reference', () => {
+  test('renders the breadcrumb sections on the navigation API page and filters', async ({
+    page,
+  }) => {
+    await page.goto('/components/tree-view/api');
+    await expect(page.locator('#ogebreadcrumb-properties')).toBeVisible();
+    await expect(page.locator('#ogebreadcrumb-events')).toBeVisible();
+    await expect(page.locator('#ogebreadcrumbitem-properties')).toBeVisible();
+
+    const filter = page.locator('#ogebreadcrumb input[type="search"]').first();
+    await filter.fill('collapseMode');
+    await expect(
+      page
+        .locator('#ogebreadcrumb td code', { hasText: 'collapseMode' })
+        .first(),
+    ).toBeVisible();
+    await expect(page.locator('#ogebreadcrumb-events')).toHaveCount(0);
+    await filter.fill('');
+    await expect(page.locator('#ogebreadcrumb-events')).toBeVisible();
+  });
+});
+
+test.describe('slider API reference', () => {
+  test('renders both slider sections on the inputs API page and filters', async ({
+    page,
+  }) => {
+    await page.goto('/components/inputs/api');
+    await expect(page.locator('#ogeslider-properties')).toBeVisible();
+    await expect(page.locator('#ogeslider-events')).toBeVisible();
+    await expect(page.locator('#ogerangeslider-properties')).toBeVisible();
+
+    const filter = page.locator('#ogeslider input[type="search"]').first();
+    await filter.fill('valueIndicator');
+    await expect(
+      page
+        .locator('#ogeslider td code', { hasText: 'valueIndicator' })
+        .first(),
+    ).toBeVisible();
+    await filter.fill('');
+    await expect(page.locator('#ogeslider-events')).toBeVisible();
+  });
+});

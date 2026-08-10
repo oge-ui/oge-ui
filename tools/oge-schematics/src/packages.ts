@@ -53,6 +53,10 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-select-box>`, `<oge-tag-box>`, `<oge-autocomplete>`',
     },
     {
+      need: 'slider / range selection',
+      use: '`<oge-slider [(value)]="v" [min]="0" [max]="100">`, `<oge-range-slider [(value)]="pair">` — APG keyboard set, live drag commits, Escape cancels the gesture',
+    },
+    {
       need: 'date picker, toggle, radio',
       use: '`<oge-date-box>`, `<oge-date-range-box>`, `<oge-check-box>`, `<oge-switch>`, `<oge-radio-group>`',
     },
@@ -121,6 +125,14 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
     {
       need: 'side panel / sidenav / off-canvas menu',
       use: '`<oge-drawer [(opened)]="open" mode="overlay|push|side">` — the panel goes in the `[ogeDrawerPanel]` slot, everything else projected is the content; modality follows `mode`',
+    },
+    {
+      need: 'application menu bar / menubar with nested submenus',
+      use: '`<oge-menubar [items]="menu" (itemClick)="run($event)">` — children at any depth open as submenus; `compactBelow` collapses the bar into a hamburger. For plain site navigation prefer a `<nav>` of links (the APG\'s own advice)',
+    },
+    {
+      need: 'breadcrumb / navigation trail',
+      use: '`<oge-breadcrumb [items]="trail" (itemClick)="go($event)">` — `url` crumbs are real links, the last crumb carries `aria-current="page"`, and `collapseMode: \'auto\'` folds the oldest middle crumbs into an ellipsis menu against the container width',
     },
   ],
 };

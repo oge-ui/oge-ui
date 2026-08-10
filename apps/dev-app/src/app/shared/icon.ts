@@ -40,7 +40,9 @@ export type IconName =
   | 'accordion'
   | 'card'
   | 'splitter'
+  | 'breadcrumb'
   | 'drawer'
+  | 'menubar'
   | 'stepper'
   | 'toolbar'
   | 'tree';
@@ -200,6 +202,19 @@ export type IconName =
           <circle cx="19" cy="12" r="2.5" />
           <path d="M7.5 12h2" />
           <path d="M14.5 12h2" />
+        }
+        @case ('breadcrumb') {
+          <circle cx="4" cy="12" r="1.5" />
+          <path d="m8.5 9.5 2.5 2.5-2.5 2.5" />
+          <circle cx="14" cy="12" r="1.5" />
+          <path d="m17.5 9.5 2.5 2.5-2.5 2.5" />
+        }
+        @case ('menubar') {
+          <rect x="3" y="5" width="18" height="5" rx="1" />
+          <path d="M6 7.5h3" />
+          <path d="M11 7.5h3" />
+          <path d="M16 7.5h2" />
+          <path d="M5 13h7v6H5z" />
         }
         @case ('drawer') {
           <rect x="3" y="4" width="18" height="16" rx="1" />

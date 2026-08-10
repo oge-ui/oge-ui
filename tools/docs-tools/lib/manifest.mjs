@@ -73,7 +73,7 @@ export const PACKAGES = [
     npm: '@oge-ui/inputs',
     label: 'Inputs',
     summary:
-      'Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox and Switch — floating labels, validation, Signal Forms and reactive forms.',
+      'Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.',
     docsRoot: '/components/inputs',
     pageDirs: ['inputs'],
     apiPage: 'apps/dev-app/src/app/pages/inputs/api.ts',
@@ -144,7 +144,7 @@ export const PACKAGES = [
     npm: '@oge-ui/navigation',
     label: 'Navigation',
     summary:
-      'Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, plus a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row).',
+      'Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, and an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links.',
     docsRoot: '/components/tree-view',
     pageDirs: ['navigation'],
     apiPage: 'apps/dev-app/src/app/pages/navigation/api.ts',

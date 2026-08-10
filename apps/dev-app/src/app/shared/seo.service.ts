@@ -67,6 +67,26 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Drawer: an overlay, push or side panel whose modality is derived from its mode — role="dialog" with a focus trap and inert background when it covers the content, a landmark when it shares the row. Responsive to its own container, not the window.',
   ],
   [
+    '/components/inputs/slider',
+    'Angular Slider and RangeSlider: the WAI-ARIA APG slider and multi-thumb patterns as bare form editors — arrows/PageUp/Home/End, live drag commits with Escape-to-cancel, dynamic aria constraints between range thumbs, formatValue feeding aria-valuetext, and Signal Forms membership out of the box.',
+  ],
+  [
+    '/components/breadcrumb',
+    'Angular Breadcrumb: the WAI-ARIA APG trail — a nav landmark of real links with aria-current="page", collapsing its oldest middle crumbs against its own container width into an ellipsis menu where they stay reachable as links. No roving tabindex, because the APG defines none.',
+  ],
+  [
+    '/components/breadcrumb/routed',
+    'Angular Breadcrumb with the router: derive the trail from the URL, keep crumbs real links and hand the primary click to the router — no router dependency in the package.',
+  ],
+  [
+    '/components/menubar',
+    "Angular Menubar: a persistent WAI-ARIA APG menubar with roving tabindex, nested submenus on the shared overlay machinery, cancelable open/close pairs and a container-width hamburger collapse — plus the APG's own advice on when a nav of links serves better.",
+  ],
+  [
+    '/components/menubar/routed',
+    'Angular Menubar with the router: activeKey bound one-way from the URL renders aria-current="page", itemClick navigates — no router dependency in the package, url items stay real links.',
+  ],
+  [
     '/components/splitter/api',
     'Angular Splitter API reference: every property, method, event and type of oge-splitter and oge-splitter-pane, including the WAI-ARIA separator attributes and the config provider.',
   ],

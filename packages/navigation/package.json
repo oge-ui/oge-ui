@@ -1,12 +1,17 @@
 {
   "name": "@oge-ui/navigation",
   "version": "0.9.0",
-  "description": "Signal-based Angular navigation family: OgeTreeView with flat or nested data, WAI-ARIA APG treeview keyboard support, tri-state cascade checkboxes, search, lazy load-on-demand, virtual scrolling and drag & drop reparenting.",
+  "description": "Signal-based Angular navigation family: OgeTreeView with flat or nested data and APG treeview keyboard support, OgeDrawer whose modality follows its layout mode, OgeStepper with async leave guards, OgeMenubar — a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse — and OgeBreadcrumb with a container-width ellipsis collapse that keeps hidden crumbs reachable as links.",
   "keywords": [
     "angular",
     "treeview",
     "tree",
     "navigation",
+    "drawer",
+    "stepper",
+    "menubar",
+    "menu",
+    "breadcrumb",
     "hierarchy",
     "virtual-scroll",
     "signals",

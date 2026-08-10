@@ -42,3 +42,5 @@ export * from './lib/util/type-ahead';
 export * from './lib/util/split-sizes';
 export * from './lib/util/toolbar-fit';
 export * from './lib/util/drawer-mode';
+export * from './lib/util/menubar-compact';
+export * from './lib/util/slider-math';

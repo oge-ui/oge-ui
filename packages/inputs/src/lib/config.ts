@@ -61,6 +61,16 @@ export interface OgeInputsMessages {
   switchOn: string;
   /** Switch track text while off (empty string hides it). */
   switchOff: string;
+  /** Aria label of a single slider's handle when the app supplies none. */
+  sliderHandle: string;
+  /** Aria label of a range slider's start handle. */
+  sliderStartHandle: string;
+  /** Aria label of a range slider's end handle. */
+  sliderEndHandle: string;
+  /** Aria label / title of the slider's increment button. */
+  sliderIncrement: string;
+  /** Aria label / title of the slider's decrement button. */
+  sliderDecrement: string;
   /** Calendar today shortcut button. */
   todayButton: string;
   /** Aria label of the calendar's previous-view arrow. */
@@ -117,6 +127,11 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   removeTagButton: 'Remove',
   switchOn: 'ON',
   switchOff: 'OFF',
+  sliderHandle: 'Value',
+  sliderStartHandle: 'Start value',
+  sliderEndHandle: 'End value',
+  sliderIncrement: 'Increase',
+  sliderDecrement: 'Decrease',
   todayButton: 'Today',
   calendarPrev: 'Previous',
   calendarNext: 'Next',

@@ -397,6 +397,44 @@ export class App {
       ],
     },
     {
+      title: 'Breadcrumb',
+      group: COMPONENTS_GROUP,
+      items: [
+        {
+          path: '/components/breadcrumb',
+          label: 'Overview',
+          icon: 'breadcrumb',
+        },
+        {
+          path: '/components/breadcrumb/routed',
+          label: 'Routed Breadcrumb',
+          icon: 'globe',
+        },
+        {
+          path: '/components/tree-view/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Menubar',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/menubar', label: 'Overview', icon: 'menubar' },
+        {
+          path: '/components/menubar/routed',
+          label: 'Routed Menubar',
+          icon: 'globe',
+        },
+        {
+          path: '/components/tree-view/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Tree View',
       group: COMPONENTS_GROUP,
       items: [
@@ -437,6 +475,11 @@ export class App {
           path: '/components/inputs/toggle-controls',
           label: 'Toggle Controls',
           icon: 'toggle',
+        },
+        {
+          path: '/components/inputs/slider',
+          label: 'Slider',
+          icon: 'sliders',
         },
         {
           path: '/components/inputs/date-box',
