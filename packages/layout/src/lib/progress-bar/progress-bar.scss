@@ -1,0 +1,131 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-progress-bar {
+  @include tokens.core-tokens;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.oge-progress-bar-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--oge-border-color);
+}
+
+// Transform-driven, never width-driven — the toast progress recipe: no
+// layout work per frame, and transform-origin mirrors for RTL.
+.oge-progress-bar-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--oge-accent);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 160ms ease;
+
+  [dir='rtl'] & {
+    transform-origin: right;
+  }
+}
+
+.oge-progress-bar-buffer {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--oge-accent-25);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 160ms ease;
+
+  [dir='rtl'] & {
+    transform-origin: right;
+  }
+}
+
+@keyframes oge-progress-bar-slide {
+  from {
+    transform: translateX(-100%) scaleX(0.4);
+  }
+  to {
+    transform: translateX(250%) scaleX(0.4);
+  }
+}
+
+.oge-progress-bar-indeterminate .oge-progress-bar-fill {
+  transform-origin: center;
+  transition: none;
+  animation: oge-progress-bar-slide 1200ms ease-in-out infinite;
+
+  [dir='rtl'] & {
+    animation-direction: reverse;
+  }
+}
+
+.oge-progress-bar-chunk {
+  flex: 1 1 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--oge-border-color);
+  transition: background-color 160ms ease;
+
+  &.oge-progress-bar-chunk-filled {
+    background: var(--oge-accent);
+  }
+}
+
+// Chunked tracks lay the segments out themselves.
+.oge-progress-bar-track:has(.oge-progress-bar-chunk) {
+  display: flex;
+  gap: 3px;
+  overflow: visible;
+  background: none;
+}
+
+.oge-progress-bar-label {
+  flex: none;
+  min-width: 2.5em;
+  color: var(--oge-muted-color);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+// Severity recolors the fill only — the toast recipe.
+.oge-progress-bar-success .oge-progress-bar-fill,
+.oge-progress-bar-success .oge-progress-bar-chunk-filled {
+  background: var(--oge-success);
+}
+
+.oge-progress-bar-warning .oge-progress-bar-fill,
+.oge-progress-bar-warning .oge-progress-bar-chunk-filled {
+  background: var(--oge-warning);
+}
+
+.oge-progress-bar-danger .oge-progress-bar-fill,
+.oge-progress-bar-danger .oge-progress-bar-chunk-filled {
+  background: var(--oge-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-progress-bar-fill,
+  .oge-progress-bar-buffer,
+  .oge-progress-bar-chunk {
+    transition: none;
+  }
+
+  // Indeterminate slows rather than stops — a frozen bar reads as finished
+  // (the drop-down button's reduced-motion precedent).
+  .oge-progress-bar-indeterminate .oge-progress-bar-fill {
+    animation-duration: 2400ms;
+  }
+}

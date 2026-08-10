@@ -1972,6 +1972,12 @@ export class HomePage {
       path: '/components/drawer',
     },
     {
+      icon: 'loader',
+      name: 'Progress & Loading',
+      desc: 'Bar, ring and skeleton as one trio — role="progressbar" with the aria rules done right.',
+      path: '/components/progress',
+    },
+    {
       icon: 'breadcrumb',
       name: 'Breadcrumb',
       desc: 'The APG trail with container-width collapse; hidden crumbs stay reachable as links.',

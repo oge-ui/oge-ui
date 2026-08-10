@@ -117,12 +117,13 @@ export const PACKAGES = [
     npm: '@oge-ui/layout',
     label: 'Layout',
     summary:
-      'Layout containers — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, and a card content surface with attribute-slot sections.',
+      'Layout containers and loading visuals — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), load-indicator ring and shimmer skeleton with the aria progressbar contract done right.',
     docsRoot: '/components/accordion',
     pageDirs: ['layout'],
     apiPage: [
       'apps/dev-app/src/app/pages/layout/api.ts',
       'apps/dev-app/src/app/pages/layout/card-api.ts',
+      'apps/dev-app/src/app/pages/layout/progress-api.ts',
       'apps/dev-app/src/app/pages/layout/splitter-api.ts',
       'apps/dev-app/src/app/pages/layout/toolbar-api.ts',
     ],

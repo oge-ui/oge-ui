@@ -418,6 +418,18 @@ export class App {
       ],
     },
     {
+      title: 'Progress & Loading',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/progress', label: 'Overview', icon: 'loader' },
+        {
+          path: '/components/progress/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Menubar',
       group: COMPONENTS_GROUP,
       items: [

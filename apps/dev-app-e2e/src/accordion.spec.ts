@@ -39,23 +39,41 @@ test('every header is in the Tab sequence and arrows move focus', async ({
 test('the last open panel cannot be collapsed without collapsible', async ({
   page,
 }) => {
+  // The first demo is deliberately collapsible now — this contract lives in
+  // the "Single, multiple & collapsible" demo, whose switches start off.
+  await page.goto('/components/accordion');
+  const demo = page.locator(
+    'app-demo-card:has(#single-multiple-collapsible) .oge-accordion',
+  );
+  const general = demo.getByRole('button', { name: /General/ });
+  await general.scrollIntoViewIfNeeded();
+
+  await general.click();
+  await expect(general).toHaveAttribute('aria-expanded', 'true');
+  // APG: aria-disabled, never the disabled attribute…
+  await expect(general).toHaveAttribute('aria-disabled', 'true');
+  await expect(general).not.toHaveAttribute('disabled', /.*/);
+  // …so it stays focusable and in the Tab sequence
+  await general.focus();
+  await expect(general).toBeFocused();
+  await expect(general).toHaveAttribute('tabindex', '0');
+
+  // dispatch past Playwright's actionability check, which honours aria-disabled
+  await general.dispatchEvent('click');
+  await expect(general).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('the first demo toggles closed — collapsible by default', async ({
+  page,
+}) => {
   await page.goto('/components/accordion');
   const first = page.locator('.oge-accordion').first();
   const account = first.getByRole('button', { name: /Account/ });
 
   await account.click();
   await expect(account).toHaveAttribute('aria-expanded', 'true');
-  // APG: aria-disabled, never the disabled attribute…
-  await expect(account).toHaveAttribute('aria-disabled', 'true');
-  await expect(account).not.toHaveAttribute('disabled', /.*/);
-  // …so it stays focusable and in the Tab sequence
-  await account.focus();
-  await expect(account).toBeFocused();
-  await expect(account).toHaveAttribute('tabindex', '0');
-
-  // dispatch past Playwright's actionability check, which honours aria-disabled
-  await account.dispatchEvent('click');
-  await expect(account).toHaveAttribute('aria-expanded', 'true');
+  await account.click();
+  await expect(account).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('header actions are focusable without breaking the toggle', async ({

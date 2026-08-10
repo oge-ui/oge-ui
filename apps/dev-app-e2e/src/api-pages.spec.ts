@@ -175,11 +175,29 @@ test.describe('slider API reference', () => {
     const filter = page.locator('#ogeslider input[type="search"]').first();
     await filter.fill('valueIndicator');
     await expect(
-      page
-        .locator('#ogeslider td code', { hasText: 'valueIndicator' })
-        .first(),
+      page.locator('#ogeslider td code', { hasText: 'valueIndicator' }).first(),
     ).toBeVisible();
     await filter.fill('');
     await expect(page.locator('#ogeslider-events')).toBeVisible();
+  });
+});
+
+test.describe('progress API reference', () => {
+  test('renders the loading trio sections and filters', async ({ page }) => {
+    await page.goto('/components/progress/api');
+    await expect(page.locator('#ogeprogressbar-properties')).toBeVisible();
+    await expect(page.locator('#ogeprogressbar-events')).toBeVisible();
+    await expect(page.locator('#ogeloadindicator-properties')).toBeVisible();
+    await expect(page.locator('#ogeskeleton-properties')).toBeVisible();
+
+    const filter = page.locator('#ogeprogressbar input[type="search"]').first();
+    await filter.fill('bufferValue');
+    await expect(
+      page
+        .locator('#ogeprogressbar td code', { hasText: 'bufferValue' })
+        .first(),
+    ).toBeVisible();
+    await filter.fill('');
+    await expect(page.locator('#ogeprogressbar-events')).toBeVisible();
   });
 });

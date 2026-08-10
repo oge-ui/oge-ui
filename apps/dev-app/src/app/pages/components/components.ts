@@ -28,6 +28,7 @@ import { OgeContextMenu, OgeTooltip, type OgeMenuItem } from '@oge-ui/overlay';
 import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
 import { OgeForm, OgeFormItem } from '@oge-ui/forms';
 import { OgeTreeList } from '@oge-ui/tree-list';
+import { OgeLoadIndicator, OgeProgressBar, OgeSkeleton } from '@oge-ui/layout';
 import { Icon, type IconName } from '../../shared/icon';
 import { SITE_VERSION } from '../../shared/site-version';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
@@ -41,6 +42,7 @@ type FamilyKey =
   | 'forms'
   | 'accordion'
   | 'card'
+  | 'progress'
   | 'splitter'
   | 'toolbar'
   | 'tree-view'
@@ -93,6 +95,9 @@ interface OrgNode {
     OgeCard,
     OgeCardActions,
     OgeCardMedia,
+    OgeProgressBar,
+    OgeLoadIndicator,
+    OgeSkeleton,
     OgeSplitter,
     OgeSplitterPane,
     OgeToolbar,
@@ -313,6 +318,16 @@ interface OrgNode {
                         </p>
                       </oge-accordion-item>
                     </oge-accordion>
+                  </div>
+                }
+                @case ('progress') {
+                  <div class="flex w-full flex-col gap-3 self-start">
+                    <oge-progress-bar [value]="62" [showLabel]="true" />
+                    <oge-progress-bar ariaLabel="Preparing" />
+                    <div class="flex items-center gap-3">
+                      <oge-load-indicator size="sm" />
+                      <oge-skeleton class="flex-1" />
+                    </div>
                   </div>
                 }
                 @case ('card') {
@@ -540,6 +555,14 @@ export class ComponentsIndexPage {
       path: '/components/card',
       description:
         'Content surface with header, full-bleed media, action row and footer as attribute slots — one component, outlined/raised/filled/flat chrome, horizontal orientation, and no nested-interactive trap.',
+    },
+    {
+      key: 'progress',
+      name: 'Progress & Loading',
+      icon: 'loader',
+      path: '/components/progress',
+      description:
+        'The linear bar, the ring and the shimmer placeholder as one canonical trio — role="progressbar" done right: indeterminate omits aria-valuenow, reduced motion slows the ring instead of freezing it.',
     },
     {
       key: 'splitter',

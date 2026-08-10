@@ -9,6 +9,7 @@ const FAMILIES = [
   { name: 'Inputs', preview: 'oge-text-box' },
   { name: 'Tabs', preview: 'oge-tab-panel' },
   { name: 'Accordion', preview: 'oge-accordion' },
+  { name: 'Progress & Loading', preview: 'oge-progress-bar' },
   { name: 'Splitter', preview: 'oge-splitter' },
   { name: 'Toolbar', preview: 'oge-toolbar' },
   { name: 'Tree View', preview: 'oge-tree-view' },

@@ -1,0 +1,103 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+@keyframes oge-skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@keyframes oge-skeleton-beat {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.oge-skeleton {
+  @include tokens.core-tokens;
+
+  display: block;
+  height: 0.75em; // a text line by default — derives from the font
+  border-radius: var(--oge-radius);
+  // The card/accordion moving-gradient recipe, canonicalized.
+  background: linear-gradient(
+    90deg,
+    var(--oge-header-bg) 25%,
+    var(--oge-row-hover-bg) 37%,
+    var(--oge-header-bg) 63%
+  );
+  background-size: 400% 100%;
+  animation: oge-skeleton-shimmer 1400ms ease infinite;
+  box-sizing: border-box;
+}
+
+.oge-skeleton-circle {
+  width: 2.5em;
+  height: 2.5em;
+  border-radius: 50%;
+}
+
+.oge-skeleton-rectangle {
+  height: 4em;
+}
+
+.oge-skeleton-pulse {
+  background: var(--oge-skeleton-color, rgba(148, 163, 184, 0.25));
+  background-size: auto;
+  animation: oge-skeleton-beat 1200ms ease-in-out infinite;
+}
+
+.oge-skeleton-static {
+  background: var(--oge-header-bg);
+  animation: none;
+}
+
+// Multi-line text placeholder: the host becomes a transparent stack and the
+// lines carry the visual — the card/accordion pattern as one input.
+.oge-skeleton-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: auto;
+  background: none;
+  animation: none;
+}
+
+.oge-skeleton-line {
+  display: block;
+  height: 0.75em;
+  border-radius: var(--oge-radius);
+  background: linear-gradient(
+    90deg,
+    var(--oge-header-bg) 25%,
+    var(--oge-row-hover-bg) 37%,
+    var(--oge-header-bg) 63%
+  );
+  background-size: 400% 100%;
+  animation: oge-skeleton-shimmer 1400ms ease infinite;
+
+  // The last line tapers — the house placeholder look.
+  &:last-child:not(:first-child) {
+    width: 60%;
+  }
+
+  .oge-skeleton-pulse & {
+    background: var(--oge-skeleton-color, rgba(148, 163, 184, 0.25));
+    background-size: auto;
+    animation: oge-skeleton-beat 1200ms ease-in-out infinite;
+  }
+
+  .oge-skeleton-static & {
+    background: var(--oge-header-bg);
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-skeleton,
+  .oge-skeleton-line {
+    animation: none;
+  }
+}

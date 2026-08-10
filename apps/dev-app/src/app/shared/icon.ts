@@ -42,6 +42,7 @@ export type IconName =
   | 'splitter'
   | 'breadcrumb'
   | 'drawer'
+  | 'loader'
   | 'menubar'
   | 'stepper'
   | 'toolbar'
@@ -208,6 +209,9 @@ export type IconName =
           <path d="m8.5 9.5 2.5 2.5-2.5 2.5" />
           <circle cx="14" cy="12" r="1.5" />
           <path d="m17.5 9.5 2.5 2.5-2.5 2.5" />
+        }
+        @case ('loader') {
+          <path d="M12 3a9 9 0 1 1-9 9" />
         }
         @case ('menubar') {
           <rect x="3" y="5" width="18" height="5" rx="1" />

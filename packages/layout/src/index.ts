@@ -59,6 +59,45 @@ export type {
   OgeCardSize,
   OgeCardStylingMode,
 } from './lib/card/card-types';
+export {
+  OgeLoadIndicator,
+  type OgeLoadIndicatorSeverity,
+} from './lib/load-indicator/load-indicator';
+export {
+  OGE_DEFAULT_LOAD_INDICATOR_CONFIG,
+  OGE_DEFAULT_LOAD_INDICATOR_MESSAGES,
+  OGE_LOAD_INDICATOR_CONFIG,
+  provideOgeLoadIndicatorConfig,
+  type OgeLoadIndicatorConfig,
+  type OgeLoadIndicatorConfigInput,
+  type OgeLoadIndicatorMessages,
+} from './lib/load-indicator/config';
+export { OgeProgressBar } from './lib/progress-bar/progress-bar';
+export {
+  OGE_DEFAULT_PROGRESS_BAR_CONFIG,
+  OGE_DEFAULT_PROGRESS_BAR_MESSAGES,
+  OGE_PROGRESS_BAR_CONFIG,
+  provideOgeProgressBarConfig,
+  type OgeProgressBarConfig,
+  type OgeProgressBarConfigInput,
+  type OgeProgressBarMessages,
+} from './lib/progress-bar/config';
+export type {
+  OgeProgressBarCompletedEvent,
+  OgeProgressBarSeverity,
+} from './lib/progress-bar/progress-bar-types';
+export { OgeSkeleton } from './lib/skeleton/skeleton';
+export {
+  OGE_DEFAULT_SKELETON_CONFIG,
+  OGE_SKELETON_CONFIG,
+  provideOgeSkeletonConfig,
+  type OgeSkeletonConfig,
+  type OgeSkeletonConfigInput,
+} from './lib/skeleton/config';
+export type {
+  OgeSkeletonAnimation,
+  OgeSkeletonShape,
+} from './lib/skeleton/skeleton-types';
 export { OgeSplitter } from './lib/splitter/splitter';
 export { OgeSplitterPane } from './lib/splitter/splitter-pane';
 export { OgeSplitterPaneTemplate } from './lib/splitter/templates';

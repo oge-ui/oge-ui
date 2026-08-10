@@ -7189,7 +7189,7 @@ export class Demo {
 
 ## @oge-ui/layout
 
-Layout containers — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, and a card content surface with attribute-slot sections.
+Layout containers and loading visuals — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), load-indicator ring and shimmer skeleton with the aria progressbar contract done right.
 
 Docs: https://ogeui.com/components/accordion
 
@@ -7197,8 +7197,8 @@ Docs: https://ogeui.com/components/accordion
 
 `@oge-ui/layout`
 
-- values: `OGE_ACCORDION_CONFIG`, `OGE_CARD_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_SPLITTER_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeCardConfig`, `provideOgeSplitterConfig`, `provideOgeToolbarConfig`
-- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
+- values: `OGE_ACCORDION_CONFIG`, `OGE_CARD_CONFIG`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_LOAD_INDICATOR_CONFIG`, `OGE_PROGRESS_BAR_CONFIG`, `OGE_SKELETON_CONFIG`, `OGE_SPLITTER_CONFIG`, `OGE_TOOLBAR_CONFIG`, `OgeAccordion`, `OgeAccordionActionRow`, `OgeAccordionContentTemplate`, `OgeAccordionHeaderActionsTemplate`, `OgeAccordionHeaderTemplate`, `OgeAccordionItem`, `OgeAccordionToggleIconTemplate`, `OgeCard`, `OgeCardActions`, `OgeCardAvatar`, `OgeCardFooter`, `OgeCardHeaderActions`, `OgeCardMedia`, `OgeCardSeparator`, `OgeLoadIndicator`, `OgeProgressBar`, `OgeSkeleton`, `OgeSplitter`, `OgeSplitterPane`, `OgeSplitterPaneTemplate`, `OgeToolbar`, `OgeToolbarItem`, `OgeToolbarItemTemplate`, `OgeToolbarMenuItemTemplate`, `provideOgeAccordionConfig`, `provideOgeCardConfig`, `provideOgeLoadIndicatorConfig`, `provideOgeProgressBarConfig`, `provideOgeSkeletonConfig`, `provideOgeSplitterConfig`, `provideOgeToolbarConfig`
+- types: `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionContentTemplateContext`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionHeaderActionsTemplateContext`, `OgeAccordionHeaderTemplateContext`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionMessages`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionToggleIconTemplateContext`, `OgeAccordionTogglePosition`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeLoadIndicatorSeverity`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterGripSide`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterPaneTemplateContext`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDisplayMode`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContext`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarSize`, `OgeToolbarStylingMode`
 
 ### OgeAccordion — `<oge-accordion>`
 
@@ -7415,6 +7415,91 @@ _Accessibility contract_
 | --- | --- | --- |
 | `provideOgeCardConfig(config)` | `(config: OgeCardConfigInput) => Provider` | Application- or component-scoped defaults for `stylingMode`, `orientation` and `size`. There is deliberately no `messages` block: the card renders no user-facing strings and no interactive chrome of its own. |
 | `OGE_CARD_CONFIG` | `InjectionToken<OgeCardConfig>` | The token behind `provideOgeCardConfig()`, with `OGE_DEFAULT_CARD_CONFIG` as its factory default. |
+
+### OgeProgressBar — `<oge-progress-bar>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number \| null` | `null` | Current value; `null` renders the **indeterminate** sliding bar — and `aria-valuenow` is then omitted entirely (the ARIA rule), never pinned to a sentinel. |
+| `min / max` | `number` | `0 / 100` | Scale bounds; the fill ratio clamps into them. |
+| `bufferValue` | `number \| undefined` | `—` | Material's buffer layer — a soft second fill behind the primary one (media pre-loading behind the play position). |
+| `chunkCount` | `number \| undefined` | `—` | Renders the bar as N discrete segments (Kendo's chunk progress bar); the filled count is the rounded ratio. |
+| `severity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill color — the card/toast severity vocabulary; recolors the fill only. |
+| `showLabel` | `boolean` | `false` | Renders the formatted value next to the bar (rounded percent by default). |
+| `formatLabel` | `(value: number, ratio: number) => string \| undefined` | `—` | Formats the visible label **and** `aria-valuetext` — DevExtreme's `statusFormat` in the house argument order; display and announcement never diverge. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name; the localized `progress` message is the fallback. A progressbar must always be named. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `completed` | `OgeProgressBarCompletedEvent` | The value reached `max` — DevExtreme's `onComplete`. Fired once per arrival: staying at max is silent, re-crossing after a reset fires again. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeProgressBarSeverity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | Fill color vocabulary. |
+| `OgeProgressBarCompletedEvent` | `{ value: number }` | Payload of `completed`. |
+
+### OgeLoadIndicator — `<oge-load-indicator>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Ring diameter preset — 16/24/32px. |
+| `inheritSize` | `boolean` | `false` | A `1em` ring that scales with the surrounding font — the inside-a-button case. |
+| `severity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Ring color — the card/toast severity vocabulary. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name; the localized `loading` message is the fallback. |
+
+_Accessibility contract_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `role="progressbar", no aria-valuenow` | `—` | Deliberately indeterminate-only (dx, Kendo and PrimeNG all are — a circle filling toward completion is the progress bar&rsquo;s job), announced without `aria-valuenow` per the ARIA rule. Under `prefers-reduced-motion` the spin **slows rather than stops**: a frozen ring reads as finished. |
+
+### OgeSkeleton — `<oge-skeleton>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `shape` | `'text' \| 'circle' \| 'rectangle'` | `'text'` | What the placeholder stands in for; a `text` skeleton with no height derives it from the font. |
+| `animation` | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'` | `shimmer` is the card/accordion moving-gradient recipe, `pulse` the data grid filler rows' opacity beat, `none` a static block. |
+| `width / height` | `string \| number \| undefined` | `—` | Numbers mean pixels; strings pass through as CSS. |
+| `lines` | `number` | `1` | `text` shape only: renders N stacked lines with the last one tapered — the card/accordion placeholder pattern as one input. Capped at 20. |
+
+_Accessibility contract_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `aria-hidden, always` | `—` | A skeleton is decoration — the loading **region** owns the announcement. Put `aria-busy` (and, where the change should be announced, a visually-hidden status text) on the container the skeleton stands in for. |
+
+### Configuration
+
+#### Properties
+
+_provideOgeProgressBarConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeProgressBarMessages` | Every user-facing string: `progress` — the accessible name fallback (default `Progress`). |
+| `severity / showLabel` | `—` | Defaults for the matching inputs. |
+
+_provideOgeLoadIndicatorConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeLoadIndicatorMessages` | Every user-facing string: `loading` — the accessible name fallback (default `Loading`). |
+
+_provideOgeSkeletonConfig()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `shape / animation` | `—` | Defaults for the matching inputs. Deliberately no messages block: a skeleton renders no user-facing strings — the loading region owns the announcement. |
 
 ### OgeSplitter — `<oge-splitter>`
 
@@ -8323,6 +8408,182 @@ export class Demo {
     { key: 'a', title: 'First' },
     { key: 'b', title: 'Second' },
   ];
+}
+```
+
+#### Async
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeProgressBar, OgeSkeleton } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeProgressBar, OgeSkeleton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A real flow: indeterminate while the size is unknown, then
+         determinate, then a one-shot completed event. -->
+    @if (total() === null) {
+      <oge-progress-bar ariaLabel="Download" />
+    } @else {
+      <oge-progress-bar
+        [value]="received()"
+        [max]="total()!"
+        [showLabel]="true"
+        ariaLabel="Download"
+        (completed)="done.set(true)"
+      />
+    }
+  `,
+})
+export class Demo {
+  protected readonly total = signal<number | null>(null);
+  protected readonly received = signal(0);
+  protected readonly done = signal(false);
+}
+```
+
+#### Chunk
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeProgressBar } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeProgressBar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- chunkCount renders Kendo's segmented variant — the filled
+         segment count is the rounded ratio. severity recolors the fill with the
+         card/toast vocabulary. -->
+    <oge-progress-bar [value]="step() * 20" [chunkCount]="5" ariaLabel="Steps" />
+
+    <oge-progress-bar [value]="92" severity="success" [showLabel]="true" ariaLabel="Sync" />
+    <oge-progress-bar [value]="45" severity="danger" [showLabel]="true" ariaLabel="Disk" />
+  `,
+})
+export class Demo {
+  protected readonly step = signal(3);
+}
+```
+
+#### Determinate
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeProgressBar } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeProgressBar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- role="progressbar" with the full aria triple. showLabel
+         renders the rounded percent; formatLabel replaces it AND feeds
+         aria-valuetext, so display and announcement never diverge. -->
+    <oge-progress-bar [value]="uploaded()" [showLabel]="true" />
+
+    <oge-progress-bar
+      [value]="uploaded()"
+      [max]="200"
+      [showLabel]="true"
+      [formatLabel]="asMegabytes"
+      ariaLabel="Upload"
+    />
+  `,
+})
+export class Demo {
+  protected readonly uploaded = signal(80);
+  protected readonly asMegabytes = (value: number): string => `${value} MB`;
+}
+```
+
+#### Indeterminate
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeProgressBar } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeProgressBar],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- value: null (the default) is the indeterminate sliding bar.
+         Per the ARIA guidance aria-valuenow is then OMITTED entirely — never
+         pinned to a sentinel. bufferValue adds Material's second layer (media
+         pre-loading behind the play position). -->
+    <oge-progress-bar ariaLabel="Preparing" />
+
+    <oge-progress-bar [value]="played()" [bufferValue]="buffered()" ariaLabel="Playback" />
+  `,
+})
+export class Demo {
+  protected readonly played = signal(35);
+  protected readonly buffered = signal(70);
+}
+```
+
+#### Load indicator
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeLoadIndicator } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeLoadIndicator],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The suite's canonical ring, deliberately indeterminate-only
+         (a circle filling toward completion is the progress bar's job). Under
+         prefers-reduced-motion it slows rather than stops — a frozen ring reads
+         as finished. inheritSize makes a 1em ring for buttons. -->
+    <oge-load-indicator size="sm" />
+    <oge-load-indicator />
+    <oge-load-indicator size="lg" ariaLabel="Loading report" />
+
+    <button type="button" disabled>
+      <oge-load-indicator [inheritSize]="true" /> Saving…
+    </button>
+  `,
+})
+export class Demo {}
+```
+
+#### Skeleton
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSkeleton } from '@oge-ui/layout';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSkeleton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Always aria-hidden decoration: the loading REGION owns the
+         announcement — put aria-busy (and a visually-hidden status text where
+         the change should be announced) on the container. shimmer is the
+         card/accordion gradient recipe; pulse is the grid filler rows' beat. -->
+    <div [attr.aria-busy]="loading() ? true : null" class="flex items-center gap-3">
+      <oge-skeleton shape="circle" [width]="40" [height]="40" />
+      <div class="flex-1">
+        <oge-skeleton [width]="'60%'" />
+        <oge-skeleton class="mt-2" [width]="'40%'" animation="pulse" />
+      </div>
+    </div>
+
+    <oge-skeleton shape="rectangle" height="96px" class="mt-3" />
+
+    <!-- lines: the tapered multi-line text stack in one input. -->
+    <oge-skeleton [lines]="3" class="mt-3" />
+  `,
+})
+export class Demo {
+  protected readonly loading = signal(true);
 }
 ```
 

@@ -5,7 +5,12 @@ standalone, zoneless-ready, MIT.
 
 Today the package ships **`OgeAccordion`** with its declarative child
 **`OgeAccordionItem`**, **`OgeCard`** with its attribute slots, **`OgeSplitter`**
-with **`OgeSplitterPane`**, and **`OgeToolbar`** with **`OgeToolbarItem`**.
+with **`OgeSplitterPane`**, **`OgeToolbar`** with **`OgeToolbarItem`**, and the
+loading trio — **`OgeProgressBar`** (buffer/chunked variants, severity colors,
+`value: null` = indeterminate with `aria-valuenow` correctly omitted),
+**`OgeLoadIndicator`** (the canonical ring; reduced motion slows it rather than
+freezing it) and **`OgeSkeleton`** (shimmer/pulse placeholder, always
+`aria-hidden` — the loading region owns the announcement).
 
 ```sh
 npm install @oge-ui/layout

@@ -365,6 +365,25 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/progress',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/layout/progress').then((m) => m.LayoutProgressPage),
+        title: 'OGE — Progress & Loading',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/layout/progress-api').then(
+            (m) => m.LayoutProgressApiPage,
+          ),
+        title: 'OGE — Progress & Loading API',
+      },
+    ],
+  },
+  {
     path: 'components/card',
     children: [
       {

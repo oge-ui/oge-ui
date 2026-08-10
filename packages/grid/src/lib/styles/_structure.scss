@@ -1017,22 +1017,33 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  // Slow down rather than stop — a frozen ring reads as finished.
+  .oge-spinner {
+    animation-duration: 1400ms;
+  }
+
+  .oge-grid-skeleton {
+    animation: none;
+  }
+}
+
 // Placeholder rows for blocks that are still loading (remote virtual / infinite).
 .oge-filler-row .oge-cell {
   display: flex;
   align-items: center;
 }
 
-.oge-skeleton {
+.oge-grid-skeleton {
   display: block;
   width: 70%;
   height: 10px;
   border-radius: 5px;
   background: var(--oge-skeleton-color, rgba(148, 163, 184, 0.25));
-  animation: oge-skeleton-pulse 1.2s ease-in-out infinite;
+  animation: oge-grid-skeleton-pulse 1.2s ease-in-out infinite;
 }
 
-@keyframes oge-skeleton-pulse {
+@keyframes oge-grid-skeleton-pulse {
   0%,
   100% {
     opacity: 0.5;

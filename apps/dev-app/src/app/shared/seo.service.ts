@@ -67,6 +67,14 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Drawer: an overlay, push or side panel whose modality is derived from its mode — role="dialog" with a focus trap and inert background when it covers the content, a landmark when it shares the row. Responsive to its own container, not the window.',
   ],
   [
+    '/components/progress',
+    'Angular Progress & Loading: a linear progress bar (buffer and chunked variants, severity colors), an indeterminate load-indicator ring and a shimmer skeleton — role="progressbar" with aria-valuenow correctly omitted in the indeterminate state, and reduced motion that slows instead of freezing.',
+  ],
+  [
+    '/components/progress/api',
+    'Angular Progress & Loading API reference: every property, event and type of oge-progress-bar, oge-load-indicator and oge-skeleton, including the config providers.',
+  ],
+  [
     '/components/inputs/slider',
     'Angular Slider and RangeSlider: the WAI-ARIA APG slider and multi-thumb patterns as bare form editors — arrows/PageUp/Home/End, live drag commits with Escape-to-cancel, dynamic aria constraints between range thumbs, formatValue feeding aria-valuetext, and Signal Forms membership out of the box.',
   ],

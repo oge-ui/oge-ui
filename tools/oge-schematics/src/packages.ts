@@ -98,6 +98,10 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       need: 'card / content surface (header, media, actions, footer)',
       use: '`<oge-card header="…" stylingMode="outlined|raised|filled|flat">` — sections are the `[ogeCardMedia]`, `[ogeCardActions]`, `[ogeCardFooter]` attribute slots, everything else projected is the content',
     },
+    {
+      need: 'progress bar / spinner / skeleton placeholder',
+      use: '`<oge-progress-bar [value]="v">` (`value: null` = indeterminate; `bufferValue`, `chunkCount`, `severity`), `<oge-load-indicator size="sm|md|lg">`, `<oge-skeleton shape="text|circle|rectangle">` — put `aria-busy` on the loading region, the skeleton itself is decoration',
+    },
   ],
   '@oge-ui/forms': [
     {

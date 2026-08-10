@@ -1,0 +1,73 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+@keyframes oge-load-indicator-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.oge-load-indicator {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  vertical-align: middle;
+
+  &,
+  * {
+    box-sizing: border-box;
+  }
+}
+
+// The house ring: soft accent base, accent leading edge — the recipe every
+// ad-hoc spinner in the suite already draws.
+.oge-load-indicator-ring {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid var(--oge-accent-25);
+  border-block-start-color: var(--oge-accent);
+  border-radius: 50%;
+  animation: oge-load-indicator-spin 700ms linear infinite;
+}
+
+.oge-load-indicator-sm .oge-load-indicator-ring {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.oge-load-indicator-lg .oge-load-indicator-ring {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+// Inside a button: scale with the surrounding font.
+.oge-load-indicator-inherit .oge-load-indicator-ring {
+  width: 1em;
+  height: 1em;
+  border-width: 2px;
+}
+
+.oge-load-indicator-success .oge-load-indicator-ring {
+  border-color: var(--oge-success-soft);
+  border-block-start-color: var(--oge-success);
+}
+
+.oge-load-indicator-warning .oge-load-indicator-ring {
+  border-color: var(--oge-warning-soft);
+  border-block-start-color: var(--oge-warning);
+}
+
+.oge-load-indicator-danger .oge-load-indicator-ring {
+  border-color: var(--oge-danger-soft);
+  border-block-start-color: var(--oge-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  // Slow down rather than stop — a frozen ring reads as finished (the
+  // drop-down button's reduced-motion precedent).
+  .oge-load-indicator-ring {
+    animation-duration: 1400ms;
+  }
+}
