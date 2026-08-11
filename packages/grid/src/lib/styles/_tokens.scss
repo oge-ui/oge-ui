@@ -68,4 +68,14 @@
   --oge-scheduler-now-color: #dc2626;
   --oge-scheduler-allday-bg: var(--oge-header-bg);
   --oge-scheduler-hour-fg: var(--oge-muted-color);
+  /* gantt surfaces */
+  --oge-gantt-bar-bg: var(--oge-accent);
+  --oge-gantt-bar-fg: #ffffff;
+  --oge-gantt-summary-bg: #475569;
+  --oge-gantt-milestone-bg: #7c3aed;
+  --oge-gantt-baseline-bg: rgba(100, 116, 139, 0.45);
+  --oge-gantt-grid-line: var(--oge-border-color);
+  --oge-gantt-offday-bg: rgba(148, 163, 184, 0.1);
+  --oge-gantt-today-color: #dc2626;
+  --oge-gantt-arrow-color: #94a3b8;
 }

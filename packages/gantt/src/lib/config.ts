@@ -140,6 +140,8 @@ export const OGE_DEFAULT_GANTT_MESSAGES: OgeGanttMessages = {
 /** DI-level configuration of every Gantt in the injector's scope. */
 export interface OgeGanttConfig {
   readonly messages: OgeGanttMessages;
+  /** BCP 47 locale for every `Intl` format; unset = the browser locale. */
+  readonly locale?: string;
   /** Row height in px (fixed — enables row virtualization). */
   readonly rowHeight?: number;
   /** Undo history depth. */

@@ -2,6 +2,33 @@
 // Explicit named exports only (house rule): internal panes and the engine
 // stay unexported.
 
+export { OgeGantt } from './lib/gantt/gantt';
+export {
+  OgeGanttTaskTemplate,
+  type OgeGanttTaskTemplateContext,
+} from './lib/gantt/gantt-templates';
+export {
+  type OgeGanttColumn,
+  type OgeGanttDependency,
+  type OgeGanttDependencyDeletedEvent,
+  type OgeGanttDependencyDeletingEvent,
+  type OgeGanttDependencyInsertedEvent,
+  type OgeGanttDependencyInsertingEvent,
+  type OgeGanttDependencyType,
+  type OgeGanttDialogShowingEvent,
+  type OgeGanttScaleType,
+  type OgeGanttSelectionChangedEvent,
+  type OgeGanttStripLine,
+  type OgeGanttTask,
+  type OgeGanttTaskClickEvent,
+  type OgeGanttTaskDeletedEvent,
+  type OgeGanttTaskDeletingEvent,
+  type OgeGanttTaskInsertedEvent,
+  type OgeGanttTaskInsertingEvent,
+  type OgeGanttTaskTitlePosition,
+  type OgeGanttTaskUpdatedEvent,
+  type OgeGanttTaskUpdatingEvent,
+} from './lib/gantt-types';
 export {
   OGE_DEFAULT_GANTT_CONFIG,
   OGE_DEFAULT_GANTT_MESSAGES,

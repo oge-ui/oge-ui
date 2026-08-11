@@ -41,6 +41,7 @@
 .oge-theme-dark .oge-pagination,
 .oge-theme-dark .oge-bpmn-editor,
 .oge-theme-dark .oge-scheduler,
+.oge-theme-dark .oge-gantt,
 .oge-theme-dark .oge-pivot-grid,
 .oge-grid.oge-theme-dark,
 .oge-tree-list.oge-theme-dark,
@@ -76,6 +77,7 @@
 .oge-pagination.oge-theme-dark,
 .oge-bpmn-editor.oge-theme-dark,
 .oge-scheduler.oge-theme-dark,
+.oge-gantt.oge-theme-dark,
 .oge-pivot-grid.oge-theme-dark {
   /* native form controls (checkboxes, selects, date pickers) follow suit */
   color-scheme: dark;
@@ -119,4 +121,9 @@
   --oge-modal-backdrop-bg: rgb(0 0 0 / 0.55);
   --oge-scheduler-chip-fg: #0b1220;
   --oge-scheduler-now-color: #ef4444;
+  --oge-gantt-bar-fg: #0b1220;
+  --oge-gantt-summary-bg: #94a3b8;
+  --oge-gantt-offday-bg: rgba(148, 163, 184, 0.07);
+  --oge-gantt-today-color: #ef4444;
+  --oge-gantt-arrow-color: #64748b;
 }
