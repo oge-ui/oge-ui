@@ -344,6 +344,7 @@ export const CONFIG_SNIPPET = demoSource({
             agenda: 'Agenda',
             timelineDay: 'Zeitachse Tag',
             timelineWeek: 'Zeitachse Woche',
+            year: 'Jahr',
           },
         },
       },

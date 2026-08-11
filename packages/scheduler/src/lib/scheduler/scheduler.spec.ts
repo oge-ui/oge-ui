@@ -144,6 +144,7 @@ describe('<oge-scheduler> shell', () => {
           agenda: 'Agenda',
           timelineDay: 'Zeitachse Tag',
           timelineWeek: 'Zeitachse Woche',
+          year: 'Jahr',
         },
       },
     });

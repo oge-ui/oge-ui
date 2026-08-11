@@ -106,7 +106,7 @@ _Data_
 | `recurrenceRuleExpr / recurrenceExceptionExpr` | `string \| ((item: T) => unknown)` | `'recurrenceRule' / 'recurrenceException'` | Recurrence fields: rules in the documented RFC 5545 subset expand into occurrence instances in every view; exceptions are comma-separated EXDATE stamps. |
 | `reminderExpr` | `string \| ((item: T) => unknown)` | `'reminder'` | Minutes before the start a reminder fires (see `reminderTriggered`) — **OGE extra** (Outlook parity). |
 | `resources` | `readonly OgeSchedulerResource[]` | `[]` | Resource kinds (`{ fieldExpr, items, label?, useColorAsDefault? }`): editor select fields, default appointment colors and timeline rows. |
-| `groups` | `readonly string[]` | `[]` | Resource field grouping the timeline rows (first entry). Day/week column grouping is on the roadmap. |
+| `groups` | `readonly string[]` | `[]` | Resource field grouping the views (first entry): timeline rows, and day/week columns split per resource — grouped cells prefill the resource on create, and drags across subcolumns/rows reassign it. |
 | `recurrenceEditMode` | `'dialog' \| 'occurrence' \| 'series'` | `'dialog'` | How edits to a recurring occurrence apply: ask per action, always detach the occurrence (EXDATE + standalone copy), or always change the series. |
 
 _Date & views_
@@ -114,7 +114,7 @@ _Date & views_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `currentDate` | `Date` | `new Date()` | Anchor date of the visible period. Two-way (`[(currentDate)]`); writes clamp into `[min, max]`. |
-| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek'` | `'week'` | The active view. Two-way (`[(currentView)]`). |
+| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek' \| 'year'` | `'week'` | The active view. Two-way (`[(currentView)]`). |
 | `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour` and `cellDuration` per view. |
 | `min / max` | `Date \| undefined` | `—` | Navigable date bounds: navigation buttons disable at the edges and every date write clamps. |
 | `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday); `undefined` resolves from the locale via `Intl.Locale.weekInfo`. |
@@ -254,6 +254,7 @@ export const appConfig = {
             agenda: 'Agenda',
             timelineDay: 'Zeitachse Tag',
             timelineWeek: 'Zeitachse Woche',
+            year: 'Jahr',
           },
         },
       },

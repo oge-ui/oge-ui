@@ -24,7 +24,8 @@ export type SchedulerViewType =
   | 'month'
   | 'agenda'
   | 'timelineDay'
-  | 'timelineWeek';
+  | 'timelineWeek'
+  | 'year';
 
 /** Configuration of a day/week time grid. */
 export interface TimeGridConfig {
@@ -144,6 +145,10 @@ export function viewRange(
     const start = startOfWeek(anchorDate, firstDayOfWeek);
     return { start, end: addDays(start, 7) };
   }
+  if (view === 'year') {
+    const start = new Date(anchorDate.getFullYear(), 0, 1);
+    return { start, end: new Date(anchorDate.getFullYear() + 1, 0, 1) };
+  }
   const grid = buildMonthGrid(anchorDate, firstDayOfWeek);
   return { start: grid.rangeStart, end: grid.rangeEnd };
 }
@@ -163,6 +168,9 @@ export function navigateDate(
   }
   if (view === 'week' || view === 'workWeek' || view === 'timelineWeek') {
     return addDays(anchorDate, direction * 7);
+  }
+  if (view === 'year') {
+    return new Date(anchorDate.getFullYear() + direction, 0, 1);
   }
   return startOfMonth(addMonths(anchorDate, direction));
 }

@@ -21,7 +21,7 @@ dependencies are taken instead of rebuilt.
 **Views & data**
 
 - `'day' | 'week' | 'workWeek' | 'month' | 'agenda' | 'timelineDay' |
-  'timelineWeek'` views with `[(currentDate)]` /
+'timelineWeek' | 'year'` views with `[(currentDate)]` /
   `[(currentView)]`, per-view hour-window and slot-duration overrides,
   `hiddenWeekDays`, `min`/`max` navigation bounds and a toolbar
   date-navigator calendar (embeds `@oge-ui/inputs`' `OgeCalendar`)
@@ -41,8 +41,10 @@ dependencies are taken instead of rebuilt.
   a recurrence section, and edits/deletes ask "this appointment or the
   series?" (`recurrenceEditMode`) — occurrence scope detaches via EXDATE
 - Resources: editor select fields, color-by-resource
-  (`useColorAsDefault`), timeline rows grouped by `groups`; reminders via
-  `reminderExpr` + the `reminderTriggered` event
+  (`useColorAsDefault`), timeline rows and day/week resource columns
+  grouped by `groups` (grouped drags reassign the resource); reminders via
+  `reminderExpr` + the `reminderTriggered` event; a Year overview with
+  busy-day dots drills into the day view
 
 **Editing**
 

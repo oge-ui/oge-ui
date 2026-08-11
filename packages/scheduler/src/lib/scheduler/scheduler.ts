@@ -74,7 +74,11 @@ import {
   type SchedulerProposalEvent,
 } from './day-week-view';
 import { OgeSchedulerAgendaView } from './agenda-view';
-import { OgeSchedulerTimelineView } from './timeline-view';
+import {
+  OgeSchedulerTimelineView,
+  type TimelineMoveEvent,
+} from './timeline-view';
+import { OgeSchedulerYearView } from './year-view';
 import { OgeSchedulerMonthView } from './month-view';
 import {
   OgeAppointmentTemplate,
@@ -114,6 +118,7 @@ interface ResolvedView {
     OgePopup,
     OgeSchedulerAgendaView,
     OgeSchedulerTimelineView,
+    OgeSchedulerYearView,
     OgeSchedulerAppointmentDialog,
     OgeSchedulerAppointmentPopup,
     OgeSchedulerDayWeekView,
@@ -270,6 +275,16 @@ interface ResolvedView {
           (chipDeleteRequested)="onDeleteRequested($event)"
         />
       }
+      @case ('year') {
+        <oge-scheduler-year-view
+          [anchorDate]="currentDate()"
+          [appointments]="visibleAppointments()"
+          [firstDayOfWeek]="resolvedFirstDayOfWeek()"
+          [locale]="locale()"
+          [messages]="msg().grid"
+          (dayPicked)="drillIntoDay($event)"
+        />
+      }
       @case ('timelineDay') {
         <oge-scheduler-timeline-view
           view="timelineDay"
@@ -283,9 +298,13 @@ interface ResolvedView {
           [messages]="msg().grid"
           [groupResource]="groupResource()"
           [resourceIdOf]="groupResourceIdOf()"
+          [allowDragging]="canDrag()"
+          [snapDuration]="snapDuration()"
           (chipClicked)="onChipClicked($event)"
           (chipDblClicked)="onChipDblClicked($event)"
           (chipDeleteRequested)="onDeleteRequested($event)"
+          (moveCommitted)="onTimelineMoveCommitted($event)"
+          (gestureCancelled)="onGestureCancelled()"
         />
       }
       @case ('timelineWeek') {
@@ -301,9 +320,13 @@ interface ResolvedView {
           [messages]="msg().grid"
           [groupResource]="groupResource()"
           [resourceIdOf]="groupResourceIdOf()"
+          [allowDragging]="canDrag()"
+          [snapDuration]="snapDuration()"
           (chipClicked)="onChipClicked($event)"
           (chipDblClicked)="onChipDblClicked($event)"
           (chipDeleteRequested)="onDeleteRequested($event)"
+          (moveCommitted)="onTimelineMoveCommitted($event)"
+          (gestureCancelled)="onGestureCancelled()"
         />
       }
       @case ('month') {
@@ -364,7 +387,9 @@ interface ResolvedView {
           [workHours]="workHours()"
           [shadeUntilCurrentTime]="shadeUntilCurrentTime()"
           [snapDuration]="snapDuration()"
-          (moveCommitted)="onMoveCommitted($event)"
+          [groupResource]="groupResource()"
+          [resourceIdOf]="groupResourceIdOf()"
+          (moveCommitted)="onTimelineMoveCommitted($event)"
           (resizeCommitted)="onResizeCommitted($event)"
           (gestureCancelled)="onGestureCancelled()"
           (rangeSelected)="onRangeSelected($event)"
@@ -861,6 +886,9 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
         year: 'numeric',
       }).format(date);
     }
+    if (view === 'year') {
+      return new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(date);
+    }
     const { start, end } = viewRange(
       view === 'agenda' ? 'agenda' : 'week',
       date,
@@ -988,11 +1016,11 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
         event: event.event,
       });
     }
-    this.openCreateEditor(event.cellDate, event.allDay);
+    this.openCreateEditor(event.cellDate, event.allDay, event.resourceId);
   }
 
   protected onCellActivated(event: SchedulerCellEvent): void {
-    this.openCreateEditor(event.cellDate, event.allDay);
+    this.openCreateEditor(event.cellDate, event.allDay, event.resourceId);
   }
 
   protected onChipClicked(event: SchedulerChipEvent<T>): void {
@@ -1317,7 +1345,11 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     this.deleteBySource(appointment.source);
   }
 
-  private openCreateEditor(cellDate: Date, allDay: boolean): void {
+  private openCreateEditor(
+    cellDate: Date,
+    allDay: boolean,
+    resourceId?: unknown,
+  ): void {
     if (!this.canAdd()) return;
     const startDate = allDay ? startOfDay(cellDate) : cellDate;
     const endDate = allDay
@@ -1329,7 +1361,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       startDate,
       endDate,
       reminder: null,
-      resourceValues: {},
+      resourceValues: this.prefillResources(resourceId),
       ...this.ruleFields(undefined),
     };
     this.openEditor(model, this.buildItem(model), true);
@@ -1505,7 +1537,44 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     this.announcement.set(this.msg().announcements.cancelled);
   }
 
-  protected onRangeSelected(range: OgeSchedulerRangeSelectedEvent): void {
+  /**
+   * Timeline drag commit: the time shift runs the normal (recurrence-aware)
+   * move pipeline; a resource-row change patches the grouping field — for
+   * plain appointments and series scope only (an occurrence keeps its row).
+   */
+  protected onTimelineMoveCommitted(event: TimelineMoveEvent<T>): void {
+    const resource = this.groupResource();
+    if (event.appointment.seriesKey !== null) {
+      this.routeRecurring('moved', event.appointment, event.proposal);
+      return;
+    }
+    if (!this.canUpdate()) return;
+    const fields = this.fields();
+    const patch: Record<string, unknown> = {
+      ...(appointmentPatch(
+        event.appointment.source,
+        event.proposal,
+        fields,
+      ) as Record<string, unknown>),
+    };
+    if (event.resourceId !== undefined && resource !== null) {
+      patch[resource.fieldExpr] = event.resourceId;
+    }
+    this.updateItem(event.appointment.source, patch as Partial<T>);
+    const format = new Intl.DateTimeFormat(this.locale(), {
+      dateStyle: 'medium',
+      timeStyle: event.appointment.allDay ? undefined : 'short',
+    });
+    this.announce(this.msg().announcements.moved, {
+      text: event.appointment.text,
+      start: format.format(event.proposal.startDate),
+      end: format.format(event.proposal.endDate),
+    });
+  }
+
+  protected onRangeSelected(
+    range: OgeSchedulerRangeSelectedEvent & { resourceId?: unknown },
+  ): void {
     this.rangeSelected.emit(range);
     if (!this.canAdd()) return;
     const model: SchedulerEditorModel = {
@@ -1514,10 +1583,18 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       startDate: range.startDate,
       endDate: range.endDate,
       reminder: null,
-      resourceValues: {},
+      resourceValues: this.prefillResources(range.resourceId),
       ...this.ruleFields(undefined),
     };
     this.openEditor(model, this.buildItem(model), true);
+  }
+
+  /** Resource prefill of grouped create flows. */
+  private prefillResources(resourceId: unknown): Record<string, unknown> {
+    const resource = this.groupResource();
+    return resource !== null && resourceId !== undefined
+      ? { [resource.fieldExpr]: resourceId }
+      : {};
   }
 
   protected onChipContextMenu(event: SchedulerChipEvent<T>): void {

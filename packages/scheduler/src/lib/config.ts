@@ -25,7 +25,8 @@ export interface OgeSchedulerToolbarMessages {
       | 'month'
       | 'agenda'
       | 'timelineDay'
-      | 'timelineWeek',
+      | 'timelineWeek'
+      | 'year',
       string
     >
   >;
@@ -166,6 +167,7 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
       agenda: 'Agenda',
       timelineDay: 'Timeline Day',
       timelineWeek: 'Timeline Week',
+      year: 'Year',
     },
   },
   popup: {

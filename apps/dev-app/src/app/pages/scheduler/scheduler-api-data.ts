@@ -54,7 +54,7 @@ export const OGE_SCHEDULER_API: ApiSections = {
           type: 'readonly string[]',
           default: '[]',
           description:
-            'Resource field grouping the timeline rows (first entry). Day/week column grouping is on the roadmap.',
+            'Resource field grouping the views (first entry): timeline rows, and day/week columns split per resource — grouped cells prefill the resource on create, and drags across subcolumns/rows reassign it.',
         },
         {
           name: 'recurrenceEditMode',
@@ -77,7 +77,7 @@ export const OGE_SCHEDULER_API: ApiSections = {
         },
         {
           name: 'currentView',
-          type: "'day' | 'week' | 'workWeek' | 'month' | 'agenda' | 'timelineDay' | 'timelineWeek'",
+          type: "'day' | 'week' | 'workWeek' | 'month' | 'agenda' | 'timelineDay' | 'timelineWeek' | 'year'",
           default: "'week'",
           description:
             'The active view. Two-way (<code>[(currentView)]</code>).',

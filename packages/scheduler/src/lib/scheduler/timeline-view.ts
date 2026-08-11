@@ -1,12 +1,20 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   ViewEncapsulation,
   computed,
+  inject,
   input,
   output,
+  signal,
 } from '@angular/core';
 import { sameDay } from '@oge-ui/core';
+import {
+  proposeMove,
+  proposeResize,
+  type AppointmentProposal,
+} from '../engine/gesture-math';
 import { layoutDayColumn } from '../engine/layout';
 import type { SchedulerAppointment } from '../engine/scheduler-model';
 import {
@@ -21,6 +29,15 @@ import type {
   OgeSchedulerResourceItem,
 } from '../scheduler-types';
 import type { SchedulerChipEvent } from './day-week-view';
+import { beginPointerGesture } from './gesture';
+
+/** A committed timeline move: time proposal + optional new resource id. */
+export interface TimelineMoveEvent<T> {
+  readonly appointment: SchedulerAppointment<T>;
+  readonly proposal: AppointmentProposal;
+  /** Set when the bar was dropped on a different resource row. */
+  readonly resourceId?: unknown;
+}
 
 /** One positioned timeline bar. */
 interface TimelineBar<T> {
@@ -82,7 +99,7 @@ interface TimelineRow<T> {
             }
           </div>
         </div>
-        @for (row of rows(); track $index) {
+        @for (row of rows(); track $index; let rowIndex = $index) {
           <div class="oge-scheduler-timeline-row">
             <div class="oge-scheduler-timeline-rowhead">
               <span
@@ -109,6 +126,9 @@ interface TimelineRow<T> {
                   class="oge-scheduler-timeline-bar oge-scheduler-chip-stop"
                   [class.oge-scheduler-bar-clipped-start]="bar.clippedStart"
                   [class.oge-scheduler-bar-clipped-end]="bar.clippedEnd"
+                  [class.oge-scheduler-dragging]="
+                    preview()?.key === bar.appointment.key
+                  "
                   [style.inset-inline-start.%]="bar.leftPct"
                   [style.width.%]="bar.widthPct"
                   [style.top.px]="4 + bar.lane * 26"
@@ -116,9 +136,20 @@ interface TimelineRow<T> {
                   (click)="onBarClick(bar.appointment, $event)"
                   (dblclick)="onBarDblClick(bar.appointment, $event)"
                   (keydown)="onBarKeydown(bar.appointment, $event)"
+                  (pointerdown)="onBarPointerDown(bar.appointment, $event)"
                 >
                   {{ bar.appointment.text }}
                 </button>
+              }
+              @if (preview(); as p) {
+                @if (p.rowIndex === rowIndex) {
+                  <div
+                    class="oge-scheduler-drag-preview oge-scheduler-timeline-preview"
+                    aria-hidden="true"
+                    [style.inset-inline-start.%]="p.leftPct"
+                    [style.width.%]="p.widthPct"
+                  ></div>
+                }
               }
             </div>
           </div>
@@ -141,10 +172,16 @@ export class OgeSchedulerTimelineView<T = unknown> {
   readonly groupResource = input<OgeSchedulerResource | null>(null);
   /** Reads the assigned resource id of an item. */
   readonly resourceIdOf = input.required<(item: T) => unknown>();
+  readonly allowDragging = input(true);
+  /** Drag snap raster in minutes; defaults to `cellDuration`. */
+  readonly snapDuration = input<number | undefined>(undefined);
 
   readonly chipClicked = output<SchedulerChipEvent<T>>();
   readonly chipDblClicked = output<SchedulerChipEvent<T>>();
   readonly chipDeleteRequested = output<SchedulerAppointment<T>>();
+  /** A bar drag landed — time shift + optional resource-row change. */
+  readonly moveCommitted = output<TimelineMoveEvent<T>>();
+  readonly gestureCancelled = output<void>();
 
   protected readonly grid = computed<TimeGridVm>(() =>
     buildTimeGrid({
@@ -158,9 +195,10 @@ export class OgeSchedulerTimelineView<T = unknown> {
   );
 
   /** Bars of one appointment set, laid out on the global horizontal axis. */
-  private layoutBars(
-    appointments: readonly SchedulerAppointment<T>[],
-  ): { bars: TimelineBar<T>[]; laneCount: number } {
+  private layoutBars(appointments: readonly SchedulerAppointment<T>[]): {
+    bars: TimelineBar<T>[];
+    laneCount: number;
+  } {
     const grid = this.grid();
     const windowSpan = grid.windowEndMinutes - grid.windowStartMinutes;
     const totalSpan = windowSpan * grid.days.length;
@@ -239,7 +277,13 @@ export class OgeSchedulerTimelineView<T = unknown> {
           (appointment) => idOf(appointment.source) === item.id,
         );
         const { bars, laneCount } = this.layoutBars(matches);
-        return { id: item.id, text: item.text, color: item.color, bars, laneCount };
+        return {
+          id: item.id,
+          text: item.text,
+          color: item.color,
+          bars,
+          laneCount,
+        };
       },
     );
     const unassigned = appointments.filter(
@@ -301,6 +345,160 @@ export class OgeSchedulerTimelineView<T = unknown> {
     }).format(day);
   }
 
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Live drag preview: proposed bar geometry + target row. */
+  protected readonly preview = signal<{
+    key: unknown;
+    leftPct: number;
+    widthPct: number;
+    rowIndex: number;
+  } | null>(null);
+
+  private snapMinutes(): number {
+    return this.snapDuration() ?? this.cellDuration();
+  }
+
+  /**
+   * Bar drag: horizontal = day + slot-snapped time shift, vertical = target
+   * resource row (grouped timelines only). Recurring occurrences shift in
+   * time through the scope routing but keep their row — resource reassign
+   * of a single occurrence is deliberately not supported.
+   */
+  protected onBarPointerDown(
+    appointment: SchedulerAppointment<T>,
+    event: PointerEvent,
+  ): void {
+    if (!this.allowDragging() || appointment.disabled || event.button !== 0) {
+      return;
+    }
+    const tracks = Array.from(
+      this.host.nativeElement.querySelectorAll<HTMLElement>(
+        '.oge-scheduler-timeline-track',
+      ),
+    );
+    const originRow = tracks.findIndex((track) =>
+      track.contains(event.currentTarget as HTMLElement),
+    );
+    if (originRow === -1) return;
+    const trackRect = tracks[originRow].getBoundingClientRect();
+    const rowRects = tracks.map((track) => track.getBoundingClientRect());
+    const grid = this.grid();
+    const windowSpan = grid.windowEndMinutes - grid.windowStartMinutes;
+    const totalSpan = windowSpan * grid.days.length;
+    const barEl = event.currentTarget as HTMLElement;
+    const startLeftPct = parseFloat(barEl.style.insetInlineStart) || 0;
+    const widthPct = parseFloat(barEl.style.width) || 0;
+    let proposal: AppointmentProposal | null = null;
+    let targetRow = originRow;
+    beginPointerGesture(event, {
+      onMove: (deltaX, _deltaY, moveEvent) => {
+        const dayWidth = trackRect.width / grid.days.length;
+        const deltaDays = Math.round(deltaX / dayWidth);
+        const deltaMinutes =
+          ((deltaX - deltaDays * dayWidth) / dayWidth) * windowSpan;
+        proposal = proposeMove(
+          appointment,
+          deltaDays,
+          deltaMinutes,
+          this.snapMinutes(),
+        );
+        targetRow = rowRects.findIndex(
+          (rect) =>
+            moveEvent.clientY >= rect.top && moveEvent.clientY <= rect.bottom,
+        );
+        if (targetRow === -1) targetRow = originRow;
+        const deltaPct =
+          ((deltaDays * windowSpan +
+            Math.round(deltaMinutes / this.snapMinutes()) *
+              this.snapMinutes()) /
+            totalSpan) *
+          100;
+        this.preview.set({
+          key: appointment.key,
+          leftPct: startLeftPct + deltaPct,
+          widthPct,
+          rowIndex: targetRow,
+        });
+      },
+      onFinish: (commit, cancelled) => {
+        this.preview.set(null);
+        if (commit && proposal !== null) {
+          const rowId = this.rows()[targetRow]?.id ?? null;
+          const changedRow = targetRow !== originRow && rowId !== null;
+          this.moveCommitted.emit({
+            appointment,
+            proposal,
+            ...(changedRow ? { resourceId: rowId } : {}),
+          });
+        } else if (cancelled) {
+          this.gestureCancelled.emit();
+        }
+      },
+    });
+  }
+
+  /** Keyboard drag equivalents: Ctrl+Arrows move, Ctrl+Shift+Right/Left resize. */
+  private handleBarCtrlKey(
+    appointment: SchedulerAppointment<T>,
+    event: KeyboardEvent,
+  ): boolean {
+    if (!event.ctrlKey) return false;
+    const snap = this.snapMinutes();
+    if (event.shiftKey) {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return false;
+      if (!this.allowDragging() || appointment.disabled) return true;
+      event.preventDefault();
+      this.moveCommitted.emit({
+        appointment,
+        proposal: proposeResize(
+          appointment,
+          'end',
+          event.key === 'ArrowRight' ? snap : -snap,
+          snap,
+        ),
+      });
+      return true;
+    }
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      if (!this.allowDragging() || appointment.disabled) return true;
+      event.preventDefault();
+      this.moveCommitted.emit({
+        appointment,
+        proposal: proposeMove(
+          appointment,
+          0,
+          event.key === 'ArrowRight' ? snap : -snap,
+          snap,
+        ),
+      });
+      return true;
+    }
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      const rows = this.rows();
+      const idOf = this.resourceIdOf();
+      const current = rows.findIndex(
+        (row) => idOf(appointment.source) === row.id,
+      );
+      if (current === -1) return true;
+      const next = rows[current + (event.key === 'ArrowDown' ? 1 : -1)];
+      if (next === undefined || next.id === null) return true;
+      if (!this.allowDragging() || appointment.disabled) return true;
+      event.preventDefault();
+      this.moveCommitted.emit({
+        appointment,
+        proposal: {
+          startDate: appointment.startDate,
+          endDate: appointment.endDate,
+          allDay: appointment.allDay,
+        },
+        resourceId: next.id,
+      });
+      return true;
+    }
+    return false;
+  }
+
   protected onBarClick(
     appointment: SchedulerAppointment<T>,
     event: MouseEvent,
@@ -327,6 +525,7 @@ export class OgeSchedulerTimelineView<T = unknown> {
     appointment: SchedulerAppointment<T>,
     event: KeyboardEvent,
   ): void {
+    if (this.handleBarCtrlKey(appointment, event)) return;
     if (event.key === 'Delete' || event.key === 'Backspace') {
       event.preventDefault();
       this.chipDeleteRequested.emit(appointment);
