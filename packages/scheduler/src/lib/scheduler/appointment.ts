@@ -38,6 +38,9 @@ import type { OgeAppointmentTemplate } from './scheduler-templates';
       <span class="oge-scheduler-chip-text">{{ appointment().text }}</span>
       @if (!compact()) {
         <span class="oge-scheduler-chip-time">{{ timeText() }}</span>
+        @if (appointment().location; as location) {
+          <span class="oge-scheduler-chip-location">{{ location }}</span>
+        }
       }
     }
   `,

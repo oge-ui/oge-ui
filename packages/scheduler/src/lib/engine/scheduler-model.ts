@@ -23,6 +23,7 @@ export interface SchedulerFieldExprs<T> {
   readonly endDateExpr: SchedulerFieldExpr<T, unknown>;
   readonly allDayExpr: SchedulerFieldExpr<T, unknown>;
   readonly colorExpr: SchedulerFieldExpr<T, unknown>;
+  readonly locationExpr: SchedulerFieldExpr<T, unknown>;
   readonly descriptionExpr: SchedulerFieldExpr<T, unknown>;
   readonly recurrenceRuleExpr: SchedulerFieldExpr<T, unknown>;
   readonly recurrenceExceptionExpr: SchedulerFieldExpr<T, unknown>;
@@ -36,6 +37,7 @@ export interface ResolvedSchedulerFields<T> {
   readonly endDate: ValueAccessor<T>;
   readonly allDay: ValueAccessor<T>;
   readonly color: ValueAccessor<T>;
+  readonly location: ValueAccessor<T>;
   readonly description: ValueAccessor<T>;
   readonly recurrenceRule: ValueAccessor<T>;
   readonly recurrenceException: ValueAccessor<T>;
@@ -50,6 +52,7 @@ export type SchedulerFieldKey =
   | 'endDate'
   | 'allDay'
   | 'color'
+  | 'location'
   | 'description'
   | 'recurrenceRule'
   | 'recurrenceException'
@@ -72,6 +75,7 @@ export interface SchedulerAppointment<T = unknown> {
    */
   readonly displayAllDay: boolean;
   readonly color: string | undefined;
+  readonly location: string | undefined;
   readonly description: string | undefined;
   /** RFC 5545 RRULE string (reserved in v0.1; expanded by the v0.2 engine). */
   readonly recurrenceRule: string | undefined;
@@ -98,6 +102,7 @@ export function resolveSchedulerFields<T>(
     endDate: toAccessor(exprs.endDateExpr),
     allDay: toAccessor(exprs.allDayExpr),
     color: toAccessor(exprs.colorExpr),
+    location: toAccessor(exprs.locationExpr),
     description: toAccessor(exprs.descriptionExpr),
     recurrenceRule: toAccessor(exprs.recurrenceRuleExpr),
     recurrenceException: toAccessor(exprs.recurrenceExceptionExpr),
@@ -108,6 +113,7 @@ export function resolveSchedulerFields<T>(
       endDate: name(exprs.endDateExpr),
       allDay: name(exprs.allDayExpr),
       color: name(exprs.colorExpr),
+      location: name(exprs.locationExpr),
       description: name(exprs.descriptionExpr),
       recurrenceRule: name(exprs.recurrenceRuleExpr),
       recurrenceException: name(exprs.recurrenceExceptionExpr),
@@ -148,6 +154,7 @@ export function normalizeAppointment<T>(
     allDay,
     displayAllDay: allDay || durationMinutes(startDate, endDate) >= 1440,
     color: asString(fields.color(item)),
+    location: asString(fields.location(item)),
     description: asString(fields.description(item)),
     recurrenceRule: asString(fields.recurrenceRule(item)),
     recurrenceException: asString(fields.recurrenceException(item)),

@@ -24,6 +24,7 @@ const DEFAULT_EXPRS: SchedulerFieldExprs<Item> = {
   endDateExpr: 'endDate',
   allDayExpr: 'allDay',
   colorExpr: 'color',
+  locationExpr: 'location',
   descriptionExpr: 'description',
   recurrenceRuleExpr: 'recurrenceRule',
   recurrenceExceptionExpr: 'recurrenceException',

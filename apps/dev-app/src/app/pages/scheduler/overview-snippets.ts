@@ -277,6 +277,7 @@ export const CONFIG_SNIPPET = demoSource({
           next: 'Weiter',
           viewSwitcherLabel: 'Ansichten',
           dateNavigatorLabel: 'Datum wählen',
+          newAppointment: 'Neu',
           viewNames: {
             day: 'Tag',
             week: 'Woche',

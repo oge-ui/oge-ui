@@ -102,7 +102,7 @@ _Data_
 | --- | --- | --- | --- |
 | `dataSource` | `readonly T[] \| DataSource<T> \| null` | `null` | Appointment items: a plain array (copied into an internal working set — the input is never mutated) or any `@oge-ui/core` `DataSource`, whose `insert`/`update`/`remove` are used for CRUD when present. |
 | `keyExpr` | `string \| ((item: T) => unknown)` | `'id'` | Key field or selector; items without a resolvable key fall back to their index. |
-| `textExpr / startDateExpr / endDateExpr / allDayExpr / colorExpr / descriptionExpr / disabledExpr` | `string \| ((item: T) => unknown)` | `'text' / 'startDate' / …` | Field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
+| `textExpr / startDateExpr / endDateExpr / allDayExpr / colorExpr / locationExpr / descriptionExpr / disabledExpr` | `string \| ((item: T) => unknown)` | `'text' / 'startDate' / …` | Field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
 | `recurrenceRuleExpr / recurrenceExceptionExpr` | `string \| ((item: T) => unknown)` | `'recurrenceRule' / 'recurrenceException'` | Reserved recurrence fields — parsed and validated against the documented RFC 5545 subset in v0.1; the expansion engine ships in v0.2. |
 
 _Date & views_
@@ -126,6 +126,7 @@ _Behavior_
 | `readOnly` | `boolean` | `false` | **Display-only shorthand**: overrides every `allow*` flag at once and hides the editing affordances. |
 | `snapDuration` | `number \| undefined` | `—` | Drag/resize snap raster in minutes; defaults to `cellDuration`. |
 | `workHours` | `OgeSchedulerWorkHours \| null` | `null` | Working-hours emphasis: cells outside `{ start, end, days? }` get the off-hours shading. |
+| `showAddButton` | `boolean` | `true` | Shows the toolbar "new appointment" button (Outlook parity) — creation without double-click; hidden while `readOnly` or `allowAdding=false`. |
 | `showAllDayPanel` | `boolean` | `true` | Shows the all-day strip in the day/week views. |
 | `showCurrentTimeIndicator` | `boolean` | `true` | The accent now-line in today's column. |
 | `shadeUntilCurrentTime` | `boolean` | `false` | Dims today's column above the now-line. |
@@ -233,6 +234,7 @@ export const appConfig = {
           next: 'Weiter',
           viewSwitcherLabel: 'Ansichten',
           dateNavigatorLabel: 'Datum wählen',
+          newAppointment: 'Neu',
           viewNames: {
             day: 'Tag',
             week: 'Woche',

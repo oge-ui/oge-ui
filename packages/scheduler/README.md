@@ -44,8 +44,10 @@ dependencies are taken instead of rebuilt.
 - Click-to-create, drag-to-create range selection, drag-move and edge
   resize with slot snapping, a 3px movement threshold and mid-gesture
   Escape-cancel; context-menu events with full payloads
-- Anchored appointment popup (edit / delete) and a modal appointment form
-  (`@oge-ui/forms`) with an `editorShowing` hook for custom fields
+- Anchored appointment popup (edit / delete, with location line) and a
+  modal appointment form (`@oge-ui/forms` — subject, location, start/end,
+  all-day, color, notes) with an `editorShowing` hook for custom fields;
+  toolbar "new appointment" button (`showAddButton`)
 - Cancelable `appointmentAdding` / `appointmentUpdating` /
   `appointmentDeleting` events (sync or `Promise`-based)
 

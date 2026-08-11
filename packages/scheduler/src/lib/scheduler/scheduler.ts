@@ -165,6 +165,27 @@ interface ResolvedView {
             <path d="m6 3.5 4.5 4.5L6 12.5" />
           </svg>
         </button>
+        @if (showAddButton() && canAdd()) {
+          <button
+            type="button"
+            class="oge-scheduler-btn oge-scheduler-btn-primary oge-scheduler-btn-add"
+            (click)="showAppointmentPopup(undefined, true)"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M8 3.5v9M3.5 8h9" />
+            </svg>
+            {{ msg().toolbar.newAppointment }}
+          </button>
+        }
       </div>
       <button
         type="button"
@@ -327,6 +348,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly endDateExpr = input<SchedulerFieldExpr<T, unknown>>('endDate');
   readonly allDayExpr = input<SchedulerFieldExpr<T, unknown>>('allDay');
   readonly colorExpr = input<SchedulerFieldExpr<T, unknown>>('color');
+  readonly locationExpr = input<SchedulerFieldExpr<T, unknown>>('location');
   readonly descriptionExpr =
     input<SchedulerFieldExpr<T, unknown>>('description');
   readonly recurrenceRuleExpr =
@@ -366,6 +388,8 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly allowDeleting = input(true);
   readonly allowDragging = input(true);
   readonly allowResizing = input(true);
+  /** Shows the toolbar "new appointment" button. */
+  readonly showAddButton = input(true);
   /** Display-only shorthand: overrides every `allow*` flag at once. */
   readonly readOnly = input(false);
   /** Earliest navigable date (clamps navigation and the date navigator). */
@@ -507,6 +531,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       endDateExpr: this.endDateExpr(),
       allDayExpr: this.allDayExpr(),
       colorExpr: this.colorExpr(),
+      locationExpr: this.locationExpr(),
       descriptionExpr: this.descriptionExpr(),
       recurrenceRuleExpr: this.recurrenceRuleExpr(),
       recurrenceExceptionExpr: this.recurrenceExceptionExpr(),
@@ -798,6 +823,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
         startDate: appointment.startDate,
         endDate: appointment.endDate,
         color: appointment.color,
+        location: appointment.location,
         description: appointment.description,
       },
       appointment.source,
@@ -859,6 +885,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     set(fields.fieldNames.endDate, editorModel.endDate);
     if (editorModel.allDay) set(fields.fieldNames.allDay, true);
     set(fields.fieldNames.color, editorModel.color);
+    set(fields.fieldNames.location, editorModel.location);
     set(fields.fieldNames.description, editorModel.description);
     return item as T;
   }
@@ -873,11 +900,12 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       >),
     };
     const set = (field: string | null, value: unknown): void => {
-      if (field !== null) patch[field] = value;
+      if (field !== null && value !== undefined) patch[field] = value;
     };
     set(fields.fieldNames.text, editorModel.text);
     set(fields.fieldNames.allDay, editorModel.allDay);
     set(fields.fieldNames.color, editorModel.color);
+    set(fields.fieldNames.location, editorModel.location);
     set(fields.fieldNames.description, editorModel.description);
     return patch as Partial<T>;
   }

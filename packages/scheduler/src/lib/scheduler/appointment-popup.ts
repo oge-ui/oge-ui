@@ -63,6 +63,25 @@ import type { OgeSchedulerPopupMessages } from '../config';
               </button>
             </div>
             <div class="oge-scheduler-popup-time">{{ timeText() }}</div>
+            @if (appt.location) {
+              <div class="oge-scheduler-popup-location">
+                <svg
+                  viewBox="0 0 16 16"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8 14.5s4.5-4.1 4.5-7.5a4.5 4.5 0 1 0-9 0c0 3.4 4.5 7.5 4.5 7.5Z" />
+                  <circle cx="8" cy="7" r="1.6" />
+                </svg>
+                <span>{{ appt.location }}</span>
+              </div>
+            }
             @if (appt.description) {
               <div class="oge-scheduler-popup-desc">{{ appt.description }}</div>
             }

@@ -67,6 +67,23 @@
   min-width: 30px;
 }
 
+.oge-scheduler-btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: 6px;
+  font-weight: 600;
+}
+
+.oge-scheduler-btn:disabled {
+  color: var(--oge-muted-color);
+  cursor: default;
+
+  &:hover {
+    background: var(--oge-bg);
+  }
+}
+
 .oge-scheduler-title {
   display: inline-flex;
   align-items: center;
@@ -445,6 +462,15 @@
   text-overflow: ellipsis;
 }
 
+.oge-scheduler-chip-location {
+  font-size: 11px;
+  opacity: 0.75;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .oge-scheduler-chip-allday {
   flex-direction: row;
   align-items: center;
@@ -695,6 +721,18 @@
 .oge-scheduler-popup-time {
   color: var(--oge-muted-color);
   margin-block-end: 6px;
+}
+
+.oge-scheduler-popup-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--oge-muted-color);
+  margin-block-end: 6px;
+
+  svg {
+    flex-shrink: 0;
+  }
 }
 
 .oge-scheduler-popup-desc {

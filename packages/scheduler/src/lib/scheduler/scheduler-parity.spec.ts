@@ -199,6 +199,49 @@ describe('<oge-scheduler> reference parity (close-now batch)', () => {
     ).toBeTruthy();
   });
 
+  it('the toolbar add button opens the create editor (no double-click needed)', async () => {
+    const add = Array.from(
+      host.querySelectorAll<HTMLButtonElement>('.oge-scheduler-btn-add'),
+    )[0];
+    expect(add?.textContent).toContain('New');
+    add.click();
+    await settle(fixture);
+    expect(host.querySelector('.oge-scheduler-editor-form')).toBeTruthy();
+    // readOnly hides the affordance entirely
+    fixture.componentInstance.readOnly.set(true);
+    await settle(fixture);
+    expect(host.querySelector('.oge-scheduler-btn-add')).toBeNull();
+  });
+
+  it('location flows from the item to the chip and the popup', async () => {
+    const scheduler = fixture.debugElement.children[0]
+      .componentInstance as OgeScheduler<
+      Appt & { location?: string; description?: string }
+    >;
+    scheduler.addAppointment({
+      id: 3,
+      text: 'Onsite',
+      location: 'Room 4B',
+      startDate: new Date(2026, 7, 5, 13),
+      endDate: new Date(2026, 7, 5, 14),
+    });
+    await settle(fixture);
+    expect(
+      host.querySelector('.oge-scheduler-chip-location')?.textContent,
+    ).toBe('Room 4B');
+    host
+      .querySelectorAll<HTMLElement>('.oge-scheduler-chip-box')
+      .forEach((chip) => {
+        if (chip.textContent?.includes('Onsite')) {
+          chip.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+      });
+    await settle(fixture);
+    expect(
+      host.querySelector('.oge-scheduler-popup-location')?.textContent?.trim(),
+    ).toBe('Room 4B');
+  });
+
   it('programmatic CRUD methods run the guarded pipelines', async () => {
     const scheduler = fixture.debugElement.children[0]
       .componentInstance as OgeScheduler<Appt>;

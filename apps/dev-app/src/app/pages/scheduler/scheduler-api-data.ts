@@ -22,7 +22,7 @@ export const OGE_SCHEDULER_API: ApiSections = {
             'Key field or selector; items without a resolvable key fall back to their index.',
         },
         {
-          name: 'textExpr / startDateExpr / endDateExpr / allDayExpr / colorExpr / descriptionExpr / disabledExpr',
+          name: 'textExpr / startDateExpr / endDateExpr / allDayExpr / colorExpr / locationExpr / descriptionExpr / disabledExpr',
           type: 'string | ((item: T) =&gt; unknown)',
           default: "'text' / 'startDate' / …",
           description:
@@ -122,6 +122,13 @@ export const OGE_SCHEDULER_API: ApiSections = {
           default: 'null',
           description:
             'Working-hours emphasis: cells outside <code>{ start, end, days? }</code> get the off-hours shading.',
+        },
+        {
+          name: 'showAddButton',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Shows the toolbar "new appointment" button (Outlook parity) — creation without double-click; hidden while <code>readOnly</code> or <code>allowAdding=false</code>.',
         },
         {
           name: 'showAllDayPanel',

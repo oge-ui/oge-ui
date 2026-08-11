@@ -19,6 +19,7 @@ export interface SchedulerEditorModel {
   startDate: Date;
   endDate: Date;
   color?: string;
+  location?: string;
   description?: string;
 }
 
@@ -42,7 +43,7 @@ export interface SchedulerEditorResult {
     <oge-modal
       [(opened)]="opened"
       [title]="isNew() ? messages().titleNew : messages().titleEdit"
-      [width]="480"
+      [width]="560"
     >
       @if (model(); as m) {
         <oge-form
@@ -97,13 +98,14 @@ export class OgeSchedulerAppointmentDialog {
       {
         field: 'text',
         label: messages.subjectLabel,
+        placeholder: messages.subjectPlaceholder,
         isRequired: true,
         colSpan: 2,
       },
       {
-        field: 'allDay',
-        label: messages.allDayLabel,
-        editorType: 'switch',
+        field: 'location',
+        label: messages.locationLabel,
+        placeholder: messages.locationPlaceholder,
         colSpan: 2,
       },
       {
@@ -132,6 +134,11 @@ export class OgeSchedulerAppointmentDialog {
         ],
       },
       {
+        field: 'allDay',
+        label: messages.allDayLabel,
+        editorType: 'switch',
+      },
+      {
         field: 'color',
         label: messages.colorLabel,
         editorType: 'colorBox',
@@ -139,7 +146,9 @@ export class OgeSchedulerAppointmentDialog {
       {
         field: 'description',
         label: messages.descriptionLabel,
+        placeholder: messages.descriptionPlaceholder,
         editorType: 'textArea',
+        editorOptions: { rows: 3, autoResize: true },
         colSpan: 2,
       },
     ];

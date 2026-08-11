@@ -14,6 +14,8 @@ export interface OgeSchedulerToolbarMessages {
   readonly viewSwitcherLabel: string;
   /** Aria label of the date-navigator button (opens the calendar). */
   readonly dateNavigatorLabel: string;
+  /** The "new appointment" toolbar button. */
+  readonly newAppointment: string;
   /** Display names of the built-in views. */
   readonly viewNames: Readonly<
     Record<'day' | 'week' | 'workWeek' | 'month', string>
@@ -37,11 +39,16 @@ export interface OgeSchedulerEditorMessages {
   /** Dialog title when editing an existing appointment. */
   readonly titleEdit: string;
   readonly subjectLabel: string;
+  /** Placeholder of the subject field. */
+  readonly subjectPlaceholder: string;
+  readonly locationLabel: string;
+  readonly locationPlaceholder: string;
   readonly allDayLabel: string;
   readonly startDateLabel: string;
   readonly endDateLabel: string;
   readonly colorLabel: string;
   readonly descriptionLabel: string;
+  readonly descriptionPlaceholder: string;
   readonly save: string;
   readonly cancel: string;
   /** Validation message when the end date is not after the start date. */
@@ -102,6 +109,7 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     next: 'Next period',
     viewSwitcherLabel: 'Views',
     dateNavigatorLabel: 'Choose a date',
+    newAppointment: 'New',
     viewNames: {
       day: 'Day',
       week: 'Week',
@@ -118,11 +126,15 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     titleNew: 'New appointment',
     titleEdit: 'Edit appointment',
     subjectLabel: 'Subject',
+    subjectPlaceholder: 'Add a title',
+    locationLabel: 'Location',
+    locationPlaceholder: 'Add a location',
     allDayLabel: 'All day',
     startDateLabel: 'Start',
     endDateLabel: 'End',
     colorLabel: 'Color',
     descriptionLabel: 'Description',
+    descriptionPlaceholder: 'Add notes',
     save: 'Save',
     cancel: 'Cancel',
     endBeforeStart: 'The end date must be after the start date',
