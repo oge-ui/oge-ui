@@ -40,6 +40,7 @@ export {
   type OgeSchedulerConfigInput,
   type OgeSchedulerEditorMessages,
   type OgeSchedulerGridMessages,
+  type OgeSchedulerMenuMessages,
   type OgeSchedulerMessages,
   type OgeSchedulerPopupMessages,
   type OgeSchedulerRecurrenceScopeMessages,

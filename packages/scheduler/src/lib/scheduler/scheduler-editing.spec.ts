@@ -226,6 +226,64 @@ describe('<oge-scheduler> editing', () => {
     expect(typeof updated?.startDate).toBe('string'); // storage shape kept
   });
 
+  it('right-click on a chip opens the built-in menu and Delete removes through the pipeline', async () => {
+    await settle(fixture);
+    const host = fixture.nativeElement as HTMLElement;
+    host
+      .querySelector<HTMLElement>('.oge-scheduler-chip-stop')
+      ?.dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
+      );
+    await settle(fixture);
+    const menu = host.querySelector('.oge-scheduler-menu');
+    expect(menu).not.toBeNull();
+    const remove = Array.from(
+      menu?.querySelectorAll<HTMLButtonElement>('.oge-scheduler-menu-item') ??
+        [],
+    ).find((button) => button.textContent?.includes('Delete'));
+    remove?.click();
+    await settle(fixture);
+    expect(host.querySelector('.oge-scheduler-menu')).toBeNull();
+    expect(fixture.componentInstance.deleted).toHaveLength(1);
+    expect(host.querySelector('.oge-scheduler-chip-box')).toBeNull();
+  });
+
+  it('right-click on an empty cell offers New appointment prefilled at that slot', async () => {
+    await settle(fixture);
+    const host = fixture.nativeElement as HTMLElement;
+    const cells = host.querySelectorAll<HTMLElement>(
+      '.oge-scheduler-rows .oge-scheduler-cell',
+    );
+    cells[3]?.dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
+    );
+    await settle(fixture);
+    const item = host.querySelector<HTMLButtonElement>(
+      '.oge-scheduler-menu-item',
+    );
+    expect(item?.textContent).toContain('New appointment');
+    item?.click();
+    await settle(fixture);
+    expect(host.querySelector('.oge-scheduler-menu')).toBeNull();
+    expect(host.querySelector('.oge-scheduler-editor-form')).toBeTruthy();
+  });
+
+  it('the menu respects the allow flags: delete disabled when allowDeleting=false', async () => {
+    fixture.componentInstance.allowDeleting.set(false);
+    await settle(fixture);
+    const host = fixture.nativeElement as HTMLElement;
+    host
+      .querySelector<HTMLElement>('.oge-scheduler-chip-stop')
+      ?.dispatchEvent(
+        new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
+      );
+    await settle(fixture);
+    const remove = Array.from(
+      host.querySelectorAll<HTMLButtonElement>('.oge-scheduler-menu-item'),
+    ).find((button) => button.textContent?.includes('Delete'));
+    expect(remove?.disabled).toBe(true);
+  });
+
   it('hideAppointmentPopup closes both surfaces', async () => {
     await settle(fixture);
     const scheduler = schedulerOf(fixture);

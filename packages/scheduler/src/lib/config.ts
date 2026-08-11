@@ -103,6 +103,13 @@ export interface OgeSchedulerRecurrenceScopeMessages {
  * Grid-surface strings: aria templates use `{token}` placeholders replaced
  * with `Intl`-formatted values at render time.
  */
+/** Built-in context-menu labels. */
+export interface OgeSchedulerMenuMessages {
+  readonly newAppointment: string;
+  readonly edit: string;
+  readonly deleteAppointment: string;
+}
+
 export interface OgeSchedulerGridMessages {
   /** Accessible name of the scheduler grid; `{period}` is the visible period. */
   readonly gridLabel: string;
@@ -147,6 +154,7 @@ export interface OgeSchedulerMessages {
   readonly editor: OgeSchedulerEditorMessages;
   readonly recurrenceScope: OgeSchedulerRecurrenceScopeMessages;
   readonly grid: OgeSchedulerGridMessages;
+  readonly menu: OgeSchedulerMenuMessages;
   readonly announcements: OgeSchedulerAnnouncementMessages;
 }
 
@@ -219,6 +227,11 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     occurrence: 'Only this appointment',
     series: 'The entire series',
     cancel: 'Cancel',
+  },
+  menu: {
+    newAppointment: 'New appointment',
+    edit: 'Edit',
+    deleteAppointment: 'Delete',
   },
   grid: {
     gridLabel: 'Scheduler, {period}',

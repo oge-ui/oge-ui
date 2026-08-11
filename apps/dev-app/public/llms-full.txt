@@ -14737,7 +14737,7 @@ Docs: https://ogeui.com/components/scheduler
 `@oge-ui/scheduler`
 
 - values: `OGE_DEFAULT_SCHEDULER_CONFIG`, `OGE_DEFAULT_SCHEDULER_MESSAGES`, `OGE_SCHEDULER_CONFIG`, `OgeAppointmentTemplate`, `OgeDateHeaderTemplate`, `OgeScheduler`, `OgeSchedulerCellTemplate`, `provideOgeSchedulerConfig`
-- types: `OgeAppointmentTemplateContext`, `OgeDateHeaderTemplateContext`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerCellClickEvent`, `OgeSchedulerCellTemplateContext`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerGridMessages`, `OgeSchedulerMessages`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWorkHours`
+- types: `OgeAppointmentTemplateContext`, `OgeDateHeaderTemplateContext`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerCellClickEvent`, `OgeSchedulerCellTemplateContext`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerGridMessages`, `OgeSchedulerMenuMessages`, `OgeSchedulerMessages`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWorkHours`
 
 ### OgeScheduler — `<oge-scheduler>`
 
@@ -14825,7 +14825,7 @@ _Interaction_
 | --- | --- | --- |
 | `appointmentClick / appointmentDblClick` | `OgeSchedulerAppointmentClickEvent<T>` | Chip clicks; single click also opens the popup, double click the editor. |
 | `cellClick / cellDblClick` | `OgeSchedulerCellClickEvent` | Empty-cell clicks; double click also opens the prefilled create editor. |
-| `appointmentContextMenu / cellContextMenu` | `OgeSchedulerAppointmentClickEvent<T> / OgeSchedulerCellClickEvent` | Right-clicks with full payloads — build your own context menu (pairs with `@oge-ui/overlay`). |
+| `appointmentContextMenu / cellContextMenu` | `OgeSchedulerAppointmentClickEvent<T> / OgeSchedulerCellClickEvent` | Right-clicks with full payloads. A **built-in context menu** also opens (chip: edit/delete through the guarded pipelines incl. recurrence scope; cell: new appointment prefilled at that slot — labels in `messages.menu`); listen to these events to add your own entries alongside it. |
 | `rangeSelected` | `OgeSchedulerRangeSelectedEvent` | A drag-to-create cell-range selection landed; the prefilled create editor opens next. |
 | `currentDateChange / currentViewChange` | `Date / OgeSchedulerView` | The two-way model outputs. |
 

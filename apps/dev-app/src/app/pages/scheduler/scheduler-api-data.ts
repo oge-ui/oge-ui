@@ -329,7 +329,7 @@ export const OGE_SCHEDULER_API: ApiSections = {
           name: 'appointmentContextMenu / cellContextMenu',
           type: 'OgeSchedulerAppointmentClickEvent&lt;T&gt; / OgeSchedulerCellClickEvent',
           description:
-            'Right-clicks with full payloads — build your own context menu (pairs with <code>&#64;oge-ui/overlay</code>).',
+            'Right-clicks with full payloads. A <strong>built-in context menu</strong> also opens (chip: edit/delete through the guarded pipelines incl. recurrence scope; cell: new appointment prefilled at that slot — labels in <code>messages.menu</code>); listen to these events to add your own entries alongside it.',
         },
         {
           name: 'rangeSelected',

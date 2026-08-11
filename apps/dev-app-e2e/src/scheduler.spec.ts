@@ -158,6 +158,34 @@ test.describe('scheduler', () => {
     await expect(chip).toHaveCount(0);
   });
 
+  test('right-click opens the built-in menu on chips and cells', async ({
+    page,
+  }) => {
+    await openBasic(page);
+    const host = scheduler(page);
+    // empty cell → New appointment
+    await host
+      .locator('.oge-scheduler-rows .oge-scheduler-cell')
+      .nth(9)
+      .click({ button: 'right' });
+    const menu = page.locator('.oge-scheduler-menu');
+    await expect(menu).toBeVisible();
+    await menu.getByRole('menuitem', { name: 'New appointment' }).click();
+    const dialog = page.locator('.oge-modal', { hasText: 'New appointment' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog).toBeHidden();
+
+    // chip → Delete removes through the guarded pipeline
+    const chip = host.locator('.oge-scheduler-chip-box', {
+      hasText: 'Design review',
+    });
+    await chip.click({ button: 'right' });
+    await expect(menu).toBeVisible();
+    await menu.getByRole('menuitem', { name: 'Delete' }).click();
+    await expect(chip).toHaveCount(0);
+  });
+
   test('keyboard: grid roving focus, Enter creates, chips cycle', async ({
     page,
   }) => {

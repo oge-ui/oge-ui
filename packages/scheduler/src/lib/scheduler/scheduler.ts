@@ -454,6 +454,55 @@ interface ResolvedView {
         </div>
       </div>
     }
+    @if (contextMenu(); as menu) {
+      <!-- click-away surface only; Escape on the focused menu closes too -->
+      <!-- eslint-disable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+      <div
+        class="oge-scheduler-menu-backdrop"
+        (click)="closeMenu()"
+        (contextmenu)="$event.preventDefault(); closeMenu()"
+      ></div>
+      <!-- eslint-enable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+      <div
+        class="oge-scheduler-menu"
+        role="menu"
+        tabindex="-1"
+        [style.left.px]="menu.x"
+        [style.top.px]="menu.y"
+        (keydown.escape)="closeMenu()"
+      >
+        @if (menu.appointment !== null) {
+          <button
+            type="button"
+            role="menuitem"
+            class="oge-scheduler-menu-item"
+            [disabled]="!canUpdate()"
+            (click)="menuEdit()"
+          >
+            {{ msg().menu.edit }}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="oge-scheduler-menu-item oge-scheduler-menu-danger"
+            [disabled]="!canDelete()"
+            (click)="menuDelete()"
+          >
+            {{ msg().menu.deleteAppointment }}
+          </button>
+        } @else {
+          <button
+            type="button"
+            role="menuitem"
+            class="oge-scheduler-menu-item"
+            [disabled]="!canAdd()"
+            (click)="menuCreate()"
+          >
+            {{ msg().menu.newAppointment }}
+          </button>
+        }
+      </div>
+    }
     <div class="oge-scheduler-live" aria-live="polite">
       {{ announcement() }}
     </div>
@@ -1608,6 +1657,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
         appointment: event.appointment,
         event: event.event,
       });
+      this.openMenu(event.event, event.appointment, null);
     }
   }
 
@@ -1618,6 +1668,76 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
         allDay: event.allDay,
         event: event.event,
       });
+      this.openMenu(event.event, null, {
+        cellDate: event.cellDate,
+        allDay: event.allDay,
+        resourceId: event.resourceId,
+      });
+    }
+  }
+
+  /* ---------------- built-in context menu ---------------- */
+
+  protected readonly contextMenu = signal<{
+    x: number;
+    y: number;
+    appointment: SchedulerAppointment<T> | null;
+    cell: { cellDate: Date; allDay: boolean; resourceId?: unknown } | null;
+  } | null>(null);
+
+  private openMenu(
+    event: MouseEvent,
+    appointment: SchedulerAppointment<T> | null,
+    cell: { cellDate: Date; allDay: boolean; resourceId?: unknown } | null,
+  ): void {
+    // no available action → keep the native browser menu
+    const available =
+      appointment !== null
+        ? this.canUpdate() || this.canDelete()
+        : this.canAdd();
+    if (!available) return;
+    event.preventDefault();
+    const hostRect = this.hostEl.nativeElement.getBoundingClientRect();
+    this.contextMenu.set({
+      x: event.clientX - hostRect.left,
+      y: event.clientY - hostRect.top,
+      appointment,
+      cell,
+    });
+    setTimeout(() => {
+      this.hostEl.nativeElement
+        .querySelector<HTMLElement>(
+          '.oge-scheduler-menu-item:not(:disabled)',
+        )
+        ?.focus();
+    });
+  }
+
+  protected closeMenu(): void {
+    this.contextMenu.set(null);
+  }
+
+  protected menuEdit(): void {
+    const menu = untracked(this.contextMenu);
+    this.closeMenu();
+    if (menu?.appointment) this.openEditorFor(menu.appointment);
+  }
+
+  protected menuDelete(): void {
+    const menu = untracked(this.contextMenu);
+    this.closeMenu();
+    if (menu?.appointment) this.onDeleteRequested(menu.appointment);
+  }
+
+  protected menuCreate(): void {
+    const menu = untracked(this.contextMenu);
+    this.closeMenu();
+    if (menu?.cell) {
+      this.openCreateEditor(
+        menu.cell.cellDate,
+        menu.cell.allDay,
+        menu.cell.resourceId,
+      );
     }
   }
 

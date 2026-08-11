@@ -86,7 +86,7 @@ type DemoAppt = Record<string, unknown>;
     <app-demo-card
       [chips]="['week view', 'all-day strip', 'drag & resize', 'Escape-cancel']"
       heading="Getting started"
-      description="One element, a working scheduler. Drag a chip to move it (Escape cancels mid-drag), pull its edges to resize, drag over empty cells to create a range, double-click or press Enter on a cell for the form dialog, single-click a chip for the summary popup. The toolbar title opens a date-navigator calendar."
+      description="One element, a working scheduler. Drag a chip to move it (Escape cancels mid-drag), pull its edges to resize, drag over empty cells to create a range, double-click or press Enter on a cell for the form dialog, single-click a chip for the summary popup — and right-click a chip or cell for the built-in menu (edit, delete, new appointment). The toolbar title opens a date-navigator calendar."
       [code]="gettingStartedSnippet"
       language="ts"
     >

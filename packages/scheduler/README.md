@@ -51,6 +51,9 @@ dependencies are taken instead of rebuilt.
 - Click-to-create, drag-to-create range selection, drag-move and edge
   resize with slot snapping, a 3px movement threshold and mid-gesture
   Escape-cancel; context-menu events with full payloads
+- Built-in right-click menu: edit/delete on chips (recurrence scope
+  respected) and a prefilled "new appointment" on empty cells — labels
+  in `messages.menu`, `allow*` flags respected
 - Anchored appointment popup (edit / delete, with location line) and a
   modal appointment form (`@oge-ui/forms` — subject, location, start/end,
   all-day, color, notes) with an `editorShowing` hook for custom fields;

@@ -31,7 +31,20 @@
 .oge-scheduler-nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: calc(var(--oge-radius) + 3px);
+  background: color-mix(in srgb, var(--oge-border-color) 34%, transparent);
+
+  > .oge-scheduler-btn {
+    border-color: transparent;
+    background: transparent;
+
+    &:hover:not(:disabled) {
+      background: var(--oge-bg);
+      box-shadow: var(--oge-shadow-btn);
+    }
+  }
 }
 
 .oge-scheduler-btn {
@@ -138,7 +151,20 @@
 
     &:first-child {
       border-inline-start: none;
+      padding: 2px;
+  border-radius: calc(var(--oge-radius) + 3px);
+  background: color-mix(in srgb, var(--oge-border-color) 34%, transparent);
+
+  > .oge-scheduler-btn {
+    border-color: transparent;
+    background: transparent;
+
+    &:hover:not(:disabled) {
+      background: var(--oge-bg);
+      box-shadow: var(--oge-shadow-btn);
     }
+  }
+}
   }
 }
 
@@ -472,12 +498,32 @@
   box-sizing: border-box;
   padding: 3px 6px;
   border-radius: var(--oge-radius);
-  background: var(--oge-scheduler-chip-bg);
+  background-color: var(--oge-scheduler-chip-bg);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ffffff 14%, transparent),
+    transparent 55%
+  );
   color: var(--oge-scheduler-chip-fg);
   font-size: 12px;
   line-height: 1.25;
   overflow: hidden;
   cursor: default;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.16),
+    inset 0 0 0 1px color-mix(in srgb, #000000 7%, transparent);
+  transition:
+    box-shadow 120ms ease,
+    translate 120ms ease,
+    filter 120ms ease;
+}
+
+.oge-scheduler-chip-box:hover > .oge-scheduler-chip {
+  translate: 0 -1px;
+  filter: brightness(1.05);
+  box-shadow:
+    0 3px 8px rgba(15, 23, 42, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, #000000 7%, transparent);
 }
 
 .oge-scheduler-chip-text {
@@ -595,7 +641,9 @@
     height: 8px;
     border-radius: 50%;
     background: var(--oge-scheduler-now-color);
-  }
+    box-shadow: 0 0 6px 1px
+    color-mix(in srgb, var(--oge-scheduler-now-color) 45%, transparent);
+}
 }
 
 /* ---------- month view ---------- */
@@ -1214,5 +1262,66 @@
 @media (prefers-reduced-motion: reduce) {
   .oge-scheduler * {
     transition: none !important;
+  }
+}
+
+/* ---------- built-in context menu ---------- */
+
+.oge-scheduler-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.oge-scheduler-menu {
+  position: absolute;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 5px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  box-shadow: var(--oge-shadow-btn-hover);
+}
+
+.oge-scheduler-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    outline: none;
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.oge-scheduler-menu-danger:hover:not(:disabled),
+.oge-scheduler-menu-danger:focus-visible {
+  background: var(--oge-danger-soft);
+  color: var(--oge-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-scheduler-chip,
+  .oge-scheduler-menu-item {
+    transition: none;
   }
 }
