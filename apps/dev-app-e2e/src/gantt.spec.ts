@@ -167,6 +167,40 @@ test.describe('gantt', () => {
     await expect(editDialog).toBeHidden();
   });
 
+  test('end-handle resize widens the bar; moving the earliest task never re-anchors the chart', async ({
+    page,
+  }) => {
+    await openBasic(page);
+    const host = gantt(page);
+    const bar = host.locator('.oge-gantt-bar', { hasText: 'Design' });
+    const before = await bar.boundingBox();
+    if (before === null) throw new Error('no bar');
+    // resize: the title span is pointer-events none, so the handle is hittable
+    await bar.hover({ position: { x: 20, y: 8 } });
+    const handle = bar.locator('.oge-gantt-handle-end');
+    const hb = await handle.boundingBox();
+    if (hb === null) throw new Error('no handle');
+    await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(hb.x + hb.width / 2 + 80, hb.y + hb.height / 2, {
+      steps: 6,
+    });
+    await page.mouse.up();
+    await expect
+      .poll(async () => (await bar.boundingBox())?.width)
+      .toBeGreaterThan(before.width + 60);
+    // moving the EARLIEST task right must move it visually (stable range)
+    const b2 = await bar.boundingBox();
+    if (b2 === null) throw new Error('no bar 2');
+    await page.mouse.move(b2.x + 20, b2.y + b2.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b2.x + 100, b2.y + b2.height / 2, { steps: 6 });
+    await page.mouse.up();
+    await expect
+      .poll(async () => (await bar.boundingBox())?.x)
+      .toBeGreaterThan(b2.x + 60);
+  });
+
   test('hover tooltip shows task details; workload band renders per resource', async ({
     page,
   }) => {
@@ -179,6 +213,15 @@ test.describe('gantt', () => {
     await expect(tooltip).toBeVisible();
     await expect(tooltip).toContainText('Implementation');
     await expect(tooltip).toContainText('45%');
+    // first-row tooltips flip below the sticky header, never under it
+    await host
+      .locator('.oge-gantt-summary')
+      .hover({ position: { x: 30, y: 5 } });
+    await expect(tooltip).toBeVisible();
+    const tipBox = await tooltip.boundingBox();
+    const scale = await host.locator('.oge-gantt-scale').boundingBox();
+    if (tipBox === null || scale === null) throw new Error('no boxes');
+    expect(tipBox.y).toBeGreaterThanOrEqual(scale.y + scale.height - 1);
 
     // the work-calendar demo renders one workload row per resource
     const workload = page.locator('.oge-gantt-workload-row');

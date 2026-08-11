@@ -462,6 +462,7 @@
 }
 
 .oge-gantt-bar-title {
+  pointer-events: none;
   position: relative;
   display: block;
   padding: 0 8px;
@@ -645,6 +646,10 @@
   pointer-events: none;
   transform: translateY(-100%);
   box-shadow: var(--oge-shadow-btn);
+}
+
+.oge-gantt-tooltip-below {
+  transform: none;
 }
 
 .oge-gantt-tooltip-title {

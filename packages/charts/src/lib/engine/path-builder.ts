@@ -10,8 +10,7 @@ export interface PathPoint {
   readonly y: number | null;
 }
 
-const fmt = (value: number): string =>
-  String(Math.round(value * 100) / 100);
+const fmt = (value: number): string => String(Math.round(value * 100) / 100);
 
 /** Polyline path with gap handling. */
 export function linePath(points: readonly PathPoint[]): string {
@@ -26,6 +25,23 @@ export function linePath(points: readonly PathPoint[]): string {
     penDown = true;
   }
   return d;
+}
+
+/**
+ * Inserts horizontal-then-vertical step corners between consecutive
+ * points (`stepLine`/`stepArea`); gaps pass through untouched.
+ */
+export function steppedPoints(points: readonly PathPoint[]): PathPoint[] {
+  const result: PathPoint[] = [];
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i];
+    const prev = points[i - 1];
+    if (i > 0 && point.y !== null && prev !== undefined && prev.y !== null) {
+      result.push({ x: point.x, y: prev.y });
+    }
+    result.push(point);
+  }
+  return result;
 }
 
 /** Consecutive non-gap runs of at least one point. */
@@ -87,7 +103,10 @@ export function areaPath(
     const t = topRuns[i];
     const b = [...bottomRuns[i]].reverse();
     const edge = (pts: { x: number; y: number }[]): string => {
-      const asPathPoints = pts.map((p) => ({ x: p.x, y: p.y as number | null }));
+      const asPathPoints = pts.map((p) => ({
+        x: p.x,
+        y: p.y as number | null,
+      }));
       const path = spline ? splinePath(asPathPoints) : linePath(asPathPoints);
       return path;
     };

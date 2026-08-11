@@ -660,47 +660,52 @@ const OVERSCAN_ROWS = 6;
                   aria-hidden="true"
                 ></div>
               }
-              @if (dragTip(); as tip) {
-                <div
-                  class="oge-gantt-drag-tip"
-                  [style.inset-inline-start.px]="tip.x"
-                  [style.top.px]="tip.y"
-                  aria-hidden="true"
-                >
-                  {{ tip.text }}
-                </div>
-              }
-              @if (tooltipBar(); as bar) {
-                <div
-                  class="oge-gantt-tooltip"
-                  [style.inset-inline-start.px]="bar.leftPx"
-                  [style.top.px]="bar.index * rowHeight() - 6"
-                  aria-hidden="true"
-                >
-                  @if (tooltipTemplate(); as tpl) {
-                    <ng-container
-                      [ngTemplateOutlet]="tpl.templateRef"
-                      [ngTemplateOutletContext]="{ $implicit: bar.task }"
-                    />
-                  } @else {
-                    <strong class="oge-gantt-tooltip-title">{{
-                      bar.task.title
-                    }}</strong>
-                    <span class="oge-gantt-tooltip-line">{{
-                      tooltipDates(bar.task)
-                    }}</span>
-                    @if (!bar.task.isMilestone) {
-                      <span class="oge-gantt-tooltip-line"
-                        >{{ bar.task.progress }}%</span
-                      >
-                    }
-                    @if (resourceText(bar.task); as names) {
-                      <span class="oge-gantt-tooltip-line">{{ names }}</span>
-                    }
-                  }
-                </div>
-              }
             </div>
+            @if (dragTip(); as tip) {
+              <div
+                class="oge-gantt-drag-tip"
+                [style.inset-inline-start.px]="tip.x"
+                [style.top.px]="scaleHeadH + Math.max(4, tip.y)"
+                aria-hidden="true"
+              >
+                {{ tip.text }}
+              </div>
+            }
+            @if (tooltipBar(); as bar) {
+              <div
+                class="oge-gantt-tooltip"
+                [class.oge-gantt-tooltip-below]="bar.index < 2"
+                [style.inset-inline-start.px]="bar.leftPx"
+                [style.top.px]="
+                  bar.index < 2
+                    ? scaleHeadH + (bar.index + 1) * rowHeight() + 6
+                    : scaleHeadH + bar.index * rowHeight() - 6
+                "
+                aria-hidden="true"
+              >
+                @if (tooltipTemplate(); as tpl) {
+                  <ng-container
+                    [ngTemplateOutlet]="tpl.templateRef"
+                    [ngTemplateOutletContext]="{ $implicit: bar.task }"
+                  />
+                } @else {
+                  <strong class="oge-gantt-tooltip-title">{{
+                    bar.task.title
+                  }}</strong>
+                  <span class="oge-gantt-tooltip-line">{{
+                    tooltipDates(bar.task)
+                  }}</span>
+                  @if (!bar.task.isMilestone) {
+                    <span class="oge-gantt-tooltip-line"
+                      >{{ bar.task.progress }}%</span
+                    >
+                  }
+                  @if (resourceText(bar.task); as names) {
+                    <span class="oge-gantt-tooltip-line">{{ names }}</span>
+                  }
+                }
+              </div>
+            }
             @if (workloadRows().length > 0) {
               <div class="oge-gantt-workload" aria-hidden="true">
                 @for (row of workloadRows(); track row.id) {
@@ -821,6 +826,9 @@ export class OgeGantt<
   D extends object = Record<string, unknown>,
 > {
   private readonly config = inject(OGE_GANTT_CONFIG);
+  /** Sticky scale header height (two 24px tick rows). */
+  protected readonly scaleHeadH = 48;
+  protected readonly Math = Math;
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /* ---------------- data inputs ---------------- */
@@ -959,6 +967,17 @@ export class OgeGantt<
 
   constructor() {
     effect(() => {
+      const next = this.stableRange();
+      const prev = untracked(this.renderedRange);
+      if (
+        prev === null ||
+        prev.min.getTime() !== next.min.getTime() ||
+        prev.max.getTime() !== next.max.getTime()
+      ) {
+        this.renderedRange.set(next);
+      }
+    });
+    effect(() => {
       this.taskStore.set([...this.tasks()]);
       this.undoStack.set([]);
       this.redoStack.set([]);
@@ -1078,7 +1097,7 @@ export class OgeGantt<
       : new Set(),
   );
 
-  protected readonly scale = computed<GanttScale>(() => {
+  private readonly dataRange = computed<{ min: Date; max: Date }>(() => {
     const tasks = this.allTasks();
     const now = startOfDay(new Date());
     let min = now;
@@ -1099,9 +1118,42 @@ export class OgeGantt<
         max = task.baselineEnd;
       }
     }
+    return { min, max };
+  });
+
+  /**
+   * The rendered range only ever WIDENS while the component lives —
+   * dragging the earliest task to the right must not re-anchor the whole
+   * chart under the pointer. A disjoint new dataset resets it;
+   * `zoomToFit()` snaps it back to the data.
+   */
+  private readonly renderedRange = signal<{ min: Date; max: Date } | null>(
+    null,
+  );
+
+  private readonly stableRange = computed<{ min: Date; max: Date }>(() => {
+    const data = this.dataRange();
+    const rendered = this.renderedRange();
+    if (
+      rendered === null ||
+      data.max.getTime() < rendered.min.getTime() ||
+      data.min.getTime() > rendered.max.getTime()
+    ) {
+      return data;
+    }
+    return {
+      min:
+        data.min.getTime() < rendered.min.getTime() ? data.min : rendered.min,
+      max:
+        data.max.getTime() > rendered.max.getTime() ? data.max : rendered.max,
+    };
+  });
+
+  protected readonly scale = computed<GanttScale>(() => {
+    const range = this.stableRange();
     return buildGanttScale(
-      min,
-      max,
+      range.min,
+      range.max,
       this.scaleType(),
       this.resolvedFirstDayOfWeek(),
     );
@@ -1819,6 +1871,7 @@ export class OgeGantt<
 
   /** Picks the finest scale whose full range fits the chart viewport. */
   zoomToFit(): void {
+    this.renderedRange.set(untracked(this.dataRange));
     const viewport = this.chartScrollEl()?.nativeElement.clientWidth ?? 800;
     for (const type of GANTT_SCALE_ORDER) {
       this.scaleType.set(type);

@@ -3,11 +3,7 @@
  * (stacked / full-stacked, positive and negative branches separately) and
  * bar group slotting inside a category band. Pure.
  */
-import {
-  isBarType,
-  isStackedType,
-  type ChartSeries,
-} from './series-model';
+import { isBarType, isStackedType, type ChartSeries } from './series-model';
 
 /** Per-point stacked segment: base → top in value space. */
 export interface StackedValue {
@@ -42,7 +38,7 @@ export function computeStacks<T>(
   // full-stacked totals per argument per stack key
   const totals = new Map<string, Map<unknown, number>>();
   for (const series of seriesList) {
-    if (series.type !== 'fullStackedBar') continue;
+    if (!series.type.startsWith('fullStacked')) continue;
     const key = `${series.type}:${series.input.stack ?? ''}`;
     let byArg = totals.get(key);
     if (byArg === undefined) {
@@ -66,7 +62,7 @@ export function computeStacks<T>(
     return series.points.map((point) => {
       if (point.value === null) return null;
       let value = point.value;
-      if (series.type === 'fullStackedBar') {
+      if (series.type.startsWith('fullStacked')) {
         const total = fullTotals?.get(point.argument) ?? 0;
         value = total > 0 ? value / total : 0;
       }
@@ -115,9 +111,7 @@ export function computeBarSlots<T>(
   const usable = bandPx * (1 - padding);
   const widthPx = usable / slotCount;
   return assigned.map((slot) =>
-    slot === null
-      ? null
-      : { offsetPx: -usable / 2 + slot * widthPx, widthPx },
+    slot === null ? null : { offsetPx: -usable / 2 + slot * widthPx, widthPx },
   );
 }
 

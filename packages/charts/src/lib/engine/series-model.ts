@@ -10,13 +10,18 @@ import type { ChartScaleKind } from './scale';
 export type ChartSeriesType =
   | 'line'
   | 'spline'
+  | 'stepLine'
   | 'area'
   | 'splineArea'
+  | 'stepArea'
   | 'stackedArea'
+  | 'fullStackedArea'
   | 'bar'
   | 'stackedBar'
   | 'fullStackedBar'
+  | 'rangeBar'
   | 'scatter'
+  | 'bubble'
   | 'rangeArea'
   | 'candlestick';
 
@@ -36,7 +41,13 @@ export interface ChartSeriesInput<T = unknown> {
   readonly width?: number;
   readonly opacity?: number;
   readonly showInLegend?: boolean;
-  /** rangeArea bounds. */
+  /** Initially hidden (the legend can re-show it). */
+  readonly visible?: boolean;
+  /** Value labels next to the points/bars (small series only). */
+  readonly showLabels?: boolean;
+  /** bubble: the field driving the bubble radius. */
+  readonly sizeField?: ChartFieldExpr<T>;
+  /** rangeArea / rangeBar bounds. */
   readonly value1Field?: ChartFieldExpr<T>;
   readonly value2Field?: ChartFieldExpr<T>;
   /** candlestick OHLC. */
@@ -52,8 +63,10 @@ export interface ChartPoint<T = unknown> {
   /** Numeric position on the argument axis; null = unplottable. */
   readonly argNumeric: number | null;
   readonly value: number | null;
-  /** rangeArea second bound. */
+  /** rangeArea / rangeBar second bound. */
   readonly value2: number | null;
+  /** bubble size value. */
+  readonly size: number | null;
   /** candlestick extras. */
   readonly open: number | null;
   readonly high: number | null;
@@ -71,14 +84,20 @@ export interface ChartSeries<T = unknown> {
 }
 
 export function isBarType(type: ChartSeriesType): boolean {
-  return type === 'bar' || type === 'stackedBar' || type === 'fullStackedBar';
+  return (
+    type === 'bar' ||
+    type === 'stackedBar' ||
+    type === 'fullStackedBar' ||
+    type === 'rangeBar'
+  );
 }
 
 export function isStackedType(type: ChartSeriesType): boolean {
   return (
     type === 'stackedBar' ||
     type === 'fullStackedBar' ||
-    type === 'stackedArea'
+    type === 'stackedArea' ||
+    type === 'fullStackedArea'
   );
 }
 
@@ -153,6 +172,7 @@ export function buildSeries<T>(
   const valueOf = toAccessor(input.valueField);
   const value1Of = toAccessor(input.value1Field);
   const value2Of = toAccessor(input.value2Field);
+  const sizeOf = toAccessor(input.sizeField);
   const openOf = toAccessor(input.openField);
   const highOf = toAccessor(input.highField);
   const lowOf = toAccessor(input.lowField);
@@ -163,7 +183,7 @@ export function buildSeries<T>(
     const low = lowOf !== null ? toNumber(lowOf(item)) : null;
     const high = highOf !== null ? toNumber(highOf(item)) : null;
     const value =
-      input.type === 'rangeArea'
+      input.type === 'rangeArea' || input.type === 'rangeBar'
         ? value2Of !== null
           ? toNumber(value2Of(item))
           : null
@@ -177,6 +197,7 @@ export function buildSeries<T>(
       argNumeric: numericArgument(argument, axisKind, categoryIndex),
       value,
       value2: value1Of !== null ? toNumber(value1Of(item)) : null,
+      size: sizeOf !== null ? toNumber(sizeOf(item)) : null,
       open: openOf !== null ? toNumber(openOf(item)) : null,
       high,
       low,
@@ -203,7 +224,7 @@ export function seriesValueExtent<T>(
     const candidates =
       series.type === 'candlestick'
         ? [point.low, point.high]
-        : series.type === 'rangeArea'
+        : series.type === 'rangeArea' || series.type === 'rangeBar'
           ? [point.value2, point.value]
           : [point.value];
     for (const value of candidates) {
