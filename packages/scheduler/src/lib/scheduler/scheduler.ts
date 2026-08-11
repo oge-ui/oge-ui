@@ -57,6 +57,7 @@ import {
   OgeSchedulerDayWeekView,
   type SchedulerCellEvent,
   type SchedulerChipEvent,
+  type SchedulerProposalEvent,
 } from './day-week-view';
 import { OgeSchedulerMonthView } from './month-view';
 import {
@@ -193,6 +194,9 @@ interface ResolvedView {
           (chipDblClicked)="onChipDblClicked($event)"
           (chipActivated)="onChipActivated($event)"
           (chipDeleteRequested)="deleteBySource($event.source)"
+          [allowDragging]="allowDragging()"
+          (moveCommitted)="onMoveCommitted($event)"
+          (gestureCancelled)="onGestureCancelled()"
         />
       }
       @default {
@@ -220,6 +224,11 @@ interface ResolvedView {
           (chipDblClicked)="onChipDblClicked($event)"
           (chipActivated)="onChipActivated($event)"
           (chipDeleteRequested)="deleteBySource($event.source)"
+          [allowDragging]="allowDragging()"
+          [allowResizing]="allowResizing()"
+          (moveCommitted)="onMoveCommitted($event)"
+          (resizeCommitted)="onResizeCommitted($event)"
+          (gestureCancelled)="onGestureCancelled()"
         />
       }
     }
@@ -296,6 +305,8 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly allowAdding = input(true);
   readonly allowUpdating = input(true);
   readonly allowDeleting = input(true);
+  readonly allowDragging = input(true);
+  readonly allowResizing = input(true);
 
   /* ---------- events ---------- */
 
@@ -774,6 +785,41 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     this.appointmentUpdated.emit({ appointmentData: updated });
     this.announce(this.msg().announcements.updated, {
       text: String(this.fields().text(updated) ?? ''),
+    });
+  }
+
+  protected onMoveCommitted(event: SchedulerProposalEvent<T>): void {
+    this.commitProposal(event, 'moved');
+  }
+
+  protected onResizeCommitted(event: SchedulerProposalEvent<T>): void {
+    this.commitProposal(event, 'resized');
+  }
+
+  protected onGestureCancelled(): void {
+    this.announcement.set(this.msg().announcements.cancelled);
+  }
+
+  private commitProposal(
+    event: SchedulerProposalEvent<T>,
+    kind: 'moved' | 'resized',
+  ): void {
+    if (!this.allowUpdating()) return;
+    const fields = this.fields();
+    const patch = appointmentPatch(
+      event.appointment.source,
+      event.proposal,
+      fields,
+    );
+    this.updateItem(event.appointment.source, patch);
+    const format = new Intl.DateTimeFormat(this.locale(), {
+      dateStyle: 'medium',
+      timeStyle: event.appointment.allDay ? undefined : 'short',
+    });
+    this.announce(this.msg().announcements[kind], {
+      text: event.appointment.text,
+      start: format.format(event.proposal.startDate),
+      end: format.format(event.proposal.endDate),
     });
   }
 

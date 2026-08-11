@@ -8,9 +8,15 @@ import {
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { sameDay, sameMonth } from '@oge-ui/core';
+import { sameDay, sameMonth, startOfDay } from '@oge-ui/core';
+import {
+  proposeMove,
+  type AppointmentProposal,
+} from '../engine/gesture-math';
+import { beginPointerGesture } from './gesture';
 import type { LaneLayout } from '../engine/lanes';
 import { buildMonthWeekLanes } from '../engine/month-layout';
 import type { SchedulerAppointment } from '../engine/scheduler-model';
@@ -21,6 +27,7 @@ import {
   escapeAttr,
   type SchedulerCellEvent,
   type SchedulerChipEvent,
+  type SchedulerProposalEvent,
 } from './day-week-view';
 import type {
   OgeAppointmentTemplate,
@@ -50,6 +57,7 @@ import type {
     <!-- delegated keydown; focus lives on the roving gridcell -->
     <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
     <div
+      #monthGridEl
       class="oge-scheduler-month-grid"
       role="grid"
       [attr.aria-label]="gridAriaLabel()"
@@ -73,6 +81,9 @@ import type {
               [class.oge-scheduler-day-today]="isToday(day)"
               [class.oge-scheduler-cell-focused]="
                 isFocusedCell(weekIndex, dayIndex)
+              "
+              [class.oge-scheduler-drop-target]="
+                isDropTarget(weekIndex, dayIndex)
               "
               [tabindex]="isFocusedCell(weekIndex, dayIndex) ? 0 : -1"
               [attr.data-focus-target]="
@@ -116,10 +127,14 @@ import type {
                   item.startDayIndex + 1 + ' / ' + (item.endDayIndex + 2)
                 "
                 [style.grid-row]="item.lane + 1"
+                [class.oge-scheduler-dragging]="
+                  draggedKey() === item.appointment.key
+                "
                 (click)="onChipClick(item.appointment, $event)"
                 (dblclick)="onChipDblClick(item.appointment, $event)"
                 (keydown)="onChipKeydown(item.appointment, $event)"
                 (focus)="focusedChipKey.set(item.appointment.key)"
+                (pointerdown)="onBarPointerDown(item.appointment, $event)"
               >
                 <oge-scheduler-appointment
                   [appointment]="item.appointment"
@@ -161,6 +176,7 @@ export class OgeSchedulerMonthView<T = unknown> {
   readonly locale = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerGridMessages>();
   readonly periodLabel = input('');
+  readonly allowDragging = input(true);
   readonly appointmentTemplate = input<OgeAppointmentTemplate<T> | null>(null);
   readonly cellTemplate = input<OgeSchedulerCellTemplate | null>(null);
 
@@ -174,6 +190,10 @@ export class OgeSchedulerMonthView<T = unknown> {
   readonly chipActivated = output<SchedulerChipEvent<T>>();
   readonly chipDeleteRequested = output<SchedulerAppointment<T>>();
   readonly escapePressed = output<void>();
+  /** A day-drag landed (time of day preserved). */
+  readonly moveCommitted = output<SchedulerProposalEvent<T>>();
+  /** A drag was cancelled with Escape/blur. */
+  readonly gestureCancelled = output<void>();
 
   protected readonly grid = computed<MonthGridVm>(() =>
     buildMonthGrid(this.anchorDate(), this.firstDayOfWeek()),
@@ -348,6 +368,64 @@ export class OgeSchedulerMonthView<T = unknown> {
       default:
         return;
     }
+  }
+
+  /* ---------- drag gesture (day-only, bpmn five-part pattern) ---------- */
+
+  private readonly monthGridEl =
+    viewChild<ElementRef<HTMLElement>>('monthGridEl');
+
+  protected readonly draggedKey = signal<unknown>(null);
+  private readonly dropTarget = signal<{ week: number; day: number } | null>(
+    null,
+  );
+
+  protected isDropTarget(weekIndex: number, dayIndex: number): boolean {
+    const target = this.dropTarget();
+    return target !== null && target.week === weekIndex && target.day === dayIndex;
+  }
+
+  protected onBarPointerDown(
+    appointment: SchedulerAppointment<T>,
+    event: PointerEvent,
+  ): void {
+    if (!this.allowDragging() || appointment.disabled || event.button !== 0) {
+      return;
+    }
+    const gridEl = this.monthGridEl()?.nativeElement;
+    if (gridEl === undefined) return;
+    const rect = gridEl.getBoundingClientRect();
+    const days = this.grid().weeks.flat();
+    const originIndex = days.findIndex((day) =>
+      sameDay(day, startOfDay(appointment.startDate)),
+    );
+    let proposal: AppointmentProposal | null = null;
+    beginPointerGesture(event, {
+      onMove: (_deltaX, _deltaY, moveEvent) => {
+        const week = Math.min(
+          5,
+          Math.max(0, Math.floor(((moveEvent.clientY - rect.top) / rect.height) * 6)),
+        );
+        const day = Math.min(
+          6,
+          Math.max(0, Math.floor(((moveEvent.clientX - rect.left) / rect.width) * 7)),
+        );
+        this.dropTarget.set({ week, day });
+        if (originIndex === -1) return;
+        const deltaDays = week * 7 + day - originIndex;
+        proposal = proposeMove(appointment, deltaDays, 0, 30);
+        this.draggedKey.set(appointment.key);
+      },
+      onFinish: (commit, cancelled) => {
+        this.draggedKey.set(null);
+        this.dropTarget.set(null);
+        if (commit && proposal !== null) {
+          this.moveCommitted.emit({ appointment, proposal });
+        } else if (cancelled) {
+          this.gestureCancelled.emit();
+        }
+      },
+    });
   }
 
   /* ---------- pointer ---------- */

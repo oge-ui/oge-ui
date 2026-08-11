@@ -10,13 +10,20 @@ import {
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { sameDay } from '@oge-ui/core';
+import {
+  proposeMove,
+  proposeResize,
+  type AppointmentProposal,
+} from '../engine/gesture-math';
 import { layoutDayColumn, type LayoutedSegment } from '../engine/layout';
 import { packLanes, type LaneLayout } from '../engine/lanes';
 import type { SchedulerAppointment } from '../engine/scheduler-model';
-import { minutesOfDay } from '../engine/time-math';
+import { durationMinutes, minutesOfDay } from '../engine/time-math';
+import { beginPointerGesture } from './gesture';
 import {
   buildTimeGrid,
   partitionAllDay,
@@ -58,6 +65,12 @@ export interface SchedulerCellEvent {
   readonly cellDate: Date;
   readonly allDay: boolean;
   readonly event: MouseEvent | KeyboardEvent;
+}
+
+/** A committed move/resize surfaced to the shell. */
+export interface SchedulerProposalEvent<T> {
+  readonly appointment: SchedulerAppointment<T>;
+  readonly proposal: AppointmentProposal;
 }
 
 /**
@@ -131,10 +144,12 @@ export interface SchedulerCellEvent {
                 bar.startDayIndex + 1 + ' / ' + (bar.endDayIndex + 2)
               "
               [style.grid-row]="bar.lane + 1"
+              [class.oge-scheduler-dragging]="isDragging(bar.appointment)"
               (click)="onChipClick(bar.appointment, $event)"
               (dblclick)="onChipDblClick(bar.appointment, $event)"
               (keydown)="onChipKeydown(bar.appointment, $event)"
               (focus)="focusedChipKey.set(bar.appointment.key)"
+              (pointerdown)="onAllDayBarPointerDown(bar.appointment, $event)"
             >
               <oge-scheduler-appointment
                 [appointment]="bar.appointment"
@@ -160,6 +175,7 @@ export interface SchedulerCellEvent {
       <!-- delegated keydown; focus lives on the roving gridcell -->
       <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
       <div
+        #rowsEl
         class="oge-scheduler-rows"
         role="grid"
         [attr.aria-label]="gridAriaLabel()"
@@ -222,10 +238,12 @@ export interface SchedulerCellEvent {
               [style.height.%]="segment.heightFraction * 100"
               [style.left.%]="chipLeft(segment)"
               [style.width.%]="chipWidth(segment)"
+              [class.oge-scheduler-dragging]="isDragging(segment.appointment)"
               (click)="onChipClick(segment.appointment, $event)"
               (dblclick)="onChipDblClick(segment.appointment, $event)"
               (keydown)="onChipKeydown(segment.appointment, $event)"
               (focus)="focusedChipKey.set(segment.appointment.key)"
+              (pointerdown)="onChipPointerDown(segment.appointment, $event)"
             >
               <oge-scheduler-appointment
                 [appointment]="segment.appointment"
@@ -233,7 +251,33 @@ export interface SchedulerCellEvent {
                 [locale]="locale()"
                 [template]="appointmentTemplate()"
               />
+              @if (allowResizing() && !segment.appointment.disabled) {
+                <div
+                  class="oge-scheduler-resize-handle oge-scheduler-resize-start"
+                  aria-hidden="true"
+                  (pointerdown)="
+                    onResizePointerDown(segment.appointment, 'start', $event)
+                  "
+                ></div>
+                <div
+                  class="oge-scheduler-resize-handle oge-scheduler-resize-end"
+                  aria-hidden="true"
+                  (pointerdown)="
+                    onResizePointerDown(segment.appointment, 'end', $event)
+                  "
+                ></div>
+              }
             </div>
+          }
+          @if (previewBox(); as box) {
+            <div
+              class="oge-scheduler-drag-preview"
+              aria-hidden="true"
+              [style.top.%]="box.top"
+              [style.height.%]="box.height"
+              [style.left.%]="box.left"
+              [style.width.%]="box.width"
+            ></div>
           }
         </div>
         @for (day of grid().days; track day.getTime(); let dayIndex = $index) {
@@ -267,6 +311,8 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly locale = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerGridMessages>();
   readonly periodLabel = input('');
+  readonly allowDragging = input(true);
+  readonly allowResizing = input(true);
   readonly appointmentTemplate = input<OgeAppointmentTemplate<T> | null>(null);
   readonly cellTemplate = input<OgeSchedulerCellTemplate | null>(null);
   readonly dateHeaderTemplate = input<OgeDateHeaderTemplate | null>(null);
@@ -283,6 +329,12 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly chipDeleteRequested = output<SchedulerAppointment<T>>();
   /** Escape on the grid — arm the shell's tab-exit contract. */
   readonly escapePressed = output<void>();
+  /** A drag-move landed (pointer or keyboard). */
+  readonly moveCommitted = output<SchedulerProposalEvent<T>>();
+  /** A resize landed (pointer or keyboard). */
+  readonly resizeCommitted = output<SchedulerProposalEvent<T>>();
+  /** A gesture was cancelled with Escape/blur. */
+  readonly gestureCancelled = output<void>();
 
   readonly grid = computed<TimeGridVm>(() =>
     buildTimeGrid({
@@ -472,6 +524,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
     appointment: SchedulerAppointment<T>,
     event: KeyboardEvent,
   ): void {
+    if (event.ctrlKey && this.handleChipCtrlKey(appointment, event)) return;
     switch (event.key) {
       case 'Enter':
       case ' ': {
@@ -510,6 +563,217 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       default:
         return;
     }
+  }
+
+  /**
+   * Keyboard move/resize (**OGE extra** — the keyboard equivalent of drag):
+   * Ctrl+Arrow moves by slot/day, Ctrl+Shift+Up/Down resizes the end edge.
+   */
+  private handleChipCtrlKey(
+    appointment: SchedulerAppointment<T>,
+    event: KeyboardEvent,
+  ): boolean {
+    const cellDuration = this.grid().cellDuration;
+    if (event.shiftKey) {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return false;
+      if (!this.allowResizing() || appointment.disabled) return true;
+      event.preventDefault();
+      this.resizeCommitted.emit({
+        appointment,
+        proposal: proposeResize(
+          appointment,
+          'end',
+          event.key === 'ArrowDown' ? cellDuration : -cellDuration,
+          cellDuration,
+        ),
+      });
+      return true;
+    }
+    let deltaDays = 0;
+    let deltaMinutes = 0;
+    switch (event.key) {
+      case 'ArrowLeft':
+        deltaDays = -1;
+        break;
+      case 'ArrowRight':
+        deltaDays = 1;
+        break;
+      case 'ArrowUp':
+        deltaMinutes = -cellDuration;
+        break;
+      case 'ArrowDown':
+        deltaMinutes = cellDuration;
+        break;
+      default:
+        return false;
+    }
+    if (!this.allowDragging() || appointment.disabled) return true;
+    event.preventDefault();
+    this.moveCommitted.emit({
+      appointment,
+      proposal: proposeMove(appointment, deltaDays, deltaMinutes, cellDuration),
+    });
+    return true;
+  }
+
+  /* ---------- pointer gestures (bpmn five-part pattern) ---------- */
+
+  private readonly rowsEl =
+    viewChild<ElementRef<HTMLElement>>('rowsEl');
+
+  /** The live preview of the dragged/resized appointment. */
+  protected readonly preview = signal<{
+    key: unknown;
+    proposal: AppointmentProposal;
+  } | null>(null);
+
+  protected isDragging(appointment: SchedulerAppointment<T>): boolean {
+    return this.preview()?.key === appointment.key;
+  }
+
+  /** Geometry of the preview box (percent of the rows area). */
+  protected readonly previewBox = computed<{
+    top: number;
+    height: number;
+    left: number;
+    width: number;
+  } | null>(() => {
+    const preview = this.preview();
+    if (preview === null) return null;
+    const grid = this.grid();
+    const dayIndex = grid.days.findIndex((day) =>
+      sameDay(day, preview.proposal.startDate),
+    );
+    if (dayIndex === -1) return null;
+    const span = grid.windowEndMinutes - grid.windowStartMinutes;
+    if (span <= 0) return null;
+    const startMinutes = Math.max(
+      minutesOfDay(preview.proposal.startDate),
+      grid.windowStartMinutes,
+    );
+    const length = Math.max(
+      durationMinutes(preview.proposal.startDate, preview.proposal.endDate),
+      this.minAppointmentMinutes(),
+    );
+    const endMinutes = Math.min(startMinutes + length, grid.windowEndMinutes);
+    return {
+      top: ((startMinutes - grid.windowStartMinutes) / span) * 100,
+      height: ((endMinutes - startMinutes) / span) * 100,
+      left: (dayIndex / grid.days.length) * 100,
+      width: (1 / grid.days.length) * 100,
+    };
+  });
+
+  protected onChipPointerDown(
+    appointment: SchedulerAppointment<T>,
+    event: PointerEvent,
+  ): void {
+    if (
+      !this.allowDragging() ||
+      appointment.disabled ||
+      event.button !== 0 ||
+      (event.target as HTMLElement).closest('.oge-scheduler-resize-handle')
+    ) {
+      return;
+    }
+    const rows = this.rowsEl()?.nativeElement;
+    if (rows === undefined) return;
+    const grid = this.grid();
+    const rect = rows.getBoundingClientRect();
+    const span = grid.windowEndMinutes - grid.windowStartMinutes;
+    let proposal: AppointmentProposal | null = null;
+    beginPointerGesture(event, {
+      onMove: (deltaX, deltaY) => {
+        const deltaDays = Math.round(
+          deltaX / (rect.width / grid.days.length),
+        );
+        const deltaMinutes = (deltaY / rect.height) * span;
+        proposal = proposeMove(
+          appointment,
+          deltaDays,
+          deltaMinutes,
+          grid.cellDuration,
+        );
+        this.preview.set({ key: appointment.key, proposal });
+      },
+      onFinish: (commit, cancelled) => {
+        this.preview.set(null);
+        if (commit && proposal !== null) {
+          this.moveCommitted.emit({ appointment, proposal });
+        } else if (cancelled) {
+          this.gestureCancelled.emit();
+        }
+      },
+    });
+  }
+
+  protected onResizePointerDown(
+    appointment: SchedulerAppointment<T>,
+    edge: 'start' | 'end',
+    event: PointerEvent,
+  ): void {
+    if (!this.allowResizing() || appointment.disabled || event.button !== 0) {
+      return;
+    }
+    event.stopPropagation();
+    const rows = this.rowsEl()?.nativeElement;
+    if (rows === undefined) return;
+    const grid = this.grid();
+    const rect = rows.getBoundingClientRect();
+    const span = grid.windowEndMinutes - grid.windowStartMinutes;
+    let proposal: AppointmentProposal | null = null;
+    beginPointerGesture(event, {
+      onMove: (_deltaX, deltaY) => {
+        const deltaMinutes = (deltaY / rect.height) * span;
+        proposal = proposeResize(
+          appointment,
+          edge,
+          deltaMinutes,
+          grid.cellDuration,
+        );
+        this.preview.set({ key: appointment.key, proposal });
+      },
+      onFinish: (commit, cancelled) => {
+        this.preview.set(null);
+        if (commit && proposal !== null) {
+          this.resizeCommitted.emit({ appointment, proposal });
+        } else if (cancelled) {
+          this.gestureCancelled.emit();
+        }
+      },
+    });
+  }
+
+  protected onAllDayBarPointerDown(
+    appointment: SchedulerAppointment<T>,
+    event: PointerEvent,
+  ): void {
+    if (!this.allowDragging() || appointment.disabled || event.button !== 0) {
+      return;
+    }
+    const rows = this.rowsEl()?.nativeElement;
+    if (rows === undefined) return;
+    const grid = this.grid();
+    const rect = rows.getBoundingClientRect();
+    let proposal: AppointmentProposal | null = null;
+    beginPointerGesture(event, {
+      onMove: (deltaX) => {
+        const deltaDays = Math.round(
+          deltaX / (rect.width / grid.days.length),
+        );
+        // day-only move: the time of day (and all-day flag) survive
+        proposal = proposeMove(appointment, deltaDays, 0, grid.cellDuration);
+        this.preview.set({ key: appointment.key, proposal });
+      },
+      onFinish: (commit, cancelled) => {
+        this.preview.set(null);
+        if (commit && proposal !== null) {
+          this.moveCommitted.emit({ appointment, proposal });
+        } else if (cancelled) {
+          this.gestureCancelled.emit();
+        }
+      },
+    });
   }
 
   /** Focuses the chip element rendered for `key`. */
