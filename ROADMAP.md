@@ -635,8 +635,10 @@ reference ships them) with live-region announcements.
 | Image export (PNG/SVG)                                                  | dx/K      | covered | dependency-free `@oge-ui/charts/export-image`: inline-styled SVG serialization + canvas rasterizing |
 | Large-series performance (10k+)                                         | dx/K      | covered | single path per series, marker threshold, O(log n) hit-test, rAF coalescing — 50k smoke test        |
 | Messages/i18n incl. aria + announcements + `locale`                     | dx/K      | covered | `provideOgeChartsConfig` + per-instance `[messages]`/`[locale]`                                     |
-| Polar/radar charts                                                      | dx/K      | Skipped | a separate chart family (dx ships it as dxPolarChart); revisit on demand                            |
-| Financial indicators/annotations (trend lines, Fibonacci, notes)        | dx        | Skipped | analysis-tool surface beyond charting; `stripLines` + templates cover the common cases              |
+| Polar/radar charts (`oge-polar-chart`: line/area/scatter/bar, spider)   | dx/K      | covered | radar loops with gap handling, sector bars, circular/polygon grids, shared legend/tooltip/keyboard  |
+| Annotations (point callouts + text labels + HTML template)              | dx        | covered | anchored at (argument, value); `*ogeChartAnnotationTemplate` for arbitrary HTML                     |
+| Range selector overview strip (`oge-range-selector`, `[(value)]`)       | dx        | covered | mini background chart + draggable window; WAI-ARIA slider handles; pairs with `[(visualRange)]`     |
+| Financial indicators (trend lines, Fibonacci, moving averages)          | dx        | Skipped | analysis-tool surface beyond charting; annotations + extra series cover the common cases            |
 | TreeMap/Funnel/Gauge/Sparkline/Sankey families                          | dx/K      | Skipped | separate products in the references too — candidates for future packages, not chart options         |
 | Chart.js-style plugin hooks                                             | PrimeNG   | Skipped | OGE renders its own SVG; templates + events are the extension surface                               |
 

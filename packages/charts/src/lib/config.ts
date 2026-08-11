@@ -14,6 +14,12 @@ export interface OgeChartsAriaMessages {
   readonly plotHint: string;
   /** Legend list label. */
   readonly legendLabel: string;
+  /** Range-selector start handle label. */
+  readonly rangeStart: string;
+  /** Range-selector end handle label. */
+  readonly rangeEnd: string;
+  /** Range-selector window label. */
+  readonly rangeWindow: string;
 }
 
 /** Live-region announcement templates. */
@@ -43,6 +49,9 @@ export const OGE_DEFAULT_CHARTS_MESSAGES: OgeChartsMessages = {
     argumentHeader: 'Argument',
     plotHint: 'Use arrow keys to inspect points, Enter to select',
     legendLabel: 'Chart legend',
+    rangeStart: 'Range start',
+    rangeEnd: 'Range end',
+    rangeWindow: 'Selected range',
   },
   announcements: {
     point: '{series}, {argument}: {value}',
@@ -87,9 +96,7 @@ export type OgeChartsConfigInput = Partial<
  * Configures every chart below the provider; shallow merge per top-level
  * key (a partial `messages` replaces whole nested blocks).
  */
-export function provideOgeChartsConfig(
-  config: OgeChartsConfigInput,
-): Provider {
+export function provideOgeChartsConfig(config: OgeChartsConfigInput): Provider {
   const { messages, ...rest } = config;
   return {
     provide: OGE_CHARTS_CONFIG,

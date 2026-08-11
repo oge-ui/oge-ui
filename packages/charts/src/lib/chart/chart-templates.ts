@@ -17,14 +17,33 @@ export interface OgeChartTooltipTemplateContext<T = unknown> {
  */
 @Directive({ selector: '[ogeChartTooltipTemplate]' })
 export class OgeChartTooltipTemplate<T = unknown> {
-  readonly templateRef = inject(
-    TemplateRef<OgeChartTooltipTemplateContext<T>>,
-  );
+  readonly templateRef = inject(TemplateRef<OgeChartTooltipTemplateContext<T>>);
 
   static ngTemplateContextGuard<T>(
     _dir: OgeChartTooltipTemplate<T>,
     _ctx: unknown,
   ): _ctx is OgeChartTooltipTemplateContext<T> {
+    return true;
+  }
+}
+
+export interface OgeChartAnnotationTemplateContext {
+  /** The annotation payload (`let note`). */
+  $implicit: { text: string };
+}
+
+/**
+ * Structural directive replacing an annotation's label content (rendered
+ * in a `foreignObject`, so any HTML works).
+ */
+@Directive({ selector: '[ogeChartAnnotationTemplate]' })
+export class OgeChartAnnotationTemplate {
+  readonly templateRef = inject(TemplateRef<OgeChartAnnotationTemplateContext>);
+
+  static ngTemplateContextGuard(
+    _dir: OgeChartAnnotationTemplate,
+    _ctx: unknown,
+  ): _ctx is OgeChartAnnotationTemplateContext {
     return true;
   }
 }

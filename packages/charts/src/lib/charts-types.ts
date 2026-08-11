@@ -73,6 +73,25 @@ export interface OgeChartCrosshairOptions {
   readonly horizontal?: boolean;
 }
 
+/**
+ * An annotation anchored on the plot: `'point'` draws a marker dot with a
+ * connector into a label box; `'text'` places the label alone. Anchors
+ * resolve on the argument axis (+ `value` on the given value axis;
+ * without `value` the label sits at the top of the plot).
+ */
+export interface OgeChartAnnotation {
+  readonly type?: 'text' | 'point';
+  readonly text: string;
+  readonly argument: number | Date | string;
+  readonly value?: number;
+  /** Index into the `valueAxis` array. Default 0. */
+  readonly axis?: number;
+  readonly color?: string;
+  /** Label offset from the anchor, px. */
+  readonly offsetX?: number;
+  readonly offsetY?: number;
+}
+
 /** A selected point address. */
 export interface OgeChartPointRef {
   readonly seriesIndex: number;

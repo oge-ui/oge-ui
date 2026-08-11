@@ -7,9 +7,17 @@ import {
   OGE_CHART_API,
   OGE_CHARTS_CONFIG_API,
   OGE_PIE_CHART_API,
+  OGE_POLAR_CHART_API,
+  OGE_RANGE_SELECTOR_API,
 } from './charts-api-data';
 
-const SECTIONS = ['OgeChart', 'OgePieChart', 'Configuration'] as const;
+const SECTIONS = [
+  'OgeChart',
+  'OgePieChart',
+  'OgePolarChart',
+  'OgeRangeSelector',
+  'Configuration',
+] as const;
 
 @Component({
   selector: 'app-charts-api',
@@ -48,6 +56,16 @@ const SECTIONS = ['OgeChart', 'OgePieChart', 'Configuration'] as const;
       selector="oge-pie-chart"
       [sections]="pieApi"
     />
+    <app-api-reference
+      title="OgePolarChart"
+      selector="oge-polar-chart"
+      [sections]="polarApi"
+    />
+    <app-api-reference
+      title="OgeRangeSelector"
+      selector="oge-range-selector"
+      [sections]="rangeApi"
+    />
     <app-api-reference title="Configuration" [sections]="configApi" />
 
     <h3>Notes</h3>
@@ -80,5 +98,7 @@ export class ChartsApiPage {
   protected readonly sections = SECTIONS;
   protected readonly chartApi = OGE_CHART_API;
   protected readonly pieApi = OGE_PIE_CHART_API;
+  protected readonly polarApi = OGE_POLAR_CHART_API;
+  protected readonly rangeApi = OGE_RANGE_SELECTOR_API;
   protected readonly configApi = OGE_CHARTS_CONFIG_API;
 }

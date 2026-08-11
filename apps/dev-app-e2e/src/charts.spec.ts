@@ -129,6 +129,58 @@ test.describe('charts', () => {
     await expect(host.locator('.oge-chart-sr-table')).toContainText('Others');
   });
 
+  test('polar radar renders spider grid, loops and category labels', async ({
+    page,
+  }) => {
+    await page.goto('/components/charts');
+    const host = page.locator(
+      'app-demo-card:has(#polar-radar) oge-polar-chart',
+    );
+    await host.scrollIntoViewIfNeeded();
+    // spider grid: polygon rings without arc commands
+    const ring = host.locator('.oge-chart-grid').first();
+    await expect.poll(async () => ring.getAttribute('d')).not.toContain('A ');
+    await expect(host.locator('.oge-chart-area')).toHaveCount(1);
+    await expect(host.locator('.oge-chart-line')).toHaveCount(2);
+    await expect(host.locator('.oge-chart-svg')).toContainText('TypeScript');
+  });
+
+  test('range selector window drives the linked chart zoom', async ({
+    page,
+  }) => {
+    await page.goto('/components/charts');
+    const card = page.locator('app-demo-card:has(#range-selector)');
+    await card.scrollIntoViewIfNeeded();
+    const chartHost = card.locator('oge-chart');
+    const selector = card.locator('oge-range-selector');
+    const labelsBefore = await chartHost
+      .locator('.oge-chart-arg-label')
+      .allTextContents();
+    // drag the start handle to the right
+    const handle = selector.locator('.oge-range-handle').first();
+    const box = await handle.boundingBox();
+    if (box === null) throw new Error('no handle box');
+    await page.mouse.move(box.x + 4, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 150, box.y + box.height / 2, { steps: 6 });
+    await page.mouse.up();
+    // the linked chart re-ticks to the narrower window
+    await expect
+      .poll(async () =>
+        (
+          await chartHost.locator('.oge-chart-arg-label').allTextContents()
+        ).join(),
+      )
+      .not.toBe(labelsBefore.join());
+    // keyboard on the handle also adjusts (slider pattern)
+    await handle.focus();
+    const nowBefore = await handle.getAttribute('aria-valuenow');
+    await page.keyboard.press('ArrowRight');
+    await expect
+      .poll(async () => handle.getAttribute('aria-valuenow'))
+      .not.toBe(nowBefore);
+  });
+
   test('axe: no violations in either theme', async ({ page }) => {
     test.slow();
     await openBasic(page);

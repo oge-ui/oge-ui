@@ -278,3 +278,99 @@ protected async exportSvg<T extends object>(
   exportChartToSvg(chart, { filename: 'chart.svg' });
 }`,
 });
+
+export const POLAR_SNIPPET = demoSource({
+  use: { '@oge-ui/charts': ['OgePolarChart'] },
+  types: { '@oge-ui/charts': ['OgeChartSeriesInput'] },
+  template: `<!-- Radar/polar on the same kernel: categories slot around the
+     circle, values map radially with nice ticks. line/area draw closed
+     radar loops (a null value breaks the loop into a gap), scatter renders
+     markers, bar renders sectors. spider swaps circular rings for
+     polygons. -->
+<oge-polar-chart
+  [dataSource]="data"
+  [series]="series"
+  [commonSeries]="{ argumentField: 'skill' }"
+  [spider]="true"
+  title="Team skills"
+  style="height: 400px"
+/>`,
+  body: `protected readonly data = [
+  { skill: 'TypeScript', ada: 9, grace: 7 },
+  { skill: 'CSS', ada: 6, grace: 8 },
+  { skill: 'SQL', ada: 7, grace: 5 },
+  { skill: 'Rust', ada: 4, grace: 6 },
+  { skill: 'Go', ada: 5, grace: 9 },
+  { skill: 'Testing', ada: 8, grace: 7 },
+];
+
+protected readonly series: OgeChartSeriesInput[] = [
+  { type: 'area', valueField: 'ada', name: 'Ada' },
+  { type: 'line', valueField: 'grace', name: 'Grace', width: 2.5 },
+];`,
+});
+
+export const ANNOTATIONS_SNIPPET = demoSource({
+  use: { '@oge-ui/charts': ['OgeChart'] },
+  types: { '@oge-ui/charts': ['OgeChartAnnotation', 'OgeChartSeriesInput'] },
+  template: `<!-- Annotations anchor on the plot: 'point' draws a marker dot
+     with a connector into a label box at (argument, value); 'text' places
+     the label alone (top of the plot without a value).
+     *ogeChartAnnotationTemplate swaps in arbitrary HTML. -->
+<oge-chart
+  [dataSource]="data"
+  [series]="series"
+  [annotations]="annotations"
+  style="height: 380px"
+/>`,
+  body: `protected readonly data = Array.from({ length: 40 }, (_, i) => ({
+  day: i + 1,
+  price: 80 + Math.sin(i / 5) * 20 + i / 2,
+}));
+
+protected readonly series: OgeChartSeriesInput[] = [
+  { type: 'spline', argumentField: 'day', valueField: 'price', name: 'Price' },
+];
+
+protected readonly annotations: OgeChartAnnotation[] = [
+  { type: 'point', text: 'All-time high', argument: 34, value: 116.9 },
+  { type: 'point', text: 'Correction', argument: 22, value: 76.1, offsetY: 24 },
+  { type: 'text', text: 'Q1 guidance', argument: 8 },
+];`,
+});
+
+export const RANGE_SELECTOR_SNIPPET = demoSource({
+  use: { '@oge-ui/charts': ['OgeChart', 'OgeRangeSelector'] },
+  types: { '@oge-ui/charts': ['OgeChartRange', 'OgeChartSeriesInput'] },
+  template: `<!-- The overview strip: a mini background chart with a draggable
+     window and two WAI-ARIA slider handles (arrows adjust, Home/End jump,
+     Escape mid-drag restores). Bind the same range to a chart's
+     [(visualRange)] and the two stay in lockstep. -->
+<oge-chart
+  [dataSource]="data"
+  [series]="series"
+  [(visualRange)]="range"
+  zoomEnabled="both"
+  style="height: 300px"
+/>
+<oge-range-selector
+  [dataSource]="data"
+  [series]="miniSeries"
+  [(value)]="range"
+  style="display: block; margin-top: 8px"
+/>`,
+  body: `protected readonly range = signal<OgeChartRange | null>(null);
+
+protected readonly data = Array.from({ length: 365 }, (_, i) => ({
+  date: new Date(2026, 0, 1 + i),
+  sales: 200 + Math.sin(i / 20) * 80 + (i % 11) * 6,
+}));
+
+protected readonly series: OgeChartSeriesInput[] = [
+  { type: 'line', argumentField: 'date', valueField: 'sales', name: 'Sales' },
+];
+
+protected readonly miniSeries: OgeChartSeriesInput[] = [
+  { type: 'area', argumentField: 'date', valueField: 'sales', name: 'Sales' },
+];`,
+});

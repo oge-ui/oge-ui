@@ -87,8 +87,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/charts`
 
-- values: `OGE_CHARTS_CONFIG`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `OgeChart`, `OgeChartLegendTemplate`, `OgeChartTooltipTemplate`, `OgePieChart`, `provideOgeChartsConfig`
-- types: `OgeChartAxisOptions`, `OgeChartAxisType`, `OgeChartCrosshairOptions`, `OgeChartExportData`, `OgeChartLegendClickEvent`, `OgeChartLegendOptions`, `OgeChartLegendTemplateContext`, `OgeChartPieSliceEvent`, `OgeChartPoint`, `OgeChartPointEvent`, `OgeChartPointRef`, `OgeChartRange`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSmallValuesGrouping`, `OgeChartStripLine`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipTemplateContext`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`
+- values: `OGE_CHARTS_CONFIG`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `OgeChart`, `OgeChartAnnotationTemplate`, `OgeChartLegendTemplate`, `OgeChartTooltipTemplate`, `OgePieChart`, `OgePolarChart`, `OgeRangeSelector`, `provideOgeChartsConfig`
+- types: `OgeChartAnnotation`, `OgeChartAnnotationTemplateContext`, `OgeChartAxisOptions`, `OgeChartAxisType`, `OgeChartCrosshairOptions`, `OgeChartExportData`, `OgeChartLegendClickEvent`, `OgeChartLegendOptions`, `OgeChartLegendTemplateContext`, `OgeChartPieSliceEvent`, `OgeChartPoint`, `OgeChartPointEvent`, `OgeChartPointRef`, `OgeChartRange`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSmallValuesGrouping`, `OgeChartStripLine`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipTemplateContext`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`
 
 `@oge-ui/charts/export-image`
 
@@ -117,6 +117,7 @@ _Axes_
 | `argumentAxis` | `OgeChartAxisOptions` | `{}` | Argument axis: `type` auto-detects (numbers / dates / categories) when unset; `min`/`max`, `inverted`, `grid`, `title`, `labelFormat`, `labelOverlap` (`rotate`/`skip`/`none`). |
 | `valueAxis` | `OgeChartAxisOptions \| readonly OgeChartAxisOptions[]` | `{}` | One or more value axes; series pick theirs via `axis`. `position: 'end'` renders on the right, `type: 'logarithmic'` spaces decades evenly, `abbreviate: false` disables SI labels (`1.2K`). |
 | `stripLines` | `readonly OgeChartStripLine[]` | `[]` | Argument-axis markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded band with it. |
+| `annotations` | `readonly OgeChartAnnotation[]` | `[]` | Plot annotations: `type: 'point'` draws a marker dot with a connector into a label box at (`argument`, `value`); `'text'` places the label alone (top of the plot without a value). `axis`, `color` and `offsetX/Y` refine placement. |
 
 _Interaction_
 
@@ -173,6 +174,7 @@ _Export entry point (lazy, dependency-free)_
 | `OgeChartPoint<T>` | `interface` | The normalized point: `argument`, `argNumeric`, `value`(s incl. OHLC), `source`, `index`. |
 | `OgeChartAxisType / OgeChartRange` | `'linear' \| 'logarithmic' \| 'category' \| 'time' / { min, max }` | Axis kinds and the numeric window type (time axes: epoch ms; category: index space). |
 | `[ogeChartTooltipTemplate]` | `structural directive (OgeChartTooltipTemplate)` | Replaces the tooltip's content; context `OgeChartTooltipTemplateContext`: `{ $implicit: OgeChartPointEvent[] }`. |
+| `[ogeChartAnnotationTemplate]` | `structural directive (OgeChartAnnotationTemplate)` | Replaces an annotation's label (rendered in a `foreignObject`, so any HTML works); context `OgeChartAnnotationTemplateContext`: `{ $implicit: { text } }`. |
 | `[ogeChartLegendTemplate]` | `structural directive (OgeChartLegendTemplate)` | Replaces a legend item's content; context `OgeChartLegendTemplateContext`: `{ $implicit: { name, color, hidden } }`. |
 
 ### OgePieChart — `<oge-pie-chart>`
@@ -195,6 +197,54 @@ _Export entry point (lazy, dependency-free)_
 | `sliceClick` | `OgeChartPieSliceEvent<T>` | Slice activation: `argument`, `value`, `fraction`, merged `sources` and the `grouped` flag for the "Others" slice. |
 | `legendClick / selectedSlicesChange` | `OgeChartLegendClickEvent / readonly number[]` | Cancelable legend toggle; the two-way selection output. |
 
+### OgePolarChart — `<oge-polar-chart>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource / series / commonSeries` | `readonly T[] / readonly OgeChartSeriesInput[] / Partial` | `[] / [] / {}` | Same field mapping as the cartesian chart; supported polar types: `'line'` and `'area'` (closed radar loops — a null value breaks the loop into a gap), `'scatter'` (markers) and `'bar'` (sectors from the center). |
+| `spider` | `boolean` | `false` | Straight-segment (polygon) grid rings instead of circles. |
+| `startAngle` | `number` | `0` | First category's angle in radians (0 = 12 o'clock, clockwise). |
+| `valueAxis` | `OgeChartAxisOptions` | `{}` | The radial axis: `max` override and `labelFormat` of the nice-tick rings. |
+| `selectionMode / selectedPoints` | `'point' \| 'none' / readonly OgeChartPointRef[]` | `'none' / []` | Keyboard Enter (and clicks on markers/sectors) select; two-way (`[(selectedPoints)]`). |
+| `legend / tooltipEnabled / palette / title / locale / messages` | `see OgeChart` | `—` | Shared options — the legend, tooltip, sr data table and keyboard inspection (arrows walk categories and series) work exactly like the cartesian chart. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus() / getSvgElement()` | `void / SVGSVGElement` | Focuses the keyboard-inspectable plot / the live SVG root for the image exporters. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pointClick / legendClick / selectedPointsChange` | `OgeChartPointEvent<T> / OgeChartLegendClickEvent / readonly OgeChartPointRef[]` | Point activation, the cancelable legend toggle and the two-way selection output. |
+
+### OgeRangeSelector — `<oge-range-selector>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource / series` | `readonly T[] / readonly OgeChartSeriesInput[]` | `[] / []` | The mini background chart (line/area recommended) drawn behind the selection window. |
+| `value` | `OgeChartRange \| null` | `null` | The selected window in argument units (`null` = full range). Two-way (`[(value)]`) — bind the same signal to a chart's `[(visualRange)]` and the two stay in lockstep. |
+| `scaleType` | `'time' \| 'linear' \| undefined` | `—` | Auto-detects from the first argument (dates → time) when unset. |
+| `palette / locale / messages` | `see OgeChart` | `—` | Shared options; handle labels come from `messages.aria.rangeStart/rangeEnd/rangeWindow`. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `reset()` | `void` | Back to the full range (`value = null`). |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueChange` | `OgeChartRange \| null` | The two-way model output. Interaction: drag the window (grab cursor), drag either handle, click the track to center the window there — Escape mid-drag restores; the handles are WAI-ARIA sliders (arrow keys adjust by 2%, Home/End jump to the bounds, changes announced). |
+
 ### Configuration
 
 #### Properties
@@ -210,6 +260,48 @@ _Export entry point (lazy, dependency-free)_
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Annotations
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartAnnotation, OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Annotations anchor on the plot: 'point' draws a marker dot
+         with a connector into a label box at (argument, value); 'text' places
+         the label alone (top of the plot without a value).
+         *ogeChartAnnotationTemplate swaps in arbitrary HTML. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [annotations]="annotations"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = Array.from({ length: 40 }, (_, i) => ({
+    day: i + 1,
+    price: 80 + Math.sin(i / 5) * 20 + i / 2,
+  }));
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'spline', argumentField: 'day', valueField: 'price', name: 'Price' },
+  ];
+
+  protected readonly annotations: OgeChartAnnotation[] = [
+    { type: 'point', text: 'All-time high', argument: 34, value: 116.9 },
+    { type: 'point', text: 'Correction', argument: 22, value: 76.1, offsetY: 24 },
+    { type: 'text', text: 'Q1 guidance', argument: 8 },
+  ];
+}
+```
 
 ### Events export
 
@@ -416,6 +508,99 @@ export class Demo {
     { browser: 'Samsung', share: 3 },
     { browser: 'Opera', share: 2 },
     { browser: 'Other', share: 2 },
+  ];
+}
+```
+
+### Polar
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgePolarChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePolarChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Radar/polar on the same kernel: categories slot around the
+         circle, values map radially with nice ticks. line/area draw closed
+         radar loops (a null value breaks the loop into a gap), scatter renders
+         markers, bar renders sectors. spider swaps circular rings for
+         polygons. -->
+    <oge-polar-chart
+      [dataSource]="data"
+      [series]="series"
+      [commonSeries]="{ argumentField: 'skill' }"
+      [spider]="true"
+      title="Team skills"
+      style="height: 400px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = [
+    { skill: 'TypeScript', ada: 9, grace: 7 },
+    { skill: 'CSS', ada: 6, grace: 8 },
+    { skill: 'SQL', ada: 7, grace: 5 },
+    { skill: 'Rust', ada: 4, grace: 6 },
+    { skill: 'Go', ada: 5, grace: 9 },
+    { skill: 'Testing', ada: 8, grace: 7 },
+  ];
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'area', valueField: 'ada', name: 'Ada' },
+    { type: 'line', valueField: 'grace', name: 'Grace', width: 2.5 },
+  ];
+}
+```
+
+### Range selector
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChart, OgeRangeSelector } from '@oge-ui/charts';
+import type { OgeChartRange, OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart, OgeRangeSelector],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The overview strip: a mini background chart with a draggable
+         window and two WAI-ARIA slider handles (arrows adjust, Home/End jump,
+         Escape mid-drag restores). Bind the same range to a chart's
+         [(visualRange)] and the two stay in lockstep. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [(visualRange)]="range"
+      zoomEnabled="both"
+      style="height: 300px"
+    />
+    <oge-range-selector
+      [dataSource]="data"
+      [series]="miniSeries"
+      [(value)]="range"
+      style="display: block; margin-top: 8px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly range = signal<OgeChartRange | null>(null);
+
+  protected readonly data = Array.from({ length: 365 }, (_, i) => ({
+    date: new Date(2026, 0, 1 + i),
+    sales: 200 + Math.sin(i / 20) * 80 + (i % 11) * 6,
+  }));
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'line', argumentField: 'date', valueField: 'sales', name: 'Sales' },
+  ];
+
+  protected readonly miniSeries: OgeChartSeriesInput[] = [
+    { type: 'area', argumentField: 'date', valueField: 'sales', name: 'Sales' },
   ];
 }
 ```

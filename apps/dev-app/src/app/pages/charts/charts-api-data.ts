@@ -59,6 +59,13 @@ export const OGE_CHART_API: ApiSections = {
           description:
             'Argument-axis markers: <code>{ start, end?, label?, color? }</code> — a line without <code>end</code>, a shaded band with it.',
         },
+        {
+          name: 'annotations',
+          type: 'readonly OgeChartAnnotation[]',
+          default: '[]',
+          description:
+            "Plot annotations: <code>type: 'point'</code> draws a marker dot with a connector into a label box at (<code>argument</code>, <code>value</code>); <code>'text'</code> places the label alone (top of the plot without a value). <code>axis</code>, <code>color</code> and <code>offsetX/Y</code> refine placement.",
+        },
       ],
     },
     {
@@ -253,10 +260,148 @@ export const OGE_CHART_API: ApiSections = {
             "Replaces the tooltip's content; context <code>OgeChartTooltipTemplateContext</code>: <code>{ $implicit: OgeChartPointEvent[] }</code>.",
         },
         {
+          name: '[ogeChartAnnotationTemplate]',
+          type: 'structural directive (OgeChartAnnotationTemplate)',
+          description:
+            "Replaces an annotation's label (rendered in a <code>foreignObject</code>, so any HTML works); context <code>OgeChartAnnotationTemplateContext</code>: <code>{ $implicit: { text } }</code>.",
+        },
+        {
           name: '[ogeChartLegendTemplate]',
           type: 'structural directive (OgeChartLegendTemplate)',
           description:
             "Replaces a legend item's content; context <code>OgeChartLegendTemplateContext</code>: <code>{ $implicit: { name, color, hidden } }</code>.",
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_POLAR_CHART_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'dataSource / series / commonSeries',
+          type: 'readonly T[] / readonly OgeChartSeriesInput[] / Partial',
+          default: '[] / [] / {}',
+          description:
+            "Same field mapping as the cartesian chart; supported polar types: <code>'line'</code> and <code>'area'</code> (closed radar loops — a null value breaks the loop into a gap), <code>'scatter'</code> (markers) and <code>'bar'</code> (sectors from the center).",
+        },
+        {
+          name: 'spider',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Straight-segment (polygon) grid rings instead of circles.',
+        },
+        {
+          name: 'startAngle',
+          type: 'number',
+          default: '0',
+          description:
+            "First category's angle in radians (0 = 12 o'clock, clockwise).",
+        },
+        {
+          name: 'valueAxis',
+          type: 'OgeChartAxisOptions',
+          default: '{}',
+          description:
+            'The radial axis: <code>max</code> override and <code>labelFormat</code> of the nice-tick rings.',
+        },
+        {
+          name: 'selectionMode / selectedPoints',
+          type: "'point' | 'none' / readonly OgeChartPointRef[]",
+          default: "'none' / []",
+          description:
+            'Keyboard Enter (and clicks on markers/sectors) select; two-way (<code>[(selectedPoints)]</code>).',
+        },
+        {
+          name: 'legend / tooltipEnabled / palette / title / locale / messages',
+          type: 'see OgeChart',
+          description:
+            'Shared options — the legend, tooltip, sr data table and keyboard inspection (arrows walk categories and series) work exactly like the cartesian chart.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'focus() / getSvgElement()',
+          type: 'void / SVGSVGElement',
+          description:
+            'Focuses the keyboard-inspectable plot / the live SVG root for the image exporters.',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'pointClick / legendClick / selectedPointsChange',
+          type: 'OgeChartPointEvent&lt;T&gt; / OgeChartLegendClickEvent / readonly OgeChartPointRef[]',
+          description:
+            'Point activation, the cancelable legend toggle and the two-way selection output.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_RANGE_SELECTOR_API: ApiSections = {
+  properties: [
+    {
+      entries: [
+        {
+          name: 'dataSource / series',
+          type: 'readonly T[] / readonly OgeChartSeriesInput[]',
+          default: '[] / []',
+          description:
+            'The mini background chart (line/area recommended) drawn behind the selection window.',
+        },
+        {
+          name: 'value',
+          type: 'OgeChartRange | null',
+          default: 'null',
+          description:
+            "The selected window in argument units (<code>null</code> = full range). Two-way (<code>[(value)]</code>) — bind the same signal to a chart's <code>[(visualRange)]</code> and the two stay in lockstep.",
+        },
+        {
+          name: 'scaleType',
+          type: "'time' | 'linear' | undefined",
+          description:
+            'Auto-detects from the first argument (dates → time) when unset.',
+        },
+        {
+          name: 'palette / locale / messages',
+          type: 'see OgeChart',
+          description:
+            'Shared options; handle labels come from <code>messages.aria.rangeStart/rangeEnd/rangeWindow</code>.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'reset()',
+          type: 'void',
+          description: 'Back to the full range (<code>value = null</code>).',
+        },
+      ],
+    },
+  ],
+  events: [
+    {
+      entries: [
+        {
+          name: 'valueChange',
+          type: 'OgeChartRange | null',
+          description:
+            'The two-way model output. Interaction: drag the window (grab cursor), drag either handle, click the track to center the window there — Escape mid-drag restores; the handles are WAI-ARIA sliders (arrow keys adjust by 2%, Home/End jump to the bounds, changes announced).',
         },
       ],
     },

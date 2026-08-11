@@ -3,6 +3,9 @@ import { RouterLink } from '@angular/router';
 import {
   OgeChart,
   OgePieChart,
+  OgePolarChart,
+  OgeRangeSelector,
+  type OgeChartAnnotation,
   type OgeChartPointEvent,
   type OgeChartPointRef,
   type OgeChartRange,
@@ -13,10 +16,13 @@ import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { PageToc } from '../../shared/page-toc';
 import {
+  ANNOTATIONS_SNIPPET,
   EVENTS_EXPORT_SNIPPET,
   FINANCIAL_SNIPPET,
   GETTING_STARTED_SNIPPET,
   PIE_SNIPPET,
+  POLAR_SNIPPET,
+  RANGE_SELECTOR_SNIPPET,
   SERIES_TYPES_SNIPPET,
   STACKS_SNIPPET,
   TIME_AXIS_SNIPPET,
@@ -31,12 +37,24 @@ const SECTIONS = [
   'Zoom, pan & tooltips',
   'Candlestick & multi-axis',
   'Pie & doughnut',
+  'Polar & radar',
+  'Annotations',
+  'Range selector',
   'Selection, i18n & export',
 ] as const;
 
 @Component({
   selector: 'app-charts-overview',
-  imports: [DemoCard, DocHeader, OgeChart, OgePieChart, PageToc, RouterLink],
+  imports: [
+    DemoCard,
+    DocHeader,
+    OgeChart,
+    OgePieChart,
+    OgePolarChart,
+    OgeRangeSelector,
+    PageToc,
+    RouterLink,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -195,6 +213,60 @@ const SECTIONS = [
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['radar', 'spider grid', 'polar bar']"
+      heading="Polar & radar"
+      description="Radar/polar on the same kernel: categories slot around the circle, values map radially with nice-tick rings. <code>line</code>/<code>area</code> draw closed radar loops (a null value breaks the loop into a gap), <code>scatter</code> renders markers, <code>bar</code> renders sectors — and <code>spider</code> swaps circular rings for polygons."
+      [code]="polarSnippet"
+      language="ts"
+    >
+      <oge-polar-chart
+        [dataSource]="polarData"
+        [series]="polarSeries"
+        [commonSeries]="{ argumentField: 'skill' }"
+        [spider]="true"
+        title="Team skills"
+        style="height: 400px"
+      />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="['point annotations', 'text annotations', 'template']"
+      heading="Annotations"
+      description="Annotations anchor on the plot: <code>point</code> draws a marker dot with a connector into a label box at (argument, value); <code>text</code> places the label alone. <code>*ogeChartAnnotationTemplate</code> swaps in arbitrary HTML."
+      [code]="annotationsSnippet"
+      language="ts"
+    >
+      <oge-chart
+        [dataSource]="annoData"
+        [series]="annoSeries"
+        [annotations]="annotations"
+        style="height: 380px"
+      />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="['overview strip', '[(value)]', 'slider handles']"
+      heading="Range selector"
+      description="The overview strip: a mini background chart with a draggable window and two WAI-ARIA slider handles (arrows adjust, Home/End jump, Escape mid-drag restores). Bound to the chart's <code>[(visualRange)]</code>, the two stay in lockstep — drag the window and the chart zooms."
+      [code]="rangeSelectorSnippet"
+      language="ts"
+    >
+      <oge-chart
+        [dataSource]="rangeData"
+        [series]="rangeSeries"
+        [(visualRange)]="linkedRange"
+        zoomEnabled="both"
+        style="height: 300px"
+      />
+      <oge-range-selector
+        [dataSource]="rangeData"
+        [series]="rangeMiniSeries"
+        [(value)]="linkedRange"
+        style="display: block; margin-top: 8px"
+      />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['selectionMode', 'locale', 'export-image', 'PNG/SVG']"
       heading="Selection, i18n & export"
       description='<code>selectionMode="point"</code> rings clicked points (Ctrl adds to the set). Every user-facing string, aria labels included, lives in <code>OgeChartsMessages</code> (<code>provideOgeChartsConfig()</code>, <code>locale</code>). The dependency-free <code>&#64;oge-ui/charts/export-image</code> entry serializes the live SVG with inlined styles — PNG via canvas rasterization, or the standalone <code>.svg</code> itself.'
@@ -239,6 +311,9 @@ export class ChartsOverviewPage {
   protected readonly zoomSnippet = ZOOM_SNIPPET;
   protected readonly financialSnippet = FINANCIAL_SNIPPET;
   protected readonly pieSnippet = PIE_SNIPPET;
+  protected readonly polarSnippet = POLAR_SNIPPET;
+  protected readonly annotationsSnippet = ANNOTATIONS_SNIPPET;
+  protected readonly rangeSelectorSnippet = RANGE_SELECTOR_SNIPPET;
   protected readonly eventsExportSnippet = EVENTS_EXPORT_SNIPPET;
 
   protected readonly basicData = [
@@ -358,6 +433,55 @@ export class ChartsOverviewPage {
     { browser: 'Samsung', share: 3 },
     { browser: 'Opera', share: 2 },
     { browser: 'Other', share: 2 },
+  ];
+
+  protected readonly polarData = [
+    { skill: 'TypeScript', ada: 9, grace: 7 },
+    { skill: 'CSS', ada: 6, grace: 8 },
+    { skill: 'SQL', ada: 7, grace: 5 },
+    { skill: 'Rust', ada: 4, grace: 6 },
+    { skill: 'Go', ada: 5, grace: 9 },
+    { skill: 'Testing', ada: 8, grace: 7 },
+  ];
+  protected readonly polarSeries: OgeChartSeriesInput[] = [
+    { type: 'area', valueField: 'ada', name: 'Ada' },
+    { type: 'line', valueField: 'grace', name: 'Grace', width: 2.5 },
+  ];
+
+  protected readonly annoData = Array.from({ length: 40 }, (_, i) => ({
+    day: i + 1,
+    price: 80 + Math.sin(i / 5) * 20 + i / 2,
+  }));
+  protected readonly annoSeries: OgeChartSeriesInput[] = [
+    {
+      type: 'spline',
+      argumentField: 'day',
+      valueField: 'price',
+      name: 'Price',
+    },
+  ];
+  protected readonly annotations: OgeChartAnnotation[] = [
+    { type: 'point', text: 'All-time high', argument: 34, value: 116.9 },
+    {
+      type: 'point',
+      text: 'Correction',
+      argument: 22,
+      value: 76.1,
+      offsetY: 24,
+    },
+    { type: 'text', text: 'Q1 guidance', argument: 8 },
+  ];
+
+  protected readonly linkedRange = signal<OgeChartRange | null>(null);
+  protected readonly rangeData = Array.from({ length: 365 }, (_, i) => ({
+    date: new Date(2026, 0, 1 + i),
+    sales: 200 + Math.sin(i / 20) * 80 + (i % 11) * 6,
+  }));
+  protected readonly rangeSeries: OgeChartSeriesInput[] = [
+    { type: 'line', argumentField: 'date', valueField: 'sales', name: 'Sales' },
+  ];
+  protected readonly rangeMiniSeries: OgeChartSeriesInput[] = [
+    { type: 'area', argumentField: 'date', valueField: 'sales', name: 'Sales' },
   ];
 
   protected readonly selected = signal<readonly OgeChartPointRef[]>([]);

@@ -32,6 +32,17 @@ pure engine.
 - Stacking accumulates positives and negatives on separate branches;
   `fullStackedBar` normalizes each argument to 100%; `stack` groups
   split independent stacks
+- `<oge-polar-chart>`: radar/polar on the same kernel — `line`/`area`
+  radar loops (null values break the loop into gaps), `scatter` markers
+  and `bar` sectors around a category circle, with circular or `spider`
+  (polygon) grids
+- Annotations: `point` (marker dot + connector + label box) and `text`
+  labels anchored at (argument, value), with a
+  `*ogeChartAnnotationTemplate` HTML override
+- `<oge-range-selector>`: the overview strip — a mini background chart
+  with a draggable window and two WAI-ARIA slider handles; bind
+  `[(value)]` to a chart's `[(visualRange)]` and the two stay in
+  lockstep
 
 **Interaction**
 

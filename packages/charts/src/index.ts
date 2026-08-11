@@ -2,17 +2,19 @@
 // Explicit named exports only (house rule): the engine stays unexported.
 
 export { OgeChart, OGE_CHART_PALETTE } from './lib/chart/chart';
+export { OgePieChart, type OgeChartPieSliceEvent } from './lib/chart/pie-chart';
+export { OgePolarChart } from './lib/chart/polar-chart';
+export { OgeRangeSelector } from './lib/chart/range-selector';
 export {
-  OgePieChart,
-  type OgeChartPieSliceEvent,
-} from './lib/chart/pie-chart';
-export {
+  OgeChartAnnotationTemplate,
   OgeChartLegendTemplate,
   OgeChartTooltipTemplate,
+  type OgeChartAnnotationTemplateContext,
   type OgeChartLegendTemplateContext,
   type OgeChartTooltipTemplateContext,
 } from './lib/chart/chart-templates';
 export {
+  type OgeChartAnnotation,
   type OgeChartAxisOptions,
   type OgeChartAxisType,
   type OgeChartCrosshairOptions,

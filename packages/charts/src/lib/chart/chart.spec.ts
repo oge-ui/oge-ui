@@ -3,6 +3,7 @@ import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { OgeChart } from './chart';
 import { provideOgeChartsConfig } from '../config';
 import type {
+  OgeChartAnnotation,
   OgeChartLegendClickEvent,
   OgeChartRange,
   OgeChartSeriesInput,
@@ -31,6 +32,7 @@ const DATA: Row[] = [
       [zoomEnabled]="'both'"
       selectionMode="point"
       [(visualRange)]="range"
+      [annotations]="annotations()"
       title="Revenue"
       locale="en-US"
       style="height: 400px; width: 600px"
@@ -42,10 +44,16 @@ class Host {
   readonly chart = viewChild.required(OgeChart<Row>);
   readonly data = signal<Row[]>(DATA);
   readonly series = signal<OgeChartSeriesInput<Row>[]>([
-    { type: 'line', argumentField: 'month', valueField: 'sales', name: 'Sales' },
+    {
+      type: 'line',
+      argumentField: 'month',
+      valueField: 'sales',
+      name: 'Sales',
+    },
     { type: 'bar', argumentField: 'month', valueField: 'cost', name: 'Cost' },
   ]);
   readonly range = signal<OgeChartRange | null>(null);
+  readonly annotations = signal<OgeChartAnnotation[]>([]);
   readonly legendClicks: OgeChartLegendClickEvent[] = [];
 }
 
@@ -154,6 +162,22 @@ describe('<oge-chart>', () => {
     );
     await settle(fixture);
     expect(fixture.componentInstance.chart().selectedPoints().length).toBe(1);
+  });
+
+  it('annotations render dots, connectors and label boxes at their anchors', async () => {
+    fixture.componentInstance.annotations.set([
+      { type: 'point', text: 'Peak', argument: 'Apr', value: 40 },
+      { type: 'text', text: 'Note', argument: 'Jan' },
+    ]);
+    await settle(fixture);
+    expect(host.querySelectorAll('.oge-chart-annotation-dot').length).toBe(1);
+    expect(
+      host.querySelectorAll('.oge-chart-annotation-connector').length,
+    ).toBe(1);
+    const texts = Array.from(
+      host.querySelectorAll('.oge-chart-annotation-text'),
+    ).map((el) => el.textContent?.trim());
+    expect(texts).toEqual(['Peak', 'Note']);
   });
 
   it('getExportData snapshots series, colors and ranges', () => {

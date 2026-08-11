@@ -238,6 +238,77 @@
   pointer-events: none;
 }
 
+.oge-chart-annotation-dot {
+  fill: var(--oge-accent);
+  stroke: var(--oge-bg);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.oge-chart-annotation-connector {
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 1;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.oge-chart-annotation-box {
+  fill: var(--oge-tooltip-bg);
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.oge-chart-annotation-text {
+  fill: var(--oge-tooltip-color);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.oge-chart-annotation-fo {
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* ---------- range selector ---------- */
+
+.oge-range-selector {
+  min-block-size: 0;
+  height: auto;
+}
+
+.oge-range-wrap {
+  min-height: 90px;
+  height: 90px;
+}
+
+.oge-range-shade {
+  fill: var(--oge-chart-strip-bg);
+  pointer-events: none;
+}
+
+.oge-range-window {
+  fill: var(--oge-chart-zoom-bg);
+  stroke: var(--oge-accent);
+  stroke-width: 1;
+  cursor: grab;
+}
+
+.oge-range-handle {
+  position: absolute;
+  top: 6px;
+  bottom: 24px;
+  width: 8px;
+  border-radius: 4px;
+  background: var(--oge-accent);
+  cursor: ew-resize;
+  touch-action: none;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
 .oge-chart-pie-connector {
   fill: none;
   stroke: var(--oge-chart-axis-fg);

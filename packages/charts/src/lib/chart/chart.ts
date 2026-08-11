@@ -59,11 +59,13 @@ import { buildArgumentIndex, nearestIndex } from '../engine/hit-test';
 import { panRange, rangeFromSelection, zoomRangeAt } from '../engine/zoom-math';
 import { beginChartGesture } from './chart-gesture';
 import {
+  OgeChartAnnotationTemplate,
   OgeChartLegendTemplate,
   OgeChartTooltipTemplate,
 } from './chart-templates';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
 import type {
+  OgeChartAnnotation,
   OgeChartAxisOptions,
   OgeChartCrosshairOptions,
   OgeChartExportData,
@@ -393,6 +395,57 @@ interface AxisTickVm {
                 [attr.height]="plotH()"
               />
             }
+            <!-- annotations -->
+            @for (note of annotationVms(); track $index) {
+              @if (note.isPoint) {
+                <circle
+                  class="oge-chart-annotation-dot"
+                  [attr.cx]="note.x"
+                  [attr.cy]="note.y"
+                  r="4"
+                  [attr.fill]="note.color ?? null"
+                />
+                <line
+                  class="oge-chart-annotation-connector"
+                  [attr.x1]="note.x"
+                  [attr.y1]="note.y"
+                  [attr.x2]="note.labelX"
+                  [attr.y2]="note.labelY"
+                />
+              }
+              @if (annotationTemplate(); as tpl) {
+                <foreignObject
+                  [attr.x]="note.labelX"
+                  [attr.y]="note.labelY - 14"
+                  width="200"
+                  height="60"
+                  class="oge-chart-annotation-fo"
+                >
+                  <ng-container
+                    [ngTemplateOutlet]="tpl.templateRef"
+                    [ngTemplateOutletContext]="{
+                      $implicit: { text: note.text },
+                    }"
+                  />
+                </foreignObject>
+              } @else {
+                <rect
+                  class="oge-chart-annotation-box"
+                  [attr.x]="note.labelX - 6"
+                  [attr.y]="note.labelY - 13"
+                  [attr.width]="note.labelW"
+                  height="20"
+                  rx="4"
+                />
+                <text
+                  class="oge-chart-annotation-text"
+                  [attr.x]="note.labelX"
+                  [attr.y]="note.labelY + 1"
+                >
+                  {{ note.text }}
+                </text>
+              }
+            }
             <!-- axes lines -->
             <line
               class="oge-chart-axis-line"
@@ -536,10 +589,12 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   /** Shared defaults merged under every series (dx commonSeriesSettings). */
   readonly commonSeries = input<Partial<ChartSeriesInput<T>>>({});
   readonly argumentAxis = input<OgeChartAxisOptions>({});
-  readonly valueAxis = input<OgeChartAxisOptions | readonly OgeChartAxisOptions[]>(
-    {},
-  );
+  readonly valueAxis = input<
+    OgeChartAxisOptions | readonly OgeChartAxisOptions[]
+  >({});
   readonly stripLines = input<readonly OgeChartStripLine[]>([]);
+  /** Text/point annotations anchored on the plot. */
+  readonly annotations = input<readonly OgeChartAnnotation[]>([]);
   readonly legend = input<OgeChartLegendOptions>({});
   readonly tooltip = input<OgeChartTooltipOptions>({});
   readonly crosshair = input<OgeChartCrosshairOptions>({});
@@ -570,6 +625,10 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   protected readonly legendTemplate = contentChild(OgeChartLegendTemplate, {
     descendants: false,
   });
+  protected readonly annotationTemplate = contentChild(
+    OgeChartAnnotationTemplate,
+    { descendants: false },
+  );
   private readonly plotWrapEl =
     viewChild.required<ElementRef<HTMLElement>>('plotWrap');
   private readonly svgEl =
@@ -697,7 +756,8 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       : [],
   );
   private readonly categoryIndex = computed<ReadonlyMap<unknown, number>>(
-    () => new Map(this.categories().map((category, index) => [category, index])),
+    () =>
+      new Map(this.categories().map((category, index) => [category, index])),
   );
 
   protected readonly seriesList = computed<readonly ChartSeries<T>[]>(() => {
@@ -959,9 +1019,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
           if (x === null || slot === null) return;
           const segment =
             stacked?.[pointIndex] ??
-            (point.value === null
-              ? null
-              : { base: 0, top: point.value });
+            (point.value === null ? null : { base: 0, top: point.value });
           if (segment === null) return;
           const y1 = valueScale.toPx(segment.base);
           const y2 = valueScale.toPx(segment.top);
@@ -1010,9 +1068,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
         const top: PathPoint[] = series.points.map((point, pointIndex) => {
           const x = xOf(point);
           const value =
-            stacked !== null
-              ? (stacked[pointIndex]?.top ?? null)
-              : point.value;
+            stacked !== null ? (stacked[pointIndex]?.top ?? null) : point.value;
           return {
             x: x ?? 0,
             y: x === null || value === null ? null : valueScale.toPx(value),
@@ -1038,9 +1094,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
             });
             const back = reversePathPoints(bottom);
             areaPathD =
-              linePathD !== '' && back !== ''
-                ? `${linePathD} ${back} Z`
-                : null;
+              linePathD !== '' && back !== '' ? `${linePathD} ${back} Z` : null;
           } else if (type === 'stackedArea' && stacked !== null) {
             const bottom: PathPoint[] = series.points.map(
               (point, pointIndex) => {
@@ -1135,9 +1189,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       this.argumentAxis().labelOverlap ?? 'skip',
     );
   });
-  protected readonly argRotated = computed(
-    () => this.argTicksLayout().rotated,
-  );
+  protected readonly argRotated = computed(() => this.argTicksLayout().rotated);
 
   protected readonly argTicksVm = computed<readonly AxisTickVm[]>(() => {
     const scale = this.argScale();
@@ -1174,9 +1226,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
           ? numberFormat(value, this.effectiveLocale())
           : siFormat(value, this.effectiveLocale());
       };
-      const titleX = right
-        ? labelX + AXIS_W - 14
-        : labelX - AXIS_W + 14;
+      const titleX = right ? labelX + AXIS_W - 14 : labelX - AXIS_W + 14;
       const titleY = this.plotY() + this.plotH() / 2;
       return {
         index,
@@ -1200,11 +1250,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
     const kind = this.argKind();
     const categoryIndex = this.categoryIndex();
     const toNumeric = (value: number | Date | string): number | null =>
-      numericArgument(
-        value,
-        kind,
-        categoryIndex,
-      );
+      numericArgument(value, kind, categoryIndex);
     return this.stripLines()
       .map((strip) => {
         const start = toNumeric(strip.start);
@@ -1218,8 +1264,41 @@ export class OgeChart<T extends object = Record<string, unknown>> {
           color: strip.color,
         };
       })
+      .filter((strip): strip is NonNullable<typeof strip> => strip !== null);
+  });
+
+  protected readonly annotationVms = computed(() => {
+    const scale = this.argScale();
+    const scales = this.valueScales();
+    const kind = this.argKind();
+    const categoryIndex = this.categoryIndex();
+    return this.annotations()
+      .map((annotation) => {
+        const arg = numericArgument(annotation.argument, kind, categoryIndex);
+        if (arg === null) return null;
+        const x = scale.toPx(arg);
+        const valueScale = scales[annotation.axis ?? 0] ?? scales[0];
+        const anchorY =
+          annotation.value === undefined
+            ? 14
+            : valueScale.toPx(annotation.value);
+        const isPoint = annotation.type !== 'text';
+        const labelX = x + (annotation.offsetX ?? 12);
+        const labelY = anchorY + (annotation.offsetY ?? -12);
+        return {
+          x,
+          y: anchorY,
+          isPoint,
+          text: annotation.text,
+          color: annotation.color,
+          labelX,
+          labelY,
+          labelW: annotation.text.length * 6.6 + 12,
+        };
+      })
       .filter(
-        (strip): strip is NonNullable<typeof strip> => strip !== null,
+        (annotation): annotation is NonNullable<typeof annotation> =>
+          annotation !== null,
       );
   });
 
@@ -1329,31 +1408,31 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   }
 
   /** Point events at the active argument (shared → all visible series). */
-  protected readonly activePoints = computed<
-    readonly OgeChartPointEvent<T>[]
-  >(() => {
-    const position = this.activeArgPos();
-    if (position === null) return [];
-    const index = this.argIndex();
-    const shared = this.tooltip().shared === true;
-    const list: OgeChartPointEvent<T>[] = [];
-    this.seriesList().forEach((series, seriesIndex) => {
-      if (this.hiddenSeries().has(seriesIndex)) return;
-      if (!shared && seriesIndex !== this.nearestSeriesIndex()) return;
-      const pointIndex = index.pointIndexAt(position, seriesIndex);
-      if (pointIndex === -1) return;
-      const point = series.points[pointIndex];
-      if (point.value === null && series.type !== 'candlestick') return;
-      list.push({
-        seriesIndex,
-        seriesName: series.name,
-        pointIndex,
-        point,
-        event: new MouseEvent('pointermove'),
+  protected readonly activePoints = computed<readonly OgeChartPointEvent<T>[]>(
+    () => {
+      const position = this.activeArgPos();
+      if (position === null) return [];
+      const index = this.argIndex();
+      const shared = this.tooltip().shared === true;
+      const list: OgeChartPointEvent<T>[] = [];
+      this.seriesList().forEach((series, seriesIndex) => {
+        if (this.hiddenSeries().has(seriesIndex)) return;
+        if (!shared && seriesIndex !== this.nearestSeriesIndex()) return;
+        const pointIndex = index.pointIndexAt(position, seriesIndex);
+        if (pointIndex === -1) return;
+        const point = series.points[pointIndex];
+        if (point.value === null && series.type !== 'candlestick') return;
+        list.push({
+          seriesIndex,
+          seriesName: series.name,
+          pointIndex,
+          point,
+          event: new MouseEvent('pointermove'),
+        });
       });
-    });
-    return list;
-  });
+      return list;
+    },
+  );
 
   /** Non-shared tooltips snap to the series whose value is nearest the cursor. */
   private readonly nearestSeriesIndex = computed(() => {
