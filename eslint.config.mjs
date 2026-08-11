@@ -71,6 +71,19 @@ export default [
               onlyDependOnLibsWithTags: ['scope:bpmn', 'scope:core'],
             },
             {
+              // commercial gantt: like the scheduler, a deliberate consumer
+              // of the MIT suite (task dialog = forms, tooltips = overlay);
+              // the tree pane builds on core's tree engine, not tree-list
+              sourceTag: 'scope:gantt',
+              onlyDependOnLibsWithTags: [
+                'scope:gantt',
+                'scope:core',
+                'scope:overlay',
+                'scope:inputs',
+                'scope:forms',
+              ],
+            },
+            {
               // commercial scheduler: deliberately a *consumer* of the MIT
               // suite — the appointment popup (overlay), editors (inputs)
               // and the appointment form (forms) are the selling point, so
@@ -181,6 +194,7 @@ export default [
                 'scope:pivot',
                 'scope:bpmn',
                 'scope:scheduler',
+                'scope:gantt',
                 'scope:buttons',
                 'scope:overlay',
                 'scope:inputs',

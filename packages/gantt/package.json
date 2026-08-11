@@ -1,0 +1,39 @@
+{
+  "name": "@oge-ui/gantt",
+  "version": "0.10.0",
+  "description": "Signal-based Angular Gantt chart: task tree pane + timeline chart with summary/milestone bars, FS/SS/FF/SF dependency arrows, drag/resize/progress editing with Escape-cancel and full keyboard access — the only Angular-native Gantt. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "angular",
+    "gantt",
+    "gantt-chart",
+    "project-management",
+    "timeline",
+    "tasks",
+    "dependencies",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/core": "0.10.0",
+    "@oge-ui/forms": "0.10.0",
+    "@oge-ui/overlay": "0.10.0"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/gantt"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}
