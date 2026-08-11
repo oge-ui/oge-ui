@@ -22,8 +22,10 @@ export {
   type OgeSchedulerAppointmentUpdatingEvent,
   type OgeSchedulerCellClickEvent,
   type OgeSchedulerEditorShowingEvent,
+  type OgeSchedulerRangeSelectedEvent,
   type OgeSchedulerView,
   type OgeSchedulerViewOptions,
+  type OgeSchedulerWorkHours,
 } from './lib/scheduler-types';
 export {
   OGE_DEFAULT_SCHEDULER_CONFIG,

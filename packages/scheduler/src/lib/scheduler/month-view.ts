@@ -12,10 +12,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { sameDay, sameMonth, startOfDay } from '@oge-ui/core';
-import {
-  proposeMove,
-  type AppointmentProposal,
-} from '../engine/gesture-math';
+import { proposeMove, type AppointmentProposal } from '../engine/gesture-math';
 import { beginPointerGesture } from './gesture';
 import type { LaneLayout } from '../engine/lanes';
 import { buildMonthWeekLanes } from '../engine/month-layout';
@@ -54,113 +51,139 @@ import type {
         </div>
       }
     </div>
-    <!-- delegated keydown; focus lives on the roving gridcell -->
-    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
-    <div
-      #monthGridEl
-      class="oge-scheduler-month-grid"
-      role="grid"
-      [attr.aria-label]="gridAriaLabel()"
-      (keydown)="onGridKeydown($event)"
-    >
+    <!-- the wrapper carries the lane layers so the grid element owns ONLY
+         rows (aria-required-children) -->
+    <div #monthGridEl class="oge-scheduler-month-area">
+      <!-- delegated keydown; focus lives on the roving gridcell -->
+      <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+      <div
+        class="oge-scheduler-month-grid"
+        role="grid"
+        [attr.aria-label]="gridAriaLabel()"
+        (keydown)="onGridKeydown($event)"
+      >
+        @for (
+          week of grid().weeks;
+          track week[0].getTime();
+          let weekIndex = $index
+        ) {
+          <div
+            class="oge-scheduler-month-week"
+            role="row"
+            [style.--oge-scheduler-month-lanes]="maxLanes()"
+          >
+            @for (day of week; track day.getTime(); let dayIndex = $index) {
+              <div
+                class="oge-scheduler-month-cell"
+                role="gridcell"
+                [class.oge-scheduler-month-other]="!isCurrentMonth(day)"
+                [class.oge-scheduler-day-today]="isToday(day)"
+                [class.oge-scheduler-cell-weekend]="
+                  day.getDay() === 0 || day.getDay() === 6
+                "
+                [class.oge-scheduler-cell-focused]="
+                  isFocusedCell(weekIndex, dayIndex)
+                "
+                [class.oge-scheduler-drop-target]="
+                  isDropTarget(weekIndex, dayIndex)
+                "
+                [tabindex]="isFocusedCell(weekIndex, dayIndex) ? 0 : -1"
+                [attr.data-focus-target]="
+                  isFocusedCell(weekIndex, dayIndex) ? '' : null
+                "
+                [attr.aria-label]="cellAriaLabel(day)"
+                (click)="onCellClick(weekIndex, dayIndex, $event)"
+                (dblclick)="onCellDblClick(day, $event)"
+                (keydown)="onCellKeydown(weekIndex, dayIndex, $event)"
+                (contextmenu)="
+                  cellContextMenu.emit({
+                    cellDate: day,
+                    allDay: true,
+                    event: $event,
+                  })
+                "
+              >
+                <span class="oge-scheduler-month-daynum" aria-hidden="true">{{
+                  day.getDate()
+                }}</span>
+                @if (cellTemplate(); as tpl) {
+                  <ng-container
+                    [ngTemplateOutlet]="tpl.templateRef"
+                    [ngTemplateOutletContext]="{
+                      $implicit: day,
+                      view: 'month',
+                      allDay: true,
+                    }"
+                  />
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
       @for (
         week of grid().weeks;
         track week[0].getTime();
         let weekIndex = $index
       ) {
         <div
-          class="oge-scheduler-month-week"
-          role="row"
+          class="oge-scheduler-month-lane-layer"
+          role="presentation"
           [style.--oge-scheduler-month-lanes]="maxLanes()"
+          [style.top.%]="(weekIndex / 6) * 100"
+          [style.height.%]="100 / 6"
         >
-          @for (day of week; track day.getTime(); let dayIndex = $index) {
+          @for (
+            item of weekLanes()[weekIndex].visible;
+            track item.appointment.key
+          ) {
             <div
-              class="oge-scheduler-month-cell"
-              role="gridcell"
-              [class.oge-scheduler-month-other]="!isCurrentMonth(day)"
-              [class.oge-scheduler-day-today]="isToday(day)"
-              [class.oge-scheduler-cell-focused]="
-                isFocusedCell(weekIndex, dayIndex)
+              class="oge-scheduler-month-bar oge-scheduler-chip-stop"
+              role="button"
+              [attr.aria-label]="chipLabel(item.appointment)"
+              aria-haspopup="dialog"
+              [tabindex]="chipTabIndex(item.appointment)"
+              [attr.data-appointment-key]="String(item.appointment.key)"
+              [class.oge-scheduler-bar-clipped-start]="item.clippedStart"
+              [class.oge-scheduler-bar-clipped-end]="item.clippedEnd"
+              [style.grid-column]="
+                item.startDayIndex + 1 + ' / ' + (item.endDayIndex + 2)
               "
-              [class.oge-scheduler-drop-target]="
-                isDropTarget(weekIndex, dayIndex)
+              [style.grid-row]="item.lane + 1"
+              [class.oge-scheduler-dragging]="
+                draggedKey() === item.appointment.key
               "
-              [tabindex]="isFocusedCell(weekIndex, dayIndex) ? 0 : -1"
-              [attr.data-focus-target]="
-                isFocusedCell(weekIndex, dayIndex) ? '' : null
-              "
-              [attr.aria-label]="cellAriaLabel(day)"
-              (click)="onCellClick(weekIndex, dayIndex, $event)"
-              (dblclick)="onCellDblClick(day, $event)"
-              (keydown)="onCellKeydown(weekIndex, dayIndex, $event)"
+              (click)="onChipClick(item.appointment, $event)"
+              (dblclick)="onChipDblClick(item.appointment, $event)"
+              (keydown)="onChipKeydown(item.appointment, $event)"
+              (contextmenu)="onChipContextMenu(item.appointment, $event)"
+              (focus)="focusedChipKey.set(item.appointment.key)"
+              (pointerdown)="onBarPointerDown(item.appointment, $event)"
             >
-              <span class="oge-scheduler-month-daynum" aria-hidden="true">{{
-                day.getDate()
-              }}</span>
-              @if (cellTemplate(); as tpl) {
-                <ng-container
-                  [ngTemplateOutlet]="tpl.templateRef"
-                  [ngTemplateOutletContext]="{
-                    $implicit: day,
-                    view: 'month',
-                    allDay: true,
-                  }"
-                />
-              }
+              <oge-scheduler-appointment
+                [appointment]="item.appointment"
+                view="month"
+                [compact]="true"
+                [locale]="locale()"
+                [template]="appointmentTemplate()"
+              />
             </div>
           }
-          <div class="oge-scheduler-month-lane-layer" role="presentation">
-            @for (
-              item of weekLanes()[weekIndex].visible;
-              track item.appointment.key
-            ) {
-              <div
-                class="oge-scheduler-month-bar oge-scheduler-chip-stop"
-                role="button"
-                [attr.aria-label]="chipLabel(item.appointment)"
-                aria-haspopup="dialog"
-                [tabindex]="chipTabIndex(item.appointment)"
-                [attr.data-appointment-key]="String(item.appointment.key)"
-                [class.oge-scheduler-bar-clipped-start]="item.clippedStart"
-                [class.oge-scheduler-bar-clipped-end]="item.clippedEnd"
-                [style.grid-column]="
-                  item.startDayIndex + 1 + ' / ' + (item.endDayIndex + 2)
-                "
-                [style.grid-row]="item.lane + 1"
-                [class.oge-scheduler-dragging]="
-                  draggedKey() === item.appointment.key
-                "
-                (click)="onChipClick(item.appointment, $event)"
-                (dblclick)="onChipDblClick(item.appointment, $event)"
-                (keydown)="onChipKeydown(item.appointment, $event)"
-                (focus)="focusedChipKey.set(item.appointment.key)"
-                (pointerdown)="onBarPointerDown(item.appointment, $event)"
-              >
-                <oge-scheduler-appointment
-                  [appointment]="item.appointment"
-                  view="month"
-                  [compact]="true"
-                  [locale]="locale()"
-                  [template]="appointmentTemplate()"
-                />
-              </div>
-            }
-            @for (
-              overflow of overflowEntries()[weekIndex];
-              track overflow.dayIndex
-            ) {
-              <button
-                type="button"
-                class="oge-scheduler-month-more"
-                tabindex="-1"
-                [style.grid-column]="overflow.dayIndex + 1"
-                [style.grid-row]="maxLanes() + 1"
-                (click)="moreClick.emit(week[overflow.dayIndex])"
-              >
-                {{ moreText(overflow.count) }}
-              </button>
-            }
-          </div>
+          @for (
+            overflow of overflowEntries()[weekIndex];
+            track overflow.dayIndex
+          ) {
+            <button
+              type="button"
+              class="oge-scheduler-month-more"
+              tabindex="-1"
+              [style.grid-column]="overflow.dayIndex + 1"
+              [style.grid-row]="maxLanes() + 1"
+              (click)="moreClick.emit(week[overflow.dayIndex])"
+            >
+              {{ moreText(overflow.count) }}
+            </button>
+          }
         </div>
       }
     </div>
@@ -194,6 +217,22 @@ export class OgeSchedulerMonthView<T = unknown> {
   readonly moveCommitted = output<SchedulerProposalEvent<T>>();
   /** A drag was cancelled with Escape/blur. */
   readonly gestureCancelled = output<void>();
+  /** Right-click on a chip. */
+  readonly chipContextMenu = output<SchedulerChipEvent<T>>();
+  /** Right-click on an empty cell. */
+  readonly cellContextMenu = output<SchedulerCellEvent>();
+
+  protected onChipContextMenu(
+    appointment: SchedulerAppointment<T>,
+    event: MouseEvent,
+  ): void {
+    event.stopPropagation();
+    this.chipContextMenu.emit({
+      appointment,
+      event,
+      rect: (event.currentTarget as HTMLElement).getBoundingClientRect(),
+    });
+  }
 
   protected readonly grid = computed<MonthGridVm>(() =>
     buildMonthGrid(this.anchorDate(), this.firstDayOfWeek()),
@@ -382,7 +421,9 @@ export class OgeSchedulerMonthView<T = unknown> {
 
   protected isDropTarget(weekIndex: number, dayIndex: number): boolean {
     const target = this.dropTarget();
-    return target !== null && target.week === weekIndex && target.day === dayIndex;
+    return (
+      target !== null && target.week === weekIndex && target.day === dayIndex
+    );
   }
 
   protected onBarPointerDown(
@@ -404,11 +445,17 @@ export class OgeSchedulerMonthView<T = unknown> {
       onMove: (_deltaX, _deltaY, moveEvent) => {
         const week = Math.min(
           5,
-          Math.max(0, Math.floor(((moveEvent.clientY - rect.top) / rect.height) * 6)),
+          Math.max(
+            0,
+            Math.floor(((moveEvent.clientY - rect.top) / rect.height) * 6),
+          ),
         );
         const day = Math.min(
           6,
-          Math.max(0, Math.floor(((moveEvent.clientX - rect.left) / rect.width) * 7)),
+          Math.max(
+            0,
+            Math.floor(((moveEvent.clientX - rect.left) / rect.width) * 7),
+          ),
         );
         this.dropTarget.set({ week, day });
         if (originIndex === -1) return;

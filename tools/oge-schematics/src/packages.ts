@@ -39,6 +39,12 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-bpmn-editor />` — `importXml(xml)` / `exportXml()` round-trip BPMN 2.0 + DI; palette, orthogonal connections, undo/redo, keyboard-accessible canvas',
     },
   ],
+  '@oge-ui/scheduler': [
+    {
+      need: 'scheduler / event calendar with day, week and month views, appointments, drag & resize',
+      use: '`<oge-scheduler [dataSource]="appointments" [(currentDate)]="date" [(currentView)]="view" />` — field mapping via `startDateExpr`/`endDateExpr`/`textExpr`, appointment popup + form editing, cancelable `appointmentAdding/Updating/Deleting`',
+    },
+  ],
   '@oge-ui/buttons': [
     {
       need: 'button, async action button',
@@ -161,6 +167,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/tree-list',
   '@oge-ui/pivot',
   '@oge-ui/bpmn',
+  '@oge-ui/scheduler',
   '@oge-ui/inputs',
   '@oge-ui/buttons',
   '@oge-ui/overlay',

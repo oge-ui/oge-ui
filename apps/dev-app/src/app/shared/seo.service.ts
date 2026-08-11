@@ -31,6 +31,10 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular BPMN Editor: a from-scratch BPMN 2.0 modeler with its own dependency-free XML + diagram-interchange engine — palette, orthogonal routing, snapping, undo/redo, keyboard-accessible canvas with live-region announcements, and no watermark. Commercial, free for evaluation.',
   ],
   [
+    '/components/scheduler',
+    'Angular Scheduler / event calendar: day, week and month views, all-day strip, deterministic overlap layout from a framework-free kernel, drag & resize with Escape-cancel, anchored appointment popup, form-based editing and full keyboard access. Commercial, free for evaluation.',
+  ],
+  [
     '/components/buttons',
     'Angular Buttons with async actions and automatic loading, click guards, hold-to-confirm, badges, button groups and drop-down/split buttons.',
   ],

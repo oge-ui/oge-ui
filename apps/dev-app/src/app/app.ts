@@ -255,6 +255,18 @@ export class App {
       ],
     },
     {
+      title: 'Scheduler',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/scheduler', label: 'Overview', icon: 'calendar' },
+        {
+          path: '/components/scheduler/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Buttons',
       group: COMPONENTS_GROUP,
       items: [

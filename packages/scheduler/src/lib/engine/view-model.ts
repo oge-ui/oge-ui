@@ -17,16 +17,31 @@ import type { SchedulerAppointment } from './scheduler-model';
 import { minutesOfDay, slotCount } from './time-math';
 
 /** The scheduler's view types (string union, house rule — never an enum). */
-export type SchedulerViewType = 'day' | 'week' | 'month';
+export type SchedulerViewType = 'day' | 'week' | 'workWeek' | 'month';
 
 /** Configuration of a day/week time grid. */
 export interface TimeGridConfig {
   readonly anchorDate: Date;
-  readonly view: 'day' | 'week';
+  readonly view: 'day' | 'week' | 'workWeek';
   readonly firstDayOfWeek: number;
   readonly dayStartHour: number;
   readonly dayEndHour: number;
   readonly cellDuration: number;
+  /** Weekdays (0 = Sunday) removed from week-shaped grids. */
+  readonly hiddenWeekDays?: readonly number[];
+}
+
+/** The weekdays a view hides: `workWeek` always drops the weekend. */
+export function resolveHiddenWeekDays(
+  view: SchedulerViewType,
+  hiddenWeekDays: readonly number[] | undefined,
+): readonly number[] {
+  const hidden =
+    view === 'workWeek'
+      ? [0, 6, ...(hiddenWeekDays ?? [])]
+      : (hiddenWeekDays ?? []);
+  // a grid needs at least one visible day — ignore a config hiding all seven
+  return new Set(hidden).size >= 7 ? [] : hidden;
 }
 
 /** The built day/week grid: rendered days, slot rows and the data window. */
@@ -49,9 +64,14 @@ export function buildTimeGrid(config: TimeGridConfig): TimeGridVm {
       ? startOfDay(config.anchorDate)
       : startOfWeek(config.anchorDate, config.firstDayOfWeek);
   const dayCount = config.view === 'day' ? 1 : 7;
+  const hidden = new Set(
+    config.view === 'day'
+      ? []
+      : resolveHiddenWeekDays(config.view, config.hiddenWeekDays),
+  );
   const days = Array.from({ length: dayCount }, (_, index) =>
     addDays(first, index),
-  );
+  ).filter((day) => !hidden.has(day.getDay()));
   const rows = slotCount(
     config.dayStartHour,
     config.dayEndHour,
@@ -108,7 +128,7 @@ export function viewRange(
     const start = startOfDay(anchorDate);
     return { start, end: addDays(start, 1) };
   }
-  if (view === 'week') {
+  if (view === 'week' || view === 'workWeek') {
     const start = startOfWeek(anchorDate, firstDayOfWeek);
     return { start, end: addDays(start, 7) };
   }
@@ -123,7 +143,9 @@ export function navigateDate(
   direction: -1 | 1,
 ): Date {
   if (view === 'day') return addDays(anchorDate, direction);
-  if (view === 'week') return addDays(anchorDate, direction * 7);
+  if (view === 'week' || view === 'workWeek') {
+    return addDays(anchorDate, direction * 7);
+  }
   return startOfMonth(addMonths(anchorDate, direction));
 }
 
@@ -208,7 +230,11 @@ export function segmentTimedAppointments<T>(
       const start = Math.max(rawStart, grid.windowStartMinutes);
       const end = Math.min(rawEnd, grid.windowEndMinutes);
       if (end < start || (end === start && !zeroLength)) continue;
-      if (zeroLength && (start > grid.windowEndMinutes || end < grid.windowStartMinutes)) continue;
+      if (
+        zeroLength &&
+        (start > grid.windowEndMinutes || end < grid.windowStartMinutes)
+      )
+        continue;
       segments.push({
         appointment,
         dayIndex,

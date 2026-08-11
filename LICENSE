@@ -8,6 +8,10 @@ Portions of this repository are licensed as follows:
 - Everything under `packages/bpmn` is licensed under the OGE UI Commercial
   License — see `packages/bpmn/LICENSE`. Same terms: source-available, free
   for evaluation and development, paid for production use.
+- Everything under `packages/scheduler` is licensed under the OGE UI
+  Commercial License — see `packages/scheduler/LICENSE`. Same terms:
+  source-available, free for evaluation and development, paid for
+  production use.
 - Everything else is licensed under the MIT License, reproduced below, and
   will remain MIT-licensed.
 

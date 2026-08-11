@@ -12,8 +12,12 @@ export interface OgeSchedulerToolbarMessages {
   readonly next: string;
   /** Accessible name of the view-switcher group. */
   readonly viewSwitcherLabel: string;
+  /** Aria label of the date-navigator button (opens the calendar). */
+  readonly dateNavigatorLabel: string;
   /** Display names of the built-in views. */
-  readonly viewNames: Readonly<Record<'day' | 'week' | 'month', string>>;
+  readonly viewNames: Readonly<
+    Record<'day' | 'week' | 'workWeek' | 'month', string>
+  >;
 }
 
 /** Labels of the appointment popup (click on a chip). */
@@ -97,7 +101,13 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     previous: 'Previous period',
     next: 'Next period',
     viewSwitcherLabel: 'Views',
-    viewNames: { day: 'Day', week: 'Week', month: 'Month' },
+    dateNavigatorLabel: 'Choose a date',
+    viewNames: {
+      day: 'Day',
+      week: 'Week',
+      workWeek: 'Work Week',
+      month: 'Month',
+    },
   },
   popup: {
     edit: 'Edit',

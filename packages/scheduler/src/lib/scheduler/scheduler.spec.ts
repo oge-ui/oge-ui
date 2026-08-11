@@ -81,13 +81,11 @@ describe('<oge-scheduler> shell', () => {
 
   it('renders the week view with 7 day columns and the appointments', () => {
     const host = fixture.nativeElement as HTMLElement;
-    expect(
-      host.querySelector('.oge-scheduler-row')?.children.length,
-    ).toBe(7);
+    expect(host.querySelector('.oge-scheduler-row')?.children.length).toBe(7);
     expect(host.querySelectorAll('.oge-scheduler-chip-box').length).toBe(1);
-    expect(text(fixture, '.oge-scheduler-chip-box .oge-scheduler-chip-text')).toBe(
-      'Standup',
-    );
+    expect(
+      text(fixture, '.oge-scheduler-chip-box .oge-scheduler-chip-text'),
+    ).toBe('Standup');
     expect(host.querySelectorAll('.oge-scheduler-allday-bar').length).toBe(1);
   });
 
@@ -103,9 +101,7 @@ describe('<oge-scheduler> shell', () => {
 
     fixture.componentInstance.view.set('day');
     await settle(fixture);
-    expect(
-      host.querySelector('.oge-scheduler-row')?.children.length,
-    ).toBe(1);
+    expect(host.querySelector('.oge-scheduler-row')?.children.length).toBe(1);
   });
 
   it('navigates periods and today through the toolbar', async () => {
@@ -138,16 +134,20 @@ describe('<oge-scheduler> shell', () => {
         previous: 'Zurück',
         next: 'Weiter',
         viewSwitcherLabel: 'Ansichten',
-        viewNames: { day: 'Tag', week: 'Woche', month: 'Monat' },
+        dateNavigatorLabel: 'Datum wählen',
+        viewNames: {
+          day: 'Tag',
+          week: 'Woche',
+          workWeek: 'Arbeitswoche',
+          month: 'Monat',
+        },
       },
     });
     await settle(fixture);
     const host = fixture.nativeElement as HTMLElement;
     expect(text(fixture, '.oge-scheduler-btn')).toBe('Heute');
     expect(
-      host
-        .querySelector('.oge-scheduler-toolbar')
-        ?.getAttribute('aria-label'),
+      host.querySelector('.oge-scheduler-toolbar')?.getAttribute('aria-label'),
     ).toBe('Zeitplaner');
   });
 
@@ -160,10 +160,9 @@ describe('<oge-scheduler> shell', () => {
     await settle(fixture);
     const host = fixture.nativeElement as HTMLElement;
     expect(host.querySelectorAll('.oge-scheduler-month-week').length).toBe(6);
+    expect(host.querySelectorAll('.oge-scheduler-month-cell').length).toBe(42);
     expect(
-      host.querySelectorAll('.oge-scheduler-month-cell').length,
-    ).toBe(42);
-    expect(host.querySelectorAll('.oge-scheduler-month-bar').length)
-      .toBeGreaterThanOrEqual(2); // Offsite bar + Standup chip
+      host.querySelectorAll('.oge-scheduler-month-bar').length,
+    ).toBeGreaterThanOrEqual(2); // Offsite bar + Standup chip
   });
 });

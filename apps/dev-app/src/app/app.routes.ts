@@ -742,6 +742,25 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/scheduler',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/scheduler/overview').then(
+            (m) => m.SchedulerOverviewPage,
+          ),
+        title: 'OGE — Scheduler',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/scheduler/api').then((m) => m.SchedulerApiPage),
+        title: 'OGE — Scheduler API',
+      },
+    ],
+  },
+  {
     path: 'license',
     loadComponent: () =>
       import('./pages/license/license').then((m) => m.LicensePage),

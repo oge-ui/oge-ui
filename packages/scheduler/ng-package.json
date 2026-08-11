@@ -5,6 +5,7 @@
   "allowedNonPeerDependencies": [
     "@oge-ui/core",
     "@oge-ui/forms",
+    "@oge-ui/inputs",
     "@oge-ui/overlay"
   ],
   "lib": {

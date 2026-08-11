@@ -13,15 +13,20 @@ overflow), drag-move / resize with Escape-cancel, an anchored appointment
 popup and a form-based appointment editor.
 
 Unlike `@oge-ui/bpmn` (deliberately self-contained), this package is a
-*consumer* of the MIT suite by design: the appointment popup comes from
+_consumer_ of the MIT suite by design: the appointment popup comes from
 `@oge-ui/overlay`, the editors from `@oge-ui/inputs` and the appointment
 form from `@oge-ui/forms` — that composition is the selling point, so the
 dependencies are taken instead of rebuilt.
 
 **Views & data**
 
-- `'day' | 'week' | 'month'` views with `[(currentDate)]` /
-  `[(currentView)]`, per-view hour-window and slot-duration overrides
+- `'day' | 'week' | 'workWeek' | 'month'` views with `[(currentDate)]` /
+  `[(currentView)]`, per-view hour-window and slot-duration overrides,
+  `hiddenWeekDays`, `min`/`max` navigation bounds and a toolbar
+  date-navigator calendar (embeds `@oge-ui/inputs`' `OgeCalendar`)
+- Planner ergonomics: `workHours` off-hours shading, weekend shading,
+  `shadeUntilCurrentTime`, `scrollTime`/`scrollTo(date)`, `snapDuration`
+  and a `readOnly` display-only shorthand
 - Binds plain arrays or any `@oge-ui/core` `DataSource` (OData, custom);
   field mapping via `startDateExpr` / `endDateExpr` / `textExpr` /
   `allDayExpr` / `colorExpr` / … (dotted paths or getter functions);
@@ -36,8 +41,9 @@ dependencies are taken instead of rebuilt.
 
 **Editing**
 
-- Click-to-create, drag-move and edge resize with slot snapping, a 3px
-  movement threshold and mid-gesture Escape-cancel
+- Click-to-create, drag-to-create range selection, drag-move and edge
+  resize with slot snapping, a 3px movement threshold and mid-gesture
+  Escape-cancel; context-menu events with full payloads
 - Anchored appointment popup (edit / delete) and a modal appointment form
   (`@oge-ui/forms`) with an `editorShowing` hook for custom fields
 - Cancelable `appointmentAdding` / `appointmentUpdating` /

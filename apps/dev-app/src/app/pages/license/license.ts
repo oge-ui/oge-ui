@@ -10,11 +10,12 @@ import { DocHeader } from '../../shared/doc-header';
       title="Licensing"
       category="Getting Started"
       categoryLink="/getting-started"
-      [chips]="['open-core', 'MIT', 'commercial pivot']"
+      [chips]="['open-core', 'MIT', 'commercial tier']"
     >
       <p>
         OGE UI is <strong>open-core</strong>: the suite is MIT-licensed and free
-        for any use — one analytics package, the Pivot Grid, is commercial.
+        for any use — three enterprise packages, the Pivot Grid, the BPMN Editor
+        and the Scheduler, are commercial.
       </p>
     </app-doc-header>
 
@@ -41,10 +42,13 @@ import { DocHeader } from '../../shared/doc-header';
       No feature that is free today will ever move behind a paid license.
     </p>
 
-    <h2 class="scroll-mt-20">Commercial — Pivot Grid &amp; BPMN Editor</h2>
+    <h2 class="scroll-mt-20">
+      Commercial — Pivot Grid, BPMN Editor &amp; Scheduler
+    </h2>
     <p>
-      <code>&#64;oge-ui/pivot</code> and <code>&#64;oge-ui/bpmn</code> are
-      source-available commercial software under the
+      <code>&#64;oge-ui/pivot</code>, <code>&#64;oge-ui/bpmn</code> and
+      <code>&#64;oge-ui/scheduler</code> are source-available commercial
+      software under the
       <a
         href="https://github.com/oge-ui/oge-ui/blob/main/packages/pivot/LICENSE"
         target="_blank"
@@ -64,7 +68,7 @@ import { DocHeader } from '../../shared/doc-header';
         <a href="mailto:license&#64;ogeui.com">license&#64;ogeui.com</a>.
       </li>
       <li>
-        Future enterprise-oriented packages (charts, scheduler, …) may join the
+        Future enterprise-oriented packages (e.g. charts) may join the
         commercial tier — never anything that is MIT today.
       </li>
     </ul>

@@ -174,6 +174,17 @@ export const PACKAGES = [
     tier: 'commercial',
   },
   {
+    dir: 'scheduler',
+    npm: '@oge-ui/scheduler',
+    label: 'Scheduler',
+    summary:
+      'Scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing.',
+    docsRoot: '/components/scheduler',
+    pageDirs: ['scheduler'],
+    apiPage: 'apps/dev-app/src/app/pages/scheduler/api.ts',
+    tier: 'commercial',
+  },
+  {
     dir: 'core',
     npm: '@oge-ui/core',
     label: 'Core',

@@ -85,7 +85,7 @@ describe('<oge-scheduler> keyboard model', () => {
   }
 
   it('exposes a role=grid with exactly one roving tabindex cell', () => {
-    const grid = host.querySelector('.oge-scheduler-rows');
+    const grid = host.querySelector('.oge-scheduler-grid');
     expect(grid?.getAttribute('role')).toBe('grid');
     expect(grid?.getAttribute('aria-label')).toContain('Scheduler');
     const stops = host.querySelectorAll(
@@ -128,9 +128,7 @@ describe('<oge-scheduler> keyboard model', () => {
       '.oge-scheduler-chip-box[role="button"]',
     );
     expect(chips.length).toBe(2);
-    const tabStops = Array.from(chips).filter(
-      (chip) => chip.tabIndex === 0,
-    );
+    const tabStops = Array.from(chips).filter((chip) => chip.tabIndex === 0);
     expect(tabStops.length).toBe(1);
     expect(tabStops[0].getAttribute('aria-label')).toContain('Early');
 
@@ -169,9 +167,9 @@ describe('<oge-scheduler> keyboard model', () => {
     );
     key(chip!, 'Delete');
     await settle(fixture);
-    expect(
-      host.querySelector('.oge-scheduler-live')?.textContent?.trim(),
-    ).toBe('Early deleted');
+    expect(host.querySelector('.oge-scheduler-live')?.textContent?.trim()).toBe(
+      'Early deleted',
+    );
   });
 
   it('month view exposes a role=grid with roving day cells', async () => {

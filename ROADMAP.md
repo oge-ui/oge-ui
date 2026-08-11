@@ -471,6 +471,73 @@ but the minimap is pointer-only (keyboard users pan with the arrow keys and
 are pointer-only gestures (their outcomes remain achievable via arrow-key
 moves), and the H/L/S tool shortcuts are edit-mode only.
 
+## Scheduler (`@oge-ui/scheduler`, commercial) — Feature Parity & Roadmap
+
+`OgeScheduler` against dxScheduler, Kendo Angular Scheduler and FullCalendar
+(the framework-agnostic incumbent). **Angular Material has no scheduler**
+(only a datepicker), and **PrimeNG removed its FullCalendar wrapper
+entirely** in 2022 (`p-schedule` → `p-fullCalendar` → removed, issues
+#6758/#12152) — two honest absence rows: OgeScheduler is the only
+Angular-native scheduler in the current ecosystem. No WAI-ARIA APG scheduler
+pattern exists; the a11y is composed from the calendar-grid pattern (roving
+`role="grid"` cells) plus a chip tab stop with keyboard move/resize
+(**OGE extra** — none of the three references move appointments from the
+keyboard) and polite live-region announcements.
+
+**Structural decisions.**
+
+- **Consumer of the MIT suite, by design** — the opposite stance to bpmn's
+  self-containment: the appointment popup is `overlay`'s `OgeAnchoredPanel`
+  (virtual anchor rect), the editor is `oge-modal` + `oge-form`
+  (`[(formData)]` mode), the date navigator embeds `inputs`' `OgeCalendar`.
+  The composition is the selling point.
+- **Pure kernel** (`src/lib/engine/`, lint-enforced framework-free):
+  view-model builders, deterministic transitive-overlap column layout
+  (equal-width clusters; FullCalendar-style right-expansion deferred), lane
+  packing shared by the all-day strip and month rows, gesture math, and an
+  RFC 5545 RRULE-subset parser (FREQ DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL,
+  COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY, BYMONTH, WKST — unsupported parts reject
+  the whole rule, never truncate).
+- **Intl-only local dates** (house rule): no date library, no adapter, no TZ
+  database — `UNTIL=…Z` reads as local wall time, documented honestly.
+
+| Feature (references)                                                       | Reference | Status  | Notes                                                                                                                |
+| -------------------------------------------------------------------------- | --------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| Day / Week / Month views                                                   | dx/K/FC   | covered | per-view `dayStartHour`/`dayEndHour`/`cellDuration` overrides via `views` option objects                             |
+| workWeek view + `hiddenWeekDays`                                           | dx/K/FC   | covered | `workWeek` always drops the weekend; `hiddenWeekDays` filters any week grid                                          |
+| All-day strip + lane packing                                               | dx/K/FC   | covered | `showAllDayPanel`; grows to CSS max-height + scroll                                                                  |
+| Overlap layout                                                             | dx/K/FC   | covered | deterministic clusters + greedy columns; right-expansion → v0.2                                                      |
+| `maxAppointmentsPerCell` + "+N more"                                       | dx/K/FC   | covered | overflow drills into the day view (dx option parity); collector popup list → v0.2                                    |
+| dataSource array / DataSource + field exprs + `keyExpr`                    | dx/K/FC   | covered | string dates round-trip in their storage shape (`serializeLikeOriginal`)                                             |
+| `[(currentDate)]` / `[(currentView)]`, toolbar, Intl period title          | dx/K/FC   | covered | Today disables while visible; `dateNavigatorText` formatter                                                          |
+| Date-navigator calendar drop-down                                          | dx/K      | covered | title button opens `OgeCalendar` in an anchored panel                                                                |
+| `min`/`max` navigation bounds                                              | dx/K/FC   | covered | clamps every date write; prev/next disable at the edges                                                              |
+| Current-time indicator + past-time shading                                 | dx/K/FC   | covered | `showCurrentTimeIndicator`, `shadeUntilCurrentTime`                                                                  |
+| Working-hours emphasis                                                     | K/FC      | covered | `workHours: { start, end, days? }` off-hours shading; weekends always shaded                                         |
+| `scrollTime` + `scrollToTime()`/`scrollTo(date)`                           | dx/K/FC   | covered |                                                                                                                      |
+| Click/dblclick/Enter create; popup; form dialog; `editorShowing`           | dx/K/FC   | covered | dx `onAppointmentFormOpening` parity via mutable `formItems`                                                         |
+| Drag-to-create range selection                                             | dx/K/FC   | covered | `rangeSelected` + prefilled editor; Escape cancels                                                                   |
+| Drag-move / edge-resize + Escape-cancel + `snapDuration`                   | dx/K/FC   | covered | bpmn five-part gesture machine; month/all-day drags move by day, preserving time                                     |
+| Keyboard move/resize (Ctrl+Arrow, Ctrl+Shift+Up/Down)                      | —         | covered | **OGE extra** — announced via the live region                                                                        |
+| Cancelable CRUD events + past-tense events                                 | dx/K      | covered | `appointment{Adding,Updating,Deleting}` (+ed); programmatic `addAppointment`/`updateAppointment`/`deleteAppointment` |
+| Context-menu events                                                        | dx        | covered | `appointmentContextMenu` / `cellContextMenu` with full payloads                                                      |
+| `readOnly`                                                                 | K/FC      | covered | overrides every `allow*` flag                                                                                        |
+| Templates: appointment / cell / date header                                | dx/K/FC   | covered | `[ogeAppointmentTemplate]` (+ cell/date-header **OGE extras**); collector + tooltip templates → v0.2                 |
+| Messages/i18n incl. aria + announcements                                   | dx/K/FC   | covered | `provideOgeSchedulerConfig` + per-instance `[messages]`                                                              |
+| Recurrence expansion + editor UI (`recurrenceEditMode`, `getOccurrences`)  | dx/K/FC   | v0.2    | v0.1 parses/validates the documented RRULE subset so data models are stable                                          |
+| Resources & grouping (`resources`, `groups`, `groupByDate`, orientation)   | dx/K/FC   | v0.2    |                                                                                                                      |
+| Timeline / Agenda / Year views, `intervalCount` multi-day ranges           | dx/K/FC   | v0.2    | timeline needs a horizontal layout engine                                                                            |
+| Virtual scrolling, adaptive/mobile popovers, cross-scrolling               | dx        | v0.2    | no horizontal axis exists yet in v0.1                                                                                |
+| Timezone options (`timeZone`, `*TimeZoneExpr`, `allowTimeZoneEditing`)     | dx/K/FC   | v0.2    | interacts with recurrence; v0.1 documents "local wall time" honestly                                                 |
+| Drag between schedulers / external drag sources                            | dx/FC     | v0.2    |                                                                                                                      |
+| PDF export / iCal & Google Calendar feeds                                  | K/FC      | v0.2    |                                                                                                                      |
+| Remote range filtering through LoadOptions                                 | dx/K/FC   | v0.2    | v0.1 filters client-side after load                                                                                  |
+| Hover appointment tooltip (`appointmentTooltipTemplate`)                   | dx/FC     | Skipped | the click popup covers the role; hover preview reconsidered on demand                                                |
+| `allDayPanelMode: 'all'` (long events kept in the grid)                    | dx        | Skipped | the boolean panel covers real cases; 'all' is a dx oddity                                                            |
+| `dateSerializationFormat`, `offset` (shifted day window)                   | dx        | Skipped | serialization belongs to the DataSource layer; overnight-shift windows revisit with timeline                         |
+| `accessKey/tabIndex/hint/elementAttr`, `repaint/beginUpdate/option/on/off` | dx        | Skipped | jQuery-era widget plumbing — signals, host bindings and Angular lifecycle replace them                               |
+| Kendo `navigable` extra shortcut map                                       | K         | Skipped | the composed grid + chip model covers the keyboard contract; no APG pattern exists to mandate more                   |
+
 ## Date editors (`@oge-ui/inputs`) — Feature Parity
 
 `OgeCalendar` + `OgeDateBox` (reference Calendar/DateBox scope) on native

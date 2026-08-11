@@ -52,6 +52,7 @@ type FamilyKey =
   | 'stepper'
   | 'pivot'
   | 'bpmn'
+  | 'scheduler'
   | 'overlay';
 
 interface Family {
@@ -295,6 +296,54 @@ interface OrgNode {
                       stroke-dasharray="4 3"
                     />
                     <circle cx="246" cy="22" r="9" stroke-width="3.2" />
+                  </svg>
+                }
+                @case ('scheduler') {
+                  <!-- illustrative sketch; the live scheduler renders on its own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="scheduler"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  >
+                    <rect x="10" y="10" width="260" height="100" rx="8" />
+                    <path
+                      d="M10 34h260M47 34v76M84 34v76M121 34v76M158 34v76M195 34v76M232 34v76"
+                    />
+                    <rect
+                      x="50"
+                      y="42"
+                      width="31"
+                      height="30"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <rect
+                      x="124"
+                      y="50"
+                      width="31"
+                      height="44"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.4"
+                      stroke="none"
+                    />
+                    <rect
+                      x="198"
+                      y="40"
+                      width="31"
+                      height="22"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <path d="M10 88h260" stroke-dasharray="3 3" opacity="0.7" />
                   </svg>
                 }
                 @case ('overlay') {
@@ -662,6 +711,14 @@ export class ComponentsIndexPage {
       path: '/components/bpmn',
       description:
         'BPMN 2.0 process modeler: palette, orthogonal connections, undo/redo, XML import/export — on its own dependency-free engine, with no watermark.',
+    },
+    {
+      key: 'scheduler',
+      name: 'Scheduler',
+      icon: 'calendar',
+      path: '/components/scheduler',
+      description:
+        'Event planner with day, week and month views: all-day strip, deterministic appointment layout, drag & resize with Escape-cancel, popup and editing dialog.',
     },
     {
       key: 'overlay',

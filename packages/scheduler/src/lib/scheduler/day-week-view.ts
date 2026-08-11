@@ -172,57 +172,72 @@ export interface SchedulerProposalEvent<T> {
           </div>
         }
       </div>
-      <!-- delegated keydown; focus lives on the roving gridcell -->
-      <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
-      <div
-        #rowsEl
-        class="oge-scheduler-rows"
-        role="grid"
-        [attr.aria-label]="gridAriaLabel()"
-        (keydown)="onGridKeydown($event)"
-      >
-        @for (
-          minutes of grid().slotStartMinutes;
-          track minutes;
-          let slotIndex = $index
-        ) {
-          <div class="oge-scheduler-row" role="row">
-            @for (
-              day of grid().days;
-              track day.getTime();
-              let dayIndex = $index
-            ) {
-              <div
-                class="oge-scheduler-cell"
-                role="gridcell"
-                [class.oge-scheduler-cell-hour]="minutes % 60 === 0"
-                [class.oge-scheduler-day-today]="isToday(day)"
-                [class.oge-scheduler-cell-focused]="
-                  isFocusedCell(dayIndex, slotIndex)
-                "
-                [tabindex]="isFocusedCell(dayIndex, slotIndex) ? 0 : -1"
-                [attr.data-focus-target]="
-                  isFocusedCell(dayIndex, slotIndex) ? '' : null
-                "
-                [attr.aria-label]="cellAriaLabel(dayIndex, minutes)"
-                (click)="onCellClick(dayIndex, slotIndex, $event)"
-                (dblclick)="onCellDblClick(dayIndex, slotIndex, $event)"
-                (keydown)="onCellKeydown(dayIndex, slotIndex, $event)"
-              >
-                @if (cellTemplate(); as tpl) {
-                  <ng-container
-                    [ngTemplateOutlet]="tpl.templateRef"
-                    [ngTemplateOutletContext]="{
-                      $implicit: cellDate(dayIndex, minutes),
-                      view: view(),
+      <!-- the wrapper carries the overlay layers so the grid element owns
+           ONLY rows (aria-required-children) -->
+      <div #rowsEl class="oge-scheduler-rows">
+        <!-- delegated keydown; focus lives on the roving gridcell -->
+        <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -->
+        <div
+          class="oge-scheduler-grid"
+          role="grid"
+          [attr.aria-label]="gridAriaLabel()"
+          (keydown)="onGridKeydown($event)"
+        >
+          @for (
+            minutes of grid().slotStartMinutes;
+            track minutes;
+            let slotIndex = $index
+          ) {
+            <div class="oge-scheduler-row" role="row">
+              @for (
+                day of grid().days;
+                track day.getTime();
+                let dayIndex = $index
+              ) {
+                <div
+                  class="oge-scheduler-cell"
+                  role="gridcell"
+                  [class.oge-scheduler-cell-hour]="minutes % 60 === 0"
+                  [class.oge-scheduler-day-today]="isToday(day)"
+                  [class.oge-scheduler-cell-weekend]="isWeekend(day)"
+                  [class.oge-scheduler-cell-off-hours]="
+                    isOffHours(day, minutes)
+                  "
+                  [class.oge-scheduler-cell-focused]="
+                    isFocusedCell(dayIndex, slotIndex)
+                  "
+                  [tabindex]="isFocusedCell(dayIndex, slotIndex) ? 0 : -1"
+                  [attr.data-focus-target]="
+                    isFocusedCell(dayIndex, slotIndex) ? '' : null
+                  "
+                  [attr.aria-label]="cellAriaLabel(dayIndex, minutes)"
+                  (click)="onCellClick(dayIndex, slotIndex, $event)"
+                  (dblclick)="onCellDblClick(dayIndex, slotIndex, $event)"
+                  (keydown)="onCellKeydown(dayIndex, slotIndex, $event)"
+                  (pointerdown)="onCellPointerDown(dayIndex, slotIndex, $event)"
+                  (contextmenu)="
+                    cellContextMenu.emit({
+                      cellDate: cellDate(dayIndex, minutes),
                       allDay: false,
-                    }"
-                  />
-                }
-              </div>
-            }
-          </div>
-        }
+                      event: $event,
+                    })
+                  "
+                >
+                  @if (cellTemplate(); as tpl) {
+                    <ng-container
+                      [ngTemplateOutlet]="tpl.templateRef"
+                      [ngTemplateOutletContext]="{
+                        $implicit: cellDate(dayIndex, minutes),
+                        view: view(),
+                        allDay: false,
+                      }"
+                    />
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
         <div class="oge-scheduler-chip-layer" role="presentation">
           @for (segment of layouted(); track segmentKey(segment)) {
             <div
@@ -241,6 +256,7 @@ export interface SchedulerProposalEvent<T> {
               [class.oge-scheduler-dragging]="isDragging(segment.appointment)"
               (click)="onChipClick(segment.appointment, $event)"
               (dblclick)="onChipDblClick(segment.appointment, $event)"
+              (contextmenu)="onChipContextMenu(segment.appointment, $event)"
               (keydown)="onChipKeydown(segment.appointment, $event)"
               (focus)="focusedChipKey.set(segment.appointment.key)"
               (pointerdown)="onChipPointerDown(segment.appointment, $event)"
@@ -280,8 +296,27 @@ export interface SchedulerProposalEvent<T> {
             ></div>
           }
         </div>
+        @if (selectionBox(); as box) {
+          <div
+            class="oge-scheduler-selection"
+            aria-hidden="true"
+            [style.top.%]="box.top"
+            [style.height.%]="box.height"
+            [style.left.%]="box.left"
+            [style.width.%]="box.width"
+          ></div>
+        }
         @for (day of grid().days; track day.getTime(); let dayIndex = $index) {
           @if (nowFraction(dayIndex); as fraction) {
+            @if (shadeUntilCurrentTime()) {
+              <div
+                class="oge-scheduler-shade"
+                [style.height.%]="fraction * 100"
+                [style.left.%]="(dayIndex / grid().days.length) * 100"
+                [style.width.%]="(1 / grid().days.length) * 100"
+                aria-hidden="true"
+              ></div>
+            }
             <div
               class="oge-scheduler-now"
               [style.top.%]="fraction * 100"
@@ -298,7 +333,7 @@ export interface SchedulerProposalEvent<T> {
 export class OgeSchedulerDayWeekView<T = unknown> {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  readonly view = input.required<'day' | 'week'>();
+  readonly view = input.required<'day' | 'week' | 'workWeek'>();
   readonly anchorDate = input.required<Date>();
   readonly appointments = input.required<readonly SchedulerAppointment<T>[]>();
   readonly firstDayOfWeek = input.required<number>();
@@ -313,6 +348,19 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly periodLabel = input('');
   readonly allowDragging = input(true);
   readonly allowResizing = input(true);
+  readonly allowAdding = input(true);
+  /** Weekdays (0 = Sunday) hidden from week-shaped grids. */
+  readonly hiddenWeekDays = input<readonly number[] | undefined>(undefined);
+  /** Emphasized working hours; cells outside get the off-hours shading. */
+  readonly workHours = input<{
+    readonly start: number;
+    readonly end: number;
+    readonly days?: readonly number[];
+  } | null>(null);
+  /** Shades today's column above the now-line (dx parity). */
+  readonly shadeUntilCurrentTime = input(false);
+  /** Drag snap raster in minutes; defaults to `cellDuration`. */
+  readonly snapDuration = input<number | undefined>(undefined);
   readonly appointmentTemplate = input<OgeAppointmentTemplate<T> | null>(null);
   readonly cellTemplate = input<OgeSchedulerCellTemplate | null>(null);
   readonly dateHeaderTemplate = input<OgeDateHeaderTemplate | null>(null);
@@ -335,6 +383,24 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly resizeCommitted = output<SchedulerProposalEvent<T>>();
   /** A gesture was cancelled with Escape/blur. */
   readonly gestureCancelled = output<void>();
+  /** A drag-to-create cell-range selection landed. */
+  readonly rangeSelected = output<{ startDate: Date; endDate: Date }>();
+  /** Right-click on a chip. */
+  readonly chipContextMenu = output<SchedulerChipEvent<T>>();
+  /** Right-click on an empty cell. */
+  readonly cellContextMenu = output<SchedulerCellEvent>();
+
+  protected onChipContextMenu(
+    appointment: SchedulerAppointment<T>,
+    event: MouseEvent,
+  ): void {
+    event.stopPropagation();
+    this.chipContextMenu.emit({
+      appointment,
+      event,
+      rect: (event.currentTarget as HTMLElement).getBoundingClientRect(),
+    });
+  }
 
   readonly grid = computed<TimeGridVm>(() =>
     buildTimeGrid({
@@ -344,8 +410,30 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       dayStartHour: this.dayStartHour(),
       dayEndHour: this.dayEndHour(),
       cellDuration: this.cellDuration(),
+      hiddenWeekDays: this.hiddenWeekDays(),
     }),
   );
+
+  private snapMinutes(): number {
+    return this.snapDuration() ?? this.grid().cellDuration;
+  }
+
+  /** Whether a cell sits outside the emphasized working hours. */
+  protected isOffHours(day: Date, minutes: number): boolean {
+    const workHours = this.workHours();
+    if (workHours === null) return false;
+    if (
+      workHours.days !== undefined &&
+      !workHours.days.includes(day.getDay())
+    ) {
+      return true;
+    }
+    return minutes < workHours.start * 60 || minutes >= workHours.end * 60;
+  }
+
+  protected isWeekend(day: Date): boolean {
+    return day.getDay() === 0 || day.getDay() === 6;
+  }
 
   private readonly partitioned = computed(() =>
     partitionAllDay(this.appointments()),
@@ -454,8 +542,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
     const focusedKey = this.focusedChipKey();
     const order = this.chipOrder();
     if (order.length === 0) return -1;
-    const active =
-      order.find((entry) => entry.key === focusedKey) ?? order[0];
+    const active = order.find((entry) => entry.key === focusedKey) ?? order[0];
     return appointment.key === active.key ? 0 : -1;
   }
 
@@ -545,9 +632,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       case 'ArrowRight': {
         event.preventDefault();
         const order = this.chipOrder();
-        const index = order.findIndex(
-          (entry) => entry.key === appointment.key,
-        );
+        const index = order.findIndex((entry) => entry.key === appointment.key);
         const next =
           order[
             event.key === 'ArrowRight'
@@ -618,8 +703,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
 
   /* ---------- pointer gestures (bpmn five-part pattern) ---------- */
 
-  private readonly rowsEl =
-    viewChild<ElementRef<HTMLElement>>('rowsEl');
+  private readonly rowsEl = viewChild<ElementRef<HTMLElement>>('rowsEl');
 
   /** The live preview of the dragged/resized appointment. */
   protected readonly preview = signal<{
@@ -664,6 +748,82 @@ export class OgeSchedulerDayWeekView<T = unknown> {
     };
   });
 
+  /** The live drag-to-create selection (single day column). */
+  protected readonly selection = signal<{
+    dayIndex: number;
+    startMinutes: number;
+    endMinutes: number;
+  } | null>(null);
+
+  protected readonly selectionBox = computed<{
+    top: number;
+    height: number;
+    left: number;
+    width: number;
+  } | null>(() => {
+    const selection = this.selection();
+    if (selection === null) return null;
+    const grid = this.grid();
+    const span = grid.windowEndMinutes - grid.windowStartMinutes;
+    if (span <= 0) return null;
+    return {
+      top: ((selection.startMinutes - grid.windowStartMinutes) / span) * 100,
+      height: ((selection.endMinutes - selection.startMinutes) / span) * 100,
+      left: (selection.dayIndex / grid.days.length) * 100,
+      width: (1 / grid.days.length) * 100,
+    };
+  });
+
+  /** Drag-to-create: pointer drag over empty cells selects a time range. */
+  protected onCellPointerDown(
+    dayIndex: number,
+    slotIndex: number,
+    event: PointerEvent,
+  ): void {
+    if (!this.allowAdding() || event.button !== 0) return;
+    const rows = this.rowsEl()?.nativeElement;
+    if (rows === undefined) return;
+    const grid = this.grid();
+    const rect = rows.getBoundingClientRect();
+    const span = grid.windowEndMinutes - grid.windowStartMinutes;
+    const anchorMinutes = grid.slotStartMinutes[slotIndex];
+    const snap = this.snapMinutes();
+    let range: { startMinutes: number; endMinutes: number } | null = null;
+    beginPointerGesture(event, {
+      onMove: (_deltaX, _deltaY, moveEvent) => {
+        const rawMinutes =
+          grid.windowStartMinutes +
+          ((moveEvent.clientY - rect.top) / rect.height) * span;
+        const snapped = Math.min(
+          grid.windowEndMinutes,
+          Math.max(
+            grid.windowStartMinutes,
+            Math.round(rawMinutes / snap) * snap,
+          ),
+        );
+        range =
+          snapped >= anchorMinutes
+            ? {
+                startMinutes: anchorMinutes,
+                endMinutes: Math.max(snapped, anchorMinutes + snap),
+              }
+            : { startMinutes: snapped, endMinutes: anchorMinutes + snap };
+        this.selection.set({ dayIndex, ...range });
+      },
+      onFinish: (commit, cancelled) => {
+        this.selection.set(null);
+        if (commit && range !== null) {
+          this.rangeSelected.emit({
+            startDate: this.cellDate(dayIndex, range.startMinutes),
+            endDate: this.cellDate(dayIndex, range.endMinutes),
+          });
+        } else if (cancelled) {
+          this.gestureCancelled.emit();
+        }
+      },
+    });
+  }
+
   protected onChipPointerDown(
     appointment: SchedulerAppointment<T>,
     event: PointerEvent,
@@ -684,15 +844,13 @@ export class OgeSchedulerDayWeekView<T = unknown> {
     let proposal: AppointmentProposal | null = null;
     beginPointerGesture(event, {
       onMove: (deltaX, deltaY) => {
-        const deltaDays = Math.round(
-          deltaX / (rect.width / grid.days.length),
-        );
+        const deltaDays = Math.round(deltaX / (rect.width / grid.days.length));
         const deltaMinutes = (deltaY / rect.height) * span;
         proposal = proposeMove(
           appointment,
           deltaDays,
           deltaMinutes,
-          grid.cellDuration,
+          this.snapMinutes(),
         );
         this.preview.set({ key: appointment.key, proposal });
       },
@@ -729,7 +887,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
           appointment,
           edge,
           deltaMinutes,
-          grid.cellDuration,
+          this.snapMinutes(),
         );
         this.preview.set({ key: appointment.key, proposal });
       },
@@ -758,11 +916,9 @@ export class OgeSchedulerDayWeekView<T = unknown> {
     let proposal: AppointmentProposal | null = null;
     beginPointerGesture(event, {
       onMove: (deltaX) => {
-        const deltaDays = Math.round(
-          deltaX / (rect.width / grid.days.length),
-        );
+        const deltaDays = Math.round(deltaX / (rect.width / grid.days.length));
         // day-only move: the time of day (and all-day flag) survive
-        proposal = proposeMove(appointment, deltaDays, 0, grid.cellDuration);
+        proposal = proposeMove(appointment, deltaDays, 0, this.snapMinutes());
         this.preview.set({ key: appointment.key, proposal });
       },
       onFinish: (commit, cancelled) => {
@@ -802,7 +958,10 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   ): void {
     this.focusedCell.set({ day: dayIndex, slot: slotIndex });
     this.cellClicked.emit({
-      cellDate: this.cellDate(dayIndex, this.grid().slotStartMinutes[slotIndex]),
+      cellDate: this.cellDate(
+        dayIndex,
+        this.grid().slotStartMinutes[slotIndex],
+      ),
       allDay: false,
       event,
     });
@@ -814,7 +973,10 @@ export class OgeSchedulerDayWeekView<T = unknown> {
     event: MouseEvent,
   ): void {
     this.cellDblClicked.emit({
-      cellDate: this.cellDate(dayIndex, this.grid().slotStartMinutes[slotIndex]),
+      cellDate: this.cellDate(
+        dayIndex,
+        this.grid().slotStartMinutes[slotIndex],
+      ),
       allDay: false,
       event,
     });

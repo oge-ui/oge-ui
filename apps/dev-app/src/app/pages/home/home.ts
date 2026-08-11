@@ -1831,6 +1831,7 @@ export class HomePage {
     '@oge-ui/tree-list',
     '@oge-ui/pivot',
     '@oge-ui/bpmn',
+    '@oge-ui/scheduler',
     '@oge-ui/buttons',
     '@oge-ui/inputs',
     '@oge-ui/overlay',
@@ -1911,6 +1912,12 @@ export class HomePage {
       name: 'BPMN Editor',
       desc: 'BPMN 2.0 modeler with its own XML engine, undo/redo and no watermark.',
       path: '/components/bpmn',
+    },
+    {
+      icon: 'calendar',
+      name: 'Scheduler',
+      desc: 'Day, week and month views with drag & resize, popup and form editing.',
+      path: '/components/scheduler',
     },
     {
       icon: 'pointer',

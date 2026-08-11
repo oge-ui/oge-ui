@@ -7,8 +7,24 @@ import type { OgeFormItemData } from '@oge-ui/forms';
 import type { SchedulerAppointment } from './engine/scheduler-model';
 import type { SchedulerViewType } from './engine/view-model';
 
-/** The scheduler's view types: `'day' | 'week' | 'month'`. */
+/** The scheduler's view types: `'day' | 'week' | 'workWeek' | 'month'`. */
 export type OgeSchedulerView = SchedulerViewType;
+
+/** Emphasized working hours; cells outside get the off-hours shading. */
+export interface OgeSchedulerWorkHours {
+  /** First working hour (fractions allowed, e.g. `8.5`). */
+  readonly start: number;
+  /** First non-working hour after the block. */
+  readonly end: number;
+  /** Working weekdays (0 = Sunday); omitted = every rendered day. */
+  readonly days?: readonly number[];
+}
+
+/** Fires after a drag-to-create cell-range selection lands. */
+export interface OgeSchedulerRangeSelectedEvent {
+  readonly startDate: Date;
+  readonly endDate: Date;
+}
 
 /**
  * A user item normalized into the scheduler's shape — the payload of

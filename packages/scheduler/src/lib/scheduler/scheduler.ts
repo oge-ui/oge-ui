@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import {
   addMinutes,
+  clampDate,
   nextDay,
   rangesOverlap,
   resolveFirstDayOfWeek,
@@ -24,6 +25,8 @@ import {
   type DataSource,
   type RowKey,
 } from '@oge-ui/core';
+import { OgeCalendar } from '@oge-ui/inputs';
+import { OgeAnchoredPanel, OgePopup } from '@oge-ui/overlay';
 import type { OgeSchedulerMessages } from '../config';
 import { OGE_SCHEDULER_CONFIG } from '../config';
 import {
@@ -44,8 +47,10 @@ import type {
   OgeSchedulerAppointmentUpdatingEvent,
   OgeSchedulerCellClickEvent,
   OgeSchedulerEditorShowingEvent,
+  OgeSchedulerRangeSelectedEvent,
   OgeSchedulerView,
   OgeSchedulerViewOptions,
+  OgeSchedulerWorkHours,
 } from '../scheduler-types';
 import {
   OgeSchedulerAppointmentDialog,
@@ -94,6 +99,8 @@ interface ResolvedView {
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   imports: [
+    OgeCalendar,
+    OgePopup,
     OgeSchedulerAppointmentDialog,
     OgeSchedulerAppointmentPopup,
     OgeSchedulerDayWeekView,
@@ -108,13 +115,19 @@ interface ResolvedView {
       [attr.aria-label]="msg().toolbar.label"
     >
       <div class="oge-scheduler-nav">
-        <button type="button" class="oge-scheduler-btn" (click)="goToday()">
+        <button
+          type="button"
+          class="oge-scheduler-btn"
+          [disabled]="isTodayVisible()"
+          (click)="goToday()"
+        >
           {{ msg().toolbar.today }}
         </button>
         <button
           type="button"
           class="oge-scheduler-btn oge-scheduler-btn-icon"
           [attr.aria-label]="msg().toolbar.previous"
+          [disabled]="!canNavigate(-1)"
           (click)="navigate(-1)"
         >
           <svg
@@ -135,6 +148,7 @@ interface ResolvedView {
           type="button"
           class="oge-scheduler-btn oge-scheduler-btn-icon"
           [attr.aria-label]="msg().toolbar.next"
+          [disabled]="!canNavigate(1)"
           (click)="navigate(1)"
         >
           <svg
@@ -152,9 +166,44 @@ interface ResolvedView {
           </svg>
         </button>
       </div>
-      <span class="oge-scheduler-title" aria-live="polite">{{
-        periodTitle()
-      }}</span>
+      <button
+        type="button"
+        class="oge-scheduler-title"
+        [attr.aria-label]="msg().toolbar.dateNavigatorLabel"
+        [attr.aria-expanded]="navigatorPanel.isOpen()"
+        [attr.aria-controls]="navigatorPanel.panelId"
+        aria-haspopup="dialog"
+        (click)="navigatorPanel.toggle()"
+      >
+        <span aria-live="polite">{{ periodTitle() }}</span>
+        <svg
+          viewBox="0 0 16 16"
+          width="12"
+          height="12"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m4 6.5 4 4 4-4" />
+        </svg>
+      </button>
+      @if (navigatorPanel.isOpen()) {
+        <oge-popup [panel]="navigatorPanel">
+          <div class="oge-scheduler-navigator" #navigatorEl>
+            <oge-calendar
+              [value]="currentDate()"
+              (valueChange)="onNavigatorPicked($event)"
+              [firstDayOfWeek]="firstDayOfWeek()"
+              [min]="min()"
+              [max]="max()"
+              [locale]="locale()"
+            />
+          </div>
+        </oge-popup>
+      }
       <div
         class="oge-scheduler-views"
         role="group"
@@ -194,9 +243,11 @@ interface ResolvedView {
           (chipDblClicked)="onChipDblClicked($event)"
           (chipActivated)="onChipActivated($event)"
           (chipDeleteRequested)="deleteBySource($event.source)"
-          [allowDragging]="allowDragging()"
+          [allowDragging]="canDrag()"
           (moveCommitted)="onMoveCommitted($event)"
           (gestureCancelled)="onGestureCancelled()"
+          (chipContextMenu)="onChipContextMenu($event)"
+          (cellContextMenu)="onCellContextMenu($event)"
         />
       }
       @default {
@@ -224,11 +275,19 @@ interface ResolvedView {
           (chipDblClicked)="onChipDblClicked($event)"
           (chipActivated)="onChipActivated($event)"
           (chipDeleteRequested)="deleteBySource($event.source)"
-          [allowDragging]="allowDragging()"
-          [allowResizing]="allowResizing()"
+          [allowDragging]="canDrag()"
+          [allowResizing]="canResize()"
+          [allowAdding]="canAdd()"
+          [hiddenWeekDays]="hiddenWeekDays()"
+          [workHours]="workHours()"
+          [shadeUntilCurrentTime]="shadeUntilCurrentTime()"
+          [snapDuration]="snapDuration()"
           (moveCommitted)="onMoveCommitted($event)"
           (resizeCommitted)="onResizeCommitted($event)"
           (gestureCancelled)="onGestureCancelled()"
+          (rangeSelected)="onRangeSelected($event)"
+          (chipContextMenu)="onChipContextMenu($event)"
+          (cellContextMenu)="onCellContextMenu($event)"
         />
       }
     }
@@ -236,8 +295,8 @@ interface ResolvedView {
     <oge-scheduler-appointment-popup
       [messages]="msg().popup"
       [locale]="locale()"
-      [allowEditing]="allowUpdating()"
-      [allowDeleting]="allowDeleting()"
+      [allowEditing]="canUpdate()"
+      [allowDeleting]="canDelete()"
       (editRequested)="openEditorFor($any($event))"
       (deleteRequested)="deleteBySource($any($event).source)"
     />
@@ -307,12 +366,47 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly allowDeleting = input(true);
   readonly allowDragging = input(true);
   readonly allowResizing = input(true);
+  /** Display-only shorthand: overrides every `allow*` flag at once. */
+  readonly readOnly = input(false);
+  /** Earliest navigable date (clamps navigation and the date navigator). */
+  readonly min = input<Date | undefined>(undefined);
+  /** Latest navigable date. */
+  readonly max = input<Date | undefined>(undefined);
+  /** Weekdays (0 = Sunday) hidden from the week views. */
+  readonly hiddenWeekDays = input<readonly number[] | undefined>(undefined);
+  /** Working-hours emphasis; cells outside get the off-hours shading. */
+  readonly workHours = input<OgeSchedulerWorkHours | null>(null);
+  /** Shades today's column above the now-line (dx parity). */
+  readonly shadeUntilCurrentTime = input(false);
+  /** Drag/resize snap raster in minutes; defaults to `cellDuration`. */
+  readonly snapDuration = input<number | undefined>(undefined);
+  /** Initial scroll position of the day/week body, in hours (e.g. `8.5`). */
+  readonly scrollTime = input<number | undefined>(undefined);
+  /** Custom period-title formatter for the toolbar date navigator. */
+  readonly dateNavigatorText = input<
+    ((start: Date, end: Date, view: OgeSchedulerView) => string) | undefined
+  >(undefined);
+
+  protected readonly canAdd = computed(
+    () => this.allowAdding() && !this.readOnly(),
+  );
+  protected readonly canUpdate = computed(
+    () => this.allowUpdating() && !this.readOnly(),
+  );
+  protected readonly canDelete = computed(
+    () => this.allowDeleting() && !this.readOnly(),
+  );
+  protected readonly canDrag = computed(
+    () => this.allowDragging() && !this.readOnly(),
+  );
+  protected readonly canResize = computed(
+    () => this.allowResizing() && !this.readOnly(),
+  );
 
   /* ---------- events ---------- */
 
   /** Cancelable: before a new appointment reaches the store. */
-  readonly appointmentAdding =
-    output<OgeSchedulerAppointmentAddingEvent<T>>();
+  readonly appointmentAdding = output<OgeSchedulerAppointmentAddingEvent<T>>();
   /** After an appointment was inserted. */
   readonly appointmentAdded = output<OgeSchedulerAppointmentAddedEvent<T>>();
   /** Cancelable: before an update reaches the store. */
@@ -330,14 +424,20 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   /** Chip single click (also opens the appointment popup). */
   readonly appointmentClick = output<OgeSchedulerAppointmentClickEvent<T>>();
   /** Chip double click (also opens the editor). */
-  readonly appointmentDblClick =
-    output<OgeSchedulerAppointmentClickEvent<T>>();
+  readonly appointmentDblClick = output<OgeSchedulerAppointmentClickEvent<T>>();
   /** Empty-cell click. */
   readonly cellClick = output<OgeSchedulerCellClickEvent>();
   /** Empty-cell double click (also opens the create editor). */
   readonly cellDblClick = output<OgeSchedulerCellClickEvent>();
   /** Cancelable: before the editor opens; customize `formItems` here. */
   readonly editorShowing = output<OgeSchedulerEditorShowingEvent<T>>();
+  /** A drag-to-create range selection landed (also opens the editor). */
+  readonly rangeSelected = output<OgeSchedulerRangeSelectedEvent>();
+  /** Right-click on a chip (build your own context menu from it). */
+  readonly appointmentContextMenu =
+    output<OgeSchedulerAppointmentClickEvent<T>>();
+  /** Right-click on an empty cell. */
+  readonly cellContextMenu = output<OgeSchedulerCellClickEvent>();
 
   protected readonly appointmentTemplate = contentChild(
     OgeAppointmentTemplate<T>,
@@ -350,9 +450,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     descendants: false,
   });
 
-  private readonly popup = viewChild.required(
-    OgeSchedulerAppointmentPopup<T>,
-  );
+  private readonly popup = viewChild.required(OgeSchedulerAppointmentPopup<T>);
   private readonly dialog = viewChild.required(OgeSchedulerAppointmentDialog);
   private readonly dayWeekViewRef = viewChild(OgeSchedulerDayWeekView<T>);
   private readonly monthViewRef = viewChild(OgeSchedulerMonthView<T>);
@@ -397,9 +495,10 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     );
   });
 
-  protected readonly dayWeekView = computed<'day' | 'week'>(() =>
-    this.currentView() === 'day' ? 'day' : 'week',
-  );
+  protected readonly dayWeekView = computed<'day' | 'week' | 'workWeek'>(() => {
+    const view = this.currentView();
+    return view === 'month' ? 'week' : view;
+  });
 
   private readonly fields = computed(() =>
     resolveSchedulerFields<T>({
@@ -442,6 +541,17 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     });
     this.destroyRef.onDestroy(() => {
       this.loadEpoch++;
+    });
+    // initial scroll position of the time grid (FC scrollTime parity);
+    // re-applied when the view or period changes
+    effect(() => {
+      const scrollTime = this.scrollTime();
+      this.currentView();
+      this.currentDate();
+      if (scrollTime === undefined) return;
+      setTimeout(() => {
+        this.scrollToTime(Math.floor(scrollTime), (scrollTime % 1) * 60);
+      });
     });
   }
 
@@ -508,6 +618,11 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     const view = this.currentView();
     const date = this.currentDate();
     const locale = this.locale();
+    const custom = this.dateNavigatorText();
+    if (custom !== undefined) {
+      const range = viewRange(view, date, this.resolvedFirstDayOfWeek());
+      return custom(range.start, new Date(range.end.getTime() - 1), view);
+    }
     if (view === 'day') {
       return new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(
         date,
@@ -549,20 +664,72 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
 
   /* ---------- navigation ---------- */
 
+  /** The toolbar date-navigator panel (title click opens a calendar). */
+  protected readonly navigatorEl =
+    viewChild<ElementRef<HTMLElement>>('navigatorEl');
+  readonly navigatorPanel = new OgeAnchoredPanel({
+    anchor: () =>
+      this.hostEl.nativeElement.querySelector('.oge-scheduler-title'),
+    panel: () => this.navigatorEl()?.nativeElement ?? null,
+    placement: () => 'bottom',
+  });
+
+  protected onNavigatorPicked(date: Date | null): void {
+    if (date !== null) this.setDate(date);
+    this.navigatorPanel.close();
+  }
+
+  private setDate(date: Date): void {
+    this.currentDate.set(clampDate(date, this.min(), this.max()));
+  }
+
+  /** Whether today falls inside the visible period (disables "Today"). */
+  protected isTodayVisible(): boolean {
+    const { start, end } = viewRange(
+      this.currentView(),
+      this.currentDate(),
+      this.resolvedFirstDayOfWeek(),
+    );
+    const now = Date.now();
+    return now >= start.getTime() && now < end.getTime();
+  }
+
+  /** Whether stepping one period keeps some of `[min, max]` visible. */
+  protected canNavigate(direction: -1 | 1): boolean {
+    const candidate = navigateDate(
+      this.currentView(),
+      this.currentDate(),
+      direction,
+    );
+    const { start, end } = viewRange(
+      this.currentView(),
+      candidate,
+      this.resolvedFirstDayOfWeek(),
+    );
+    const min = this.min();
+    const max = this.max();
+    if (min !== undefined && end.getTime() <= startOfDay(min).getTime()) {
+      return false;
+    }
+    if (max !== undefined && start.getTime() > max.getTime()) return false;
+    return true;
+  }
+
   /** Moves the visible period to today. */
   goToday(): void {
-    this.currentDate.set(new Date());
+    this.setDate(new Date());
   }
 
   /** Steps the visible period backwards (`-1`) or forwards (`1`). */
   navigate(direction: -1 | 1): void {
-    this.currentDate.set(
+    if (!this.canNavigate(direction)) return;
+    this.setDate(
       navigateDate(this.currentView(), untracked(this.currentDate), direction),
     );
   }
 
   protected drillIntoDay(date: Date): void {
-    this.currentDate.set(date);
+    this.setDate(date);
     this.currentView.set('day');
   }
 
@@ -623,7 +790,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
 
   /** Opens the editor for an existing appointment. */
   protected openEditorFor(appointment: SchedulerAppointment<T>): void {
-    if (!this.allowUpdating()) return;
+    if (!this.canUpdate()) return;
     this.openEditor(
       {
         text: appointment.text,
@@ -639,7 +806,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   }
 
   private openCreateEditor(cellDate: Date, allDay: boolean): void {
-    if (!this.allowAdding()) return;
+    if (!this.canAdd()) return;
     const startDate = allDay ? startOfDay(cellDate) : cellDate;
     const endDate = allDay
       ? nextDay(startDate)
@@ -650,11 +817,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       startDate,
       endDate,
     });
-    this.openEditor(
-      { text: '', allDay, startDate, endDate },
-      draft,
-      true,
-    );
+    this.openEditor({ text: '', allDay, startDate, endDate }, draft, true);
   }
 
   private openEditor(
@@ -729,7 +892,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   }
 
   private insertItem(item: T): void {
-    if (!this.allowAdding()) return;
+    if (!this.canAdd()) return;
     const event: OgeSchedulerAppointmentAddingEvent<T> = {
       appointmentData: item,
       cancel: false,
@@ -756,7 +919,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   }
 
   private updateItem(original: T, patch: Partial<T>): void {
-    if (!this.allowUpdating()) return;
+    if (!this.canUpdate()) return;
     const event: OgeSchedulerAppointmentUpdatingEvent<T> = {
       oldData: original,
       newData: patch,
@@ -800,11 +963,51 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     this.announcement.set(this.msg().announcements.cancelled);
   }
 
+  protected onRangeSelected(range: OgeSchedulerRangeSelectedEvent): void {
+    this.rangeSelected.emit(range);
+    if (!this.canAdd()) return;
+    const draft = this.buildItem({
+      text: '',
+      allDay: false,
+      startDate: range.startDate,
+      endDate: range.endDate,
+    });
+    this.openEditor(
+      {
+        text: '',
+        allDay: false,
+        startDate: range.startDate,
+        endDate: range.endDate,
+      },
+      draft,
+      true,
+    );
+  }
+
+  protected onChipContextMenu(event: SchedulerChipEvent<T>): void {
+    if (event.event instanceof MouseEvent) {
+      this.appointmentContextMenu.emit({
+        appointment: event.appointment,
+        event: event.event,
+      });
+    }
+  }
+
+  protected onCellContextMenu(event: SchedulerCellEvent): void {
+    if (event.event instanceof MouseEvent) {
+      this.cellContextMenu.emit({
+        cellDate: event.cellDate,
+        allDay: event.allDay,
+        event: event.event,
+      });
+    }
+  }
+
   private commitProposal(
     event: SchedulerProposalEvent<T>,
     kind: 'moved' | 'resized',
   ): void {
-    if (!this.allowUpdating()) return;
+    if (!this.canUpdate()) return;
     const fields = this.fields();
     const patch = appointmentPatch(
       event.appointment.source,
@@ -825,7 +1028,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
 
   /** Deletes the appointment rendered from `item` (guarded + evented). */
   protected deleteBySource(item: T): void {
-    if (!this.allowDeleting()) return;
+    if (!this.canDelete()) return;
     const event: OgeSchedulerAppointmentDeletingEvent<T> = {
       appointmentData: item,
       cancel: false,
@@ -865,10 +1068,9 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   scrollToTime(hours: number, minutes = 0): void {
     const view = this.dayWeekViewRef();
     if (view === undefined) return;
-    const body =
-      this.hostEl.nativeElement.querySelector<HTMLElement>(
-        '.oge-scheduler-body',
-      );
+    const body = this.hostEl.nativeElement.querySelector<HTMLElement>(
+      '.oge-scheduler-body',
+    );
     const rows = this.hostEl.nativeElement.querySelector<HTMLElement>(
       '.oge-scheduler-rows',
     );
@@ -912,5 +1114,52 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   hideAppointmentPopup(): void {
     this.dialog().close();
     this.popup().close();
+  }
+
+  /**
+   * Inserts an appointment programmatically — runs the same cancelable
+   * `appointmentAdding` pipeline as interactive creation.
+   */
+  addAppointment(appointmentData: T): void {
+    this.insertItem(appointmentData);
+  }
+
+  /** Applies a patch to an existing item through the guarded pipeline. */
+  updateAppointment(appointmentData: T, patch: Partial<T>): void {
+    this.updateItem(appointmentData, patch);
+  }
+
+  /** Deletes an item through the guarded pipeline. */
+  deleteAppointment(appointmentData: T): void {
+    this.deleteBySource(appointmentData);
+  }
+
+  /** First moment of the visible period. */
+  getStartViewDate(): Date {
+    return viewRange(
+      untracked(this.currentView),
+      untracked(this.currentDate),
+      this.resolvedFirstDayOfWeek(),
+    ).start;
+  }
+
+  /** Exclusive end of the visible period. */
+  getEndViewDate(): Date {
+    return viewRange(
+      untracked(this.currentView),
+      untracked(this.currentDate),
+      this.resolvedFirstDayOfWeek(),
+    ).end;
+  }
+
+  /** The bound data source, as given. */
+  getDataSource(): readonly T[] | DataSource<T> | null {
+    return this.dataSource();
+  }
+
+  /** Navigates to `date` and scrolls the time grid to its time of day. */
+  scrollTo(date: Date): void {
+    this.setDate(date);
+    this.scrollToTime(date.getHours(), date.getMinutes());
   }
 }

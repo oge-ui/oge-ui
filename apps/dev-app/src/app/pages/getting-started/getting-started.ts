@@ -153,6 +153,14 @@ interface ComponentCard {
           </td>
         </tr>
         <tr>
+          <td><code>&#64;oge-ui/scheduler</code></td>
+          <td>
+            Scheduler / event calendar with day, week and month views, drag
+            &amp; resize and form editing (commercial — free for evaluation and
+            development).
+          </td>
+        </tr>
+        <tr>
           <td><code>&#64;oge-ui/buttons</code></td>
           <td>
             Button, ButtonGroup and DropDownButton with async actions, click
