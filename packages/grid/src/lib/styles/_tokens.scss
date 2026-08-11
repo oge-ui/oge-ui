@@ -61,4 +61,11 @@
   /* tooltip bubble (inverted surface; dark theme overrides) */
   --oge-tooltip-bg: #1e2430;
   --oge-tooltip-color: #f5f7fa;
+  /* scheduler surfaces (commercial package hooks into the same theme files) */
+  --oge-scheduler-chip-bg: var(--oge-accent);
+  --oge-scheduler-chip-fg: #ffffff;
+  --oge-scheduler-grid-line: var(--oge-border-color);
+  --oge-scheduler-now-color: #dc2626;
+  --oge-scheduler-allday-bg: var(--oge-header-bg);
+  --oge-scheduler-hour-fg: var(--oge-muted-color);
 }

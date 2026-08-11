@@ -41,6 +41,7 @@
 .oge-tree-view,
 .oge-pagination,
 .oge-bpmn-editor,
+.oge-scheduler,
 .oge-pivot-grid {
   --oge-border-color: var(--bs-border-color, #dee2e6);
   --oge-header-bg: var(--bs-tertiary-bg, #f8f9fa);
