@@ -78,4 +78,13 @@
   --oge-gantt-offday-bg: rgba(148, 163, 184, 0.1);
   --oge-gantt-today-color: #dc2626;
   --oge-gantt-arrow-color: #94a3b8;
+  /* charts surfaces */
+  --oge-chart-grid-line: rgba(148, 163, 184, 0.22);
+  --oge-chart-axis-line: var(--oge-border-color);
+  --oge-chart-axis-fg: var(--oge-muted-color);
+  --oge-chart-crosshair: rgba(100, 116, 139, 0.55);
+  --oge-chart-strip-bg: rgba(148, 163, 184, 0.14);
+  --oge-chart-zoom-bg: rgba(99, 102, 241, 0.14);
+  --oge-chart-candle-up: #10b981;
+  --oge-chart-candle-down: #ef4444;
 }

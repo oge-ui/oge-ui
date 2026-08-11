@@ -1,0 +1,299 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-chart {
+  @include tokens.core-tokens;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  min-block-size: 200px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.oge-chart-title {
+  padding: 10px 14px 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.oge-chart-subtitle {
+  padding: 0 14px;
+  font-size: 12px;
+  color: var(--oge-muted-color);
+}
+
+/* ---------- layout / legend ---------- */
+
+.oge-chart-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column-reverse; /* legend bottom by default */
+  gap: 4px;
+  padding: 8px;
+}
+
+.oge-chart-legend-top {
+  flex-direction: column;
+}
+
+.oge-chart-legend-start {
+  flex-direction: row;
+}
+
+.oge-chart-legend-end {
+  flex-direction: row-reverse;
+}
+
+.oge-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 2px 6px;
+  margin: 0;
+  padding: 0 6px;
+  list-style: none;
+}
+
+.oge-chart-legend-start .oge-chart-legend,
+.oge-chart-legend-end .oge-chart-legend {
+  flex-direction: column;
+  max-width: 40%;
+}
+
+.oge-chart-legend-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    opacity 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-chart-legend-hidden {
+  opacity: 0.45;
+
+  .oge-chart-legend-text {
+    text-decoration: line-through;
+  }
+}
+
+.oge-chart-legend-marker {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ---------- plot ---------- */
+
+.oge-chart-plot-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 120px;
+  min-width: 0;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+    border-radius: var(--oge-radius);
+  }
+}
+
+.oge-chart-svg {
+  display: block;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.oge-chart-grid {
+  stroke: var(--oge-chart-grid-line);
+  stroke-width: 1;
+}
+
+.oge-chart-axis-line {
+  stroke: var(--oge-chart-axis-line);
+  stroke-width: 1;
+}
+
+.oge-chart-axis-label {
+  fill: var(--oge-chart-axis-fg);
+  font-size: 11px;
+}
+
+.oge-chart-axis-title {
+  fill: var(--oge-chart-axis-fg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.oge-chart-no-data {
+  fill: var(--oge-muted-color);
+  font-size: 13px;
+}
+
+/* ---------- series ---------- */
+
+.oge-chart-line {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.oge-chart-bar,
+.oge-chart-marker,
+.oge-chart-pie-slice {
+  transition:
+    opacity 120ms ease,
+    filter 120ms ease;
+}
+
+.oge-chart-bar:hover,
+.oge-chart-pie-slice:hover {
+  filter: brightness(1.08);
+}
+
+.oge-chart-marker {
+  stroke: var(--oge-bg);
+  stroke-width: 1.5;
+}
+
+.oge-chart-point-selected {
+  stroke: var(--oge-text-color);
+  stroke-width: 2;
+}
+
+.oge-chart-candle {
+  fill: var(--oge-chart-candle-up);
+}
+
+.oge-chart-candle-falling {
+  fill: var(--oge-chart-candle-down);
+}
+
+.oge-chart-candle-wick {
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 1;
+}
+
+/* ---------- overlays ---------- */
+
+.oge-chart-crosshair {
+  stroke: var(--oge-chart-crosshair);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+
+.oge-chart-zoom-rect {
+  fill: var(--oge-chart-zoom-bg);
+  stroke: var(--oge-accent);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.oge-chart-strip {
+  fill: var(--oge-chart-strip-bg);
+  pointer-events: none;
+}
+
+.oge-chart-strip-line {
+  stroke: var(--oge-warning);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.oge-chart-strip-label {
+  fill: var(--oge-muted-color);
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.oge-chart-pie-connector {
+  fill: none;
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.oge-chart-tooltip {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-tooltip-bg);
+  color: var(--oge-tooltip-color);
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--oge-shadow-btn);
+}
+
+.oge-chart-tooltip-arg {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.oge-chart-tooltip-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.9;
+}
+
+/* ---------- a11y ---------- */
+
+.oge-chart-sr-table,
+.oge-chart-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-chart-bar,
+  .oge-chart-marker,
+  .oge-chart-pie-slice,
+  .oge-chart-legend-btn {
+    transition: none;
+  }
+}

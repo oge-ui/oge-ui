@@ -27,6 +27,10 @@
       ],
       "@oge-ui/grid/foundation": ["./packages/grid/foundation/src/index.ts"],
       "@oge-ui/bpmn": ["./packages/bpmn/src/index.ts"],
+      "@oge-ui/charts": ["./packages/charts/src/index.ts"],
+      "@oge-ui/charts/export-image": [
+        "./packages/charts/export-image/src/index.ts"
+      ],
       "@oge-ui/gantt": ["./packages/gantt/src/index.ts"],
       "@oge-ui/gantt/export-excel": [
         "./packages/gantt/export-excel/src/index.ts"

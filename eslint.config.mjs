@@ -25,6 +25,7 @@ export default [
             '@oge-ui/grid',
             '@oge-ui/pivot',
             '@oge-ui/gantt',
+            '@oge-ui/charts',
           ],
           depConstraints: [
             {
@@ -73,6 +74,16 @@ export default [
               // allowed edge is core (and today not even that is used)
               sourceTag: 'scope:bpmn',
               onlyDependOnLibsWithTags: ['scope:bpmn', 'scope:core'],
+            },
+            {
+              // commercial charts: dependency-free SVG rendering; only the
+              // shared kernel (core) and the overlay primitives are taken
+              sourceTag: 'scope:charts',
+              onlyDependOnLibsWithTags: [
+                'scope:charts',
+                'scope:core',
+                'scope:overlay',
+              ],
             },
             {
               // commercial gantt: like the scheduler, a deliberate consumer
@@ -199,6 +210,7 @@ export default [
                 'scope:bpmn',
                 'scope:scheduler',
                 'scope:gantt',
+                'scope:charts',
                 'scope:buttons',
                 'scope:overlay',
                 'scope:inputs',

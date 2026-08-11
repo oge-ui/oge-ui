@@ -1,0 +1,39 @@
+{
+  "name": "@oge-ui/charts",
+  "version": "0.10.0",
+  "description": "Signal-based Angular charts: line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — calendar-true time axes, log axes, zoom & pan, crosshair, shared tooltips, interactive legend and full keyboard access. The only dependency-free Angular-native chart family. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "angular",
+    "charts",
+    "chart",
+    "line-chart",
+    "bar-chart",
+    "pie-chart",
+    "area-chart",
+    "candlestick",
+    "svg",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/core": "0.10.0"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/charts"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}
