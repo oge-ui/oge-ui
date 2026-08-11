@@ -244,4 +244,51 @@ describe('<oge-gantt>', () => {
     expect(updated?.start).toBe('2026-01-06');
     expect(updated?.end).toBe('2026-01-09');
   });
+
+  it('right-click opens the built-in menu and indent reparents to the previous sibling', async () => {
+    // 'Build' (b) sits after its sibling 'Design' (a) under 'Phase 1'
+    rows()[2].dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
+    );
+    await settle(fixture);
+    const menu = host.querySelector('.oge-gantt-menu');
+    expect(menu).not.toBeNull();
+    const indent = Array.from(
+      menu?.querySelectorAll<HTMLButtonElement>('.oge-gantt-menu-item') ?? [],
+    ).find((button) => button.textContent?.includes('Indent'));
+    indent?.click();
+    await settle(fixture);
+    expect(host.querySelector('.oge-gantt-menu')).toBeNull();
+    const updated = fixture.componentInstance.updated.at(-1)?.taskData;
+    expect(updated?.id).toBe('b');
+    expect(updated?.parentId).toBe('a');
+    // 'Build' now renders one level deeper
+    const buildRow = rows().find((row) => row.textContent?.includes('Build'));
+    expect(buildRow?.getAttribute('aria-level')).toBe('3');
+  });
+
+  it('Alt+Shift+ArrowLeft outdents the focused row', async () => {
+    rows()[1].click(); // 'Design', child of 'Phase 1'
+    rows()[1].dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowLeft',
+        altKey: true,
+        shiftKey: true,
+        bubbles: true,
+      }),
+    );
+    await settle(fixture);
+    const updated = fixture.componentInstance.updated.at(-1)?.taskData;
+    expect(updated?.id).toBe('a');
+    expect(updated?.parentId).toBeNull();
+  });
+
+  it('shows the empty state with a create button when no tasks exist', async () => {
+    fixture.componentInstance.tasks.set([]);
+    await settle(fixture);
+    const empty = host.querySelector('.oge-gantt-empty');
+    expect(empty).not.toBeNull();
+    expect(empty?.textContent).toContain('No tasks yet');
+    expect(empty?.querySelector('button')).not.toBeNull();
+  });
 });

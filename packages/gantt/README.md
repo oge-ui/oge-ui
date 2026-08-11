@@ -60,7 +60,12 @@ the dependencies are taken instead of rebuilt.
 **Editing**
 
 - Drag to move, edge-resize, progress-knob drag and link-dot dependency
-  drawing — 3px threshold, live drag tip, mid-gesture Escape-cancel
+  drawing — 3px threshold, live drag tip, mid-gesture Escape-cancel;
+  double-click or draw on empty chart space to create a task at that
+  date, and hover any bar for a rich tooltip
+- Built-in right-click menu (edit, new task/subtask, indent/outdent,
+  delete) plus MS Project-style Alt+Shift+Left/Right reparenting on the
+  focused row; a friendly empty state offers the first-task shortcut
 - Task dialog (`@oge-ui/forms`) with a `taskEditDialogShowing` hook for
   custom fields; toolbar add / undo / redo / expand / collapse; snapshot
   undo/redo where every applied edit, drags included, is exactly one step

@@ -95,7 +95,7 @@ type DemoTask = Record<string, unknown>;
     <app-demo-card
       [chips]="['task tree', 'milestones', 'drag & resize', 'Escape-cancel']"
       heading="Getting started"
-      description="One element, a working Gantt. Drag a bar to move it (Escape cancels mid-drag), pull its edges to resize, drag the bottom knob to set progress, drag a link dot onto another bar to draw a dependency. Double-click a bar or row for the task dialog; a zero-length task renders as a milestone diamond."
+      description="One element, a working Gantt. Drag a bar to move it (Escape cancels mid-drag), pull its edges to resize, drag the bottom knob to set progress, drag a link dot onto another bar to draw a dependency. Double-click a bar or row for the task dialog — or double-click / drag on <em>empty</em> chart space to create a task right there. Right-click opens the built-in menu (edit, new subtask, indent/outdent, delete); Alt+Shift+Left/Right reparents from the keyboard."
       [code]="gettingStartedSnippet"
       language="ts"
     >

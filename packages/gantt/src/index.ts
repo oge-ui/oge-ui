@@ -46,5 +46,6 @@ export {
   type OgeGanttDialogMessages,
   type OgeGanttGridMessages,
   type OgeGanttMessages,
+  type OgeGanttMenuMessages,
   type OgeGanttToolbarMessages,
 } from './lib/config';

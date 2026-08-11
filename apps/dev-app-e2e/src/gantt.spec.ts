@@ -130,6 +130,43 @@ test.describe('gantt', () => {
     await expect(cells).not.toHaveCount(minorBefore);
   });
 
+  test('right-click opens the built-in menu; draw-to-create opens a prefilled dialog', async ({
+    page,
+  }) => {
+    await openBasic(page);
+    const host = gantt(page);
+
+    // draw-to-create on empty chart space: the left half of the milestone
+    // row is empty (the page TOC overlays the chart's right side)
+    const bar = host.locator('.oge-gantt-bar', { hasText: 'Design' });
+    const box = await bar.boundingBox();
+    if (box === null) throw new Error('no bar box');
+    const milestone = await host.locator('.oge-gantt-milestone').boundingBox();
+    if (milestone === null) throw new Error('no milestone box');
+    const y = milestone.y + milestone.height / 2;
+    const startX = box.x + 20;
+    await page.mouse.move(startX, y);
+    await page.mouse.down();
+    await page.mouse.move(startX + 70, y, { steps: 5 });
+    await expect(host.locator('.oge-gantt-draw-preview')).toHaveCount(1);
+    await page.mouse.up();
+    const createDialog = page.locator('.oge-modal', { hasText: 'New task' });
+    await expect(createDialog).toBeVisible();
+    await createDialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(createDialog).toBeHidden();
+
+    // context menu on a row
+    await host.getByRole('row', { name: /Design/ }).click({ button: 'right' });
+    const menu = page.locator('.oge-gantt-menu');
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'Indent' })).toBeVisible();
+    await menu.getByRole('menuitem', { name: 'Edit' }).click();
+    const editDialog = page.locator('.oge-modal', { hasText: 'Edit task' });
+    await expect(editDialog).toBeVisible();
+    await editDialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(editDialog).toBeHidden();
+  });
+
   test('hover tooltip shows task details; workload band renders per resource', async ({
     page,
   }) => {

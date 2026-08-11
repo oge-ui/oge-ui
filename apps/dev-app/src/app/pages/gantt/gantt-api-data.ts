@@ -235,6 +235,12 @@ export const OGE_GANTT_API: ApiSections = {
             'Opens the task dialog — edit form for the given task, prefilled create form without one.',
         },
         {
+          name: 'indentTask(task) / outdentTask(task)',
+          type: 'void',
+          description:
+            'Reparents through the guarded update pipeline: indent makes the task a child of its previous sibling (MS Project parity), outdent lifts it to the grandparent. Also on the built-in context menu and <strong>Alt+Shift+Left/Right</strong> on the focused row.',
+        },
+        {
           name: 'focus()',
           type: 'void',
           description: 'Focuses the task tree (roving row).',
@@ -312,7 +318,7 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'taskClick / taskDblClick / taskContextMenu',
           type: 'OgeGanttTaskClickEvent&lt;T&gt;',
           description:
-            'Bar/row pointer events with the normalized task and the raw <code>MouseEvent</code> — build your own context menu (pairs with <code>&#64;oge-ui/overlay</code>).',
+            'Bar/row pointer events with the normalized task and the raw <code>MouseEvent</code>. Right-click also opens the <strong>built-in context menu</strong> (edit, new task/subtask, indent/outdent, delete — labels in <code>messages.menu</code>); listen to <code>taskContextMenu</code> to add your own entries alongside it.',
         },
         {
           name: 'selectionChanged',

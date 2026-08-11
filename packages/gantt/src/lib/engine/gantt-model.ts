@@ -46,7 +46,13 @@ export interface ResolvedGanttFields<T> {
   readonly resourceId: ValueAccessor<T>;
   readonly fieldNames: Readonly<
     Record<
-      'title' | 'start' | 'end' | 'progress' | 'color' | 'resourceId',
+      | 'title'
+      | 'start'
+      | 'end'
+      | 'progress'
+      | 'color'
+      | 'resourceId'
+      | 'parentKey',
       string | null
     >
   >;
@@ -106,6 +112,7 @@ export function resolveGanttFields<T>(
     baselineEnd: toAccessor(exprs.baselineEndExpr),
     resourceId: toAccessor(exprs.resourceIdExpr),
     fieldNames: {
+      parentKey: name(exprs.parentKeyExpr),
       title: name(exprs.titleExpr),
       start: name(exprs.startExpr),
       end: name(exprs.endExpr),

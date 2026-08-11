@@ -14107,7 +14107,7 @@ Docs: https://ogeui.com/components/gantt
 `@oge-ui/gantt`
 
 - values: `OGE_DEFAULT_GANTT_CONFIG`, `OGE_DEFAULT_GANTT_MESSAGES`, `OGE_GANTT_CONFIG`, `OgeGantt`, `OgeGanttTaskTemplate`, `OgeGanttTooltipTemplate`, `provideOgeGanttConfig`
-- types: `OgeGanttAnnouncementMessages`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttMessages`, `OgeGanttScaleType`, `OgeGanttSelectionChangedEvent`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTemplateContext`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttTooltipTemplateContext`, `OgeGanttWorkCalendar`
+- types: `OgeGanttAnnouncementMessages`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttMenuMessages`, `OgeGanttMessages`, `OgeGanttScaleType`, `OgeGanttSelectionChangedEvent`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTemplateContext`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttTooltipTemplateContext`, `OgeGanttWorkCalendar`
 
 `@oge-ui/gantt/export-pdf`
 
@@ -14179,6 +14179,7 @@ _Editing gates_
 | `scrollToDate(date)` | `void` | Scrolls the chart so `date` is in view. |
 | `expandAll() / collapseAll() / expandAllToLevel(level) / expandToTask(key)` | `void` | Tree expansion control; `expandToTask` also selects and reveals the row. |
 | `showTaskDetailsDialog(taskData?)` | `void` | Opens the task dialog — edit form for the given task, prefilled create form without one. |
+| `indentTask(task) / outdentTask(task)` | `void` | Reparents through the guarded update pipeline: indent makes the task a child of its previous sibling (MS Project parity), outdent lifts it to the grandparent. Also on the built-in context menu and **Alt+Shift+Left/Right** on the focused row. |
 | `focus()` | `void` | Focuses the task tree (roving row). |
 | `getExportData()` | `OgeGanttExportData<T>` | Snapshot for the exporters: every task in tree order (collapse ignored), the resolved columns with pane-identical formatting, the chart range and the critical-path keys. |
 
@@ -14206,7 +14207,7 @@ _Interaction_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `taskClick / taskDblClick / taskContextMenu` | `OgeGanttTaskClickEvent<T>` | Bar/row pointer events with the normalized task and the raw `MouseEvent` — build your own context menu (pairs with `@oge-ui/overlay`). |
+| `taskClick / taskDblClick / taskContextMenu` | `OgeGanttTaskClickEvent<T>` | Bar/row pointer events with the normalized task and the raw `MouseEvent`. Right-click also opens the **built-in context menu** (edit, new task/subtask, indent/outdent, delete — labels in `messages.menu`); listen to `taskContextMenu` to add your own entries alongside it. |
 | `selectionChanged` | `OgeGanttSelectionChangedEvent<T>` | Single-row selection changed (task or `null`). |
 | `scaleTypeChange / selectedTaskKeyChange` | `OgeGanttScaleType / RowKey \| null` | The two-way model outputs. |
 

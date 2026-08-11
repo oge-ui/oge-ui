@@ -31,6 +31,7 @@ import {
   routeDependency,
 } from '../engine/dependency-routing';
 import {
+  chartPxToDate,
   proposeTaskMove,
   proposeTaskProgress,
   proposeTaskResize,
@@ -204,6 +205,9 @@ const OVERSCAN_ROWS = 6;
         <button type="button" class="oge-gantt-btn" (click)="zoomToFit()">
           {{ msg().toolbar.zoomToFit }}
         </button>
+        <button type="button" class="oge-gantt-btn" (click)="goToday()">
+          {{ msg().toolbar.today }}
+        </button>
       </div>
       <div class="oge-gantt-toolbar-group">
         <button type="button" class="oge-gantt-btn" (click)="expandAll()">
@@ -262,6 +266,35 @@ const OVERSCAN_ROWS = 6;
     </div>
 
     <div class="oge-gantt-body" #bodyEl (scroll)="onBodyScroll()">
+      @if (visibleTasks().length === 0) {
+        <div class="oge-gantt-empty">
+          <svg
+            viewBox="0 0 48 48"
+            width="44"
+            height="44"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <rect x="6" y="10" width="24" height="7" rx="3.5" />
+            <rect x="14" y="21" width="28" height="7" rx="3.5" />
+            <rect x="10" y="32" width="18" height="7" rx="3.5" />
+          </svg>
+          <div class="oge-gantt-empty-title">{{ msg().grid.noTasks }}</div>
+          <div class="oge-gantt-empty-hint">{{ msg().grid.noTasksHint }}</div>
+          @if (effectiveEditing() && allowTaskAdding()) {
+            <button
+              type="button"
+              class="oge-gantt-btn oge-gantt-btn-primary"
+              (click)="showTaskDetailsDialog()"
+            >
+              {{ msg().toolbar.addTask }}
+            </button>
+          }
+        </div>
+      }
       <div
         class="oge-gantt-layout"
         [style.--oge-gantt-list-width.px]="listWidth()"
@@ -409,6 +442,9 @@ const OVERSCAN_ROWS = 6;
               class="oge-gantt-canvas"
               #canvasEl
               [style.height.px]="tasks().length * rowHeight()"
+              (dblclick)="onCanvasDblClick($event)"
+              (pointerdown)="onCanvasPointerDown($event)"
+              (contextmenu)="onCanvasContextMenu($event)"
             >
               @for (shade of shadedTicks(); track shade.px) {
                 <div
@@ -614,6 +650,16 @@ const OVERSCAN_ROWS = 6;
                   }
                 </div>
               }
+              @if (drawPreview(); as draw) {
+                <div
+                  class="oge-gantt-draw-preview"
+                  [style.inset-inline-start.px]="draw.leftPx"
+                  [style.width.px]="draw.widthPx"
+                  [style.top.px]="draw.top"
+                  [style.height.px]="rowHeight() - 12"
+                  aria-hidden="true"
+                ></div>
+              }
               @if (dragTip(); as tip) {
                 <div
                   class="oge-gantt-drag-tip"
@@ -688,6 +734,85 @@ const OVERSCAN_ROWS = 6;
       (saved)="onDialogSaved($event)"
       (deleteRequested)="onDialogDelete()"
     />
+    @if (contextMenu(); as menu) {
+      <!-- click-away surface only; Escape on the focused menu closes too -->
+      <!-- eslint-disable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+      <div
+        class="oge-gantt-menu-backdrop"
+        (click)="closeMenu()"
+        (contextmenu)="$event.preventDefault(); closeMenu()"
+      ></div>
+      <!-- eslint-enable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+      <div
+        class="oge-gantt-menu"
+        role="menu"
+        tabindex="-1"
+        [style.left.px]="menu.x"
+        [style.top.px]="menu.y"
+        (keydown.escape)="closeMenu()"
+      >
+        @if (menu.task !== null) {
+          <button
+            type="button"
+            role="menuitem"
+            class="oge-gantt-menu-item"
+            [disabled]="!allowTaskUpdating()"
+            (click)="menuEdit()"
+          >
+            {{ msg().menu.editTask }}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="oge-gantt-menu-item"
+            [disabled]="!allowTaskAdding()"
+            (click)="menuNewSubtask()"
+          >
+            {{ msg().menu.newSubtask }}
+          </button>
+        }
+        <button
+          type="button"
+          role="menuitem"
+          class="oge-gantt-menu-item"
+          [disabled]="!allowTaskAdding()"
+          (click)="menuNewTask()"
+        >
+          {{ msg().menu.newTask }}
+        </button>
+        @if (menu.task !== null) {
+          <div class="oge-gantt-menu-sep" role="separator"></div>
+          <button
+            type="button"
+            role="menuitem"
+            class="oge-gantt-menu-item"
+            [disabled]="!canIndent(menu.task)"
+            (click)="menuIndent()"
+          >
+            {{ msg().menu.indent }}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="oge-gantt-menu-item"
+            [disabled]="menu.task.parentKey === null || !allowTaskUpdating()"
+            (click)="menuOutdent()"
+          >
+            {{ msg().menu.outdent }}
+          </button>
+          <div class="oge-gantt-menu-sep" role="separator"></div>
+          <button
+            type="button"
+            role="menuitem"
+            class="oge-gantt-menu-item oge-gantt-menu-danger"
+            [disabled]="!allowTaskDeleting()"
+            (click)="menuDelete()"
+          >
+            {{ msg().menu.deleteTask }}
+          </button>
+        }
+      </div>
+    }
     <div class="oge-gantt-live" aria-live="polite">{{ announcement() }}</div>
   `,
 })
@@ -1425,6 +1550,160 @@ export class OgeGantt<
 
   protected onRowContextMenu(task: GanttTask<T>, event: MouseEvent): void {
     this.taskContextMenu.emit({ task, event });
+    this.openMenu(task, event);
+  }
+
+  /* ---------------- built-in context menu ---------------- */
+
+  protected readonly contextMenu = signal<{
+    x: number;
+    y: number;
+    task: GanttTask<T> | null;
+  } | null>(null);
+
+  private openMenu(task: GanttTask<T> | null, event: MouseEvent): void {
+    if (!this.effectiveEditing()) return;
+    event.preventDefault();
+    const hostRect = this.hostEl.nativeElement.getBoundingClientRect();
+    this.contextMenu.set({
+      x: event.clientX - hostRect.left,
+      y: event.clientY - hostRect.top,
+      task,
+    });
+    if (task !== null) this.select(task);
+    setTimeout(() => {
+      this.hostEl.nativeElement
+        .querySelector<HTMLElement>('.oge-gantt-menu-item:not(:disabled)')
+        ?.focus();
+    });
+  }
+
+  protected closeMenu(): void {
+    this.contextMenu.set(null);
+  }
+
+  protected onCanvasContextMenu(event: MouseEvent): void {
+    const target = (event.target as HTMLElement).closest<HTMLElement>(
+      '[data-task-key]',
+    );
+    if (target !== null) {
+      const key = target.getAttribute('data-task-key');
+      const task = untracked(this.visibleTasks).find(
+        (entry) => String(entry.key) === key,
+      );
+      if (task !== undefined) {
+        this.taskContextMenu.emit({ task, event });
+        this.openMenu(task, event);
+        return;
+      }
+    }
+    this.openMenu(null, event);
+  }
+
+  protected menuEdit(): void {
+    const task = untracked(this.contextMenu)?.task;
+    this.closeMenu();
+    if (task) this.openEditDialog(task);
+  }
+
+  protected menuNewTask(): void {
+    this.closeMenu();
+    this.showTaskDetailsDialog();
+  }
+
+  protected menuNewSubtask(): void {
+    const task = untracked(this.contextMenu)?.task;
+    this.closeMenu();
+    if (!task) return;
+    const start = new Date(
+      task.start.getFullYear(),
+      task.start.getMonth(),
+      task.start.getDate(),
+    );
+    this.openCreateDialog(
+      start,
+      new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1),
+      this.fields().key(task.source),
+    );
+  }
+
+  protected menuDelete(): void {
+    const task = untracked(this.contextMenu)?.task;
+    this.closeMenu();
+    if (task) this.deleteTask(task.source);
+  }
+
+  protected menuIndent(): void {
+    const task = untracked(this.contextMenu)?.task;
+    this.closeMenu();
+    if (task) this.indentTask(task);
+  }
+
+  protected menuOutdent(): void {
+    const task = untracked(this.contextMenu)?.task;
+    this.closeMenu();
+    if (task) this.outdentTask(task);
+  }
+
+  /* ---------------- indent / outdent ---------------- */
+
+  /** The previous visible sibling — the indent target. */
+  private previousSibling(task: GanttTask<T>): GanttTask<T> | null {
+    const visible = untracked(this.visibleTasks);
+    const index = visible.findIndex((entry) => entry.key === task.key);
+    for (let i = index - 1; i >= 0; i--) {
+      if (visible[i].parentKey === task.parentKey) return visible[i];
+      if (visible[i].level < task.level) break;
+    }
+    return null;
+  }
+
+  protected canIndent(task: GanttTask<T>): boolean {
+    return (
+      this.allowTaskUpdating() &&
+      this.effectiveEditing() &&
+      this.previousSibling(task) !== null
+    );
+  }
+
+  /** Makes the task a child of its previous sibling (MS Project parity). */
+  indentTask(task: GanttTask<T>): void {
+    const sibling = this.previousSibling(task);
+    const names = this.fields().fieldNames;
+    if (sibling === null || names.parentKey === null) return;
+    if (!this.effectiveEditing() || !this.allowTaskUpdating()) return;
+    const patch = {
+      [names.parentKey]: this.fields().key(sibling.source),
+    } as Partial<T>;
+    this.updateTask(task.source, patch);
+    if (untracked(this.collapsedKeys).has(sibling.key)) {
+      this.toggleExpanded(sibling);
+    }
+    this.announce(this.msg().announcements.indented, {
+      title: task.title,
+      parent: sibling.title,
+    });
+  }
+
+  /** Moves the task up to its grandparent (or the root). */
+  outdentTask(task: GanttTask<T>): void {
+    const names = this.fields().fieldNames;
+    if (task.parentKey === null || names.parentKey === null) return;
+    if (!this.effectiveEditing() || !this.allowTaskUpdating()) return;
+    const parent = untracked(this.allTasks).find(
+      (entry) => entry.key === task.parentKey,
+    );
+    const grandRaw =
+      parent !== undefined && parent.parentKey !== null
+        ? this.fields().key(
+            untracked(this.allTasks).find(
+              (entry) => entry.key === parent.parentKey,
+            )?.source as T,
+          )
+        : null;
+    const patch = { [names.parentKey]: grandRaw } as Partial<T>;
+    this.updateTask(task.source, patch);
+    this.announce(this.msg().announcements.outdented, { title: task.title });
   }
 
   protected onPaneKeydown(event: KeyboardEvent): void {
@@ -1446,6 +1725,19 @@ export class OgeGantt<
       });
     };
     if (event.ctrlKey && this.handleBarKey(task, event)) return;
+    if (event.altKey && event.shiftKey) {
+      // MS Project parity: Alt+Shift+Right indents, Alt+Shift+Left outdents
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        this.indentTask(task);
+        return;
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        this.outdentTask(task);
+        return;
+      }
+    }
     switch (event.key) {
       case 'ArrowDown':
         focusRow(visible[index + 1]);
@@ -1972,6 +2264,93 @@ export class OgeGantt<
   private editedSource: T | null = null;
   private draftCounter = 0;
 
+  /** Today button: scrolls the chart to the current date. */
+  protected goToday(): void {
+    this.scrollToDate(new Date());
+  }
+
+  protected readonly drawPreview = signal<{
+    leftPx: number;
+    widthPx: number;
+    top: number;
+  } | null>(null);
+
+  /** Double-click on empty chart space creates a task at that date. */
+  protected onCanvasDblClick(event: MouseEvent): void {
+    if (!this.effectiveEditing() || !this.allowTaskAdding()) return;
+    if ((event.target as HTMLElement).closest('.oge-gantt-target')) return;
+    const canvas = this.canvasEl()?.nativeElement;
+    if (canvas === undefined) return;
+    const rect = canvas.getBoundingClientRect();
+    const start = chartPxToDate(
+      untracked(this.scale),
+      event.clientX - rect.left,
+      this.resolvedFirstDayOfWeek(),
+    );
+    this.openCreateDialog(
+      start,
+      new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1),
+    );
+  }
+
+  /** Drag on empty chart space draws a bar, then opens the create dialog. */
+  protected onCanvasPointerDown(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    if (!this.effectiveEditing() || !this.allowTaskAdding()) return;
+    if ((event.target as HTMLElement).closest('.oge-gantt-target')) return;
+    const canvas = this.canvasEl()?.nativeElement;
+    if (canvas === undefined) return;
+    const rect = canvas.getBoundingClientRect();
+    const startPx = event.clientX - rect.left;
+    const rowIndex = Math.floor((event.clientY - rect.top) / this.rowHeight());
+    beginGanttGesture(event, {
+      onMove: (deltaX) => {
+        this.drawPreview.set({
+          leftPx: Math.min(startPx, startPx + deltaX),
+          widthPx: Math.abs(deltaX),
+          top: rowIndex * this.rowHeight() + 6,
+        });
+      },
+      onFinish: (commit, cancelled) => {
+        const draw = untracked(this.drawPreview);
+        this.drawPreview.set(null);
+        if (!commit || cancelled || draw === null || draw.widthPx < 12) {
+          return;
+        }
+        const scale = untracked(this.scale);
+        const firstDay = this.resolvedFirstDayOfWeek();
+        const start = chartPxToDate(scale, draw.leftPx, firstDay);
+        let end = chartPxToDate(scale, draw.leftPx + draw.widthPx, firstDay);
+        if (end.getTime() <= start.getTime()) {
+          end = new Date(
+            start.getFullYear(),
+            start.getMonth(),
+            start.getDate() + 1,
+          );
+        }
+        this.openCreateDialog(start, end);
+      },
+    });
+  }
+
+  /** Prefilled create dialog (double-click, draw-to-create, subtask). */
+  private openCreateDialog(start: Date, end: Date, parentRaw?: unknown): void {
+    this.pendingParentRaw = parentRaw;
+    this.openDialog(
+      {
+        title: '',
+        start,
+        end,
+        progress: 0,
+        ...(this.resources().length > 0 ? { resourceIds: [] } : {}),
+      },
+      this.buildDraft(start, parentRaw),
+      true,
+    );
+  }
+
+  private pendingParentRaw: unknown = undefined;
+
   /** Opens the task dialog: a prefilled create form without arguments. */
   showTaskDetailsDialog(taskData?: T): void {
     if (taskData !== undefined) {
@@ -2000,11 +2379,12 @@ export class OgeGantt<
     );
   }
 
-  private buildDraft(start: Date): T {
+  private buildDraft(start: Date, parentRaw?: unknown): T {
     const item: Record<string, unknown> = {};
     const set = (expr: GanttFieldExpr<T>, value: unknown): void => {
       if (typeof expr === 'string') item[expr] = value;
     };
+    if (parentRaw !== undefined) set(this.parentKeyExpr(), parentRaw);
     set(
       this.keyExpr(),
       `oge-task-${++this.draftCounter}-${untracked(this.taskStore).length}`,
@@ -2054,7 +2434,8 @@ export class OgeGantt<
   protected onDialogSaved(result: GanttEditorResult): void {
     const fields = this.fields();
     if (result.isNew) {
-      const draft = this.buildDraft(result.model.start);
+      const draft = this.buildDraft(result.model.start, this.pendingParentRaw);
+      this.pendingParentRaw = undefined;
       const patch = ganttTaskPatch(draft, result.model, fields);
       this.insertTask({ ...draft, ...patch });
     } else if (this.editedSource !== null) {

@@ -3,6 +3,7 @@ import { InjectionToken, type Provider } from '@angular/core';
 /** Toolbar labels. */
 export interface OgeGanttToolbarMessages {
   readonly label: string;
+  readonly today: string;
   readonly zoomIn: string;
   readonly zoomOut: string;
   readonly zoomToFit: string;
@@ -43,6 +44,16 @@ export interface OgeGanttDialogMessages {
   readonly resourcesLabel: string;
 }
 
+/** Built-in context-menu labels. */
+export interface OgeGanttMenuMessages {
+  readonly newTask: string;
+  readonly newSubtask: string;
+  readonly editTask: string;
+  readonly deleteTask: string;
+  readonly indent: string;
+  readonly outdent: string;
+}
+
 /** Grid/chart aria strings; `{token}` placeholders formatted at render. */
 export interface OgeGanttGridMessages {
   /** Accessible name of the task tree pane. */
@@ -57,6 +68,10 @@ export interface OgeGanttGridMessages {
   readonly todayLabel: string;
   /** Accessible name of the scrollable chart region. */
   readonly chartLabel: string;
+  /** Empty-state heading. */
+  readonly noTasks: string;
+  /** Empty-state hint under the heading. */
+  readonly noTasksHint: string;
 }
 
 /** Live-region announcement templates. */
@@ -70,6 +85,9 @@ export interface OgeGanttAnnouncementMessages {
   readonly dependencyCreated: string;
   readonly dependencyDeleted: string;
   readonly dependencyRejected: string;
+  /** `{title}` indented under `{parent}`. */
+  readonly indented: string;
+  readonly outdented: string;
   readonly cancelled: string;
   readonly undone: string;
   readonly redone: string;
@@ -78,6 +96,7 @@ export interface OgeGanttAnnouncementMessages {
 /** Every user-facing string of the Gantt (house i18n rule). */
 export interface OgeGanttMessages {
   readonly toolbar: OgeGanttToolbarMessages;
+  readonly menu: OgeGanttMenuMessages;
   readonly columns: OgeGanttColumnMessages;
   readonly dialog: OgeGanttDialogMessages;
   readonly grid: OgeGanttGridMessages;
@@ -87,6 +106,7 @@ export interface OgeGanttMessages {
 export const OGE_DEFAULT_GANTT_MESSAGES: OgeGanttMessages = {
   toolbar: {
     label: 'Gantt toolbar',
+    today: 'Today',
     zoomIn: 'Zoom in',
     zoomOut: 'Zoom out',
     zoomToFit: 'Zoom to fit',
@@ -95,6 +115,14 @@ export const OGE_DEFAULT_GANTT_MESSAGES: OgeGanttMessages = {
     addTask: 'New task',
     undo: 'Undo',
     redo: 'Redo',
+  },
+  menu: {
+    newTask: 'New task',
+    newSubtask: 'New subtask',
+    editTask: 'Edit',
+    deleteTask: 'Delete',
+    indent: 'Indent (make subtask)',
+    outdent: 'Outdent',
   },
   columns: {
     title: 'Task',
@@ -126,6 +154,8 @@ export const OGE_DEFAULT_GANTT_MESSAGES: OgeGanttMessages = {
     treeHint: 'Press Escape then Tab to leave the Gantt',
     todayLabel: 'Today',
     chartLabel: 'Gantt chart',
+    noTasks: 'No tasks yet',
+    noTasksHint: 'Create your first task to get started',
   },
   announcements: {
     taskCreated: '{title} created',
@@ -137,6 +167,8 @@ export const OGE_DEFAULT_GANTT_MESSAGES: OgeGanttMessages = {
     dependencyCreated: 'Link from {from} to {to} created',
     dependencyDeleted: 'Link from {from} to {to} deleted',
     dependencyRejected: 'Link rejected — it would create a cycle',
+    indented: '{title} indented under {parent}',
+    outdented: '{title} outdented',
     cancelled: 'Cancelled',
     undone: 'Undone',
     redone: 'Redone',
