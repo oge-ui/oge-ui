@@ -20,7 +20,8 @@ dependencies are taken instead of rebuilt.
 
 **Views & data**
 
-- `'day' | 'week' | 'workWeek' | 'month'` views with `[(currentDate)]` /
+- `'day' | 'week' | 'workWeek' | 'month' | 'agenda' | 'timelineDay' |
+  'timelineWeek'` views with `[(currentDate)]` /
   `[(currentView)]`, per-view hour-window and slot-duration overrides,
   `hiddenWeekDays`, `min`/`max` navigation bounds and a toolbar
   date-navigator calendar (embeds `@oge-ui/inputs`' `OgeCalendar`)
@@ -34,10 +35,14 @@ dependencies are taken instead of rebuilt.
 - Deterministic overlap layout: transitive-overlap clusters with greedy
   column assignment (day/week), shared lane packing for the all-day strip
   and month rows, per-day "+N more" overflow counts
-- Recurrence fields (`recurrenceRule` / `recurrenceException`) are parsed
-  and validated in v0.1 against a documented RFC 5545 subset (FREQ
+- Recurring appointments (documented RFC 5545 subset: FREQ
   DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL, COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY,
-  BYMONTH, WKST); the expansion engine ships in v0.2
+  BYMONTH, WKST) expand into occurrences in every view; the editor carries
+  a recurrence section, and edits/deletes ask "this appointment or the
+  series?" (`recurrenceEditMode`) — occurrence scope detaches via EXDATE
+- Resources: editor select fields, color-by-resource
+  (`useColorAsDefault`), timeline rows grouped by `groups`; reminders via
+  `reminderExpr` + the `reminderTriggered` event
 
 **Editing**
 

@@ -55,6 +55,8 @@ import type {
   OgeSchedulerCellClickEvent,
   OgeSchedulerEditorShowingEvent,
   OgeSchedulerRangeSelectedEvent,
+  OgeSchedulerReminderEvent,
+  OgeSchedulerResource,
   OgeSchedulerView,
   OgeSchedulerViewOptions,
   OgeSchedulerWorkHours,
@@ -72,6 +74,7 @@ import {
   type SchedulerProposalEvent,
 } from './day-week-view';
 import { OgeSchedulerAgendaView } from './agenda-view';
+import { OgeSchedulerTimelineView } from './timeline-view';
 import { OgeSchedulerMonthView } from './month-view';
 import {
   OgeAppointmentTemplate,
@@ -110,6 +113,7 @@ interface ResolvedView {
     OgeCalendar,
     OgePopup,
     OgeSchedulerAgendaView,
+    OgeSchedulerTimelineView,
     OgeSchedulerAppointmentDialog,
     OgeSchedulerAppointmentPopup,
     OgeSchedulerDayWeekView,
@@ -266,6 +270,42 @@ interface ResolvedView {
           (chipDeleteRequested)="onDeleteRequested($event)"
         />
       }
+      @case ('timelineDay') {
+        <oge-scheduler-timeline-view
+          view="timelineDay"
+          [anchorDate]="currentDate()"
+          [appointments]="visibleAppointments()"
+          [firstDayOfWeek]="resolvedFirstDayOfWeek()"
+          [dayStartHour]="activeView().dayStartHour"
+          [dayEndHour]="activeView().dayEndHour"
+          [cellDuration]="activeView().cellDuration"
+          [locale]="locale()"
+          [messages]="msg().grid"
+          [groupResource]="groupResource()"
+          [resourceIdOf]="groupResourceIdOf()"
+          (chipClicked)="onChipClicked($event)"
+          (chipDblClicked)="onChipDblClicked($event)"
+          (chipDeleteRequested)="onDeleteRequested($event)"
+        />
+      }
+      @case ('timelineWeek') {
+        <oge-scheduler-timeline-view
+          view="timelineWeek"
+          [anchorDate]="currentDate()"
+          [appointments]="visibleAppointments()"
+          [firstDayOfWeek]="resolvedFirstDayOfWeek()"
+          [dayStartHour]="activeView().dayStartHour"
+          [dayEndHour]="activeView().dayEndHour"
+          [cellDuration]="activeView().cellDuration"
+          [locale]="locale()"
+          [messages]="msg().grid"
+          [groupResource]="groupResource()"
+          [resourceIdOf]="groupResourceIdOf()"
+          (chipClicked)="onChipClicked($event)"
+          (chipDblClicked)="onChipDblClicked($event)"
+          (chipDeleteRequested)="onDeleteRequested($event)"
+        />
+      }
       @case ('month') {
         <oge-scheduler-month-view
           [anchorDate]="currentDate()"
@@ -345,6 +385,7 @@ interface ResolvedView {
     <oge-scheduler-appointment-dialog
       [messages]="msg().editor"
       [locale]="locale()"
+      [resources]="resources()"
       (saved)="onEditorSaved($event)"
     />
     @if (scopePending(); as pending) {
@@ -442,6 +483,11 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly maxAppointmentsPerCell = input<number | 'auto'>('auto');
   /** Days the agenda view lists from the anchor date. */
   readonly agendaDuration = input(7);
+  /** Resource kinds appointments can be assigned to. */
+  readonly resources = input<readonly OgeSchedulerResource[]>([]);
+  /** Field of the resource that groups the timeline rows (first entry). */
+  readonly groups = input<readonly string[]>([]);
+  readonly reminderExpr = input<SchedulerFieldExpr<T, unknown>>('reminder');
   /** BCP 47 locale for every `Intl` format; defaults to the browser locale. */
   readonly locale = input<string | undefined>(undefined);
   /** Per-instance overrides of the DI-configured messages. */
@@ -533,6 +579,8 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     output<OgeSchedulerAppointmentClickEvent<T>>();
   /** Right-click on an empty cell. */
   readonly cellContextMenu = output<OgeSchedulerCellClickEvent>();
+  /** An appointment's reminder lead time was reached (checked ~30s). */
+  readonly reminderTriggered = output<OgeSchedulerReminderEvent<T>>();
 
   protected readonly appointmentTemplate = contentChild(
     OgeAppointmentTemplate<T>,
@@ -592,7 +640,9 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
 
   protected readonly dayWeekView = computed<'day' | 'week' | 'workWeek'>(() => {
     const view = this.currentView();
-    return view === 'month' || view === 'agenda' ? 'week' : view;
+    return view === 'day' || view === 'week' || view === 'workWeek'
+      ? view
+      : 'week';
   });
 
   private readonly fields = computed(() =>
@@ -604,11 +654,48 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       colorExpr: this.colorExpr(),
       locationExpr: this.locationExpr(),
       descriptionExpr: this.descriptionExpr(),
+      reminderExpr: this.reminderExpr(),
       recurrenceRuleExpr: this.recurrenceRuleExpr(),
       recurrenceExceptionExpr: this.recurrenceExceptionExpr(),
       disabledExpr: this.disabledExpr(),
     }),
   );
+
+  /** The resource that colors uncolored appointments, if any. */
+  private readonly colorResource = computed<OgeSchedulerResource | null>(() => {
+    const resources = this.resources();
+    return (
+      resources.find((resource) => resource.useColorAsDefault) ??
+      resources[0] ??
+      null
+    );
+  });
+
+  /** The timeline grouping resource (first `groups` field). */
+  protected readonly groupResource = computed<OgeSchedulerResource | null>(
+    () => {
+      const field = this.groups()[0];
+      if (field === undefined) return null;
+      return (
+        this.resources().find((resource) => resource.fieldExpr === field) ??
+        null
+      );
+    },
+  );
+
+  protected readonly groupResourceIdOf = computed<(item: T) => unknown>(() => {
+    const resource = this.groupResource();
+    if (resource === null) return () => null;
+    return (item) => (item as Record<string, unknown>)[resource.fieldExpr];
+  });
+
+  /** Resolves an appointment's fallback color from the color resource. */
+  private resourceColorOf(item: T): string | undefined {
+    const resource = this.colorResource();
+    if (resource === null) return undefined;
+    const id = (item as Record<string, unknown>)[resource.fieldExpr];
+    return resource.items.find((entry) => entry.id === id)?.color;
+  }
 
   /* ---------- data store ---------- */
 
@@ -649,6 +736,32 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
         this.scrollToTime(Math.floor(scrollTime), (scrollTime % 1) * 60);
       });
     });
+    // reminder ticker: fires reminderTriggered once per occurrence when
+    // now >= start - reminderMinutes (looking 24h ahead)
+    const firedReminders = new Set<unknown>();
+    const reminderTimer = setInterval(() => {
+      const now = new Date();
+      const horizon = new Date(now.getTime() + 86_400_000);
+      for (const base of untracked(this.appointments)) {
+        for (const appointment of expandAppointment(base, now, horizon)) {
+          const lead = appointment.reminderMinutes;
+          if (lead === undefined) continue;
+          const dueAt = appointment.startDate.getTime() - lead * 60_000;
+          if (
+            now.getTime() >= dueAt &&
+            now.getTime() < appointment.startDate.getTime() &&
+            !firedReminders.has(appointment.key)
+          ) {
+            firedReminders.add(appointment.key);
+            this.reminderTriggered.emit({
+              appointmentData: appointment.source,
+              appointment,
+            });
+          }
+        }
+      }
+    }, 30_000);
+    this.destroyRef.onDestroy(() => clearInterval(reminderTimer));
   }
 
   private reload(source: DataSource<T>): void {
@@ -686,7 +799,12 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
           keyOf(item, index),
           fields,
         );
-        if (appointment !== null) result.push(appointment);
+        if (appointment === null) return;
+        result.push(
+          appointment.color === undefined
+            ? { ...appointment, color: this.resourceColorOf(item) }
+            : appointment,
+        );
       });
       return result;
     },
@@ -1150,10 +1268,22 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       color: appointment.color,
       location: appointment.location,
       description: appointment.description,
+      reminder: appointment.reminderMinutes ?? null,
+      resourceValues: this.resourceValuesOf(appointment.source),
       ...this.ruleFields(
         withRecurrence ? appointment.recurrenceRule : undefined,
       ),
     };
+  }
+
+  private resourceValuesOf(item: T): Record<string, unknown> {
+    const values: Record<string, unknown> = {};
+    for (const resource of this.resources()) {
+      values[resource.fieldExpr] = (item as Record<string, unknown>)[
+        resource.fieldExpr
+      ];
+    }
+    return values;
   }
 
   /* ---------- editor ---------- */
@@ -1198,6 +1328,8 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       allDay,
       startDate,
       endDate,
+      reminder: null,
+      resourceValues: {},
       ...this.ruleFields(undefined),
     };
     this.openEditor(model, this.buildItem(model), true);
@@ -1248,6 +1380,10 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     set(fields.fieldNames.location, editorModel.location);
     set(fields.fieldNames.description, editorModel.description);
     set(fields.fieldNames.recurrenceRule, this.editorRuleString(editorModel));
+    set(fields.fieldNames.reminder, editorModel.reminder ?? undefined);
+    for (const resource of this.resources()) {
+      set(resource.fieldExpr, editorModel.resourceValues[resource.fieldExpr]);
+    }
     return item as T;
   }
 
@@ -1272,6 +1408,10 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     set(fields.fieldNames.recurrenceRule, ruleString ?? '');
     if (ruleString === undefined) {
       set(fields.fieldNames.recurrenceException, '');
+    }
+    set(fields.fieldNames.reminder, editorModel.reminder);
+    for (const resource of this.resources()) {
+      set(resource.fieldExpr, editorModel.resourceValues[resource.fieldExpr]);
     }
     return patch as Partial<T>;
   }
@@ -1373,6 +1513,8 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       allDay: false,
       startDate: range.startDate,
       endDate: range.endDate,
+      reminder: null,
+      resourceValues: {},
       ...this.ruleFields(undefined),
     };
     this.openEditor(model, this.buildItem(model), true);

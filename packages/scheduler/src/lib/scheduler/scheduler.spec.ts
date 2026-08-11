@@ -141,6 +141,9 @@ describe('<oge-scheduler> shell', () => {
           week: 'Woche',
           workWeek: 'Arbeitswoche',
           month: 'Monat',
+          agenda: 'Agenda',
+          timelineDay: 'Zeitachse Tag',
+          timelineWeek: 'Zeitachse Woche',
         },
       },
     });

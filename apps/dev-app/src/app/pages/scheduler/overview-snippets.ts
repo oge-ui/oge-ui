@@ -253,6 +253,64 @@ protected readonly appointments = [
 ];`,
 });
 
+export const TEAMS_SNIPPET = demoSource({
+  use: { '@oge-ui/scheduler': ['OgeScheduler'] },
+  types: { '@oge-ui/scheduler': ['OgeSchedulerResource'] },
+  template: `<!-- Recurring series (RFC 5545 subset) expand into occurrences in
+     every view; editing or deleting one asks "this appointment or the entire
+     series?" (recurrenceEditMode). resources drive the editor's assignment
+     selects, default colors (useColorAsDefault) and the timeline rows
+     (groups). The agenda view lists the coming days; reminderTriggered fires
+     when a reminder lead time is reached. -->
+<oge-scheduler
+  [dataSource]="appointments"
+  [currentDate]="date"
+  currentView="timelineWeek"
+  [views]="['week', 'timelineDay', 'timelineWeek', 'agenda', 'month']"
+  [resources]="resources"
+  [groups]="['ownerId']"
+  [dayStartHour]="8"
+  [dayEndHour]="18"
+  style="height: 560px"
+/>`,
+  body: `protected readonly date = new Date(2026, 7, 6);
+protected readonly resources: OgeSchedulerResource[] = [
+  {
+    fieldExpr: 'ownerId',
+    label: 'Owner',
+    useColorAsDefault: true,
+    items: [
+      { id: 'ada', text: 'Ada', color: '#7c3aed' },
+      { id: 'grace', text: 'Grace', color: '#0891b2' },
+    ],
+  },
+];
+protected readonly appointments = [
+  {
+    id: 1,
+    text: 'Daily standup',
+    startDate: new Date(2026, 7, 3, 9, 0),
+    endDate: new Date(2026, 7, 3, 9, 15),
+    recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+    ownerId: 'ada',
+    reminder: 5,
+  },
+  {
+    id: 2,
+    text: 'Design pairing',
+    startDate: new Date(2026, 7, 5, 14, 0),
+    endDate: new Date(2026, 7, 5, 16, 0),
+    ownerId: 'grace',
+  },
+  {
+    id: 3,
+    text: 'Ops review',
+    startDate: new Date(2026, 7, 6, 11, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+  },
+];`,
+});
+
 export const CONFIG_SNIPPET = demoSource({
   use: { '@oge-ui/scheduler': ['OgeScheduler'] },
   helpers: { '@oge-ui/scheduler': ['provideOgeSchedulerConfig'] },
@@ -283,6 +341,9 @@ export const CONFIG_SNIPPET = demoSource({
             week: 'Woche',
             workWeek: 'Arbeitswoche',
             month: 'Monat',
+            agenda: 'Agenda',
+            timelineDay: 'Zeitachse Tag',
+            timelineWeek: 'Zeitachse Woche',
           },
         },
       },

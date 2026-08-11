@@ -28,6 +28,7 @@ export interface SchedulerFieldExprs<T> {
   readonly colorExpr: SchedulerFieldExpr<T, unknown>;
   readonly locationExpr: SchedulerFieldExpr<T, unknown>;
   readonly descriptionExpr: SchedulerFieldExpr<T, unknown>;
+  readonly reminderExpr: SchedulerFieldExpr<T, unknown>;
   readonly recurrenceRuleExpr: SchedulerFieldExpr<T, unknown>;
   readonly recurrenceExceptionExpr: SchedulerFieldExpr<T, unknown>;
   readonly disabledExpr: SchedulerFieldExpr<T, unknown>;
@@ -42,6 +43,7 @@ export interface ResolvedSchedulerFields<T> {
   readonly color: ValueAccessor<T>;
   readonly location: ValueAccessor<T>;
   readonly description: ValueAccessor<T>;
+  readonly reminder: ValueAccessor<T>;
   readonly recurrenceRule: ValueAccessor<T>;
   readonly recurrenceException: ValueAccessor<T>;
   readonly disabled: ValueAccessor<T>;
@@ -57,6 +59,7 @@ export type SchedulerFieldKey =
   | 'color'
   | 'location'
   | 'description'
+  | 'reminder'
   | 'recurrenceRule'
   | 'recurrenceException'
   | 'disabled';
@@ -80,6 +83,8 @@ export interface SchedulerAppointment<T = unknown> {
   readonly color: string | undefined;
   readonly location: string | undefined;
   readonly description: string | undefined;
+  /** Minutes before the start a reminder fires; `undefined` = none. */
+  readonly reminderMinutes: number | undefined;
   /** RFC 5545 RRULE string (reserved in v0.1; expanded by the v0.2 engine). */
   readonly recurrenceRule: string | undefined;
   /** Comma-separated exception dates (reserved in v0.1). */
@@ -112,6 +117,7 @@ export function resolveSchedulerFields<T>(
     color: toAccessor(exprs.colorExpr),
     location: toAccessor(exprs.locationExpr),
     description: toAccessor(exprs.descriptionExpr),
+    reminder: toAccessor(exprs.reminderExpr),
     recurrenceRule: toAccessor(exprs.recurrenceRuleExpr),
     recurrenceException: toAccessor(exprs.recurrenceExceptionExpr),
     disabled: toAccessor(exprs.disabledExpr),
@@ -123,6 +129,7 @@ export function resolveSchedulerFields<T>(
       color: name(exprs.colorExpr),
       location: name(exprs.locationExpr),
       description: name(exprs.descriptionExpr),
+      reminder: name(exprs.reminderExpr),
       recurrenceRule: name(exprs.recurrenceRuleExpr),
       recurrenceException: name(exprs.recurrenceExceptionExpr),
       disabled: name(exprs.disabledExpr),
@@ -164,6 +171,12 @@ export function normalizeAppointment<T>(
     color: asString(fields.color(item)),
     location: asString(fields.location(item)),
     description: asString(fields.description(item)),
+    reminderMinutes: (() => {
+      const raw = fields.reminder(item);
+      return typeof raw === 'number' && Number.isFinite(raw) && raw >= 0
+        ? raw
+        : undefined;
+    })(),
     recurrenceRule: asString(fields.recurrenceRule(item)),
     recurrenceException: asString(fields.recurrenceException(item)),
     disabled: fields.disabled(item) === true,

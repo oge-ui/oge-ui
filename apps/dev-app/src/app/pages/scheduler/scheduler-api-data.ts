@@ -33,7 +33,35 @@ export const OGE_SCHEDULER_API: ApiSections = {
           type: 'string | ((item: T) =&gt; unknown)',
           default: "'recurrenceRule' / 'recurrenceException'",
           description:
-            'Reserved recurrence fields — parsed and validated against the documented RFC 5545 subset in v0.1; the expansion engine ships in v0.2.',
+            'Recurrence fields: rules in the documented RFC 5545 subset expand into occurrence instances in every view; exceptions are comma-separated EXDATE stamps.',
+        },
+        {
+          name: 'reminderExpr',
+          type: 'string | ((item: T) =&gt; unknown)',
+          default: "'reminder'",
+          description:
+            'Minutes before the start a reminder fires (see <code>reminderTriggered</code>) — <strong>OGE extra</strong> (Outlook parity).',
+        },
+        {
+          name: 'resources',
+          type: 'readonly OgeSchedulerResource[]',
+          default: '[]',
+          description:
+            'Resource kinds (<code>{ fieldExpr, items, label?, useColorAsDefault? }</code>): editor select fields, default appointment colors and timeline rows.',
+        },
+        {
+          name: 'groups',
+          type: 'readonly string[]',
+          default: '[]',
+          description:
+            'Resource field grouping the timeline rows (first entry). Day/week column grouping is on the roadmap.',
+        },
+        {
+          name: 'recurrenceEditMode',
+          type: "'dialog' | 'occurrence' | 'series'",
+          default: "'dialog'",
+          description:
+            'How edits to a recurring occurrence apply: ask per action, always detach the occurrence (EXDATE + standalone copy), or always change the series.',
         },
       ],
     },
@@ -49,7 +77,7 @@ export const OGE_SCHEDULER_API: ApiSections = {
         },
         {
           name: 'currentView',
-          type: "'day' | 'week' | 'workWeek' | 'month'",
+          type: "'day' | 'week' | 'workWeek' | 'month' | 'agenda' | 'timelineDay' | 'timelineWeek'",
           default: "'week'",
           description:
             'The active view. Two-way (<code>[(currentView)]</code>).',
@@ -85,6 +113,12 @@ export const OGE_SCHEDULER_API: ApiSections = {
           default: '0 / 24 / 30',
           description:
             'Visible hour window and slot raster (minutes) of the time grids.',
+        },
+        {
+          name: 'agendaDuration',
+          type: 'number',
+          default: '7',
+          description: 'Days the agenda view lists from the anchor date.',
         },
         {
           name: 'scrollTime',
@@ -262,6 +296,17 @@ export const OGE_SCHEDULER_API: ApiSections = {
           type: 'OgeSchedulerEditorShowingEvent&lt;T&gt;',
           description:
             'Cancelable, before the editor opens; replace <code>formItems</code> to customize the form (dx <code>onAppointmentFormOpening</code> parity).',
+        },
+      ],
+    },
+    {
+      title: 'Reminders',
+      entries: [
+        {
+          name: 'reminderTriggered',
+          type: 'OgeSchedulerReminderEvent&lt;T&gt;',
+          description:
+            'Fires once per occurrence when <code>start − reminder</code> minutes is reached (checked about every 30 s while mounted) — <strong>OGE extra</strong>.',
         },
       ],
     },

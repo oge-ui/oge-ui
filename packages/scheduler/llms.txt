@@ -88,7 +88,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/scheduler`
 
 - values: `OGE_DEFAULT_SCHEDULER_CONFIG`, `OGE_DEFAULT_SCHEDULER_MESSAGES`, `OGE_SCHEDULER_CONFIG`, `OgeAppointmentTemplate`, `OgeDateHeaderTemplate`, `OgeScheduler`, `OgeSchedulerCellTemplate`, `provideOgeSchedulerConfig`
-- types: `OgeAppointmentTemplateContext`, `OgeDateHeaderTemplateContext`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerCellClickEvent`, `OgeSchedulerCellTemplateContext`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerGridMessages`, `OgeSchedulerMessages`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWorkHours`
+- types: `OgeAppointmentTemplateContext`, `OgeDateHeaderTemplateContext`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerCellClickEvent`, `OgeSchedulerCellTemplateContext`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerGridMessages`, `OgeSchedulerMessages`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWorkHours`
 
 ## API reference
 
@@ -103,19 +103,24 @@ _Data_
 | `dataSource` | `readonly T[] \| DataSource<T> \| null` | `null` | Appointment items: a plain array (copied into an internal working set — the input is never mutated) or any `@oge-ui/core` `DataSource`, whose `insert`/`update`/`remove` are used for CRUD when present. |
 | `keyExpr` | `string \| ((item: T) => unknown)` | `'id'` | Key field or selector; items without a resolvable key fall back to their index. |
 | `textExpr / startDateExpr / endDateExpr / allDayExpr / colorExpr / locationExpr / descriptionExpr / disabledExpr` | `string \| ((item: T) => unknown)` | `'text' / 'startDate' / …` | Field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
-| `recurrenceRuleExpr / recurrenceExceptionExpr` | `string \| ((item: T) => unknown)` | `'recurrenceRule' / 'recurrenceException'` | Reserved recurrence fields — parsed and validated against the documented RFC 5545 subset in v0.1; the expansion engine ships in v0.2. |
+| `recurrenceRuleExpr / recurrenceExceptionExpr` | `string \| ((item: T) => unknown)` | `'recurrenceRule' / 'recurrenceException'` | Recurrence fields: rules in the documented RFC 5545 subset expand into occurrence instances in every view; exceptions are comma-separated EXDATE stamps. |
+| `reminderExpr` | `string \| ((item: T) => unknown)` | `'reminder'` | Minutes before the start a reminder fires (see `reminderTriggered`) — **OGE extra** (Outlook parity). |
+| `resources` | `readonly OgeSchedulerResource[]` | `[]` | Resource kinds (`{ fieldExpr, items, label?, useColorAsDefault? }`): editor select fields, default appointment colors and timeline rows. |
+| `groups` | `readonly string[]` | `[]` | Resource field grouping the timeline rows (first entry). Day/week column grouping is on the roadmap. |
+| `recurrenceEditMode` | `'dialog' \| 'occurrence' \| 'series'` | `'dialog'` | How edits to a recurring occurrence apply: ask per action, always detach the occurrence (EXDATE + standalone copy), or always change the series. |
 
 _Date & views_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `currentDate` | `Date` | `new Date()` | Anchor date of the visible period. Two-way (`[(currentDate)]`); writes clamp into `[min, max]`. |
-| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month'` | `'week'` | The active view. Two-way (`[(currentView)]`). |
+| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek'` | `'week'` | The active view. Two-way (`[(currentView)]`). |
 | `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour` and `cellDuration` per view. |
 | `min / max` | `Date \| undefined` | `—` | Navigable date bounds: navigation buttons disable at the edges and every date write clamps. |
 | `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday); `undefined` resolves from the locale via `Intl.Locale.weekInfo`. |
 | `hiddenWeekDays` | `readonly number[] \| undefined` | `—` | Weekdays removed from the week views; the `workWeek` view always drops the weekend on top. |
 | `dayStartHour / dayEndHour / cellDuration` | `number` | `0 / 24 / 30` | Visible hour window and slot raster (minutes) of the time grids. |
+| `agendaDuration` | `number` | `7` | Days the agenda view lists from the anchor date. |
 | `scrollTime` | `number \| undefined` | `—` | Initial scroll position of the day/week body in hours (fractions allowed, e.g. `8.5`); re-applied on view/period changes. |
 
 _Behavior_
@@ -160,6 +165,12 @@ _Editing (cancelable pipeline)_
 | `appointmentAdding / appointmentUpdating / appointmentDeleting` | `OgeSchedulerAppointment*ingEvent<T>` | Cancelable pre-events — set `cancel = true` to veto before the store changes. |
 | `appointmentAdded / appointmentUpdated / appointmentDeleted` | `OgeSchedulerAppointment*edEvent<T>` | Fired only for applied changes — persist from these when binding plain arrays. |
 | `editorShowing` | `OgeSchedulerEditorShowingEvent<T>` | Cancelable, before the editor opens; replace `formItems` to customize the form (dx `onAppointmentFormOpening` parity). |
+
+_Reminders_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `reminderTriggered` | `OgeSchedulerReminderEvent<T>` | Fires once per occurrence when `start − reminder` minutes is reached (checked about every 30 s while mounted) — **OGE extra**. |
 
 _Interaction_
 
@@ -240,6 +251,9 @@ export const appConfig = {
             week: 'Woche',
             workWeek: 'Arbeitswoche',
             month: 'Monat',
+            agenda: 'Agenda',
+            timelineDay: 'Zeitachse Tag',
+            timelineWeek: 'Zeitachse Woche',
           },
         },
       },
@@ -456,6 +470,77 @@ export class Demo {
       startDate: new Date(2026, 7, 6, 18, 0),
       endDate: new Date(2026, 7, 6, 19, 0),
       color: '#dc2626',
+    },
+  ];
+}
+```
+
+### Teams
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeScheduler } from '@oge-ui/scheduler';
+import type { OgeSchedulerResource } from '@oge-ui/scheduler';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeScheduler],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Recurring series (RFC 5545 subset) expand into occurrences in
+         every view; editing or deleting one asks "this appointment or the entire
+         series?" (recurrenceEditMode). resources drive the editor's assignment
+         selects, default colors (useColorAsDefault) and the timeline rows
+         (groups). The agenda view lists the coming days; reminderTriggered fires
+         when a reminder lead time is reached. -->
+    <oge-scheduler
+      [dataSource]="appointments"
+      [currentDate]="date"
+      currentView="timelineWeek"
+      [views]="['week', 'timelineDay', 'timelineWeek', 'agenda', 'month']"
+      [resources]="resources"
+      [groups]="['ownerId']"
+      [dayStartHour]="8"
+      [dayEndHour]="18"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly date = new Date(2026, 7, 6);
+  protected readonly resources: OgeSchedulerResource[] = [
+    {
+      fieldExpr: 'ownerId',
+      label: 'Owner',
+      useColorAsDefault: true,
+      items: [
+        { id: 'ada', text: 'Ada', color: '#7c3aed' },
+        { id: 'grace', text: 'Grace', color: '#0891b2' },
+      ],
+    },
+  ];
+  protected readonly appointments = [
+    {
+      id: 1,
+      text: 'Daily standup',
+      startDate: new Date(2026, 7, 3, 9, 0),
+      endDate: new Date(2026, 7, 3, 9, 15),
+      recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+      ownerId: 'ada',
+      reminder: 5,
+    },
+    {
+      id: 2,
+      text: 'Design pairing',
+      startDate: new Date(2026, 7, 5, 14, 0),
+      endDate: new Date(2026, 7, 5, 16, 0),
+      ownerId: 'grace',
+    },
+    {
+      id: 3,
+      text: 'Ops review',
+      startDate: new Date(2026, 7, 6, 11, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
     },
   ];
 }

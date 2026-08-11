@@ -23,6 +23,9 @@ export {
   type OgeSchedulerCellClickEvent,
   type OgeSchedulerEditorShowingEvent,
   type OgeSchedulerRangeSelectedEvent,
+  type OgeSchedulerReminderEvent,
+  type OgeSchedulerResource,
+  type OgeSchedulerResourceItem,
   type OgeSchedulerView,
   type OgeSchedulerViewOptions,
   type OgeSchedulerWorkHours,
@@ -39,5 +42,6 @@ export {
   type OgeSchedulerGridMessages,
   type OgeSchedulerMessages,
   type OgeSchedulerPopupMessages,
+  type OgeSchedulerRecurrenceScopeMessages,
   type OgeSchedulerToolbarMessages,
 } from './lib/config';

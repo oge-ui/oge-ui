@@ -16,6 +16,7 @@ import {
   FIELD_MAPPING_SNIPPET,
   GETTING_STARTED_SNIPPET,
   PLANNING_SNIPPET,
+  TEAMS_SNIPPET,
   TEMPLATE_SNIPPET,
   VIEWS_SNIPPET,
 } from './overview-snippets';
@@ -25,6 +26,7 @@ const SECTIONS = [
   'Field mapping',
   'Editing pipeline',
   'Planner ergonomics',
+  'Teams, recurrence & timeline',
   'Views',
   'Appointment template',
   'Configuration & i18n',
@@ -167,6 +169,32 @@ type DemoAppt = Record<string, unknown>;
     </app-demo-card>
 
     <app-demo-card
+      [chips]="[
+        'recurrence',
+        'resources',
+        'timeline',
+        'agenda',
+        'reminders',
+      ]"
+      heading="Teams, recurrence & timeline"
+      description="Recurring series expand into occurrences in every view — editing or deleting one asks &quot;this appointment or the entire series?&quot; (<code>recurrenceEditMode</code>). <code>resources</code> drive the editor's assignment selects, default colors and the timeline rows (<code>groups</code>); the agenda view lists the coming days and <code>reminderTriggered</code> fires at the reminder lead time."
+      [code]="teamsSnippet"
+      language="ts"
+    >
+      <oge-scheduler
+        [dataSource]="teamsData"
+        [currentDate]="fixedDate"
+        currentView="timelineWeek"
+        [views]="['week', 'timelineDay', 'timelineWeek', 'agenda', 'month']"
+        [resources]="teamResources"
+        [groups]="['ownerId']"
+        [dayStartHour]="8"
+        [dayEndHour]="18"
+        style="height: 560px"
+      />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['views options', 'per-view hours', 'maxAppointmentsPerCell']"
       heading="Views"
       description='<code>views</code> takes plain names or option objects with per-view hour windows and slot rasters. The month view packs appointments into lanes and folds the overflow into a "+N more" button that drills into the day view.'
@@ -232,6 +260,7 @@ export class SchedulerOverviewPage {
   protected readonly editingSnippet = EDITING_SNIPPET;
   protected readonly planningSnippet = PLANNING_SNIPPET;
   protected readonly viewsSnippet = VIEWS_SNIPPET;
+  protected readonly teamsSnippet = TEAMS_SNIPPET;
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
 
@@ -352,6 +381,43 @@ export class SchedulerOverviewPage {
       endDate: new Date(2026, 7, 15),
       allDay: true,
       color: '#7c3aed',
+    },
+  ];
+
+  protected readonly teamResources = [
+    {
+      fieldExpr: 'ownerId',
+      label: 'Owner',
+      useColorAsDefault: true,
+      items: [
+        { id: 'ada', text: 'Ada', color: '#7c3aed' },
+        { id: 'grace', text: 'Grace', color: '#0891b2' },
+      ],
+    },
+  ];
+
+  protected readonly teamsData: DemoAppt[] = [
+    {
+      id: 1,
+      text: 'Daily standup',
+      startDate: new Date(2026, 7, 3, 9, 0),
+      endDate: new Date(2026, 7, 3, 9, 15),
+      recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+      ownerId: 'ada',
+      reminder: 5,
+    },
+    {
+      id: 2,
+      text: 'Design pairing',
+      startDate: new Date(2026, 7, 5, 14, 0),
+      endDate: new Date(2026, 7, 5, 16, 0),
+      ownerId: 'grace',
+    },
+    {
+      id: 3,
+      text: 'Ops review',
+      startDate: new Date(2026, 7, 6, 11, 0),
+      endDate: new Date(2026, 7, 6, 12, 0),
     },
   ];
 

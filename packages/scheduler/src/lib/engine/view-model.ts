@@ -22,7 +22,9 @@ export type SchedulerViewType =
   | 'week'
   | 'workWeek'
   | 'month'
-  | 'agenda';
+  | 'agenda'
+  | 'timelineDay'
+  | 'timelineWeek';
 
 /** Configuration of a day/week time grid. */
 export interface TimeGridConfig {
@@ -130,7 +132,7 @@ export function viewRange(
   firstDayOfWeek: number,
   agendaDuration = 7,
 ): { start: Date; end: Date } {
-  if (view === 'day') {
+  if (view === 'day' || view === 'timelineDay') {
     const start = startOfDay(anchorDate);
     return { start, end: addDays(start, 1) };
   }
@@ -138,7 +140,7 @@ export function viewRange(
     const start = startOfDay(anchorDate);
     return { start, end: addDays(start, Math.max(1, agendaDuration)) };
   }
-  if (view === 'week' || view === 'workWeek') {
+  if (view === 'week' || view === 'workWeek' || view === 'timelineWeek') {
     const start = startOfWeek(anchorDate, firstDayOfWeek);
     return { start, end: addDays(start, 7) };
   }
@@ -153,11 +155,13 @@ export function navigateDate(
   direction: -1 | 1,
   agendaDuration = 7,
 ): Date {
-  if (view === 'day') return addDays(anchorDate, direction);
+  if (view === 'day' || view === 'timelineDay') {
+    return addDays(anchorDate, direction);
+  }
   if (view === 'agenda') {
     return addDays(anchorDate, direction * Math.max(1, agendaDuration));
   }
-  if (view === 'week' || view === 'workWeek') {
+  if (view === 'week' || view === 'workWeek' || view === 'timelineWeek') {
     return addDays(anchorDate, direction * 7);
   }
   return startOfMonth(addMonths(anchorDate, direction));

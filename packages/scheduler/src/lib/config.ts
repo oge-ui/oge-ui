@@ -18,7 +18,16 @@ export interface OgeSchedulerToolbarMessages {
   readonly newAppointment: string;
   /** Display names of the built-in views. */
   readonly viewNames: Readonly<
-    Record<'day' | 'week' | 'workWeek' | 'month' | 'agenda', string>
+    Record<
+      | 'day'
+      | 'week'
+      | 'workWeek'
+      | 'month'
+      | 'agenda'
+      | 'timelineDay'
+      | 'timelineWeek',
+      string
+    >
   >;
 }
 
@@ -65,6 +74,12 @@ export interface OgeSchedulerEditorMessages {
   readonly endOptions: Readonly<Record<'never' | 'count' | 'until', string>>;
   readonly countLabel: string;
   readonly untilLabel: string;
+  /** Reminder picker labels. */
+  readonly reminderLabel: string;
+  readonly reminderNone: string;
+  readonly reminderAtStart: string;
+  /** `{minutes}` is replaced with the lead time. */
+  readonly reminderBefore: string;
 }
 
 /** Strings of the occurrence-vs-series scope dialog. */
@@ -104,6 +119,8 @@ export interface OgeSchedulerGridMessages {
   readonly gridHint: string;
   /** Empty state of the agenda view. */
   readonly agendaNoData: string;
+  /** Timeline row label for appointments without a resource. */
+  readonly unassignedLabel: string;
 }
 
 /** Templates written to the polite live region after actions. */
@@ -147,6 +164,8 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
       workWeek: 'Work Week',
       month: 'Month',
       agenda: 'Agenda',
+      timelineDay: 'Timeline Day',
+      timelineWeek: 'Timeline Week',
     },
   },
   popup: {
@@ -184,6 +203,10 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     endOptions: { never: 'Never', count: 'After', until: 'On date' },
     countLabel: 'Occurrences',
     untilLabel: 'End date',
+    reminderLabel: 'Reminder',
+    reminderNone: 'None',
+    reminderAtStart: 'At start',
+    reminderBefore: '{minutes} minutes before',
   },
   recurrenceScope: {
     title: 'Recurring appointment',
@@ -204,6 +227,7 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     moreLabel: '+{count} more',
     gridHint: 'Press Escape then Tab to leave the scheduler',
     agendaNoData: 'No appointments in this period',
+    unassignedLabel: 'Unassigned',
   },
   announcements: {
     created: '{text} created',

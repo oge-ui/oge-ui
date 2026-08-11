@@ -20,6 +20,30 @@ export interface OgeSchedulerWorkHours {
   readonly days?: readonly number[];
 }
 
+/** One assignable resource choice. */
+export interface OgeSchedulerResourceItem {
+  readonly id: unknown;
+  readonly text: string;
+  readonly color?: string;
+}
+
+/** A resource kind appointments can be assigned to (dx `resources` parity). */
+export interface OgeSchedulerResource {
+  /** Item field holding the assigned resource id. */
+  readonly fieldExpr: string;
+  readonly items: readonly OgeSchedulerResourceItem[];
+  /** Editor label; defaults to the field name. */
+  readonly label?: string;
+  /** Colors appointments without an own color from this resource. */
+  readonly useColorAsDefault?: boolean;
+}
+
+/** Fires when an appointment's reminder lead time is reached. */
+export interface OgeSchedulerReminderEvent<T = unknown> {
+  readonly appointmentData: T;
+  readonly appointment: OgeSchedulerAppointment<T>;
+}
+
 /** Fires after a drag-to-create cell-range selection lands. */
 export interface OgeSchedulerRangeSelectedEvent {
   readonly startDate: Date;

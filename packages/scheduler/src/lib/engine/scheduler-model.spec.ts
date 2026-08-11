@@ -26,6 +26,7 @@ const DEFAULT_EXPRS: SchedulerFieldExprs<Item> = {
   colorExpr: 'color',
   locationExpr: 'location',
   descriptionExpr: 'description',
+  reminderExpr: 'reminder',
   recurrenceRuleExpr: 'recurrenceRule',
   recurrenceExceptionExpr: 'recurrenceException',
   disabledExpr: 'disabled',

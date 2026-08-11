@@ -17,6 +17,7 @@ function item(
     color: undefined,
     location: undefined,
     description: undefined,
+    reminderMinutes: undefined,
     recurrenceRule: undefined,
     recurrenceException: undefined,
     disabled: false,

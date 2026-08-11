@@ -11,6 +11,7 @@ import {
 import { OgeModal, OgeModalFooter } from '@oge-ui/overlay';
 import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
 import type { OgeSchedulerEditorMessages } from '../config';
+import type { OgeSchedulerResource } from '../scheduler-types';
 
 /** The editor's working model (independent of the user's item shape). */
 export interface SchedulerEditorModel {
@@ -29,6 +30,10 @@ export interface SchedulerEditorModel {
   endMode: 'never' | 'count' | 'until';
   count: number;
   until?: Date;
+  /** Minutes before start a reminder fires; `null` = none. */
+  reminder: number | null;
+  /** Assigned resource ids, keyed by the resource `fieldExpr`. */
+  resourceValues: Record<string, unknown>;
 }
 
 /** The dialog's save payload. */
@@ -85,6 +90,7 @@ export interface SchedulerEditorResult {
 export class OgeSchedulerAppointmentDialog {
   readonly messages = input.required<OgeSchedulerEditorMessages>();
   readonly locale = input<string | undefined>(undefined);
+  readonly resources = input<readonly OgeSchedulerResource[]>([]);
 
   readonly saved = output<SchedulerEditorResult>();
   readonly cancelled = output<void>();
@@ -153,6 +159,27 @@ export class OgeSchedulerAppointmentDialog {
         label: messages.colorLabel,
         editorType: 'colorBox',
       },
+      ...this.resources().map((resource) => ({
+        field: `resourceValues.${resource.fieldExpr}`,
+        label: resource.label ?? resource.fieldExpr,
+        editorType: 'selectBox' as const,
+        editorOptions: {
+          items: resource.items as unknown as readonly unknown[],
+          valueExpr: 'id',
+          displayExpr: 'text',
+          showClearButton: true,
+        },
+      })),
+      {
+        field: 'reminder',
+        label: messages.reminderLabel,
+        editorType: 'selectBox',
+        editorOptions: {
+          items: this.reminderItems(),
+          valueExpr: 'value',
+          displayExpr: 'text',
+        },
+      },
       {
         field: 'repeat',
         label: messages.repeatLabel,
@@ -220,6 +247,19 @@ export class OgeSchedulerAppointmentDialog {
         editorOptions: { rows: 3, autoResize: true },
         colSpan: 2,
       },
+    ];
+  }
+
+  /** Reminder lead-time presets. */
+  private reminderItems(): { value: number | null; text: string }[] {
+    const messages = this.messages();
+    return [
+      { value: null, text: messages.reminderNone },
+      { value: 0, text: messages.reminderAtStart },
+      ...[5, 10, 15, 30, 60].map((minutes) => ({
+        value: minutes,
+        text: messages.reminderBefore.replace('{minutes}', String(minutes)),
+      })),
     ];
   }
 

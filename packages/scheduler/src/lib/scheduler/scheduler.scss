@@ -953,6 +953,133 @@
   }
 }
 
+/* ---------- timeline views ---------- */
+
+.oge-scheduler-timeline {
+  overflow: hidden;
+}
+
+.oge-scheduler-timeline-scroll {
+  overflow: auto;
+  height: 100%;
+}
+
+.oge-scheduler-timeline-inner {
+  min-width: 720px;
+}
+
+.oge-scheduler-timeline-header,
+.oge-scheduler-timeline-subheader,
+.oge-scheduler-timeline-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+}
+
+.oge-scheduler-timeline-corner,
+.oge-scheduler-timeline-rowhead {
+  border-inline-end: 1px solid var(--oge-scheduler-grid-line);
+  background: var(--oge-header-bg);
+  padding: 6px 10px;
+}
+
+.oge-scheduler-timeline-rowhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+}
+
+.oge-scheduler-timeline-days {
+  position: relative;
+  display: flex;
+}
+
+.oge-scheduler-timeline-dayhead {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--oge-header-color);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  border-inline-start: 1px solid var(--oge-scheduler-grid-line);
+  box-sizing: border-box;
+
+  &:first-child {
+    border-inline-start: none;
+  }
+}
+
+.oge-scheduler-timeline-subheader {
+  border-block-end: 1px solid var(--oge-scheduler-grid-line);
+
+  .oge-scheduler-timeline-days {
+    height: 20px;
+  }
+}
+
+.oge-scheduler-timeline-hour {
+  position: absolute;
+  inset-block-start: 2px;
+  font-size: 10px;
+  color: var(--oge-scheduler-hour-fg);
+  padding-inline-start: 3px;
+  border-inline-start: 1px solid var(--oge-scheduler-grid-line);
+}
+
+.oge-scheduler-timeline-track {
+  position: relative;
+  display: flex;
+  min-height: calc(
+    8px + var(--oge-scheduler-timeline-lanes, 1) * 26px
+  );
+}
+
+.oge-scheduler-timeline-row {
+  border-block-end: 1px solid var(--oge-scheduler-grid-line);
+}
+
+.oge-scheduler-timeline-daycol {
+  border-inline-start: 1px solid var(--oge-scheduler-grid-line);
+  box-sizing: border-box;
+
+  &:first-child {
+    border-inline-start: none;
+  }
+}
+
+.oge-scheduler-timeline-bar {
+  position: absolute;
+  height: 22px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: var(--oge-scheduler-chip-bg);
+  color: var(--oge-scheduler-chip-fg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  &:hover {
+    filter: brightness(1.05);
+    box-shadow: var(--oge-shadow-btn-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
 /* ---------- compact hosts ---------- */
 
 @container (max-width: 560px) {
