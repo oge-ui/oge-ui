@@ -18,7 +18,7 @@ export interface OgeSchedulerToolbarMessages {
   readonly newAppointment: string;
   /** Display names of the built-in views. */
   readonly viewNames: Readonly<
-    Record<'day' | 'week' | 'workWeek' | 'month', string>
+    Record<'day' | 'week' | 'workWeek' | 'month' | 'agenda', string>
   >;
 }
 
@@ -102,6 +102,8 @@ export interface OgeSchedulerGridMessages {
   readonly moreLabel: string;
   /** Hint appended to the grid label for keyboard users. */
   readonly gridHint: string;
+  /** Empty state of the agenda view. */
+  readonly agendaNoData: string;
 }
 
 /** Templates written to the polite live region after actions. */
@@ -144,6 +146,7 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
       week: 'Week',
       workWeek: 'Work Week',
       month: 'Month',
+      agenda: 'Agenda',
     },
   },
   popup: {
@@ -200,6 +203,7 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     appointmentLabel: '{text}, {start} to {end}',
     moreLabel: '+{count} more',
     gridHint: 'Press Escape then Tab to leave the scheduler',
+    agendaNoData: 'No appointments in this period',
   },
   announcements: {
     created: '{text} created',

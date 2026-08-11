@@ -71,6 +71,7 @@ import {
   type SchedulerChipEvent,
   type SchedulerProposalEvent,
 } from './day-week-view';
+import { OgeSchedulerAgendaView } from './agenda-view';
 import { OgeSchedulerMonthView } from './month-view';
 import {
   OgeAppointmentTemplate,
@@ -108,6 +109,7 @@ interface ResolvedView {
   imports: [
     OgeCalendar,
     OgePopup,
+    OgeSchedulerAgendaView,
     OgeSchedulerAppointmentDialog,
     OgeSchedulerAppointmentPopup,
     OgeSchedulerDayWeekView,
@@ -252,6 +254,18 @@ interface ResolvedView {
     </div>
 
     @switch (currentView()) {
+      @case ('agenda') {
+        <oge-scheduler-agenda-view
+          [anchorDate]="currentDate()"
+          [agendaDuration]="agendaDuration()"
+          [appointments]="visibleAppointments()"
+          [locale]="locale()"
+          [messages]="msg().grid"
+          (chipClicked)="onChipClicked($event)"
+          (chipDblClicked)="onChipDblClicked($event)"
+          (chipDeleteRequested)="onDeleteRequested($event)"
+        />
+      }
       @case ('month') {
         <oge-scheduler-month-view
           [anchorDate]="currentDate()"
@@ -426,6 +440,8 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly showCurrentTimeIndicator = input(true);
   /** Month-view lane budget per cell; `'auto'` picks a sensible default. */
   readonly maxAppointmentsPerCell = input<number | 'auto'>('auto');
+  /** Days the agenda view lists from the anchor date. */
+  readonly agendaDuration = input(7);
   /** BCP 47 locale for every `Intl` format; defaults to the browser locale. */
   readonly locale = input<string | undefined>(undefined);
   /** Per-instance overrides of the DI-configured messages. */
@@ -576,7 +592,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
 
   protected readonly dayWeekView = computed<'day' | 'week' | 'workWeek'>(() => {
     const view = this.currentView();
-    return view === 'month' ? 'week' : view;
+    return view === 'month' || view === 'agenda' ? 'week' : view;
   });
 
   private readonly fields = computed(() =>
@@ -684,6 +700,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       this.currentView(),
       this.currentDate(),
       this.resolvedFirstDayOfWeek(),
+      this.agendaDuration(),
     );
     return this.appointments()
       .flatMap((appointment) => expandAppointment(appointment, start, end))
@@ -707,7 +724,12 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     const locale = this.locale();
     const custom = this.dateNavigatorText();
     if (custom !== undefined) {
-      const range = viewRange(view, date, this.resolvedFirstDayOfWeek());
+      const range = viewRange(
+        view,
+        date,
+        this.resolvedFirstDayOfWeek(),
+        this.agendaDuration(),
+      );
       return custom(range.start, new Date(range.end.getTime() - 1), view);
     }
     if (view === 'day') {
@@ -722,9 +744,10 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       }).format(date);
     }
     const { start, end } = viewRange(
-      'week',
+      view === 'agenda' ? 'agenda' : 'week',
       date,
       this.resolvedFirstDayOfWeek(),
+      this.agendaDuration(),
     );
     const last = new Date(end.getTime() - 1);
     return new Intl.DateTimeFormat(locale, {
@@ -776,6 +799,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       this.currentView(),
       this.currentDate(),
       this.resolvedFirstDayOfWeek(),
+      this.agendaDuration(),
     );
     const now = Date.now();
     return now >= start.getTime() && now < end.getTime();
@@ -787,6 +811,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       this.currentView(),
       this.currentDate(),
       direction,
+      this.agendaDuration(),
     );
     const { start, end } = viewRange(
       this.currentView(),
@@ -811,7 +836,12 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   navigate(direction: -1 | 1): void {
     if (!this.canNavigate(direction)) return;
     this.setDate(
-      navigateDate(this.currentView(), untracked(this.currentDate), direction),
+      navigateDate(
+        this.currentView(),
+        untracked(this.currentDate),
+        direction,
+        this.agendaDuration(),
+      ),
     );
   }
 
@@ -1504,6 +1534,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       untracked(this.currentView),
       untracked(this.currentDate),
       this.resolvedFirstDayOfWeek(),
+      this.agendaDuration(),
     ).start;
   }
 
@@ -1513,6 +1544,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       untracked(this.currentView),
       untracked(this.currentDate),
       this.resolvedFirstDayOfWeek(),
+      this.agendaDuration(),
     ).end;
   }
 

@@ -17,7 +17,12 @@ import type { SchedulerAppointment } from './scheduler-model';
 import { minutesOfDay, slotCount } from './time-math';
 
 /** The scheduler's view types (string union, house rule — never an enum). */
-export type SchedulerViewType = 'day' | 'week' | 'workWeek' | 'month';
+export type SchedulerViewType =
+  | 'day'
+  | 'week'
+  | 'workWeek'
+  | 'month'
+  | 'agenda';
 
 /** Configuration of a day/week time grid. */
 export interface TimeGridConfig {
@@ -123,10 +128,15 @@ export function viewRange(
   view: SchedulerViewType,
   anchorDate: Date,
   firstDayOfWeek: number,
+  agendaDuration = 7,
 ): { start: Date; end: Date } {
   if (view === 'day') {
     const start = startOfDay(anchorDate);
     return { start, end: addDays(start, 1) };
+  }
+  if (view === 'agenda') {
+    const start = startOfDay(anchorDate);
+    return { start, end: addDays(start, Math.max(1, agendaDuration)) };
   }
   if (view === 'week' || view === 'workWeek') {
     const start = startOfWeek(anchorDate, firstDayOfWeek);
@@ -141,8 +151,12 @@ export function navigateDate(
   view: SchedulerViewType,
   anchorDate: Date,
   direction: -1 | 1,
+  agendaDuration = 7,
 ): Date {
   if (view === 'day') return addDays(anchorDate, direction);
+  if (view === 'agenda') {
+    return addDays(anchorDate, direction * Math.max(1, agendaDuration));
+  }
   if (view === 'week' || view === 'workWeek') {
     return addDays(anchorDate, direction * 7);
   }

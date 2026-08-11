@@ -838,6 +838,121 @@
   white-space: nowrap;
 }
 
+/* ---------- agenda view ---------- */
+
+.oge-scheduler-agenda {
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.oge-scheduler-agenda-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--oge-muted-color);
+}
+
+.oge-scheduler-agenda-list,
+.oge-scheduler-agenda-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.oge-scheduler-agenda-day {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 12px;
+  padding: 10px 16px;
+  border-block-end: 1px solid var(--oge-scheduler-grid-line);
+
+  &:last-child {
+    border-block-end: none;
+  }
+}
+
+.oge-scheduler-agenda-date {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.oge-scheduler-agenda-daynum {
+  font-size: 22px;
+  font-weight: 600;
+  min-width: 34px;
+  text-align: center;
+  border-radius: 999px;
+  padding: 1px 5px;
+  align-self: start;
+}
+
+.oge-scheduler-agenda-weekday {
+  font-size: 12px;
+  color: var(--oge-header-color);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.oge-scheduler-agenda-item {
+  display: grid;
+  grid-template-columns: 12px 120px 1fr;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 10px;
+  margin-block-end: 2px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-scheduler-agenda-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--oge-scheduler-chip-bg);
+}
+
+.oge-scheduler-agenda-time {
+  font-size: 12px;
+  color: var(--oge-muted-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-scheduler-agenda-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-scheduler-agenda-location {
+  margin-inline-start: 8px;
+  font-size: 12px;
+  color: var(--oge-muted-color);
+}
+
+@container (max-width: 560px) {
+  .oge-scheduler-agenda-day {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
 /* ---------- compact hosts ---------- */
 
 @container (max-width: 560px) {
