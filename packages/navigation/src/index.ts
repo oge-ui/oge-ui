@@ -95,6 +95,22 @@ export type {
   OgeMenubarSubmenuOpenedEvent,
   OgeMenubarSubmenuOpeningEvent,
 } from './lib/menubar/menubar-types';
+export { OgePagination } from './lib/pagination/pagination';
+export {
+  OGE_PAGINATION_CONFIG,
+  OGE_DEFAULT_PAGINATION_CONFIG,
+  OGE_DEFAULT_PAGINATION_MESSAGES,
+  provideOgePaginationConfig,
+  type OgePaginationConfig,
+  type OgePaginationConfigInput,
+  type OgePaginationMessages,
+} from './lib/pagination/config';
+export type {
+  OgePaginationDisplayMode,
+  OgePaginationPageChangedEvent,
+  OgePaginationPageSizeChangedEvent,
+  OgePaginationSize,
+} from './lib/pagination/pagination-types';
 export { OgeTreeView } from './lib/tree-view/tree-view';
 export {
   OgeTreeExpandIconTemplate,

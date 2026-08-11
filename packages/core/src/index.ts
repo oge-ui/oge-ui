@@ -44,3 +44,5 @@ export * from './lib/util/toolbar-fit';
 export * from './lib/util/drawer-mode';
 export * from './lib/util/menubar-compact';
 export * from './lib/util/slider-math';
+export * from './lib/util/color-math';
+export * from './lib/util/pagination-math';

@@ -7,6 +7,7 @@ import {
   OGE_AUTOCOMPLETE_API,
   OGE_CALENDAR_API,
   OGE_CHECK_BOX_API,
+  OGE_COLOR_BOX_API,
   OGE_DATE_BOX_API,
   OGE_INPUTS_CONFIG_API,
   OGE_INPUTS_TYPES_API,
@@ -37,6 +38,7 @@ const SECTIONS = [
   'OgeRadioGroup',
   'OgeCalendar',
   'OgeDateBox',
+  'OgeColorBox',
   'Shared input types',
   'Inputs configuration',
 ] as const;
@@ -135,6 +137,11 @@ const SECTIONS = [
       selector="oge-date-box"
       [sections]="dateBoxApi"
     />
+    <app-api-reference
+      title="OgeColorBox"
+      selector="oge-color-box"
+      [sections]="colorBoxApi"
+    />
     <app-api-reference title="Shared input types" [sections]="typesApi" />
     <app-api-reference title="Inputs configuration" [sections]="configApi" />
 
@@ -175,6 +182,7 @@ export class InputsApiPage {
   protected readonly radioGroupApi = OGE_RADIO_GROUP_API;
   protected readonly calendarApi = OGE_CALENDAR_API;
   protected readonly dateBoxApi = OGE_DATE_BOX_API;
+  protected readonly colorBoxApi = OGE_COLOR_BOX_API;
   protected readonly typesApi = OGE_INPUTS_TYPES_API;
   protected readonly configApi = OGE_INPUTS_CONFIG_API;
 }

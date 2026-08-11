@@ -4,7 +4,7 @@ Navigation controls for the [OGE](https://ogeui.com) Angular UI suite.
 Signal-based, standalone, zoneless-ready, MIT.
 
 Today the package ships **`OgeTreeView`**, **`OgeDrawer`**, **`OgeStepper`**,
-**`OgeMenubar`** and **`OgeBreadcrumb`**.
+**`OgeMenubar`**, **`OgeBreadcrumb`** and **`OgePagination`**.
 
 ```sh
 npm install @oge-ui/navigation
@@ -228,6 +228,41 @@ both (children first).
   `aria-hidden` separator.
 - **Config** — `provideOgeBreadcrumbConfig()`; the nav landmark's label and
   the ellipsis button's label live in `OgeBreadcrumbMessages`.
+
+See the [API reference](https://ogeui.com/components/tree-view/api) for the full
+surface.
+
+## Pagination
+
+```html
+<oge-pagination [(pageIndex)]="page" [itemCount]="total" [pageSize]="20" />
+```
+
+### What it does
+
+- **A constant-width numeric window with real ellipsis markers** — ellipsis
+  slots count toward `maxButtons` (default 7), so paging from the first page
+  through the middle to the last never changes how many slots render and the
+  bar never jitters. An ellipsis never hides a single page (the page renders
+  instead). The window arithmetic is core's pure `resolvePageWindow`.
+- **The grid pager's contracts, kept aligned by design** — `pageIndex` is
+  **0-based** and two-way; `pageSize: 0` means "all items on one page";
+  `pageSizes` accepts `'all'`. `pageChanged`/`pageSizeChanged` fire only on
+  user interaction with `previousPageIndex`/`previousPageSize`; programmatic
+  writes and auto-clamps update the models silently.
+- **Unknown totals, written down** — omit `itemCount` and only prev/next plus
+  a "Page N" indicator render; **next never disables** because the component
+  cannot know the end (clamp `pageIndex` at the app level when the server
+  reports the last page).
+- **Composed accessibility** — no APG pagination pattern exists, so the
+  markup composes a `<nav>` landmark named by messages, real buttons with
+  `aria-current="page"` on the active page and the info range in an
+  `aria-live="polite"` region. Keyboard is the native Tab order.
+- **Adaptive against its own container** — `displayMode: 'adaptive'` swaps to
+  the compact `N / M` indicator below `compactBelow` (default 480px), measured
+  by ResizeObserver against the bar's own box, never the window.
+- **Config** — `provideOgePaginationConfig()`; every string incl. the info
+  template (`{from}–{to} of {itemCount}`) lives in `OgePaginationMessages`.
 
 See the [API reference](https://ogeui.com/components/tree-view/api) for the full
 surface.

@@ -2176,3 +2176,159 @@ export const OGE_RANGE_SLIDER_API: ApiSections = {
     COMMON_EVENTS,
   ],
 };
+
+export const OGE_COLOR_BOX_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeColorBox',
+      entries: [
+        {
+          name: 'value',
+          type: 'model&lt;string | null&gt;',
+          default: 'null',
+          description:
+            'The committed color as a CSS string, normalized to <code>format</code> on user commits. Programmatic writes keep any parseable CSS color verbatim (never reformatted); unparseable writes land as <code>null</code>.',
+        },
+        {
+          name: 'format',
+          type: "'hex' | 'rgb' | 'rgba' | 'hsl'",
+          default: "'hex'",
+          description:
+            'Committed string shape (hex — the DevExtreme default; Kendo defaults to rgba). Translucent colors widen to carry alpha: <code>#rrggbbaa</code> / <code>rgba()</code> / <code>hsla()</code>.',
+        },
+        {
+          name: 'view',
+          type: "'gradient' | 'palette' | 'both'",
+          default: "'gradient'",
+          description:
+            "Popup surfaces: the saturation/brightness gradient with sliders and inputs, the swatch palette, or both stacked — no view switcher (Kendo's <code>activeView</code> is deliberately skipped).",
+        },
+        {
+          name: 'editAlphaChannel',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Adds the alpha slider + percent input and lets the output carry alpha. Without it, alpha is coerced to 1 on commit — <code>rgba()</code> text still parses.',
+        },
+        {
+          name: 'applyValueMode',
+          type: "'instantly' | 'useButtons'",
+          default: "'instantly'",
+          description:
+            'OK/Cancel footer collects panel interactions in a draft when <code>useButtons</code>; the default commits live (dragging streams through <code>valueCommitted</code>, throttled by <code>debounce</code>).',
+        },
+        {
+          name: 'acceptCustomValue',
+          type: 'boolean',
+          default: 'true',
+          description:
+            '<code>false</code> makes the text read-only (picker input only). Typed text parses any CSS color incl. the 148 named colors; unparseable text reverts on blur.',
+        },
+        {
+          name: 'keyStep',
+          type: 'number',
+          default: '5',
+          description:
+            'Arrow-key increment of the panel parts in value units — hue degrees, alpha percent, surface saturation/brightness percent. PageUp/PageDown move by 5× (value-space, not Kendo’s pixel steps — zoom-independent).',
+        },
+        {
+          name: 'palette',
+          type: 'readonly string[] | undefined',
+          description:
+            'Palette swatches as CSS color strings; <code>undefined</code> renders the exported <code>OGE_DEFAULT_COLOR_PALETTE</code>. Unparseable entries are dropped.',
+        },
+        {
+          name: 'paletteColumns',
+          type: 'number',
+          default: '10',
+          description: 'Swatch columns of the palette grid.',
+        },
+        {
+          name: 'openOnFieldClick',
+          type: 'boolean',
+          default: 'true',
+          description: 'Clicking the field opens the picker.',
+        },
+        {
+          name: 'showDropDownButton',
+          type: 'boolean',
+          default: 'true',
+          description:
+            '<code>false</code> hides the rail chevron — field click and ArrowDown still open.',
+        },
+        {
+          name: 'showEyedropper',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'The eyedropper button (pick a color from anywhere on screen) — rendered only in browsers shipping the <code>EyeDropper</code> API; progressive enhancement, no polyfill. The picked color keeps the working alpha.',
+        },
+        {
+          name: 'opened',
+          type: 'model&lt;boolean&gt;',
+          default: 'false',
+          description: 'Picker visibility — two-way.',
+        },
+      ],
+    },
+    COMMON_CHROME,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeColorBox methods',
+      entries: [
+        {
+          name: 'open() / close() / toggle()',
+          type: 'void',
+          description: 'Picker control (no-ops while disabled/readonly).',
+        },
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeColorBox events',
+      entries: [
+        {
+          name: 'dropDownOpened / dropDownClosed',
+          type: 'void',
+          description: 'Picker visibility changes, from any trigger.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      title: 'Color types',
+      entries: [
+        {
+          name: 'OgeColorBoxView / OgeColorBoxApplyValueMode',
+          type: 'types',
+          description:
+            'The string unions of <code>view</code> and <code>applyValueMode</code>.',
+        },
+        {
+          name: 'OGE_DEFAULT_COLOR_PALETTE',
+          type: 'readonly string[]',
+          description:
+            'The built-in 50-swatch palette used when <code>palette</code> is not set.',
+        },
+        {
+          name: 'Color messages',
+          type: 'OgeInputsMessages keys',
+          description:
+            'All popup strings localize through the family config: <code>colorPickerLabel</code>, <code>hueSliderLabel</code>/<code>hueValueText</code>, <code>alphaSliderLabel</code>/<code>alphaValueText</code>, <code>colorSurfaceLabel</code>/<code>colorSurfaceRoleDescription</code>/<code>surfaceValueText</code>, <code>paletteLabel</code>, the hex/R/G/B/A input labels, <code>eyedropperButton</code> and <code>invalidColorError</code>.',
+        },
+        {
+          name: 'parseColor / formatColor / normalizeColor / rgbaToHsva / hsvaToRgba / relativeLuminance / contrastForeground / colorsEqual',
+          type: '@oge-ui/core',
+          description:
+            'The DOM-free color kernel (<code>OgeRgba</code> / <code>OgeHsva</code> / <code>OgeColorFormat</code>): CSS color-text parsing, HSV↔RGB conversion, canonical formatting and the WCAG swatch-contrast decision — unit-tested without a DOM, the slider-math precedent.',
+        },
+      ],
+    },
+  ],
+};

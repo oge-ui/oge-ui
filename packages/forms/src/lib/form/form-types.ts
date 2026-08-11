@@ -69,7 +69,8 @@ export type OgeFormEditorType =
   | 'calendar'
   | 'checkBox'
   | 'switch'
-  | 'radioGroup';
+  | 'radioGroup'
+  | 'colorBox';
 
 /** Where an item's label sits relative to its editor. */
 export type OgeFormLabelLocation = 'top' | 'start' | 'end';
@@ -175,6 +176,11 @@ export interface OgeFormEditorOptions {
   readonly firstDayOfWeek?: number;
   readonly showTodayButton?: boolean;
   readonly showWeekNumbers?: boolean;
+  /** `colorBox` output shape and popup surfaces. */
+  readonly colorFormat?: 'hex' | 'rgb' | 'rgba' | 'hsl';
+  readonly editAlphaChannel?: boolean;
+  readonly view?: 'gradient' | 'palette' | 'both';
+  readonly palette?: readonly string[];
 }
 
 /** One data-driven form item. Mirrors `<oge-form-item>`'s inputs. */

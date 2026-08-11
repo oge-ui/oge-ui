@@ -124,6 +124,27 @@
   [showClearButton]="opts().showClearButton ?? false"
   [formControl]="ctrl"
 />
+} @case ('colorBox') {
+<oge-color-box
+  [fluid]="true"
+  [size]="size()"
+  [stylingMode]="stylingMode()"
+  [labelMode]="labelMode()"
+  [subscriptSizing]="subscriptSizing()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [placeholder]="placeholder()"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [format]="opts().colorFormat ?? 'hex'"
+  [editAlphaChannel]="opts().editAlphaChannel ?? false"
+  [view]="opts().view ?? 'gradient'"
+  [palette]="opts().palette"
+  [showClearButton]="opts().showClearButton ?? false"
+  [formControl]="ctrl"
+/>
 } @case ('dateRangeBox') {
 <oge-date-range-box
   [fluid]="true"
@@ -347,6 +368,24 @@
   [type]="dateType()"
   [displayFormat]="opts().displayFormat"
   [locale]="opts().locale"
+  [showClearButton]="opts().showClearButton ?? false"
+  [formField]="node"
+/>
+} @case ('colorBox') {
+<oge-color-box
+  [fluid]="true"
+  [size]="size()"
+  [stylingMode]="stylingMode()"
+  [labelMode]="labelMode()"
+  [subscriptSizing]="subscriptSizing()"
+  [id]="editorId()"
+  [label]="label()"
+  [hint]="hintOrUndefined()"
+  [placeholder]="placeholder()"
+  [format]="opts().colorFormat ?? 'hex'"
+  [editAlphaChannel]="opts().editAlphaChannel ?? false"
+  [view]="opts().view ?? 'gradient'"
+  [palette]="opts().palette"
   [showClearButton]="opts().showClearButton ?? false"
   [formField]="node"
 />

@@ -62,6 +62,12 @@ export {
   type OgeDateBoxTimeView,
 } from './lib/date-box/date-box-types';
 export { parseDateText, datePartOrder } from './lib/date-box/date-parse';
+export { OgeColorBox } from './lib/color-box/color-box';
+export {
+  type OgeColorBoxView,
+  type OgeColorBoxApplyValueMode,
+  OGE_DEFAULT_COLOR_PALETTE,
+} from './lib/color-box/color-box-types';
 export {
   type OgeRadioGroupItemClickEvent,
   type OgeRadioGroupLayout,

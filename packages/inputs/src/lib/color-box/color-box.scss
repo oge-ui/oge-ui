@@ -1,0 +1,350 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+// Checkerboard underlay shared by the field swatch, the alpha track and
+// translucent palette cells — what every current-generation picker uses to
+// make "transparent" visible.
+@mixin checkerboard($size: 8px) {
+  background-color: #fff;
+  background-image: conic-gradient(
+    rgba(0, 0, 0, 0.12) 25%,
+    transparent 25% 50%,
+    rgba(0, 0, 0, 0.12) 50% 75%,
+    transparent 75%
+  );
+  background-size: $size $size;
+}
+
+// --- field swatch -----------------------------------------------------------
+
+.oge-color-box-swatch {
+  @include checkerboard(6px);
+  display: inline-flex;
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: calc(var(--oge-radius) - 2px);
+  border: 1px solid var(--oge-border-color);
+  overflow: hidden;
+  flex: none;
+}
+
+.oge-color-box-swatch-fill {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+// --- panel ------------------------------------------------------------------
+
+.oge-color-box-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  inline-size: 264px;
+}
+
+// --- 2D saturation/brightness surface ---------------------------------------
+
+.oge-color-surface {
+  position: relative;
+  display: block;
+  block-size: 148px;
+  border-radius: var(--oge-radius);
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, var(--oge-color-surface-hue, #f00));
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.oge-color-surface-thumb {
+  position: absolute;
+  inline-size: 14px;
+  block-size: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--oge-color-thumb, transparent);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  transition: box-shadow 120ms ease;
+
+  [dir='rtl'] & {
+    transform: translate(50%, -50%);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 3px var(--oge-focus-ring),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// --- hue / alpha sliders ----------------------------------------------------
+
+.oge-color-slider {
+  display: block;
+  padding-block: 2px;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.oge-color-slider-track {
+  position: relative;
+  block-size: 12px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #f00 0%,
+    #ff0 17%,
+    #0f0 33%,
+    #0ff 50%,
+    #00f 67%,
+    #f0f 83%,
+    #f00 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.oge-color-slider-alpha .oge-color-slider-track {
+  @include checkerboard;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      to right,
+      rgba(var(--oge-color-slider-rgb, 0, 0, 0), 0),
+      rgba(var(--oge-color-slider-rgb, 0, 0, 0), 1)
+    );
+  }
+}
+
+.oge-color-slider-thumb {
+  position: absolute;
+  top: 50%;
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--oge-color-thumb, transparent);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 1px 3px rgba(0, 0, 0, 0.25);
+  transform: translate(-50%, -50%);
+  transition: box-shadow 120ms ease;
+
+  [dir='rtl'] & {
+    transform: translate(50%, -50%);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 3px var(--oge-focus-ring),
+      0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+}
+
+// --- hex + channel inputs ---------------------------------------------------
+
+.oge-color-box-fields {
+  display: flex;
+  gap: 6px;
+}
+
+.oge-color-box-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+.oge-color-box-field-hex {
+  flex: 2 1 0;
+}
+
+.oge-color-box-channel {
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: 4px 2px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: calc(var(--oge-radius) - 2px);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--oge-accent);
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-color-box-eyedropper {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 27px;
+  block-size: 27px;
+  flex: none;
+  border: 1px solid var(--oge-border-color);
+  border-radius: calc(var(--oge-radius) - 2px);
+  background: none;
+  color: var(--oge-muted-color);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+    color: var(--oge-text-color);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-color-box-field-tag {
+  color: var(--oge-muted-color);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+// --- palette ----------------------------------------------------------------
+
+.oge-color-palette {
+  display: grid;
+  grid-template-columns: repeat(var(--oge-color-palette-columns, 10), 1fr);
+  gap: 4px;
+}
+
+.oge-color-palette-row {
+  display: contents;
+}
+
+.oge-color-palette-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: calc(var(--oge-radius) - 2px);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    transform: scale(1.12);
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+      0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+      0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-color-palette-check {
+  inline-size: 12px;
+  block-size: 12px;
+  pointer-events: none;
+}
+
+// --- OK / Cancel footer -----------------------------------------------------
+
+.oge-color-box-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+// Kendo's `preview` panes, folded into the footer: committed | draft.
+.oge-color-box-preview {
+  @include checkerboard(6px);
+  display: inline-flex;
+  block-size: 24px;
+  inline-size: 48px;
+  margin-inline-end: auto;
+  border-radius: calc(var(--oge-radius) - 2px);
+  border: 1px solid var(--oge-border-color);
+  overflow: hidden;
+}
+
+.oge-color-box-preview-pane {
+  flex: 1 1 0;
+}
+
+.oge-color-box-action {
+  padding: 5px 12px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-color-box-ok {
+  border-color: var(--oge-accent);
+  color: var(--oge-accent);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-color-surface-thumb,
+  .oge-color-slider-thumb,
+  .oge-color-palette-cell,
+  .oge-color-box-channel,
+  .oge-color-box-eyedropper,
+  .oge-color-box-action {
+    transition: none;
+  }
+
+  .oge-color-palette-cell:hover {
+    transform: none;
+  }
+}

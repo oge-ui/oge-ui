@@ -1,0 +1,178 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-pagination {
+  @include tokens.core-tokens;
+  display: block;
+  color: var(--oge-text-color);
+}
+
+.oge-pagination-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.oge-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 32px;
+  min-block-size: 32px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus:not(:focus-visible) {
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-pagination-current {
+  background: var(--oge-accent);
+  color: var(--oge-btn-contrast, #fff);
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent);
+  }
+}
+
+.oge-pagination-ellipsis {
+  min-inline-size: 24px;
+  text-align: center;
+  color: var(--oge-muted-color);
+  user-select: none;
+}
+
+.oge-pagination-indicator {
+  padding-inline: 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--oge-muted-color);
+}
+
+.oge-pagination-sizes,
+.oge-pagination-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: 12px;
+  font-size: 0.85em;
+  color: var(--oge-muted-color);
+}
+
+.oge-pagination-select,
+.oge-pagination-jump-input {
+  padding: 4px 6px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: 1em;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--oge-accent);
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-pagination-jump-input {
+  inline-size: 60px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+  }
+}
+
+.oge-pagination-info {
+  margin-inline-start: auto;
+  color: var(--oge-muted-color);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+// --- density ----------------------------------------------------------------
+
+.oge-pagination-sm {
+  .oge-pagination-btn {
+    min-inline-size: 26px;
+    min-block-size: 26px;
+    padding: 2px 6px;
+    font-size: 0.85em;
+  }
+
+  .oge-pagination-select,
+  .oge-pagination-jump-input {
+    padding: 2px 4px;
+  }
+}
+
+.oge-pagination-lg {
+  .oge-pagination-btn {
+    min-inline-size: 40px;
+    min-block-size: 40px;
+    padding: 6px 10px;
+  }
+}
+
+// --- disabled host ----------------------------------------------------------
+
+.oge-pagination.oge-disabled {
+  .oge-pagination-indicator,
+  .oge-pagination-info,
+  .oge-pagination-sizes,
+  .oge-pagination-jump {
+    color: var(--oge-muted-color);
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-pagination-btn,
+  .oge-pagination-select,
+  .oge-pagination-jump-input {
+    transition: none;
+  }
+}

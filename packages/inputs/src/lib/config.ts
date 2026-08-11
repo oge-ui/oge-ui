@@ -95,6 +95,38 @@ export interface OgeInputsMessages {
   rangeStartLabel: string;
   /** Aria label of the date range box's end input. */
   rangeEndLabel: string;
+  /** Color box parse failure (reverts on blur). */
+  invalidColorError: string;
+  /** Aria label of the color box popup dialog when the field has no label. */
+  colorPickerLabel: string;
+  /** Aria label of the color box's hue slider thumb. */
+  hueSliderLabel: string;
+  /** `aria-valuetext` of the hue slider — placeholder `{value}` (degrees). */
+  hueValueText: string;
+  /** Aria label of the color box's alpha slider thumb. */
+  alphaSliderLabel: string;
+  /** `aria-valuetext` of the alpha slider — placeholder `{value}` (percent). */
+  alphaValueText: string;
+  /** Aria label of the 2D saturation/brightness surface thumb. */
+  colorSurfaceLabel: string;
+  /** `aria-roledescription` of the 2D surface — announces the 2-axis nature. */
+  colorSurfaceRoleDescription: string;
+  /** `aria-valuetext` of the 2D surface — placeholders `{saturation}` `{brightness}`. */
+  surfaceValueText: string;
+  /** Aria label of the color box's palette grid. */
+  paletteLabel: string;
+  /** Aria label of the color box's hex text input. */
+  hexInputLabel: string;
+  /** Aria label of the color box's red channel input. */
+  redInputLabel: string;
+  /** Aria label of the color box's green channel input. */
+  greenInputLabel: string;
+  /** Aria label of the color box's blue channel input. */
+  blueInputLabel: string;
+  /** Aria label of the color box's alpha percent input. */
+  alphaInputLabel: string;
+  /** Aria label / title of the color box's eyedropper button. */
+  eyedropperButton: string;
 }
 
 export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
@@ -144,6 +176,22 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   cancelButton: 'Cancel',
   rangeStartLabel: 'Start date',
   rangeEndLabel: 'End date',
+  invalidColorError: 'Enter a valid color',
+  colorPickerLabel: 'Color picker',
+  hueSliderLabel: 'Hue',
+  hueValueText: '{value} degrees',
+  alphaSliderLabel: 'Opacity',
+  alphaValueText: '{value}%',
+  colorSurfaceLabel: 'Saturation and brightness',
+  colorSurfaceRoleDescription: '2-dimensional color picker',
+  surfaceValueText: 'Saturation {saturation}%, Brightness {brightness}%',
+  paletteLabel: 'Color palette',
+  hexInputLabel: 'Hex color',
+  redInputLabel: 'Red',
+  greenInputLabel: 'Green',
+  blueInputLabel: 'Blue',
+  alphaInputLabel: 'Opacity percent',
+  eyedropperButton: 'Pick color from screen',
 };
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */

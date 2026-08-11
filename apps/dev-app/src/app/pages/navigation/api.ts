@@ -13,6 +13,10 @@ import {
   OGE_MENUBAR_CONFIG_API,
   OGE_MENUBAR_ITEM_API,
 } from './menubar-api-data';
+import {
+  OGE_PAGINATION_API,
+  OGE_PAGINATION_CONFIG_API,
+} from './pagination-api-data';
 import { OGE_STEPPER_API, OGE_STEPPER_CONFIG_API } from './stepper-api-data';
 import {
   OGE_TREE_VIEW_API,
@@ -32,6 +36,8 @@ const SECTIONS = [
   'OgeBreadcrumb',
   'OgeBreadcrumbItem',
   'Breadcrumb configuration',
+  'OgePagination',
+  'Pagination configuration',
 ] as const;
 
 @Component({
@@ -104,6 +110,15 @@ const SECTIONS = [
       title="Breadcrumb configuration"
       [sections]="breadcrumbConfigApi"
     />
+    <app-api-reference
+      title="OgePagination"
+      selector="oge-pagination"
+      [sections]="paginationApi"
+    />
+    <app-api-reference
+      title="Pagination configuration"
+      [sections]="paginationConfigApi"
+    />
   `,
 })
 export class NavigationApiPage {
@@ -120,4 +135,6 @@ export class NavigationApiPage {
   protected readonly breadcrumbApi = OGE_BREADCRUMB_API;
   protected readonly breadcrumbItemApi = OGE_BREADCRUMB_ITEM_API;
   protected readonly breadcrumbConfigApi = OGE_BREADCRUMB_CONFIG_API;
+  protected readonly paginationApi = OGE_PAGINATION_API;
+  protected readonly paginationConfigApi = OGE_PAGINATION_CONFIG_API;
 }

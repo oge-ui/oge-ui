@@ -1,13 +1,14 @@
 # @oge-ui/inputs
 
 Signal-based Angular form editors sharing one field chrome and working with
-three form systems at once. Fourteen editors ship today: `oge-text-box`,
+three form systems at once. Fifteen editors ship today: `oge-text-box`,
 `oge-text-area`, `oge-number-box`, the dropdown family (`oge-select-box`,
 `oge-tag-box`, `oge-autocomplete`), toggle controls (`oge-check-box`,
 `oge-switch`, `oge-radio-group`), date editors (`oge-calendar`,
-`oge-date-box`, `oge-date-range-box`) and the APG sliders (`oge-slider`,
+`oge-date-box`, `oge-date-range-box`), the APG sliders (`oge-slider`,
 `oge-range-slider` — arrows/PageUp/Home/End, live drag commits with
-Escape-to-cancel, dynamic aria constraints between range thumbs).
+Escape-to-cancel, dynamic aria constraints between range thumbs) and the
+color editor (`oge-color-box`).
 
 ## Features
 
@@ -45,6 +46,12 @@ always`, announce via `aria-live`, and chain `aria-describedby` across
   ArrowUp/ArrowDown.
 - **Auto-resize textarea** — `autoResize` grows between `minRows`/`maxRows`
   using CSS `field-sizing: content` with a measurement fallback.
+- **Color box**: `value` is a CSS color string normalized to `format:
+'hex' | 'rgb' | 'rgba' | 'hsl'` on commit; the popup dialog composes a
+  saturation/brightness surface, hue/alpha APG sliders (`aria-valuetext`),
+  hex + channel inputs and a `role="grid"` swatch palette
+  (`view: 'gradient' | 'palette' | 'both'`); typed text parses any CSS color
+  incl. named colors; `applyValueMode: 'instantly' | 'useButtons'`.
 - **Select box**: WAI-ARIA combobox with `aria-activedescendant` (focus
   never leaves the input), `displayExpr`/`valueExpr` data mapping (string or
   function), debounced client-side search (`searchEnabled`, `searchMode`,
