@@ -2,7 +2,7 @@
 
 > Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, ColorBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
 
-Part of OGE UI v0.10.0.
+Part of OGE UI v0.11.0.
 Docs and live demos: https://ogeui.com/components/inputs
 Whole-suite reference: https://ogeui.com/llms-full.txt
 

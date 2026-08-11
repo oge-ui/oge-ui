@@ -2,7 +2,7 @@
 
 > Re-exports every MIT family from a single import path. `npm i oge-ui` then `import { OgeGrid, OgeButton } from 'oge-ui'`.
 
-Part of OGE UI v0.10.0.
+Part of OGE UI v0.11.0.
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
 ```sh

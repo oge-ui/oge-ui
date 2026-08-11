@@ -5,6 +5,72 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## 0.11.0 — 2026-08-11
+
+### New package
+
+- **`@oge-ui/charts`** (commercial) — data visualization on a
+  **dependency-free SVG kernel** (no D3, no Chart.js, no canvas library; the
+  only suite dependency is `core`). `<oge-chart>` ships sixteen cartesian
+  series types — `line`, `spline`, `stepLine`, `area`, `splineArea`,
+  `stepArea`, `stackedArea`, `fullStackedArea`, `bar`, `stackedBar`,
+  `fullStackedBar`, `rangeBar`, `scatter`, `bubble`, `rangeArea`,
+  `candlestick` — over pure engines for 1-2-5 nice-tick scales,
+  calendar-true time axes, logarithmic axes, multi value axes, stacking with
+  separate negative branches and strip lines. Interaction: cursor-centered
+  wheel zoom, drag-select zoom and Shift-pan with Escape reset
+  (`[(visualRange)]` two-way), crosshair, single/`shared` tooltips with
+  templates, an interactive legend that spotlights its series on hover,
+  point/series selection, plot annotations (`point` callouts and `text`
+  labels with an HTML template) and per-series value labels.
+  `<oge-pie-chart>` adds pie/doughnut with anti-overlap outside labels and
+  small-value grouping; `<oge-polar-chart>` adds radar/polar (line/area
+  loops, scatter, sector bars, `spider` grids); `<oge-range-selector>` is
+  the overview strip whose `[(value)]` pairs with a chart's
+  `[(visualRange)]`. **Performance:** one `<path>` per series plus automatic
+  **LTTB downsampling** to ~one point per pixel for oversized series (50k+
+  points fluid; hit-testing keeps the full data). **Accessibility** (no APG
+  chart pattern exists): `role="img"` labels, a screen-reader data table,
+  real legend buttons and keyboard point inspection with live-region
+  announcements — none of the reference libraries ship the latter two.
+  Image export lives in the dependency-free `@oge-ui/charts/export-image`
+  entry (inline-styled SVG serialization + PNG rasterization).
+
+### `@oge-ui/gantt`
+
+- **v0.2 feature wave:** `workCalendar` work-time calendars (off-day
+  shading; auto-scheduling rolls pushed starts onto working days and keeps
+  durations in working days) with per-resource `calendar` overrides;
+  multi-resource assignment (scalar or array `resourceId` stores with
+  shape-preserving write-back, a tag editor in the dialog and bar labels);
+  `showResourceWorkload` utilization band with overallocation marks; hover
+  tooltips with `*ogeGanttTooltipTemplate`; and three lazy export entry
+  points — `export-excel` (exceljs), `export-pdf` (jspdf, the chart drawn
+  as vector graphics) and the dependency-free `export-image` PNG.
+- **Usability wave:** built-in right-click menu (edit, new task/subtask,
+  indent/outdent, delete), double-click or **draw on empty chart space** to
+  create a task at that date, MS Project-style Alt+Shift+Left/Right
+  reparenting, a toolbar Today button, an empty state with a create
+  shortcut — plus a visual refresh (segmented toolbar pills, gradient bars
+  with hover lift, glowing today line).
+- **Fixes from live use:** resize handles are reachable again (bar labels
+  no longer intercept the pointer), dragging the earliest/latest task no
+  longer re-anchors the whole chart (the rendered range only widens), and
+  tooltips/drag tips never disappear under the sticky scale header.
+
+### `@oge-ui/scheduler`
+
+- Built-in right-click menu: edit/delete on chips through the guarded
+  pipelines (recurrence occurrence/series scope included) and a prefilled
+  "new appointment" on empty cells; toolbar and chips share the new visual
+  language (segmented pills, gradient chips, glowing now-line).
+
+### i18n
+
+- Config-level `locale` for the scheduler and the date editors
+  (`OgeInputsConfig.locale` / `OgeSchedulerConfig.locale`; per-instance
+  `[locale]` wins) — the same pattern the gantt and charts shipped with.
+
 ## 0.10.0 — 2026-08-10
 
 ### New components

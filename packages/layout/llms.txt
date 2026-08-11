@@ -2,7 +2,7 @@
 
 > Layout containers and loading visuals — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), load-indicator ring and shimmer skeleton with the aria progressbar contract done right.
 
-Part of OGE UI v0.10.0.
+Part of OGE UI v0.11.0.
 Docs and live demos: https://ogeui.com/components/accordion
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
