@@ -81,7 +81,9 @@ describe('<oge-scheduler> shell', () => {
 
   it('renders the week view with 7 day columns and the appointments', () => {
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelectorAll('.oge-scheduler-day-col').length).toBe(7);
+    expect(
+      host.querySelector('.oge-scheduler-row')?.children.length,
+    ).toBe(7);
     expect(host.querySelectorAll('.oge-scheduler-chip-box').length).toBe(1);
     expect(text(fixture, '.oge-scheduler-chip-box .oge-scheduler-chip-text')).toBe(
       'Standup',
@@ -101,7 +103,9 @@ describe('<oge-scheduler> shell', () => {
 
     fixture.componentInstance.view.set('day');
     await settle(fixture);
-    expect(host.querySelectorAll('.oge-scheduler-day-col').length).toBe(1);
+    expect(
+      host.querySelector('.oge-scheduler-row')?.children.length,
+    ).toBe(1);
   });
 
   it('navigates periods and today through the toolbar', async () => {

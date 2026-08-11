@@ -24,7 +24,9 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "0.10.0"
+    "@oge-ui/core": "0.10.0",
+    "@oge-ui/forms": "0.10.0",
+    "@oge-ui/overlay": "0.10.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

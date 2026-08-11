@@ -3,6 +3,7 @@
  * module with the component in the next wave; the engine's internal shapes
  * stay unexported by design.
  */
+import type { OgeFormItemData } from '@oge-ui/forms';
 import type { SchedulerAppointment } from './engine/scheduler-model';
 import type { SchedulerViewType } from './engine/view-model';
 
@@ -23,4 +24,74 @@ export interface OgeSchedulerViewOptions {
   readonly dayStartHour?: number;
   readonly dayEndHour?: number;
   readonly cellDuration?: number;
+}
+
+/** Cancelable: fires before a new appointment reaches the store. */
+export interface OgeSchedulerAppointmentAddingEvent<T = unknown> {
+  /** The item about to be inserted (mutable — adjust fields before insert). */
+  readonly appointmentData: T;
+  /** Set `true` to veto the insert. */
+  cancel: boolean;
+}
+
+/** Fires after an appointment was inserted. */
+export interface OgeSchedulerAppointmentAddedEvent<T = unknown> {
+  readonly appointmentData: T;
+}
+
+/** Cancelable: fires before an appointment update reaches the store. */
+export interface OgeSchedulerAppointmentUpdatingEvent<T = unknown> {
+  readonly oldData: T;
+  /** The patch about to be applied. */
+  readonly newData: Partial<T>;
+  /** Set `true` to veto the update. */
+  cancel: boolean;
+}
+
+/** Fires after an appointment was updated. */
+export interface OgeSchedulerAppointmentUpdatedEvent<T = unknown> {
+  readonly appointmentData: T;
+}
+
+/** Cancelable: fires before an appointment is removed from the store. */
+export interface OgeSchedulerAppointmentDeletingEvent<T = unknown> {
+  readonly appointmentData: T;
+  /** Set `true` to veto the delete. */
+  cancel: boolean;
+}
+
+/** Fires after an appointment was removed. */
+export interface OgeSchedulerAppointmentDeletedEvent<T = unknown> {
+  readonly appointmentData: T;
+}
+
+/** Fires on appointment chip click / double-click. */
+export interface OgeSchedulerAppointmentClickEvent<T = unknown> {
+  readonly appointment: OgeSchedulerAppointment<T>;
+  /** The raw DOM event. */
+  readonly event: MouseEvent;
+}
+
+/** Fires on empty-cell click / double-click. */
+export interface OgeSchedulerCellClickEvent {
+  /** Start date/time of the clicked cell. */
+  readonly cellDate: Date;
+  /** True in the all-day strip and in month cells. */
+  readonly allDay: boolean;
+  /** The raw DOM event. */
+  readonly event: MouseEvent;
+}
+
+/**
+ * Cancelable: fires before the appointment editor opens; replace
+ * `formItems` to customize the form (dx `onAppointmentFormOpening` parity).
+ */
+export interface OgeSchedulerEditorShowingEvent<T = unknown> {
+  /** The item being edited, or the prefilled draft for a new appointment. */
+  readonly appointmentData: T;
+  readonly isNew: boolean;
+  /** The data-driven form items the editor will render (mutable). */
+  formItems: OgeFormItemData[];
+  /** Set `true` to keep the editor closed. */
+  cancel: boolean;
 }

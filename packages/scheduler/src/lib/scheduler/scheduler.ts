@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   ViewEncapsulation,
   computed,
   contentChild,
@@ -9,17 +10,24 @@ import {
   inject,
   input,
   model,
+  output,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import {
+  addMinutes,
+  nextDay,
   rangesOverlap,
   resolveFirstDayOfWeek,
+  startOfDay,
   type DataSource,
+  type RowKey,
 } from '@oge-ui/core';
 import type { OgeSchedulerMessages } from '../config';
 import { OGE_SCHEDULER_CONFIG } from '../config';
 import {
+  appointmentPatch,
   normalizeAppointment,
   resolveSchedulerFields,
   type SchedulerAppointment,
@@ -27,10 +35,29 @@ import {
 } from '../engine/scheduler-model';
 import { navigateDate, viewRange } from '../engine/view-model';
 import type {
+  OgeSchedulerAppointmentAddedEvent,
+  OgeSchedulerAppointmentAddingEvent,
+  OgeSchedulerAppointmentClickEvent,
+  OgeSchedulerAppointmentDeletedEvent,
+  OgeSchedulerAppointmentDeletingEvent,
+  OgeSchedulerAppointmentUpdatedEvent,
+  OgeSchedulerAppointmentUpdatingEvent,
+  OgeSchedulerCellClickEvent,
+  OgeSchedulerEditorShowingEvent,
   OgeSchedulerView,
   OgeSchedulerViewOptions,
 } from '../scheduler-types';
-import { OgeSchedulerDayWeekView } from './day-week-view';
+import {
+  OgeSchedulerAppointmentDialog,
+  type SchedulerEditorModel,
+  type SchedulerEditorResult,
+} from './appointment-dialog';
+import { OgeSchedulerAppointmentPopup } from './appointment-popup';
+import {
+  OgeSchedulerDayWeekView,
+  type SchedulerCellEvent,
+  type SchedulerChipEvent,
+} from './day-week-view';
 import { OgeSchedulerMonthView } from './month-view';
 import {
   OgeAppointmentTemplate,
@@ -65,7 +92,12 @@ interface ResolvedView {
   selector: 'oge-scheduler',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [OgeSchedulerDayWeekView, OgeSchedulerMonthView],
+  imports: [
+    OgeSchedulerAppointmentDialog,
+    OgeSchedulerAppointmentPopup,
+    OgeSchedulerDayWeekView,
+    OgeSchedulerMonthView,
+  ],
   host: { class: 'oge-scheduler' },
   styleUrl: './scheduler.scss',
   template: `
@@ -75,11 +107,7 @@ interface ResolvedView {
       [attr.aria-label]="msg().toolbar.label"
     >
       <div class="oge-scheduler-nav">
-        <button
-          type="button"
-          class="oge-scheduler-btn"
-          (click)="goToday()"
-        >
+        <button type="button" class="oge-scheduler-btn" (click)="goToday()">
           {{ msg().toolbar.today }}
         </button>
         <button
@@ -154,9 +182,17 @@ interface ResolvedView {
           [maxAppointmentsPerCell]="maxAppointmentsPerCell()"
           [locale]="locale()"
           [messages]="msg().grid"
+          [periodLabel]="periodTitle()"
           [appointmentTemplate]="appointmentTemplate() ?? null"
           [cellTemplate]="cellTemplate() ?? null"
           (moreClick)="drillIntoDay($event)"
+          (cellClicked)="onCellClicked($event)"
+          (cellDblClicked)="onCellDblClicked($event)"
+          (cellActivated)="onCellActivated($event)"
+          (chipClicked)="onChipClicked($event)"
+          (chipDblClicked)="onChipDblClicked($event)"
+          (chipActivated)="onChipActivated($event)"
+          (chipDeleteRequested)="deleteBySource($event.source)"
         />
       }
       @default {
@@ -173,17 +209,43 @@ interface ResolvedView {
           [minAppointmentMinutes]="minAppointmentMinutes()"
           [locale]="locale()"
           [messages]="msg().grid"
+          [periodLabel]="periodTitle()"
           [appointmentTemplate]="appointmentTemplate() ?? null"
           [cellTemplate]="cellTemplate() ?? null"
           [dateHeaderTemplate]="dateHeaderTemplate() ?? null"
+          (cellClicked)="onCellClicked($event)"
+          (cellDblClicked)="onCellDblClicked($event)"
+          (cellActivated)="onCellActivated($event)"
+          (chipClicked)="onChipClicked($event)"
+          (chipDblClicked)="onChipDblClicked($event)"
+          (chipActivated)="onChipActivated($event)"
+          (chipDeleteRequested)="deleteBySource($event.source)"
         />
       }
     }
+
+    <oge-scheduler-appointment-popup
+      [messages]="msg().popup"
+      [locale]="locale()"
+      [allowEditing]="allowUpdating()"
+      [allowDeleting]="allowDeleting()"
+      (editRequested)="openEditorFor($any($event))"
+      (deleteRequested)="deleteBySource($any($event).source)"
+    />
+    <oge-scheduler-appointment-dialog
+      [messages]="msg().editor"
+      [locale]="locale()"
+      (saved)="onEditorSaved($event)"
+    />
+    <div class="oge-scheduler-live" aria-live="polite">
+      {{ announcement() }}
+    </div>
   `,
 })
 export class OgeScheduler<T extends object = Record<string, unknown>> {
   private readonly config = inject(OGE_SCHEDULER_CONFIG);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** Appointment items: a plain array or any `@oge-ui/core` `DataSource`. */
   readonly dataSource = input<readonly T[] | DataSource<T> | null>(null);
@@ -231,6 +293,41 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   /** Per-instance overrides of the DI-configured messages. */
   readonly messages = input<Partial<OgeSchedulerMessages>>({});
 
+  readonly allowAdding = input(true);
+  readonly allowUpdating = input(true);
+  readonly allowDeleting = input(true);
+
+  /* ---------- events ---------- */
+
+  /** Cancelable: before a new appointment reaches the store. */
+  readonly appointmentAdding =
+    output<OgeSchedulerAppointmentAddingEvent<T>>();
+  /** After an appointment was inserted. */
+  readonly appointmentAdded = output<OgeSchedulerAppointmentAddedEvent<T>>();
+  /** Cancelable: before an update reaches the store. */
+  readonly appointmentUpdating =
+    output<OgeSchedulerAppointmentUpdatingEvent<T>>();
+  /** After an appointment was updated. */
+  readonly appointmentUpdated =
+    output<OgeSchedulerAppointmentUpdatedEvent<T>>();
+  /** Cancelable: before an appointment is removed from the store. */
+  readonly appointmentDeleting =
+    output<OgeSchedulerAppointmentDeletingEvent<T>>();
+  /** After an appointment was removed. */
+  readonly appointmentDeleted =
+    output<OgeSchedulerAppointmentDeletedEvent<T>>();
+  /** Chip single click (also opens the appointment popup). */
+  readonly appointmentClick = output<OgeSchedulerAppointmentClickEvent<T>>();
+  /** Chip double click (also opens the editor). */
+  readonly appointmentDblClick =
+    output<OgeSchedulerAppointmentClickEvent<T>>();
+  /** Empty-cell click. */
+  readonly cellClick = output<OgeSchedulerCellClickEvent>();
+  /** Empty-cell double click (also opens the create editor). */
+  readonly cellDblClick = output<OgeSchedulerCellClickEvent>();
+  /** Cancelable: before the editor opens; customize `formItems` here. */
+  readonly editorShowing = output<OgeSchedulerEditorShowingEvent<T>>();
+
   protected readonly appointmentTemplate = contentChild(
     OgeAppointmentTemplate<T>,
     { descendants: false },
@@ -241,6 +338,13 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected readonly dateHeaderTemplate = contentChild(OgeDateHeaderTemplate, {
     descendants: false,
   });
+
+  private readonly popup = viewChild.required(
+    OgeSchedulerAppointmentPopup<T>,
+  );
+  private readonly dialog = viewChild.required(OgeSchedulerAppointmentDialog);
+  private readonly dayWeekViewRef = viewChild(OgeSchedulerDayWeekView<T>);
+  private readonly monthViewRef = viewChild(OgeSchedulerMonthView<T>);
 
   protected readonly msg = computed<OgeSchedulerMessages>(() => ({
     ...this.config.messages,
@@ -300,37 +404,48 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     }),
   );
 
-  /** Items loaded from a `DataSource` (arrays bypass this signal). */
-  private readonly loadedItems = signal<readonly T[]>([]);
+  /* ---------- data store ---------- */
+
+  /**
+   * The writable working set. Array inputs are copied here (the input array
+   * itself is never mutated — hosts persist through the CRUD events);
+   * `DataSource` loads land here too and CRUD goes through the source's own
+   * `insert`/`update`/`remove` before a reload.
+   */
+  private readonly store = signal<readonly T[]>([]);
   private loadEpoch = 0;
 
   constructor() {
-    // reload whenever the DataSource instance changes; arrays are pass-through
     effect(() => {
       const source = this.dataSource();
-      if (source === null || Array.isArray(source)) return;
-      const epoch = ++this.loadEpoch;
-      void (source as DataSource<T>)
-        .load({})
-        .then((result) => {
-          if (epoch !== this.loadEpoch) return;
-          this.loadedItems.set(result.data as readonly T[]);
-        })
-        .catch(() => {
-          if (epoch === this.loadEpoch) this.loadedItems.set([]);
-        });
+      this.loadEpoch++;
+      if (source === null) {
+        this.store.set([]);
+        return;
+      }
+      if (Array.isArray(source)) {
+        this.store.set([...(source as readonly T[])]);
+        return;
+      }
+      this.reload(source as DataSource<T>);
     });
     this.destroyRef.onDestroy(() => {
       this.loadEpoch++;
     });
   }
 
-  private readonly items = computed<readonly T[]>(() => {
-    const source = this.dataSource();
-    if (source === null) return [];
-    if (Array.isArray(source)) return source;
-    return this.loadedItems();
-  });
+  private reload(source: DataSource<T>): void {
+    const epoch = ++this.loadEpoch;
+    void source
+      .load({})
+      .then((result) => {
+        if (epoch !== this.loadEpoch) return;
+        this.store.set(result.data as readonly T[]);
+      })
+      .catch(() => {
+        if (epoch === this.loadEpoch) this.store.set([]);
+      });
+  }
 
   private readonly keyOf = computed<(item: T, index: number) => unknown>(() => {
     const keyExpr = this.keyExpr();
@@ -343,18 +458,22 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   });
 
   /** Every normalized appointment (unfiltered). */
-  private readonly appointments = computed<
-    readonly SchedulerAppointment<T>[]
-  >(() => {
-    const fields = this.fields();
-    const keyOf = this.keyOf();
-    const result: SchedulerAppointment<T>[] = [];
-    this.items().forEach((item, index) => {
-      const appointment = normalizeAppointment(item, keyOf(item, index), fields);
-      if (appointment !== null) result.push(appointment);
-    });
-    return result;
-  });
+  private readonly appointments = computed<readonly SchedulerAppointment<T>[]>(
+    () => {
+      const fields = this.fields();
+      const keyOf = this.keyOf();
+      const result: SchedulerAppointment<T>[] = [];
+      this.store().forEach((item, index) => {
+        const appointment = normalizeAppointment(
+          item,
+          keyOf(item, index),
+          fields,
+        );
+        if (appointment !== null) result.push(appointment);
+      });
+      return result;
+    },
+  );
 
   /** Appointments overlapping the visible period (client-side window). */
   protected readonly visibleAppointments = computed<
@@ -402,6 +521,23 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     }).formatRange(start, last);
   });
 
+  /* ---------- announcements ---------- */
+
+  protected readonly announcement = signal('');
+
+  private announce(
+    template: string,
+    tokens: Readonly<Record<string, string>>,
+  ): void {
+    let text = template;
+    for (const [token, value] of Object.entries(tokens)) {
+      text = text.replace(`{${token}}`, value);
+    }
+    this.announcement.set(text);
+  }
+
+  /* ---------- navigation ---------- */
+
   /** Moves the visible period to today. */
   goToday(): void {
     this.currentDate.set(new Date());
@@ -417,5 +553,318 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected drillIntoDay(date: Date): void {
     this.currentDate.set(date);
     this.currentView.set('day');
+  }
+
+  /* ---------- interaction plumbing ---------- */
+
+  protected onCellClicked(event: SchedulerCellEvent): void {
+    if (event.event instanceof MouseEvent) {
+      this.cellClick.emit({
+        cellDate: event.cellDate,
+        allDay: event.allDay,
+        event: event.event,
+      });
+    }
+  }
+
+  protected onCellDblClicked(event: SchedulerCellEvent): void {
+    if (event.event instanceof MouseEvent) {
+      this.cellDblClick.emit({
+        cellDate: event.cellDate,
+        allDay: event.allDay,
+        event: event.event,
+      });
+    }
+    this.openCreateEditor(event.cellDate, event.allDay);
+  }
+
+  protected onCellActivated(event: SchedulerCellEvent): void {
+    this.openCreateEditor(event.cellDate, event.allDay);
+  }
+
+  protected onChipClicked(event: SchedulerChipEvent<T>): void {
+    if (event.event instanceof MouseEvent) {
+      this.appointmentClick.emit({
+        appointment: event.appointment,
+        event: event.event,
+      });
+    }
+    this.popup().open(event.appointment, event.rect);
+  }
+
+  protected onChipDblClicked(event: SchedulerChipEvent<T>): void {
+    if (event.event instanceof MouseEvent) {
+      this.appointmentDblClick.emit({
+        appointment: event.appointment,
+        event: event.event,
+      });
+    }
+    this.openEditorFor(event.appointment);
+  }
+
+  protected onChipActivated(event: SchedulerChipEvent<T>): void {
+    this.popup().open(event.appointment, event.rect);
+  }
+
+  /* ---------- editor ---------- */
+
+  private editedSource: T | null = null;
+
+  /** Opens the editor for an existing appointment. */
+  protected openEditorFor(appointment: SchedulerAppointment<T>): void {
+    if (!this.allowUpdating()) return;
+    this.openEditor(
+      {
+        text: appointment.text,
+        allDay: appointment.allDay,
+        startDate: appointment.startDate,
+        endDate: appointment.endDate,
+        color: appointment.color,
+        description: appointment.description,
+      },
+      appointment.source,
+      false,
+    );
+  }
+
+  private openCreateEditor(cellDate: Date, allDay: boolean): void {
+    if (!this.allowAdding()) return;
+    const startDate = allDay ? startOfDay(cellDate) : cellDate;
+    const endDate = allDay
+      ? nextDay(startDate)
+      : addMinutes(startDate, this.activeView().cellDuration);
+    const draft = this.buildItem({
+      text: '',
+      allDay,
+      startDate,
+      endDate,
+    });
+    this.openEditor(
+      { text: '', allDay, startDate, endDate },
+      draft,
+      true,
+    );
+  }
+
+  private openEditor(
+    editorModel: SchedulerEditorModel,
+    source: T,
+    isNew: boolean,
+  ): void {
+    const dialog = this.dialog();
+    const event: OgeSchedulerEditorShowingEvent<T> = {
+      appointmentData: source,
+      isNew,
+      formItems: dialog.defaultItems(),
+      cancel: false,
+    };
+    this.editorShowing.emit(event);
+    if (event.cancel) return;
+    this.editedSource = isNew ? null : source;
+    dialog.open(editorModel, isNew, event.formItems);
+  }
+
+  protected onEditorSaved(result: SchedulerEditorResult): void {
+    if (result.isNew) {
+      this.insertItem(this.buildItem(result.model));
+    } else if (this.editedSource !== null) {
+      this.updateItem(this.editedSource, this.buildPatch(result.model));
+    }
+    this.editedSource = null;
+  }
+
+  /** Builds a new item from the editor model using the string field names. */
+  private buildItem(editorModel: SchedulerEditorModel): T {
+    const fields = this.fields();
+    const item: Record<string, unknown> = {};
+    const set = (field: string | null, value: unknown): void => {
+      if (field !== null && value !== undefined) item[field] = value;
+    };
+    set(fields.fieldNames.text, editorModel.text);
+    set(fields.fieldNames.startDate, editorModel.startDate);
+    set(fields.fieldNames.endDate, editorModel.endDate);
+    if (editorModel.allDay) set(fields.fieldNames.allDay, true);
+    set(fields.fieldNames.color, editorModel.color);
+    set(fields.fieldNames.description, editorModel.description);
+    return item as T;
+  }
+
+  private buildPatch(editorModel: SchedulerEditorModel): Partial<T> {
+    const fields = this.fields();
+    const original = this.editedSource as T;
+    const patch: Record<string, unknown> = {
+      ...(appointmentPatch(original, editorModel, fields) as Record<
+        string,
+        unknown
+      >),
+    };
+    const set = (field: string | null, value: unknown): void => {
+      if (field !== null) patch[field] = value;
+    };
+    set(fields.fieldNames.text, editorModel.text);
+    set(fields.fieldNames.allDay, editorModel.allDay);
+    set(fields.fieldNames.color, editorModel.color);
+    set(fields.fieldNames.description, editorModel.description);
+    return patch as Partial<T>;
+  }
+
+  /* ---------- CRUD executor ---------- */
+
+  private dataSourceOf(): DataSource<T> | null {
+    const source = this.dataSource();
+    return source !== null && !Array.isArray(source)
+      ? (source as DataSource<T>)
+      : null;
+  }
+
+  private insertItem(item: T): void {
+    if (!this.allowAdding()) return;
+    const event: OgeSchedulerAppointmentAddingEvent<T> = {
+      appointmentData: item,
+      cancel: false,
+    };
+    this.appointmentAdding.emit(event);
+    if (event.cancel) return;
+    const source = this.dataSourceOf();
+    if (source?.insert) {
+      void source.insert(item).then(() => {
+        this.reload(source);
+        this.finishAdd(item);
+      });
+      return;
+    }
+    this.store.set([...this.store(), item]);
+    this.finishAdd(item);
+  }
+
+  private finishAdd(item: T): void {
+    this.appointmentAdded.emit({ appointmentData: item });
+    this.announce(this.msg().announcements.created, {
+      text: String(this.fields().text(item) ?? ''),
+    });
+  }
+
+  private updateItem(original: T, patch: Partial<T>): void {
+    if (!this.allowUpdating()) return;
+    const event: OgeSchedulerAppointmentUpdatingEvent<T> = {
+      oldData: original,
+      newData: patch,
+      cancel: false,
+    };
+    this.appointmentUpdating.emit(event);
+    if (event.cancel) return;
+    const updated = { ...original, ...patch };
+    const source = this.dataSourceOf();
+    if (source?.update) {
+      const index = this.store().indexOf(original);
+      const key = this.keyOf()(original, index) as RowKey;
+      void source.update(key, patch).then(() => {
+        this.reload(source);
+        this.finishUpdate(updated);
+      });
+      return;
+    }
+    this.store.set(
+      this.store().map((entry) => (entry === original ? updated : entry)),
+    );
+    this.finishUpdate(updated);
+  }
+
+  private finishUpdate(updated: T): void {
+    this.appointmentUpdated.emit({ appointmentData: updated });
+    this.announce(this.msg().announcements.updated, {
+      text: String(this.fields().text(updated) ?? ''),
+    });
+  }
+
+  /** Deletes the appointment rendered from `item` (guarded + evented). */
+  protected deleteBySource(item: T): void {
+    if (!this.allowDeleting()) return;
+    const event: OgeSchedulerAppointmentDeletingEvent<T> = {
+      appointmentData: item,
+      cancel: false,
+    };
+    this.appointmentDeleting.emit(event);
+    if (event.cancel) return;
+    const source = this.dataSourceOf();
+    if (source?.remove) {
+      const index = this.store().indexOf(item);
+      const key = this.keyOf()(item, index) as RowKey;
+      void source.remove(key).then(() => {
+        this.reload(source);
+        this.finishDelete(item);
+      });
+      return;
+    }
+    this.store.set(this.store().filter((entry) => entry !== item));
+    this.finishDelete(item);
+  }
+
+  private finishDelete(item: T): void {
+    this.appointmentDeleted.emit({ appointmentData: item });
+    this.announce(this.msg().announcements.deleted, {
+      text: String(this.fields().text(item) ?? ''),
+    });
+  }
+
+  /* ---------- imperative API ---------- */
+
+  /** Focuses the active view's grid. */
+  focus(): void {
+    this.dayWeekViewRef()?.focusGrid();
+    this.monthViewRef()?.focusGrid();
+  }
+
+  /** Scrolls the day/week body so `hours:minutes` sits at the top. */
+  scrollToTime(hours: number, minutes = 0): void {
+    const view = this.dayWeekViewRef();
+    if (view === undefined) return;
+    const body =
+      this.hostEl.nativeElement.querySelector<HTMLElement>(
+        '.oge-scheduler-body',
+      );
+    const rows = this.hostEl.nativeElement.querySelector<HTMLElement>(
+      '.oge-scheduler-rows',
+    );
+    if (body === null || rows === null) return;
+    const grid = view.grid();
+    const span = grid.windowEndMinutes - grid.windowStartMinutes;
+    if (span <= 0) return;
+    const fraction = Math.min(
+      1,
+      Math.max(0, (hours * 60 + minutes - grid.windowStartMinutes) / span),
+    );
+    body.scrollTop = fraction * rows.scrollHeight;
+  }
+
+  /**
+   * Opens the appointment editor: with `createNew` (or no data) a prefilled
+   * create form, otherwise the edit form of the given item (dx parity —
+   * `showAppointmentPopup` opens the *form*, not the summary popup).
+   */
+  showAppointmentPopup(appointmentData?: Partial<T>, createNew = false): void {
+    if (createNew || appointmentData === undefined) {
+      const base = untracked(this.currentDate);
+      this.openCreateEditor(
+        new Date(
+          base.getFullYear(),
+          base.getMonth(),
+          base.getDate(),
+          this.activeView().dayStartHour,
+        ),
+        false,
+      );
+      return;
+    }
+    const appointment = untracked(this.appointments).find(
+      (entry) => entry.source === appointmentData,
+    );
+    if (appointment !== undefined) this.openEditorFor(appointment);
+  }
+
+  /** Closes the appointment editor and the summary popup. */
+  hideAppointmentPopup(): void {
+    this.dialog().close();
+    this.popup().close();
   }
 }

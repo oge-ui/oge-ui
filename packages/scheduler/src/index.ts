@@ -13,6 +13,15 @@ export {
 } from './lib/scheduler/scheduler-templates';
 export {
   type OgeSchedulerAppointment,
+  type OgeSchedulerAppointmentAddedEvent,
+  type OgeSchedulerAppointmentAddingEvent,
+  type OgeSchedulerAppointmentClickEvent,
+  type OgeSchedulerAppointmentDeletedEvent,
+  type OgeSchedulerAppointmentDeletingEvent,
+  type OgeSchedulerAppointmentUpdatedEvent,
+  type OgeSchedulerAppointmentUpdatingEvent,
+  type OgeSchedulerCellClickEvent,
+  type OgeSchedulerEditorShowingEvent,
   type OgeSchedulerView,
   type OgeSchedulerViewOptions,
 } from './lib/scheduler-types';
