@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/charts",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Signal-based Angular charts: line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — calendar-true time axes, log axes, zoom & pan, crosshair, shared tooltips, interactive legend and full keyboard access. The only dependency-free Angular-native chart family. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "angular",
@@ -24,7 +24,7 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "0.10.0"
+    "@oge-ui/core": "0.11.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

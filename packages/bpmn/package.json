@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/bpmn",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Signal-based Angular BPMN 2.0 editor: a from-scratch, dependency-free modeler with its own BPMN XML + diagram-interchange engine, orthogonal routing, undo/redo and a keyboard-accessible canvas — no watermark. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "angular",

@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/buttons",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Signal-based Angular button family: OgeButton with async single-flight actions and hold-to-confirm, OgeButtonGroup selection and OgeDropDownButton.",
   "keywords": [
     "angular",
@@ -20,7 +20,7 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/overlay": "0.10.0"
+    "@oge-ui/overlay": "0.11.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",
