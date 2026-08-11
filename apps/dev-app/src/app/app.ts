@@ -243,6 +243,18 @@ export class App {
       ],
     },
     {
+      title: 'BPMN Editor',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/bpmn', label: 'Overview', icon: 'workflow' },
+        {
+          path: '/components/bpmn/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Buttons',
       group: COMPONENTS_GROUP,
       items: [
@@ -430,6 +442,18 @@ export class App {
       ],
     },
     {
+      title: 'Pagination',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/pagination', label: 'Overview', icon: 'pages' },
+        {
+          path: '/components/tree-view/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Menubar',
       group: COMPONENTS_GROUP,
       items: [
@@ -497,6 +521,11 @@ export class App {
           path: '/components/inputs/date-box',
           label: 'Date Editors',
           icon: 'calendar',
+        },
+        {
+          path: '/components/inputs/color-box',
+          label: 'Color Box',
+          icon: 'palette',
         },
         {
           path: '/components/inputs/showcase',

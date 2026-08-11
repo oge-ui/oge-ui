@@ -64,6 +64,13 @@ export default [
               ],
             },
             {
+              // commercial BPMN editor: self-contained by design — the whole
+              // engine (XML + geometry) lives inside the package, so the only
+              // allowed edge is core (and today not even that is used)
+              sourceTag: 'scope:bpmn',
+              onlyDependOnLibsWithTags: ['scope:bpmn', 'scope:core'],
+            },
+            {
               sourceTag: 'scope:overlay',
               onlyDependOnLibsWithTags: ['scope:overlay', 'scope:core'],
             },
@@ -134,8 +141,9 @@ export default [
             },
             {
               // umbrella package: re-exports every MIT family.
-              // scope:pivot is deliberately absent — the umbrella must never
-              // depend on the commercial tier (see LICENSE).
+              // scope:pivot and scope:bpmn are deliberately absent — the
+              // umbrella must never depend on the commercial tier (see
+              // LICENSE).
               sourceTag: 'scope:ui',
               onlyDependOnLibsWithTags: [
                 'scope:grid',
@@ -157,6 +165,7 @@ export default [
                 'scope:grid',
                 'scope:tree-list',
                 'scope:pivot',
+                'scope:bpmn',
                 'scope:buttons',
                 'scope:overlay',
                 'scope:inputs',

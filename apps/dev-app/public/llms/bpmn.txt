@@ -1,0 +1,615 @@
+# @oge-ui/bpmn
+
+> From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.10.0.
+Docs and live demos: https://ogeui.com/components/bpmn
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/bpmn
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/bpmn`
+
+- values: `OGE_BPMN_CONFIG`, `OGE_DEFAULT_BPMN_COLOR_PRESETS`, `OGE_DEFAULT_BPMN_CONFIG`, `OGE_DEFAULT_BPMN_MESSAGES`, `OgeBpmnEditor`, `VALID_EVENT_DEFINITIONS`, `alignElements`, `createEmptyDiagram`, `distributeElements`, `fromBpmnJson`, `provideOgeBpmnConfig`, `readBpmnXml`, `renderDiagramSvg`, `toBpmnJson`, `writeBpmnXml`
+- types: `BpmnActivityMarker`, `BpmnAlignMode`, `BpmnClipboard`, `BpmnDataNodeType`, `BpmnDiagram`, `BpmnDiagramJson`, `BpmnDistributeAxis`, `BpmnEdge`, `BpmnEdgeType`, `BpmnElementNameKey`, `BpmnEventDefinitionKind`, `BpmnImportResult`, `BpmnImportWarning`, `BpmnImportWarningCode`, `BpmnJsonParseResult`, `BpmnLane`, `BpmnMessageFlow`, `BpmnNode`, `BpmnNodeType`, `BpmnPaletteItemType`, `BpmnPool`, `BpmnSubProcessType`, `BpmnSvgExportOptions`, `OgeBpmnAnnouncementMessages`, `OgeBpmnChangeSource`, `OgeBpmnConfig`, `OgeBpmnConfigInput`, `OgeBpmnContextPadMessages`, `OgeBpmnDiagramChangedEvent`, `OgeBpmnElementInfo`, `OgeBpmnElementsChangedEvent`, `OgeBpmnHeaderMessages`, `OgeBpmnImportEvent`, `OgeBpmnMessages`, `OgeBpmnOverlay`, `OgeBpmnPaletteItem`, `OgeBpmnPropertiesMessages`, `OgeBpmnSelectionEvent`, `Point`, `Rect`
+
+## API reference
+
+### OgeBpmnEditor — `<oge-bpmn-editor>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `readOnly` | `boolean` | `false` | Disables every mutation: palette, context pad, keyboard editing and drags. Selection, pan, zoom and element search keep working. |
+| `gridVisible` | `boolean` | `true` | Shows the dotted background grid. |
+| `snapEnabled` | `boolean` | `true` | Enables grid and neighbor-alignment snapping (with guide lines) while moving and placing. |
+| `paletteItems` | `readonly BpmnPaletteItemType[]` | `all 18 entries` | Palette entries offered, in render order: every placeable node type plus the `'pool'` pseudo-entry, which creates a collaboration participant. Event sub-processes and transactions are reached by morphing a sub-process via the panel type select. |
+| `showPropertiesPanel` | `boolean` | `true` | Shows the right-side properties panel (always hidden in `readOnly`). |
+| `showMinimap` | `boolean` | `true` | Shows the bottom-right minimap overlay (hidden while the diagram is empty). Click or drag the minimap to pan the main viewport. |
+| `showHeader` | `boolean` | `true` | Shows the header toolbar: the inline-editable diagram name, undo/redo, zoom out / percentage (fit) / zoom in, the properties-panel collapse toggle, the optional edit/view mode toggle and the fullscreen button (native Fullscreen API with a fixed-position maximized fallback). |
+| `mode` | `model<'edit' \| 'view'>` | `'edit'` | The UI mode — two-way. `'view'` locks every mutating surface exactly like `readOnly`; zoom, pan, search and fullscreen stay available. |
+| `allowModeToggle` | `boolean` | `false` | Shows the edit/view toggle in the header (hidden while `readOnly` — the app-level lock always wins). |
+| `showBranding` | `boolean` | `true` | The badge in the canvas corner — a bare logo with no chrome, removable exclusively from code via `false`. Branding is a courtesy, never a license term (unlike bpmn-js's mandatory watermark). |
+| `brandLogoUrl` | `string \| undefined` | `—` | Badge image URL (per instance, or app-wide via `provideOgeBpmnConfig({ brandLogoUrl })`); unset renders the built-in drawn mark — no bundled bitmap, no network dependency by default. |
+| `Panel resizing` | `built-in` | `—` | The palette rail and the properties panel carry `role="separator"` drag handles — pointer drag (Escape cancels) or Tab + Arrow keys / Home / End, the APG window-splitter keys. The header panel-toggle collapses the properties panel entirely. |
+| `messages` | `Partial<OgeBpmnMessages>` | `{}` | Per-instance message overrides, merged over the `provideOgeBpmnConfig()` defaults. |
+| `zoom` | `model<number>` | `1` | Two-way zoom factor (`[(zoom)]`); wheel zooming writes it back. Clamped to the configured `zoomMin`/`zoomMax`. |
+
+_Canvas keyboard_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `role="application" canvas` | `Tab / Shift+Tab · arrows (Shift = 1px) · C · A · H / L / S · F2 / Enter · Delete · Ctrl+Z / Ctrl+Y · Ctrl+C / Ctrl+X / Ctrl+V · Ctrl+A · Ctrl+F · + / − / F · Escape` | Tab cycles elements (never trapped on an empty selection — leave with Escape then Tab, announced in the canvas hint), arrows move the selection by one grid step, `C` arms the connect tool (Tab/arrows walk candidate targets, Enter commits), `A` appends a connected task, `H`/`L`/`S` switch to the hand / lasso / space tool (edit mode only), `F` zooms to fit, `F2`/Enter edit the label, Ctrl+C/X/V copy/cut/paste via the internal clipboard, Ctrl+A selects all, Ctrl+F opens the element search overlay, Escape cancels the active tool or drag. The selected element is exposed via `aria-activedescendant` and every action is narrated in a polite live region. |
+
+#### Methods
+
+_Import & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `importXml(xml: string)` | `Promise<BpmnImportResult>` | Parses BPMN XML and loads it into the editor, resetting undo history and fitting the viewport. Resolves with the import result (model + warnings); on a fatal parse error the current diagram is left untouched. |
+| `exportXml()` | `string` | Serializes the current diagram to deterministic BPMN 2.0 XML — same model, same bytes. |
+| `exportJson()` | `BpmnDiagramJson` | Wraps the current diagram in the versioned JSON persistence envelope — the shape to store in an application database and the payload of the `diagramChanged` autosave stream. |
+| `importJson(value: unknown)` | `{ error?: string }` | Validates a JSON persistence envelope (see `fromBpmnJson`) and loads it, resetting undo history and fitting the viewport exactly like `importXml`. On a validation error the current diagram is left untouched and the error message is returned. |
+| `exportSvg()` | `string` | Renders the current diagram as a self-contained static SVG string (neutral hardcoded colors, no grid or selection, `viewBox` fitted to the content) via `renderDiagramSvg` — writable to a file or embeddable as-is. |
+| `newDiagram()` | `void` | Replaces the diagram with an empty one and resets history and viewport. |
+
+_Selection, history & navigation_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `zoomToFit()` | `void` | Fits and centers the whole diagram in the canvas. |
+| `centerOn(id: string)` | `void` | Pans the viewport (keeping the current zoom) so the given element is centered in the canvas. Unknown ids are ignored. Used by the element search overlay; public for app-driven navigation. |
+| `select(ids: readonly string[])` | `void` | Selects the given element ids, pools included (unknown ids are ignored). |
+| `getSelection()` | `readonly string[]` | The currently selected element ids. |
+| `deleteSelection()` | `void` | Deletes the selected elements, cascading to their attached edges and clearing orphaned default-flow markers. |
+| `undo() / redo()` | `void` | Undoes / re-applies the most recent command. Snapshot-based: each command — including every arrow-key step — is exactly one entry. |
+| `canUndo() / canRedo()` | `boolean` | Whether at least one command can be undone / redone. |
+| `isDirty()` | `boolean` | True when the model differs from the last save point. |
+| `markSaved()` | `void` | Marks the current model as saved; `isDirty()` reports false until the model changes again. |
+| `focus()` | `void` | Moves keyboard focus onto the diagram canvas. |
+
+_Overlays_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addOverlay(overlay: OgeBpmnOverlay)` | `string` | Attaches an HTML badge to a diagram element and returns a handle for `removeOverlay`. The badge tracks the element through pan/zoom and model changes; a dangling `elementId` hides it without removing the registration. The `html` renders through Angular's sanitizing `[innerHTML]` binding. |
+| `removeOverlay(id: string)` | `void` | Removes the overlay registered under the given handle. Unknown handles are ignored. |
+| `clearOverlays(elementId?: string)` | `void` | Removes every registered overlay, or — when `elementId` is given — only the overlays attached to that element. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectionChanged` | `OgeBpmnSelectionEvent` | The selection changed (user interaction or `select()`): `{ ids, elements }` with per-element `{ id, type, name? }` summaries. |
+| `elementsChanged` | `OgeBpmnElementsChangedEvent` | The diagram model changed: `{ source, label }`, where `source` is `execute \| undo \| redo \| import \| new` and `label` is the command label. |
+| `diagramChanged` | `OgeBpmnDiagramChangedEvent` | Debounced autosave stream: after model changes settle for `autoSaveDebounceMs` (default 500ms; `0` emits synchronously) the diagram is serialized once to both JSON and XML and emitted together with the change source. Emitted for every source including `import` and `new` — filter on `source` to persist only user edits. No serialization happens mid-drag (gestures commit one command on release); a pending emission is cancelled on destroy. |
+| `importCompleted` | `OgeBpmnImportEvent` | An `importXml()` call finished parsing; carries the fidelity warnings (`{ warnings }`) — emitted on fatal errors too. |
+| `dirtyChanged` | `boolean` | The dirty state flipped — the model diverged from, or returned to, the save point. |
+
+#### Types
+
+_Event payloads & overlays_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBpmnSelectionEvent` | `{ ids: readonly string[]; elements: readonly OgeBpmnElementInfo[] }` | Payload of `selectionChanged`. |
+| `OgeBpmnElementInfo` | `{ id: string; type: BpmnNodeType \| BpmnEdgeType \| 'pool'; name?: string }` | Summary of one diagram element carried in editor event payloads. |
+| `OgeBpmnElementsChangedEvent` | `{ source: OgeBpmnChangeSource; label: string }` | Payload of `elementsChanged`: what changed the model and the command label. |
+| `OgeBpmnChangeSource` | `'execute' \| 'undo' \| 'redo' \| 'import' \| 'new'` | Origin of a model change reported by `elementsChanged` and `diagramChanged`. |
+| `OgeBpmnDiagramChangedEvent` | `{ json: BpmnDiagramJson; xml: string; source: OgeBpmnChangeSource }` | Payload of the debounced `diagramChanged` autosave stream: the diagram in both persistence formats plus what caused the change. |
+| `OgeBpmnImportEvent` | `{ warnings: readonly BpmnImportWarning[] }` | Payload of `importCompleted`: the fidelity warnings collected during import. |
+| `OgeBpmnOverlay` | `{ elementId: string; html: string; position: 'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right' \| 'center'; offset?: Point }` | A programmatic HTML badge attached to a diagram element (process-monitoring overlays), registered via `addOverlay()`. `position` picks which corner (or the center) of the element's bounds the badge anchors to; `offset` is extra diagram-unit displacement applied before the screen transform. `html` is bound through Angular's sanitizing `[innerHTML]` — script tags and inline event handlers are stripped. |
+| `OgeBpmnPaletteItem` | `{ type: BpmnPaletteItemType }` | One entry of the elements palette. |
+| `BpmnPaletteItemType` | `BpmnNodeType \| 'pool'` | Everything the palette can place: node types plus the `'pool'` pseudo-entry, which creates a collaboration participant. |
+
+_Engine — import & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `readBpmnXml(xml: string)` | `BpmnImportResult` | Standalone, prefix-agnostic BPMN 2.0 reader (`bpmn:`, `bpmn2:` or no prefix) — pure TypeScript, usable outside the component. Missing DI is auto-laid-out with a warning. |
+| `writeBpmnXml(model: BpmnDiagram)` | `string` | Standalone byte-deterministic BPMN 2.0 writer with fixed, normalized prefixes; preserved `extensionElements`/`documentation`/unknown attributes are written back verbatim. |
+| `toBpmnJson(model: BpmnDiagram)` | `BpmnDiagramJson` | Wraps the diagram model in the versioned JSON persistence envelope — the standalone twin of `OgeBpmnEditor.exportJson()`. |
+| `fromBpmnJson(value: unknown)` | `BpmnJsonParseResult` | Structurally validates a value produced by `toBpmnJson` (typically after a `JSON.parse` round trip through a database) and returns the diagram model, or an error describing the first problem found. Unknown extra keys are tolerated for forward compatibility; version mismatches, missing required maps and broken id cross-references are not. |
+| `renderDiagramSvg(model, options?)` | `(model: BpmnDiagram, options?: BpmnSvgExportOptions) => string` | Renders the diagram as a self-contained static `` string: shapes, edges (with arrowhead markers) and labels re-rendered with inline fill/stroke attributes, `viewBox` fitted to the content bounds plus padding. No grid, no selection state, no external CSS. |
+| `BpmnSvgExportOptions` | `{ padding?: number }` | Options of `renderDiagramSvg`: padding in diagram units added around the content bounds (default 20). |
+| `createEmptyDiagram(processId?)` | `BpmnDiagram` | A fresh empty diagram model with default `` attributes. |
+| `BpmnDiagramJson` | `{ version: 1; diagram: BpmnDiagram }` | Versioned JSON envelope for persisting a diagram to an application database; `version` guards forward compatibility of the envelope shape. |
+| `BpmnJsonParseResult` | `{ model: BpmnDiagram \| null; error?: string }` | Result of `fromBpmnJson`: the model, or null plus an error message. |
+| `BpmnImportResult` | `{ model: BpmnDiagram \| null; warnings: readonly BpmnImportWarning[]; error?: string }` | Result of importing BPMN XML: the model (`null` on fatal errors) plus fidelity warnings. |
+| `BpmnImportWarning / BpmnImportWarningCode` | `{ code, message, elementId?, localName? } · 'unsupported-element' \| 'missing-di' \| 'multiple-processes' \| 'dangling-ref' \| 'event-definition-stripped' \| 'invalid-event-definition' \| 'nested-lanes-flattened'` | A non-fatal fidelity loss reported while importing — dropped flow elements, stripped or position-invalid event definitions, dangling references, missing DI, flattened nested lanes. |
+
+_Engine — alignment_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `alignElements(rects, mode)` | `(rects: Readonly<Record<string, Rect>>, mode: BpmnAlignMode) => Record<string, Point>` | Computes the per-element move deltas that align the given rectangles (bpmn-js align-elements semantics): edge modes move to the outermost matching edge, center modes to the center of the joint bounding box. Every input id appears in the result (zero delta when already aligned); fewer than 2 rectangles produce an empty result. Pure — no model involved. |
+| `distributeElements(rects, axis)` | `(rects: Readonly<Record<string, Rect>>, axis: BpmnDistributeAxis) => Record<string, Point>` | Computes the deltas that spread the elements at equal center gaps along one axis (3+ elements). Pure — no model involved. |
+| `BpmnAlignMode` | `'left' \| 'centerX' \| 'right' \| 'top' \| 'centerY' \| 'bottom'` | Alignment edge/axis of `alignElements`: edge values align the matching edges, `centerX`/`centerY` align the centers on the horizontal / vertical axis of the selection's bounding box. |
+| `BpmnDistributeAxis` | `'x' \| 'y'` | Distribution axis of `distributeElements`: `x` spreads horizontally. |
+
+_Engine — model_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `BpmnDiagram` | `readonly plain-object graph` | The complete immutable diagram model: the default process, optional collaboration `pools`, `nodes`/`edges` records, a deterministic `order` list, per-element DI bounds/waypoints and the preserved foreign XML fragments. All nodes and edges of every pool's process live in the single flat maps; a node's `poolId` decides which `` it is serialized into. |
+| `BpmnNode / BpmnNodeType` | `'startEvent' \| 'endEvent' \| 'intermediateThrowEvent' \| 'intermediateCatchEvent' \| 'boundaryEvent' \| 'task' \| 'userTask' \| 'serviceTask' \| 'scriptTask' \| 'callActivity' \| 'subProcess' \| 'eventSubProcess' \| 'transaction' \| 'exclusiveGateway' \| 'parallelGateway' \| 'dataObject' \| 'dataStore' \| 'group' \| 'textAnnotation'` | A diagram node and every node kind that can appear on the canvas. Events carry `eventDefinition` (and boundary events `attachedToRef`/`cancelActivity`), gateways carry `defaultFlowId`, activities carry `marker`/`isForCompensation`, call activities `calledElement`, sub-process children `parentId`, annotations `text`. |
+| `BpmnEdge / BpmnEdgeType` | `'sequenceFlow' \| 'association' \| 'messageFlow' \| 'dataAssociation'` | A connection with `sourceRef`/`targetRef`: sequence flows (may carry `name` and `conditionExpression`), annotation associations, cross-pool message flows and data associations (v0.4 — one endpoint must be an activity). |
+| `BpmnEventDefinitionKind` | `'message' \| 'timer' \| 'error' \| 'signal' \| 'escalation' \| 'conditional' \| 'link' \| 'compensate' \| 'terminate'` | The nine standard BPMN event definition kinds (single definition per event). |
+| `VALID_EVENT_DEFINITIONS` | `Readonly<Record<event position, readonly BpmnEventDefinitionKind[]>>` | Which event definition kinds each event position accepts (BPMN 2.0 table 10.87 subset), enforced by the reader and the panel definition select. v0.3 simplification: `error` on a start event is allowed unconditionally although the spec restricts it to event sub-processes. |
+| `BpmnActivityMarker` | `'loop' \| 'multiInstanceParallel' \| 'multiInstanceSequential' \| 'compensation'` | Loop/multi-instance/compensation markers rendered at an activity's bottom center. |
+| `BpmnSubProcessType` | `'subProcess' \| 'eventSubProcess' \| 'transaction'` | The three sub-process container kinds (children carry `parentId`). |
+| `BpmnDataNodeType` | `'dataObject' \| 'dataStore'` | Data element kinds (v0.4): the page-with-fold object and the cylinder store. |
+| `BpmnPool / BpmnLane` | `interfaces` | A collaboration participant and its swimlanes. A pool without a `processRef` is a black-box pool: it renders as an empty band and is a valid message-flow endpoint, but has no process contents. Lane membership is the ordered `flowNodeRefs` id list, auto-maintained from geometry on every editing command. |
+| `BpmnMessageFlow` | `interface` | A message flow between elements of different pools. Either endpoint may be a participant (pool) id or a flow-node id; serialized inside the `` element. |
+| `BpmnClipboard` | `interface` | A deep-cloned diagram subgraph held by the editor's internal clipboard: the copied nodes plus every edge whose both endpoints were copied, with their DI. Ids still refer to the source diagram; pasting remaps them. |
+| `Point / Rect` | `{ x, y } · { x, y, width, height }` | Geometry primitives used by DI bounds and waypoints. |
+
+### Configuration
+
+#### Properties
+
+_OgeBpmnConfig_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `gridSize` | `number` | `10` | Grid step in diagram units used for placement and arrow-key movement. |
+| `snapThreshold` | `number` | `5` | Neighbor-alignment snapping threshold in diagram units — center/edge alignment beats the grid inside it. |
+| `zoomMin / zoomMax` | `number` | `0.2 / 4` | Bounds of the zoom factor. |
+| `autoSaveDebounceMs` | `number` | `500` | Debounce in milliseconds for the editor's `diagramChanged` autosave stream: rapid model changes collapse into one emission carrying the final state; `0` emits synchronously after every change. Serialization happens only on emit and never while dragging (move/bend gestures commit a single command on release). |
+| `colorPresets` | `readonly string[]` | `OGE_DEFAULT_BPMN_COLOR_PRESETS` | Fill color presets (any CSS color strings) offered as swatch buttons in the properties panel's appearance section. Presets set the fill only; the stroke has its own picker. |
+| `messages` | `OgeBpmnMessages` | `—` | Every user-facing string the editor renders, including aria labels. |
+
+_OgeBpmnMessages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `canvasLabel / canvasHint` | `string` | Accessible name of the `role="application"` canvas, and the focus hint explaining how to leave the diagram (appended to the label). |
+| `emptyText` | `string` | Centered hint shown while the diagram has no elements. |
+| `paletteLabel` | `string` | Accessible name of the elements palette toolbar. |
+| `paletteLabels` | `Readonly<Record<BpmnPaletteItemType, string>>` | Label (tooltip + aria label) of each palette entry, per palette item type (including `'pool'`) — a full record, so an override supplies every key. |
+| `tools` | `OgeBpmnToolsMessages` | Labels of the tool strip below the palette: `label` (the toolbar's accessible name), `hand`, `lasso`, `space`, `globalConnect` and `search`. |
+| `align` | `OgeBpmnAlignMessages` | Labels of the align/distribute flyout on multi-element selections: `menuLabel`, the six `align*` entries and `distributeHorizontal`/`distributeVertical` (equal gaps, 3+ elements). |
+| `search` | `OgeBpmnSearchMessages` | Labels of the element search overlay (Ctrl+F): `label`, `placeholder` and `noResults`. |
+| `minimapLabel` | `string` | Accessible name of the minimap navigation overlay. |
+| `contextPad` | `OgeBpmnContextPadMessages` | Aria labels and titles of the context-pad actions: `connect`, `appendTask`, `appendGateway`, `appendEndEvent`, `editLabel`, `toggleDefault`, `deleteElement`. |
+| `announcements` | `OgeBpmnAnnouncementMessages` | Live-region announcement templates; `{token}` placeholders are substituted. |
+| `elementNames` | `Readonly<Record<BpmnElementNameKey, string>>` | Fallback display name per element type — node/edge types plus pools and lanes — used when an element has no name. |
+| `properties` | `OgeBpmnPropertiesMessages` | Labels of the properties panel: headings, field labels and templates. |
+
+_OgeBpmnPropertiesMessages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `panelLabel / processHeading / name / id / executable` | `string` | The panel region's accessible name, the no-selection (process) heading, the name field label, the read-only id row label and the process "is executable" checkbox label. |
+| `condition / defaultFlow / annotationText / selectionCount` | `string` | The sequence-flow condition textarea, the "default flow" checkbox on an exclusive gateway's flow, the text-annotation textarea and the multi-selection summary (`{count}`). |
+| `appearanceHeading / fillLabel / strokeLabel / clearColors / presetLabel` | `string` | The appearance (colors) section: heading, fill/stroke picker labels, the "clear colors" button and the aria label of a preset swatch (`{color}`). |
+| `typeLabel / eventDefinition / noneOption / eventDefinitionNames` | `string · Readonly<Record<BpmnEventDefinitionKind, string>>` | The element type (morph) select, the event definition select on events, the shared "None" option and the display name per event definition kind. |
+| `interrupting / collapsed / marker / markerNames / forCompensation / calledElement` | `string · Readonly<Record<marker, string>>` | The boundary event "Interrupting" checkbox, the sub-process "Collapsed" checkbox, the activity marker select with its per-marker display names, the "For compensation" checkbox and the call activity "Called element" field. |
+| `lanesHeading / addLane / removeLane / laneName` | `string` | The lanes section of the pool panel: heading, "Add lane" button, per-lane "Remove" button (`{name}`) and lane name input aria label (`{name}`). |
+
+_OgeBpmnAnnouncementMessages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `created / moved / connected / deleted` | `string templates` | After a palette placement (`{type}`), a move (`{name}`), a connection (`{source}`/`{target}`) and a deletion (`{count}`). |
+| `undone / redone` | `string templates` | After undo/redo; `{label}` is the affected command label. |
+| `selected / selectionCleared` | `string templates` | When an element becomes selected (`{name}`) and when the selection is cleared. |
+| `imported / importedWithWarnings` | `string templates` | After a clean import, and after an import that produced warnings (`{count}`). |
+| `connectDenied / labelEdited` | `string templates` | When a requested connection is not allowed by the rules, and after an inline label edit is committed. |
+| `copied / cut / pasted` | `string templates` | After a clipboard copy, cut and paste; `{count}` is the number of affected elements. |
+| `recolored / resized / typeChanged` | `string templates` | After a recolor (`{count}`), a resize (`{name}`) and a properties-panel type morph (`{name}`/`{type}`). |
+| `attached / attachDenied / collapsedToggled` | `string templates` | After a boundary event attaches (`{name}`/`{host}`), when a boundary-event placement finds no activity border, and after a sub-process collapse/expand (`{name}`). |
+| `poolCreated / laneAdded / laneRemoved` | `string templates` | After a pool is placed from the palette and after a lane is added to / removed from a pool (`{name}` is the pool's display name). |
+| `aligned / distributed / spaceAdjusted` | `string templates` | After an align, distribute and space-tool commit; `{count}` is the number of moved/shifted elements. |
+| `searchResults / labelMoved / waypointRemoved` | `string templates` | When the search result set changes (`{count}`), after an external label drag (`{name}`) and after a bend-point handle was removed by double click. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeBpmnConfig(config: OgeBpmnConfigInput)` | `Provider` | Application- or component-scoped editor defaults; `messages` is a partial merged over the built-in English strings. |
+| `OgeBpmnConfigInput` | `Partial<OgeBpmnConfig> with Partial<OgeBpmnMessages>` | Argument shape of `provideOgeBpmnConfig()`. |
+| `OGE_BPMN_CONFIG` | `InjectionToken<OgeBpmnConfig>` | The DI token the editor reads; defaults to `OGE_DEFAULT_BPMN_CONFIG`. |
+| `OGE_DEFAULT_BPMN_CONFIG / OGE_DEFAULT_BPMN_MESSAGES` | `OgeBpmnConfig / OgeBpmnMessages` | The built-in defaults — handy as a base for wholesale message replacement. |
+| `OGE_DEFAULT_BPMN_COLOR_PRESETS` | `readonly string[]` | The default fill presets of the properties panel's appearance section: eight soft pastel tones that keep dark strokes and labels readable. Override per app via `colorPresets`. |
+| `BpmnElementNameKey` | `BpmnNodeType \| BpmnEdgeType \| 'pool' \| 'lane'` | Every key of `elementNames`: node/edge types plus pools and lanes. |
+| `OgeBpmnContextPadMessages / OgeBpmnToolsMessages / OgeBpmnAlignMessages / OgeBpmnSearchMessages / OgeBpmnPropertiesMessages / OgeBpmnHeaderMessages` | `interfaces` | The message blocks referenced above — context-pad actions, tool strip, align/distribute flyout, search overlay and properties panel. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Autosave
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+import type { OgeBpmnDiagramChangedEvent } from '@oge-ui/bpmn';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor
+      #editor
+      style="height: 420px"
+      (diagramChanged)="onDiagramChanged($event)"
+    />
+    <button type="button" (click)="restore()">Restore last save</button>
+  `,
+})
+export class Demo {
+  private readonly editor = viewChild.required(OgeBpmnEditor);
+
+  // fires once per settled change (autoSaveDebounceMs, default 500ms),
+  // with the diagram already serialized to both JSON and XML — no
+  // exportJson() call needed and never mid-drag
+  protected onDiagramChanged(event: OgeBpmnDiagramChangedEvent): void {
+    if (event.source === 'import' || event.source === 'new') return;
+    localStorage.setItem('diagram', JSON.stringify(event.json));
+    this.editor().markSaved();
+  }
+
+  protected restore(): void {
+    const raw = localStorage.getItem('diagram');
+    if (raw === null) return;
+    // structural validation — a broken envelope never clobbers the canvas
+    const { error } = this.editor().importJson(JSON.parse(raw));
+    if (error !== undefined) console.warn(error);
+  }
+}
+```
+
+### Config
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBpmnEditor, provideOgeBpmnConfig } from '@oge-ui/bpmn';
+import type { OgeBpmnMessages } from '@oge-ui/bpmn';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- per-instance override via the [messages] input -->
+    <oge-bpmn-editor style="height: 420px" [messages]="turkish" />
+  `,
+})
+export class Demo {
+  // paletteLabels is a full record — every palette entry gets its label
+  protected readonly turkish: Partial<OgeBpmnMessages> = {
+    canvasLabel: 'BPMN diyagram editörü',
+    canvasHint: 'Diyagramdan çıkmak için Escape sonra Tab',
+    emptyText: 'Boş diyagram — paletten bir öğe seçin',
+    paletteLabel: 'Öğe paleti',
+    paletteLabels: {
+      startEvent: 'Başlangıç olayı',
+      endEvent: 'Bitiş olayı',
+      intermediateThrowEvent: 'Ara fırlatma olayı',
+      intermediateCatchEvent: 'Ara yakalama olayı',
+      boundaryEvent: 'Sınır olayı',
+      task: 'Görev',
+      userTask: 'Kullanıcı görevi',
+      serviceTask: 'Servis görevi',
+      scriptTask: 'Betik görevi',
+      callActivity: 'Çağrı aktivitesi',
+      subProcess: 'Alt süreç',
+      eventSubProcess: 'Olay alt süreci',
+      transaction: 'İşlem',
+      exclusiveGateway: 'Dışlayıcı geçit',
+      parallelGateway: 'Paralel geçit',
+      dataObject: 'Veri nesnesi',
+      dataStore: 'Veri deposu',
+      group: 'Grup',
+      pool: 'Havuz',
+      textAnnotation: 'Metin notu',
+    },
+  };
+}
+
+// or app-scoped defaults (merged over the built-ins):
+export const appConfig = {
+  providers: [
+    provideOgeBpmnConfig({
+      gridSize: 20, // placement + arrow-key step
+      snapThreshold: 8, // neighbor-alignment snapping
+      zoomMin: 0.5,
+      zoomMax: 2,
+      autoSaveDebounceMs: 1000, // diagramChanged settle time (0 = sync)
+      colorPresets: ['#fee2e2', '#dcfce7', '#dbeafe'], // panel fill swatches
+      messages: { emptyText: 'Boş diyagram — paletten bir öğe seçin' },
+    }),
+  ],
+};
+```
+
+### Getting started
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+import type { OgeBpmnElementsChangedEvent } from '@oge-ui/bpmn';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor
+      style="height: 480px"
+      [(zoom)]="zoom"
+      (elementsChanged)="onChanged($event)"
+    />
+  `,
+})
+export class Demo {
+  // two-way zoom model: wheel zooming writes it back
+  protected readonly zoom = signal(1);
+
+  // fires on every command, undo/redo, import and newDiagram()
+  protected onChanged(event: OgeBpmnElementsChangedEvent): void {
+    console.log(event.source, event.label);
+  }
+}
+```
+
+### Import export
+
+```ts
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+import type { BpmnImportWarning, OgeBpmnImportEvent } from '@oge-ui/bpmn';
+
+const SAMPLE_BPMN_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" ...>
+  <bpmn:process id="Process_order">
+    <bpmn:startEvent id="Start_1" name="Order received" />
+    <bpmn:userTask id="Task_review" name="Review order" />
+    <bpmn:exclusiveGateway id="Gateway_ok" name="Approved?" default="Flow_no" />
+    <!-- ... end events, sequence flows and BPMN DI shapes/edges ... -->
+  </bpmn:process>
+</bpmn:definitions>`;
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor #editor style="height: 420px" (importCompleted)="onImport($event)" />
+    <textarea [value]="xml()" (input)="xml.set($any($event.target).value)"></textarea>
+    <button type="button" (click)="importXml()">Import</button>
+    <button type="button" (click)="exportXml()">Export</button>
+  `,
+})
+export class Demo {
+  private readonly editor = viewChild.required(OgeBpmnEditor);
+
+  protected readonly xml = signal(SAMPLE_BPMN_XML);
+  protected readonly warnings = signal<readonly BpmnImportWarning[]>([]);
+
+  protected importXml(): void {
+    // resolves with { model, warnings, error? }; a fatal parse
+    // error leaves the current diagram untouched
+    void this.editor().importXml(this.xml());
+  }
+
+  protected exportXml(): void {
+    // deterministic BPMN 2.0 XML — same model, same bytes
+    this.xml.set(this.editor().exportXml());
+  }
+
+  protected onImport(event: OgeBpmnImportEvent): void {
+    this.warnings.set(event.warnings);
+  }
+}
+```
+
+### Overlays
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor #editor style="height: 420px" />
+    <button type="button" (click)="addBadge()">Add badge</button>
+    <button type="button" (click)="clearBadges()">Clear</button>
+  `,
+})
+export class Demo {
+  private readonly editor = viewChild.required(OgeBpmnEditor);
+  private count = 0;
+
+  // attach a count bubble to the selected element; the badge tracks it
+  // through pan, zoom and model changes, hides while the element is
+  // gone and returns the handle for removeOverlay()
+  protected addBadge(): void {
+    const [id] = this.editor().getSelection();
+    if (id === undefined) return;
+    this.editor().addOverlay({
+      elementId: id,
+      // rendered through Angular's sanitizing [innerHTML]
+      html: '<span class="badge">' + ++this.count + '</span>',
+      position: 'top-right',
+      offset: { x: 4, y: -4 },
+    });
+  }
+
+  protected clearBadges(): void {
+    this.editor().clearOverlays(); // or clearOverlays(elementId)
+  }
+}
+```
+
+### Readonly
+
+```ts
+import { ChangeDetectionStrategy, Component, afterNextRender, viewChild } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+
+declare const PROCESS_XML: string; // e.g. fetched from your API
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor #viewer style="height: 360px" [readOnly]="true" />
+  `,
+})
+export class Demo {
+  private readonly viewer = viewChild.required(OgeBpmnEditor);
+
+  constructor() {
+    // load the diagram once the view exists; readOnly blocks every
+    // mutation (palette, context pad, keyboard editing, drags) but
+    // keeps selection, pan, zoom and the accessible reading order
+    afterNextRender(() => {
+      void this.viewer().importXml(PROCESS_XML);
+    });
+  }
+}
+```
+
+### Sample bpmn xml
+
+```ts
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_order" targetNamespace="http://ogeui.com/bpmn">
+  <bpmn:process id="Process_order" isExecutable="false">
+    <bpmn:startEvent id="Start_1" name="Order received" />
+    <bpmn:userTask id="Task_review" name="Review order" />
+    <bpmn:exclusiveGateway id="Gateway_ok" name="Approved?" default="Flow_no" />
+    <bpmn:endEvent id="End_ship" name="Shipped" />
+    <bpmn:endEvent id="End_reject" name="Rejected" />
+    <bpmn:sequenceFlow id="Flow_start" sourceRef="Start_1" targetRef="Task_review" />
+    <bpmn:sequenceFlow id="Flow_review" sourceRef="Task_review" targetRef="Gateway_ok" />
+    <bpmn:sequenceFlow id="Flow_yes" name="yes" sourceRef="Gateway_ok" targetRef="End_ship" />
+    <bpmn:sequenceFlow id="Flow_no" name="no" sourceRef="Gateway_ok" targetRef="End_reject" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_order">
+      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1">
+        <dc:Bounds x="160" y="218" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_review_di" bpmnElement="Task_review">
+        <dc:Bounds x="260" y="196" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ok_di" bpmnElement="Gateway_ok">
+        <dc:Bounds x="420" y="211" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ship_di" bpmnElement="End_ship">
+        <dc:Bounds x="530" y="158" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_reject_di" bpmnElement="End_reject">
+        <dc:Bounds x="530" y="278" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_start_di" bpmnElement="Flow_start">
+        <di:waypoint x="196" y="236" />
+        <di:waypoint x="260" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_review_di" bpmnElement="Flow_review">
+        <di:waypoint x="360" y="236" />
+        <di:waypoint x="420" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_yes_di" bpmnElement="Flow_yes">
+        <di:waypoint x="445" y="211" />
+        <di:waypoint x="445" y="176" />
+        <di:waypoint x="530" y="176" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_no_di" bpmnElement="Flow_no">
+        <di:waypoint x="445" y="261" />
+        <di:waypoint x="445" y="296" />
+        <di:waypoint x="530" y="296" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
+
+```
+

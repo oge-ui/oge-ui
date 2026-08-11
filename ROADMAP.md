@@ -306,6 +306,171 @@ canonical `@oge-ui/overlay` type (a superset — existing handlers compile
 unchanged); grid re-exports it. The pivot keeps its inline popups (commercial
 package, out of scope) with locally restored styles.
 
+## BPMN Editor (`@oge-ui/bpmn`, commercial) — Feature Parity & Roadmap
+
+No Angular-native BPMN editor exists on the market — every offering wraps
+bpmn-js, whose own license requires keeping the bpmn.io watermark ("must not
+remove or hide the logo") in all deployments; that behavior bar is quoted here
+honestly because it is also the parity bar. JointJS+ sells a commercial BPMN
+demo on a generic diagram engine; Syncfusion's Diagram draws BPMN _shapes_ but
+has no BPMN 2.0 XML/DI interop; Material, Kendo, PrimeNG and DevExtreme ship
+nothing (absence rows below). No WAI-ARIA APG pattern covers a canvas editor,
+so the a11y is composed and its limits documented.
+
+**Structural decisions.**
+
+- **Engine fully in-package** — a deliberate deviation from the
+  pivot-engine-in-core precedent. Pivot math was generic analytics; the BPMN
+  XML/DI reader/writer plus interaction geometry _is_ the commercial product,
+  and `@oge-ui/core`'s MIT-forever commitment would gift it irreversibly.
+  Engine Angular-freeness is enforced by an eslint `no-restricted-imports`
+  override over `src/lib/engine/**`.
+- **Immutable model + snapshot undo** — commands are pure
+  `model => model` functions and undo is a reference stack (limit 100, with a
+  save-point marker driving `isDirty`), so undo corruption is impossible and
+  Escape-cancel needs no transient command.
+- **String-builder XML writer** — byte-deterministic output (never
+  `XMLSerializer`), fixed attribute order, input prefixes normalized to
+  `bpmn:`/`bpmndi:`/`dc:`/`di:` (documented, spec-guarded:
+  `read(write(read(x)))` is model-equal and `write(read(write(m)))` is
+  byte-identical).
+
+| Feature                                                 | Reference (bpmn-js) | OGE  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------- | ------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core element subset (events/tasks/gateways/annotations) | Yes                 | Done | 11 node types + sequence flow (name, condition, default flow) + association                                                                                                                                                                                                                                                                                                                                                                                                            |
+| BPMN 2.0 XML + DI round-trip                            | Yes                 | Done | prefix-agnostic reader; `extensionElements`/`documentation`/unknown children preserved verbatim                                                                                                                                                                                                                                                                                                                                                                                        |
+| Import without DI                                       | Yes (partial)       | Done | topological auto-layout + `missing-di` warning                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Palette (click-then-place + drag-to-canvas)             | Yes (drag)          | Done | click-then-place is keyboard-accessible for free; v0.5 added drag-to-canvas (snapped ghost follows the cursor, release places through the same validated path incl. boundary border-attach and pool membership, release outside cancels)                                                                                                                                                                                                                                               |
+| Context pad with append                                 | Yes                 | Done | connect / append task / gateway / end event / edit label / toggle default / delete                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Orthogonal routing, no obstacle avoidance               | same (no avoidance) | Done | dock-side choice, L/Z/U waypoints; bpmn-js default Manhattan layout has no avoidance either                                                                                                                                                                                                                                                                                                                                                                                            |
+| Snapping + alignment guides                             | Yes                 | Done | grid snap + center/edge neighbor alignment (5px threshold beats the grid)                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Undo/redo with save-point dirty tracking                | Yes                 | Done | snapshot stack; `isDirty()`/`markSaved()`/`dirtyChanged`                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Zoom / pan / zoom-to-fit                                | Yes                 | Done | cursor-anchored wheel zoom, middle/Space drag pan, `F` fit, two-way `zoom` model                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Inline label editing                                    | Yes                 | Done | HTML textarea overlay (dblclick/F2/Enter), Enter commit / Escape cancel                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Read-only viewer mode                                   | Yes (viewer build)  | Done | one `readOnly` input instead of a separate build                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Messages i18n                                           | No (English source) | Done | every string incl. announcement templates in `OgeBpmnMessages` / `provideOgeBpmnConfig()`                                                                                                                                                                                                                                                                                                                                                                                              |
+| **No watermark, Angular-native signals API**            | watermark required  | Done | OGE extra: commercial license, no logo requirement, no runtime checks                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Keyboard node cycling + keyboard connect**            | No                  | Done | OGE extra: Tab cycles elements, `C` + Tab/arrows/Enter connects without a pointer                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Live-region announcements**                           | No                  | Done | OGE extra: every create/move/connect/delete/undo narrated politely                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Escape cancels any drag or tool**                     | partial             | Done | mid-drag Escape restores positions; never consumes an undo step                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Properties panel                                        | Yes (extra package) | Done | in-package, dependency-free; process / name / condition / default-flow fields, each commit its own undo step                                                                                                                                                                                                                                                                                                                                                                           |
+| Edge-drag connect (shape border ring)                   | Yes                 | Done | 8px transparent-stroke ring; drag-release commits, plain click arms the click-then-click connect tool                                                                                                                                                                                                                                                                                                                                                                                  |
+| Bend-point editing                                      | Yes                 | Done | handle drag + dblclick segment insert; v0.5 added handle-dblclick waypoint REMOVE (endpoints and 2-point polylines protected) and perpendicular SEGMENT drag (end segments gain a dock waypoint first, as in bpmn-js); `manual` flag is runtime-only (translated when both endpoints move together, re-routed + cleared when one moves; not serialized to XML — DI waypoints carry the geometry)                                                                                       |
+| Marquee selection                                       | Yes                 | Done | >3px drag on empty canvas; nodes by bounds intersection + edges with both endpoints selected; Shift adds, Escape cancels, sub-3px click still clears                                                                                                                                                                                                                                                                                                                                   |
+| Copy / paste / cut / select all                         | Yes                 | Done | internal clipboard, Ctrl+C/X/V/A; fresh ids, +20/+20 growing offset, internal edge refs remapped, `defaultFlowId` remapped-or-dropped                                                                                                                                                                                                                                                                                                                                                  |
+| **JSON persistence (`toBpmnJson`/`fromBpmnJson`)**      | No                  | Done | OGE extra: versioned envelope with structural validation (version, required maps, id cross-refs); `exportJson()`/`importJson()` on the component                                                                                                                                                                                                                                                                                                                                       |
+| **Autosave stream (`diagramChanged`)**                  | No                  | Done | OGE extra: debounced JSON+XML emission per settled change (`autoSaveDebounceMs`, default 500ms, 0 = sync); never serializes mid-drag                                                                                                                                                                                                                                                                                                                                                   |
+| Static SVG export (`exportSvg`)                         | Yes                 | Done | self-contained SVG string, neutral hardcoded colors, fitted viewBox (pulled forward from the v0.5 list); custom element colors are honored (arrowheads stay neutral)                                                                                                                                                                                                                                                                                                                   |
+| Per-element colors (bpmn.io `bioc` interop)             | Yes                 | Done | `bioc:stroke`/`bioc:fill` read prefix-agnostically and written with the `bioc` namespace — files recolored in bpmn.io render identically here and vice versa; preset swatches + fill/stroke pickers in the panel                                                                                                                                                                                                                                                                       |
+| Resize (corner handles)                                 | Yes                 | Done | activities and text annotations only — events and gateways are fixed-size by BPMN convention, exactly as in bpmn-js; ghost preview, grid snap, min-size clamp, Escape cancel; pointer-only (see a11y limits)                                                                                                                                                                                                                                                                           |
+| Replace / morph menu                                    | Yes (popup menu)    | Done | via a "Type" select in the properties panel — a deliberate simplification of bpmn-js's canvas popup menu (popup variant on the v0.5 tools-pack list); same-group morphs only, rule-checked against existing flows                                                                                                                                                                                                                                                                      |
+| Event definitions (9 standard kinds)                    | Yes                 | Done | single definition per event (multiple → first kept + warning), position-validity matrix enforced in reader and panel select, throw glyphs filled / catch outlined, deterministic `{eventId}_def` serialization                                                                                                                                                                                                                                                                         |
+| Boundary events                                         | Yes                 | Done | palette drop on an activity border (12px ring, nearest border-midpoint dock), non-interrupting dashed via `cancelActivity`, host move carries them, solo move slides along the border, flow-target denied                                                                                                                                                                                                                                                                              |
+| SubProcess / event sub-process / transaction            | Yes                 | Done | nested import/export with `parentId`, DI `isExpanded`, collapsed [+] rendering hides (but preserves) children, panel collapse toggle, cross-container flows denied; re-parenting by drag is v0.5 (see below)                                                                                                                                                                                                                                                                           |
+| Activity markers (loop / multi-instance / compensation) | Yes                 | Done | `standardLoopCharacteristics` / `multiInstanceLoopCharacteristics isSequential` / `isForCompensation` round-tripped; bottom-center glyphs; panel marker select + compensation checkbox                                                                                                                                                                                                                                                                                                 |
+| Pools (collaboration participants) + lanes              | Yes                 | Done | full multi-process import/export: nodes carry `poolId`, one `<bpmn:process>` per participant reconstructed; palette pool (600×250, horizontal, lane-less as in bpmn-js); black-box pools (no `processRef`) read/write as empty bands and are valid message-flow endpoints; panel add/remove/rename lanes; lane membership auto-maintained from geometry on every editing command (imports keep the file's `flowNodeRef`s verbatim); moving/deleting/copying a pool carries its members |
+| Message flows                                           | Yes                 | Done | dashed line, open (unfilled) arrowhead, source circle per BPMN convention; endpoints must be in different pools (pool bands themselves connectable); `connectionKindFor` picks `messageFlow` automatically for cross-pool connects; sequence flows across pools denied (`cross-pool-flow`)                                                                                                                                                                                             |
+| Data objects / data stores + data associations          | Yes                 | Done | page-with-fold 36×50 and cylinder 50×50 glyphs; our node IS the reference — writer emits a deterministic backing `<bpmn:dataObject id="{id}_ref">`; dotted open-arrow edges serialized INSIDE the activity as `dataInput/OutputAssociation` (documented simplification: the non-data endpoint must be an activity)                                                                                                                                                                     |
+| Group artifact                                          | Yes                 | Done | dashed rounded rect, resizable, fill-none (no containment semantics, interior clicks pass through); label round-tripped via a definitions-level `category`/`categoryValue` pair with deterministic `{id}_cat`/`{id}_val` ids                                                                                                                                                                                                                                                           |
+| Call activity                                           | Yes                 | Done | thick-border task rect, `calledElement` panel field, member of the activity morph group (morphing away drops the reference)                                                                                                                                                                                                                                                                                                                                                            |
+| Align & distribute                                      | Yes (plugin)        | Done | v0.5: multi-selection context pad grows an "Align" flyout — 6 align modes (edges + bbox centers) and 2 distributions (equal center gaps, 3+ elements); each element moves by its own delta, edges re-route once; no keyboard shortcut (parity with the bpmn-js plugin)                                                                                                                                                                                                                 |
+| Hand / lasso / space / global-connect tools             | Yes                 | Done | v0.5 tool strip under the palette; H/L/S shortcuts as in bpmn-js; space tool locks the dominant axis at 10px, ghost-previews and commits one `makeSpaceCommand` (strictly-beyond-origin centers shift; positive inserts, negative removes); Escape returns to select                                                                                                                                                                                                                   |
+| External label drag                                     | Yes                 | Done | v0.5: below-shape labels (events/gateways/data) and edge labels are their own hit targets (`.oge-bpmn-label[data-owner]`); ghost drag commits `moveLabelCommand` (first drag creates `labelBounds` from the render-matching estimate); positions round-trip via `BPMNLabel` DI                                                                                                                                                                                                         |
+| Element search (Ctrl+F)                                 | Yes (popup)         | Done | v0.5: in-canvas overlay, live name/id containment filter (locale-lowercase), top-8 result list with ArrowUp/Down + Enter, non-matches dimmed at 0.25 opacity, selection + `centerOn(id)` pan on pick, result count announced; works in read-only viewers                                                                                                                                                                                                                               |
+| Minimap                                                 | Yes (extra package) | Done | v0.5: 180×120 bottom-right overlay (`showMinimap` input, hidden when empty); rect/circle/diamond primitives + accent viewport rect from one computed (pure fit math, no `getScreenCTM`); click/drag pans the main viewport                                                                                                                                                                                                                                                             |
+| Overlays API                                            | Yes                 | Done | v0.5: `addOverlay`/`removeOverlay`/`clearOverlays` render absolutely-positioned HTML badges (5 anchor positions + offset) tracking elements through pan/zoom/model changes; dangling element ids hide (not drop) the badge; `html` goes through Angular's sanitizing `[innerHTML]`                                                                                                                                                                                                     |
+| Unknown-attribute preservation                          | Yes (moddle)        | Done | v0.5: unknown attributes on every supported element are preserved verbatim by qualified name (`foreignAttributes`) and re-emitted after the fixed attrs (alphabetical); non-standard root `xmlns:*` decls ride along in `definitionsAttrs`; camunda-flavored files round-trip byte-identically — the `unsupported-attribute` warning code is gone                                                                                                                                      |
+| Material / Kendo / PrimeNG / DevExtreme BPMN            | —                   | —    | none of the four ships any BPMN offering (absence rows)                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| JointJS+ BPMN                                           | commercial          | —    | generic diagram engine + BPMN shape kit; comparable commercial tier                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Syncfusion Diagram BPMN shapes                          | shapes only         | —    | draws BPMN glyphs but has no BPMN 2.0 XML/DI import/export                                                                                                                                                                                                                                                                                                                                                                                                                             |
+
+**Honest lossiness** (every drop surfaces as a `BpmnImportWarning`, never
+silently). Sub-processes, boundary events and event definitions stopped being
+dropped in v0.3; pools, lanes and message flows in v0.4; unknown attributes
+in v0.5 (preserved verbatim, no warning left to raise). What remains:
+
+| Lost on import                           | Behavior                                                                                                       |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Nested lanes (`childLaneSet`)            | flattened to one level with `nested-lanes-flattened`                                                           |
+| Lanes of a process without a participant | dropped with `unsupported-element` (the model ties lanes to pools)                                             |
+| Extra processes without a participant    | first process is the default; further unreferenced ones dropped with `multiple-processes`                      |
+| Extra event definitions on one event     | first kept, rest dropped with `event-definition-stripped`; position-invalid kinds → `invalid-event-definition` |
+| Event definition payloads (timers, refs) | `timeDuration`/`errorRef`-style children dropped with `unsupported-element` (kind survives)                    |
+| Input namespace prefixes                 | normalized on export (documented; byte-determinism contract)                                                   |
+| Label DI bounds                          | estimated from character-width math (`getBBox` is unavailable in jsdom)                                        |
+
+**Skipped with rationale**: obstacle-avoidance routing (bpmn-js's default
+router does not avoid obstacles either — parity holds without it).
+Bend-point editing and edge-drag connect, deferred here in v0.1, shipped in
+v0.2 (see the Done rows above).
+
+**Phase roadmap**
+
+- **v0.2 (remaining — since shipped in v0.5)** — palette drag-to-place and
+  bend-point handle delete both landed in the v0.5 tools pack.
+  Shipped from the original v0.2 list: properties panel (built in-package and
+  dependency-free instead of via `@oge-ui/forms`), edge-drag connect,
+  bend-point editing (drag + dblclick insert), plus marquee selection,
+  clipboard, JSON persistence, the autosave stream and SVG export. Manual
+  edge routing is runtime-only: the `manual` flag is not serialized to XML,
+  so it is lost on an export/import round trip (JSON persistence keeps it).
+  The v0.2b customization pack added per-element colors (bioc interop),
+  corner-handle resize and the properties-panel type morph (all Done rows
+  above).
+- **v0.3 (shipped)** — sub-processes (collapsed/expanded, event sub-process,
+  transaction, nested import/export), boundary events (border attach/slide,
+  interrupting toggle), the nine event definitions with a position-validity
+  matrix, and activity markers. Honest cuts, deliberately deferred: children
+  can only be created inside a sub-process via import or the context-pad
+  append chain (re-parenting by drag is v0.5), a single event definition per
+  event (multiple definitions → first kept, backlog), and the palette's
+  boundary-event replace menu is the panel definition select (bpmn-js's
+  replace-menu equivalence noted). Task-type switching shipped early in v0.2b
+  as the properties-panel morph select.
+- **v0.4 (shipped)** — pools/lanes, collaboration, message flows, data
+  objects/stores with data associations, groups (category-labeled) and call
+  activities (see the Done rows above). Honest cuts, deliberately deferred:
+  pool creation is horizontal-only (vertical pools render if imported);
+  creating a pool does not absorb existing elements (they stay in the default
+  process, unlike bpmn-js's wrap-on-first-participant); nodes keep their
+  `poolId` when dragged outside the band (pool re-parenting joins sub-process
+  re-parenting on the v0.5 list); data associations require an activity
+  endpoint so the in-activity `dataInput/OutputAssociation` serialization
+  stays total; copying a pool copies its member subgraph, not the participant
+  band itself; pools are not part of the Tab element cycle (selectable by
+  pointer, panel and `select()`).
+- **v0.5 (shipped — the tools pack)** — align & distribute (context-pad
+  flyout), the tool strip (hand / lasso / space / global connect, H/L/S),
+  palette drag-to-canvas, bend-point remove + perpendicular segment drag,
+  external label drag with `BPMNLabel` round-trip, element search (Ctrl+F,
+  dimming, `centerOn`), the minimap, the public Overlays API and full
+  unknown-attribute preservation (byte-identical camunda round trips).
+- **Backlog (post-v0.5, honest)** — re-parenting by drag (into/out of
+  sub-processes and pools), vertical pools (render-only today), multiple
+  event definitions per event, event definition payloads
+  (`timeDuration`/`errorRef` children still drop with a warning), the canvas
+  popup replace menu (the panel morph select covers the capability), PNG
+  export (SVG shipped), viewport virtualization for very large diagrams.
+  Token simulation is out of scope — it is a separate bpmn-js ecosystem
+  product, not part of the editor parity bar.
+
+**A11y limits (v0.1, stated plainly).** The canvas is `role="application"`
+with `aria-activedescendant` and a polite live region — a screen reader can
+walk, create, connect and delete every element, and hears each action. What it
+cannot yet do: query the topology ("what does this task connect to?") without
+walking, or edit bend points / marquee-select / resize from the keyboard (all
+pointer-only in v0.2 — bpmn-js has no keyboard resize either; recolor and
+type morph ARE keyboard-accessible through the properties panel). These are
+composition limits of an SVG canvas with no APG pattern to lean on; the
+announcement vocabulary is the mitigation and topology querying stays on the
+backlog. v0.5 additions, stated plainly: element search is fully
+keyboard-driven (Ctrl+F, arrows, Enter, Escape) and works in read-only
+viewers, and align/distribute are reachable through the pad flyout buttons —
+but the minimap is pointer-only (keyboard users pan with the arrow keys and
+`F` fit instead), the space tool, segment drag, palette drag and label drag
+are pointer-only gestures (their outcomes remain achievable via arrow-key
+moves), and the H/L/S tool shortcuts are edit-mode only.
+
 ## Date editors (`@oge-ui/inputs`) — Feature Parity
 
 `OgeCalendar` + `OgeDateBox` (reference Calendar/DateBox scope) on native
@@ -1474,6 +1639,69 @@ collapsed crumbs in the suite's shared `oge-menu-list`, where the just-shipped
 | Messages / i18n                                         | partial   | Done    | `provideOgeBreadcrumbConfig()`; `OgeBreadcrumbMessages` carries the nav landmark's label and the ellipsis label — every user-facing string, aria included                                                                                            |
 | RTL                                                     | Yes       | covered | logical properties throughout; the separator chevron mirrors via `[dir='rtl']`                                                                                                                                                                       |
 
+## Pagination (`@oge-ui/navigation`) — Feature Parity
+
+`OgePagination` against DevExtreme's new standalone `dxPagination`, Kendo's
+`Pager` (`@progress/kendo-angular-pager`), PrimeNG's `Paginator` and Angular
+Material's `MatPaginator`. **No WAI-ARIA APG pagination pattern exists** —
+the a11y backbone is a composition and the table's spine is that
+composition: a `<nav>` landmark named by messages (dx's `label`, PrimeNG's
+documented landmark), real `<button>`s with `aria-current="page"` on the
+active page, icon buttons with message-driven `aria-label`s, the info range
+in an `aria-live="polite"` region (PrimeNG precedent), and the page-size
+`<select>`/jump `<input>` inside visible `<label>`s. Keyboard is the native
+Tab order — the APG defines no arrow-key behavior for pagination and every
+control is a native element, so none is invented (the breadcrumb's
+no-roving-tabindex reasoning).
+
+Structural decisions: `pageIndex` is **0-based** (Material, Kendo's
+0-based `skip`, and the grid pager agree; dx's documentation is ambiguous
+about its base — noted as a migration check, not painted over) and
+`pageSize: 0` means "all items" — both contracts deliberately identical to
+the grid's `OgePager` so eventual delegation is a template swap, not an API
+migration. The window arithmetic is a new DOM-free core kernel
+(`pagination-math.ts` — `resolvePageWindow`/`resolvePageRange`/
+`resolvePageCount`, the `slider-math.ts` precedent) whose defining invariant
+is a **constant window length**: ellipsis slots count toward `maxButtons`,
+so the bar's width never changes while paging. Material's i18n service
+(`MatPaginatorIntl`) maps onto the house messages-config
+(`provideOgePaginationConfig` + per-instance `[messages]`) — DI-based string
+overrides either way, ours signal-merged.
+
+| Feature                                                               | Reference | OGE     | Notes                                                                                                                                                                                            |
+| --------------------------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pageIndex` / `pageSize` two-way (dx)                                 | Yes       | Done    | `model()`s — implicit changes free; rich `pageChanged`/`pageSizeChanged` add `previousPageIndex`/`previousPageSize` + `event`, and fire **only on user interaction** (Material `PageEvent` rule) |
+| `itemCount` (dx) / `total` (Kendo) / `length` (Material)              | Yes       | Done    | dx name; `undefined` = unknown total → prev/next + "Page N" only, **next never disables** (documented loudly — Kendo leaves the `total: 0` case undocumented)                                    |
+| `getPageCount()` (dx)                                                 | Yes       | Done    | the public readonly `pageCount` computed — signals are the house read API                                                                                                                        |
+| `allowedPageSizes` (dx) / `pageSizeValues` (Kendo)                    | Yes       | Done    | `pageSizes: (number \| 'all')[]` — presence shows the selector; `'all'` commits `pageSize 0` (grid contract). dx `showPageSizeSelector` Skipped: the `undefined`-fallback idiom does both jobs   |
+| `buttonCount` (Kendo) / `pageLinkSize` (PrimeNG)                      | Yes       | Done    | `maxButtons` (default 7, not Kendo's 10) — **counts ellipsis slots**, so the window width is constant; floor at the smallest honest shape                                                        |
+| MUI-style `siblingCount`/`boundaryCount` pair                         | partial   | Skipped | over-constrained next to `maxButtons` (which wins?); `boundaryCount` survives in the kernel signature, off the public surface                                                                    |
+| `showInfo`/`infoText` (dx) / `info` (Kendo) / report (PrimeNG)        | Yes       | Done    | `showInfo` + the `info` message template `{from}–{to} of {itemCount}` — PrimeNG's `currentPageReportTemplate` placeholders covered by messages; rendered `aria-live="polite"`                    |
+| `showNavigationButtons` (dx) / `previousNext` (Kendo)                 | Yes       | Done    | dx name; forced on in compact and unknown-total modes                                                                                                                                            |
+| `showFirstLastButtons` (Material) / `showFirstLastIcon` (PrimeNG)     | Yes       | Done    | Material name **and default (`false`)** — the numeric rails already render both end pages, so the extra chrome is opt-in                                                                         |
+| Jump to page (`type: 'input'` Kendo; `showJumpToPageInput` PrimeNG)   | Yes       | Done    | PrimeNG name; native number input, 1-based display, Enter/change commit, clamped, display re-synced. PrimeNG's jump _dropdown_ Skipped — it duplicates the numeric buttons                       |
+| `displayMode: 'full' \| 'compact' \| 'adaptive'` (dx)                 | Yes       | Done    | grid-pager parity; adaptive via core's `resolveMenubarCompact` against the **container** (config `compactBelow`, default 480 — the grid's hardcoded magic number, now configurable)              |
+| `responsive` (Kendo) / `adaptiveMode` ActionSheet (Kendo)             | Yes       | covered | the adaptive display mode; the ActionSheet variant Skipped (no suite-wide adaptive story yet — same call as the color box)                                                                       |
+| Methods `firstPage/lastPage/nextPage/previousPage`, `has*` (Material) | Yes       | Done    | plus dx's `focus()`; `lastPage()` no-ops and `hasNextPage()` returns `true` while the total is unknown                                                                                           |
+| `disabled` (Material/dx)                                              | Yes       | Done    | native `disabled` on every control — they are all real buttons/selects/inputs, no `aria-disabled` gymnastics                                                                                     |
+| `size` density (Kendo)                                                | Yes       | Done    | `'sm' \| 'md' \| 'lg'` host classes on token-driven padding                                                                                                                                      |
+| i18n (`MatPaginatorIntl` service; Kendo messages component)           | Yes       | covered | `OgePaginationMessages` + `provideOgePaginationConfig()` + per-instance `[messages]` — the house config idiom, no service subclassing                                                            |
+| `showPageLinks` (PrimeNG)                                             | Yes       | covered | hiding the numeric links is `displayMode: 'compact'` (the `N / M` indicator keeps orientation, which bare prev/next lose)                                                                        |
+| `dropdownAppendTo` (PrimeNG)                                          | Yes       | covered | the page-size selector is a native `<select>` — the platform owns its popup, no overlay re-anchoring knob to expose                                                                              |
+| Icon-button hover tooltips (dx `hint`, Kendo titles)                  | Yes       | Done    | `title` mirrors the message-driven `aria-label` on first/last/prev/next                                                                                                                          |
+| Kendo `navigable` keyboard shortcuts                                  | Yes       | Skipped | no APG pattern defines pagination keys; native Tab order over real controls is the whole contract                                                                                                |
+| Kendo pager template directives                                       | Yes       | Skipped | v1; the slot-directive idiom can come later without breaking the data API                                                                                                                        |
+| dx `rtlEnabled` / lifecycle events                                    | Yes       | covered | logical properties + `dir` handling; Angular lifecycle and signals replace `onOptionChanged` et al. (house rule)                                                                                 |
+| **Constant-width ellipsis window**                                    | No        | Done    | OGE extra: `result.length === min(pageCount, maxButtons)` always — locked by a kernel spec loop; no reference guarantees it (the grid's own pager jitters), and an ellipsis never hides one page |
+| **Zero-item honesty**                                                 | partial   | Done    | one disabled-rails page + "0–0 of 0" (the Material `getRangeLabel` convention) — the bar never vanishes or renders an empty loop                                                                 |
+
+Grid note: grid and tree-list still render the internal `OgePager`. Planned:
+grid delegates to `OgePagination` in the next major — requires the
+`grid → navigation` dep edge, a `.oge-pager` → `.oge-pagination` class break
+(theme files + consumer CSS), and bridging the pager keys of
+`OgeGridMessages` into `OgePaginationMessages`. The contracts (0-based
+`pageIndex`, `'all' → pageSize 0`) are already aligned by design.
+
 ## Slider (`@oge-ui/inputs`) — Feature Parity
 
 `OgeSlider` + `OgeRangeSlider` against DevExtreme `dxSlider`/`dxRangeSlider`,
@@ -1521,6 +1749,72 @@ clause exactly like the number box.
 | **Escape cancels the drag**                                                   | No        | Done    | OGE extra: the splitter's gesture rule applied to a slider — Escape mid-drag restores the start value and emits no `slideEnded`. No reference slider offers it                                                                                                               |
 | **`formatValue` → `aria-valuetext`, always**                                  | partial   | Done    | Material wires `displayWith` to the indicator only (the aria mapping is guide prose); ours is one input, locked in by `slider-a11y.spec.ts`                                                                                                                                  |
 | **Signal Forms `FormValueControl` membership**                                | No        | Done    | OGE extra: native contract membership (value/disabled/readonly/errors/touch) with schema `min`/`max` metadata flowing into the scale automatically inside `<oge-form>`                                                                                                       |
+
+## Color Box (`@oge-ui/inputs`) — Feature Parity
+
+`OgeColorBox` against DevExtreme `dxColorBox` and Kendo `ColorPicker` (+ its
+standalone `ColorGradient`/`ColorPalette`/`FlatColorPicker`). **Angular
+Material and the CDK ship no color picker at all** (community packages only) —
+the absence row, written down. **PrimeNG deprecated its `ColorPicker`**
+("use InputColor instead") and its old accessibility section says outright
+"not compatible with screen readers" / "Specification does not cover a color
+picker yet" — the replacement `InputColor` is a composable area/slider/swatch
+kit. That spec gap is real: **no WAI-ARIA APG color-picker pattern exists**
+(the 30-pattern index was checked), so the a11y backbone here is a
+composition, and the table's spine is that composition: the trigger is the
+date box's combobox + `aria-haspopup="dialog"`; the popup is a `role="dialog"`
+that takes **real DOM focus** (APG date-picker-dialog precedent); hue and
+alpha are APG `role="slider"`s with mandatory `aria-valuetext` (the APG's own
+"Color Viewer Slider" example sets that precedent); the 2D
+saturation/brightness surface — which the APG never covers — is a
+`role="slider"` with `aria-roledescription`, brightness as `aria-valuenow`
+and a both-axes `aria-valuetext`; the palette is a `role="grid"` with a
+roving tabindex. Where the native `<input type="color">` suffices (no format
+contract, no palette, no alpha), the docs page says to prefer it.
+
+Structural decisions: the value is a **CSS color string normalized to
+`format` on user commits** (dx: hex default widening to rgba with alpha —
+generalized here across `'hex' | 'rgb' | 'rgba' | 'hsl'`); programmatic
+writes keep any parseable CSS string verbatim. The color arithmetic is a new
+DOM-free core kernel (`color-math.ts` — parse/convert/format/luminance, the
+`slider-math.ts` precedent, exhaustively unit-tested without a DOM). The
+panel parts are **internal components, deliberately not `OgeSliderBase`
+subclasses** — that base drags a form control's whole CVA/commit machinery,
+and a panel part is not a form control; the slider's gesture and keyboard
+idioms are copied per the house rule, the arithmetic reused from core.
+Kendo's standalone `ColorGradient`/`ColorPalette` are a possible v2
+extraction of exactly these internals.
+
+| Feature                                                           | Reference | OGE     | Notes                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value` as color string, any CSS text accepted (dx)               | Yes       | Done    | hex 3/4/6/8, `rgb()`/`rgba()` comma **and** space/slash syntax, `hsl()`, the 148 CSS named colors, `transparent` — core `parseColor`, ~2.5 KB name table accepted for dx parse parity                                                                         |
+| Output format control (dx implicit; Kendo `format`)               | Yes       | Done    | `format: 'hex' \| 'rgb' \| 'rgba' \| 'hsl'`, default hex (dx); Kendo's rgba default rejected — apps store hex. Kendo's `formats` list (a format switcher UI) is Skipped: one committed shape is a contract                                                    |
+| `editAlphaChannel` (dx) / `gradientSettings.opacity` (Kendo)      | Yes       | Done    | dx name; adds alpha slider + percent input, output widens to `#rrggbbaa`/`rgba()`/`hsla()` only while translucent; without it alpha coerces to 1 on commit (typed `rgba()` still parses)                                                                      |
+| `applyValueMode: 'instantly' \| 'useButtons'` + apply/cancel      | Yes       | Done    | dx semantics on the date box's exact draft + OK/Cancel machinery (`okButton`/`cancelButton` messages reused); `'instantly'` live-commits through `queueCommit` so `[debounce]` throttles drags                                                                |
+| `acceptCustomValue` (dx)                                          | Yes       | Done    | `false` = picker-only text; unparseable typed text sets `parseInvalid` (always-visible `invalidColorError`) and reverts on blur — never committed                                                                                                             |
+| `keyStep` (dx) / `gradientSliderStep` 5px + 2px shift (Kendo)     | Yes       | Done    | one `keyStep` (default 5) in **value units** — hue degrees, alpha/saturation/brightness percent; PageUp/Down ×5. Kendo's pixel steps are zoom-dependent — deliberate deviation                                                                                |
+| `view` / `views` gradient \| palette (Kendo)                      | Yes       | Done    | `view: 'gradient' \| 'palette' \| 'both'` — `'both'` stacks them; Kendo's `activeView` two-way + switcher UI Skipped (both surfaces render at once instead)                                                                                                   |
+| `paletteSettings {palette, columns}` (Kendo)                      | Yes       | Done    | flat inputs `palette` (string array) + `paletteColumns`; exported `OGE_DEFAULT_COLOR_PALETTE` fallback. Named presets (`'office'`/`'basic'`/`'apex'`) Skipped — apps pass arrays; `tileSize` Skipped (token-sized)                                            |
+| `showClearButton` (dx) / `clearButton` (Kendo)                    | Yes       | Done    | inherited field-chrome clear → commits `null`                                                                                                                                                                                                                 |
+| `opened` + `open()/close()/toggle()` + open/close events          | Yes       | Done    | `[(opened)]` model, `dropDownOpened`/`dropDownClosed` (house names); `openOnFieldClick`, `dropdownPlacement` as the family's dropdown editors                                                                                                                 |
+| Field swatch + text (dx editor shape)                             | Yes       | Done    | checkerboard-underlaid swatch in the chrome prefix driven by the committed string; the rail keeps the family chevron                                                                                                                                          |
+| Hex + R/G/B/A inputs in the popup (dx/Kendo gradient view)        | Yes       | Done    | labeled (`hexInputLabel` etc.), parse-validated, garbage reverts in place; channel edits preserve the working hue                                                                                                                                             |
+| Contrast tool (`gradientSettings.contrastTool`, Kendo)            | Yes       | Skipped | WCAG-ratio preview against a supplied background is a niche audit tool; `relativeLuminance` sits in the core kernel if ever revisited                                                                                                                         |
+| `preview` before/after panes (Kendo)                              | Yes       | Done    | folded into the `useButtons` footer as a compact committed \| draft pane pair on a checkerboard — where a draft actually exists; `'instantly'` needs none (the field swatch is live)                                                                          |
+| `showDropDownButton` (dx)                                         | Yes       | Done    | hides the rail chevron; field click and ArrowDown still open (the select box's exact contract)                                                                                                                                                                |
+| `adaptiveMode` ActionSheet (Kendo)                                | Yes       | Skipped | no reference-wide consensus; the popup is small enough on touch — revisit with a suite-wide adaptive story                                                                                                                                                    |
+| Inline / flat rendering (PrimeNG `inline`; Kendo FlatColorPicker) | Yes       | Skipped | deferred to v2 — the internal surface/slider/palette parts are shaped for exactly that extraction                                                                                                                                                             |
+| Angular Material / CDK color picker                               | No        | —       | **does not exist** (community packages only) — absence written down per the dxCardView rule                                                                                                                                                                   |
+| **Composed dialog a11y with real DOM focus**                      | No        | Done    | OGE extra: no reference moves DOM focus into a labeled `role="dialog"` and restores it on Escape; PrimeNG's own docs concede screen readers are unsupported                                                                                                   |
+| **2-axis surface `aria-valuetext` + `aria-roledescription`**      | No        | Done    | OGE extra: "Saturation X%, Brightness Y%" per move, RTL-aware Left/Right, Home/End deliberately no-ops (ambiguous in 2D)                                                                                                                                      |
+| **Palette as APG grid with WCAG-contrast checkmark**              | partial   | Done    | Kendo renders a grid but no per-cell color announcement contract; ours: cell `aria-label` = the color string, `aria-selected`, Ctrl+Home/End corners, checkmark black/white by `contrastForeground`                                                           |
+| **Escape cancels a panel drag**                                   | No        | Done    | OGE extra: the slider/splitter gesture rule applied to the surface and both sliders — mid-drag Escape restores the gesture-start value                                                                                                                        |
+| **Eyedropper (`EyeDropper` API)**                                 | No        | Done    | OGE extra: `showEyedropper` renders a pick-from-screen button only where the platform API exists (Chromium today) — progressive enhancement, no polyfill; no reference color editor offers it. Picks keep the working alpha; localized via `eyedropperButton` |
+| **Signal Forms `FormValueControl` membership**                    | No        | Done    | OGE extra: `TValue = string \| null` carries no `min`/`max`, so the range-slider typing trap does not apply; `<oge-form>` gained `editorType: 'colorBox'` (chrome'd, not bare)                                                                                |
+
+Grid note: `OgeCellEditor` picks editors by `dataType`, and no color dataType
+exists — the grid is untouched in v1. Recent-colors (session-only) is a noted
+OGE-extra candidate, deliberately out of v1.
 
 ## Forms (`@oge-ui/forms`) — Feature Parity
 

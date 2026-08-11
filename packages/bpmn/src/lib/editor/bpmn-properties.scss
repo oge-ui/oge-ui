@@ -1,0 +1,194 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-bpmn-properties {
+  @include tokens.core-tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  inline-size: 240px;
+  flex: none;
+  min-inline-size: 0;
+  overflow-x: hidden;
+  padding: 12px;
+  border-inline-start: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  overflow-y: auto;
+}
+
+.oge-bpmn-props-heading {
+  margin: 0;
+  font-size: var(--oge-font-size);
+  font-weight: 600;
+}
+
+.oge-bpmn-props-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oge-bpmn-props-label {
+  color: var(--oge-muted-color);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-bpmn-props-id {
+  font-family: var(--oge-font-mono, monospace);
+  font-size: calc(var(--oge-font-size) - 1px);
+  word-break: break-all;
+  user-select: all;
+}
+
+.oge-bpmn-props-input {
+  inline-size: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-family: inherit;
+  font-size: var(--oge-font-size);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--oge-accent);
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-props-textarea {
+  min-block-size: 64px;
+  resize: vertical;
+}
+
+.oge-bpmn-props-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  input {
+    accent-color: var(--oge-accent);
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--oge-focus-ring);
+      border-radius: 2px;
+    }
+  }
+}
+
+.oge-bpmn-props-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.oge-bpmn-props-swatch {
+  inline-size: 22px;
+  block-size: 22px;
+  padding: 0;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-props-color {
+  inline-size: 100%;
+  block-size: 28px;
+  padding: 2px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--oge-accent);
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-props-clear {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-family: inherit;
+  font-size: calc(var(--oge-font-size) - 1px);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-props-summary {
+  margin: 0;
+  color: var(--oge-muted-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-bpmn-props-input {
+    transition: none;
+  }
+}
+
+// --- pool panel (lanes) -----------------------------------------------------
+
+.oge-bpmn-props-lane {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.oge-bpmn-props-lane-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oge-bpmn-props-lane-remove,
+.oge-bpmn-props-add-lane {
+  padding: 4px 10px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-family: inherit;
+  font-size: calc(var(--oge-font-size) - 1px);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-props-add-lane {
+  align-self: flex-start;
+}

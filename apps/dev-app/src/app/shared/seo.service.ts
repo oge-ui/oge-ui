@@ -27,6 +27,10 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Pivot Grid: cross-tab analytics with rows × columns × measures, grand totals, field chooser, sorting and Excel export.',
   ],
   [
+    '/components/bpmn',
+    'Angular BPMN Editor: a from-scratch BPMN 2.0 modeler with its own dependency-free XML + diagram-interchange engine — palette, orthogonal routing, snapping, undo/redo, keyboard-accessible canvas with live-region announcements, and no watermark. Commercial, free for evaluation.',
+  ],
+  [
     '/components/buttons',
     'Angular Buttons with async actions and automatic loading, click guards, hold-to-confirm, badges, button groups and drop-down/split buttons.',
   ],
@@ -77,6 +81,14 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
     '/components/inputs/slider',
     'Angular Slider and RangeSlider: the WAI-ARIA APG slider and multi-thumb patterns as bare form editors — arrows/PageUp/Home/End, live drag commits with Escape-to-cancel, dynamic aria constraints between range thumbs, formatValue feeding aria-valuetext, and Signal Forms membership out of the box.',
+  ],
+  [
+    '/components/inputs/color-box',
+    'Angular ColorBox: a color picker dropdown on the shared field chrome — CSS color string value normalized to hex/rgb/rgba/hsl, saturation/brightness surface with hue/alpha sliders, swatch palette grid, any-CSS-color text parsing incl. named colors, instantly/useButtons commit modes, and composed dialog+slider+grid accessibility (no APG color-picker pattern exists).',
+  ],
+  [
+    '/components/pagination',
+    'Angular Pagination: a standalone pager around 0-based two-way pageIndex/pageSize models — a constant-width numeric window with real ellipsis markers, page-size selector with an All option, info range in a polite live region, jump-to-page input and a container-width adaptive compact mode. No APG pagination pattern exists; the markup composes a nav landmark, real buttons and aria-current="page".',
   ],
   [
     '/components/breadcrumb',

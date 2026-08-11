@@ -1,0 +1,49 @@
+OGE UI Commercial License — @oge-ui/bpmn
+
+Copyright (c) 2026 kaya2m. All rights reserved.
+
+This package (@oge-ui/bpmn, the "Software") is source-available commercial
+software. It is NOT open source and is NOT covered by the MIT license that
+applies to the rest of the OGE UI suite.
+
+1. Evaluation and development use (free of charge)
+
+   You may download, install and use the Software without a paid license for
+   the purposes of evaluation, development, testing, and other non-production
+   use.
+
+2. Production use (paid license required)
+
+   Deploying the Software, or an application that includes the Software, to a
+   production environment or otherwise making it available to end users
+   requires a valid commercial license purchased from the copyright holder.
+   Licensing information: https://ogeui.com/license — contact:
+   license@ogeui.com.
+
+3. Restrictions
+
+   You may view the source code of the Software. You may not, except as
+   expressly permitted above or by a purchased license agreement:
+
+   a. redistribute, sublicense, sell, rent, lease or otherwise transfer the
+      Software or any modified version of it;
+   b. publish the Software, in original or modified form, as part of another
+      software development kit, component library or similar developer-facing
+      product;
+   c. remove or alter this license, copyright notices, or any license
+      enforcement mechanism the Software may contain.
+
+4. Termination
+
+   Any breach of this license automatically terminates your rights under it.
+   Upon termination you must cease all use of the Software.
+
+5. Disclaimer of warranty and limitation of liability
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.

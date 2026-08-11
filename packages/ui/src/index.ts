@@ -16,8 +16,8 @@
  * (ESM silently drops names exported by two stars). The scoped packages
  * remain the canonical import paths for size-conscious apps.
  *
- * The commercial `@oge-ui/pivot` package is deliberately NOT part of this
- * MIT umbrella — install and import it separately.
+ * The commercial packages (`@oge-ui/pivot`, `@oge-ui/bpmn`) are deliberately
+ * NOT part of this MIT umbrella — install and import them separately.
  */
 export * from '@oge-ui/core';
 export * from '@oge-ui/grid';

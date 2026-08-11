@@ -41,10 +41,10 @@ import { DocHeader } from '../../shared/doc-header';
       No feature that is free today will ever move behind a paid license.
     </p>
 
-    <h2 class="scroll-mt-20">Commercial — Pivot Grid</h2>
+    <h2 class="scroll-mt-20">Commercial — Pivot Grid &amp; BPMN Editor</h2>
     <p>
-      <code>&#64;oge-ui/pivot</code> is source-available commercial software
-      under the
+      <code>&#64;oge-ui/pivot</code> and <code>&#64;oge-ui/bpmn</code> are
+      source-available commercial software under the
       <a
         href="https://github.com/oge-ui/oge-ui/blob/main/packages/pivot/LICENSE"
         target="_blank"
@@ -64,7 +64,7 @@ import { DocHeader } from '../../shared/doc-header';
         <a href="mailto:license&#64;ogeui.com">license&#64;ogeui.com</a>.
       </li>
       <li>
-        Future analytics-oriented packages (for example charts) may join the
+        Future enterprise-oriented packages (charts, scheduler, …) may join the
         commercial tier — never anything that is MIT today.
       </li>
     </ul>

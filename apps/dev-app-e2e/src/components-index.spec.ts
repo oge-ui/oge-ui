@@ -17,6 +17,7 @@ const FAMILIES = [
   { name: 'Menubar', preview: 'oge-menubar' },
   { name: 'Breadcrumb', preview: 'oge-breadcrumb' },
   { name: 'Stepper', preview: 'oge-stepper' },
+  { name: 'BPMN Editor', preview: '[data-preview="bpmn"]' },
   { name: 'Overlay', preview: 'oge-button' },
 ] as const;
 

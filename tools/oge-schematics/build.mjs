@@ -22,6 +22,7 @@ const PACKAGES = [
   { dir: 'grid', npm: '@oge-ui/grid' },
   { dir: 'tree-list', npm: '@oge-ui/tree-list' },
   { dir: 'pivot', npm: '@oge-ui/pivot' },
+  { dir: 'bpmn', npm: '@oge-ui/bpmn' },
   { dir: 'inputs', npm: '@oge-ui/inputs' },
   { dir: 'buttons', npm: '@oge-ui/buttons' },
   { dir: 'overlay', npm: '@oge-ui/overlay' },

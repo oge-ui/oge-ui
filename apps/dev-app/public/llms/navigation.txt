@@ -1,6 +1,6 @@
 # @oge-ui/navigation
 
-> Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, and an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links.
+> Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
 
 Part of OGE UI v0.10.0.
 Docs and live demos: https://ogeui.com/components/tree-view
@@ -85,8 +85,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/navigation`
 
-- values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
-- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
+- values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_PAGINATION_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgePagination`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgePaginationConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
+- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
 
 ## API reference
 
@@ -586,6 +586,69 @@ _provideOgeBreadcrumbConfig()_
 | --- | --- | --- |
 | `messages` | `OgeBreadcrumbMessages` | Every user-facing string: `breadcrumb` (accessible name of the `` landmark, default `Breadcrumb`) and `collapsed` (aria label of the ellipsis button, default `Show hidden items`). |
 | `collapseMode` | `'auto' \| 'wrap' \| 'none' \| undefined` | Default for the `collapseMode` input. |
+
+### OgePagination — `<oge-pagination>`
+
+#### Properties
+
+_OgePagination_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `pageIndex` | `model<number>` | `0` | The current page — **0-based**, two-way. Auto-clamped when the page count shrinks (an implicit `pageIndexChange`, no rich event). DevExtreme migrators: check your origin — dx documentation is ambiguous about its base. |
+| `pageSize` | `model<number>` | `20` | Items per page — two-way. `0` means "all items on one page" (the grid pager contract, kept aligned for eventual delegation). |
+| `itemCount` | `number \| undefined` | `—` | Total items. `undefined` = unknown total: only prev/next and a "Page N" indicator render, and **next never disables** — clamp `pageIndex` yourself when the server reports the end. |
+| `pageSizes` | `readonly (number \| 'all')[] \| undefined` | `—` | Page-size choices; `'all'` adds the unpaged option. **Presence shows the selector** — no separate boolean (DevExtreme's `showPageSizeSelector` is deliberately skipped). |
+| `showInfo` | `boolean` | `false` | Renders the `{from}–{to} of {itemCount}` range (the `info` message template) in an `aria-live="polite"` region. |
+| `showFirstLastButtons` | `boolean` | `false` | First/last jump buttons (Material name and default) — the numeric window already renders both rail pages, so they are opt-in chrome. |
+| `showNavigationButtons` | `boolean` | `true` | Prev/next buttons; forced on in compact and unknown-total modes (they are the backbone there). |
+| `showJumpToPageInput` | `boolean` | `false` | Jump-to-page input (PrimeNG name; Kendo's `type: 'input'`): 1-based display, Enter/change commit, clamped into range, display re-synced after a clamp. Hidden while the total is unknown. |
+| `maxButtons` | `number \| undefined` | `7 (config)` | Total rendered slots **including ellipsis slots** — the window width never changes while paging, so the bar never jitters. An ellipsis hiding a single page renders the page instead. |
+| `displayMode` | `'full' \| 'compact' \| 'adaptive'` | `'full' (config)` | `'compact'` renders the `N / M` indicator; `'adaptive'` switches below `compactBelow` (config, default 480px), measured against the bar's own container via ResizeObserver — never the window. |
+| `disabled` | `boolean` | `false` | Disables every control (native `disabled` — they are all real buttons/selects/inputs). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset (26/32/40px hit targets). |
+| `messages` | `Partial<OgePaginationMessages>` | `—` | Per-instance string overrides, merged over the config messages. Several bars on one page need distinct `paginationLabel` values — landmarks must be unique (axe `landmark-unique`). |
+| `pageCount` | `Signal<number \| undefined>` | `—` | Readonly derived page count; `undefined` while the total is unknown. DevExtreme's `getPageCount()` as a signal — the house read API. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `firstPage() / lastPage() / nextPage() / previousPage()` | `void` | Programmatic paging (Material names). `lastPage()` no-ops while the total is unknown. Model updates only — no rich event (no user event). |
+| `hasPreviousPage() / hasNextPage()` | `boolean` | `hasNextPage()` returns `true` while the total is unknown — the component cannot know the end. |
+| `focus()` | `void` | Moves keyboard focus to the first enabled control. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pageChanged` | `OgePaginationPageChangedEvent` | `{ pageIndex, previousPageIndex, pageSize, event }` — user interactions only; programmatic writes and auto-clamps update the model without it. |
+| `pageSizeChanged` | `OgePaginationPageSizeChangedEvent` | `{ pageSize, previousPageSize, pageIndex, event }` — `pageIndex` reports the **post-clamp** page (changing the size can move the current page). |
+| `pageIndexChange / pageSizeChange` | `number` | The implicit model outputs — fire on every change including programmatic writes and auto-clamps. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePaginationDisplayMode / OgePaginationSize` | `types` | The string unions of the mode and density inputs. |
+| `resolvePageWindow / resolvePageRange / resolvePageCount / OGE_PAGE_ELLIPSIS` | `@oge-ui/core` | The DOM-free paging kernel (`pagination-math.ts`): the constant-width page window with real ellipsis markers, the from/to info arithmetic and the never-below-1 page-count division — unit-tested without a DOM. |
+
+### Pagination configuration
+
+#### Properties
+
+_OgePaginationConfig_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgePaginationMessages` | All strings: `paginationLabel` (the `` name), `firstPage`/`lastPage`/`previousPage`/`nextPage`, `pageLabel` (`{page}`, 1-based), `info` (`{from}` `{to}` `{itemCount}`), `pageInfoUnknown`, `pageIndicator` (`{page}` `{pageCount}`), `pageSizeLabel`, `allRows`, `jumpLabel`. |
+| `displayMode / compactBelow / maxButtons` | `OgePaginationDisplayMode / number / number` | Application-wide input defaults; the component resolves `input ?? config ?? literal` (480px / 7). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgePaginationConfig(config: OgePaginationConfigInput)` | `Provider` | Application- or component-scoped defaults; shallow-merges `messages` over the built-ins. |
 
 ## Demos
 
@@ -1646,6 +1709,174 @@ export class Demo {
     { length: 10000 },
     (_, i) => ({ id: i + 1, parentId: null, name: `Item ${i + 1}` }),
   );
+}
+```
+
+### Adaptive
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- displayMode 'adaptive' switches to the compact "N / M"
+         indicator below the container threshold (config compactBelow, default
+         480px) — measured against the pagination's OWN box via ResizeObserver,
+         never the window (core's resolveMenubarCompact). 'compact' forces the
+         indicator unconditionally. -->
+    <div style="max-width: 320px">
+      <oge-pagination
+        [(pageIndex)]="page"
+        [itemCount]="total"
+        [pageSize]="20"
+        displayMode="adaptive"
+      />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly page = signal(4);
+  protected readonly total = 400;
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- pageIndex is 0-BASED and two-way; the numeric window keeps a
+         CONSTANT width — ellipsis slots count toward maxButtons (default 7), so
+         paging from the first page to the middle never jitters the layout. An
+         ellipsis never hides a single page (it would render the page instead). -->
+    <oge-pagination [(pageIndex)]="page" [itemCount]="total" [pageSize]="20" />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(0);
+  protected readonly total = 400;
+}
+```
+
+### Config
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination, provideOgePaginationConfig } from '@oge-ui/navigation';
+
+// Application- or component-scoped defaults; per-instance [messages] wins.
+// providers: [
+//   provideOgePaginationConfig({
+//     maxButtons: 9,
+//     messages: { pageSizeLabel: 'Sayfa başına', info: '{itemCount} kayıttan {from}–{to}' },
+//   }),
+// ]
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-pagination [(pageIndex)]="page" [itemCount]="total" [showInfo]="true" />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(0);
+  protected readonly total = 250;
+}
+```
+
+### Jump
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- First/last jump buttons (Material's showFirstLastButtons) and
+         the jump-to-page input (PrimeNG's showJumpToPageInput; Kendo's
+         type: 'input'): 1-based display, Enter/blur commit, clamped into range,
+         display re-synced after a clamp. -->
+    <oge-pagination
+      [(pageIndex)]="page"
+      [itemCount]="total"
+      [pageSize]="10"
+      [showFirstLastButtons]="true"
+      [showJumpToPageInput]="true"
+    />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(41);
+  protected readonly total = 1000;
+}
+```
+
+### Sizes
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Presence of pageSizes shows the selector (no separate boolean);
+         'all' commits pageSize 0 — "all items on one page", the grid pager's
+         exact contract. Changing the size re-clamps pageIndex before the rich
+         pageSizeChanged event reports it. -->
+    <oge-pagination
+      [(pageIndex)]="page"
+      [(pageSize)]="size"
+      [itemCount]="total"
+      [pageSizes]="[10, 20, 50, 'all']"
+      [showInfo]="true"
+    />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(0);
+  protected readonly size = signal(20);
+  protected readonly total = 97;
+}
+```
+
+### Unknown
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- itemCount undefined = the server cannot count. Only prev/next
+         and a "Page N" indicator render, and NEXT NEVER DISABLES — the component
+         cannot know the end. Clamp pageIndex yourself when the server reports the
+         last page. -->
+    <oge-pagination [(pageIndex)]="page" [pageSize]="20" />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(3);
 }
 ```
 

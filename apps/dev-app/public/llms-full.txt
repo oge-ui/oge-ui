@@ -1,6 +1,6 @@
 # OGE UI — full reference
 
-> Signal-based Angular UI component suite for data-heavy applications: a virtualized Data Grid, Tree List, Pivot Grid, form editors, buttons, overlay surfaces (modal and toast), tabs and layout containers. Angular 22+, standalone components only, zoneless, zero runtime dependencies. MIT licensed, except @oge-ui/pivot which is commercial.
+> Signal-based Angular UI component suite for data-heavy applications: a virtualized Data Grid, Tree List, Pivot Grid, BPMN editor, form editors, buttons, overlay surfaces (modal and toast), tabs and layout containers. Angular 22+, standalone components only, zoneless, zero runtime dependencies. MIT licensed, except @oge-ui/pivot and @oge-ui/bpmn which are commercial.
 
 Version 0.10.0. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://ogeui.com renders. Index: https://ogeui.com/llms.txt
 
@@ -16,6 +16,7 @@ Version 0.10.0. Generated from the OGE UI source tree: the API tables and demo s
 - `@oge-ui/forms` — Forms
 - `@oge-ui/navigation` — Navigation
 - `@oge-ui/pivot` — Pivot Grid
+- `@oge-ui/bpmn` — BPMN Editor
 - `@oge-ui/core` — Core
 - `oge-ui` — Umbrella package
 
@@ -2358,7 +2359,7 @@ export class Demo {
 
 ## @oge-ui/inputs
 
-Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
+Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, ColorBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
 
 Docs: https://ogeui.com/components/inputs
 
@@ -2366,8 +2367,8 @@ Docs: https://ogeui.com/components/inputs
 
 `@oge-ui/inputs`
 
-- values: `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeRangeSlider`, `OgeSelectBox`, `OgeSlider`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
-- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeSliderDragStartedEvent`, `OgeSliderOrientation`, `OgeSliderSlideEndedEvent`, `OgeSliderValueIndicator`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
+- values: `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeColorBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeRangeSlider`, `OgeSelectBox`, `OgeSlider`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
+- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeSliderDragStartedEvent`, `OgeSliderOrientation`, `OgeSliderSlideEndedEvent`, `OgeSliderValueIndicator`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
 
 ### OgeTextBox — `<oge-text-box>`
 
@@ -3552,6 +3553,116 @@ _Date types_
 | `parseDateText(text, locale, kind, reference?)` | `function` | Exported: locale-aware text → local `Date \| null` via Intl part order — never `Date.parse`. |
 | `OgeDateBoxType / OgeDateBoxApplyValueMode / OgeDateBoxDisplayFormat / OgeDateBoxTimeView` | `types` | The string unions and the display-format shape. |
 
+### OgeColorBox — `<oge-color-box>`
+
+#### Properties
+
+_OgeColorBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<string \| null>` | `null` | The committed color as a CSS string, normalized to `format` on user commits. Programmatic writes keep any parseable CSS color verbatim (never reformatted); unparseable writes land as `null`. |
+| `format` | `'hex' \| 'rgb' \| 'rgba' \| 'hsl'` | `'hex'` | Committed string shape (hex — the DevExtreme default; Kendo defaults to rgba). Translucent colors widen to carry alpha: `#rrggbbaa` / `rgba()` / `hsla()`. |
+| `view` | `'gradient' \| 'palette' \| 'both'` | `'gradient'` | Popup surfaces: the saturation/brightness gradient with sliders and inputs, the swatch palette, or both stacked — no view switcher (Kendo's `activeView` is deliberately skipped). |
+| `editAlphaChannel` | `boolean` | `false` | Adds the alpha slider + percent input and lets the output carry alpha. Without it, alpha is coerced to 1 on commit — `rgba()` text still parses. |
+| `applyValueMode` | `'instantly' \| 'useButtons'` | `'instantly'` | OK/Cancel footer collects panel interactions in a draft when `useButtons`; the default commits live (dragging streams through `valueCommitted`, throttled by `debounce`). |
+| `acceptCustomValue` | `boolean` | `true` | `false` makes the text read-only (picker input only). Typed text parses any CSS color incl. the 148 named colors; unparseable text reverts on blur. |
+| `keyStep` | `number` | `5` | Arrow-key increment of the panel parts in value units — hue degrees, alpha percent, surface saturation/brightness percent. PageUp/PageDown move by 5× (value-space, not Kendo’s pixel steps — zoom-independent). |
+| `palette` | `readonly string[] \| undefined` | `—` | Palette swatches as CSS color strings; `undefined` renders the exported `OGE_DEFAULT_COLOR_PALETTE`. Unparseable entries are dropped. |
+| `paletteColumns` | `number` | `10` | Swatch columns of the palette grid. |
+| `openOnFieldClick` | `boolean` | `true` | Clicking the field opens the picker. |
+| `showDropDownButton` | `boolean` | `true` | `false` hides the rail chevron — field click and ArrowDown still open. |
+| `showEyedropper` | `boolean` | `true` | The eyedropper button (pick a color from anywhere on screen) — rendered only in browsers shipping the `EyeDropper` API; progressive enhancement, no polyfill. The picked color keeps the working alpha. |
+| `opened` | `model<boolean>` | `false` | Picker visibility — two-way. |
+
+_Common — field chrome (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string \| undefined` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `{}` | Escape hatch: extra attributes rendered onto the native input (template-owned attributes are ignored). |
+| `messages` | `Partial<OgeInputsMessages> \| undefined` | `—` | Per-instance overrides of user-facing strings. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeColorBox methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `void` | Picker control (no-ops while disabled/readonly). |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_OgeColorBox events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `dropDownOpened / dropDownClosed` | `void` | Picker visibility changes, from any trigger. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+#### Types
+
+_Color types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeColorBoxView / OgeColorBoxApplyValueMode` | `types` | The string unions of `view` and `applyValueMode`. |
+| `OGE_DEFAULT_COLOR_PALETTE` | `readonly string[]` | The built-in 50-swatch palette used when `palette` is not set. |
+| `Color messages` | `OgeInputsMessages keys` | All popup strings localize through the family config: `colorPickerLabel`, `hueSliderLabel`/`hueValueText`, `alphaSliderLabel`/`alphaValueText`, `colorSurfaceLabel`/`colorSurfaceRoleDescription`/`surfaceValueText`, `paletteLabel`, the hex/R/G/B/A input labels, `eyedropperButton` and `invalidColorError`. |
+| `parseColor / formatColor / normalizeColor / rgbaToHsva / hsvaToRgba / relativeLuminance / contrastForeground / colorsEqual` | `@oge-ui/core` | The DOM-free color kernel (`OgeRgba` / `OgeHsva` / `OgeColorFormat`): CSS color-text parsing, HSV↔RGB conversion, canonical formatting and the WCAG swatch-contrast decision — unit-tested without a DOM, the slider-math precedent. |
+
 ### Shared input types
 
 #### Types
@@ -3842,6 +3953,172 @@ export class Demo {
 
   protected readonly accountName = signal('');
   protected readonly accountId = signal<unknown>(null);
+}
+```
+
+#### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A dropdown color editor: the field shows a swatch + the committed
+         string; the popup is a role="dialog" that takes real DOM focus (no APG
+         color-picker pattern exists — it is composed from dialog, sliders and
+         grid primitives). ArrowDown opens; Escape restores focus to the input. -->
+    <oge-color-box label="Brand color" [(value)]="brand" [showClearButton]="true" />
+  `,
+})
+export class Demo {
+  protected readonly brand = signal<string | null>('#3aa0ff');
+}
+```
+
+#### Buttons
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- applyValueMode: 'instantly' (default) commits every panel
+         interaction live — dragging streams through valueCommitted and [debounce]
+         throttles it. 'useButtons' collects interactions in a draft, shows a
+         committed | draft preview pair in the footer and commits only on OK;
+         Cancel (or Escape / outside click) discards. The date box's exact
+         contract, applied to color. -->
+    <oge-color-box
+      label="Theme color"
+      view="both"
+      applyValueMode="useButtons"
+      [(value)]="theme"
+    />
+  `,
+})
+export class Demo {
+  protected readonly theme = signal<string | null>('#7c3aed');
+}
+```
+
+#### Formats
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- format controls the committed string shape ('hex' default —
+         the DevExtreme choice; Kendo defaults to rgba). editAlphaChannel adds the
+         alpha slider + input; a translucent color then WIDENS the output
+         (#rrggbbaa / rgba() / hsla()), while opaque colors stay compact. Without
+         it, alpha is coerced to 1 on commit — rgba() text still parses. -->
+    <oge-color-box label="Overlay" format="rgba" [editAlphaChannel]="true" [(value)]="overlay" />
+    <oge-color-box label="Accent (hsl)" format="hsl" [(value)]="accent" />
+  `,
+})
+export class Demo {
+  protected readonly overlay = signal<string | null>('rgba(58, 160, 255, 0.5)');
+  protected readonly accent = signal<string | null>('hsl(210, 100%, 61%)');
+}
+```
+
+#### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="branding" [items]="items" />
+  `,
+})
+export class Demo {
+  protected readonly branding = signal({ primary: '#3aa0ff' });
+  protected readonly items: OgeFormItemData[] = [
+    {
+      field: 'primary',
+      label: 'Primary color',
+      editorType: 'colorBox',
+      editorOptions: { colorFormat: 'hex', showClearButton: true },
+    },
+  ];
+}
+```
+
+#### Palette
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- view: 'gradient' | 'palette' | 'both'. The palette is an APG
+         grid: roving tabindex, arrows move by cell/row, Home/End row edges,
+         Ctrl+Home/End grid corners, Enter/Space picks (and closes — a swatch is a
+         final choice). Cells announce their color string; the selected checkmark
+         picks black or white by WCAG contrast. -->
+    <oge-color-box
+      label="Tag color"
+      view="palette"
+      [palette]="swatches"
+      [paletteColumns]="5"
+      [(value)]="tag"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tag = signal<string | null>('#16a34a');
+  protected readonly swatches: readonly string[] = [
+    '#dc2626', '#ea580c', '#d97706', '#16a34a', '#0d9488',
+    '#2563eb', '#7c3aed', '#c026d3', '#475569', '#111827',
+  ];
+}
+```
+
+#### Typed
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Typed text parses ANY CSS color — #rgb/#rrggbb/#rrggbbaa,
+         rgb()/rgba() (comma and space/slash syntax), hsl(), the 148 named colors,
+         'transparent'. Commits normalize to format; unparseable text shows the
+         invalid state while typing and REVERTS on blur — a wrong color is never
+         committed. acceptCustomValue=false makes the text read-only. -->
+    <oge-color-box label="Any CSS color" [(value)]="typed" />
+    <oge-color-box label="Picker only" [acceptCustomValue]="false" [(value)]="typed" />
+  `,
+})
+export class Demo {
+  protected readonly typed = signal<string | null>('rebeccapurple');
 }
 ```
 
@@ -10304,7 +10581,7 @@ export class Demo {
 
 ## @oge-ui/navigation
 
-Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, and an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links.
+Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
 
 Docs: https://ogeui.com/components/tree-view
 
@@ -10312,8 +10589,8 @@ Docs: https://ogeui.com/components/tree-view
 
 `@oge-ui/navigation`
 
-- values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
-- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
+- values: `OGE_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DRAWER_CONFIG`, `OGE_MENUBAR_CONFIG`, `OGE_PAGINATION_CONFIG`, `OGE_STEPPER_CONFIG`, `OGE_TREE_VIEW_CONFIG`, `OgeBreadcrumb`, `OgeBreadcrumbItem`, `OgeBreadcrumbItemTemplate`, `OgeBreadcrumbSeparatorTemplate`, `OgeDrawer`, `OgeMenubar`, `OgeMenubarItem`, `OgeMenubarItemTemplate`, `OgePagination`, `OgeStep`, `OgeStepContentTemplate`, `OgeStepHeaderTemplate`, `OgeStepIndicatorTemplate`, `OgeStepper`, `OgeStepperNext`, `OgeStepperPrevious`, `OgeTreeExpandIconTemplate`, `OgeTreeItemTemplate`, `OgeTreeNoDataTemplate`, `OgeTreeView`, `provideOgeBreadcrumbConfig`, `provideOgeDrawerConfig`, `provideOgeMenubarConfig`, `provideOgePaginationConfig`, `provideOgeStepperConfig`, `provideOgeTreeViewConfig`
+- types: `CheckState`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbItemTemplateContext`, `OgeBreadcrumbMessages`, `OgeBreadcrumbSeparatorTemplateContext`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarItemTemplateContext`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepGuard`, `OgeStepState`, `OgeStepTemplateContext`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandIconTemplateContext`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeItemTemplateContext`, `OgeTreeLoadChildren`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeVirtualScrollOptions`, `RowKey`, `TreeFilterMode`
 
 ### OgeTreeView — `<oge-tree-view>`
 
@@ -10811,6 +11088,69 @@ _provideOgeBreadcrumbConfig()_
 | --- | --- | --- |
 | `messages` | `OgeBreadcrumbMessages` | Every user-facing string: `breadcrumb` (accessible name of the `` landmark, default `Breadcrumb`) and `collapsed` (aria label of the ellipsis button, default `Show hidden items`). |
 | `collapseMode` | `'auto' \| 'wrap' \| 'none' \| undefined` | Default for the `collapseMode` input. |
+
+### OgePagination — `<oge-pagination>`
+
+#### Properties
+
+_OgePagination_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `pageIndex` | `model<number>` | `0` | The current page — **0-based**, two-way. Auto-clamped when the page count shrinks (an implicit `pageIndexChange`, no rich event). DevExtreme migrators: check your origin — dx documentation is ambiguous about its base. |
+| `pageSize` | `model<number>` | `20` | Items per page — two-way. `0` means "all items on one page" (the grid pager contract, kept aligned for eventual delegation). |
+| `itemCount` | `number \| undefined` | `—` | Total items. `undefined` = unknown total: only prev/next and a "Page N" indicator render, and **next never disables** — clamp `pageIndex` yourself when the server reports the end. |
+| `pageSizes` | `readonly (number \| 'all')[] \| undefined` | `—` | Page-size choices; `'all'` adds the unpaged option. **Presence shows the selector** — no separate boolean (DevExtreme's `showPageSizeSelector` is deliberately skipped). |
+| `showInfo` | `boolean` | `false` | Renders the `{from}–{to} of {itemCount}` range (the `info` message template) in an `aria-live="polite"` region. |
+| `showFirstLastButtons` | `boolean` | `false` | First/last jump buttons (Material name and default) — the numeric window already renders both rail pages, so they are opt-in chrome. |
+| `showNavigationButtons` | `boolean` | `true` | Prev/next buttons; forced on in compact and unknown-total modes (they are the backbone there). |
+| `showJumpToPageInput` | `boolean` | `false` | Jump-to-page input (PrimeNG name; Kendo's `type: 'input'`): 1-based display, Enter/change commit, clamped into range, display re-synced after a clamp. Hidden while the total is unknown. |
+| `maxButtons` | `number \| undefined` | `7 (config)` | Total rendered slots **including ellipsis slots** — the window width never changes while paging, so the bar never jitters. An ellipsis hiding a single page renders the page instead. |
+| `displayMode` | `'full' \| 'compact' \| 'adaptive'` | `'full' (config)` | `'compact'` renders the `N / M` indicator; `'adaptive'` switches below `compactBelow` (config, default 480px), measured against the bar's own container via ResizeObserver — never the window. |
+| `disabled` | `boolean` | `false` | Disables every control (native `disabled` — they are all real buttons/selects/inputs). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset (26/32/40px hit targets). |
+| `messages` | `Partial<OgePaginationMessages>` | `—` | Per-instance string overrides, merged over the config messages. Several bars on one page need distinct `paginationLabel` values — landmarks must be unique (axe `landmark-unique`). |
+| `pageCount` | `Signal<number \| undefined>` | `—` | Readonly derived page count; `undefined` while the total is unknown. DevExtreme's `getPageCount()` as a signal — the house read API. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `firstPage() / lastPage() / nextPage() / previousPage()` | `void` | Programmatic paging (Material names). `lastPage()` no-ops while the total is unknown. Model updates only — no rich event (no user event). |
+| `hasPreviousPage() / hasNextPage()` | `boolean` | `hasNextPage()` returns `true` while the total is unknown — the component cannot know the end. |
+| `focus()` | `void` | Moves keyboard focus to the first enabled control. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pageChanged` | `OgePaginationPageChangedEvent` | `{ pageIndex, previousPageIndex, pageSize, event }` — user interactions only; programmatic writes and auto-clamps update the model without it. |
+| `pageSizeChanged` | `OgePaginationPageSizeChangedEvent` | `{ pageSize, previousPageSize, pageIndex, event }` — `pageIndex` reports the **post-clamp** page (changing the size can move the current page). |
+| `pageIndexChange / pageSizeChange` | `number` | The implicit model outputs — fire on every change including programmatic writes and auto-clamps. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePaginationDisplayMode / OgePaginationSize` | `types` | The string unions of the mode and density inputs. |
+| `resolvePageWindow / resolvePageRange / resolvePageCount / OGE_PAGE_ELLIPSIS` | `@oge-ui/core` | The DOM-free paging kernel (`pagination-math.ts`): the constant-width page window with real ellipsis markers, the from/to info arithmetic and the never-below-1 page-count division — unit-tested without a DOM. |
+
+### Pagination configuration
+
+#### Properties
+
+_OgePaginationConfig_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgePaginationMessages` | All strings: `paginationLabel` (the `` name), `firstPage`/`lastPage`/`previousPage`/`nextPage`, `pageLabel` (`{page}`, 1-based), `info` (`{from}` `{to}` `{itemCount}`), `pageInfoUnknown`, `pageIndicator` (`{page}` `{pageCount}`), `pageSizeLabel`, `allRows`, `jumpLabel`. |
+| `displayMode / compactBelow / maxButtons` | `OgePaginationDisplayMode / number / number` | Application-wide input defaults; the component resolves `input ?? config ?? literal` (480px / 7). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgePaginationConfig(config: OgePaginationConfigInput)` | `Provider` | Application- or component-scoped defaults; shallow-merges `messages` over the built-ins. |
 
 ### Demos
 
@@ -11874,6 +12214,174 @@ export class Demo {
 }
 ```
 
+#### Adaptive
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- displayMode 'adaptive' switches to the compact "N / M"
+         indicator below the container threshold (config compactBelow, default
+         480px) — measured against the pagination's OWN box via ResizeObserver,
+         never the window (core's resolveMenubarCompact). 'compact' forces the
+         indicator unconditionally. -->
+    <div style="max-width: 320px">
+      <oge-pagination
+        [(pageIndex)]="page"
+        [itemCount]="total"
+        [pageSize]="20"
+        displayMode="adaptive"
+      />
+    </div>
+  `,
+})
+export class Demo {
+  protected readonly page = signal(4);
+  protected readonly total = 400;
+}
+```
+
+#### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- pageIndex is 0-BASED and two-way; the numeric window keeps a
+         CONSTANT width — ellipsis slots count toward maxButtons (default 7), so
+         paging from the first page to the middle never jitters the layout. An
+         ellipsis never hides a single page (it would render the page instead). -->
+    <oge-pagination [(pageIndex)]="page" [itemCount]="total" [pageSize]="20" />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(0);
+  protected readonly total = 400;
+}
+```
+
+#### Config
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination, provideOgePaginationConfig } from '@oge-ui/navigation';
+
+// Application- or component-scoped defaults; per-instance [messages] wins.
+// providers: [
+//   provideOgePaginationConfig({
+//     maxButtons: 9,
+//     messages: { pageSizeLabel: 'Sayfa başına', info: '{itemCount} kayıttan {from}–{to}' },
+//   }),
+// ]
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-pagination [(pageIndex)]="page" [itemCount]="total" [showInfo]="true" />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(0);
+  protected readonly total = 250;
+}
+```
+
+#### Jump
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- First/last jump buttons (Material's showFirstLastButtons) and
+         the jump-to-page input (PrimeNG's showJumpToPageInput; Kendo's
+         type: 'input'): 1-based display, Enter/blur commit, clamped into range,
+         display re-synced after a clamp. -->
+    <oge-pagination
+      [(pageIndex)]="page"
+      [itemCount]="total"
+      [pageSize]="10"
+      [showFirstLastButtons]="true"
+      [showJumpToPageInput]="true"
+    />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(41);
+  protected readonly total = 1000;
+}
+```
+
+#### Sizes
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Presence of pageSizes shows the selector (no separate boolean);
+         'all' commits pageSize 0 — "all items on one page", the grid pager's
+         exact contract. Changing the size re-clamps pageIndex before the rich
+         pageSizeChanged event reports it. -->
+    <oge-pagination
+      [(pageIndex)]="page"
+      [(pageSize)]="size"
+      [itemCount]="total"
+      [pageSizes]="[10, 20, 50, 'all']"
+      [showInfo]="true"
+    />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(0);
+  protected readonly size = signal(20);
+  protected readonly total = 97;
+}
+```
+
+#### Unknown
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgePagination } from '@oge-ui/navigation';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePagination],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- itemCount undefined = the server cannot count. Only prev/next
+         and a "Page N" indicator render, and NEXT NEVER DISABLES — the component
+         cannot know the end. Clamp pageIndex yourself when the server reports the
+         last page. -->
+    <oge-pagination [(pageIndex)]="page" [pageSize]="20" />
+  `,
+})
+export class Demo {
+  protected readonly page = signal(3);
+}
+```
+
 #### Basic
 
 ```ts
@@ -12352,6 +12860,542 @@ export class Demo {
 }
 ```
 
+## @oge-ui/bpmn
+
+From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark.
+
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+
+Docs: https://ogeui.com/components/bpmn
+
+### Entry points
+
+`@oge-ui/bpmn`
+
+- values: `OGE_BPMN_CONFIG`, `OGE_DEFAULT_BPMN_COLOR_PRESETS`, `OGE_DEFAULT_BPMN_CONFIG`, `OGE_DEFAULT_BPMN_MESSAGES`, `OgeBpmnEditor`, `VALID_EVENT_DEFINITIONS`, `alignElements`, `createEmptyDiagram`, `distributeElements`, `fromBpmnJson`, `provideOgeBpmnConfig`, `readBpmnXml`, `renderDiagramSvg`, `toBpmnJson`, `writeBpmnXml`
+- types: `BpmnActivityMarker`, `BpmnAlignMode`, `BpmnClipboard`, `BpmnDataNodeType`, `BpmnDiagram`, `BpmnDiagramJson`, `BpmnDistributeAxis`, `BpmnEdge`, `BpmnEdgeType`, `BpmnElementNameKey`, `BpmnEventDefinitionKind`, `BpmnImportResult`, `BpmnImportWarning`, `BpmnImportWarningCode`, `BpmnJsonParseResult`, `BpmnLane`, `BpmnMessageFlow`, `BpmnNode`, `BpmnNodeType`, `BpmnPaletteItemType`, `BpmnPool`, `BpmnSubProcessType`, `BpmnSvgExportOptions`, `OgeBpmnAnnouncementMessages`, `OgeBpmnChangeSource`, `OgeBpmnConfig`, `OgeBpmnConfigInput`, `OgeBpmnContextPadMessages`, `OgeBpmnDiagramChangedEvent`, `OgeBpmnElementInfo`, `OgeBpmnElementsChangedEvent`, `OgeBpmnHeaderMessages`, `OgeBpmnImportEvent`, `OgeBpmnMessages`, `OgeBpmnOverlay`, `OgeBpmnPaletteItem`, `OgeBpmnPropertiesMessages`, `OgeBpmnSelectionEvent`, `Point`, `Rect`
+
+### OgeBpmnEditor — `<oge-bpmn-editor>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `readOnly` | `boolean` | `false` | Disables every mutation: palette, context pad, keyboard editing and drags. Selection, pan, zoom and element search keep working. |
+| `gridVisible` | `boolean` | `true` | Shows the dotted background grid. |
+| `snapEnabled` | `boolean` | `true` | Enables grid and neighbor-alignment snapping (with guide lines) while moving and placing. |
+| `paletteItems` | `readonly BpmnPaletteItemType[]` | `all 18 entries` | Palette entries offered, in render order: every placeable node type plus the `'pool'` pseudo-entry, which creates a collaboration participant. Event sub-processes and transactions are reached by morphing a sub-process via the panel type select. |
+| `showPropertiesPanel` | `boolean` | `true` | Shows the right-side properties panel (always hidden in `readOnly`). |
+| `showMinimap` | `boolean` | `true` | Shows the bottom-right minimap overlay (hidden while the diagram is empty). Click or drag the minimap to pan the main viewport. |
+| `showHeader` | `boolean` | `true` | Shows the header toolbar: the inline-editable diagram name, undo/redo, zoom out / percentage (fit) / zoom in, the properties-panel collapse toggle, the optional edit/view mode toggle and the fullscreen button (native Fullscreen API with a fixed-position maximized fallback). |
+| `mode` | `model<'edit' \| 'view'>` | `'edit'` | The UI mode — two-way. `'view'` locks every mutating surface exactly like `readOnly`; zoom, pan, search and fullscreen stay available. |
+| `allowModeToggle` | `boolean` | `false` | Shows the edit/view toggle in the header (hidden while `readOnly` — the app-level lock always wins). |
+| `showBranding` | `boolean` | `true` | The badge in the canvas corner — a bare logo with no chrome, removable exclusively from code via `false`. Branding is a courtesy, never a license term (unlike bpmn-js's mandatory watermark). |
+| `brandLogoUrl` | `string \| undefined` | `—` | Badge image URL (per instance, or app-wide via `provideOgeBpmnConfig({ brandLogoUrl })`); unset renders the built-in drawn mark — no bundled bitmap, no network dependency by default. |
+| `Panel resizing` | `built-in` | `—` | The palette rail and the properties panel carry `role="separator"` drag handles — pointer drag (Escape cancels) or Tab + Arrow keys / Home / End, the APG window-splitter keys. The header panel-toggle collapses the properties panel entirely. |
+| `messages` | `Partial<OgeBpmnMessages>` | `{}` | Per-instance message overrides, merged over the `provideOgeBpmnConfig()` defaults. |
+| `zoom` | `model<number>` | `1` | Two-way zoom factor (`[(zoom)]`); wheel zooming writes it back. Clamped to the configured `zoomMin`/`zoomMax`. |
+
+_Canvas keyboard_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `role="application" canvas` | `Tab / Shift+Tab · arrows (Shift = 1px) · C · A · H / L / S · F2 / Enter · Delete · Ctrl+Z / Ctrl+Y · Ctrl+C / Ctrl+X / Ctrl+V · Ctrl+A · Ctrl+F · + / − / F · Escape` | Tab cycles elements (never trapped on an empty selection — leave with Escape then Tab, announced in the canvas hint), arrows move the selection by one grid step, `C` arms the connect tool (Tab/arrows walk candidate targets, Enter commits), `A` appends a connected task, `H`/`L`/`S` switch to the hand / lasso / space tool (edit mode only), `F` zooms to fit, `F2`/Enter edit the label, Ctrl+C/X/V copy/cut/paste via the internal clipboard, Ctrl+A selects all, Ctrl+F opens the element search overlay, Escape cancels the active tool or drag. The selected element is exposed via `aria-activedescendant` and every action is narrated in a polite live region. |
+
+#### Methods
+
+_Import & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `importXml(xml: string)` | `Promise<BpmnImportResult>` | Parses BPMN XML and loads it into the editor, resetting undo history and fitting the viewport. Resolves with the import result (model + warnings); on a fatal parse error the current diagram is left untouched. |
+| `exportXml()` | `string` | Serializes the current diagram to deterministic BPMN 2.0 XML — same model, same bytes. |
+| `exportJson()` | `BpmnDiagramJson` | Wraps the current diagram in the versioned JSON persistence envelope — the shape to store in an application database and the payload of the `diagramChanged` autosave stream. |
+| `importJson(value: unknown)` | `{ error?: string }` | Validates a JSON persistence envelope (see `fromBpmnJson`) and loads it, resetting undo history and fitting the viewport exactly like `importXml`. On a validation error the current diagram is left untouched and the error message is returned. |
+| `exportSvg()` | `string` | Renders the current diagram as a self-contained static SVG string (neutral hardcoded colors, no grid or selection, `viewBox` fitted to the content) via `renderDiagramSvg` — writable to a file or embeddable as-is. |
+| `newDiagram()` | `void` | Replaces the diagram with an empty one and resets history and viewport. |
+
+_Selection, history & navigation_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `zoomToFit()` | `void` | Fits and centers the whole diagram in the canvas. |
+| `centerOn(id: string)` | `void` | Pans the viewport (keeping the current zoom) so the given element is centered in the canvas. Unknown ids are ignored. Used by the element search overlay; public for app-driven navigation. |
+| `select(ids: readonly string[])` | `void` | Selects the given element ids, pools included (unknown ids are ignored). |
+| `getSelection()` | `readonly string[]` | The currently selected element ids. |
+| `deleteSelection()` | `void` | Deletes the selected elements, cascading to their attached edges and clearing orphaned default-flow markers. |
+| `undo() / redo()` | `void` | Undoes / re-applies the most recent command. Snapshot-based: each command — including every arrow-key step — is exactly one entry. |
+| `canUndo() / canRedo()` | `boolean` | Whether at least one command can be undone / redone. |
+| `isDirty()` | `boolean` | True when the model differs from the last save point. |
+| `markSaved()` | `void` | Marks the current model as saved; `isDirty()` reports false until the model changes again. |
+| `focus()` | `void` | Moves keyboard focus onto the diagram canvas. |
+
+_Overlays_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addOverlay(overlay: OgeBpmnOverlay)` | `string` | Attaches an HTML badge to a diagram element and returns a handle for `removeOverlay`. The badge tracks the element through pan/zoom and model changes; a dangling `elementId` hides it without removing the registration. The `html` renders through Angular's sanitizing `[innerHTML]` binding. |
+| `removeOverlay(id: string)` | `void` | Removes the overlay registered under the given handle. Unknown handles are ignored. |
+| `clearOverlays(elementId?: string)` | `void` | Removes every registered overlay, or — when `elementId` is given — only the overlays attached to that element. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectionChanged` | `OgeBpmnSelectionEvent` | The selection changed (user interaction or `select()`): `{ ids, elements }` with per-element `{ id, type, name? }` summaries. |
+| `elementsChanged` | `OgeBpmnElementsChangedEvent` | The diagram model changed: `{ source, label }`, where `source` is `execute \| undo \| redo \| import \| new` and `label` is the command label. |
+| `diagramChanged` | `OgeBpmnDiagramChangedEvent` | Debounced autosave stream: after model changes settle for `autoSaveDebounceMs` (default 500ms; `0` emits synchronously) the diagram is serialized once to both JSON and XML and emitted together with the change source. Emitted for every source including `import` and `new` — filter on `source` to persist only user edits. No serialization happens mid-drag (gestures commit one command on release); a pending emission is cancelled on destroy. |
+| `importCompleted` | `OgeBpmnImportEvent` | An `importXml()` call finished parsing; carries the fidelity warnings (`{ warnings }`) — emitted on fatal errors too. |
+| `dirtyChanged` | `boolean` | The dirty state flipped — the model diverged from, or returned to, the save point. |
+
+#### Types
+
+_Event payloads & overlays_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBpmnSelectionEvent` | `{ ids: readonly string[]; elements: readonly OgeBpmnElementInfo[] }` | Payload of `selectionChanged`. |
+| `OgeBpmnElementInfo` | `{ id: string; type: BpmnNodeType \| BpmnEdgeType \| 'pool'; name?: string }` | Summary of one diagram element carried in editor event payloads. |
+| `OgeBpmnElementsChangedEvent` | `{ source: OgeBpmnChangeSource; label: string }` | Payload of `elementsChanged`: what changed the model and the command label. |
+| `OgeBpmnChangeSource` | `'execute' \| 'undo' \| 'redo' \| 'import' \| 'new'` | Origin of a model change reported by `elementsChanged` and `diagramChanged`. |
+| `OgeBpmnDiagramChangedEvent` | `{ json: BpmnDiagramJson; xml: string; source: OgeBpmnChangeSource }` | Payload of the debounced `diagramChanged` autosave stream: the diagram in both persistence formats plus what caused the change. |
+| `OgeBpmnImportEvent` | `{ warnings: readonly BpmnImportWarning[] }` | Payload of `importCompleted`: the fidelity warnings collected during import. |
+| `OgeBpmnOverlay` | `{ elementId: string; html: string; position: 'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right' \| 'center'; offset?: Point }` | A programmatic HTML badge attached to a diagram element (process-monitoring overlays), registered via `addOverlay()`. `position` picks which corner (or the center) of the element's bounds the badge anchors to; `offset` is extra diagram-unit displacement applied before the screen transform. `html` is bound through Angular's sanitizing `[innerHTML]` — script tags and inline event handlers are stripped. |
+| `OgeBpmnPaletteItem` | `{ type: BpmnPaletteItemType }` | One entry of the elements palette. |
+| `BpmnPaletteItemType` | `BpmnNodeType \| 'pool'` | Everything the palette can place: node types plus the `'pool'` pseudo-entry, which creates a collaboration participant. |
+
+_Engine — import & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `readBpmnXml(xml: string)` | `BpmnImportResult` | Standalone, prefix-agnostic BPMN 2.0 reader (`bpmn:`, `bpmn2:` or no prefix) — pure TypeScript, usable outside the component. Missing DI is auto-laid-out with a warning. |
+| `writeBpmnXml(model: BpmnDiagram)` | `string` | Standalone byte-deterministic BPMN 2.0 writer with fixed, normalized prefixes; preserved `extensionElements`/`documentation`/unknown attributes are written back verbatim. |
+| `toBpmnJson(model: BpmnDiagram)` | `BpmnDiagramJson` | Wraps the diagram model in the versioned JSON persistence envelope — the standalone twin of `OgeBpmnEditor.exportJson()`. |
+| `fromBpmnJson(value: unknown)` | `BpmnJsonParseResult` | Structurally validates a value produced by `toBpmnJson` (typically after a `JSON.parse` round trip through a database) and returns the diagram model, or an error describing the first problem found. Unknown extra keys are tolerated for forward compatibility; version mismatches, missing required maps and broken id cross-references are not. |
+| `renderDiagramSvg(model, options?)` | `(model: BpmnDiagram, options?: BpmnSvgExportOptions) => string` | Renders the diagram as a self-contained static `` string: shapes, edges (with arrowhead markers) and labels re-rendered with inline fill/stroke attributes, `viewBox` fitted to the content bounds plus padding. No grid, no selection state, no external CSS. |
+| `BpmnSvgExportOptions` | `{ padding?: number }` | Options of `renderDiagramSvg`: padding in diagram units added around the content bounds (default 20). |
+| `createEmptyDiagram(processId?)` | `BpmnDiagram` | A fresh empty diagram model with default `` attributes. |
+| `BpmnDiagramJson` | `{ version: 1; diagram: BpmnDiagram }` | Versioned JSON envelope for persisting a diagram to an application database; `version` guards forward compatibility of the envelope shape. |
+| `BpmnJsonParseResult` | `{ model: BpmnDiagram \| null; error?: string }` | Result of `fromBpmnJson`: the model, or null plus an error message. |
+| `BpmnImportResult` | `{ model: BpmnDiagram \| null; warnings: readonly BpmnImportWarning[]; error?: string }` | Result of importing BPMN XML: the model (`null` on fatal errors) plus fidelity warnings. |
+| `BpmnImportWarning / BpmnImportWarningCode` | `{ code, message, elementId?, localName? } · 'unsupported-element' \| 'missing-di' \| 'multiple-processes' \| 'dangling-ref' \| 'event-definition-stripped' \| 'invalid-event-definition' \| 'nested-lanes-flattened'` | A non-fatal fidelity loss reported while importing — dropped flow elements, stripped or position-invalid event definitions, dangling references, missing DI, flattened nested lanes. |
+
+_Engine — alignment_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `alignElements(rects, mode)` | `(rects: Readonly<Record<string, Rect>>, mode: BpmnAlignMode) => Record<string, Point>` | Computes the per-element move deltas that align the given rectangles (bpmn-js align-elements semantics): edge modes move to the outermost matching edge, center modes to the center of the joint bounding box. Every input id appears in the result (zero delta when already aligned); fewer than 2 rectangles produce an empty result. Pure — no model involved. |
+| `distributeElements(rects, axis)` | `(rects: Readonly<Record<string, Rect>>, axis: BpmnDistributeAxis) => Record<string, Point>` | Computes the deltas that spread the elements at equal center gaps along one axis (3+ elements). Pure — no model involved. |
+| `BpmnAlignMode` | `'left' \| 'centerX' \| 'right' \| 'top' \| 'centerY' \| 'bottom'` | Alignment edge/axis of `alignElements`: edge values align the matching edges, `centerX`/`centerY` align the centers on the horizontal / vertical axis of the selection's bounding box. |
+| `BpmnDistributeAxis` | `'x' \| 'y'` | Distribution axis of `distributeElements`: `x` spreads horizontally. |
+
+_Engine — model_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `BpmnDiagram` | `readonly plain-object graph` | The complete immutable diagram model: the default process, optional collaboration `pools`, `nodes`/`edges` records, a deterministic `order` list, per-element DI bounds/waypoints and the preserved foreign XML fragments. All nodes and edges of every pool's process live in the single flat maps; a node's `poolId` decides which `` it is serialized into. |
+| `BpmnNode / BpmnNodeType` | `'startEvent' \| 'endEvent' \| 'intermediateThrowEvent' \| 'intermediateCatchEvent' \| 'boundaryEvent' \| 'task' \| 'userTask' \| 'serviceTask' \| 'scriptTask' \| 'callActivity' \| 'subProcess' \| 'eventSubProcess' \| 'transaction' \| 'exclusiveGateway' \| 'parallelGateway' \| 'dataObject' \| 'dataStore' \| 'group' \| 'textAnnotation'` | A diagram node and every node kind that can appear on the canvas. Events carry `eventDefinition` (and boundary events `attachedToRef`/`cancelActivity`), gateways carry `defaultFlowId`, activities carry `marker`/`isForCompensation`, call activities `calledElement`, sub-process children `parentId`, annotations `text`. |
+| `BpmnEdge / BpmnEdgeType` | `'sequenceFlow' \| 'association' \| 'messageFlow' \| 'dataAssociation'` | A connection with `sourceRef`/`targetRef`: sequence flows (may carry `name` and `conditionExpression`), annotation associations, cross-pool message flows and data associations (v0.4 — one endpoint must be an activity). |
+| `BpmnEventDefinitionKind` | `'message' \| 'timer' \| 'error' \| 'signal' \| 'escalation' \| 'conditional' \| 'link' \| 'compensate' \| 'terminate'` | The nine standard BPMN event definition kinds (single definition per event). |
+| `VALID_EVENT_DEFINITIONS` | `Readonly<Record<event position, readonly BpmnEventDefinitionKind[]>>` | Which event definition kinds each event position accepts (BPMN 2.0 table 10.87 subset), enforced by the reader and the panel definition select. v0.3 simplification: `error` on a start event is allowed unconditionally although the spec restricts it to event sub-processes. |
+| `BpmnActivityMarker` | `'loop' \| 'multiInstanceParallel' \| 'multiInstanceSequential' \| 'compensation'` | Loop/multi-instance/compensation markers rendered at an activity's bottom center. |
+| `BpmnSubProcessType` | `'subProcess' \| 'eventSubProcess' \| 'transaction'` | The three sub-process container kinds (children carry `parentId`). |
+| `BpmnDataNodeType` | `'dataObject' \| 'dataStore'` | Data element kinds (v0.4): the page-with-fold object and the cylinder store. |
+| `BpmnPool / BpmnLane` | `interfaces` | A collaboration participant and its swimlanes. A pool without a `processRef` is a black-box pool: it renders as an empty band and is a valid message-flow endpoint, but has no process contents. Lane membership is the ordered `flowNodeRefs` id list, auto-maintained from geometry on every editing command. |
+| `BpmnMessageFlow` | `interface` | A message flow between elements of different pools. Either endpoint may be a participant (pool) id or a flow-node id; serialized inside the `` element. |
+| `BpmnClipboard` | `interface` | A deep-cloned diagram subgraph held by the editor's internal clipboard: the copied nodes plus every edge whose both endpoints were copied, with their DI. Ids still refer to the source diagram; pasting remaps them. |
+| `Point / Rect` | `{ x, y } · { x, y, width, height }` | Geometry primitives used by DI bounds and waypoints. |
+
+### Configuration
+
+#### Properties
+
+_OgeBpmnConfig_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `gridSize` | `number` | `10` | Grid step in diagram units used for placement and arrow-key movement. |
+| `snapThreshold` | `number` | `5` | Neighbor-alignment snapping threshold in diagram units — center/edge alignment beats the grid inside it. |
+| `zoomMin / zoomMax` | `number` | `0.2 / 4` | Bounds of the zoom factor. |
+| `autoSaveDebounceMs` | `number` | `500` | Debounce in milliseconds for the editor's `diagramChanged` autosave stream: rapid model changes collapse into one emission carrying the final state; `0` emits synchronously after every change. Serialization happens only on emit and never while dragging (move/bend gestures commit a single command on release). |
+| `colorPresets` | `readonly string[]` | `OGE_DEFAULT_BPMN_COLOR_PRESETS` | Fill color presets (any CSS color strings) offered as swatch buttons in the properties panel's appearance section. Presets set the fill only; the stroke has its own picker. |
+| `messages` | `OgeBpmnMessages` | `—` | Every user-facing string the editor renders, including aria labels. |
+
+_OgeBpmnMessages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `canvasLabel / canvasHint` | `string` | Accessible name of the `role="application"` canvas, and the focus hint explaining how to leave the diagram (appended to the label). |
+| `emptyText` | `string` | Centered hint shown while the diagram has no elements. |
+| `paletteLabel` | `string` | Accessible name of the elements palette toolbar. |
+| `paletteLabels` | `Readonly<Record<BpmnPaletteItemType, string>>` | Label (tooltip + aria label) of each palette entry, per palette item type (including `'pool'`) — a full record, so an override supplies every key. |
+| `tools` | `OgeBpmnToolsMessages` | Labels of the tool strip below the palette: `label` (the toolbar's accessible name), `hand`, `lasso`, `space`, `globalConnect` and `search`. |
+| `align` | `OgeBpmnAlignMessages` | Labels of the align/distribute flyout on multi-element selections: `menuLabel`, the six `align*` entries and `distributeHorizontal`/`distributeVertical` (equal gaps, 3+ elements). |
+| `search` | `OgeBpmnSearchMessages` | Labels of the element search overlay (Ctrl+F): `label`, `placeholder` and `noResults`. |
+| `minimapLabel` | `string` | Accessible name of the minimap navigation overlay. |
+| `contextPad` | `OgeBpmnContextPadMessages` | Aria labels and titles of the context-pad actions: `connect`, `appendTask`, `appendGateway`, `appendEndEvent`, `editLabel`, `toggleDefault`, `deleteElement`. |
+| `announcements` | `OgeBpmnAnnouncementMessages` | Live-region announcement templates; `{token}` placeholders are substituted. |
+| `elementNames` | `Readonly<Record<BpmnElementNameKey, string>>` | Fallback display name per element type — node/edge types plus pools and lanes — used when an element has no name. |
+| `properties` | `OgeBpmnPropertiesMessages` | Labels of the properties panel: headings, field labels and templates. |
+
+_OgeBpmnPropertiesMessages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `panelLabel / processHeading / name / id / executable` | `string` | The panel region's accessible name, the no-selection (process) heading, the name field label, the read-only id row label and the process "is executable" checkbox label. |
+| `condition / defaultFlow / annotationText / selectionCount` | `string` | The sequence-flow condition textarea, the "default flow" checkbox on an exclusive gateway's flow, the text-annotation textarea and the multi-selection summary (`{count}`). |
+| `appearanceHeading / fillLabel / strokeLabel / clearColors / presetLabel` | `string` | The appearance (colors) section: heading, fill/stroke picker labels, the "clear colors" button and the aria label of a preset swatch (`{color}`). |
+| `typeLabel / eventDefinition / noneOption / eventDefinitionNames` | `string · Readonly<Record<BpmnEventDefinitionKind, string>>` | The element type (morph) select, the event definition select on events, the shared "None" option and the display name per event definition kind. |
+| `interrupting / collapsed / marker / markerNames / forCompensation / calledElement` | `string · Readonly<Record<marker, string>>` | The boundary event "Interrupting" checkbox, the sub-process "Collapsed" checkbox, the activity marker select with its per-marker display names, the "For compensation" checkbox and the call activity "Called element" field. |
+| `lanesHeading / addLane / removeLane / laneName` | `string` | The lanes section of the pool panel: heading, "Add lane" button, per-lane "Remove" button (`{name}`) and lane name input aria label (`{name}`). |
+
+_OgeBpmnAnnouncementMessages_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `created / moved / connected / deleted` | `string templates` | After a palette placement (`{type}`), a move (`{name}`), a connection (`{source}`/`{target}`) and a deletion (`{count}`). |
+| `undone / redone` | `string templates` | After undo/redo; `{label}` is the affected command label. |
+| `selected / selectionCleared` | `string templates` | When an element becomes selected (`{name}`) and when the selection is cleared. |
+| `imported / importedWithWarnings` | `string templates` | After a clean import, and after an import that produced warnings (`{count}`). |
+| `connectDenied / labelEdited` | `string templates` | When a requested connection is not allowed by the rules, and after an inline label edit is committed. |
+| `copied / cut / pasted` | `string templates` | After a clipboard copy, cut and paste; `{count}` is the number of affected elements. |
+| `recolored / resized / typeChanged` | `string templates` | After a recolor (`{count}`), a resize (`{name}`) and a properties-panel type morph (`{name}`/`{type}`). |
+| `attached / attachDenied / collapsedToggled` | `string templates` | After a boundary event attaches (`{name}`/`{host}`), when a boundary-event placement finds no activity border, and after a sub-process collapse/expand (`{name}`). |
+| `poolCreated / laneAdded / laneRemoved` | `string templates` | After a pool is placed from the palette and after a lane is added to / removed from a pool (`{name}` is the pool's display name). |
+| `aligned / distributed / spaceAdjusted` | `string templates` | After an align, distribute and space-tool commit; `{count}` is the number of moved/shifted elements. |
+| `searchResults / labelMoved / waypointRemoved` | `string templates` | When the search result set changes (`{count}`), after an external label drag (`{name}`) and after a bend-point handle was removed by double click. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeBpmnConfig(config: OgeBpmnConfigInput)` | `Provider` | Application- or component-scoped editor defaults; `messages` is a partial merged over the built-in English strings. |
+| `OgeBpmnConfigInput` | `Partial<OgeBpmnConfig> with Partial<OgeBpmnMessages>` | Argument shape of `provideOgeBpmnConfig()`. |
+| `OGE_BPMN_CONFIG` | `InjectionToken<OgeBpmnConfig>` | The DI token the editor reads; defaults to `OGE_DEFAULT_BPMN_CONFIG`. |
+| `OGE_DEFAULT_BPMN_CONFIG / OGE_DEFAULT_BPMN_MESSAGES` | `OgeBpmnConfig / OgeBpmnMessages` | The built-in defaults — handy as a base for wholesale message replacement. |
+| `OGE_DEFAULT_BPMN_COLOR_PRESETS` | `readonly string[]` | The default fill presets of the properties panel's appearance section: eight soft pastel tones that keep dark strokes and labels readable. Override per app via `colorPresets`. |
+| `BpmnElementNameKey` | `BpmnNodeType \| BpmnEdgeType \| 'pool' \| 'lane'` | Every key of `elementNames`: node/edge types plus pools and lanes. |
+| `OgeBpmnContextPadMessages / OgeBpmnToolsMessages / OgeBpmnAlignMessages / OgeBpmnSearchMessages / OgeBpmnPropertiesMessages / OgeBpmnHeaderMessages` | `interfaces` | The message blocks referenced above — context-pad actions, tool strip, align/distribute flyout, search overlay and properties panel. |
+
+### Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Autosave
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+import type { OgeBpmnDiagramChangedEvent } from '@oge-ui/bpmn';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor
+      #editor
+      style="height: 420px"
+      (diagramChanged)="onDiagramChanged($event)"
+    />
+    <button type="button" (click)="restore()">Restore last save</button>
+  `,
+})
+export class Demo {
+  private readonly editor = viewChild.required(OgeBpmnEditor);
+
+  // fires once per settled change (autoSaveDebounceMs, default 500ms),
+  // with the diagram already serialized to both JSON and XML — no
+  // exportJson() call needed and never mid-drag
+  protected onDiagramChanged(event: OgeBpmnDiagramChangedEvent): void {
+    if (event.source === 'import' || event.source === 'new') return;
+    localStorage.setItem('diagram', JSON.stringify(event.json));
+    this.editor().markSaved();
+  }
+
+  protected restore(): void {
+    const raw = localStorage.getItem('diagram');
+    if (raw === null) return;
+    // structural validation — a broken envelope never clobbers the canvas
+    const { error } = this.editor().importJson(JSON.parse(raw));
+    if (error !== undefined) console.warn(error);
+  }
+}
+```
+
+#### Config
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeBpmnEditor, provideOgeBpmnConfig } from '@oge-ui/bpmn';
+import type { OgeBpmnMessages } from '@oge-ui/bpmn';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- per-instance override via the [messages] input -->
+    <oge-bpmn-editor style="height: 420px" [messages]="turkish" />
+  `,
+})
+export class Demo {
+  // paletteLabels is a full record — every palette entry gets its label
+  protected readonly turkish: Partial<OgeBpmnMessages> = {
+    canvasLabel: 'BPMN diyagram editörü',
+    canvasHint: 'Diyagramdan çıkmak için Escape sonra Tab',
+    emptyText: 'Boş diyagram — paletten bir öğe seçin',
+    paletteLabel: 'Öğe paleti',
+    paletteLabels: {
+      startEvent: 'Başlangıç olayı',
+      endEvent: 'Bitiş olayı',
+      intermediateThrowEvent: 'Ara fırlatma olayı',
+      intermediateCatchEvent: 'Ara yakalama olayı',
+      boundaryEvent: 'Sınır olayı',
+      task: 'Görev',
+      userTask: 'Kullanıcı görevi',
+      serviceTask: 'Servis görevi',
+      scriptTask: 'Betik görevi',
+      callActivity: 'Çağrı aktivitesi',
+      subProcess: 'Alt süreç',
+      eventSubProcess: 'Olay alt süreci',
+      transaction: 'İşlem',
+      exclusiveGateway: 'Dışlayıcı geçit',
+      parallelGateway: 'Paralel geçit',
+      dataObject: 'Veri nesnesi',
+      dataStore: 'Veri deposu',
+      group: 'Grup',
+      pool: 'Havuz',
+      textAnnotation: 'Metin notu',
+    },
+  };
+}
+
+// or app-scoped defaults (merged over the built-ins):
+export const appConfig = {
+  providers: [
+    provideOgeBpmnConfig({
+      gridSize: 20, // placement + arrow-key step
+      snapThreshold: 8, // neighbor-alignment snapping
+      zoomMin: 0.5,
+      zoomMax: 2,
+      autoSaveDebounceMs: 1000, // diagramChanged settle time (0 = sync)
+      colorPresets: ['#fee2e2', '#dcfce7', '#dbeafe'], // panel fill swatches
+      messages: { emptyText: 'Boş diyagram — paletten bir öğe seçin' },
+    }),
+  ],
+};
+```
+
+#### Getting started
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+import type { OgeBpmnElementsChangedEvent } from '@oge-ui/bpmn';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor
+      style="height: 480px"
+      [(zoom)]="zoom"
+      (elementsChanged)="onChanged($event)"
+    />
+  `,
+})
+export class Demo {
+  // two-way zoom model: wheel zooming writes it back
+  protected readonly zoom = signal(1);
+
+  // fires on every command, undo/redo, import and newDiagram()
+  protected onChanged(event: OgeBpmnElementsChangedEvent): void {
+    console.log(event.source, event.label);
+  }
+}
+```
+
+#### Import export
+
+```ts
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+import type { BpmnImportWarning, OgeBpmnImportEvent } from '@oge-ui/bpmn';
+
+const SAMPLE_BPMN_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" ...>
+  <bpmn:process id="Process_order">
+    <bpmn:startEvent id="Start_1" name="Order received" />
+    <bpmn:userTask id="Task_review" name="Review order" />
+    <bpmn:exclusiveGateway id="Gateway_ok" name="Approved?" default="Flow_no" />
+    <!-- ... end events, sequence flows and BPMN DI shapes/edges ... -->
+  </bpmn:process>
+</bpmn:definitions>`;
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor #editor style="height: 420px" (importCompleted)="onImport($event)" />
+    <textarea [value]="xml()" (input)="xml.set($any($event.target).value)"></textarea>
+    <button type="button" (click)="importXml()">Import</button>
+    <button type="button" (click)="exportXml()">Export</button>
+  `,
+})
+export class Demo {
+  private readonly editor = viewChild.required(OgeBpmnEditor);
+
+  protected readonly xml = signal(SAMPLE_BPMN_XML);
+  protected readonly warnings = signal<readonly BpmnImportWarning[]>([]);
+
+  protected importXml(): void {
+    // resolves with { model, warnings, error? }; a fatal parse
+    // error leaves the current diagram untouched
+    void this.editor().importXml(this.xml());
+  }
+
+  protected exportXml(): void {
+    // deterministic BPMN 2.0 XML — same model, same bytes
+    this.xml.set(this.editor().exportXml());
+  }
+
+  protected onImport(event: OgeBpmnImportEvent): void {
+    this.warnings.set(event.warnings);
+  }
+}
+```
+
+#### Overlays
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor #editor style="height: 420px" />
+    <button type="button" (click)="addBadge()">Add badge</button>
+    <button type="button" (click)="clearBadges()">Clear</button>
+  `,
+})
+export class Demo {
+  private readonly editor = viewChild.required(OgeBpmnEditor);
+  private count = 0;
+
+  // attach a count bubble to the selected element; the badge tracks it
+  // through pan, zoom and model changes, hides while the element is
+  // gone and returns the handle for removeOverlay()
+  protected addBadge(): void {
+    const [id] = this.editor().getSelection();
+    if (id === undefined) return;
+    this.editor().addOverlay({
+      elementId: id,
+      // rendered through Angular's sanitizing [innerHTML]
+      html: '<span class="badge">' + ++this.count + '</span>',
+      position: 'top-right',
+      offset: { x: 4, y: -4 },
+    });
+  }
+
+  protected clearBadges(): void {
+    this.editor().clearOverlays(); // or clearOverlays(elementId)
+  }
+}
+```
+
+#### Readonly
+
+```ts
+import { ChangeDetectionStrategy, Component, afterNextRender, viewChild } from '@angular/core';
+import { OgeBpmnEditor } from '@oge-ui/bpmn';
+
+declare const PROCESS_XML: string; // e.g. fetched from your API
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeBpmnEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-bpmn-editor #viewer style="height: 360px" [readOnly]="true" />
+  `,
+})
+export class Demo {
+  private readonly viewer = viewChild.required(OgeBpmnEditor);
+
+  constructor() {
+    // load the diagram once the view exists; readOnly blocks every
+    // mutation (palette, context pad, keyboard editing, drags) but
+    // keeps selection, pan, zoom and the accessible reading order
+    afterNextRender(() => {
+      void this.viewer().importXml(PROCESS_XML);
+    });
+  }
+}
+```
+
+#### Sample bpmn xml
+
+```ts
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_order" targetNamespace="http://ogeui.com/bpmn">
+  <bpmn:process id="Process_order" isExecutable="false">
+    <bpmn:startEvent id="Start_1" name="Order received" />
+    <bpmn:userTask id="Task_review" name="Review order" />
+    <bpmn:exclusiveGateway id="Gateway_ok" name="Approved?" default="Flow_no" />
+    <bpmn:endEvent id="End_ship" name="Shipped" />
+    <bpmn:endEvent id="End_reject" name="Rejected" />
+    <bpmn:sequenceFlow id="Flow_start" sourceRef="Start_1" targetRef="Task_review" />
+    <bpmn:sequenceFlow id="Flow_review" sourceRef="Task_review" targetRef="Gateway_ok" />
+    <bpmn:sequenceFlow id="Flow_yes" name="yes" sourceRef="Gateway_ok" targetRef="End_ship" />
+    <bpmn:sequenceFlow id="Flow_no" name="no" sourceRef="Gateway_ok" targetRef="End_reject" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_order">
+      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1">
+        <dc:Bounds x="160" y="218" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_review_di" bpmnElement="Task_review">
+        <dc:Bounds x="260" y="196" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ok_di" bpmnElement="Gateway_ok">
+        <dc:Bounds x="420" y="211" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ship_di" bpmnElement="End_ship">
+        <dc:Bounds x="530" y="158" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_reject_di" bpmnElement="End_reject">
+        <dc:Bounds x="530" y="278" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_start_di" bpmnElement="Flow_start">
+        <di:waypoint x="196" y="236" />
+        <di:waypoint x="260" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_review_di" bpmnElement="Flow_review">
+        <di:waypoint x="360" y="236" />
+        <di:waypoint x="420" y="236" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_yes_di" bpmnElement="Flow_yes">
+        <di:waypoint x="445" y="211" />
+        <di:waypoint x="445" y="176" />
+        <di:waypoint x="530" y="176" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_no_di" bpmnElement="Flow_no">
+        <di:waypoint x="445" y="261" />
+        <di:waypoint x="445" y="296" />
+        <di:waypoint x="530" y="296" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
+
+```
+
 ## @oge-ui/core
 
 Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
@@ -12360,8 +13404,8 @@ Framework-free data engine shared by every package: sort/filter/group/aggregate 
 
 `@oge-ui/core`
 
-- values: `ArrayDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildTreeIndex`, `clampDate`, `clampValue`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `groupNodeKey`, `groupRows`, `intervalKey`, `intervalRange`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeSplitTracks`, `pathKey`, `pathToFilterExpr`, `ratioToValue`, `resizeSplitAt`, `resolveDrawerMode`, `resolveKeySelector`, `resolveMenubarCompact`, `resolveSelectedKeys`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `weekNumber`
-- types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeNavDirection`, `OgePivotStore`, `OgeRangeThumb`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
+- values: `ArrayDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OGE_PAGE_ELLIPSIS`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildTreeIndex`, `clampDate`, `clampValue`, `colorsEqual`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `contrastForeground`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `formatColor`, `groupNodeKey`, `groupRows`, `hsvaToRgba`, `intervalKey`, `intervalRange`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeColor`, `normalizeSplitTracks`, `parseColor`, `pathKey`, `pathToFilterExpr`, `ratioToValue`, `relativeLuminance`, `resizeSplitAt`, `resolveDrawerMode`, `resolveKeySelector`, `resolveMenubarCompact`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolveSelectedKeys`, `rgbaToHsva`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `weekNumber`
+- types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeColorFormat`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeHsva`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeNavDirection`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePivotStore`, `OgeRangeThumb`, `OgeRgba`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
 
 ## oge-ui
 

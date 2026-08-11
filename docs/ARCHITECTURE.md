@@ -39,7 +39,7 @@ commercial (free for evaluation/development, paid for production —
 `packages/pivot/LICENSE`, `"license": "SEE LICENSE IN LICENSE"` in its
 package.json). The MIT packages carry a public "will remain MIT" commitment
 (root README) — never move an MIT package or an existing MIT feature into the
-commercial tier. New analytics-oriented packages (charts, scheduler, …) may
+commercial tier. New enterprise-oriented packages (charts, scheduler, BPMN, …) may
 be commercial; copy pivot's LICENSE when scaffolding one. The `oge-ui`
 umbrella is MIT-only and must **not** depend on or re-export commercial
 packages. The root `LICENSE` lists the per-directory split. There is no

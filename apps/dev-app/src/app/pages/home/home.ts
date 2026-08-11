@@ -1830,6 +1830,7 @@ export class HomePage {
     '@oge-ui/grid',
     '@oge-ui/tree-list',
     '@oge-ui/pivot',
+    '@oge-ui/bpmn',
     '@oge-ui/buttons',
     '@oge-ui/inputs',
     '@oge-ui/overlay',
@@ -1904,6 +1905,12 @@ export class HomePage {
       name: 'Pivot Grid',
       desc: 'Cross-tab analytics: rows × columns × measures with totals and export.',
       path: '/components/pivot-grid',
+    },
+    {
+      icon: 'workflow',
+      name: 'BPMN Editor',
+      desc: 'BPMN 2.0 modeler with its own XML engine, undo/redo and no watermark.',
+      path: '/components/bpmn',
     },
     {
       icon: 'pointer',

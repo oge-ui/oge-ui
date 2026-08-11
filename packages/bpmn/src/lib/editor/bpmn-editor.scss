@@ -1,0 +1,1043 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+.oge-bpmn-editor {
+  @include tokens.core-tokens;
+  display: flex;
+  flex-direction: column;
+  min-height: 480px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  overflow: hidden;
+}
+
+.oge-bpmn-body {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-block-size: 0;
+}
+
+// Maximized fallback (native fullscreen handles its own sizing).
+.oge-bpmn-editor.oge-bpmn-maximized {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 0;
+  border-radius: 0;
+}
+
+// --- branding badge (bare logo — never a license term) ----------------------
+
+.oge-bpmn-brand-link {
+  position: absolute;
+  inset-block-end: 8px;
+  inset-inline-end: 8px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--oge-radius);
+  color: var(--oge-muted-color);
+  opacity: 0.6;
+  transition:
+    opacity 120ms ease,
+    color 120ms ease;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    opacity: 1;
+    color: var(--oge-accent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    opacity: 1;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-brand-img {
+  inline-size: 18px;
+  block-size: 18px;
+  display: block;
+}
+
+// --- header toolbar ---------------------------------------------------------
+
+.oge-bpmn-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding: 6px 8px;
+  border-block-end: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+}
+
+.oge-bpmn-header-name {
+  min-inline-size: 0;
+  inline-size: 220px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-weight: 600;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--oge-border-color);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--oge-accent);
+    background: var(--oge-bg);
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &::placeholder {
+    color: var(--oge-muted-color);
+    font-weight: 400;
+  }
+}
+
+.oge-bpmn-header-spacer {
+  flex: 1;
+}
+
+.oge-bpmn-header-sep {
+  inline-size: 1px;
+  block-size: 20px;
+  margin-inline: 4px;
+  background: var(--oge-border-color);
+}
+
+.oge-bpmn-header-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 30px;
+  min-block-size: 30px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+}
+
+.oge-bpmn-header-zoom {
+  min-inline-size: 52px;
+  font-size: 0.85em;
+}
+
+// --- palette rail -----------------------------------------------------------
+
+.oge-bpmn-rail {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  min-inline-size: 0;
+  border-inline-end: 1px solid var(--oge-border-color);
+  background: var(--oge-header-bg);
+}
+
+// User-draggable panel separator (APG window-splitter keys on top).
+.oge-bpmn-resizer {
+  flex: none;
+  inline-size: 6px;
+  margin-inline: -3px;
+  cursor: col-resize;
+  touch-action: none;
+  position: relative;
+  z-index: 2;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-accent-soft);
+  }
+
+  &:focus-visible {
+    outline: none;
+    background: var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 6px;
+  flex: 1;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.oge-bpmn-toolstrip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 6px;
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+.oge-bpmn-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+
+  svg {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-bpmn-tool-active {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent-soft);
+  }
+}
+
+.oge-bpmn-palette-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+
+  svg {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .oge-bpmn-glyph-thick {
+    stroke-width: 3;
+  }
+
+  .oge-bpmn-glyph-hair {
+    stroke-width: 1;
+    opacity: 0.6;
+  }
+
+  .oge-bpmn-glyph-dash {
+    stroke-dasharray: 3 2;
+  }
+
+  .oge-bpmn-glyph-fill {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  }
+
+  &:focus:not(:focus-visible) {
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-bpmn-palette-active {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent-soft);
+  }
+}
+
+// --- canvas -----------------------------------------------------------------
+
+.oge-bpmn-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-inline-size: 0;
+  outline: none;
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.oge-bpmn-tool-place {
+    cursor: crosshair;
+  }
+
+  &.oge-bpmn-tool-connect {
+    cursor: crosshair;
+  }
+
+  &.oge-bpmn-tool-hand {
+    cursor: grab;
+  }
+
+  &.oge-bpmn-tool-lasso,
+  &.oge-bpmn-tool-lasso .oge-bpmn-shape,
+  &.oge-bpmn-tool-lasso .oge-bpmn-edge {
+    cursor: crosshair;
+  }
+
+  &.oge-bpmn-tool-space,
+  &.oge-bpmn-tool-space .oge-bpmn-shape,
+  &.oge-bpmn-tool-space .oge-bpmn-edge {
+    cursor: move;
+  }
+}
+
+.oge-bpmn-grid-dot {
+  fill: var(--oge-border-color);
+  opacity: 0.5;
+}
+
+// --- shapes -----------------------------------------------------------------
+
+.oge-bpmn-shape {
+  cursor: move;
+
+  .oge-bpmn-node {
+    fill: var(--oge-bg);
+    stroke: var(--oge-border-color);
+    stroke-width: 1.5;
+    transition:
+      fill 120ms ease,
+      stroke 120ms ease;
+  }
+
+  .oge-bpmn-event,
+  .oge-bpmn-gateway {
+    stroke: var(--oge-text-color);
+  }
+
+  .oge-bpmn-event-end {
+    stroke-width: 4;
+  }
+
+  .oge-bpmn-event-dot {
+    fill: var(--oge-text-color);
+  }
+
+  .oge-bpmn-event-dashed {
+    stroke-dasharray: 4 3;
+  }
+
+  .oge-bpmn-event-def {
+    fill: none;
+    stroke: var(--oge-text-color);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+
+  .oge-bpmn-event-def-filled {
+    fill: var(--oge-text-color);
+  }
+
+  .oge-bpmn-subprocess-event {
+    stroke-dasharray: 3 3;
+  }
+
+  .oge-bpmn-marker {
+    fill: none;
+    stroke: var(--oge-text-color);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+
+  .oge-bpmn-annotation {
+    fill: none;
+    stroke: var(--oge-text-color);
+  }
+
+  .oge-bpmn-gateway-mark {
+    fill: none;
+    stroke: var(--oge-text-color);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  .oge-bpmn-task-icon {
+    fill: none;
+    stroke: var(--oge-muted-color);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+
+  &.oge-bpmn-selected .oge-bpmn-node {
+    stroke: var(--oge-accent);
+    stroke-width: 2.5;
+  }
+
+  &.oge-bpmn-drop-ok .oge-bpmn-node {
+    stroke: var(--oge-success);
+    fill: var(--oge-success-soft);
+  }
+
+  &.oge-bpmn-drop-deny .oge-bpmn-node {
+    stroke: var(--oge-danger);
+    fill: var(--oge-danger-soft);
+  }
+}
+
+.oge-bpmn-label {
+  fill: var(--oge-text-color);
+  font-size: 12px;
+  font-family: inherit;
+  user-select: none;
+  pointer-events: none;
+}
+
+// --- edges ------------------------------------------------------------------
+
+.oge-bpmn-edge {
+  cursor: pointer;
+
+  .oge-bpmn-edge-hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 12;
+    pointer-events: stroke;
+  }
+
+  .oge-bpmn-edge-line {
+    fill: none;
+    stroke: var(--oge-muted-color);
+    stroke-width: 1.5;
+    transition: stroke 120ms ease;
+  }
+
+  &.oge-bpmn-association .oge-bpmn-edge-line {
+    stroke-dasharray: 4 4;
+  }
+
+  .oge-bpmn-default-mark {
+    stroke: var(--oge-muted-color);
+    stroke-width: 1.5;
+  }
+
+  .oge-bpmn-edge-label {
+    fill: var(--oge-text-color);
+    font-size: 11px;
+    text-anchor: middle;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  &.oge-bpmn-selected {
+    .oge-bpmn-edge-line,
+    .oge-bpmn-default-mark {
+      stroke: var(--oge-accent);
+      stroke-width: 2;
+    }
+  }
+}
+
+.oge-bpmn-arrow {
+  fill: var(--oge-muted-color);
+}
+
+// --- preview & overlay ------------------------------------------------------
+
+.oge-bpmn-ghost {
+  fill: var(--oge-accent);
+  fill-opacity: 0.08;
+  stroke: var(--oge-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  pointer-events: none;
+}
+
+.oge-bpmn-snap-guide {
+  stroke: var(--oge-accent);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.oge-bpmn-rubber-band {
+  fill: none;
+  stroke: var(--oge-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  pointer-events: none;
+}
+
+.oge-bpmn-shape-ring {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 8;
+  pointer-events: stroke;
+  cursor: crosshair;
+}
+
+.oge-bpmn-marquee {
+  fill: var(--oge-accent);
+  fill-opacity: 0.06;
+  stroke: var(--oge-accent);
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
+  pointer-events: none;
+}
+
+.oge-bpmn-bend-preview {
+  fill: none;
+  stroke: var(--oge-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  pointer-events: none;
+}
+
+.oge-bpmn-bend-handle {
+  fill: var(--oge-bg);
+  stroke: var(--oge-accent);
+  stroke-width: 1.5;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.oge-bpmn-resize-handle {
+  fill: var(--oge-accent);
+  stroke: var(--oge-bg);
+  stroke-width: 1;
+}
+
+.oge-bpmn-resize-nwse {
+  cursor: nwse-resize;
+}
+
+.oge-bpmn-resize-nesw {
+  cursor: nesw-resize;
+}
+
+.oge-bpmn-selection-outline {
+  fill: none;
+  stroke: var(--oge-accent);
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+// --- context pad ------------------------------------------------------------
+
+.oge-bpmn-context-pad {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  box-shadow: var(
+    --oge-shadow-card,
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 4px 12px -4px rgba(15, 23, 42, 0.1)
+  );
+  z-index: 2;
+}
+
+.oge-bpmn-pad-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 26px;
+  block-size: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+
+  svg {
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-pad-active {
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+}
+
+.oge-bpmn-pad-danger:hover {
+  background: var(--oge-danger-soft);
+  color: var(--oge-danger);
+}
+
+// --- draggable external labels ---------------------------------------------
+
+.oge-bpmn-label-external {
+  pointer-events: all;
+  cursor: move;
+}
+
+// --- align/distribute flyout ------------------------------------------------
+
+.oge-bpmn-align-menu {
+  position: absolute;
+  inset-inline-start: calc(100% + 4px);
+  inset-block-start: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 26px);
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  box-shadow: var(
+    --oge-shadow-card,
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 4px 12px -4px rgba(15, 23, 42, 0.1)
+  );
+
+  .oge-bpmn-pad-btn:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+
+    &:hover {
+      background: none;
+    }
+  }
+}
+
+// --- element search ----------------------------------------------------------
+
+.oge-bpmn-search {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+  inline-size: 240px;
+  z-index: 4;
+}
+
+.oge-bpmn-search-input {
+  inline-size: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  box-shadow: var(
+    --oge-shadow-card,
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 4px 12px -4px rgba(15, 23, 42, 0.1)
+  );
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+.oge-bpmn-search-results {
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  box-shadow: var(
+    --oge-shadow-card,
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 4px 12px -4px rgba(15, 23, 42, 0.1)
+  );
+  max-block-size: 240px;
+  overflow-y: auto;
+}
+
+.oge-bpmn-search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 8px;
+  border-radius: var(--oge-radius);
+  cursor: pointer;
+
+  &:hover,
+  &.oge-bpmn-search-active {
+    background: var(--oge-row-hover-bg);
+  }
+}
+
+.oge-bpmn-search-id {
+  font-size: 0.85em;
+  color: var(--oge-muted-color);
+}
+
+.oge-bpmn-search-empty {
+  padding: 5px 8px;
+  color: var(--oge-muted-color);
+}
+
+// --- search dimming -----------------------------------------------------------
+
+.oge-bpmn-dimmed {
+  opacity: 0.25;
+}
+
+// --- minimap ------------------------------------------------------------------
+
+.oge-bpmn-minimap {
+  position: absolute;
+  inset-block-end: 38px;
+  inset-inline-end: 8px;
+  inline-size: 180px;
+  block-size: 120px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  box-shadow: var(
+    --oge-shadow-card,
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 4px 12px -4px rgba(15, 23, 42, 0.1)
+  );
+  overflow: hidden;
+  z-index: 2;
+  cursor: pointer;
+
+  svg {
+    display: block;
+  }
+}
+
+.oge-bpmn-minimap-shape {
+  fill: var(--oge-muted-color);
+  fill-opacity: 0.35;
+  stroke: none;
+}
+
+.oge-bpmn-minimap-viewport {
+  fill: var(--oge-accent);
+  fill-opacity: 0.08;
+  stroke: var(--oge-accent);
+  stroke-width: 1.5;
+}
+
+// --- HTML overlays (badges) ---------------------------------------------------
+
+.oge-bpmn-overlay {
+  position: absolute;
+  z-index: 2;
+}
+
+// --- label editor -----------------------------------------------------------
+
+.oge-bpmn-label-edit {
+  position: absolute;
+  padding: 4px 6px;
+  border: 1px solid var(--oge-accent);
+  border-radius: var(--oge-radius);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-family: inherit;
+  line-height: 1.25;
+  resize: none;
+  box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  z-index: 3;
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+// --- empty hint & live region -----------------------------------------------
+
+.oge-bpmn-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--oge-muted-color);
+  pointer-events: none;
+  text-align: center;
+  padding: 24px;
+}
+
+.oge-bpmn-live {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+// --- read-only & reduced motion ---------------------------------------------
+
+.oge-bpmn-readonly {
+  .oge-bpmn-shape {
+    cursor: default;
+  }
+
+  .oge-bpmn-canvas.oge-bpmn-tool-place,
+  .oge-bpmn-canvas.oge-bpmn-tool-connect {
+    cursor: grab;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-bpmn-palette-btn,
+  .oge-bpmn-pad-btn,
+  .oge-bpmn-shape .oge-bpmn-node,
+  .oge-bpmn-edge .oge-bpmn-edge-line {
+    transition: none;
+  }
+}
+
+// --- pools, lanes & v0.4 elements -------------------------------------------
+
+.oge-bpmn-pool {
+  .oge-bpmn-pool-band {
+    fill: var(--oge-bg);
+    stroke: var(--oge-border-color);
+    stroke-width: 1.5;
+    pointer-events: none;
+  }
+
+  .oge-bpmn-lane {
+    fill: none;
+    stroke: var(--oge-border-color);
+    stroke-width: 1;
+    pointer-events: none;
+  }
+
+  .oge-bpmn-pool-header {
+    fill: var(--oge-header-bg, var(--oge-row-hover-bg));
+    stroke: var(--oge-border-color);
+    stroke-width: 1.5;
+    cursor: move;
+  }
+
+  .oge-bpmn-pool-border {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 10;
+    pointer-events: stroke;
+    cursor: move;
+  }
+
+  .oge-bpmn-pool-name,
+  .oge-bpmn-lane-name {
+    fill: var(--oge-text-color);
+    font-size: 12px;
+    font-family: inherit;
+    text-anchor: middle;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .oge-bpmn-lane-name {
+    font-size: 11px;
+    fill: var(--oge-muted-color);
+  }
+
+  &.oge-bpmn-selected .oge-bpmn-pool-band,
+  &.oge-bpmn-selected .oge-bpmn-pool-header {
+    stroke: var(--oge-accent);
+    stroke-width: 2.5;
+  }
+
+  &.oge-bpmn-drop-ok .oge-bpmn-pool-band {
+    stroke: var(--oge-success);
+    fill: var(--oge-success-soft);
+  }
+
+  &.oge-bpmn-drop-deny .oge-bpmn-pool-band {
+    stroke: var(--oge-danger);
+    fill: var(--oge-danger-soft);
+  }
+}
+
+.oge-bpmn-edge {
+  &.oge-bpmn-message-flow .oge-bpmn-edge-line {
+    stroke-dasharray: 8 5;
+  }
+
+  &.oge-bpmn-data-association .oge-bpmn-edge-line {
+    stroke-dasharray: 2 4;
+  }
+
+  .oge-bpmn-message-dot {
+    fill: var(--oge-bg);
+    stroke: var(--oge-muted-color);
+    stroke-width: 1.5;
+    pointer-events: none;
+  }
+
+  &.oge-bpmn-selected .oge-bpmn-message-dot {
+    stroke: var(--oge-accent);
+  }
+}
+
+.oge-bpmn-open-arrow {
+  fill: var(--oge-bg);
+  stroke: var(--oge-muted-color);
+  stroke-width: 1;
+}
+
+.oge-bpmn-shape {
+  .oge-bpmn-data {
+    stroke-linejoin: round;
+  }
+
+  .oge-bpmn-group {
+    fill: none;
+    stroke-dasharray: 8 3 1 3;
+  }
+
+  .oge-bpmn-call-activity {
+    stroke-width: 3;
+  }
+}

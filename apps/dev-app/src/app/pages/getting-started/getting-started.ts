@@ -140,7 +140,17 @@ interface ComponentCard {
         </tr>
         <tr>
           <td><code>&#64;oge-ui/pivot</code></td>
-          <td>Pivot table with field chooser, totals and export.</td>
+          <td>
+            Pivot table with field chooser, totals and export (commercial — free
+            for evaluation and development).
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/bpmn</code></td>
+          <td>
+            BPMN 2.0 process modeler with its own XML + DI engine, no watermark
+            (commercial — free for evaluation and development).
+          </td>
         </tr>
         <tr>
           <td><code>&#64;oge-ui/buttons</code></td>

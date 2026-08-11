@@ -46,7 +46,8 @@ export type IconName =
   | 'menubar'
   | 'stepper'
   | 'toolbar'
-  | 'tree';
+  | 'tree'
+  | 'workflow';
 
 /** Lucide-style inline SVG icons — no emoji, no icon-font dependency. */
 @Component({
@@ -239,6 +240,13 @@ export type IconName =
           <path d="M18 7h.01" />
           <path d="M3 14h18" />
           <path d="M3 18h12" />
+        }
+        @case ('workflow') {
+          <circle cx="5" cy="7" r="2.5" />
+          <rect x="10" y="4" width="7" height="6" rx="1.5" />
+          <path d="M7.5 7h2.5" />
+          <path d="M13.5 10v3" />
+          <path d="M13.5 13.5 17 17l-3.5 3.5L10 17z" />
         }
         @case ('sun') {
           <circle cx="12" cy="12" r="4" />

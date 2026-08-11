@@ -73,7 +73,7 @@ export const PACKAGES = [
     npm: '@oge-ui/inputs',
     label: 'Inputs',
     summary:
-      'Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.',
+      'Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, ColorBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.',
     docsRoot: '/components/inputs',
     pageDirs: ['inputs'],
     apiPage: 'apps/dev-app/src/app/pages/inputs/api.ts',
@@ -145,7 +145,7 @@ export const PACKAGES = [
     npm: '@oge-ui/navigation',
     label: 'Navigation',
     summary:
-      'Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, and an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links.',
+      'Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.',
     docsRoot: '/components/tree-view',
     pageDirs: ['navigation'],
     apiPage: 'apps/dev-app/src/app/pages/navigation/api.ts',
@@ -160,6 +160,17 @@ export const PACKAGES = [
     docsRoot: '/components/pivot-grid',
     pageDirs: ['pivot-grid'],
     apiPage: 'apps/dev-app/src/app/pages/pivot-grid/api.ts',
+    tier: 'commercial',
+  },
+  {
+    dir: 'bpmn',
+    npm: '@oge-ui/bpmn',
+    label: 'BPMN Editor',
+    summary:
+      'From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark.',
+    docsRoot: '/components/bpmn',
+    pageDirs: ['bpmn'],
+    apiPage: 'apps/dev-app/src/app/pages/bpmn/api.ts',
     tier: 'commercial',
   },
   {

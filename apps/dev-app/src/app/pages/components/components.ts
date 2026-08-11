@@ -51,6 +51,7 @@ type FamilyKey =
   | 'breadcrumb'
   | 'stepper'
   | 'pivot'
+  | 'bpmn'
   | 'overlay';
 
 interface Family {
@@ -269,6 +270,32 @@ interface OrgNode {
                       </tr>
                     </tbody>
                   </table>
+                }
+                @case ('bpmn') {
+                  <!-- illustrative sketch; the live editor renders on its own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="bpmn"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  >
+                    <circle cx="26" cy="60" r="12" />
+                    <path d="M38 60h26m0 0-6-4m6 4-6 4" />
+                    <rect x="66" y="38" width="66" height="44" rx="8" />
+                    <path d="M132 60h26m0 0-6-4m6 4-6 4" />
+                    <path d="M178 40 198 60 178 80 158 60Z" />
+                    <path d="M171 53l14 14M185 53l-14 14" />
+                    <path d="M198 60h32m0 0-6-4m6 4-6 4" />
+                    <circle cx="246" cy="60" r="12" stroke-width="3.2" />
+                    <path
+                      d="M178 40V22h52m0 0-6-4m6 4-6 4"
+                      stroke-dasharray="4 3"
+                    />
+                    <circle cx="246" cy="22" r="9" stroke-width="3.2" />
+                  </svg>
                 }
                 @case ('overlay') {
                   <div class="flex flex-col items-center gap-3">
@@ -627,6 +654,14 @@ export class ComponentsIndexPage {
       path: '/components/pivot-grid',
       description:
         'Cross-tab analytics on raw records: rows × columns × measures with grand totals, field chooser, sorting and export.',
+    },
+    {
+      key: 'bpmn',
+      name: 'BPMN Editor',
+      icon: 'workflow',
+      path: '/components/bpmn',
+      description:
+        'BPMN 2.0 process modeler: palette, orthogonal connections, undo/redo, XML import/export — on its own dependency-free engine, with no watermark.',
     },
     {
       key: 'overlay',

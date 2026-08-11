@@ -38,6 +38,8 @@
 .oge-theme-dark .oge-toolbar,
 .oge-theme-dark .oge-form,
 .oge-theme-dark .oge-tree-view,
+.oge-theme-dark .oge-pagination,
+.oge-theme-dark .oge-bpmn-editor,
 .oge-theme-dark .oge-pivot-grid,
 .oge-grid.oge-theme-dark,
 .oge-tree-list.oge-theme-dark,
@@ -70,6 +72,8 @@
 .oge-toolbar.oge-theme-dark,
 .oge-form.oge-theme-dark,
 .oge-tree-view.oge-theme-dark,
+.oge-pagination.oge-theme-dark,
+.oge-bpmn-editor.oge-theme-dark,
 .oge-pivot-grid.oge-theme-dark {
   /* native form controls (checkboxes, selects, date pickers) follow suit */
   color-scheme: dark;

@@ -58,6 +58,7 @@
   <url><loc>https://ogeui.com/components/drawer</loc></url>
   <url><loc>https://ogeui.com/components/breadcrumb</loc></url>
   <url><loc>https://ogeui.com/components/breadcrumb/routed</loc></url>
+  <url><loc>https://ogeui.com/components/pagination</loc></url>
   <url><loc>https://ogeui.com/components/menubar</loc></url>
   <url><loc>https://ogeui.com/components/menubar/routed</loc></url>
   <url><loc>https://ogeui.com/components/tree-view</loc><priority>0.9</priority></url>
@@ -70,6 +71,7 @@
   <url><loc>https://ogeui.com/components/inputs/toggle-controls</loc></url>
   <url><loc>https://ogeui.com/components/inputs/slider</loc></url>
   <url><loc>https://ogeui.com/components/inputs/date-box</loc></url>
+  <url><loc>https://ogeui.com/components/inputs/color-box</loc></url>
   <url><loc>https://ogeui.com/components/inputs/showcase</loc></url>
   <url><loc>https://ogeui.com/components/inputs/api</loc></url>
   <url><loc>https://ogeui.com/components/overlay</loc><priority>0.9</priority></url>
@@ -80,5 +82,7 @@
   <url><loc>https://ogeui.com/components/pivot-grid</loc><priority>0.9</priority></url>
   <url><loc>https://ogeui.com/components/pivot-grid/analytics</loc></url>
   <url><loc>https://ogeui.com/components/pivot-grid/api</loc></url>
+  <url><loc>https://ogeui.com/components/bpmn</loc><priority>0.9</priority></url>
+  <url><loc>https://ogeui.com/components/bpmn/api</loc></url>
   <url><loc>https://ogeui.com/license</loc><priority>0.9</priority></url>
 </urlset>

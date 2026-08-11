@@ -503,6 +503,19 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/pagination',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/navigation/pagination').then(
+            (m) => m.NavigationPaginationPage,
+          ),
+        title: 'OGE — Pagination',
+      },
+    ],
+  },
+  {
     path: 'components/menubar',
     children: [
       {
@@ -628,6 +641,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Date Editors',
       },
       {
+        path: 'color-box',
+        loadComponent: () =>
+          import('./pages/inputs/color-box').then((m) => m.InputsColorBoxPage),
+        title: 'OGE — Color Box',
+      },
+      {
         path: 'showcase',
         loadComponent: () =>
           import('./pages/inputs/showcase').then((m) => m.InputsShowcasePage),
@@ -702,6 +721,23 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/pivot-grid/api').then((m) => m.PivotGridApiPage),
         title: 'OGE — Pivot Grid API',
+      },
+    ],
+  },
+  {
+    path: 'components/bpmn',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/bpmn/overview').then((m) => m.BpmnOverviewPage),
+        title: 'OGE — BPMN Editor',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/bpmn/api').then((m) => m.BpmnApiPage),
+        title: 'OGE — BPMN Editor API',
       },
     ],
   },

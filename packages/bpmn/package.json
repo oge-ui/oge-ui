@@ -1,0 +1,33 @@
+{
+  "name": "@oge-ui/bpmn",
+  "version": "0.10.0",
+  "description": "Signal-based Angular BPMN 2.0 editor: a from-scratch, dependency-free modeler with its own BPMN XML + diagram-interchange engine, orthogonal routing, undo/redo and a keyboard-accessible canvas — no watermark. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "angular",
+    "bpmn",
+    "bpmn-2.0",
+    "workflow",
+    "process-modeler",
+    "diagram",
+    "flowchart",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/core": "^22.0.0"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/bpmn"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

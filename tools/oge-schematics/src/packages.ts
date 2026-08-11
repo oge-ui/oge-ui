@@ -33,6 +33,12 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-pivot-grid [data]="rows">` with `<oge-pivot-field>` children',
     },
   ],
+  '@oge-ui/bpmn': [
+    {
+      need: 'BPMN 2.0 process modeler / workflow diagram editor',
+      use: '`<oge-bpmn-editor />` — `importXml(xml)` / `exportXml()` round-trip BPMN 2.0 + DI; palette, orthogonal connections, undo/redo, keyboard-accessible canvas',
+    },
+  ],
   '@oge-ui/buttons': [
     {
       need: 'button, async action button',
@@ -59,6 +65,10 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
     {
       need: 'date picker, toggle, radio',
       use: '`<oge-date-box>`, `<oge-date-range-box>`, `<oge-check-box>`, `<oge-switch>`, `<oge-radio-group>`',
+    },
+    {
+      need: 'color picker dropdown',
+      use: '`<oge-color-box [(value)]="color">` — CSS color string value (`format`: hex/rgb/rgba/hsl), gradient + palette views, `editAlphaChannel`, `applyValueMode: instantly | useButtons`',
     },
   ],
   '@oge-ui/overlay': [
@@ -138,6 +148,10 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       need: 'breadcrumb / navigation trail',
       use: '`<oge-breadcrumb [items]="trail" (itemClick)="go($event)">` — `url` crumbs are real links, the last crumb carries `aria-current="page"`, and `collapseMode: \'auto\'` folds the oldest middle crumbs into an ellipsis menu against the container width',
     },
+    {
+      need: 'pagination / pager / page navigation',
+      use: '`<oge-pagination [(pageIndex)]="page" [itemCount]="total" [pageSize]="20">` — 0-based `pageIndex`, `pageSize: 0` = all items, `[pageSizes]="[10, 20, \'all\']"` shows the selector, `displayMode: \'adaptive\'` collapses to `N / M` against the container width',
+    },
   ],
 };
 
@@ -146,6 +160,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/grid',
   '@oge-ui/tree-list',
   '@oge-ui/pivot',
+  '@oge-ui/bpmn',
   '@oge-ui/inputs',
   '@oge-ui/buttons',
   '@oge-ui/overlay',

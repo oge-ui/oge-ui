@@ -1,6 +1,6 @@
 # @oge-ui/inputs
 
-> Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
+> Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, ColorBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
 
 Part of OGE UI v0.10.0.
 Docs and live demos: https://ogeui.com/components/inputs
@@ -85,8 +85,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/inputs`
 
-- values: `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeRangeSlider`, `OgeSelectBox`, `OgeSlider`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
-- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeSliderDragStartedEvent`, `OgeSliderOrientation`, `OgeSliderSlideEndedEvent`, `OgeSliderValueIndicator`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
+- values: `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_INPUTS_CONFIG`, `OGE_SELECT_OPTION_HEIGHT`, `OgeAutocomplete`, `OgeCalendar`, `OgeCalendarCellTemplate`, `OgeCheckBox`, `OgeColorBox`, `OgeDateBox`, `OgeDateRangeBox`, `OgeInputPrefix`, `OgeInputSuffix`, `OgeNumberBox`, `OgeRadioGroup`, `OgeRangeSlider`, `OgeSelectBox`, `OgeSlider`, `OgeSwitch`, `OgeTagBox`, `OgeTextArea`, `OgeTextBox`, `OgeTreeSelect`, `datePartOrder`, `formatPattern`, `measureTextAreaHeight`, `parseDateText`, `provideOgeInputsConfig`, `resolveErrorMessage`
+- types: `OgeAutocompleteItemClickEvent`, `OgeAutocompleteSelectionChangedEvent`, `OgeCalendarCellClickEvent`, `OgeCalendarCellTemplateContext`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeFieldError`, `OgeInputCopyApi`, `OgeInputCounterMode`, `OgeInputCounterState`, `OgeInputDropDownApi`, `OgeInputErrorDisplay`, `OgeInputFocusEvent`, `OgeInputKeyEvent`, `OgeInputLabelMode`, `OgeInputRawEvent`, `OgeInputRevealApi`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputSpinApi`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputValueCommittedEvent`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeNumberBoxMode`, `OgeRadioGroupItemClickEvent`, `OgeRadioGroupLayout`, `OgeSelectBoxCustomItemEvent`, `OgeSelectBoxDisabledExpr`, `OgeSelectBoxDisplayExpr`, `OgeSelectBoxGroupExpr`, `OgeSelectBoxImageExpr`, `OgeSelectBoxItemClickEvent`, `OgeSelectBoxItemsFn`, `OgeSelectBoxSearchChangedEvent`, `OgeSelectBoxSearchExpr`, `OgeSelectBoxSearchMode`, `OgeSelectBoxSelectionChangedEvent`, `OgeSelectBoxValueExpr`, `OgeSelectItemTemplateContext`, `OgeSliderDragStartedEvent`, `OgeSliderOrientation`, `OgeSliderSlideEndedEvent`, `OgeSliderValueIndicator`, `OgeTagBoxItemClickEvent`, `OgeTagBoxSelectionChangedEvent`, `OgeTextBoxMode`, `OgeTreeSelectDisplayMode`, `OgeTreeSelectSelectionChangedEvent`, `OgeTreeSelectSelectionMode`, `OgeVirtualScrollOptions`
 
 ## API reference
 
@@ -1273,6 +1273,116 @@ _Date types_
 | `parseDateText(text, locale, kind, reference?)` | `function` | Exported: locale-aware text → local `Date \| null` via Intl part order — never `Date.parse`. |
 | `OgeDateBoxType / OgeDateBoxApplyValueMode / OgeDateBoxDisplayFormat / OgeDateBoxTimeView` | `types` | The string unions and the display-format shape. |
 
+### OgeColorBox — `<oge-color-box>`
+
+#### Properties
+
+_OgeColorBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `model<string \| null>` | `null` | The committed color as a CSS string, normalized to `format` on user commits. Programmatic writes keep any parseable CSS color verbatim (never reformatted); unparseable writes land as `null`. |
+| `format` | `'hex' \| 'rgb' \| 'rgba' \| 'hsl'` | `'hex'` | Committed string shape (hex — the DevExtreme default; Kendo defaults to rgba). Translucent colors widen to carry alpha: `#rrggbbaa` / `rgba()` / `hsla()`. |
+| `view` | `'gradient' \| 'palette' \| 'both'` | `'gradient'` | Popup surfaces: the saturation/brightness gradient with sliders and inputs, the swatch palette, or both stacked — no view switcher (Kendo's `activeView` is deliberately skipped). |
+| `editAlphaChannel` | `boolean` | `false` | Adds the alpha slider + percent input and lets the output carry alpha. Without it, alpha is coerced to 1 on commit — `rgba()` text still parses. |
+| `applyValueMode` | `'instantly' \| 'useButtons'` | `'instantly'` | OK/Cancel footer collects panel interactions in a draft when `useButtons`; the default commits live (dragging streams through `valueCommitted`, throttled by `debounce`). |
+| `acceptCustomValue` | `boolean` | `true` | `false` makes the text read-only (picker input only). Typed text parses any CSS color incl. the 148 named colors; unparseable text reverts on blur. |
+| `keyStep` | `number` | `5` | Arrow-key increment of the panel parts in value units — hue degrees, alpha percent, surface saturation/brightness percent. PageUp/PageDown move by 5× (value-space, not Kendo’s pixel steps — zoom-independent). |
+| `palette` | `readonly string[] \| undefined` | `—` | Palette swatches as CSS color strings; `undefined` renders the exported `OGE_DEFAULT_COLOR_PALETTE`. Unparseable entries are dropped. |
+| `paletteColumns` | `number` | `10` | Swatch columns of the palette grid. |
+| `openOnFieldClick` | `boolean` | `true` | Clicking the field opens the picker. |
+| `showDropDownButton` | `boolean` | `true` | `false` hides the rail chevron — field click and ArrowDown still open. |
+| `showEyedropper` | `boolean` | `true` | The eyedropper button (pick a color from anywhere on screen) — rendered only in browsers shipping the `EyeDropper` API; progressive enhancement, no polyfill. The picked color keeps the working alpha. |
+| `opened` | `model<boolean>` | `false` | Picker visibility — two-way. |
+
+_Common — field chrome (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string \| undefined` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `{}` | Escape hatch: extra attributes rendered onto the native input (template-owned attributes are ignored). |
+| `messages` | `Partial<OgeInputsMessages> \| undefined` | `—` | Per-instance overrides of user-facing strings. |
+
+_Common — state & forms (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with forms state. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override (Signal Forms contract). |
+| `dirty` | `boolean` | `false` | External dirty override (Signal Forms contract). |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Signal Forms validation errors (auto-bound by `[formField]`). |
+| `errorText` | `string \| undefined` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number \| undefined` | `—` | Commit delay in ms for `value`/forms updates; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeColorBox methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `void` | Picker control (no-ops while disabled/readonly). |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(): void` | `void` | Moves keyboard focus to the native input. |
+| `blur(): void` | `void` | Blurs the native input. |
+| `clear(): void` | `void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+| `reset(value?: T): void` | `void` | Returns the field to pristine: sets `value` (default: empty), clears touched/dirty/parse errors, cancels pending commits. On a reactive-forms-bound editor resets the control itself. |
+
+#### Events
+
+_OgeColorBox events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `dropDownOpened / dropDownClosed` | `void` | Picker visibility changes, from any trigger. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `valueCommitted` | `OgeInputValueCommittedEvent<T>` | Every committed change with `previousValue` + originating DOM event (`undefined` for programmatic writes) — the reference `onValueChanged` shape. |
+| `inputChange` | `OgeInputRawEvent` | Raw text on every keystroke, regardless of commit policy. |
+| `cleared` | `void` | Value cleared via the clear button / `clear()`. |
+| `enterKey` | `OgeInputKeyEvent` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `focused` | `OgeInputFocusEvent` | The editor received focus. |
+| `blurred` | `OgeInputFocusEvent` | The editor lost focus. |
+| `touch` | `void` | Signal Forms `FormValueControl` contract — emitted once per blur. |
+| `valueChange` | `T` | Implicit output of the `value` model. |
+
+#### Types
+
+_Color types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeColorBoxView / OgeColorBoxApplyValueMode` | `types` | The string unions of `view` and `applyValueMode`. |
+| `OGE_DEFAULT_COLOR_PALETTE` | `readonly string[]` | The built-in 50-swatch palette used when `palette` is not set. |
+| `Color messages` | `OgeInputsMessages keys` | All popup strings localize through the family config: `colorPickerLabel`, `hueSliderLabel`/`hueValueText`, `alphaSliderLabel`/`alphaValueText`, `colorSurfaceLabel`/`colorSurfaceRoleDescription`/`surfaceValueText`, `paletteLabel`, the hex/R/G/B/A input labels, `eyedropperButton` and `invalidColorError`. |
+| `parseColor / formatColor / normalizeColor / rgbaToHsva / hsvaToRgba / relativeLuminance / contrastForeground / colorsEqual` | `@oge-ui/core` | The DOM-free color kernel (`OgeRgba` / `OgeHsva` / `OgeColorFormat`): CSS color-text parsing, HSV↔RGB conversion, canonical formatting and the WCAG swatch-contrast decision — unit-tested without a DOM, the slider-math precedent. |
+
 ### Shared input types
 
 #### Types
@@ -1563,6 +1673,172 @@ export class Demo {
 
   protected readonly accountName = signal('');
   protected readonly accountId = signal<unknown>(null);
+}
+```
+
+### Basic
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- A dropdown color editor: the field shows a swatch + the committed
+         string; the popup is a role="dialog" that takes real DOM focus (no APG
+         color-picker pattern exists — it is composed from dialog, sliders and
+         grid primitives). ArrowDown opens; Escape restores focus to the input. -->
+    <oge-color-box label="Brand color" [(value)]="brand" [showClearButton]="true" />
+  `,
+})
+export class Demo {
+  protected readonly brand = signal<string | null>('#3aa0ff');
+}
+```
+
+### Buttons
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- applyValueMode: 'instantly' (default) commits every panel
+         interaction live — dragging streams through valueCommitted and [debounce]
+         throttles it. 'useButtons' collects interactions in a draft, shows a
+         committed | draft preview pair in the footer and commits only on OK;
+         Cancel (or Escape / outside click) discards. The date box's exact
+         contract, applied to color. -->
+    <oge-color-box
+      label="Theme color"
+      view="both"
+      applyValueMode="useButtons"
+      [(value)]="theme"
+    />
+  `,
+})
+export class Demo {
+  protected readonly theme = signal<string | null>('#7c3aed');
+}
+```
+
+### Formats
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- format controls the committed string shape ('hex' default —
+         the DevExtreme choice; Kendo defaults to rgba). editAlphaChannel adds the
+         alpha slider + input; a translucent color then WIDENS the output
+         (#rrggbbaa / rgba() / hsla()), while opaque colors stay compact. Without
+         it, alpha is coerced to 1 on commit — rgba() text still parses. -->
+    <oge-color-box label="Overlay" format="rgba" [editAlphaChannel]="true" [(value)]="overlay" />
+    <oge-color-box label="Accent (hsl)" format="hsl" [(value)]="accent" />
+  `,
+})
+export class Demo {
+  protected readonly overlay = signal<string | null>('rgba(58, 160, 255, 0.5)');
+  protected readonly accent = signal<string | null>('hsl(210, 100%, 61%)');
+}
+```
+
+### Forms
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form [(formData)]="branding" [items]="items" />
+  `,
+})
+export class Demo {
+  protected readonly branding = signal({ primary: '#3aa0ff' });
+  protected readonly items: OgeFormItemData[] = [
+    {
+      field: 'primary',
+      label: 'Primary color',
+      editorType: 'colorBox',
+      editorOptions: { colorFormat: 'hex', showClearButton: true },
+    },
+  ];
+}
+```
+
+### Palette
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- view: 'gradient' | 'palette' | 'both'. The palette is an APG
+         grid: roving tabindex, arrows move by cell/row, Home/End row edges,
+         Ctrl+Home/End grid corners, Enter/Space picks (and closes — a swatch is a
+         final choice). Cells announce their color string; the selected checkmark
+         picks black or white by WCAG contrast. -->
+    <oge-color-box
+      label="Tag color"
+      view="palette"
+      [palette]="swatches"
+      [paletteColumns]="5"
+      [(value)]="tag"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tag = signal<string | null>('#16a34a');
+  protected readonly swatches: readonly string[] = [
+    '#dc2626', '#ea580c', '#d97706', '#16a34a', '#0d9488',
+    '#2563eb', '#7c3aed', '#c026d3', '#475569', '#111827',
+  ];
+}
+```
+
+### Typed
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColorBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColorBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Typed text parses ANY CSS color — #rgb/#rrggbb/#rrggbbaa,
+         rgb()/rgba() (comma and space/slash syntax), hsl(), the 148 named colors,
+         'transparent'. Commits normalize to format; unparseable text shows the
+         invalid state while typing and REVERTS on blur — a wrong color is never
+         committed. acceptCustomValue=false makes the text read-only. -->
+    <oge-color-box label="Any CSS color" [(value)]="typed" />
+    <oge-color-box label="Picker only" [acceptCustomValue]="false" [(value)]="typed" />
+  `,
+})
+export class Demo {
+  protected readonly typed = signal<string | null>('rebeccapurple');
 }
 ```
 
