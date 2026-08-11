@@ -143,22 +143,6 @@ export function navigate(
   return addMonths(anchor, direction * 120);
 }
 
-/** Resolves the locale's first day of week (`0` = Sunday) when unspecified. */
-export function resolveFirstDayOfWeek(
-  explicit: number | undefined,
-  locale: string | undefined,
-): number {
-  if (explicit !== undefined) return ((explicit % 7) + 7) % 7;
-  try {
-    const info = new Intl.Locale(locale ?? navigator.language) as unknown as {
-      weekInfo?: { firstDay?: number };
-      getWeekInfo?: () => { firstDay?: number };
-    };
-    const weekInfo = info.weekInfo ?? info.getWeekInfo?.();
-    // Intl weekInfo uses 1–7 (Mon–Sun); our API uses 0–6 (Sun–Sat)
-    if (weekInfo?.firstDay !== undefined) return weekInfo.firstDay % 7;
-  } catch {
-    // older engines: fall through to Sunday
-  }
-  return 0;
-}
+// resolveFirstDayOfWeek moved to @oge-ui/core date-utils (the scheduler
+// shares it); re-exported here so calendar-internal imports stay unchanged.
+export { resolveFirstDayOfWeek } from '@oge-ui/core';

@@ -1,0 +1,35 @@
+{
+  "name": "@oge-ui/scheduler",
+  "version": "0.10.0",
+  "description": "Signal-based Angular scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing — the only Angular-native scheduler. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "angular",
+    "scheduler",
+    "calendar",
+    "event-calendar",
+    "appointments",
+    "agenda",
+    "day-view",
+    "week-view",
+    "month-view",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@oge-ui/core": "0.10.0"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/scheduler"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

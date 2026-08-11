@@ -71,6 +71,20 @@ export default [
               onlyDependOnLibsWithTags: ['scope:bpmn', 'scope:core'],
             },
             {
+              // commercial scheduler: deliberately a *consumer* of the MIT
+              // suite — the appointment popup (overlay), editors (inputs)
+              // and the appointment form (forms) are the selling point, so
+              // unlike bpmn it takes those edges instead of rebuilding them
+              sourceTag: 'scope:scheduler',
+              onlyDependOnLibsWithTags: [
+                'scope:scheduler',
+                'scope:core',
+                'scope:overlay',
+                'scope:inputs',
+                'scope:forms',
+              ],
+            },
+            {
               sourceTag: 'scope:overlay',
               onlyDependOnLibsWithTags: ['scope:overlay', 'scope:core'],
             },
@@ -166,6 +180,7 @@ export default [
                 'scope:tree-list',
                 'scope:pivot',
                 'scope:bpmn',
+                'scope:scheduler',
                 'scope:buttons',
                 'scope:overlay',
                 'scope:inputs',

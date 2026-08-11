@@ -51,6 +51,68 @@ export function addYears(date: Date, years: number): Date {
   return addMonths(date, years * 12);
 }
 
+/**
+ * Minute arithmetic in local wall time: crossing a DST transition keeps the
+ * wall-clock delta (09:00 + 60min → 10:00 even on a 23-hour day), which is
+ * what calendar UIs expect — never epoch-millis addition.
+ */
+export function addMinutes(date: Date, minutes: number): Date {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes() + minutes,
+    date.getSeconds(),
+    date.getMilliseconds(),
+  );
+}
+
+/** Midnight (local) of the `firstDayOfWeek`-aligned day at or before `date`. */
+export function startOfWeek(date: Date, firstDayOfWeek: number): Date {
+  const lead = (date.getDay() - firstDayOfWeek + 7) % 7;
+  return addDays(startOfDay(date), -lead);
+}
+
+/** Midnight (local) of the 1st of the date's month. */
+export function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+/**
+ * Whether two half-open ranges `[startA, endA)` and `[startB, endB)` overlap.
+ * Half-open, so back-to-back appointments (10:00–11:00, 11:00–12:00) do NOT
+ * overlap — the convention used throughout the scheduler layout math.
+ */
+export function rangesOverlap(
+  startA: Date,
+  endA: Date,
+  startB: Date,
+  endB: Date,
+): boolean {
+  return startA.getTime() < endB.getTime() && startB.getTime() < endA.getTime();
+}
+
+/** Resolves the locale's first day of week (`0` = Sunday) when unspecified. */
+export function resolveFirstDayOfWeek(
+  explicit: number | undefined,
+  locale: string | undefined,
+): number {
+  if (explicit !== undefined) return ((explicit % 7) + 7) % 7;
+  try {
+    const info = new Intl.Locale(locale ?? navigator.language) as unknown as {
+      weekInfo?: { firstDay?: number };
+      getWeekInfo?: () => { firstDay?: number };
+    };
+    const weekInfo = info.weekInfo ?? info.getWeekInfo?.();
+    // Intl weekInfo uses 1–7 (Mon–Sun); our API uses 0–6 (Sun–Sat)
+    if (weekInfo?.firstDay !== undefined) return weekInfo.firstDay % 7;
+  } catch {
+    // older engines: fall through to Sunday
+  }
+  return 0;
+}
+
 export function sameDay(a: Date | null, b: Date | null): boolean {
   if (a === null || b === null) return a === b;
   return (
@@ -130,8 +192,9 @@ export function weekNumber(date: Date, rule: WeekNumberRule): number {
 
 /**
  * Serializes `next` in the storage shape of `original`: `Date` stays `Date`,
- * a `yyyy-MM-dd`(THH:mm…) string round-trips as `yyyy-MM-dd` — so grid
- * editors never silently change a row's storage type.
+ * a `yyyy-MM-dd` string round-trips as `yyyy-MM-dd`, and a string carrying a
+ * time part (`yyyy-MM-ddTHH:mm[:ss]`) keeps its time precision — so grid and
+ * scheduler editors never silently change a row's storage type.
  */
 export function serializeLikeOriginal(
   next: Date | null,
@@ -143,7 +206,15 @@ export function serializeLikeOriginal(
     const y = String(next.getFullYear()).padStart(4, '0');
     const m = String(next.getMonth() + 1).padStart(2, '0');
     const d = String(next.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    const timeMatch = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?/.exec(
+      original,
+    );
+    if (!timeMatch) return `${y}-${m}-${d}`;
+    const hh = String(next.getHours()).padStart(2, '0');
+    const mm = String(next.getMinutes()).padStart(2, '0');
+    if (!timeMatch[1]) return `${y}-${m}-${d}T${hh}:${mm}`;
+    const ss = String(next.getSeconds()).padStart(2, '0');
+    return `${y}-${m}-${d}T${hh}:${mm}:${ss}`;
   }
   return next;
 }
