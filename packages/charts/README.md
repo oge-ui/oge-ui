@@ -14,11 +14,14 @@ pure engine.
 
 **Series & axes**
 
-- `<oge-chart>`: `line`, `spline` (Catmull-Rom), `area`, `splineArea`,
-  `stackedArea`, `bar`, `stackedBar`, `fullStackedBar`, `scatter`,
-  `rangeArea`, `candlestick` — mixed freely, with `commonSeries`
-  defaults, per-series color/dash/width/opacity and null-value gaps
-  (never fake zeros)
+- `<oge-chart>`: 16 series types — `line`, `spline` (Catmull-Rom),
+  `stepLine`, `area`, `splineArea`, `stepArea`, `stackedArea`,
+  `fullStackedArea`, `bar`, `stackedBar`, `fullStackedBar`, `rangeBar`
+  (value1..value2 spans), `scatter`, `bubble` (`sizeField` drives the
+  bubble area), `rangeArea`, `candlestick` — mixed freely, with
+  `commonSeries` defaults, per-series color/dash/width/opacity,
+  `visible` initial state, `showLabels` value labels and null-value
+  gaps (never fake zeros)
 - `<oge-pie-chart>`: pie/doughnut with outside labels in two
   anti-overlap columns, connector lines, small-value grouping
   (`topN`/`smallValueThreshold` → an "Others" slice) and slice explode
@@ -53,9 +56,13 @@ pure engine.
   (real buttons, cancelable `legendClick`, axes rescale on toggle),
   point/series selection with `[(selectedPoints)]`
 - **Performance contract:** one `<path>` per series regardless of point
-  count, markers only under `markerThreshold`, O(log n) binary-search
-  hit-testing, rAF-coalesced pointer/resize work — a 50k-point smoke
-  test guards it
+  count, automatic **LTTB downsampling** to ~one point per pixel for
+  oversized line/area series (peaks survive; hit-testing keeps the full
+  data), markers only under `markerThreshold`, O(log n) binary-search
+  hit-testing, rAF-coalesced pointer/resize work — 50k/200k-point smoke
+  tests guard it
+- Legend items spotlight their series on hover (the rest dim), toggle
+  visibility on click, and respect the series' initial `visible` flag
 
 **Export** — `@oge-ui/charts/export-image` (lazy, dependency-free): the
 live SVG is serialized with computed styles inlined, downloaded as a

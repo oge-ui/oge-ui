@@ -521,7 +521,7 @@ keyboard) and polite live-region announcements.
 | Keyboard move/resize (Ctrl+Arrow, Ctrl+Shift+Up/Down)                      | —         | covered | **OGE extra** — announced via the live region                                                                                                                        |
 | Cancelable CRUD events + past-tense events                                 | dx/K      | covered | `appointment{Adding,Updating,Deleting}` (+ed); programmatic `addAppointment`/`updateAppointment`/`deleteAppointment`                                                 |
 | Context-menu events                                                        | dx        | covered | `appointmentContextMenu` / `cellContextMenu` with full payloads                                                                                                      |
-| Built-in context menu (chip edit/delete, cell create)                      | —         | covered | **OGE extra** — dx/K/FC only emit events; recurrence scope and `allow*` flags respected              |
+| Built-in context menu (chip edit/delete, cell create)                      | —         | covered | **OGE extra** — dx/K/FC only emit events; recurrence scope and `allow*` flags respected                                                                              |
 | `readOnly`                                                                 | K/FC      | covered | overrides every `allow*` flag                                                                                                                                        |
 | Templates: appointment / cell / date header                                | dx/K/FC   | covered | `[ogeAppointmentTemplate]` (+ cell/date-header **OGE extras**); collector + tooltip templates → v0.2                                                                 |
 | Messages/i18n incl. aria + announcements                                   | dx/K/FC   | covered | `provideOgeSchedulerConfig` + per-instance `[messages]`                                                                                                              |
@@ -580,7 +580,7 @@ live-region announcements.
 | Cancelable CRUD events + past-tense events + programmatic CRUD           | dx/K      | covered | `task*`/`dependency*` pipelines; `insertTask`/`updateTask`/`deleteTask`/`insertDependency`/`deleteDependency`                       |
 | Undo/redo                                                                | dx        | covered | snapshot history, one step per applied edit — **absent in Kendo**                                                                   |
 | Task dialog + `taskEditDialogShowing` form hook                          | dx/K      | covered | dx `onTaskEditDialogShowing` parity via mutable `formItems`                                                                         |
-| Built-in context menu + indent/outdent (Alt+Shift+arrows) + create-at  | dx        | covered | right-click menu, MS Project-style reparenting, double-click / draw-to-create on empty chart space |
+| Built-in context menu + indent/outdent (Alt+Shift+arrows) + create-at    | dx        | covered | right-click menu, MS Project-style reparenting, double-click / draw-to-create on empty chart space                                  |
 | Task-list columns (built-in + data fields, format)                       | dx/K      | covered | `columns: { field, header?, widthPx?, format? }`                                                                                    |
 | Resources (multi-assignment: labels + dialog tag editor)                 | dx/K      | covered | scalar or array `resourceId` stores; shape-preserving write-back; `showResourceWorkload` utilization band with overallocation marks |
 | Selection + `[(selectedTaskKey)]`, context-menu events                   | dx/K      | covered | single-row; `taskContextMenu` payload for custom menus                                                                              |
@@ -618,31 +618,32 @@ reference ships them) with live-region announcements.
 - **Intl-only local dates** (house rule): no date library; DST never
   shifts a point.
 
-| Feature (references)                                                    | Reference | Status  | Notes                                                                                               |
-| ----------------------------------------------------------------------- | --------- | ------- | --------------------------------------------------------------------------------------------------- |
-| Line/spline/area/splineArea/stackedArea series                          | dx/K      | covered | Catmull-Rom splines; null values render as gaps, never fake zeros                                   |
-| Bar/stackedBar/fullStackedBar (+ `stack` groups, negative stacks)       | dx/K      | covered | separate positive/negative branches; 100% normalization                                             |
-| Scatter, rangeArea, candlestick                                         | dx/K      | covered | OHLC field mapping; rising/falling theme tokens                                                     |
-| Pie/doughnut + outside labels + small-value grouping                    | dx/K      | covered | two-column anti-overlap labels with connectors; `topN`/threshold → "Others"                         |
-| Argument axis auto-detection (number/date/category)                     | dx        | covered | explicit `type` override                                                                            |
-| Calendar-true time axis + Intl labels                                   | dx/K      | covered | real month boundaries, DST-safe; unit-matched label formats                                         |
-| Logarithmic + inverted + multiple value axes                            | dx/K      | covered | per-series `axis`, `position: 'end'`, SI abbreviation                                               |
-| Label overlap resolution (`rotate`/`skip`)                              | dx/K      | covered | decided from measured slot widths                                                                   |
-| Strip lines / bands                                                     | dx        | covered | argument-axis `{ start, end?, label?, color? }`                                                     |
-| Zoom & pan (`[(visualRange)]`, wheel + drag-select + Shift-pan, Escape) | dx/K      | covered | cursor-centered; bpmn five-part gesture machine with mid-drag Escape                                |
-| Crosshair + single/shared tooltips + templates                          | dx/K      | covered | `*ogeChartTooltipTemplate`; nearest-series snap in single mode                                      |
-| Interactive legend (toggle, positions, template, cancelable click)      | dx/K      | covered | real `<button aria-pressed>` — axes rescale on toggle                                               |
-| Point/series selection (`[(selectedPoints)]`, Ctrl multi)               | dx/K      | covered | keyboard Enter selects too                                                                          |
-| Keyboard point inspection + live announcements + sr data table          | —         | covered | **OGE extra** — arrows walk arguments/series; no reference library ships either                     |
-| Image export (PNG/SVG)                                                  | dx/K      | covered | dependency-free `@oge-ui/charts/export-image`: inline-styled SVG serialization + canvas rasterizing |
-| Large-series performance (10k+)                                         | dx/K      | covered | single path per series, marker threshold, O(log n) hit-test, rAF coalescing — 50k smoke test        |
-| Messages/i18n incl. aria + announcements + `locale`                     | dx/K      | covered | `provideOgeChartsConfig` + per-instance `[messages]`/`[locale]`                                     |
-| Polar/radar charts (`oge-polar-chart`: line/area/scatter/bar, spider)   | dx/K      | covered | radar loops with gap handling, sector bars, circular/polygon grids, shared legend/tooltip/keyboard  |
-| Annotations (point callouts + text labels + HTML template)              | dx        | covered | anchored at (argument, value); `*ogeChartAnnotationTemplate` for arbitrary HTML                     |
-| Range selector overview strip (`oge-range-selector`, `[(value)]`)       | dx        | covered | mini background chart + draggable window; WAI-ARIA slider handles; pairs with `[(visualRange)]`     |
-| Financial indicators (trend lines, Fibonacci, moving averages)          | dx        | Skipped | analysis-tool surface beyond charting; annotations + extra series cover the common cases            |
-| TreeMap/Funnel/Gauge/Sparkline/Sankey families                          | dx/K      | Skipped | separate products in the references too — candidates for future packages, not chart options         |
-| Chart.js-style plugin hooks                                             | PrimeNG   | Skipped | OGE renders its own SVG; templates + events are the extension surface                               |
+| Feature (references)                                                     | Reference | Status  | Notes                                                                                               |
+| ------------------------------------------------------------------------ | --------- | ------- | --------------------------------------------------------------------------------------------------- |
+| Line/spline/step/area×5 series (incl. fullStackedArea)                   | dx/K      | covered | Catmull-Rom splines, step corners; null values render as gaps, never fake zeros                     |
+| Bar/stackedBar/fullStackedBar/rangeBar (+ `stack` groups, negatives)     | dx/K      | covered | separate positive/negative branches; 100% normalization; rangeBar spans value1..value2              |
+| Scatter, bubble (`sizeField` → area), rangeArea, candlestick             | dx/K      | covered | OHLC field mapping; rising/falling theme tokens                                                     |
+| Pie/doughnut + outside labels + small-value grouping                     | dx/K      | covered | two-column anti-overlap labels with connectors; `topN`/threshold → "Others"                         |
+| Argument axis auto-detection (number/date/category)                      | dx        | covered | explicit `type` override                                                                            |
+| Calendar-true time axis + Intl labels                                    | dx/K      | covered | real month boundaries, DST-safe; unit-matched label formats                                         |
+| Logarithmic + inverted + multiple value axes                             | dx/K      | covered | per-series `axis`, `position: 'end'`, SI abbreviation                                               |
+| Label overlap resolution (`rotate`/`skip`)                               | dx/K      | covered | decided from measured slot widths                                                                   |
+| Strip lines / bands                                                      | dx        | covered | argument-axis `{ start, end?, label?, color? }`                                                     |
+| Zoom & pan (`[(visualRange)]`, wheel + drag-select + Shift-pan, Escape)  | dx/K      | covered | cursor-centered; bpmn five-part gesture machine with mid-drag Escape                                |
+| Crosshair + single/shared tooltips + templates                           | dx/K      | covered | `*ogeChartTooltipTemplate`; nearest-series snap in single mode                                      |
+| Interactive legend (toggle, positions, template, cancelable click)       | dx/K      | covered | real `<button aria-pressed>` — axes rescale on toggle                                               |
+| Point/series selection (`[(selectedPoints)]`, Ctrl multi)                | dx/K      | covered | keyboard Enter selects too                                                                          |
+| Keyboard point inspection + live announcements + sr data table           | —         | covered | **OGE extra** — arrows walk arguments/series; no reference library ships either                     |
+| Image export (PNG/SVG)                                                   | dx/K      | covered | dependency-free `@oge-ui/charts/export-image`: inline-styled SVG serialization + canvas rasterizing |
+| Large-series performance (50k+ incl. LTTB aggregation)                   | dx/K      | covered | auto LTTB downsampling to ~1 pt/px (dx `aggregation` parity, peaks survive); full-data hit-testing  |
+| Point value labels (`showLabels`) + initial `visible` + legend spotlight | dx/K      | covered | SI-formatted labels on small series; hover a legend item to dim the rest (**OGE extra**)            |
+| Messages/i18n incl. aria + announcements + `locale`                      | dx/K      | covered | `provideOgeChartsConfig` + per-instance `[messages]`/`[locale]`                                     |
+| Polar/radar charts (`oge-polar-chart`: line/area/scatter/bar, spider)    | dx/K      | covered | radar loops with gap handling, sector bars, circular/polygon grids, shared legend/tooltip/keyboard  |
+| Annotations (point callouts + text labels + HTML template)               | dx        | covered | anchored at (argument, value); `*ogeChartAnnotationTemplate` for arbitrary HTML                     |
+| Range selector overview strip (`oge-range-selector`, `[(value)]`)        | dx        | covered | mini background chart + draggable window; WAI-ARIA slider handles; pairs with `[(visualRange)]`     |
+| Financial indicators (trend lines, Fibonacci, moving averages)           | dx        | Skipped | analysis-tool surface beyond charting; annotations + extra series cover the common cases            |
+| TreeMap/Funnel/Gauge/Sparkline/Sankey families                           | dx/K      | Skipped | separate products in the references too — candidates for future packages, not chart options         |
+| Chart.js-style plugin hooks                                              | PrimeNG   | Skipped | OGE renders its own SVG; templates + events are the extension surface                               |
 
 ## Date editors (`@oge-ui/inputs`) — Feature Parity
 

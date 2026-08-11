@@ -18,7 +18,7 @@ export const OGE_CHART_API: ApiSections = {
           type: 'readonly OgeChartSeriesInput[]',
           default: '[]',
           description:
-            'Series definitions: <code>type</code> (11 kinds), field mapping (<code>valueField</code>/<code>argumentField</code> — names, dotted paths or getters), <code>name</code>, <code>color</code>, <code>axis</code> (value-axis index), <code>stack</code> group, <code>dashStyle</code>/<code>width</code>/<code>opacity</code>, <code>showInLegend</code>, rangeArea bounds (<code>value1Field</code>/<code>value2Field</code>) and candlestick OHLC (<code>openField</code>/<code>highField</code>/<code>lowField</code>/<code>closeField</code>). Null/NaN values render as gaps.',
+            'Series definitions: <code>type</code> (16 kinds), field mapping (<code>valueField</code>/<code>argumentField</code> — names, dotted paths or getters), <code>name</code>, <code>color</code>, <code>axis</code> (value-axis index), <code>stack</code> group, <code>dashStyle</code>/<code>width</code>/<code>opacity</code>, <code>showInLegend</code>, rangeArea bounds (<code>value1Field</code>/<code>value2Field</code>) and candlestick OHLC (<code>openField</code>/<code>highField</code>/<code>lowField</code>/<code>closeField</code>), <code>sizeField</code> (bubble area), <code>visible</code> (start hidden; the legend re-shows) and <code>showLabels</code> (SI-formatted value labels on small series). Null/NaN values render as gaps.',
         },
         {
           name: 'commonSeries',
@@ -239,7 +239,7 @@ export const OGE_CHART_API: ApiSections = {
           name: 'OgeChartSeriesType',
           type: 'string union',
           description:
-            "'line' | 'spline' | 'area' | 'splineArea' | 'stackedArea' | 'bar' | 'stackedBar' | 'fullStackedBar' | 'scatter' | 'rangeArea' | 'candlestick'.",
+            "'line' | 'spline' | 'stepLine' | 'area' | 'splineArea' | 'stepArea' | 'stackedArea' | 'fullStackedArea' | 'bar' | 'stackedBar' | 'fullStackedBar' | 'rangeBar' | 'scatter' | 'bubble' | 'rangeArea' | 'candlestick'.",
         },
         {
           name: 'OgeChartPoint&lt;T&gt;',
@@ -507,7 +507,7 @@ export const OGE_CHARTS_CONFIG_API: ApiSections = {
           type: 'number',
           default: '200',
           description:
-            'Marker circles render only up to this many points per series — beyond it the single path carries the series alone (the 10k+ point performance contract).',
+            'Marker circles render only up to this many points per series — beyond it the single path carries the series alone. Line-family paths additionally auto-downsample with LTTB to about one point per pixel once a series outgrows the plot width (hit-testing and tooltips keep the full data).',
         },
       ],
     },

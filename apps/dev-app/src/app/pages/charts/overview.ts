@@ -113,9 +113,9 @@ const SECTIONS = [
     </app-demo-card>
 
     <app-demo-card
-      [chips]="['spline', 'splineArea', 'scatter', 'commonSeries']"
+      [chips]="['stepLine', 'bubble', 'rangeBar', 'showLabels']"
       heading="Series types"
-      description="Eleven series types share one kernel: splines are Catmull-Rom curves, areas fill to the zero line, scatter renders markers only — and null values become gaps rather than fake zeros. <code>commonSeries</code> sets shared defaults."
+      description="Sixteen series types share one kernel — line/spline/step lines, five area flavors, four bar flavors (incl. <code>rangeBar</code> spanning value1..value2), scatter, <code>bubble</code> (<code>sizeField</code> drives each bubble's area), rangeArea and candlestick. <code>showLabels</code> prints values next to small series, null values become gaps, and hovering a legend item spotlights its series."
       [code]="seriesTypesSnippet"
       language="ts"
     >
@@ -160,9 +160,9 @@ const SECTIONS = [
     </app-demo-card>
 
     <app-demo-card
-      [chips]="['5000 points', 'wheel zoom', 'drag-select', 'shared tooltip']"
+      [chips]="['50k points', 'LTTB downsampling', 'wheel zoom', 'drag-select']"
       heading="Zoom, pan & tooltips"
-      description="5000 points stay fluid: one SVG path per series, binary-search hit-testing and rAF-coalesced pointer work. Wheel zooms around the cursor, dragging selects a range, Shift+drag pans, Escape resets — <code>[(visualRange)]</code> is two-way and shared tooltips list every series at the hovered argument."
+      description="50,000 points per series stay fluid: paths auto-downsample with <strong>LTTB</strong> (Largest-Triangle-Three-Buckets — peaks survive) to roughly one point per pixel, while hit-testing stays a binary search over the <em>full</em> data. Wheel zooms around the cursor, dragging selects a range, Shift+drag pans, Escape resets — <code>[(visualRange)]</code> is two-way and shared tooltips list every series."
       [code]="zoomSnippet"
       language="ts"
     >
@@ -340,13 +340,21 @@ export class ChartsOverviewPage {
   protected readonly mixData = Array.from({ length: 14 }, (_, i) => ({
     day: i + 1,
     smooth: Math.sin(i / 2) * 30 + 60,
-    band: Math.sin(i / 2) * 20 + 40,
+    lo: Math.sin(i / 2) * 12 + 22,
+    hi: Math.sin(i / 2) * 12 + 42,
     dots: Math.cos(i / 1.5) * 25 + 55,
+    weight: (i % 5) + 1,
   }));
   protected readonly mixSeries: OgeChartSeriesInput[] = [
-    { type: 'splineArea', valueField: 'band', name: 'Range', opacity: 0.8 },
-    { type: 'spline', valueField: 'smooth', name: 'Trend', width: 3 },
-    { type: 'scatter', valueField: 'dots', name: 'Samples' },
+    { type: 'rangeBar', value1Field: 'lo', value2Field: 'hi', name: 'Band' },
+    { type: 'stepLine', valueField: 'smooth', name: 'Steps', width: 2.5 },
+    {
+      type: 'bubble',
+      valueField: 'dots',
+      sizeField: 'weight',
+      name: 'Bubbles',
+      opacity: 0.75,
+    },
   ];
 
   protected readonly timeData = Array.from({ length: 120 }, (_, i) => ({
@@ -383,7 +391,7 @@ export class ChartsOverviewPage {
   ];
 
   protected readonly perfRange = signal<OgeChartRange | null>(null);
-  protected readonly perfData = Array.from({ length: 5000 }, (_, i) => ({
+  protected readonly perfData = Array.from({ length: 50_000 }, (_, i) => ({
     t: new Date(2026, 0, 1, 0, i * 15),
     cpu: 40 + Math.sin(i / 60) * 25 + (i % 13),
     memory: 55 + Math.cos(i / 90) * 18 + (i % 7),

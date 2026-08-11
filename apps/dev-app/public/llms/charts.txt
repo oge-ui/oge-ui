@@ -106,7 +106,7 @@ _Data & series_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `dataSource` | `readonly T[]` | `[]` | Data items; never mutated. |
-| `series` | `readonly OgeChartSeriesInput[]` | `[]` | Series definitions: `type` (11 kinds), field mapping (`valueField`/`argumentField` — names, dotted paths or getters), `name`, `color`, `axis` (value-axis index), `stack` group, `dashStyle`/`width`/`opacity`, `showInLegend`, rangeArea bounds (`value1Field`/`value2Field`) and candlestick OHLC (`openField`/`highField`/`lowField`/`closeField`). Null/NaN values render as gaps. |
+| `series` | `readonly OgeChartSeriesInput[]` | `[]` | Series definitions: `type` (16 kinds), field mapping (`valueField`/`argumentField` — names, dotted paths or getters), `name`, `color`, `axis` (value-axis index), `stack` group, `dashStyle`/`width`/`opacity`, `showInLegend`, rangeArea bounds (`value1Field`/`value2Field`) and candlestick OHLC (`openField`/`highField`/`lowField`/`closeField`), `sizeField` (bubble area), `visible` (start hidden; the legend re-shows) and `showLabels` (SI-formatted value labels on small series). Null/NaN values render as gaps. |
 | `commonSeries` | `Partial<OgeChartSeriesInput>` | `{}` | Defaults merged under every series (dx `commonSeriesSettings` parity). |
 | `palette` | `readonly string[] \| undefined` | `—` | Series colors; defaults to the 10-color `OGE_CHART_PALETTE` (concrete hex values so exported images keep their colors). |
 
@@ -170,7 +170,7 @@ _Export entry point (lazy, dependency-free)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeChartSeriesType` | `string union` | 'line' \| 'spline' \| 'area' \| 'splineArea' \| 'stackedArea' \| 'bar' \| 'stackedBar' \| 'fullStackedBar' \| 'scatter' \| 'rangeArea' \| 'candlestick'. |
+| `OgeChartSeriesType` | `string union` | 'line' \| 'spline' \| 'stepLine' \| 'area' \| 'splineArea' \| 'stepArea' \| 'stackedArea' \| 'fullStackedArea' \| 'bar' \| 'stackedBar' \| 'fullStackedBar' \| 'rangeBar' \| 'scatter' \| 'bubble' \| 'rangeArea' \| 'candlestick'. |
 | `OgeChartPoint<T>` | `interface` | The normalized point: `argument`, `argNumeric`, `value`(s incl. OHLC), `source`, `index`. |
 | `OgeChartAxisType / OgeChartRange` | `'linear' \| 'logarithmic' \| 'category' \| 'time' / { min, max }` | Axis kinds and the numeric window type (time axes: epoch ms; category: index space). |
 | `[ogeChartTooltipTemplate]` | `structural directive (OgeChartTooltipTemplate)` | Replaces the tooltip's content; context `OgeChartTooltipTemplateContext`: `{ $implicit: OgeChartPointEvent[] }`. |
@@ -255,7 +255,7 @@ _Export entry point (lazy, dependency-free)_
 | `messages` | `OgeChartsMessages` | `—` | Every user-facing string, aria labels included: `aria` (`OgeChartsAriaMessages` — chart/pie labels with `{title}`/`{count}`, table caption, plot hint, legend label), `announcements` (`OgeChartsAnnouncementMessages` — live-region templates with `{series}`/`{argument}`/`{value}`) and `noData`. Defaults: `OGE_DEFAULT_CHARTS_MESSAGES`. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `[locale]` input wins. |
 | `a11yTableLimit` | `number` | `50` | Rows of the screen-reader data table. |
-| `markerThreshold` | `number` | `200` | Marker circles render only up to this many points per series — beyond it the single path carries the series alone (the 10k+ point performance contract). |
+| `markerThreshold` | `number` | `200` | Marker circles render only up to this many points per series — beyond it the single path carries the series alone. Line-family paths additionally auto-downsample with LTTB to about one point per pixel once a series outgrows the plot width (hit-testing and tooltips keep the full data). |
 
 ## Demos
 
@@ -617,10 +617,12 @@ import type { OgeChartSeriesInput } from '@oge-ui/charts';
   imports: [OgeChart],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Eleven series types share one kernel. splines are
-         Catmull-Rom curves, areas fill to the zero line, scatter renders
-         markers only; null values become gaps rather than fake zeros.
-         commonSeries sets shared defaults (dx commonSeriesSettings parity). -->
+    <!-- Sixteen series types share one kernel: line/spline/step
+         lines, five area flavors, four bar flavors (incl. rangeBar spanning
+         value1..value2), scatter, bubble (sizeField drives the AREA of each
+         bubble), rangeArea and candlestick. showLabels prints SI-formatted
+         values next to small series; null values become gaps, never fake
+         zeros. Hovering a legend item spotlights its series. -->
     <oge-chart
       [dataSource]="data"
       [series]="series"
@@ -633,14 +635,22 @@ export class Demo {
   protected readonly data = Array.from({ length: 14 }, (_, i) => ({
     day: i + 1,
     smooth: Math.sin(i / 2) * 30 + 60,
-    band: Math.sin(i / 2) * 20 + 40,
+    lo: Math.sin(i / 2) * 12 + 22,
+    hi: Math.sin(i / 2) * 12 + 42,
     dots: Math.cos(i / 1.5) * 25 + 55,
+    weight: (i % 5) + 1,
   }));
 
   protected readonly series: OgeChartSeriesInput[] = [
-    { type: 'splineArea', valueField: 'band', name: 'Range', opacity: 0.8 },
-    { type: 'spline', valueField: 'smooth', name: 'Trend', width: 3 },
-    { type: 'scatter', valueField: 'dots', name: 'Samples' },
+    { type: 'rangeBar', value1Field: 'lo', value2Field: 'hi', name: 'Band' },
+    { type: 'stepLine', valueField: 'smooth', name: 'Steps', width: 2.5 },
+    {
+      type: 'bubble',
+      valueField: 'dots',
+      sizeField: 'weight',
+      name: 'Bubbles',
+      opacity: 0.75,
+    },
   ];
 }
 ```
@@ -739,11 +749,12 @@ import type { OgeChartRange, OgeChartSeriesInput } from '@oge-ui/charts';
   imports: [OgeChart],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- 5000 points stay fluid: every series is a single SVG path,
-         hit-testing is a binary search and pointer work is rAF-coalesced.
-         Wheel zooms around the cursor, dragging selects a range, Shift+drag
-         pans, Escape resets; visualRange is two-way. shared tooltips list
-         every series at the hovered argument. -->
+    <!-- 50,000 points per series stay fluid: paths auto-downsample with
+         LTTB (Largest-Triangle-Three-Buckets — peaks survive) to roughly
+         one point per pixel, hit-testing is a binary search over the FULL
+         data and pointer work is rAF-coalesced. Wheel zooms around the
+         cursor, dragging selects a range, Shift+drag pans, Escape resets;
+         visualRange is two-way; shared tooltips list every series. -->
     <oge-chart
       [dataSource]="data"
       [series]="series"
@@ -759,7 +770,7 @@ import type { OgeChartRange, OgeChartSeriesInput } from '@oge-ui/charts';
 export class Demo {
   protected readonly range = signal<OgeChartRange | null>(null);
 
-  protected readonly data = Array.from({ length: 5000 }, (_, i) => ({
+  protected readonly data = Array.from({ length: 50_000 }, (_, i) => ({
     t: new Date(2026, 0, 1, 0, i * 15),
     cpu: 40 + Math.sin(i / 60) * 25 + (i % 13),
     memory: 55 + Math.cos(i / 90) * 18 + (i % 7),

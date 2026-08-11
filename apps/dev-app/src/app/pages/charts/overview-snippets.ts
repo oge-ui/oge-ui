@@ -29,10 +29,12 @@ protected readonly series: OgeChartSeriesInput[] = [
 export const SERIES_TYPES_SNIPPET = demoSource({
   use: { '@oge-ui/charts': ['OgeChart'] },
   types: { '@oge-ui/charts': ['OgeChartSeriesInput'] },
-  template: `<!-- Eleven series types share one kernel. splines are
-     Catmull-Rom curves, areas fill to the zero line, scatter renders
-     markers only; null values become gaps rather than fake zeros.
-     commonSeries sets shared defaults (dx commonSeriesSettings parity). -->
+  template: `<!-- Sixteen series types share one kernel: line/spline/step
+     lines, five area flavors, four bar flavors (incl. rangeBar spanning
+     value1..value2), scatter, bubble (sizeField drives the AREA of each
+     bubble), rangeArea and candlestick. showLabels prints SI-formatted
+     values next to small series; null values become gaps, never fake
+     zeros. Hovering a legend item spotlights its series. -->
 <oge-chart
   [dataSource]="data"
   [series]="series"
@@ -42,14 +44,22 @@ export const SERIES_TYPES_SNIPPET = demoSource({
   body: `protected readonly data = Array.from({ length: 14 }, (_, i) => ({
   day: i + 1,
   smooth: Math.sin(i / 2) * 30 + 60,
-  band: Math.sin(i / 2) * 20 + 40,
+  lo: Math.sin(i / 2) * 12 + 22,
+  hi: Math.sin(i / 2) * 12 + 42,
   dots: Math.cos(i / 1.5) * 25 + 55,
+  weight: (i % 5) + 1,
 }));
 
 protected readonly series: OgeChartSeriesInput[] = [
-  { type: 'splineArea', valueField: 'band', name: 'Range', opacity: 0.8 },
-  { type: 'spline', valueField: 'smooth', name: 'Trend', width: 3 },
-  { type: 'scatter', valueField: 'dots', name: 'Samples' },
+  { type: 'rangeBar', value1Field: 'lo', value2Field: 'hi', name: 'Band' },
+  { type: 'stepLine', valueField: 'smooth', name: 'Steps', width: 2.5 },
+  {
+    type: 'bubble',
+    valueField: 'dots',
+    sizeField: 'weight',
+    name: 'Bubbles',
+    opacity: 0.75,
+  },
 ];`,
 });
 
@@ -112,11 +122,12 @@ protected readonly series: OgeChartSeriesInput[] = [
 export const ZOOM_SNIPPET = demoSource({
   use: { '@oge-ui/charts': ['OgeChart'] },
   types: { '@oge-ui/charts': ['OgeChartRange', 'OgeChartSeriesInput'] },
-  template: `<!-- 5000 points stay fluid: every series is a single SVG path,
-     hit-testing is a binary search and pointer work is rAF-coalesced.
-     Wheel zooms around the cursor, dragging selects a range, Shift+drag
-     pans, Escape resets; visualRange is two-way. shared tooltips list
-     every series at the hovered argument. -->
+  template: `<!-- 50,000 points per series stay fluid: paths auto-downsample with
+     LTTB (Largest-Triangle-Three-Buckets — peaks survive) to roughly
+     one point per pixel, hit-testing is a binary search over the FULL
+     data and pointer work is rAF-coalesced. Wheel zooms around the
+     cursor, dragging selects a range, Shift+drag pans, Escape resets;
+     visualRange is two-way; shared tooltips list every series. -->
 <oge-chart
   [dataSource]="data"
   [series]="series"
@@ -129,7 +140,7 @@ export const ZOOM_SNIPPET = demoSource({
 />`,
   body: `protected readonly range = signal<OgeChartRange | null>(null);
 
-protected readonly data = Array.from({ length: 5000 }, (_, i) => ({
+protected readonly data = Array.from({ length: 50_000 }, (_, i) => ({
   t: new Date(2026, 0, 1, 0, i * 15),
   cpu: 40 + Math.sin(i / 60) * 25 + (i % 13),
   memory: 55 + Math.cos(i / 90) * 18 + (i % 7),

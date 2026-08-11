@@ -47,8 +47,10 @@ import {
   baselineAreaPath,
   linePath,
   splinePath,
+  steppedPoints,
   type PathPoint,
 } from '../engine/path-builder';
+import { downsamplePath } from '../engine/downsample';
 import {
   decideLabelLayout,
   numberFormat,
@@ -126,6 +128,14 @@ interface RenderMarker {
   readonly y: number;
   readonly seriesIndex: number;
   readonly pointIndex: number;
+  /** bubble radius; undefined = the default marker size. */
+  readonly r?: number;
+}
+
+interface RenderLabel {
+  readonly x: number;
+  readonly y: number;
+  readonly text: string;
 }
 
 interface RenderSeries {
@@ -138,6 +148,7 @@ interface RenderSeries {
   readonly bars: readonly RenderBar[];
   readonly candles: readonly RenderCandle[];
   readonly markers: readonly RenderMarker[];
+  readonly labels: readonly RenderLabel[];
   readonly dashArray: string | null;
   readonly strokeWidth: number;
   readonly opacity: number;
@@ -185,6 +196,10 @@ interface AxisTickVm {
                 [attr.aria-pressed]="!item.hidden"
                 [disabled]="!legendInteractive()"
                 (click)="onLegendClick(item.seriesIndex)"
+                (mouseenter)="hoveredLegend.set(item.seriesIndex)"
+                (mouseleave)="hoveredLegend.set(null)"
+                (focus)="hoveredLegend.set(item.seriesIndex)"
+                (blur)="hoveredLegend.set(null)"
               >
                 @if (legendTemplate(); as tpl) {
                   <ng-container
@@ -301,69 +316,85 @@ interface AxisTickVm {
             <!-- series -->
             <g [attr.clip-path]="'url(#' + clipId + ')'">
               @for (rs of renderSeries(); track rs.seriesIndex) {
-                @if (rs.areaPathD !== null) {
-                  <path
-                    class="oge-chart-area"
-                    [attr.d]="rs.areaPathD"
-                    [attr.fill]="rs.color"
-                    [attr.opacity]="rs.opacity * 0.35"
-                  />
-                }
-                @if (rs.linePathD !== null) {
-                  <path
-                    class="oge-chart-line"
-                    [attr.d]="rs.linePathD"
-                    [attr.stroke]="rs.color"
-                    [attr.stroke-width]="rs.strokeWidth"
-                    [attr.stroke-dasharray]="rs.dashArray"
-                    [attr.opacity]="rs.opacity"
-                    fill="none"
-                  />
-                }
-                @for (bar of rs.bars; track bar.pointIndex) {
-                  <rect
-                    class="oge-chart-bar"
-                    [class.oge-chart-point-selected]="
-                      isSelected(rs.seriesIndex, bar.pointIndex)
-                    "
-                    [attr.x]="bar.x"
-                    [attr.y]="bar.y"
-                    [attr.width]="bar.w"
-                    [attr.height]="bar.h"
-                    [attr.fill]="rs.color"
-                    [attr.opacity]="rs.opacity"
-                    rx="2"
-                  />
-                }
-                @for (candle of rs.candles; track candle.pointIndex) {
-                  <line
-                    class="oge-chart-candle-wick"
-                    [attr.x1]="candle.x"
-                    [attr.x2]="candle.x"
-                    [attr.y1]="candle.wickY1"
-                    [attr.y2]="candle.wickY2"
-                  />
-                  <rect
-                    class="oge-chart-candle"
-                    [class.oge-chart-candle-falling]="!candle.rising"
-                    [attr.x]="candle.x - candle.w / 2"
-                    [attr.y]="candle.bodyY"
-                    [attr.width]="candle.w"
-                    [attr.height]="candle.bodyH"
-                  />
-                }
-                @for (marker of rs.markers; track marker.pointIndex) {
-                  <circle
-                    class="oge-chart-marker"
-                    [class.oge-chart-point-selected]="
-                      isSelected(rs.seriesIndex, marker.pointIndex)
-                    "
-                    [attr.cx]="marker.x"
-                    [attr.cy]="marker.y"
-                    [attr.r]="rs.type === 'scatter' ? 4 : 3.5"
-                    [attr.fill]="rs.color"
-                  />
-                }
+                <g
+                  class="oge-chart-series"
+                  [attr.opacity]="seriesGroupOpacity(rs.seriesIndex)"
+                >
+                  @if (rs.areaPathD !== null) {
+                    <path
+                      class="oge-chart-area"
+                      [attr.d]="rs.areaPathD"
+                      [attr.fill]="rs.color"
+                      [attr.opacity]="rs.opacity * 0.35"
+                    />
+                  }
+                  @if (rs.linePathD !== null) {
+                    <path
+                      class="oge-chart-line"
+                      [attr.d]="rs.linePathD"
+                      [attr.stroke]="rs.color"
+                      [attr.stroke-width]="rs.strokeWidth"
+                      [attr.stroke-dasharray]="rs.dashArray"
+                      [attr.opacity]="rs.opacity"
+                      fill="none"
+                    />
+                  }
+                  @for (bar of rs.bars; track bar.pointIndex) {
+                    <rect
+                      class="oge-chart-bar"
+                      [class.oge-chart-point-selected]="
+                        isSelected(rs.seriesIndex, bar.pointIndex)
+                      "
+                      [attr.x]="bar.x"
+                      [attr.y]="bar.y"
+                      [attr.width]="bar.w"
+                      [attr.height]="bar.h"
+                      [attr.fill]="rs.color"
+                      [attr.opacity]="rs.opacity"
+                      rx="2"
+                    />
+                  }
+                  @for (candle of rs.candles; track candle.pointIndex) {
+                    <line
+                      class="oge-chart-candle-wick"
+                      [attr.x1]="candle.x"
+                      [attr.x2]="candle.x"
+                      [attr.y1]="candle.wickY1"
+                      [attr.y2]="candle.wickY2"
+                    />
+                    <rect
+                      class="oge-chart-candle"
+                      [class.oge-chart-candle-falling]="!candle.rising"
+                      [attr.x]="candle.x - candle.w / 2"
+                      [attr.y]="candle.bodyY"
+                      [attr.width]="candle.w"
+                      [attr.height]="candle.bodyH"
+                    />
+                  }
+                  @for (marker of rs.markers; track marker.pointIndex) {
+                    <circle
+                      class="oge-chart-marker"
+                      [class.oge-chart-bubble]="rs.type === 'bubble'"
+                      [class.oge-chart-point-selected]="
+                        isSelected(rs.seriesIndex, marker.pointIndex)
+                      "
+                      [attr.cx]="marker.x"
+                      [attr.cy]="marker.y"
+                      [attr.r]="marker.r ?? (rs.type === 'scatter' ? 4 : 3.5)"
+                      [attr.fill]="rs.color"
+                    />
+                  }
+                  @for (label of rs.labels; track $index) {
+                    <text
+                      class="oge-chart-point-label"
+                      [attr.x]="label.x"
+                      [attr.y]="label.y"
+                      text-anchor="middle"
+                    >
+                      {{ label.text }}
+                    </text>
+                  }
+                </g>
               }
             </g>
             <!-- crosshair -->
@@ -769,9 +800,19 @@ export class OgeChart<T extends object = Record<string, unknown>> {
     );
   });
 
-  private readonly hiddenSeries = signal<ReadonlySet<number>>(new Set());
+  /** Legend-toggle overrides; unset = the series input's `visible` flag. */
+  private readonly visibilityOverrides = signal<ReadonlyMap<number, boolean>>(
+    new Map(),
+  );
+
+  protected isSeriesVisible(seriesIndex: number): boolean {
+    const override = this.visibilityOverrides().get(seriesIndex);
+    if (override !== undefined) return override;
+    return this.seriesList()[seriesIndex]?.input.visible !== false;
+  }
+
   protected readonly visibleSeries = computed(() =>
-    this.seriesList().filter((_, index) => !this.hiddenSeries().has(index)),
+    this.seriesList().filter((_, index) => this.isSeriesVisible(index)),
   );
 
   /** Full data bounds on the argument axis. */
@@ -894,7 +935,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       let min = Infinity;
       let max = -Infinity;
       this.seriesList().forEach((series, seriesIndex) => {
-        if (this.hiddenSeries().has(seriesIndex)) return;
+        if (!this.isSeriesVisible(seriesIndex)) return;
         if ((series.input.axis ?? 0) !== axisIndex) return;
         const stacked = stacks[seriesIndex];
         if (stacked !== null) {
@@ -990,13 +1031,17 @@ export class OgeChart<T extends object = Record<string, unknown>> {
     const markerThreshold = this.config.markerThreshold ?? 200;
     const result: RenderSeries[] = [];
     this.seriesList().forEach((series, seriesIndex) => {
-      if (this.hiddenSeries().has(seriesIndex)) return;
+      if (!this.isSeriesVisible(seriesIndex)) return;
       const valueScale = scales[series.input.axis ?? 0] ?? scales[0];
       const color = this.colorOf(seriesIndex);
       const stacked = stacks[seriesIndex];
       const slot = barSlots[seriesIndex];
       const xOf = (point: ChartPoint<T>): number | null =>
         point.argNumeric === null ? null : scale.toPx(point.argNumeric);
+      const showLabels = series.input.showLabels === true;
+      const labels: RenderLabel[] = [];
+      const labelText = (value: number): string =>
+        siFormat(value, this.effectiveLocale());
       const dashArray =
         series.input.dashStyle === 'dash'
           ? '6 4'
@@ -1018,8 +1063,12 @@ export class OgeChart<T extends object = Record<string, unknown>> {
           const x = xOf(point);
           if (x === null || slot === null) return;
           const segment =
-            stacked?.[pointIndex] ??
-            (point.value === null ? null : { base: 0, top: point.value });
+            type === 'rangeBar'
+              ? point.value === null || point.value2 === null
+                ? null
+                : { base: point.value2, top: point.value }
+              : (stacked?.[pointIndex] ??
+                (point.value === null ? null : { base: 0, top: point.value }));
           if (segment === null) return;
           const y1 = valueScale.toPx(segment.base);
           const y2 = valueScale.toPx(segment.top);
@@ -1031,6 +1080,35 @@ export class OgeChart<T extends object = Record<string, unknown>> {
             seriesIndex,
             pointIndex,
           });
+          if (showLabels && point.value !== null) {
+            labels.push({
+              x: x + slot.offsetPx + slot.widthPx / 2,
+              y: Math.min(y1, y2) - 4,
+              text: labelText(point.value),
+            });
+          }
+        });
+      } else if (type === 'bubble') {
+        let sizeMin = Infinity;
+        let sizeMax = -Infinity;
+        for (const point of series.points) {
+          if (point.size === null) continue;
+          sizeMin = Math.min(sizeMin, point.size);
+          sizeMax = Math.max(sizeMax, point.size);
+        }
+        const sizeSpan = sizeMax - sizeMin || 1;
+        series.points.forEach((point, pointIndex) => {
+          const x = xOf(point);
+          if (x === null || point.value === null) return;
+          const frac =
+            point.size === null ? 0.5 : (point.size - sizeMin) / sizeSpan;
+          // sqrt so AREA (not radius) tracks the size value
+          const r = 4 + Math.sqrt(frac) * 14;
+          const y = valueScale.toPx(point.value);
+          markers.push({ x, y, seriesIndex, pointIndex, r });
+          if (showLabels) {
+            labels.push({ x, y: y - r - 4, text: labelText(point.value) });
+          }
         });
       } else if (type === 'candlestick') {
         const w = Math.max(3, this.barBandPx() * 0.5);
@@ -1055,16 +1133,16 @@ export class OgeChart<T extends object = Record<string, unknown>> {
         series.points.forEach((point, pointIndex) => {
           const x = xOf(point);
           if (x === null || point.value === null) return;
-          markers.push({
-            x,
-            y: valueScale.toPx(point.value),
-            seriesIndex,
-            pointIndex,
-          });
+          const y = valueScale.toPx(point.value);
+          markers.push({ x, y, seriesIndex, pointIndex });
+          if (showLabels) {
+            labels.push({ x, y: y - 8, text: labelText(point.value) });
+          }
         });
       } else {
         // line-family
         const spline = type === 'spline' || type === 'splineArea';
+        const step = type === 'stepLine' || type === 'stepArea';
         const top: PathPoint[] = series.points.map((point, pointIndex) => {
           const x = xOf(point);
           const value =
@@ -1074,11 +1152,22 @@ export class OgeChart<T extends object = Record<string, unknown>> {
             y: x === null || value === null ? null : valueScale.toPx(value),
           };
         });
-        linePathD = spline ? splinePath(top) : linePath(top);
+        // big series: LTTB-downsample the PATH only (markers/hit-testing
+        // keep the full data) so one path never carries more points than
+        // the plot has pixels
+        const budget = Math.max(200, Math.ceil(this.plotW() * 1.5));
+        const pathTop = step
+          ? steppedPoints(top)
+          : top.length > budget
+            ? downsamplePath(top, budget)
+            : top;
+        linePathD = spline ? splinePath(pathTop) : linePath(pathTop);
         if (
           type === 'area' ||
           type === 'splineArea' ||
+          type === 'stepArea' ||
           type === 'stackedArea' ||
+          type === 'fullStackedArea' ||
           type === 'rangeArea'
         ) {
           if (type === 'rangeArea') {
@@ -1095,7 +1184,10 @@ export class OgeChart<T extends object = Record<string, unknown>> {
             const back = reversePathPoints(bottom);
             areaPathD =
               linePathD !== '' && back !== '' ? `${linePathD} ${back} Z` : null;
-          } else if (type === 'stackedArea' && stacked !== null) {
+          } else if (
+            (type === 'stackedArea' || type === 'fullStackedArea') &&
+            stacked !== null
+          ) {
             const bottom: PathPoint[] = series.points.map(
               (point, pointIndex) => {
                 const x = xOf(point);
@@ -1114,7 +1206,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
             const baselineY = valueScale.toPx(
               Math.max(valueScale.min, Math.min(valueScale.max, 0)),
             );
-            areaPathD = baselineAreaPath(top, baselineY, spline);
+            areaPathD = baselineAreaPath(pathTop, baselineY, spline);
           }
         }
         if (series.points.length <= markerThreshold) {
@@ -1127,6 +1219,13 @@ export class OgeChart<T extends object = Record<string, unknown>> {
               seriesIndex,
               pointIndex,
             });
+            if (showLabels && point.value !== null) {
+              labels.push({
+                x: pathPoint.x,
+                y: pathPoint.y - 8,
+                text: labelText(point.value),
+              });
+            }
           });
         }
       }
@@ -1140,6 +1239,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
         bars,
         candles,
         markers,
+        labels,
         dashArray,
         strokeWidth,
         opacity,
@@ -1319,16 +1419,23 @@ export class OgeChart<T extends object = Record<string, unknown>> {
         seriesIndex,
         name: series.name,
         color: this.colorOf(seriesIndex),
-        hidden: this.hiddenSeries().has(seriesIndex),
+        hidden: !this.isSeriesVisible(seriesIndex),
         inLegend: series.input.showInLegend !== false,
       }))
       .filter((item) => item.inLegend),
   );
 
+  /** Hovering a legend item spotlights its series and dims the rest. */
+  protected readonly hoveredLegend = signal<number | null>(null);
+
+  protected seriesGroupOpacity(seriesIndex: number): number {
+    const hovered = this.hoveredLegend();
+    return hovered === null || hovered === seriesIndex ? 1 : 0.25;
+  }
+
   protected onLegendClick(seriesIndex: number): void {
     if (!this.legendInteractive()) return;
-    const hidden = untracked(this.hiddenSeries);
-    const willHide = !hidden.has(seriesIndex);
+    const willHide = untracked(() => this.isSeriesVisible(seriesIndex));
     const series = untracked(this.seriesList)[seriesIndex];
     const event: OgeChartLegendClickEvent = {
       seriesIndex,
@@ -1338,10 +1445,9 @@ export class OgeChart<T extends object = Record<string, unknown>> {
     };
     this.legendClick.emit(event);
     if (event.cancel) return;
-    const next = new Set(hidden);
-    if (willHide) next.add(seriesIndex);
-    else next.delete(seriesIndex);
-    this.hiddenSeries.set(next);
+    const next = new Map(untracked(this.visibilityOverrides));
+    next.set(seriesIndex, !willHide);
+    this.visibilityOverrides.set(next);
     this.announce(
       willHide
         ? this.msg().announcements.seriesHidden
@@ -1416,7 +1522,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       const shared = this.tooltip().shared === true;
       const list: OgeChartPointEvent<T>[] = [];
       this.seriesList().forEach((series, seriesIndex) => {
-        if (this.hiddenSeries().has(seriesIndex)) return;
+        if (!this.isSeriesVisible(seriesIndex)) return;
         if (!shared && seriesIndex !== this.nearestSeriesIndex()) return;
         const pointIndex = index.pointIndexAt(position, seriesIndex);
         if (pointIndex === -1) return;
@@ -1444,7 +1550,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
     let best = 0;
     let bestDist = Infinity;
     this.seriesList().forEach((series, seriesIndex) => {
-      if (this.hiddenSeries().has(seriesIndex)) return;
+      if (!this.isSeriesVisible(seriesIndex)) return;
       const pointIndex = index.pointIndexAt(position, seriesIndex);
       if (pointIndex === -1) return;
       const value = series.points[pointIndex].value;
@@ -1698,7 +1804,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
         let next = untracked(this.activeSeriesIndex);
         for (let i = 0; i < seriesCount; i++) {
           next = (next + delta + seriesCount) % seriesCount;
-          if (!untracked(this.hiddenSeries).has(next)) break;
+          if (untracked(() => this.isSeriesVisible(next))) break;
         }
         this.activeSeriesIndex.set(next);
         this.announceActive();
@@ -1850,14 +1956,13 @@ export class OgeChart<T extends object = Record<string, unknown>> {
 
   /** Snapshot for `@oge-ui/charts/export-image`. */
   getExportData(): OgeChartExportData<T> {
-    const hidden = untracked(this.hiddenSeries);
     return {
       title: untracked(this.title),
       series: untracked(this.seriesList).map((series, seriesIndex) => ({
         name: series.name,
         type: series.type,
         color: this.colorOf(seriesIndex),
-        visible: !hidden.has(seriesIndex),
+        visible: untracked(() => this.isSeriesVisible(seriesIndex)),
         points: series.points,
       })),
       argumentRange: untracked(this.effectiveRange),

@@ -180,6 +180,97 @@ describe('<oge-chart>', () => {
     expect(texts).toEqual(['Peak', 'Note']);
   });
 
+  it('new series types render: stepLine steps, bubble sizes, rangeBar spans, labels show', async () => {
+    fixture.componentInstance.series.set([
+      {
+        type: 'stepLine',
+        argumentField: 'month',
+        valueField: 'cost',
+        name: 'Steps',
+      },
+      {
+        type: 'bubble',
+        argumentField: 'month',
+        valueField: 'cost',
+        sizeField: 'sales',
+        name: 'Bubbles',
+      },
+      {
+        type: 'rangeBar',
+        argumentField: 'month',
+        value1Field: 'cost',
+        value2Field: 'sales',
+        name: 'Range',
+        showLabels: true,
+      },
+    ]);
+    await settle(fixture);
+    // stepLine: every segment is axis-parallel (x or y matches its neighbor)
+    const d = host
+      .querySelector('.oge-chart-line')
+      ?.getAttribute('d') as string;
+    const coords = [...d.matchAll(/[ML] (-?[\d.]+) (-?[\d.]+)/g)].map(
+      (match) => [Number(match[1]), Number(match[2])],
+    );
+    for (let i = 1; i < coords.length; i++) {
+      const straight =
+        coords[i][0] === coords[i - 1][0] || coords[i][1] === coords[i - 1][1];
+      expect(straight).toBe(true);
+    }
+    // bubbles: radii differ with the size field
+    const radii = Array.from(host.querySelectorAll('.oge-chart-bubble')).map(
+      (el) => Number(el.getAttribute('r')),
+    );
+    expect(new Set(radii).size).toBeGreaterThan(1);
+    // rangeBar renders bars where both bounds exist (Mar sales is null → 3)
+    expect(host.querySelectorAll('.oge-chart-bar').length).toBe(3);
+    // labels render for the labeled series
+    expect(
+      host.querySelectorAll('.oge-chart-point-label').length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('series visible:false starts hidden and the legend re-shows it', async () => {
+    fixture.componentInstance.series.set([
+      {
+        type: 'line',
+        argumentField: 'month',
+        valueField: 'sales',
+        name: 'Sales',
+        visible: false,
+      },
+    ]);
+    await settle(fixture);
+    expect(host.querySelectorAll('.oge-chart-line').length).toBe(0);
+    const button = host.querySelector<HTMLButtonElement>(
+      '.oge-chart-legend-btn',
+    );
+    expect(button?.getAttribute('aria-pressed')).toBe('false');
+    button?.click();
+    await settle(fixture);
+    expect(host.querySelectorAll('.oge-chart-line').length).toBe(1);
+  });
+
+  it('big line series downsample the path via LTTB (well under one point per px)', async () => {
+    fixture.componentInstance.data.set(
+      Array.from({ length: 20_000 }, (_, i) => ({
+        month: String(i),
+        sales: Math.sin(i / 100) * 50,
+        cost: 0,
+      })),
+    );
+    fixture.componentInstance.series.set([
+      { type: 'line', argumentField: 'month', valueField: 'sales', name: 'S' },
+    ]);
+    await settle(fixture);
+    const d = host
+      .querySelector('.oge-chart-line')
+      ?.getAttribute('d') as string;
+    const commands = (d.match(/[ML] /g) ?? []).length;
+    expect(commands).toBeLessThan(2_000);
+    expect(commands).toBeGreaterThan(200);
+  });
+
   it('getExportData snapshots series, colors and ranges', () => {
     const data = fixture.componentInstance.chart().getExportData();
     expect(data.title).toBe('Revenue');
