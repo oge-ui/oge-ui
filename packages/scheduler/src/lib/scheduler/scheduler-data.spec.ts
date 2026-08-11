@@ -113,15 +113,15 @@ describe('<oge-scheduler> data binding', () => {
     const host = fixture.nativeElement as HTMLElement;
     const chips = host.querySelectorAll('.oge-scheduler-chip-text');
     expect(chips.length).toBe(1);
-    expect(chips[0].textContent).toBe('Loaded'); // October item filtered out
+    expect(chips[0].textContent?.trim()).toBe('Loaded'); // October item filtered out
   });
 
   it('loads from a core DataSource', async () => {
     const fixture = TestBed.createComponent(DataSourceHost);
     await settle(fixture);
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('.oge-scheduler-chip-text')?.textContent).toBe(
-      'Loaded',
-    );
+    expect(
+      host.querySelector('.oge-scheduler-chip-text')?.textContent?.trim(),
+    ).toBe('Loaded');
   });
 });

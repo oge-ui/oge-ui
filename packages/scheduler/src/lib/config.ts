@@ -53,6 +53,34 @@ export interface OgeSchedulerEditorMessages {
   readonly cancel: string;
   /** Validation message when the end date is not after the start date. */
   readonly endBeforeStart: string;
+  /** Recurrence section labels. */
+  readonly repeatLabel: string;
+  readonly repeatOptions: Readonly<
+    Record<'never' | 'daily' | 'weekly' | 'monthly' | 'yearly', string>
+  >;
+  readonly intervalLabel: string;
+  /** Weekday picker label of the weekly recurrence. */
+  readonly repeatOnLabel: string;
+  readonly endLabel: string;
+  readonly endOptions: Readonly<Record<'never' | 'count' | 'until', string>>;
+  readonly countLabel: string;
+  readonly untilLabel: string;
+}
+
+/** Strings of the occurrence-vs-series scope dialog. */
+export interface OgeSchedulerRecurrenceScopeMessages {
+  /** Dialog title. */
+  readonly title: string;
+  /** Body text; `{action}` is the localized action name. */
+  readonly text: string;
+  readonly editAction: string;
+  readonly deleteAction: string;
+  readonly moveAction: string;
+  /** "Only this appointment" button. */
+  readonly occurrence: string;
+  /** "The entire series" button. */
+  readonly series: string;
+  readonly cancel: string;
 }
 
 /**
@@ -97,6 +125,7 @@ export interface OgeSchedulerMessages {
   readonly toolbar: OgeSchedulerToolbarMessages;
   readonly popup: OgeSchedulerPopupMessages;
   readonly editor: OgeSchedulerEditorMessages;
+  readonly recurrenceScope: OgeSchedulerRecurrenceScopeMessages;
   readonly grid: OgeSchedulerGridMessages;
   readonly announcements: OgeSchedulerAnnouncementMessages;
 }
@@ -138,6 +167,30 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
     save: 'Save',
     cancel: 'Cancel',
     endBeforeStart: 'The end date must be after the start date',
+    repeatLabel: 'Repeat',
+    repeatOptions: {
+      never: 'Never',
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      yearly: 'Yearly',
+    },
+    intervalLabel: 'Every',
+    repeatOnLabel: 'Repeat on',
+    endLabel: 'Ends',
+    endOptions: { never: 'Never', count: 'After', until: 'On date' },
+    countLabel: 'Occurrences',
+    untilLabel: 'End date',
+  },
+  recurrenceScope: {
+    title: 'Recurring appointment',
+    text: 'Apply the {action} to this appointment only, or to the entire series?',
+    editAction: 'change',
+    deleteAction: 'deletion',
+    moveAction: 'move',
+    occurrence: 'Only this appointment',
+    series: 'The entire series',
+    cancel: 'Cancel',
   },
   grid: {
     gridLabel: 'Scheduler, {period}',

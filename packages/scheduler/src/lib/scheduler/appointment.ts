@@ -35,7 +35,26 @@ import type { OgeAppointmentTemplate } from './scheduler-templates';
         [ngTemplateOutletContext]="{ $implicit: appointment(), view: view() }"
       />
     } @else {
-      <span class="oge-scheduler-chip-text">{{ appointment().text }}</span>
+      <span class="oge-scheduler-chip-text">
+        @if (appointment().recurrenceRule) {
+          <svg
+            class="oge-scheduler-chip-recur"
+            viewBox="0 0 16 16"
+            width="10"
+            height="10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M13 8a5 5 0 0 1-9 3m-1-3a5 5 0 0 1 9-3" />
+            <path d="M12.5 2v3h-3M3.5 14v-3h3" />
+          </svg>
+        }
+        {{ appointment().text }}</span
+      >
       @if (!compact()) {
         <span class="oge-scheduler-chip-time">{{ timeText() }}</span>
         @if (appointment().location; as location) {

@@ -21,6 +21,14 @@ export interface SchedulerEditorModel {
   color?: string;
   location?: string;
   description?: string;
+  /** Recurrence section (mapped to/from the RRULE by the shell). */
+  repeat: 'never' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  interval: number;
+  /** Weekly BYDAY weekdays (0 = Sunday). */
+  byDays: number[];
+  endMode: 'never' | 'count' | 'until';
+  count: number;
+  until?: Date;
 }
 
 /** The dialog's save payload. */
@@ -94,6 +102,8 @@ export class OgeSchedulerAppointmentDialog {
   defaultItems(): OgeFormItemData[] {
     const messages = this.messages();
     const allDay = this.model()?.allDay === true;
+    const repeat = this.model()?.repeat ?? 'never';
+    const endMode = this.model()?.endMode ?? 'never';
     return [
       {
         field: 'text',
@@ -144,6 +154,65 @@ export class OgeSchedulerAppointmentDialog {
         editorType: 'colorBox',
       },
       {
+        field: 'repeat',
+        label: messages.repeatLabel,
+        editorType: 'selectBox',
+        editorOptions: {
+          items: (
+            ['never', 'daily', 'weekly', 'monthly', 'yearly'] as const
+          ).map((value) => ({ value, text: messages.repeatOptions[value] })),
+          valueExpr: 'value',
+          displayExpr: 'text',
+        },
+      },
+      {
+        field: 'interval',
+        label: messages.intervalLabel,
+        editorType: 'numberBox',
+        editorOptions: { min: 1, max: 99, showSpinButtons: true },
+        visible: repeat !== 'never',
+      },
+      {
+        field: 'byDays',
+        label: messages.repeatOnLabel,
+        editorType: 'tagBox',
+        editorOptions: {
+          items: this.weekdayItems(),
+          valueExpr: 'value',
+          displayExpr: 'text',
+        },
+        colSpan: 2,
+        visible: repeat === 'weekly',
+      },
+      {
+        field: 'endMode',
+        label: messages.endLabel,
+        editorType: 'selectBox',
+        editorOptions: {
+          items: (['never', 'count', 'until'] as const).map((value) => ({
+            value,
+            text: messages.endOptions[value],
+          })),
+          valueExpr: 'value',
+          displayExpr: 'text',
+        },
+        visible: repeat !== 'never',
+      },
+      {
+        field: 'count',
+        label: messages.countLabel,
+        editorType: 'numberBox',
+        editorOptions: { min: 1, max: 999, showSpinButtons: true },
+        visible: repeat !== 'never' && endMode === 'count',
+      },
+      {
+        field: 'until',
+        label: messages.untilLabel,
+        editorType: 'dateBox',
+        editorOptions: { type: 'date' },
+        visible: repeat !== 'never' && endMode === 'until',
+      },
+      {
         field: 'description',
         label: messages.descriptionLabel,
         placeholder: messages.descriptionPlaceholder,
@@ -152,6 +221,16 @@ export class OgeSchedulerAppointmentDialog {
         colSpan: 2,
       },
     ];
+  }
+
+  /** Localized weekday choices for the weekly BYDAY picker. */
+  private weekdayItems(): { value: number; text: string }[] {
+    const format = new Intl.DateTimeFormat(this.locale(), { weekday: 'short' });
+    // Jan 4–10 2026 is a Sunday-first week
+    return Array.from({ length: 7 }, (_, weekday) => ({
+      value: weekday,
+      text: format.format(new Date(2026, 0, 4 + weekday)),
+    }));
   }
 
   protected readonly items = computed<readonly OgeFormItemData[]>(

@@ -21,10 +21,12 @@ function appointment(
     allDay,
     displayAllDay: allDay,
     color: undefined,
+    location: undefined,
     description: undefined,
     recurrenceRule: undefined,
     recurrenceException: undefined,
     disabled: false,
+    seriesKey: null,
   };
 }
 

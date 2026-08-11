@@ -30,7 +30,14 @@ import { OgeAnchoredPanel, OgePopup } from '@oge-ui/overlay';
 import type { OgeSchedulerMessages } from '../config';
 import { OGE_SCHEDULER_CONFIG } from '../config';
 import {
+  parseRecurrenceRule,
+  serializeRecurrenceRule,
+  type RecurrenceRule,
+} from '../engine/rrule';
+import { appendException } from '../engine/rrule-expand';
+import {
   appointmentPatch,
+  expandAppointment,
   normalizeAppointment,
   resolveSchedulerFields,
   type SchedulerAppointment,
@@ -263,7 +270,7 @@ interface ResolvedView {
           (chipClicked)="onChipClicked($event)"
           (chipDblClicked)="onChipDblClicked($event)"
           (chipActivated)="onChipActivated($event)"
-          (chipDeleteRequested)="deleteBySource($event.source)"
+          (chipDeleteRequested)="onDeleteRequested($event)"
           [allowDragging]="canDrag()"
           (moveCommitted)="onMoveCommitted($event)"
           (gestureCancelled)="onGestureCancelled()"
@@ -295,7 +302,7 @@ interface ResolvedView {
           (chipClicked)="onChipClicked($event)"
           (chipDblClicked)="onChipDblClicked($event)"
           (chipActivated)="onChipActivated($event)"
-          (chipDeleteRequested)="deleteBySource($event.source)"
+          (chipDeleteRequested)="onDeleteRequested($event)"
           [allowDragging]="canDrag()"
           [allowResizing]="canResize()"
           [allowAdding]="canAdd()"
@@ -319,13 +326,54 @@ interface ResolvedView {
       [allowEditing]="canUpdate()"
       [allowDeleting]="canDelete()"
       (editRequested)="openEditorFor($any($event))"
-      (deleteRequested)="deleteBySource($any($event).source)"
+      (deleteRequested)="onDeleteRequested($any($event))"
     />
     <oge-scheduler-appointment-dialog
       [messages]="msg().editor"
       [locale]="locale()"
       (saved)="onEditorSaved($event)"
     />
+    @if (scopePending(); as pending) {
+      <div
+        class="oge-scheduler-scope-backdrop"
+        (click)="scopePending.set(null)"
+        aria-hidden="true"
+      ></div>
+      <div
+        class="oge-scheduler-scope"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="msg().recurrenceScope.title"
+      >
+        <div class="oge-scheduler-scope-title">
+          {{ msg().recurrenceScope.title }}
+        </div>
+        <div class="oge-scheduler-scope-text">{{ scopeText(pending) }}</div>
+        <div class="oge-scheduler-scope-actions">
+          <button
+            type="button"
+            class="oge-scheduler-btn"
+            (click)="scopePending.set(null)"
+          >
+            {{ msg().recurrenceScope.cancel }}
+          </button>
+          <button
+            type="button"
+            class="oge-scheduler-btn"
+            (click)="resolveScope('occurrence')"
+          >
+            {{ msg().recurrenceScope.occurrence }}
+          </button>
+          <button
+            type="button"
+            class="oge-scheduler-btn oge-scheduler-btn-primary"
+            (click)="resolveScope('series')"
+          >
+            {{ msg().recurrenceScope.series }}
+          </button>
+        </div>
+      </div>
+    }
     <div class="oge-scheduler-live" aria-live="polite">
       {{ announcement() }}
     </div>
@@ -390,6 +438,13 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly allowResizing = input(true);
   /** Shows the toolbar "new appointment" button. */
   readonly showAddButton = input(true);
+  /**
+   * How edits to a recurring occurrence apply: ask per action (`'dialog'`),
+   * always detach the occurrence, or always change the series.
+   */
+  readonly recurrenceEditMode = input<'dialog' | 'occurrence' | 'series'>(
+    'dialog',
+  );
   /** Display-only shorthand: overrides every `allow*` flag at once. */
   readonly readOnly = input(false);
   /** Earliest navigable date (clamps navigation and the date navigator). */
@@ -630,13 +685,20 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       this.currentDate(),
       this.resolvedFirstDayOfWeek(),
     );
-    return this.appointments().filter(
-      (appointment) =>
-        rangesOverlap(appointment.startDate, appointment.endDate, start, end) ||
-        (appointment.startDate.getTime() === appointment.endDate.getTime() &&
-          appointment.startDate.getTime() >= start.getTime() &&
-          appointment.startDate.getTime() < end.getTime()),
-    );
+    return this.appointments()
+      .flatMap((appointment) => expandAppointment(appointment, start, end))
+      .filter(
+        (appointment) =>
+          rangesOverlap(
+            appointment.startDate,
+            appointment.endDate,
+            start,
+            end,
+          ) ||
+          (appointment.startDate.getTime() === appointment.endDate.getTime() &&
+            appointment.startDate.getTime() >= start.getTime() &&
+            appointment.startDate.getTime() < end.getTime()),
+      );
   });
 
   protected readonly periodTitle = computed(() => {
@@ -809,26 +871,290 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     this.popup().open(event.appointment, event.rect);
   }
 
+  /* ---------- recurrence scope routing ---------- */
+
+  /** A pending occurrence action awaiting the scope choice. */
+  protected readonly scopePending = signal<{
+    action: 'edit' | 'delete' | 'moved' | 'resized';
+    appointment: SchedulerAppointment<T>;
+    proposal?: SchedulerProposalEvent<T>['proposal'];
+  } | null>(null);
+
+  protected scopeText(pending: {
+    action: 'edit' | 'delete' | 'moved' | 'resized';
+  }): string {
+    const messages = this.msg().recurrenceScope;
+    const action =
+      pending.action === 'edit'
+        ? messages.editAction
+        : pending.action === 'delete'
+          ? messages.deleteAction
+          : messages.moveAction;
+    return messages.text.replace('{action}', action);
+  }
+
+  private routeRecurring(
+    action: 'edit' | 'delete' | 'moved' | 'resized',
+    appointment: SchedulerAppointment<T>,
+    proposal?: SchedulerProposalEvent<T>['proposal'],
+  ): void {
+    const mode = this.recurrenceEditMode();
+    if (mode === 'dialog') {
+      this.scopePending.set({ action, appointment, proposal });
+      return;
+    }
+    this.applyScoped(mode, { action, appointment, proposal });
+  }
+
+  protected resolveScope(scope: 'occurrence' | 'series'): void {
+    const pending = untracked(this.scopePending);
+    this.scopePending.set(null);
+    if (pending !== null) this.applyScoped(scope, pending);
+  }
+
+  private applyScoped(
+    scope: 'occurrence' | 'series',
+    pending: {
+      action: 'edit' | 'delete' | 'moved' | 'resized';
+      appointment: SchedulerAppointment<T>;
+      proposal?: SchedulerProposalEvent<T>['proposal'];
+    },
+  ): void {
+    switch (pending.action) {
+      case 'edit':
+        this.performEdit(pending.appointment, scope);
+        return;
+      case 'delete':
+        this.performDelete(pending.appointment, scope);
+        return;
+      default:
+        if (pending.proposal !== undefined) {
+          this.performProposal(
+            pending.appointment,
+            pending.proposal,
+            scope,
+            pending.action,
+          );
+        }
+    }
+  }
+
+  /** The series template appointment an occurrence was expanded from. */
+  private seriesOf(
+    occurrence: SchedulerAppointment<T>,
+  ): SchedulerAppointment<T> | undefined {
+    return untracked(this.appointments).find(
+      (entry) => entry.key === occurrence.seriesKey,
+    );
+  }
+
+  /** Detaches an occurrence: EXDATE on the series + a standalone copy. */
+  private detachOccurrence(
+    occurrence: SchedulerAppointment<T>,
+    replacement: SchedulerEditorModel | null,
+  ): void {
+    const fields = this.fields();
+    const source = occurrence.source;
+    const exceptionField = fields.fieldNames.recurrenceException;
+    if (exceptionField !== null) {
+      this.updateItem(source, {
+        [exceptionField]: appendException(
+          occurrence.recurrenceException,
+          occurrence.startDate,
+        ),
+      } as Partial<T>);
+    }
+    if (replacement !== null) {
+      this.insertItem(this.buildItem(replacement));
+    } else {
+      this.announce(this.msg().announcements.deleted, {
+        text: occurrence.text,
+      });
+    }
+  }
+
+  private performDelete(
+    appointment: SchedulerAppointment<T>,
+    scope: 'occurrence' | 'series',
+  ): void {
+    if (scope === 'occurrence') {
+      this.detachOccurrence(appointment, null);
+      return;
+    }
+    this.deleteBySource(appointment.source);
+  }
+
+  private performEdit(
+    appointment: SchedulerAppointment<T>,
+    scope: 'occurrence' | 'series',
+  ): void {
+    if (!this.canUpdate()) return;
+    if (scope === 'occurrence') {
+      this.editingOccurrence = appointment;
+      this.openEditor(
+        this.editorModelFrom(appointment, false),
+        appointment.source,
+        false,
+      );
+      return;
+    }
+    const series = this.seriesOf(appointment) ?? appointment;
+    this.editingOccurrence = null;
+    this.openEditor(this.editorModelFrom(series, true), series.source, false);
+  }
+
+  private performProposal(
+    appointment: SchedulerAppointment<T>,
+    proposal: SchedulerProposalEvent<T>['proposal'],
+    scope: 'occurrence' | 'series',
+    kind: 'moved' | 'resized',
+  ): void {
+    if (!this.canUpdate()) return;
+    if (scope === 'occurrence') {
+      const model = this.editorModelFrom(appointment, false);
+      this.detachOccurrence(appointment, {
+        ...model,
+        startDate: proposal.startDate,
+        endDate: proposal.endDate,
+        allDay: proposal.allDay,
+      });
+      return;
+    }
+    const series = this.seriesOf(appointment);
+    if (series === undefined) return;
+    const deltaMs =
+      proposal.startDate.getTime() - appointment.startDate.getTime();
+    const lengthMs = proposal.endDate.getTime() - proposal.startDate.getTime();
+    const newStart = new Date(series.startDate.getTime() + deltaMs);
+    this.commitProposal(
+      {
+        appointment: series,
+        proposal: {
+          startDate: newStart,
+          endDate: new Date(newStart.getTime() + lengthMs),
+          allDay: proposal.allDay,
+        },
+      },
+      kind,
+    );
+  }
+
+  /* ---------- recurrence <-> editor mapping ---------- */
+
+  private ruleFields(
+    ruleString: string | undefined,
+  ): Pick<
+    SchedulerEditorModel,
+    'repeat' | 'interval' | 'byDays' | 'endMode' | 'count' | 'until'
+  > {
+    const rule =
+      ruleString === undefined ? null : parseRecurrenceRule(ruleString);
+    if (rule === null) {
+      return {
+        repeat: 'never',
+        interval: 1,
+        byDays: [],
+        endMode: 'never',
+        count: 10,
+        until: undefined,
+      };
+    }
+    return {
+      repeat: rule.freq,
+      interval: rule.interval,
+      byDays: rule.byDay?.map((entry) => entry.weekday) ?? [],
+      endMode:
+        rule.count !== undefined
+          ? 'count'
+          : rule.until !== undefined
+            ? 'until'
+            : 'never',
+      count: rule.count ?? 10,
+      until: rule.until,
+    };
+  }
+
+  private editorRuleString(model: SchedulerEditorModel): string | undefined {
+    if (model.repeat === 'never') return undefined;
+    const rule: RecurrenceRule = {
+      freq: model.repeat,
+      interval: Math.max(1, Math.round(model.interval || 1)),
+      ...(model.endMode === 'count'
+        ? { count: Math.max(1, Math.round(model.count || 1)) }
+        : {}),
+      ...(model.endMode === 'until' && model.until instanceof Date
+        ? {
+            until: new Date(
+              model.until.getFullYear(),
+              model.until.getMonth(),
+              model.until.getDate(),
+              23,
+              59,
+              59,
+            ),
+          }
+        : {}),
+      ...(model.repeat === 'weekly' && model.byDays.length > 0
+        ? {
+            byDay: model.byDays.map((weekday) => ({
+              ordinal: null,
+              weekday,
+            })),
+          }
+        : {}),
+      weekStart: 1,
+    };
+    return serializeRecurrenceRule(rule);
+  }
+
+  /** Editor model of an appointment; `withRecurrence` maps its rule too. */
+  private editorModelFrom(
+    appointment: SchedulerAppointment<T>,
+    withRecurrence: boolean,
+  ): SchedulerEditorModel {
+    return {
+      text: appointment.text,
+      allDay: appointment.allDay,
+      startDate: appointment.startDate,
+      endDate: appointment.endDate,
+      color: appointment.color,
+      location: appointment.location,
+      description: appointment.description,
+      ...this.ruleFields(
+        withRecurrence ? appointment.recurrenceRule : undefined,
+      ),
+    };
+  }
+
   /* ---------- editor ---------- */
 
   private editedSource: T | null = null;
+  /** The occurrence being detached by an occurrence-scope edit. */
+  private editingOccurrence: SchedulerAppointment<T> | null = null;
 
-  /** Opens the editor for an existing appointment. */
+  /** Opens the editor for an existing appointment (occurrences route). */
   protected openEditorFor(appointment: SchedulerAppointment<T>): void {
     if (!this.canUpdate()) return;
+    if (appointment.seriesKey !== null) {
+      this.routeRecurring('edit', appointment);
+      return;
+    }
+    this.editingOccurrence = null;
     this.openEditor(
-      {
-        text: appointment.text,
-        allDay: appointment.allDay,
-        startDate: appointment.startDate,
-        endDate: appointment.endDate,
-        color: appointment.color,
-        location: appointment.location,
-        description: appointment.description,
-      },
+      this.editorModelFrom(appointment, true),
       appointment.source,
       false,
     );
+  }
+
+  /** Deletes an appointment, routing recurring occurrences by scope. */
+  protected onDeleteRequested(appointment: SchedulerAppointment<T>): void {
+    if (!this.canDelete()) return;
+    if (appointment.seriesKey !== null) {
+      this.routeRecurring('delete', appointment);
+      return;
+    }
+    this.deleteBySource(appointment.source);
   }
 
   private openCreateEditor(cellDate: Date, allDay: boolean): void {
@@ -837,13 +1163,14 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     const endDate = allDay
       ? nextDay(startDate)
       : addMinutes(startDate, this.activeView().cellDuration);
-    const draft = this.buildItem({
+    const model: SchedulerEditorModel = {
       text: '',
       allDay,
       startDate,
       endDate,
-    });
-    this.openEditor({ text: '', allDay, startDate, endDate }, draft, true);
+      ...this.ruleFields(undefined),
+    };
+    this.openEditor(model, this.buildItem(model), true);
   }
 
   private openEditor(
@@ -867,10 +1194,13 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected onEditorSaved(result: SchedulerEditorResult): void {
     if (result.isNew) {
       this.insertItem(this.buildItem(result.model));
+    } else if (this.editingOccurrence !== null) {
+      this.detachOccurrence(this.editingOccurrence, result.model);
     } else if (this.editedSource !== null) {
       this.updateItem(this.editedSource, this.buildPatch(result.model));
     }
     this.editedSource = null;
+    this.editingOccurrence = null;
   }
 
   /** Builds a new item from the editor model using the string field names. */
@@ -887,6 +1217,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     set(fields.fieldNames.color, editorModel.color);
     set(fields.fieldNames.location, editorModel.location);
     set(fields.fieldNames.description, editorModel.description);
+    set(fields.fieldNames.recurrenceRule, this.editorRuleString(editorModel));
     return item as T;
   }
 
@@ -907,6 +1238,11 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     set(fields.fieldNames.color, editorModel.color);
     set(fields.fieldNames.location, editorModel.location);
     set(fields.fieldNames.description, editorModel.description);
+    const ruleString = this.editorRuleString(editorModel);
+    set(fields.fieldNames.recurrenceRule, ruleString ?? '');
+    if (ruleString === undefined) {
+      set(fields.fieldNames.recurrenceException, '');
+    }
     return patch as Partial<T>;
   }
 
@@ -980,10 +1316,18 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   }
 
   protected onMoveCommitted(event: SchedulerProposalEvent<T>): void {
+    if (event.appointment.seriesKey !== null) {
+      this.routeRecurring('moved', event.appointment, event.proposal);
+      return;
+    }
     this.commitProposal(event, 'moved');
   }
 
   protected onResizeCommitted(event: SchedulerProposalEvent<T>): void {
+    if (event.appointment.seriesKey !== null) {
+      this.routeRecurring('resized', event.appointment, event.proposal);
+      return;
+    }
     this.commitProposal(event, 'resized');
   }
 
@@ -994,22 +1338,14 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected onRangeSelected(range: OgeSchedulerRangeSelectedEvent): void {
     this.rangeSelected.emit(range);
     if (!this.canAdd()) return;
-    const draft = this.buildItem({
+    const model: SchedulerEditorModel = {
       text: '',
       allDay: false,
       startDate: range.startDate,
       endDate: range.endDate,
-    });
-    this.openEditor(
-      {
-        text: '',
-        allDay: false,
-        startDate: range.startDate,
-        endDate: range.endDate,
-      },
-      draft,
-      true,
-    );
+      ...this.ruleFields(undefined),
+    };
+    this.openEditor(model, this.buildItem(model), true);
   }
 
   protected onChipContextMenu(event: SchedulerChipEvent<T>): void {

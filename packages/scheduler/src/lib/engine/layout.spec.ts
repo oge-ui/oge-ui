@@ -16,10 +16,12 @@ function segment(
     allDay: false,
     displayAllDay: false,
     color: undefined,
+    location: undefined,
     description: undefined,
     recurrenceRule: undefined,
     recurrenceException: undefined,
     disabled: false,
+    seriesKey: null,
   };
   return {
     appointment,

@@ -462,6 +462,13 @@
   text-overflow: ellipsis;
 }
 
+.oge-scheduler-chip-recur {
+  display: inline-block;
+  vertical-align: -1px;
+  margin-inline-end: 3px;
+  opacity: 0.9;
+}
+
 .oge-scheduler-chip-location {
   font-size: 11px;
   opacity: 0.75;
@@ -764,6 +771,50 @@
     background: var(--oge-accent);
     filter: brightness(1.06);
   }
+}
+
+/* ---------- recurrence scope dialog ---------- */
+
+.oge-scheduler-scope-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--oge-modal-backdrop-bg);
+  z-index: calc(var(--oge-z-modal) + 10);
+}
+
+.oge-scheduler-scope {
+  position: fixed;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  z-index: calc(var(--oge-z-modal) + 11);
+  min-width: 320px;
+  max-width: 420px;
+  padding: 18px 20px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  box-shadow: var(--oge-shadow-popup);
+}
+
+.oge-scheduler-scope-title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-block-end: 6px;
+}
+
+.oge-scheduler-scope-text {
+  color: var(--oge-muted-color);
+  font-size: 13px;
+  margin-block-end: 14px;
+}
+
+.oge-scheduler-scope-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* ---------- editor dialog ---------- */

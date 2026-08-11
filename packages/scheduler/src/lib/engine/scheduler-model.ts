@@ -11,6 +11,9 @@ import {
   toLocalDate,
   type ValueAccessor,
 } from '@oge-ui/core';
+import { addMinutes } from '@oge-ui/core';
+import { parseRecurrenceException, parseRecurrenceRule } from './rrule';
+import { expandRecurrence } from './rrule-expand';
 import { durationMinutes } from './time-math';
 
 /** A user item's field accessors: a field name or a getter function. */
@@ -82,6 +85,11 @@ export interface SchedulerAppointment<T = unknown> {
   /** Comma-separated exception dates (reserved in v0.1). */
   readonly recurrenceException: string | undefined;
   readonly disabled: boolean;
+  /**
+   * Set on expanded occurrence instances: the series appointment's key.
+   * `null` for plain appointments and the series template itself.
+   */
+  readonly seriesKey: unknown | null;
 }
 
 function toAccessor<T>(expr: SchedulerFieldExpr<T, unknown>): ValueAccessor<T> {
@@ -159,7 +167,43 @@ export function normalizeAppointment<T>(
     recurrenceRule: asString(fields.recurrenceRule(item)),
     recurrenceException: asString(fields.recurrenceException(item)),
     disabled: fields.disabled(item) === true,
+    seriesKey: null,
   };
+}
+
+/**
+ * Expands a recurring appointment into its occurrence instances inside the
+ * half-open window; non-recurring (or unparseable-rule) appointments return
+ * themselves. Occurrences share the series' `source` and carry
+ * `seriesKey` + a composite key, so editing flows can route to
+ * occurrence-vs-series semantics.
+ */
+export function expandAppointment<T>(
+  appointment: SchedulerAppointment<T>,
+  rangeStart: Date,
+  rangeEnd: Date,
+): SchedulerAppointment<T>[] {
+  if (appointment.recurrenceRule === undefined) return [appointment];
+  const rule = parseRecurrenceRule(appointment.recurrenceRule);
+  if (rule === null) return [appointment];
+  const exceptions =
+    appointment.recurrenceException === undefined
+      ? []
+      : parseRecurrenceException(appointment.recurrenceException);
+  const length = durationMinutes(appointment.startDate, appointment.endDate);
+  return expandRecurrence(
+    rule,
+    appointment.startDate,
+    rangeStart,
+    rangeEnd,
+    exceptions,
+  ).map((start) => ({
+    ...appointment,
+    key: `${String(appointment.key)}::${start.getTime()}`,
+    startDate: start,
+    endDate: addMinutes(start, length),
+    seriesKey: appointment.key,
+  }));
 }
 
 /** A date/flag change produced by editing, dragging or resizing. */
