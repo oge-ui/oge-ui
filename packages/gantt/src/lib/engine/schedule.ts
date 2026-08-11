@@ -41,10 +41,15 @@ export interface GanttScheduleChange {
   readonly end: Date;
 }
 
+/** A single plan-wide calendar, or a per-task resolver (resource calendars). */
+export type GanttCalendarInput =
+  GanttWorkCalendar | ((task: GanttTask) => GanttWorkCalendar | undefined);
+
 /**
  * Forward pass: walks the dependency graph in topological order and shifts
  * every successor that starts before its constraint, preserving durations.
- * With a work calendar, shifted starts roll onto the next working day and
+ * With a work calendar (plan-wide or resolved per task, e.g. from the
+ * task's resource), shifted starts roll onto the next working day and
  * durations are preserved in working days rather than wall-clock time.
  * Returns only the tasks that actually moved. Cycles are guarded by the
  * iteration cap (the model rejects new cycles up front).
@@ -52,8 +57,11 @@ export interface GanttScheduleChange {
 export function autoScheduleForward(
   tasks: readonly GanttTask[],
   dependencies: readonly GanttDependency[],
-  calendar?: GanttWorkCalendar,
+  calendar?: GanttCalendarInput,
 ): GanttScheduleChange[] {
+  const calendarFor =
+    typeof calendar === 'function' ? calendar : () => calendar;
+  const taskByKey = new Map(tasks.map((task) => [task.key, task]));
   const dates = new Map<RowKey, { start: Date; end: Date }>();
   for (const task of tasks) {
     if (!task.isSummary)
@@ -82,13 +90,18 @@ export function autoScheduleForward(
           successor.start.getTime() < minStart.getTime()
         ) {
           let next: { start: Date; end: Date };
-          if (calendar !== undefined) {
+          const successorTask = taskByKey.get(successorKey);
+          const taskCalendar =
+            successorTask !== undefined
+              ? calendarFor(successorTask)
+              : undefined;
+          if (taskCalendar !== undefined) {
             const days = workingDaysBetween(
               successor.start,
               successor.end,
-              calendar,
+              taskCalendar,
             );
-            const start = nextWorkingDay(minStart, calendar);
+            const start = nextWorkingDay(minStart, taskCalendar);
             next = {
               start,
               end:
@@ -97,7 +110,7 @@ export function autoScheduleForward(
                       start.getTime() +
                         (successor.end.getTime() - successor.start.getTime()),
                     )
-                  : addWorkingDays(start, days, calendar),
+                  : addWorkingDays(start, days, taskCalendar),
             };
           } else {
             const duration =

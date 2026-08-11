@@ -577,6 +577,77 @@
   transform: translateX(-50%);
 }
 
+/* ---------- hover tooltip ---------- */
+
+.oge-gantt-tooltip {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-tooltip-bg);
+  color: var(--oge-tooltip-color);
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateY(-100%);
+  box-shadow: var(--oge-shadow-btn);
+}
+
+.oge-gantt-tooltip-title {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.oge-gantt-tooltip-line {
+  opacity: 0.85;
+}
+
+/* ---------- resource workload band ---------- */
+
+.oge-gantt-workload {
+  border-block-start: 1px solid var(--oge-gantt-grid-line, var(--oge-border));
+  background: var(--oge-gantt-scale-bg, var(--oge-header-bg));
+}
+
+.oge-gantt-workload-row {
+  position: relative;
+  height: 22px;
+  border-block-end: 1px solid var(--oge-gantt-grid-line, var(--oge-border));
+}
+
+.oge-gantt-workload-label {
+  position: sticky;
+  inset-inline-start: 8px;
+  z-index: 2;
+  display: inline-block;
+  padding-block-start: 3px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--oge-header-color);
+  pointer-events: none;
+}
+
+.oge-gantt-workload-seg {
+  position: absolute;
+  top: 5px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--oge-accent-soft, var(--oge-selected-bg));
+  opacity: 0.85;
+}
+
+.oge-gantt-workload-over {
+  background: var(--oge-danger);
+}
+
 /* ---------- dialog / live ---------- */
 
 .oge-gantt-dialog-footer {

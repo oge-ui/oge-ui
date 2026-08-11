@@ -48,6 +48,7 @@ import {
 } from '../engine/gantt-model';
 import { autoScheduleForward, criticalPathKeys } from '../engine/schedule';
 import { isWorkingDay, type GanttWorkCalendar } from '../engine/work-calendar';
+import { buildResourceWorkload } from '../engine/workload';
 import {
   buildGanttScale,
   dateToPx,
@@ -82,7 +83,10 @@ import {
   type GanttEditorModel,
   type GanttEditorResult,
 } from './gantt-task-dialog';
-import { OgeGanttTaskTemplate } from './gantt-templates';
+import {
+  OgeGanttTaskTemplate,
+  OgeGanttTooltipTemplate,
+} from './gantt-templates';
 
 /** One rendered chart bar with its pixel geometry. */
 interface GanttBar<T> {
@@ -506,6 +510,8 @@ const OVERSCAN_ROWS = 6;
                       [attr.data-task-key]="String(bar.task.key)"
                       (pointerdown)="onBarPointerDown(bar, 'move', $event)"
                       (dblclick)="onRowDblClick(bar.task, $event)"
+                      (mouseenter)="tooltipKey.set(bar.task.key)"
+                      (mouseleave)="tooltipKey.set(null)"
                     ></div>
                   } @else if (bar.task.isSummary) {
                     <div
@@ -515,6 +521,8 @@ const OVERSCAN_ROWS = 6;
                       [style.width.px]="bar.widthPx"
                       [style.background-color]="bar.task.color ?? null"
                       [attr.data-task-key]="String(bar.task.key)"
+                      (mouseenter)="tooltipKey.set(bar.task.key)"
+                      (mouseleave)="tooltipKey.set(null)"
                     ></div>
                   } @else {
                     <div
@@ -528,6 +536,8 @@ const OVERSCAN_ROWS = 6;
                       [attr.data-task-key]="String(bar.task.key)"
                       (pointerdown)="onBarPointerDown(bar, 'move', $event)"
                       (dblclick)="onRowDblClick(bar.task, $event)"
+                      (mouseenter)="tooltipKey.set(bar.task.key)"
+                      (mouseleave)="tooltipKey.set(null)"
                     >
                       <div
                         class="oge-gantt-progress"
@@ -614,7 +624,57 @@ const OVERSCAN_ROWS = 6;
                   {{ tip.text }}
                 </div>
               }
+              @if (tooltipBar(); as bar) {
+                <div
+                  class="oge-gantt-tooltip"
+                  [style.inset-inline-start.px]="bar.leftPx"
+                  [style.top.px]="bar.index * rowHeight() - 6"
+                  aria-hidden="true"
+                >
+                  @if (tooltipTemplate(); as tpl) {
+                    <ng-container
+                      [ngTemplateOutlet]="tpl.templateRef"
+                      [ngTemplateOutletContext]="{ $implicit: bar.task }"
+                    />
+                  } @else {
+                    <strong class="oge-gantt-tooltip-title">{{
+                      bar.task.title
+                    }}</strong>
+                    <span class="oge-gantt-tooltip-line">{{
+                      tooltipDates(bar.task)
+                    }}</span>
+                    @if (!bar.task.isMilestone) {
+                      <span class="oge-gantt-tooltip-line"
+                        >{{ bar.task.progress }}%</span
+                      >
+                    }
+                    @if (resourceText(bar.task); as names) {
+                      <span class="oge-gantt-tooltip-line">{{ names }}</span>
+                    }
+                  }
+                </div>
+              }
             </div>
+            @if (workloadRows().length > 0) {
+              <div class="oge-gantt-workload" aria-hidden="true">
+                @for (row of workloadRows(); track row.id) {
+                  <div class="oge-gantt-workload-row">
+                    <span class="oge-gantt-workload-label">{{ row.text }}</span>
+                    @for (segment of row.segments; track segment.px) {
+                      <div
+                        class="oge-gantt-workload-seg"
+                        [class.oge-gantt-workload-over]="segment.over"
+                        [style.inset-inline-start.px]="segment.px"
+                        [style.width.px]="segment.widthPx"
+                        [style.background-color]="
+                          segment.over ? null : (row.color ?? null)
+                        "
+                      ></div>
+                    }
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -658,9 +718,18 @@ export class OgeGantt<
   readonly successorKeyExpr = input<GanttFieldExpr<D>>('successorId');
   readonly dependencyTypeExpr = input<GanttFieldExpr<D>>('type');
 
-  /** Resource choices shown next to bars and in the dialog. */
+  /**
+   * Resource choices shown next to bars and in the dialog. A resource's
+   * own `calendar` overrides `workCalendar` for tasks assigned to it
+   * (first assigned resource with a calendar wins).
+   */
   readonly resources = input<
-    readonly { id: unknown; text: string; color?: string }[]
+    readonly {
+      id: unknown;
+      text: string;
+      color?: string;
+      calendar?: GanttWorkCalendar;
+    }[]
   >([]);
   readonly resourceIdExpr = input<GanttFieldExpr<T>>('resourceId');
 
@@ -687,6 +756,8 @@ export class OgeGantt<
    * durations in working days (day granularity).
    */
   readonly workCalendar = input<GanttWorkCalendar | null>(null);
+  /** Renders the per-resource workload band under the chart. */
+  readonly showResourceWorkload = input(false);
   readonly stripLines = input<readonly OgeGanttStripLine[]>([]);
   readonly autoScheduling = input(false);
   readonly locale = input<string | undefined>(undefined);
@@ -723,6 +794,9 @@ export class OgeGantt<
   readonly taskEditDialogShowing = output<OgeGanttDialogShowingEvent<T>>();
 
   protected readonly taskTemplate = contentChild(OgeGanttTaskTemplate, {
+    descendants: false,
+  });
+  protected readonly tooltipTemplate = contentChild(OgeGanttTooltipTemplate, {
     descendants: false,
   });
   private readonly dialog = viewChild.required(OgeGanttTaskDialog);
@@ -1061,6 +1135,31 @@ export class OgeGantt<
     });
   });
 
+  /** Per-resource workload segments in chart px; `over` = overallocated. */
+  protected readonly workloadRows = computed(() => {
+    if (!this.showResourceWorkload()) return [];
+    const resources = this.resources();
+    if (resources.length === 0) return [];
+    const scale = this.scale();
+    const workload = buildResourceWorkload(
+      this.allTasks(),
+      resources.map((resource) => resource.id),
+    );
+    return resources.map((resource) => ({
+      id: resource.id,
+      text: resource.text,
+      color: resource.color,
+      segments: (workload.get(resource.id) ?? []).map((segment) => {
+        const px = dateToPx(scale, segment.start);
+        return {
+          px,
+          widthPx: Math.max(1, dateToPx(scale, segment.end) - px),
+          over: segment.count > 1,
+        };
+      }),
+    }));
+  });
+
   protected readonly stripRects = computed(() => {
     const scale = this.scale();
     return this.stripLines().map((strip) => {
@@ -1213,6 +1312,29 @@ export class OgeGantt<
   protected readonly selectedDependencyKey = signal<RowKey | null>(null);
   protected readonly announcement = signal('');
   protected readonly dragKey = signal<RowKey | null>(null);
+  /** Key of the bar under the pointer — drives the hover tooltip. */
+  protected readonly tooltipKey = signal<RowKey | null>(null);
+  protected readonly tooltipBar = computed<GanttBar<T> | null>(() => {
+    const key = this.tooltipKey();
+    if (key === null || this.dragKey() !== null) return null;
+    return this.windowBars().find((bar) => bar.task.key === key) ?? null;
+  });
+
+  protected tooltipDates(task: GanttTask<T>): string {
+    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
+      day: 'numeric',
+      month: 'short',
+    });
+    const days = Math.max(
+      1,
+      Math.round((task.end.getTime() - task.start.getTime()) / 86_400_000),
+    );
+    const duration = this.msg().columns.durationDays.replace(
+      '{days}',
+      String(days),
+    );
+    return `${format.format(task.start)} – ${format.format(task.end)} · ${duration}`;
+  }
   protected readonly dragTip = signal<{
     x: number;
     y: number;
@@ -1809,10 +1931,20 @@ export class OgeGantt<
   /** Applies the forward pass when `autoScheduling` is on. */
   private runAutoSchedule(): void {
     if (!this.autoScheduling()) return;
+    const resources = untracked(this.resources);
+    const planCalendar = untracked(this.effectiveWorkCalendar) ?? undefined;
     const changes = autoScheduleForward(
       untracked(this.allTasks),
       untracked(this.ganttDependencies),
-      this.effectiveWorkCalendar() ?? undefined,
+      (task) => {
+        for (const id of task.resourceIds) {
+          const calendar = resources.find(
+            (resource) => resource.id === id,
+          )?.calendar;
+          if (calendar !== undefined) return calendar;
+        }
+        return planCalendar;
+      },
     );
     if (changes.length === 0) return;
     const fields = this.fields();

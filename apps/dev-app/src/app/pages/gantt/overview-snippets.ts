@@ -238,14 +238,25 @@ protected readonly tasks = [
 });
 
 export const TEMPLATE_SNIPPET = demoSource({
-  use: { '@oge-ui/gantt': ['OgeGantt', 'OgeGanttTaskTemplate'] },
-  template: `<!-- *ogeGanttTaskTemplate replaces the bar's title content while
-     the bar surface, gestures and keyboard semantics stay with the
-     component. -->
+  use: {
+    '@oge-ui/gantt': [
+      'OgeGantt',
+      'OgeGanttTaskTemplate',
+      'OgeGanttTooltipTemplate',
+    ],
+  },
+  template: `<!-- *ogeGanttTaskTemplate replaces the bar's title content;
+     *ogeGanttTooltipTemplate replaces the hover tooltip (default: title,
+     dates + duration, progress, resources). Bar surface, gestures and
+     keyboard semantics stay with the component. -->
 <oge-gantt [tasks]="tasks" style="height: 300px">
   <ng-template ogeGanttTaskTemplate let-task>
     <strong>{{ task.title }}</strong>
     <span class="opacity-75"> · {{ task.progress }}%</span>
+  </ng-template>
+  <ng-template ogeGanttTooltipTemplate let-task>
+    <strong>{{ task.title }}</strong>
+    <em>{{ task.progress }}% complete</em>
   </ng-template>
 </oge-gantt>`,
   body: `protected readonly tasks = [
@@ -289,6 +300,7 @@ export const WORK_EXPORT_SNIPPET = demoSource({
 <div class="mb-2 flex gap-2">
   <button type="button" (click)="exportExcel(plan)">Export Excel</button>
   <button type="button" (click)="exportPdf(plan)">Export PDF</button>
+  <button type="button" (click)="exportPng(plan)">Export PNG</button>
 </div>
 <oge-gantt
   #plan
@@ -296,8 +308,9 @@ export const WORK_EXPORT_SNIPPET = demoSource({
   [dependencies]="links"
   [resources]="people"
   [workCalendar]="calendar"
+  [showResourceWorkload]="true"
   [autoScheduling]="true"
-  style="height: 360px"
+  style="height: 400px"
 />`,
   body: `protected readonly calendar: OgeGanttWorkCalendar = {
   workingDays: [1, 2, 3, 4], // four-day week
@@ -306,7 +319,13 @@ export const WORK_EXPORT_SNIPPET = demoSource({
 
 protected readonly people = [
   { id: 'ada', text: 'Ada', color: '#7c3aed' },
-  { id: 'grace', text: 'Grace', color: '#0891b2' },
+  {
+    id: 'grace',
+    text: 'Grace',
+    color: '#0891b2',
+    // per-resource calendar: overrides workCalendar for Grace's tasks
+    calendar: { workingDays: [1, 2, 3, 4, 5] },
+  },
 ];
 
 protected readonly tasks = [
@@ -343,5 +362,13 @@ protected async exportPdf<T extends object, D extends object>(
 ): Promise<void> {
   const { exportGanttToPdf } = await import('@oge-ui/gantt/export-pdf');
   await exportGanttToPdf(gantt, { filename: 'plan.pdf', title: 'Plan' });
+}
+
+/** PNG needs no third-party library at all — plain canvas drawing. */
+protected async exportPng<T extends object, D extends object>(
+  gantt: OgeGantt<T, D>,
+): Promise<void> {
+  const { exportGanttToPng } = await import('@oge-ui/gantt/export-image');
+  await exportGanttToPng(gantt, { filename: 'plan.png' });
 }`,
 });

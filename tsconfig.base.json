@@ -31,6 +31,9 @@
       "@oge-ui/gantt/export-excel": [
         "./packages/gantt/export-excel/src/index.ts"
       ],
+      "@oge-ui/gantt/export-image": [
+        "./packages/gantt/export-image/src/index.ts"
+      ],
       "@oge-ui/gantt/export-pdf": ["./packages/gantt/export-pdf/src/index.ts"],
       "@oge-ui/scheduler": ["./packages/scheduler/src/index.ts"],
       "@oge-ui/pivot": ["./packages/pivot/src/index.ts"],

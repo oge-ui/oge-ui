@@ -45,10 +45,10 @@ export const OGE_GANTT_API: ApiSections = {
         },
         {
           name: 'resources',
-          type: 'readonly { id, text, color? }[]',
+          type: 'readonly { id, text, color?, calendar? }[]',
           default: '[]',
           description:
-            'Resource choices: labels next to the bars and the multi-assignment tag editor in the task dialog.',
+            "Resource choices: labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own <code>calendar</code> overrides <code>workCalendar</code> for its tasks (first assigned resource with a calendar wins).",
         },
         {
           name: 'resourceIdExpr',
@@ -119,7 +119,14 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'OgeGanttWorkCalendar | null',
           default: 'null',
           description:
-            'Work-time calendar (<code>{ workingDays?, holidays? }</code>, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in <em>working</em> days. The <code>holidays</code> input merges in.',
+            'Work-time calendar (<code>{ workingDays?, holidays? }</code>, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in <em>working</em> days. The <code>holidays</code> input merges in; per-resource <code>calendar</code>s override it per task.',
+        },
+        {
+          name: 'showResourceWorkload',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Renders the per-resource workload band under the chart: merged assignment segments per resource, overallocated stretches (concurrent assignments) in the danger color.',
         },
         {
           name: 'stripLines',
@@ -255,6 +262,12 @@ export const OGE_GANTT_API: ApiSections = {
           description:
             'Lazy PDF export (<code>jspdf</code> peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination.',
         },
+        {
+          name: 'exportGanttToPng(gantt, options?) / buildGanttCanvas(data, options?)',
+          type: '@oge-ui/gantt/export-image',
+          description:
+            'Lazy PNG export with <strong>no dependencies</strong> — plain canvas drawing of the same chart (configurable width, pixel ratio, background and critical-path outlining).',
+        },
       ],
     },
   ],
@@ -375,6 +388,12 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'structural directive (OgeGanttTaskTemplate)',
           description:
             "Replaces the bar's title content; context <code>OgeGanttTaskTemplateContext</code>: <code>{ $implicit: OgeGanttTask&lt;T&gt; }</code>.",
+        },
+        {
+          name: '[ogeGanttTooltipTemplate]',
+          type: 'structural directive (OgeGanttTooltipTemplate)',
+          description:
+            "Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context <code>OgeGanttTooltipTemplateContext</code>: <code>{ $implicit: OgeGanttTask&lt;T&gt; }</code>.",
         },
       ],
     },

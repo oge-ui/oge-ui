@@ -21,7 +21,7 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'jsdom',
     include: [
-      '{src,export-excel,export-pdf}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      '{src,export-excel,export-pdf,export-image}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
     setupFiles: ['src/test-setup.ts'],
     reporters: ['default'],

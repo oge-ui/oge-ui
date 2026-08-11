@@ -130,6 +130,24 @@ test.describe('gantt', () => {
     await expect(cells).not.toHaveCount(minorBefore);
   });
 
+  test('hover tooltip shows task details; workload band renders per resource', async ({
+    page,
+  }) => {
+    await openBasic(page);
+    const host = gantt(page);
+    const bar = host.locator('.oge-gantt-bar', { hasText: 'Implementation' });
+    // hover near the left edge — the page TOC overlays the chart's right half
+    await bar.hover({ position: { x: 20, y: 8 } });
+    const tooltip = host.locator('.oge-gantt-tooltip');
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText('Implementation');
+    await expect(tooltip).toContainText('45%');
+
+    // the work-calendar demo renders one workload row per resource
+    const workload = page.locator('.oge-gantt-workload-row');
+    await expect(workload).toHaveCount(2);
+  });
+
   test('axe: no violations in either theme', async ({ page }) => {
     test.slow();
     await openBasic(page);

@@ -40,16 +40,22 @@ the dependencies are taken instead of rebuilt.
   splitter
 - `workCalendar` (working weekdays + holidays) shades every off day and
   makes auto-scheduling roll pushed starts onto working days, preserving
-  durations in working days (day granularity)
+  durations in working days (day granularity); a resource's own
+  `calendar` overrides it for the tasks assigned to it
 - Multi-resource assignment: `resourceId` fields may hold a single id or
   an array — bar labels join the names, the task dialog edits assignments
-  with a tag editor, and write-back preserves the storage shape
-- Lazy export entry points with optional peers:
-  `@oge-ui/gantt/export-excel` (exceljs — the task tree as a typed
-  worksheet with indented titles and bold summaries) and
-  `@oge-ui/gantt/export-pdf` (jspdf — the chart drawn as vector graphics:
-  scale header, progress fills, summary brackets, milestone diamonds,
-  critical-path outlining, multi-page)
+  with a tag editor, and write-back preserves the storage shape;
+  `showResourceWorkload` renders the per-resource utilization band with
+  overallocated stretches in the danger color
+- Hover tooltip on every bar (title, dates + duration, progress,
+  resources) with a `*ogeGanttTooltipTemplate` override
+- Three lazy export entry points: `@oge-ui/gantt/export-excel` (optional
+  exceljs peer — the task tree as a typed worksheet with indented titles
+  and bold summaries), `@oge-ui/gantt/export-pdf` (optional jspdf peer —
+  the chart drawn as vector graphics: scale header, progress fills,
+  summary brackets, milestone diamonds, critical-path outlining,
+  multi-page) and `@oge-ui/gantt/export-image` (dependency-free PNG via
+  plain canvas drawing)
 
 **Editing**
 

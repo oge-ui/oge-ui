@@ -26,3 +26,29 @@ export class OgeGanttTaskTemplate<T = unknown> {
     return true;
   }
 }
+
+export interface OgeGanttTooltipTemplateContext<T = unknown> {
+  /** The hovered task (`let task`). */
+  $implicit: OgeGanttTask<T>;
+}
+
+/**
+ * Structural directive replacing the hover tooltip's content:
+ *
+ * ```html
+ * <oge-gantt [tasks]="tasks">
+ *   <div *ogeGanttTooltipTemplate="let task">{{ task.title }}</div>
+ * </oge-gantt>
+ * ```
+ */
+@Directive({ selector: '[ogeGanttTooltipTemplate]' })
+export class OgeGanttTooltipTemplate<T = unknown> {
+  readonly templateRef = inject(TemplateRef<OgeGanttTooltipTemplateContext<T>>);
+
+  static ngTemplateContextGuard<T>(
+    _dir: OgeGanttTooltipTemplate<T>,
+    _ctx: unknown,
+  ): _ctx is OgeGanttTooltipTemplateContext<T> {
+    return true;
+  }
+}

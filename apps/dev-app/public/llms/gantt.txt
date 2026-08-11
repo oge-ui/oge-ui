@@ -87,8 +87,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/gantt`
 
-- values: `OGE_DEFAULT_GANTT_CONFIG`, `OGE_DEFAULT_GANTT_MESSAGES`, `OGE_GANTT_CONFIG`, `OgeGantt`, `OgeGanttTaskTemplate`, `provideOgeGanttConfig`
-- types: `OgeGanttAnnouncementMessages`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttMessages`, `OgeGanttScaleType`, `OgeGanttSelectionChangedEvent`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTemplateContext`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttWorkCalendar`
+- values: `OGE_DEFAULT_GANTT_CONFIG`, `OGE_DEFAULT_GANTT_MESSAGES`, `OGE_GANTT_CONFIG`, `OgeGantt`, `OgeGanttTaskTemplate`, `OgeGanttTooltipTemplate`, `provideOgeGanttConfig`
+- types: `OgeGanttAnnouncementMessages`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttMessages`, `OgeGanttScaleType`, `OgeGanttSelectionChangedEvent`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTemplateContext`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttTooltipTemplateContext`, `OgeGanttWorkCalendar`
 
 `@oge-ui/gantt/export-pdf`
 
@@ -99,6 +99,11 @@ Predictable wrong guesses, and what to write instead.
 
 - values: `buildGanttExcelWorkbook`, `exportGanttToExcel`
 - types: `OgeGanttExcelExportOptions`
+
+`@oge-ui/gantt/export-image`
+
+- values: `buildGanttCanvas`, `exportGanttToPng`, `ganttImageSize`
+- types: `OgeGanttImageExportOptions`
 
 ## API reference
 
@@ -115,7 +120,7 @@ _Data_
 | `keyExpr / parentKeyExpr / titleExpr / startExpr / endExpr / progressExpr / colorExpr` | `string \| ((item: T) => unknown)` | `'id' / 'parentId' / 'title' / 'start' / 'end' / 'progress' / 'color'` | Task field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
 | `baselineStartExpr / baselineEndExpr` | `string \| ((item: T) => unknown)` | `'baselineStart' / 'baselineEnd'` | Baseline plan fields — tasks with both render the original plan as a slim bar under the live bar. |
 | `dependencyKeyExpr / predecessorKeyExpr / successorKeyExpr / dependencyTypeExpr` | `string \| ((item: D) => unknown)` | `'id' / 'predecessorId' / 'successorId' / 'type'` | Dependency field mapping. Types are `'FS' \| 'SS' \| 'FF' \| 'SF'` (dx numeric codes 0–3 also parse); missing type means FS. |
-| `resources` | `readonly { id, text, color? }[]` | `[]` | Resource choices: labels next to the bars and the multi-assignment tag editor in the task dialog. |
+| `resources` | `readonly { id, text, color?, calendar? }[]` | `[]` | Resource choices: labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own `calendar` overrides `workCalendar` for its tasks (first assigned resource with a calendar wins). |
 | `resourceIdExpr` | `string \| ((item: T) => unknown)` | `'resourceId'` | The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape: array stores stay arrays, scalar stores stay scalar while at most one id is assigned. |
 
 _Appearance & behavior_
@@ -130,7 +135,8 @@ _Appearance & behavior_
 | `showDependencies / showRowLines` | `boolean` | `true` | Dependency arrows / horizontal row guides. |
 | `showCriticalPath` | `boolean` | `false` | Outlines the zero-slack chain (backward-pass latest-finish relaxation over all four link types). |
 | `weekendsHighlighted / holidays` | `boolean / readonly Date[]` | `true / []` | Off-day shading on the days scale. |
-| `workCalendar` | `OgeGanttWorkCalendar \| null` | `null` | Work-time calendar (`{ workingDays?, holidays? }`, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in _working_ days. The `holidays` input merges in. |
+| `workCalendar` | `OgeGanttWorkCalendar \| null` | `null` | Work-time calendar (`{ workingDays?, holidays? }`, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in _working_ days. The `holidays` input merges in; per-resource `calendar`s override it per task. |
+| `showResourceWorkload` | `boolean` | `false` | Renders the per-resource workload band under the chart: merged assignment segments per resource, overallocated stretches (concurrent assignments) in the danger color. |
 | `stripLines` | `readonly OgeGanttStripLine[]` | `[]` | Vertical markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded range with it (dx parity). |
 | `autoScheduling` | `boolean` | `false` | Forward-pass scheduling: moving a predecessor pushes its successors to satisfy FS/SS/FF/SF constraints (never pulls them earlier). |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
@@ -165,6 +171,7 @@ _Export entry points (lazy, optional peers)_
 | --- | --- | --- |
 | `exportGanttToExcel(gantt, options?) / buildGanttExcelWorkbook(data, options?)` | `@oge-ui/gantt/export-excel` | Lazy Excel export (`exceljs` peer): the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. Import the entry point dynamically so exceljs stays out of the initial bundle. |
 | `exportGanttToPdf(gantt, options?) / buildGanttPdfDocument(data, options?)` | `@oge-ui/gantt/export-pdf` | Lazy PDF export (`jspdf` peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. |
+| `exportGanttToPng(gantt, options?) / buildGanttCanvas(data, options?)` | `@oge-ui/gantt/export-image` | Lazy PNG export with **no dependencies** — plain canvas drawing of the same chart (configurable width, pixel ratio, background and critical-path outlining). |
 
 #### Events
 
@@ -200,6 +207,7 @@ _Interaction_
 | `OgeGanttExportData<T> / OgeGanttExportColumn<T>` | `interface` | The exporter snapshot: `tasks`, `columns` (header + pane-identical `text()`), `rangeStart`/`rangeEnd`, `critical` keys and `resourceText()`. |
 | `OgeGanttTaskTitlePosition` | `'inside' \| 'outside' \| 'none'` | Task title placement relative to the bar. |
 | `[ogeGanttTaskTemplate]` | `structural directive (OgeGanttTaskTemplate)` | Replaces the bar's title content; context `OgeGanttTaskTemplateContext`: `{ $implicit: OgeGanttTask }`. |
+| `[ogeGanttTooltipTemplate]` | `structural directive (OgeGanttTooltipTemplate)` | Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context `OgeGanttTooltipTemplateContext`: `{ $implicit: OgeGanttTask }`. |
 
 ### Configuration
 
@@ -525,20 +533,25 @@ export class Demo {
 
 ```ts
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { OgeGantt, OgeGanttTaskTemplate } from '@oge-ui/gantt';
+import { OgeGantt, OgeGanttTaskTemplate, OgeGanttTooltipTemplate } from '@oge-ui/gantt';
 
 @Component({
   selector: 'demo-root',
-  imports: [OgeGantt, OgeGanttTaskTemplate],
+  imports: [OgeGantt, OgeGanttTaskTemplate, OgeGanttTooltipTemplate],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- *ogeGanttTaskTemplate replaces the bar's title content while
-         the bar surface, gestures and keyboard semantics stay with the
-         component. -->
+    <!-- *ogeGanttTaskTemplate replaces the bar's title content;
+         *ogeGanttTooltipTemplate replaces the hover tooltip (default: title,
+         dates + duration, progress, resources). Bar surface, gestures and
+         keyboard semantics stay with the component. -->
     <oge-gantt [tasks]="tasks" style="height: 300px">
       <ng-template ogeGanttTaskTemplate let-task>
         <strong>{{ task.title }}</strong>
         <span class="opacity-75"> · {{ task.progress }}%</span>
+      </ng-template>
+      <ng-template ogeGanttTooltipTemplate let-task>
+        <strong>{{ task.title }}</strong>
+        <em>{{ task.progress }}% complete</em>
       </ng-template>
     </oge-gantt>
   `,
@@ -616,6 +629,7 @@ import type { OgeGanttWorkCalendar } from '@oge-ui/gantt';
     <div class="mb-2 flex gap-2">
       <button type="button" (click)="exportExcel(plan)">Export Excel</button>
       <button type="button" (click)="exportPdf(plan)">Export PDF</button>
+      <button type="button" (click)="exportPng(plan)">Export PNG</button>
     </div>
     <oge-gantt
       #plan
@@ -623,8 +637,9 @@ import type { OgeGanttWorkCalendar } from '@oge-ui/gantt';
       [dependencies]="links"
       [resources]="people"
       [workCalendar]="calendar"
+      [showResourceWorkload]="true"
       [autoScheduling]="true"
-      style="height: 360px"
+      style="height: 400px"
     />
   `,
 })
@@ -636,7 +651,13 @@ export class Demo {
 
   protected readonly people = [
     { id: 'ada', text: 'Ada', color: '#7c3aed' },
-    { id: 'grace', text: 'Grace', color: '#0891b2' },
+    {
+      id: 'grace',
+      text: 'Grace',
+      color: '#0891b2',
+      // per-resource calendar: overrides workCalendar for Grace's tasks
+      calendar: { workingDays: [1, 2, 3, 4, 5] },
+    },
   ];
 
   protected readonly tasks = [
@@ -673,6 +694,14 @@ export class Demo {
   ): Promise<void> {
     const { exportGanttToPdf } = await import('@oge-ui/gantt/export-pdf');
     await exportGanttToPdf(gantt, { filename: 'plan.pdf', title: 'Plan' });
+  }
+
+  /** PNG needs no third-party library at all — plain canvas drawing. */
+  protected async exportPng<T extends object, D extends object>(
+    gantt: OgeGantt<T, D>,
+  ): Promise<void> {
+    const { exportGanttToPng } = await import('@oge-ui/gantt/export-image');
+    await exportGanttToPng(gantt, { filename: 'plan.png' });
   }
 }
 ```

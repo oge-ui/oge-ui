@@ -82,6 +82,18 @@ describe('schedule', () => {
     expect(two?.end).toEqual(d(13)); // Fri + Mon = 2 working days
   });
 
+  it('a per-task calendar resolver overrides the plan calendar', () => {
+    // same shape as the weekend test, but task 2 resolves a calendar where
+    // Saturday IS a working day — so it starts Sat the 10th, not Monday
+    const tasks = [task(1, d(5), d(10)), task(2, d(5), d(6))];
+    const changes = autoScheduleForward(tasks, [dep(1, 2)], (t) =>
+      t.key === 2 ? { workingDays: [1, 2, 3, 4, 5, 6] } : {},
+    );
+    const two = changes.find((c) => c.key === 2);
+    expect(two?.start).toEqual(d(10)); // Saturday allowed for this task
+    expect(two?.end).toEqual(d(11)); // one working day: Saturday
+  });
+
   it('with a work calendar a weekend constraint start rolls to Monday', () => {
     // predecessor ends Sat the 10th; successor rolls to Mon the 12th
     const tasks = [task(1, d(5), d(10)), task(2, d(5), d(6))];

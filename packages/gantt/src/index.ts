@@ -5,7 +5,9 @@
 export { OgeGantt } from './lib/gantt/gantt';
 export {
   OgeGanttTaskTemplate,
+  OgeGanttTooltipTemplate,
   type OgeGanttTaskTemplateContext,
+  type OgeGanttTooltipTemplateContext,
 } from './lib/gantt/gantt-templates';
 export {
   type OgeGanttColumn,

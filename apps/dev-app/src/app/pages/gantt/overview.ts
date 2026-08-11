@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import {
   OgeGantt,
   OgeGanttTaskTemplate,
+  OgeGanttTooltipTemplate,
   type OgeGanttScaleType,
   type OgeGanttStripLine,
   type OgeGanttTaskDeletingEvent,
@@ -45,6 +46,7 @@ type DemoTask = Record<string, unknown>;
     DocHeader,
     OgeGantt,
     OgeGanttTaskTemplate,
+    OgeGanttTooltipTemplate,
     PageToc,
     RouterLink,
   ],
@@ -194,7 +196,7 @@ type DemoTask = Record<string, unknown>;
     <app-demo-card
       [chips]="['workCalendar', 'multi-resource', 'export-excel', 'export-pdf']"
       heading="Work calendar, teams & export"
-      description="<code>workCalendar</code> shades every off day (a four-day week here plus a holiday) and auto-scheduling rolls pushed starts onto working days, preserving working-day durations. <code>resourceId</code> may hold an array of ids — the dialog edits assignments with a tag editor and bar labels join the names. The lazy entry points <code>&#64;oge-ui/gantt/export-excel</code> (exceljs) and <code>&#64;oge-ui/gantt/export-pdf</code> (jspdf) write the task tree as a typed worksheet and draw the chart as a vector PDF."
+      description="<code>workCalendar</code> shades every off day (a four-day week here plus a holiday) and auto-scheduling rolls pushed starts onto working days, preserving working-day durations — a resource's own <code>calendar</code> overrides it per task. <code>resourceId</code> may hold an array of ids — the dialog edits assignments with a tag editor, bar labels join the names and <code>showResourceWorkload</code> renders the per-resource utilization band (overallocation in red). Three lazy export entry points: <code>export-excel</code> (exceljs, typed worksheet), <code>export-pdf</code> (jspdf, drawn vector chart) and <code>export-image</code> (dependency-free PNG)."
       [code]="workExportSnippet"
       language="ts"
     >
@@ -213,6 +215,13 @@ type DemoTask = Record<string, unknown>;
         >
           Export PDF
         </button>
+        <button
+          type="button"
+          class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+          (click)="exportPng(plan)"
+        >
+          Export PNG
+        </button>
       </div>
       <oge-gantt
         #plan
@@ -220,15 +229,16 @@ type DemoTask = Record<string, unknown>;
         [dependencies]="workLinks"
         [resources]="people"
         [workCalendar]="workCalendarDemo"
+        [showResourceWorkload]="true"
         [autoScheduling]="true"
-        style="height: 360px"
+        style="height: 400px"
       />
     </app-demo-card>
 
     <app-demo-card
       [chips]="['*ogeGanttTaskTemplate']"
       heading="Task template"
-      description="<code>*ogeGanttTaskTemplate</code> replaces the bar's title content while the bar surface, gestures and keyboard semantics stay with the component."
+      description="<code>*ogeGanttTaskTemplate</code> replaces the bar's title content and <code>*ogeGanttTooltipTemplate</code> the hover tooltip (default: title, dates + duration, progress, resources) — bar surface, gestures and keyboard semantics stay with the component."
       [code]="templateSnippet"
       language="ts"
     >
@@ -236,6 +246,10 @@ type DemoTask = Record<string, unknown>;
         <ng-template ogeGanttTaskTemplate let-task>
           <strong>{{ task.title }}</strong>
           <span class="opacity-75"> · {{ task.progress }}%</span>
+        </ng-template>
+        <ng-template ogeGanttTooltipTemplate let-task>
+          <strong>{{ task.title }}</strong>
+          <em>{{ task.progress }}% complete</em>
         </ng-template>
       </oge-gantt>
     </app-demo-card>
@@ -403,7 +417,12 @@ export class GanttOverviewPage {
 
   protected readonly people = [
     { id: 'ada', text: 'Ada', color: '#7c3aed' },
-    { id: 'grace', text: 'Grace', color: '#0891b2' },
+    {
+      id: 'grace',
+      text: 'Grace',
+      color: '#0891b2',
+      calendar: { workingDays: [1, 2, 3, 4, 5] },
+    },
   ];
 
   protected readonly holidays = [new Date(2026, 7, 10)];
@@ -524,6 +543,14 @@ export class GanttOverviewPage {
   ): Promise<void> {
     const { exportGanttToPdf } = await import('@oge-ui/gantt/export-pdf');
     await exportGanttToPdf(gantt, { filename: 'plan.pdf', title: 'Plan' });
+  }
+
+  /** PNG needs no third-party library at all — plain canvas drawing. */
+  protected async exportPng<T extends object, D extends object>(
+    gantt: OgeGantt<T, D>,
+  ): Promise<void> {
+    const { exportGanttToPng } = await import('@oge-ui/gantt/export-image');
+    await exportGanttToPng(gantt, { filename: 'plan.png' });
   }
 
   protected protectDone(event: OgeGanttTaskUpdatingEvent<DemoTask>): void {
