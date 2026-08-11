@@ -201,7 +201,8 @@ test.describe('scheduler', () => {
     // prev/next disable at the min/max bounds after navigating to the edge
     const prev = host.getByRole('button', { name: 'Previous period' });
     for (let i = 0; i < 8 && !(await prev.isDisabled()); i++) {
-      await prev.click();
+      // the button may disable between the check and the click at the bound
+      await prev.click({ timeout: 2000 }).catch(() => undefined);
     }
     await expect(prev).toBeDisabled();
   });

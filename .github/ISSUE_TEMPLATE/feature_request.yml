@@ -12,6 +12,7 @@ body:
         - '@oge-ui/pivot (Pivot Grid)'
         - '@oge-ui/bpmn (BPMN Editor)'
         - '@oge-ui/scheduler (Scheduler)'
+        - '@oge-ui/gantt (Gantt)'
         - '@oge-ui/inputs (TextBox / SelectBox / TagBox / …)'
         - '@oge-ui/buttons'
         - '@oge-ui/overlay'

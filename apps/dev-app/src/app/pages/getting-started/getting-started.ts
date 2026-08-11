@@ -153,6 +153,13 @@ interface ComponentCard {
           </td>
         </tr>
         <tr>
+          <td><code>&#64;oge-ui/gantt</code></td>
+          <td>
+            Gantt chart with task tree, dependencies, critical path and drag
+            editing (commercial — free for evaluation and development).
+          </td>
+        </tr>
+        <tr>
           <td><code>&#64;oge-ui/scheduler</code></td>
           <td>
             Scheduler / event calendar with day, week and month views, drag

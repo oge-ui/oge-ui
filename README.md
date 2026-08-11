@@ -18,7 +18,7 @@
   <a href="https://www.npmjs.com/package/oge-ui"><img src="https://img.shields.io/npm/v/oge-ui?label=oge-ui&color=6366f1" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/@oge-ui/grid"><img src="https://img.shields.io/npm/v/@oge-ui/grid?label=%40oge-ui%2Fgrid&color=8b5cf6" alt="npm version" /></a>
   <a href="https://github.com/oge-ui/oge-ui/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/oge-ui/oge-ui/ci.yml?branch=main&label=CI" alt="CI status" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Commercial%20(pivot%2C%20bpmn%2C%20scheduler)-22d3ee" alt="MIT license (commercial pivot, bpmn and scheduler)" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT%20%2B%20Commercial-22d3ee" alt="MIT license with commercial pivot, bpmn, scheduler and gantt" /></a>
   <img src="https://img.shields.io/badge/Angular-%E2%89%A522-dd0031" alt="Angular 22+" />
 </p>
 
@@ -63,6 +63,7 @@ npm install @oge-ui/forms       # form layout, groups and validation (+ @oge-ui/
 npm install @oge-ui/pivot       # pivot table (commercial — see Licensing)
 npm install @oge-ui/bpmn        # BPMN 2.0 editor (commercial — see Licensing)
 npm install @oge-ui/scheduler   # scheduler / event calendar (commercial — see Licensing)
+npm install @oge-ui/gantt       # gantt chart (commercial — see Licensing)
 ```
 
 ## Quick start
@@ -101,9 +102,9 @@ No modules, no forms boilerplate — `[(value)]` binds straight to a
 
 ## Packages
 
-All packages are MIT except `@oge-ui/pivot`, `@oge-ui/bpmn` and
-`@oge-ui/scheduler`, which are commercial (free for evaluation and
-development) — see [Licensing](#licensing).
+All packages are MIT except `@oge-ui/pivot`, `@oge-ui/bpmn`,
+`@oge-ui/scheduler` and `@oge-ui/gantt`, which are commercial (free for
+evaluation and development) — see [Licensing](#licensing).
 
 | Package                                     | Description                                                                                                                                                                                                                                                                                                                                                                       | npm                                                     |
 | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -113,6 +114,8 @@ development) — see [Licensing](#licensing).
 | [`@oge-ui/pivot`](packages/pivot)           | Pivot Grid (commercial): rows × columns × measures, totals, two-axis virtualization                                                                                                                                                                                                                                                                                               | [npm](https://www.npmjs.com/package/@oge-ui/pivot)      |
 | [`@oge-ui/bpmn`](packages/bpmn)             | BPMN Editor (commercial): from-scratch BPMN 2.0 modeler with its own XML + DI engine, no watermark                                                                                                                                                                                                                                                                                | [npm](https://www.npmjs.com/package/@oge-ui/bpmn)       |
 | [`@oge-ui/scheduler`](packages/scheduler)   | Scheduler (commercial): day/week/month event calendar, all-day strip, drag & resize with Escape-cancel, appointment popup + form                                                                                                                                                                                                                                                  | [npm](https://www.npmjs.com/package/@oge-ui/scheduler)  |
+| [`@oge-ui/gantt`](packages/gantt)           | Gantt (commercial): task tree + timeline, dependencies, critical path, baselines, drag editing, undo/redo                                                                                                                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/gantt)      |
+| [`@oge-ui/gantt`](packages/gantt)           | Gantt (commercial): task tree + timeline, dependencies, critical path, baselines, drag editing, undo/redo                                                                                                                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/gantt)      |
 | [`@oge-ui/buttons`](packages/buttons)       | Buttons, groups & drop-down/split buttons: async actions, click guards, hold-to-confirm                                                                                                                                                                                                                                                                                           | [npm](https://www.npmjs.com/package/@oge-ui/buttons)    |
 | [`@oge-ui/inputs`](packages/inputs)         | Form editors: text, number, select / tree select / tag / autocomplete, date, color, checkbox/switch/radio                                                                                                                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/inputs)     |
 | [`@oge-ui/overlay`](packages/overlay)       | Anchored popups, menus, tooltips, context menus, modal dialogs and toasts                                                                                                                                                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/overlay)    |
@@ -195,13 +198,14 @@ OGE UI is **open-core**:
   `@oge-ui/tabs`, `@oge-ui/layout`, `@oge-ui/navigation`,
   `@oge-ui/forms` and `@oge-ui/overlay` are [MIT-licensed](LICENSE). This is a commitment:
   these packages and every feature currently in them will remain MIT.
-- **Commercial — `@oge-ui/pivot`, `@oge-ui/bpmn` and `@oge-ui/scheduler`.**
-  The pivot grid, the BPMN editor and the scheduler are source-available
-  commercial software: free for evaluation, development and testing;
-  production use requires a paid license
+- **Commercial — `@oge-ui/pivot`, `@oge-ui/bpmn`, `@oge-ui/scheduler` and
+  `@oge-ui/gantt`.** The pivot grid, the BPMN editor, the scheduler and
+  the Gantt are source-available commercial software: free for evaluation,
+  development and testing; production use requires a paid license
   ([packages/pivot/LICENSE](packages/pivot/LICENSE),
   [packages/bpmn/LICENSE](packages/bpmn/LICENSE),
   [packages/scheduler/LICENSE](packages/scheduler/LICENSE),
+  [packages/gantt/LICENSE](packages/gantt/LICENSE),
   [ogeui.com/license](https://ogeui.com/license)). Future
   enterprise-oriented packages (e.g. charts) may join this tier — never
   anything that is MIT today.

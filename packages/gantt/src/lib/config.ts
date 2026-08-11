@@ -53,6 +53,8 @@ export interface OgeGanttGridMessages {
   readonly treeHint: string;
   /** The today marker's title. */
   readonly todayLabel: string;
+  /** Accessible name of the scrollable chart region. */
+  readonly chartLabel: string;
 }
 
 /** Live-region announcement templates. */
@@ -120,6 +122,7 @@ export const OGE_DEFAULT_GANTT_MESSAGES: OgeGanttMessages = {
     dependencyLabel: '{type} link from {from} to {to}',
     treeHint: 'Press Escape then Tab to leave the Gantt',
     todayLabel: 'Today',
+    chartLabel: 'Gantt chart',
   },
   announcements: {
     taskCreated: '{title} created',

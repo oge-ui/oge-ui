@@ -1,0 +1,575 @@
+# @oge-ui/gantt
+
+> Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, drag editing with Escape-cancel and snapshot undo/redo.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.10.0.
+Docs and live demos: https://ogeui.com/components/gantt
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/gantt
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/gantt`
+
+- values: `OGE_DEFAULT_GANTT_CONFIG`, `OGE_DEFAULT_GANTT_MESSAGES`, `OGE_GANTT_CONFIG`, `OgeGantt`, `OgeGanttTaskTemplate`, `provideOgeGanttConfig`
+- types: `OgeGanttAnnouncementMessages`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttGridMessages`, `OgeGanttMessages`, `OgeGanttScaleType`, `OgeGanttSelectionChangedEvent`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTemplateContext`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`
+
+## API reference
+
+### OgeGantt — `<oge-gantt>`
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tasks` | `readonly T[]` | `[]` | Task items — a plain array, copied into an internal working set; the input is never mutated. Edits surface through the past-tense events. |
+| `dependencies` | `readonly D[]` | `[]` | Dependency links between tasks; same working-set semantics as `tasks`. |
+| `keyExpr / parentKeyExpr / titleExpr / startExpr / endExpr / progressExpr / colorExpr` | `string \| ((item: T) => unknown)` | `'id' / 'parentId' / 'title' / 'start' / 'end' / 'progress' / 'color'` | Task field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
+| `baselineStartExpr / baselineEndExpr` | `string \| ((item: T) => unknown)` | `'baselineStart' / 'baselineEnd'` | Baseline plan fields — tasks with both render the original plan as a slim bar under the live bar. |
+| `dependencyKeyExpr / predecessorKeyExpr / successorKeyExpr / dependencyTypeExpr` | `string \| ((item: D) => unknown)` | `'id' / 'predecessorId' / 'successorId' / 'type'` | Dependency field mapping. Types are `'FS' \| 'SS' \| 'FF' \| 'SF'` (dx numeric codes 0–3 also parse); missing type means FS. |
+| `resources` | `readonly { id, text, color? }[]` | `[]` | Resource choices: labels next to the bars and the assignment select in the task dialog. |
+| `resourceIdExpr` | `string \| ((item: T) => unknown)` | `'resourceId'` | The task's assigned resource id field. |
+
+_Appearance & behavior_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `scaleType` | `'hours' \| 'days' \| 'weeks' \| 'months'` | `'days'` | Timeline scale — calendar-true ticks (real month lengths, DST-safe). Two-way (`[(scaleType)]`); the toolbar zoom and Ctrl+wheel write it. |
+| `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday) for the weeks scale; `undefined` resolves from the locale. |
+| `columns` | `readonly OgeGanttColumn[]` | `title / start / end / duration` | Task-list columns: built-in fields (`title`, `start`, `end`, `duration`, `progress`) or any data field, with optional `header`, `widthPx` and `format`. |
+| `taskListWidth` | `number` | `360` | Initial width (px) of the task pane; the splitter between the panes drags. |
+| `taskTitlePosition` | `'inside' \| 'outside' \| 'none'` | `'inside'` | Where the task title renders relative to its bar. |
+| `showDependencies / showRowLines` | `boolean` | `true` | Dependency arrows / horizontal row guides. |
+| `showCriticalPath` | `boolean` | `false` | Outlines the zero-slack chain (backward-pass latest-finish relaxation over all four link types). |
+| `weekendsHighlighted / holidays` | `boolean / readonly Date[]` | `true / []` | Off-day shading on the days scale. |
+| `stripLines` | `readonly OgeGanttStripLine[]` | `[]` | Vertical markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded range with it (dx parity). |
+| `autoScheduling` | `boolean` | `false` | Forward-pass scheduling: moving a predecessor pushes its successors to satisfy FS/SS/FF/SF constraints (never pulls them earlier). |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
+| `messages` | `Partial<OgeGanttMessages>` | `{}` | Per-instance message overrides, merged over the DI config per top-level block. |
+| `selectedTaskKey` | `RowKey \| null` | `null` | The selected task. Two-way (`[(selectedTaskKey)]`). |
+
+_Editing gates_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `editingEnabled` | `boolean` | `true` | Master editing switch (dx `editing.enabled`). |
+| `allowTaskAdding / allowTaskUpdating / allowTaskDeleting / allowDependencyAdding / allowDependencyDeleting` | `boolean` | `true` | Per-capability editing gates. |
+| `readOnly` | `boolean` | `false` | **Display-only shorthand**: equivalent to `editingEnabled=false`, hides every editing affordance. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `insertTask(taskData) / updateTask(taskData, patch) / deleteTask(taskData)` | `void` | Programmatic CRUD through the same cancelable pipelines as interactive editing — one undo step each. |
+| `insertDependency(predecessorData, successorData, type?) / deleteDependency(dependencyData)` | `void` | Guarded link CRUD; inserting runs the same cycle check as interactive drawing. |
+| `undo() / redo()` | `void` | Snapshot history — every applied edit, drags included, is exactly one step (depth: config `undoLimit`). |
+| `zoomIn() / zoomOut() / zoomToFit()` | `void` | Steps the scale (hours ⇄ days ⇄ weeks ⇄ months) / picks the scale that fits the whole plan and scrolls to it. |
+| `scrollToDate(date)` | `void` | Scrolls the chart so `date` is in view. |
+| `expandAll() / collapseAll() / expandAllToLevel(level) / expandToTask(key)` | `void` | Tree expansion control; `expandToTask` also selects and reveals the row. |
+| `showTaskDetailsDialog(taskData?)` | `void` | Opens the task dialog — edit form for the given task, prefilled create form without one. |
+| `focus()` | `void` | Focuses the task tree (roving row). |
+
+#### Events
+
+_Editing (cancelable pipeline)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `taskInserting / taskUpdating / taskDeleting` | `OgeGanttTask*ingEvent<T>` | Cancelable pre-events — set `cancel = true` to veto before the store changes. |
+| `taskInserted / taskUpdated / taskDeleted` | `OgeGanttTask*edEvent<T>` | Fired only for applied changes — persist from these. |
+| `dependencyInserting / dependencyDeleting` | `OgeGanttDependency*ingEvent` | Cancelable link pre-events; inserting carries `predecessorKey`, `successorKey` and `type`. |
+| `dependencyInserted / dependencyDeleted` | `OgeGanttDependency*edEvent<D>` | Applied link changes. |
+| `taskEditDialogShowing` | `OgeGanttDialogShowingEvent<T>` | Cancelable, before the task dialog opens; replace `formItems` to customize the form (dx `onTaskEditDialogShowing` parity). |
+
+_Interaction_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `taskClick / taskDblClick / taskContextMenu` | `OgeGanttTaskClickEvent<T>` | Bar/row pointer events with the normalized task and the raw `MouseEvent` — build your own context menu (pairs with `@oge-ui/overlay`). |
+| `selectionChanged` | `OgeGanttSelectionChangedEvent<T>` | Single-row selection changed (task or `null`). |
+| `scaleTypeChange / selectedTaskKeyChange` | `OgeGanttScaleType / RowKey \| null` | The two-way model outputs. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGanttTask<T>` | `interface` | The normalized task — the payload of events and templates: `key`, `parentKey`, `source` (the original item), `title`, `start`/`end`, `progress`, `color`, baseline dates, `isSummary`/`isMilestone` and `level`. |
+| `OgeGanttDependency<D>` | `interface` | The normalized link: `key`, `source`, `predecessorKey`, `successorKey`, `type`. |
+| `OgeGanttDependencyType` | `'FS' \| 'SS' \| 'FF' \| 'SF'` | Finish-to-start, start-to-start, finish-to-finish, start-to-finish. |
+| `OgeGanttScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months'` | The timeline scale units. |
+| `OgeGanttColumn` | `interface` | A task-list column: `{ field, header?, widthPx?, format? }`. |
+| `OgeGanttStripLine` | `interface` | `{ start, end?, label?, color? }` — a chart marker line or range. |
+| `OgeGanttTaskTitlePosition` | `'inside' \| 'outside' \| 'none'` | Task title placement relative to the bar. |
+| `[ogeGanttTaskTemplate]` | `structural directive (OgeGanttTaskTemplate)` | Replaces the bar's title content; context `OgeGanttTaskTemplateContext`: `{ $implicit: OgeGanttTask }`. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `provideOgeGanttConfig(config)` | `Provider` | `—` | Configures every Gantt below the provider (`OgeGanttConfigInput`); shallow merge over `OGE_DEFAULT_GANTT_CONFIG` per top-level key — a partial `messages` replaces whole nested blocks. The token is `OGE_GANTT_CONFIG` (`OgeGanttConfig`). |
+| `messages` | `OgeGanttMessages` | `—` | Every user-facing string, aria labels included: `toolbar` (`OgeGanttToolbarMessages`), `columns` (`OgeGanttColumnMessages`), `dialog` (`OgeGanttDialogMessages`), `grid` (`OgeGanttGridMessages`, aria templates with `{token}` placeholders) and `announcements` (`OgeGanttAnnouncementMessages`, live-region templates). Defaults: `OGE_DEFAULT_GANTT_MESSAGES`. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `[locale]` input wins. |
+| `rowHeight` | `number` | `36` | Fixed row height in px — the invariant behind the row virtualization of both panes. |
+| `undoLimit` | `number` | `50` | Undo history depth. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Baselines
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttStripLine } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Baseline bars render the original plan under the live bars;
+         stripLines mark deadlines (a line) or freeze windows (a range) on the
+         chart; resources label the bars. Weekends shade automatically and
+         holidays add to the off-day shading. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [stripLines]="stripLines"
+      [resources]="people"
+      [holidays]="holidays"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    {
+      id: 1,
+      title: 'Data migration',
+      start: new Date(2026, 7, 4),
+      end: new Date(2026, 7, 11),
+      baselineStart: new Date(2026, 7, 3),
+      baselineEnd: new Date(2026, 7, 7),
+      progress: 70,
+      resourceId: 'ada',
+    },
+    {
+      id: 2,
+      title: 'Cutover rehearsal',
+      start: new Date(2026, 7, 11),
+      end: new Date(2026, 7, 14),
+      baselineStart: new Date(2026, 7, 10),
+      baselineEnd: new Date(2026, 7, 12),
+      resourceId: 'grace',
+    },
+  ];
+
+  protected readonly stripLines: OgeGanttStripLine[] = [
+    { start: new Date(2026, 7, 18), label: 'Go-live', color: '#dc2626' },
+    {
+      start: new Date(2026, 7, 14),
+      end: new Date(2026, 7, 17),
+      label: 'Freeze',
+    },
+  ];
+
+  protected readonly people = [
+    { id: 'ada', text: 'Ada', color: '#7c3aed' },
+    { id: 'grace', text: 'Grace', color: '#0891b2' },
+  ];
+
+  protected readonly holidays = [new Date(2026, 7, 10)];
+}
+```
+
+### Config
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt, provideOgeGanttConfig } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Every user-facing string, aria labels included, lives in
+         OgeGanttMessages — provide once with provideOgeGanttConfig() or override
+         per instance with [messages]. locale drives every Intl date format;
+         rowHeight and undoLimit are config-level too. -->
+    <oge-gantt [tasks]="tasks" locale="de" style="height: 300px" />
+  `,
+})
+export class Demo {
+  // App-wide (main.ts / route providers):
+  // provideOgeGanttConfig({
+  //   locale: 'de',
+  //   rowHeight: 32,
+  //   messages: {
+  //     toolbar: { ...germanToolbar },
+  //   },
+  // })
+
+  protected readonly tasks = [
+    { id: 1, title: 'Planung', start: new Date(2026, 7, 3), end: new Date(2026, 7, 10), progress: 25 },
+  ];
+}
+```
+
+### Critical path
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- showCriticalPath outlines the tasks with zero slack;
+         autoScheduling pushes successors forward whenever a predecessor moves
+         (FS/SS/FF/SF respected). Drawing a link that would close a cycle is
+         rejected and announced — try dragging a link dot backwards. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      [showCriticalPath]="true"
+      [autoScheduling]="true"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, title: 'Foundation', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), progress: 100 },
+    { id: 2, title: 'Framing', start: new Date(2026, 7, 6), end: new Date(2026, 7, 12), progress: 60 },
+    { id: 3, title: 'Electrical', start: new Date(2026, 7, 12), end: new Date(2026, 7, 15) },
+    { id: 4, title: 'Landscaping', start: new Date(2026, 7, 6), end: new Date(2026, 7, 10) },
+    { id: 5, title: 'Inspection', start: new Date(2026, 7, 17), end: new Date(2026, 7, 18) },
+  ];
+
+  protected readonly links = [
+    { id: 1, predecessorId: 1, successorId: 2 },
+    { id: 2, predecessorId: 2, successorId: 3 },
+    { id: 3, predecessorId: 3, successorId: 5 },
+    { id: 4, predecessorId: 4, successorId: 5 },
+  ];
+}
+```
+
+### Editing
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttTaskDeletingEvent, OgeGanttTaskUpdatingEvent } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Every mutation runs a cancelable '-ing' event before the
+         store changes; the past-tense event fires only for applied changes —
+         persist from there. allow* flags gate each capability; readOnly turns
+         the whole widget display-only. This demo protects finished tasks and
+         asks before deleting. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [allowDependencyAdding]="false"
+      (taskUpdating)="protectDone($event)"
+      (taskDeleting)="confirmDelete($event)"
+      style="height: 360px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, title: 'Audit (done — locked)', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), progress: 100 },
+    { id: 2, title: 'Remediation', start: new Date(2026, 7, 6), end: new Date(2026, 7, 13), progress: 30 },
+  ];
+
+  protected protectDone(
+    event: OgeGanttTaskUpdatingEvent<Record<string, unknown>>,
+  ): void {
+    if ((event.oldData['progress'] as number) === 100) event.cancel = true;
+  }
+
+  protected confirmDelete(
+    event: OgeGanttTaskDeletingEvent<Record<string, unknown>>,
+  ): void {
+    event.cancel = !confirm('Delete this task?');
+  }
+}
+```
+
+### Field mapping
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Any item shape binds through the *Expr inputs — field names,
+         dotted paths or getter functions — for tasks AND dependency links.
+         String dates parse as local wall time and write back in the same
+         storage shape after edits. -->
+    <oge-gantt
+      [tasks]="workItems"
+      [dependencies]="relations"
+      keyExpr="code"
+      parentKeyExpr="parentCode"
+      titleExpr="subject"
+      startExpr="plan.begin"
+      endExpr="plan.finish"
+      progressExpr="done"
+      dependencyKeyExpr="relId"
+      predecessorKeyExpr="fromCode"
+      successorKeyExpr="toCode"
+      style="height: 360px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly workItems = [
+    {
+      code: 'EPIC-1',
+      subject: 'Checkout revamp',
+      plan: { begin: '2026-08-03', finish: '2026-08-14' },
+    },
+    {
+      code: 'T-1',
+      parentCode: 'EPIC-1',
+      subject: 'Payment API',
+      plan: { begin: '2026-08-03', finish: '2026-08-07' },
+      done: 80,
+    },
+    {
+      code: 'T-2',
+      parentCode: 'EPIC-1',
+      subject: 'Wallet UI',
+      plan: { begin: '2026-08-07', finish: '2026-08-14' },
+      done: 20,
+    },
+  ];
+
+  protected readonly relations = [{ relId: 1, fromCode: 'T-1', toCode: 'T-2' }];
+}
+```
+
+### Getting started
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One element, a working Gantt: task tree pane + timeline chart
+         with summary brackets, milestone diamonds and dependency arrows. Drag a
+         bar to move it (Escape cancels mid-drag), pull its edges to resize, drag
+         the bottom knob to set progress, drag a link dot onto another bar to draw
+         a dependency. Double-click opens the task dialog. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      style="height: 480px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, title: 'Release 1.0', start: new Date(2026, 7, 3), end: new Date(2026, 7, 21) },
+    {
+      id: 2,
+      parentId: 1,
+      title: 'Design',
+      start: new Date(2026, 7, 3),
+      end: new Date(2026, 7, 7),
+      progress: 100,
+    },
+    {
+      id: 3,
+      parentId: 1,
+      title: 'Implementation',
+      start: new Date(2026, 7, 7),
+      end: new Date(2026, 7, 17),
+      progress: 45,
+    },
+    {
+      id: 4,
+      parentId: 1,
+      title: 'Ship',
+      start: new Date(2026, 7, 21),
+      end: new Date(2026, 7, 21), // zero-length => milestone diamond
+    },
+  ];
+
+  protected readonly links = [
+    { id: 'a', predecessorId: 2, successorId: 3 }, // FS is the default type
+    { id: 'b', predecessorId: 3, successorId: 4 },
+  ];
+}
+```
+
+### Template
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt, OgeGanttTaskTemplate } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt, OgeGanttTaskTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- *ogeGanttTaskTemplate replaces the bar's title content while
+         the bar surface, gestures and keyboard semantics stay with the
+         component. -->
+    <oge-gantt [tasks]="tasks" style="height: 300px">
+      <ng-template ogeGanttTaskTemplate let-task>
+        <strong>{{ task.title }}</strong>
+        <span class="opacity-75"> · {{ task.progress }}%</span>
+      </ng-template>
+    </oge-gantt>
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, title: 'Usability study', start: new Date(2026, 7, 3), end: new Date(2026, 7, 12), progress: 55, color: '#0f766e' },
+    { id: 2, title: 'Findings report', start: new Date(2026, 7, 12), end: new Date(2026, 7, 17), progress: 10 },
+  ];
+}
+```
+
+### Toolbar
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+import type { OgeGanttScaleType } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The toolbar adds tasks, zooms between hour/day/week/month
+         scales (Ctrl+wheel on the chart works too), fits the whole plan,
+         expands/collapses the tree and drives snapshot undo/redo — every edit,
+         including drags, is one undo step. scaleType is two-way. The task list
+         is a virtualized treegrid: columns are configurable and the splitter
+         between the panes drags. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [(scaleType)]="scale"
+      [columns]="columns"
+      [taskListWidth]="300"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly scale = signal<OgeGanttScaleType>('weeks');
+  protected readonly columns = [
+    { field: 'title' },
+    { field: 'progress' },
+    { field: 'owner', header: 'Owner' },
+  ] as const;
+
+  protected readonly tasks = [
+    { id: 1, title: 'Discovery', start: new Date(2026, 6, 6), end: new Date(2026, 6, 24), progress: 100, owner: 'Ada' },
+    { id: 2, title: 'Build', start: new Date(2026, 6, 27), end: new Date(2026, 8, 4), progress: 40, owner: 'Grace' },
+    { id: 3, title: 'Rollout', start: new Date(2026, 8, 7), end: new Date(2026, 8, 25), owner: 'Ada' },
+  ];
+}
+```
+

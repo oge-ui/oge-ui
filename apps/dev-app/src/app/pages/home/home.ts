@@ -1832,6 +1832,7 @@ export class HomePage {
     '@oge-ui/pivot',
     '@oge-ui/bpmn',
     '@oge-ui/scheduler',
+    '@oge-ui/gantt',
     '@oge-ui/buttons',
     '@oge-ui/inputs',
     '@oge-ui/overlay',
@@ -1912,6 +1913,12 @@ export class HomePage {
       name: 'BPMN Editor',
       desc: 'BPMN 2.0 modeler with its own XML engine, undo/redo and no watermark.',
       path: '/components/bpmn',
+    },
+    {
+      icon: 'list',
+      name: 'Gantt',
+      desc: 'Task tree + timeline with dependencies, critical path and drag editing.',
+      path: '/components/gantt',
     },
     {
       icon: 'calendar',

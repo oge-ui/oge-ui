@@ -45,6 +45,12 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-scheduler [dataSource]="appointments" [(currentDate)]="date" [(currentView)]="view" />` — field mapping via `startDateExpr`/`endDateExpr`/`textExpr`, appointment popup + form editing, cancelable `appointmentAdding/Updating/Deleting`',
     },
   ],
+  '@oge-ui/gantt': [
+    {
+      need: 'Gantt chart / project plan with task tree, dependencies, critical path',
+      use: '`<oge-gantt [tasks]="tasks" [dependencies]="links" />` — field mapping via `keyExpr`/`parentKeyExpr`/`startExpr`/`endExpr`, drag move/resize/progress, dependency drawing, undo/redo, cancelable `taskUpdating`-style events',
+    },
+  ],
   '@oge-ui/buttons': [
     {
       need: 'button, async action button',
@@ -168,6 +174,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/pivot',
   '@oge-ui/bpmn',
   '@oge-ui/scheduler',
+  '@oge-ui/gantt',
   '@oge-ui/inputs',
   '@oge-ui/buttons',
   '@oge-ui/overlay',

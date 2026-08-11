@@ -174,6 +174,17 @@ export const PACKAGES = [
     tier: 'commercial',
   },
   {
+    dir: 'gantt',
+    npm: '@oge-ui/gantt',
+    label: 'Gantt',
+    summary:
+      'Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, drag editing with Escape-cancel and snapshot undo/redo.',
+    docsRoot: '/components/gantt',
+    pageDirs: ['gantt'],
+    apiPage: 'apps/dev-app/src/app/pages/gantt/api.ts',
+    tier: 'commercial',
+  },
+  {
     dir: 'scheduler',
     npm: '@oge-ui/scheduler',
     label: 'Scheduler',

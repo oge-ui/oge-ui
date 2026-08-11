@@ -539,6 +539,58 @@ keyboard) and polite live-region announcements.
 | `accessKey/tabIndex/hint/elementAttr`, `repaint/beginUpdate/option/on/off` | dx        | Skipped | jQuery-era widget plumbing — signals, host bindings and Angular lifecycle replace them                                                                               |
 | Kendo `navigable` extra shortcut map                                       | K         | Skipped | the composed grid + chip model covers the keyboard contract; no APG pattern exists to mandate more                                                                   |
 
+## Gantt (`@oge-ui/gantt`, commercial) — Feature Parity & Roadmap
+
+`OgeGantt` against dxGantt and Kendo Angular Gantt (the only Angular-native
+rival). **Angular Material has no gantt** and **PrimeNG has no gantt** — two
+honest absence rows. Kendo's gantt lacks critical-path highlighting,
+baselines, undo/redo and row virtualization — all four ship here. No WAI-ARIA
+APG gantt pattern exists; the a11y is composed from the treegrid pattern
+(roving rows) whose focused row drives its bar with keyboard move/resize
+(**OGE extra** — neither reference moves bars from the keyboard) and polite
+live-region announcements.
+
+**Structural decisions.**
+
+- **Consumer of the MIT suite, by design** (scheduler stance): the task
+  dialog is `oge-modal` + `oge-form`, its editors come from `inputs`.
+- **Pure kernel** (`src/lib/engine/`, lint-enforced framework-free): tree
+  index + summary roll-up (duration-weighted progress), calendar-true
+  hour/day/week/month scales with date↔px math, forward-pass
+  auto-scheduling, backward-pass critical path, cycle detection, orthogonal
+  dependency routing and all gesture math.
+- **Intl-only local dates** (house rule): no date library, no adapter, no TZ
+  database; DST-safe scales.
+
+| Feature (references)                                                     | Reference | Status  | Notes                                                                                                         |
+| ------------------------------------------------------------------------ | --------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| Task tree pane + timeline chart, shared scroll, splitter                 | dx/K      | covered | both panes row-virtualized over a fixed `rowHeight` (**OGE extra** — Kendo paginates instead)                 |
+| Summary bars (roll-up) + milestones                                      | dx/K      | covered | duration-weighted progress roll-up; zero-duration ⇒ diamond                                                   |
+| FS/SS/FF/SF dependencies + drawing + cycle rejection                     | dx/K      | covered | link-dot drag; dx numeric type codes 0–3 parse; rejection announced                                           |
+| Critical path                                                            | dx        | covered | backward-pass latest-finish over all four link types — **absent in Kendo**                                    |
+| Baselines (planned vs actual)                                            | dx        | covered | `baselineStartExpr`/`baselineEndExpr` under-bars — **absent in Kendo**                                        |
+| Auto-scheduling                                                          | dx        | covered | forward pass pushes successors; never pulls earlier                                                           |
+| Scales hours/days/weeks/months + zoom + fit                              | dx/K      | covered | calendar-true ticks; toolbar, Ctrl+wheel, `zoomToFit()`                                                       |
+| Strip lines / date markers                                               | dx        | covered | line (`start`) or range (`start`+`end`), label + color                                                        |
+| Weekend/holiday shading                                                  | dx/K      | covered | `weekendsHighlighted`, `holidays`                                                                             |
+| Field mapping (task + dependency exprs), string-date round-trip          | dx/K      | covered | dotted paths / getters; `serializeLikeOriginal` write-back                                                    |
+| Drag move/resize/progress + Escape-cancel                                | dx/K      | covered | bpmn five-part gesture machine, 3px threshold, live drag tip                                                  |
+| Keyboard move/resize (Ctrl+Arrows, Ctrl+Shift)                           | —         | covered | **OGE extra** — announced via the live region                                                                 |
+| Cancelable CRUD events + past-tense events + programmatic CRUD           | dx/K      | covered | `task*`/`dependency*` pipelines; `insertTask`/`updateTask`/`deleteTask`/`insertDependency`/`deleteDependency` |
+| Undo/redo                                                                | dx        | covered | snapshot history, one step per applied edit — **absent in Kendo**                                             |
+| Task dialog + `taskEditDialogShowing` form hook                          | dx/K      | covered | dx `onTaskEditDialogShowing` parity via mutable `formItems`                                                   |
+| Task-list columns (built-in + data fields, format)                       | dx/K      | covered | `columns: { field, header?, widthPx?, format? }`                                                              |
+| Resources (labels + dialog select)                                       | dx/K      | partial | single resource per task; multi-assignment + workload views → v0.2                                            |
+| Selection + `[(selectedTaskKey)]`, context-menu events                   | dx/K      | covered | single-row; `taskContextMenu` payload for custom menus                                                        |
+| Templates (task bar content)                                             | dx/K      | covered | `*ogeGanttTaskTemplate`; header/tooltip templates → v0.2                                                      |
+| Messages/i18n incl. aria + announcements + `locale`                      | dx/K      | covered | `provideOgeGanttConfig` + per-instance `[messages]`/`[locale]`                                                |
+| `readOnly` + per-capability `allow*` gates                               | dx/K      | covered | dx `editing.*` parity                                                                                         |
+| Work-time calendars (per-task/resource working hours)                    | K         | v0.2    | affects auto-scheduling durations; v0.1 schedules on calendar days                                            |
+| Export (PDF/Excel/image)                                                 | dx/K      | v0.2    |                                                                                                               |
+| Full Resource Manager UI (dx `showResources` dialogs, assignments store) | dx        | Skipped | dx's separate assignment-store surface; the `resources` input + dialog select covers the common case          |
+| dx jQuery-era widget surface (`repaint/option/on/off`, `elementAttr`, …) | dx        | Skipped | signals, host bindings and Angular lifecycle replace them                                                     |
+| Kendo per-cell `ganttStyles` theming object                              | K         | Skipped | the `--oge-gantt-*` CSS token set is the theming contract                                                     |
+
 ## Date editors (`@oge-ui/inputs`) — Feature Parity
 
 `OgeCalendar` + `OgeDateBox` (reference Calendar/DateBox scope) on native

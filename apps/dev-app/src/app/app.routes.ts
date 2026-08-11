@@ -742,6 +742,23 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/gantt',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/gantt/overview').then((m) => m.GanttOverviewPage),
+        title: 'OGE — Gantt',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/gantt/api').then((m) => m.GanttApiPage),
+        title: 'OGE — Gantt API',
+      },
+    ],
+  },
+  {
     path: 'components/scheduler',
     children: [
       {

@@ -271,6 +271,7 @@
 .oge-gantt-canvas {
   position: relative;
   overflow: hidden;
+  user-select: none;
 }
 
 .oge-gantt-offday {

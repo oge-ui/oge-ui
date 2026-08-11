@@ -24,6 +24,7 @@ const PACKAGES = [
   { dir: 'pivot', npm: '@oge-ui/pivot' },
   { dir: 'bpmn', npm: '@oge-ui/bpmn' },
   { dir: 'scheduler', npm: '@oge-ui/scheduler' },
+  { dir: 'gantt', npm: '@oge-ui/gantt' },
   { dir: 'inputs', npm: '@oge-ui/inputs' },
   { dir: 'buttons', npm: '@oge-ui/buttons' },
   { dir: 'overlay', npm: '@oge-ui/overlay' },

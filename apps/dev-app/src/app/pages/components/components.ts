@@ -53,6 +53,7 @@ type FamilyKey =
   | 'pivot'
   | 'bpmn'
   | 'scheduler'
+  | 'gantt'
   | 'overlay';
 
 interface Family {
@@ -296,6 +297,65 @@ interface OrgNode {
                       stroke-dasharray="4 3"
                     />
                     <circle cx="246" cy="22" r="9" stroke-width="3.2" />
+                  </svg>
+                }
+                @case ('gantt') {
+                  <!-- illustrative sketch; the live gantt renders on its own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="gantt"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  >
+                    <rect x="10" y="10" width="260" height="100" rx="8" />
+                    <path
+                      d="M80 10v100M10 36h260M10 62h260M10 88h260"
+                      opacity="0.5"
+                    />
+                    <rect
+                      x="92"
+                      y="18"
+                      width="120"
+                      height="12"
+                      rx="3"
+                      fill="currentColor"
+                      opacity="0.35"
+                      stroke="none"
+                    />
+                    <rect
+                      x="100"
+                      y="44"
+                      width="70"
+                      height="12"
+                      rx="3"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <rect
+                      x="150"
+                      y="70"
+                      width="90"
+                      height="12"
+                      rx="3"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <path d="M170 56h-10v14" />
+                    <rect
+                      x="236"
+                      y="92"
+                      width="10"
+                      height="10"
+                      transform="rotate(45 241 97)"
+                      fill="currentColor"
+                      opacity="0.4"
+                      stroke="none"
+                    />
                   </svg>
                 }
                 @case ('scheduler') {
@@ -711,6 +771,14 @@ export class ComponentsIndexPage {
       path: '/components/bpmn',
       description:
         'BPMN 2.0 process modeler: palette, orthogonal connections, undo/redo, XML import/export — on its own dependency-free engine, with no watermark.',
+    },
+    {
+      key: 'gantt',
+      name: 'Gantt',
+      icon: 'list',
+      path: '/components/gantt',
+      description:
+        'Project plan with a task tree and timeline chart: summary and milestone bars, dependency arrows, critical path, drag editing and undo/redo.',
     },
     {
       key: 'scheduler',

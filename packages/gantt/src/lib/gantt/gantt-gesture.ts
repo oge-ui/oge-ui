@@ -15,6 +15,8 @@ export function beginGanttGesture(
   event: PointerEvent,
   callbacks: GanttGestureCallbacks,
 ): void {
+  // A native selection drag would auto-scroll the chart under the gesture.
+  event.preventDefault();
   const startX = event.clientX;
   const startY = event.clientY;
   let moved = false;

@@ -136,51 +136,119 @@ const OVERSCAN_ROWS = 6;
           class="oge-gantt-btn oge-gantt-btn-primary oge-gantt-btn-add"
           (click)="showTaskDetailsDialog()"
         >
-          <svg viewBox="0 0 16 16" width="13" height="13" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" /></svg>
+          <svg
+            viewBox="0 0 16 16"
+            width="13"
+            height="13"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M8 3.5v9M3.5 8h9" />
+          </svg>
           {{ msg().toolbar.addTask }}
         </button>
       }
       <div class="oge-gantt-toolbar-group">
-        <button type="button" class="oge-gantt-btn oge-gantt-btn-icon"
+        <button
+          type="button"
+          class="oge-gantt-btn oge-gantt-btn-icon"
           [attr.aria-label]="msg().toolbar.zoomOut"
-          [disabled]="!canZoom(1)" (click)="zoomOut()">
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3M5 7h4" /></svg>
+          [disabled]="!canZoom(1)"
+          (click)="zoomOut()"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="7" cy="7" r="4.5" />
+            <path d="m10.5 10.5 3 3M5 7h4" />
+          </svg>
         </button>
-        <button type="button" class="oge-gantt-btn oge-gantt-btn-icon"
+        <button
+          type="button"
+          class="oge-gantt-btn oge-gantt-btn-icon"
           [attr.aria-label]="msg().toolbar.zoomIn"
-          [disabled]="!canZoom(-1)" (click)="zoomIn()">
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            aria-hidden="true"><circle cx="7" cy="7" r="4.5" /><path d="m10.5 10.5 3 3M5 7h4M7 5v4" /></svg>
+          [disabled]="!canZoom(-1)"
+          (click)="zoomIn()"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="7" cy="7" r="4.5" />
+            <path d="m10.5 10.5 3 3M5 7h4M7 5v4" />
+          </svg>
         </button>
-        <button type="button" class="oge-gantt-btn"
-          (click)="zoomToFit()">{{ msg().toolbar.zoomToFit }}</button>
+        <button type="button" class="oge-gantt-btn" (click)="zoomToFit()">
+          {{ msg().toolbar.zoomToFit }}
+        </button>
       </div>
       <div class="oge-gantt-toolbar-group">
-        <button type="button" class="oge-gantt-btn"
-          (click)="expandAll()">{{ msg().toolbar.expandAll }}</button>
-        <button type="button" class="oge-gantt-btn"
-          (click)="collapseAll()">{{ msg().toolbar.collapseAll }}</button>
+        <button type="button" class="oge-gantt-btn" (click)="expandAll()">
+          {{ msg().toolbar.expandAll }}
+        </button>
+        <button type="button" class="oge-gantt-btn" (click)="collapseAll()">
+          {{ msg().toolbar.collapseAll }}
+        </button>
       </div>
       @if (effectiveEditing()) {
         <div class="oge-gantt-toolbar-group">
-          <button type="button" class="oge-gantt-btn oge-gantt-btn-icon"
+          <button
+            type="button"
+            class="oge-gantt-btn oge-gantt-btn-icon"
             [attr.aria-label]="msg().toolbar.undo"
-            [disabled]="!canUndo()" (click)="undo()">
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5 3 7l3.5 3.5M3 7h7a3 3 0 0 1 0 6H8" /></svg>
+            [disabled]="!canUndo()"
+            (click)="undo()"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M6.5 3.5 3 7l3.5 3.5M3 7h7a3 3 0 0 1 0 6H8" />
+            </svg>
           </button>
-          <button type="button" class="oge-gantt-btn oge-gantt-btn-icon"
+          <button
+            type="button"
+            class="oge-gantt-btn oge-gantt-btn-icon"
             [attr.aria-label]="msg().toolbar.redo"
-            [disabled]="!canRedo()" (click)="redo()">
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round" aria-hidden="true"><path d="M9.5 3.5 13 7l-3.5 3.5M13 7H6a3 3 0 0 0 0 6h2" /></svg>
+            [disabled]="!canRedo()"
+            (click)="redo()"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9.5 3.5 13 7l-3.5 3.5M13 7H6a3 3 0 0 0 0 6h2" />
+            </svg>
           </button>
         </div>
       }
@@ -225,8 +293,8 @@ const OVERSCAN_ROWS = 6;
               [attr.aria-label]="taskAriaLabel(task)"
               [class.oge-gantt-row-selected]="task.key === selectedTaskKey()"
               [class.oge-gantt-row-hover]="task.key === hoverKey()"
-              [tabindex]="task.key === focusKey() ? 0 : -1"
-              [attr.data-focus-target]="task.key === focusKey() ? '' : null"
+              [tabindex]="task.key === rovingKey() ? 0 : -1"
+              [attr.data-focus-target]="task.key === rovingKey() ? '' : null"
               (click)="onRowClick(task, $event)"
               (dblclick)="onRowDblClick(task, $event)"
               (contextmenu)="onRowContextMenu(task, $event)"
@@ -257,13 +325,24 @@ const OVERSCAN_ROWS = 6;
                         aria-hidden="true"
                         (click)="toggleExpanded(task, $event)"
                       >
-                        <svg viewBox="0 0 16 16" width="11" height="11"
-                          fill="none" stroke="currentColor" stroke-width="2"
-                          stroke-linecap="round" stroke-linejoin="round">
-                          <path d="m6 3.5 4.5 4.5L6 12.5" /></svg>
+                        <svg
+                          viewBox="0 0 16 16"
+                          width="11"
+                          height="11"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="m6 3.5 4.5 4.5L6 12.5" />
+                        </svg>
                       </span>
                     } @else {
-                      <span class="oge-gantt-toggle-spacer" aria-hidden="true"></span>
+                      <span
+                        class="oge-gantt-toggle-spacer"
+                        aria-hidden="true"
+                      ></span>
                     }
                   }
                   <span class="oge-gantt-cell-text">{{
@@ -281,12 +360,21 @@ const OVERSCAN_ROWS = 6;
           class="oge-gantt-splitter"
           role="separator"
           aria-orientation="vertical"
+          [attr.aria-valuemin]="160"
+          [attr.aria-valuemax]="720"
+          [attr.aria-valuenow]="listWidth()"
           tabindex="-1"
           (pointerdown)="onSplitterPointerDown($event)"
         ></div>
 
         <!-- ======== chart ======== -->
-        <div class="oge-gantt-chart-scroll" #chartScrollEl>
+        <div
+          class="oge-gantt-chart-scroll"
+          #chartScrollEl
+          role="group"
+          [attr.aria-label]="msg().grid.chartLabel"
+          tabindex="0"
+        >
           <div class="oge-gantt-chart" [style.width.px]="scale().totalPx">
             <div class="oge-gantt-scale" role="presentation">
               <div class="oge-gantt-scale-major">
@@ -357,7 +445,9 @@ const OVERSCAN_ROWS = 6;
               @for (task of windowTasks(); track task.key) {
                 <div
                   class="oge-gantt-lane"
-                  [class.oge-gantt-row-selected]="task.key === selectedTaskKey()"
+                  [class.oge-gantt-row-selected]="
+                    task.key === selectedTaskKey()
+                  "
                   [class.oge-gantt-row-hover]="task.key === hoverKey()"
                   [style.top.px]="rowIndexOf(task) * rowHeight()"
                   [style.height.px]="rowHeight()"
@@ -412,6 +502,7 @@ const OVERSCAN_ROWS = 6;
                       [style.background-color]="bar.task.color ?? null"
                       [attr.data-task-key]="String(bar.task.key)"
                       (pointerdown)="onBarPointerDown(bar, 'move', $event)"
+                      (dblclick)="onRowDblClick(bar.task, $event)"
                     ></div>
                   } @else if (bar.task.isSummary) {
                     <div
@@ -433,6 +524,7 @@ const OVERSCAN_ROWS = 6;
                       [style.color]="barForeground(bar.task)"
                       [attr.data-task-key]="String(bar.task.key)"
                       (pointerdown)="onBarPointerDown(bar, 'move', $event)"
+                      (dblclick)="onRowDblClick(bar.task, $event)"
                     >
                       <div
                         class="oge-gantt-progress"
@@ -443,18 +535,24 @@ const OVERSCAN_ROWS = 6;
                         <div
                           class="oge-gantt-handle oge-gantt-handle-start"
                           aria-hidden="true"
-                          (pointerdown)="onBarPointerDown(bar, 'resize-start', $event)"
+                          (pointerdown)="
+                            onBarPointerDown(bar, 'resize-start', $event)
+                          "
                         ></div>
                         <div
                           class="oge-gantt-handle oge-gantt-handle-end"
                           aria-hidden="true"
-                          (pointerdown)="onBarPointerDown(bar, 'resize-end', $event)"
+                          (pointerdown)="
+                            onBarPointerDown(bar, 'resize-end', $event)
+                          "
                         ></div>
                         <div
                           class="oge-gantt-progress-knob"
                           [style.inset-inline-start.%]="bar.task.progress"
                           aria-hidden="true"
-                          (pointerdown)="onBarPointerDown(bar, 'progress', $event)"
+                          (pointerdown)="
+                            onBarPointerDown(bar, 'progress', $event)
+                          "
                         ></div>
                       }
                       @if (effectiveEditing() && allowDependencyAdding()) {
@@ -474,7 +572,9 @@ const OVERSCAN_ROWS = 6;
                           @if (taskTemplate(); as tpl) {
                             <ng-container
                               [ngTemplateOutlet]="tpl.templateRef"
-                              [ngTemplateOutletContext]="{ $implicit: bar.task }"
+                              [ngTemplateOutletContext]="{
+                                $implicit: bar.task,
+                              }"
                             />
                           } @else {
                             {{ bar.task.title }}
@@ -485,7 +585,9 @@ const OVERSCAN_ROWS = 6;
                     @if (taskTitlePosition() === 'outside') {
                       <span
                         class="oge-gantt-bar-title-outside"
-                        [style.inset-inline-start.px]="bar.leftPx + bar.widthPx + 8"
+                        [style.inset-inline-start.px]="
+                          bar.leftPx + bar.widthPx + 8
+                        "
                         >{{ bar.task.title }}</span
                       >
                     }
@@ -601,10 +703,8 @@ export class OgeGantt<
   readonly taskDeleting = output<OgeGanttTaskDeletingEvent<T>>();
   readonly taskDeleted = output<OgeGanttTaskDeletedEvent<T>>();
   readonly dependencyInserting = output<OgeGanttDependencyInsertingEvent>();
-  readonly dependencyInserted =
-    output<OgeGanttDependencyInsertedEvent<D>>();
-  readonly dependencyDeleting =
-    output<OgeGanttDependencyDeletingEvent<D>>();
+  readonly dependencyInserted = output<OgeGanttDependencyInsertedEvent<D>>();
+  readonly dependencyDeleting = output<OgeGanttDependencyDeletingEvent<D>>();
   readonly dependencyDeleted = output<OgeGanttDependencyDeletedEvent<D>>();
   readonly taskClick = output<OgeGanttTaskClickEvent<T>>();
   readonly taskDblClick = output<OgeGanttTaskClickEvent<T>>();
@@ -834,10 +934,8 @@ export class OgeGantt<
   );
   protected readonly windowBottomPx = computed(
     () =>
-      Math.max(
-        0,
-        this.visibleTasks().length - this.windowRange().last,
-      ) * this.rowHeight(),
+      Math.max(0, this.visibleTasks().length - this.windowRange().last) *
+      this.rowHeight(),
   );
 
   private readonly rowIndexByKey = computed<ReadonlyMap<RowKey, number>>(() => {
@@ -930,11 +1028,8 @@ export class OgeGantt<
     const holidays = this.holidays();
     return scale.ticks.filter((tick) => {
       const day = tick.date.getDay();
-      const weekend =
-        this.weekendsHighlighted() && (day === 0 || day === 6);
-      return (
-        weekend || holidays.some((holiday) => sameDay(holiday, tick.date))
-      );
+      const weekend = this.weekendsHighlighted() && (day === 0 || day === 6);
+      return weekend || holidays.some((holiday) => sameDay(holiday, tick.date));
     });
   });
 
@@ -1001,10 +1096,7 @@ export class OgeGantt<
         const days = Math.round(
           (task.end.getTime() - task.start.getTime()) / 86_400_000,
         );
-        return this.msg().columns.durationDays.replace(
-          '{days}',
-          String(days),
-        );
+        return this.msg().columns.durationDays.replace('{days}', String(days));
       }
       case 'progress':
         return `${task.progress}%`;
@@ -1060,9 +1152,7 @@ export class OgeGantt<
           month: 'short',
         }).format(date);
       case 'months':
-        return new Intl.DateTimeFormat(locale, { month: 'short' }).format(
-          date,
-        );
+        return new Intl.DateTimeFormat(locale, { month: 'short' }).format(date);
     }
   }
 
@@ -1090,6 +1180,10 @@ export class OgeGantt<
 
   protected readonly hoverKey = signal<RowKey | null>(null);
   protected readonly focusKey = signal<RowKey | null>(null);
+  /** The roving tab stop: the focused row, or the first visible one. */
+  protected readonly rovingKey = computed<RowKey | null>(
+    () => this.focusKey() ?? this.visibleTasks()[0]?.key ?? null,
+  );
   protected readonly selectedDependencyKey = signal<RowKey | null>(null);
   protected readonly announcement = signal('');
   protected readonly dragKey = signal<RowKey | null>(null);
@@ -1353,11 +1447,14 @@ export class OgeGantt<
     this.dragKey.set(bar.task.key);
     beginGanttGesture(event, {
       onMove: (deltaX, _deltaY, moveEvent) => {
-        const canvasRect = this.canvasEl()?.nativeElement.getBoundingClientRect();
+        const canvasRect =
+          this.canvasEl()?.nativeElement.getBoundingClientRect();
         const tipX =
           canvasRect !== undefined ? moveEvent.clientX - canvasRect.left : 0;
         const tipY =
-          canvasRect !== undefined ? moveEvent.clientY - canvasRect.top - 28 : 0;
+          canvasRect !== undefined
+            ? moveEvent.clientY - canvasRect.top - 28
+            : 0;
         if (kind === 'progress') {
           progress = proposeTaskProgress(
             bar.leftPx,
@@ -1571,9 +1668,7 @@ export class OgeGantt<
     const key = fields.key(taskData) as RowKey;
     const linked = new Set(
       untracked(this.ganttDependencies)
-        .filter(
-          (dep) => dep.predecessorKey === key || dep.successorKey === key,
-        )
+        .filter((dep) => dep.predecessorKey === key || dep.successorKey === key)
         .map((dep) => dep.source),
     );
     this.taskStore.set(
@@ -1652,9 +1747,7 @@ export class OgeGantt<
       (entry) => entry.source === dependencyData,
     );
     this.dependencyStore.set(
-      untracked(this.dependencyStore).filter(
-        (item) => item !== dependencyData,
-      ),
+      untracked(this.dependencyStore).filter((item) => item !== dependencyData),
     );
     this.dependencyDeleted.emit({ dependencyData });
     this.announce(this.msg().announcements.dependencyDeleted, {
@@ -1728,7 +1821,10 @@ export class OgeGantt<
     const set = (expr: GanttFieldExpr<T>, value: unknown): void => {
       if (typeof expr === 'string') item[expr] = value;
     };
-    set(this.keyExpr(), `oge-task-${++this.draftCounter}-${untracked(this.taskStore).length}`);
+    set(
+      this.keyExpr(),
+      `oge-task-${++this.draftCounter}-${untracked(this.taskStore).length}`,
+    );
     set(this.titleExpr(), '');
     set(this.startExpr(), start);
     set(

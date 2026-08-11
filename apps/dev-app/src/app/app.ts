@@ -255,6 +255,18 @@ export class App {
       ],
     },
     {
+      title: 'Gantt',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/gantt', label: 'Overview', icon: 'list' },
+        {
+          path: '/components/gantt/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Scheduler',
       group: COMPONENTS_GROUP,
       items: [
