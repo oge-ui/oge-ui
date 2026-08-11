@@ -244,6 +244,8 @@ export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
 /** DI-level configuration of every scheduler in the injector's scope. */
 export interface OgeSchedulerConfig {
   readonly messages: OgeSchedulerMessages;
+  /** BCP 47 locale for every `Intl` format; unset = the browser locale. */
+  readonly locale?: string;
   /** Minimum rendered height of a chip, in minutes of the slot raster. */
   readonly minAppointmentMinutes?: number;
 }

@@ -269,6 +269,10 @@ export class OgeDateBox
   >(undefined);
   /** BCP 47 locale for display and parsing; `undefined` = the runtime default. */
   readonly locale = input<string | undefined>(undefined);
+  /** Instance locale, falling back to the DI config, then the browser. */
+  protected readonly effectiveLocale = computed(
+    () => this.locale() ?? this.config.locale,
+  );
   /** Picker visibility — two-way. */
   readonly opened = model(false);
 
@@ -348,7 +352,7 @@ export class OgeDateBox
         : this.type() === 'time'
           ? { timeStyle: 'short' }
           : { dateStyle: 'short', timeStyle: 'short' });
-    const format = new Intl.DateTimeFormat(this.locale(), options);
+    const format = new Intl.DateTimeFormat(this.effectiveLocale(), options);
     return (date: Date) => format.format(date);
   });
 
@@ -361,7 +365,7 @@ export class OgeDateBox
 
   protected readonly timeSlots = computed<TimeSlot[]>(() => {
     const step = Math.max(1, this.interval());
-    const format = new Intl.DateTimeFormat(this.locale(), {
+    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
       timeStyle: 'short',
     });
     const slots: TimeSlot[] = [];
@@ -409,7 +413,7 @@ export class OgeDateBox
   private parseTyped(raw: string): Date | null {
     const parsed = parseDateText(
       raw,
-      this.locale(),
+      this.effectiveLocale(),
       this.type(),
       this.value() ?? new Date(),
     );
@@ -547,7 +551,9 @@ export class OgeDateBox
   // --- hour/minute columns (`timeView: 'columns'`) ---------------------------
 
   protected readonly hourSlots = computed(() => {
-    const format = new Intl.DateTimeFormat(this.locale(), { hour: 'numeric' });
+    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
+      hour: 'numeric',
+    });
     return Array.from({ length: 24 }, (_, hour) => ({
       hour,
       text: format.format(new Date(2001, 0, 1, hour)),

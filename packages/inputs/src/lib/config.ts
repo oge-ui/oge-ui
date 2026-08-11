@@ -196,6 +196,12 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */
 export interface OgeInputsConfig {
+  /**
+   * BCP 47 locale for every `Intl` format in the date editors; a
+   * component-level `locale` input overrides it, unset = the browser
+   * locale.
+   */
+  readonly locale?: string;
   /** Delay before number-box spin buttons start repeating. */
   spinRepeatDelayMs: number;
   /** Interval between spin repeats while held. */

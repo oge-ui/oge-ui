@@ -217,6 +217,10 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
   >(false);
   /** BCP 47 locale for display and parsing; `undefined` = the runtime default. */
   readonly locale = input<string | undefined>(undefined);
+  /** Instance locale, falling back to the DI config, then the browser. */
+  protected readonly effectiveLocale = computed(
+    () => this.locale() ?? this.config.locale,
+  );
   /** Picker visibility — two-way. */
   readonly opened = model(false);
 
@@ -282,7 +286,7 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
     const custom = this.displayFormat();
     if (typeof custom === 'function') return custom;
     const format = new Intl.DateTimeFormat(
-      this.locale(),
+      this.effectiveLocale(),
       custom ??
         (this.type() === 'datetime'
           ? { dateStyle: 'short', timeStyle: 'short' }
@@ -293,7 +297,7 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
 
   protected readonly timeSlots = computed(() => {
     const step = Math.max(1, this.interval());
-    const format = new Intl.DateTimeFormat(this.locale(), {
+    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
       timeStyle: 'short',
     });
     const slots: { minutes: number; text: string }[] = [];
@@ -351,7 +355,7 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
   }
 
   private parseSide(raw: string): Date | null {
-    const parsed = parseDateText(raw, this.locale(), this.type());
+    const parsed = parseDateText(raw, this.effectiveLocale(), this.type());
     if (parsed === null) return null;
     return isDayDisabled(parsed, this.min(), this.max(), this.disabledDates())
       ? null

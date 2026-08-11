@@ -238,7 +238,7 @@ interface ResolvedView {
               [firstDayOfWeek]="firstDayOfWeek()"
               [min]="min()"
               [max]="max()"
-              [locale]="locale()"
+              [locale]="effectiveLocale()"
             />
           </div>
         </oge-popup>
@@ -268,7 +268,7 @@ interface ResolvedView {
           [anchorDate]="currentDate()"
           [agendaDuration]="agendaDuration()"
           [appointments]="visibleAppointments()"
-          [locale]="locale()"
+          [locale]="effectiveLocale()"
           [messages]="msg().grid"
           (chipClicked)="onChipClicked($event)"
           (chipDblClicked)="onChipDblClicked($event)"
@@ -280,7 +280,7 @@ interface ResolvedView {
           [anchorDate]="currentDate()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
-          [locale]="locale()"
+          [locale]="effectiveLocale()"
           [messages]="msg().grid"
           (dayPicked)="drillIntoDay($event)"
         />
@@ -294,7 +294,7 @@ interface ResolvedView {
           [dayStartHour]="activeView().dayStartHour"
           [dayEndHour]="activeView().dayEndHour"
           [cellDuration]="activeView().cellDuration"
-          [locale]="locale()"
+          [locale]="effectiveLocale()"
           [messages]="msg().grid"
           [groupResource]="groupResource()"
           [resourceIdOf]="groupResourceIdOf()"
@@ -316,7 +316,7 @@ interface ResolvedView {
           [dayStartHour]="activeView().dayStartHour"
           [dayEndHour]="activeView().dayEndHour"
           [cellDuration]="activeView().cellDuration"
-          [locale]="locale()"
+          [locale]="effectiveLocale()"
           [messages]="msg().grid"
           [groupResource]="groupResource()"
           [resourceIdOf]="groupResourceIdOf()"
@@ -335,7 +335,7 @@ interface ResolvedView {
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
           [maxAppointmentsPerCell]="maxAppointmentsPerCell()"
-          [locale]="locale()"
+          [locale]="effectiveLocale()"
           [messages]="msg().grid"
           [periodLabel]="periodTitle()"
           [appointmentTemplate]="appointmentTemplate() ?? null"
@@ -367,7 +367,7 @@ interface ResolvedView {
           [showAllDayPanel]="showAllDayPanel()"
           [showCurrentTimeIndicator]="showCurrentTimeIndicator()"
           [minAppointmentMinutes]="minAppointmentMinutes()"
-          [locale]="locale()"
+          [locale]="effectiveLocale()"
           [messages]="msg().grid"
           [periodLabel]="periodTitle()"
           [appointmentTemplate]="appointmentTemplate() ?? null"
@@ -401,7 +401,7 @@ interface ResolvedView {
 
     <oge-scheduler-appointment-popup
       [messages]="msg().popup"
-      [locale]="locale()"
+      [locale]="effectiveLocale()"
       [allowEditing]="canUpdate()"
       [allowDeleting]="canDelete()"
       (editRequested)="openEditorFor($any($event))"
@@ -409,7 +409,7 @@ interface ResolvedView {
     />
     <oge-scheduler-appointment-dialog
       [messages]="msg().editor"
-      [locale]="locale()"
+      [locale]="effectiveLocale()"
       [resources]="resources()"
       (saved)="onEditorSaved($event)"
     />
@@ -632,8 +632,13 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     () => this.config.minAppointmentMinutes ?? 15,
   );
 
+  /** Per-instance locale, falling back to the DI config, then the browser. */
+  protected readonly effectiveLocale = computed(
+    () => this.locale() ?? this.config.locale,
+  );
+
   protected readonly resolvedFirstDayOfWeek = computed(() =>
-    resolveFirstDayOfWeek(this.firstDayOfWeek(), this.locale()),
+    resolveFirstDayOfWeek(this.firstDayOfWeek(), this.effectiveLocale()),
   );
 
   protected readonly resolvedViews = computed<readonly ResolvedView[]>(() =>
@@ -864,7 +869,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected readonly periodTitle = computed(() => {
     const view = this.currentView();
     const date = this.currentDate();
-    const locale = this.locale();
+    const locale = this.effectiveLocale();
     const custom = this.dateNavigatorText();
     if (custom !== undefined) {
       const range = viewRange(
@@ -1561,7 +1566,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       patch[resource.fieldExpr] = event.resourceId;
     }
     this.updateItem(event.appointment.source, patch as Partial<T>);
-    const format = new Intl.DateTimeFormat(this.locale(), {
+    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
       dateStyle: 'medium',
       timeStyle: event.appointment.allDay ? undefined : 'short',
     });
@@ -1628,7 +1633,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       fields,
     );
     this.updateItem(event.appointment.source, patch);
-    const format = new Intl.DateTimeFormat(this.locale(), {
+    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
       dateStyle: 'medium',
       timeStyle: event.appointment.allDay ? undefined : 'short',
     });

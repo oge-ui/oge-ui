@@ -305,6 +305,10 @@ export class OgeCalendar
   readonly focusedDate = model<Date | null>(null);
   /** BCP 47 locale for all texts; `undefined` = the runtime default. */
   readonly locale = input<string | undefined>(undefined);
+  /** Instance locale, falling back to the DI config, then the browser. */
+  protected readonly effectiveLocale = computed(
+    () => this.locale() ?? this.config.locale,
+  );
   /** Accessible name of the grid (`aria-label`). */
   readonly label = input('');
   /** Custom cell rendering. */
@@ -321,7 +325,7 @@ export class OgeCalendar
   private readonly viewDate = signal(startOfDay(new Date()));
 
   protected readonly effFirstDay = computed(() =>
-    resolveFirstDayOfWeek(this.firstDayOfWeek(), this.locale()),
+    resolveFirstDayOfWeek(this.firstDayOfWeek(), this.effectiveLocale()),
   );
 
   protected readonly weekNumbersOn = computed(
@@ -334,11 +338,11 @@ export class OgeCalendar
   });
 
   protected readonly weekdays = computed(() =>
-    weekdayNames(this.locale(), this.effFirstDay()),
+    weekdayNames(this.effectiveLocale(), this.effFirstDay()),
   );
 
   protected readonly headerLabel = computed(() =>
-    viewLabel(this.viewDate(), this.zoom(), this.locale()),
+    viewLabel(this.viewDate(), this.zoom(), this.effectiveLocale()),
   );
 
   /** `[0]` or `[0, 1]` — the month offsets of the visible views. */
@@ -351,7 +355,7 @@ export class OgeCalendar
       const cells = monthCells(
         addMonths(this.viewDate(), offset),
         this.effFirstDay(),
-        this.locale(),
+        this.effectiveLocale(),
         this.min(),
         this.max(),
         this.disabledDates(),
@@ -370,14 +374,19 @@ export class OgeCalendar
     return viewLabel(
       addMonths(this.viewDate(), offset),
       'month',
-      this.locale(),
+      this.effectiveLocale(),
     );
   }
 
   protected readonly zoomedRows = computed<CalendarCell[][]>(() => {
     const cells =
       this.zoom() === 'year'
-        ? yearCells(this.viewDate(), this.locale(), this.min(), this.max())
+        ? yearCells(
+            this.viewDate(),
+            this.effectiveLocale(),
+            this.min(),
+            this.max(),
+          )
         : decadeCells(this.viewDate(), this.min(), this.max());
     return Array.from({ length: 3 }, (_, row) =>
       cells.slice(row * 4, row * 4 + 4),
@@ -436,7 +445,8 @@ export class OgeCalendar
   }
 
   private readonly dayLabelFormat = computed(
-    () => new Intl.DateTimeFormat(this.locale(), { dateStyle: 'full' }),
+    () =>
+      new Intl.DateTimeFormat(this.effectiveLocale(), { dateStyle: 'full' }),
   );
 
   protected dayAriaLabel(date: Date): string {
