@@ -21,6 +21,7 @@ For code generation, prefer the full reference — it inlines every API table an
 - [@oge-ui/bpmn](https://ogeui.com/components/bpmn): From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark. **Commercial licence.**
 - [@oge-ui/charts](https://ogeui.com/components/charts): Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection. **Commercial licence.**
 - [@oge-ui/gantt](https://ogeui.com/components/gantt): Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, drag editing with Escape-cancel and snapshot undo/redo. **Commercial licence.**
+- [@oge-ui/kanban](https://ogeui.com/components/kanban): Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits with drag previews, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar. **Commercial licence.**
 - [@oge-ui/scheduler](https://ogeui.com/components/scheduler): Scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing. **Commercial licence.**
 - [@oge-ui/core](https://www.npmjs.com/package/@oge-ui/core): Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
 - [oge-ui](https://www.npmjs.com/package/oge-ui): Re-exports every MIT family from a single import path. `npm i oge-ui` then `import { OgeGrid, OgeButton } from 'oge-ui'`.
@@ -140,6 +141,11 @@ For code generation, prefer the full reference — it inlines every API table an
 
 - [Gantt](https://ogeui.com/components/gantt): Angular Gantt chart: virtualized task tree + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows with cycle-safe drawing, critical path, drag editing with Escape-cancel, snapshot undo/redo and full keyboard access. Commercial, free for evaluation.
 - [Gantt API](https://ogeui.com/components/gantt/api)
+
+## Kanban
+
+- [Kanban](https://ogeui.com/components/kanban): Angular Kanban board: columns, swimlanes and WIP limits over a plain card array with field mapping, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar. Commercial, free for evaluation.
+- [Kanban API](https://ogeui.com/components/kanban/api)
 
 ## Scheduler
 

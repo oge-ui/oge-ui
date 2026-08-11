@@ -78,6 +78,24 @@
   --oge-gantt-offday-bg: rgba(148, 163, 184, 0.1);
   --oge-gantt-today-color: #dc2626;
   --oge-gantt-arrow-color: #94a3b8;
+  /* kanban surfaces */
+  --oge-kanban-board-bg: transparent;
+  --oge-kanban-column-bg: #f6f8fb;
+  --oge-kanban-column-header-bg: transparent;
+  --oge-kanban-card-bg: var(--oge-bg);
+  --oge-kanban-card-fg: var(--oge-text-color);
+  --oge-kanban-card-ring: rgba(15, 23, 42, 0.07);
+  --oge-kanban-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+  --oge-kanban-card-shadow-hover: 0 3px 10px rgba(15, 23, 42, 0.16);
+  --oge-kanban-card-shadow-drag:
+    0 12px 28px -6px rgba(15, 23, 42, 0.28),
+    0 4px 10px -4px rgba(15, 23, 42, 0.18);
+  --oge-kanban-placeholder-border: var(--oge-accent-25);
+  --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  --oge-kanban-lane-border: var(--oge-border-color);
+  --oge-kanban-tag-bg: rgba(100, 116, 139, 0.14);
+  --oge-kanban-avatar-bg: #64748b;
+  --oge-kanban-avatar-fg: #ffffff;
   /* charts surfaces */
   --oge-chart-grid-line: rgba(148, 163, 184, 0.22);
   --oge-chart-axis-line: var(--oge-border-color);

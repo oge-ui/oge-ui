@@ -31,6 +31,7 @@
       "@oge-ui/charts/export-image": [
         "./packages/charts/export-image/src/index.ts"
       ],
+      "@oge-ui/kanban": ["./packages/kanban/src/index.ts"],
       "@oge-ui/gantt": ["./packages/gantt/src/index.ts"],
       "@oge-ui/gantt/export-excel": [
         "./packages/gantt/export-excel/src/index.ts"

@@ -99,6 +99,20 @@ export default [
               ],
             },
             {
+              // commercial kanban: like the scheduler and gantt, a deliberate
+              // consumer of the MIT suite (card dialog = forms, menus/modal =
+              // overlay, editors = inputs); virtualization and field
+              // accessors come from core's kernel
+              sourceTag: 'scope:kanban',
+              onlyDependOnLibsWithTags: [
+                'scope:kanban',
+                'scope:core',
+                'scope:overlay',
+                'scope:inputs',
+                'scope:forms',
+              ],
+            },
+            {
               // commercial scheduler: deliberately a *consumer* of the MIT
               // suite — the appointment popup (overlay), editors (inputs)
               // and the appointment form (forms) are the selling point, so
@@ -210,6 +224,7 @@ export default [
                 'scope:bpmn',
                 'scope:scheduler',
                 'scope:gantt',
+                'scope:kanban',
                 'scope:charts',
                 'scope:buttons',
                 'scope:overlay',

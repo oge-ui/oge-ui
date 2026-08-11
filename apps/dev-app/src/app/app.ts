@@ -279,6 +279,18 @@ export class App {
       ],
     },
     {
+      title: 'Kanban',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/kanban', label: 'Overview', icon: 'columns' },
+        {
+          path: '/components/kanban/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Scheduler',
       group: COMPONENTS_GROUP,
       items: [

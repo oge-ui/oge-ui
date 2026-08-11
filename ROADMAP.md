@@ -2111,3 +2111,61 @@ jQuery-era lifecycle members (`onInitialized` / `onOptionChanged` /
 | **`renderFormElement`**                                                        | No        | Done    | OGE extra: renders the fields without a `<form>` element, because nested forms are invalid HTML — what makes the grid re-host legal                                                                                                                        |
 | **Schema-carried layout metadata**                                             | No        | Done    | OGE extra: `OGE_FORM_LABEL` / `_HINT` / `_PLACEHOLDER` / `_COL_SPAN` / `_EDITOR` / `_EDITOR_OPTIONS` / `_DATA_TYPE` / `_GROUP` / `_ORDER` on `createMetadataKey()`, so `<oge-form [fieldTree]>` needs no items at all; a schema `hidden()` drops the field |
 | **Data-driven per-item slots**                                                 | No        | Done    | OGE extra: `OgeFormItemData` carries `itemTemplate` / `editorTemplate` / `labelTemplate` refs, so a host that generates its items can still give one field a custom editor                                                                                 |
+
+## Kanban (`@oge-ui/kanban`, commercial) — Feature Parity & Roadmap
+
+`OgeKanban` against Syncfusion EJ2 Angular Kanban — the only Angular-native
+rival. Four honest absences: **DevExtreme has no Kanban widget** (its "Kanban"
+pages are demos of the `Sortable` component), **Kendo UI for Angular has no
+Kanban/TaskBoard** (open feature request; TaskBoard exists only in Kendo
+jQuery/KendoReact), **Angular Material has none** (CDK drag-drop is a
+primitive, not a board) and **PrimeNG has none**. No WAI-ARIA APG kanban
+pattern exists; the a11y is composed from the listbox pattern (labeled column
+listboxes, roving-tabindex option cards) with **Ctrl+Arrow keyboard card
+moving + polite live-region announcements** (**OGE extra** — no reference
+library moves cards from the keyboard).
+
+**Structural decisions.**
+
+- **Consumer of the MIT suite, by design** (scheduler/gantt stance): the card
+  dialog is `oge-modal` + `oge-form`, its editors come from `inputs`; the
+  context menu and modal share `overlay`'s Escape stack.
+- **Pure kernel** (`src/lib/engine/`, lint-enforced framework-free):
+  card normalization + storage-shape-preserving write-back (`board-model`),
+  allocation-free drag hit-testing with binary search + edge auto-scroll
+  velocity (`drag-math`), per-column fixed-height windowing
+  (`virtual-column`) and WIP arithmetic with drag previews (`wip`).
+- **Fixed `cardHeight` virtualization** is what keeps 10k cards smooth _and_
+  makes drag hit-testing agree with the render; variable-height templates opt
+  out (`virtualScrolling: false`, documented exception).
+
+| Feature (Syncfusion)                                   | Status  | Notes                                                                                                    |
+| ------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------- |
+| Array dataSource + `keyField` column mapping           | covered | plus full `*Expr` mapping (dotted paths / getters) for 12 fields — richer than the reference             |
+| Columns: header text/template, toggle, WIP `maxCount`  | covered | `wipLimit` danger badge + live drag preview counts; `minCount` warning badge too                         |
+| `minCount` lower WIP bound                             | covered | warning-tone badge                                                                                       |
+| Per-column `allowDrag` / `allowDrop`                   | covered | interactive moves gated; programmatic `moveCard` deliberately free                                       |
+| `transitionColumns` legal-target restriction           | covered | gates drag targets, menu move-to entries and Ctrl+Arrow                                                  |
+| Swimlanes (`keyField`, collapse, item counts)          | covered | first-seen order; per-lane cell scrolling; `showEmptyRow`/`sortComparer`/frozen lanes → future           |
+| Card template / tags / selection                       | covered | single selection; **multi-select + multi-card drag → future**                                            |
+| Drag & drop with placeholder                           | covered | 3px threshold, lifted tilt, edge auto-scroll, mid-drag Escape restore, exactly one commit                |
+| Column drag reordering                                 | covered | `[(columnOrder)]` + `columnReordered`; live preview while dragging                                       |
+| Virtualization (`enableVirtualization`)                | covered | per-column windows; 10k cards / 20 columns smoke-tested                                                  |
+| Dialog (`dialogSettings.fields/model`)                 | covered | built-in `OgeForm` dialog renders only mapped fields; `dialogItems` input + `cardEditDialogShowing` hook |
+| `openDialog` / `closeDialog`                           | covered | `editCard`/`openNewCard`/`closeDialog` + `cardEditDialogHidden`                                          |
+| `addCard`/`updateCard`/`deleteCard` methods            | covered | plus `moveCard` (the reference is drag-only)                                                             |
+| Runtime column adding                                  | covered | **OGE extra** — "+ Add column" ghost composer with cancelable `columnAdding` (Trello parity)             |
+| Toolbar search                                         | covered | **OGE extra** — fold-insensitive client search + `searchExprs`; Syncfusion has no built-in toolbar       |
+| Keyboard card moving + announcements                   | covered | **OGE extra** — Ctrl+Arrow, the drag's exact keyboard twin                                               |
+| Stacked (grouped) column headers                       | Skipped | niche layout; revisit on demand                                                                          |
+| Card tooltip (`enableTooltip`)                         | Skipped | `overlay`'s `ogeTooltip` directive composes onto card templates already                                  |
+| Continuous `drag` event / granular column-drag events  | Skipped | end-state events + two-way models cover persistence; low signal                                          |
+| Swimlane WIP scope (`constraintType: 'Swimlane'`)      | Skipped | column-scoped WIP only in v0.1                                                                           |
+| External board-to-board drop (`externalDropId`)        | Skipped | single-board contract in v0.1                                                                            |
+| DataManager / remote adaptors, `enablePersistence`     | Skipped | app-owned array + cancelable events + two-way models (house data contract)                               |
+| `showSpinner`/`refreshUI`/lifecycle events             | Skipped | Angular lifecycle + signals cover these                                                                  |
+| Multi-select + multi-card drag                         | future  | also closes `cardSettings.selectionType: 'Multiple'`                                                     |
+| Quick-add composer at column foot (Trello)             | future  | inline title box, Enter adds and stays open                                                              |
+| Card covers, checklist/badge rows, card aging (Trello) | future  | template-able today; first-class fields later                                                            |
+| Touch long-press drag initiation                       | future  | separate touch-ergonomics pass                                                                           |
+| Duplicate card (menu)                                  | Skipped | key generation is the app's business; `cardAdding` + spread covers it                                    |

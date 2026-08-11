@@ -57,6 +57,12 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-gantt [tasks]="tasks" [dependencies]="links" />` — field mapping via `keyExpr`/`parentKeyExpr`/`startExpr`/`endExpr`, drag move/resize/progress, dependency drawing, undo/redo, cancelable `taskUpdating`-style events',
     },
   ],
+  '@oge-ui/kanban': [
+    {
+      need: 'Kanban / task board with columns, swimlanes, WIP limits, drag & drop',
+      use: '`<oge-kanban [dataSource]="cards" columnExpr="status" titleExpr="title" [columns]="cols" />` — field mapping via `keyExpr`/`columnExpr`/`orderExpr`/`swimlaneExpr`, drag with Escape-cancel, Ctrl+Arrow keyboard moving, cancelable `cardMoving`-style events, built-in dialog/menu/toolbar',
+    },
+  ],
   '@oge-ui/buttons': [
     {
       need: 'button, async action button',
@@ -181,6 +187,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/bpmn',
   '@oge-ui/scheduler',
   '@oge-ui/gantt',
+  '@oge-ui/kanban',
   '@oge-ui/charts',
   '@oge-ui/inputs',
   '@oge-ui/buttons',

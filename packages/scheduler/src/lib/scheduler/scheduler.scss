@@ -151,20 +151,7 @@
 
     &:first-child {
       border-inline-start: none;
-      padding: 2px;
-  border-radius: calc(var(--oge-radius) + 3px);
-  background: color-mix(in srgb, var(--oge-border-color) 34%, transparent);
-
-  > .oge-scheduler-btn {
-    border-color: transparent;
-    background: transparent;
-
-    &:hover:not(:disabled) {
-      background: var(--oge-bg);
-      box-shadow: var(--oge-shadow-btn);
     }
-  }
-}
   }
 }
 
@@ -642,8 +629,8 @@
     border-radius: 50%;
     background: var(--oge-scheduler-now-color);
     box-shadow: 0 0 6px 1px
-    color-mix(in srgb, var(--oge-scheduler-now-color) 45%, transparent);
-}
+      color-mix(in srgb, var(--oge-scheduler-now-color) 45%, transparent);
+  }
 }
 
 /* ---------- month view ---------- */

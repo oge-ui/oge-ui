@@ -776,6 +776,23 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/kanban',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/kanban/overview').then((m) => m.KanbanOverviewPage),
+        title: 'OGE — Kanban',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/kanban/api').then((m) => m.KanbanApiPage),
+        title: 'OGE — Kanban API',
+      },
+    ],
+  },
+  {
     path: 'components/scheduler',
     children: [
       {

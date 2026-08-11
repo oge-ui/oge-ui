@@ -54,6 +54,7 @@ type FamilyKey =
   | 'bpmn'
   | 'scheduler'
   | 'gantt'
+  | 'kanban'
   | 'charts'
   | 'overlay';
 
@@ -406,6 +407,80 @@ interface OrgNode {
                       fill="currentColor"
                       opacity="0.4"
                       stroke="none"
+                    />
+                  </svg>
+                }
+                @case ('kanban') {
+                  <!-- illustrative sketch; the live kanban renders on its own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="kanban"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  >
+                    <rect x="10" y="10" width="80" height="100" rx="8" />
+                    <rect x="100" y="10" width="80" height="72" rx="8" />
+                    <rect x="190" y="10" width="80" height="86" rx="8" />
+                    <rect
+                      x="18"
+                      y="26"
+                      width="64"
+                      height="20"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <rect
+                      x="18"
+                      y="52"
+                      width="64"
+                      height="20"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.18"
+                      stroke="none"
+                    />
+                    <rect
+                      x="108"
+                      y="26"
+                      width="64"
+                      height="20"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.35"
+                      stroke="none"
+                    />
+                    <rect
+                      x="198"
+                      y="26"
+                      width="64"
+                      height="20"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.18"
+                      stroke="none"
+                    />
+                    <rect
+                      x="198"
+                      y="52"
+                      width="64"
+                      height="20"
+                      rx="4"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <rect
+                      x="128"
+                      y="56"
+                      width="64"
+                      height="20"
+                      rx="4"
+                      opacity="0.7"
                     />
                   </svg>
                 }
@@ -838,6 +913,14 @@ export class ComponentsIndexPage {
       path: '/components/gantt',
       description:
         'Project plan with a task tree and timeline chart: summary and milestone bars, dependency arrows, critical path, drag editing and undo/redo.',
+    },
+    {
+      key: 'kanban',
+      name: 'Kanban',
+      icon: 'columns',
+      path: '/components/kanban',
+      description:
+        'Task board with columns, swimlanes and WIP limits: virtualized card lists, polished drag & drop with Escape-cancel, keyboard card moving, built-in dialog and menu.',
     },
     {
       key: 'scheduler',

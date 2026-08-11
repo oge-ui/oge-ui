@@ -1,0 +1,37 @@
+{
+  "name": "kanban",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/kanban/src",
+  "prefix": "oge",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["{projectRoot}", "dist/{projectRoot}"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  },
+  "tags": ["scope:kanban"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "project": "packages/kanban/ng-package.json",
+        "tsConfig": "packages/kanban/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/kanban/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  }
+}

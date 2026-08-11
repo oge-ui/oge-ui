@@ -1833,6 +1833,7 @@ export class HomePage {
     '@oge-ui/bpmn',
     '@oge-ui/scheduler',
     '@oge-ui/gantt',
+    '@oge-ui/kanban',
     '@oge-ui/charts',
     '@oge-ui/buttons',
     '@oge-ui/inputs',
@@ -1926,6 +1927,12 @@ export class HomePage {
       name: 'Gantt',
       desc: 'Task tree + timeline with dependencies, critical path and drag editing.',
       path: '/components/gantt',
+    },
+    {
+      icon: 'columns',
+      name: 'Kanban',
+      desc: 'Columns, swimlanes and WIP limits with drag & drop and keyboard moving.',
+      path: '/components/kanban',
     },
     {
       icon: 'calendar',

@@ -196,6 +196,17 @@ export const PACKAGES = [
     tier: 'commercial',
   },
   {
+    dir: 'kanban',
+    npm: '@oge-ui/kanban',
+    label: 'Kanban',
+    summary:
+      'Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits with drag previews, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar.',
+    docsRoot: '/components/kanban',
+    pageDirs: ['kanban'],
+    apiPage: 'apps/dev-app/src/app/pages/kanban/api.ts',
+    tier: 'commercial',
+  },
+  {
     dir: 'scheduler',
     npm: '@oge-ui/scheduler',
     label: 'Scheduler',

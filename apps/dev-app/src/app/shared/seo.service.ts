@@ -39,6 +39,10 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Gantt chart: virtualized task tree + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows with cycle-safe drawing, critical path, drag editing with Escape-cancel, snapshot undo/redo and full keyboard access. Commercial, free for evaluation.',
   ],
   [
+    '/components/kanban',
+    'Angular Kanban board: columns, swimlanes and WIP limits over a plain card array with field mapping, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar. Commercial, free for evaluation.',
+  ],
+  [
     '/components/scheduler',
     'Angular Scheduler / event calendar: day, week and month views, all-day strip, deterministic overlap layout from a framework-free kernel, drag & resize with Escape-cancel, anchored appointment popup, form-based editing and full keyboard access. Commercial, free for evaluation.',
   ],

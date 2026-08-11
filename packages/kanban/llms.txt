@@ -1,0 +1,576 @@
+# @oge-ui/kanban
+
+> Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits with drag previews, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.11.0.
+Docs and live demos: https://ogeui.com/components/kanban
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/kanban
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/kanban`
+
+- values: `OGE_DEFAULT_KANBAN_CONFIG`, `OGE_DEFAULT_KANBAN_MESSAGES`, `OGE_KANBAN_CONFIG`, `OgeKanban`, `OgeKanbanCardTemplate`, `OgeKanbanColumnHeaderTemplate`, `provideOgeKanbanConfig`
+- types: `OgeKanbanAnnouncementMessages`, `OgeKanbanBoardMessages`, `OgeKanbanCard`, `OgeKanbanCardAddedEvent`, `OgeKanbanCardAddingEvent`, `OgeKanbanCardDeletedEvent`, `OgeKanbanCardDeletingEvent`, `OgeKanbanCardEvent`, `OgeKanbanCardMovedEvent`, `OgeKanbanCardMovingEvent`, `OgeKanbanCardTemplateContext`, `OgeKanbanCardUpdatedEvent`, `OgeKanbanCardUpdatingEvent`, `OgeKanbanColumn`, `OgeKanbanColumnAddedEvent`, `OgeKanbanColumnAddingEvent`, `OgeKanbanColumnHeaderTemplateContext`, `OgeKanbanColumnReorderedEvent`, `OgeKanbanConfig`, `OgeKanbanConfigInput`, `OgeKanbanDialogMessages`, `OgeKanbanEditDialogShowingEvent`, `OgeKanbanEditorModel`, `OgeKanbanFieldExpr`, `OgeKanbanMenuMessages`, `OgeKanbanMessages`, `OgeKanbanToolbarMessages`
+
+## API reference
+
+### OgeKanban — `<oge-kanban>`
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource` | `readonly T[]` | `[]` | Card items — a plain array, copied into an internal working set; the input is never mutated. Edits surface through the past-tense events. |
+| `keyExpr / columnExpr / titleExpr / descriptionExpr / colorExpr` | `string \| ((item: T) => unknown)` | `'id' / 'status' / 'title' / 'description' / 'color'` | Card field mapping: names (dotted paths reach nested objects) or getter functions. `columnExpr` holds the card's column key; a card with no resolvable column lands in the untitled column instead of being dropped. |
+| `orderExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Numeric in-column sort order. Unset, the array order is the board order and moves reorder the working set; set, moves write a midpoint order value back onto the item (sequential renumber of the cell when the midpoint has no room). |
+| `swimlaneExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Set = the board renders collapsible swimlane rows (first-seen data order); each lane holds every column. |
+| `tagsExpr / assigneeExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Tag chips and assignee avatars (initials). Both accept a single value _or_ an array — write-back preserves the storage shape. |
+| `dueDateExpr / priorityExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Due-date badge (danger when overdue; formatted through `locale`) and the priority indicator (colored by value: `'low'` green, `'medium'`/`'normal'` amber, `'high'`/`'urgent'`/`'critical'` red). |
+| `searchExprs` | `readonly (string \| ((item: T) => unknown))[] \| undefined` | `undefined` | Extra fields the toolbar search matches, beyond the built-in title + description + tags + assignees haystack. Matching is fold-insensitive (accents, Turkish İ/i). |
+| `columns` | `readonly OgeKanbanColumn[] \| undefined` | `undefined` | Declared columns (`{ key, title?, color?, wipLimit?, minCount?, collapsed?, allowAdding?, allowDrag?, allowDrop?, transitionColumns? }`); unset = derived from the data's distinct column keys in first-seen order. Cards in undeclared columns stay in the data but leave the view. |
+
+_State (two-way)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `collapsedColumns / collapsedSwimlanes` | `model<readonly string[]>` | `[]` | Collapsed column keys (slim vertical pills) and collapsed swimlane keys. |
+| `columnOrder` | `model<readonly string[]>` | `[]` | Persisted column key order (empty = declared order); written by header drags when `allowColumnReordering` is on. |
+| `selectedCardKey` | `model<unknown>` | `null` | The selected card's key — single selection. |
+
+_Behavior_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `virtualScrolling` | `boolean` | `true` | Per-column card windowing over a fixed `cardHeight` — 10k cards stay smooth. Rich variable-height templates may opt out (`false`), the documented exception. |
+| `cardHeight` | `number \| undefined` | `undefined (config: 112)` | Fixed card height in px; also drives the drag hit-testing and the keyboard scroll-into-view math. |
+| `showToolbar` | `boolean` | `true` | The built-in toolbar: primary add button, collapse/expand-all pill and the search box. |
+| `allowAdding / allowUpdating / allowDeleting / allowDragging / allowColumnReordering / allowColumnAdding` | `boolean` | `true / true / true / true / false / false` | Capability gates for the toolbar, dialog, menu, hover quick actions, keyboard shortcuts and drags. `allowColumnAdding` renders the "+ Add column" ghost column (inline composer → cancelable `columnAdding` → `columnAdded`). Per-column `allowAdding: false` overrides the board. |
+| `columnWidth` | `number` | `300` | Fixed column track width in px — headers stay legible and the board scrolls horizontally, Trello-style. |
+| `cardColorMode` | `'stripe' \| 'surface'` | `'stripe'` | How `colorExpr` renders: an accent bar on the card's edge, or the whole card surface tinted with the color. |
+| `dialogItems` | `readonly OgeFormItemData[] \| undefined` | `undefined` | Replaces the edit dialog's default form wholesale (generic `OgeForm` items); `cardEditDialogShowing` can still adjust per open. The default form only renders editors for fields the board actually maps. |
+| `readOnly` | `boolean` | `false` | One switch over every `allow*` capability; the context menu falls back to the browser's native menu. |
+| `messages / locale` | `Partial<OgeKanbanMessages> / string \| undefined` | `{} / undefined` | Per-instance overrides of the DI config (`provideOgeKanbanConfig`). Every user-facing string, aria labels and live-region templates included, lives in the messages interface; `locale` drives every Intl format. |
+
+#### Methods
+
+_Methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addCard(item)` | `(item: T) => void` | Programmatic insert through the cancelable `cardAdding` pipeline; the column and swimlane resolve from the item's own fields. |
+| `updateCard(original, updated)` | `(original: T, updated: T) => void` | Programmatic update through the cancelable `cardUpdating` pipeline. |
+| `deleteCard(item)` | `(item: T) => void` | Programmatic delete through the cancelable `cardDeleting` pipeline. |
+| `moveCard(key, toColumn, toIndex?, toSwimlane?)` | `(key: unknown, toColumn: string, toIndex?: number, toSwimlane?: string \| null) => void` | Moves a card (append when `toIndex` is omitted) through the cancelable `cardMoving` pipeline — the same path the drag, the Ctrl+Arrow twin and the context menu commit through. |
+| `editCard(card) / openNewCard(column, swimlane)` | `(…) => void` | Opens the built-in dialog for an existing card / prefilled for a new card, through the `cardEditDialogShowing` hook. |
+| `closeDialog()` | `() => void` | Closes the edit dialog without saving; fires `cardEditDialogHidden`. |
+| `collapseAllColumns() / expandAllColumns()` | `() => void` | The toolbar buttons, callable from code. |
+
+#### Events
+
+_Events_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `cardClick / cardDblClick / cardContextMenu` | `OgeKanbanCardEvent<T>` | Pointer interactions with a card (`{ card, event }`). Double-click also opens the editor; right-click fires _before_ the built-in menu opens, so app handlers can coexist with it. |
+| `cardAdding / cardUpdating / cardDeleting / cardMoving` | `Oge…Event<T> (mutable cancel)` | Cancelable pre-events — set `cancel = true` to veto. `cardMoving` carries `{ card, fromColumn, toColumn, fromIndex, toIndex, fromSwimlane, toSwimlane }` and guards drags, keyboard moves and programmatic moves alike. |
+| `cardAdded / cardUpdated / cardDeleted / cardMoved` | `Oge…Event<T>` | Past-tense events fire only for applied changes and carry the data to persist (`cardMoved.card` is the _updated_ item, orderExpr write-back included). |
+| `cardEditDialogShowing` | `OgeKanbanEditDialogShowingEvent<T>` | Cancelable + customization point before the dialog opens: `formItems` arrives pre-populated with the default `OgeForm` items and may be mutated or replaced (dx `onAppointmentFormOpening` parity). |
+| `cardEditDialogHidden` | `void` | The edit dialog closed — saved, cancelled, deleted or `closeDialog()` (Syncfusion `dialogClose` parity). |
+| `columnReordered` | `OgeKanbanColumnReorderedEvent` | A header drag committed a new order: `{ column, fromIndex, toIndex, columnOrder }`. |
+| `columnAdding / columnAdded` | `OgeKanbanColumnAddingEvent / OgeKanbanColumnAddedEvent` | The "+ Add column" composer's cancelable pre-event and its past-tense commit. |
+
+#### Types
+
+_Templates_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `*ogeKanbanCardTemplate` | `OgeKanbanCardTemplateContext<T>` | Replaces the card body (`$implicit` card with its `source`, plus `column` and `swimlane`). Drag, keyboard and ARIA stay on the component. |
+| `*ogeKanbanColumnHeaderTemplate` | `OgeKanbanColumnHeaderTemplateContext` | Replaces the column header's title row (`$implicit` column, `count`, `wip`); the collapse affordance stays. An OGE extra — no reference library templates its headers. |
+
+_Configuration_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `provideOgeKanbanConfig(config)` | `(config: OgeKanbanConfigInput) => Provider` | DI-level configuration: `messages` (shallow-merged per top-level block), `locale`, `cardHeight`. |
+| `OgeKanbanMessages` | `interface` | Every user-facing string: `toolbar`, `menu`, `dialog`, `board` (aria label templates with `{title}`/`{count}`/`{limit}` tokens) and `announcements` (live-region templates). |
+| `OgeKanbanColumn` | `interface` | `{ key, title?, color?, wipLimit?, minCount?, collapsed?, allowAdding?, allowDrag?, allowDrop?, transitionColumns? }` — the declared column shape. `wipLimit`/`minCount` drive the danger/warning badges; `allowDrag`/`allowDrop`/`transitionColumns` gate interactive moves (programmatic `moveCard` is deliberately not gated). |
+| `OgeKanbanCard<T>` | `interface` | The normalized card handed to templates and events: `key`, `source` (your item, unchanged), `column`, `title`, `description`, `color`, `order`, `swimlane`, `tags`, `assignees`, `dueDate`, `priority`. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Config
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban, provideOgeKanbanConfig } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Every user-facing string — toolbar, menu, dialog, aria labels,
+         live-region announcements — lives in OgeKanbanMessages. Provide once,
+         override per instance with [messages]; locale drives every Intl
+         format (due-date badges). -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      dueDateExpr="due"
+      locale="de-DE"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  // App-wide (main.ts / route providers):
+  // provideOgeKanbanConfig({
+  //   locale: 'de-DE',
+  //   cardHeight: 104,
+  //   messages: {
+  //     toolbar: {
+  //       label: 'Kanban-Werkzeugleiste',
+  //       addCard: 'Neue Karte',
+  //       collapseAll: 'Alle einklappen',
+  //       expandAll: 'Alle ausklappen',
+  //       searchLabel: 'Karten durchsuchen',
+  //       searchPlaceholder: 'Suchen…',
+  //       clearSearch: 'Suche löschen',
+  //     },
+  //   },
+  // })
+
+  protected readonly tasks = [
+    { id: 1, status: 'Offen', title: 'Angebot schreiben', due: new Date(2026, 7, 14) },
+    { id: 2, status: 'In Arbeit', title: 'Rechnung prüfen' },
+    { id: 3, status: 'Fertig', title: 'Kickoff-Termin' },
+  ];
+}
+```
+
+### Dialog events
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+import type { OgeKanbanEditDialogShowingEvent } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The built-in dialog (an OgeForm) covers the standard fields;
+         cardEditDialogShowing is both the veto and the customization point —
+         formItems arrives pre-populated and may be mutated or replaced.
+         Saves and deletes run the cancelable cardUpdating / cardDeleting
+         pipelines; new cards go through cardAdding. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      descriptionExpr="notes"
+      (cardEditDialogShowing)="onDialogShowing($event)"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  protected onDialogShowing(event: OgeKanbanEditDialogShowingEvent): void {
+    // drop the color field and add a sprint picker
+    event.formItems = [
+      ...event.formItems.filter((item) => item.field !== 'color'),
+      {
+        field: 'sprint',
+        label: 'Sprint',
+        editorType: 'selectBox',
+        editorOptions: { items: ['Sprint 41', 'Sprint 42', 'Sprint 43'] },
+      },
+    ];
+  }
+
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Double-click me', notes: 'Custom form field below' },
+    { id: 2, status: 'doing', title: 'Right-click me for the menu' },
+  ];
+}
+```
+
+### Drag drop
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+import type { OgeKanbanCardMovingEvent } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Every move — drag, Ctrl+Arrow or moveCard() — runs the same
+         cancelable pipeline: cardMoving (set cancel = true to veto) then
+         cardMoved with {card, fromColumn, toColumn, fromIndex, toIndex}.
+         Mid-drag Escape restores everything. orderExpr persists the in-column
+         order back onto your items; without it the array order is the board
+         order. Column headers drag too (allowColumnReordering). -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      orderExpr="rank"
+      [allowColumnReordering]="true"
+      (cardMoving)="onMoving($event)"
+      (cardMoved)="log.set('moved: ' + $event.toColumn + ' @ ' + $event.toIndex)"
+      style="height: 420px"
+    />
+    <p>{{ log() }}</p>
+  `,
+})
+export class Demo {
+  protected readonly log = signal('drag a card');
+
+  protected onMoving(event: OgeKanbanCardMovingEvent): void {
+    // veto example: nothing may leave "done"
+    if (event.fromColumn === 'done') event.cancel = true;
+  }
+
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Refactor auth', rank: 0 },
+    { id: 2, status: 'todo', title: 'Ship dark mode', rank: 1 },
+    { id: 3, status: 'doing', title: 'Bundle size audit', rank: 0 },
+    { id: 4, status: 'done', title: 'This card is locked in', rank: 0 },
+  ];
+}
+```
+
+### Getting started
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One element, a working board. Any item shape binds through the
+         *Expr inputs — field names, dotted paths or getter functions. Columns can
+         be declared (with titles, colors and WIP limits) or derived from the data.
+         Drag a card between columns (Escape cancels mid-drag), double-click to
+         edit, right-click for the built-in menu, type in the toolbar to search,
+         and add a column at the board's end (allowColumnAdding). The edit
+         dialog only offers editors for fields the board maps. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      descriptionExpr="notes"
+      assigneeExpr="owner"
+      dueDateExpr="due"
+      priorityExpr="priority"
+      tagsExpr="labels"
+      [columns]="columns"
+      [allowColumnAdding]="true"
+      style="height: 520px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly columns = [
+    { key: 'todo', title: 'To do', color: '#64748b' },
+    { key: 'doing', title: 'In progress', color: '#2563eb', wipLimit: 3 },
+    { key: 'review', title: 'Review', color: '#d97706' },
+    { key: 'done', title: 'Done', color: '#16a34a' },
+  ];
+
+  protected readonly tasks = [
+    {
+      id: 1,
+      status: 'doing',
+      title: 'Checkout revamp',
+      notes: 'New payment flow behind the feature flag',
+      owner: 'Ada Lovelace',
+      due: new Date(2026, 7, 21),
+      priority: 'high',
+      labels: ['feature'],
+    },
+    {
+      id: 2,
+      status: 'todo',
+      title: 'Wallet UI polish',
+      owner: ['Grace Hopper', 'Alan Turing'],
+      priority: 'medium',
+      labels: ['design'],
+    },
+    { id: 3, status: 'todo', title: 'Upgrade CI runners', priority: 'low' },
+    {
+      id: 4,
+      status: 'review',
+      title: 'Fix login crash',
+      notes: 'Repro: expired refresh token',
+      owner: 'Ada Lovelace',
+      due: new Date(2026, 7, 5),
+      priority: 'high',
+      labels: ['bug'],
+    },
+    { id: 5, status: 'done', title: 'Q3 roadmap draft' },
+  ];
+}
+```
+
+### Keyboard
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Full keyboard board: arrows rove between cards and columns,
+         Enter edits, Delete deletes, and Ctrl+Arrow MOVES the focused card —
+         the exact keyboard twin of the drag, with a polite live-region
+         announcement ("… moved to …, position 2 of 3") after every commit.
+         Columns are labeled listboxes; cards are options. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Tab to the board, then arrow around' },
+    { id: 2, status: 'todo', title: 'Ctrl+ArrowRight moves me' },
+    { id: 3, status: 'doing', title: 'Enter opens my dialog' },
+  ];
+}
+```
+
+### Swimlanes
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- swimlaneExpr turns the board into swimlane rows × columns.
+         Lane headers collapse ([(collapsedSwimlanes)] is two-way, like
+         [(collapsedColumns)]); every lane scrolls its column cells
+         independently. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      swimlaneExpr="team"
+      [columns]="[{ key: 'todo', title: 'To do' }, { key: 'doing', title: 'In progress' }, { key: 'done', title: 'Done' }]"
+      [(collapsedSwimlanes)]="collapsedLanes"
+      style="height: 560px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly collapsedLanes = signal<readonly string[]>([]);
+
+  protected readonly tasks = [
+    { id: 1, team: 'Platform', status: 'doing', title: 'Sharding rollout' },
+    { id: 2, team: 'Platform', status: 'todo', title: 'Postgres 18 upgrade' },
+    { id: 3, team: 'Mobile', status: 'todo', title: 'Push notification opt-in' },
+    { id: 4, team: 'Mobile', status: 'done', title: 'Biometric login' },
+    { id: 5, team: 'Web', status: 'doing', title: 'Design token migration' },
+  ];
+}
+```
+
+### Template
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban, OgeKanbanCardTemplate } from '@oge-ui/kanban';
+import type { OgeKanbanCard } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban, OgeKanbanCardTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- *ogeKanbanCardTemplate replaces the card body while drag,
+         keyboard and ARIA stay on the component. card.source is your original
+         item (typed unknown — narrow it in a helper). Rich templates usually
+         pair with a matching cardHeight, or opt out of virtualization entirely
+         ([virtualScrolling]="false") when heights must vary. -->
+    <oge-kanban
+      [dataSource]="deployments"
+      keyExpr="id"
+      columnExpr="stage"
+      titleExpr="service"
+      [cardHeight]="96"
+      style="height: 420px"
+    >
+      <ng-template ogeKanbanCardTemplate let-card>
+        <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px">
+          <strong>{{ card.title }}</strong>
+          <code style="font-size: 11px">{{ field(card, 'version') }}</code>
+          <progress
+            [value]="+field(card, 'health')"
+            max="100"
+            style="width: 100%"
+          ></progress>
+        </div>
+      </ng-template>
+    </oge-kanban>
+  `,
+})
+export class Demo {
+  protected field(card: OgeKanbanCard, name: string): string {
+    return String((card.source as Record<string, unknown>)[name] ?? '');
+  }
+
+  protected readonly deployments = [
+    { id: 1, stage: 'staging', service: 'api-gateway', version: 'v2.14.0', health: 98 },
+    { id: 2, stage: 'staging', service: 'search', version: 'v1.9.2', health: 74 },
+    { id: 3, stage: 'production', service: 'billing', version: 'v3.1.1', health: 100 },
+  ];
+}
+```
+
+### Wip
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- wipLimit is a soft limit: the column count badge shows
+         count/limit, turns to the danger tone on overflow, and previews the
+         target column's +1 while a drag hovers it. Limits count real data —
+         search filtering never changes them. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      [columns]="[
+        { key: 'todo', title: 'To do' },
+        { key: 'doing', title: 'In progress', wipLimit: 2 },
+        { key: 'done', title: 'Done' },
+      ]"
+      style="height: 420px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, status: 'doing', title: 'Payments API' },
+    { id: 2, status: 'doing', title: 'Search relevance' },
+    { id: 3, status: 'doing', title: 'One too many — WIP exceeded' },
+    { id: 4, status: 'todo', title: 'Docs sweep' },
+    { id: 5, status: 'done', title: 'Login rate limits' },
+  ];
+}
+```
+

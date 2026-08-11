@@ -167,6 +167,13 @@ interface ComponentCard {
           </td>
         </tr>
         <tr>
+          <td><code>&#64;oge-ui/kanban</code></td>
+          <td>
+            Kanban board with columns, swimlanes, WIP limits and drag &amp; drop
+            (commercial — free for evaluation and development).
+          </td>
+        </tr>
+        <tr>
           <td><code>&#64;oge-ui/scheduler</code></td>
           <td>
             Scheduler / event calendar with day, week and month views, drag

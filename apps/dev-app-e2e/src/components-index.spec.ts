@@ -20,6 +20,7 @@ const FAMILIES = [
   { name: 'BPMN Editor', preview: '[data-preview="bpmn"]' },
   { name: 'Scheduler', preview: '[data-preview="scheduler"]' },
   { name: 'Gantt', preview: '[data-preview="gantt"]' },
+  { name: 'Kanban', preview: '[data-preview="kanban"]' },
   { name: 'Charts', preview: '[data-preview="charts"]' },
   { name: 'Overlay', preview: 'oge-button' },
 ] as const;
