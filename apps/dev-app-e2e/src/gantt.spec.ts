@@ -127,8 +127,7 @@ test.describe('gantt', () => {
     const cells = host.locator('.oge-gantt-scale-minor .oge-gantt-scale-cell');
     const minorBefore = await cells.count();
     await host.getByRole('button', { name: 'Zoom out' }).click();
-    const minorAfter = await cells.count();
-    expect(minorAfter).not.toBe(minorBefore);
+    await expect(cells).not.toHaveCount(minorBefore);
   });
 
   test('axe: no violations in either theme', async ({ page }) => {

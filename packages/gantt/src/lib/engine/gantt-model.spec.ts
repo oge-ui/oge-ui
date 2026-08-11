@@ -15,6 +15,7 @@ interface Item {
   end?: unknown;
   progress?: number;
   color?: string;
+  resourceId?: unknown;
 }
 
 const EXPRS: GanttTaskExprs<Item> = {
@@ -27,12 +28,18 @@ const EXPRS: GanttTaskExprs<Item> = {
   colorExpr: 'color',
   baselineStartExpr: 'baselineStart',
   baselineEndExpr: 'baselineEnd',
+  resourceIdExpr: 'resourceId',
 };
 
 const fields = resolveGanttFields(EXPRS);
 
 const DATA: Item[] = [
-  { id: 1, title: 'Phase', start: new Date(2026, 0, 1), end: new Date(2026, 0, 2) },
+  {
+    id: 1,
+    title: 'Phase',
+    start: new Date(2026, 0, 1),
+    end: new Date(2026, 0, 2),
+  },
   {
     id: 2,
     parentId: 1,
@@ -87,7 +94,13 @@ describe('gantt-model', () => {
   it('drops rows with unparseable dates and clamps progress', () => {
     const tasks = buildGanttTasks(
       [
-        { id: 1, title: 'ok', start: '2026-01-05', end: '2026-01-06', progress: 140 },
+        {
+          id: 1,
+          title: 'ok',
+          start: '2026-01-05',
+          end: '2026-01-06',
+          progress: 140,
+        },
         { id: 2, title: 'bad', start: 'garbage' },
       ],
       fields,
@@ -110,6 +123,75 @@ describe('gantt-model', () => {
       end: '2026-01-08',
       progress: 100,
     });
+  });
+
+  it('normalizes resource ids: scalar wraps, arrays pass through', () => {
+    const items: (Item & { resourceId?: unknown })[] = [
+      {
+        id: 1,
+        title: 'A',
+        start: new Date(2026, 0, 1),
+        end: new Date(2026, 0, 2),
+        resourceId: 'ada',
+      },
+      {
+        id: 2,
+        title: 'B',
+        start: new Date(2026, 0, 1),
+        end: new Date(2026, 0, 2),
+        resourceId: ['ada', 'grace'],
+      },
+      {
+        id: 3,
+        title: 'C',
+        start: new Date(2026, 0, 1),
+        end: new Date(2026, 0, 2),
+      },
+    ];
+    const tasks = buildGanttTasks(items, fields, new Set());
+    expect(tasks[0].resourceIds).toEqual(['ada']);
+    expect(tasks[1].resourceIds).toEqual(['ada', 'grace']);
+    expect(tasks[2].resourceIds).toEqual([]);
+  });
+
+  it('ganttTaskPatch preserves the resource storage shape', () => {
+    const base = {
+      id: 1,
+      start: new Date(2026, 0, 1),
+      end: new Date(2026, 0, 2),
+    };
+    // scalar store + one id stays scalar
+    expect(
+      ganttTaskPatch(
+        { ...base, resourceId: 'ada' },
+        { resourceIds: ['grace'] },
+        fields,
+      ),
+    ).toEqual({ resourceId: 'grace' });
+    // scalar store + several ids becomes an array (documented)
+    expect(
+      ganttTaskPatch(
+        { ...base, resourceId: 'ada' },
+        { resourceIds: ['ada', 'grace'] },
+        fields,
+      ),
+    ).toEqual({ resourceId: ['ada', 'grace'] });
+    // array store stays an array even for one id
+    expect(
+      ganttTaskPatch(
+        { ...base, resourceId: ['ada'] },
+        { resourceIds: ['grace'] },
+        fields,
+      ),
+    ).toEqual({ resourceId: ['grace'] });
+    // clearing a scalar store writes null
+    expect(
+      ganttTaskPatch(
+        { ...base, resourceId: 'ada' },
+        { resourceIds: [] },
+        fields,
+      ),
+    ).toEqual({ resourceId: null });
   });
 
   it('normalizes dependencies and drops broken links', () => {

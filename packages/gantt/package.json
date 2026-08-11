@@ -11,6 +11,8 @@
     "tasks",
     "dependencies",
     "signals",
+    "excel-export",
+    "pdf-export",
     "standalone-components"
   ],
   "author": "kaya2m",
@@ -19,7 +21,17 @@
   },
   "peerDependencies": {
     "@angular/common": "^22.0.0",
-    "@angular/core": "^22.0.0"
+    "@angular/core": "^22.0.0",
+    "exceljs": "^4.4.0",
+    "jspdf": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "exceljs": {
+      "optional": true
+    },
+    "jspdf": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@oge-ui/core": "0.10.0",

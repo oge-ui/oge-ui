@@ -38,6 +38,18 @@ the dependencies are taken instead of rebuilt.
 - Both panes virtualize rows over a fixed `rowHeight` and share one
   scroll model; the task pane has configurable `columns` and a draggable
   splitter
+- `workCalendar` (working weekdays + holidays) shades every off day and
+  makes auto-scheduling roll pushed starts onto working days, preserving
+  durations in working days (day granularity)
+- Multi-resource assignment: `resourceId` fields may hold a single id or
+  an array — bar labels join the names, the task dialog edits assignments
+  with a tag editor, and write-back preserves the storage shape
+- Lazy export entry points with optional peers:
+  `@oge-ui/gantt/export-excel` (exceljs — the task tree as a typed
+  worksheet with indented titles and bold summaries) and
+  `@oge-ui/gantt/export-pdf` (jspdf — the chart drawn as vector graphics:
+  scale header, progress fills, summary brackets, milestone diamonds,
+  critical-path outlining, multi-page)
 
 **Editing**
 

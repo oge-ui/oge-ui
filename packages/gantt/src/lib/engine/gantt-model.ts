@@ -29,6 +29,7 @@ export interface GanttTaskExprs<T> {
   readonly colorExpr: GanttFieldExpr<T>;
   readonly baselineStartExpr: GanttFieldExpr<T>;
   readonly baselineEndExpr: GanttFieldExpr<T>;
+  readonly resourceIdExpr: GanttFieldExpr<T>;
 }
 
 /** Resolved task accessors + write-back field names. */
@@ -42,9 +43,10 @@ export interface ResolvedGanttFields<T> {
   readonly color: ValueAccessor<T>;
   readonly baselineStart: ValueAccessor<T>;
   readonly baselineEnd: ValueAccessor<T>;
+  readonly resourceId: ValueAccessor<T>;
   readonly fieldNames: Readonly<
     Record<
-      'title' | 'start' | 'end' | 'progress' | 'color',
+      'title' | 'start' | 'end' | 'progress' | 'color' | 'resourceId',
       string | null
     >
   >;
@@ -71,6 +73,14 @@ export interface GanttTask<T = unknown> {
   readonly isSummary: boolean;
   readonly expanded: boolean;
   readonly hasChildren: boolean;
+  /** Assigned resource ids, normalized to an array (scalar sources wrap). */
+  readonly resourceIds: readonly unknown[];
+}
+
+/** Normalizes a resource field value: scalar wraps, nullish empties. */
+export function normalizeResourceIds(raw: unknown): readonly unknown[] {
+  if (raw == null || raw === '') return [];
+  return Array.isArray(raw) ? raw : [raw];
 }
 
 function toAccessor<T>(expr: GanttFieldExpr<T>): ValueAccessor<T> {
@@ -94,12 +104,14 @@ export function resolveGanttFields<T>(
     color: toAccessor(exprs.colorExpr),
     baselineStart: toAccessor(exprs.baselineStartExpr),
     baselineEnd: toAccessor(exprs.baselineEndExpr),
+    resourceId: toAccessor(exprs.resourceIdExpr),
     fieldNames: {
       title: name(exprs.titleExpr),
       start: name(exprs.startExpr),
       end: name(exprs.endExpr),
       progress: name(exprs.progressExpr),
       color: name(exprs.colorExpr),
+      resourceId: name(exprs.resourceIdExpr),
     },
   };
 }
@@ -219,13 +231,16 @@ export function buildGanttTasks<T>(
           ? baselineStart
           : undefined,
       baselineEnd:
-        baselineStart !== null && baselineEnd !== null ? baselineEnd : undefined,
+        baselineStart !== null && baselineEnd !== null
+          ? baselineEnd
+          : undefined,
       isMilestone:
         node.hasChildren !== true &&
         dates.start.getTime() === dates.end.getTime(),
       isSummary: node.hasChildren === true,
       expanded: node.expanded === true,
       hasChildren: node.hasChildren === true,
+      resourceIds: normalizeResourceIds(fields.resourceId(item)),
     });
   }
   return tasks;
@@ -238,6 +253,7 @@ export interface GanttTaskChange {
   readonly progress?: number;
   readonly title?: string;
   readonly color?: string;
+  readonly resourceIds?: readonly unknown[];
 }
 
 /** Write-back patch preserving each field's storage shape. */
@@ -265,6 +281,15 @@ export function ganttTaskPatch<T>(
   }
   if (change.color !== undefined && names.color !== null) {
     patch[names.color] = change.color;
+  }
+  if (change.resourceIds !== undefined && names.resourceId !== null) {
+    // preserve the storage shape: array stores stay arrays; scalar (or
+    // absent) stores stay scalar while at most one id is assigned
+    const originalRaw = fields.resourceId(original);
+    patch[names.resourceId] =
+      Array.isArray(originalRaw) || change.resourceIds.length > 1
+        ? [...change.resourceIds]
+        : (change.resourceIds[0] ?? null);
   }
   return patch as Partial<T>;
 }

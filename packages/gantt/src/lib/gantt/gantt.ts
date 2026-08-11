@@ -47,6 +47,7 @@ import {
   type GanttTask,
 } from '../engine/gantt-model';
 import { autoScheduleForward, criticalPathKeys } from '../engine/schedule';
+import { isWorkingDay, type GanttWorkCalendar } from '../engine/work-calendar';
 import {
   buildGanttScale,
   dateToPx,
@@ -61,9 +62,11 @@ import type {
   OgeGanttDependencyInsertingEvent,
   OgeGanttDependencyType,
   OgeGanttDialogShowingEvent,
+  OgeGanttExportData,
   OgeGanttScaleType,
   OgeGanttSelectionChangedEvent,
   OgeGanttStripLine,
+  OgeGanttTask,
   OgeGanttTaskClickEvent,
   OgeGanttTaskDeletedEvent,
   OgeGanttTaskDeletingEvent,
@@ -620,6 +623,7 @@ const OVERSCAN_ROWS = 6;
     <oge-gantt-task-dialog
       [messages]="msg().dialog"
       [locale]="effectiveLocale()"
+      [resources]="resources()"
       [allowDeleting]="effectiveEditing() && allowTaskDeleting()"
       (saved)="onDialogSaved($event)"
       (deleteRequested)="onDialogDelete()"
@@ -677,6 +681,12 @@ export class OgeGantt<
   readonly showCriticalPath = input(false);
   readonly weekendsHighlighted = input(true);
   readonly holidays = input<readonly Date[]>([]);
+  /**
+   * Work-time calendar: working weekdays + holidays. Shades off days and
+   * makes auto-scheduling roll starts onto working days, preserving
+   * durations in working days (day granularity).
+   */
+  readonly workCalendar = input<GanttWorkCalendar | null>(null);
   readonly stripLines = input<readonly OgeGanttStripLine[]>([]);
   readonly autoScheduling = input(false);
   readonly locale = input<string | undefined>(undefined);
@@ -832,6 +842,7 @@ export class OgeGantt<
       colorExpr: this.colorExpr(),
       baselineStartExpr: this.baselineStartExpr(),
       baselineEndExpr: this.baselineEndExpr(),
+      resourceIdExpr: this.resourceIdExpr(),
     }),
   );
 
@@ -1022,11 +1033,28 @@ export class OgeGantt<
     return arrows;
   });
 
+  /** The calendar merging `workCalendar` with the `holidays` input. */
+  protected readonly effectiveWorkCalendar = computed<GanttWorkCalendar | null>(
+    () => {
+      const calendar = this.workCalendar();
+      const holidays = this.holidays();
+      if (calendar === null) return null;
+      return holidays.length === 0
+        ? calendar
+        : {
+            ...calendar,
+            holidays: [...(calendar.holidays ?? []), ...holidays],
+          };
+    },
+  );
+
   protected readonly shadedTicks = computed(() => {
     const scale = this.scale();
     if (scale.type === 'weeks' || scale.type === 'months') return [];
+    const calendar = this.effectiveWorkCalendar();
     const holidays = this.holidays();
     return scale.ticks.filter((tick) => {
+      if (calendar !== null) return !isWorkingDay(tick.date, calendar);
       const day = tick.date.getDay();
       const weekend = this.weekendsHighlighted() && (day === 0 || day === 6);
       return weekend || holidays.some((holiday) => sameDay(holiday, tick.date));
@@ -1164,13 +1192,11 @@ export class OgeGantt<
 
   protected resourceText(task: GanttTask<T>): string | null {
     const resources = this.resources();
-    if (resources.length === 0) return null;
-    const id = (task.source as Record<string, unknown>)[
-      typeof this.resourceIdExpr() === 'string'
-        ? (this.resourceIdExpr() as string)
-        : ''
-    ];
-    return resources.find((resource) => resource.id === id)?.text ?? null;
+    if (resources.length === 0 || task.resourceIds.length === 0) return null;
+    const names = task.resourceIds
+      .map((id) => resources.find((resource) => resource.id === id)?.text)
+      .filter((text): text is string => text !== undefined);
+    return names.length === 0 ? null : names.join(', ');
   }
 
   protected resourceLabelLeft(bar: GanttBar<T>): number {
@@ -1392,6 +1418,30 @@ export class OgeGantt<
     const chart = this.chartScrollEl()?.nativeElement;
     if (chart === undefined) return;
     chart.scrollLeft = Math.max(0, dateToPx(untracked(this.scale), date) - 40);
+  }
+
+  /**
+   * Snapshot for the exporters (`@oge-ui/gantt/export-excel` /
+   * `export-pdf`): every task in tree order regardless of collapse state,
+   * the resolved columns with pane-identical text formatting, the chart
+   * range and the critical-path keys.
+   */
+  getExportData(): OgeGanttExportData<T> {
+    const tasks = untracked(this.allTasks);
+    const scale = untracked(this.scale);
+    const columns = untracked(this.resolvedColumns).map((column) => ({
+      field: column.field,
+      header: column.header,
+      text: (task: OgeGanttTask<T>) => this.cellText(task, column),
+    }));
+    return {
+      tasks,
+      columns,
+      rangeStart: scale.start,
+      rangeEnd: scale.end,
+      critical: criticalPathKeys(tasks, untracked(this.ganttDependencies)),
+      resourceText: (task) => this.resourceText(task),
+    };
   }
 
   /** Focuses the roving task row. */
@@ -1762,6 +1812,7 @@ export class OgeGantt<
     const changes = autoScheduleForward(
       untracked(this.allTasks),
       untracked(this.ganttDependencies),
+      this.effectiveWorkCalendar() ?? undefined,
     );
     if (changes.length === 0) return;
     const fields = this.fields();
@@ -1810,6 +1861,7 @@ export class OgeGantt<
           today.getDate() + 1,
         ),
         progress: 0,
+        ...(this.resources().length > 0 ? { resourceIds: [] } : {}),
       },
       this.buildDraft(today),
       true,
@@ -1844,6 +1896,9 @@ export class OgeGantt<
         end: task.end,
         progress: task.progress,
         color: task.color,
+        ...(this.resources().length > 0
+          ? { resourceIds: task.resourceIds }
+          : {}),
       },
       task.source,
       false,

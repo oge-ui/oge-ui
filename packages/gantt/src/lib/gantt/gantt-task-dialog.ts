@@ -19,6 +19,8 @@ export interface GanttEditorModel {
   end: Date;
   progress: number;
   color?: string;
+  /** Present only when resources are configured — enables the tag editor. */
+  resourceIds?: readonly unknown[];
 }
 
 export interface GanttEditorResult {
@@ -81,6 +83,10 @@ export class OgeGanttTaskDialog {
   readonly messages = input.required<OgeGanttDialogMessages>();
   readonly locale = input<string | undefined>(undefined);
   readonly allowDeleting = input(true);
+  /** Resource choices; non-empty adds the multi-assignment tag editor. */
+  readonly resources = input<
+    readonly { id: unknown; text: string; color?: string }[]
+  >([]);
 
   readonly saved = output<GanttEditorResult>();
   readonly deleteRequested = output<void>();
@@ -142,6 +148,21 @@ export class OgeGanttTaskDialog {
         label: messages.colorLabel,
         editorType: 'colorBox',
       },
+      ...(this.resources().length > 0
+        ? [
+            {
+              field: 'resourceIds',
+              label: messages.resourcesLabel,
+              editorType: 'tagBox',
+              editorOptions: {
+                items: [...this.resources()],
+                valueExpr: 'id',
+                displayExpr: 'text',
+              },
+              colSpan: 2,
+            } satisfies OgeFormItemData,
+          ]
+        : []),
     ];
   }
 

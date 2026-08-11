@@ -7,6 +7,10 @@ import type {
   GanttTask,
 } from './engine/gantt-model';
 import type { GanttScaleType } from './engine/time-scale';
+import type { GanttWorkCalendar } from './engine/work-calendar';
+
+/** Work-time calendar: working weekdays (0 = Sunday) + holiday dates. */
+export type OgeGanttWorkCalendar = GanttWorkCalendar;
 
 /** The timeline scale units: `'hours' | 'days' | 'weeks' | 'months'`. */
 export type OgeGanttScaleType = GanttScaleType;
@@ -85,6 +89,30 @@ export interface OgeGanttDependencyDeletingEvent<D = unknown> {
 }
 export interface OgeGanttDependencyDeletedEvent<D = unknown> {
   readonly dependencyData: D;
+}
+
+/** One resolved column handed to the exporters. */
+export interface OgeGanttExportColumn<T = unknown> {
+  readonly field: string;
+  readonly header: string;
+  /** Cell text with the same formatting as the task-list pane. */
+  readonly text: (task: OgeGanttTask<T>) => string;
+}
+
+/**
+ * Snapshot of the widget for the Excel/PDF exporters
+ * (`@oge-ui/gantt/export-excel`, `@oge-ui/gantt/export-pdf`): every task in
+ * tree order (collapse ignored), the resolved columns, the chart range and
+ * the critical-path keys.
+ */
+export interface OgeGanttExportData<T = unknown> {
+  readonly tasks: readonly OgeGanttTask<T>[];
+  readonly columns: readonly OgeGanttExportColumn<T>[];
+  readonly rangeStart: Date;
+  readonly rangeEnd: Date;
+  readonly critical: ReadonlySet<RowKey>;
+  /** Joined resource names of a task, or `null`. */
+  readonly resourceText: (task: OgeGanttTask<T>) => string | null;
 }
 
 /** Task click / double-click. */

@@ -23,6 +23,7 @@ function task(
     isSummary,
     expanded: true,
     hasChildren: isSummary,
+    resourceIds: [],
   };
 }
 
@@ -53,11 +54,12 @@ describe('schedule', () => {
   });
 
   it('propagates through chains and honors SS links', () => {
-    const tasks = [task(1, d(5), d(8)), task(2, d(4), d(6)), task(3, d(4), d(5))];
-    const changes = autoScheduleForward(tasks, [
-      dep(1, 2, 'SS'),
-      dep(2, 3),
-    ]);
+    const tasks = [
+      task(1, d(5), d(8)),
+      task(2, d(4), d(6)),
+      task(3, d(4), d(5)),
+    ];
+    const changes = autoScheduleForward(tasks, [dep(1, 2, 'SS'), dep(2, 3)]);
     const two = changes.find((c) => c.key === 2);
     const three = changes.find((c) => c.key === 3);
     expect(two?.start).toEqual(d(5)); // SS: start aligns to predecessor start
@@ -67,6 +69,26 @@ describe('schedule', () => {
   it('returns [] when nothing violates its constraints', () => {
     const tasks = [task(1, d(5), d(8)), task(2, d(8), d(9))];
     expect(autoScheduleForward(tasks, [dep(1, 2)])).toEqual([]);
+  });
+
+  it('with a work calendar the pushed start rolls onto a working day and the duration is preserved in working days', () => {
+    // 2026-01: 9th/10th are Sat/Sun. Predecessor ends Fri the 9th 00:00;
+    // successor (2 working days) starts Mon the 5th -> pushed to Fri, but
+    // Fri counts as day 1 and the weekend is skipped: end Tue the 13th.
+    const tasks = [task(1, d(5), d(9)), task(2, d(5), d(7))];
+    const changes = autoScheduleForward(tasks, [dep(1, 2)], {});
+    const two = changes.find((c) => c.key === 2);
+    expect(two?.start).toEqual(d(9)); // Friday is a working day
+    expect(two?.end).toEqual(d(13)); // Fri + Mon = 2 working days
+  });
+
+  it('with a work calendar a weekend constraint start rolls to Monday', () => {
+    // predecessor ends Sat the 10th; successor rolls to Mon the 12th
+    const tasks = [task(1, d(5), d(10)), task(2, d(5), d(6))];
+    const changes = autoScheduleForward(tasks, [dep(1, 2)], {});
+    const two = changes.find((c) => c.key === 2);
+    expect(two?.start).toEqual(d(12));
+    expect(two?.end).toEqual(d(13));
   });
 
   it('critical path marks the zero-slack chain only', () => {

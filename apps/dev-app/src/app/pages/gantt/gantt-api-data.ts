@@ -48,13 +48,14 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'readonly { id, text, color? }[]',
           default: '[]',
           description:
-            'Resource choices: labels next to the bars and the assignment select in the task dialog.',
+            'Resource choices: labels next to the bars and the multi-assignment tag editor in the task dialog.',
         },
         {
           name: 'resourceIdExpr',
           type: 'string | ((item: T) =&gt; unknown)',
           default: "'resourceId'",
-          description: "The task's assigned resource id field.",
+          description:
+            "The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape: array stores stay arrays, scalar stores stay scalar while at most one id is assigned.",
         },
       ],
     },
@@ -112,6 +113,13 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'boolean / readonly Date[]',
           default: 'true / []',
           description: 'Off-day shading on the days scale.',
+        },
+        {
+          name: 'workCalendar',
+          type: 'OgeGanttWorkCalendar | null',
+          default: 'null',
+          description:
+            'Work-time calendar (<code>{ workingDays?, holidays? }</code>, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in <em>working</em> days. The <code>holidays</code> input merges in.',
         },
         {
           name: 'stripLines',
@@ -224,6 +232,29 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'void',
           description: 'Focuses the task tree (roving row).',
         },
+        {
+          name: 'getExportData()',
+          type: 'OgeGanttExportData&lt;T&gt;',
+          description:
+            'Snapshot for the exporters: every task in tree order (collapse ignored), the resolved columns with pane-identical formatting, the chart range and the critical-path keys.',
+        },
+      ],
+    },
+    {
+      title: 'Export entry points (lazy, optional peers)',
+      entries: [
+        {
+          name: 'exportGanttToExcel(gantt, options?) / buildGanttExcelWorkbook(data, options?)',
+          type: '@oge-ui/gantt/export-excel',
+          description:
+            'Lazy Excel export (<code>exceljs</code> peer): the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. Import the entry point dynamically so exceljs stays out of the initial bundle.',
+        },
+        {
+          name: 'exportGanttToPdf(gantt, options?) / buildGanttPdfDocument(data, options?)',
+          type: '@oge-ui/gantt/export-pdf',
+          description:
+            'Lazy PDF export (<code>jspdf</code> peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination.',
+        },
       ],
     },
   ],
@@ -321,6 +352,18 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'interface',
           description:
             '<code>{ start, end?, label?, color? }</code> — a chart marker line or range.',
+        },
+        {
+          name: 'OgeGanttWorkCalendar',
+          type: 'interface',
+          description:
+            '<code>{ workingDays?, holidays? }</code> — the work-time calendar (0 = Sunday; default working week Monday-Friday).',
+        },
+        {
+          name: 'OgeGanttExportData&lt;T&gt; / OgeGanttExportColumn&lt;T&gt;',
+          type: 'interface',
+          description:
+            'The exporter snapshot: <code>tasks</code>, <code>columns</code> (header + pane-identical <code>text()</code>), <code>rangeStart</code>/<code>rangeEnd</code>, <code>critical</code> keys and <code>resourceText()</code>.',
         },
         {
           name: 'OgeGanttTaskTitlePosition',

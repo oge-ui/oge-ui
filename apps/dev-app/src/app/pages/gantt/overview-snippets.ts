@@ -275,3 +275,73 @@ protected readonly tasks = [
   { id: 1, title: 'Planung', start: new Date(2026, 7, 3), end: new Date(2026, 7, 10), progress: 25 },
 ];`,
 });
+
+export const WORK_EXPORT_SNIPPET = demoSource({
+  use: { '@oge-ui/gantt': ['OgeGantt'] },
+  types: { '@oge-ui/gantt': ['OgeGanttWorkCalendar'] },
+  template: `<!-- workCalendar shades every off day (custom working week +
+     holidays) and makes auto-scheduling roll pushed starts onto working
+     days, preserving durations in working days. resourceId may hold an
+     ARRAY of ids — the dialog edits assignments with a tag editor and the
+     bar label joins the names. The export entry points load exceljs/jspdf
+     lazily: Excel writes the task tree as a typed worksheet, PDF draws the
+     chart as vector graphics. -->
+<div class="mb-2 flex gap-2">
+  <button type="button" (click)="exportExcel(plan)">Export Excel</button>
+  <button type="button" (click)="exportPdf(plan)">Export PDF</button>
+</div>
+<oge-gantt
+  #plan
+  [tasks]="tasks"
+  [dependencies]="links"
+  [resources]="people"
+  [workCalendar]="calendar"
+  [autoScheduling]="true"
+  style="height: 360px"
+/>`,
+  body: `protected readonly calendar: OgeGanttWorkCalendar = {
+  workingDays: [1, 2, 3, 4], // four-day week
+  holidays: [new Date(2026, 7, 12)],
+};
+
+protected readonly people = [
+  { id: 'ada', text: 'Ada', color: '#7c3aed' },
+  { id: 'grace', text: 'Grace', color: '#0891b2' },
+];
+
+protected readonly tasks = [
+  {
+    id: 1,
+    title: 'Prototype',
+    start: new Date(2026, 7, 3),
+    end: new Date(2026, 7, 6),
+    progress: 80,
+    resourceId: ['ada', 'grace'], // multi-assignment
+  },
+  {
+    id: 2,
+    title: 'Field test',
+    start: new Date(2026, 7, 6),
+    end: new Date(2026, 7, 11),
+    resourceId: 'grace',
+  },
+];
+
+protected readonly links = [{ id: 1, predecessorId: 1, successorId: 2 }];
+
+/** exceljs stays out of the initial bundle — loaded on first click. */
+protected async exportExcel<T extends object, D extends object>(
+  gantt: OgeGantt<T, D>,
+): Promise<void> {
+  const { exportGanttToExcel } = await import('@oge-ui/gantt/export-excel');
+  await exportGanttToExcel(gantt, { filename: 'plan.xlsx' });
+}
+
+/** jspdf loads lazily the same way. */
+protected async exportPdf<T extends object, D extends object>(
+  gantt: OgeGantt<T, D>,
+): Promise<void> {
+  const { exportGanttToPdf } = await import('@oge-ui/gantt/export-pdf');
+  await exportGanttToPdf(gantt, { filename: 'plan.pdf', title: 'Plan' });
+}`,
+});

@@ -21,7 +21,11 @@ export default [
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           // the export-excel secondary entries are intentionally lazy-loaded
           // while the primary package entries stay static imports
-          checkDynamicDependenciesExceptions: ['@oge-ui/grid', '@oge-ui/pivot'],
+          checkDynamicDependenciesExceptions: [
+            '@oge-ui/grid',
+            '@oge-ui/pivot',
+            '@oge-ui/gantt',
+          ],
           depConstraints: [
             {
               sourceTag: 'scope:core',

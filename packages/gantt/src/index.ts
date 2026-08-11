@@ -16,6 +16,8 @@ export {
   type OgeGanttDependencyInsertingEvent,
   type OgeGanttDependencyType,
   type OgeGanttDialogShowingEvent,
+  type OgeGanttExportColumn,
+  type OgeGanttExportData,
   type OgeGanttScaleType,
   type OgeGanttSelectionChangedEvent,
   type OgeGanttStripLine,
@@ -28,6 +30,7 @@ export {
   type OgeGanttTaskTitlePosition,
   type OgeGanttTaskUpdatedEvent,
   type OgeGanttTaskUpdatingEvent,
+  type OgeGanttWorkCalendar,
 } from './lib/gantt-types';
 export {
   OGE_DEFAULT_GANTT_CONFIG,

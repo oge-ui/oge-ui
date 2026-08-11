@@ -3,7 +3,11 @@ import {
   dependencyPath,
   routeDependency,
 } from './dependency-routing';
-import { proposeTaskMove, proposeTaskProgress, proposeTaskResize } from './gantt-gesture-math';
+import {
+  proposeTaskMove,
+  proposeTaskProgress,
+  proposeTaskResize,
+} from './gantt-gesture-math';
 import { buildGanttScale } from './time-scale';
 import type { GanttTask } from './gantt-model';
 
@@ -43,7 +47,12 @@ describe('dependency-routing', () => {
 });
 
 describe('gantt-gesture-math', () => {
-  const scale = buildGanttScale(new Date(2026, 0, 5), new Date(2026, 0, 20), 'days', 1);
+  const scale = buildGanttScale(
+    new Date(2026, 0, 5),
+    new Date(2026, 0, 20),
+    'days',
+    1,
+  );
   const base: GanttTask = {
     key: 1,
     source: {},
@@ -60,6 +69,7 @@ describe('gantt-gesture-math', () => {
     isSummary: false,
     expanded: true,
     hasChildren: false,
+    resourceIds: [],
   };
 
   it('proposeTaskMove shifts snapped whole units preserving duration', () => {

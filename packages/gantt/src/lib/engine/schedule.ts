@@ -9,6 +9,12 @@ import type {
   GanttDependencyType,
   GanttTask,
 } from './gantt-model';
+import {
+  addWorkingDays,
+  nextWorkingDay,
+  workingDaysBetween,
+  type GanttWorkCalendar,
+} from './work-calendar';
 
 /** The date pair a constraint imposes on a successor. */
 function constraintStart(
@@ -38,16 +44,20 @@ export interface GanttScheduleChange {
 /**
  * Forward pass: walks the dependency graph in topological order and shifts
  * every successor that starts before its constraint, preserving durations.
+ * With a work calendar, shifted starts roll onto the next working day and
+ * durations are preserved in working days rather than wall-clock time.
  * Returns only the tasks that actually moved. Cycles are guarded by the
  * iteration cap (the model rejects new cycles up front).
  */
 export function autoScheduleForward(
   tasks: readonly GanttTask[],
   dependencies: readonly GanttDependency[],
+  calendar?: GanttWorkCalendar,
 ): GanttScheduleChange[] {
   const dates = new Map<RowKey, { start: Date; end: Date }>();
   for (const task of tasks) {
-    if (!task.isSummary) dates.set(task.key, { start: task.start, end: task.end });
+    if (!task.isSummary)
+      dates.set(task.key, { start: task.start, end: task.end });
   }
   const moved = new Map<RowKey, { start: Date; end: Date }>();
   const incoming = new Map<RowKey, GanttDependency[]>();
@@ -67,12 +77,37 @@ export function autoScheduleForward(
         const predecessor = dates.get(link.predecessorKey);
         if (predecessor === undefined) continue;
         const minStart = constraintStart(link.type, predecessor, successor);
-        if (minStart !== null && successor.start.getTime() < minStart.getTime()) {
-          const duration = successor.end.getTime() - successor.start.getTime();
-          const next = {
-            start: minStart,
-            end: new Date(minStart.getTime() + duration),
-          };
+        if (
+          minStart !== null &&
+          successor.start.getTime() < minStart.getTime()
+        ) {
+          let next: { start: Date; end: Date };
+          if (calendar !== undefined) {
+            const days = workingDaysBetween(
+              successor.start,
+              successor.end,
+              calendar,
+            );
+            const start = nextWorkingDay(minStart, calendar);
+            next = {
+              start,
+              end:
+                days === 0
+                  ? new Date(
+                      start.getTime() +
+                        (successor.end.getTime() - successor.start.getTime()),
+                    )
+                  : addWorkingDays(start, days, calendar),
+            };
+          } else {
+            const duration =
+              successor.end.getTime() - successor.start.getTime();
+            next = {
+              start: minStart,
+              end: new Date(minStart.getTime() + duration),
+            };
+          }
+          if (next.start.getTime() <= successor.start.getTime()) continue;
           dates.set(successorKey, next);
           moved.set(successorKey, next);
           changed = true;

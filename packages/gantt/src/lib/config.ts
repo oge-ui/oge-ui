@@ -39,6 +39,8 @@ export interface OgeGanttDialogMessages {
   readonly deleteTask: string;
   /** Validation message when the end date precedes the start date. */
   readonly endBeforeStart: string;
+  /** Label of the resource multi-assignment editor. */
+  readonly resourcesLabel: string;
 }
 
 /** Grid/chart aria strings; `{token}` placeholders formatted at render. */
@@ -115,6 +117,7 @@ export const OGE_DEFAULT_GANTT_MESSAGES: OgeGanttMessages = {
     cancel: 'Cancel',
     deleteTask: 'Delete',
     endBeforeStart: 'The end date must not precede the start date',
+    resourcesLabel: 'Assigned to',
   },
   grid: {
     treeLabel: 'Gantt tasks',

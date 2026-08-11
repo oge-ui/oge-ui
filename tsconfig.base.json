@@ -28,6 +28,10 @@
       "@oge-ui/grid/foundation": ["./packages/grid/foundation/src/index.ts"],
       "@oge-ui/bpmn": ["./packages/bpmn/src/index.ts"],
       "@oge-ui/gantt": ["./packages/gantt/src/index.ts"],
+      "@oge-ui/gantt/export-excel": [
+        "./packages/gantt/export-excel/src/index.ts"
+      ],
+      "@oge-ui/gantt/export-pdf": ["./packages/gantt/export-pdf/src/index.ts"],
       "@oge-ui/scheduler": ["./packages/scheduler/src/index.ts"],
       "@oge-ui/pivot": ["./packages/pivot/src/index.ts"],
       "@oge-ui/pivot/export-excel": [

@@ -7,6 +7,7 @@ import {
   type OgeGanttStripLine,
   type OgeGanttTaskDeletingEvent,
   type OgeGanttTaskUpdatingEvent,
+  type OgeGanttWorkCalendar,
 } from '@oge-ui/gantt';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -20,6 +21,7 @@ import {
   GETTING_STARTED_SNIPPET,
   TEMPLATE_SNIPPET,
   TOOLBAR_SNIPPET,
+  WORK_EXPORT_SNIPPET,
 } from './overview-snippets';
 
 const SECTIONS = [
@@ -29,6 +31,7 @@ const SECTIONS = [
   'Baselines, strip lines & resources',
   'Editing pipeline',
   'Toolbar, scales & undo/redo',
+  'Work calendar, teams & export',
   'Task template',
   'Configuration & i18n',
 ] as const;
@@ -189,6 +192,40 @@ type DemoTask = Record<string, unknown>;
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['workCalendar', 'multi-resource', 'export-excel', 'export-pdf']"
+      heading="Work calendar, teams & export"
+      description="<code>workCalendar</code> shades every off day (a four-day week here plus a holiday) and auto-scheduling rolls pushed starts onto working days, preserving working-day durations. <code>resourceId</code> may hold an array of ids — the dialog edits assignments with a tag editor and bar labels join the names. The lazy entry points <code>&#64;oge-ui/gantt/export-excel</code> (exceljs) and <code>&#64;oge-ui/gantt/export-pdf</code> (jspdf) write the task tree as a typed worksheet and draw the chart as a vector PDF."
+      [code]="workExportSnippet"
+      language="ts"
+    >
+      <div class="mb-2 flex gap-2">
+        <button
+          type="button"
+          class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+          (click)="exportExcel(plan)"
+        >
+          Export Excel
+        </button>
+        <button
+          type="button"
+          class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+          (click)="exportPdf(plan)"
+        >
+          Export PDF
+        </button>
+      </div>
+      <oge-gantt
+        #plan
+        [tasks]="workTasks"
+        [dependencies]="workLinks"
+        [resources]="people"
+        [workCalendar]="workCalendarDemo"
+        [autoScheduling]="true"
+        style="height: 360px"
+      />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['*ogeGanttTaskTemplate']"
       heading="Task template"
       description="<code>*ogeGanttTaskTemplate</code> replaces the bar's title content while the bar surface, gestures and keyboard semantics stay with the component."
@@ -222,6 +259,7 @@ export class GanttOverviewPage {
   protected readonly baselinesSnippet = BASELINES_SNIPPET;
   protected readonly editingSnippet = EDITING_SNIPPET;
   protected readonly toolbarSnippet = TOOLBAR_SNIPPET;
+  protected readonly workExportSnippet = WORK_EXPORT_SNIPPET;
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
 
@@ -446,6 +484,47 @@ export class GanttOverviewPage {
       progress: 25,
     },
   ];
+
+  protected readonly workCalendarDemo: OgeGanttWorkCalendar = {
+    workingDays: [1, 2, 3, 4],
+    holidays: [new Date(2026, 7, 12)],
+  };
+
+  protected readonly workTasks: DemoTask[] = [
+    {
+      id: 1,
+      title: 'Prototype',
+      start: new Date(2026, 7, 3),
+      end: new Date(2026, 7, 6),
+      progress: 80,
+      resourceId: ['ada', 'grace'],
+    },
+    {
+      id: 2,
+      title: 'Field test',
+      start: new Date(2026, 7, 6),
+      end: new Date(2026, 7, 11),
+      resourceId: 'grace',
+    },
+  ];
+
+  protected readonly workLinks = [{ id: 1, predecessorId: 1, successorId: 2 }];
+
+  /** exceljs stays out of the initial bundle — loaded on first click. */
+  protected async exportExcel<T extends object, D extends object>(
+    gantt: OgeGantt<T, D>,
+  ): Promise<void> {
+    const { exportGanttToExcel } = await import('@oge-ui/gantt/export-excel');
+    await exportGanttToExcel(gantt, { filename: 'plan.xlsx' });
+  }
+
+  /** jspdf loads lazily the same way. */
+  protected async exportPdf<T extends object, D extends object>(
+    gantt: OgeGantt<T, D>,
+  ): Promise<void> {
+    const { exportGanttToPdf } = await import('@oge-ui/gantt/export-pdf');
+    await exportGanttToPdf(gantt, { filename: 'plan.pdf', title: 'Plan' });
+  }
 
   protected protectDone(event: OgeGanttTaskUpdatingEvent<DemoTask>): void {
     if ((event.oldData['progress'] as number) === 100) event.cancel = true;
