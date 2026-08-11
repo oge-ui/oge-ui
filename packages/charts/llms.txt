@@ -1,0 +1,589 @@
+# @oge-ui/charts
+
+> Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.10.0.
+Docs and live demos: https://ogeui.com/components/charts
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/charts
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Optional stylesheets, imported once: `@oge-ui/grid/themes/dark.css` (then put
+`class="oge-theme-dark"` on `<html>` or any subtree),
+`@oge-ui/grid/themes/tailwind.css` and `@oge-ui/grid/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/charts`
+
+- values: `OGE_CHARTS_CONFIG`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `OgeChart`, `OgeChartLegendTemplate`, `OgeChartTooltipTemplate`, `OgePieChart`, `provideOgeChartsConfig`
+- types: `OgeChartAxisOptions`, `OgeChartAxisType`, `OgeChartCrosshairOptions`, `OgeChartExportData`, `OgeChartLegendClickEvent`, `OgeChartLegendOptions`, `OgeChartLegendTemplateContext`, `OgeChartPieSliceEvent`, `OgeChartPoint`, `OgeChartPointEvent`, `OgeChartPointRef`, `OgeChartRange`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSmallValuesGrouping`, `OgeChartStripLine`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipTemplateContext`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`
+
+`@oge-ui/charts/export-image`
+
+- values: `exportChartToPng`, `exportChartToSvg`, `serializeChartSvg`
+- types: `OgeChartImageExportOptions`, `OgeChartSvgSource`
+
+## API reference
+
+### OgeChart — `<oge-chart>`
+
+#### Properties
+
+_Data & series_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource` | `readonly T[]` | `[]` | Data items; never mutated. |
+| `series` | `readonly OgeChartSeriesInput[]` | `[]` | Series definitions: `type` (11 kinds), field mapping (`valueField`/`argumentField` — names, dotted paths or getters), `name`, `color`, `axis` (value-axis index), `stack` group, `dashStyle`/`width`/`opacity`, `showInLegend`, rangeArea bounds (`value1Field`/`value2Field`) and candlestick OHLC (`openField`/`highField`/`lowField`/`closeField`). Null/NaN values render as gaps. |
+| `commonSeries` | `Partial<OgeChartSeriesInput>` | `{}` | Defaults merged under every series (dx `commonSeriesSettings` parity). |
+| `palette` | `readonly string[] \| undefined` | `—` | Series colors; defaults to the 10-color `OGE_CHART_PALETTE` (concrete hex values so exported images keep their colors). |
+
+_Axes_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `argumentAxis` | `OgeChartAxisOptions` | `{}` | Argument axis: `type` auto-detects (numbers / dates / categories) when unset; `min`/`max`, `inverted`, `grid`, `title`, `labelFormat`, `labelOverlap` (`rotate`/`skip`/`none`). |
+| `valueAxis` | `OgeChartAxisOptions \| readonly OgeChartAxisOptions[]` | `{}` | One or more value axes; series pick theirs via `axis`. `position: 'end'` renders on the right, `type: 'logarithmic'` spaces decades evenly, `abbreviate: false` disables SI labels (`1.2K`). |
+| `stripLines` | `readonly OgeChartStripLine[]` | `[]` | Argument-axis markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded band with it. |
+
+_Interaction_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `zoomEnabled / panEnabled` | `'none' \| 'wheel' \| 'drag' \| 'both' / boolean` | `'none' / false` | Cursor-centered wheel zoom, drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom. |
+| `visualRange` | `OgeChartRange \| null` | `null` | The zoom window in argument-axis units (`null` = full extent). Two-way (`[(visualRange)]`); writes clamp into the data bounds. |
+| `tooltip` | `OgeChartTooltipOptions` | `{}` | `{ enabled?, shared? }` — shared lists every series at the hovered argument; otherwise the value-nearest series wins. |
+| `crosshair` | `OgeChartCrosshairOptions` | `{}` | `{ enabled?, horizontal? }` — the vertical tracker snaps to the nearest argument (binary search). |
+| `legend` | `OgeChartLegendOptions` | `{}` | `{ visible?, position? (top/bottom/start/end), interactive? }` — real buttons with `aria-pressed`; clicking toggles the series and the axes rescale. |
+| `selectionMode / selectedPoints` | `'point' \| 'series' \| 'none' / readonly OgeChartPointRef[]` | `'none' / []` | Click (or Enter) selects; Ctrl adds points to the set; series mode selects the whole series. Two-way (`[(selectedPoints)]`). |
+
+_Appearance & i18n_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title / subtitle` | `string` | `''` | Headings above the plot. |
+| `animation` | `boolean` | `true` | Hover/selection transitions; honors `prefers-reduced-motion`. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
+| `messages` | `Partial<OgeChartsMessages>` | `{}` | Per-instance message overrides, merged over the DI config per top-level block. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `zoomToRange(range) / resetZoom()` | `void` | Programmatic zoom (clamped into the data bounds) / back to the full extent, announced. |
+| `hideTooltip()` | `void` | Clears the hover state (tooltip + crosshair). |
+| `refresh()` | `void` | Re-measures the container (ResizeObserver normally covers it). |
+| `focus()` | `void` | Focuses the keyboard-inspectable plot region. |
+| `getExportData()` | `OgeChartExportData<T>` | Snapshot for custom pipelines: per-series names/types/colors/visibility/points plus the plotted range. |
+| `getSvgElement()` | `SVGSVGElement` | The live SVG root — what the image exporters serialize. |
+
+_Export entry point (lazy, dependency-free)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `exportChartToPng(chart, options?) / exportChartToSvg(chart, options?) / serializeChartSvg(svg, options?)` | `@oge-ui/charts/export-image` | No third-party libraries: the live SVG is cloned with computed styles inlined, then downloaded as a standalone `.svg` or rasterized onto a canvas for `.png` (`pixelRatio`, `background`). Import the entry point dynamically. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pointClick / seriesClick` | `OgeChartPointEvent<T> / OgeChartSeriesEvent` | Pointer (and keyboard Enter) activation with the normalized point payload. |
+| `legendClick` | `OgeChartLegendClickEvent` | Cancelable — set `cancel = true` to veto the visibility toggle; carries `willHide`. |
+| `tooltipShowing` | `OgeChartTooltipShowingEvent<T>` | Cancelable, before the tooltip shows for a new argument. |
+| `visualRangeChange / selectedPointsChange` | `OgeChartRange \| null / readonly OgeChartPointRef[]` | The two-way model outputs. |
+| `drawn` | `void` | After every render pass. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeChartSeriesType` | `string union` | 'line' \| 'spline' \| 'area' \| 'splineArea' \| 'stackedArea' \| 'bar' \| 'stackedBar' \| 'fullStackedBar' \| 'scatter' \| 'rangeArea' \| 'candlestick'. |
+| `OgeChartPoint<T>` | `interface` | The normalized point: `argument`, `argNumeric`, `value`(s incl. OHLC), `source`, `index`. |
+| `OgeChartAxisType / OgeChartRange` | `'linear' \| 'logarithmic' \| 'category' \| 'time' / { min, max }` | Axis kinds and the numeric window type (time axes: epoch ms; category: index space). |
+| `[ogeChartTooltipTemplate]` | `structural directive (OgeChartTooltipTemplate)` | Replaces the tooltip's content; context `OgeChartTooltipTemplateContext`: `{ $implicit: OgeChartPointEvent[] }`. |
+| `[ogeChartLegendTemplate]` | `structural directive (OgeChartLegendTemplate)` | Replaces a legend item's content; context `OgeChartLegendTemplateContext`: `{ $implicit: { name, color, hidden } }`. |
+
+### OgePieChart — `<oge-pie-chart>`
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource / argumentField / valueField` | `readonly T[] / string \| getter` | `[] / 'argument' / 'value'` | One slice per item; negative values clamp to zero. |
+| `type / innerRadius / startAngle` | `'pie' \| 'doughnut' / number / number` | `'pie' / 0.5 / 0` | Doughnut hole as an outer-radius fraction; start angle in radians (0 = 12 o'clock, clockwise). |
+| `smallValuesGrouping` | `OgeChartSmallValuesGrouping \| null` | `null` | `{ mode: 'topN' \| 'smallValueThreshold', topCount?, threshold? }` — the tail folds into an "Others" slice (`othersLabel`). |
+| `showLabels` | `boolean` | `true` | Outside labels in two anti-overlap columns with connector lines. |
+| `selectedSlices` | `readonly number[]` | `[]` | Selected slice indexes — selected slices explode. Two-way (`[(selectedSlices)]`). |
+| `legend / tooltipEnabled / palette / title / locale / messages` | `see OgeChart` | `—` | Shared options with the cartesian chart. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `sliceClick` | `OgeChartPieSliceEvent<T>` | Slice activation: `argument`, `value`, `fraction`, merged `sources` and the `grouped` flag for the "Others" slice. |
+| `legendClick / selectedSlicesChange` | `OgeChartLegendClickEvent / readonly number[]` | Cancelable legend toggle; the two-way selection output. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `provideOgeChartsConfig(config)` | `Provider` | `—` | Configures every chart below the provider (`OgeChartsConfigInput`); shallow merge over `OGE_DEFAULT_CHARTS_CONFIG` per top-level key — a partial `messages` replaces whole nested blocks. The token is `OGE_CHARTS_CONFIG` (`OgeChartsConfig`). |
+| `messages` | `OgeChartsMessages` | `—` | Every user-facing string, aria labels included: `aria` (`OgeChartsAriaMessages` — chart/pie labels with `{title}`/`{count}`, table caption, plot hint, legend label), `announcements` (`OgeChartsAnnouncementMessages` — live-region templates with `{series}`/`{argument}`/`{value}`) and `noData`. Defaults: `OGE_DEFAULT_CHARTS_MESSAGES`. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `[locale]` input wins. |
+| `a11yTableLimit` | `number` | `50` | Rows of the screen-reader data table. |
+| `markerThreshold` | `number` | `200` | Marker circles render only up to this many points per series — beyond it the single path carries the series alone (the 10k+ point performance contract). |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Events export
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChart, provideOgeChartsConfig } from '@oge-ui/charts';
+import type { OgeChartPointEvent, OgeChartPointRef, OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- selectionMode="point" rings clicked points (Ctrl adds);
+         legendClick is cancelable. Every user-facing string, aria included,
+         lives in OgeChartsMessages (provideOgeChartsConfig, locale). The
+         dependency-free export entry serializes the SVG with inlined styles
+         — PNG via canvas rasterization, or the standalone .svg itself. -->
+    <div class="mb-2 flex gap-2">
+      <button type="button" (click)="exportPng(chart)">Export PNG</button>
+      <button type="button" (click)="exportSvg(chart)">Export SVG</button>
+    </div>
+    <oge-chart
+      #chart
+      [dataSource]="data"
+      [series]="series"
+      selectionMode="point"
+      [(selectedPoints)]="selected"
+      locale="de"
+      (pointClick)="lastPoint = $event"
+      style="height: 340px"
+    />
+  `,
+})
+export class Demo {
+  // App-wide (main.ts / route providers):
+  // provideOgeChartsConfig({ locale: 'de', a11yTableLimit: 100 })
+
+  protected readonly selected = signal<readonly OgeChartPointRef[]>([]);
+  protected lastPoint: OgeChartPointEvent<Record<string, unknown>> | null =
+    null;
+
+  protected readonly data = [
+    { month: 'Jan', value: 12 },
+    { month: 'Feb', value: 31 },
+    { month: 'Mar', value: 24 },
+    { month: 'Apr', value: 42 },
+  ];
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'bar', argumentField: 'month', valueField: 'value', name: 'Value' },
+  ];
+
+  /** The exporter loads lazily and needs no third-party library at all. */
+  protected async exportPng<T extends object>(
+    chart: OgeChart<T>,
+  ): Promise<void> {
+    const { exportChartToPng } = await import('@oge-ui/charts/export-image');
+    await exportChartToPng(chart, { filename: 'chart.png' });
+  }
+
+  protected async exportSvg<T extends object>(
+    chart: OgeChart<T>,
+  ): Promise<void> {
+    const { exportChartToSvg } = await import('@oge-ui/charts/export-image');
+    exportChartToSvg(chart, { filename: 'chart.svg' });
+  }
+}
+```
+
+### Financial
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Candlesticks read OHLC fields; a second value axis
+         (position: 'end') carries the volume bars so the two scales stay
+         independent. Rising/falling bodies color via the theme tokens. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [valueAxis]="[
+        { title: 'Price' },
+        { position: 'end', title: 'Volume' },
+      ]"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = Array.from({ length: 30 }, (_, i) => {
+    const open = 100 + Math.sin(i / 4) * 12 + (i % 5);
+    const close = open + Math.sin(i / 2) * 6 - 2;
+    return {
+      day: new Date(2026, 6, 1 + i),
+      o: open,
+      h: Math.max(open, close) + 4,
+      l: Math.min(open, close) - 4,
+      c: close,
+      vol: 800 + (i % 9) * 120,
+    };
+  });
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    {
+      type: 'candlestick',
+      argumentField: 'day',
+      openField: 'o',
+      highField: 'h',
+      lowField: 'l',
+      closeField: 'c',
+      name: 'OGE',
+    },
+    {
+      type: 'bar',
+      argumentField: 'day',
+      valueField: 'vol',
+      name: 'Volume',
+      axis: 1,
+      opacity: 0.4,
+    },
+  ];
+}
+```
+
+### Getting started
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One element, a working chart: category axis auto-detected
+         from the string arguments, nice-tick value axis, interactive legend
+         (click hides a series), hover tooltip and crosshair. Everything is
+         drawn as dependency-free SVG — no D3, no canvas library. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      title="Quarterly revenue"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = [
+    { quarter: 'Q1', product: 120, services: 60 },
+    { quarter: 'Q2', product: 150, services: 74 },
+    { quarter: 'Q3', product: 138, services: 90 },
+    { quarter: 'Q4', product: 190, services: 105 },
+  ];
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'bar', argumentField: 'quarter', valueField: 'product', name: 'Product' },
+    { type: 'line', argumentField: 'quarter', valueField: 'services', name: 'Services' },
+  ];
+}
+```
+
+### Pie
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgePieChart } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgePieChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Pie and doughnut share the kernel: outside labels with
+         connector lines, small-value grouping folds the tail into an
+         "Others" slice, clicking (or the legend) selects and explodes. -->
+    <oge-pie-chart
+      [dataSource]="data"
+      argumentField="browser"
+      valueField="share"
+      type="doughnut"
+      [innerRadius]="0.55"
+      [smallValuesGrouping]="{ mode: 'topN', topCount: 4 }"
+      title="Browser share"
+      style="height: 360px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = [
+    { browser: 'Chrome', share: 62 },
+    { browser: 'Safari', share: 20 },
+    { browser: 'Edge', share: 6 },
+    { browser: 'Firefox', share: 5 },
+    { browser: 'Samsung', share: 3 },
+    { browser: 'Opera', share: 2 },
+    { browser: 'Other', share: 2 },
+  ];
+}
+```
+
+### Series types
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Eleven series types share one kernel. splines are
+         Catmull-Rom curves, areas fill to the zero line, scatter renders
+         markers only; null values become gaps rather than fake zeros.
+         commonSeries sets shared defaults (dx commonSeriesSettings parity). -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [commonSeries]="{ argumentField: 'day' }"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = Array.from({ length: 14 }, (_, i) => ({
+    day: i + 1,
+    smooth: Math.sin(i / 2) * 30 + 60,
+    band: Math.sin(i / 2) * 20 + 40,
+    dots: Math.cos(i / 1.5) * 25 + 55,
+  }));
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'splineArea', valueField: 'band', name: 'Range', opacity: 0.8 },
+    { type: 'spline', valueField: 'smooth', name: 'Trend', width: 3 },
+    { type: 'scatter', valueField: 'dots', name: 'Samples' },
+  ];
+}
+```
+
+### Stacks
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- stackedBar accumulates per argument (negatives stack
+         downward separately); fullStackedBar normalizes each argument to
+         100%. The stack option splits series into independent stack groups. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [commonSeries]="{ argumentField: 'month' }"
+      [valueAxis]="{ abbreviate: false }"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = [
+    { month: 'Jan', on: 40, off: 24, refunds: -6 },
+    { month: 'Feb', on: 52, off: 28, refunds: -4 },
+    { month: 'Mar', on: 47, off: 35, refunds: -9 },
+    { month: 'Apr', on: 61, off: 31, refunds: -5 },
+  ];
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'stackedBar', valueField: 'on', name: 'Online' },
+    { type: 'stackedBar', valueField: 'off', name: 'Retail' },
+    { type: 'stackedBar', valueField: 'refunds', name: 'Refunds' },
+  ];
+}
+```
+
+### Time axis
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput, OgeChartStripLine } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- Date arguments auto-detect the time axis: ticks are
+         calendar-true (real month boundaries, DST-safe) and labels format
+         through Intl in your locale. stripLines mark a deadline (line) or a
+         window (band) on the argument axis. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [stripLines]="stripLines"
+      [argumentAxis]="{ grid: true }"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = Array.from({ length: 120 }, (_, i) => ({
+    date: new Date(2026, 0, 1 + i),
+    visitors: 400 + Math.sin(i / 9) * 150 + (i % 17) * 8,
+  }));
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'area', argumentField: 'date', valueField: 'visitors', name: 'Visitors' },
+  ];
+
+  protected readonly stripLines: OgeChartStripLine[] = [
+    { start: new Date(2026, 2, 1), end: new Date(2026, 2, 15), label: 'Campaign' },
+    { start: new Date(2026, 3, 10), label: 'Release', color: '#dc2626' },
+  ];
+}
+```
+
+### Zoom
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartRange, OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- 5000 points stay fluid: every series is a single SVG path,
+         hit-testing is a binary search and pointer work is rAF-coalesced.
+         Wheel zooms around the cursor, dragging selects a range, Shift+drag
+         pans, Escape resets; visualRange is two-way. shared tooltips list
+         every series at the hovered argument. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [(visualRange)]="range"
+      zoomEnabled="both"
+      [panEnabled]="true"
+      [tooltip]="{ shared: true }"
+      [crosshair]="{ horizontal: true }"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly range = signal<OgeChartRange | null>(null);
+
+  protected readonly data = Array.from({ length: 5000 }, (_, i) => ({
+    t: new Date(2026, 0, 1, 0, i * 15),
+    cpu: 40 + Math.sin(i / 60) * 25 + (i % 13),
+    memory: 55 + Math.cos(i / 90) * 18 + (i % 7),
+  }));
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'line', argumentField: 't', valueField: 'cpu', name: 'CPU' },
+    { type: 'line', argumentField: 't', valueField: 'memory', name: 'Memory' },
+  ];
+}
+```
+

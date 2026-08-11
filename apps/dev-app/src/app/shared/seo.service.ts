@@ -31,6 +31,10 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular BPMN Editor: a from-scratch BPMN 2.0 modeler with its own dependency-free XML + diagram-interchange engine — palette, orthogonal routing, snapping, undo/redo, keyboard-accessible canvas with live-region announcements, and no watermark. Commercial, free for evaluation.',
   ],
   [
+    '/components/charts',
+    'Angular Charts: line, spline, area, bar, stacked, scatter, range and candlestick series plus pie/doughnut on a dependency-free SVG kernel — calendar-true time axes, log axes, zoom & pan, crosshair, shared tooltips, interactive legend, keyboard point inspection and a screen-reader data table. Commercial, free for evaluation.',
+  ],
+  [
     '/components/gantt',
     'Angular Gantt chart: virtualized task tree + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows with cycle-safe drawing, critical path, drag editing with Escape-cancel, snapshot undo/redo and full keyboard access. Commercial, free for evaluation.',
   ],

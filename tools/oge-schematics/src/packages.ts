@@ -45,6 +45,12 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-scheduler [dataSource]="appointments" [(currentDate)]="date" [(currentView)]="view" />` — field mapping via `startDateExpr`/`endDateExpr`/`textExpr`, appointment popup + form editing, cancelable `appointmentAdding/Updating/Deleting`',
     },
   ],
+  '@oge-ui/charts': [
+    {
+      need: 'Charts / data visualization: line, area, bar, stacked, scatter, range, candlestick, pie',
+      use: '`<oge-chart [dataSource]="data" [series]="series" />` and `<oge-pie-chart>` — field mapping via `argumentField`/`valueField`, `[(visualRange)]` zoom, interactive legend, shared tooltips, `provideOgeChartsConfig()`',
+    },
+  ],
   '@oge-ui/gantt': [
     {
       need: 'Gantt chart / project plan with task tree, dependencies, critical path',
@@ -175,6 +181,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/bpmn',
   '@oge-ui/scheduler',
   '@oge-ui/gantt',
+  '@oge-ui/charts',
   '@oge-ui/inputs',
   '@oge-ui/buttons',
   '@oge-ui/overlay',

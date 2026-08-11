@@ -6,6 +6,6 @@ contact_links:
   - name: 💬 Questions & discussions
     url: https://github.com/oge-ui/oge-ui/discussions
     about: Ask usage questions or share what you're building.
-  - name: 💼 Commercial licensing (@oge-ui/pivot, @oge-ui/bpmn, @oge-ui/scheduler, @oge-ui/gantt)
+  - name: 💼 Commercial licensing (@oge-ui/pivot, @oge-ui/bpmn, @oge-ui/scheduler, @oge-ui/gantt, @oge-ui/charts)
     url: https://ogeui.com/license
     about: Licensing tiers and contact for production use of the commercial packages.

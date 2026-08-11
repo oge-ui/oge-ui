@@ -591,6 +591,55 @@ live-region announcements.
 | dx jQuery-era widget surface (`repaint/option/on/off`, `elementAttr`, …) | dx        | Skipped | signals, host bindings and Angular lifecycle replace them                                                                           |
 | Kendo per-cell `ganttStyles` theming object                              | K         | Skipped | the `--oge-gantt-*` CSS token set is the theming contract                                                                           |
 
+## Charts (`@oge-ui/charts`, commercial) — Feature Parity & Roadmap
+
+`OgeChart`/`OgePieChart` against dxChart/dxPieChart and Kendo Angular
+Charts. **Angular Material has no charts** and **PrimeNG only wraps
+Chart.js** (not Angular-native rendering) — two honest absence rows; OGE
+renders dependency-free SVG from its own kernel. No WAI-ARIA APG chart
+pattern exists; the a11y composes `role="img"` + a **screen-reader data
+table** and **keyboard point inspection** (both OGE extras — neither
+reference ships them) with live-region announcements.
+
+**Structural decisions.**
+
+- **Dependency-free by design** — no D3/Chart.js/canvas library, and no
+  suite dependency beyond `core`: tooltip/legend are plain markup, so the
+  bundle stays lean and exported SVGs are self-contained.
+- **Pure kernel** (`src/lib/engine/`, lint-enforced framework-free):
+  1-2-5 nice-tick scales, calendar-true time ticks, category bands,
+  series extraction with null-gap policy, stack accumulation (separate
+  negative branches), bar slotting, candlestick geometry, single-path
+  line/spline/area builders, pie layout with label anti-overlap,
+  SI/Intl tick formatting, cursor-centered zoom math, O(log n)
+  hit-testing — plus a 50k-point performance smoke.
+- **Intl-only local dates** (house rule): no date library; DST never
+  shifts a point.
+
+| Feature (references)                                                    | Reference | Status  | Notes                                                                                               |
+| ----------------------------------------------------------------------- | --------- | ------- | --------------------------------------------------------------------------------------------------- |
+| Line/spline/area/splineArea/stackedArea series                          | dx/K      | covered | Catmull-Rom splines; null values render as gaps, never fake zeros                                   |
+| Bar/stackedBar/fullStackedBar (+ `stack` groups, negative stacks)       | dx/K      | covered | separate positive/negative branches; 100% normalization                                             |
+| Scatter, rangeArea, candlestick                                         | dx/K      | covered | OHLC field mapping; rising/falling theme tokens                                                     |
+| Pie/doughnut + outside labels + small-value grouping                    | dx/K      | covered | two-column anti-overlap labels with connectors; `topN`/threshold → "Others"                         |
+| Argument axis auto-detection (number/date/category)                     | dx        | covered | explicit `type` override                                                                            |
+| Calendar-true time axis + Intl labels                                   | dx/K      | covered | real month boundaries, DST-safe; unit-matched label formats                                         |
+| Logarithmic + inverted + multiple value axes                            | dx/K      | covered | per-series `axis`, `position: 'end'`, SI abbreviation                                               |
+| Label overlap resolution (`rotate`/`skip`)                              | dx/K      | covered | decided from measured slot widths                                                                   |
+| Strip lines / bands                                                     | dx        | covered | argument-axis `{ start, end?, label?, color? }`                                                     |
+| Zoom & pan (`[(visualRange)]`, wheel + drag-select + Shift-pan, Escape) | dx/K      | covered | cursor-centered; bpmn five-part gesture machine with mid-drag Escape                                |
+| Crosshair + single/shared tooltips + templates                          | dx/K      | covered | `*ogeChartTooltipTemplate`; nearest-series snap in single mode                                      |
+| Interactive legend (toggle, positions, template, cancelable click)      | dx/K      | covered | real `<button aria-pressed>` — axes rescale on toggle                                               |
+| Point/series selection (`[(selectedPoints)]`, Ctrl multi)               | dx/K      | covered | keyboard Enter selects too                                                                          |
+| Keyboard point inspection + live announcements + sr data table          | —         | covered | **OGE extra** — arrows walk arguments/series; no reference library ships either                     |
+| Image export (PNG/SVG)                                                  | dx/K      | covered | dependency-free `@oge-ui/charts/export-image`: inline-styled SVG serialization + canvas rasterizing |
+| Large-series performance (10k+)                                         | dx/K      | covered | single path per series, marker threshold, O(log n) hit-test, rAF coalescing — 50k smoke test        |
+| Messages/i18n incl. aria + announcements + `locale`                     | dx/K      | covered | `provideOgeChartsConfig` + per-instance `[messages]`/`[locale]`                                     |
+| Polar/radar charts                                                      | dx/K      | Skipped | a separate chart family (dx ships it as dxPolarChart); revisit on demand                            |
+| Financial indicators/annotations (trend lines, Fibonacci, notes)        | dx        | Skipped | analysis-tool surface beyond charting; `stripLines` + templates cover the common cases              |
+| TreeMap/Funnel/Gauge/Sparkline/Sankey families                          | dx/K      | Skipped | separate products in the references too — candidates for future packages, not chart options         |
+| Chart.js-style plugin hooks                                             | PrimeNG   | Skipped | OGE renders its own SVG; templates + events are the extension surface                               |
+
 ## Date editors (`@oge-ui/inputs`) — Feature Parity
 
 `OgeCalendar` + `OgeDateBox` (reference Calendar/DateBox scope) on native

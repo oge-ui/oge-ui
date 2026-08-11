@@ -1833,6 +1833,7 @@ export class HomePage {
     '@oge-ui/bpmn',
     '@oge-ui/scheduler',
     '@oge-ui/gantt',
+    '@oge-ui/charts',
     '@oge-ui/buttons',
     '@oge-ui/inputs',
     '@oge-ui/overlay',
@@ -1913,6 +1914,12 @@ export class HomePage {
       name: 'BPMN Editor',
       desc: 'BPMN 2.0 modeler with its own XML engine, undo/redo and no watermark.',
       path: '/components/bpmn',
+    },
+    {
+      icon: 'activity',
+      name: 'Charts',
+      desc: 'Line, bar, area, pie and more on a dependency-free SVG kernel.',
+      path: '/components/charts',
     },
     {
       icon: 'list',

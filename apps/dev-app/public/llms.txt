@@ -19,6 +19,7 @@ For code generation, prefer the full reference — it inlines every API table an
 - [@oge-ui/navigation](https://ogeui.com/components/tree-view): Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
 - [@oge-ui/pivot](https://ogeui.com/components/pivot-grid): Cross-tab analytics: rows × columns × measures, grand totals, field chooser, sorting and Excel export. **Commercial licence.**
 - [@oge-ui/bpmn](https://ogeui.com/components/bpmn): From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark. **Commercial licence.**
+- [@oge-ui/charts](https://ogeui.com/components/charts): Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection. **Commercial licence.**
 - [@oge-ui/gantt](https://ogeui.com/components/gantt): Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, drag editing with Escape-cancel and snapshot undo/redo. **Commercial licence.**
 - [@oge-ui/scheduler](https://ogeui.com/components/scheduler): Scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing. **Commercial licence.**
 - [@oge-ui/core](https://www.npmjs.com/package/@oge-ui/core): Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
@@ -129,6 +130,11 @@ For code generation, prefer the full reference — it inlines every API table an
 
 - [BPMN Editor](https://ogeui.com/components/bpmn): Angular BPMN Editor: a from-scratch BPMN 2.0 modeler with its own dependency-free XML + diagram-interchange engine — palette, orthogonal routing, snapping, undo/redo, keyboard-accessible canvas with live-region announcements, and no watermark. Commercial, free for evaluation.
 - [BPMN Editor API](https://ogeui.com/components/bpmn/api)
+
+## Charts
+
+- [Charts](https://ogeui.com/components/charts): Angular Charts: line, spline, area, bar, stacked, scatter, range and candlestick series plus pie/doughnut on a dependency-free SVG kernel — calendar-true time axes, log axes, zoom & pan, crosshair, shared tooltips, interactive legend, keyboard point inspection and a screen-reader data table. Commercial, free for evaluation.
+- [Charts API](https://ogeui.com/components/charts/api)
 
 ## Gantt
 

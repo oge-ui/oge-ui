@@ -255,6 +255,18 @@ export class App {
       ],
     },
     {
+      title: 'Charts',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/charts', label: 'Overview', icon: 'activity' },
+        {
+          path: '/components/charts/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
       title: 'Gantt',
       group: COMPONENTS_GROUP,
       items: [

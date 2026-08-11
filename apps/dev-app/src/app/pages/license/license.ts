@@ -14,8 +14,8 @@ import { DocHeader } from '../../shared/doc-header';
     >
       <p>
         OGE UI is <strong>open-core</strong>: the suite is MIT-licensed and free
-        for any use — four enterprise packages, the Pivot Grid, the BPMN Editor,
-        the Scheduler and the Gantt, are commercial.
+        for any use — five enterprise packages, the Pivot Grid, the BPMN Editor,
+        the Scheduler, the Gantt and the Charts, are commercial.
       </p>
     </app-doc-header>
 
@@ -43,11 +43,12 @@ import { DocHeader } from '../../shared/doc-header';
     </p>
 
     <h2 class="scroll-mt-20">
-      Commercial — Pivot Grid, BPMN Editor, Scheduler &amp; Gantt
+      Commercial — Pivot Grid, BPMN Editor, Scheduler, Gantt &amp; Charts
     </h2>
     <p>
       <code>&#64;oge-ui/pivot</code>, <code>&#64;oge-ui/bpmn</code>,
-      <code>&#64;oge-ui/scheduler</code> and <code>&#64;oge-ui/gantt</code>
+      <code>&#64;oge-ui/scheduler</code>, <code>&#64;oge-ui/gantt</code> and
+      <code>&#64;oge-ui/charts</code>
       are source-available commercial software under the
       <a
         href="https://github.com/oge-ui/oge-ui/blob/main/packages/pivot/LICENSE"

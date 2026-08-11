@@ -742,6 +742,23 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/charts',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/charts/overview').then((m) => m.ChartsOverviewPage),
+        title: 'OGE — Charts',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/charts/api').then((m) => m.ChartsApiPage),
+        title: 'OGE — Charts API',
+      },
+    ],
+  },
+  {
     path: 'components/gantt',
     children: [
       {

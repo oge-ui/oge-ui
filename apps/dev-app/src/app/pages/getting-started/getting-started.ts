@@ -153,6 +153,13 @@ interface ComponentCard {
           </td>
         </tr>
         <tr>
+          <td><code>&#64;oge-ui/charts</code></td>
+          <td>
+            Charts: cartesian series and pie/doughnut on a dependency-free SVG
+            kernel (commercial — free for evaluation and development).
+          </td>
+        </tr>
+        <tr>
           <td><code>&#64;oge-ui/gantt</code></td>
           <td>
             Gantt chart with task tree, dependencies, critical path and drag

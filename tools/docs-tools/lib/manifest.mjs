@@ -174,6 +174,17 @@ export const PACKAGES = [
     tier: 'commercial',
   },
   {
+    dir: 'charts',
+    npm: '@oge-ui/charts',
+    label: 'Charts',
+    summary:
+      'Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection.',
+    docsRoot: '/components/charts',
+    pageDirs: ['charts'],
+    apiPage: 'apps/dev-app/src/app/pages/charts/api.ts',
+    tier: 'commercial',
+  },
+  {
     dir: 'gantt',
     npm: '@oge-ui/gantt',
     label: 'Gantt',

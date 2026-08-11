@@ -54,6 +54,7 @@ type FamilyKey =
   | 'bpmn'
   | 'scheduler'
   | 'gantt'
+  | 'charts'
   | 'overlay';
 
 interface Family {
@@ -297,6 +298,56 @@ interface OrgNode {
                       stroke-dasharray="4 3"
                     />
                     <circle cx="246" cy="22" r="9" stroke-width="3.2" />
+                  </svg>
+                }
+                @case ('charts') {
+                  <!-- illustrative sketch; the live charts render on their own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="charts"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  >
+                    <rect x="10" y="10" width="260" height="100" rx="8" />
+                    <path d="M10 88h260M10 62h260M10 36h260" opacity="0.35" />
+                    <path
+                      d="M24 84 L70 58 L116 66 L162 38 L208 46 L254 24"
+                      stroke-width="2.4"
+                    />
+                    <rect
+                      x="40"
+                      y="70"
+                      width="14"
+                      height="26"
+                      rx="2"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <rect
+                      x="96"
+                      y="56"
+                      width="14"
+                      height="40"
+                      rx="2"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <rect
+                      x="152"
+                      y="46"
+                      width="14"
+                      height="50"
+                      rx="2"
+                      fill="currentColor"
+                      opacity="0.25"
+                      stroke="none"
+                    />
+                    <circle cx="238" cy="34" r="12" opacity="0.6" />
                   </svg>
                 }
                 @case ('gantt') {
@@ -771,6 +822,14 @@ export class ComponentsIndexPage {
       path: '/components/bpmn',
       description:
         'BPMN 2.0 process modeler: palette, orthogonal connections, undo/redo, XML import/export — on its own dependency-free engine, with no watermark.',
+    },
+    {
+      key: 'charts',
+      name: 'Charts',
+      icon: 'activity',
+      path: '/components/charts',
+      description:
+        'Data visualization on a dependency-free SVG kernel: 11 cartesian series types plus pie/doughnut, time and log axes, zoom & pan, crosshair, tooltips and an interactive legend.',
     },
     {
       key: 'gantt',
