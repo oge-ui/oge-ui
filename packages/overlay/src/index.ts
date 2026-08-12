@@ -1,3 +1,10 @@
+// ---------------------------------------------------------------------------
+// Re-exported from `@oge-ui/behavior`, where these framework-free primitives
+// now live so the React render layer can share them (ADR 0001). They stay on
+// this barrel as a compatibility surface: `@oge-ui/navigation`'s drawer and
+// every downstream consumer keep importing them from `@oge-ui/overlay`, and
+// nothing about the Angular-facing API changed.
+// ---------------------------------------------------------------------------
 export {
   resolvePopupPosition,
   type OgePopupSide,
@@ -6,7 +13,7 @@ export {
   type OgeRect,
   type OgePopupPositionRequest,
   type OgeResolvedPopupPosition,
-} from './lib/position/position';
+} from '@oge-ui/behavior';
 export {
   OgeAnchoredPanel,
   type OgeAnchoredPanelOptions,
@@ -15,10 +22,18 @@ export {
 export { OgePopup } from './lib/popup/popup';
 // Primitives a modal surface implemented in another package needs. They are
 // public so that surface can join *this* Escape stack and reuse *this* focus
-// trap rather than growing a second, competing copy of either.
-export { pushOverlay, removeOverlay, isTopOverlay } from './lib/overlay-stack';
-export { getTabbableElements, trapTabKey } from './lib/modal/focus-trap';
-export { lockBodyScroll, unlockBodyScroll } from './lib/modal/scroll-lock';
+// trap rather than growing a second, competing copy of either — which is also
+// exactly why they moved to `@oge-ui/behavior`: the stack has to stay single
+// across render layers, not just across packages.
+export {
+  pushOverlay,
+  removeOverlay,
+  isTopOverlay,
+  getTabbableElements,
+  trapTabKey,
+  lockBodyScroll,
+  unlockBodyScroll,
+} from '@oge-ui/behavior';
 export {
   type OgeMenuItem,
   type OgeMenuItemSeverity,

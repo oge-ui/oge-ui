@@ -28,10 +28,76 @@ export default [
             '@oge-ui/charts',
           ],
           depConstraints: [
+            // ---------------------------------------------------------------
+            // Platform layering (see docs/adr/0001-multi-framework-strategy.md)
+            //
+            // Every project carries a `platform:` tag next to its `scope:` tag,
+            // and Nx applies *all* matching constraints — so the platform rules
+            // below intersect with the per-package scope rules further down.
+            //
+            //   platform:agnostic  shared substrate — no framework, ever
+            //   platform:angular   the Angular render layer (packages/<name>)
+            //   platform:react     the React render layer (packages/react/<name>)
+            //   platform:tooling   build-time scripts under tools/ — outside the
+            //                      layering, but tagged so that "no platform tag"
+            //                      never silently means "unconstrained"
+            //
+            // The two render layers may depend on the substrate and never on
+            // each other. This is what keeps `@oge-ui/behavior` honest: a
+            // behaviour that quietly reaches for Angular stops being shareable,
+            // and the build says so instead of a reviewer having to notice.
+            // ---------------------------------------------------------------
+            {
+              sourceTag: 'platform:agnostic',
+              onlyDependOnLibsWithTags: ['platform:agnostic'],
+              bannedExternalImports: [
+                '@angular/*',
+                'rxjs*',
+                'zone.js*',
+                'react',
+                'react-dom',
+                'react/*',
+                'react-dom/*',
+              ],
+            },
+            {
+              sourceTag: 'platform:angular',
+              onlyDependOnLibsWithTags: [
+                'platform:angular',
+                'platform:agnostic',
+              ],
+              bannedExternalImports: [
+                'react',
+                'react-dom',
+                'react/*',
+                'react-dom/*',
+              ],
+            },
+            {
+              sourceTag: 'platform:react',
+              onlyDependOnLibsWithTags: ['platform:react', 'platform:agnostic'],
+              bannedExternalImports: ['@angular/*', 'zone.js*'],
+            },
+            {
+              // Build-time tooling (docs generators, the `ng add` schematics).
+              // It ships nothing to users, so the render-layer bans do not
+              // apply — the schematics legitimately run on @angular-devkit and
+              // its rxjs. It depends on no workspace library at all, which is
+              // the constraint worth enforcing here.
+              sourceTag: 'platform:tooling',
+              onlyDependOnLibsWithTags: ['platform:tooling'],
+            },
             {
               sourceTag: 'scope:core',
               onlyDependOnLibsWithTags: ['scope:core'],
-              bannedExternalImports: ['@angular/*', 'rxjs*', 'zone.js*'],
+            },
+            {
+              // the interaction/a11y sibling of core: positioning, focus
+              // trapping, the overlay Escape stack, scroll locking. It may
+              // take core's arithmetic but nothing above it — a behaviour
+              // that needs a component is not a behaviour (ADR 0001).
+              sourceTag: 'scope:behavior',
+              onlyDependOnLibsWithTags: ['scope:behavior', 'scope:core'],
             },
             {
               sourceTag: 'scope:grid',
@@ -128,7 +194,11 @@ export default [
             },
             {
               sourceTag: 'scope:overlay',
-              onlyDependOnLibsWithTags: ['scope:overlay', 'scope:core'],
+              onlyDependOnLibsWithTags: [
+                'scope:overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
             },
             {
               sourceTag: 'scope:inputs',

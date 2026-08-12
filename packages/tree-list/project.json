@@ -11,7 +11,7 @@
       "fallbackCurrentVersionResolver": "disk"
     }
   },
-  "tags": ["scope:tree-list"],
+  "tags": ["scope:tree-list", "platform:angular"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",

@@ -11,7 +11,7 @@
       "fallbackCurrentVersionResolver": "disk"
     }
   },
-  "tags": ["scope:grid"],
+  "tags": ["scope:grid", "platform:angular"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",

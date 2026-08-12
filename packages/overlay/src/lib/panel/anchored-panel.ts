@@ -1,11 +1,13 @@
 import { signal, type Signal } from '@angular/core';
-import { isTopOverlay, pushOverlay, removeOverlay } from '../overlay-stack';
 import {
+  isTopOverlay,
+  pushOverlay,
+  removeOverlay,
   resolvePopupPosition,
   type OgePopupPlacement,
   type OgeRect,
   type OgeResolvedPopupPosition,
-} from '../position/position';
+} from '@oge-ui/behavior';
 
 /**
  * Why an anchored panel closed. `'back'` is a nested submenu closing toward

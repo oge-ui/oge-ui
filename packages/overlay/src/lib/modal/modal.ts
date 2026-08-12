@@ -20,9 +20,9 @@ import {
   type Signal,
 } from '@angular/core';
 import { OGE_OVERLAY_CONFIG } from '../config';
-import { isTopOverlay, pushOverlay, removeOverlay } from '../overlay-stack';
-import { getTabbableElements, trapTabKey } from './focus-trap';
-import { lockBodyScroll, unlockBodyScroll } from './scroll-lock';
+import { isTopOverlay, pushOverlay, removeOverlay } from '@oge-ui/behavior';
+import { getTabbableElements, trapTabKey } from '@oge-ui/behavior';
+import { lockBodyScroll, unlockBodyScroll } from '@oge-ui/behavior';
 import {
   OgeModalFooter,
   OgeModalHeaderActions,

@@ -11,7 +11,7 @@
       "fallbackCurrentVersionResolver": "disk"
     }
   },
-  "tags": ["scope:scheduler"],
+  "tags": ["scope:scheduler", "platform:angular"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",

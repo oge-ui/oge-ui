@@ -22,6 +22,7 @@ Version 0.11.0. Generated from the OGE UI source tree: the API tables and demo s
 - `@oge-ui/kanban` — Kanban
 - `@oge-ui/scheduler` — Scheduler
 - `@oge-ui/core` — Core
+- `@oge-ui/behavior` — Behavior
 - `oge-ui` — Umbrella package
 
 ## Install
@@ -15824,6 +15825,17 @@ Framework-free data engine shared by every package: sort/filter/group/aggregate 
 
 - values: `ArrayDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OGE_PAGE_ELLIPSIS`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMinutes`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildTreeIndex`, `clampDate`, `clampValue`, `colorsEqual`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `contrastForeground`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `formatColor`, `groupNodeKey`, `groupRows`, `hsvaToRgba`, `intervalKey`, `intervalRange`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeColor`, `normalizeSplitTracks`, `parseColor`, `pathKey`, `pathToFilterExpr`, `rangesOverlap`, `ratioToValue`, `relativeLuminance`, `resizeSplitAt`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveKeySelector`, `resolveMenubarCompact`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolveSelectedKeys`, `rgbaToHsva`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `startOfMonth`, `startOfWeek`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `weekNumber`
 - types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeColorFormat`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeHsva`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeNavDirection`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePivotStore`, `OgeRangeThumb`, `OgeRgba`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
+
+## @oge-ui/behavior
+
+Framework-free interaction and accessibility layer shared by every package: popup positioning, focus trapping, the single overlay Escape stack and ref-counted body scroll locking. Installed automatically — you rarely import it directly.
+
+### Entry points
+
+`@oge-ui/behavior`
+
+- values: `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `pushOverlay`, `removeOverlay`, `resetScrollLockForTests`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
+- types: `OgePopupAlign`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeRect`, `OgeResolvedPopupPosition`
 
 ## oge-ui
 

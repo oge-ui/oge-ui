@@ -51,6 +51,7 @@
   "release": {
     "projects": [
       "core",
+      "behavior",
       "grid",
       "tree-list",
       "pivot",

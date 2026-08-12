@@ -1,7 +1,7 @@
 import { Component, signal, viewChild } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { OgeModal } from './modal';
-import { resetScrollLockForTests } from './scroll-lock';
+import { resetScrollLockForTests } from '@oge-ui/behavior';
 import type { OgeModalOpeningEvent, OgeModalResizeEvent } from './modal-types';
 
 async function settle(fixture: ComponentFixture<unknown>): Promise<void> {

@@ -1,7 +1,7 @@
 {
-  "name": "core",
+  "name": "behavior",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/core/src",
+  "sourceRoot": "packages/behavior/src",
   "projectType": "library",
   "release": {
     "version": {
@@ -10,7 +10,7 @@
       "fallbackCurrentVersionResolver": "disk"
     }
   },
-  "tags": ["scope:core", "platform:agnostic"],
+  "tags": ["scope:behavior", "platform:agnostic"],
   "targets": {
     "nx-release-publish": {
       "options": {

@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { OgeModal } from './modal';
 import { OgeModalFooter, OgeModalTitle } from './modal-templates';
-import { resetScrollLockForTests } from './scroll-lock';
+import { resetScrollLockForTests } from '@oge-ui/behavior';
 import type { OgeModalClosedEvent, OgeModalClosingEvent } from './modal-types';
 
 async function settle(fixture: ComponentFixture<unknown>): Promise<void> {

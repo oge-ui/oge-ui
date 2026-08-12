@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { OGE_MODAL_DATA, OgeModalRef, OgeModalService } from './modal-service';
-import { resetScrollLockForTests } from './scroll-lock';
+import { resetScrollLockForTests } from '@oge-ui/behavior';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

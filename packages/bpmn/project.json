@@ -11,7 +11,7 @@
       "fallbackCurrentVersionResolver": "disk"
     }
   },
-  "tags": ["scope:bpmn"],
+  "tags": ["scope:bpmn", "platform:angular"],
   "targets": {
     "build": {
       "executor": "@nx/angular:package",

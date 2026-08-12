@@ -1,0 +1,33 @@
+{
+  "name": "@oge-ui/behavior",
+  "version": "0.11.0",
+  "description": "Framework-free interaction and accessibility layer behind the OGE UI suite: popup positioning, focus trapping, the shared overlay Escape stack and body scroll locking.",
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "headless",
+    "focus-trap",
+    "popup",
+    "positioning",
+    "scroll-lock",
+    "wai-aria",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "sideEffects": false,
+  "dependencies": {},
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/behavior"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

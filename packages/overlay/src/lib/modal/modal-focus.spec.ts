@@ -2,7 +2,7 @@ import { Component, signal, viewChild } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { OgeAnchoredPanel } from '../panel/anchored-panel';
 import { OgeModal } from './modal';
-import { resetScrollLockForTests } from './scroll-lock';
+import { resetScrollLockForTests } from '@oge-ui/behavior';
 import type { OgeModalAutoFocus } from './modal-types';
 
 async function settle(fixture: ComponentFixture<unknown>): Promise<void> {

@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 import { OGE_OVERLAY_CONFIG } from '../config';
 import { OgeAnchoredPanel } from '../panel/anchored-panel';
-import type { OgePopupPlacement } from '../position/position';
+import type { OgePopupPlacement } from '@oge-ui/behavior';
 
 /**
  * Presentational tooltip bubble — created by the `OgeTooltip` directive and

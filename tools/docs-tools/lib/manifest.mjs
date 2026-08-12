@@ -229,6 +229,17 @@ export const PACKAGES = [
     tier: 'mit',
   },
   {
+    dir: 'behavior',
+    npm: '@oge-ui/behavior',
+    label: 'Behavior',
+    summary:
+      'Framework-free interaction and accessibility layer shared by every package: popup positioning, focus trapping, the single overlay Escape stack and ref-counted body scroll locking. Installed automatically — you rarely import it directly.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'mit',
+  },
+  {
     dir: 'ui',
     npm: 'oge-ui',
     label: 'Umbrella package',

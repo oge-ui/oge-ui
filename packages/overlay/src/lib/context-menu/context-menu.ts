@@ -25,7 +25,7 @@ import type {
 } from '../menu/menu-types';
 import { OgeAnchoredPanel } from '../panel/anchored-panel';
 import { OgePopup } from '../popup/popup';
-import type { OgeRect } from '../position/position';
+import type { OgeRect } from '@oge-ui/behavior';
 
 /**
  * Panel rendered by the `OgeContextMenu` directive: an anchored popup hosting

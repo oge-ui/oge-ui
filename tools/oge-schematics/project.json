@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "tools/oge-schematics/src",
-  "tags": ["scope:tools"],
+  "tags": ["scope:tools", "platform:tooling"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

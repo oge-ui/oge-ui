@@ -22,6 +22,9 @@
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0"
   },
+  "dependencies": {
+    "@oge-ui/behavior": "0.11.0"
+  },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",
   "homepage": "https://ogeui.com",
