@@ -34,9 +34,9 @@ export default [
         {
           patterns: [
             {
-              group: ['@angular/*', 'rxjs', 'rxjs/*'],
+              group: ['@angular/*', 'rxjs', 'rxjs/*', 'zone.js', 'zone.js/*'],
               message:
-                'The kanban engine is framework-free — no Angular or rxjs imports.',
+                'The kanban engine is framework-free — no Angular, rxjs or zone.js imports.',
             },
           ],
         },

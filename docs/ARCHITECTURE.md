@@ -48,14 +48,14 @@ way Zag.js does. Full rationale, rejected alternatives and the phase plan:
 
 Four layers, the first three single-sourced:
 
-| Layer                   | Tag                 | Contains                                                                                                                                                           |
-| ----------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@oge-ui/core`          | `platform:agnostic` | Data: DataSource, filtering, grouping, pivot, virtualization arithmetic.                                                                                           |
-| `@oge-ui/behavior`      | `platform:agnostic` | Interaction + a11y: positioning, focus trap, the overlay Escape stack, scroll lock. Keyboard maps and drag hit-testing land here as each package is split.         |
-| `@oge-ui/themes`        | `platform:agnostic` | The SCSS. **Not extracted yet** — still in `packages/grid/src/lib/styles/`; shared verbatim when it moves, because the styles are already global `.oge-*` classes. |
-| `packages/<name>`       | `platform:angular`  | Angular templates + bindings.                                                                                                                                      |
-| `packages/react/<name>` | `platform:react`    | React components. Published as `@oge-ui/react-<name>`; Angular keeps the unprefixed names.                                                                         |
-| `tools/<name>`          | `platform:tooling`  | Build-time scripts (docs generators, `ng add` schematics). Outside the layering — nothing ships to users — but tagged so an untagged project is always a mistake.  |
+| Layer                   | Tag                 | Contains                                                                                                                                                                                   |
+| ----------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@oge-ui/core`          | `platform:agnostic` | Data: DataSource, filtering, grouping, pivot, virtualization arithmetic.                                                                                                                   |
+| `@oge-ui/behavior`      | `platform:agnostic` | Interaction + a11y: positioning, focus trap, the overlay Escape stack, scroll lock. Keyboard maps and drag hit-testing land here as each package is split.                                 |
+| `@oge-ui/themes`        | `platform:agnostic` | The SCSS. **Not extracted yet** — still in `packages/grid/src/lib/styles/`; shared verbatim when it moves, because the styles are already global `.oge-*` classes.                         |
+| `packages/<name>`       | `platform:angular`  | Angular templates + bindings.                                                                                                                                                              |
+| `packages/react/<name>` | `platform:react`    | React components. Published as `@oge-ui/react-<name>`; Angular keeps the unprefixed names.                                                                                                 |
+| `tools/<name>`          | `platform:agnostic` | Build-time scripts (docs generators, `ng add` schematics). Framework-free like the rest of the substrate; only their specs are exempt, where @angular-devkit's Observable API forces rxjs. |
 
 Three rules govern the split:
 
@@ -66,8 +66,7 @@ Three rules govern the split:
 - **Every project carries a `platform:` tag beside its `scope:` tag**, and the root
   `eslint.config.mjs` enforces the layering: `platform:agnostic` may depend only on
   `platform:agnostic` and bans `@angular/*` / `rxjs*` / `zone.js*` / `react*`; the two render
-  layers may each depend on the substrate and never on each other; `platform:tooling` sits
-  outside the layering and only promises to depend on no workspace library. Nx applies **all** matching
+  layers may each depend on the substrate and never on each other. Nx applies **all** matching
   constraints, so these intersect with the per-package `scope:` rules rather than replacing
   them. (`bannedExternalImports` only classifies packages present in the project graph, so the
   `react` bans stay inert until React is installed — see the ADR's "Known gap".)

@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "tools/docs-tools",
-  "tags": ["scope:tools", "platform:tooling"],
+  "tags": ["scope:tools", "platform:agnostic"],
   "targets": {
     "llms": {
       "executor": "nx:run-commands",

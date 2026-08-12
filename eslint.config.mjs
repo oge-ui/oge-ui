@@ -38,9 +38,6 @@ export default [
             //   platform:agnostic  shared substrate — no framework, ever
             //   platform:angular   the Angular render layer (packages/<name>)
             //   platform:react     the React render layer (packages/react/<name>)
-            //   platform:tooling   build-time scripts under tools/ — outside the
-            //                      layering, but tagged so that "no platform tag"
-            //                      never silently means "unconstrained"
             //
             // The two render layers may depend on the substrate and never on
             // each other. This is what keeps `@oge-ui/behavior` honest: a
@@ -77,15 +74,6 @@ export default [
               sourceTag: 'platform:react',
               onlyDependOnLibsWithTags: ['platform:react', 'platform:agnostic'],
               bannedExternalImports: ['@angular/*', 'zone.js*'],
-            },
-            {
-              // Build-time tooling (docs generators, the `ng add` schematics).
-              // It ships nothing to users, so the render-layer bans do not
-              // apply — the schematics legitimately run on @angular-devkit and
-              // its rxjs. It depends on no workspace library at all, which is
-              // the constraint worth enforcing here.
-              sourceTag: 'platform:tooling',
-              onlyDependOnLibsWithTags: ['platform:tooling'],
             },
             {
               sourceTag: 'scope:core',
@@ -310,5 +298,15 @@ export default [
         },
       ],
     },
+  },
+  {
+    // The `ng add` schematics are platform:agnostic like the rest of the
+    // substrate, and the code they ship honours that. Their tests cannot:
+    // @angular-devkit's `SchematicTestRunner.callRule` returns an Observable,
+    // so awaiting it means importing rxjs. Exempting the spec files keeps the
+    // ban meaningful where it matters — on shipped code — instead of granting
+    // the whole tools/ tree an exemption it does not need.
+    files: ['tools/oge-schematics/src/**/*.spec.ts'],
+    rules: { '@nx/enforce-module-boundaries': 'off' },
   },
 ];
