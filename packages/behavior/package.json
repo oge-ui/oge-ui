@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/behavior",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Framework-free interaction and accessibility layer behind the OGE UI suite: popup positioning, focus trapping, the shared overlay Escape stack and body scroll locking.",
   "keywords": [
     "accessibility",
@@ -22,7 +22,7 @@
   "types": "./index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "@oge-ui/core": "0.11.0"
+    "@oge-ui/core": "0.12.0"
   },
   "homepage": "https://ogeui.com",
   "repository": {

@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-overlay",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "React overlay primitives from the OGE UI suite: viewport-aware anchored popups (flip + clamp, RTL-aware, Escape stack) and a full WAI-ARIA menu with submenus and type-ahead — running the same positioning and menu machines as the Angular overlay package.",
   "keywords": [
     "react",
@@ -36,7 +36,7 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "0.11.0"
+    "@oge-ui/behavior": "0.12.0"
   },
   "homepage": "https://ogeui.com",
   "repository": {

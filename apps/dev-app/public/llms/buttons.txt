@@ -2,7 +2,7 @@
 
 > Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.
 
-Part of OGE UI v0.11.0.
+Part of OGE UI v0.12.0.
 Docs and live demos: https://ogeui.com/components/buttons
 Whole-suite reference: https://ogeui.com/llms-full.txt
 

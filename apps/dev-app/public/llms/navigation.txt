@@ -2,7 +2,7 @@
 
 > Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
 
-Part of OGE UI v0.11.0.
+Part of OGE UI v0.12.0.
 Docs and live demos: https://ogeui.com/components/tree-view
 Whole-suite reference: https://ogeui.com/llms-full.txt
 

@@ -2,7 +2,7 @@
 
 > File uploader — drag & drop with directory and paste support, client-side restrictions, image previews, per-file progress, and chunked resumable transfer with pause, resume and retry.
 
-Part of OGE UI v0.11.0.
+Part of OGE UI v0.12.0.
 Docs and live demos: https://ogeui.com/components/upload
 Whole-suite reference: https://ogeui.com/llms-full.txt
 

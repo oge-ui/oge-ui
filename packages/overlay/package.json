@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/overlay",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Angular overlay primitives: anchored popups, menus, tooltips, context menus, a full-featured modal dialog (focus trap, Escape stack, drag/resize) and toast notifications.",
   "keywords": [
     "angular",
@@ -23,7 +23,7 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "0.11.0"
+    "@oge-ui/behavior": "0.12.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

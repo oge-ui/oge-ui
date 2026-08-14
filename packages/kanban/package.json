@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/kanban",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Signal-based Angular Kanban board: swimlanes, WIP limits, per-column virtualization, drag & drop with Escape-cancel, keyboard card moving with live announcements, built-in edit dialog and context menu — the only Angular-native Kanban. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "angular",
@@ -23,9 +23,9 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/core": "0.11.0",
-    "@oge-ui/forms": "0.11.0",
-    "@oge-ui/overlay": "0.11.0"
+    "@oge-ui/core": "0.12.0",
+    "@oge-ui/forms": "0.12.0",
+    "@oge-ui/overlay": "0.12.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

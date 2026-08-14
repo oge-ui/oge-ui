@@ -2,7 +2,7 @@
 
 > React form editors on the same field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete (virtual scrolling, custom values), CheckBox, Switch, RadioGroup, Slider/RangeSlider, ColorBox, Calendar and DateBox/DateRangeBox — running the same commit pipeline, list/selection machines and stylesheet as the Angular package.
 
-Part of OGE UI v0.11.0.
+Part of OGE UI v0.12.0.
 Docs and live demos: https://ogeui.com/components/inputs
 Whole-suite reference: https://ogeui.com/llms-full.txt
 

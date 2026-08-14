@@ -2,7 +2,7 @@
 
 > React tab strip and tab panel: the WAI-ARIA APG tabs pattern with declarative or data-driven tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards, drag reordering and lazy panel rendering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.
 
-Part of OGE UI v0.11.0.
+Part of OGE UI v0.12.0.
 Docs and live demos: https://ogeui.com/components/tabs
 Whole-suite reference: https://ogeui.com/llms-full.txt
 

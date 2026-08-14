@@ -2,7 +2,7 @@
 
 > Framework-free interaction and accessibility layer shared by every package: popup positioning, focus trapping, the single overlay Escape stack and ref-counted body scroll locking. Installed automatically — you rarely import it directly.
 
-Part of OGE UI v0.11.0.
+Part of OGE UI v0.12.0.
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
 ```sh

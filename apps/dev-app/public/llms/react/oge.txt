@@ -2,7 +2,7 @@
 
 > Re-exports every React family from a single import path, with one stylesheet for all of them. `npm i @oge-ui/react` then `import { OgeButton, OgeTextBox } from '@oge-ui/react'`.
 
-Part of OGE UI v0.11.0.
+Part of OGE UI v0.12.0.
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
 ```sh
