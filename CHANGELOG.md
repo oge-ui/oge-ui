@@ -5,6 +5,63 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## 0.12.0 — 2026-08-14
+
+### New render layer: React
+
+The suite now ships a **native React layer** — real React components, not
+wrappers. One framework-free engine drives both layers (ADR 0001): data
+arithmetic in `@oge-ui/core`, interaction and accessibility in
+`@oge-ui/behavior`, one stylesheet, one message table. Every family extracted
+to the engine was rewired in Angular in the same change, with its existing
+specs passing unchanged.
+
+- **`@oge-ui/react`** — umbrella package; installs and re-exports every
+  `@oge-ui/react-*` family so an app can install once and import from one path.
+- **`@oge-ui/react-overlay`** — the anchored-panel substrate: viewport-aware
+  positioning with flip and clamp, the single Escape stack, focus trap,
+  ref-counted scroll lock.
+- **`@oge-ui/react-buttons`**, **`@oge-ui/react-inputs`**,
+  **`@oge-ui/react-tabs`**, **`@oge-ui/react-layout`**,
+  **`@oge-ui/react-navigation`** — the five component families, API member for
+  API member with their Angular counterparts. React idioms where the framework
+  requires them: controlled/uncontrolled pairs (`value` + `onValueChange` /
+  `defaultValue`), imperative handles through `forwardRef`, render props in
+  place of `TemplateRef`, context providers in place of DI tokens. Every
+  deliberate difference is recorded in `docs/REACT-PARITY.md`.
+
+The docs are **one site, not two**: a global framework switch stamps
+`<html data-framework>`, rides in the URL as `?framework=react`, and every
+component page renders the chosen layer on the same route. Coverage is
+page-granular, so a React reader on an Angular-only page gets a notice instead
+of syntax they cannot use. A cross-framework parity gate compares the two API
+tables member for member on every build.
+
+### New package
+
+- **`@oge-ui/upload`** — file uploader with a transport engine (chunking,
+  retry, progress, abort), drag & drop from an external drop zone, per-file
+  validation with the rejection reason kept on the list, and a roving-tabindex
+  file list.
+
+### `@oge-ui/behavior`
+
+- The shared engine grew to cover the input commit/debounce pipeline, the
+  select-list machine (filtering, grouping, lazy item sources), the dropdown
+  virtualizer, number/date/calendar/slider math, the anchored-panel machine and
+  the layout, tabs and navigation decision layers.
+- **Now tested framework-free**: every module carrying a decision has a spec
+  beside it (49 → 664 tests), plus a barrel guard, since that barrel is the
+  React layer's entire import surface. Two defects it found: the scroll lock
+  could leave its own `padding-right` behind on release, and the React tree
+  view painted its first frame with no roving tab stop, which made the
+  virtualized tree a scrollable region with no keyboard access (WCAG 2.1.1).
+
+### Accessibility
+
+- In-prose links across the docs site now carry a persistent underline
+  (axe `link-in-text-block`) — colour alone was the only signal.
+
 ## 0.11.0 — 2026-08-11
 
 ### New package
