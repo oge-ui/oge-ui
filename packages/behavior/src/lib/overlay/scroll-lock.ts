@@ -29,8 +29,19 @@ export function lockBodyScroll(): void {
 export function unlockBodyScroll(): void {
   if (typeof document === 'undefined') return;
   if (lockCount === 0 || --lockCount > 0) return;
-  document.body.style.overflow = savedOverflow;
-  document.body.style.paddingRight = savedPaddingRight;
+  restore('overflow', savedOverflow);
+  restore('padding-right', savedPaddingRight);
+}
+
+/**
+ * Puts one declaration back the way the app had it. An empty saved value
+ * means the app never inlined the property, so it is *removed* rather than
+ * assigned `''` — assigning an empty string to a longhand is a no-op in some
+ * CSSOM implementations, which would leave the lock's own padding behind.
+ */
+function restore(property: 'overflow' | 'padding-right', value: string): void {
+  if (value) document.body.style.setProperty(property, value);
+  else document.body.style.removeProperty(property);
 }
 
 /** Resets the module state between tests. @internal */
