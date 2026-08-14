@@ -30,6 +30,7 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
+    "@oge-ui/behavior": "0.11.0",
     "@oge-ui/core": "0.11.0",
     "@oge-ui/overlay": "0.11.0"
   },

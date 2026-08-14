@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   OgeInputPrefix,
@@ -8,6 +13,11 @@ import {
 } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import {
+  REACT_INPUTS_OVERVIEW_SECTIONS,
+  ReactInputsOverviewDemos,
+} from '../react-inputs/overview';
 import { PageToc } from '../../shared/page-toc';
 import {
   BASIC_SNIPPET,
@@ -33,6 +43,7 @@ const SECTIONS = [
     OgeInputPrefix,
     DemoCard,
     DocHeader,
+    ReactInputsOverviewDemos,
     PageToc,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,106 +59,131 @@ const SECTIONS = [
         'fluid',
       ]"
     >
-      <p>
-        <code>&lt;oge-text-box&gt;</code>, <code>&lt;oge-text-area&gt;</code>,
-        <code>&lt;oge-number-box&gt;</code> and
-        <code>&lt;oge-select-box&gt;</code> share one field chrome: four label
-        modes (including floating), three styling modes, prefix/suffix slots, a
-        clear button and a fixed-height subscript for hints and validation
-        errors that never shifts your layout. All of them work standalone via
-        <code>[(value)]</code>, with Signal Forms via
-        <code>[formField]</code> and with reactive forms via
-        <code>formControl</code>. The drop-down editor has
-        <a
-          routerLink="/components/inputs/select-box"
-          class="text-indigo-600 dark:text-indigo-400"
-          >its own page</a
-        >.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          <code>&lt;OgeTextBox /&gt;</code>, <code>&lt;OgeTextArea /&gt;</code>,
+          <code>&lt;OgeNumberBox /&gt;</code> and
+          <code>&lt;OgeSelectBox /&gt;</code> from
+          <code>&#64;oge-ui/react-inputs</code> share one field chrome: four
+          label modes (including floating), three styling modes, prefix/suffix
+          props, a clear button and a fixed-height subscript for hints and
+          validation errors that never shifts your layout. They run the same
+          commit pipeline and load the same stylesheet as the Angular editors —
+          only the API is React's: the controlled/uncontrolled
+          <code>value</code> + <code>onValueChange</code> pair, and a context
+          provider for defaults. The drop-down editor has
+          <a
+            routerLink="/components/inputs/select-box"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >its own page</a
+          >.
+        </p>
+      } @else {
+        <p>
+          <code>&lt;oge-text-box&gt;</code>, <code>&lt;oge-text-area&gt;</code>,
+          <code>&lt;oge-number-box&gt;</code> and
+          <code>&lt;oge-select-box&gt;</code> share one field chrome: four label
+          modes (including floating), three styling modes, prefix/suffix slots,
+          a clear button and a fixed-height subscript for hints and validation
+          errors that never shifts your layout. All of them work standalone via
+          <code>[(value)]</code>, with Signal Forms via
+          <code>[formField]</code> and with reactive forms via
+          <code>formControl</code>. The drop-down editor has
+          <a
+            routerLink="/components/inputs/select-box"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >its own page</a
+          >.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <app-demo-card
-      [chips]="['three editors', '[(value)]', 'clear button', 'auto-resize']"
-      heading="The three editors"
-      description="<code>oge-text-box</code>, <code>oge-text-area</code> and <code>oge-number-box</code> share one field chrome, so labels, hints, errors and adornments behave identically. All three bind three ways: standalone <code>[(value)]</code>, Signal Forms via <code>[formField]</code>, or classic reactive forms via <code>formControl</code>. The number editor treats empty as <code>null</code> — never <code>0</code>."
-      [code]="basicSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-4">
-        <oge-text-box label="Name" [(value)]="name" placeholder="Jane Doe" />
-        <oge-text-box
-          label="E-mail"
-          mode="email"
-          hint="We never share it"
-          [showClearButton]="true"
-        />
-        <oge-number-box
-          label="Amount"
-          [(value)]="amount"
-          [min]="0"
-          [showSpinButtons]="true"
-        />
-        <oge-text-area
-          label="Notes"
-          [(value)]="notes"
-          [autoResize]="true"
-          [maxRows]="6"
-        />
-      </div>
-    </app-demo-card>
+    @if (fw.isReact()) {
+      <app-react-inputs-overview-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['three editors', '[(value)]', 'clear button', 'auto-resize']"
+        heading="The three editors"
+        description="<code>oge-text-box</code>, <code>oge-text-area</code> and <code>oge-number-box</code> share one field chrome, so labels, hints, errors and adornments behave identically. All three bind three ways: standalone <code>[(value)]</code>, Signal Forms via <code>[formField]</code>, or classic reactive forms via <code>formControl</code>. The number editor treats empty as <code>null</code> — never <code>0</code>."
+        [code]="basicSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-4">
+          <oge-text-box label="Name" [(value)]="name" placeholder="Jane Doe" />
+          <oge-text-box
+            label="E-mail"
+            mode="email"
+            hint="We never share it"
+            [showClearButton]="true"
+          />
+          <oge-number-box
+            label="Amount"
+            [(value)]="amount"
+            [min]="0"
+            [showSpinButtons]="true"
+          />
+          <oge-text-area
+            label="Notes"
+            [(value)]="notes"
+            [autoResize]="true"
+            [maxRows]="6"
+          />
+        </div>
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['stylingMode ×3', 'size: sm | md | lg']"
-      heading="Styling modes & sizes"
-      description="<code>outlined</code> (default), <code>filled</code> and <code>underlined</code> cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes <code>sm</code>/<code>md</code>/<code>lg</code> (28/34/42px) match the button scale exactly, so mixed button-and-field rows align without manual tweaks."
-      [code]="stylingSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-4">
-        <oge-text-box label="Outlined" stylingMode="outlined" />
-        <oge-text-box label="Filled" stylingMode="filled" />
-        <oge-text-box label="Underlined" stylingMode="underlined" />
-        <oge-text-box label="Small" size="sm" />
-        <oge-text-box label="Large" size="lg" />
-      </div>
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['stylingMode ×3', 'size: sm | md | lg']"
+        heading="Styling modes & sizes"
+        description="<code>outlined</code> (default), <code>filled</code> and <code>underlined</code> cover the common form aesthetics; all derive from the design tokens and adapt to every theme. Sizes <code>sm</code>/<code>md</code>/<code>lg</code> (28/34/42px) match the button scale exactly, so mixed button-and-field rows align without manual tweaks."
+        [code]="stylingSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-4">
+          <oge-text-box label="Outlined" stylingMode="outlined" />
+          <oge-text-box label="Filled" stylingMode="filled" />
+          <oge-text-box label="Underlined" stylingMode="underlined" />
+          <oge-text-box label="Small" size="sm" />
+          <oge-text-box label="Large" size="lg" />
+        </div>
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['labelMode: static | floating | hidden | outside']"
-      heading="Label modes"
-      description="Four placements: <code>static</code> renders a compact caption above the field, <code>outside</code> a conventional block label, <code>floating</code> starts in the placeholder position and lifts on focus or content, and <code>hidden</code> keeps the field visually clean while exposing the label to screen readers via <code>aria-label</code>. Avoid mixing modes within one row — floating fields are taller."
-      [code]="labelSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-4">
-        <oge-text-box label="Static (default)" labelMode="static" />
-        <oge-text-box label="Floating" labelMode="floating" />
-        <oge-text-box label="Outside" labelMode="outside" />
-        <oge-text-box
-          label="Hidden (aria-label)"
-          labelMode="hidden"
-          placeholder="Search…"
-        />
-      </div>
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['labelMode: static | floating | hidden | outside']"
+        heading="Label modes"
+        description="Four placements: <code>static</code> renders a compact caption above the field, <code>outside</code> a conventional block label, <code>floating</code> starts in the placeholder position and lifts on focus or content, and <code>hidden</code> keeps the field visually clean while exposing the label to screen readers via <code>aria-label</code>. Avoid mixing modes within one row — floating fields are taller."
+        [code]="labelSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-4">
+          <oge-text-box label="Static (default)" labelMode="static" />
+          <oge-text-box label="Floating" labelMode="floating" />
+          <oge-text-box label="Outside" labelMode="outside" />
+          <oge-text-box
+            label="Hidden (aria-label)"
+            labelMode="hidden"
+            placeholder="Search…"
+          />
+        </div>
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['[ogeInputPrefix] / [ogeInputSuffix] slots']"
-      heading="Prefix & suffix slots"
-      description="Project any content — symbols, icons, units — into the leading or trailing slot with the <code>ogeInputPrefix</code> / <code>ogeInputSuffix</code> attributes. Custom suffixes render at the end of the built-in rail, after the clear, reveal and copy buttons, so the ordering stays predictable."
-      [code]="prefixSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-4">
-        <oge-text-box label="Price">
-          <span ogeInputPrefix>€</span>
-        </oge-text-box>
-        <oge-text-box label="Website" placeholder="example.com">
-          <span ogeInputPrefix>https://</span>
-        </oge-text-box>
-      </div>
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['[ogeInputPrefix] / [ogeInputSuffix] slots']"
+        heading="Prefix & suffix slots"
+        description="Project any content — symbols, icons, units — into the leading or trailing slot with the <code>ogeInputPrefix</code> / <code>ogeInputSuffix</code> attributes. Custom suffixes render at the end of the built-in rail, after the clear, reveal and copy buttons, so the ordering stays predictable."
+        [code]="prefixSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-4">
+          <oge-text-box label="Price">
+            <span ogeInputPrefix>€</span>
+          </oge-text-box>
+          <oge-text-box label="Website" placeholder="example.com">
+            <span ogeInputPrefix>https://</span>
+          </oge-text-box>
+        </div>
+      </app-demo-card>
+    }
 
     <h3>Notes</h3>
     <ul>
@@ -168,7 +204,9 @@ const SECTIONS = [
   `,
 })
 export class InputsOverviewPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly reactSections = REACT_INPUTS_OVERVIEW_SECTIONS;
   protected readonly name = signal('');
   protected readonly amount = signal<number | null>(null);
   protected readonly notes = signal('');

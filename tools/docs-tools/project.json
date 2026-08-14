@@ -19,13 +19,21 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "parity": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/docs-tools/check-parity.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
         "command": "node tools/docs-tools/check-snippets.mjs",
         "cwd": "{workspaceRoot}"
-      }
+      },
+      "dependsOn": ["react-buttons:build"]
     }
   }
 }

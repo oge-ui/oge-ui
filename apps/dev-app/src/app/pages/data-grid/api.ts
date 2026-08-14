@@ -32,7 +32,7 @@ const SECTIONS = [
         the
         <a
           routerLink="/components/data-grid"
-          class="text-indigo-600 dark:text-indigo-400"
+          class="text-indigo-600 underline dark:text-indigo-400"
           >demo pages</a
         >.
       </p>

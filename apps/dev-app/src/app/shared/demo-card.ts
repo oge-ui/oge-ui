@@ -48,6 +48,7 @@ export function slugify(text: string): string {
           (click)="scrollToAnchor($event)"
           class="ml-1.5 text-indigo-400 opacity-0 transition-opacity group-hover:opacity-100"
           aria-hidden="true"
+          tabindex="-1"
           >#</a
         >
       </h3>

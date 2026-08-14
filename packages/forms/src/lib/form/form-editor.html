@@ -162,6 +162,18 @@
   [max]="dateMax()"
   [formControl]="ctrl"
 />
+} @case ('fileUploader') {
+<oge-file-uploader
+  [id]="editorId()"
+  [accept]="opts().accept ?? ''"
+  [multiple]="opts().multiple ?? true"
+  [maxFileSize]="opts().maxFileSize"
+  [uploadUrl]="opts().uploadUrl ?? ''"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readOnly()"
+  [formControl]="ctrl"
+/>
 } @case ('checkBox') {
 <oge-check-box
   [size]="size()"
@@ -399,6 +411,15 @@
   [id]="editorId()"
   [label]="label()"
   [hint]="hintOrUndefined()"
+  [formField]="node"
+/>
+} @case ('fileUploader') {
+<oge-file-uploader
+  [id]="editorId()"
+  [accept]="opts().accept ?? ''"
+  [multiple]="opts().multiple ?? true"
+  [maxFileSize]="opts().maxFileSize"
+  [uploadUrl]="opts().uploadUrl ?? ''"
   [formField]="node"
 />
 } @case ('checkBox') {

@@ -46,3 +46,45 @@ import { OgeButton } from '@oge-ui/buttons';
   template: \`<oge-button text="It works" severity="accent" />\`,
 })
 export class App {}`;
+
+// ── React layer (ADR 0002) ────────────────────────────────────────────────
+// Only the samples that genuinely differ get a React twin. Anything shared —
+// the token overrides, the theme stylesheets — deliberately has none, because
+// implying a difference where there is not one is its own kind of wrong.
+
+export const INSTALL_REACT = `# the React render layer — one package per family
+npm install @oge-ui/react-buttons
+
+# react is a peer you already have
+# @oge-ui/behavior and @oge-ui/core come along as dependencies`;
+
+export const STYLES_REACT = `// once, at your app entry — the components ship class names, not inline styles
+import '@oge-ui/react-buttons/styles.css';
+
+// optional themes, shared with the Angular packages
+import '@oge-ui/grid/themes/dark.css';`;
+
+export const PROVIDERS_REACT = `'use client';
+
+import type { ReactNode } from 'react';
+import { OgeButtonsConfigProvider } from '@oge-ui/react-buttons';
+
+// optional — components work with sensible defaults out of the box.
+// The React counterpart of Angular's provideOgeButtonsConfig().
+export function Providers({ children }: { children: ReactNode }) {
+  return (
+    <OgeButtonsConfigProvider
+      config={{ clickGuardMs: 300, messages: { loading: 'Loading…' } }}
+    >
+      {children}
+    </OgeButtonsConfigProvider>
+  );
+}`;
+
+export const VERIFY_REACT = `'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+
+export function App() {
+  return <OgeButton text="It works" severity="accent" />;
+}`;

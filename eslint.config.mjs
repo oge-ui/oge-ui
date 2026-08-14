@@ -76,6 +76,19 @@ export default [
               bannedExternalImports: ['@angular/*', 'zone.js*'],
             },
             {
+              // The docs site is the one project that must hold both render
+              // layers at once: showing an Angular and a React component side
+              // by side, under one shell and one homepage, is its whole job.
+              // It is a leaf — nothing depends on it — so this cannot leak.
+              sourceTag: 'platform:docs',
+              onlyDependOnLibsWithTags: [
+                'platform:docs',
+                'platform:angular',
+                'platform:react',
+                'platform:agnostic',
+              ],
+            },
+            {
               sourceTag: 'scope:core',
               onlyDependOnLibsWithTags: ['scope:core'],
             },
@@ -86,6 +99,92 @@ export default [
               // that needs a component is not a behaviour (ADR 0001).
               sourceTag: 'scope:behavior',
               onlyDependOnLibsWithTags: ['scope:behavior', 'scope:core'],
+            },
+            {
+              // React render layer. Note there is no `scope:buttons` here: the
+              // React buttons must reach the shared substrate directly, never
+              // the Angular package — the `platform:` rules above already
+              // forbid it, and this keeps the intent readable per package.
+              // `react-overlay` mirrors the Angular dependency shape
+              // (buttons → overlay for the drop-down button).
+              sourceTag: 'scope:react-buttons',
+              onlyDependOnLibsWithTags: [
+                'scope:react-buttons',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              sourceTag: 'scope:react-overlay',
+              onlyDependOnLibsWithTags: [
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // mirrors the Angular inputs' dependency shape (inputs →
+              // overlay lands with the dropdown editors)
+              sourceTag: 'scope:react-inputs',
+              onlyDependOnLibsWithTags: [
+                'scope:react-inputs',
+                'scope:react-overlay',
+                // the tree select hosts @oge-ui/react-navigation's tree inside
+                // the dropdown; the editor chrome (the field, the commit
+                // pipeline, the validation subscript) only exists here, so the
+                // edge points this way — mirroring the Angular
+                // `scope:inputs → scope:navigation` edge, the same direction
+                // Kendo's dropdowns → treeview takes. react-navigation never
+                // imports react-inputs, so this cannot close a cycle.
+                'scope:react-navigation',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              sourceTag: 'scope:react-tabs',
+              onlyDependOnLibsWithTags: [
+                'scope:react-tabs',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React umbrella: one install, one import path. It may take
+              // every React family and nothing else — it is a leaf, so this
+              // cannot create a cycle (mirrors `scope:ui` on the Angular side).
+              sourceTag: 'scope:react-oge',
+              onlyDependOnLibsWithTags: [
+                'scope:react-oge',
+                'scope:react-buttons',
+                'scope:react-inputs',
+                'scope:react-tabs',
+                'scope:react-layout',
+                'scope:react-navigation',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              sourceTag: 'scope:react-layout',
+              onlyDependOnLibsWithTags: [
+                'scope:react-layout',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              sourceTag: 'scope:react-navigation',
+              onlyDependOnLibsWithTags: [
+                'scope:react-navigation',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
             },
             {
               sourceTag: 'scope:grid',
@@ -192,6 +291,7 @@ export default [
               sourceTag: 'scope:inputs',
               onlyDependOnLibsWithTags: [
                 'scope:inputs',
+                'scope:behavior',
                 'scope:overlay',
                 // the tree select hosts @oge-ui/navigation's tree inside the
                 // dropdown; the editor chrome (OgeInputBase, CVA, Signal
@@ -205,6 +305,7 @@ export default [
               sourceTag: 'scope:buttons',
               onlyDependOnLibsWithTags: [
                 'scope:buttons',
+                'scope:behavior',
                 'scope:overlay',
                 'scope:core',
               ],
@@ -214,6 +315,7 @@ export default [
               onlyDependOnLibsWithTags: [
                 'scope:tabs',
                 'scope:overlay',
+                'scope:behavior',
                 'scope:core',
               ],
             },
@@ -225,6 +327,7 @@ export default [
               onlyDependOnLibsWithTags: [
                 'scope:layout',
                 'scope:overlay',
+                'scope:behavior',
                 'scope:core',
               ],
             },
@@ -236,6 +339,20 @@ export default [
               // cannot close a cycle
               onlyDependOnLibsWithTags: [
                 'scope:navigation',
+                'scope:overlay',
+                'scope:core',
+                'scope:behavior',
+              ],
+            },
+            {
+              // the uploader draws its own chrome, so it takes none of the
+              // editor packages — only core's navigation arithmetic today,
+              // and layout's progress bar once transfers land
+              sourceTag: 'scope:upload',
+              onlyDependOnLibsWithTags: [
+                'scope:upload',
+                'scope:layout',
+                'scope:buttons',
                 'scope:overlay',
                 'scope:core',
               ],
@@ -250,6 +367,7 @@ export default [
                 'scope:tabs',
                 'scope:layout',
                 'scope:navigation',
+                'scope:upload',
                 'scope:core',
               ],
             },
@@ -269,6 +387,7 @@ export default [
                 'scope:layout',
                 'scope:navigation',
                 'scope:forms',
+                'scope:upload',
                 'scope:core',
               ],
             },
@@ -276,6 +395,16 @@ export default [
               sourceTag: 'scope:app',
               onlyDependOnLibsWithTags: [
                 'scope:app',
+                // the docs site renders the React components beside the
+                // Angular ones on the same page (ADR 0001)
+                'scope:react-buttons',
+                'scope:react-inputs',
+                'scope:react-tabs',
+                'scope:react-layout',
+                'scope:react-navigation',
+                'scope:react-oge',
+                'scope:react-overlay',
+                'scope:behavior',
                 'scope:grid',
                 'scope:tree-list',
                 'scope:pivot',
@@ -291,6 +420,7 @@ export default [
                 'scope:layout',
                 'scope:navigation',
                 'scope:forms',
+                'scope:upload',
                 'scope:core',
               ],
             },

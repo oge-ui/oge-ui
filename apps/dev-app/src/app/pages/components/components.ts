@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OgeButton } from '@oge-ui/buttons';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
@@ -29,6 +34,11 @@ import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
 import { OgeForm, OgeFormItem } from '@oge-ui/forms';
 import { OgeTreeList } from '@oge-ui/tree-list';
 import { OgeLoadIndicator, OgeProgressBar, OgeSkeleton } from '@oge-ui/layout';
+import {
+  FrameworkLogo,
+  type FrameworkLogoName,
+} from '../../shared/framework-logo';
+import { FrameworkService } from '../../shared/framework.service';
 import { Icon, type IconName } from '../../shared/icon';
 import { SITE_VERSION } from '../../shared/site-version';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
@@ -54,6 +64,7 @@ type FamilyKey =
   | 'bpmn'
   | 'scheduler'
   | 'gantt'
+  | 'upload'
   | 'kanban'
   | 'charts'
   | 'overlay';
@@ -83,6 +94,7 @@ interface OrgNode {
   imports: [
     RouterLink,
     Icon,
+    FrameworkLogo,
     OgeGrid,
     OgeColumn,
     OgeTreeList,
@@ -410,6 +422,50 @@ interface OrgNode {
                     />
                   </svg>
                 }
+                @case ('upload') {
+                  <!-- illustrative sketch; the live uploader renders on its own pages -->
+                  <svg
+                    aria-hidden="true"
+                    data-preview="upload"
+                    viewBox="0 0 280 120"
+                    class="w-full max-w-[280px] text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  >
+                    <rect
+                      x="10"
+                      y="8"
+                      width="260"
+                      height="52"
+                      rx="10"
+                      stroke-dasharray="6 5"
+                    />
+                    <path d="M140 44V22m0 0-10 10m10-10 10 10" />
+                    <rect x="10" y="70" width="260" height="18" rx="6" />
+                    <rect
+                      x="14"
+                      y="74"
+                      width="150"
+                      height="10"
+                      rx="5"
+                      fill="currentColor"
+                      opacity="0.35"
+                      stroke="none"
+                    />
+                    <rect x="10" y="96" width="260" height="18" rx="6" />
+                    <rect
+                      x="14"
+                      y="100"
+                      width="230"
+                      height="10"
+                      rx="5"
+                      fill="currentColor"
+                      opacity="0.2"
+                      stroke="none"
+                    />
+                  </svg>
+                }
                 @case ('kanban') {
                   <!-- illustrative sketch; the live kanban renders on its own pages -->
                   <svg
@@ -713,10 +769,20 @@ interface OrgNode {
               <span class="font-semibold text-gray-900 dark:text-gray-100">{{
                 family.name
               }}</span>
-              <span
-                class="ml-auto rounded-full border border-gray-200 px-2 py-0.5 font-mono text-[11px] text-gray-400 dark:border-gray-700 dark:text-gray-500"
-                >v{{ version }}</span
-              >
+              <!--
+                Which render layers this family ships in, read from the single
+                coverage table (ADR 0002) — so a new React package lights the
+                mark up here without this page being touched.
+              -->
+              <span class="ml-auto flex items-center gap-1.5">
+                @for (layer of layersOf(family.path); track layer) {
+                  <app-framework-logo
+                    [name]="layer"
+                    [size]="15"
+                    [brand]="true"
+                  />
+                }
+              </span>
             </div>
             <p
               class="!mb-0 mt-2 line-clamp-3 min-h-[60px] text-sm text-gray-500 dark:text-gray-400"
@@ -739,6 +805,19 @@ interface OrgNode {
   `,
 })
 export class ComponentsIndexPage {
+  private readonly fwService = inject(FrameworkService);
+
+  /**
+   * Render layers a family ships in, derived from its docs route so the card
+   * and the header switch can never disagree.
+   */
+  protected readonly layersOf = (path: string): FrameworkLogoName[] => {
+    const family = path.split('/components/')[1]?.split('/')[0] ?? '';
+    return this.fwService.frameworks
+      .filter((entry) => this.fwService.supports(family, entry.id))
+      .map((entry) => entry.id as FrameworkLogoName);
+  };
+
   protected readonly version = SITE_VERSION;
   protected readonly heroChips = [
     'signal-based APIs',
@@ -913,6 +992,14 @@ export class ComponentsIndexPage {
       path: '/components/gantt',
       description:
         'Project plan with a task tree and timeline chart: summary and milestone bars, dependency arrows, critical path, drag editing and undo/redo.',
+    },
+    {
+      key: 'upload',
+      name: 'Upload',
+      icon: 'upload',
+      path: '/components/upload',
+      description:
+        'File uploader: drag & drop with directory and paste, restrictions that stay on the row with their reason, previews, and chunked resumable transfer with pause, resume and retry.',
     },
     {
       key: 'kanban',

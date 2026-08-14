@@ -12,7 +12,8 @@
     "@oge-ui/tabs",
     "@oge-ui/layout",
     "@oge-ui/navigation",
-    "@oge-ui/forms"
+    "@oge-ui/forms",
+    "@oge-ui/upload"
   ],
   "assets": ["llms.txt"],
   "lib": {

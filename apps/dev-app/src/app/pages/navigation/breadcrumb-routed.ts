@@ -5,7 +5,12 @@ import {
   inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterOutlet,
+} from '@angular/router';
 import { filter, map } from 'rxjs';
 import {
   OgeBreadcrumb,
@@ -55,10 +60,10 @@ export class BreadcrumbRoutedMonthly {}
       [chips]="['URL-derived trail', 'aria-current', 'no router dependency']"
     >
       <p>
-        The breadcrumb takes no <code>&#64;angular/router</code> dependency —
-        no package in the suite does. Derive the trail from the URL,
-        keep <code>url</code> crumbs real links (middle-click and copy-address
-        work) and hand the primary click to the router with
+        The breadcrumb takes no <code>&#64;angular/router</code> dependency — no
+        package in the suite does. Derive the trail from the URL, keep
+        <code>url</code> crumbs real links (middle-click and copy-address work)
+        and hand the primary click to the router with
         <code>preventDefault</code>. The last crumb is the current page:
         non-interactive, <code>aria-current="page"</code>.
       </p>

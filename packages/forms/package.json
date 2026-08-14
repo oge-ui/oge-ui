@@ -26,7 +26,8 @@
     "@oge-ui/inputs": "0.11.0",
     "@oge-ui/tabs": "0.11.0",
     "@oge-ui/layout": "0.11.0",
-    "@oge-ui/navigation": "0.11.0"
+    "@oge-ui/navigation": "0.11.0",
+    "@oge-ui/upload": "0.11.0"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

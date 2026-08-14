@@ -24,6 +24,9 @@ test('dragging a separator resizes both neighbouring panes', async ({
   const separator = splitter.locator('.oge-splitter-separator').first();
 
   const before = await tracks(splitter);
+  const sizesBefore = await card
+    .locator('p', { hasText: /sizes → / })
+    .innerText();
   await separator.scrollIntoViewIfNeeded();
   const box = await separator.boundingBox();
   expect(box).not.toBeNull();
@@ -37,8 +40,15 @@ test('dragging a separator resizes both neighbouring panes', async ({
   await page.mouse.up();
 
   await expect.poll(async () => tracks(splitter)).not.toBe(before);
-  // the reported sizes follow the drag
-  await expect(card.getByText(/^sizes →/)).toBeVisible();
+  // The reported sizes follow the drag. Asserted on the card's text rather
+  // than an anchored `getByText(/^sizes →/)`: the readout is a template
+  // expression whose surrounding whitespace moves whenever the page is
+  // reformatted, and an anchored match turns that into a false failure.
+  // Comparing the value before and after also tests more than presence.
+  await expect(card).toContainText(/sizes → /);
+  await expect
+    .poll(async () => card.locator('p', { hasText: /sizes → / }).innerText())
+    .not.toBe(sizesBefore);
 });
 
 test('arrow keys move a focused separator and update aria-valuenow', async ({

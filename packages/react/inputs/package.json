@@ -1,0 +1,51 @@
+{
+  "name": "@oge-ui/react-inputs",
+  "version": "0.11.0",
+  "description": "React form editors from the OGE UI suite: text/number editors with the full oge field chrome — label modes, prefix/suffix slots, clear button, validation subscript, grapheme-accurate counter, password reveal, copy-to-clipboard — running the same commit pipeline, messages and design tokens as the Angular inputs package.",
+  "keywords": [
+    "react",
+    "input",
+    "textbox",
+    "form",
+    "editor",
+    "validation",
+    "accessibility",
+    "design-system",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.11.0",
+    "@oge-ui/react-navigation": "0.11.0",
+    "@oge-ui/react-overlay": "0.11.0"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/inputs"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

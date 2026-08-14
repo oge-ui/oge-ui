@@ -13,6 +13,11 @@ import {
   signal,
   viewChildren,
 } from '@angular/core';
+import {
+  applyButtonGroupSelection,
+  buttonGroupNavIndex,
+  buttonGroupRole,
+} from '@oge-ui/behavior';
 import { OgeButton } from '../button/button';
 import {
   OGE_BUTTON_GROUP,
@@ -115,16 +120,9 @@ export class OgeButtonGroup implements OgeButtonGroupContext {
   /** Last child that held focus — the roving-tabindex anchor. */
   private readonly focusedButton = signal<OgeButton | null>(null);
 
-  protected readonly role = computed(() => {
-    switch (this.selectionMode()) {
-      case 'single':
-        return 'radiogroup';
-      case 'multiple':
-        return 'group';
-      default:
-        return 'toolbar';
-    }
-  });
+  protected readonly role = computed(() =>
+    buttonGroupRole(this.selectionMode()),
+  );
 
   /** The single button that carries `tabindex="0"`. */
   private readonly focusTarget = computed<OgeButton | null>(() => {
@@ -182,30 +180,16 @@ export class OgeButtonGroup implements OgeButtonGroupContext {
         ? this.items()?.find((entry) => entry.value === value)
         : undefined;
     this.itemClick.emit({ value, event, item, index });
-    const mode = this.selectionMode();
-    if (mode === 'none' || value === undefined) return;
-    const current = this.selectedKeys();
-    if (mode === 'single') {
-      if (current.length === 1 && current[0] === value) return; // radios can't unselect
-      const removedKeys = current.filter((key) => key !== value);
-      this.selectedKeys.set([value]);
-      this.selectionChanged.emit({
-        selectedKeys: [value],
-        addedKeys: [value],
-        removedKeys,
-      });
-      return;
-    }
-    const wasSelected = current.includes(value);
-    const next = wasSelected
-      ? current.filter((key) => key !== value)
-      : [...current, value];
-    this.selectedKeys.set(next);
-    this.selectionChanged.emit({
-      selectedKeys: next,
-      addedKeys: wasSelected ? [] : [value],
-      removedKeys: wasSelected ? [value] : [],
-    });
+    // The no-unselect radio rule and the delta arithmetic live in `behavior`,
+    // shared verbatim with the React group.
+    const change = applyButtonGroupSelection(
+      this.selectionMode(),
+      this.selectedKeys(),
+      value,
+    );
+    if (!change) return;
+    this.selectedKeys.set(change.selectedKeys);
+    this.selectionChanged.emit(change);
   }
 
   // --- keyboard navigation ---------------------------------------------------
@@ -218,37 +202,21 @@ export class OgeButtonGroup implements OgeButtonGroupContext {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    const key = event.key;
-    const isArrow =
-      key === 'ArrowRight' ||
-      key === 'ArrowLeft' ||
-      key === 'ArrowDown' ||
-      key === 'ArrowUp';
-    if (!isArrow && key !== 'Home' && key !== 'End') return;
     const enabled = this.allButtons().filter((b) => !b.isDisabled());
-    if (enabled.length === 0) return;
+    const current = this.focusTarget();
+    const index = current ? enabled.indexOf(current) : -1;
+    const rtl = getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    // The wrap-around/RTL arithmetic lives in `behavior`, shared verbatim
+    // with the React group; -1 means "not a navigation key" (or no targets).
+    const nextIndex = buttonGroupNavIndex(
+      event.key,
+      index,
+      enabled.length,
+      rtl,
+    );
+    if (nextIndex < 0) return;
     event.preventDefault();
-    let next: OgeButton;
-    if (key === 'Home') {
-      next = enabled[0];
-    } else if (key === 'End') {
-      next = enabled[enabled.length - 1];
-    } else {
-      let forward: boolean;
-      if (key === 'ArrowDown') {
-        forward = true;
-      } else if (key === 'ArrowUp') {
-        forward = false;
-      } else {
-        const rtl =
-          getComputedStyle(this.host.nativeElement).direction === 'rtl';
-        forward = (key === 'ArrowRight') !== rtl;
-      }
-      const current = this.focusTarget();
-      const index = current ? enabled.indexOf(current) : -1;
-      const delta = forward ? 1 : -1;
-      next = enabled[(index + delta + enabled.length) % enabled.length];
-    }
+    const next = enabled[nextIndex];
     this.focusedButton.set(next);
     next.focus();
     // WAI-ARIA radio-group pattern: arrows move the selection too.

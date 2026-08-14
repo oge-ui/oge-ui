@@ -1,0 +1,2489 @@
+# @oge-ui/react-layout
+
+> React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, plus the progress bar, load indicator and shimmer skeleton — running the same config defaults, decision functions and stylesheet as the Angular layout package.
+
+Part of OGE UI v0.11.0.
+Docs and live demos: https://ogeui.com/components/accordion
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-layout
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages:
+`@oge-ui/grid/themes/dark.css` (then put `class="oge-theme-dark"` on
+`<html>` or any subtree), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeAccordion>
+
+#### Properties
+
+_Panels & expansion_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeAccordionItemDefinition[]` | `—` | The panels, in render order — the React counterpart of both the projected `` children and the Angular `items` array: the shared data fields plus `content` and the per-panel render props. |
+| `expandedKeys` | `readonly string[]` | `—` | Keys of the expanded panels — controlled when provided, so pass `onExpandedKeysChange` with it. The multi-expand counterpart of `selectedIndex`; only panels that declare a `key` can appear here. |
+| `defaultExpandedKeys` | `readonly string[]` | `—` | Uncontrolled initial expansion by key — the component owns the set from there. Never combine with `expandedKeys`. |
+| `onExpandedKeysChange` | `(keys: readonly string[]) => void` | `—` | The controlled half of `expandedKeys`; Angular’s `[(expandedKeys)]` model is both halves at once. |
+| `selectedIndex` | `number` | `—` | Index of the expanded panel in single-expand mode — controlled when provided. `-1` means none; in `multiple` mode it reports the first expanded panel. |
+| `defaultSelectedIndex` | `number` | `-1` | Uncontrolled initial expansion by index. Never combine with `selectedIndex`. |
+| `onSelectedIndexChange` | `(index: number) => void` | `—` | The controlled half of `selectedIndex`; Angular’s `[(selectedIndex)]` model is both halves at once. |
+| `multiple` | `boolean` | `false` | Allows more than one panel to stay expanded. |
+| `collapsible` | `boolean` | `false` | Allows collapsing the last expanded panel, leaving none open. While `false`, that header is `aria-disabled` per the APG — it stays focusable. |
+| `disabled` | `boolean` | `false` | Disables the whole component. |
+
+_Rendering & animation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `deferRendering` | `boolean` | `true` | Mount a panel's `renderContent` body only when it first expands. |
+| `keepAlive` | `boolean` | `true` | Keep once-rendered panels mounted (hidden) so their React state survives a collapse. Ignored while `deferRendering` is `false`. |
+| `animation` | `boolean \| number` | `true` | Height animation: `true` uses the default duration, a number overrides it in milliseconds, `false` disables it. Always suppressed under `prefers-reduced-motion`. |
+| `renderHeader` | `(context: OgeAccordionHeaderContext) => ReactNode` | `—` | Shared header renderer — the React face of the component-level `[ogeAccordionHeaderTemplate]`. Overridden by a panel’s own `renderHeader`. Must not contain focusable controls. |
+| `renderContent` | `(context: OgeAccordionContentContext) => ReactNode` | `—` | Shared lazy body for panels that carry no `content` — the React face of `[ogeAccordionContentTemplate]`. `context.data` carries the panel’s `contentLoader` result. |
+| `renderToggleIcon` | `(context: OgeAccordionToggleIconContext) => ReactNode` | `—` | Replaces the chevron — the React face of `[ogeAccordionToggleIconTemplate]`. |
+| `renderHeaderActions` | `(context: OgeAccordionHeaderActionsContext) => ReactNode` | `—` | Actions rendered _beside_ the toggle button, never inside it — the React face of `[ogeAccordionHeaderActionsTemplate]`, and the reason there is no `nested-interactive` violation. |
+
+_Appearance_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `togglePosition` | `'start' \| 'end'` | `'end'` | Side of the header the chevron sits on — logical, so RTL mirrors it. |
+| `hideToggle` | `boolean` | `false` | Hides the chevron entirely. Overridable per panel via an item’s `hideToggle`. |
+| `collapsedHeaderHeight` | `string` | `—` | Minimum height of a collapsed header (any CSS length). Unset lets `size` and the padding tokens decide. |
+| `expandedHeaderHeight` | `string` | `—` | Minimum height of an expanded header; falls back to `collapsedHeaderHeight`. |
+| `displayMode` | `'default' \| 'flat'` | `'default'` | `flat` removes the gutters between panels and joins them into one stack. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'flat'` | `'outlined'` | Visual variant of the panels. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the header rows. |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles applied to the host element. |
+
+_Keyboard & accessibility_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `keyboardNavigation` | `boolean` | `true` | Enables Up/Down/Home/End and Ctrl+PageUp/PageDown header navigation. The APG pattern itself requires only Enter/Space and Tab — this is the optional enhancement. |
+| `typeAhead` | `boolean` | `true` | Enables printable-character type-ahead over the panel titles. Matching is accent- and locale-insensitive. |
+| `selectOnFocus` | `boolean` | `false` | Expands a panel as soon as keyboard navigation moves focus onto it. |
+| `headingLevel` | `number` | `3` | `aria-level` of the heading wrapping each header button; 1–6 render a real `h1`–`h6`. |
+| `useRegionRole` | `boolean` | `true` | Gives each panel `role="region"` (APG-optional; adds one landmark per panel). |
+| `ariaLabel` | `string` | `—` | Aria label of the accordion container. |
+| `messages` | `Partial<OgeAccordionMessages>` | `—` | Per-instance overrides of the `` messages. |
+
+#### Methods
+
+_Imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `expand(target)` | `(target: number \| string) => Promise<boolean>` | Runs the expand pipeline for the panel at an index or with a key. Resolves `true` once it expanded, `false` if an unknown target, `onItemExpanding` or the `expandGuard` vetoed it. |
+| `collapse(target)` | `(target: number \| string) => Promise<boolean>` | Runs the collapse pipeline; resolves whether the panel actually collapsed. |
+| `toggle(target)` | `(target: number \| string) => Promise<boolean>` | Expands the panel if collapsed, collapses it otherwise. |
+| `expandAll()` | `() => void` | Expands every enabled panel. Requires `multiple` — otherwise it warns in dev mode and does nothing. |
+| `collapseAll()` | `() => void` | Collapses every panel. In single-expand mode the last panel stays open unless `collapsible` is set. |
+| `expandInvalid()` | `() => void` | Expands every panel flagged `invalid` — call it after a failed form submit so the user sees each section needing attention. |
+| `isExpanded(target)` | `(target: number \| string) => boolean` | Whether the panel at an index or with a key is currently expanded. |
+| `focus(target?)` | `(target?: number \| string) => void` | Focuses a panel's header button, or the first enabled one. |
+
+#### Events
+
+_Callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemExpanding` | `(event: OgeAccordionExpandingEvent) => void` | Cancelable pre-event of a panel expanding — set `event.cancel = true` to block it. Runs before the panel’s `expandGuard`. |
+| `onItemExpanded` | `(event: OgeAccordionExpandedEvent) => void` | Fires after a panel expanded. |
+| `onItemCollapsing` | `(event: OgeAccordionCollapsingEvent) => void` | Cancelable pre-event of a panel collapsing — set `event.cancel = true` to block it. |
+| `onItemCollapsed` | `(event: OgeAccordionCollapsedEvent) => void` | Fires after a panel collapsed. |
+| `onAfterExpand` | `(event: OgeAccordionExpandedEvent) => void` | Fires once the expand animation finished — the point at which the panel has its final height. Fires immediately when the animation is off or suppressed by `prefers-reduced-motion`. |
+| `onAfterCollapse` | `(event: OgeAccordionCollapsedEvent) => void` | Fires once the collapse animation finished. |
+| `onItemClick` | `(event: OgeAccordionItemClickEvent) => void` | Fires when a header button is activated, before the expand pipeline runs. Fires for disabled panels too. |
+| `onItemContentLoaded` | `(event: OgeAccordionContentLoadedEvent) => void` | Fires after a panel's `contentLoader` resolved. |
+| `onItemContentFailed` | `(event: OgeAccordionContentFailedEvent) => void` | Fires after a panel's `contentLoader` rejected. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAccordionProps` | `interface` | Extends `OgeAccordionBehaviorProps` with `className` and `style`. |
+| `OgeAccordionHandle` | `{ expand(); collapse(); toggle(); expandAll(); collapseAll(); expandInvalid(); isExpanded(); focus() }` | Imperative handle exposed through `ref`. |
+| `OgeAccordionItemData` | `interface` | The framework-free panel fields shared with Angular: `key`, `title`, `text`, `description`, `icon`, `badge`, `hint`, `disabled`, `visible`, `expanded`, `invalid`, `hideToggle`, `togglePosition`, `expandGuard`, `contentLoader`. |
+| `OgeAccordionExpandGuard` | `() => boolean \| Promise<boolean>` | Veto for a pending expand or collapse. `false` blocks it; throwing or rejecting is also a veto. While a promise is pending the panel shows a spinner and ignores further toggles (single-flight). |
+| `OgeAccordionContentLoader` | `() => Promise<unknown>` | Loads a panel's content the first time it expands. The resolved value reaches `renderContent` as `data`. |
+| `OgeAccordionTogglePosition` | `'start' \| 'end'` | Chevron side inside the header button. |
+| `OgeAccordionDisplayMode` | `'default' \| 'flat'` | Gutters between panels, or one joined stack. |
+| `OgeAccordionStylingMode` | `'outlined' \| 'filled' \| 'flat'` | Visual variant of the panels. |
+| `OgeAccordionSize` | `'sm' \| 'md' \| 'lg'` | Density of the header rows. |
+| `useOgeAccordion(props)` | `(props: OgeAccordionBehaviorProps) => accordion state` | The headless hook behind the component — descriptors, the expanded/pending/rendered sets and the expand/collapse pipelines, for a stack you render yourself. |
+
+### OgeAccordionItem (OgeAccordionItemDefinition)
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | `string` | `—` | Header title; alternative to a per-panel `renderHeader`. |
+| `text` | `string` | `—` | Plain-text panel body, rendered when there is neither `content` nor a `renderContent`. The reference `html` item field has no counterpart on purpose. |
+| `description` | `string` | `—` | Secondary line rendered under the title. |
+| `key` | `string` | `—` | Stable identity used by `expandedKeys`, the handle’s targets and DOM ids. |
+| `icon` | `string` | `—` | SVG path data (`d`) rendered as a 24×24 aria-hidden icon before the title. |
+| `badge` | `string \| number` | `—` | Badge rendered after the title. |
+| `hint` | `string` | `—` | Tooltip — rendered as the native `title` attribute. |
+| `disabled` | `boolean` | `false` | Disabled panels cannot expand and are skipped by keyboard navigation. |
+| `visible` | `boolean` | `true` | `false` removes the panel entirely. |
+| `expanded` | `boolean` | `false` | Expands this panel on first render — the seed only. React drives further state through the controlled `expandedKeys` / `selectedIndex` pairs or the `ref` handle, where Angular offers a per-panel **two-way** `[(expanded)]`. |
+| `hideToggle` | `boolean` | `—` | Overrides the accordion's `hideToggle` for this panel. |
+| `togglePosition` | `'start' \| 'end'` | `—` | Overrides the accordion's `togglePosition` for this panel. |
+| `invalid` | `boolean` | `false` | Flags the section as failing validation — renders the danger rail and feeds `expandInvalid()`. |
+| `expandGuard` | `OgeAccordionExpandGuard` | `—` | Veto hook run before this panel expands or collapses; may be async (single-flight). |
+| `contentLoader` | `OgeAccordionContentLoader` | `—` | Loads this panel's content on first expand, with a skeleton while pending and a retry button on failure. |
+| `content` | `ReactNode` | `—` | Panel body — the React face of the content projected into an ``. Eager: a panel that should be lazy uses `renderContent` instead. |
+| `renderHeader` | `(context: OgeAccordionHeaderContext) => ReactNode` | `—` | Custom header for this panel alone — the React face of an `[ogeAccordionHeaderTemplate]` inside an ``. |
+| `renderContent` | `(context: OgeAccordionContentContext) => ReactNode` | `—` | Lazy body for this panel alone — the React face of an inline `[ogeAccordionContentTemplate]`. Ignored when `content` is set. |
+| `renderToggleIcon` | `(context: OgeAccordionToggleIconContext) => ReactNode` | `—` | Custom chevron for this panel alone. |
+| `renderHeaderActions` | `(context: OgeAccordionHeaderActionsContext) => ReactNode` | `—` | Actions for this panel, rendered beside the toggle button. |
+
+#### Types
+
+_Render-prop contexts & slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAccordionHeaderContext` | `{ item, index, expanded, title, description }` | Context handed to `renderHeader` — the React face of the `[ogeAccordionHeaderTemplate]` context. |
+| `OgeAccordionContentContext` | `{ item, index, data }` | Context handed to `renderContent`. `data` carries the panel's `contentLoader` result. |
+| `OgeAccordionToggleIconContext` | `{ expanded, index }` | Context handed to `renderToggleIcon`. |
+| `OgeAccordionHeaderActionsContext` | `{ item, index, expanded }` | Context handed to `renderHeaderActions`. |
+| `.oge-accordion-action-row` | `class name` | A row of buttons at the end of a panel body marked with this class becomes its action bar (divider above, actions at the inline end) — the React face of the `[ogeAccordionActionRow]` directive, which does nothing else but apply it. Inside the panel, so only reachable while expanded. |
+| `OgeAccordionItemDefinition` | `OgeAccordionItemData & { content?, renderHeader?, renderContent?, renderToggleIcon?, renderHeaderActions? }` | One entry of the `items` prop — the shared panel data plus the React content slots. |
+
+### Accordion configuration
+
+#### Properties
+
+_OgeAccordionMessages_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `invalidSection` | `string` | `'section has errors'` | Announced after the title of a panel flagged `invalid`. |
+| `pending` | `string` | `'working'` | Announced while an `expandGuard` promise is in flight. |
+| `loadingContent` | `string` | `'Loading…'` | Shown while a panel's `contentLoader` is running. |
+| `contentLoadFailed` | `string` | `'Could not load this section.'` | Shown when a panel's `contentLoader` rejected. |
+| `retry` | `string` | `'Retry'` | Label of the retry button on a failed content load. |
+| `noData` | `string` | `'No sections to display'` | Shown in place of the panels when there are no visible items. |
+
+#### Types
+
+_Behavioural defaults_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `hideToggle` | `boolean \| undefined` | Default for the `hideToggle` prop. |
+| `collapsedHeaderHeight` | `string \| undefined` | Default for the `collapsedHeaderHeight` prop. |
+| `expandedHeaderHeight` | `string \| undefined` | Default for the `expandedHeaderHeight` prop. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAccordionConfigProvider` | `(props: { config?: OgeAccordionConfigInput; children?: ReactNode }) => JSX.Element` | Wrap a subtree to change the accordion’s defaults and user-facing strings beneath it — the React counterpart of Angular’s `provideOgeAccordionConfig()`. Both shallow-merge `messages` over the same `@oge-ui/behavior` defaults, so an override reads identically in either layer. |
+| `useOgeAccordionConfig()` | `() => OgeAccordionConfig` | Reads the resolved config of the current subtree — the counterpart of injecting `OGE_ACCORDION_CONFIG`. |
+| `OGE_DEFAULT_ACCORDION_CONFIG` | `OgeAccordionConfig` | The built-in defaults themselves, re-exported from `@oge-ui/behavior` so both layers start from one object. |
+
+### <OgeCard>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `header` | `string \| undefined` | `—` | Header title. Named after the PrimeNG input rather than `title` — a static `title` attribute would double as a native tooltip. |
+| `subheader` | `string \| undefined` | `—` | Line rendered under `header` in the muted color. |
+| `stylingMode` | `'outlined' \| 'raised' \| 'filled' \| 'flat'` | `'outlined'` | Chrome preset: `outlined` (border), `raised` (rests on the `--oge-shadow-card` token), `filled` (tinted surface) or `flat` (no chrome — for a card nested in another surface). Falls back to ``. |
+| `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | `horizontal` turns the card into a two-column grid with the `media` node spanning the inline-start column, sized by `--oge-card-media-size`. Falls back to the config provider. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset — scales the section padding and type ramp together (`--oge-card-pad` is the per-card escape hatch). Falls back to the config provider. |
+| `severity` | `'accent' \| 'success' \| 'warning' \| 'danger' \| undefined` | `undefined` | Colored status rail on the inline-start edge — the toast&rsquo;s rail idiom on a static surface. `undefined` renders no rail. |
+| `interactive` | `boolean` | `false` | Purely visual affordance for the documented clickable-card pattern: a hover/focus-within lift and a keyboard focus ring on the surface. Adds **no** role, tabindex or wrapper — pair it with one primary `` in the content. |
+| `loading` | `boolean` | `false` | Replaces the content and action row with a shimmer skeleton and marks the card `aria-busy`. Header, media and footer stay, so the card keeps its footprint while the data arrives. |
+| `children` | `ReactNode` | `—` | The card content — the React counterpart of the default `` projection. |
+| `className / style` | `string \| CSSProperties` | `—` | Merged onto the card host. `className` is appended to the generated `oge-card*` classes; the Angular host takes `class`/`style` natively. |
+
+_Accessibility contract_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `(no role, no clickable prop)` | `—` | There is no WAI-ARIA card pattern, so the card renders no role and no `tabIndex`, and ships no clickable-card API — wrapping the card in a link or button is the `nested-interactive` trap. Add `role="article"` / `role="region"` yourself, and make a card clickable with one primary `` in the content plus a CSS-stretched hit area. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCardStylingMode` | `'outlined' \| 'raised' \| 'filled' \| 'flat'` | Chrome preset union — the layout family&rsquo;s `stylingMode` vocabulary plus Material&rsquo;s `raised`. |
+| `OgeCardOrientation` | `'vertical' \| 'horizontal'` | Section flow union. |
+| `OgeCardSize` | `'sm' \| 'md' \| 'lg'` | Density preset union. |
+| `OgeCardSeverity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | Status rail union for the `severity` prop. |
+| `OgeCardActionsAlign` | `'start' \| 'center' \| 'end' \| 'stretched'` | Justification vocabulary of the action row. The React `actions` node is plain markup, so this types your own state and maps to the `oge-card-actions-*` class. |
+| `OgeCardProps` | `interface` | Props of ``, including the slot nodes. |
+| `OgeCardConfig / OgeCardConfigInput` | `{ stylingMode?; orientation?; size? }` | The config shape and its partial input for ``; `OGE_DEFAULT_CARD_CONFIG` is the resolved default. |
+
+### Slot props
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `media` | `ReactNode` | The full-bleed media element (`[ogeCardMedia]` in Angular) — an ``, `` or a wrapper carrying `className="oge-card-media"`. Sized by consumer CSS (`aspect-ratio`, `block-size`); there is deliberately no size prop. |
+| `avatar` | `ReactNode` | The round image before the header titles (`[ogeCardAvatar]`), rendered with `className="oge-card-avatar"`. |
+| `headerActions` | `ReactNode` | Controls at the inline end of the header row (`[ogeCardHeaderActions]`), in a node with `className="oge-card-header-actions"`. Real controls in the Tab sequence — the card never wraps them in anything interactive. |
+| `actions` | `ReactNode` | The action row under the content (`[ogeCardActions]`). Give it `className="oge-card-actions"` plus one of `oge-card-actions-center` / `-end` / `-stretched` — the alignment the Angular directive takes as its `align` input. |
+| `footer` | `ReactNode` | A divided strip on the header surface after the actions (`[ogeCardFooter]`, `className="oge-card-footer"`) — metadata rather than commands. |
+| `oge-card-separator` | `class` | A full-bleed hairline between content sections — put the class on an `` inside `children`. |
+
+### Card configuration
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCardConfigProvider` | `(props: { config?: OgeCardConfigInput; children?: ReactNode }) => JSX.Element` | Subtree defaults for `stylingMode`, `orientation` and `size` — the React counterpart of `provideOgeCardConfig()`. There is deliberately no `messages` block: the card renders no user-facing strings and no interactive chrome of its own. |
+| `useOgeCardConfig()` | `() => OgeCardConfig` | Reads the resolved config of the nearest provider, merged over `OGE_DEFAULT_CARD_CONFIG` — the hook behind the component, exported for cards you compose yourself. |
+
+### <OgeProgressBar>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number \| null` | `null` | Current value; `null` renders the **indeterminate** sliding bar — and `aria-valuenow` is then omitted entirely (the ARIA rule), never pinned to a sentinel. |
+| `min / max` | `number` | `0 / 100` | Scale bounds; the fill ratio clamps into them. |
+| `bufferValue` | `number \| undefined` | `—` | Material's buffer layer — a soft second fill behind the primary one (media pre-loading behind the play position). |
+| `chunkCount` | `number \| undefined` | `—` | Renders the bar as N discrete segments (Kendo's chunk progress bar); the filled count is the rounded ratio. |
+| `severity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill color — the card/toast severity vocabulary; recolors the fill only. Falls back to ``. |
+| `showLabel` | `boolean` | `false` | Renders the formatted value next to the bar (rounded percent by default). Falls back to the config provider. |
+| `formatLabel` | `(value: number, ratio: number) => string \| undefined` | `—` | Formats the visible label **and** `aria-valuetext` — DevExtreme's `statusFormat` in the house argument order; display and announcement never diverge. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name; the localized `progress` message is the fallback. A progressbar must always be named. |
+| `className / style` | `string \| CSSProperties` | `—` | Merged onto the bar host; the Angular host takes `class`/`style` natively. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onCompleted` | `(event: OgeProgressBarCompletedEvent) => void` | The value reached `max` — DevExtreme's `onComplete`, the callback half of Angular's `(completed)`. Fired once per arrival: staying at max is silent, re-crossing after a reset fires again. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeProgressBarSeverity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | Fill color vocabulary. |
+| `OgeProgressBarCompletedEvent` | `{ value: number }` | Payload of `onCompleted`. |
+| `OgeProgressBarProps` | `interface` | Props of ``. |
+
+### <OgeLoadIndicator>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Ring diameter preset — 16/24/32px. |
+| `inheritSize` | `boolean` | `false` | A `1em` ring that scales with the surrounding font — the inside-a-button case. |
+| `severity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Ring color — the card/toast severity vocabulary. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name; the localized `loading` message is the fallback. |
+| `className / style` | `string \| CSSProperties` | `—` | Merged onto the ring host; the Angular host takes `class`/`style` natively. |
+
+_Accessibility contract_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `role="progressbar", no aria-valuenow` | `—` | Deliberately indeterminate-only (dx, Kendo and PrimeNG all are — a circle filling toward completion is the progress bar&rsquo;s job), announced without `aria-valuenow` per the ARIA rule. Under `prefers-reduced-motion` the spin **slows rather than stops**: a frozen ring reads as finished. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeLoadIndicatorSeverity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | Ring color vocabulary. |
+| `OgeLoadIndicatorProps` | `interface` | Props of ``. |
+
+### <OgeSkeleton>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `shape` | `'text' \| 'circle' \| 'rectangle'` | `'text'` | What the placeholder stands in for; a `text` skeleton with no height derives it from the font. Falls back to ``. |
+| `animation` | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'` | `shimmer` is the card/accordion moving-gradient recipe, `pulse` the data grid filler rows' opacity beat, `none` a static block. Falls back to the config provider. |
+| `width / height` | `string \| number \| undefined` | `—` | Numbers mean pixels; strings pass through as CSS. |
+| `lines` | `number` | `1` | `text` shape only: renders N stacked lines with the last one tapered — the card/accordion placeholder pattern as one prop. Capped at 20. |
+| `className / style` | `string \| CSSProperties` | `—` | Merged onto the placeholder host; the Angular host takes `class`/`style` natively. |
+
+_Accessibility contract_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `aria-hidden, always` | `—` | A skeleton is decoration — the loading **region** owns the announcement. Put `aria-busy` (and, where the change should be announced, a visually-hidden status text) on the container the skeleton stands in for. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSkeletonShape / OgeSkeletonAnimation` | `'text' \| 'circle' \| 'rectangle' / 'shimmer' \| 'pulse' \| 'none'` | The two vocabularies, shared with the Angular package. |
+| `OgeSkeletonProps` | `interface` | Props of ``. |
+
+### Configuration
+
+#### Properties
+
+_OgeProgressBarConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeProgressBarMessages` | Every user-facing string: `progress` — the accessible name fallback (default `Progress`). |
+| `severity / showLabel` | `—` | Defaults for the matching props. `useOgeProgressBarConfig()` reads the resolved value. |
+
+_OgeLoadIndicatorConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeLoadIndicatorMessages` | Every user-facing string: `loading` — the accessible name fallback (default `Loading`). `useOgeLoadIndicatorConfig()` reads the resolved value. |
+
+_OgeSkeletonConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `shape / animation` | `—` | Defaults for the matching props. Deliberately no messages block: a skeleton renders no user-facing strings — the loading region owns the announcement. `useOgeSkeletonConfig()` reads the resolved value. |
+
+### <OgeSplitter>
+
+#### Properties
+
+_Panes & sizing_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `panes` | `readonly OgeSplitterPaneItem[] \| undefined` | `—` | The panes, in layout order — the React counterpart of the projected `` children: every field of a pane plus its `content`. |
+| `dataSource` | `OgeSplitterDataSourceLike \| undefined` | `—` | Remote pane list, loaded through `@oge-ui/core`&rsquo;s `DataSource` contract and merged after `panes`. A source that publishes `changes` triggers a reload. |
+| `itemHoldTimeout` | `number` | `750` | Milliseconds a pointer must rest on a pane before `onPaneHold` fires. |
+| `sizes` | `readonly OgeSplitterSize[] \| undefined` | `—` | Current pane sizes — the controlled half of the pair, and the whole persistable state. Setting it overrides the per-pane `size` fields. Numbers are ratios; `'240px'` pins a pane. |
+| `defaultSizes` | `readonly OgeSplitterSize[] \| undefined` | `—` | Initial sizes of the uncontrolled pair — the component owns them from there. Never combine with `sizes`. |
+| `renderPane` | `(pane: OgeSplitterPaneItem, index: number, collapsed: boolean) => ReactNode` | `—` | Body of every pane that carries no `content` — the React face of `[ogeSplitterPaneTemplate]`. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis the panes are laid out along. Also drives which arrow keys move a separator. |
+| `separatorSize` | `number` | `6` | Thickness of each separator in pixels — a real grid track, so it never eats into a pane. |
+
+_Interaction_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `resizable` | `boolean` | `true` | Pins every separator when `false`. |
+| `step` | `number` | `5` | Share points one arrow-key press moves a separator. |
+| `keyboardNavigation` | `boolean` | `true` | Enables Arrow / Home / End / Enter / Ctrl+Arrow on the separators. While off they also leave the Tab sequence. |
+| `showCollapseGrips` | `boolean` | `true` | Renders an `aria-hidden` chevron on the separator for each collapsible neighbour — one for the pane before it, one for the pane after. The keyboard paths (Enter, Ctrl+Arrow) stay available either way. |
+| `disabled` | `boolean` | `false` | Disables the whole splitter — no dragging, no keyboard, no collapsing. |
+
+_Accessibility & text_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `ariaLabel` | `string \| undefined` | Accessible name of the splitter container. |
+| `messages` | `Partial<OgeSplitterMessages>` | Per-instance overrides of the `` strings, including the separators’ accessible names. |
+
+_Host_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string \| undefined` | Extra classes on the splitter element — the React host styling idiom; an Angular host takes `class` natively. |
+| `style` | `CSSProperties \| undefined` | Inline styles on the splitter element. The splitter fills its container and has no intrinsic height, so this is usually where the height comes from. |
+| `id` | `string \| undefined` | Id of the splitter element; the separators and panes derive their own ids independently. |
+
+#### Methods
+
+_OgeSplitterHandle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `collapse(target)` | `(target: number \| string) => boolean` | Collapses a pane by index or key. Returns `false` when the pane is not collapsible or `onPaneCollapsing` vetoed it. |
+| `expand(target)` | `(target: number \| string) => boolean` | Expands a collapsed pane, restoring the size it had when it collapsed and scaling its siblings back down to fit. |
+| `toggle(target)` | `(target: number \| string) => boolean` | Collapses the pane if expanded, expands it otherwise. |
+| `isCollapsed(target)` | `(target: number \| string) => boolean` | Whether a pane is currently collapsed. |
+| `resize(separatorIndex, delta)` | `(separatorIndex: number, delta: number) => boolean` | Moves a separator by `delta` share points — the programmatic equivalent of an arrow key. `false` when that separator cannot move. |
+| `focus(separatorIndex?)` | `(separatorIndex?: number) => void` | Focuses a separator, the first one by default. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onResizeStarted` | `(event: OgeSplitterResizeStartEvent) => void` | Fires once when a drag or keyboard resize begins. The reference `onResizeStart`. |
+| `onResized` | `(event: OgeSplitterResizeEvent) => void` | Fires every time the sizes change during a resize — once per pointer move. The reference `onResize`. |
+| `onResizeEnded` | `(event: OgeSplitterResizeEvent) => void` | Fires once when the gesture finishes, after the new sizes have been published. The reference `onResizeEnd`. |
+| `onPaneCollapsing` | `(event: OgeSplitterPaneCollapsingEvent) => void` | Cancelable pre-event of a pane collapsing — set `cancel = true` to block it. |
+| `onPaneExpanding` | `(event: OgeSplitterPaneCollapsingEvent) => void` | Cancelable pre-event of a pane expanding. |
+| `onPaneCollapsed` | `(event: OgeSplitterPaneCollapsedEvent) => void` | Fires after a pane collapsed. |
+| `onPaneExpanded` | `(event: OgeSplitterPaneCollapsedEvent) => void` | Fires after a pane expanded. |
+| `onPaneClick` | `(event: OgeSplitterPaneClickEvent) => void` | Fires when a pane is clicked. A nested splitter reports its own panes — the event does not surface on the parent. |
+| `onPaneHold` | `(event: OgeSplitterPaneHoldEvent) => void` | A pane was held for `itemHoldTimeout` — a touch long-press or a mouse hold. |
+| `onPaneContextMenu` | `(event: OgeSplitterPaneHoldEvent) => void` | A pane was right-clicked or long-pressed for a menu. |
+| `onSizesChange` | `(sizes: readonly OgeSplitterSize[]) => void` | The controlled half of `sizes`; Angular’s `[(sizes)]` model is both halves at once. Persist the array here. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSplitterOrientation` | `'horizontal' \| 'vertical'` | Axis the panes are laid out along. |
+| `OgeSplitterGripSide` | `'start' \| 'end'` | Which neighbour a separator's collapse grip acts on: `'start'` is the pane before it (the APG primary pane), `'end'` the one after. |
+| `OgeSplitterSize` | `number \| string` | A number (or `'%'`) is a **ratio** of the space the flexible panes share, so `[30, 30]` lays out like `[50, 50]`. `'px'` pins the pane to a fixed track. Any other string is ignored with a dev-mode warning. |
+| `OgeSplitterPaneItem` | `interface` | One pane of the `panes` prop — every field of `OgeSplitterPaneData` (`key`, `size`, `minSize`, `maxSize`, `collapsible`, `collapsed`, `collapsedSize`, `resizable`, `scrollable`, `disabled`, `visible`, `text`, `cssClass`, `htmlAttributes`, `orientation`) plus `content` and a nested `panes` array of the same shape. |
+| `OgeSplitterHandle` | `interface` | The `ref` handle: `collapse`, `expand`, `toggle`, `isCollapsed`, `resize`, `focus` — the React face of the Angular public methods. |
+| `OgeSplitterResizeStartEvent` | `interface` | `separatorIndex`, `sizes` at the start of the gesture, and the originating `event` (absent for a keyboard resize). |
+| `OgeSplitterResizeEvent` | `interface` | `separatorIndex`, current `sizes`, `previousSizes` from the start of the gesture, and the originating `event`. |
+| `OgeSplitterPaneCollapsingEvent` | `interface` | `index`, `key`, `item`, `event`, and a mutable `cancel` flag. |
+| `OgeSplitterPaneCollapsedEvent` | `interface` | `index`, `key`, `item`, `event`. |
+| `OgeSplitterPaneHoldEvent` | `interface` | Payload of `onPaneHold` and `onPaneContextMenu`: `index`, `key?`, `item?`, `event`. |
+| `OgeSplitterPaneClickEvent` | `interface` | `index`, `key`, `item` and the originating `event`. |
+
+### OgeSplitterPane (OgeSplitterPaneItem)
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `key` | `string \| undefined` | `—` | Stable identity used by DOM ids and by the handle’s string targets. |
+| `size` | `OgeSplitterSize \| undefined` | `—` | Initial size — a ratio number, `'40%'` or `'240px'`. Panes without one split whatever the sized ones leave. |
+| `minSize` | `OgeSplitterSize \| undefined` | `—` | Smallest size a resize may leave this pane at. A pixel value also becomes the grid track’s floor. |
+| `maxSize` | `OgeSplitterSize \| undefined` | `—` | Largest size a resize may grow this pane to. |
+| `collapsible` | `boolean` | `false` | Allows the pane to be collapsed from its separator — Enter, the grip, or a double click. |
+| `collapsed` | `boolean` | `false` | Collapsed state. Writing it runs the splitter’s pipeline, so a vetoed change is reverted — the React face of Angular’s `[(collapsed)]` model, whose other half is `onPaneCollapsed` / `onPaneExpanded`. |
+| `collapsedSize` | `OgeSplitterSize \| undefined` | `0` | Size the pane keeps while collapsed. |
+| `resizable` | `boolean` | `true` | Pins the pane — both of its separators refuse to drag and report `aria-disabled`. |
+| `scrollable` | `boolean` | `true` | Clips overflowing content instead of scrolling it when `false`. |
+| `disabled` | `boolean` | `false` | Disabled panes cannot be collapsed and their separators are inert. |
+| `visible` | `boolean` | `true` | Removes the pane entirely when `false`. |
+| `text` | `string \| undefined` | `—` | Plain-text body, rendered when the pane has neither `content` nor a `renderPane`. |
+| `htmlAttributes` | `Readonly<Record<string, string>> \| undefined` | `—` | Extra attributes on the pane element. Keys removed from the bag are removed from the DOM, so clearing it clears the element. |
+| `cssClass` | `string \| undefined` | `—` | Extra class on the pane element. |
+| `content` | `ReactNode` | `—` | Pane body — the React counterpart of the content projected into an ``. Takes precedence over `renderPane` and `text`. |
+| `panes` | `readonly OgeSplitterPaneItem[] \| undefined` | `—` | Nested splitter inside this pane, rendered on the opposite axis by default — the data form of an `` placed in `content`. |
+| `orientation` | `'horizontal' \| 'vertical'` | `—` | Axis of the nested splitter, when this pane has one. |
+
+#### Types
+
+_Render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderPane` | `(pane, index, collapsed) => ReactNode` | The splitter-level renderer for panes with no `content` — the React replacement for the `[ogeSplitterPaneTemplate]` structural directive. Documented as a prop of ``. |
+
+### Splitter configuration
+
+#### Properties
+
+_OgeSplitterConfig_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `separatorSize` | `number \| undefined` | `6` | Default for the `separatorSize` prop. |
+| `step` | `number \| undefined` | `5` | Default for the `step` prop. |
+| `showCollapseGrips` | `boolean \| undefined` | `true` | Default for the `showCollapseGrips` prop. |
+| `messages` | `OgeSplitterMessages` | `—` | Every user-facing string: `separator` (with `{{first}}` / `{{second}}` placeholders), `collapsed`, `collapsePane`, `expandPane`, `noData`. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSplitterConfigProvider` | `(props: { config?: OgeSplitterConfigInput; children?: ReactNode }) => JSX.Element` | Wrap a subtree to change the splitter defaults and user-facing strings beneath it — the React counterpart of Angular’s `provideOgeSplitterConfig()`. Both shallow-merge `messages` over the same `@oge-ui/behavior` defaults, so an override reads identically in either layer. |
+| `useOgeSplitterConfig()` | `() => OgeSplitterConfig` | Reads the resolved config of the current subtree — how a splitter of your own picks up the same defaults. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSplitterConfig` | `interface` | Shape the provider publishes: `messages` plus the optional prop defaults. |
+| `OgeSplitterConfigInput` | `interface` | The provider’s `config` prop — every field optional, `messages` partial. |
+| `OgeSplitterMessages` | `interface` | Every user-facing string in the splitter, including the separators’ accessible names. |
+| `OGE_DEFAULT_SPLITTER_CONFIG` | `OgeSplitterConfig` | The built-in defaults, exported for composition. |
+| `OGE_DEFAULT_SPLITTER_MESSAGES` | `OgeSplitterMessages` | The built-in English strings. |
+
+### <OgeToolbar>
+
+#### Properties
+
+_Items_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeToolbarItemData[] \| undefined` | `—` | Data-driven entries — the only item source in React, since there is no child component to project. |
+| `dataSource` | `OgeToolbarDataSourceLike \| undefined` | `—` | Remote command list, accepted structurally through the `@oge-ui/core` `DataSource` contract and merged after `items`. A source that publishes `changes` triggers a reload. |
+| `showText` | `'always' \| 'onBar' \| 'inMenu' \| 'never'` | `'always'` | Default for every item&rsquo;s `showText`: both places, the bar only, the menu only, or neither. An item that renders icon-only keeps its `text` as the accessible name. |
+| `showIcon` | `'always' \| 'onBar' \| 'inMenu' \| 'never'` | `'always'` | Default for every item&rsquo;s `showIcon`. It resolves separately for the bar and the overflow menu, so a collapsed command keeps its icon on its menu row unless you say `&apos;onBar&apos;`. |
+
+_Layout & overflow_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `overflow` | `'menu' \| 'scroll' \| 'wrap' \| 'extended' \| 'none'` | `'menu'` | `menu` collapses what does not fit into an overflow menu, `scroll` keeps one line and adds scroll buttons, `wrap` flows onto more lines (the reference `multiline` mode), `extended` hides the remainder in a second row behind a toggle, `none` lets the row overflow. |
+| `scrollStep` | `number` | `120` | Pixels a scroll button moves the row in `overflow: 'scroll'`. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Main axis. Drives the arrow keys and `aria-orientation` (written only when vertical, since horizontal is the ARIA default). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset. Falls back to ``. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'flat'` | `'outlined'` | Container chrome. Falls back to ``. |
+
+_State & accessibility_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables every item and takes the whole toolbar out of the Tab sequence. |
+| `wrap` | `boolean` | `true` | Whether arrow navigation wraps around the ends — optional in the APG toolbar pattern, on by default here. |
+| `keyboardNavigation` | `boolean` | `true` | Turns arrow/Home/End handling off entirely. The controls then keep their natural Tab order instead of a roving tabindex. |
+| `itemHoldTimeout` | `number` | `750` | Milliseconds a pointer must rest on an item before `onItemHold` fires. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the toolbar; falls back to `messages.toolbar`. |
+| `ariaLabelledBy` | `string \| undefined` | `—` | Id of a visible label. Wins over `ariaLabel`, which is then omitted. |
+| `messages` | `Partial<OgeToolbarMessages> \| undefined` | `—` | Per-instance overrides of the context strings (`toolbar`, `overflowMenu`, `noData`). |
+| `className` | `string \| undefined` | `—` | Extra class(es) on the `role="toolbar"` host — the React styling idiom; the Angular host takes `class` natively. |
+| `style` | `CSSProperties \| undefined` | `—` | Inline styles on the host — the React styling idiom; the Angular host takes `style` natively. |
+
+_Node slots & render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `before` | `ReactNode` | Any control, rendered into the leading group — the React face of `[ogeToolbarBefore]`. Slot content always stays on the bar: only items the toolbar owns can be re-rendered inside the menu. |
+| `center` | `ReactNode` | Any control, rendered into the centre group (`[ogeToolbarCenter]`). |
+| `after` | `ReactNode` | Any control, rendered into the trailing group (`[ogeToolbarAfter]`). |
+| `renderItem` | `(context: OgeToolbarItemRenderContext) => ReactNode` | Replaces the default rendering of every `items` entry on the bar — the render-prop face of `ogeToolbarItemTemplate`. Context: `{ item, index, inMenu }`. A rendered entry stays re-stampable, so it can still collapse into the overflow menu. |
+| `renderMenuItem` | `(context: OgeToolbarItemRenderContext) => ReactNode` | Replaces the default rendering of an item inside the overflow menu (`ogeToolbarMenuItemTemplate`). |
+
+#### Methods
+
+_Handle (ref: OgeToolbarHandle)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `(): void` | Focuses the toolbar&rsquo;s current roving-tabindex stop. |
+| `openMenu()` | `(event?: Event): void` | Opens the overflow menu. Runs the `onMenuOpening` pipeline, so it can be vetoed. |
+| `closeMenu()` | `(reason?: OgeToolbarMenuCloseReason): void` | Closes the overflow menu, subject to `onMenuClosing`. Defaults to reason `'api'`. |
+| `toggleMenu()` | `(event?: Event): void` | Opens the menu when closed, closes it otherwise — the reference `toggle()` method. |
+| `toggleExtendedRow()` | `(): void` | Shows or hides the second row of `overflow: 'extended'`. |
+| `refreshOverflow()` | `(): void` | Drops the measurement cache and re-measures. Prop changes and container resizes already do this — call it after something the toolbar cannot observe changed a control&rsquo;s size (a late web font, a stylesheet swap). |
+| `addItem()` | `(item: OgeToolbarItemData): void` | Appends a runtime entry, merged after `items`. `items` stays the declared source of truth, so a re-supplied array does not drop it. |
+| `removeItem()` | `(key: string): void` | Drops an entry added by `addItem()`, or hides an `items` entry. |
+| `hideItem()` | `(key: string, hidden?: boolean): void` | Hides (or re-shows) an entry without touching the `items` array. |
+| `enableItem()` | `(key: string, enabled?: boolean): void` | Enables (or disables) an entry without touching the `items` array. |
+| `clearItemOverrides()` | `(): void` | Drops every `hideItem()` / `enableItem()` override. |
+
+#### Events
+
+_Callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeToolbarItemClickEvent) => void` | An item was activated on the bar or from the menu. Payload: `index`, `key`, `item`, `inMenu`, `event`. |
+| `onMenuOpening` | `(event: OgeToolbarMenuOpeningEvent) => void` | Cancelable — set `cancel` to keep the overflow menu closed. |
+| `onMenuOpened` | `() => void` | The overflow menu opened. |
+| `onMenuClosing` | `(event: OgeToolbarMenuClosingEvent) => void` | Cancelable — set `cancel` to keep the overflow menu open. Carries the close `reason`. |
+| `onMenuClosed` | `(event: OgeToolbarMenuClosedEvent) => void` | The overflow menu closed, with its reason. |
+| `onOverflowChanged` | `(event: OgeToolbarOverflowChangedEvent) => void` | The set of items living in the overflow menu changed. Payload: `keys`, `count`. |
+| `onActiveChanged` | `(event: OgeToolbarItemActiveChangedEvent) => void` | A toggle item&rsquo;s pressed state changed. `items` entries are data the toolbar must not mutate, so a React toggle is controlled: this reports the new value and the application writes it back into `items`. |
+| `onItemHold` | `(event: OgeToolbarItemHoldEvent) => void` | An item was held for `itemHoldTimeout` — touch long-press or mouse hold. |
+| `onItemContextMenu` | `(event: OgeToolbarItemHoldEvent) => void` | An item was right-clicked or long-pressed. |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeToolbarProps` | `interface` | Every prop of ``. |
+| `OgeToolbarHandle` | `interface` | The imperative handle reached through `ref` — the React counterpart of the Angular component&rsquo;s public methods. |
+| `OgeToolbarItemRenderContext` | `interface` | Argument of `renderItem` / `renderMenuItem`: `item` (the `items` entry), `index`, `inMenu`. |
+| `OgeToolbarItemData` | `interface` | One data-driven entry: `key`, `type`, `text`, `icon`, `suffixIcon`, `iconClass`, `suffixIconClass`, `hint`, `width`, `htmlAttributes`, `location`, `locateInMenu`, `overflowPriority`, `showText`, `showIcon`, `disabled`, `visible`, `cssClass`, `severity`, `active`, `data`. |
+| `OgeToolbarItemType` | `'button' \| 'separator' \| 'spacer' \| 'label'` | What the toolbar renders for an item it owns. |
+| `OgeToolbarItemLocation` | `'before' \| 'center' \| 'after'` | Which of the three groups an item belongs to. |
+| `OgeToolbarLocateInMenu` | `'auto' \| 'always' \| 'never'` | Whether an item may move into the overflow menu. Structurally core&rsquo;s `OgeToolbarOverflowPolicy`, which the shared fitting math consumes. |
+| `OgeToolbarDisplayMode` | `'always' \| 'onBar' \| 'inMenu' \| 'never'` | Where an item&rsquo;s text or icon is rendered: both places, the bar only, the menu only, or neither. |
+| `OgeToolbarItemSeverity` | `'default' \| 'accent' \| 'danger'` | Emphasis of an item the toolbar renders itself. |
+| `OgeToolbarOverflow` | `'menu' \| 'scroll' \| 'wrap' \| 'extended' \| 'none'` | How the toolbar reacts to more items than room. |
+| `OgeToolbarOrientation` | `'horizontal' \| 'vertical'` | Main axis of the toolbar. |
+| `OgeToolbarSize` | `'sm' \| 'md' \| 'lg'` | Density preset. |
+| `OgeToolbarStylingMode` | `'outlined' \| 'filled' \| 'flat'` | Container chrome preset. |
+| `OgeToolbarMenuCloseReason` | `'api' \| 'outside' \| 'escape' \| 'select' \| 'tab'` | Why the overflow menu closed — the overlay package&rsquo;s canonical reason set. |
+| `OgeToolbarItemClickEvent` | `interface` | `index`, `key?`, `item?`, `inMenu`, `event`. |
+| `OgeToolbarOverflowChangedEvent` | `interface` | `keys`, `count`. |
+| `OgeToolbarItemActiveChangedEvent` | `interface` | `index`, `key?`, `item?`, `active`, `event`. |
+| `OgeToolbarItemHoldEvent` | `interface` | Payload of `onItemHold` and `onItemContextMenu`: `index`, `key?`, `item?`, `event`. |
+| `OgeToolbarMenuOpeningEvent` | `interface` | `cancel`, `event?`. |
+| `OgeToolbarMenuClosingEvent` | `interface` | `cancel`, `reason`. |
+| `OgeToolbarMenuClosedEvent` | `interface` | `reason`. |
+| `OgeToolbarDataSourceLike` | `interface` | The structural shape `dataSource` accepts — `load()` plus an optional `changes` subscription — so the React package never depends on the Angular `DataSource` class. |
+
+### OgeToolbarItem (OgeToolbarItemData)
+
+#### Properties
+
+_Fields_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `key` | `string \| undefined` | `—` | Stable identity echoed on `onItemClick` and used for DOM ids. |
+| `type` | `'button' \| 'separator' \| 'spacer' \| 'label'` | `'button'` | What the toolbar renders when no `renderItem` is supplied. |
+| `text` | `string \| undefined` | `—` | Label; also the accessible name when the item renders icon-only. |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading aria-hidden 16×16 icon. |
+| `suffixIcon` | `string \| undefined` | `—` | SVG path data (`d`) for a trailing icon, rendered after the text. |
+| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon rendered as an empty `_` — the hook for an icon font the application already ships. `icon` stays the dependency-free default. |
+| `suffixIconClass` | `string \| undefined` | `—` | Class(es) for a trailing icon element. |
+| `width` | `number \| string \| undefined` | `—` | Fixed main-axis size of the item — a bare number is pixels. |
+| `htmlAttributes` | `Readonly<Record<string, string>> \| undefined` | `—` | Extra attributes spread onto the item element. |
+| `hint` | `string \| undefined` | `—` | Tooltip — the native `title` attribute. |
+| `location` | `'before' \| 'center' \| 'after'` | `'before'` | Which of the toolbar&rsquo;s three groups the item joins. |
+| `locateInMenu` | `'auto' \| 'always' \| 'never'` | `'auto'` | Whether the item may move into the overflow menu. The default diverges from the reference `never` on purpose — collapsing is the point. |
+| `overflowPriority` | `number \| undefined` | `0` | How hard the item holds its place on the bar; higher survives longer. The default makes the trailing item yield first, as in every reference toolbar. Raise it to keep a primary command visible without moving it to the front of the bar. |
+| `showText` | `'always' \| 'onBar' \| 'inMenu' \| 'never' \| undefined` | `—` | Overrides the toolbar&rsquo;s `showText`. |
+| `showIcon` | `'always' \| 'onBar' \| 'inMenu' \| 'never' \| undefined` | `—` | Overrides the toolbar&rsquo;s `showIcon`. |
+| `disabled` | `boolean` | `false` | Not clickable, and skipped by the toolbar&rsquo;s arrow navigation. |
+| `visible` | `boolean` | `true` | `false` removes the item entirely. |
+| `cssClass` | `string \| undefined` | `—` | Extra class on the item element. |
+| `severity` | `'default' \| 'accent' \| 'danger'` | `'default'` | Emphasis of a toolbar-rendered button. |
+| `active` | `boolean \| undefined` | `—` | Toggle-button state. Defining it is what makes the item a toggle: it renders `aria-pressed` on the bar and a checkmark in the menu. React toggles are controlled — the component reports through `onActiveChanged` and the app writes the new value back. |
+| `data` | `unknown` | `—` | Arbitrary payload echoed back on `onItemClick` through `event.item`. |
+
+### Toolbar configuration
+
+#### Properties
+
+_OgeToolbarConfigProvider (config prop)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `size` | `'sm' \| 'md' \| 'lg' \| undefined` | `—` | Default for every toolbar&rsquo;s `size`. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'flat' \| undefined` | `—` | Default for every toolbar&rsquo;s `stylingMode`. |
+| `messages.toolbar` | `string` | `'Toolbar'` | Accessible name used when neither `ariaLabel` nor `ariaLabelledBy` is set. |
+| `messages.overflowMenu` | `string` | `'More commands'` | Accessible name and tooltip of the overflow button, and the menu&rsquo;s label. |
+| `messages.moreCommands` | `string` | `'Show more commands'` | Accessible name of the `overflow: 'extended'` second-row toggle. |
+| `messages.scrollBackward` | `string` | `'Scroll backward'` | Accessible name of the back scroll button in `overflow: 'scroll'`. |
+| `messages.scrollForward` | `string` | `'Scroll forward'` | Accessible name of the forward scroll button. |
+| `messages.noData` | `string` | `'No commands to display'` | Shown when the toolbar has no items of its own and nothing is passed to a node slot (the reference `noDataText`). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `useOgeToolbarConfig()` | `() => OgeToolbarConfig` | Reads the resolved config of the current subtree — how a bar of your own picks up the same defaults and messages. The Angular counterpart is `inject(OGE_TOOLBAR_CONFIG)`. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Basics
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCard } from '@oge-ui/react-layout';
+
+export function CardBasicsDemo() {
+  const [last, setLast] = useState('—');
+  return (
+    <div className="max-w-sm">
+      <OgeCard
+        header="Mountains"
+        subheader="Alps, 2026"
+        actions={
+          <div className="oge-card-actions oge-card-actions-end">
+            <button type="button" onClick={() => setLast('Share')}>
+              Share
+            </button>
+          </div>
+        }
+      >
+        <p>Four days above the tree line, one pass a day.</p>
+      </OgeCard>
+      <p className="mt-2 text-sm opacity-70">last action → {last}</p>
+    </div>
+  );
+}
+```
+
+### Chrome presets
+
+```ts
+'use client';
+
+import { OgeCard } from '@oge-ui/react-layout';
+
+// outlined is the default; raised rests on the --oge-shadow-card token,
+// filled sits on the header surface, flat is for a card nested inside
+// another surface.
+const modes = ['outlined', 'raised', 'filled', 'flat'] as const;
+
+export function CardModesDemo() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {modes.map((mode) => (
+        <OgeCard key={mode} header={mode} stylingMode={mode}>
+          <p className="text-sm">The {mode} chrome preset.</p>
+        </OgeCard>
+      ))}
+    </div>
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { OgeCard, OgeCardConfigProvider } from '@oge-ui/react-layout';
+
+export function CardConfigDemo() {
+  return (
+    <OgeCardConfigProvider config={{ stylingMode: 'raised' }}>
+      <div className="max-w-sm">
+        <OgeCard header="Raised by default">
+          <p className="text-sm">
+            What every card in the subtree looks like. Instance props still win:
+            add stylingMode="outlined" to opt one card out.
+          </p>
+        </OgeCard>
+      </div>
+    </OgeCardConfigProvider>
+  );
+}
+```
+
+### Density
+
+```ts
+'use client';
+
+import { OgeCard } from '@oge-ui/react-layout';
+
+const sizes = ['sm', 'md', 'lg'] as const;
+
+export function CardSizeDemo() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-3">
+      {sizes.map((size) => (
+        <OgeCard key={size} header={size === 'md' ? 'Default' : size} size={size}>
+          <p className="text-sm">The {size} density.</p>
+        </OgeCard>
+      ))}
+    </div>
+  );
+}
+```
+
+### Media
+
+```ts
+'use client';
+
+import { OgeCard } from '@oge-ui/react-layout';
+
+export function CardMediaDemo() {
+  return (
+    <div className="max-w-sm">
+      <OgeCard
+        header="Mountains"
+        subheader="Alps, 2026"
+        media={
+          <img
+            className="oge-card-media"
+            src="https://picsum.photos/seed/oge-alps/640/360"
+            alt=""
+            style={{ aspectRatio: '16 / 9' }}
+          />
+        }
+      >
+        <p>Media renders edge to edge, clipped by the card radius.</p>
+      </OgeCard>
+    </div>
+  );
+}
+```
+
+### Horizontal
+
+```ts
+'use client';
+
+import { OgeCard } from '@oge-ui/react-layout';
+import type { CSSProperties } from 'react';
+
+export function CardHorizontalDemo() {
+  return (
+    <div className="max-w-xl">
+      <OgeCard
+        header="Mountains"
+        subheader="Alps, 2026"
+        orientation="horizontal"
+        style={{ '--oge-card-media-size': '160px' } as CSSProperties}
+        media={
+          <img
+            className="oge-card-media"
+            src="https://picsum.photos/seed/oge-lake/320/320"
+            alt=""
+          />
+        }
+      >
+        <p>
+          The media column follows the writing mode, so it mirrors in RTL with no
+          flag to set.
+        </p>
+      </OgeCard>
+    </div>
+  );
+}
+```
+
+### Header slots
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCard } from '@oge-ui/react-layout';
+
+export function CardHeaderDemo() {
+  const [last, setLast] = useState('—');
+  return (
+    <div className="max-w-sm">
+      <OgeCard
+        header="R. Aydın"
+        subheader="3 hours ago"
+        avatar={
+          <img
+            className="oge-card-avatar"
+            src="https://i.pravatar.cc/80?img=12"
+            alt=""
+          />
+        }
+        headerActions={
+          <div className="oge-card-header-actions">
+            <button
+              type="button"
+              aria-label="More options"
+              onClick={() => setLast('Menu')}
+            >
+              ⋮
+            </button>
+          </div>
+        }
+      >
+        <p>Reached the ridge before the weather turned.</p>
+      </OgeCard>
+      <p className="mt-2 text-sm opacity-70">last action → {last}</p>
+    </div>
+  );
+}
+```
+
+### Actions alignment
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCard } from '@oge-ui/react-layout';
+import type { OgeCardActionsAlign } from '@oge-ui/react-layout';
+
+const aligns: readonly OgeCardActionsAlign[] = [
+  'start',
+  'center',
+  'end',
+  'stretched',
+];
+
+export function CardActionsDemo() {
+  const [align, setAlign] = useState<OgeCardActionsAlign>('start');
+  return (
+    <div className="max-w-sm">
+      <div className="mb-3 flex gap-2">
+        {aligns.map((value) => (
+          <button key={value} type="button" onClick={() => setAlign(value)}>
+            {value}
+          </button>
+        ))}
+      </div>
+      <OgeCard
+        header="Draft"
+        actions={
+          <div
+            className={`oge-card-actions${align === 'start' ? '' : ` oge-card-actions-${align}`}`}
+          >
+            <button type="button">Discard</button>
+            <button type="button">Save</button>
+          </div>
+        }
+      >
+        <p>Unsaved changes.</p>
+      </OgeCard>
+    </div>
+  );
+}
+```
+
+### Footer & separator
+
+```ts
+'use client';
+
+import { OgeCard } from '@oge-ui/react-layout';
+
+export function CardFooterDemo() {
+  return (
+    <div className="max-w-sm">
+      <OgeCard
+        header="Weekly report"
+        footer={<div className="oge-card-footer">Updated 2 hours ago</div>}
+      >
+        <p>Generated from last week&#39;s data.</p>
+        <hr className="oge-card-separator" />
+        <p>12 pages, 4 charts.</p>
+      </OgeCard>
+    </div>
+  );
+}
+```
+
+### Status & loading
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCard } from '@oge-ui/react-layout';
+
+export function CardStatesDemo() {
+  const [pending, setPending] = useState(true);
+  return (
+    <>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <OgeCard
+          header="Deploy failed"
+          subheader="build #412"
+          severity="danger"
+          actions={
+            <div className="oge-card-actions oge-card-actions-end">
+              <button type="button">Retry</button>
+            </div>
+          }
+        >
+          <p className="text-sm">The e2e stage timed out after 20 minutes.</p>
+        </OgeCard>
+        <OgeCard header="Weekly report" subheader="loading…" loading={pending}>
+          <p className="text-sm">Generated from last week&#39;s data.</p>
+        </OgeCard>
+      </div>
+      <button type="button" className="mt-3" onClick={() => setPending(!pending)}>
+        Toggle loading
+      </button>
+    </>
+  );
+}
+```
+
+### Clickable cards, accessibly
+
+```ts
+'use client';
+
+import { OgeCard } from '@oge-ui/react-layout';
+
+// The stretched hit area, in your own stylesheet:
+//
+//   .oge-card { position: relative; }
+//   .card-link::after { content: ''; position: absolute; inset: 0; }
+//
+// Other controls stay usable by raising them above the overlay
+// (position: relative + z-index).
+
+export function CardClickableDemo() {
+  return (
+    <div className="max-w-sm">
+      <OgeCard
+        header="Mountains"
+        subheader="Alps, 2026"
+        interactive
+        style={{ position: 'relative' }}
+      >
+        <p>Four days above the tree line.</p>
+        <a className="card-link" href="/trips/alps-2026">
+          Read the full report
+        </a>
+      </OgeCard>
+    </div>
+  );
+}
+```
+
+### Declarative panels
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAccordion } from '@oge-ui/react-layout';
+
+export function BasicAccordionDemo() {
+  const [index, setIndex] = useState(-1);
+  return (
+    <OgeAccordion
+      collapsible
+      selectedIndex={index}
+      onSelectedIndexChange={setIndex}
+      onItemExpanded={(event) => console.log('itemExpanded', event.index)}
+      items={[
+        {
+          key: 'account',
+          title: 'Account',
+          description: 'Name and e-mail',
+          content: <p>Account settings — selected index: {index}</p>,
+        },
+        { key: 'notifications', title: 'Notifications', badge: 3, content: <p>Notification settings…</p> },
+        { key: 'archived', title: 'Archived', disabled: true, content: <p>Never reachable…</p> },
+      ]}
+    />
+  );
+}
+```
+
+### Data-driven items
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAccordion } from '@oge-ui/react-layout';
+import type { OgeAccordionItemDefinition } from '@oge-ui/react-layout';
+
+const sections: OgeAccordionItemDefinition[] = [
+  {
+    key: 'general',
+    title: 'General',
+    description: 'Language, time zone and formats',
+    icon: 'M12 3v2m0 14v2m9-9h-2M5 12H3m14.5-6.5l-1.4 1.4M7.9 16.1l-1.4 1.4m11.2 0l-1.4-1.4M7.9 7.9L6.5 6.5',
+  },
+  {
+    key: 'security',
+    title: 'Security',
+    description: 'Password and two-factor auth',
+    badge: 2,
+    icon: 'M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6z',
+  },
+  { key: 'danger', title: 'Danger zone', description: 'Irreversible actions' },
+];
+
+export function ItemsAccordionDemo() {
+  const [openKeys, setOpenKeys] = useState<readonly string[]>(['general']);
+  return (
+    <OgeAccordion
+      items={sections}
+      multiple
+      collapsible
+      expandedKeys={openKeys}
+      onExpandedKeysChange={setOpenKeys}
+      renderContent={({ item }) => (
+        <p>
+          Body of <b>{item?.title}</b> — expandedKeys: <code>{openKeys.join(', ') || '(none)'}</code>
+        </p>
+      )}
+    />
+  );
+}
+```
+
+### Single, multiple & collapsible
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAccordion } from '@oge-ui/react-layout';
+import type { OgeAccordionItemDefinition } from '@oge-ui/react-layout';
+
+const sections: OgeAccordionItemDefinition[] = [
+  { key: 'general', title: 'General', description: 'Language, time zone and formats' },
+  { key: 'security', title: 'Security', description: 'Password and two-factor auth', badge: 2 },
+  { key: 'danger', title: 'Danger zone', description: 'Irreversible actions' },
+];
+
+export function ModeAccordionDemo() {
+  const [multiple, setMultiple] = useState(false);
+  const [collapsible, setCollapsible] = useState(false);
+  return (
+    <>
+      <div className="demo-row demo-row-start">
+        <label>
+          <input type="checkbox" checked={multiple} onChange={() => setMultiple(!multiple)} /> multiple
+        </label>
+        <label>
+          <input type="checkbox" checked={collapsible} onChange={() => setCollapsible(!collapsible)} /> collapsible
+        </label>
+      </div>
+      <OgeAccordion
+        items={sections}
+        multiple={multiple}
+        collapsible={collapsible}
+        renderContent={({ item }) => <p>{item?.title} body…</p>}
+      />
+    </>
+  );
+}
+```
+
+### Lazy rendering & keep-alive
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAccordion } from '@oge-ui/react-layout';
+
+function CreatedAt() {
+  const [createdAt] = useState(() => new Date().toLocaleTimeString());
+  return <p className="text-sm">Created at {createdAt}</p>;
+}
+
+export function LazyAccordionDemo() {
+  const [keepAlive, setKeepAlive] = useState(true);
+  return (
+    <>
+      <label>
+        <input type="checkbox" checked={keepAlive} onChange={() => setKeepAlive(!keepAlive)} /> keepAlive
+      </label>
+      <OgeAccordion
+        keepAlive={keepAlive}
+        multiple
+        collapsible
+        items={[
+          { key: 'first', title: 'First', renderContent: () => <CreatedAt /> },
+          { key: 'second', title: 'Second', renderContent: () => <CreatedAt /> },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+### Async expand guard
+
+```ts
+'use client';
+
+import { OgeAccordion } from '@oge-ui/react-layout';
+import type { OgeAccordionItemDefinition } from '@oge-ui/react-layout';
+
+const guarded: OgeAccordionItemDefinition[] = [
+  { key: 'plain', title: 'Opens right away' },
+  {
+    key: 'slow',
+    title: 'Confirms first (1s)',
+    expandGuard: () => new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 1000)),
+  },
+  { key: 'locked', title: 'Always vetoes', expandGuard: () => false },
+];
+
+export function GuardAccordionDemo() {
+  return (
+    <OgeAccordion
+      items={guarded}
+      multiple
+      collapsible
+      renderContent={({ item }) => <p>{item?.title} body…</p>}
+    />
+  );
+}
+```
+
+### Invalid sections
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeAccordion } from '@oge-ui/react-layout';
+import type { OgeAccordionHandle, OgeAccordionItemDefinition } from '@oge-ui/react-layout';
+
+export function InvalidAccordionDemo() {
+  const accordion = useRef<OgeAccordionHandle>(null);
+  const [sections, setSections] = useState<OgeAccordionItemDefinition[]>([
+    { key: 'contact', title: 'Contact' },
+    { key: 'billing', title: 'Billing', invalid: true },
+    { key: 'shipping', title: 'Shipping', invalid: true },
+  ]);
+  return (
+    <>
+      <OgeAccordion
+        ref={accordion}
+        items={sections}
+        multiple
+        collapsible
+        renderContent={({ item }) => <p>{item?.title} fields…</p>}
+      />
+      <div className="demo-row demo-row-start">
+        <button type="button" onClick={() => accordion.current?.expandInvalid()}>
+          Show all errors
+        </button>
+        <button
+          type="button"
+          onClick={() => setSections((all) => all.map((s) => ({ ...s, invalid: false })))}
+        >
+          Fix everything
+        </button>
+      </div>
+    </>
+  );
+}
+```
+
+### Async content loader
+
+```ts
+'use client';
+
+import { OgeAccordion } from '@oge-ui/react-layout';
+
+const loadInvoices = () =>
+  new Promise<string>((resolve) => setTimeout(() => resolve('42 invoices loaded.'), 900));
+
+let flakyAttempts = 0;
+const loadFlaky = () =>
+  new Promise<string>((resolve, reject) =>
+    setTimeout(() => {
+      flakyAttempts++;
+      if (flakyAttempts === 1) reject(new Error('network'));
+      else resolve(`Report ready on attempt ${flakyAttempts}.`);
+    }, 700),
+  );
+
+export function LoaderAccordionDemo() {
+  return (
+    <OgeAccordion
+      multiple
+      collapsible
+      renderContent={({ data }) => <p>{data as string}</p>}
+      items={[
+        { key: 'invoices', title: 'Invoices', contentLoader: loadInvoices },
+        { key: 'flaky', title: 'Flaky report', contentLoader: loadFlaky },
+      ]}
+    />
+  );
+}
+```
+
+### Header actions
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAccordion } from '@oge-ui/react-layout';
+
+const ALL_TEAMS = ['Platform', 'Design', 'Support'];
+
+export function ActionsAccordionDemo() {
+  const [teams, setTeams] = useState<readonly string[]>(ALL_TEAMS);
+  return (
+    <>
+      <OgeAccordion
+        multiple
+        collapsible
+        items={teams.map((team) => ({
+          key: team,
+          title: team,
+          content: <p>{team} members…</p>,
+          renderHeaderActions: () => (
+            <button type="button" onClick={() => setTeams(teams.filter((t) => t !== team))}>
+              Remove
+            </button>
+          ),
+        }))}
+      />
+      <button type="button" onClick={() => setTeams(ALL_TEAMS)}>
+        Reset
+      </button>
+    </>
+  );
+}
+```
+
+### Panel-level control
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeAccordion } from '@oge-ui/react-layout';
+import type { OgeAccordionHandle } from '@oge-ui/react-layout';
+
+export function PanelControlAccordionDemo() {
+  const accordion = useRef<OgeAccordionHandle>(null);
+  const [settled, setSettled] = useState<string | null>(null);
+  return (
+    <>
+      <OgeAccordion
+        ref={accordion}
+        multiple
+        collapsible
+        onAfterExpand={(event) => setSettled(`afterExpand → ${event.index}`)}
+        onAfterCollapse={(event) => setSettled(`afterCollapse → ${event.index}`)}
+        items={[
+          {
+            key: 'profile',
+            title: 'Profile',
+            expanded: true,
+            content: (
+              <>
+                <p>Name, e-mail and avatar…</p>
+                <div className="oge-accordion-action-row">
+                  <button type="button" onClick={() => accordion.current?.collapse('profile')}>
+                    Cancel
+                  </button>
+                  <button type="button" onClick={() => accordion.current?.collapse('profile')}>
+                    Save
+                  </button>
+                </div>
+              </>
+            ),
+          },
+          {
+            key: 'preferences',
+            title: 'Preferences',
+            hideToggle: true,
+            content: <p>This panel overrides hideToggle on its own.</p>,
+          },
+        ]}
+      />
+      <div className="demo-row demo-row-start">
+        <button type="button" onClick={() => accordion.current?.toggle('profile')}>
+          toggle('profile')
+        </button>
+        {settled && <span>{settled}</span>}
+      </div>
+    </>
+  );
+}
+```
+
+### Toggle position & styling
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAccordion } from '@oge-ui/react-layout';
+import type { OgeAccordionItemDefinition, OgeAccordionTogglePosition } from '@oge-ui/react-layout';
+
+const sections: OgeAccordionItemDefinition[] = [
+  { key: 'general', title: 'General', description: 'Language, time zone and formats' },
+  { key: 'security', title: 'Security', description: 'Password and two-factor auth', badge: 2 },
+  { key: 'danger', title: 'Danger zone', description: 'Irreversible actions' },
+];
+
+export function StylingAccordionDemo() {
+  const [togglePosition, setTogglePosition] = useState<OgeAccordionTogglePosition>('end');
+  const [flat, setFlat] = useState(false);
+  return (
+    <>
+      <div className="demo-row demo-row-start">
+        <label>
+          <input
+            type="checkbox"
+            checked={togglePosition === 'start'}
+            onChange={() => setTogglePosition(togglePosition === 'end' ? 'start' : 'end')}
+          />{' '}
+          togglePosition = start
+        </label>
+        <label>
+          <input type="checkbox" checked={flat} onChange={() => setFlat(!flat)} /> displayMode = flat
+        </label>
+      </div>
+      <OgeAccordion
+        items={sections}
+        multiple
+        collapsible
+        togglePosition={togglePosition}
+        displayMode={flat ? 'flat' : 'default'}
+        stylingMode="filled"
+        size="sm"
+        renderContent={({ item }) => <p>{item?.title} body…</p>}
+      />
+    </>
+  );
+}
+```
+
+### Determinate bar
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeProgressBar } from '@oge-ui/react-layout';
+
+const asMegabytes = (value: number): string => `${value} MB`;
+
+export function ProgressDeterminateDemo() {
+  const [uploaded, setUploaded] = useState(80);
+  return (
+    <>
+      {/* role="progressbar" with the full aria triple. showLabel renders the
+          rounded percent; formatLabel replaces it AND feeds aria-valuetext. */}
+      <OgeProgressBar value={uploaded} showLabel />
+
+      <OgeProgressBar
+        value={uploaded}
+        max={200}
+        showLabel
+        formatLabel={asMegabytes}
+        ariaLabel="Upload"
+      />
+
+      <label>
+        Value
+        <input
+          type="range"
+          min={0}
+          max={200}
+          value={uploaded}
+          onChange={(event) => setUploaded(Number(event.target.value))}
+        />
+      </label>
+    </>
+  );
+}
+```
+
+### Indeterminate & buffer
+
+```ts
+'use client';
+
+import { OgeProgressBar } from '@oge-ui/react-layout';
+
+export function ProgressIndeterminateDemo() {
+  return (
+    <>
+      {/* Per the ARIA guidance aria-valuenow is OMITTED entirely for the
+          unknown state — never pinned to a sentinel. */}
+      <OgeProgressBar ariaLabel="Preparing" />
+
+      <OgeProgressBar value={35} bufferValue={70} ariaLabel="Playback" />
+    </>
+  );
+}
+```
+
+### Chunks & severity
+
+```ts
+'use client';
+
+import { OgeProgressBar } from '@oge-ui/react-layout';
+
+export function ProgressChunkDemo() {
+  return (
+    <>
+      {/* The filled segment count is the rounded ratio. */}
+      <OgeProgressBar value={60} chunkCount={5} ariaLabel="Steps" />
+
+      <OgeProgressBar value={92} severity="success" showLabel ariaLabel="Sync" />
+      <OgeProgressBar value={45} severity="danger" showLabel ariaLabel="Disk" />
+    </>
+  );
+}
+```
+
+### Load indicator
+
+```ts
+'use client';
+
+import { OgeLoadIndicator } from '@oge-ui/react-layout';
+
+export function LoadIndicatorDemo() {
+  return (
+    <div className="demo-row demo-row-start">
+      <OgeLoadIndicator size="sm" />
+      <OgeLoadIndicator />
+      <OgeLoadIndicator size="lg" ariaLabel="Loading report" />
+      <OgeLoadIndicator severity="success" />
+
+      {/* inheritSize makes a 1em ring that scales with the button's font. */}
+      <button type="button" disabled>
+        <OgeLoadIndicator inheritSize /> Saving…
+      </button>
+    </div>
+  );
+}
+```
+
+### Skeleton
+
+```ts
+'use client';
+
+import { OgeSkeleton } from '@oge-ui/react-layout';
+
+export function SkeletonDemo() {
+  return (
+    <>
+      <div aria-busy="true" className="demo-row demo-row-start">
+        <OgeSkeleton shape="circle" width={40} height={40} />
+        <div style={{ flex: 1 }}>
+          <OgeSkeleton width="60%" />
+          <OgeSkeleton width="40%" animation="pulse" />
+        </div>
+      </div>
+
+      <OgeSkeleton shape="rectangle" height="72px" />
+
+      {/* lines: the tapered multi-line text stack in one prop. */}
+      <OgeSkeleton lines={3} />
+    </>
+  );
+}
+```
+
+### A real async flow
+
+```ts
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { OgeProgressBar } from '@oge-ui/react-layout';
+
+export function ProgressAsyncDemo() {
+  const [total, setTotal] = useState<number | null>(null);
+  const [received, setReceived] = useState(0);
+  const [done, setDone] = useState(false);
+  const discovery = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stop = () => {
+    if (discovery.current !== null) clearTimeout(discovery.current);
+    if (ticker.current !== null) clearInterval(ticker.current);
+    discovery.current = null;
+    ticker.current = null;
+  };
+
+  // Timers never outlive the component — the React counterpart of the
+  // Angular page's DestroyRef cleanup.
+  useEffect(() => stop, []);
+  useEffect(() => {
+    if (received >= 100) stop();
+  }, [received]);
+
+  const start = () => {
+    stop();
+    setTotal(null);
+    setReceived(0);
+    setDone(false);
+    discovery.current = setTimeout(() => {
+      setTotal(100); // "size discovered"
+      ticker.current = setInterval(
+        () => setReceived((current) => Math.min(current + 9, 100)),
+        250,
+      );
+    }, 900);
+  };
+  return (
+    <>
+      {total === null ? (
+        <OgeProgressBar ariaLabel="Download" />
+      ) : (
+        <OgeProgressBar
+          value={received}
+          max={total}
+          showLabel
+          ariaLabel="Download"
+          onCompleted={() => setDone(true)}
+        />
+      )}
+      <p>
+        <button type="button" onClick={start}>
+          Start download
+        </button>
+        {done && <span>completed ✓</span>}
+      </p>
+    </>
+  );
+}
+```
+
+### Resizable panes
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSplitter } from '@oge-ui/react-layout';
+import type { OgeSplitterSize } from '@oge-ui/react-layout';
+
+export function SplitterDemo() {
+  // Sizes are ratios, not percentages — [30, 30] lays out like [50, 50],
+  // so a configuration that does not add up to 100 is never an error.
+  const [sizes, setSizes] = useState<readonly OgeSplitterSize[]>([35, 65]);
+  return (
+    // The splitter fills its container, so give it (or a wrapper) a height.
+    <OgeSplitter
+      sizes={sizes}
+      onSizesChange={setSizes}
+      style={{ blockSize: 220 }}
+      panes={[
+        { key: 'list', minSize: 15, content: <div>Result list…</div> },
+        { key: 'detail', minSize: 25, content: <div>Detail view…</div> },
+      ]}
+    />
+  );
+}
+```
+
+### Orientation
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSplitter } from '@oge-ui/react-layout';
+import type { OgeSplitterOrientation } from '@oge-ui/react-layout';
+
+export function SplitterOrientationDemo() {
+  const [orientation, setOrientation] =
+    useState<OgeSplitterOrientation>('vertical');
+  return (
+    <>
+      {(['horizontal', 'vertical'] as const).map((option) => (
+        <button key={option} type="button" onClick={() => setOrientation(option)}>
+          {option}
+        </button>
+      ))}
+      <OgeSplitter
+        orientation={orientation}
+        style={{ blockSize: 220 }}
+        panes={[
+          { content: <div>Top / left</div> },
+          { content: <div>Bottom / right</div> },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { OgeSplitter, OgeSplitterConfigProvider } from '@oge-ui/react-layout';
+
+export function SplitterConfigDemo() {
+  return (
+    <OgeSplitterConfigProvider
+      config={{
+        separatorSize: 8,
+        step: 10,
+        messages: {
+          separator: '{{first}} ile {{second}} arasını yeniden boyutlandır',
+          collapsePane: 'Paneli daralt',
+          expandPane: 'Paneli aç',
+        },
+      }}
+    >
+      <OgeSplitter
+        style={{ blockSize: 220 }}
+        panes={[
+          { collapsible: true, content: <div>Sol</div> },
+          { content: <div>Sağ</div> },
+        ]}
+      />
+    </OgeSplitterConfigProvider>
+  );
+}
+```
+
+### Fixed and fluid panes
+
+```ts
+'use client';
+
+import { OgeSplitter } from '@oge-ui/react-layout';
+
+export function SplitterFixedDemo() {
+  return (
+    // A '<n>px' size pins the pane: it becomes a fixed grid track and
+    // drops out of the share pool, while '<n>%' and plain numbers stay ratios.
+    // min and max accept either unit, so a px floor on a ratio pane is fine.
+    <OgeSplitter
+      style={{ blockSize: 220 }}
+      panes={[
+        {
+          size: '240px',
+          minSize: '160px',
+          maxSize: '420px',
+          content: <div>Fixed sidebar — dragged in pixels</div>,
+        },
+        { minSize: 20, content: <div>Fluid content</div> },
+      ]}
+    />
+  );
+}
+```
+
+### Collapsible panes
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSplitter } from '@oge-ui/react-layout';
+import type { OgeSplitterPaneCollapsedEvent } from '@oge-ui/react-layout';
+
+export function SplitterCollapseDemo() {
+  // A pane's `collapsed` field is the React counterpart of the Angular
+  // [(collapsed)] model: write it to drive the pane, and follow the pane's
+  // own collapses through onPaneCollapsed / onPaneExpanded.
+  const [sideCollapsed, setSideCollapsed] = useState(false);
+
+  const onCollapsed = (event: OgeSplitterPaneCollapsedEvent) => {
+    console.log('collapsed', event.key);
+    setSideCollapsed(true);
+  };
+  return (
+    <OgeSplitter
+      style={{ blockSize: 220 }}
+      onPaneCollapsed={onCollapsed}
+      onPaneExpanded={() => setSideCollapsed(false)}
+      panes={[
+        {
+          key: 'side',
+          size: 30,
+          collapsible: true,
+          collapsedSize: '28px',
+          collapsed: sideCollapsed,
+          content: <div>Navigation…</div>,
+        },
+        { key: 'main', content: <div>Editor…</div> },
+      ]}
+    />
+  );
+}
+```
+
+### Data-driven panes
+
+```ts
+'use client';
+
+import { OgeSplitter } from '@oge-ui/react-layout';
+import type { OgeSplitterPaneItem } from '@oge-ui/react-layout';
+
+const areas: OgeSplitterPaneItem[] = [
+  { key: 'explorer', size: 25, minSize: 15, collapsible: true },
+  { key: 'editor', size: 50 },
+  { key: 'inspector', size: 25, minSize: 15 },
+];
+
+export function SplitterPanesDemo() {
+  return (
+    <OgeSplitter
+      panes={areas}
+      style={{ blockSize: 220 }}
+      renderPane={(pane, index) => (
+        <h4>
+          {index} — {pane.key}
+        </h4>
+      )}
+    />
+  );
+}
+```
+
+### Nested splitters
+
+```ts
+'use client';
+
+import { OgeSplitter } from '@oge-ui/react-layout';
+
+export function SplitterNestedDemo() {
+  return (
+    // Nesting needs no second component: a splitter inside a pane just
+    // works, and a pane also nests by carrying its own panes array
+    // (which defaults to the opposite axis).
+    <OgeSplitter
+      style={{ blockSize: 220 }}
+      panes={[
+        { size: '220px', collapsible: true, content: <div>Sidebar</div> },
+        {
+          content: (
+            <OgeSplitter
+              orientation="vertical"
+              style={{ blockSize: '100%' }}
+              panes={[
+                { size: 70, content: <div>Editor</div> },
+                { size: 30, collapsible: true, content: <div>Terminal</div> },
+              ]}
+            />
+          ),
+        },
+      ]}
+    />
+  );
+}
+```
+
+### Forms inside a pane
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeNumberBox, OgeTextBox } from '@oge-ui/react-inputs';
+import { OgeSplitter } from '@oge-ui/react-layout';
+
+export function SplitterFormDemo() {
+  // @oge-ui/forms has no React layer yet (docs/REACT-PARITY.md), so the
+  // editors hold their value in your own state — useState here, but React
+  // Hook Form, Formik or TanStack Form bind exactly the same way.
+  const [server, setServer] = useState({
+    host: 'db.internal',
+    port: 5432 as number | null,
+    user: 'app',
+  });
+  return (
+    <OgeSplitter
+      style={{ blockSize: 280 }}
+      panes={[
+        {
+          size: 78,
+          content: (
+            <div className="demo-row">
+              <OgeTextBox
+                label="Host"
+                value={server.host}
+                onValueChange={(host) => setServer((s) => ({ ...s, host }))}
+              />
+              <OgeNumberBox
+                label="Port"
+                value={server.port}
+                onValueChange={(port) => setServer((s) => ({ ...s, port }))}
+              />
+              <OgeTextBox
+                label="User"
+                value={server.user}
+                onValueChange={(user) => setServer((s) => ({ ...s, user }))}
+              />
+            </div>
+          ),
+        },
+        { size: 22, content: <div>Preview…</div> },
+      ]}
+    />
+  );
+}
+```
+
+### Keyboard & accessibility
+
+```ts
+'use client';
+
+import { OgeSplitter } from '@oge-ui/react-layout';
+
+export function SplitterKeyboardDemo() {
+  return (
+    // WAI-ARIA APG window splitter: every separator is a focusable
+    // role="separator" with aria-controls on the pane before it and
+    // aria-valuenow/min/max on one 0-100 scale.
+    //   Arrow keys    move it by `step` share points (RTL mirrored)
+    //   Home / End    jump to the primary pane's smallest / largest size
+    //   Enter         collapse the primary pane, or restore it
+    //   Ctrl + Arrow  collapse the pane the arrow points at, or restore
+    //                 the collapsed one it points away from
+    <OgeSplitter
+      step={10}
+      ariaLabel="Editor layout"
+      style={{ blockSize: 220 }}
+      panes={[
+        {
+          minSize: 20,
+          maxSize: 70,
+          collapsible: true,
+          content: <div>Primary</div>,
+        },
+        { minSize: 20, collapsible: true, content: <div>Secondary</div> },
+      ]}
+    />
+  );
+}
+```
+
+### Events
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSplitter } from '@oge-ui/react-layout';
+import type { OgeSplitterPaneCollapsingEvent, OgeSplitterResizeEvent } from '@oge-ui/react-layout';
+
+export function SplitterEventsDemo() {
+  const [locked, setLocked] = useState(true);
+
+  const onResized = (event: OgeSplitterResizeEvent) => {
+    console.log(event.sizes, event.previousSizes);
+  };
+
+  // onPaneCollapsing / onPaneExpanding are cancelable — set cancel to veto.
+  const onCollapsing = (event: OgeSplitterPaneCollapsingEvent) => {
+    if (locked) event.cancel = true;
+  };
+  return (
+    <>
+      <label>
+        <input
+          type="checkbox"
+          checked={locked}
+          onChange={(event) => setLocked(event.target.checked)}
+        />
+        veto collapsing (event.cancel = true)
+      </label>
+      <OgeSplitter
+        style={{ blockSize: 220 }}
+        onResizeStarted={() => console.log('start')}
+        onResized={onResized}
+        onResizeEnded={() => console.log('end')}
+        onPaneCollapsing={onCollapsing}
+        panes={[
+          { key: 'a', collapsible: true, content: <div>A</div> },
+          { key: 'b', content: <div>B</div> },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+### Persisting sizes
+
+```ts
+'use client';
+
+import { useEffect, useState } from 'react';
+import { OgeSplitter } from '@oge-ui/react-layout';
+import type { OgeSplitterSize } from '@oge-ui/react-layout';
+
+export function SplitterPersistDemo() {
+  // sizes + onSizesChange is the whole persistable state, so there is no
+  // stateKey to learn and no storage context to provide — save it anywhere.
+  const [sizes, setSizes] = useState<readonly OgeSplitterSize[]>(
+    () => JSON.parse(localStorage.getItem('editor-layout') ?? 'null') ?? [30, 70],
+  );
+
+  useEffect(() => {
+    localStorage.setItem('editor-layout', JSON.stringify(sizes));
+  }, [sizes]);
+  return (
+    <OgeSplitter
+      sizes={sizes}
+      onSizesChange={setSizes}
+      style={{ blockSize: 220 }}
+      panes={[
+        { content: <div>Left</div> },
+        { content: <div>Right</div> },
+      ]}
+    />
+  );
+}
+```
+
+### Commands
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const commands: readonly OgeToolbarItemData[] = [
+  { key: 'new', text: 'New' },
+  { key: 'open', text: 'Open' },
+  { key: 'sep', type: 'separator' },
+  { key: 'save', text: 'Save', severity: 'accent' },
+  { key: 'delete', text: 'Delete', severity: 'danger', location: 'after' },
+];
+
+export function ToolbarCommandsDemo() {
+  const [last, setLast] = useState('—');
+  return (
+    <>
+      <OgeToolbar
+        ariaLabel="Document actions"
+        items={commands}
+        onItemClick={(event) => setLast(event.item?.text ?? '')}
+      />
+      <p>last command → {last}</p>
+    </>
+  );
+}
+```
+
+### Data-driven items
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const tools: readonly OgeToolbarItemData[] = [
+  { key: 'undo', text: 'Undo' },
+  { key: 'redo', text: 'Redo' },
+  { key: 'sep', type: 'separator' },
+  { key: 'bold', text: 'Bold', active: true },
+  { key: 'note', type: 'label', text: 'Draft' },
+  { key: 'publish', text: 'Publish', location: 'after', severity: 'accent' },
+];
+
+export function ToolbarItemsDemo() {
+  const [last, setLast] = useState('—');
+  return (
+    <>
+      <OgeToolbar
+        items={tools}
+        onItemClick={(event) =>
+          setLast(`${event.key} (${event.inMenu ? 'menu' : 'bar'})`)
+        }
+      />
+      <p>last command → {last}</p>
+    </>
+  );
+}
+```
+
+### Keyboard & accessibility
+
+```ts
+'use client';
+
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const items: readonly OgeToolbarItemData[] = [
+  { key: 'select', text: 'Select' },
+  { key: 'move', text: 'Move', disabled: true },
+  { key: 'zoom', text: 'Zoom' },
+];
+
+export function ToolbarKeyboardDemo() {
+  return (
+    <OgeToolbar
+      orientation="vertical"
+      ariaLabel="Tools"
+      wrap={false}
+      items={items}
+    />
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { OgeToolbar, OgeToolbarConfigProvider } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const items: readonly OgeToolbarItemData[] = [
+  { key: 'yeni', text: 'Yeni' },
+  { key: 'kaydet', text: 'Kaydet', severity: 'accent' },
+  { key: 'ayarlar', text: 'Ayarlar', locateInMenu: 'always' },
+];
+
+export function ToolbarConfigDemo() {
+  return (
+    <OgeToolbarConfigProvider
+      config={{
+        size: 'sm',
+        stylingMode: 'flat',
+        messages: {
+          toolbar: 'Araç çubuğu',
+          overflowMenu: 'Daha fazla komut',
+          noData: 'Gösterilecek komut yok',
+        },
+      }}
+    >
+      {/* A single instance can still override the strings with the messages prop. */}
+      <OgeToolbar
+        items={items}
+        messages={{ toolbar: 'Araç çubuğu', overflowMenu: 'Daha fazla' }}
+      />
+    </OgeToolbarConfigProvider>
+  );
+}
+```
+
+### Location groups
+
+```ts
+'use client';
+
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const items: readonly OgeToolbarItemData[] = [
+  { key: 'back', text: 'Back', location: 'before' },
+  { key: 'file', type: 'label', text: 'report.xlsx', location: 'center' },
+  { key: 'share', text: 'Share', location: 'after' },
+];
+
+export function ToolbarLocationDemo() {
+  return (
+    <OgeToolbar items={items} />
+  );
+}
+```
+
+### Overflow menu
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const items: readonly OgeToolbarItemData[] = [
+  { key: 'cut', text: 'Cut', locateInMenu: 'never' },
+  { key: 'copy', text: 'Copy' },
+  { key: 'paste', text: 'Paste' },
+  { key: 'paste-special', text: 'Paste special' },
+  { key: 'print', text: 'Print preview' },
+  { key: 'settings', text: 'Document settings', locateInMenu: 'always' },
+];
+
+export function ToolbarOverflowDemo() {
+  const [width, setWidth] = useState(520);
+  const [inMenu, setInMenu] = useState(0);
+  return (
+    <>
+      <label htmlFor="tb-width">width</label>
+      <input
+        id="tb-width"
+        type="range"
+        min={220}
+        max={720}
+        step={10}
+        value={width}
+        onChange={(event) => setWidth(Number(event.target.value))}
+      />
+      <div style={{ maxWidth: width }}>
+        <OgeToolbar
+          overflow="menu"
+          items={items}
+          onOverflowChanged={(event) => setInMenu(event.count)}
+        />
+      </div>
+      <p>in the menu → {inMenu} command(s)</p>
+    </>
+  );
+}
+```
+
+### Overflow priority
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const items: readonly OgeToolbarItemData[] = [
+  { key: 'open', text: 'Open' },
+  { key: 'print', text: 'Print preview', overflowPriority: -1 },
+  { key: 'settings', text: 'Document settings', overflowPriority: -1 },
+  // Save sits last on the bar and is still the last to collapse.
+  { key: 'save', text: 'Save', severity: 'accent', overflowPriority: 10 },
+];
+
+export function ToolbarPriorityDemo() {
+  const [width, setWidth] = useState(520);
+  return (
+    <>
+      <label htmlFor="tb-priority-width">width</label>
+      <input
+        id="tb-priority-width"
+        type="range"
+        min={220}
+        max={720}
+        step={10}
+        value={width}
+        onChange={(event) => setWidth(Number(event.target.value))}
+      />
+      <div style={{ maxWidth: width }}>
+        <OgeToolbar overflow="menu" items={items} />
+      </div>
+    </>
+  );
+}
+```
+
+### Overflow modes
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData, OgeToolbarOverflow } from '@oge-ui/react-layout';
+
+const modes: readonly OgeToolbarOverflow[] = [
+  'menu',
+  'scroll',
+  'wrap',
+  'extended',
+  'none',
+];
+
+const items: readonly OgeToolbarItemData[] = [
+  { key: 'cut', text: 'Cut' },
+  { key: 'copy', text: 'Copy' },
+  { key: 'paste', text: 'Paste' },
+  { key: 'paste-special', text: 'Paste special' },
+  { key: 'print', text: 'Print preview' },
+];
+
+export function ToolbarModesDemo() {
+  const [mode, setMode] = useState<OgeToolbarOverflow>('extended');
+  return (
+    <>
+      <div>
+        {modes.map((option) => (
+          <button key={option} type="button" onClick={() => setMode(option)}>
+            {option}
+          </button>
+        ))}
+      </div>
+      <div style={{ maxWidth: 384 }}>
+        <OgeToolbar overflow={mode} items={items} />
+      </div>
+    </>
+  );
+}
+```
+
+### Toggle commands
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+export function ToolbarToggleDemo() {
+  const [bold, setBold] = useState(true);
+  const [italic, setItalic] = useState(false);
+  const [last, setLast] = useState('—');
+
+  const items: readonly OgeToolbarItemData[] = [
+    { key: 'bold', text: 'Bold', active: bold },
+    { key: 'italic', text: 'Italic', active: italic },
+  ];
+  return (
+    <>
+      <OgeToolbar
+        items={items}
+        onActiveChanged={(event) => {
+          if (event.key === 'bold') setBold(event.active);
+          if (event.key === 'italic') setItalic(event.active);
+          setLast(`${event.key} → ${event.active}`);
+        }}
+      />
+      <p>
+        bold {String(bold)} · italic {String(italic)} · last {last}
+      </p>
+    </>
+  );
+}
+```
+
+### Runtime changes
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarHandle, OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const tools: readonly OgeToolbarItemData[] = [
+  { key: 'cut', text: 'Cut' },
+  { key: 'copy', text: 'Copy' },
+  { key: 'paste', text: 'Paste' },
+];
+
+export function ToolbarRuntimeDemo() {
+  const bar = useRef<OgeToolbarHandle>(null);
+  return (
+    <>
+      <OgeToolbar ref={bar} items={tools} />
+      <button
+        type="button"
+        onClick={() => bar.current?.addItem({ key: 'new', text: 'Added' })}
+      >
+        addItem
+      </button>
+      <button type="button" onClick={() => bar.current?.hideItem('copy')}>
+        hideItem
+      </button>
+      <button
+        type="button"
+        onClick={() => bar.current?.enableItem('paste', false)}
+      >
+        disable
+      </button>
+      <button type="button" onClick={() => bar.current?.clearItemOverrides()}>
+        reset
+      </button>
+      <button type="button" onClick={() => bar.current?.refreshOverflow()}>
+        refreshOverflow
+      </button>
+    </>
+  );
+}
+```
+
+### Icon-only commands
+
+```ts
+'use client';
+
+import { OgeToolbar } from '@oge-ui/react-layout';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+// Icons are SVG path data — there is no icon font or icon package.
+const items: readonly OgeToolbarItemData[] = [
+  { key: 'bold', text: 'Bold', icon: 'M5 3h4a3 3 0 0 1 0 6H5zM5 9h5a3 3 0 0 1 0 6H5z' },
+  { key: 'italic', text: 'Italic', icon: 'M10 3H6m4 0-3 10m0 0H3m4 0h3' },
+  {
+    key: 'underline',
+    text: 'Underline',
+    icon: 'M4 3v5a4 4 0 0 0 8 0V3M3 14h10',
+    showText: 'always',
+  },
+];
+
+export function ToolbarIconDemo() {
+  return (
+    <OgeToolbar showText="inMenu" items={items} />
+  );
+}
+```
+
+### Custom content
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeToolbar } from '@oge-ui/react-layout';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+import type { OgeToolbarItemData } from '@oge-ui/react-layout';
+
+const views = ['All', 'Mine', 'Archived'];
+const items: readonly OgeToolbarItemData[] = [{ key: 'view', text: 'View' }];
+
+export function ToolbarSlotsDemo() {
+  const [view, setView] = useState<unknown>('All');
+  return (
+    <OgeToolbar
+      items={items}
+      renderItem={() => (
+        <OgeSelectBox
+          label="View"
+          items={views}
+          value={view}
+          onValueChange={setView}
+          size="sm"
+        />
+      )}
+      after={<input type="search" placeholder="Search…" aria-label="Search" />}
+    />
+  );
+}
+```
+

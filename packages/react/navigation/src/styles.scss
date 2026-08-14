@@ -1,0 +1,12 @@
+// The React navigation components render the exact `.oge-*` markup the Angular
+// package styles — so this stylesheet IS the Angular package's SCSS, compiled
+// into this package's own `styles.css`. No second stylesheet, no drift
+// (ADR 0001). Every partial of the Angular counterpart belongs here: adding a
+// component without its stylesheet ships an unstyled component that every
+// gate passes (see docs/ARCHITECTURE.md, "React package template").
+@use '../../../navigation/src/lib/tree-view/tree-view';
+@use '../../../navigation/src/lib/drawer/drawer';
+@use '../../../navigation/src/lib/menubar/menubar';
+@use '../../../navigation/src/lib/breadcrumb/breadcrumb';
+@use '../../../navigation/src/lib/pagination/pagination';
+@use '../../../navigation/src/lib/stepper/stepper';

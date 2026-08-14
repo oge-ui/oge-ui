@@ -6,8 +6,10 @@ test.describe('home / landing page', () => {
     page,
   }) => {
     await page.goto('/');
+    // framework-neutral hero copy (ADR 0002): the h1 names no framework, the
+    // hero switch beside it does
     await expect(
-      page.getByRole('heading', { level: 1, name: /Angular components/ }),
+      page.getByRole('heading', { level: 1, name: /UI components/ }),
     ).toBeVisible();
     // landing renders full-bleed: no sidebar nav, no page filter box
     await expect(page.getByPlaceholder('Filter pages…')).toHaveCount(0);

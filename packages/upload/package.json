@@ -1,0 +1,40 @@
+{
+  "name": "@oge-ui/upload",
+  "version": "0.11.0",
+  "description": "Signal-based Angular file uploader: drag & drop with directory and paste support, client-side restrictions, image previews, per-file progress, chunked and resumable transfer with pause/resume/retry, a pluggable upload adapter, and a full keyboard and screen-reader contract.",
+  "keywords": [
+    "angular",
+    "file-upload",
+    "uploader",
+    "dropzone",
+    "drag-and-drop",
+    "chunked-upload",
+    "resumable",
+    "signals",
+    "standalone-components"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/core": "0.11.0",
+    "@oge-ui/layout": "0.11.0",
+    "@oge-ui/overlay": "0.11.0"
+  },
+  "sideEffects": false,
+  "schematics": "./schematics/collection.json",
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/upload"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

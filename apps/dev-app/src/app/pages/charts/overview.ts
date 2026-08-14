@@ -89,7 +89,9 @@ const SECTIONS = [
         <code>&#64;oge-ui/charts</code> is a commercial package — free for
         evaluation and development, with no watermark and no runtime license
         checks. See
-        <a routerLink="/license" class="text-indigo-600 dark:text-indigo-400"
+        <a
+          routerLink="/license"
+          class="text-indigo-600 underline dark:text-indigo-400"
           >licensing</a
         >
         for the terms.

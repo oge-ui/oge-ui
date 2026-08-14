@@ -15,6 +15,11 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import {
+  OgeMenuTypeAhead,
+  menuEdgeIndex,
+  menuMoveIndex,
+} from '@oge-ui/behavior';
 import { OGE_OVERLAY_CONFIG } from '../config';
 import {
   OgeAnchoredPanel,
@@ -295,8 +300,11 @@ export class OgeMenuList {
     onClosed: () => this.openChildIndex.set(-1),
   });
 
-  private typeAheadBuffer = '';
-  private lastTypeTime = Number.NEGATIVE_INFINITY;
+  // Shared with the React menu via `behavior` — buffer growth, repeated-char
+  // cycling and the silence timeout are the same machine in both layers.
+  private readonly typeAheadMachine = new OgeMenuTypeAhead(
+    () => this.config.typeAheadMs,
+  );
   private pendingChildFocus = false;
   private hoverOpenTimer: ReturnType<typeof setTimeout> | null = null;
   private hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
@@ -319,11 +327,8 @@ export class OgeMenuList {
   /** Focuses the menu container and activates the first/last enabled item. */
   focus(position: 'first' | 'last' = 'first'): void {
     this.host.nativeElement.focus({ preventScroll: true });
-    const enabled = this.enabledIndexes();
-    if (enabled.length === 0) return;
-    this.setActive(
-      position === 'first' ? enabled[0] : enabled[enabled.length - 1],
-    );
+    const index = menuEdgeIndex(this.items(), position);
+    if (index >= 0) this.setActive(index);
   }
 
   protected itemId(index: number): string {
@@ -439,12 +444,11 @@ export class OgeMenuList {
     if (key === 'Home' || key === 'End') {
       event.preventDefault();
       event.stopPropagation();
-      const enabled = this.enabledIndexes();
-      if (enabled.length) {
-        this.setActive(
-          key === 'Home' ? enabled[0] : enabled[enabled.length - 1],
-        );
-      }
+      const index = menuEdgeIndex(
+        this.items(),
+        key === 'Home' ? 'first' : 'last',
+      );
+      if (index >= 0) this.setActive(index);
       return;
     }
     if (key === 'Enter' || key === ' ') {
@@ -471,31 +475,13 @@ export class OgeMenuList {
   }
 
   private typeAhead(key: string): void {
-    const now = performance.now();
-    if (now - this.lastTypeTime > this.config.typeAheadMs) {
-      this.typeAheadBuffer = '';
-    }
-    this.lastTypeTime = now;
-    this.typeAheadBuffer += key.toLowerCase();
-    const buffer = this.typeAheadBuffer;
-    const repeated =
-      buffer.length > 1 && buffer.split('').every((c) => c === buffer[0]);
-    const needle = repeated ? buffer[0] : buffer;
-    // A growing distinct buffer keeps matching the current item ("d","de");
-    // a repeated single character cycles through matches instead.
-    const startOffset = buffer.length > 1 && !repeated ? 0 : 1;
-    const list = this.items();
-    const count = list.length;
-    const start = this.activeIndex();
-    for (let step = startOffset; step <= count; step++) {
-      const index = (start + step + count) % count;
-      const item = list[index];
-      if (!item || item.disabled || item.separator) continue;
-      if (item.text.toLowerCase().startsWith(needle)) {
-        this.setActive(index);
-        return;
-      }
-    }
+    const index = this.typeAheadMachine.next(
+      key,
+      this.items(),
+      this.activeIndex(),
+      performance.now(),
+    );
+    if (index >= 0) this.setActive(index);
   }
 
   private openChild(index: number, focusChild = false): void {
@@ -538,25 +524,9 @@ export class OgeMenuList {
     }
   }
 
-  private enabledIndexes(): number[] {
-    const indexes: number[] = [];
-    this.items().forEach((item, index) => {
-      if (!item.disabled && !item.separator) indexes.push(index);
-    });
-    return indexes;
-  }
-
   private move(delta: 1 | -1): void {
-    const enabled = this.enabledIndexes();
-    if (enabled.length === 0) return;
-    const current = enabled.indexOf(this.activeIndex());
-    const next =
-      current === -1
-        ? delta === 1
-          ? enabled[0]
-          : enabled[enabled.length - 1]
-        : enabled[(current + delta + enabled.length) % enabled.length];
-    this.setActive(next);
+    const next = menuMoveIndex(this.items(), this.activeIndex(), delta);
+    if (next >= 0) this.setActive(next);
   }
 
   private setActive(index: number): void {

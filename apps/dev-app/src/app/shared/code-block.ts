@@ -17,6 +17,10 @@ export interface CodeFile {
 
 const DEFAULT_TITLES: Record<string, string> = {
   ts: 'component.ts',
+  // React samples are `.tsx` files — a tab reading `component.ts` above JSX
+  // is a small lie the React reader notices. The highlighter has no `tsx`
+  // ruleset and falls back to `ts`, which is the correct highlighting anyway.
+  tsx: 'component.tsx',
   html: 'template.html',
   css: 'styles.css',
   sh: 'terminal',

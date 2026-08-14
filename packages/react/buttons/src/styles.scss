@@ -1,0 +1,13 @@
+// The stylesheet is the Angular package's, compiled verbatim.
+//
+// This is the cheapest win in the whole multi-framework split (ADR 0001):
+// every OGE style is a global `.oge-*` class under `ViewEncapsulation.None`,
+// so the React components need no CSS of their own — they render the same
+// class names and import the same source. When `@oge-ui/themes` is extracted
+// these paths become a package import; until then they point at the source,
+// exactly as the sibling Angular packages do for the token mixin.
+@use '../../../buttons/src/lib/button/button.scss';
+@use '../../../buttons/src/lib/button-group/button-group.scss';
+@use '../../../buttons/src/lib/drop-down-button/drop-down-button.scss';
+// The panel/menu chrome ships with `@oge-ui/react-overlay/styles.css` — the
+// docs tell drop-down users to import both, exactly one time each.

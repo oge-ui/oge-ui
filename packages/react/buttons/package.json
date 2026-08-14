@@ -1,0 +1,48 @@
+{
+  "name": "@oge-ui/react-buttons",
+  "version": "0.11.0",
+  "description": "React buttons from the OGE UI suite: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat gestures — sharing the Angular suite's press machine and design tokens.",
+  "keywords": [
+    "react",
+    "button",
+    "button-group",
+    "toggle-group",
+    "accessibility",
+    "design-system",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.11.0",
+    "@oge-ui/react-overlay": "0.11.0"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/buttons"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

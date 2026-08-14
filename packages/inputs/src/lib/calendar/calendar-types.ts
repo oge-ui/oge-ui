@@ -1,22 +1,17 @@
-import type { WeekNumberRule } from '@oge-ui/core';
+import type { OgeCalendarZoomLevel } from '@oge-ui/behavior';
 
-/** Calendar drill levels (century is deliberately not replicated). */
-export type OgeCalendarZoomLevel = 'month' | 'year' | 'decade';
-
-/** Single, multiple or range (start–end with hover preview) day selection. */
-export type OgeCalendarSelectionMode = 'single' | 'multiple' | 'range';
-
-/** Two-ended range value (`[start, end]`, either end may be open). */
-export type OgeCalendarRange = readonly [Date | null, Date | null];
-
-/** Options object form of `showWeekNumbers`. */
-export interface OgeCalendarWeekNumberOptions {
-  rule: WeekNumberRule;
-}
-
-/** `Date[]` or a predicate marking unselectable days. */
-export type OgeCalendarDisabledDates =
-  readonly Date[] | ((date: Date) => boolean);
+// The calendar vocabulary lives framework-free in `@oge-ui/behavior`
+// (`calendar-core`), shared with the React render layer; re-exported here so
+// existing imports keep working. Only the Angular template-slot context stays
+// local — `$implicit` has no meaning outside Angular.
+export type {
+  OgeCalendarZoomLevel,
+  OgeCalendarSelectionMode,
+  OgeCalendarRange,
+  OgeCalendarWeekNumberOptions,
+  OgeCalendarDisabledDates,
+  OgeCalendarCellClickEvent,
+} from '@oge-ui/behavior';
 
 /** Context of the `[ogeCalendarCellTemplate]` slot. */
 export interface OgeCalendarCellTemplateContext {
@@ -30,11 +25,4 @@ export interface OgeCalendarCellTemplateContext {
   today: boolean;
   /** Day belongs to the previous/next month (month view only). */
   otherPeriod: boolean;
-}
-
-/** A day/month/year cell was activated. */
-export interface OgeCalendarCellClickEvent {
-  date: Date;
-  view: OgeCalendarZoomLevel;
-  event: Event;
 }

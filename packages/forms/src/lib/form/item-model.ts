@@ -95,6 +95,8 @@ export function pickEditorType(
       return 'dateRangeBox';
     case 'array':
       return 'tagBox';
+    case 'file':
+      return 'fileUploader';
     default:
       return 'textBox';
   }

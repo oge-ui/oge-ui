@@ -49,7 +49,8 @@ export type OgeFormDataType =
   | 'datetime'
   | 'dateRange'
   | 'array'
-  | 'object';
+  | 'object'
+  | 'file';
 
 /**
  * Which `@oge-ui/inputs` editor renders an item. House camelCase names — the
@@ -70,7 +71,8 @@ export type OgeFormEditorType =
   | 'checkBox'
   | 'switch'
   | 'radioGroup'
-  | 'colorBox';
+  | 'colorBox'
+  | 'fileUploader';
 
 /** Where an item's label sits relative to its editor. */
 export type OgeFormLabelLocation = 'top' | 'start' | 'end';
@@ -162,6 +164,11 @@ export interface OgeFormEditorOptions {
   readonly text?: string;
   /** `radioGroup` orientation. */
   readonly layout?: 'vertical' | 'horizontal';
+  /** `fileUploader` restrictions and destination. */
+  readonly accept?: string;
+  readonly multiple?: boolean;
+  readonly maxFileSize?: number;
+  readonly uploadUrl?: string;
   /** `dateBox` kind. */
   readonly type?: 'date' | 'time' | 'datetime';
   readonly locale?: string;

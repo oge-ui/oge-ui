@@ -18,7 +18,12 @@ import {
   viewChild,
   viewChildren,
 } from '@angular/core';
-import { fitToolbarItems } from '@oge-ui/core';
+import {
+  breadcrumbDataDescriptors,
+  breadcrumbMenuItems,
+  fitBreadcrumbDescriptors,
+  type OgeBreadcrumbDescriptorCore,
+} from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
   OgeAnchoredPanel,
@@ -42,14 +47,8 @@ import type {
 
 let nextBreadcrumbId = 0;
 
-/** Estimated ellipsis-button size until the real element is measured. */
-const ELLIPSIS_SIZE_FALLBACK = 44;
-
 /** One normalized crumb: declarative children first, then `items`. */
-interface BreadcrumbDescriptor {
-  readonly id: string;
-  readonly item: OgeBreadcrumbItemData;
-}
+type BreadcrumbDescriptor = OgeBreadcrumbDescriptorCore;
 
 /**
  * WAI-ARIA APG breadcrumb: a `<nav>` landmark holding an ordered list of
@@ -98,7 +97,9 @@ interface BreadcrumbDescriptor {
               class="oge-breadcrumb-li oge-breadcrumb-ellipsis-li"
               [class.oge-breadcrumb-li-parked]="!menuVisible()"
             >
-              <ng-container *ngTemplateOutlet="separatorTpl; context: { i: i }" />
+              <ng-container
+                *ngTemplateOutlet="separatorTpl; context: { i: i }"
+              />
               <button
                 #ellipsisBtn
                 type="button"
@@ -131,7 +132,9 @@ interface BreadcrumbDescriptor {
             [class.oge-breadcrumb-li-hidden]="collapsedSet().has(i)"
           >
             @if (i > 0) {
-              <ng-container *ngTemplateOutlet="separatorTpl; context: { i: i }" />
+              <ng-container
+                *ngTemplateOutlet="separatorTpl; context: { i: i }"
+              />
             }
             @if (last || d.item.disabled) {
               <span
@@ -282,12 +285,10 @@ export class OgeBreadcrumb {
     OgeBreadcrumbSeparatorTemplate,
   );
   private readonly crumbEls = viewChildren<ElementRef<HTMLElement>>('crumbEl');
-  private readonly ellipsisEl = viewChild<ElementRef<HTMLElement>>(
-    'ellipsisEl',
-  );
-  private readonly ellipsisBtn = viewChild<ElementRef<HTMLElement>>(
-    'ellipsisBtn',
-  );
+  private readonly ellipsisEl =
+    viewChild<ElementRef<HTMLElement>>('ellipsisEl');
+  private readonly ellipsisBtn =
+    viewChild<ElementRef<HTMLElement>>('ellipsisBtn');
   private readonly popupRef = viewChild(OgePopup, { read: ElementRef });
   private readonly menuList = viewChild(OgeMenuList);
 
@@ -296,10 +297,9 @@ export class OgeBreadcrumb {
     ...this.messages(),
   }));
 
-  protected readonly resolvedCollapseMode =
-    computed<OgeBreadcrumbCollapseMode>(
-      () => this.collapseMode() ?? this.config.collapseMode ?? 'auto',
-    );
+  protected readonly resolvedCollapseMode = computed<OgeBreadcrumbCollapseMode>(
+    () => this.collapseMode() ?? this.config.collapseMode ?? 'auto',
+  );
 
   /** Declarative children first, then `items` — the house merge order. */
   protected readonly descriptors = computed<readonly BreadcrumbDescriptor[]>(
@@ -310,10 +310,7 @@ export class OgeBreadcrumb {
           id: child.key() ?? child.autoId,
           item: child.data(),
         }));
-      const fromItems = (this.items() ?? [])
-        .filter((item) => item.visible !== false)
-        .map((item, index) => ({ id: item.key ?? `i${index}`, item }));
-      return [...fromChildren, ...fromItems];
+      return [...fromChildren, ...breadcrumbDataDescriptors(this.items())];
     },
   );
 
@@ -323,52 +320,31 @@ export class OgeBreadcrumb {
   private readonly sizeCache = new Map<string, number>();
   private ellipsisSize = 0;
 
+  // First and last always stay visible (the reference contract); the lowest
+  // priority yields first, so the oldest middle crumb collapses before the
+  // ones nearer the current page. The decision itself is behavior's.
   private readonly fitResult = computed(() => {
     this.measuredVersion();
-    if (this.resolvedCollapseMode() !== 'auto') return null;
-    const ds = this.descriptors();
-    if (ds.length <= 2) return null; // first and last never collapse
-    const container = this.containerSize();
-    if (container <= 0) return null; // not measured yet: render complete
-    const sizes = ds.map((d) => this.sizeCache.get(d.id));
-    if (sizes.some((size) => size === undefined)) return null;
-    return fitToolbarItems({
-      containerSize: container,
-      items: ds.map((d, index) => ({
-        size: sizes[index] as number,
-        // First and last always stay visible (the reference contract); the
-        // lowest priority yields first, so the oldest middle crumb collapses
-        // before the ones nearer the current page.
-        policy: index === 0 || index === ds.length - 1 ? 'never' : 'auto',
-        priority: index,
-      })),
-      menuButtonSize: this.ellipsisSize || ELLIPSIS_SIZE_FALLBACK,
+    return fitBreadcrumbDescriptors({
+      descriptors: this.descriptors(),
+      collapseMode: this.resolvedCollapseMode(),
+      containerSize: this.containerSize(),
+      sizes: this.sizeCache,
+      ellipsisSize: this.ellipsisSize,
     });
   });
 
   protected readonly collapsedSet = computed<ReadonlySet<number>>(
-    () => new Set(this.fitResult()?.inMenu ?? []),
+    () => new Set(this.fitResult().inMenu),
   );
-  protected readonly menuVisible = computed(
-    () => this.fitResult()?.menuVisible ?? false,
-  );
+  protected readonly menuVisible = computed(() => this.fitResult().menuVisible);
 
   /** Collapsed crumbs as menu rows — `url` keeps them real links. */
-  protected readonly menuItems = computed<readonly OgeMenuItem[]>(() => {
-    if (!this.panelWanted()) return [];
-    const ds = this.descriptors();
-    return [...this.collapsedSet()]
-      .sort((a, b) => a - b)
-      .map((index) => ({
-        text: ds[index].item.text,
-        url: ds[index].item.url,
-        icon: ds[index].item.icon,
-        iconClass: ds[index].item.iconClass,
-        disabled: ds[index].item.disabled,
-        hint: ds[index].item.hint,
-        value: index,
-      }));
-  });
+  protected readonly menuItems = computed<readonly OgeMenuItem[]>(() =>
+    this.panelWanted()
+      ? breadcrumbMenuItems(this.descriptors(), this.collapsedSet())
+      : [],
+  );
   private readonly panelWanted = signal(false);
 
   /** Anchored-panel model — public so templates/tests can read `panelId`. */

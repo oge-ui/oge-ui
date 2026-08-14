@@ -43,6 +43,7 @@
 .oge-theme-dark .oge-scheduler,
 .oge-theme-dark .oge-gantt,
 .oge-theme-dark .oge-kanban,
+.oge-theme-dark .oge-upload,
 .oge-theme-dark .oge-chart,
 .oge-theme-dark .oge-pivot-grid,
 .oge-grid.oge-theme-dark,
@@ -81,6 +82,7 @@
 .oge-scheduler.oge-theme-dark,
 .oge-gantt.oge-theme-dark,
 .oge-kanban.oge-theme-dark,
+.oge-upload.oge-theme-dark,
 .oge-chart.oge-theme-dark,
 .oge-pivot-grid.oge-theme-dark {
   /* native form controls (checkboxes, selects, date pickers) follow suit */

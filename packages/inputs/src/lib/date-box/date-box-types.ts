@@ -1,12 +1,9 @@
-/** What the editor edits: a day, a time of day, or both. */
-export type OgeDateBoxType = 'date' | 'time' | 'datetime';
-
-/** Picker commit policy: on pick, or via the OK/Cancel footer. */
-export type OgeDateBoxApplyValueMode = 'instantly' | 'useButtons';
-
-/** Display text: `Intl.DateTimeFormatOptions` or a custom formatter. */
-export type OgeDateBoxDisplayFormat =
-  Intl.DateTimeFormatOptions | ((date: Date) => string);
-
-/** Time picker layout: one interval list, or hour + minute columns. */
-export type OgeDateBoxTimeView = 'list' | 'columns';
+// The date box vocabulary lives framework-free in `@oge-ui/behavior`
+// (`calendar-core`), shared with the React render layer; re-exported here so
+// existing imports keep working.
+export type {
+  OgeDateBoxType,
+  OgeDateBoxApplyValueMode,
+  OgeDateBoxDisplayFormat,
+  OgeDateBoxTimeView,
+} from '@oge-ui/behavior';

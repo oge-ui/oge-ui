@@ -196,6 +196,17 @@ const EVENT_GROUPS: readonly ApiGroup[] = [
           'Emitted when a pane is clicked. A nested splitter reports its own panes — the event does not surface on the parent.',
       },
       {
+        name: 'paneHold',
+        type: 'OgeSplitterPaneHoldEvent',
+        description:
+          'A pane was held for <code>itemHoldTimeout</code> — a touch long-press or a mouse hold.',
+      },
+      {
+        name: 'paneContextMenu',
+        type: 'OgeSplitterPaneHoldEvent',
+        description: 'A pane was right-clicked or long-pressed for a menu.',
+      },
+      {
         name: 'sizesChange',
         type: 'readonly OgeSplitterSize[] | undefined',
         description: 'Two-way model output of <code>sizes</code>.',
@@ -233,7 +244,7 @@ export const OGE_SPLITTER_API: ApiSections = {
           name: 'OgeSplitterPaneData',
           type: 'interface',
           description:
-            'Data-driven counterpart of a declarative pane: <code>key</code>, <code>size</code>, <code>minSize</code>, <code>maxSize</code>, <code>collapsible</code>, <code>collapsed</code>, <code>collapsedSize</code>, <code>resizable</code>, <code>scrollable</code>, <code>visible</code>, <code>text</code>, <code>cssClass</code>, <code>htmlAttributes</code>, <code>panes</code>, <code>orientation</code>.',
+            'Data-driven counterpart of a declarative pane: <code>key</code>, <code>size</code>, <code>minSize</code>, <code>maxSize</code>, <code>collapsible</code>, <code>collapsed</code>, <code>collapsedSize</code>, <code>resizable</code>, <code>scrollable</code>, <code>disabled</code>, <code>visible</code>, <code>text</code>, <code>cssClass</code>, <code>htmlAttributes</code>, <code>panes</code>, <code>orientation</code>.',
         },
         {
           name: 'OgeSplitterPaneTemplateContext',

@@ -8,7 +8,15 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { snapToStep, valueToRatio } from '@oge-ui/core';
+import { snapToStep } from '@oge-ui/core';
+import {
+  sliderKeyboardTarget,
+  sliderPercent,
+  sliderTicks,
+  sliderValueFromPointer,
+  startSliderDrag,
+  type OgeSliderScale,
+} from '@oge-ui/behavior';
 import { OgeControlBase } from '../field/control-base';
 import type {
   OgeSliderDragStartedEvent,
@@ -16,9 +24,6 @@ import type {
   OgeSliderSlideEndedEvent,
   OgeSliderValueIndicator,
 } from './slider-types';
-
-/** Hard cap on rendered ticks so a tiny `tickStep` cannot flood the DOM. */
-const MAX_TICKS = 200;
 
 /**
  * Shared machinery of `OgeSlider` and `OgeRangeSlider`: the scale inputs, the
@@ -81,8 +86,7 @@ export abstract class OgeSliderBase<T> extends OgeControlBase<T> {
   /** A drag gesture completed (not emitted on Escape-cancel). */
   readonly slideEnded = output<OgeSliderSlideEndedEvent<T>>();
 
-  protected readonly trackEl =
-    viewChild<ElementRef<HTMLElement>>('track');
+  protected readonly trackEl = viewChild<ElementRef<HTMLElement>>('track');
 
   protected readonly dragging = signal(false);
   /** Pointer is over a thumb — the `'active'` indicator includes hover (dx). */
@@ -96,6 +100,12 @@ export abstract class OgeSliderBase<T> extends OgeControlBase<T> {
   }
 
   // --- arithmetic ------------------------------------------------------------
+  // The math and the gesture harness live framework-free in `@oge-ui/behavior`
+  // (`slider-core`); this base only feeds them signals and DOM measurements.
+
+  private scale(): OgeSliderScale {
+    return { min: this.minValue(), max: this.maxValue(), step: this.step() };
+  }
 
   protected resolvedLargeStep(): number {
     return this.largeStep() ?? this.step() * 10;
@@ -116,32 +126,21 @@ export abstract class OgeSliderBase<T> extends OgeControlBase<T> {
   }
 
   protected percent(value: number): number {
-    return valueToRatio(value, this.minValue(), this.maxValue()) * 100;
+    return sliderPercent(value, this.scale());
   }
 
   protected readonly ticks = computed<readonly number[]>(() => {
     if (!this.showTicks()) return [];
-    const spacing = this.tickStep() ?? this.largeStep() ?? this.step();
-    const min = this.minValue();
-    const max = this.maxValue();
-    if (spacing <= 0 || max <= min) return [];
-    const count = Math.floor((max - min) / spacing);
-    const list: number[] = [];
-    for (let i = 0; i <= count && list.length < MAX_TICKS; i++) {
-      list.push(snapToStep(min + i * spacing, min, max, spacing));
-    }
-    if (list[list.length - 1] !== max && list.length < MAX_TICKS) {
-      list.push(max); // the far end always gets a stop
-    }
-    return list;
+    return sliderTicks(
+      this.scale(),
+      this.tickStep() ?? this.largeStep() ?? this.step(),
+    );
   });
 
   // --- pointer machinery -----------------------------------------------------
 
   protected isRtl(): boolean {
-    return (
-      getComputedStyle(this.hostEl.nativeElement).direction === 'rtl'
-    );
+    return getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
   }
 
   /**
@@ -150,15 +149,10 @@ export abstract class OgeSliderBase<T> extends OgeControlBase<T> {
    * reads belong at the gesture boundary, not in the hot path).
    */
   protected valueAtPointer(event: PointerEvent, rect: DOMRect): number {
-    let ratio: number;
-    if (this.orientation() === 'vertical') {
-      ratio = rect.height > 0 ? (rect.bottom - event.clientY) / rect.height : 0;
-    } else {
-      ratio = rect.width > 0 ? (event.clientX - rect.left) / rect.width : 0;
-      if (this.isRtl()) ratio = 1 - ratio;
-    }
-    const min = this.minValue();
-    return this.snap(min + Math.min(Math.max(ratio, 0), 1) * (this.maxValue() - min));
+    return sliderValueFromPointer(event, rect, this.scale(), {
+      vertical: this.orientation() === 'vertical',
+      rtl: this.isRtl(),
+    });
   }
 
   /**
@@ -181,56 +175,20 @@ export abstract class OgeSliderBase<T> extends OgeControlBase<T> {
     this.dragging.set(true);
     this.dragStarted.emit({ event });
 
-    const target = event.target as HTMLElement | null;
-    if (target && typeof target.setPointerCapture === 'function') {
-      try {
-        target.setPointerCapture(event.pointerId);
-      } catch {
-        /* jsdom / detached elements — capture is a progressive enhancement */
-      }
-    }
-
-    apply(this.valueAtPointer(event, rect), event);
-
-    const move = (e: PointerEvent): void => {
-      apply(this.valueAtPointer(e, rect), e);
-    };
-    const finish = (e: PointerEvent, cancelled: boolean): void => {
-      cleanup();
-      this.dragging.set(false);
-      if (cancelled) {
-        restore();
-        return;
-      }
-      this.flushCommit();
-      this.slideEnded.emit({ value: this.value(), event: e });
-    };
-    const onMove = (e: PointerEvent): void => move(e);
-    const onUp = (e: PointerEvent): void => finish(e, false);
-    const onCancel = (e: PointerEvent): void => finish(e, true);
-    const onKeydown = (e: KeyboardEvent): void => {
-      if (e.key !== 'Escape') return;
-      e.preventDefault();
-      e.stopPropagation();
-      finish(event, true);
-    };
-    const onWindowBlur = (): void => finish(event, true);
-    const cleanup = (): void => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onCancel);
-      document.removeEventListener('keydown', onKeydown, true);
-      window.removeEventListener('blur', onWindowBlur);
-      this.activeGestureCleanup = null;
-    };
-    // Document-level listeners: pointer capture is not guaranteed, and
-    // alt-tab / releases outside the document never deliver a pointerup.
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onCancel);
-    document.addEventListener('keydown', onKeydown, true);
-    window.addEventListener('blur', onWindowBlur);
-    this.activeGestureCleanup = cleanup;
+    this.activeGestureCleanup = startSliderDrag(event, {
+      valueAt: (e) => this.valueAtPointer(e, rect),
+      apply,
+      finish: (e, cancelled) => {
+        this.activeGestureCleanup = null;
+        this.dragging.set(false);
+        if (cancelled) {
+          restore();
+          return;
+        }
+        this.flushCommit();
+        this.slideEnded.emit({ value: this.value(), event: e });
+      },
+    });
   }
 
   // --- keyboard --------------------------------------------------------------
@@ -240,22 +198,20 @@ export abstract class OgeSliderBase<T> extends OgeControlBase<T> {
    * PageUp/PageDown ±largeStep, Home/End to the ends. Returns the next value
    * for `current`, or `null` when the key is not part of the pattern.
    */
-  protected keyboardTarget(current: number, event: KeyboardEvent): number | null {
-    const key = event.key;
-    if (key === 'Home') return this.minValue();
-    if (key === 'End') return this.maxValue();
-    const large = this.resolvedLargeStep();
-    if (key === 'PageUp') return this.snap(current + large);
-    if (key === 'PageDown') return this.snap(current - large);
-    const vertical = this.orientation() === 'vertical';
-    const rtl = !vertical && this.isRtl();
-    let direction = 0;
-    if (key === 'ArrowUp') direction = 1;
-    else if (key === 'ArrowDown') direction = -1;
-    else if (key === 'ArrowRight') direction = rtl ? -1 : 1;
-    else if (key === 'ArrowLeft') direction = rtl ? 1 : -1;
-    if (direction === 0) return null;
-    return this.snap(current + direction * this.step());
+  protected keyboardTarget(
+    current: number,
+    event: KeyboardEvent,
+  ): number | null {
+    return sliderKeyboardTarget(
+      current,
+      event.key,
+      this.scale(),
+      this.resolvedLargeStep(),
+      {
+        vertical: this.orientation() === 'vertical',
+        rtl: this.isRtl(),
+      },
+    );
   }
 
   // --- subclass contract defaults --------------------------------------------

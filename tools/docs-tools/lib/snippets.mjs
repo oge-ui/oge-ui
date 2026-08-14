@@ -33,13 +33,15 @@ export async function readSnippets(pagesDir, workspaceRoot) {
       .split(path.sep)
       .join('/');
     for (const [name, value] of Object.entries(namespace)) {
-      if (typeof value !== 'string') continue;
-      snippets.push({
-        file: relative,
-        name,
-        code: value,
-        checkable: isStandaloneComponent(value),
-      });
+      for (const { suffix, code, title } of collectSources(value)) {
+        snippets.push({
+          file: relative,
+          name: `${name}${suffix}`,
+          code,
+          title,
+          checkable: isStandaloneComponent(code),
+        });
+      }
     }
   }
   snippets.sort(
@@ -49,12 +51,65 @@ export async function readSnippets(pagesDir, workspaceRoot) {
 }
 
 /**
+ * Normalises what a `*-snippets.ts` module may export into snippet sources.
+ *
+ * The Angular pages export bare strings, one constant per demo. The React
+ * pages export arrays of `{ title, description, source }` because their demo
+ * cards carry that metadata — so an array (or a single such object) is unwrapped
+ * here rather than forcing one convention onto both apps. Anything else is
+ * ignored, which is what keeps helper exports out of the docs.
+ *
+ * @param {unknown} value
+ * @returns {Array<{ suffix: string, code: string }>}
+ */
+function collectSources(value) {
+  if (typeof value === 'string') return [{ suffix: '', code: value }];
+  if (Array.isArray(value)) {
+    return value.flatMap((entry, index) =>
+      collectSources(entry).map(({ code, title }) => ({
+        suffix: `[${index}]`,
+        code,
+        title,
+      })),
+    );
+  }
+  if (
+    value &&
+    typeof value === 'object' &&
+    typeof (/** @type {{ source?: unknown }} */ (value).source) === 'string'
+  ) {
+    const record = /** @type {{ source: string, title?: unknown }} */ (value);
+    return [
+      {
+        suffix: '',
+        code: record.source,
+        // The demo card's human title — used as the llms.txt heading instead
+        // of the constant name + index, which reads as `Button demos[0]`.
+        title: typeof record.title === 'string' ? record.title : undefined,
+      },
+    ];
+  }
+  return [];
+}
+
+/**
  * A snippet is checkable when it is a whole file: import statements plus a
  * component. Structural rather than a flag, so a fragment can never claim to be
  * complete and a complete one can never opt out of the gate.
+ *
+ * Two shapes qualify — an Angular `@Component` and a React component module,
+ * which the `'use client'` pragma plus an exported function identifies.
  */
 function isStandaloneComponent(code) {
-  return code.startsWith('import ') && code.includes('@Component(');
+  if (code.startsWith('import ') && code.includes('@Component(')) return true;
+  // Props are allowed — `export function Demo({ children }: …)` is as much a
+  // whole component module as a no-arg one, and exempting it would let any
+  // props-taking React demo silently escape the gate.
+  return (
+    code.startsWith("'use client';") &&
+    code.includes('import ') &&
+    /export function \w+\(/.test(code)
+  );
 }
 
 /** @param {string} dir @returns {string[]} absolute paths */

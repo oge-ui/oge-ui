@@ -1,0 +1,51 @@
+{
+  "name": "@oge-ui/react-navigation",
+  "version": "0.11.0",
+  "description": "React navigation controls from the OGE UI suite: tree view, drawer, menubar, breadcrumb, pagination and stepper — running the same traversal, layout-mode and overflow engines and the same stylesheet as the Angular navigation package.",
+  "keywords": [
+    "react",
+    "navigation",
+    "tree-view",
+    "drawer",
+    "menubar",
+    "breadcrumb",
+    "pagination",
+    "stepper",
+    "accessibility",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.11.0",
+    "@oge-ui/react-overlay": "0.11.0"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/navigation"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

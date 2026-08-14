@@ -1,0 +1,477 @@
+@use '../../../../grid/src/lib/styles/tokens';
+
+/*
+ * Visual bar: a current-generation surface, not a wireframe.
+ *
+ * Three ideas carry the design. The drop zone is a *state layer* — the
+ * dashed rest state, an accent-soft wash on hover and a solid ring plus a
+ * lift on drag-over — rather than a hard colour swap. Rows are quiet by
+ * default and grow their affordances on hover or focus-within, so a list of
+ * twelve files is not a wall of buttons. And every state that matters
+ * (uploading, uploaded, failed, paused) has a left accent rail, which reads
+ * at a glance and is never the only signal — the status text and icon carry
+ * it too.
+ */
+
+.oge-upload {
+  @include tokens.core-tokens;
+
+  --oge-upload-gap: 8px;
+  --oge-upload-row-pad: 10px 12px;
+
+  display: block;
+  color: var(--oge-text-color);
+  font-family: inherit;
+}
+
+/* The input stays in the accessibility tree — clipped, never `display: none`,
+   so browse-mode users can still reach it. The visible affordance is a real
+   button that forwards the click. */
+.oge-upload-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- drop zone ----------------------------------------------------------- */
+
+.oge-upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 32px 20px;
+  color: var(--oge-muted-color);
+  font: inherit;
+  text-align: center;
+  background: linear-gradient(var(--oge-accent-soft) 0 0) no-repeat center / 0%
+    100%;
+  background-color: var(--oge-bg);
+  border: 1.5px dashed var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-size 0.28s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+
+  &:hover:not(:disabled) {
+    background-size: 100% 100%;
+    border-color: var(--oge-accent-25);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+/* Drop-only variant: a region, not a button. */
+.oge-upload-dropzone-passive {
+  cursor: default;
+}
+
+.oge-upload-dropzone-over {
+  background-size: 100% 100%;
+  border-style: solid;
+  border-color: var(--oge-accent);
+  box-shadow:
+    0 0 0 4px var(--oge-accent-soft),
+    var(--oge-shadow-card);
+  transform: translateY(-1px);
+}
+
+.oge-upload-dropzone-compact {
+  flex-direction: row;
+  gap: 10px;
+  padding: 12px 16px;
+  text-align: start;
+}
+
+.oge-upload-dropzone-label {
+  color: var(--oge-text-color);
+  font-weight: 550;
+  letter-spacing: -0.01em;
+}
+
+.oge-upload-dropzone-hint {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* The zone glyph sits on a soft accent disc so the panel has a focal point. */
+.oge-upload-icon {
+  box-sizing: content-box;
+  padding: 10px;
+  color: var(--oge-accent);
+  background: var(--oge-accent-soft);
+  border-radius: 50%;
+}
+
+.oge-upload-dropzone-compact .oge-upload-icon {
+  padding: 6px;
+}
+
+/* --- buttons ------------------------------------------------------------- */
+
+.oge-upload-select,
+.oge-upload-clear,
+.oge-upload-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-weight: 500;
+  background: var(--oge-bg);
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  box-shadow: var(--oge-shadow-btn);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-row-hover-bg);
+    box-shadow: var(--oge-shadow-btn-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    box-shadow: none;
+  }
+}
+
+/* The primary action carries the accent; the rest stay quiet. */
+.oge-upload-start:not(:disabled) {
+  color: #fff;
+  background: var(--oge-accent);
+  border-color: var(--oge-accent);
+
+  &:hover {
+    background: var(--oge-accent);
+    filter: brightness(1.06);
+  }
+}
+
+.oge-upload-select {
+  margin-bottom: var(--oge-upload-gap);
+}
+
+.oge-upload-actions {
+  display: flex;
+  gap: var(--oge-upload-gap);
+  margin-top: 12px;
+}
+
+.oge-upload-actions-start {
+  justify-content: flex-start;
+}
+.oge-upload-actions-center {
+  justify-content: center;
+}
+.oge-upload-actions-end {
+  justify-content: flex-end;
+}
+.oge-upload-actions-stretch > * {
+  flex: 1;
+  justify-content: center;
+}
+
+/* --- file list ----------------------------------------------------------- */
+
+.oge-upload-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oge-upload-file {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--oge-upload-row-pad);
+  overflow: hidden;
+  background: var(--oge-bg);
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  /* The status rail: a 3px inset edge, coloured per state. */
+  &::before {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    content: '';
+    background: transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+[dir='rtl'] .oge-upload-file::before {
+  inset: 0 0 0 auto;
+}
+
+.oge-upload-file-uploading::before {
+  background: var(--oge-accent);
+}
+.oge-upload-file-uploaded::before {
+  background: var(--oge-success);
+}
+.oge-upload-file-paused::before {
+  background: var(--oge-warning);
+}
+.oge-upload-file-failed::before,
+.oge-upload-file-invalid::before {
+  background: var(--oge-danger);
+}
+
+.oge-upload-file-invalid,
+.oge-upload-file-failed {
+  background: var(--oge-danger-soft);
+  border-color: color-mix(in srgb, var(--oge-danger) 35%, transparent);
+}
+
+.oge-upload-file-thumb {
+  flex: none;
+  height: auto;
+  object-fit: cover;
+  background: var(--oge-group-bg);
+  border-radius: var(--oge-radius);
+}
+
+.oge-upload-file-glyph {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--oge-muted-color);
+  background: var(--oge-group-bg);
+  border-radius: var(--oge-radius);
+}
+
+.oge-upload-file-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.oge-upload-file-name {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-upload-file-meta {
+  color: var(--oge-muted-color);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-upload-file-progress {
+  margin-top: 2px;
+}
+
+.oge-upload-file-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--oge-danger);
+  font-size: 0.8125rem;
+}
+
+/* Row actions recede until the row is engaged — a twelve-file list should not
+   read as a wall of buttons. Always visible to the keyboard and to touch,
+   where there is no hover to reveal them. */
+.oge-upload-file-action {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  color: var(--oge-muted-color);
+  font: inherit;
+  font-size: 0.8125rem;
+  background: none;
+  border: 0;
+  border-radius: var(--oge-radius);
+  cursor: pointer;
+  opacity: 0.55;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    color: var(--oge-text-color);
+    background: var(--oge-selected-bg);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    opacity: 1;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.3;
+  }
+}
+
+.oge-upload-file:hover .oge-upload-file-action,
+.oge-upload-file:focus-within .oge-upload-file-action {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .oge-upload-file-action {
+    opacity: 1;
+  }
+}
+
+.oge-upload-empty {
+  margin: 12px 0 0;
+  padding: 18px;
+  color: var(--oge-muted-color);
+  font-size: 0.875rem;
+  text-align: center;
+  background: var(--oge-group-bg);
+  border-radius: var(--oge-radius);
+}
+
+/* --- picture layouts ----------------------------------------------------- */
+
+.oge-upload-list-card .oge-upload-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+}
+
+.oge-upload-list-card .oge-upload-file {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+  text-align: center;
+  box-shadow: var(--oge-shadow-card);
+}
+
+.oge-upload-list-card .oge-upload-file-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.oge-upload-list-card .oge-upload-file-glyph {
+  width: 100%;
+  height: 84px;
+}
+
+.oge-upload-list-card .oge-upload-file-name {
+  font-size: 0.8125rem;
+}
+
+/* --- lightbox ------------------------------------------------------------ */
+
+.oge-upload-lightbox-image {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  margin: 0 auto;
+  object-fit: contain;
+  border-radius: var(--oge-radius);
+}
+
+/* --- external drop zone -------------------------------------------------- */
+
+.oge-upload-external-zone {
+  transition:
+    background-color 0.18s ease,
+    outline-color 0.18s ease;
+}
+
+.oge-upload-external-zone-over {
+  background: var(--oge-accent-soft);
+  outline: 2px dashed var(--oge-accent);
+  outline-offset: -4px;
+}
+
+/* --- live region --------------------------------------------------------- */
+
+.oge-upload-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- RTL ----------------------------------------------------------------- */
+
+[dir='rtl'] .oge-upload-file-main {
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-upload-dropzone,
+  .oge-upload-file,
+  .oge-upload-file-action,
+  .oge-upload-select,
+  .oge-upload-clear,
+  .oge-upload-start,
+  .oge-upload-external-zone {
+    transition: none;
+  }
+
+  .oge-upload-dropzone-over {
+    transform: none;
+  }
+}

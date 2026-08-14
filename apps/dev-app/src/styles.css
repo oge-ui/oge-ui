@@ -1,0 +1,191 @@
+/* ── Framework switch in the header + the not-in-this-layer notice ─────────
+   The switch component brings its own look; these two rules only fit it to
+   the compact header and style the shell-level fallback banner. */
+/* React demo rows — the exact layout the Angular demo previews get from
+   Tailwind's `flex flex-wrap items-center gap-3`, as one class the
+   `createElement` demos can carry. Without it the React buttons render
+   touching each other and read as "styled differently", which they are not. */
+.demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.demo-row + .demo-row {
+  margin-block-start: 0.75rem;
+}
+/* The input previews' variant: the Angular pages lay editors out with
+   `items-start gap-4` because a field's subscript makes rows uneven —
+   the React mirrors carry the same geometry through this modifier. */
+.demo-row-start {
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+/* The theme select, sized for the 52px header row: compact width, no
+   subscript strip (the reserved hint/error area would push the field above
+   the row's centerline), and a field height matching the other controls. */
+/* doubled class beats the component's own `.oge-input { width }`, which is
+   injected after the global stylesheet and would win on equal specificity */
+.app-theme-select.oge-input {
+  width: 7.5rem;
+}
+.app-theme-select .oge-input-subscript {
+  display: none;
+}
+.app-theme-select .oge-input-container {
+  min-height: 2rem;
+  font-size: 12.5px;
+}
+
+.app-header-fw .app-fw-group {
+  padding: 0.15rem;
+}
+.app-header-fw .app-fw-group button {
+  padding: 0.22rem 0.6rem;
+  font-size: 0.78rem;
+}
+@media (max-width: 40rem) {
+  .app-header-fw .app-fw-group button span,
+  .app-header-fw .app-fw-group button {
+    gap: 0;
+  }
+}
+
+.app-fw-fallback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0 0 1.25rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg, 10px);
+  background: var(--oge-accent-soft);
+  font-size: 0.83rem;
+  color: var(--oge-text-color);
+}
+.app-fw-fallback button {
+  margin-inline-start: auto;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius, 6px);
+  background: var(--oge-bg);
+  color: inherit;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.app-fw-fallback button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--oge-focus-ring);
+}
+
+/* ── Ambient framework identity ───────────────────────────────────────────
+   The active framework is stamped on <html data-framework>, so the shell can
+   carry it without any component binding. One signal, one place: the
+   framework's mark sits beside the OGE mark at the top of the sidebar column,
+   and its colour radiates softly out of the mark and down into the sidebar.
+   The OGE indigo stays the product's colour everywhere else. */
+:root {
+  --app-fw-color: #dd0031; /* Angular */
+}
+html[data-framework='react'] {
+  --app-fw-color: #087ea4; /* React, darkened for contrast on white */
+}
+html[data-framework='javascript'] {
+  --app-fw-color: #b8a005;
+}
+html.dark[data-framework='react'] {
+  --app-fw-color: #61dafb;
+}
+html.dark[data-framework='javascript'] {
+  --app-fw-color: #f7df1e;
+}
+
+/* The active framework's mark, right beside the OGE brand. The ::before is a
+   larger blurred halo that escapes the circle — the "light" that the sidebar
+   gradient below appears to catch. */
+.app-fw-brandmark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  color: var(--app-fw-color);
+  border: 1px solid color-mix(in srgb, var(--app-fw-color) 32%, transparent);
+  background: radial-gradient(
+    circle at 50% 34%,
+    color-mix(in srgb, var(--app-fw-color) 22%, transparent),
+    color-mix(in srgb, var(--app-fw-color) 5%, transparent)
+  );
+  transition:
+    color 250ms ease,
+    background 250ms ease,
+    border-color 250ms ease;
+}
+.app-fw-brandmark::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--app-fw-color) 32%, transparent),
+    transparent 70%
+  );
+  filter: blur(6px);
+  opacity: 0.7;
+  pointer-events: none;
+  transition: background 250ms ease;
+}
+
+/* The mark's colour spilling down into the sidebar: a soft radial centred on
+   the brandmark, which sits right-aligned in the sidebar's brand row, fading
+   out within the first rows. Chrome, not content — strong enough to name the
+   framework at a glance, weak enough to leave the old sidebar exactly as it
+   was underneath. */
+.app-sidebar-glow {
+  background-image: radial-gradient(
+    340px 220px at 218px 30px,
+    color-mix(in srgb, var(--app-fw-color) 17%, transparent),
+    transparent 72%
+  );
+  /* the glow belongs to the brand row: when the sidebar's own scrollbar
+     moves, it must ride along instead of staining whatever scrolls under it */
+  background-attachment: local;
+}
+/* Small screens: the sidebar joins the flow and the brand row is hidden, so a
+   glow with no visible source would read as a stain — drop it. */
+@media (max-width: 767px) {
+  .app-sidebar-glow {
+    background-image: none;
+  }
+}
+
+/* the active chip in the switch picks up the same colour */
+.app-fw-group button.is-active {
+  color: var(--app-fw-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-fw-brandmark,
+  .app-fw-brandmark::before {
+    transition: none;
+  }
+}
+
+/* A note that a page is deliberately the SAME in every framework. Pages that
+   branch need no marker; pages whose whole point is that nothing branches do
+   (ADR 0002, decision 6). */
+.app-shared-note {
+  border-inline-start: 3px solid var(--app-fw-color);
+  border-radius: 0 var(--oge-radius, 6px) var(--oge-radius, 6px) 0;
+  background: color-mix(in srgb, var(--app-fw-color) 7%, transparent);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.88rem;
+}

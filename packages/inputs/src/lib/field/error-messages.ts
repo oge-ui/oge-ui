@@ -1,49 +1,15 @@
 import type { ValidationErrors } from '@angular/forms';
+import { formatPattern, messageForFieldError } from '@oge-ui/behavior';
 import type { OgeInputsMessages } from '../config';
 import type { OgeFieldError } from './input-types';
 
-/** `{token}` interpolation — same contract as the grid's message patterns. */
-export function formatPattern(
-  pattern: string,
-  values: Record<string, string>,
-): string {
-  return pattern.replace(
-    /\{(\w+)\}/g,
-    (match, key: string) => values[key] ?? match,
-  );
-}
+// The `{token}` interpolation and the Signal-Forms kind→message map are
+// shared with the React editors via `@oge-ui/behavior`; only the
+// reactive-forms (`ValidationErrors`) branch below is Angular's own.
+export { formatPattern } from '@oge-ui/behavior';
 
 function str(value: unknown): string {
   return value == null ? '' : String(value);
-}
-
-function messageForKind(
-  error: OgeFieldError,
-  messages: OgeInputsMessages,
-): string {
-  const detail = error as unknown as Record<string, unknown>;
-  switch (error.kind) {
-    case 'required':
-      return messages.requiredError;
-    case 'email':
-      return messages.emailError;
-    case 'min':
-      return formatPattern(messages.minError, { min: str(detail['min']) });
-    case 'max':
-      return formatPattern(messages.maxError, { max: str(detail['max']) });
-    case 'minLength':
-      return formatPattern(messages.minLengthError, {
-        requiredLength: str(detail['minLength']),
-      });
-    case 'maxLength':
-      return formatPattern(messages.maxLengthError, {
-        requiredLength: str(detail['maxLength']),
-      });
-    case 'pattern':
-      return messages.patternError;
-    default:
-      return error.message ?? messages.invalidError;
-  }
 }
 
 /** Reactive-forms error keys in display priority order. */
@@ -110,7 +76,7 @@ export function resolveErrorMessage(
   messages: OgeInputsMessages,
 ): string | null {
   const first = sfErrors[0];
-  if (first) return first.message ?? messageForKind(first, messages);
+  if (first) return first.message ?? messageForFieldError(first, messages);
   if (cvaErrors && Object.keys(cvaErrors).length > 0) {
     return messageForCvaErrors(cvaErrors, messages);
   }

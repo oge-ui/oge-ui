@@ -16,6 +16,11 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { OgeSelectBox } from '@oge-ui/inputs';
+import { FrameworkLogo } from './shared/framework-logo';
+import { ThemeLogo } from './shared/theme-logo';
+import { FrameworkSwitch } from './shared/framework-switch';
+import { FrameworkService } from './shared/framework.service';
 import { Icon, type IconName } from './shared/icon';
 import { SITE_VERSION } from './shared/site-version';
 import { SeoService } from './shared/seo.service';
@@ -53,13 +58,42 @@ interface NavGroup {
 const COMPONENTS_GROUP = 'Components';
 
 @Component({
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    Icon,
+    FrameworkSwitch,
+    FrameworkLogo,
+    ThemeLogo,
+    OgeSelectBox,
+  ],
   selector: 'app-root',
   templateUrl: './app.html',
   host: { class: 'flex min-h-screen flex-col' },
 })
 export class App {
   protected readonly version = SITE_VERSION;
+  protected readonly framework = inject(FrameworkService);
+  private readonly doc = inject(DOCUMENT);
+
+  /** Human label of the active framework, for the brand lockup badge. */
+  protected readonly frameworkLabel = computed(
+    () =>
+      this.framework.frameworks.find(
+        (entry) => entry.id === this.framework.framework(),
+      )?.label ?? '',
+  );
+
+  /**
+   * Stamp the active framework on the document so the whole shell can respond
+   * in CSS — the accent rail, the brand badge, the switch — without any of
+   * them needing a binding. A future vanilla-JavaScript layer inherits this
+   * for free.
+   */
+  private readonly stampFramework = effect(() => {
+    this.doc.documentElement.dataset['framework'] = this.framework.framework();
+  });
 
   private readonly allSections: NavSection[] = [
     {
@@ -273,6 +307,18 @@ export class App {
         { path: '/components/gantt', label: 'Overview', icon: 'list' },
         {
           path: '/components/gantt/api',
+          label: 'API Reference',
+          icon: 'code',
+        },
+      ],
+    },
+    {
+      title: 'Upload',
+      group: COMPONENTS_GROUP,
+      items: [
+        { path: '/components/upload', label: 'Overview', icon: 'upload' },
+        {
+          path: '/components/upload/api',
           label: 'API Reference',
           icon: 'code',
         },

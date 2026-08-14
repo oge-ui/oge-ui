@@ -17,6 +17,7 @@
 import { spawnSync } from 'node:child_process';
 import {
   mkdirSync,
+  existsSync,
   readFileSync,
   readdirSync,
   rmSync,
@@ -38,7 +39,13 @@ const snippets = await readSnippets(
   path.join(workspaceRoot, PATHS.pagesDir),
   workspaceRoot,
 );
-const checkable = snippets.filter((snippet) => snippet.checkable);
+// Both render layers' snippets share one `pages/` tree, because the docs are
+// one site (ADR 0001). They are told apart by shape — a React demo module opens
+// with the `'use client'` pragma — so each goes to the compiler that fits it.
+const isReactSnippet = (code) => code.startsWith("'use client';");
+const checkable = snippets.filter(
+  (snippet) => snippet.checkable && !isReactSnippet(snippet.code),
+);
 const exempt = snippets.filter((snippet) => !snippet.checkable);
 
 if (exempt.length) {
@@ -108,18 +115,98 @@ const result = spawnSync(
 );
 const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
 
-if (result.status === 0) {
-  console.log(
-    `✓ ${checkable.length} docs snippet(s) compile under strictTemplates`,
+if (result.status !== 0) {
+  console.error(annotate(output));
+  console.error(
+    `\n✗ docs snippets failed to compile. Sources are in tmp/docs-snippets/src — the file name is <page>--<snippet-const>.\n`,
   );
-  process.exit(0);
+  process.exit(1);
 }
 
-console.error(annotate(output));
-console.error(
-  `\n✗ docs snippets failed to compile. Sources are in tmp/docs-snippets/src — the file name is <page>--<snippet-const>.\n`,
+console.log(
+  `✓ ${checkable.length} Angular docs snippet(s) compile under strictTemplates`,
 );
-process.exit(1);
+
+// The React render layer's snippets get the same treatment with the tool that
+// fits them: plain `tsc` with `jsx: react-jsx`. A React snippet that does not
+// compile is exactly as harmful as an Angular one — it is what a reader copies
+// out of the docs (ADR 0001).
+process.exit(await checkReactSnippets());
+
+/**
+ * Compiles every React docs snippet in a scratch program.
+ * @returns {Promise<number>} process exit code
+ */
+async function checkReactSnippets() {
+  // React snippets live in the same `pages/` tree as the Angular ones — the
+  // docs are one site (ADR 0001) — so they are told apart by *shape*, not by
+  // folder: a React demo module starts with the `'use client'` pragma.
+  const components = snippets.filter(
+    (snippet) => snippet.checkable && isReactSnippet(snippet.code),
+  );
+  if (!components.length) return 0;
+
+  const dir = path.join(workspaceRoot, 'tmp', 'docs-snippets-react');
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(path.join(dir, 'src'), { recursive: true });
+
+  for (const snippet of components) {
+    const slug = `${path
+      .basename(snippet.file)
+      .replace(/-snippets\.ts$/, '')}--${snippet.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')}`;
+    writeFileSync(
+      path.join(dir, 'src', `${slug}.tsx`),
+      `${snippet.code}\n`,
+      'utf8',
+    );
+  }
+
+  writeFileSync(
+    path.join(dir, 'tsconfig.json'),
+    `${JSON.stringify(
+      {
+        extends: '../../tsconfig.base.json',
+        compilerOptions: {
+          noEmit: true,
+          strict: true,
+          skipLibCheck: true,
+          jsx: 'react-jsx',
+          moduleResolution: 'bundler',
+          // `@oge-ui/react-*` resolves to source through the workspace paths,
+          // so this program compiles the packages too — which needs their
+          // ambient types (`vite/client` for the `.scss` side-effect import,
+          // `node` for the `process.env.NODE_ENV` dev guards).
+          types: ['node', 'vite/client'],
+        },
+        include: ['src/**/*.tsx'],
+        // the base config excludes `tmp/` — this scratch program lives there
+        exclude: [],
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  );
+
+  const reactResult = spawnSync(
+    'npx',
+    ['tsc', '-p', 'tmp/docs-snippets-react/tsconfig.json'],
+    { cwd: workspaceRoot, encoding: 'utf8', shell: true },
+  );
+  if (reactResult.status === 0) {
+    console.log(`✓ ${components.length} React docs snippet(s) compile`);
+    return 0;
+  }
+  console.error(
+    `${reactResult.stdout ?? ''}${reactResult.stderr ?? ''}`.trim(),
+  );
+  console.error(
+    `\n✗ React docs snippets failed to compile. Sources are in tmp/docs-snippets-react/src.\n`,
+  );
+  return 1;
+}
 
 /**
  * Docs pages must not declare code samples inline — they belong in the sibling

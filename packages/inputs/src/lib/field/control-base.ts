@@ -16,6 +16,7 @@ import {
   type ControlValueAccessor,
   type ValidationErrors,
 } from '@angular/forms';
+import { OgeInputCommit } from '@oge-ui/behavior';
 import { OGE_INPUTS_CONFIG, type OgeInputsMessages } from '../config';
 import { resolveErrorMessage } from './error-messages';
 import type {
@@ -203,36 +204,36 @@ export abstract class OgeControlBase<T> implements ControlValueAccessor {
 
   private onChangeFn: ((value: T) => void) | null = null;
   private onTouchedFn: (() => void) | null = null;
-  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  private pendingCommit: { value: T; event: Event | undefined } | null = null;
+  private committing = false;
+
+  // The queue/flush/cancel rules live in `@oge-ui/behavior` (ADR 0001) so
+  // the React editors debounce, flush and supersede exactly the same way;
+  // this sink is the Angular half — value signal, CVA, dirty, emit.
+  private readonly commitMachine = new OgeInputCommit<T>({
+    debounceMs: () => this.debounce(),
+    current: () => this.value(),
+    onCommit: (value, previousValue, event) => {
+      this.committing = true;
+      try {
+        this.value.set(value);
+      } finally {
+        this.committing = false;
+      }
+      this.onChangeFn?.(value);
+      this.selfDirty.set(true);
+      if (!Object.is(previousValue, value)) {
+        this.valueCommitted.emit({ value, previousValue, event });
+      }
+    },
+  });
 
   protected queueCommit(value: T, event?: Event): void {
-    const ms = this.debounce();
-    if (!ms) {
-      this.commitNow(value, event);
-      return;
-    }
-    this.pendingCommit = { value, event };
-    if (this.debounceTimer !== null) clearTimeout(this.debounceTimer);
-    this.debounceTimer = setTimeout(() => {
-      this.debounceTimer = null;
-      const staged = this.pendingCommit;
-      this.pendingCommit = null;
-      if (staged) this.commitNow(staged.value, staged.event);
-    }, ms);
+    this.commitMachine.queue(value, event);
   }
 
   /** Commits any staged debounced value synchronously (blur/Enter). */
   protected flushCommit(): void {
-    if (this.debounceTimer !== null) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
-    }
-    const staged = this.pendingCommit;
-    this.pendingCommit = null;
-    if (staged) {
-      this.commitNow(this.transformFlushValue(staged.value), staged.event);
-    }
+    this.commitMachine.flush((value) => this.transformFlushValue(value));
   }
 
   /** Subclass hook applied to flushed values (number box clamps here). */
@@ -241,30 +242,11 @@ export abstract class OgeControlBase<T> implements ControlValueAccessor {
   }
 
   protected cancelCommit(): void {
-    if (this.debounceTimer !== null) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
-    }
-    this.pendingCommit = null;
+    this.commitMachine.cancel();
   }
 
-  private committing = false;
-
   protected commitNow(value: T, event?: Event): void {
-    // A direct commit supersedes anything staged (spin during debounce etc.).
-    this.cancelCommit();
-    const previousValue = this.value();
-    this.committing = true;
-    try {
-      this.value.set(value);
-    } finally {
-      this.committing = false;
-    }
-    this.onChangeFn?.(value);
-    this.selfDirty.set(true);
-    if (!Object.is(previousValue, value)) {
-      this.valueCommitted.emit({ value, previousValue, event });
-    }
+    this.commitMachine.commitNow(value, event);
   }
 
   // --- event handlers (wired from subclass templates) ------------------------

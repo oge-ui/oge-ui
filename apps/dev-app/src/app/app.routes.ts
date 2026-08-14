@@ -776,6 +776,23 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'components/upload',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/upload/overview').then((m) => m.UploadOverviewPage),
+        title: 'OGE — Upload',
+      },
+      {
+        path: 'api',
+        loadComponent: () =>
+          import('./pages/upload/api').then((m) => m.UploadApiPage),
+        title: 'OGE — Upload API',
+      },
+    ],
+  },
+  {
     path: 'components/kanban',
     children: [
       {

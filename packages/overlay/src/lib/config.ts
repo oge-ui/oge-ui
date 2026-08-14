@@ -1,4 +1,5 @@
 import { InjectionToken, type Provider } from '@angular/core';
+import { OGE_DEFAULT_OVERLAY_TIMINGS } from '@oge-ui/behavior';
 import type { OgeToastPosition } from './toast/toast-types';
 
 /**
@@ -65,13 +66,9 @@ export interface OgeOverlayConfig {
 }
 
 export const OGE_DEFAULT_OVERLAY_CONFIG: OgeOverlayConfig = {
-  offset: 4,
-  viewportPadding: 8,
-  typeAheadMs: 500,
-  menuShowDelayMs: 50,
-  menuHideDelayMs: 300,
-  tooltipShowDelayMs: 400,
-  tooltipHideDelayMs: 100,
+  // The anchored-primitive timings are single-sourced in `@oge-ui/behavior`
+  // so the React overlay ships the exact same feel (ADR 0001).
+  ...OGE_DEFAULT_OVERLAY_TIMINGS,
   toastPosition: 'bottom-end',
   toastDisplayTime: 4000,
   toastMaxVisible: 5,

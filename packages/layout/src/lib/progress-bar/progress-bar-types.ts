@@ -1,8 +1,6 @@
-/** Fill color of the bar — the card/toast severity vocabulary. */
-export type OgeProgressBarSeverity =
-  'accent' | 'success' | 'warning' | 'danger';
-
-/** The value reached `max` — fired once per completion (dx `onComplete`). */
-export interface OgeProgressBarCompletedEvent {
-  value: number;
-}
+// The progress-bar vocabulary and event payload live framework-free in
+// `@oge-ui/behavior` (`layout-core`), shared with the React render layer.
+export type {
+  OgeProgressBarSeverity,
+  OgeProgressBarCompletedEvent,
+} from '@oge-ui/behavior';

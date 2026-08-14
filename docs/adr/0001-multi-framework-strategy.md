@@ -145,14 +145,19 @@ This replaces the `bannedExternalImports` that used to hang off `scope:core`.
 
 ## Phased plan
 
-| Faz | Scope                                                                                                                                                                                | Why in this order                                                                                                                                                                                                                                |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0   | This ADR, the `platform:` tags, the boundary rules, `ARCHITECTURE.md`                                                                                                                | The contract precedes the code.                                                                                                                                                                                                                  |
-| 1   | ✅ **Done.** `@oge-ui/behavior` scaffolded; `overlay`'s four already-pure files migrated verbatim and the Angular side rewired                                                       | Proves the package and its build with **zero logic change**, so a failure here is unambiguously a tooling failure.                                                                                                                               |
-| 2   | React pipeline + narrow pilot: `packages/react/buttons`, `OgeButton` + `OgeButtonGroup` only (851 lines; drop-down excluded because it needs `overlay`)                              | The deliverable is not a product, it is a **repeatable package template**: Vite lib mode, React 19 peer (`^18 \|\| ^19`), `"use client"`, vitest + Testing Library, `apps/dev-app-react`, the docs-tools React branch, first npm publish.        |
-| 3   | `overlay` split across both frameworks; positioning, focus trap, Escape stack, menu keyboard machine move into `behavior`                                                            | **The real test.** Whether a shared layer is actually shared is only knowable with two consumers, and this fazda the Angular side gets refactored too. If the architecture is wrong, it is wrong here — with three packages ported, not fifteen. |
-| 4   | Cross-framework parity gate                                                                                                                                                          | B's known failure mode is parity drift. The gate must land after the _second_ package, not the tenth.                                                                                                                                            |
-| 5   | Scale out: `inputs` → `layout`/`tabs`/`navigation` → `forms` → `grid` → `tree-list`. In parallel: `bpmn` (no dependencies, 50% already engine) and `pivot` (depends on `core` alone) | Dependency order, with the two low-coupling packages free to run off the main chain.                                                                                                                                                             |
+> The living execution schedule of these fazlar — per-family phases, the parity
+> principle and the per-family definition of done — is
+> [`ROADMAP-REACT.md`](../../ROADMAP-REACT.md). This table records the original
+> decision and its rationale.
+
+| Faz | Scope                                                                                                                                                                                | Why in this order                                                                                                                                                                                                                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | This ADR, the `platform:` tags, the boundary rules, `ARCHITECTURE.md`                                                                                                                | The contract precedes the code.                                                                                                                                                                                                                                                                                                                                 |
+| 1   | ✅ **Done.** `@oge-ui/behavior` scaffolded; `overlay`'s four already-pure files migrated verbatim and the Angular side rewired                                                       | Proves the package and its build with **zero logic change**, so a failure here is unambiguously a tooling failure.                                                                                                                                                                                                                                              |
+| 2   | ✅ **Done** (bar the first publish). React pipeline + narrow pilot: `packages/react/buttons`, `OgeButton` + `OgeButtonGroup` (drop-down excluded because it needs `overlay`)         | The deliverable is not a product, it is a **repeatable package template**: Vite lib mode, React peer (`^18 \|\| ^19`), `"use client"` preserved into the dist, vitest + Testing Library (incl. a StrictMode remount spec), the framework-aware docs site (ADR 0002 — one site, not a separate `dev-app-react`), the docs-tools React branch, first npm publish. |
+| 3   | `overlay` split across both frameworks; positioning, focus trap, Escape stack, menu keyboard machine move into `behavior`                                                            | **The real test.** Whether a shared layer is actually shared is only knowable with two consumers, and this fazda the Angular side gets refactored too. If the architecture is wrong, it is wrong here — with three packages ported, not fifteen.                                                                                                                |
+| 4   | Cross-framework parity gate                                                                                                                                                          | B's known failure mode is parity drift. The gate must land after the _second_ package, not the tenth.                                                                                                                                                                                                                                                           |
+| 5   | Scale out: `inputs` → `layout`/`tabs`/`navigation` → `forms` → `grid` → `tree-list`. In parallel: `bpmn` (no dependencies, 50% already engine) and `pivot` (depends on `core` alone) | Dependency order, with the two low-coupling packages free to run off the main chain.                                                                                                                                                                                                                                                                            |
 
 Two things Faz 1 taught, recorded because they generalise to every later split:
 
@@ -167,6 +172,26 @@ Two things Faz 1 taught, recorded because they generalise to every later split:
   `resetScrollLockForTests` was module-private to `overlay`; the specs that need
   it now live a package away, so it is exported from `behavior`'s barrel — and
   deliberately _not_ re-exported from any component package's barrel.
+
+What Faz 2 added, beyond the plan:
+
+- **The port pulled four things into `behavior` before a line of JSX existed** —
+  the press machine (`OgeButtonPress`), the config defaults and messages, the
+  variant vocabulary with its shorthand resolvers, and the group's selection
+  arithmetic. Writing any of them twice would have been the parity debt this ADR
+  exists to avoid. The Angular button was then rewired onto the same machine and
+  **all 81 of its specs passed unchanged**, which is the first real evidence the
+  shared layer is shared rather than merely extracted. `button.ts` fell from 592
+  to 405 lines, and the group's selection/role/navigation arithmetic was later
+  rewired the same way.
+- **`llms.txt` is per-framework or it is harmful.** The first generated React
+  `llms.txt` told assistants to write `imports: [OgeButton]` into `.tsx` — the
+  Angular prose applied wholesale. Fixed with a `platform` field on each
+  manifest entry (selecting the React conventions/mistakes prose) and by giving
+  the React docs their own page dir in the one docs app; see ARCHITECTURE's
+  "AI-facing docs are per-framework".
+- **The React snippet gate earned its keep on its first run**, catching a demo
+  that called an undefined `remove()`.
 
 `grid` is deliberately last: it is the largest package, the most
 `TemplateRef`-dependent, and it pulls in `inputs` + `overlay` + `forms` — porting

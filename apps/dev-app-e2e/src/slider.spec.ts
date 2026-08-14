@@ -85,9 +85,7 @@ test('the range thumbs constrain each other with minRange', async ({
   );
 });
 
-test('slider page has no axe violations (light and dark)', async ({
-  page,
-}) => {
+test('slider page has no axe violations (light and dark)', async ({ page }) => {
   test.slow();
   await page.goto('/components/inputs/slider');
   await expect(page.locator('oge-slider').first()).toBeVisible();

@@ -446,6 +446,8 @@ _Accessibility & text_
 | `paneCollapsed` | `OgeSplitterPaneCollapsedEvent` | Emitted after a pane collapsed. |
 | `paneExpanded` | `OgeSplitterPaneCollapsedEvent` | Emitted after a pane expanded. |
 | `paneClick` | `OgeSplitterPaneClickEvent` | Emitted when a pane is clicked. A nested splitter reports its own panes — the event does not surface on the parent. |
+| `paneHold` | `OgeSplitterPaneHoldEvent` | A pane was held for `itemHoldTimeout` — a touch long-press or a mouse hold. |
+| `paneContextMenu` | `OgeSplitterPaneHoldEvent` | A pane was right-clicked or long-pressed for a menu. |
 | `sizesChange` | `readonly OgeSplitterSize[] \| undefined` | Two-way model output of `sizes`. |
 
 #### Types
@@ -457,7 +459,7 @@ _Types_
 | `OgeSplitterOrientation` | `'horizontal' \| 'vertical'` | Axis the panes are laid out along. |
 | `OgeSplitterGripSide` | `'start' \| 'end'` | Which neighbour a separator's collapse grip acts on: `'start'` is the pane before it (the APG primary pane), `'end'` the one after. |
 | `OgeSplitterSize` | `number \| string` | A number (or `'%'`) is a **ratio** of the space the flexible panes share, so `[30, 30]` lays out like `[50, 50]`. `'px'` pins the pane to a fixed track. Any other string is ignored with a dev-mode warning. |
-| `OgeSplitterPaneData` | `interface` | Data-driven counterpart of a declarative pane: `key`, `size`, `minSize`, `maxSize`, `collapsible`, `collapsed`, `collapsedSize`, `resizable`, `scrollable`, `visible`, `text`, `cssClass`, `htmlAttributes`, `panes`, `orientation`. |
+| `OgeSplitterPaneData` | `interface` | Data-driven counterpart of a declarative pane: `key`, `size`, `minSize`, `maxSize`, `collapsible`, `collapsed`, `collapsedSize`, `resizable`, `scrollable`, `disabled`, `visible`, `text`, `cssClass`, `htmlAttributes`, `panes`, `orientation`. |
 | `OgeSplitterPaneTemplateContext` | `interface` | Context of `[ogeSplitterPaneTemplate]`: `$implicit` (the pane entry), `index`, `collapsed`. |
 | `OgeSplitterResizeStartEvent` | `interface` | `separatorIndex`, `sizes` at the start of the gesture, and the originating `event` (absent for a keyboard resize). |
 | `OgeSplitterResizeEvent` | `interface` | `separatorIndex`, current `sizes`, `previousSizes` from the start of the gesture, and the originating `event`. |
@@ -667,6 +669,7 @@ _Inputs_
 | `visible` | `boolean` | `true` | `false` removes the item entirely. |
 | `cssClass` | `string \| undefined` | `—` | Extra class on the item element. |
 | `severity` | `'default' \| 'accent' \| 'danger'` | `'default'` | Emphasis of a toolbar-rendered button. |
+| `data` | `unknown` | `—` | Arbitrary payload echoed back on `itemClick` — the declarative counterpart of the same field on an `[items]` entry. |
 | `active` | `boolean \| undefined (two-way)` | `—` | Toggle-button state. Defining it is what makes the item a toggle: it renders `aria-pressed` on the bar and a checkmark in the menu, and every activation flips the value. |
 
 #### Events

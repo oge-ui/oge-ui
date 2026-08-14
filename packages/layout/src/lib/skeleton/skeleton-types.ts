@@ -1,8 +1,3 @@
-/** What the placeholder stands in for. */
-export type OgeSkeletonShape = 'text' | 'circle' | 'rectangle';
-
-/**
- * `'shimmer'` is the card/accordion moving-gradient recipe, `'pulse'` the
- * grid filler rows' opacity beat, `'none'` a static block.
- */
-export type OgeSkeletonAnimation = 'shimmer' | 'pulse' | 'none';
+// The skeleton vocabulary lives framework-free in `@oge-ui/behavior`
+// (`layout-core`), shared with the React render layer.
+export type { OgeSkeletonShape, OgeSkeletonAnimation } from '@oge-ui/behavior';

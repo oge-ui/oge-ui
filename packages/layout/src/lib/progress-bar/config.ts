@@ -1,27 +1,21 @@
 import { InjectionToken, type Provider } from '@angular/core';
-import type { OgeProgressBarSeverity } from './progress-bar-types';
+import {
+  OGE_DEFAULT_PROGRESS_BAR_CONFIG,
+  resolveOgeProgressBarConfig,
+  type OgeProgressBarConfig,
+  type OgeProgressBarConfigInput,
+} from '@oge-ui/behavior';
 
-/** Every user-facing string the progress bar renders, including aria labels. */
-export interface OgeProgressBarMessages {
-  /** Accessible name of the bar when the application supplies none. */
-  progress: string;
-}
-
-export const OGE_DEFAULT_PROGRESS_BAR_MESSAGES: OgeProgressBarMessages = {
-  progress: 'Progress',
-};
-
-export interface OgeProgressBarConfig {
-  messages: OgeProgressBarMessages;
-  /** Default for the `severity` input. */
-  severity?: OgeProgressBarSeverity;
-  /** Default for the `showLabel` input. */
-  showLabel?: boolean;
-}
-
-export const OGE_DEFAULT_PROGRESS_BAR_CONFIG: OgeProgressBarConfig = {
-  messages: OGE_DEFAULT_PROGRESS_BAR_MESSAGES,
-};
+// The message catalog, the defaults and the merge rule live framework-free in
+// `@oge-ui/behavior` (`layout-core`); this file is only the Angular DI
+// wrapper around them.
+export {
+  OGE_DEFAULT_PROGRESS_BAR_MESSAGES,
+  OGE_DEFAULT_PROGRESS_BAR_CONFIG,
+  type OgeProgressBarMessages,
+  type OgeProgressBarConfig,
+  type OgeProgressBarConfigInput,
+} from '@oge-ui/behavior';
 
 export const OGE_PROGRESS_BAR_CONFIG = new InjectionToken<OgeProgressBarConfig>(
   'OGE_PROGRESS_BAR_CONFIG',
@@ -29,12 +23,6 @@ export const OGE_PROGRESS_BAR_CONFIG = new InjectionToken<OgeProgressBarConfig>(
     factory: () => OGE_DEFAULT_PROGRESS_BAR_CONFIG,
   },
 );
-
-export type OgeProgressBarConfigInput = Partial<
-  Omit<OgeProgressBarConfig, 'messages'>
-> & {
-  messages?: Partial<OgeProgressBarMessages>;
-};
 
 /**
  * Application- or component-scoped progress-bar defaults:
@@ -48,13 +36,8 @@ export type OgeProgressBarConfigInput = Partial<
 export function provideOgeProgressBarConfig(
   config: OgeProgressBarConfigInput,
 ): Provider {
-  const { messages, ...rest } = config;
   return {
     provide: OGE_PROGRESS_BAR_CONFIG,
-    useValue: {
-      ...OGE_DEFAULT_PROGRESS_BAR_CONFIG,
-      ...rest,
-      messages: { ...OGE_DEFAULT_PROGRESS_BAR_MESSAGES, ...messages },
-    } satisfies OgeProgressBarConfig,
+    useValue: resolveOgeProgressBarConfig(config),
   };
 }

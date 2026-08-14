@@ -28,6 +28,7 @@ import {
   OgeTreeSelect,
   type OgeTextBoxMode,
 } from '@oge-ui/inputs';
+import { OgeFileUploader } from '@oge-ui/upload';
 import type {
   OgeFormEditorAppearance,
   OgeFormFieldNode,
@@ -72,6 +73,7 @@ import type {
     OgeTextArea,
     OgeTextBox,
     OgeTreeSelect,
+    OgeFileUploader,
   ],
   host: {
     class: 'oge-form-editor',

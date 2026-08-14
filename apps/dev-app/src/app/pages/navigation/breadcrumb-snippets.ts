@@ -3,7 +3,10 @@ import { demoSource } from '../../shared/demo-source';
 export const BASIC_SNIPPET = demoSource({
   use: { '@oge-ui/navigation': ['OgeBreadcrumb'] },
   types: {
-    '@oge-ui/navigation': ['OgeBreadcrumbItemData', 'OgeBreadcrumbItemClickEvent'],
+    '@oge-ui/navigation': [
+      'OgeBreadcrumbItemData',
+      'OgeBreadcrumbItemClickEvent',
+    ],
   },
   template: `<!-- The APG breadcrumb: a nav landmark holding an ordered list of
      links, the current page carrying aria-current="page". The last crumb is

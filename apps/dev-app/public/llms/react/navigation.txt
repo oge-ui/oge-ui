@@ -1,0 +1,2229 @@
+# @oge-ui/react-navigation
+
+> React navigation and wayfinding: a virtualized tree view with lazy children, checkbox tri-state and drag reparenting, a drawer with overlay/push/side modes and derived modality, a linear or free stepper with async step guards, a full WAI-ARIA menubar with submenus and type-ahead, a collapsing breadcrumb and a pagination bar — running the same config defaults, decision functions and stylesheet as the Angular navigation package.
+
+Part of OGE UI v0.11.0.
+Docs and live demos: https://ogeui.com/components/tree-view
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-navigation
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages:
+`@oge-ui/grid/themes/dark.css` (then put `class="oge-theme-dark"` on
+`<html>` or any subtree), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeTreeView>
+
+#### Properties
+
+_Data & accessors_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly T[] \| undefined` | `—` | Nodes to display — a flat parent-referencing list or nested children. |
+| `keyExpr` | `string \| ((row: T) => RowKey)` | `'id'` | Field holding a node's stable key. |
+| `parentIdExpr` | `string \| ((row: T) => unknown)` | `'parentId'` | Field holding a node's parent key (flat data). |
+| `itemsExpr` | `string \| ((row: T) => readonly T[]) \| undefined` | `—` | Field holding nested children. Setting it switches the tree to hierarchical data. |
+| `displayExpr` | `string \| ((row: T) => unknown)` | `'text'` | Field holding the display text. |
+| `disabledExpr` | `string \| ((row: T) => unknown)` | `'disabled'` | Field marking a node disabled. |
+| `hasItemsExpr` | `string \| ((row: T) => unknown)` | `'hasItems'` | Field hinting that a node has children that are not loaded yet — only consulted with a `loadChildren`. |
+| `iconExpr` | `string \| ((row: T) => unknown) \| undefined` | `—` | Field holding SVG path data (`d`) for a per-node icon. |
+| `rootValue` | `unknown` | `—` | Parent value that marks root nodes in flat data. `undefined`/`null` treats both as root. |
+| `dataStructure` | `'plain' \| 'tree' \| undefined` | `—` | Explicit data shape; inferred from `itemsExpr` when unset. |
+
+_State (controlled pairs)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `expandedKeys / defaultExpandedKeys / onExpandedKeysChange` | `readonly RowKey[]` | `[]` | Keys of the expanded nodes. Pass `expandedKeys` to control the tree, `defaultExpandedKeys` to seed it and let the tree own the state — the React face of Angular&rsquo;s `[(expandedKeys)]` model. |
+| `selectedKeys / defaultSelectedKeys / onSelectedKeysChange` | `readonly RowKey[]` | `[]` | Keys of the selected nodes, projected by `selectedKeysMode` on the way out. |
+| `focusedKey / defaultFocusedKey / onFocusedKeyChange` | `RowKey \| undefined` | `—` | Key of the node holding the roving tabindex. |
+| `searchValue / defaultSearchValue / onSearchValueChange` | `string` | `''` | Current search text. |
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `'none' \| 'single' \| 'multiple'` | `'none'` | How nodes may be selected. |
+| `selectByClick` | `boolean \| undefined` | `—` | Selects a node when its row is clicked. `undefined` resolves to `true` without checkboxes and `false` with them, so clicking a label never silently ticks the box beside it. |
+| `selectNodesRecursive` | `boolean` | `true` | Cascades selection down to descendants and up to fully-selected parents (the tri-state model). |
+| `showCheckBoxes` | `'none' \| 'normal' \| 'selectAll'` | `'none'` | Checkbox column: hidden, per node, or per node plus a "select all" row. |
+| `selectedKeysMode` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` | `'all'` | Projection applied to `selectedKeys`: everything, only childless nodes, or the top-most roots of fully-selected subtrees. |
+
+_Expansion_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `expandEvent` | `'click' \| 'dblclick'` | `'click'` | Which gesture expands a node. The chevron always expands regardless. |
+| `expandNodesRecursive` | `boolean` | `true` | Expanding a node also expands its ancestors. |
+| `allowExpandAll` | `boolean` | `true` | Enables the APG `*` shortcut, which expands every sibling at the focused level. |
+
+_Search_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `searchEnabled` | `boolean` | `false` | Renders the built-in search box above the tree. |
+| `searchMode` | `'contains' \| 'startsWith' \| 'equals'` | `'contains'` | How the text is compared. Matching is accent- and locale-insensitive. |
+| `searchExpr` | `string \| ((row: T) => unknown) \| array \| undefined` | `—` | Fields searched instead of `displayExpr`; an array searches several. |
+| `searchTimeout` | `number` | `0` | Debounce applied to the search box, in milliseconds. |
+| `filterMode` | `'matchOnly' \| 'withAncestors' \| 'fullBranch'` | `'withAncestors'` | Which relatives of a match stay visible. `fullBranch` also keeps a match's descendants. |
+| `expandNodesOnFiltering` | `boolean` | `true` | Auto-expands the ancestors of matches. |
+| `highlightSearchResults` | `boolean` | `true` | Wraps matches in ``. |
+
+_Lazy loading, virtualization & drag_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `loadChildren` | `(parent: T, key: RowKey) => Promise<readonly T[]>` | `—` | Loads a node's children the first time it expands; a placeholder row shows meanwhile. Single-flight per node, and fetched children join the index so cascades reach them. |
+| `virtualScroll` | `boolean \| { itemHeight: number }` | `false` | Windowed rendering for large trees. Every row must actually be `itemHeight` tall (30px by default). |
+| `height` | `string \| undefined` | `—` | Height of the scroll container (any CSS length) — required for virtual scrolling to have a viewport. |
+| `allowDragging` | `boolean` | `false` | Enables pointer drag reordering. |
+| `allowDropInside` | `boolean` | `true` | Allows dropping *into* a node (reparenting), not just between siblings. |
+
+_Presentation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the whole component. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the node rows. |
+| `ariaLabel` | `string \| undefined` | `—` | Aria label of the tree. |
+| `treeId` | `string \| undefined` | `—` | DOM id put on the inner `role="tree"` element — set it when an outside control (a combobox owning this tree as its popup) must point `aria-controls` at the list rather than the host. |
+| `messages` | `Partial<OgeTreeViewMessages>` | `{}` | Per-instance overrides of the config strings. |
+| `className / style` | `string \| CSSProperties` | `—` | Merged onto the tree host. `className` is appended to the generated `oge-tree-view*` classes; the Angular host takes `class`/`style` natively. |
+
+#### Methods
+
+_OgeTreeViewHandle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `expand(key)` | `(key: RowKey) => Promise<boolean>` | Expands a node, awaiting the lazy child fetch when there is one. Resolves `false` if the node is unknown or `onItemExpanding` vetoed it. |
+| `collapse(key)` | `(key: RowKey) => Promise<boolean>` | Collapses a node; resolves whether it actually collapsed. |
+| `toggle(key)` | `(key: RowKey) => Promise<boolean>` | Expands the node if collapsed, collapses it otherwise. |
+| `expandAll()` | `() => void` | Expands every node that has loaded children. |
+| `collapseAll()` | `() => void` | Collapses every node. |
+| `selectAll()` | `() => void` | Selects every node. |
+| `unselectAll()` | `() => void` | Clears the selection. |
+| `select(key) / unselect(key)` | `(key: RowKey) => void` | Selects or deselects one node, cascading when `selectNodesRecursive` is on. |
+| `isExpanded(key) / isSelected(key)` | `(key: RowKey) => boolean` | Current state of one node. |
+| `getSelectedKeys(mode?)` | `(mode?: OgeTreeSelectedKeysMode) => RowKey[]` | Selected keys under a projection, defaulting to `selectedKeysMode`. |
+| `focus(key?)` | `(key?: RowKey) => void` | Focuses a node's row, or the first enabled one. |
+| `scrollToItem(key)` | `(key: RowKey) => void` | Scrolls a node into view, using offset math when virtualized. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemExpanding / onItemCollapsing` | `(event: OgeTreeExpandingEvent<T>) => void / (event: OgeTreeCollapsingEvent<T>) => void` | Cancelable pre-events — set `event.cancel = true` to block the change. |
+| `onItemExpanded / onItemCollapsed` | `(event: OgeTreeExpandedEvent<T>) => void / (event: OgeTreeCollapsedEvent<T>) => void` | Called after the change committed. |
+| `onSelectionChanging` | `(event: OgeTreeSelectionChangingEvent<T>) => void` | Cancelable pre-event carrying the keys the selection would become. |
+| `onSelectionChanged` | `(event: OgeTreeSelectionChangedEvent<T>) => void` | Called after the selection committed, with `previousKeys`. |
+| `onItemSelectionChanged` | `(event: OgeTreeItemSelectionChangedEvent<T>) => void` | Called for the single node whose own state flipped. |
+| `onItemClick / onItemDblClick` | `(event: OgeTreeItemClickEvent<T>) => void` | Called when a node row is clicked or double-clicked. |
+| `onChildrenLoaded / onChildrenLoadFailed` | `(event: OgeTreeChildrenLoadedEvent<T>) => void / (event: OgeTreeChildrenFailedEvent<T>) => void` | Called after a lazy `loadChildren` settled; the failure carries the original error. |
+| `onSelectAllChanged` | `(event: OgeTreeSelectAllChangedEvent) => void` | Called when the "select all" row is toggled. |
+| `onItemReordering / onItemReordered` | `(event: OgeTreeReorderingEvent<T>) => void / (event: OgeTreeReorderedEvent<T>) => void` | Cancelable pre-event and result of a drag & drop reparent, carrying `position: 'inside' \| 'before' \| 'after'`. The tree does not mutate your data. |
+
+#### Types
+
+_Render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderItem` | `(context: { item, key, level, expanded, selected, checkState, hasChildren, highlightedHtml }) => ReactNode` | Replaces a node's built-in label — the React face of `[ogeTreeItemTemplate]`. Renders inside `role="treeitem"`, so it must not contain focusable controls. |
+| `renderExpandIcon` | `(context: { expanded: boolean, item, key, loading }) => ReactNode` | Replaces the expand/collapse chevron. |
+| `renderNoData` | `() => ReactNode` | Replaces the empty state shown when the tree has no nodes or a search matched nothing. |
+
+_Keyboard (WAI-ARIA APG treeview)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Down / Up Arrow` | `navigation` | Moves focus over the visible nodes, skipping disabled ones. Trees do not wrap at the ends. |
+| `Right Arrow` | `navigation` | Opens a collapsed parent; on an open parent moves to its first child; no-op on a leaf. |
+| `Left Arrow` | `navigation` | Closes an open parent; otherwise moves focus to the parent node. |
+| `Home / End` | `navigation` | Moves to the first / last visible node. |
+| `Enter` | `activation` | Toggles a parent, or selects a leaf when a selection mode is set. |
+| `Space` | `selection` | Toggles selection on the focused node. `Shift+Space` selects the contiguous range. |
+| `Printable characters` | `type-ahead` | Moves focus to the next node whose label starts with the typed prefix, accent-insensitively. |
+| `*` | `expansion` | Expands every sibling at the focused level. |
+| `Ctrl+A, Shift+Arrow, Ctrl+Shift+Home/End` | `multi-select` | Select all, extend by one, and range-select to the start/end — the APG "recommended" model, so plain navigation needs no modifier. |
+
+### Tree view configuration
+
+#### Properties
+
+_OgeTreeViewMessages_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectAll` | `string` | `'Select all'` | Label of the "select all" row. |
+| `searchPlaceholder` | `string` | `'Search…'` | Placeholder of the built-in search box. |
+| `searchLabel` | `string` | `'Search the tree'` | Accessible name of the built-in search box. |
+| `clearSearch` | `string` | `'Clear search'` | Accessible name of the search box's clear button. |
+| `loadingChildren` | `string` | `'Loading…'` | Shown while a node's lazy children are loading. |
+| `childrenLoadFailed` | `string` | `'Could not load these items.'` | Shown when `loadChildren` rejected. |
+| `noData` | `string` | `'No items to display'` | Shown when the tree has no nodes at all. |
+| `noSearchResults` | `string` | `'No matching items'` | Shown when a search matched nothing. |
+
+#### Types
+
+_Behavioural defaults_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `itemHeight` | `number \| undefined` | Default row height used by `virtualScroll`. |
+| `expandEvent` | `'click' \| 'dblclick' \| undefined` | Default for the `expandEvent` prop. |
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTreeViewConfigProvider` | `(props: { config?: OgeTreeViewConfigInput; children?: ReactNode }) => JSX.Element` | Subtree defaults — the React counterpart of `provideOgeTreeViewConfig()`; shallow-merges `messages` over the built-ins. |
+| `useOgeTreeViewConfig()` | `() => OgeTreeViewConfig` | Reads the resolved config of the nearest provider — the hook behind the component, and the React counterpart of injecting `OGE_TREE_VIEW_CONFIG`. |
+
+### <OgeDrawer>
+
+#### Properties
+
+_Layout_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `opened / defaultOpened / onOpenedChange` | `boolean \| (opened: boolean) => void` | `false` | Whether the drawer is open. Controlled through `opened` + `onOpenedChange`, uncontrolled through `defaultOpened` — the React halves of Angular&rsquo;s `[(opened)]` model. |
+| `mode` | `'overlay' \| 'push' \| 'side'` | `'overlay'` | `overlay` floats over the content, `push` shifts it aside without resizing it, `side` shrinks it so both share the row. **This also decides modality** — see the accessibility group. |
+| `position` | `'start' \| 'end' \| 'top' \| 'bottom'` | `'start'` | Edge the panel is attached to. Logical, so `start`/`end` mirror in RTL with no flag to set. |
+| `size` | `number \| string` | `260` | Size of the open panel along its cross axis. A number means pixels. |
+| `minSize` | `number \| string \| undefined` | `—` | Size of the _closed_ panel — the compact rail that keeps icons visible. Only meaningful for `mode: 'side'`: a rail belongs to the layout, and a modal drawer still partly on screen is not closed. |
+| `compactBelow` | `number \| undefined` | `—` | Below this **container** inline size the drawer downgrades to `'overlay'` and closes. Measured against the drawer's own box, never the window, so a drawer nested in a dialog or a split pane adapts to the room it actually has. |
+| `disabled` | `boolean` | `false` | Blocks every open and close gesture, the handle&rsquo;s `open()` and `close()` included. A drawer already open stays open and stays usable; only a `compact` close still goes through, because a drawer with no room left must stop covering the content. |
+| `animationEnabled` | `boolean` | `true` | Enables the open/close transition. |
+| `animationDuration` | `number` | `240` | Duration of that transition in milliseconds. Suppressed entirely under `prefers-reduced-motion`. |
+| `className / style` | `string \| CSSProperties` | `—` | Merged onto the drawer host. `className` is appended to the generated `oge-drawer*` classes; the Angular host takes `class`/`style` natively. |
+
+_Dismissal_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `showCloseButton` | `boolean` | `false` | Renders the built-in close button in the panel, labelled by the `close` message. It closes through the full pipeline, so `closeGuard` still applies. |
+| `shading` | `boolean` | `true` | Renders the backdrop of a modal drawer. A persistent drawer never shades the content it shares the row with. |
+| `closeOnEscape` | `boolean` | `true` | Escape closes a modal drawer, and only when it is the topmost overlay — a popup opened inside it closes first. A persistent drawer never takes Escape from the page. |
+| `closeOnBackdropClick` | `boolean` | `true` | A click on the backdrop closes the drawer. Only a press that _started_ on the backdrop counts, so a drag ending there does not close it. |
+| `closeGuard` | `(() => boolean \| Promise<boolean>) \| undefined` | `—` | Vetoes a close. Return `false`, throw, or reject to keep the drawer open; a promise reports pending through the handle&rsquo;s `closePending` and `onClosePendingChange`, and a second gesture meanwhile is dropped. |
+| `scrollLock` | `boolean` | `false` | Locks body scroll while a modal drawer is open, through the same ref-counted lock every other OGE overlay uses. Off by default, because a drawer is usually an in-page region rather than a page-level dialog. |
+
+_Accessibility_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `landmark` | `'navigation' \| 'complementary' \| 'region'` | `'navigation'` | Landmark role while persistent. Ignored while modal, which is always `role="dialog"`. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the panel. Falls back to the `drawer` message. |
+| `ariaLabelledBy` | `string \| undefined` | `—` | id of an element naming the panel. Wins over `ariaLabel`, which is then cleared so there is only one name. |
+| `messages` | `Partial<OgeDrawerMessages> \| undefined` | `—` | Per-instance overrides of the config strings — the panel&rsquo;s fallback accessible name (`drawer`) and the close button&rsquo;s label (`close`). |
+| `autoFocus` | `'first-tabbable' \| 'panel' \| 'none' \| string` | `'first-tabbable'` | Where focus lands when a _modal_ drawer opens; any other string is a CSS selector, and an `[autofocus]` element always wins. A persistent drawer never moves focus. |
+| `restoreFocus` | `boolean` | `true` | Returns focus to the opener on close, but only when focus would otherwise be orphaned — it never steals a target the user has moved to. |
+| `inertBackground` | `boolean` | `true` | Marks the content behind a modal drawer `inert`, so neither Tab nor assistive tech can reach it. None of the four reference drawers does this. |
+| `drawerId` | `string (handle)` | `—` | id of the panel element, read from the ref. The panel stays in the DOM while closed, so a trigger's `aria-controls` always resolves to a real element. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open()` | `void` | Opens the drawer through the cancelable pre-event. |
+| `close()` | `void` | Closes through the full pipeline (`onClosing` → `closeGuard`) with reason `'api'`. |
+| `toggle(force?: boolean)` | `void` | Opens when closed, closes when open; `force` drives it to a known state. |
+| `focus()` | `void` | Re-applies the initial-focus resolution. No-op unless the drawer is open and modal. |
+| `closePending` | `boolean` | True while an async `closeGuard` is in flight. `onClosePendingChange` reports the same transitions as a callback. |
+
+#### Events
+
+_Callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onOpening` | `(event: OgeDrawerOpeningEvent) => void` | Cancelable — set `cancel` to keep the drawer closed; the controlled value is reset for you. |
+| `onAfterOpened` | `() => void` | The drawer finished opening. Fires on the render pass rather than `transitionend`, because the transition is CSS-only and `prefers-reduced-motion` zeroes it. |
+| `onClosing` | `(event: OgeDrawerClosingEvent) => void` | Cancelable, carries the `reason`. Runs before `closeGuard`. |
+| `onClosed` | `(event: OgeDrawerClosedEvent) => void` | The drawer finished closing. |
+| `onModeChanged` | `(event: OgeDrawerModeChangedEvent) => void` | The resolved layout mode changed, carrying the requested mode and whether `compactBelow` forced it. |
+| `onClosePendingChange` | `(pending: boolean) => void` | Fires whenever the async `closeGuard` starts or settles — the callback half of the handle&rsquo;s `closePending`. |
+
+#### Types
+
+_Content slots_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `panel` | `ReactNode` | The drawer panel itself — the React counterpart of the `[ogeDrawerPanel]` attribute slot. |
+| `children` | `ReactNode` | Everything the drawer sits next to: the content `overlay` covers, `push` shifts and `side` shrinks. |
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDrawerMode` | `'overlay' \| 'push' \| 'side'` | Layout mode, and therefore modality. |
+| `OgeDrawerPosition` | `'start' \| 'end' \| 'top' \| 'bottom'` | Edge the panel attaches to; logical for RTL. |
+| `OgeDrawerLandmark` | `'navigation' \| 'complementary' \| 'region'` | Landmark role of a persistent drawer. |
+| `OgeDrawerAutoFocus` | `'first-tabbable' \| 'panel' \| 'none' \| string` | Initial-focus strategy of a modal drawer. |
+| `OgeDrawerCloseReason` | `'api' \| 'escape' \| 'backdrop' \| 'outside' \| 'compact'` | Why the drawer closed. |
+| `OgeDrawerOpeningEvent` | `{ cancel: boolean }` | Cancelable pre-event for opening. |
+| `OgeDrawerClosingEvent` | `{ cancel: boolean; reason: OgeDrawerCloseReason }` | Cancelable pre-event for closing. |
+| `OgeDrawerClosedEvent` | `{ reason: OgeDrawerCloseReason }` | Payload of `onClosed`. |
+| `OgeDrawerModeChangedEvent` | `{ mode; requestedMode; compact: boolean }` | Payload of `onModeChanged`. |
+| `OgeDrawerProps / OgeDrawerHandle` | `interface` | Props of `` and the shape of its `ref`. |
+| `resolveDrawerMode()` | `(request: OgeDrawerModeRequest) => OgeDrawerModeResult` | The pure function in `@oge-ui/behavior` that decides whether a drawer keeps its mode or goes compact. DOM-free, so the rule is unit-tested on its own — and shared verbatim with the Angular drawer. A non-positive `containerSize` means &ldquo;not measured yet&rdquo; and the requested mode is returned unchanged. |
+
+### Drawer configuration
+
+#### Properties
+
+_&lt;OgeDrawerConfigProvider&gt;_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `OgeDrawerMode` | `—` | Default for the `mode` prop. |
+| `position` | `OgeDrawerPosition` | `—` | Default for the `position` prop. |
+| `size` | `number \| string` | `—` | Default for the `size` prop. |
+| `messages.drawer` | `string` | `'Drawer'` | Accessible name of the panel when the application supplies none. |
+| `messages.close` | `string` | `'Close drawer'` | Label of the built-in close button. |
+| `useOgeDrawerConfig()` | `() => OgeDrawerConfig` | `—` | Reads the resolved config of the nearest provider, merged over `OGE_DEFAULT_DRAWER_CONFIG` — the hook behind the component, exported for drawers you compose yourself. |
+
+### <OgeStepper>
+
+#### Properties
+
+_Steps & selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `activeIndex / defaultActiveIndex / onActiveIndexChange` | `number \| (index: number) => void` | `0` | Index of the active step — controlled through `activeIndex` + `onActiveIndexChange`, uncontrolled through `defaultActiveIndex`. |
+| `activeKey / defaultActiveKey / onActiveKeyChange` | `string \| undefined \| (key: string \| undefined) => void` | `—` | Key of the active step. Resolved before the index, so an initial key binding wins over the index default on first run. |
+| `steps` | `readonly OgeStepDefinition[] \| undefined` | `—` | The steps, in render order — the shared `OgeStepData` fields plus the React content slots. React has no declarative `` child to project, so this array is the only step source. |
+| `linear` | `boolean` | `false` | Blocks moving past a step that is neither `completed` nor `optional`. The default matches Material and PrimeNG; Kendo is the outlier at `true`. |
+| `disabled` | `boolean` | `false` | Blocks every step change. |
+
+_Layout & chrome_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Main axis of the step list. **The ARIA semantics do not change with it** — see the accessibility group. |
+| `display` | `'full' \| 'label' \| 'indicator'` | `'full'` | How much of each header renders: label plus description, label only, or just the round indicator. |
+| `showNavigation` | `boolean` | `false` | Renders the built-in Back / Next bar, which becomes Finish on the last step. None of the three reference steppers ships one. |
+| `deferRendering` | `boolean` | `false` | Creates a step's body on first activation. |
+| `keepAlive` | `boolean` | `true` | Keeps a body mounted after the user leaves it. |
+| `className / style` | `string \| CSSProperties` | `—` | Merged onto the stepper host. `className` is appended to the generated `oge-stepper*` classes; the Angular host takes `class`/`style` natively. |
+
+_Accessibility_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `keyboardNavigation` | `boolean` | `false` | Adds arrow / Home / End over the headers. Off by default because the headers are buttons in a list, not tabs, so they are already Tab-reachable. It moves focus only, and deliberately does **not** wrap. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the step list. Falls back to the `stepper` message. |
+| `messages` | `Partial<OgeStepperMessages> \| undefined` | `—` | Per-instance overrides of the config strings — the list&rsquo;s accessible name, the optional/completed/invalid announcements and the navigation bar&rsquo;s labels. |
+| `stepperId` | `string (handle)` | `—` | id prefix of the generated header / panel pairs, read from the ref. |
+| `changePending` | `boolean (handle)` | `—` | True while an async `stepGuard` is in flight. `onChangePendingChange` reports the same transitions as a callback. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `next(event?: Event)` | `void` | Advances one step, or confirms the finish when already on the last one. The guard runs either way, so a final step can still veto. |
+| `previous(event?: Event)` | `void` | Goes back one step, through the same pipeline. |
+| `goTo(target: number \| string, event?: Event)` | `void` | Moves to a step by index or key. |
+| `reset()` | `void` | Clears the rendered-body cache and returns to the first step. |
+| `focus()` | `void` | Focuses the active step's header. |
+
+#### Events
+
+_Callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onStepChanging` | `(event: OgeStepChangingEvent) => void` | Cancelable, called before the leaving step&rsquo;s `stepGuard` runs. |
+| `onStepChanged` | `(event: OgeStepChangedEvent) => void` | The active step changed. |
+| `onStepBlocked` | `(event: OgeStepBlockedEvent) => void` | A move was refused, carrying `reason: 'linear' \| 'editable' \| 'guard' \| 'disabled'`. Angular Material refuses silently. |
+| `onFinished` | `(event: OgeStepperFinishEvent) => void` | `next()` was confirmed on the last step. |
+| `onChangePendingChange` | `(pending: boolean) => void` | Fires whenever an async `stepGuard` starts or settles — the callback half of the handle&rsquo;s `changePending`. |
+
+#### Types
+
+_OgeStepDefinition (a steps entry)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `key / label / description` | `string` | Identity and header text. |
+| `icon / iconClass` | `string \| undefined` | SVG path data, or class(es) for an icon font — replacing the step number. |
+| `completed / optional / editable` | `boolean` | The linear gate: `completed` lets a linear stepper past, `optional` lets it past regardless, and `editable: false` blocks coming _back_. |
+| `errorMessage` | `string \| undefined` | Shown under the label while `invalid`, replacing `description` so two sub-lines never compete. Angular Material has this; Kendo and PrimeNG do not. |
+| `invalid / disabled / visible` | `boolean` | Error state, non-activatable, and removal from the list. |
+| `stepGuard` | `() => boolean \| Promise<boolean>` | Veto hook run when leaving this step. A throw and a rejection both veto. |
+| `content` | `ReactNode` | The step body — the React counterpart of what an `` projects. |
+
+_Types & render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeStepState` | `'number' \| 'active' \| 'done' \| 'error'` | Derived indicator state; error outranks done, so a completed step that later fails still reads as needing attention. |
+| `OgeStepperOrientation` | `'horizontal' \| 'vertical'` | Main axis; the ARIA model is the same for both. |
+| `OgeStepperDisplay` | `'full' \| 'label' \| 'indicator'` | How much of a header renders. |
+| `OgeStepData` | `{ key?; label?; description?; icon?; iconClass?; disabled?; visible?; completed?; optional?; editable?; invalid?; cssClass?; stepGuard? }` | One step&rsquo;s shared data — the same shape the Angular layer uses, from `@oge-ui/behavior`. `OgeStepDefinition` adds the React slots on top. |
+| `OgeStepGuard` | `() => boolean \| Promise<boolean>` | Behavior's `OgeAsyncGuard`, the same veto contract the tabs' close guard and the accordion's expand guard use. |
+| `next() / previous() on the handle` | `OgeStepperHandle` | The React counterpart of the `[ogeStepperNext]` / `[ogeStepperPrevious]` directives: any button drives the stepper through the same pipeline by calling the ref, from inside a step body or from outside — which Material&rsquo;s equivalents cannot do. |
+| `renderHeader / renderIndicator / renderContent` | `(context) => ReactNode` | Render props replacing `[ogeStepHeaderTemplate]`, `[ogeStepIndicatorTemplate]` and `[ogeStepContentTemplate]`: the label block, the round indicator, or a lazily built body. Set on the stepper for all steps, or on one `steps` entry. |
+| `Stepper inside a form` | `@oge-ui/react-inputs` | Angular&rsquo;s `` wrapper has no React counterpart yet — `@oge-ui/forms` ships no React layer. Bind the editors to your own state and compute each step's `completed` / `invalid` from it; the linear gate and the per-step error display are the stepper's own. |
+
+### Stepper configuration
+
+#### Properties
+
+_&lt;OgeStepperConfigProvider&gt;_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation / display / linear` | `defaults` | `—` | Defaults for the matching props. |
+| `messages.stepper` | `string` | `'Steps'` | Accessible name of the step list. |
+| `messages.optional` | `string` | `'Optional'` | Sub-label of an optional step, wired through `aria-describedby`. |
+| `messages.completed / messages.invalid` | `string` | `'Completed' / 'Has errors'` | Announced in visually hidden text, because the indicator glyph is `aria-hidden`. |
+| `messages.previous / next / finish` | `string` | `'Back' / 'Next' / 'Finish'` | Labels of the built-in navigation bar. |
+| `useOgeStepperConfig()` | `() => OgeStepperConfig` | `—` | Reads the resolved config of the nearest provider, merged over `OGE_DEFAULT_STEPPER_CONFIG` — the hook behind the component, exported for steppers you compose yourself. |
+
+### <OgeMenubar>
+
+#### Properties
+
+_Data_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `items` | `readonly OgeMenubarItemData[] \| undefined` | Data-driven item tree; children at any depth open as nested submenus. The **only** item API in React — the Angular layer also accepts declarative `` children, which React cannot mirror because `key` is reserved by React itself. |
+| `activeKey` | `string \| undefined` | The item `key` rendered with `aria-current="page"` and the active style. Consumer-driven — bind it from your router; the menubar itself takes no router dependency. |
+| `messages` | `Partial<OgeMenubarMessages> \| undefined` | Per-instance overrides of the user-facing strings, merged over ``. |
+
+_Behavior_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | A vertical bar announces `aria-orientation="vertical"` and swaps the arrow axes: Up/Down traverse, ArrowRight opens the submenu beside the bar. |
+| `openMode` | `'click' \| 'hover'` | `'click'` | How **top-level** submenus open. Nested levels always open on hover and on ArrowRight/Enter — the reference libraries&rsquo; first-vs-nested split baked in as behavior. With a menu open, hovering siblings switches it in either mode. |
+| `hoverDelay` | `number` | `100` | Hover dwell before a top-level submenu opens in `'hover'` mode, in ms. Nested levels use the overlay config's `menuShowDelayMs`/`menuHideDelayMs` (50/300). |
+| `compactBelow` | `number \| undefined` | `—` | Below this **container** inline size the whole bar collapses into a hamburger button opening the full tree as one nested menu. Measured against the menubar's own box, never the window. |
+| `disabled` | `boolean` | `false` | Disables the whole bar: every item goes inert and the bar leaves the Tab sequence. |
+| `renderSubmenuItem` | `(item: OgeMenuItem, index: number) => ReactNode` | `—` | Custom rendering for submenu rows at **every depth** — the shared menu-list renderer, the React face of `[submenuItemTemplate]`. Top-level bar items use `renderItem` instead. |
+| `renderItem` | `(item: OgeMenubarItemData, index: number) => ReactNode` | `—` | Replaces the interior of the **top-level** bar items — the React face of `[ogeMenubarItemTemplate]` (documented in the Angular block&rsquo;s types table). The caret, roles and roving tabindex stay with the component. |
+
+_Host_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string \| undefined` | Extra classes on the menubar element — the React host styling idiom; an Angular host takes `class` natively. |
+| `style` | `CSSProperties \| undefined` | Inline styles on the menubar element. |
+
+#### Methods
+
+_OgeMenubarHandle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(target: number \| string)` | `void` | Opens the submenu of a top-level item, by index or `key`. Runs through the cancelable `onSubmenuOpening` pipeline. |
+| `close()` | `void` | Closes any open submenu through the cancelable `onSubmenuClosing` pipeline with `reason: 'api'`. |
+| `focus()` | `void` | Focuses the bar's roving tab target — or the hamburger button when compact. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeMenubarItemClickEvent) => void` | A leaf item was activated, at any depth. Carries the item, its `key` and the hierarchical index `path` from the bar down. |
+| `onSubmenuOpening` | `(event: OgeMenubarSubmenuOpeningEvent) => void` | **Cancelable** — set `cancel` to keep the submenu closed. `item` is `undefined` for the compact hamburger menu (empty `path`). |
+| `onSubmenuOpened` | `(event: OgeMenubarSubmenuOpenedEvent) => void` | A top-level submenu (or the hamburger menu) opened. |
+| `onSubmenuClosing` | `(event: OgeMenubarSubmenuClosingEvent) => void` | **Cancelable** — set `cancel` to keep the submenu open. Fires for closes the menubar itself initiates (`escape`, `select`, `navigation`, `api`); overlay-owned closes (`outside`) and Tab only report `onSubmenuClosed`. |
+| `onSubmenuClosed` | `(event: OgeMenubarSubmenuClosedEvent) => void` | A submenu closed, with its `reason`. |
+| `onCompactChanged` | `(event: OgeMenubarCompactChangedEvent) => void` | The bar collapsed into (or recovered from) the compact hamburger. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeMenubarItemData<T>` | `interface` | The canonical overlay `OgeMenuItem` narrowed recursively — `badge` and `shortcut` included — plus `key` (identity for `activeKey`/`open()`/events), `url` (renders the item as a real `` at the bar **and** at any submenu depth; `onItemClick` fires first so `preventDefault()` hands navigation to a router) and `visible`. Submenus come from `items`. |
+| `OgeMenubarCloseReason` | `'escape' \| 'outside' \| 'select' \| 'tab' \| 'navigation' \| 'api'` | Why a submenu closed. `'navigation'` is a Left/Right or hover switch to a sibling top-level item. |
+| `OgeMenubarItemClickEvent` | `{ item; key?; index; path; event }` | `path` is the hierarchical index chain from the bar down to the item; `index` is its last entry. |
+| `OgeMenubarHandle` | `interface` | The `ref` handle: `open`, `close`, `focus` — the React face of the Angular public methods. |
+| `OgeMenubarProps` | `interface` | Props of ``, render props included. |
+
+### OgeMenubarItem (OgeMenubarItemData)
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | `''` | Label of the item. |
+| `key` | `string \| undefined` | `—` | Stable identity used by `activeKey`, the handle&rsquo;s `open()` and event payloads. Not React&rsquo;s `key` — an item is data, so nothing collides. |
+| `value` | `unknown` | `—` | Consumer-defined value carried through click events. |
+| `url` | `string \| undefined` | `—` | Renders the item as a real link (``). |
+| `hint` | `string \| undefined` | `—` | Tooltip (native `title`) — e.g. why an item is disabled. |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading `aria-hidden` icon. |
+| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon element — the icon-font hook. |
+| `disabled` | `boolean` | `false` | Disabled items are exposed (`aria-disabled`) but inert and skipped by the arrow keys. |
+| `visible` | `boolean` | `true` | `false` removes the item and its subtree. |
+| `separator` | `boolean` | `false` | Renders a divider (`role="separator"`); every other field is ignored. |
+
+### Menubar configuration
+
+#### Properties
+
+_OgeMenubarConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeMenubarMessages` | Every user-facing string: `menubar` (accessible name of the bar, default `Menu bar`) and `hamburger` (aria label of the compact button, default `Menu`). |
+| `openMode` | `'click' \| 'hover' \| undefined` | Default for the `openMode` prop. |
+| `hoverDelay` | `number \| undefined` | Default for the `hoverDelay` prop, in ms. |
+| `orientation` | `'horizontal' \| 'vertical' \| undefined` | Default for the `orientation` prop. |
+| `compactBelow` | `number \| undefined` | Default for the `compactBelow` prop. |
+
+### <OgeBreadcrumb>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeBreadcrumbItemData[] \| undefined` | `—` | Data-driven trail — a flat list, never nested. The **only** crumb API in React: the Angular layer also accepts declarative `` children, which React cannot mirror because `key` is reserved by React itself. |
+| `collapseMode` | `'auto' \| 'wrap' \| 'none'` | `'auto'` | `'auto'` collapses the **oldest middle** crumbs into an ellipsis menu against the breadcrumb's own **container** width (never the window) — the first and last crumb always stay visible, and the collapsed crumbs remain reachable as real links. `'wrap'` breaks onto multiple rows; `'none'` keeps one scrollable row. The fitting arithmetic is core's pure `fitToolbarItems`. |
+| `messages` | `Partial<OgeBreadcrumbMessages> \| undefined` | `—` | Per-instance overrides of the user-facing strings, merged over ``. |
+| `renderItem` | `(context: OgeBreadcrumbItemRenderContext) => ReactNode` | `—` | Replaces the crumb's interior only — the link/current/disabled element semantics stay with the component. The React face of `[ogeBreadcrumbItemTemplate]` (documented in the Angular block&rsquo;s types table); the context carries `item`, `index` and `last`. |
+| `renderSeparator` | `(context: OgeBreadcrumbSeparatorRenderContext) => ReactNode` | `—` | Replaces the default chevron separator — the React face of `[ogeBreadcrumbSeparatorTemplate]`. Rendered `aria-hidden`: a separator is decoration, never content (APG). |
+
+_Host_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string \| undefined` | Extra classes on the breadcrumb element — the React host styling idiom; an Angular host takes `class` natively. |
+| `style` | `CSSProperties \| undefined` | Inline styles on the breadcrumb element. |
+| `id` | `string \| undefined` | Id of the breadcrumb element; the crumbs derive their own ids independently. |
+
+#### Methods
+
+_OgeBreadcrumbHandle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `void` | Focuses the first interactive crumb — or the ellipsis button when the trail is collapsed. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeBreadcrumbItemClickEvent) => void` | A crumb (inline or inside the ellipsis menu) was activated. **Not fired** by disabled crumbs or by the last crumb — that is the current page. On `url` crumbs, `event.event.preventDefault()` hands navigation to a router. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeBreadcrumbItemData<T>` | `{ text; key?; value?; url?; hint?; icon?; iconClass?; disabled?; visible? }` | A deliberately narrow interface — no submenu, checked or shortcut fields, because none of them mean anything on a trail. `url` renders the crumb as a real `` (ignored on the last crumb); `disabled` crumbs are exposed via `aria-disabled` but inert; `visible: false` removes the crumb. |
+| `OgeBreadcrumbCollapseMode` | `'auto' \| 'wrap' \| 'none'` | How the breadcrumb behaves when room runs out. |
+| `OgeBreadcrumbItemClickEvent` | `{ item; key?; index; event }` | `index` is the position within the full trail, collapsed crumbs included. |
+| `OgeBreadcrumbItemRenderContext` | `{ item; index; last }` | Context of `renderItem` — the React face of `OgeBreadcrumbItemTemplateContext`. `last` is `true` on the current page&rsquo;s crumb. |
+| `OgeBreadcrumbSeparatorRenderContext` | `{ index }` | Context of `renderSeparator` — the index of the crumb the separator precedes. |
+| `OgeBreadcrumbHandle` | `interface` | The `ref` handle: `focus` — the React face of the Angular public method. |
+| `OgeBreadcrumbProps` | `interface` | Props of ``, render props included. |
+
+### OgeBreadcrumbItem (OgeBreadcrumbItemData)
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | `''` | Label of the crumb. |
+| `key` | `string \| undefined` | `—` | Stable identity used in event payloads and DOM ids. Not React&rsquo;s `key` — a crumb is data, so nothing collides. |
+| `value` | `unknown` | `—` | Consumer-defined value carried through click events. |
+| `url` | `string \| undefined` | `—` | Renders the crumb as a real link (``). |
+| `hint` | `string \| undefined` | `—` | Tooltip (native `title`). |
+| `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading `aria-hidden` icon. |
+| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon element — the icon-font hook. |
+| `disabled` | `boolean` | `false` | Disabled crumbs are exposed (`aria-disabled`) but inert. |
+| `visible` | `boolean` | `true` | `false` removes the crumb entirely. |
+
+### Breadcrumb configuration
+
+#### Properties
+
+_OgeBreadcrumbConfigProvider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeBreadcrumbMessages` | Every user-facing string: `breadcrumb` (accessible name of the `` landmark, default `Breadcrumb`) and `collapsed` (aria label of the ellipsis button, default `Show hidden items`). |
+| `collapseMode` | `'auto' \| 'wrap' \| 'none' \| undefined` | Default for the `collapseMode` prop. |
+
+### <OgePagination>
+
+#### Properties
+
+_OgePagination_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `pageIndex` | `number \| undefined` | `0` | The current page — **0-based**, controlled; pair it with `onPageIndexChange`. Auto-clamped when the page count shrinks (an implicit `onPageIndexChange`, no rich event). DevExtreme migrators: check your origin — dx documentation is ambiguous about its base. |
+| `defaultPageIndex` | `number \| undefined` | `0` | Initial page of the **uncontrolled** mode — the half of Angular&rsquo;s `[(pageIndex)]` model React splits out. Ignored once `pageIndex` is passed. |
+| `pageSize` | `number \| undefined` | `20` | Items per page — controlled; pair it with `onPageSizeChange`. `0` means "all items on one page" (the grid pager contract, kept aligned for eventual delegation). |
+| `defaultPageSize` | `number \| undefined` | `20` | Initial size of the **uncontrolled** mode. Ignored once `pageSize` is passed. |
+| `itemCount` | `number \| undefined` | `—` | Total items. `undefined` = unknown total: only prev/next and a "Page N" indicator render, and **next never disables** — clamp `pageIndex` yourself when the server reports the end. |
+| `pageSizes` | `readonly (number \| 'all')[] \| undefined` | `—` | Page-size choices; `'all'` adds the unpaged option. **Presence shows the selector** — no separate boolean (DevExtreme's `showPageSizeSelector` is deliberately skipped). |
+| `showInfo` | `boolean` | `false` | Renders the `{from}–{to} of {itemCount}` range (the `info` message template) in an `aria-live="polite"` region. |
+| `showFirstLastButtons` | `boolean` | `false` | First/last jump buttons (Material name and default) — the numeric window already renders both rail pages, so they are opt-in chrome. |
+| `showNavigationButtons` | `boolean` | `true` | Prev/next buttons; forced on in compact and unknown-total modes (they are the backbone there). |
+| `showJumpToPageInput` | `boolean` | `false` | Jump-to-page input (PrimeNG name; Kendo's `type: 'input'`): 1-based display, clamped into range, display re-synced after a clamp. Hidden while the total is unknown. **React idiom:** the input is uncontrolled and commits on **blur or Enter** — React has no `onChange` bound to the native `change` event, which is what the Angular version listens to alongside `(keydown.enter)`. |
+| `maxButtons` | `number \| undefined` | `7 (config)` | Total rendered slots **including ellipsis slots** — the window width never changes while paging, so the bar never jitters. An ellipsis hiding a single page renders the page instead. |
+| `displayMode` | `'full' \| 'compact' \| 'adaptive'` | `'full' (config)` | `'compact'` renders the `N / M` indicator; `'adaptive'` switches below `compactBelow` (config, default 480px), measured against the bar's own container via ResizeObserver — never the window. |
+| `disabled` | `boolean` | `false` | Disables every control (native `disabled` — they are all real buttons/selects/inputs). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset (26/32/40px hit targets). |
+| `messages` | `Partial<OgePaginationMessages>` | `—` | Per-instance string overrides, merged over the config messages. Several bars on one page need distinct `paginationLabel` values — landmarks must be unique (axe `landmark-unique`). |
+| `className / style / id` | `string \| CSSProperties \| string` | `—` | Merged onto the pagination host. `className` is appended to the generated `oge-pagination*` classes; the Angular host takes `class`/`style`/`id` natively. |
+
+#### Methods
+
+_OgePaginationHandle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `firstPage() / lastPage() / nextPage() / previousPage()` | `void` | Programmatic paging (Material names). `lastPage()` no-ops while the total is unknown. State updates only — no rich event (no user event). |
+| `hasPreviousPage() / hasNextPage()` | `boolean` | `hasNextPage()` returns `true` while the total is unknown — the component cannot know the end. |
+| `pageCount()` | `number \| undefined` | Total pages; `undefined` while the total is unknown. DevExtreme's `getPageCount()` — a handle method rather than the Angular signal, because React has no signal to read off the instance. |
+| `focus()` | `void` | Moves keyboard focus to the first enabled control. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onPageChanged` | `(event: OgePaginationPageChangedEvent) => void` | `{ pageIndex, previousPageIndex, pageSize, event }` — user interactions only; programmatic writes and auto-clamps update the state without it. |
+| `onPageSizeChanged` | `(event: OgePaginationPageSizeChangedEvent) => void` | `{ pageSize, previousPageSize, pageIndex, event }` — `pageIndex` reports the **post-clamp** page (changing the size can move the current page). |
+| `onPageIndexChange / onPageSizeChange` | `(value: number) => void` | The controlled halves of Angular&rsquo;s `[(pageIndex)]` / `[(pageSize)]` models — fire on every change including programmatic writes and auto-clamps. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePaginationDisplayMode / OgePaginationSize` | `types` | The string unions of the mode and density props, re-exported from `@oge-ui/behavior`. |
+| `OgePaginationProps / OgePaginationHandle` | `interface` | The props of `` and the shape of its `ref` handle. |
+| `resolvePageWindow / resolvePageRange / resolvePageCount / OGE_PAGE_ELLIPSIS` | `@oge-ui/behavior` | The DOM-free paging kernel (`pagination-math.ts`): the constant-width page window with real ellipsis markers, the from/to info arithmetic and the never-below-1 page-count division — the **same module** the Angular component runs on, unit-tested without a DOM. |
+
+### Pagination configuration
+
+#### Properties
+
+_OgePaginationConfig_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgePaginationMessages` | All strings: `paginationLabel` (the `` name), `firstPage`/`lastPage`/`previousPage`/`nextPage`, `pageLabel` (`{page}`, 1-based), `info` (`{from}` `{to}` `{itemCount}`), `pageInfoUnknown`, `pageIndicator` (`{page}` `{pageCount}`), `pageSizeLabel`, `allRows`, `jumpLabel`. |
+| `displayMode / compactBelow / maxButtons` | `OgePaginationDisplayMode / number / number` | Subtree-wide prop defaults; the component resolves `prop ?? config ?? literal` (480px / 7). |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePaginationConfigProvider` | `(props: { config?: OgePaginationConfigInput; children?: ReactNode }) => JSX.Element` | Subtree defaults — the React counterpart of `provideOgePaginationConfig()`; shallow-merges `messages` over the built-ins. |
+| `useOgePaginationConfig()` | `() => OgePaginationConfig` | Reads the resolved config of the nearest provider, merged over `OGE_DEFAULT_PAGINATION_CONFIG` — the hook behind the component, exported for pagination chrome you compose yourself. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeBreadcrumb } from '@oge-ui/react-navigation';
+import type { OgeBreadcrumbItemData, OgeBreadcrumbItemClickEvent } from '@oge-ui/react-navigation';
+
+// The APG breadcrumb: a nav landmark holding an ordered list of
+// links, the current page carrying aria-current="page". The last crumb is
+// never interactive — you are already there — and disabled crumbs stay
+// visible but inert. No roving tabindex: the APG defines no keyboard
+// behavior for a breadcrumb, so none is invented.
+const trail: OgeBreadcrumbItemData[] = [
+  { text: 'Home', key: 'home', url: '/', icon: 'M2 8 8 2l6 6M4 7v7h8V7' },
+  { text: 'Products', key: 'products', url: '/products' },
+  { text: 'Keyboards', key: 'keyboards', url: '/products/keyboards' },
+  { text: 'Mechanical' },
+];
+
+export function BreadcrumbBasicsDemo() {
+  const [last, setLast] = useState('—');
+
+  const go = (event: OgeBreadcrumbItemClickEvent) => {
+    setLast(`${event.key ?? event.item.text} [${event.index}]`);
+  };
+  return (
+    <>
+      <OgeBreadcrumb items={trail} onItemClick={go} />
+      <p className="mt-3 text-sm">
+        Last click: <code>{last}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Declarative items
+
+```ts
+'use client';
+
+import { OgeBreadcrumb } from '@oge-ui/react-navigation';
+import type { OgeBreadcrumbItemData } from '@oge-ui/react-navigation';
+
+// The Angular counterpart of this section lists
+// <oge-breadcrumb-item> elements. React has no such child: `key` is
+// reserved by React itself, so a crumb component could not carry the
+// identity `key` means here. A trail is the items array — flat, never
+// nested.
+const trail: OgeBreadcrumbItemData[] = [
+  { text: 'Home', key: 'home', url: '/' },
+  { text: 'Reports', key: 'reports', url: '/reports' },
+  { text: 'Q3 summary' },
+];
+
+export function BreadcrumbItemsDemo() {
+  return (
+    <OgeBreadcrumb items={trail} />
+  );
+}
+```
+
+### Collapse modes
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeBreadcrumb } from '@oge-ui/react-navigation';
+import type { OgeBreadcrumbItemData } from '@oge-ui/react-navigation';
+
+// collapseMode 'auto' (default) measures the breadcrumb's OWN
+// container, never the window. When room runs out the OLDEST middle crumbs
+// collapse first — first and last always stay visible — and unlike the
+// references the collapsed crumbs remain reachable: the ellipsis opens
+// them as real links. 'wrap' breaks onto rows, 'none' keeps one
+// scrollable row.
+const trail: OgeBreadcrumbItemData[] = [
+  { text: 'Home', url: '/' },
+  { text: 'Products', url: '/products' },
+  { text: 'Peripherals', url: '/products/peripherals' },
+  { text: 'Keyboards', url: '/products/keyboards' },
+  { text: 'Mechanical' },
+];
+
+export function BreadcrumbCollapseDemo() {
+  const [width, setWidth] = useState(640);
+  return (
+    <>
+      <label className="mb-2 flex items-center gap-2 text-sm">
+        Container width
+        <input
+          type="range"
+          min={200}
+          max={640}
+          value={width}
+          onChange={(event) => setWidth(+event.target.value)}
+        />
+        <code>{width}px</code>
+      </label>
+      <div className="rounded border p-2" style={{ width }}>
+        <OgeBreadcrumb items={trail} collapseMode="auto" />
+      </div>
+    </>
+  );
+}
+```
+
+### Templates
+
+```ts
+'use client';
+
+import { OgeBreadcrumb } from '@oge-ui/react-navigation';
+import type { OgeBreadcrumbItemData } from '@oge-ui/react-navigation';
+
+// The item render prop replaces the crumb's interior only — the
+// link/current/disabled element semantics stay with the component. The
+// separator render prop is rendered aria-hidden: a separator is
+// decoration. They are the React face of Angular's two ng-template slots.
+const trail: OgeBreadcrumbItemData[] = [
+  { text: 'Home', url: '/' },
+  { text: 'Library', url: '/library' },
+  { text: 'Data' },
+];
+
+export function BreadcrumbTemplatesDemo() {
+  return (
+    <OgeBreadcrumb
+      items={trail}
+      renderItem={({ item, last }) => (
+        <strong style={{ opacity: last ? 1 : 0.75 }}>{item.text}</strong>
+      )}
+      renderSeparator={() => '·'}
+    />
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { OgeBreadcrumb, OgeBreadcrumbConfigProvider } from '@oge-ui/react-navigation';
+import type { OgeBreadcrumbItemData } from '@oge-ui/react-navigation';
+
+// Every user-facing string lives in the messages block — the nav
+// landmark's label and the ellipsis button's label included. The context
+// provider is the React shape of provideOgeBreadcrumbConfig().
+const trail: OgeBreadcrumbItemData[] = [
+  { text: 'Giriş', url: '/' },
+  { text: 'Raporlar' },
+];
+
+export function BreadcrumbConfigDemo() {
+  return (
+    <OgeBreadcrumbConfigProvider
+      config={{
+        collapseMode: 'auto',
+        messages: {
+          breadcrumb: 'İçerik haritası',
+          collapsed: 'Gizli öğeleri göster',
+        },
+      }}
+    >
+      <OgeBreadcrumb items={trail} />
+    </OgeBreadcrumbConfigProvider>
+  );
+}
+```
+
+### Layout modes
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDrawer } from '@oge-ui/react-navigation';
+import type { OgeDrawerMode } from '@oge-ui/react-navigation';
+
+// One component, not the container/drawer/content trio the reference
+// libraries need. The panel is the `panel` node prop; `children` is
+// everything the drawer sits next to.
+
+export function DrawerModesDemo() {
+  const [opened, setOpened] = useState(true);
+  const [mode, setMode] = useState<OgeDrawerMode>('side');
+  return (
+    <OgeDrawer
+      opened={opened}
+      onOpenedChange={setOpened}
+      mode={mode}
+      size={240}
+      panel={<div>Navigation…</div>}
+    >
+      <main>Content that overlay covers, push shifts and side shrinks.</main>
+    </OgeDrawer>
+  );
+}
+```
+
+### Position
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDrawer } from '@oge-ui/react-navigation';
+import type { OgeDrawerPosition } from '@oge-ui/react-navigation';
+
+// start/end are logical: they mirror in RTL on their own, because there
+// is no rtlEnabled flag anywhere in this suite.
+
+export function DrawerPositionDemo() {
+  const [opened, setOpened] = useState(false);
+  const [position, setPosition] = useState<OgeDrawerPosition>('start');
+  return (
+    <OgeDrawer
+      opened={opened}
+      onOpenedChange={setOpened}
+      mode="overlay"
+      position={position}
+      panel={<div>Panel</div>}
+    >
+      <main>Content</main>
+    </OgeDrawer>
+  );
+}
+```
+
+### Modal drawer
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDrawer } from '@oge-ui/react-navigation';
+
+// Modality is DERIVED from mode, never configured. overlay and push cover
+// or displace the content, so they are dialogs: role="dialog", aria-modal,
+// a focus trap, Escape and inert on the background. side is part of the
+// layout, so it is a landmark with none of those.
+//
+// An independent "modal" flag is exactly what lets a panel claim
+// role="complementary" and aria-modal="true" at the same time.
+
+export function DrawerModalDemo() {
+  const [opened, setOpened] = useState(false);
+  return (
+    <OgeDrawer
+      opened={opened}
+      onOpenedChange={setOpened}
+      mode="overlay"
+      ariaLabel="Main menu"
+      showCloseButton
+      panel={<a href="#reports">Reports</a>}
+    >
+      <button
+        type="button"
+        aria-expanded={opened}
+        onClick={() => setOpened(true)}
+      >
+        Menu
+      </button>
+      <main>Content</main>
+    </OgeDrawer>
+  );
+}
+```
+
+### Compact rail
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDrawer } from '@oge-ui/react-navigation';
+
+// minSize is the closed size: the compact rail that keeps icons visible.
+// It only applies to mode="side", because a rail belongs to the layout and
+// a modal drawer still partly on screen is not closed.
+
+export function DrawerRailDemo() {
+  const [opened, setOpened] = useState(false);
+  return (
+    <OgeDrawer
+      opened={opened}
+      onOpenedChange={setOpened}
+      mode="side"
+      size={240}
+      minSize={56}
+      panel={<div>Icons, then labels once open</div>}
+    >
+      <main>Content</main>
+    </OgeDrawer>
+  );
+}
+```
+
+### Responsive downgrade
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDrawer } from '@oge-ui/react-navigation';
+import type { OgeDrawerModeChangedEvent } from '@oge-ui/react-navigation';
+
+// compactBelow measures the drawer's OWN container, never the window, so a
+// drawer nested in a dialog or a split pane adapts to the room it actually
+// has. Below the threshold it downgrades to an overlay and closes, rather
+// than leaving a backdrop the user never asked for.
+
+export function DrawerCompactDemo() {
+  const [opened, setOpened] = useState(true);
+
+  const onModeChanged = (event: OgeDrawerModeChangedEvent): void => {
+    console.log(event.mode, 'compact:', event.compact);
+  };
+  return (
+    <OgeDrawer
+      opened={opened}
+      onOpenedChange={setOpened}
+      mode="side"
+      compactBelow={720}
+      onModeChanged={onModeChanged}
+      panel={<div>Navigation</div>}
+    >
+      <main>Content</main>
+    </OgeDrawer>
+  );
+}
+```
+
+### Close guard
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDrawer } from '@oge-ui/react-navigation';
+
+// closeGuard follows the overlay package's veto semantics: false, a throw
+// and a rejection all mean "stay open", a promise reports pending through
+// the handle's closePending (and onClosePendingChange), and a second
+// gesture meanwhile is dropped.
+
+export function DrawerGuardDemo() {
+  const [opened, setOpened] = useState(true);
+  const [dirty, setDirty] = useState(true);
+
+  const confirmDiscard = (): boolean =>
+    !dirty || confirm('Discard your changes?');
+  return (
+    <OgeDrawer
+      opened={opened}
+      onOpenedChange={setOpened}
+      closeGuard={confirmDiscard}
+      panel={<form>Unsaved edits…</form>}
+    >
+      <label>
+        <input
+          type="checkbox"
+          checked={dirty}
+          onChange={() => setDirty(!dirty)}
+        />
+        pretend there are unsaved changes
+      </label>
+      <main>Content</main>
+    </OgeDrawer>
+  );
+}
+```
+
+### App shell
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDrawer, OgeTreeView } from '@oge-ui/react-navigation';
+import { OgeToolbar, OgeSplitter } from '@oge-ui/react-layout';
+import type { OgeSplitterSize, OgeToolbarItemData } from '@oge-ui/react-layout';
+
+// The whole app shell out of three OGE containers: a toolbar on top, a
+// drawer down the side holding the tree view that ships in the same
+// package, and a splitter dividing the workspace.
+//
+// compactBelow makes the shell responsive to its own width, so the same
+// markup works full-page and inside a preview card.
+const nav = [
+  { id: 1, parentId: null, text: 'Reports' },
+  { id: 2, parentId: 1, text: 'Monthly' },
+  { id: 3, parentId: null, text: 'Settings' },
+];
+
+export function DrawerAppShellDemo() {
+  const [menuOpen, setMenuOpen] = useState(true);
+  const [sizes, setSizes] = useState<readonly OgeSplitterSize[]>([60, 40]);
+
+  const commands: readonly OgeToolbarItemData[] = [
+    { key: 'menu', text: 'Menu' },
+    { key: 'save', text: 'Save', severity: 'accent', overflowPriority: 10 },
+    { key: 'help', text: 'Help', location: 'after', overflowPriority: -1 },
+  ];
+  return (
+    <>
+      <OgeToolbar
+        ariaLabel="Application"
+        items={commands}
+        onItemClick={(event) => {
+          if (event.key === 'menu') setMenuOpen((open) => !open);
+        }}
+      />
+
+      <OgeDrawer
+        opened={menuOpen}
+        onOpenedChange={setMenuOpen}
+        mode="side"
+        size={220}
+        compactBelow={720}
+        ariaLabel="Sections"
+        panel={<OgeTreeView items={nav} />}
+      >
+        <OgeSplitter
+          sizes={sizes}
+          onSizesChange={setSizes}
+          panes={[
+            { key: 'list', content: <div>Rows…</div> },
+            { key: 'detail', content: <div>Details…</div> },
+          ]}
+        />
+      </OgeDrawer>
+    </>
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDrawer, OgeDrawerConfigProvider } from '@oge-ui/react-navigation';
+
+export function DrawerConfigDemo() {
+  const [opened, setOpened] = useState(true);
+  return (
+    <OgeDrawerConfigProvider
+      config={{
+        mode: 'side',
+        size: 280,
+        messages: { drawer: 'Gezinme', close: 'Kapat' },
+      }}
+    >
+      {/* A single instance can still override the strings with the messages prop. */}
+      <OgeDrawer
+        opened={opened}
+        onOpenedChange={setOpened}
+        showCloseButton
+        messages={{ close: 'Paneli kapat' }}
+        panel={<div>Gezinme…</div>}
+      >
+        <main>İçerik</main>
+      </OgeDrawer>
+    </OgeDrawerConfigProvider>
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMenubar } from '@oge-ui/react-navigation';
+import type { OgeMenubarItemData, OgeMenubarItemClickEvent } from '@oge-ui/react-navigation';
+
+// role="menubar" with the full APG keyboard contract: roving
+// tabindex, Left/Right between items, Down/Enter opens, Escape unwinds,
+// type-ahead. Submenus run on the same <OgeMenuList> every other menu in
+// the suite uses.
+const menu: OgeMenubarItemData[] = [
+  {
+    text: 'File',
+    items: [
+      // shortcut renders right-aligned and announces aria-keyshortcuts;
+      // the actual key binding stays the application's job.
+      { text: 'New', key: 'new', shortcut: 'Ctrl+N' },
+      { text: 'Open…', key: 'open', shortcut: 'Ctrl+O' },
+      { separator: true, text: '' },
+      { text: 'Share', badge: 2, items: [{ text: 'Email', key: 'email' }] },
+    ],
+  },
+  { text: 'Edit', items: [{ text: 'Undo', key: 'undo', shortcut: 'Ctrl+Z' }] },
+  { text: 'Help', key: 'help' },
+];
+
+export function MenubarBasicsDemo() {
+  const [last, setLast] = useState('—');
+
+  const run = (event: OgeMenubarItemClickEvent) => {
+    setLast(`${event.key ?? event.item.text} [${event.path.join(', ')}]`);
+  };
+  return (
+    <>
+      <OgeMenubar items={menu} onItemClick={run} />
+      <p className="mt-3 text-sm">
+        Last click: <code>{last}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Declarative items
+
+```ts
+'use client';
+
+import { OgeMenubar } from '@oge-ui/react-navigation';
+import type { OgeMenubarItemData } from '@oge-ui/react-navigation';
+
+// The Angular counterpart of this section nests
+// <oge-menubar-item> elements. React has no such child: `key` is
+// reserved by React itself, so an item component could not carry the
+// identity `key` means here. Nesting is the items array, all the way
+// down — the same tree the section above builds.
+const menu: OgeMenubarItemData[] = [
+  {
+    text: 'File',
+    items: [
+      { text: 'New', key: 'new' },
+      { separator: true, text: '' },
+      { text: 'Exit', key: 'exit' },
+    ],
+  },
+  { text: 'Help', key: 'help' },
+];
+
+export function MenubarItemsDemo() {
+  return (
+    <OgeMenubar items={menu} />
+  );
+}
+```
+
+### Open mode
+
+```ts
+'use client';
+
+import { OgeMenubar } from '@oge-ui/react-navigation';
+import type { OgeMenubarItemData } from '@oge-ui/react-navigation';
+
+// openMode applies to the TOP level only: 'click' is the
+// desktop-menubar default, 'hover' opens after hoverDelay. Nested levels
+// always open on hover and on ArrowRight/Enter — the reference libraries'
+// first-vs-nested split baked in as behavior, not a second prop. Once a
+// menu is open, hovering siblings switches it in either mode.
+const menu: OgeMenubarItemData[] = [
+  { text: 'File', items: [{ text: 'New' }] },
+  { text: 'Edit', items: [{ text: 'Undo' }] },
+];
+
+export function MenubarOpenModeDemo() {
+  return (
+    <OgeMenubar items={menu} openMode="hover" hoverDelay={150} />
+  );
+}
+```
+
+### Vertical menubar
+
+```ts
+'use client';
+
+import { OgeMenubar } from '@oge-ui/react-navigation';
+import type { OgeMenubarItemData } from '@oge-ui/react-navigation';
+
+// A vertical menubar keeps role="menubar" and announces
+// aria-orientation="vertical"; Up/Down traverse the bar and ArrowRight
+// opens the submenu beside it, exactly as the APG allows.
+const menu: OgeMenubarItemData[] = [
+  { text: 'Dashboard', key: 'dashboard' },
+  { text: 'Reports', items: [{ text: 'Monthly' }, { text: 'Annual' }] },
+  { text: 'Settings', items: [{ text: 'Profile' }] },
+];
+
+export function MenubarVerticalDemo() {
+  return (
+    <OgeMenubar orientation="vertical" items={menu} />
+  );
+}
+```
+
+### Adaptive hamburger
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMenubar } from '@oge-ui/react-navigation';
+import type { OgeMenubarItemData, OgeMenubarCompactChangedEvent } from '@oge-ui/react-navigation';
+
+// compactBelow measures the menubar's OWN container, never the
+// window (DevExtreme collapses on widget overflow, PrimeNG on a media
+// query). Below the threshold the whole bar becomes a hamburger button
+// opening the full tree as one nested menu — no second interaction model.
+const menu: OgeMenubarItemData[] = [
+  { text: 'File', items: [{ text: 'New' }] },
+  { text: 'Edit', items: [{ text: 'Undo' }] },
+  { text: 'Help', key: 'help' },
+];
+
+export function MenubarCompactDemo() {
+  const [width, setWidth] = useState(640);
+
+  const onCompact = (event: OgeMenubarCompactChangedEvent) => {
+    console.log('compact:', event.compact);
+  };
+  return (
+    <>
+      <label className="mb-2 flex items-center gap-2 text-sm">
+        Container width
+        <input
+          type="range"
+          min={200}
+          max={640}
+          value={width}
+          onChange={(event) => setWidth(+event.target.value)}
+        />
+        <code>{width}px</code>
+      </label>
+      <div className="rounded border p-2" style={{ width }}>
+        <OgeMenubar
+          items={menu}
+          compactBelow={420}
+          onCompactChanged={onCompact}
+        />
+      </div>
+    </>
+  );
+}
+```
+
+### Cancelable events
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeMenubar } from '@oge-ui/react-navigation';
+import type { OgeMenubarItemData, OgeMenubarSubmenuOpeningEvent, OgeMenubarSubmenuClosingEvent } from '@oge-ui/react-navigation';
+
+// The -ing pair is cancelable with the house mutable cancel
+// flag. Closes the menubar initiates (escape, select, navigation, api) run
+// through onSubmenuClosing; pointer closes owned by the overlay (outside)
+// and Tab only report onSubmenuClosed.
+const menu: OgeMenubarItemData[] = [
+  { text: 'File', key: 'file', items: [{ text: 'New' }] },
+];
+
+export function MenubarEventsDemo() {
+  const [locked, setLocked] = useState(false);
+  // The callbacks run inside the component's event pipeline, so they read the
+  // latest value from a ref rather than the render they were created in.
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
+
+  const onOpening = (event: OgeMenubarSubmenuOpeningEvent) => {
+    if (lockedRef.current) event.cancel = true;
+  };
+
+  const onClosing = (event: OgeMenubarSubmenuClosingEvent) => {
+    if (lockedRef.current && event.reason !== 'tab') event.cancel = true;
+  };
+  return (
+    <>
+      <label className="mb-2 flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={locked}
+          onChange={(event) => setLocked(event.target.checked)}
+        />
+        Lock the submenu (cancel opening and closing)
+      </label>
+      <OgeMenubar
+        items={menu}
+        onSubmenuOpening={onOpening}
+        onSubmenuClosing={onClosing}
+      />
+    </>
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { OgeMenubar, OgeMenubarConfigProvider } from '@oge-ui/react-navigation';
+import type { OgeMenubarItemData } from '@oge-ui/react-navigation';
+
+// Every user-facing string lives in the messages block — the bar's
+// accessible name and the compact hamburger's label included. The context
+// provider is the React shape of provideOgeMenubarConfig().
+const menu: OgeMenubarItemData[] = [
+  { text: 'Dosya', items: [{ text: 'Yeni' }] },
+];
+
+export function MenubarConfigDemo() {
+  return (
+    <OgeMenubarConfigProvider
+      config={{
+        openMode: 'hover',
+        compactBelow: 480,
+        messages: { menubar: 'Ana menü', hamburger: 'Menü' },
+      }}
+    >
+      <OgeMenubar items={menu} />
+    </OgeMenubarConfigProvider>
+  );
+}
+```
+
+### Flat data
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeView } from '@oge-ui/react-navigation';
+import type { RowKey } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+const folders: Folder[] = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 3, parentId: 2, name: 'Q1.pdf' },
+];
+
+export function TreeViewFlatDemo() {
+  const [open, setOpen] = useState<readonly RowKey[]>([1]);
+  const [picked, setPicked] = useState<readonly RowKey[]>([]);
+  return (
+    <OgeTreeView
+      items={folders}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      displayExpr="name"
+      selectionMode="single"
+      expandedKeys={open}
+      onExpandedKeysChange={setOpen}
+      selectedKeys={picked}
+      onSelectedKeysChange={setPicked}
+    />
+  );
+}
+```
+
+### Nested data
+
+```ts
+'use client';
+
+import { OgeTreeView } from '@oge-ui/react-navigation';
+
+interface NestedFolder {
+  id: number;
+  name: string;
+  children?: NestedFolder[];
+}
+
+const tree: NestedFolder[] = [
+  {
+    id: 1,
+    name: 'src',
+    children: [{ id: 2, name: 'app', children: [{ id: 3, name: 'main.ts' }] }],
+  },
+];
+
+export function TreeViewNestedDemo() {
+  return (
+    <>
+      {/* nested payloads need only itemsExpr; the parent links are derived */}
+      <OgeTreeView items={tree} itemsExpr="children" displayExpr="name" />
+    </>
+  );
+}
+```
+
+### Checkboxes & cascade
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeView } from '@oge-ui/react-navigation';
+import type { RowKey } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+const folders: Folder[] = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 3, parentId: 2, name: 'Q1.pdf' },
+];
+
+export function TreeViewCheckBoxesDemo() {
+  const [picked, setPicked] = useState<readonly RowKey[]>([]);
+  return (
+    <>
+      <OgeTreeView
+        items={folders}
+        displayExpr="name"
+        selectionMode="multiple"
+        showCheckBoxes="selectAll"
+        selectedKeys={picked}
+        onSelectedKeysChange={setPicked}
+      />
+      {/* selectedKeysMode projects the stored set on the way out:
+          'all' (default) · 'leavesOnly' · 'excludeRecursive' */}
+    </>
+  );
+}
+```
+
+### Search
+
+```ts
+'use client';
+
+import { OgeTreeView } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+const folders: Folder[] = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 3, parentId: 2, name: 'Q1.pdf' },
+];
+
+export function TreeViewSearchDemo() {
+  return (
+    <OgeTreeView
+      items={folders}
+      displayExpr="name"
+      searchEnabled
+      searchMode="contains"
+      filterMode="withAncestors"
+    />
+  );
+}
+```
+
+### Lazy load on demand
+
+```ts
+'use client';
+
+import { OgeTreeView } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+const roots: Folder[] = [
+  { id: 1, parentId: null, name: 'Documents', hasItems: true },
+];
+
+// a skeleton row shows while the promise is pending
+const loadChildren = (parent: Folder): Promise<Folder[]> =>
+  fetch(`/api/folders?parent=${parent.id}`).then((r) => r.json());
+
+export function TreeViewLazyDemo() {
+  return (
+    <OgeTreeView
+      items={roots}
+      displayExpr="name"
+      hasItemsExpr="hasItems"
+      loadChildren={loadChildren}
+    />
+  );
+}
+```
+
+### Virtual scrolling
+
+```ts
+'use client';
+
+import { OgeTreeView } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+const tenThousand: Folder[] = Array.from({ length: 10000 }, (_, i) => ({
+  id: i + 1,
+  parentId: null,
+  name: `Item ${i + 1}`,
+}));
+
+export function TreeViewVirtualDemo() {
+  return (
+    <>
+      {/* every row must actually be itemHeight tall */}
+      <OgeTreeView
+        items={tenThousand}
+        displayExpr="name"
+        virtualScroll={{ itemHeight: 30 }}
+        height="320px"
+      />
+    </>
+  );
+}
+```
+
+### Drag & drop reparenting
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeView } from '@oge-ui/react-navigation';
+import type { OgeTreeReorderedEvent } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+export function TreeViewDragDemo() {
+  const [folders, setFolders] = useState<Folder[]>([
+    { id: 1, parentId: null, name: 'Documents' },
+    { id: 2, parentId: 1, name: 'Reports' },
+  ]);
+
+  // the tree never mutates your data; apply the move yourself
+  const reparent = (e: OgeTreeReorderedEvent<Folder>): void => {
+    setFolders((rows) =>
+      rows.map((row) =>
+        row.id === e.dragKey
+          ? {
+              ...row,
+              parentId:
+                e.position === 'inside'
+                  ? (e.dropKey as number)
+                  : e.dropItem.parentId,
+            }
+          : row,
+      ),
+    );
+  };
+  return (
+    <OgeTreeView
+      items={folders}
+      displayExpr="name"
+      allowDragging
+      allowDropInside
+      onItemReordered={reparent}
+    />
+  );
+}
+```
+
+### Custom node template
+
+```ts
+'use client';
+
+import { OgeTreeView } from '@oge-ui/react-navigation';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+const folders: Folder[] = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 3, parentId: 2, name: 'Q1.pdf' },
+];
+
+export function TreeViewRenderItemDemo() {
+  return (
+    <>
+      <OgeTreeView
+        items={folders}
+        displayExpr="name"
+        renderItem={({ item, level }) => (
+          <>
+            <strong>{item.name}</strong>
+            <small>level {level}</small>
+          </>
+        )}
+      />
+      {/* the render prop renders inside role="treeitem", so it must not contain
+          focusable controls — that would be a nested-interactive violation */}
+    </>
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePagination } from '@oge-ui/react-navigation';
+
+// pageIndex is 0-BASED and controlled (pass defaultPageIndex instead for
+// the uncontrolled mode); the numeric window keeps a CONSTANT width —
+// ellipsis slots count toward maxButtons (default 7), so paging from the
+// first page to the middle never jitters the layout. An ellipsis never
+// hides a single page (it would render the page instead).
+
+export function PaginationBasicDemo() {
+  const [page, setPage] = useState(0);
+  const total = 400;
+  return (
+    <OgePagination
+      pageIndex={page}
+      onPageIndexChange={setPage}
+      itemCount={total}
+      pageSize={20}
+    />
+  );
+}
+```
+
+### Page sizes and info
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePagination } from '@oge-ui/react-navigation';
+
+// Presence of pageSizes shows the selector (no separate boolean);
+// 'all' commits pageSize 0 — "all items on one page", the grid pager's
+// exact contract. Changing the size re-clamps pageIndex before the rich
+// onPageSizeChanged callback reports it.
+
+export function PaginationSizesDemo() {
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(20);
+  const total = 97;
+  return (
+    <OgePagination
+      pageIndex={page}
+      onPageIndexChange={setPage}
+      pageSize={size}
+      onPageSizeChange={setSize}
+      itemCount={total}
+      pageSizes={[10, 20, 50, 'all']}
+      showInfo
+    />
+  );
+}
+```
+
+### Jump controls
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePagination } from '@oge-ui/react-navigation';
+
+// First/last jump buttons (Material's showFirstLastButtons) and the
+// jump-to-page input (PrimeNG's showJumpToPageInput; Kendo's
+// type: 'input'): 1-based display, clamped into range, display re-synced
+// after a clamp. The input is UNCONTROLLED and commits on BLUR or ENTER —
+// React has no onChange bound to the native `change` event, so there is
+// no commit-on-commit-of-the-native-change moment the Angular version
+// gets from (change).
+
+export function PaginationJumpDemo() {
+  const [page, setPage] = useState(41);
+  const total = 1000;
+  return (
+    <OgePagination
+      pageIndex={page}
+      onPageIndexChange={setPage}
+      itemCount={total}
+      pageSize={10}
+      showFirstLastButtons
+      showJumpToPageInput
+    />
+  );
+}
+```
+
+### Unknown total
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePagination } from '@oge-ui/react-navigation';
+
+// itemCount undefined = the server cannot count. Only prev/next and a
+// "Page N" indicator render, and NEXT NEVER DISABLES — the component
+// cannot know the end. Clamp pageIndex yourself when the server reports
+// the last page. The ref handle's pageCount() returns undefined here.
+
+export function PaginationUnknownDemo() {
+  const [page, setPage] = useState(3);
+  return (
+    <OgePagination pageIndex={page} onPageIndexChange={setPage} pageSize={20} />
+  );
+}
+```
+
+### Adaptive display
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePagination } from '@oge-ui/react-navigation';
+
+// displayMode 'adaptive' switches to the compact "N / M" indicator below
+// the container threshold (config compactBelow, default 480px) — measured
+// against the pagination's OWN box via ResizeObserver, never the window
+// (behavior's paginationIsCompact). 'compact' forces the indicator
+// unconditionally.
+
+export function PaginationAdaptiveDemo() {
+  const [page, setPage] = useState(4);
+  const total = 400;
+  return (
+    <div style={{ maxWidth: 320 }}>
+      <OgePagination
+        pageIndex={page}
+        onPageIndexChange={setPage}
+        itemCount={total}
+        pageSize={20}
+        displayMode="adaptive"
+      />
+    </div>
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgePagination, OgePaginationConfigProvider } from '@oge-ui/react-navigation';
+
+// Application- or subtree-scoped defaults; the per-instance messages prop
+// wins over them, and both shallow-merge over the built-in strings.
+
+export function PaginationConfigDemo() {
+  const [page, setPage] = useState(0);
+  const total = 250;
+  return (
+    <OgePaginationConfigProvider
+      config={{
+        maxButtons: 9,
+        messages: {
+          pageSizeLabel: 'Sayfa başına',
+          info: '{itemCount} kayıttan {from}–{to}',
+        },
+      }}
+    >
+      <OgePagination
+        pageIndex={page}
+        onPageIndexChange={setPage}
+        itemCount={total}
+        showInfo
+      />
+    </OgePaginationConfigProvider>
+  );
+}
+```
+
+### Commands
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeStepper } from '@oge-ui/react-navigation';
+import type { OgeStepDefinition } from '@oge-ui/react-navigation';
+
+// A React step is a `steps` entry: the shared step data plus the content
+// node the Angular <oge-step> would have projected. The built-in Back /
+// Next bar is opt-in — none of the reference steppers ships one at all.
+// icon takes SVG path data and replaces the step number in the indicator.
+const userIcon =
+  'M8 7.5A2.75 2.75 0 1 0 8 2a2.75 2.75 0 0 0 0 5.5ZM2.5 14c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5Z';
+
+const steps: readonly OgeStepDefinition[] = [
+  {
+    key: 'account',
+    label: 'Account',
+    description: 'Who you are',
+    icon: userIcon,
+    content: <p>Account fields…</p>,
+  },
+  {
+    key: 'shipping',
+    label: 'Shipping',
+    description: 'Where it goes',
+    optional: true,
+    content: <p>Shipping fields…</p>,
+  },
+  {
+    key: 'review',
+    label: 'Review',
+    description: 'One last look',
+    content: <p>Confirm and submit…</p>,
+  },
+];
+
+export function StepperBasicsDemo() {
+  const [step, setStep] = useState(0);
+  return (
+    <OgeStepper
+      steps={steps}
+      activeIndex={step}
+      onActiveIndexChange={setStep}
+      showNavigation
+    />
+  );
+}
+```
+
+### Linear flow
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeStepper } from '@oge-ui/react-navigation';
+import type { OgeStepBlockedEvent } from '@oge-ui/react-navigation';
+
+// linear blocks moving past a step that is neither completed nor optional,
+// and editable:false blocks coming back. Every refusal says WHY — Angular
+// Material refuses silently and tells you to add your own live region.
+
+export function StepperLinearDemo() {
+  const [step, setStep] = useState(0);
+  const [accountDone, setAccountDone] = useState(false);
+  const [paymentDone, setPaymentDone] = useState(false);
+
+  const onStepBlocked = (event: OgeStepBlockedEvent): void => {
+    console.log('refused because', event.reason);
+  };
+  return (
+    <OgeStepper
+      linear
+      showNavigation
+      activeIndex={step}
+      onActiveIndexChange={setStep}
+      onStepBlocked={onStepBlocked}
+      steps={[
+        { label: 'Account', completed: accountDone, editable: false },
+        { label: 'Payment', completed: paymentDone },
+        { label: 'Review' },
+      ]}
+    />
+  );
+}
+```
+
+### Step states
+
+```ts
+'use client';
+
+import { OgeStepper } from '@oge-ui/react-navigation';
+
+// The indicator state is derived: error outranks done, so a completed step
+// that later fails still reads as needing attention. The glyph is
+// aria-hidden, so the state is also announced in text.
+
+export function StepperStateDemo() {
+  return (
+    <OgeStepper
+      activeIndex={0}
+      display="full"
+      steps={[
+        { label: 'Active', description: 'the current step' },
+        { label: 'Done', completed: true },
+        { label: 'Error', completed: true, invalid: true },
+        { label: 'Upcoming' },
+      ]}
+    />
+  );
+}
+```
+
+### Leave guard
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeStepper } from '@oge-ui/react-navigation';
+
+// stepGuard runs when the user LEAVES a step, inside the same pipeline the
+// headers use. false, a throw and a rejection all veto; a promise reports
+// changePending (and onChangePendingChange) and a second gesture meanwhile
+// is dropped. It gates the finish on the last step too.
+
+export function StepperGuardDemo() {
+  const [step, setStep] = useState(0);
+  const [dirty, setDirty] = useState(true);
+
+  const confirmLeave = (): boolean =>
+    !dirty || confirm('Discard your changes?');
+  return (
+    <OgeStepper
+      showNavigation
+      activeIndex={step}
+      onActiveIndexChange={setStep}
+      steps={[
+        { label: 'Details', stepGuard: confirmLeave, content: <p>Details…</p> },
+        { label: 'Done', content: <p>Done…</p> },
+      ]}
+    />
+  );
+}
+```
+
+### Orientation
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeStepper } from '@oge-ui/react-navigation';
+import type { OgeStepperOrientation } from '@oge-ui/react-navigation';
+
+// The ARIA semantics do NOT change with the orientation: it is an ordered
+// list of buttons with aria-current="step" either way. Angular Material
+// swaps to tab semantics when horizontal, so the same widget reads as two
+// different things to a screen reader.
+
+export function StepperVerticalDemo() {
+  const [step, setStep] = useState(0);
+  const [orientation, setOrientation] =
+    useState<OgeStepperOrientation>('vertical');
+  return (
+    <OgeStepper
+      orientation={orientation}
+      activeIndex={step}
+      onActiveIndexChange={setStep}
+      steps={[
+        { label: 'One', content: <p>First body…</p> },
+        { label: 'Two', content: <p>Second body…</p> },
+      ]}
+    />
+  );
+}
+```
+
+### Navigation buttons
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeStepper } from '@oge-ui/react-navigation';
+import type { OgeStepperHandle } from '@oge-ui/react-navigation';
+
+// The handle routes through the same pipeline the headers use, so linear
+// and stepGuard still apply. A button inside a step body and a button
+// outside the stepper drive it identically — which Material's directives
+// cannot do from outside.
+
+export function StepperNavDemo() {
+  const wizard = useRef<OgeStepperHandle>(null);
+  const [step, setStep] = useState(0);
+  return (
+    <>
+      <OgeStepper
+        ref={wizard}
+        activeIndex={step}
+        onActiveIndexChange={setStep}
+        steps={[
+          {
+            label: 'One',
+            content: (
+              <>
+                <p>First body…</p>
+                <button type="button" onClick={() => wizard.current?.next()}>
+                  Continue
+                </button>
+              </>
+            ),
+          },
+          { label: 'Two', content: <p>Second body…</p> },
+        ]}
+      />
+
+      <button type="button" onClick={() => wizard.current?.previous()}>
+        Back
+      </button>
+    </>
+  );
+}
+```
+
+### Inside a form
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTextBox } from '@oge-ui/react-inputs';
+import { OgeStepper } from '@oge-ui/react-navigation';
+
+// @oge-ui/forms has no React layer yet (docs/REACT-PARITY.md), so the
+// editors hold their value in your own state — useState here, but React
+// Hook Form, Formik or TanStack Form bind exactly the same way. Step
+// completion is a plain derivation of that state, which is what the Angular
+// <oge-form-steps> wrapper computes from the form's per-step error rollup.
+
+export function StepperFormDemo() {
+  const [order, setOrder] = useState({ email: '', card: '' });
+  return (
+    <OgeStepper
+      linear
+      showNavigation
+      ariaLabel="Order"
+      steps={[
+        {
+          key: 'account',
+          label: 'Account',
+          completed: order.email !== '',
+          content: (
+            <OgeTextBox
+              label="E-mail"
+              required
+              value={order.email}
+              onValueChange={(email) => setOrder((o) => ({ ...o, email }))}
+            />
+          ),
+        },
+        {
+          key: 'payment',
+          label: 'Payment',
+          completed: order.card !== '',
+          content: (
+            <OgeTextBox
+              label="Card"
+              required
+              value={order.card}
+              onValueChange={(card) => setOrder((o) => ({ ...o, card }))}
+            />
+          ),
+        },
+      ]}
+    />
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { OgeStepper, OgeStepperConfigProvider } from '@oge-ui/react-navigation';
+
+export function StepperConfigDemo() {
+  return (
+    <OgeStepperConfigProvider
+      config={{
+        linear: true,
+        messages: { next: 'İleri', previous: 'Geri', finish: 'Bitir' },
+      }}
+    >
+      {/* A single instance can still override the strings with the messages prop. */}
+      <OgeStepper
+        activeIndex={1}
+        showNavigation
+        messages={{ stepper: 'Adımlar' }}
+        steps={[
+          { label: 'Hesap', completed: true },
+          { label: 'Ödeme' },
+        ]}
+      />
+    </OgeStepperConfigProvider>
+  );
+}
+```
+

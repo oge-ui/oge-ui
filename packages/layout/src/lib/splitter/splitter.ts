@@ -20,38 +20,58 @@ import {
   untracked,
   viewChildren,
 } from '@angular/core';
+import type { DataSource } from '@oge-ui/core';
+// Every decision below — tracks, bounds, ranges, the separator vocabulary, the
+// keyboard map and the drag harness — lives framework-free in
+// `@oge-ui/behavior` (`splitter-core`), shared with the React render layer.
 import {
-  normalizeSplitTracks,
+  OGE_SPLITTER_GRIP_SIDES,
+  canResizeSplitterAt,
+  isSplitterPaneCollapsed,
+  isSplitterPaneCollapsible,
+  loadSplitterPanes,
   resizeSplitAt,
-  splitSeparatorRange,
-  type DataSource,
-  type OgeSplitBounds,
+  resolveSplitterIndex,
+  sameSplitterSizes,
+  splitterBounds,
+  splitterDragDelta,
+  splitterFlexiblePx,
+  splitterGridTemplate,
+  splitterGripPath,
+  splitterGripTitle,
+  splitterKeyAction,
+  splitterKeyShortcuts,
+  splitterPaneDescriptor,
+  splitterPaneOf,
+  splitterSeparatorLabel,
+  splitterSeparatorRanges,
+  splitterSizesWithRestored,
+  splitterTracks,
+  splitterTracksToSizes,
+  startSplitterDrag,
   type OgeSplitTrack,
-} from '@oge-ui/core';
+  type OgeSplitterGripSide,
+  type OgeSplitterMessages,
+  type OgeSplitterOrientation,
+  type OgeSplitterPaneClickEvent,
+  type OgeSplitterPaneCollapsedEvent,
+  type OgeSplitterPaneCollapsingEvent,
+  type OgeSplitterPaneData,
+  type OgeSplitterPaneHoldEvent,
+  type OgeSplitterResizeEvent,
+  type OgeSplitterResizeStartEvent,
+  type OgeSplitterSize,
+  type OgeSplitterView,
+} from '@oge-ui/behavior';
 import { OgeElementAttrs } from '../attrs';
-import { OGE_SPLITTER_CONFIG, type OgeSplitterMessages } from './config';
+import { OGE_SPLITTER_CONFIG } from './config';
 import type { OgeSplitterDescriptor } from './splitter-descriptor';
 import { OgeSplitterPane } from './splitter-pane';
-import type {
-  OgeSplitterGripSide,
-  OgeSplitterOrientation,
-  OgeSplitterPaneClickEvent,
-  OgeSplitterPaneHoldEvent,
-  OgeSplitterPaneCollapsedEvent,
-  OgeSplitterPaneCollapsingEvent,
-  OgeSplitterPaneData,
-  OgeSplitterResizeEvent,
-  OgeSplitterResizeStartEvent,
-  OgeSplitterSize,
-} from './splitter-types';
 import { OgeSplitterPaneTemplate } from './templates';
 
 declare const ngDevMode: boolean | undefined;
 
 let nextComponentId = 0;
-
-/** Nudge used for Home/End — clamped by the bounds, so any large number does. */
-const FULL_TRAVEL = 1e9;
 
 /**
  * Resizable pane container following the WAI-ARIA APG **window splitter**
@@ -330,29 +350,26 @@ export class OgeSplitter {
       const fromItems = [...(this.panes() ?? []), ...this.loadedPanes()]
         .filter((item) => item.visible !== false)
         .map((item, index) => ({
-          id: item.key ?? `i${index}`,
-          key: item.key,
-          size: item.size,
-          minSize: item.minSize,
-          maxSize: item.maxSize,
-          collapsible: item.collapsible ?? false,
-          collapsedSize: item.collapsedSize,
-          resizable: item.resizable ?? true,
-          scrollable: item.scrollable ?? true,
-          disabled: false,
-          text: item.text,
-          cssClass: item.cssClass,
-          htmlAttributes: item.htmlAttributes,
-          panes: item.panes,
-          orientation: item.orientation,
-          initiallyCollapsed: item.collapsed ?? false,
-          item,
+          ...splitterPaneDescriptor(item, index),
           source: undefined,
           contentTemplate: paneTpl,
         }));
       return [...fromChildren, ...fromItems];
     },
   );
+
+  /**
+   * The splitter as the shared decision functions see it — the one place the
+   * component's reactive state is projected onto `@oge-ui/behavior`'s
+   * framework-free view.
+   */
+  private readonly view = computed<OgeSplitterView>(() => ({
+    descriptors: this.descriptors(),
+    collapsed: this._collapsedIds(),
+    disabled: this.disabled(),
+    resizable: this.resizable(),
+    horizontal: this.horizontal(),
+  }));
 
   /** JSON of the sizes this component last published to the `sizes` model. */
   private lastCommitted: string | null = null;
@@ -401,41 +418,23 @@ export class OgeSplitter {
   });
 
   /** Resolved grid tracks, one per pane, shares normalized to 100. */
-  protected readonly tracks = computed<OgeSplitTrack[]>(() => {
-    const ds = this.descriptors();
-    const sizes = this.currentSizes();
-    const collapsed = this._collapsedIds();
-    return normalizeSplitTracks(
-      ds.map((d, index) => {
-        if (collapsed.has(d.id)) {
-          return (
-            parseSplitterSize(d.collapsedSize) ?? {
-              kind: 'fixed' as const,
-              value: 0,
-            }
-          );
-        }
-        return (
-          parseSplitterSize(sizes[index] ?? d.size, (message) =>
-            this.warn(message),
-          ) ?? { kind: 'share' as const, value: 0 }
-        );
-      }),
-    );
-  });
+  protected readonly tracks = computed<OgeSplitTrack[]>(() =>
+    splitterTracks(
+      this.descriptors(),
+      this.currentSizes(),
+      this._collapsedIds(),
+      (message) => this.warn(message),
+    ),
+  );
 
   /** `grid-template-columns` / `-rows` value: pane, separator, pane, … */
-  protected readonly gridTemplate = computed(() => {
-    const tracks = this.tracks();
-    if (!tracks.length) return null;
-    const separator = `${this.separatorSize()}px`;
-    const parts: string[] = [];
-    tracks.forEach((track, index) => {
-      if (index > 0) parts.push(separator);
-      parts.push(this.trackCss(track, index));
-    });
-    return parts.join(' ');
-  });
+  protected readonly gridTemplate = computed(() =>
+    splitterGridTemplate(
+      this.tracks(),
+      this.descriptors(),
+      this.separatorSize(),
+    ),
+  );
 
   constructor() {
     // Remote pane list. `load({})` is enough — a splitter has no paging,
@@ -447,22 +446,9 @@ export class OgeSplitter {
         this.loadedPanes.set([]);
         return;
       }
-      let stale = false;
-      const reload = () => {
-        void source.load({}).then((result) => {
-          // a splitter never groups, so the flat arm of LoadResult is the
-          // only one that can come back here
-          if (!stale) {
-            this.loadedPanes.set(result.data as readonly OgeSplitterPaneData[]);
-          }
-        });
-      };
-      reload();
-      const subscription = source.changes?.subscribe(() => reload());
-      onCleanup(() => {
-        stale = true;
-        subscription?.unsubscribe();
-      });
+      onCleanup(
+        loadSplitterPanes(source, (panes) => this.loadedPanes.set(panes)),
+      );
     });
     // Seeds the collapsed set and follows external writes to a declarative
     // pane's `[(collapsed)]` model. Reads stay reactive; the pipeline runs
@@ -531,66 +517,42 @@ export class OgeSplitter {
    * pane before it (the APG primary pane, also driven by Enter) and `'end'`
    * for the one after — the two-arrow splitbar the references all render.
    */
-  protected readonly gripSides = ['start', 'end'] as const;
+  protected readonly gripSides = OGE_SPLITTER_GRIP_SIDES;
 
   protected isCollapsible(
     separatorIndex: number,
     side: OgeSplitterGripSide = 'start',
   ): boolean {
-    const d = this.descriptors()[this.paneOf(separatorIndex, side)];
-    return !!d && d.collapsible && !d.disabled && !this.disabled();
-  }
-
-  /** Index of the pane a separator's grip acts on. */
-  private paneOf(separatorIndex: number, side: OgeSplitterGripSide): number {
-    return side === 'start' ? separatorIndex : separatorIndex + 1;
+    return isSplitterPaneCollapsible(this.view(), separatorIndex, side);
   }
 
   protected keyShortcuts(separatorIndex: number): string | null {
-    const keys: string[] = [];
-    if (this.isCollapsible(separatorIndex, 'start')) keys.push('Enter');
-    if (
-      this.isCollapsible(separatorIndex, 'start') ||
-      this.isCollapsible(separatorIndex, 'end')
-    ) {
-      keys.push(
-        this.horizontal()
-          ? 'Control+ArrowLeft Control+ArrowRight'
-          : 'Control+ArrowUp Control+ArrowDown',
-      );
-    }
-    return keys.length ? keys.join(' ') : null;
+    return splitterKeyShortcuts(this.view(), separatorIndex);
   }
 
   /** A separator may be dragged only when both of its neighbours allow it. */
   protected canResize(separatorIndex: number): boolean {
-    if (this.disabled() || !this.resizable()) return false;
-    const ds = this.descriptors();
-    const a = ds[separatorIndex];
-    const b = ds[separatorIndex + 1];
-    if (!a || !b) return false;
-    if (this.isCollapsedId(a.id) || this.isCollapsedId(b.id)) return false;
-    return a.resizable && b.resizable && !a.disabled && !b.disabled;
+    return canResizeSplitterAt(this.view(), separatorIndex);
   }
 
   protected separatorLabel(separatorIndex: number): string {
-    const messages = this.mergedMessages();
-    const base = messages.separator
-      .replace('{{first}}', String(separatorIndex + 1))
-      .replace('{{second}}', String(separatorIndex + 2));
-    return this.isCollapsedId(this.descriptors()[separatorIndex]?.id ?? '')
-      ? `${base} (${messages.collapsed})`
-      : base;
+    return splitterSeparatorLabel(
+      this.view(),
+      separatorIndex,
+      this.mergedMessages(),
+    );
   }
 
   protected gripTitle(
     separatorIndex: number,
     side: OgeSplitterGripSide,
   ): string {
-    const messages = this.mergedMessages();
-    return this.isPaneCollapsed(separatorIndex, side)
-      ? messages.expandPane
-      : messages.collapsePane;
+    return splitterGripTitle(
+      this.view(),
+      separatorIndex,
+      side,
+      this.mergedMessages(),
+    );
   }
 
   /** Chevron pointing the way the grip's pane would move. */
@@ -598,22 +560,14 @@ export class OgeSplitter {
     separatorIndex: number,
     side: OgeSplitterGripSide,
   ): string {
-    const collapsed = this.isPaneCollapsed(separatorIndex, side);
-    // A 'start' grip normally points towards the start (its pane shrinks that
-    // way); once that pane is collapsed it points back the other way.
-    const towardsStart = side === 'start' ? !collapsed : collapsed;
-    if (this.horizontal()) {
-      return towardsStart ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6';
-    }
-    return towardsStart ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6';
+    return splitterGripPath(this.view(), separatorIndex, side);
   }
 
   private isPaneCollapsed(
     separatorIndex: number,
     side: OgeSplitterGripSide,
   ): boolean {
-    const d = this.descriptors()[this.paneOf(separatorIndex, side)];
-    return !!d && this.isCollapsedId(d.id);
+    return isSplitterPaneCollapsed(this.view(), separatorIndex, side);
   }
 
   /**
@@ -630,18 +584,12 @@ export class OgeSplitter {
     // the correct values on the very first paint instead of announcing 0.
     const flexiblePx =
       this.measuredFlexible() ||
-      (tracks.length && tracks.every((track) => track.kind === 'share')
-        ? 100
-        : 0);
-    const bounds = this.boundsAt(flexiblePx);
-    return tracks.slice(0, -1).map((_, index) => {
-      const range = splitSeparatorRange(tracks, index, flexiblePx, bounds);
-      return {
-        now: Math.round(range.now),
-        min: Math.round(range.min),
-        max: Math.round(range.max),
-      };
-    });
+      splitterFlexiblePx(0, tracks, this.separatorSize());
+    return splitterSeparatorRanges(
+      tracks,
+      flexiblePx,
+      this.boundsAt(flexiblePx),
+    );
   });
 
   // --- pointer resize -------------------------------------------------------
@@ -667,77 +615,36 @@ export class OgeSplitter {
     this.resizingIndex.set(separatorIndex);
     this.resizeStarted.emit({ separatorIndex, sizes: startSizes, event });
 
-    const target = event.target as HTMLElement | null;
-    if (target && typeof target.setPointerCapture === 'function') {
-      try {
-        target.setPointerCapture(event.pointerId);
-      } catch {
-        // jsdom / detached elements — capture is a progressive enhancement
-      }
-    }
-
-    const move = (e: PointerEvent): void => {
-      const delta =
-        ((vertical ? e.clientY : e.clientX) - startPos) * (invert ? -1 : 1);
-      const moved = this.applyTracks(
-        resizeSplitAt(startTracks, separatorIndex, delta, flexiblePx, bounds),
-      );
-      if (!moved) return;
-      this.resized.emit({
-        separatorIndex,
-        sizes: this.snapshotSizes(),
-        previousSizes: startSizes,
-        event: e,
-      });
-    };
-
-    this.trackGesture(move, (e, cancelled) => {
-      if (cancelled) this.applyTracks(startTracks);
-      this.resizingIndex.set(null);
-      this.commitSizes();
-      this.resizeEnded.emit({
-        separatorIndex,
-        sizes: this.snapshotSizes(),
-        previousSizes: startSizes,
-        event: e,
-      });
-    });
-  }
-
-  /** Document-level move/up tracking with Escape-to-cancel and safe teardown. */
-  private trackGesture(
-    onMove: (e: PointerEvent) => void,
-    onEnd: (e: Event | undefined, cancelled: boolean) => void,
-  ): void {
+    // One gesture at a time — a second pointerdown detaches the first.
     this.activeGestureCleanup?.();
-    const finish = (e: Event | undefined, cancelled: boolean): void => {
-      cleanup();
-      onEnd(e, cancelled);
-    };
-    const onUp = (e: PointerEvent): void => finish(e, false);
-    const onCancel = (e: PointerEvent): void => finish(e, true);
-    // Releasing the button outside the document (or an alt-tab) never delivers
-    // a pointerup, which would otherwise leave the splitter dragging forever.
-    const onBlur = (): void => finish(undefined, true);
-    const onKeydown = (e: KeyboardEvent): void => {
-      if (e.key !== 'Escape') return;
-      e.preventDefault();
-      finish(e, true);
-    };
-    const cleanup = (): void => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onCancel);
-      document.removeEventListener('keydown', onKeydown, true);
-      window.removeEventListener('blur', onBlur);
-      this.activeGestureCleanup = null;
-    };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onCancel);
-    document.addEventListener('keydown', onKeydown, true);
-    window.addEventListener('blur', onBlur);
-    this.activeGestureCleanup = cleanup;
+    const axis = { vertical, rtl: invert };
+    this.activeGestureCleanup = startSplitterDrag(event, {
+      move: (e) => {
+        const delta = splitterDragDelta(e, startPos, axis);
+        const moved = this.applyTracks(
+          resizeSplitAt(startTracks, separatorIndex, delta, flexiblePx, bounds),
+        );
+        if (!moved) return;
+        this.resized.emit({
+          separatorIndex,
+          sizes: this.snapshotSizes(),
+          previousSizes: startSizes,
+          event: e,
+        });
+      },
+      finish: (e, cancelled) => {
+        this.activeGestureCleanup = null;
+        if (cancelled) this.applyTracks(startTracks);
+        this.resizingIndex.set(null);
+        this.commitSizes();
+        this.resizeEnded.emit({
+          separatorIndex,
+          sizes: this.snapshotSizes(),
+          previousSizes: startSizes,
+          event: e,
+        });
+      },
+    });
   }
 
   // --- pointer clicks -------------------------------------------------------
@@ -846,52 +753,24 @@ export class OgeSplitter {
     event: KeyboardEvent,
   ): void {
     if (!this.keyboardNavigation() || this.disabled()) return;
-    const vertical = !this.horizontal();
-    const key = event.key;
-
-    if (key === 'Enter') {
-      if (!this.isCollapsible(separatorIndex, 'start')) return;
-      event.preventDefault();
-      this.toggleAt(separatorIndex, 'start', event);
-      return;
-    }
-
-    if (key === 'Home' || key === 'End') {
-      if (!this.canResize(separatorIndex)) return;
-      event.preventDefault();
-      this.nudge(
-        separatorIndex,
-        key === 'End' ? FULL_TRAVEL : -FULL_TRAVEL,
-        event,
-      );
-      return;
-    }
-
-    let direction = 0;
-    if (!vertical && (key === 'ArrowLeft' || key === 'ArrowRight')) {
-      direction = key === 'ArrowRight' ? 1 : -1;
-      if (this.isRtl()) direction = -direction;
-    } else if (vertical && (key === 'ArrowUp' || key === 'ArrowDown')) {
-      direction = key === 'ArrowDown' ? 1 : -1;
-    }
-    if (direction === 0) return;
-
-    // Ctrl+Arrow drives the separator all the way: it collapses the pane the
-    // arrow points away from, or expands the collapsed pane it points towards
-    // (a reference binding, and the keyboard path to the second grip).
-    if (event.ctrlKey || event.metaKey) {
-      if (this.collapseInDirection(separatorIndex, direction, event)) {
-        event.preventDefault();
-      }
-      return;
-    }
-
-    if (!this.canResize(separatorIndex)) return;
+    // The whole map — Enter, Home/End, the axis arrows and the Ctrl+Arrow
+    // collapse rule — is the shared decision function.
+    const action = splitterKeyAction(
+      this.view(),
+      separatorIndex,
+      event,
+      this.step(),
+      this.isRtl(),
+    );
+    if (!action) return;
     event.preventDefault();
-    const flexiblePx = this.measureFlexible();
+    if (action.kind === 'toggle') {
+      this.toggleAt(separatorIndex, action.side, event);
+      return;
+    }
     this.nudge(
       separatorIndex,
-      direction * (this.step() / 100) * flexiblePx,
+      (action.deltaShare / 100) * this.measureFlexible(),
       event,
     );
   }
@@ -915,7 +794,9 @@ export class OgeSplitter {
     );
     // Already against the stop — report nothing rather than a resize that did
     // not happen (holding End down must not spray events).
-    if (sameSizes(tracksToSizes(next), startSizes)) return false;
+    if (sameSplitterSizes(splitterTracksToSizes(next), startSizes)) {
+      return false;
+    }
 
     this.resizeStarted.emit({ separatorIndex, sizes: startSizes, event });
     this.applyTracks(next);
@@ -943,43 +824,10 @@ export class OgeSplitter {
     side: OgeSplitterGripSide,
     event?: Event,
   ): void {
-    const index = this.paneOf(separatorIndex, side);
+    const index = splitterPaneOf(separatorIndex, side);
     const d = this.descriptors()[index];
     if (!d) return;
     this.requestCollapse(index, !this.isCollapsedId(d.id), event);
-  }
-
-  /**
-   * Ctrl+Arrow: pushes the separator to one end. Moving towards the start
-   * expands a collapsed following pane if there is one, otherwise collapses
-   * the preceding pane — and mirrored for the other direction.
-   */
-  private collapseInDirection(
-    separatorIndex: number,
-    direction: 1 | -1 | number,
-    event: Event,
-  ): boolean {
-    const towardsEnd = direction > 0;
-    const near: OgeSplitterGripSide = towardsEnd ? 'end' : 'start';
-    const far: OgeSplitterGripSide = towardsEnd ? 'start' : 'end';
-
-    // first undo a collapse the arrow points away from…
-    if (
-      this.isCollapsible(separatorIndex, far) &&
-      this.isPaneCollapsed(separatorIndex, far)
-    ) {
-      this.toggleAt(separatorIndex, far, event);
-      return true;
-    }
-    // …otherwise collapse the pane the arrow points at
-    if (
-      this.isCollapsible(separatorIndex, near) &&
-      !this.isPaneCollapsed(separatorIndex, near)
-    ) {
-      this.toggleAt(separatorIndex, near, event);
-      return true;
-    }
-    return false;
   }
 
   /**
@@ -1024,7 +872,9 @@ export class OgeSplitter {
       const remembered = this.restoreSizes.get(d.id);
       this.restoreSizes.delete(d.id);
       if (remembered !== undefined) {
-        this.currentSizes.set(this.sizesWithRestored(index, remembered));
+        this.currentSizes.set(
+          splitterSizesWithRestored(this.snapshotSizes(), index, remembered),
+        );
       }
     }
     this.commitSizes();
@@ -1067,11 +917,11 @@ export class OgeSplitter {
 
   /** Writes the working sizes; `false` when the layout did not actually move. */
   private applyTracks(tracks: readonly OgeSplitTrack[]): boolean {
-    const next = tracksToSizes(tracks);
+    const next = splitterTracksToSizes(tracks);
     // Dragging past a stop keeps producing the same clamped result. Writing it
     // again would re-run change detection for every pointermove that follows,
     // and reporting it would emit a `resized` that resized nothing.
-    if (sameSizes(next, this.currentSizes())) return false;
+    if (sameSplitterSizes(next, this.currentSizes())) return false;
     this.currentSizes.set(next);
     return true;
   }
@@ -1094,75 +944,20 @@ export class OgeSplitter {
   }
 
   private snapshotSizes(): OgeSplitterSize[] {
-    return tracksToSizes(this.tracks());
-  }
-
-  /**
-   * Sizes with pane `index` put back at the share it had before it collapsed.
-   *
-   * The other panes grew to fill the gap while it was collapsed, so restoring
-   * the remembered share alone would leave the shares summing to more than 100
-   * and the pane would come back smaller than it left. They are scaled back
-   * down proportionally, which also keeps any resizing done in the meantime.
-   */
-  private sizesWithRestored(
-    index: number,
-    remembered: OgeSplitterSize,
-  ): OgeSplitterSize[] {
-    const sizes = this.snapshotSizes();
-    sizes[index] = remembered;
-    const restored = parseSplitterSize(remembered);
-    if (restored?.kind !== 'share') return sizes;
-
-    const otherSum = sizes.reduce<number>((sum, size, i) => {
-      if (i === index) return sum;
-      const track = parseSplitterSize(size);
-      return track?.kind === 'share' ? sum + track.value : sum;
-    }, 0);
-    const target = 100 - restored.value;
-    if (otherSum <= 0 || target <= 0) return sizes;
-
-    const factor = target / otherSum;
-    return sizes.map((size, i) => {
-      if (i === index) return size;
-      const track = parseSplitterSize(size);
-      return track?.kind === 'share' ? round(track.value * factor) : size;
-    });
-  }
-
-  private trackCss(track: OgeSplitTrack, index: number): string {
-    if (track.kind === 'fixed') return `${round(track.value)}px`;
-    const d = this.descriptors()[index];
-    const min = parseSplitterSize(d?.minSize);
-    const floor = min?.kind === 'fixed' ? `${round(min.value)}px` : '0';
-    return `minmax(${floor}, ${round(track.value)}fr)`;
+    return splitterTracksToSizes(this.tracks());
   }
 
   /**
    * Pixels the share panes divide between them: the host minus the fixed panes
-   * and the separators.
-   *
-   * With no layout to measure — SSR, `display: none`, jsdom — a splitter made
-   * only of share panes falls back to a unit-free scale of 100, which yields
-   * exactly the same shares. A splitter mixing in fixed panes genuinely needs
-   * real pixels, and reports 0 so the caller does nothing.
+   * and the separators. The fallback rules live in the shared helper.
    */
   private measureFlexible(): number {
     const rect = this.host.nativeElement.getBoundingClientRect();
-    const total = this.horizontal() ? rect.width : rect.height;
-    const tracks = this.tracks();
-    if (total > 0) {
-      const fixed = tracks.reduce(
-        (sum, track) => (track.kind === 'fixed' ? sum + track.value : sum),
-        0,
-      );
-      const separators = Math.max(0, tracks.length - 1) * this.separatorSize();
-      const flexible = total - fixed - separators;
-      if (flexible > 0) return flexible;
-    }
-    return tracks.length && tracks.every((track) => track.kind === 'share')
-      ? 100
-      : 0;
+    return splitterFlexiblePx(
+      this.horizontal() ? rect.width : rect.height,
+      this.tracks(),
+      this.separatorSize(),
+    );
   }
 
   /** Re-reads the host size into `measuredFlexible`, ignoring sub-pixel noise. */
@@ -1173,13 +968,13 @@ export class OgeSplitter {
     }
   }
 
-  private boundsAt(flexiblePx: number): OgeSplitBounds[] {
-    const tracks = this.tracks();
-    return this.descriptors().map((d, index) => ({
-      min: toTrackUnit(d.minSize, tracks[index], flexiblePx),
-      max: toTrackUnit(d.maxSize, tracks[index], flexiblePx),
-      resizable: d.resizable && !d.disabled && !this.isCollapsedId(d.id),
-    }));
+  private boundsAt(flexiblePx: number) {
+    return splitterBounds(
+      this.descriptors(),
+      this.tracks(),
+      flexiblePx,
+      this._collapsedIds(),
+    );
   }
 
   private isRtl(): boolean {
@@ -1187,12 +982,7 @@ export class OgeSplitter {
   }
 
   private resolveIndex(target: number | string): number {
-    if (typeof target === 'number') {
-      return target >= 0 && target < this.descriptors().length ? target : -1;
-    }
-    return this.descriptors().findIndex(
-      (d) => d.key === target || d.id === target,
-    );
+    return resolveSplitterIndex(this.descriptors(), target);
   }
 
   private warn(message: string): void {
@@ -1248,56 +1038,4 @@ export class OgeSplitter {
   focus(separatorIndex = 0): void {
     this.separatorElements()[separatorIndex]?.nativeElement.focus();
   }
-}
-
-/** Parses a `size` input into a grid track. */
-function parseSplitterSize(
-  value: OgeSplitterSize | undefined,
-  warn?: (message: string) => void,
-): OgeSplitTrack | undefined {
-  if (value === undefined || value === null) return undefined;
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? { kind: 'share', value } : undefined;
-  }
-  const text = value.trim();
-  const percent = /^(-?\d*\.?\d+)%$/.exec(text);
-  if (percent) return { kind: 'share', value: Number(percent[1]) };
-  const pixels = /^(-?\d*\.?\d+)px$/.exec(text);
-  if (pixels) return { kind: 'fixed', value: Number(pixels[1]) };
-  warn?.(
-    `size "${text}" is not a share number, a "<n>%" or a "<n>px" value — ignoring it.`,
-  );
-  return undefined;
-}
-
-/** Converts a bound into the unit its own track uses. */
-function toTrackUnit(
-  value: OgeSplitterSize | undefined,
-  track: OgeSplitTrack | undefined,
-  flexiblePx: number,
-): number | undefined {
-  const parsed = parseSplitterSize(value);
-  if (!parsed || !track) return undefined;
-  if (parsed.kind === track.kind) return parsed.value;
-  if (flexiblePx <= 0) return undefined;
-  return parsed.kind === 'fixed'
-    ? (parsed.value / flexiblePx) * 100
-    : (parsed.value / 100) * flexiblePx;
-}
-
-function tracksToSizes(tracks: readonly OgeSplitTrack[]): OgeSplitterSize[] {
-  return tracks.map((track) =>
-    track.kind === 'fixed' ? `${round(track.value)}px` : round(track.value),
-  );
-}
-
-function round(value: number): number {
-  return Math.round(value * 100) / 100;
-}
-
-function sameSizes(
-  a: readonly (OgeSplitterSize | undefined)[],
-  b: readonly (OgeSplitterSize | undefined)[],
-): boolean {
-  return a.length === b.length && a.every((value, index) => value === b[index]);
 }

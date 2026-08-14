@@ -58,7 +58,10 @@ export async function readApiBlocks(apiPageFile) {
       );
     }
     blocks.push({
-      title: reference.title,
+      // Titles come out of an Angular template string, so React component
+      // titles arrive entity-escaped (`&lt;OgeButton&gt;`) — decode them or
+      // the generated headings carry the raw entities.
+      title: decodeEntities(reference.title),
       selector: reference.selector,
       sections,
     });

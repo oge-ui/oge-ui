@@ -75,7 +75,9 @@ type DemoAppt = Record<string, unknown>;
         <code>&#64;oge-ui/scheduler</code> is a commercial package — free for
         evaluation and development, with no watermark and no runtime license
         checks. See
-        <a routerLink="/license" class="text-indigo-600 dark:text-indigo-400"
+        <a
+          routerLink="/license"
+          class="text-indigo-600 underline dark:text-indigo-400"
           >licensing</a
         >
         for the terms.
@@ -169,15 +171,9 @@ type DemoAppt = Record<string, unknown>;
     </app-demo-card>
 
     <app-demo-card
-      [chips]="[
-        'recurrence',
-        'resources',
-        'timeline',
-        'agenda',
-        'reminders',
-      ]"
+      [chips]="['recurrence', 'resources', 'timeline', 'agenda', 'reminders']"
       heading="Teams, recurrence & timeline"
-      description="Recurring series expand into occurrences in every view — editing or deleting one asks &quot;this appointment or the entire series?&quot; (<code>recurrenceEditMode</code>). <code>resources</code> drive the editor's assignment selects, default colors and the timeline rows (<code>groups</code>); the agenda view lists the coming days and <code>reminderTriggered</code> fires at the reminder lead time."
+      description='Recurring series expand into occurrences in every view — editing or deleting one asks "this appointment or the entire series?" (<code>recurrenceEditMode</code>). <code>resources</code> drive the editor&apos;s assignment selects, default colors and the timeline rows (<code>groups</code>); the agenda view lists the coming days and <code>reminderTriggered</code> fires at the reminder lead time.'
       [code]="teamsSnippet"
       language="ts"
     >

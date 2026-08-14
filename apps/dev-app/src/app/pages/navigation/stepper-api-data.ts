@@ -93,6 +93,12 @@ export const OGE_STEPPER_API: ApiSections = {
             'Accessible name of the step list. Falls back to the <code>stepper</code> message.',
         },
         {
+          name: 'messages',
+          type: 'Partial&lt;OgeStepperMessages&gt; | undefined',
+          description:
+            'Per-instance overrides of the config strings — the list&rsquo;s accessible name, the optional/completed/invalid announcements and the navigation bar&rsquo;s labels.',
+        },
+        {
           name: 'stepperId',
           type: 'string (readonly)',
           description: 'id prefix of the generated header / panel pairs.',

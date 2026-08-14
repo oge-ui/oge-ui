@@ -52,6 +52,13 @@
     "projects": [
       "core",
       "behavior",
+      "react-buttons",
+      "react-overlay",
+      "react-inputs",
+      "react-tabs",
+      "react-layout",
+      "react-navigation",
+      "react-oge",
       "grid",
       "tree-list",
       "pivot",
@@ -67,6 +74,7 @@
       "layout",
       "navigation",
       "forms",
+      "upload",
       "ui"
     ],
     "projectsRelationship": "independent",

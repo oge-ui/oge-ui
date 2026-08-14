@@ -33,7 +33,7 @@ import { QUICK_START_SNIPPET } from './overview-snippets';
         and virtualization. Works with in-memory arrays or a
         <a
           routerLink="/components/data-grid/remote-data"
-          class="font-medium text-indigo-600 hover:underline"
+          class="font-medium text-indigo-600 underline"
         >
           remote data source</a
         >.
@@ -157,7 +157,7 @@ import { QUICK_START_SNIPPET } from './overview-snippets';
       <code>&lt;oge-column&gt;</code> — lives on the
       <a
         routerLink="/components/data-grid/api"
-        class="text-indigo-600 dark:text-indigo-400"
+        class="text-indigo-600 underline dark:text-indigo-400"
         >API Reference</a
       >
       page.

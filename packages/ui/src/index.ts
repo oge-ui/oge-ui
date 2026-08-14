@@ -28,6 +28,7 @@ export * from '@oge-ui/tabs';
 export * from '@oge-ui/layout';
 export * from '@oge-ui/navigation';
 export * from '@oge-ui/forms';
+export * from '@oge-ui/upload';
 // both grid (legacy context-menu shape) and overlay export an `OgeMenuItem`;
 // the overlay one is the canonical shape — an explicit re-export wins the tie
 export { type OgeMenuItem } from '@oge-ui/overlay';

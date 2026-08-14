@@ -22,17 +22,29 @@ import {
 import {
   createTypeAheadBuffer,
   edgeEnabledIndex,
+  isMenubarCompact,
   matchByPrefix,
-  resolveMenubarCompact,
+  menubarBarKeys,
+  menubarClosedReason,
+  menubarDataDescriptors,
+  menubarEventBase,
+  menubarItemDomId,
+  menubarPanelItems,
+  menubarPanelLabel,
+  menubarPanelPlacement,
+  menubarPopupCloseReason,
+  menubarStopDisabled,
+  findMenubarItemPath,
   stepEnabledIndex,
-} from '@oge-ui/core';
+  OGE_MENUBAR_HOVER_DELAY,
+  type OgeMenubarDescriptorCore,
+} from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
   OgeAnchoredPanel,
   OgeMenuList,
   OgePopup,
   type OgeMenuCloseRequestEvent,
-  type OgeMenuItem,
   type OgeMenuItemTemplateContext,
   type OgeMenuListItemClickEvent,
   type OgePopupCloseReason,
@@ -55,38 +67,12 @@ import type {
 
 let nextMenubarId = 0;
 
-/** One normalized top-level entry: declarative children first, then `items`. */
-interface MenubarDescriptor {
-  readonly id: string;
-  readonly item: OgeMenubarItemData;
-}
-
-/** Recursively drops `visible: false` items; item references are preserved. */
-function pruneHidden(
-  items: readonly OgeMenubarItemData[],
-): readonly OgeMenubarItemData[] {
-  return items
-    .filter((item) => item.visible !== false)
-    .map((item) =>
-      item.items?.length ? { ...item, items: pruneHidden(item.items) } : item,
-    );
-}
-
-/** Index chain of `target` (by reference) inside `items`, or `null`. */
-function findItemPath(
-  items: readonly OgeMenubarItemData[],
-  target: OgeMenuItem,
-): number[] | null {
-  for (let index = 0; index < items.length; index++) {
-    const item = items[index];
-    if (item === target) return [index];
-    if (item.items?.length) {
-      const sub = findItemPath(item.items, target);
-      if (sub) return [index, ...sub];
-    }
-  }
-  return null;
-}
+/**
+ * One normalized top-level entry: declarative children first, then `items`.
+ * The shape (and every decision made over it) is shared with the React
+ * menubar through `@oge-ui/behavior`.
+ */
+type MenubarDescriptor = OgeMenubarDescriptorCore;
 
 /**
  * WAI-ARIA APG menubar: a persistent bar of `role="menuitem"` entries with a
@@ -364,7 +350,8 @@ export class OgeMenubar {
     () => this.openMode() ?? this.config.openMode ?? 'click',
   );
   private readonly resolvedHoverDelay = computed(
-    () => this.hoverDelay() ?? this.config.hoverDelay ?? 100,
+    () =>
+      this.hoverDelay() ?? this.config.hoverDelay ?? OGE_MENUBAR_HOVER_DELAY,
   );
 
   /** Declarative children first, then `items` — the house merge order. */
@@ -376,10 +363,7 @@ export class OgeMenubar {
           id: child.key() ?? child.autoId,
           item: child.data(),
         }));
-      const fromItems = (this.items() ?? [])
-        .filter((item) => item.visible !== false)
-        .map((item, index) => ({ id: item.key ?? `i${index}`, item }));
-      return [...fromChildren, ...fromItems];
+      return [...fromChildren, ...menubarDataDescriptors(this.items())];
     },
   );
 
@@ -400,29 +384,23 @@ export class OgeMenubar {
   protected readonly openIndex = signal(-1);
 
   private readonly containerSize = signal(0);
-  protected readonly compact = computed(
-    () =>
-      resolveMenubarCompact({
-        containerSize: this.containerSize(),
-        compactBelow: this.compactBelow() ?? this.config.compactBelow,
-      }).compact,
+  protected readonly compact = computed(() =>
+    isMenubarCompact(
+      this.containerSize(),
+      this.compactBelow() ?? this.config.compactBelow,
+    ),
   );
 
-  protected readonly panelItems = computed<readonly OgeMenubarItemData[]>(
-    () => {
-      const source = this.openSource();
-      if (source === 'hamburger') {
-        return pruneHidden(this.descriptors().map((d) => d.item));
-      }
-      const index = this.openIndex();
-      if (source !== 'bar' || index < 0) return [];
-      return pruneHidden(this.descriptors()[index]?.item.items ?? []);
-    },
+  protected readonly panelItems = computed<readonly OgeMenubarItemData[]>(() =>
+    menubarPanelItems(this.descriptors(), this.openSource(), this.openIndex()),
   );
   protected readonly panelLabel = computed(() =>
-    this.openSource() === 'hamburger'
-      ? this.msg().hamburger
-      : this.descriptors()[this.openIndex()]?.item.text,
+    menubarPanelLabel(
+      this.descriptors(),
+      this.openSource(),
+      this.openIndex(),
+      this.msg().hamburger,
+    ),
   );
 
   /** Anchored-panel model — public so templates/tests can read `panelId`. */
@@ -436,9 +414,7 @@ export class OgeMenubar {
     },
     panel: () => this.popupRef()?.nativeElement ?? null,
     placement: () =>
-      this.openSource() === 'bar' && this.resolvedOrientation() === 'vertical'
-        ? 'right-start'
-        : 'bottom-start',
+      menubarPanelPlacement(this.openSource(), this.resolvedOrientation()),
     offset: () => this.overlayConfig.offset,
     viewportPadding: () => this.overlayConfig.viewportPadding,
     restoreFocus: () => this.focusPanelAnchor(),
@@ -522,7 +498,7 @@ export class OgeMenubar {
   }
 
   protected itemDomId(index: number): string {
-    return `${this.generatedId}-item-${index}`;
+    return menubarItemDomId(this.generatedId, index);
   }
 
   protected isActive(d: MenubarDescriptor): boolean {
@@ -582,16 +558,12 @@ export class OgeMenubar {
   protected onBarKeydown(event: KeyboardEvent, index: number): void {
     const key = event.key;
     const d = this.descriptors()[index];
-    const horizontal = this.resolvedOrientation() !== 'vertical';
-    const rtl = getComputedStyle(this.host.nativeElement).direction === 'rtl';
-    const nextKey = horizontal
-      ? rtl
-        ? 'ArrowLeft'
-        : 'ArrowRight'
-      : 'ArrowDown';
-    const prevKey = horizontal ? (rtl ? 'ArrowRight' : 'ArrowLeft') : 'ArrowUp';
-    const openKey = horizontal ? 'ArrowDown' : rtl ? 'ArrowLeft' : 'ArrowRight';
-    const openLastKey = horizontal ? 'ArrowUp' : null;
+    const {
+      next: nextKey,
+      prev: prevKey,
+      open: openKey,
+      openLast: openLastKey,
+    } = menubarBarKeys(this.resolvedOrientation(), this.isRtl());
 
     if (key === nextKey || key === prevKey) {
       event.preventDefault();
@@ -664,11 +636,12 @@ export class OgeMenubar {
     const target = event.target as HTMLElement | null;
     if (!target?.closest?.('.oge-menu-list')) return;
     if (this.openSource() !== 'bar' || !this.panel.isOpen()) return;
-    const horizontal = this.resolvedOrientation() !== 'vertical';
-    const rtl = getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    const orientation = this.resolvedOrientation();
+    const horizontal = orientation !== 'vertical';
+    const keys = menubarBarKeys(orientation, this.isRtl());
     if (!horizontal) {
       // Vertical bar: the level-1 list's ArrowLeft means "back to the bar".
-      if (event.key === (rtl ? 'ArrowRight' : 'ArrowLeft')) {
+      if (event.key === keys.back) {
         event.preventDefault();
         event.stopPropagation();
         const index = this.openIndex();
@@ -677,8 +650,8 @@ export class OgeMenubar {
       }
       return;
     }
-    const forward = event.key === (rtl ? 'ArrowLeft' : 'ArrowRight');
-    const backward = event.key === (rtl ? 'ArrowRight' : 'ArrowLeft');
+    const forward = event.key === keys.next;
+    const backward = event.key === keys.prev;
     if (!forward && !backward) return;
     event.preventDefault();
     event.stopPropagation();
@@ -714,7 +687,7 @@ export class OgeMenubar {
   protected onMenuItemClick(event: OgeMenuListItemClickEvent): void {
     const item = event.item as OgeMenubarItemData;
     const base = this.openSource() === 'bar' ? [this.openIndex()] : [];
-    const inTree = findItemPath(this.panelItems(), item);
+    const inTree = findMenubarItemPath(this.panelItems(), item);
     const path = inTree ? [...base, ...inTree] : [...base, event.index];
     this.itemClick.emit({
       item,
@@ -749,10 +722,13 @@ export class OgeMenubar {
     }
   }
 
+  /** Writing direction of the host, read live so RTL needs no input. */
+  private isRtl(): boolean {
+    return getComputedStyle(this.host.nativeElement).direction === 'rtl';
+  }
+
   private stopDisabled(index: number): boolean {
-    if (this.disabled()) return true; // whole bar inert: no tab stop at all
-    const d = this.descriptors()[index];
-    return !d || !!d.item.disabled || !!d.item.separator;
+    return menubarStopDisabled(this.descriptors(), index, this.disabled());
   }
 
   private focusItem(index: number): void {
@@ -880,29 +856,11 @@ export class OgeMenubar {
       if (pre.cancel) return;
     }
     this.pendingCloseReason = reason;
-    this.panel.close(this.toPopupReason(reason));
-  }
-
-  private toPopupReason(reason: OgeMenubarCloseReason): OgePopupCloseReason {
-    switch (reason) {
-      case 'escape':
-      case 'select':
-      case 'tab':
-        return reason;
-      default:
-        return 'api';
-    }
+    this.panel.close(menubarPopupCloseReason(reason));
   }
 
   private onPanelClosed(reason: OgePopupCloseReason): void {
-    const mapped: OgeMenubarCloseReason =
-      this.pendingCloseReason ??
-      (reason === 'outside' ||
-      reason === 'escape' ||
-      reason === 'select' ||
-      reason === 'tab'
-        ? reason
-        : 'api');
+    const mapped = menubarClosedReason(this.pendingCloseReason, reason);
     this.pendingCloseReason = null;
     const base = this.eventBase();
     this.openSource.set(null);
@@ -916,10 +874,11 @@ export class OgeMenubar {
     key?: string;
     path: readonly number[];
   } {
-    if (this.openSource() === 'hamburger') return { path: [] };
-    const index = this.openIndex();
-    const item = index >= 0 ? this.descriptors()[index]?.item : undefined;
-    return { item, key: item?.key, path: index >= 0 ? [index] : [] };
+    return menubarEventBase(
+      this.descriptors(),
+      this.openSource(),
+      this.openIndex(),
+    );
   }
 
   private focusPanelAnchor(): void {

@@ -5,7 +5,8 @@
     "@oge-ui/inputs",
     "@oge-ui/tabs",
     "@oge-ui/layout",
-    "@oge-ui/navigation"
+    "@oge-ui/navigation",
+    "@oge-ui/upload"
   ],
   "assets": ["llms.txt"],
   "lib": {

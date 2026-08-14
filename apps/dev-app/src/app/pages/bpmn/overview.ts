@@ -83,7 +83,9 @@ const BADGE_HTML = (count: number): string =>
         <code>&#64;oge-ui/bpmn</code> is a commercial package — free for
         evaluation and non-commercial use, with no watermark and no runtime
         license checks. See
-        <a routerLink="/license" class="text-indigo-600 dark:text-indigo-400"
+        <a
+          routerLink="/license"
+          class="text-indigo-600 underline dark:text-indigo-400"
           >licensing</a
         >
         for the terms.
@@ -287,7 +289,7 @@ const BADGE_HTML = (count: number): string =>
           href="https://github.com/oge-ui/oge-ui/blob/main/ROADMAP.md"
           target="_blank"
           rel="noopener"
-          class="text-indigo-600 dark:text-indigo-400"
+          class="text-indigo-600 underline dark:text-indigo-400"
           >roadmap</a
         >; dropped content always surfaces as import warnings.
       </li>

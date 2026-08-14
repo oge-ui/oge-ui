@@ -177,6 +177,24 @@ export const OGE_USAGE: Readonly<Record<string, readonly OgeUsage[]>> = {
       use: '`<oge-pagination [(pageIndex)]="page" [itemCount]="total" [pageSize]="20">` — 0-based `pageIndex`, `pageSize: 0` = all items, `[pageSizes]="[10, 20, \'all\']"` shows the selector, `displayMode: \'adaptive\'` collapses to `N / M` against the container width',
     },
   ],
+  '@oge-ui/upload': [
+    {
+      need: 'file upload / attachment picker',
+      use: '`<oge-file-uploader [(value)]="files" uploadUrl="/api/upload" accept="image/*,.pdf" [maxFileSize]="5 * 1024 * 1024" />` — drag & drop, restrictions with on-row reasons, previews, per-file progress',
+    },
+    {
+      need: 'chunked or resumable upload',
+      use: '`[chunk]="{ size: 1024 * 1024 }"` — pause/resume/retry per file; Kendo-shaped chunk metadata on the wire',
+    },
+    {
+      need: 'upload through an HTTP interceptor',
+      use: '`[uploadAdapter]="createHttpClientUploadAdapter(inject(HttpClient))"`; or supply your own `OgeUploadAdapter`',
+    },
+    {
+      need: 'drop zone somewhere else on the page',
+      use: '`<div [ogeUploadDropZone]="\'attachments\'">` with `<oge-file-uploader dropZone="attachments" />` — dx `dropZone`, Kendo `zoneId`, Syncfusion `dropArea`',
+    },
+  ],
 };
 
 /** Every package whose usage rows are worth listing, in a stable order. */
@@ -196,6 +214,7 @@ export const OGE_USAGE_ORDER: readonly string[] = [
   '@oge-ui/layout',
   '@oge-ui/navigation',
   '@oge-ui/forms',
+  '@oge-ui/upload',
 ];
 
 /** The umbrella package re-exports every MIT family from one import path. */
@@ -212,4 +231,5 @@ export const UMBRELLA_FAMILIES: readonly string[] = [
   '@oge-ui/layout',
   '@oge-ui/navigation',
   '@oge-ui/forms',
+  '@oge-ui/upload',
 ];

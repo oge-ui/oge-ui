@@ -1,7 +1,11 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/packages/layout",
-  "allowedNonPeerDependencies": ["@oge-ui/core", "@oge-ui/overlay"],
+  "allowedNonPeerDependencies": [
+    "@oge-ui/behavior",
+    "@oge-ui/core",
+    "@oge-ui/overlay"
+  ],
   "assets": ["llms.txt"],
   "lib": {
     "entryFile": "src/index.ts"

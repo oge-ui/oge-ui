@@ -17,38 +17,43 @@ import {
   viewChild,
   viewChildren,
 } from '@angular/core';
+// The whole decision layer — the composed derivation (`buildTreeViewModel`),
+// the composed APG key map (`planTreeViewKey`), the expansion and selection
+// arithmetic and the drag geometry — is framework-free in `@oge-ui/behavior`,
+// shared verbatim with `<OgeTreeView>` in `@oge-ui/react-navigation` (ADR
+// 0001). What is left here is the Angular render shell and its signal wiring.
 import {
-  ancestorsOf,
-  buildSearchHighlightHtml,
-  buildTreeIndex,
-  computeTreeCheckStates,
-  createFieldAccessor,
+  buildTreeViewModel,
   createTypeAheadBuffer,
-  edgeEnabledIndex,
-  flattenNestedTree,
-  flattenTreeData,
-  filterTreeKeys,
-  foldText,
-  matchByPrefix,
+  nextTreeExpansion,
+  nextTreeSelection,
+  planTreeViewKey,
   resolveSelectedKeys,
-  stepEnabledIndex,
-  toggleTreeSelection,
+  resolveTreeItemHeight,
+  resolveTreeSelectByClick,
+  resolveTreeDropPosition,
+  exceedsTreeDragThreshold,
+  treeAriaChecked,
+  treeAriaSelected,
+  treeCanDrop,
+  treeChildrenLoadNeeded,
+  treeEdgeIndex,
+  treeNodeIndent,
+  treeRangeSelection,
+  OGE_TREE_DRAG_HOVER_EXPAND_MS,
   type CheckState,
+  type OgeTreeKeyAction,
+  type OgeTreeLoadState,
+  type OgeTreeViewModel,
   type RowKey,
-  type RowNode,
   type TreeIndex,
-} from '@oge-ui/core';
+} from '@oge-ui/behavior';
 import { OGE_TREE_VIEW_CONFIG, type OgeTreeViewMessages } from './config';
 import {
   OgeTreeExpandIconTemplate,
   OgeTreeItemTemplate,
   OgeTreeNoDataTemplate,
 } from './templates';
-import {
-  TREE_DRAG_HOVER_EXPAND_MS,
-  exceedsDragThreshold,
-  resolveDropPosition,
-} from './tree-view-dnd';
 import type { OgeTreeNode } from './tree-view-node';
 import type {
   OgeTreeChildrenFailedEvent,
@@ -82,15 +87,6 @@ import type {
 import { TreeVirtualizerModel } from './tree-view-virtualizer';
 
 let nextComponentId = 0;
-
-const DEFAULT_ITEM_HEIGHT = 30;
-const EMPTY_CHECK_STATES: ReadonlyMap<RowKey, CheckState> = new Map();
-
-/** State of one node's lazy child load. */
-interface LoadState {
-  readonly status: 'loading' | 'loaded' | 'failed';
-  readonly error?: unknown;
-}
 
 /**
  * Hierarchical list following the WAI-ARIA APG treeview pattern: a roving
@@ -488,7 +484,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   private readonly deferred = signal<ReadonlyMap<RowKey, readonly T[]>>(
     new Map(),
   );
-  private readonly loadStates = signal<ReadonlyMap<RowKey, LoadState>>(
+  private readonly loadStates = signal<ReadonlyMap<RowKey, OgeTreeLoadState>>(
     new Map(),
   );
   private readonly debouncedSearch = signal('');
@@ -515,284 +511,82 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     ...this.messages(),
   }));
 
-  // ---- accessors -----------------------------------------------------------
-
-  private readonly keyOf = computed<(row: T) => RowKey>(() =>
-    toAccessor(this.keyExpr()),
-  );
-  private readonly displayOf = computed<(row: T) => string>(() => {
-    const accessor = toAccessor<T, unknown>(this.displayExpr());
-    return (row) => String(accessor(row) ?? '');
-  });
-  private readonly disabledOf = computed<(row: T) => boolean>(() => {
-    const accessor = toAccessor<T, unknown>(this.disabledExpr());
-    return (row) => accessor(row) === true;
-  });
-  private readonly iconOf = computed<((row: T) => string | undefined) | null>(
-    () => {
-      const expr = this.iconExpr();
-      if (expr === undefined) return null;
-      const accessor = toAccessor<T, unknown>(expr);
-      return (row) => {
-        const value = accessor(row);
-        return value == null ? undefined : String(value);
-      };
-    },
-  );
-
-  /** Nested payloads are flattened first; the engine has one pipeline. */
-  private readonly normalized = computed<{
-    rows: readonly T[];
-    parentOf: ReadonlyMap<RowKey, RowKey | null> | null;
-  }>(() => {
-    const rows = this.items() ?? [];
-    const itemsExpr = this.itemsExpr();
-    const nested =
-      this.dataStructure() === 'tree' ||
-      (this.dataStructure() === undefined && itemsExpr !== undefined);
-    if (!nested) return { rows, parentOf: null };
-    const itemsOf = toAccessor<T, readonly T[] | undefined>(
-      itemsExpr ?? 'items',
-    );
-    const flattened = flattenNestedTree(rows, {
-      keyOf: this.keyOf(),
-      itemsOf,
-    });
-    return { rows: flattened.rows, parentOf: flattened.parentOf };
-  });
-
-  /**
-   * Adjacency index over the normalized rows plus any lazily loaded children.
-   * Loaded children are folded into the index (not left to `deferredChildren`
-   * alone) so selection, `ancestorsOf` and the drop cycle guard can see them —
-   * their parent link comes from the map key, which is also what makes lazy
-   * loading work for nested data, where a child carries no parent field.
-   */
-  protected readonly treeIndex = computed<TreeIndex<T>>(() => {
-    const { rows, parentOf } = this.normalized();
-    const keyOf = this.keyOf();
-    const loadedRows: T[] = [];
-    const loadedParents = new Map<RowKey, RowKey>();
-    for (const [parentKey, children] of this.deferred()) {
-      for (const child of children) {
-        loadedRows.push(child);
-        loadedParents.set(keyOf(child), parentKey);
-      }
-    }
-    const parentIdAccessor = toAccessor<T, unknown>(this.parentIdExpr());
-    const parentIdOf = (row: T): unknown => {
-      const key = keyOf(row);
-      const loaded = loadedParents.get(key);
-      if (loaded !== undefined) return loaded;
-      if (parentOf) return parentOf.get(key) ?? null;
-      return parentIdAccessor(row);
-    };
-    return buildTreeIndex<T>([...rows, ...loadedRows], {
-      keyOf,
-      parentIdOf,
-      rootValue: parentOf ? null : this.rootValue(),
-    });
-  });
-
-  /** Keys that show an expand toggle — real children or a lazy hint. */
-  private readonly expandableKeys = computed<ReadonlySet<RowKey>>(() => {
-    const index = this.treeIndex();
-    const keys = new Set<RowKey>(index.childrenOf.keys());
-    const hint = this.hasChildrenHint();
-    if (hint) {
-      for (const [key, row] of index.byKey) {
-        if (hint(row) === true) keys.add(key);
-      }
-    }
-    return keys;
-  });
-
-  /** Lazy expandability hint — only meaningful with a `loadChildren`. */
-  private readonly hasChildrenHint = computed<
-    ((row: T) => boolean | undefined) | undefined
-  >(() => {
-    if (!this.loadChildren()) return undefined;
-    const accessor = toAccessor<T, unknown>(this.hasItemsExpr());
-    return (row) => {
-      const value = accessor(row);
-      return value === undefined ? undefined : value === true;
-    };
-  });
-
-  // ---- search --------------------------------------------------------------
-
-  private readonly searchPredicate = computed<((row: T) => boolean) | null>(
-    () => {
-      const needle = foldText(this.debouncedSearch().trim());
-      if (!needle) return null;
-      const mode = this.searchMode();
-      const accessors = this.searchAccessors();
-      return (row: T) =>
-        accessors.some((accessor) => {
-          const value = foldText(String(accessor(row) ?? ''));
-          if (mode === 'equals') return value === needle;
-          if (mode === 'startsWith') return value.startsWith(needle);
-          return value.includes(needle);
-        });
-    },
-  );
-
-  private readonly searchAccessors = computed<((row: T) => unknown)[]>(() => {
-    const extra = this.searchExpr();
-    if (extra === undefined) return [this.displayOf()];
-    const list = Array.isArray(extra)
-      ? (extra as readonly OgeTreeExpr<T>[])
-      : [extra as OgeTreeExpr<T>];
-    return list.map((expr) => toAccessor<T, unknown>(expr));
-  });
-
-  /** Keys that survive the search filter — `null` when not searching. */
-  private readonly visibleKeys = computed<ReadonlySet<RowKey> | null>(() => {
-    const predicate = this.searchPredicate();
-    if (!predicate) return null;
-    return filterTreeKeys(this.treeIndex(), predicate, this.filterMode());
-  });
-
-  /**
-   * Ancestors of matches, so a hit deep in the tree is actually reachable.
-   * Ported from tree-list's `filterExpandedKeys`.
-   */
-  private readonly filterExpandedKeys = computed<ReadonlySet<RowKey>>(() => {
-    const visible = this.visibleKeys();
-    if (!visible || !this.expandNodesOnFiltering()) return new Set<RowKey>();
-    const index = this.treeIndex();
-    const expanded = new Set<RowKey>();
-    for (const key of visible) {
-      for (const ancestor of ancestorsOf(index, key)) {
-        if (visible.has(ancestor)) expanded.add(ancestor);
-      }
-    }
-    return expanded;
-  });
-
-  // ---- visible node list ---------------------------------------------------
-
-  private readonly effectiveExpanded = computed<ReadonlySet<RowKey>>(() => {
-    const filtered = this.filterExpandedKeys();
-    if (filtered.size === 0) return this.expandedSet();
-    return new Set([...this.expandedSet(), ...filtered]);
-  });
-
-  /** Tri-state per key — only computed while cascading selection is on. */
-  protected readonly checkStates = computed<ReadonlyMap<RowKey, CheckState>>(
-    () => {
-      if (!this.selectNodesRecursive() || this.checkBoxesMode() === 'none') {
-        return EMPTY_CHECK_STATES;
-      }
-      return computeTreeCheckStates(this.treeIndex(), this.selectedSet());
-    },
-  );
+  // ---- derived pipeline ----------------------------------------------------
 
   protected readonly checkBoxesMode = computed<OgeTreeCheckBoxesMode>(() =>
     this.showCheckBoxes(),
   );
 
+  /**
+   * One call, one pipeline: `@oge-ui/behavior` owns the accessors, the index
+   * build (lazily loaded children folded in), the lazy expandability hint, the
+   * search filter and its auto-expansion, the effective expansion, the
+   * tri-state cascade, the flat node list and the select-all state — in the one
+   * order the pipeline requires. `<OgeTreeView>` in `@oge-ui/react-navigation`
+   * runs the same function; what is left here is the signal wiring.
+   */
+  private readonly model = computed<OgeTreeViewModel<T>>(() =>
+    buildTreeViewModel<T>({
+      items: this.items() ?? [],
+      keyExpr: this.keyExpr(),
+      parentIdExpr: this.parentIdExpr(),
+      itemsExpr: this.itemsExpr(),
+      displayExpr: this.displayExpr(),
+      disabledExpr: this.disabledExpr(),
+      hasItemsExpr: this.hasItemsExpr(),
+      iconExpr: this.iconExpr(),
+      rootValue: this.rootValue(),
+      dataStructure: this.dataStructure(),
+      deferred: this.deferred(),
+      loadStates: this.loadStates(),
+      expandedKeys: this.expandedSet(),
+      selectedKeys: this.selectedSet(),
+      search: this.debouncedSearch(),
+      searchMode: this.searchMode(),
+      searchExpr: this.searchExpr(),
+      filterMode: this.filterMode(),
+      expandNodesOnFiltering: this.expandNodesOnFiltering(),
+      highlightSearchResults: this.highlightSearchResults(),
+      selectNodesRecursive: this.selectNodesRecursive(),
+      showCheckBoxes: this.checkBoxesMode(),
+      lazy: !!this.loadChildren(),
+    }),
+  );
+
+  /** Adjacency index over the rows plus any lazily loaded children. */
+  protected readonly treeIndex = computed<TreeIndex<T>>(
+    () => this.model().index,
+  );
+
+  private readonly keyOf = computed<(row: T) => RowKey>(
+    () => this.model().keyOf,
+  );
+
+  /** Keys that show an expand toggle — real children or a lazy hint. */
+  private readonly expandableKeys = computed<ReadonlySet<RowKey>>(
+    () => this.model().expandableKeys,
+  );
+
+  /** `expandedSet` overlaid with the ancestors the search auto-expanded. */
+  private readonly effectiveExpanded = computed<ReadonlySet<RowKey>>(
+    () => this.model().effectiveExpanded,
+  );
+
   /** Resolved `selectByClick` — see the input's note on the default. */
-  private readonly selectOnRowClick = computed(
-    () => this.selectByClick() ?? this.checkBoxesMode() === 'none',
+  private readonly selectOnRowClick = computed(() =>
+    resolveTreeSelectByClick(this.selectByClick(), this.checkBoxesMode()),
   );
 
   /** The flat, visible node list — the single render source. */
-  protected readonly nodes = computed<readonly OgeTreeNode<T>[]>(() => {
-    const index = this.treeIndex();
-    const keyOf = this.keyOf();
-    const displayOf = this.displayOf();
-    const disabledOf = this.disabledOf();
-    const iconOf = this.iconOf();
-    const selected = this.selectedSet();
-    const states = this.checkStates();
-    const loads = this.loadStates();
-    const needle = this.highlightSearchResults()
-      ? this.debouncedSearch().trim()
-      : '';
-    const flat: readonly RowNode<T>[] = flattenTreeData<T>({
-      index,
-      keyOf,
-      expandedRowKeys: this.effectiveExpanded(),
-      hasChildren: this.hasChildrenHint(),
-      deferredChildren: this.deferred(),
-      visibleKeys: this.visibleKeys(),
-    });
-    const out: OgeTreeNode<T>[] = [];
-    for (const node of flat) {
-      if (node.kind === 'filler') {
-        const parentKey = String(node.key).replace(/:loading$/, '');
-        const state = loads.get(parentKey) ?? loads.get(Number(parentKey));
-        out.push({
-          id: String(node.key),
-          key: parentKey,
-          filler: true,
-          failed: state?.status === 'failed',
-          level: 0,
-          text: '',
-          posInSet: 0,
-          setSize: 0,
-          hasChildren: false,
-          expanded: false,
-          disabled: false,
-          selected: false,
-          loading: false,
-          checkState: 'unchecked',
-          highlightedHtml: null,
-          item: undefined as unknown as T,
-        });
-        continue;
-      }
-      if (node.kind !== 'data') continue;
-      const text = displayOf(node.data);
-      out.push({
-        id: String(node.key),
-        key: node.key,
-        filler: false,
-        failed: false,
-        item: node.data,
-        text,
-        level: node.level,
-        posInSet: node.posInSet ?? 1,
-        setSize: node.setSize ?? 1,
-        hasChildren: node.hasChildren === true,
-        expanded: node.expanded === true,
-        disabled: disabledOf(node.data),
-        selected: selected.has(node.key),
-        loading: loads.get(node.key)?.status === 'loading',
-        checkState:
-          states.get(node.key) ??
-          (selected.has(node.key) ? 'checked' : 'unchecked'),
-        icon: iconOf?.(node.data),
-        highlightedHtml: needle ? buildSearchHighlightHtml(text, needle) : null,
-      });
-    }
-    return out;
-  });
-
-  protected readonly loadingAny = computed(() =>
-    [...this.loadStates().values()].some((s) => s.status === 'loading'),
+  protected readonly nodes = computed<readonly OgeTreeNode<T>[]>(
+    () => this.model().nodes,
   );
 
-  protected readonly selectAllState = computed<CheckState>(() => {
-    const roots = this.treeIndex().roots;
-    if (roots.length === 0) return 'unchecked';
-    const states = this.checkStates();
-    const keyOf = this.keyOf();
-    const selected = this.selectedSet();
-    let checked = 0;
-    let partial = 0;
-    for (const root of roots) {
-      const state =
-        states.get(keyOf(root)) ??
-        (selected.has(keyOf(root)) ? 'checked' : 'unchecked');
-      if (state === 'checked') checked++;
-      else if (state === 'indeterminate') partial++;
-    }
-    if (checked === roots.length) return 'checked';
-    if (checked > 0 || partial > 0) return 'indeterminate';
-    return 'unchecked';
-  });
+  protected readonly loadingAny = computed(() => this.model().loadingAny);
+
+  protected readonly selectAllState = computed<CheckState>(
+    () => this.model().selectAllState,
+  );
 
   // ---- virtualization ------------------------------------------------------
 
@@ -800,11 +594,9 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     () => this.virtualScroll() !== false,
   );
 
-  protected readonly itemHeight = computed(() => {
-    const value = this.virtualScroll();
-    if (typeof value === 'object') return value.itemHeight;
-    return this.config.itemHeight ?? DEFAULT_ITEM_HEIGHT;
-  });
+  protected readonly itemHeight = computed(() =>
+    resolveTreeItemHeight(this.virtualScroll(), this.config.itemHeight),
+  );
 
   private readonly virtualizer = new TreeVirtualizerModel({
     itemCount: () => this.nodes().length,
@@ -969,7 +761,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     const nodes = this.nodes();
     const index =
       key === undefined
-        ? (edgeEnabledIndex(nodes.length, 1, (i) => this.nodeDisabled(i)) ?? -1)
+        ? (treeEdgeIndex(nodes, 1) ?? -1)
         : nodes.findIndex((n) => n.key === key && !n.filler);
     if (index === -1) return;
     this.focusedKey.set(nodes[index].key);
@@ -990,7 +782,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   // ---- template helpers ----------------------------------------------------
 
   protected indentOf(node: OgeTreeNode<T>): number {
-    return 8 + node.level * 16;
+    return treeNodeIndent(node.level);
   }
 
   /** APG: exactly one node sits in the Tab sequence at a time. */
@@ -1000,16 +792,11 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   }
 
   protected ariaSelected(node: OgeTreeNode<T>): boolean | null {
-    // APG: expose selection through aria-selected OR aria-checked, never both
-    if (node.filler || this.checkBoxesMode() !== 'none') return null;
-    if (this.selectionMode() === 'none') return null;
-    return node.selected;
+    return treeAriaSelected(node, this.checkBoxesMode(), this.selectionMode());
   }
 
   protected ariaChecked(node: OgeTreeNode<T>): string | null {
-    if (node.filler || this.checkBoxesMode() === 'none') return null;
-    if (node.checkState === 'indeterminate') return 'mixed';
-    return node.checkState === 'checked' ? 'true' : 'false';
+    return treeAriaChecked(node, this.checkBoxesMode());
   }
 
   protected itemContext(node: OgeTreeNode<T>): OgeTreeItemTemplateContext<T> {
@@ -1102,132 +889,69 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
       (n) => !n.filler && n.key === this.focusedKey(),
     );
     if (current === -1) return;
-    const node = nodes[current];
 
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        this.moveFocus(this.step(current, 1));
-        if (event.shiftKey && this.selectionMode() === 'multiple') {
-          this.extendSelectionTo(this.step(current, 1), event);
-        }
-        return;
-      case 'ArrowUp':
-        event.preventDefault();
-        this.moveFocus(this.step(current, -1));
-        if (event.shiftKey && this.selectionMode() === 'multiple') {
-          this.extendSelectionTo(this.step(current, -1), event);
-        }
-        return;
-      case 'ArrowRight':
-        event.preventDefault();
-        if (!node.hasChildren) return;
-        if (!node.expanded) void this.expand(node.key);
-        else this.moveFocus(this.step(current, 1));
-        return;
-      case 'ArrowLeft':
-        event.preventDefault();
-        if (node.hasChildren && node.expanded) void this.collapse(node.key);
-        else this.moveFocus(this.parentIndexOf(current));
-        return;
-      case 'Home':
-        event.preventDefault();
-        if (event.ctrlKey && event.shiftKey) {
-          this.selectRange(0, current, event);
-          return;
-        }
-        this.moveFocus(this.edge(1));
-        return;
-      case 'End':
-        event.preventDefault();
-        if (event.ctrlKey && event.shiftKey) {
-          this.selectRange(current, nodes.length - 1, event);
-          return;
-        }
-        this.moveFocus(this.edge(-1));
-        return;
-      case 'Enter':
-        event.preventDefault();
-        this.itemClick.emit({ key: node.key, item: node.item, event });
-        if (node.hasChildren) void this.toggle(node.key);
-        else if (this.selectionMode() !== 'none') {
-          this.toggleSelection(node, event);
-        }
-        return;
-      case ' ':
-        event.preventDefault();
-        if (event.shiftKey && this.selectionMode() === 'multiple') {
-          this.selectRange(this.anchorIndex(current), current, event);
-          return;
-        }
-        if (this.selectionMode() !== 'none') this.toggleSelection(node, event);
-        return;
-      case '*':
-        if (!this.allowExpandAll()) return;
-        event.preventDefault();
-        this.expandSiblingsOf(node);
-        return;
-      case 'a':
-      case 'A':
-        if (!event.ctrlKey || this.selectionMode() !== 'multiple') break;
-        event.preventDefault();
+    // The APG key map itself lives in `@oge-ui/behavior`; this only executes
+    // the actions it resolves, so the React tree view gets the same map.
+    const plan = planTreeViewKey<T>({
+      key: event.key,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      nodes,
+      index: this.treeIndex(),
+      keyOf: this.keyOf(),
+      expanded: this.expandedSet(),
+      expandableKeys: this.expandableKeys(),
+      current,
+      selectionMode: this.selectionMode(),
+      allowExpandAll: this.allowExpandAll(),
+      pushTypeAhead: (char) => this.typeAheadBuffer.push(char),
+    });
+    if (!plan) return;
+    if (plan.preventDefault) event.preventDefault();
+    for (const action of plan.actions) {
+      this.runKeyAction(action, event);
+    }
+  }
+
+  private runKeyAction(
+    action: OgeTreeKeyAction<T>,
+    event: KeyboardEvent,
+  ): void {
+    switch (action.kind) {
+      case 'focus':
+        this.moveFocus(action.index);
+        break;
+      case 'toggle-selection':
+        this.extendSelectionTo(action.index, event);
+        break;
+      case 'select-range':
+        this.selectRange(action.from, action.to, event);
+        break;
+      case 'select-all':
         this.selectAll();
-        return;
-      default:
+        break;
+      case 'expand':
+        void this.expand(action.key);
+        break;
+      case 'collapse':
+        void this.collapse(action.key);
+        break;
+      case 'toggle-expansion':
+        void this.toggle(action.key);
+        break;
+      case 'item-click':
+        this.itemClick.emit({
+          key: action.node.key,
+          item: action.node.item,
+          event,
+        });
+        break;
+      case 'set-expanded':
+        this.expandedSet.set(action.expanded);
         break;
     }
-
-    if (
-      event.key.length === 1 &&
-      !event.ctrlKey &&
-      !event.altKey &&
-      !event.metaKey &&
-      event.key !== ' '
-    ) {
-      const prefix = this.typeAheadBuffer.push(event.key.toLowerCase());
-      const match = matchByPrefix(
-        nodes.map((n) => n.text),
-        prefix,
-        prefix.length === 1 ? current : current - 1,
-        (i) => this.nodeDisabled(i),
-      );
-      if (match !== null) {
-        event.preventDefault();
-        this.moveFocus(match);
-      }
-    }
-  }
-
-  private nodeDisabled(index: number): boolean {
-    const node = this.nodes()[index];
-    return !node || node.filler || node.disabled;
-  }
-
-  private step(start: number, direction: 1 | -1): number | null {
-    return stepEnabledIndex(
-      this.nodes().length,
-      start,
-      direction,
-      (i) => this.nodeDisabled(i),
-      false,
-    );
-  }
-
-  private edge(direction: 1 | -1): number | null {
-    return edgeEnabledIndex(this.nodes().length, direction, (i) =>
-      this.nodeDisabled(i),
-    );
-  }
-
-  /** Index of the row that is the focused node's parent, if it is visible. */
-  private parentIndexOf(index: number): number | null {
-    const nodes = this.nodes();
-    const level = nodes[index]?.level ?? 0;
-    if (level === 0) return null;
-    for (let i = index - 1; i >= 0; i--) {
-      if (!nodes[i].filler && nodes[i].level < level) return i;
-    }
-    return null;
   }
 
   private moveFocus(index: number | null): void {
@@ -1266,21 +990,6 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     );
   }
 
-  /** APG `*`: expands every sibling at the focused node's level. */
-  private expandSiblingsOf(node: OgeTreeNode<T>): void {
-    const index = this.treeIndex();
-    const parent = index.parentOf.get(node.key) ?? null;
-    const siblings =
-      parent === null ? index.roots : (index.childrenOf.get(parent) ?? []);
-    const keyOf = this.keyOf();
-    const next = new Set(this.expandedSet());
-    for (const sibling of siblings) {
-      const key = keyOf(sibling);
-      if (this.expandableKeys().has(key)) next.add(key);
-    }
-    this.expandedSet.set(next);
-  }
-
   // ---- expansion pipeline --------------------------------------------------
 
   private requestExpand(key: RowKey): Promise<boolean> {
@@ -1291,23 +1000,30 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     this.itemExpanding.emit(expanding);
     if (expanding.cancel) return Promise.resolve(false);
 
-    const next = new Set(this.expandedSet());
-    next.add(key);
-    if (this.expandNodesRecursive()) {
-      for (const ancestor of ancestorsOf(this.treeIndex(), key)) {
-        next.add(ancestor);
-      }
-    }
-    this.expandedSet.set(next);
+    this.expandedSet.set(
+      nextTreeExpansion<T>({
+        index: this.treeIndex(),
+        expanded: this.expandedSet(),
+        key,
+        expand: true,
+        recursive: this.expandNodesRecursive(),
+      }),
+    );
     this.itemExpanded.emit({ key, item });
 
     const loader = this.loadChildren();
-    const needsLoad =
-      !!loader &&
-      !this.deferred().has(key) &&
-      !this.treeIndex().childrenOf.has(key) &&
-      !this.loadStates().has(key);
-    if (!needsLoad) return Promise.resolve(true);
+    if (
+      !loader ||
+      !treeChildrenLoadNeeded<T>({
+        index: this.treeIndex(),
+        deferred: this.deferred(),
+        loadStates: this.loadStates(),
+        key,
+        hasLoader: true,
+      })
+    ) {
+      return Promise.resolve(true);
+    }
     return this.loadChildrenFor(key, item, loader);
   }
 
@@ -1318,9 +1034,15 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     const collapsing: OgeTreeCollapsingEvent<T> = { key, item, cancel: false };
     this.itemCollapsing.emit(collapsing);
     if (collapsing.cancel) return Promise.resolve(false);
-    const next = new Set(this.expandedSet());
-    next.delete(key);
-    this.expandedSet.set(next);
+    this.expandedSet.set(
+      nextTreeExpansion<T>({
+        index: this.treeIndex(),
+        expanded: this.expandedSet(),
+        key,
+        expand: false,
+        recursive: false,
+      }),
+    );
     this.itemCollapsed.emit({ key, item });
     return Promise.resolve(true);
   }
@@ -1360,7 +1082,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     );
   }
 
-  private setLoadState(key: RowKey, state: LoadState): void {
+  private setLoadState(key: RowKey, state: OgeTreeLoadState): void {
     this.loadStates.update((map) => new Map(map).set(key, state));
   }
 
@@ -1375,22 +1097,14 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     const index = this.treeIndex();
     const item = index.byKey.get(key);
     if (!item) return;
-    let next: Set<RowKey>;
-    if (this.selectionMode() === 'single') {
-      next = selected ? new Set<RowKey>([key]) : new Set<RowKey>();
-    } else if (this.selectNodesRecursive()) {
-      // toggleTreeSelection decides direction from raw membership, so only
-      // call it when that matches the intent
-      const has = this.selectedSet().has(key);
-      next =
-        has === selected
-          ? new Set(this.selectedSet())
-          : toggleTreeSelection(index, this.selectedSet(), key, true);
-    } else {
-      next = new Set(this.selectedSet());
-      if (selected) next.add(key);
-      else next.delete(key);
-    }
+    const next = nextTreeSelection<T>({
+      index,
+      selected: this.selectedSet(),
+      key,
+      select: selected,
+      selectionMode: this.selectionMode(),
+      recursive: this.selectNodesRecursive(),
+    });
     if (this.commitSelection(next, key, event)) {
       this.itemSelectionChanged.emit({ key, item, selected, event });
     }
@@ -1428,13 +1142,6 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     return true;
   }
 
-  /** Index the last Shift range extends from — the focused node's anchor. */
-  private anchorIndex(current: number): number {
-    const nodes = this.nodes();
-    const first = nodes.findIndex((n) => !n.filler && n.selected);
-    return first === -1 ? current : first;
-  }
-
   private extendSelectionTo(index: number | null, event: Event): void {
     if (index === null) return;
     const node = this.nodes()[index];
@@ -1442,15 +1149,11 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
   }
 
   private selectRange(from: number, to: number, event: Event): void {
-    const nodes = this.nodes();
-    const start = Math.max(0, Math.min(from, to));
-    const end = Math.min(nodes.length - 1, Math.max(from, to));
-    const next = new Set(this.selectedSet());
-    for (let i = start; i <= end; i++) {
-      const node = nodes[i];
-      if (!node.filler && !node.disabled) next.add(node.key);
-    }
-    this.commitSelection(next, undefined, event);
+    this.commitSelection(
+      treeRangeSelection(this.nodes(), this.selectedSet(), from, to),
+      undefined,
+      event,
+    );
   }
 
   private isCheckTarget(target: EventTarget | null): boolean {
@@ -1481,7 +1184,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     const point = { x: event.clientX, y: event.clientY };
     if (
       this._dragKey() === null &&
-      !exceedsDragThreshold(this.dragOrigin, point)
+      !exceedsTreeDragThreshold(this.dragOrigin, point)
     ) {
       return;
     }
@@ -1545,13 +1248,13 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
       return;
     }
     const node = this.nodes().find((n) => String(n.key) === key && !n.filler);
-    if (!node || !this.canDrop(dragKey, node.key)) {
+    if (!node || !treeCanDrop(this.treeIndex(), dragKey, node.key)) {
       this._dropTargetKey.set(null);
       this._dropPosition.set(null);
       return;
     }
     const rect = row.nativeElement.getBoundingClientRect();
-    const position = resolveDropPosition(
+    const position = resolveTreeDropPosition(
       event.clientY,
       rect,
       this.allowDropInside(),
@@ -1559,12 +1262,6 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     this._dropTargetKey.set(node.key);
     this._dropPosition.set(position);
     this.scheduleHoverExpand(node, position);
-  }
-
-  /** A node may never be dropped into its own subtree. */
-  private canDrop(dragKey: RowKey, dropKey: RowKey): boolean {
-    if (dragKey === dropKey) return false;
-    return !ancestorsOf(this.treeIndex(), dropKey).includes(dragKey);
   }
 
   /** Hovering a collapsed parent long enough opens it, so you can drop inside. */
@@ -1586,7 +1283,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
     this.hoverExpandKey = node.key;
     this.hoverExpandTimer = setTimeout(() => {
       if (this._dragKey() !== null) void this.expand(node.key);
-    }, TREE_DRAG_HOVER_EXPAND_MS);
+    }, OGE_TREE_DRAG_HOVER_EXPAND_MS);
   }
 
   private resetDrag(): void {
@@ -1606,12 +1303,6 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
       this.resetDrag();
     }
   }
-}
-
-function toAccessor<T, R = unknown>(expr: OgeTreeExpr<T, R>): (row: T) => R {
-  if (typeof expr === 'function') return expr;
-  const accessor = createFieldAccessor<T>(expr);
-  return (row) => accessor(row) as R;
 }
 
 function sameKeys(a: readonly RowKey[], b: readonly RowKey[]): boolean {

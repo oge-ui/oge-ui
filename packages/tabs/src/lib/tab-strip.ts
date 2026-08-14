@@ -16,6 +16,7 @@ import {
   viewChildren,
 } from '@angular/core';
 import { edgeEnabledIndex, stepEnabledIndex } from '@oge-ui/core';
+import { OGE_TAB_DRAG_THRESHOLD } from '@oge-ui/behavior';
 import {
   OgeAnchoredPanel,
   OgeMenuList,
@@ -62,7 +63,7 @@ export interface OgeTabStripReorderEvent {
 }
 
 /** Pixels of movement before a pointerdown becomes a drag. */
-const DRAG_THRESHOLD = 4;
+const DRAG_THRESHOLD = OGE_TAB_DRAG_THRESHOLD;
 
 /**
  * Presentational tab strip shared by `oge-tabs` and `oge-tab-panel`: renders

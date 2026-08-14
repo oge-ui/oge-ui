@@ -1,0 +1,51 @@
+{
+  "name": "@oge-ui/react-layout",
+  "version": "0.11.0",
+  "description": "React layout containers and loading visuals from the OGE UI suite: accordion, splitter, toolbar, card, progress bar, load indicator and skeleton — running the same config defaults, message catalogs and stylesheet as the Angular layout package.",
+  "keywords": [
+    "react",
+    "layout",
+    "accordion",
+    "splitter",
+    "toolbar",
+    "card",
+    "progress",
+    "skeleton",
+    "design-system",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.11.0",
+    "@oge-ui/react-overlay": "0.11.0"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/layout"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

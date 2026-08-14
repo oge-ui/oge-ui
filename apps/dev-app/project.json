@@ -4,7 +4,8 @@
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "apps/dev-app/src",
-  "tags": ["scope:app", "platform:angular"],
+  "tags": ["scope:app", "platform:docs"],
+  "implicitDependencies": ["react-buttons"],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
@@ -26,7 +27,10 @@
             "output": "themes"
           }
         ],
-        "styles": ["apps/dev-app/src/tailwind.css"]
+        "styles": [
+          "apps/dev-app/src/tailwind.css",
+          "apps/dev-app/src/styles.css"
+        ]
       },
       "configurations": {
         "production": {
@@ -38,8 +42,8 @@
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "16kb",
-              "maximumError": "32kb"
+              "maximumWarning": "64kb",
+              "maximumError": "96kb"
             }
           ],
           "outputHashing": "all"

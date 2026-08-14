@@ -49,7 +49,9 @@ const SECTIONS = [
       <tbody>
         <tr>
           <td>
-            <a href="/llms.txt" class="text-indigo-600 dark:text-indigo-400"
+            <a
+              href="/llms.txt"
+              class="text-indigo-600 underline dark:text-indigo-400"
               ><code>/llms.txt</code></a
             >
           </td>
@@ -63,7 +65,7 @@ const SECTIONS = [
           <td>
             <a
               href="/llms-full.txt"
-              class="text-indigo-600 dark:text-indigo-400"
+              class="text-indigo-600 underline dark:text-indigo-400"
               ><code>/llms-full.txt</code></a
             >
           </td>
@@ -78,6 +80,12 @@ const SECTIONS = [
           <td>
             One self-contained reference per package — conventions, API tables
             and demos scoped to that family.
+            <strong>Each file carries its own framework's rules:</strong>
+            <code>/llms/buttons.txt</code> teaches the Angular API,
+            <code>/llms/react/buttons.txt</code> the React one. Handing an
+            assistant the wrong file is worse than handing it none — it would
+            confidently write <code>imports: [OgeButton]</code> into a
+            <code>.tsx</code> file.
           </td>
         </tr>
         <tr>
@@ -115,7 +123,7 @@ const SECTIONS = [
     <p>
       See
       <a
-        class="text-indigo-600 hover:underline dark:text-indigo-400"
+        class="text-indigo-600 underline dark:text-indigo-400"
         routerLink="/getting-started/setup"
         >Set up your project</a
       >
@@ -131,9 +139,13 @@ const SECTIONS = [
 
     <h2 id="common-mistakes" class="scroll-mt-20">Common mistakes</h2>
     <p>
-      Models trained on other Angular suites reach for the wrong names.
+      Models trained on other component suites reach for the wrong names.
       <code>llms.txt</code> lists these explicitly, because naming the wrong
-      guess works better than only stating the right one:
+      guess works better than only stating the right one. The React files carry
+      their own table — where the Angular one warns against
+      <code>OgeGridModule</code>, the React one warns against importing
+      <code>&#64;oge-ui/buttons</code> when you meant
+      <code>&#64;oge-ui/react-buttons</code>:
     </p>
     <table class="api-table">
       <thead>

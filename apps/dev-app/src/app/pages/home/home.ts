@@ -20,6 +20,12 @@ import type { OgeTabSelectionChangedEvent } from '@oge-ui/tabs';
 import { OgeTreeList } from '@oge-ui/tree-list';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 import { Icon, type IconName } from '../../shared/icon';
+import {
+  FrameworkLogo,
+  type FrameworkLogoName,
+} from '../../shared/framework-logo';
+import { FrameworkSwitch } from '../../shared/framework-switch';
+import { FrameworkService } from '../../shared/framework.service';
 import { SITE_VERSION } from '../../shared/site-version';
 
 interface TickerRow {
@@ -93,6 +99,8 @@ const ORG: OrgNode[] = [
   imports: [
     RouterLink,
     Icon,
+    FrameworkSwitch,
+    FrameworkLogo,
     OgeGrid,
     OgeColumn,
     OgeCellTemplate,
@@ -113,7 +121,7 @@ const ORG: OrgNode[] = [
         <!-- Left: copy -->
         <div>
           <h1 class="home-in home-d1 og-display">
-            Angular components
+            UI components
             <br />
             built for
             <span class="home-rotator" aria-hidden="true">
@@ -126,12 +134,22 @@ const ORG: OrgNode[] = [
             <span class="sr-only">data grids</span>
           </h1>
 
+          <!--
+            The same switch the docs use, so the choice a reader makes here
+            follows them into every component page. Rendered from the framework
+            list, so a vanilla-JavaScript layer joins it without touching this
+            template.
+          -->
+          <div class="home-in home-d2 og-fw-strip">
+            <app-framework-switch />
+          </div>
+
           <p
             class="home-in home-d3 mt-5 max-w-lg text-[15.5px] leading-relaxed text-[color:var(--og-mut)]"
           >
             A virtualized data grid, tree list, pivot table, buttons and form
             editors. Signal APIs end to end, zoneless by default, themed with
-            CSS tokens.
+            CSS tokens — over a framework-free engine both render layers share.
           </p>
 
           <div class="home-in home-d4 mt-7 flex flex-wrap items-center gap-4">
@@ -584,8 +602,22 @@ const ORG: OrgNode[] = [
                 <span class="min-w-0 flex-1">
                   <span class="flex items-baseline gap-3">
                     <span class="og-row-name">{{ tile.name }}</span>
+                    <!--
+                      The render layers this family ships in, read from the one
+                      coverage table (ADR 0002). Marks only — the row is a link,
+                      not a spec sheet.
+                    -->
+                    <span class="og-row-layers ml-auto shrink-0">
+                      @for (layer of layersOf(tile.path); track layer) {
+                        <app-framework-logo
+                          [name]="layer"
+                          [size]="13"
+                          [brand]="true"
+                        />
+                      }
+                    </span>
                     <span
-                      class="ml-auto shrink-0 text-[color:var(--og-faint)] transition-all duration-200 group-hover:translate-x-1 group-hover:text-[color:var(--og-gold)]"
+                      class="shrink-0 text-[color:var(--og-faint)] transition-all duration-200 group-hover:translate-x-1 group-hover:text-[color:var(--og-gold)]"
                     >
                       <app-icon name="arrow-right" [size]="15" />
                     </span>
@@ -700,8 +732,9 @@ const ORG: OrgNode[] = [
               >
             </a>
             <p class="mt-4 max-w-xs text-[13px] leading-relaxed text-[#8b93a5]">
-              Angular components built for serious data — signal APIs end to
-              end, zoneless by default, MIT forever.
+              Components built for serious data — a complete Angular suite and a
+              growing React one over the same framework-free engine. MIT
+              forever.
             </p>
             <p class="mt-5 max-w-xs text-[12px] leading-relaxed text-[#555d6b]">
               <span class="og-gilded font-semibold">oge</span> is the Turkish
@@ -833,6 +866,26 @@ const ORG: OrgNode[] = [
     </section>
   `,
   styles: `
+    /* ═══ framework coverage strip under the hero headline ═══ */
+    app-home .og-fw-strip {
+      margin-block-start: 1.25rem;
+    }
+    /* the hero sits on the brand palette, not the docs tokens */
+    app-home .og-fw-strip .app-fw-group {
+      border-color: var(--og-line);
+      background: var(--og-stone-2);
+    }
+    app-home .og-fw-strip .app-fw-group button {
+      color: var(--og-mut);
+    }
+    app-home .og-fw-strip .app-fw-group button.is-active {
+      color: var(--og-bone);
+      background: var(--og-stone);
+      box-shadow:
+        0 1px 2px rgb(15 23 42 / 10%),
+        0 0 0 1px var(--og-line);
+    }
+
     /* ═══ brand palette, matched to the logo: white by day, deep slate by
        night, indigo primary with the logo's cyan→violet→magenta ramp ═══ */
     app-home {
@@ -1811,6 +1864,16 @@ const ORG: OrgNode[] = [
   `,
 })
 export class HomePage {
+  private readonly fwService = inject(FrameworkService);
+
+  /** Render layers a family ships in, derived from its docs route. */
+  protected readonly layersOf = (path: string): FrameworkLogoName[] => {
+    const family = path.split('/components/')[1]?.split('/')[0] ?? '';
+    return this.fwService.frameworks
+      .filter((entry) => this.fwService.supports(family, entry.id))
+      .map((entry) => entry.id as FrameworkLogoName);
+  };
+
   /** Single source: `shared/site-version.ts`, bumped with `nx release`. */
   protected readonly version = SITE_VERSION;
 
@@ -1827,12 +1890,15 @@ export class HomePage {
   protected readonly packages = [
     'oge-ui',
     '@oge-ui/core',
+    '@oge-ui/behavior',
+    '@oge-ui/react-buttons',
     '@oge-ui/grid',
     '@oge-ui/tree-list',
     '@oge-ui/pivot',
     '@oge-ui/bpmn',
     '@oge-ui/scheduler',
     '@oge-ui/gantt',
+    '@oge-ui/upload',
     '@oge-ui/kanban',
     '@oge-ui/charts',
     '@oge-ui/buttons',
@@ -1927,6 +1993,12 @@ export class HomePage {
       name: 'Gantt',
       desc: 'Task tree + timeline with dependencies, critical path and drag editing.',
       path: '/components/gantt',
+    },
+    {
+      icon: 'upload',
+      name: 'Upload',
+      desc: 'Drag & drop, restrictions with reasons, previews, chunked resumable transfer.',
+      path: '/components/upload',
     },
     {
       icon: 'columns',

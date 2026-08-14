@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 export type IconName =
+  | 'upload'
   | 'book'
   | 'sliders'
   | 'table'
@@ -265,6 +266,11 @@ export type IconName =
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <path d="M9 3v18" />
           <path d="M15 3v18" />
+        }
+        @case ('upload') {
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <path d="M17 8l-5-5-5 5" />
+          <path d="M12 3v12" />
         }
         @case ('text-cursor') {
           <path d="M5 4h1a3 3 0 0 1 3 3 3 3 0 0 1 3-3h1" />

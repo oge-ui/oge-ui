@@ -41,6 +41,20 @@ const SECTIONS = [
     <app-page-toc [sections]="sections" />
 
     <h2 id="design-tokens" class="scroll-mt-20">Design tokens</h2>
+    <p class="app-shared-note">
+      <strong>Shared across every render layer.</strong> The tokens, the theme
+      stylesheets and the component class names are one stylesheet compiled from
+      one source — the React components render the same
+      <code>.oge-*</code> classes the Angular ones do. Everything on this page
+      applies unchanged whichever framework you picked in the header. The only
+      difference lives on the
+      <a
+        class="text-indigo-600 underline dark:text-indigo-400"
+        routerLink="/getting-started/setup"
+        >setup page</a
+      >: React imports the stylesheet once at the app entry, Angular ships it
+      inside the components.
+    </p>
     <p>
       Tokens are plain CSS custom properties. Set them on
       <code>:root</code> (or any stylesheet you already own) — no build step, no

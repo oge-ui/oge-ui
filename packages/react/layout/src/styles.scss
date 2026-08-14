@@ -1,0 +1,13 @@
+// The React layout components render the exact `.oge-*` markup the Angular
+// package styles — so this stylesheet IS the Angular package's SCSS, compiled
+// into this package's own `styles.css`. No second stylesheet, no drift
+// (ADR 0001). Every partial of the Angular counterpart belongs here: adding a
+// component without its stylesheet ships an unstyled component that every
+// gate passes (see docs/ARCHITECTURE.md, "React package template").
+@use '../../../layout/src/lib/card/card';
+@use '../../../layout/src/lib/progress-bar/progress-bar';
+@use '../../../layout/src/lib/load-indicator/load-indicator';
+@use '../../../layout/src/lib/skeleton/skeleton';
+@use '../../../layout/src/lib/accordion/accordion';
+@use '../../../layout/src/lib/splitter/splitter';
+@use '../../../layout/src/lib/toolbar/toolbar';

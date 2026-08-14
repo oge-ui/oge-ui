@@ -25,6 +25,7 @@
         "tabs:build",
         "layout:build",
         "navigation:build",
+        "upload:build",
         "ui:build"
       ],
       "outputs": ["{workspaceRoot}/dist/packages/*/schematics"],

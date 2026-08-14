@@ -22,7 +22,7 @@ const SECTIONS = ['OgeTreeList'] as const;
         templates and configuration are shared with the grid — see the
         <a
           routerLink="/components/data-grid/api"
-          class="text-indigo-600 dark:text-indigo-400"
+          class="text-indigo-600 underline dark:text-indigo-400"
           >Data Grid API</a
         >
         for <code>&lt;oge-column&gt;</code> and the option objects; this page

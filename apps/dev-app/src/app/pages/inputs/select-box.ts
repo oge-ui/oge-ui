@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   OgeSelectBox,
   OgeTagBox,
@@ -6,6 +11,11 @@ import {
 } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import {
+  REACT_INPUTS_SELECT_BOX_SECTIONS,
+  ReactInputsSelectBoxDemos,
+} from '../react-inputs/select-box';
 import { PageToc } from '../../shared/page-toc';
 import {
   BASIC_SNIPPET,
@@ -42,7 +52,14 @@ interface DemoPlan {
 
 @Component({
   selector: 'app-inputs-select-box',
-  imports: [OgeSelectBox, OgeTagBox, DemoCard, DocHeader, PageToc],
+  imports: [
+    OgeSelectBox,
+    OgeTagBox,
+    DemoCard,
+    DocHeader,
+    ReactInputsSelectBoxDemos,
+    PageToc,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -56,173 +73,190 @@ interface DemoPlan {
         'signal forms',
       ]"
     >
-      <p>
-        <code>&lt;oge-select-box&gt;</code> is a drop-down select on the shared
-        field chrome: pick one item from a list, optionally filter it by typing,
-        and bind the committed value with signals, Signal Forms or reactive
-        forms. The popup follows the anchor on scroll, flips when cramped and
-        matches the field width.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          <code>&lt;OgeSelectBox /&gt;</code> from
+          <code>&#64;oge-ui/react-inputs</code> is a drop-down select on the
+          shared field chrome: pick one item from a list, optionally filter it
+          by typing, and bind the committed value with the controlled
+          <code>value</code> + <code>onValueChange</code> pair (or
+          <code>defaultValue</code> alone). The popup follows the anchor on
+          scroll, flips when cramped and matches the field width — the same list
+          machine and the same stylesheet as the Angular editor.
+        </p>
+      } @else {
+        <p>
+          <code>&lt;oge-select-box&gt;</code> is a drop-down select on the
+          shared field chrome: pick one item from a list, optionally filter it
+          by typing, and bind the committed value with signals, Signal Forms or
+          reactive forms. The popup follows the anchor on scroll, flips when
+          cramped and matches the field width.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <app-demo-card
-      heading="Basic usage"
-      description="Bind an array of strings and <code>[(value)]</code> — no mapping needed. Open with the mouse, <kbd>&darr;</kbd>, <kbd>Enter</kbd> or by typing a letter (type-ahead)."
-      [chips]="['[(value)]']"
-      [code]="basicSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-6">
-        <oge-select-box label="City" [items]="cities" [(value)]="city" />
-        <div class="pt-2 text-sm text-gray-500 dark:text-gray-400">
-          value: <code>{{ city() === null ? 'null' : city() }}</code>
+    @if (fw.isReact()) {
+      <app-react-inputs-select-box-demos />
+    } @else {
+      <app-demo-card
+        heading="Basic usage"
+        description="Bind an array of strings and <code>[(value)]</code> — no mapping needed. Open with the mouse, <kbd>&darr;</kbd>, <kbd>Enter</kbd> or by typing a letter (type-ahead)."
+        [chips]="['[(value)]']"
+        [code]="basicSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6">
+          <oge-select-box label="City" [items]="cities" [(value)]="city" />
+          <div class="pt-2 text-sm text-gray-500 dark:text-gray-400">
+            value: <code>{{ city() === null ? 'null' : city() }}</code>
+          </div>
         </div>
-      </div>
-    </app-demo-card>
+      </app-demo-card>
 
-    <app-demo-card
-      heading="Data mapping & search"
-      description="Objects map through <code>displayExpr</code>/<code>valueExpr</code> (field name or function). <code>searchEnabled</code> turns the input editable and filters client-side; <code>searchChanged</code> + <code>[loading]</code> are the server-side escape hatch."
-      [chips]="['displayExpr', 'valueExpr', 'searchEnabled']"
-      [code]="mappingSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-6">
-        <oge-select-box
-          label="Assignee"
-          [items]="users"
-          displayExpr="name"
-          valueExpr="id"
-          [searchEnabled]="true"
-          [showClearButton]="true"
-          [(value)]="assigneeId"
-        />
-        <div class="pt-2 text-sm text-gray-500 dark:text-gray-400">
-          committed id: <code>{{ assigneeId() ?? 'null' }}</code>
+      <app-demo-card
+        heading="Data mapping & search"
+        description="Objects map through <code>displayExpr</code>/<code>valueExpr</code> (field name or function). <code>searchEnabled</code> turns the input editable and filters client-side; <code>searchChanged</code> + <code>[loading]</code> are the server-side escape hatch."
+        [chips]="['displayExpr', 'valueExpr', 'searchEnabled']"
+        [code]="mappingSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6">
+          <oge-select-box
+            label="Assignee"
+            [items]="users"
+            displayExpr="name"
+            valueExpr="id"
+            [searchEnabled]="true"
+            [showClearButton]="true"
+            [(value)]="assigneeId"
+          />
+          <div class="pt-2 text-sm text-gray-500 dark:text-gray-400">
+            committed id: <code>{{ assigneeId() ?? 'null' }}</code>
+          </div>
         </div>
-      </div>
-    </app-demo-card>
+      </app-demo-card>
 
-    <app-demo-card
-      heading="Grouping & custom values"
-      description="<code>groupBy</code> (field name or function) groups flat data under headers on the fly — no pre-shaping. <code>acceptCustomValue</code> lets typed text that matches nothing become the value: <code>customItemCreating</code> maps it to an item (sync, async, or <code>null</code> to reject)."
-      [chips]="['groupBy', 'acceptCustomValue', 'customItemCreating']"
-      [code]="groupSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-6">
+      <app-demo-card
+        heading="Grouping & custom values"
+        description="<code>groupBy</code> (field name or function) groups flat data under headers on the fly — no pre-shaping. <code>acceptCustomValue</code> lets typed text that matches nothing become the value: <code>customItemCreating</code> maps it to an item (sync, async, or <code>null</code> to reject)."
+        [chips]="['groupBy', 'acceptCustomValue', 'customItemCreating']"
+        [code]="groupSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6">
+          <oge-select-box
+            label="Team member"
+            [items]="users"
+            displayExpr="name"
+            valueExpr="id"
+            groupBy="role"
+            [(value)]="memberId"
+          />
+          <oge-select-box
+            label="Tag"
+            [items]="tags()"
+            [searchEnabled]="true"
+            [acceptCustomValue]="true"
+            [showClearButton]="true"
+            hint="Type a new tag and press Enter"
+            (customItemCreating)="createTag($event)"
+            [(value)]="tag"
+          />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Lazy data"
+        description="Pass a function as <code>[items]</code> — it runs once on first open; the popup shows a localized loading row while pending and an error row on rejection. <code>selectedItem</code> resolves as soon as the data lands."
+        [chips]="['items: () => Promise', 'deferred']"
+        [code]="lazySnippet"
+        language="ts"
+      >
         <oge-select-box
-          label="Team member"
-          [items]="users"
+          label="Warehouse"
+          [items]="loadWarehouses"
+          [(value)]="warehouse"
+        />
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Tag Box — multi-select"
+        description="<code>&amp;lt;oge-tag-box&amp;gt;</code> is the multi-select sibling: the value is an <em>array</em> of <code>valueExpr</code> results, picks render as removable chips, the popup stays open while selecting (checkbox listbox, <code>aria-multiselectable</code>) and <kbd>Backspace</kbd> removes the last chip. <code>imageExpr</code> puts avatars on chips and options; <code>maxDisplayedTags</code> collapses overflow into a <code>+N</code> chip."
+        [chips]="[
+          'value: T[]',
+          'imageExpr',
+          'maxDisplayedTags',
+          'selectionChanged',
+        ]"
+        [code]="tagBoxSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6">
+          <oge-tag-box
+            label="Skills"
+            [items]="skills"
+            [searchEnabled]="true"
+            [showClearButton]="true"
+            [(value)]="selectedSkills"
+          />
+          <oge-tag-box
+            label="Team"
+            [items]="avatarUsers"
+            displayExpr="name"
+            valueExpr="id"
+            imageExpr="avatar"
+            [maxDisplayedTags]="3"
+            [(value)]="teamIds"
+          />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Item states & templates"
+        description="<code>disabledExpr</code> marks rows non-selectable (skipped by keyboard navigation too). The selected value stays resolvable even while the visible list is filtered."
+        [chips]="['disabledExpr']"
+        [code]="statesSnippet"
+        language="ts"
+      >
+        <oge-select-box
+          label="Plan"
+          [items]="plans"
           displayExpr="name"
           valueExpr="id"
-          groupBy="role"
-          [(value)]="memberId"
+          disabledExpr="soldOut"
+          hint="Sold-out plans can't be picked"
+          [(value)]="planId"
         />
-        <oge-select-box
-          label="Tag"
-          [items]="tags()"
-          [searchEnabled]="true"
-          [acceptCustomValue]="true"
-          [showClearButton]="true"
-          hint="Type a new tag and press Enter"
-          (customItemCreating)="createTag($event)"
-          [(value)]="tag"
-        />
-      </div>
-    </app-demo-card>
+      </app-demo-card>
 
-    <app-demo-card
-      heading="Lazy data"
-      description="Pass a function as <code>[items]</code> — it runs once on first open; the popup shows a localized loading row while pending and an error row on rejection. <code>selectedItem</code> resolves as soon as the data lands."
-      [chips]="['items: () => Promise', 'deferred']"
-      [code]="lazySnippet"
-      language="ts"
-    >
-      <oge-select-box
-        label="Warehouse"
-        [items]="loadWarehouses"
-        [(value)]="warehouse"
-      />
-    </app-demo-card>
-
-    <app-demo-card
-      heading="Tag Box — multi-select"
-      description="<code>&amp;lt;oge-tag-box&amp;gt;</code> is the multi-select sibling: the value is an <em>array</em> of <code>valueExpr</code> results, picks render as removable chips, the popup stays open while selecting (checkbox listbox, <code>aria-multiselectable</code>) and <kbd>Backspace</kbd> removes the last chip. <code>imageExpr</code> puts avatars on chips and options; <code>maxDisplayedTags</code> collapses overflow into a <code>+N</code> chip."
-      [chips]="[
-        'value: T[]',
-        'imageExpr',
-        'maxDisplayedTags',
-        'selectionChanged',
-      ]"
-      [code]="tagBoxSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-6">
-        <oge-tag-box
-          label="Skills"
-          [items]="skills"
-          [searchEnabled]="true"
-          [showClearButton]="true"
-          [(value)]="selectedSkills"
-        />
-        <oge-tag-box
-          label="Team"
-          [items]="avatarUsers"
-          displayExpr="name"
-          valueExpr="id"
-          imageExpr="avatar"
-          [maxDisplayedTags]="3"
-          [(value)]="teamIds"
-        />
-      </div>
-    </app-demo-card>
-
-    <app-demo-card
-      heading="Item states & templates"
-      description="<code>disabledExpr</code> marks rows non-selectable (skipped by keyboard navigation too). The selected value stays resolvable even while the visible list is filtered."
-      [chips]="['disabledExpr']"
-      [code]="statesSnippet"
-      language="ts"
-    >
-      <oge-select-box
-        label="Plan"
-        [items]="plans"
-        displayExpr="name"
-        valueExpr="id"
-        disabledExpr="soldOut"
-        hint="Sold-out plans can't be picked"
-        [(value)]="planId"
-      />
-    </app-demo-card>
-
-    <app-demo-card
-      heading="Field chrome"
-      description="Everything from the shared chrome applies: label modes, sizes, styling modes, clear button, hints, validation subscript and the <code>sm + subscriptSizing=none</code> compact grid-editor shape."
-      [chips]="['labelMode', 'size', 'stylingMode']"
-      [code]="chromeSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-6">
-        <oge-select-box
-          label="Country"
-          labelMode="floating"
-          [items]="countries"
-          [showClearButton]="true"
-          hint="Shipping destination"
-          [(value)]="country"
-        />
-        <oge-select-box
-          label="Country"
-          size="sm"
-          stylingMode="filled"
-          subscriptSizing="none"
-          [items]="countries"
-          [(value)]="country"
-        />
-      </div>
-    </app-demo-card>
+      <app-demo-card
+        heading="Field chrome"
+        description="Everything from the shared chrome applies: label modes, sizes, styling modes, clear button, hints, validation subscript and the <code>sm + subscriptSizing=none</code> compact grid-editor shape."
+        [chips]="['labelMode', 'size', 'stylingMode']"
+        [code]="chromeSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6">
+          <oge-select-box
+            label="Country"
+            labelMode="floating"
+            [items]="countries"
+            [showClearButton]="true"
+            hint="Shipping destination"
+            [(value)]="country"
+          />
+          <oge-select-box
+            label="Country"
+            size="sm"
+            stylingMode="filled"
+            subscriptSizing="none"
+            [items]="countries"
+            [(value)]="country"
+          />
+        </div>
+      </app-demo-card>
+    }
 
     <h3 id="keyboard-accessibility" class="scroll-mt-20">
       Keyboard &amp; accessibility
@@ -255,7 +289,9 @@ interface DemoPlan {
   `,
 })
 export class InputsSelectBoxPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly reactSections = REACT_INPUTS_SELECT_BOX_SECTIONS;
   protected readonly basicSnippet = BASIC_SNIPPET;
   protected readonly mappingSnippet = MAPPING_SNIPPET;
   protected readonly groupSnippet = GROUP_SNIPPET;

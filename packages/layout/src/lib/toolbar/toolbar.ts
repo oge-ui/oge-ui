@@ -18,13 +18,29 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { type DataSource } from '@oge-ui/core';
 import {
+  applyToolbarOverride,
   edgeEnabledIndex,
-  fitToolbarItems,
+  fitToolbarDescriptors,
+  isToolbarStopDisabled,
+  isToolbarTextEntry,
+  loadToolbarItems,
+  OGE_TOOLBAR_STOP_SELECTOR,
+  orderToolbarDescriptors,
+  readToolbarStyleMetrics,
   stepEnabledIndex,
-  type DataSource,
+  toolbarDataDescriptors,
+  toolbarIconVisible,
+  toolbarItemWidth,
+  toolbarMenuItems,
+  toolbarOverflowEvent,
+  toolbarScrollState,
+  toolbarTextVisible,
+  withToolbarIndexes,
   type OgeToolbarFitResult,
-} from '@oge-ui/core';
+  type OgeToolbarItemOverride,
+} from '@oge-ui/behavior';
 import {
   OgeAnchoredPanel,
   OgeMenuList,
@@ -60,9 +76,6 @@ import type {
 } from './toolbar-types';
 
 let nextToolbarId = 0;
-
-/** Elements the roving tabindex may land on. */
-const STOP_SELECTOR = 'button, [href], input, select, textarea, [tabindex]';
 
 /**
  * WAI-ARIA APG toolbar: a `role="toolbar"` container with a roving tabindex,
@@ -536,7 +549,7 @@ export class OgeToolbar {
    * does not silently undo an imperative call.
    */
   private readonly overrides = signal<
-    ReadonlyMap<string, { visible?: boolean; disabled?: boolean }>
+    ReadonlyMap<string, OgeToolbarItemOverride>
   >(new Map());
 
   /** Index into the current stop list that holds the single `tabindex="0"`. */
@@ -577,6 +590,7 @@ export class OgeToolbar {
             item.disabled(),
           cssClass: item.cssClass(),
           severity: item.severity(),
+          data: item.data(),
           active: item.active(),
           suffixIcon: item.suffixIcon(),
           iconClass: item.iconClass(),
@@ -587,49 +601,11 @@ export class OgeToolbar {
           source: item,
           contentTemplate: item.contentTemplate()?.templateRef,
         }));
-      const dataItems = [
-        ...(this.items() ?? []),
-        ...this.loadedItems(),
-        ...this.addedItems(),
-      ];
-      const fromItems = dataItems
-        .map((item, index) => ({ item, index }))
-        .filter(({ item, index }) => {
-          const override = overrides.get(item.key ?? `i${index}`);
-          return (override?.visible ?? item.visible) !== false;
-        })
-        .map(({ item, index }) => ({
-          id: item.key ?? `i${index}`,
-          key: item.key,
-          type: item.type ?? ('button' as const),
-          text: item.text,
-          icon: item.icon,
-          suffixIcon: item.suffixIcon,
-          iconClass: item.iconClass,
-          suffixIconClass: item.suffixIconClass,
-          hint: item.hint,
-          width: item.width,
-          htmlAttributes: item.htmlAttributes,
-          location: item.location ?? ('before' as const),
-          locateInMenu: item.locateInMenu ?? ('auto' as const),
-          overflowPriority: item.overflowPriority,
-          showText: item.showText,
-          showIcon: item.showIcon,
-          disabled:
-            overrides.get(item.key ?? `i${index}`)?.disabled ??
-            item.disabled ??
-            false,
-          cssClass: item.cssClass,
-          severity: item.severity ?? ('default' as const),
-          active: item.active,
-          item,
-          source: undefined,
-          contentTemplate: undefined,
-        }));
-      return [...fromChildren, ...fromItems].map((d, index) => ({
-        ...d,
-        index,
-      }));
+      const fromItems = toolbarDataDescriptors(
+        [...(this.items() ?? []), ...this.loadedItems(), ...this.addedItems()],
+        overrides,
+      );
+      return withToolbarIndexes([...fromChildren, ...fromItems]);
     },
   );
 
@@ -647,43 +623,20 @@ export class OgeToolbar {
   );
 
   /** Descriptors in visual order — the order the fitting math reasons about. */
-  private readonly ordered = computed<readonly OgeToolbarDescriptor[]>(() => {
-    const ds = this.descriptors();
-    return [
-      ...ds.filter((d) => d.location === 'before'),
-      ...ds.filter((d) => d.location === 'center'),
-      ...ds.filter((d) => d.location === 'after'),
-    ];
-  });
-
-  /** Only these two modes take entries off the bar. */
-  private readonly collapses = computed(
-    () => this.overflow() === 'menu' || this.overflow() === 'extended',
+  private readonly ordered = computed<readonly OgeToolbarDescriptor[]>(() =>
+    orderToolbarDescriptors(this.descriptors()),
   );
 
-  private readonly fit = computed<OgeToolbarFitResult>(() => {
-    const ordered = this.ordered();
-    if (!this.collapses()) {
-      return {
-        inline: ordered.map((_, i) => i),
-        inMenu: [],
-        menuVisible: false,
-      };
-    }
-    const sizes = this.itemSizes();
-    return fitToolbarItems({
+  private readonly fit = computed<OgeToolbarFitResult>(() =>
+    fitToolbarDescriptors({
+      ordered: this.ordered(),
+      overflow: this.overflow(),
+      sizes: this.itemSizes(),
       containerSize: this.containerSize(),
-      items: ordered.map((d) => ({
-        // an unmeasured item is treated as free, so it renders inline once
-        // and is measured on the next frame instead of guessing at its width
-        size: sizes.get(d.id) ?? 0,
-        policy: d.locateInMenu,
-        priority: d.overflowPriority,
-      })),
       menuButtonSize: this.menuButtonSize(),
       gap: this.gapSize(),
-    });
-  });
+    }),
+  );
 
   /** Scroll buttons are `overflow: 'scroll'` only, and only when needed. */
   protected readonly scrollArrows = computed(
@@ -715,17 +668,11 @@ export class OgeToolbar {
   protected readonly afterItems = computed(() => this.inlineIn('after'));
 
   protected readonly menuItems = computed<OgeMenuItem<number>[]>(() =>
-    this.menuDescriptors().map((d) => ({
-      text: this.menuTextVisible(d) ? (d.text ?? '') : '',
-      value: d.index,
-      icon: this.menuIconVisible(d) ? d.icon : undefined,
-      iconClass: this.menuIconVisible(d) ? d.iconClass : undefined,
-      hint: d.hint,
-      disabled: d.disabled || this.disabled(),
-      separator: d.type === 'separator' || d.type === 'spacer',
-      severity: d.severity === 'danger' ? ('danger' as const) : undefined,
-      checked: d.active,
-    })),
+    toolbarMenuItems(this.menuDescriptors(), {
+      showText: this.showText(),
+      showIcon: this.showIcon(),
+      disabled: this.disabled(),
+    }),
   );
 
   readonly menuPanel = new OgeAnchoredPanel({
@@ -828,22 +775,9 @@ export class OgeToolbar {
         this.loadedItems.set([]);
         return;
       }
-      let stale = false;
-      const reload = () => {
-        void source.load({}).then((result) => {
-          // a toolbar never groups, so the flat arm of LoadResult is the only
-          // one that can come back here
-          if (!stale) {
-            this.loadedItems.set(result.data as readonly OgeToolbarItemData[]);
-          }
-        });
-      };
-      reload();
-      const subscription = source.changes?.subscribe(() => reload());
-      onCleanup(() => {
-        stale = true;
-        subscription?.unsubscribe();
-      });
+      onCleanup(
+        loadToolbarItems(source, (items) => this.loadedItems.set(items)),
+      );
     });
     this.destroyRef.onDestroy(() => {
       this.cancelHold();
@@ -941,13 +875,8 @@ export class OgeToolbar {
     this.overrides.set(new Map());
   }
 
-  private override(
-    key: string,
-    patch: { visible?: boolean; disabled?: boolean },
-  ): void {
-    const next = new Map(this.overrides());
-    next.set(key, { ...next.get(key), ...patch });
-    this.overrides.set(next);
+  private override(key: string, patch: OgeToolbarItemOverride): void {
+    this.overrides.set(applyToolbarOverride(this.overrides(), key, patch));
   }
 
   /** Shows or hides the second row of `overflow: 'extended'`. */
@@ -970,29 +899,12 @@ export class OgeToolbar {
 
   /** `showText` resolved for the bar: `'always'` and `'onBar'` show it there. */
   protected textVisible(d: OgeToolbarDescriptor): boolean {
-    const mode = d.showText ?? this.showText();
-    return (mode === 'always' || mode === 'onBar') && d.text !== undefined;
-  }
-
-  /** `showText` resolved for a menu row: `'always'` and `'inMenu'` show it. */
-  protected menuTextVisible(d: OgeToolbarDescriptor): boolean {
-    const mode = d.showText ?? this.showText();
-    return mode === 'always' || mode === 'inMenu';
+    return toolbarTextVisible(d, this.showText());
   }
 
   /** `showIcon` resolved for the bar: `'always'` and `'onBar'` show it there. */
   protected iconVisible(d: OgeToolbarDescriptor): boolean {
-    const mode = d.showIcon ?? this.showIcon();
-    return mode === 'always' || mode === 'onBar';
-  }
-
-  /**
-   * `showIcon` resolved for a menu row — the icon twin of `menuTextVisible`.
-   * Without it a command lost its icon the moment it collapsed into the menu.
-   */
-  protected menuIconVisible(d: OgeToolbarDescriptor): boolean {
-    const mode = d.showIcon ?? this.showIcon();
-    return mode === 'always' || mode === 'inMenu';
+    return toolbarIconVisible(d, this.showIcon());
   }
 
   private holdTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1030,9 +942,7 @@ export class OgeToolbar {
 
   /** `width` as a CSS length: a bare number is pixels. */
   protected itemWidth(d: OgeToolbarDescriptor): string | null {
-    const width = d.width;
-    if (width === undefined) return null;
-    return typeof width === 'number' ? `${width}px` : width;
+    return toolbarItemWidth(d.width);
   }
 
   protected menuContextAt(index: number) {
@@ -1099,7 +1009,7 @@ export class OgeToolbar {
     // A text-entry control owns its arrow and Home/End keys for caret
     // movement — the APG warns against stealing them, and the grid's search
     // box lives on this toolbar.
-    if (isTextEntry(event.target)) return;
+    if (isToolbarTextEntry(event.target)) return;
     const stops = this.stops();
     if (stops.length === 0) return;
 
@@ -1108,7 +1018,7 @@ export class OgeToolbar {
     const nextKey = vertical ? 'ArrowDown' : rtl ? 'ArrowLeft' : 'ArrowRight';
     const prevKey = vertical ? 'ArrowUp' : rtl ? 'ArrowRight' : 'ArrowLeft';
     const current = this.activeStop(stops);
-    const disabledAt = (i: number) => isStopDisabled(stops[i]);
+    const disabledAt = (i: number) => isToolbarStopDisabled(stops[i]);
 
     let target: number | null = null;
     if (event.key === nextKey) {
@@ -1168,9 +1078,9 @@ export class OgeToolbar {
     if (this.stopCache !== null) return this.stopCache;
     const el = this.sectionsEl()?.nativeElement;
     const inSections = el
-      ? Array.from(el.querySelectorAll<HTMLElement>(STOP_SELECTOR)).filter(
-          (node) => node.closest('.oge-popup') === null,
-        )
+      ? Array.from(
+          el.querySelectorAll<HTMLElement>(OGE_TOOLBAR_STOP_SELECTOR),
+        ).filter((node) => node.closest('.oge-popup') === null)
       : [];
     const button = this.menuButton()?.nativeElement;
     this.stopCache = button ? [...inSections, button] : inSections;
@@ -1181,9 +1091,11 @@ export class OgeToolbar {
   private activeStop(stops: readonly HTMLElement[]): number {
     if (stops.length === 0) return 0;
     const wanted = Math.min(Math.max(this.focusedStop(), 0), stops.length - 1);
-    if (!isStopDisabled(stops[wanted])) return wanted;
+    if (!isToolbarStopDisabled(stops[wanted])) return wanted;
     return (
-      edgeEnabledIndex(stops.length, 1, (i) => isStopDisabled(stops[i])) ?? 0
+      edgeEnabledIndex(stops.length, 1, (i) =>
+        isToolbarStopDisabled(stops[i]),
+      ) ?? 0
     );
   }
 
@@ -1207,11 +1119,11 @@ export class OgeToolbar {
   }
 
   private reportOverflow(): void {
-    const keys = this.menuDescriptors().map((d) => d.id);
-    const serialized = keys.join(' ');
+    const payload = toolbarOverflowEvent(this.menuDescriptors());
+    const serialized = payload.keys.join(' ');
     if (serialized === this.previousMenuKeys) return;
     this.previousMenuKeys = serialized;
-    this.overflowChanged.emit({ keys, count: keys.length });
+    this.overflowChanged.emit(payload);
   }
 
   /**
@@ -1241,14 +1153,14 @@ export class OgeToolbar {
     const sections = this.sectionsEl()?.nativeElement;
     if (!sections) return;
     const vertical = this.orientation() === 'vertical';
-    const size = vertical ? sections.clientHeight : sections.clientWidth;
-    const total = vertical ? sections.scrollHeight : sections.scrollWidth;
-    const offset = Math.abs(
-      vertical ? sections.scrollTop : sections.scrollLeft,
-    );
-    this.hasScrollOverflow.set(total > size + 1);
-    this.canScrollBack.set(offset > 1);
-    this.canScrollForward.set(offset < total - size - 1);
+    const state = toolbarScrollState({
+      viewport: vertical ? sections.clientHeight : sections.clientWidth,
+      total: vertical ? sections.scrollHeight : sections.scrollWidth,
+      offset: Math.abs(vertical ? sections.scrollTop : sections.scrollLeft),
+    });
+    this.hasScrollOverflow.set(state.hasOverflow);
+    this.canScrollBack.set(state.canScrollBack);
+    this.canScrollForward.set(state.canScrollForward);
   }
 
   /**
@@ -1270,16 +1182,15 @@ export class OgeToolbar {
    * would be a forced style recalculation for a value that cannot have moved.
    */
   private measureStyleMetrics(): void {
-    const style = getComputedStyle(this.host.nativeElement);
-    this.rtl = style.direction === 'rtl';
-    const vertical = this.orientation() === 'vertical';
-    const padding = vertical
-      ? parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
-      : parseFloat(style.paddingInlineStart || style.paddingLeft) +
-        parseFloat(style.paddingInlineEnd || style.paddingRight);
-    this.paddingSize = Number.isFinite(padding) ? padding : 0;
-    const gap = parseFloat(vertical ? style.rowGap : style.columnGap);
-    if (Number.isFinite(gap) && gap !== this.gapSize()) this.gapSize.set(gap);
+    const metrics = readToolbarStyleMetrics(
+      getComputedStyle(this.host.nativeElement),
+      this.orientation() === 'vertical',
+    );
+    this.rtl = metrics.rtl;
+    this.paddingSize = metrics.padding;
+    if (metrics.gap !== null && metrics.gap !== this.gapSize()) {
+      this.gapSize.set(metrics.gap);
+    }
   }
 
   /**
@@ -1336,23 +1247,4 @@ export class OgeToolbar {
     }
     if (next) this.itemSizes.set(next);
   }
-}
-
-/** Text-entry controls keep their own arrow / Home / End behavior. */
-function isTextEntry(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  if (target.isContentEditable) return true;
-  if (target instanceof HTMLTextAreaElement) return true;
-  if (!(target instanceof HTMLInputElement)) return false;
-  return !['button', 'checkbox', 'radio', 'reset', 'submit'].includes(
-    target.type,
-  );
-}
-
-function isStopDisabled(el: HTMLElement | undefined): boolean {
-  if (!el) return true;
-  if (el.getAttribute('aria-disabled') === 'true') return true;
-  return (
-    (el as HTMLButtonElement).disabled === true || el.hasAttribute('disabled')
-  );
 }

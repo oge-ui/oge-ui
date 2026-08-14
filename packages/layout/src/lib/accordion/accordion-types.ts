@@ -1,125 +1,26 @@
-import type { OgeAsyncGuard } from '@oge-ui/core';
+import type { OgeAccordionItemData } from '@oge-ui/behavior';
 
-/** Where the expand/collapse chevron sits inside the header button. */
-export type OgeAccordionTogglePosition = 'start' | 'end';
-
-/** Spacing between panels: `default` gutters them, `flat` joins them into one stack. */
-export type OgeAccordionDisplayMode = 'default' | 'flat';
-
-/** Visual variant of the panels. */
-export type OgeAccordionStylingMode = 'outlined' | 'filled' | 'flat';
-
-/** Density of the header rows. */
-export type OgeAccordionSize = 'sm' | 'md' | 'lg';
-
-/**
- * Veto for a pending expand or collapse. Returning (or resolving to) `false`
- * blocks it; throwing or rejecting is also a veto. While a promise is pending
- * the panel shows a spinner and ignores further toggles (single-flight).
- */
-export type OgeAccordionExpandGuard = OgeAsyncGuard;
-
-/** Loads a panel's content the first time it expands. */
-export type OgeAccordionContentLoader = () => Promise<unknown>;
-
-/** Data-driven counterpart of a declarative `<oge-accordion-item>`. */
-export interface OgeAccordionItemData {
-  /** Stable identity — required for `expandedKeys` and for state to survive reordering. */
-  key?: string;
-  /** Header title. */
-  title?: string;
-  /**
-   * Plain-text panel body, rendered when no content template is supplied.
-   * The reference `html` field has no counterpart — interpolate or use a
-   * template instead of injecting markup.
-   */
-  text?: string;
-  /** Secondary line under (or beside) the title. */
-  description?: string;
-  /** SVG path data (`d`) rendered as a 24×24 aria-hidden icon before the title. */
-  icon?: string;
-  /** Pill rendered after the title. */
-  badge?: string | number;
-  /** Native `title` tooltip of the header button. */
-  hint?: string;
-  /** Blocks expanding and takes the panel out of arrow navigation. */
-  disabled?: boolean;
-  /** `false` removes the panel entirely. */
-  visible?: boolean;
-  /** Expands the panel on first render. */
-  expanded?: boolean;
-  /** Flags the section as failing validation — see `expandInvalid()`. */
-  invalid?: boolean;
-  /** Overrides the accordion's `hideToggle` for this panel. */
-  hideToggle?: boolean;
-  /** Overrides the accordion's `togglePosition` for this panel. */
-  togglePosition?: OgeAccordionTogglePosition;
-  /** Per-panel veto run before every expand and collapse. */
-  expandGuard?: OgeAccordionExpandGuard;
-  /** Loads this panel's content on first expand, with a skeleton while pending. */
-  contentLoader?: OgeAccordionContentLoader;
-}
-
-/** Cancelable pre-event of an expand. */
-export interface OgeAccordionExpandingEvent {
-  readonly index: number;
-  readonly key?: string;
-  readonly item?: OgeAccordionItemData;
-  readonly event?: Event;
-  /** Set to `true` to block the expand. */
-  cancel: boolean;
-}
-
-/** Cancelable pre-event of a collapse. */
-export interface OgeAccordionCollapsingEvent {
-  readonly index: number;
-  readonly key?: string;
-  readonly item?: OgeAccordionItemData;
-  readonly event?: Event;
-  /** Set to `true` to block the collapse. */
-  cancel: boolean;
-}
-
-/** Emitted once a panel expanded. */
-export interface OgeAccordionExpandedEvent {
-  readonly index: number;
-  readonly key?: string;
-  readonly item?: OgeAccordionItemData;
-  readonly event?: Event;
-}
-
-/** Emitted once a panel collapsed. */
-export interface OgeAccordionCollapsedEvent {
-  readonly index: number;
-  readonly key?: string;
-  readonly item?: OgeAccordionItemData;
-  readonly event?: Event;
-}
-
-/** Emitted when a header button is activated, before the expand pipeline runs. */
-export interface OgeAccordionItemClickEvent {
-  readonly index: number;
-  readonly key?: string;
-  readonly item?: OgeAccordionItemData;
-  readonly event: Event;
-}
-
-/** Emitted after a panel's `contentLoader` resolved. */
-export interface OgeAccordionContentLoadedEvent {
-  readonly index: number;
-  readonly key?: string;
-  readonly item?: OgeAccordionItemData;
-  /** Whatever the loader resolved with — also passed to the content template. */
-  readonly data: unknown;
-}
-
-/** Emitted after a panel's `contentLoader` rejected. */
-export interface OgeAccordionContentFailedEvent {
-  readonly index: number;
-  readonly key?: string;
-  readonly item?: OgeAccordionItemData;
-  readonly error: unknown;
-}
+// The accordion vocabulary, its event payloads and the `items` shape live
+// framework-free in `@oge-ui/behavior` (`accordion-core`), shared with the
+// React render layer; re-exported here so existing imports keep working. Only
+// the Angular template-slot contexts stay local — `$implicit` has no meaning
+// elsewhere.
+export type {
+  OgeAccordionTogglePosition,
+  OgeAccordionDisplayMode,
+  OgeAccordionStylingMode,
+  OgeAccordionSize,
+  OgeAccordionExpandGuard,
+  OgeAccordionContentLoader,
+  OgeAccordionItemData,
+  OgeAccordionExpandingEvent,
+  OgeAccordionCollapsingEvent,
+  OgeAccordionExpandedEvent,
+  OgeAccordionCollapsedEvent,
+  OgeAccordionItemClickEvent,
+  OgeAccordionContentLoadedEvent,
+  OgeAccordionContentFailedEvent,
+} from '@oge-ui/behavior';
 
 /** Context of `[ogeAccordionHeaderTemplate]`. */
 export interface OgeAccordionHeaderTemplateContext {

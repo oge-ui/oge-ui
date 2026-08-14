@@ -2,11 +2,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  inject,
   signal,
 } from '@angular/core';
 import { OgeCheckBox, OgeRadioGroup, OgeSwitch } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import {
+  REACT_INPUTS_TOGGLE_CONTROLS_SECTIONS,
+  ReactInputsToggleControlsDemos,
+} from '../react-inputs/toggle-controls';
 import { PageToc } from '../../shared/page-toc';
 import {
   CHECKBOX_SNIPPET,
@@ -38,6 +44,7 @@ interface DemoPlan {
     DemoCard,
     DocHeader,
     PageToc,
+    ReactInputsToggleControlsDemos,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -45,105 +52,127 @@ interface DemoPlan {
       title="Toggle Controls"
       category="Inputs"
       categoryLink="/components/inputs"
-      [chips]="['check box', 'switch', 'radio group', 'signal forms']"
+      [chips]="fw.isReact() ? reactChips : chips"
     >
-      <p>
-        Bare (chrome-free) boolean and choice controls:
-        <code>&lt;oge-check-box&gt;</code> (two- or three-state),
-        <code>&lt;oge-switch&gt;</code> (on/off with localized track text) and
-        <code>&lt;oge-radio-group&gt;</code> (WAI-ARIA radiogroup with roving
-        tabindex). All three share the select box expression vocabulary where
-        items are involved and bind via <code>[(value)]</code>, Signal Forms or
-        reactive forms.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          Bare (chrome-free) boolean and choice controls from
+          <code>&#64;oge-ui/react-inputs</code>:
+          <code>&lt;OgeCheckBox /&gt;</code> (two- or three-state),
+          <code>&lt;OgeSwitch /&gt;</code> (on/off with localized track text)
+          and <code>&lt;OgeRadioGroup /&gt;</code> (WAI-ARIA radiogroup with
+          roving tabindex). All three share the select box expression vocabulary
+          where items are involved and bind through the standard React
+          controlled/uncontrolled pair: <code>value</code> +
+          <code>onValueChange</code>, or <code>defaultValue</code> alone.
+        </p>
+      } @else {
+        <p>
+          Bare (chrome-free) boolean and choice controls:
+          <code>&lt;oge-check-box&gt;</code> (two- or three-state),
+          <code>&lt;oge-switch&gt;</code> (on/off with localized track text) and
+          <code>&lt;oge-radio-group&gt;</code> (WAI-ARIA radiogroup with roving
+          tabindex). All three share the select box expression vocabulary where
+          items are involved and bind via <code>[(value)]</code>, Signal Forms
+          or reactive forms.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <app-demo-card
-      heading="Check Box"
-      description="A real (visually hidden) native checkbox drives semantics — label clicks, <kbd>Space</kbd> and <code>aria-checked='mixed'</code> come for free. <code>value</code> is <code>boolean | null</code>: <code>null</code> always renders the indeterminate dash, and <code>threeState</code> lets users cycle into it."
-      [chips]="['boolean | null', 'threeState', 'indeterminate']"
-      [code]="checkboxSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-center gap-8">
-        <oge-check-box [(value)]="agreed">I agree to the terms</oge-check-box>
-        <oge-check-box [threeState]="true" text="Select all" [(value)]="all" />
+    @if (fw.isReact()) {
+      <app-react-inputs-toggle-controls-demos />
+    } @else {
+      <app-demo-card
+        heading="Check Box"
+        description="A real (visually hidden) native checkbox drives semantics — label clicks, <kbd>Space</kbd> and <code>aria-checked='mixed'</code> come for free. <code>value</code> is <code>boolean | null</code>: <code>null</code> always renders the indeterminate dash, and <code>threeState</code> lets users cycle into it."
+        [chips]="['boolean | null', 'threeState', 'indeterminate']"
+        [code]="checkboxSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-center gap-8">
+          <oge-check-box [(value)]="agreed">I agree to the terms</oge-check-box>
+          <oge-check-box
+            [threeState]="true"
+            text="Select all"
+            [(value)]="all"
+          />
+          <div class="text-sm text-gray-500 dark:text-gray-400">
+            select all: <code>{{ allLabel() }}</code>
+          </div>
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Switch"
+        description="A native <code>&amp;lt;button role='switch'&amp;gt;</code> with <code>aria-checked</code> and a sliding thumb. Track texts default to the localized <code>switchOn</code>/<code>switchOff</code> messages ('ON'/'OFF'); override per instance or pass empty strings to hide them. The reference swipe gesture is deliberately not replicated."
+        [chips]="['role=switch', 'onText / offText', 'messages']"
+        [code]="switchSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-center gap-8">
+          <oge-switch label="Notifications" [(value)]="notify" />
+          <oge-switch
+            label="Localized"
+            onText="AÇIK"
+            offText="KAPALI"
+            [(value)]="enabled"
+          />
+          <oge-switch label="Plain" onText="" offText="" [(value)]="plain" />
+          <oge-switch label="Small" size="sm" [(value)]="small" />
+          <oge-switch label="Disabled" [disabled]="true" [value]="true" />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Radio Group"
+        description="Flat items with <code>displayExpr</code>/<code>valueExpr</code>/<code>disabledExpr</code>; <code>layout</code> switches column/row. Arrows move focus <em>and</em> selection (wrapping, disabled skipped, RTL-aware) per the WAI-ARIA radio-group pattern."
+        [chips]="['displayExpr / valueExpr', 'layout', 'roving tabindex']"
+        [code]="radioSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-10">
+          <oge-radio-group
+            label="Plan"
+            [items]="plans"
+            displayExpr="name"
+            valueExpr="id"
+            disabledExpr="soldOut"
+            [(value)]="planId"
+          />
+          <oge-radio-group
+            label="Priority"
+            layout="horizontal"
+            [items]="priorities"
+            [(value)]="priority"
+          />
+          <div
+            class="pt-1 text-sm text-gray-500 dark:text-gray-400"
+            data-testid="plan-output"
+          >
+            plan: <code>{{ planId() ?? 'null' }}</code>
+          </div>
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Forms integration"
+        description="All three implement Signal Forms' <code>FormValueControl</code> and the classic CVA (constructor-assignment pattern) — <code>[formField]</code>, <code>formControl</code> and <code>ngModel</code> all work. <code>valueCommitted</code> carries <code>previousValue</code> and the originating event."
+        [chips]="['FormValueControl', 'CVA', 'valueCommitted']"
+        [code]="formsSnippet"
+        language="ts"
+      >
         <div class="text-sm text-gray-500 dark:text-gray-400">
-          select all: <code>{{ allLabel() }}</code>
+          See the
+          <a
+            href="/components/inputs/validation"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >validation page</a
+          >
+          for live Signal Forms demos of the shared state inputs.
         </div>
-      </div>
-    </app-demo-card>
-
-    <app-demo-card
-      heading="Switch"
-      description="A native <code>&amp;lt;button role='switch'&amp;gt;</code> with <code>aria-checked</code> and a sliding thumb. Track texts default to the localized <code>switchOn</code>/<code>switchOff</code> messages ('ON'/'OFF'); override per instance or pass empty strings to hide them. The reference swipe gesture is deliberately not replicated."
-      [chips]="['role=switch', 'onText / offText', 'messages']"
-      [code]="switchSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-center gap-8">
-        <oge-switch label="Notifications" [(value)]="notify" />
-        <oge-switch
-          label="Localized"
-          onText="AÇIK"
-          offText="KAPALI"
-          [(value)]="enabled"
-        />
-        <oge-switch label="Plain" onText="" offText="" [(value)]="plain" />
-        <oge-switch label="Small" size="sm" [(value)]="small" />
-        <oge-switch label="Disabled" [disabled]="true" [value]="true" />
-      </div>
-    </app-demo-card>
-
-    <app-demo-card
-      heading="Radio Group"
-      description="Flat items with <code>displayExpr</code>/<code>valueExpr</code>/<code>disabledExpr</code>; <code>layout</code> switches column/row. Arrows move focus <em>and</em> selection (wrapping, disabled skipped, RTL-aware) per the WAI-ARIA radio-group pattern."
-      [chips]="['displayExpr / valueExpr', 'layout', 'roving tabindex']"
-      [code]="radioSnippet"
-      language="ts"
-    >
-      <div class="flex flex-wrap items-start gap-10">
-        <oge-radio-group
-          label="Plan"
-          [items]="plans"
-          displayExpr="name"
-          valueExpr="id"
-          disabledExpr="soldOut"
-          [(value)]="planId"
-        />
-        <oge-radio-group
-          label="Priority"
-          layout="horizontal"
-          [items]="priorities"
-          [(value)]="priority"
-        />
-        <div
-          class="pt-1 text-sm text-gray-500 dark:text-gray-400"
-          data-testid="plan-output"
-        >
-          plan: <code>{{ planId() ?? 'null' }}</code>
-        </div>
-      </div>
-    </app-demo-card>
-
-    <app-demo-card
-      heading="Forms integration"
-      description="All three implement Signal Forms' <code>FormValueControl</code> and the classic CVA (constructor-assignment pattern) — <code>[formField]</code>, <code>formControl</code> and <code>ngModel</code> all work. <code>valueCommitted</code> carries <code>previousValue</code> and the originating event."
-      [chips]="['FormValueControl', 'CVA', 'valueCommitted']"
-      [code]="formsSnippet"
-      language="ts"
-    >
-      <div class="text-sm text-gray-500 dark:text-gray-400">
-        See the
-        <a
-          href="/components/inputs/validation"
-          class="text-indigo-600 dark:text-indigo-400"
-          >validation page</a
-        >
-        for live Signal Forms demos of the shared state inputs.
-      </div>
-    </app-demo-card>
+      </app-demo-card>
+    }
 
     <h3 id="keyboard-accessibility" class="scroll-mt-20">
       Keyboard &amp; accessibility
@@ -171,7 +200,21 @@ interface DemoPlan {
   `,
 })
 export class InputsToggleControlsPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly reactSections = REACT_INPUTS_TOGGLE_CONTROLS_SECTIONS;
+  protected readonly chips = [
+    'check box',
+    'switch',
+    'radio group',
+    'signal forms',
+  ];
+  protected readonly reactChips = [
+    'check box',
+    'switch',
+    'radio group',
+    'controlled props',
+  ];
   protected readonly checkboxSnippet = CHECKBOX_SNIPPET;
   protected readonly switchSnippet = SWITCH_SNIPPET;
   protected readonly radioSnippet = RADIO_SNIPPET;

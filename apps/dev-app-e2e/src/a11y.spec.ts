@@ -28,6 +28,10 @@ test('data grid overview has no axe violations', async ({ page }) => {
 });
 
 test('grouped grid with summaries has no axe violations', async ({ page }) => {
+  // the grouped grid is axe's slowest scan in the suite (~40s alone) and
+  // trips the file-wide slow() timeout (90s) under full-suite worker
+  // contention; slow() is idempotent, so raise the ceiling explicitly
+  test.setTimeout(240_000);
   await page.goto('/components/data-grid/grouping');
   await expect(page.locator('.oge-group-row').first()).toBeVisible();
   await scanGrid(page);

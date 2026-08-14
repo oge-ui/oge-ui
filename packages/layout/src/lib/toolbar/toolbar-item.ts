@@ -100,6 +100,12 @@ export class OgeToolbarItem {
   /** Emphasis of a toolbar-rendered button. */
   readonly severity = input<OgeToolbarItemSeverity>('default');
   /**
+   * Arbitrary payload echoed back on `itemClick` — the declarative
+   * counterpart of an `[items]` entry's `data`, so a handler can read it
+   * without looking the item up by index.
+   */
+  readonly data = input<unknown>(undefined);
+  /**
    * Toggle-button state — two-way. Defining it (`true` or `false`) is what
    * makes the item a toggle: it renders `aria-pressed` on the bar and a
    * checkmark in the menu, and every activation flips the value.

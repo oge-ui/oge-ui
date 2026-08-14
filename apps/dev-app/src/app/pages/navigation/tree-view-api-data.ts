@@ -272,6 +272,12 @@ export const OGE_TREE_VIEW_API: ApiSections = {
           description: 'Aria label of the tree.',
         },
         {
+          name: 'treeId',
+          type: 'string | undefined',
+          description:
+            'DOM id put on the inner <code>role="tree"</code> element — set it when an outside control (a combobox owning this tree as its popup) must point <code>aria-controls</code> at the list rather than the host.',
+        },
+        {
           name: 'messages',
           type: 'Partial&lt;OgeTreeViewMessages&gt;',
           default: '{}',

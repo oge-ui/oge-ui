@@ -39,6 +39,10 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Gantt chart: virtualized task tree + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows with cycle-safe drawing, critical path, drag editing with Escape-cancel, snapshot undo/redo and full keyboard access. Commercial, free for evaluation.',
   ],
   [
+    '/components/upload',
+    'Angular file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews, per-file progress, chunked resumable transfer with pause, resume and retry, a pluggable upload adapter, and a full keyboard and screen-reader contract. MIT.',
+  ],
+  [
     '/components/kanban',
     'Angular Kanban board: columns, swimlanes and WIP limits over a plain card array with field mapping, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar. Commercial, free for evaluation.',
   ],

@@ -1059,6 +1059,12 @@ export const OGE_CHECK_BOX_API: ApiSections = {
       title: 'OgeCheckBox',
       entries: [
         {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description: 'Text rendered beside the control.',
+        },
+        {
           name: 'value',
           type: 'model&lt;boolean | null&gt;',
           default: 'false',
@@ -1253,6 +1259,13 @@ export const OGE_CALENDAR_API: ApiSections = {
       title: 'OgeCalendar',
       entries: [
         {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Accessible name of the grid (<code>aria-label</code>); the messages supply a default.',
+        },
+        {
           name: 'value',
           type: 'model&lt;Date | null&gt;',
           default: 'null',
@@ -1364,6 +1377,20 @@ export const OGE_DATE_BOX_API: ApiSections = {
     {
       title: 'OgeDateBox',
       entries: [
+        {
+          name: 'dropdownPlacement',
+          type: 'OgePopupPlacement',
+          default: "'bottom-start'",
+          description:
+            'Preferred popup side/alignment; flips when it would clip.',
+        },
+        {
+          name: 'showDropDownButton',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Renders the rail button that toggles the picker; the field click and the keyboard still open it when hidden.',
+        },
         {
           name: 'value',
           type: 'model&lt;Date | null&gt;',
@@ -1922,9 +1949,10 @@ export const OGE_TREE_SELECT_API: ApiSections = {
           description: 'Imperative popup control.',
         },
         {
-          name: 'focus() / blur() / reset()',
+          name: 'focus() / blur() / reset() / clear()',
           type: '() => void',
-          description: 'Inherited field-chrome control methods.',
+          description:
+            'Inherited field-chrome control methods. `clear()` empties the value, commits immediately and keeps focus in the field.',
         },
       ],
     },
@@ -2182,6 +2210,20 @@ export const OGE_COLOR_BOX_API: ApiSections = {
     {
       title: 'OgeColorBox',
       entries: [
+        {
+          name: 'dropdownPlacement',
+          type: 'OgePopupPlacement',
+          default: "'bottom-start'",
+          description:
+            'Preferred popup side/alignment; flips when it would clip.',
+        },
+        {
+          name: 'showDropDownButton',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Renders the rail button that toggles the picker; the field click and the keyboard still open it when hidden.',
+        },
         {
           name: 'value',
           type: 'model&lt;string | null&gt;',

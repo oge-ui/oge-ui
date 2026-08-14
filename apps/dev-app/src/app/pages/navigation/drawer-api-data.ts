@@ -46,6 +46,13 @@ export const OGE_DRAWER_API: ApiSections = {
             "Below this <strong>container</strong> inline size the drawer downgrades to <code>'overlay'</code> and closes. Measured against the drawer's own box, never the window, so a drawer nested in a dialog or a split pane adapts to the room it actually has.",
         },
         {
+          name: 'disabled',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Blocks every open and close gesture, <code>open()</code> and <code>close()</code> included. A drawer already open stays open and stays usable; only a <code>compact</code> close still goes through, because a drawer with no room left must stop covering the content.',
+        },
+        {
           name: 'animationEnabled',
           type: 'boolean',
           default: 'true',
@@ -63,6 +70,13 @@ export const OGE_DRAWER_API: ApiSections = {
     {
       title: 'Dismissal',
       entries: [
+        {
+          name: 'showCloseButton',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Renders the built-in close button in the panel, labelled by the <code>close</code> message. It closes through the full pipeline, so <code>closeGuard</code> still applies.',
+        },
         {
           name: 'shading',
           type: 'boolean',
@@ -93,9 +107,9 @@ export const OGE_DRAWER_API: ApiSections = {
         {
           name: 'scrollLock',
           type: 'boolean',
-          default: 'true',
+          default: 'false',
           description:
-            'Locks body scroll while a modal drawer is open, through the same ref-counted lock every other OGE overlay uses.',
+            'Locks body scroll while a modal drawer is open, through the same ref-counted lock every other OGE overlay uses. Off by default, because a drawer is usually an in-page region rather than a page-level dialog.',
         },
       ],
     },
@@ -122,6 +136,12 @@ export const OGE_DRAWER_API: ApiSections = {
             'id of an element naming the panel. Wins over <code>ariaLabel</code>, which is then cleared so there is only one name.',
         },
         {
+          name: 'messages',
+          type: 'Partial&lt;OgeDrawerMessages&gt; | undefined',
+          description:
+            'Per-instance overrides of the config strings — the panel&rsquo;s fallback accessible name (<code>drawer</code>) and the close button&rsquo;s label (<code>close</code>).',
+        },
+        {
           name: 'autoFocus',
           type: "'first-tabbable' | 'panel' | 'none' | string",
           default: "'first-tabbable'",
@@ -140,7 +160,7 @@ export const OGE_DRAWER_API: ApiSections = {
           type: 'boolean',
           default: 'true',
           description:
-            'Marks the page behind a modal drawer <code>inert</code>, so neither Tab nor assistive tech can reach it. None of the four reference drawers does this.',
+            "Marks the content behind a modal drawer <code>inert</code>, so neither Tab nor assistive tech can reach it. Scoped to the drawer's own content region rather than the document, because a drawer wraps the very content it covers. None of the four reference drawers does this.",
         },
         {
           name: 'drawerId',

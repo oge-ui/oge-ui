@@ -1,44 +1,25 @@
 import { InjectionToken, type Provider } from '@angular/core';
-import type {
-  OgeCardOrientation,
-  OgeCardSize,
-  OgeCardStylingMode,
-} from './card-types';
+import {
+  OGE_DEFAULT_CARD_CONFIG,
+  resolveOgeCardConfig,
+  type OgeCardConfig,
+  type OgeCardConfigInput,
+} from '@oge-ui/behavior';
 
-/**
- * Application-wide defaults for the card. There is deliberately no `messages`
- * block: the card renders no user-facing strings and no interactive chrome of
- * its own. The moment one appears it must move into a messages interface, per
- * the house i18n rule.
- */
-export interface OgeCardConfig {
-  /** Default for the `stylingMode` input. */
-  stylingMode?: OgeCardStylingMode;
-  /** Default for the `orientation` input. */
-  orientation?: OgeCardOrientation;
-  /** Default for the `size` input. */
-  size?: OgeCardSize;
-}
-
-export const OGE_DEFAULT_CARD_CONFIG: OgeCardConfig = {};
+// The defaults and the merge rule live framework-free in `@oge-ui/behavior`
+// (`layout-core`); this file is only the Angular DI wrapper around them.
+export {
+  OGE_DEFAULT_CARD_CONFIG,
+  type OgeCardConfig,
+  type OgeCardConfigInput,
+} from '@oge-ui/behavior';
 
 export const OGE_CARD_CONFIG = new InjectionToken<OgeCardConfig>(
   'OGE_CARD_CONFIG',
   { factory: () => OGE_DEFAULT_CARD_CONFIG },
 );
 
-export type OgeCardConfigInput = Partial<OgeCardConfig>;
-
-/**
- * Application- or component-scoped card defaults:
- *
- * ```ts
- * providers: [provideOgeCardConfig({ stylingMode: 'raised' })]
- * ```
- */
+/** Application- or component-scoped card defaults. */
 export function provideOgeCardConfig(config: OgeCardConfigInput): Provider {
-  return {
-    provide: OGE_CARD_CONFIG,
-    useValue: { ...OGE_DEFAULT_CARD_CONFIG, ...config } satisfies OgeCardConfig,
-  };
+  return { provide: OGE_CARD_CONFIG, useValue: resolveOgeCardConfig(config) };
 }

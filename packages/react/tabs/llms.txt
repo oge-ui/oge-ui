@@ -1,0 +1,716 @@
+# @oge-ui/react-tabs
+
+> React tab strip and tab panel: the WAI-ARIA APG tabs pattern with declarative or data-driven tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards, drag reordering and lazy panel rendering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.
+
+Part of OGE UI v0.11.0.
+Docs and live demos: https://ogeui.com/components/tabs
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-tabs
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages:
+`@oge-ui/grid/themes/dark.css` (then put `class="oge-theme-dark"` on
+`<html>` or any subtree), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeTabPanel>
+
+#### Properties
+
+_Common — tabs & selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tabs` | `readonly OgeTabDefinition[]` | `—` | Declarative tabs — the React counterpart of the projected `` children: an item plus its `content` and optional `renderHeader`. |
+| `items` | `readonly OgeTabItem[]` | `—` | Data-driven tabs, rendered after the `tabs` entries. |
+| `selectedIndex` | `number` | `—` | Index of the selected tab — controlled when provided, so pass `onSelectedIndexChange` with it. `-1` selects none; clamped when tabs are removed. |
+| `defaultSelectedIndex` | `number` | `0` | Uncontrolled initial selection — the component owns the index from there. Never combine with `selectedIndex`. |
+| `onSelectedIndexChange` | `(index: number) => void` | `—` | The controlled half of `selectedIndex`; Angular’s `[(selectedIndex)]` model is both halves at once. |
+| `selectedKey` | `string` | `—` | Key of the selected tab — controlled when provided, reconciled with the index the same way the Angular model is. |
+| `onSelectedKeyChange` | `(key: string \| undefined) => void` | `—` | The controlled half of `selectedKey`; fires with the key of the newly selected tab. |
+| `renderTabHeader` | `(context: OgeTabHeaderContext) => ReactNode` | `—` | Shared header renderer for the `items` tabs (icons, rich markup) — the React face of `[ogeTabHeaderTemplate]`. Context: `{ item, index, selected, text }`. A `tabs` entry overrides it with its own `renderHeader`. |
+| `activation` | `'automatic' \| 'manual'` | `'automatic'` | APG activation: arrows select immediately, or move focus only until Enter/Space commits. |
+| `disabled` | `boolean` | `false` | Disables the whole component. |
+| `ariaLabel` | `string` | `—` | Aria label of the tablist. |
+| `messages` | `Partial<OgeTabsMessages>` | `—` | Per-instance overrides of the `` messages. |
+
+_Common — closing, overflow & order_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `closable` | `boolean` | `false` | Default closability; overridable per tab / per item. Closed tabs are removed by the app in `onTabClosed`. The ✕ is presentational — the keyboard path is Delete/Backspace on the focused tab. |
+| `showNavButtons` | `'auto' \| 'always' \| 'never'` | `'auto'` | Overflow nav arrows; `auto` shows them only while the strip overflows. |
+| `showTabListButton` | `boolean` | `false` | Shows the all-tabs overflow menu (the same menu list, with the active tab checked). |
+| `allowTabReordering` | `boolean` | `false` | Enables drag & drop reordering of tab headers; Escape cancels an in-flight drag. |
+
+_Common — appearance_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `stylingMode` | `'primary' \| 'secondary'` | `'primary'` | Visual variant: underline ink (`primary`) or soft pills (`secondary`). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the tab strip. |
+| `tabAlignment` | `'start' \| 'center' \| 'end' \| 'justify' \| 'stretch'` | `'start'` | Distribution of the tabs while they fit: `justify` spreads them to the edges, `stretch` gives every tab an equal share. |
+| `indicatorFit` | `'tab' \| 'content'` | `'tab'` | Whether the selected-tab indicator spans the whole tab or only its label area. |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles applied to the host element. |
+
+_Panel rendering (&lt;OgeTabPanel&gt; only)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tabsPosition` | `'top' \| 'bottom' \| 'start' \| 'end'` | `'top'` | Side the strip sits on — logical values, so RTL flips `start`/`end`. Vertical positions switch the arrow keys to Up/Down. |
+| `deferRendering` | `boolean` | `true` | Mount a panel's content only when its tab first activates. |
+| `keepAlive` | `boolean` | `true` | Keep once-rendered panels mounted (hidden) so React state survives switches; `false` unmounts lazy content on deactivation. |
+| `panelAnimation` | `'none' \| 'fade' \| 'slide'` | `'none'` | Transition played by the incoming panel; `slide` enters from the direction of travel (mirrored in RTL). Duration comes from `--oge-tab-panel-transition` (180ms) and is suppressed under `prefers-reduced-motion`. |
+| `dynamicHeight` | `boolean` | `false` | Animates the content box between the outgoing and incoming panel heights instead of jumping; async content is tracked with a `ResizeObserver`. |
+| `renderTabContent` | `(context: { item; index: number }) => ReactNode` | `—` | Panel content for the `items` tabs — the React face of `[ogeTabContentTemplate]`. A `tabs` entry carries its own `content` instead. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Focuses the active tab header (roving-tabindex target). |
+| `closeTab(target: number \| string)` | `() => void` | Runs the close pipeline (`onTabClosing` → `closeGuard` → `onTabClosed`) for an index or key. |
+| `scrollToTab(target: number \| string)` | `() => void` | Scrolls the tab at an index or with a key into view. |
+
+#### Events
+
+_Common — callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectionChanging` | `(event: OgeTabSelectionChangingEvent) => void` | Cancelable pre-event of a user-gesture selection change (set `event.cancel = true` to keep the current tab). Programmatic prop writes bypass it. |
+| `onSelectionChanged` | `(event: OgeTabSelectionChangedEvent) => void` | After the selection committed — `index/key/previousIndex/previousKey/item/event`. |
+| `onTabClick` | `(event: OgeTabClickEvent) => void` | A tab header was activated by pointer or keyboard (Enter/Space). |
+| `onTabClosing` | `(event: OgeTabClosingEvent) => void` | Cancelable pre-event of a close, before the async `closeGuard` runs. |
+| `onTabClosed` | `(event: OgeTabClosedEvent) => void` | The close passed all guards — drop the `items` / `tabs` entry from your state here. |
+| `onTabReordering` | `(event: OgeTabReorderingEvent) => void` | Cancelable pre-event of a drag-reorder drop (`fromIndex/toIndex/key`). |
+| `onTabReordered` | `(event: OgeTabReorderedEvent) => void` | A drag reorder committed to the display order. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabPanelProps` | `interface` | Extends `OgeTabsSharedProps` with the panel-rendering props above. |
+| `OgeTabsHandle` | `{ focus(); closeTab(target); scrollToTab(target) }` | Imperative handle exposed through `ref`. |
+
+### <OgeTabs>
+
+#### Properties
+
+_Strip (&lt;OgeTabs&gt; only)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Strip direction; `vertical` renders a column, maps arrows to Up/Down and sets `aria-orientation`. |
+
+_Common — tabs & selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tabs` | `readonly OgeTabDefinition[]` | `—` | Declarative tabs — the React counterpart of the projected `` children: an item plus its `content` and optional `renderHeader`. |
+| `items` | `readonly OgeTabItem[]` | `—` | Data-driven tabs, rendered after the `tabs` entries. |
+| `selectedIndex` | `number` | `—` | Index of the selected tab — controlled when provided, so pass `onSelectedIndexChange` with it. `-1` selects none; clamped when tabs are removed. |
+| `defaultSelectedIndex` | `number` | `0` | Uncontrolled initial selection — the component owns the index from there. Never combine with `selectedIndex`. |
+| `onSelectedIndexChange` | `(index: number) => void` | `—` | The controlled half of `selectedIndex`; Angular’s `[(selectedIndex)]` model is both halves at once. |
+| `selectedKey` | `string` | `—` | Key of the selected tab — controlled when provided, reconciled with the index the same way the Angular model is. |
+| `onSelectedKeyChange` | `(key: string \| undefined) => void` | `—` | The controlled half of `selectedKey`; fires with the key of the newly selected tab. |
+| `renderTabHeader` | `(context: OgeTabHeaderContext) => ReactNode` | `—` | Shared header renderer for the `items` tabs (icons, rich markup) — the React face of `[ogeTabHeaderTemplate]`. Context: `{ item, index, selected, text }`. A `tabs` entry overrides it with its own `renderHeader`. |
+| `activation` | `'automatic' \| 'manual'` | `'automatic'` | APG activation: arrows select immediately, or move focus only until Enter/Space commits. |
+| `disabled` | `boolean` | `false` | Disables the whole component. |
+| `ariaLabel` | `string` | `—` | Aria label of the tablist. |
+| `messages` | `Partial<OgeTabsMessages>` | `—` | Per-instance overrides of the `` messages. |
+
+_Common — closing, overflow & order_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `closable` | `boolean` | `false` | Default closability; overridable per tab / per item. Closed tabs are removed by the app in `onTabClosed`. The ✕ is presentational — the keyboard path is Delete/Backspace on the focused tab. |
+| `showNavButtons` | `'auto' \| 'always' \| 'never'` | `'auto'` | Overflow nav arrows; `auto` shows them only while the strip overflows. |
+| `showTabListButton` | `boolean` | `false` | Shows the all-tabs overflow menu (the same menu list, with the active tab checked). |
+| `allowTabReordering` | `boolean` | `false` | Enables drag & drop reordering of tab headers; Escape cancels an in-flight drag. |
+
+_Common — appearance_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `stylingMode` | `'primary' \| 'secondary'` | `'primary'` | Visual variant: underline ink (`primary`) or soft pills (`secondary`). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the tab strip. |
+| `tabAlignment` | `'start' \| 'center' \| 'end' \| 'justify' \| 'stretch'` | `'start'` | Distribution of the tabs while they fit: `justify` spreads them to the edges, `stretch` gives every tab an equal share. |
+| `indicatorFit` | `'tab' \| 'content'` | `'tab'` | Whether the selected-tab indicator spans the whole tab or only its label area. |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles applied to the host element. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Focuses the active tab header (roving-tabindex target). |
+| `closeTab(target: number \| string)` | `() => void` | Runs the close pipeline (`onTabClosing` → `closeGuard` → `onTabClosed`) for an index or key. |
+| `scrollToTab(target: number \| string)` | `() => void` | Scrolls the tab at an index or with a key into view. |
+
+#### Events
+
+_Common — callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectionChanging` | `(event: OgeTabSelectionChangingEvent) => void` | Cancelable pre-event of a user-gesture selection change (set `event.cancel = true` to keep the current tab). Programmatic prop writes bypass it. |
+| `onSelectionChanged` | `(event: OgeTabSelectionChangedEvent) => void` | After the selection committed — `index/key/previousIndex/previousKey/item/event`. |
+| `onTabClick` | `(event: OgeTabClickEvent) => void` | A tab header was activated by pointer or keyboard (Enter/Space). |
+| `onTabClosing` | `(event: OgeTabClosingEvent) => void` | Cancelable pre-event of a close, before the async `closeGuard` runs. |
+| `onTabClosed` | `(event: OgeTabClosedEvent) => void` | The close passed all guards — drop the `items` / `tabs` entry from your state here. |
+| `onTabReordering` | `(event: OgeTabReorderingEvent) => void` | Cancelable pre-event of a drag-reorder drop (`fromIndex/toIndex/key`). |
+| `onTabReordered` | `(event: OgeTabReorderedEvent) => void` | A drag reorder committed to the display order. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabsProps` | `interface` | Extends `OgeTabsSharedProps` with `orientation`. |
+| `OgeTabsHandle` | `{ focus(); closeTab(target); scrollToTab(target) }` | Imperative handle exposed through `ref`. |
+
+### OgeTab (OgeTabDefinition)
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | `—` | Tab label; alternative to a per-tab `renderHeader`. |
+| `key` | `string` | `—` | Stable identity used by `selectedKey`, reorder tracking and DOM ids. |
+| `disabled` | `boolean` | `false` | Disabled tabs are skipped by keyboard navigation and selection. |
+| `visible` | `boolean` | `true` | `false` removes the tab (and its panel) entirely. |
+| `closable` | `boolean` | `—` | Shows a close button; omitted, it falls back to the component-level `closable`. |
+| `badge` | `string \| number` | `—` | Badge rendered after the label. |
+| `dirty` | `boolean` | `false` | Renders the unsaved-changes dot and announces it to screen readers (`messages.dirty`). |
+| `hint` | `string` | `—` | Tooltip — rendered as the native `title` attribute. |
+| `closeGuard` | `() => boolean \| Promise<boolean>` | `—` | Veto hook run before this tab closes; may be async (single-flight, rejection = veto, pending spinner on the ✕). |
+| `content` | `ReactNode` | `—` | Panel content rendered while the tab is displayed — the React face of the content projected into an ``. |
+| `renderHeader` | `(context: OgeTabHeaderContext) => ReactNode` | `—` | Custom header for this tab alone — the React face of an `[ogeTabHeaderTemplate]` inside an ``. |
+
+#### Types
+
+_Render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabHeaderContext` | `{ item: OgeTabItem \| undefined; index: number; selected: boolean; text: string }` | Context handed to `renderHeader` / `renderTabHeader` — the React face of `OgeTabHeaderTemplateContext`. `item` is `undefined` for `tabs`-declared entries. |
+| `renderTabContent context` | `{ item: OgeTabItem; index: number }` | Context handed to ``’s `renderTabContent` — the React face of `OgeTabContentTemplateContext`. Lazy by default: it runs on first activation, honoring `deferRendering` / `keepAlive`. |
+
+### Tabs configuration
+
+#### Properties
+
+_OgeTabsConfig_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `messages` | `OgeTabsMessages` | Every user-facing string: `closeTab`, `scrollBackward`, `scrollForward`, `tabListMenu`, `dirty`, `noData`. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabsConfigProvider` | `(props: { config?: OgeTabsConfigInput; children?: ReactNode }) => JSX.Element` | Wrap a subtree to change the tabs’ user-facing strings beneath it — the React counterpart of Angular’s `provideOgeTabsConfig()`. Both shallow-merge `messages` over the same `@oge-ui/behavior` defaults, so an override reads identically in either layer. |
+| `useOgeTabsConfig()` | `() => OgeTabsConfig` | Reads the resolved config of the current subtree — how a strip of your own picks up the same messages. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTabItem` | `{ key?, text?, badge?, hint?, disabled?, visible?, closable?, dirty?, closeGuard? }` | One data-driven tab of the `items` prop. |
+| `OgeTabDefinition` | `OgeTabItem & { content?, renderHeader? }` | One declarative tab of the `tabs` prop — an item plus its panel content. |
+| `OgeTabCloseGuard` | `() => boolean \| Promise<boolean>` | Per-tab veto hook; resolving `false` (or rejecting) keeps the tab open. |
+| `OgeTabsActivation` | `'automatic' \| 'manual'` | How keyboard focus interacts with selection (APG). |
+| `OgeTabsPosition` | `'top' \| 'bottom' \| 'start' \| 'end'` | Logical strip placement of ``. |
+| `OgeTabsOrientation` | `'horizontal' \| 'vertical'` | Direction of a stand-alone `` strip. |
+| `OgeTabsNavButtonsMode` | `'auto' \| 'always' \| 'never'` | When the overflow nav arrows are shown. |
+| `OgeTabsAlignment` | `'start' \| 'center' \| 'end' \| 'justify' \| 'stretch'` | How tabs are distributed along the strip. |
+| `OgeTabsIndicatorFit` | `'tab' \| 'content'` | Width of the selected-tab indicator. |
+| `OgeTabPanelAnimation` | `'none' \| 'fade' \| 'slide'` | Transition played by the newly displayed panel. |
+| `OgeTabsStylingMode / OgeTabsSize` | `'primary' \| 'secondary' / 'sm' \| 'md' \| 'lg'` | Visual variant and density unions. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Declarative tabs
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTabPanel } from '@oge-ui/react-tabs';
+import type { OgeTabSelectionChangedEvent } from '@oge-ui/react-tabs';
+
+export function DeclarativeTabsDemo() {
+  const [index, setIndex] = useState(0);
+  const [lastChange, setLastChange] = useState<OgeTabSelectionChangedEvent | null>(null);
+  return (
+    <>
+      <OgeTabPanel
+        selectedIndex={index}
+        onSelectedIndexChange={setIndex}
+        onSelectionChanged={setLastChange}
+        tabs={[
+          { text: 'Overview', content: <p>Project overview — selected index: {index}</p> },
+          { text: 'Activity', content: <p>Latest activity feed…</p> },
+          { text: 'Settings', disabled: true, content: <p>Settings…</p> },
+        ]}
+      />
+      {lastChange && (
+        <p className="mt-2 text-sm opacity-70">
+          selectionChanged → index {lastChange.index} (from {lastChange.previousIndex})
+        </p>
+      )}
+    </>
+  );
+}
+```
+
+### Data-driven items
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTabPanel } from '@oge-ui/react-tabs';
+import type { OgeTabItem } from '@oge-ui/react-tabs';
+
+const docs: OgeTabItem[] = [
+  { key: 'readme', text: 'README.md' },
+  { key: 'spec', text: 'spec.ts', badge: 3 },
+  { key: 'draft', text: 'draft.md', dirty: true },
+];
+
+export function ItemsDemo() {
+  const [activeDoc, setActiveDoc] = useState<string | undefined>('readme');
+  return (
+    <OgeTabPanel
+      items={docs}
+      selectedKey={activeDoc}
+      onSelectedKeyChange={setActiveDoc}
+      renderTabContent={({ item }) => (
+        <p>
+          Editing <b>{item.text}</b> — selectedKey: <code>{activeDoc}</code>
+        </p>
+      )}
+    />
+  );
+}
+```
+
+### Lazy rendering & keep-alive
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTabPanel } from '@oge-ui/react-tabs';
+
+/** Stamps its creation time — makes lazy/keep-alive behavior visible. */
+function CreatedAt() {
+  const [createdAt] = useState(() => new Date().toLocaleTimeString());
+  return <span className="text-sm opacity-70">created at {createdAt}</span>;
+}
+
+export function LazyDemo() {
+  const [keepAlive, setKeepAlive] = useState(true);
+  return (
+    <>
+      <label className="mb-2 flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={keepAlive}
+          onChange={() => setKeepAlive((value) => !value)}
+        />
+        keepAlive
+      </label>
+      <OgeTabPanel
+        keepAlive={keepAlive}
+        tabs={[
+          { text: 'First', content: <CreatedAt /> },
+          { text: 'Second', content: <CreatedAt /> },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+### Closable tabs & async close guard
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeTabPanel } from '@oge-ui/react-tabs';
+import type { OgeTabItem } from '@oge-ui/react-tabs';
+
+export function ClosableDemo() {
+  const [notice, setNotice] = useState('');
+  const armedUntil = useRef(0);
+
+  /** First attempt arms a 3s window; a second attempt inside it allows. */
+  const confirmDiscard = (): Promise<boolean> => {
+    const now = Date.now();
+    if (now < armedUntil.current) {
+      armedUntil.current = 0;
+      return Promise.resolve(true);
+    }
+    armedUntil.current = now + 3000;
+    return new Promise((resolve) =>
+      setTimeout(() => {
+        setNotice('closeGuard vetoed — close again within 3s to discard changes');
+        resolve(false);
+      }, 600),
+    );
+  };
+
+  const buildFiles = (): OgeTabItem[] => [
+    { key: 'a.ts', text: 'a.ts' },
+    { key: 'b.ts', text: 'b.ts (guarded)', dirty: true, closeGuard: confirmDiscard },
+    { key: 'c.ts', text: 'c.ts' },
+  ];
+
+  const [files, setFiles] = useState<OgeTabItem[]>(buildFiles);
+  return (
+    <>
+      <OgeTabPanel
+        items={files}
+        closable
+        onTabClosed={(event) => {
+          setFiles((current) => current.filter((file) => file.key !== event.key));
+          setNotice('');
+        }}
+        renderTabContent={({ item }) => <p>{item.text} content…</p>}
+      />
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          type="button"
+          className="rounded border px-2 py-1 text-sm"
+          onClick={() => {
+            setFiles(buildFiles());
+            setNotice('');
+          }}
+        >
+          Reset tabs
+        </button>
+        {notice && <span className="text-sm opacity-70">{notice}</span>}
+      </div>
+    </>
+  );
+}
+```
+
+### Overflow: arrows & all-tabs menu
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTabs } from '@oge-ui/react-tabs';
+import type { OgeTabItem } from '@oge-ui/react-tabs';
+
+const manyTabs: OgeTabItem[] = Array.from({ length: 14 }, (_, i) => ({
+  key: `ch${i + 1}`,
+  text: `Chapter ${i + 1}`,
+  disabled: i === 5,
+}));
+
+export function OverflowDemo() {
+  const [index, setIndex] = useState(0);
+  return (
+    <>
+      <OgeTabs
+        items={manyTabs}
+        selectedIndex={index}
+        onSelectedIndexChange={setIndex}
+        showTabListButton
+        ariaLabel="Chapters"
+      />
+      <p className="mt-2 text-sm opacity-70">selected: {manyTabs[index].text}</p>
+    </>
+  );
+}
+```
+
+### Drag reorder
+
+```ts
+'use client';
+
+import { OgeTabPanel } from '@oge-ui/react-tabs';
+import type { OgeTabItem } from '@oge-ui/react-tabs';
+
+const stages: OgeTabItem[] = [
+  { key: 'todo', text: 'To do' },
+  { key: 'doing', text: 'In progress' },
+  { key: 'review', text: 'Review' },
+  { key: 'done', text: 'Done' },
+];
+
+export function ReorderDemo() {
+  return (
+    <OgeTabPanel
+      items={stages}
+      allowTabReordering
+      onTabReordered={(event) => console.log(event.fromIndex, '→', event.toIndex)}
+      renderTabContent={({ item }) => <p>{item.text} stage…</p>}
+    />
+  );
+}
+```
+
+### Positions & styling
+
+```ts
+'use client';
+
+import { OgeTabPanel } from '@oge-ui/react-tabs';
+
+export function PositionDemo() {
+  return (
+    <OgeTabPanel
+      tabsPosition="start"
+      stylingMode="secondary"
+      size="sm"
+      tabs={[
+        { text: 'General', content: <p>General project settings…</p> },
+        { text: 'Members', content: <p>Member management…</p> },
+        { text: 'Danger zone', content: <p>Careful now…</p> },
+      ]}
+    />
+  );
+}
+```
+
+### Alignment, indicator & empty state
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTabs } from '@oge-ui/react-tabs';
+import type { OgeTabItem, OgeTabsAlignment } from '@oge-ui/react-tabs';
+
+const stages: OgeTabItem[] = [
+  { key: 'todo', text: 'To do' },
+  { key: 'doing', text: 'In progress' },
+  { key: 'review', text: 'Review' },
+  { key: 'done', text: 'Done' },
+];
+
+const alignments: OgeTabsAlignment[] = [
+  'start',
+  'center',
+  'end',
+  'justify',
+  'stretch',
+];
+
+export function AlignmentDemo() {
+  const [alignment, setAlignment] = useState<OgeTabsAlignment>('start');
+  const [fitIndicator, setFitIndicator] = useState(false);
+  const [index, setIndex] = useState(0);
+  return (
+    <>
+      <div className="mb-3 flex flex-wrap items-center gap-4 text-sm">
+        <label className="flex items-center gap-2">
+          alignment
+          <select
+            className="rounded border px-2 py-1"
+            value={alignment}
+            onChange={(event) =>
+              setAlignment(event.target.value as OgeTabsAlignment)
+            }
+          >
+            {alignments.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={fitIndicator}
+            onChange={() => setFitIndicator((value) => !value)}
+          />
+          indicatorFit = content
+        </label>
+      </div>
+      <OgeTabs
+        items={stages}
+        tabAlignment={alignment}
+        indicatorFit={fitIndicator ? 'content' : 'tab'}
+        selectedIndex={index}
+        onSelectedIndexChange={setIndex}
+        ariaLabel="Alignment demo"
+      />
+      <p className="mt-4 mb-1 text-sm opacity-70">Empty strip:</p>
+      <OgeTabs items={[]} ariaLabel="Empty demo" />
+    </>
+  );
+}
+```
+
+### Panel transitions
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTabPanel } from '@oge-ui/react-tabs';
+import type { OgeTabPanelAnimation } from '@oge-ui/react-tabs';
+
+const animations: OgeTabPanelAnimation[] = ['none', 'fade', 'slide'];
+
+const tallLines = [
+  'Tab panels can differ a lot in height.',
+  'Without dynamicHeight the page jumps as you switch.',
+  'With it, the content box animates between the two heights.',
+  'The transition honours prefers-reduced-motion.',
+  'And async content is picked up by a ResizeObserver.',
+];
+
+export function AnimationDemo() {
+  const [panelAnimation, setPanelAnimation] =
+    useState<OgeTabPanelAnimation>('slide');
+  const [dynamicHeight, setDynamicHeight] = useState(true);
+  const [index, setIndex] = useState(0);
+  return (
+    <>
+      <div className="mb-3 flex flex-wrap items-center gap-4 text-sm">
+        <label className="flex items-center gap-2">
+          panelAnimation
+          <select
+            className="rounded border px-2 py-1"
+            value={panelAnimation}
+            onChange={(event) =>
+              setPanelAnimation(event.target.value as OgeTabPanelAnimation)
+            }
+          >
+            {animations.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={dynamicHeight}
+            onChange={() => setDynamicHeight((value) => !value)}
+          />
+          dynamicHeight
+        </label>
+      </div>
+      <OgeTabPanel
+        panelAnimation={panelAnimation}
+        dynamicHeight={dynamicHeight}
+        selectedIndex={index}
+        onSelectedIndexChange={setIndex}
+        tabs={[
+          { text: 'Short', content: <p>One line of content.</p> },
+          {
+            text: 'Medium',
+            content: (
+              <>
+                <p>A few more lines.</p>
+                <p>So the panel is noticeably taller than the first one.</p>
+              </>
+            ),
+          },
+          {
+            text: 'Tall',
+            content: (
+              <>
+                {tallLines.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </>
+            ),
+          },
+        ]}
+      />
+    </>
+  );
+}
+```
+

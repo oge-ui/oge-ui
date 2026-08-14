@@ -16,7 +16,10 @@ test('renders the APG landmark contract', async ({ page }) => {
   await expect(nav).toBeVisible();
   // Distinct per instance — several breadcrumbs share the docs page, and axe
   // landmark-unique requires distinguishable landmark labels.
-  await expect(nav).toHaveAttribute('aria-label', 'Breadcrumb — getting started');
+  await expect(nav).toHaveAttribute(
+    'aria-label',
+    'Breadcrumb — getting started',
+  );
   await expect(nav.locator('ol')).toHaveCount(1);
 
   const crumbs = nav.locator('.oge-breadcrumb-item');

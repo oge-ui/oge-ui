@@ -1,22 +1,18 @@
 import { InjectionToken, type Provider } from '@angular/core';
-import type { OgeSkeletonAnimation, OgeSkeletonShape } from './skeleton-types';
+import {
+  OGE_DEFAULT_SKELETON_CONFIG,
+  resolveOgeSkeletonConfig,
+  type OgeSkeletonConfig,
+  type OgeSkeletonConfigInput,
+} from '@oge-ui/behavior';
 
-/**
- * Application-wide defaults for the skeleton. There is deliberately no
- * `messages` block: a skeleton is `aria-hidden` decoration and renders no
- * user-facing strings — the loading REGION owns the announcement
- * (`aria-busy` plus a visually-hidden status text). The moment a string
- * appears here it must move into a messages interface, per the house i18n
- * rule.
- */
-export interface OgeSkeletonConfig {
-  /** Default for the `shape` input. */
-  shape?: OgeSkeletonShape;
-  /** Default for the `animation` input. */
-  animation?: OgeSkeletonAnimation;
-}
-
-export const OGE_DEFAULT_SKELETON_CONFIG: OgeSkeletonConfig = {};
+// The defaults and the merge rule live framework-free in `@oge-ui/behavior`
+// (`layout-core`); this file is only the Angular DI wrapper around them.
+export {
+  OGE_DEFAULT_SKELETON_CONFIG,
+  type OgeSkeletonConfig,
+  type OgeSkeletonConfigInput,
+} from '@oge-ui/behavior';
 
 export const OGE_SKELETON_CONFIG = new InjectionToken<OgeSkeletonConfig>(
   'OGE_SKELETON_CONFIG',
@@ -25,17 +21,12 @@ export const OGE_SKELETON_CONFIG = new InjectionToken<OgeSkeletonConfig>(
   },
 );
 
-export type OgeSkeletonConfigInput = Partial<OgeSkeletonConfig>;
-
 /** Application- or component-scoped skeleton defaults. */
 export function provideOgeSkeletonConfig(
   config: OgeSkeletonConfigInput,
 ): Provider {
   return {
     provide: OGE_SKELETON_CONFIG,
-    useValue: {
-      ...OGE_DEFAULT_SKELETON_CONFIG,
-      ...config,
-    } satisfies OgeSkeletonConfig,
+    useValue: resolveOgeSkeletonConfig(config),
   };
 }

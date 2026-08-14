@@ -1,0 +1,3261 @@
+# @oge-ui/react-inputs
+
+> React form editors on the same field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete (virtual scrolling, custom values), CheckBox, Switch, RadioGroup, Slider/RangeSlider, ColorBox, Calendar and DateBox/DateRangeBox — running the same commit pipeline, list/selection machines and stylesheet as the Angular package.
+
+Part of OGE UI v0.11.0.
+Docs and live demos: https://ogeui.com/components/inputs
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-inputs
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages:
+`@oge-ui/grid/themes/dark.css` (then put `class="oge-theme-dark"` on
+`<html>` or any subtree), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeTextBox>
+
+#### Properties
+
+_OgeTextBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `string` | `''` | The editor value. Controlled with `value` + `onValueChange`, or uncontrolled starting from `defaultValue` — the React half of Angular’s `[(value)]`. |
+| `mode` | `OgeTextBoxMode` | `'text'` | Native input type. `password` auto-enables the reveal toggle. |
+| `maxLength` | `number` | `—` | Counter denominator; enforced natively while `counterMode` is `'limit'`. |
+| `minLength` | `number` | `—` | Native `minlength` attribute. |
+| `showCounter` | `boolean` | `false` | Renders the grapheme-accurate character counter in the subscript end slot. |
+| `counterMode` | `OgeInputCounterMode` | `'limit'` | Enforce `maxLength` natively, or allow typing past it and color the counter. |
+| `revealable` | `boolean` | `true` | Password reveal toggle; on by default for `mode="password"`. Preserves caret/selection when toggling. |
+| `showCopyButton` | `boolean` | `false` | Copy-to-clipboard rail button (API keys, tokens…); copies the live text. |
+| `autocomplete` | `string` | `—` | Native `autocomplete` attribute. |
+| `inputMode` | `string` | `—` | Native `inputmode` attribute. |
+| `enterKeyHint` | `string` | `—` | Native `enterkeyhint` attribute. |
+| `autocapitalize` | `string` | `—` | Native `autocapitalize` attribute. |
+| `spellcheck` | `boolean` | `—` | `undefined` omits the attribute (browser default). |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTextBoxProps` | `interface` | Extends `OgeControlProps` with everything above. |
+| `OgeTextBoxHandle` | `{ focus(); blur(); clear() }` | Imperative handle exposed through `ref`. |
+
+### <OgeTextArea>
+
+#### Properties
+
+_OgeTextArea_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `string` | `''` | The editor value — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `rows` | `number` | `3` | Visible rows when `autoResize` is off; the floor when it is on. |
+| `autoResize` | `boolean` | `false` | Grow/shrink with content between `minRows` and `maxRows`. |
+| `minRows` | `number` | `—` | Defaults to `rows`. |
+| `maxRows` | `number` | `—` | `undefined` = unbounded growth. |
+| `maxLength` | `number` | `—` | Counter denominator / native cap. |
+| `minLength` | `number` | `—` | Native `minlength` attribute. |
+| `showCounter` | `boolean` | `false` | Grapheme-accurate character counter. |
+| `counterMode` | `OgeInputCounterMode` | `'limit'` | Enforce `maxLength` natively, or soft-cap. |
+| `spellcheck` | `boolean` | `true` | Non-optional here, unlike the text box. |
+| `autocapitalize` | `string` | `—` | Native `autocapitalize` attribute. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTextAreaHandle` | `{ focus(); blur(); clear() }` | Imperative handle exposed through `ref`. |
+| `measureTextAreaHeight(el, minRows, maxRows?)` | `number` | Fallback auto-resize measurement for browsers without CSS `field-sizing: content` — the same helper the Angular package exports. |
+
+### <OgeNumberBox>
+
+#### Properties
+
+_OgeNumberBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `number \| null` | `null` | `null` is the empty state — never `0`. Controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `min` | `number` | `—` | Lower bound — values clamp on commit (typing is never blocked). |
+| `max` | `number` | `—` | Upper bound — clamped on commit. |
+| `step` | `number` | `1` | Spin/arrow-key increment. Spinning commits immediately. |
+| `showSpinButtons` | `boolean` | `false` | Up/down spin buttons with hold-to-repeat. |
+| `format` | `Intl.NumberFormatOptions` | `—` | Display formatting applied while unfocused; focus shows the raw number. `style: 'percent'` formats display only — the value is not rescaled. |
+| `locale` | `string` | `—` | Overrides the runtime locale (React has no `LOCALE_ID`; the config provider carries the default). |
+| `mode` | `OgeNumberBoxMode` | `'text'` | Native `type` attribute; `inputmode` is always `decimal`. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeNumberBoxHandle` | `{ focus(); blur(); clear() }` | Imperative handle exposed through `ref`. |
+
+### <OgeSelectBox>
+
+#### Properties
+
+_OgeSelectBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `unknown` | `null` | Committed value (the `valueExpr` of the selected item) — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `items` | `readonly TItem[] \| OgeSelectItemsFn<TItem>` | `[]` | The selectable items: an array, or a function invoked lazily on first open (sync or promise; loading/error rows render while pending). The selected item is resolved from this full set, never the filtered one. |
+| `displayExpr` | `string \| ((item) => string)` | `—` | Item &rarr; display text. Omitted, the item itself is stringified. |
+| `valueExpr` | `string \| ((item) => unknown)` | `—` | Item &rarr; committed value. Omitted, the whole item is the value. |
+| `disabledExpr` | `string \| ((item) => boolean)` | `—` | Marks individual items as non-selectable. |
+| `searchEnabled` | `boolean` | `false` | Enables typing into the field to filter the list. |
+| `searchMode` | `'contains' \| 'startswith'` | `'contains'` | How typed search text matches an item. |
+| `searchExpr` | `string \| string[] \| ((item) => string)` | `—` | Which text the filter matches; defaults to the display text. |
+| `minSearchLength` | `number` | `0` | Characters required before the filter narrows the list. |
+| `showDataBeforeSearch` | `boolean` | `false` | Below `minSearchLength`: show the full list (`true`) or nothing (`false`). |
+| `searchTimeout` | `number` | `—` | Debounce before typed text filters the list; `undefined` = config default (250ms). The displayed text is never debounced. |
+| `acceptCustomValue` | `boolean` | `false` | Lets typed text that matches no item become the value (committed on Enter/blur) — see `onCustomItemCreating`. |
+| `groupBy` | `string \| ((item) => string)` | `—` | Groups flat items under headers; items are re-ordered by first-seen group. |
+| `imageExpr` | `string \| ((item) => string)` | `—` | Item &rarr; image URL rendered before the option text (avatars, flags…). For inline SVG icons use `renderItem`. |
+| `showDropDownButton` | `boolean` | `true` | Renders the chevron toggle in the field rail. |
+| `openOnFieldClick` | `boolean` | `true` | Clicking the field opens the popup (select-only mode toggles it). |
+| `loading` | `boolean` | `false` | Shows a loading row instead of items — server-side filtering escape hatch. |
+| `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred popup side/alignment (flips when cramped). |
+| `dropdownWidth` | `number \| 'anchor'` | `'anchor'` | Popup width: fixed pixels or `'anchor'` to match the field box. |
+| `dropdownMaxHeight` | `number` | `—` | Scrollable list height cap; `undefined` = the CSS default (320px). |
+| `wrapItemText` | `boolean` | `false` | Wraps long option text instead of ellipsizing it. |
+| `useItemTextAsTitle` | `boolean` | `false` | Mirrors each option's display text into its `title` attribute. |
+| `renderItem` | `(item: TItem, context: { index; selected; active }) => ReactNode` | `—` | Custom option row rendering — the render prop replacing Angular’s `itemTemplate`; the context carries the same fields the template context does. |
+| `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists (`{ itemHeight, overscan }`). Rows get a fixed size-matched height; `groupBy` and `wrapItemText` are ignored while active. |
+| `opened / defaultOpened` | `boolean` | `false` | Popup visibility — controlled with `opened` + `onOpenedChange`, or uncontrolled from `defaultOpened`. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeSelectBox handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open()` | `() => void` | Opens the popup (no-op while disabled/readonly). |
+| `close()` | `() => void` | Closes the popup. |
+| `toggle()` | `() => void` | Toggles the popup. |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_OgeSelectBox callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectionChange` | `(event: OgeSelectBoxSelectionChangedEvent<TItem>) => void` | The resolved selected item changed (user or programmatic) — `{ item, previousItem }`. |
+| `onItemClick` | `(event: OgeSelectBoxItemClickEvent<TItem>) => void` | An option row was activated — `{ item, index, event }`; `index` is within the visible (filtered) list. |
+| `onDropDownOpened / onDropDownClosed` | `() => void` | Popup visibility changes, from any trigger. |
+| `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened` — fires for every open and close. |
+| `onSearchChange` | `(event: { text: string }) => void` | Raw search text on every keystroke — drive server-side filtering from here. |
+| `onCustomItemCreating` | `(payload: OgeSelectBoxCustomItemEvent<TItem>) => void` | Mutable payload (as in the references): assign `customItem` — an item, a promise of one, or `null` to reject the text. Left unset, the raw text becomes the item. |
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+_Select box types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSelectBoxHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handle exposed through `ref`. |
+| `OgeSelectBoxSelectionChangedEvent<TItem>` | `{ item: TItem \| null; previousItem: TItem \| null }` | Payload of `onSelectionChange`. |
+| `OgeSelectBoxItemClickEvent<TItem>` | `{ item; index; event }` | Payload of `onItemClick`. |
+| `OgeSelectBoxCustomItemEvent<TItem>` | `{ text: string; customItem?: TItem \| null \| PromiseLike<TItem \| null> }` | The mutable payload of `onCustomItemCreating`. |
+
+### <OgeTreeSelect>
+
+#### Properties
+
+_Value & data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `RowKey \| readonly RowKey[] \| null` | `null` | Committed value — the selected node's key in `single` mode, an array of keys in `multiple`. Controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `items` | `readonly TItem[] \| undefined` | `—` | Nodes to display — a flat parent-referencing list or nested children. |
+| `keyExpr / parentIdExpr / itemsExpr` | `string \| ((row: TItem) => …)` | `—` | Identity and structure accessors, forwarded to the popup tree. `itemsExpr` switches to hierarchical data. |
+| `displayExpr` | `string \| ((row: TItem) => unknown)` | `'text'` | Node label, used both in the tree and for the text shown in the closed field. |
+| `disabledExpr / hasItemsExpr / iconExpr / rootValue / dataStructure` | `see OgeTreeView` | `—` | Forwarded verbatim to the popup tree. |
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `'single' \| 'multiple'` | `'single'` | `multiple` makes `value` an array and keeps the popup open while picking. |
+| `showCheckBoxes` | `'none' \| 'normal' \| 'selectAll'` | `'none'` | Checkbox column inside the popup. |
+| `selectNodesRecursive` | `boolean` | `true` | Cascades selection down to descendants and up to fully-selected parents. |
+| `selectedKeysMode` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` | `'all'` | Projection applied to the committed keys — `leavesOnly` is usually what you want to store from a cascade. |
+| `displayMode` | `'text' \| 'count'` | `'text'` | Closed-field rendering for a multiple selection: the joined labels, or just how many are picked. |
+
+_Popup_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `opened / defaultOpened` | `boolean` | `false` | Popup visibility — controlled with `opened` + `onOpenedChange`, or uncontrolled from `defaultOpened`. |
+| `expandedKeys / defaultExpandedKeys` | `readonly RowKey[]` | `[]` | Expanded nodes — controlled with `onExpandedKeysChange`, or uncontrolled from `defaultExpandedKeys`, so the shape survives close and reopen. |
+| `expandEvent` | `'click' \| 'dblclick'` | `'dblclick'` | Which gesture expands inside the popup. Unlike the bare tree this defaults to `dblclick` — in a picker a single click should choose, and the chevron expands either way. |
+| `searchEnabled / searchMode / filterMode` | `see OgeTreeView` | `—` | Puts the tree's own search box inside the popup. |
+| `loadChildren` | `(parent: TItem, key: RowKey) => Promise<readonly TItem[]>` | `—` | Lazy children, fetched on first expand. |
+| `virtualScroll` | `boolean \| { itemHeight: number }` | `false` | Windowed rendering inside the popup for very large trees. |
+| `dropdownPlacement / dropdownWidth / dropdownMaxHeight` | `OgePopupPlacement \| number \| 'anchor'` | `—` | Popup geometry. Width defaults to `'anchor'` (matches the field), max height to 320px. |
+| `openOnFieldClick` | `boolean` | `true` | Opens on a click anywhere in the field, not only on the chevron. |
+
+#### Methods
+
+_OgeTreeSelectHandle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `() => void` | Imperative popup control (no-op while disabled/readonly). |
+| `focus() / blur() / clear()` | `() => void` | Field-chrome control methods. `clear()` commits the empty value and keeps focus in the field. |
+
+#### Events
+
+_OgeTreeSelect callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectionChanged` | `(event: OgeTreeSelectSelectionChangedEvent) => void` | Fires after the committed selection changed, with `keys` and `previousKeys` (always arrays, even in single mode). |
+| `onDropDownOpened / onDropDownClosed` | `() => void` | Popup lifecycle, from any trigger. |
+| `onValueChange` | `(value: unknown) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value; previousValue; event }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes). |
+| `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened` — fires for every open and close. |
+| `onExpandedKeysChange` | `(keys: readonly RowKey[]) => void` | The controlled half of `expandedKeys`. |
+
+#### Types
+
+_Tree select types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTreeSelectHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handle exposed through `ref`. |
+| `OgeTreeSelectSelectionMode` | `'single' \| 'multiple'` | How many nodes may be committed. |
+| `OgeTreeSelectDisplayMode` | `'text' \| 'count'` | Closed-field rendering of a multiple selection. |
+| `OgeTreeSelectSelectionChangedEvent` | `{ keys: readonly RowKey[]; previousKeys: readonly RowKey[] }` | Payload of `onSelectionChanged`. |
+
+### <OgeTagBox>
+
+#### Properties
+
+_OgeTagBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `readonly unknown[]` | `[]` | Committed values — the `valueExpr` of every selected item; controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `items / displayExpr / valueExpr / disabledExpr / imageExpr` | `shared with OgeSelectBox` | `—` | The tag box reuses the select box expression vocabulary verbatim. |
+| `searchEnabled / searchMode / searchExpr` | `shared with OgeSelectBox` | `—` | Client-side filtering of the option list. |
+| `showSelectionControls` | `boolean` | `true` | Renders checkboxes in front of the options. |
+| `hideSelectedItems` | `boolean` | `false` | Hides already-selected items from the popup list. |
+| `maxDisplayedTags` | `number` | `—` | Caps the rendered chips; the rest collapse into a `+N` chip. |
+| `opened / defaultOpened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick` | `shared with OgeSelectBox` | `—` | Popup configuration and the controlled/uncontrolled visibility pair. |
+| `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeTagBox handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `() => void` | Popup control (no-ops while disabled/readonly). |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_OgeTagBox callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectionChange` | `(event: OgeTagBoxSelectionChangedEvent<TItem>) => void` | Per-commit delta — `{ addedItems, removedItems }`. |
+| `onItemClick` | `(event: OgeTagBoxItemClickEvent<TItem>) => void` | An option row was toggled — `{ item, index, event }`. |
+| `onDropDownOpened / onDropDownClosed` | `() => void` | Popup visibility changes, from any trigger. |
+| `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened`. |
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTagBoxHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handle exposed through `ref`. |
+| `OgeTagBoxSelectionChangedEvent<TItem>` | `{ addedItems; removedItems }` | Payload of `onSelectionChange`. |
+
+### <OgeAutocomplete>
+
+#### Properties
+
+_OgeAutocomplete_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `string` | `''` | The typed text — the committed value is the string itself, not an item value; controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `items` | `readonly TItem[] \| OgeSelectItemsFn<TItem>` | `[]` | The suggestion items: an array, or a function invoked lazily on first open (sync or promise; loading/error rows render while pending). |
+| `displayExpr / disabledExpr / imageExpr / searchExpr / searchMode / groupBy / renderItem` | `shared with OgeSelectBox` | `—` | The autocomplete reuses the select box expression vocabulary and list rendering verbatim (no `valueExpr` — the value is text). |
+| `minSearchLength` | `number` | `1` | Characters required before suggestions open while typing; deleting below the threshold closes the list. |
+| `maxItemCount` | `number` | `10` | Caps the rendered suggestion list. |
+| `searchTimeout` | `number` | `—` | Debounce before typed text filters the list; `undefined` = config default (250ms). The displayed text is never debounced. |
+| `forceSelection` | `boolean` | `false` | Reverts non-matching text to the last committed value on blur; an exact display match resolves to the item with its canonical casing. |
+| `searchHighlight` | `boolean` | `true` | Marks the matched part of each suggestion (``). |
+| `showDropDownButton` | `boolean` | `false` | Renders the chevron toggle in the field rail (off by default — reference parity). |
+| `openOnFieldClick` | `boolean` | `false` | Clicking the field opens the suggestion list. |
+| `loading / dropdownPlacement / dropdownWidth / dropdownMaxHeight / wrapItemText / useItemTextAsTitle` | `shared with OgeSelectBox` | `—` | Popup configuration and list rendering. |
+| `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
+| `opened / defaultOpened` | `boolean` | `false` | Popup visibility — controlled with `onOpenedChange`, or uncontrolled from `defaultOpened`. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeAutocomplete handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `() => void` | Popup control (no-ops while disabled/readonly). |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_OgeAutocomplete callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectionChange` | `(event: OgeAutocompleteSelectionChangedEvent<TItem>) => void` | A suggestion was picked or the selection was canceled — `{ item: TItem \| null, event? }`. |
+| `onItemClick` | `(event: OgeAutocompleteItemClickEvent<TItem>) => void` | A suggestion row was activated — `{ item, index, event }`. |
+| `onDropDownOpened / onDropDownClosed` | `() => void` | Popup visibility changes, from any trigger. |
+| `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened`. |
+| `onSearchChange` | `(event: { text: string }) => void` | Raw search text on every keystroke — drive server-side filtering from here. |
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+_Autocomplete types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeAutocompleteHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handle exposed through `ref`. |
+| `OgeAutocompleteSelectionChangedEvent<TItem>` | `{ item: TItem \| null; event?: Event }` | `null` means the selection was canceled — the same shape as the Angular output. |
+| `OgeVirtualScrollOptions` | `interface` | `{ itemHeight?: number; overscan?: number }`; default heights come from the shared `@oge-ui/behavior` option-height table (28/34/40px for sm/md/lg). |
+
+### <OgeCheckBox>
+
+#### Properties
+
+_OgeCheckBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Text rendered beside the control. |
+| `value / defaultValue` | `boolean \| null` | `false` | `true`/`false`, or `null` for the indeterminate (dash) state. Controlled with `onValueChange`, or uncontrolled from `defaultValue`; `null` renders regardless of `threeState`. |
+| `threeState` | `boolean` | `false` | Lets users cycle into the indeterminate state: `null → true → false → null` (the reference cycle). |
+| `text` | `string` | `''` | Label text; `children` renders when unset — the React face of the default `` slot. |
+| `children` | `ReactNode` | `—` | Rich label content when `text` is not enough (JSX projection). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Glyph/font size preset. |
+| `tooltip` | `string` | `—` | Native `title` on the label element. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeCheckBox handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `toggle()` | `() => void` | Advances the state exactly like a user click (respects `threeState`, no-op while disabled/readonly). |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCheckBoxHandle` | `{ focus(); blur(); toggle() }` | Imperative handle exposed through `ref`. |
+
+### <OgeSlider>
+
+#### Properties
+
+_OgeSlider_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `number` | `0` | The slider value — controlled with `onValueChange`, or uncontrolled from `defaultValue`. Programmatic writes clamp and snap to the step grid. |
+| `min / max` | `number` | `0 / 100` | Scale bounds. |
+| `step` | `number` | `1` | Arrow-key and drag increment; thumbs always sit on this grid, with float-error correction (0.1-style steps never drift). |
+| `largeStep` | `number` | `—` | PageUp/PageDown increment; `undefined` means `step × 10`. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | A vertical slider announces `aria-orientation="vertical"`; Up still increases (APG). |
+| `showRange` | `boolean` | `true` | Fills the selected portion of the track. |
+| `showTicks / tickStep` | `boolean / number` | `false` | Tick marks on the `tickStep` grid — falling back to `largeStep`, then `step`; capped at 200 marks. |
+| `showTickLabels` | `boolean` | `false` | Formatted labels under each tick, fed by `formatValue`. |
+| `showLabels` | `boolean` | `false` | Formatted `min`/`max` labels at the track ends. |
+| `valueIndicator` | `'none' \| 'active' \| 'always'` | `'none'` | The inline value bubble: `'active'` while focused, dragged **or hovered**, `'always'` permanent. |
+| `formatValue` | `(value: number) => string` | `—` | Formats the bubble, the end labels **and** `aria-valuetext` — display and announcement never diverge. |
+| `showButtons` | `boolean` | `false` | Increment/decrement buttons with press-and-hold repeat — the number box’s spin timing config. |
+| `ariaLabel` | `string` | `—` | Accessible name of the thumb; the localized `sliderHandle` message is the fallback. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_OgeSlider callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onDragStarted` | `(event: OgeSliderDragStartedEvent) => void` | A drag gesture began on the thumb or the track. |
+| `onSlideEnded` | `(event: OgeSliderSlideEndedEvent<number>) => void` | Fires once per gesture at release (live changes stream through `onValueCommitted`, throttled by `debounce`). Not emitted when Escape cancels the gesture. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSliderOrientation` | `'horizontal' \| 'vertical'` | Axis the track lays along. |
+| `OgeSliderValueIndicator` | `'none' \| 'active' \| 'always'` | When the inline value bubble shows. |
+| `OgeSliderDragStartedEvent / OgeSliderSlideEndedEvent<T>` | `{ event } / { value; event }` | The drag gesture pair. |
+| `OgeSliderBaseProps<T>` | `interface` | The scale/appearance surface both sliders extend — exported so wrappers can reuse it. |
+
+### <OgeRangeSlider>
+
+#### Properties
+
+_OgeRangeSlider_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `readonly [number, number]` | `[0, 0]` | The `[start, end]` pair — controlled with `onValueChange`, or uncontrolled from `defaultValue`. Programmatic writes clamp, snap and sort. |
+| `minRange` | `number` | `0` | Minimum distance kept between the thumbs — reflected in each thumb&rsquo;s dynamic `aria-valuemin`/`aria-valuemax` (the APG multi-thumb constraint). |
+| `startAriaLabel / endAriaLabel` | `string` | `—` | Accessible names of the thumbs; the localized `sliderStartHandle`/`sliderEndHandle` messages are the fallbacks. |
+| `startName / endName` | `string` | `''` | Hidden-input names for plain HTML form posts (the single slider uses the inherited `name`). |
+
+_Shared with OgeSlider_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `min / max / step / largeStep / orientation / showRange / showTicks / tickStep / showLabels / valueIndicator / formatValue` | `—` | The full scale/appearance surface of ``, identical semantics. `showButtons` is single-slider only. Clicking the track moves the **nearest** thumb. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_OgeRangeSlider callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onDragStarted / onSlideEnded` | `(event: OgeSliderSlideEndedEvent<readonly [number, number]>) => void` | The drag gesture pair; an unchanged pair never re-emits `onValueCommitted`. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeRangeSliderHandle` | `{ focus(); blur() }` | Imperative handle exposed through `ref`; `focus()` targets the start thumb. |
+
+### <OgeSwitch>
+
+#### Properties
+
+_OgeSwitch_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `boolean` | `false` | The on/off state — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `label` | `string` | `''` | Accessible name (`aria-label`). |
+| `onText / offText` | `string` | `—` | Track texts; `undefined` falls back to the localized `switchOn`/`switchOff` messages ('ON'/'OFF'), empty strings hide the text. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Track size preset. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeSwitch handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `toggle()` | `() => void` | Flips the state (no-op while disabled/readonly). |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSwitchHandle` | `{ focus(); blur(); toggle() }` | Imperative handle exposed through `ref`. |
+
+### <OgeRadioGroup>
+
+#### Properties
+
+_OgeRadioGroup_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `unknown` | `null` | The selected item's `valueExpr` result — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `items` | `readonly TItem[]` | `[]` | The selectable items. |
+| `displayExpr / valueExpr / disabledExpr` | `shared with OgeSelectBox` | `—` | Field-name string or function expressions — the select box vocabulary. |
+| `layout` | `'vertical' \| 'horizontal'` | `'vertical'` | Column or row arrangement. |
+| `label` | `string` | `''` | Accessible name of the group (`aria-label`). |
+| `renderItem` | `(item: TItem, context: { index; selected; active }) => ReactNode` | `—` | Custom item rendering next to the radio dot — the render prop replacing Angular’s `itemTemplate`. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Dot/font size preset. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_OgeRadioGroup callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeRadioGroupItemClickEvent<TItem>) => void` | A radio item was activated by click or keyboard — `{ item, index, event }`. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeRadioGroupLayout` | `'vertical' \| 'horizontal'` | Arrangement of the radios. |
+| `OgeRadioGroupHandle` | `{ focus(); blur() }` | `focus()` moves to the radio holding the roving tabindex. |
+
+### <OgeCalendar>
+
+#### Properties
+
+_OgeCalendar_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Accessible name of the grid (`aria-label`); the messages supply a default. |
+| `value / defaultValue` | `Date \| null` | `null` | The selected day (single mode) — a local `Date`; controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `values / defaultValues` | `readonly Date[]` | `[]` | Selected days for `selectionMode: 'multiple'` — controlled with `onValuesChange`. |
+| `selectionMode` | `'single' \| 'multiple' \| 'range'` | `'single'` | Range mode picks a start–end pair with a live hover preview. |
+| `range / defaultRange` | `[Date \| null, Date \| null]` | `[null, null]` | The selected tuple for `selectionMode: 'range'` — controlled with `onRangeChange`; either end may stay open. |
+| `viewsCount` | `1 \| 2` | `1` | Side-by-side month views (2 is the range layout). |
+| `zoomLevel / defaultZoomLevel / minZoomLevel / maxZoomLevel` | `'month' \| 'year' \| 'decade'` | `'month' / 'decade' / 'month'` | Drill level (controlled with `onZoomLevelChange`) and its reachable bounds; dx's 'century' is deliberately dropped. |
+| `min / max` | `Date` | `—` | Day bounds; `undefined` = unbounded (no dx 1000–3000 defaults). |
+| `disabledDates` | `Date[] \| ((d: Date) => boolean)` | `—` | Individual unselectable days. |
+| `firstDayOfWeek` | `number` | `—` | 0–6 (Sunday-first); `undefined` resolves from the locale's Intl week info. |
+| `showWeekNumbers` | `boolean \| { rule: 'firstDay' \| 'firstFourDays' \| 'fullWeek' }` | `false` | Week-number column; `true` = the ISO rule. |
+| `showTodayButton` | `boolean` | `false` | Renders the localized today shortcut. |
+| `focusedDate / defaultFocusedDate` | `Date \| null` | `—` | The keyboard-focused day — controlled navigation via `onFocusedDateChange`. |
+| `locale` | `string` | `—` | BCP 47 locale for all texts (Intl). |
+| `renderCell` | `(context: OgeCalendarCellContext) => ReactNode` | `—` | Custom day/month/year cell rendering — badges, prices, availability dots. The React face of the Angular `[ogeCalendarCellTemplate]` slot; the context carries `date`, `view`, `text`, `disabled`, `selected`, `today` and `otherPeriod`. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeCalendar handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the focused day cell. |
+
+#### Events
+
+_OgeCalendar callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onCellClick` | `(event: OgeCalendarCellClickEvent) => void` | A day/month/year cell was activated — `{ date, view, event }`. |
+| `onValuesChange / onRangeChange` | `(value) => void` | The controlled halves of `values` and `range` — the multiple/range selections have their own pairs so one calendar never guesses which model you drive. |
+| `onZoomLevelChange / onFocusedDateChange` | `(value) => void` | The controlled halves of `zoomLevel` and `focusedDate`. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCalendarCellContext` | `{ date; view; text; disabled; selected; today; otherPeriod }` | Argument of `renderCell`. |
+| `OgeCalendarZoomLevel / OgeCalendarSelectionMode / OgeCalendarRange / OgeCalendarWeekNumberOptions / OgeCalendarDisabledDates` | `@oge-ui/behavior` | The shared calendar vocabulary — the same types the Angular package uses. |
+
+### <OgeDateBox>
+
+#### Properties
+
+_OgeDateBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `showDropDownButton` | `boolean` | `true` | Renders the rail button that toggles the picker; the field click and the keyboard still open it when hidden. |
+| `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred popup side/alignment; flips when it would clip. |
+| `value / defaultValue` | `Date \| null` | `null` | Always a local `Date` — serialization is the app's concern (no `dateSerializationFormat`). Controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `type` | `'date' \| 'time' \| 'datetime'` | `'date'` | Picker: calendar, interval time list, or both (no dx `pickerType`). The rail icon follows the type. |
+| `displayFormat` | `Intl.DateTimeFormatOptions \| ((d: Date) => string)` | `—` | Display text; `undefined` = per-type Intl defaults. No format strings, no date library. |
+| `min / max / disabledDates` | `as OgeCalendar` | `—` | Out-of-range typed text marks the field invalid — it is never clamped (unlike the number box). |
+| `interval` | `number` | `30` | Time list step in minutes. |
+| `timeView` | `'list' \| 'columns'` | `'list'` | Time picker layout: one interval list, or hour + minute columns. |
+| `applyValueMode` | `'instantly' \| 'useButtons'` | `'instantly'` | OK/Cancel footer collects picker changes in a draft when `useButtons`. |
+| `acceptCustomValue` | `boolean` | `true` | `false` makes the text read-only (picker input only). |
+| `openOnFieldClick` | `boolean` | `true` | Clicking the field opens the picker. |
+| `firstDayOfWeek / showWeekNumbers / zoomLevel / renderCalendarCell / locale` | `calendar passthroughs` | `—` | Exposed individually — no `calendarOptions` kitchen-sink object. `renderCalendarCell` is the render prop replacing the projected cell template. |
+| `opened / defaultOpened` | `boolean` | `false` | Picker visibility — controlled with `onOpenedChange`, or uncontrolled from `defaultOpened`. |
+
+_OgeDateRangeBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `[Date \| null, Date \| null]` | `[null, null]` | Start–end tuple on one field: two parsed inputs + a two-view range calendar popup. A reversed pair reorders on commit; either end may stay open. |
+| `type` | `'date' \| 'datetime'` | `'date'` | `'datetime'` adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times. |
+| `interval` | `number` | `30` | Time list step in minutes (`type: 'datetime'`). |
+| `min / max / disabledDates / firstDayOfWeek / showWeekNumbers / locale / displayFormat / openOnFieldClick / acceptCustomValue` | `as OgeDateBox` | `—` | Shared configuration surface. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeDateBox / OgeDateRangeBox handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `() => void` | Picker control (no-ops while disabled/readonly). |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_OgeDateBox callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onDropDownOpened / onDropDownClosed` | `() => void` | Picker visibility changes, from any trigger. |
+| `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened`. |
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+_Date types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeDateBoxHandle / OgeDateRangeBoxHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handles exposed through `ref`. |
+| `OgeDateBoxType / OgeDateBoxApplyValueMode / OgeDateBoxDisplayFormat / OgeDateBoxTimeView` | `@oge-ui/behavior` | The string unions and the display-format shape — shared with the Angular package, so locale-aware typed parsing behaves identically. |
+
+### <OgeColorBox>
+
+#### Properties
+
+_OgeColorBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred popup side/alignment; flips when it would clip. |
+| `value / defaultValue` | `string \| null` | `null` | The committed color as a CSS string, normalized to `format` on user commits. Programmatic writes keep any parseable CSS color verbatim; unparseable writes land as `null`. |
+| `format` | `'hex' \| 'rgb' \| 'rgba' \| 'hsl'` | `'hex'` | Committed string shape. Translucent colors widen to carry alpha: `#rrggbbaa` / `rgba()` / `hsla()`. |
+| `view` | `'gradient' \| 'palette' \| 'both'` | `'gradient'` | Popup surfaces: the saturation/brightness gradient with sliders and inputs, the swatch palette, or both stacked — no view switcher. |
+| `editAlphaChannel` | `boolean` | `false` | Adds the alpha slider + percent input and lets the output carry alpha. Without it, alpha is coerced to 1 on commit — `rgba()` text still parses. |
+| `applyValueMode` | `'instantly' \| 'useButtons'` | `'instantly'` | OK/Cancel footer collects panel interactions in a draft when `useButtons`; the default commits live (dragging streams through `onValueCommitted`, throttled by `debounce`). |
+| `acceptCustomValue` | `boolean` | `true` | `false` makes the text read-only (picker input only). Typed text parses any CSS color incl. the 148 named colors; unparseable text reverts on blur. |
+| `keyStep` | `number` | `5` | Arrow-key increment of the panel parts in value units — hue degrees, alpha percent, surface saturation/brightness percent. PageUp/PageDown move by 5× (value-space, zoom-independent). |
+| `palette` | `readonly string[]` | `—` | Palette swatches as CSS color strings; `undefined` renders the exported `OGE_DEFAULT_COLOR_PALETTE`. Unparseable entries are dropped. |
+| `paletteColumns` | `number` | `10` | Swatch columns of the palette grid. |
+| `openOnFieldClick` | `boolean` | `true` | Clicking the field opens the picker. |
+| `showDropDownButton` | `boolean` | `true` | `false` hides the rail chevron — field click and ArrowDown still open. |
+| `showEyedropper` | `boolean` | `true` | The eyedropper button (pick a color from anywhere on screen) — rendered only in browsers shipping the `EyeDropper` API; progressive enhancement, no polyfill. The picked color keeps the working alpha. |
+| `opened / defaultOpened` | `boolean` | `false` | Picker visibility — controlled with `onOpenedChange`, or uncontrolled from `defaultOpened`. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeColorBox handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open() / close() / toggle()` | `() => void` | Picker control (no-ops while disabled/readonly). |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_OgeColorBox callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onDropDownOpened / onDropDownClosed` | `() => void` | Picker visibility changes, from any trigger. |
+| `onOpenedChange` | `(opened: boolean) => void` | The controlled half of `opened`. |
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+_Color types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeColorBoxView / OgeColorBoxApplyValueMode / OgeColorFormat` | `@oge-ui/behavior` | The string unions of `view`, `applyValueMode` and `format`. |
+| `OGE_DEFAULT_COLOR_PALETTE` | `readonly string[]` | The built-in 50-swatch palette used when `palette` is not set. |
+| `Color messages` | `OgeInputsMessages keys` | All popup strings localize through ``: `colorPickerLabel`, `hueSliderLabel`/`hueValueText`, `alphaSliderLabel`/`alphaValueText`, `colorSurfaceLabel`/`colorSurfaceRoleDescription`/`surfaceValueText`, `paletteLabel`, the hex/R/G/B/A input labels, `eyedropperButton` and `invalidColorError`. |
+
+### Shared input types
+
+#### Types
+
+_Unions & contracts_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeControlProps<T>` | `interface` | The base every editor extends: the `value`/`defaultValue`/`onValueChange` trio, `onValueCommitted`, the state and validation props, and the focus/blur/enter/cleared callbacks. The React counterpart of the Angular `OgeInputBase` class. |
+| `OgeInputLabelMode` | `'static' \| 'floating' \| 'hidden' \| 'outside'` | `hidden` renders the label as `aria-label` only. |
+| `OgeInputStylingMode` | `'outlined' \| 'filled' \| 'underlined'` | Container fill style. |
+| `OgeInputSize` | `'sm' \| 'md' \| 'lg'` | 28 / 34 / 42px heights. |
+| `OgeInputSubscriptSizing` | `'fixed' \| 'dynamic' \| 'none'` | `fixed` reserves one line so errors never shift layout. |
+| `OgeInputErrorDisplay` | `'touched' \| 'dirty' \| 'always'` | When resolved errors become visible. |
+| `OgeInputCounterMode` | `'limit' \| 'soft'` | `soft` allows typing past `maxLength` and colors the counter danger. |
+| `OgeInputShowSuccessIcon` | `false \| 'touched' \| 'always'` | Success-icon visibility policy. |
+| `OgeTextBoxMode` | `'text' \| 'email' \| 'password' \| 'search' \| 'tel' \| 'url'` | Native input type of the text box. |
+| `OgeNumberBoxMode` | `'text' \| 'tel'` | Native input type of the number box. |
+| `OgeFieldError` | `{ kind: string; message?: string }` | The validation-error shape the `errors` prop takes — map your form library’s errors into it once. |
+
+_Callback payloads_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueCommitted payload` | `{ value: T; previousValue: T; event: Event \| undefined }` | `event === undefined` means a programmatic change. |
+| `onInputChange payload` | `{ text: string; event: Event }` | Raw keystroke payload. |
+| `onEnterKey / onFocus / onBlur payloads` | `KeyboardEvent / FocusEvent` | The native DOM events, not React synthetic wrappers — the editors listen natively so debounce flushing stays ordered. |
+
+_Slots & helpers_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `prefix / suffix` | `ReactNode props` | Leading and trailing adornments inside the field — the React face of the `[ogeInputPrefix]` / `[ogeInputSuffix]` directives. The trailing slot renders after the built-in rail buttons. |
+| `OgeInputCounterState` | `{ count: number; max: number \| undefined; over: boolean }` | Counter state rendered in the subscript end slot. |
+| `OgeInputRevealState` | `{ visible; active; toggle() }` | Password-reveal state (text box only). |
+| `OgeInputCopyState` | `{ visible; copied; trigger() }` | Copy-to-clipboard state (text box only). |
+| `measureTextAreaHeight(el, minRows, maxRows?)` | `number` | Fallback auto-resize measurement for browsers without CSS `field-sizing: content`. |
+
+### Inputs configuration
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeInputsConfigProvider` | `(props: { config?: OgeInputsConfigInput; children?: ReactNode }) => JSX.Element` | Wrap a subtree to change the editors’ defaults and user-facing strings beneath it — the React counterpart of Angular’s `provideOgeInputsConfig()`. Both merge over the same `@oge-ui/behavior` defaults, so a message override reads identically in either layer. |
+| `useOgeInputsConfig()` | `() => OgeInputsConfig` | Reads the resolved config of the current subtree — how a custom editor of your own picks up the same messages and timings. |
+
+#### Types
+
+_OgeInputsConfig_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `spinRepeatDelayMs` | `number` | `400` | Delay before spin buttons start repeating. |
+| `spinRepeatIntervalMs` | `number` | `80` | Interval between spin repeats. |
+| `copiedResetMs` | `number` | `2000` | How long the copy button shows "copied". |
+| `messages` | `OgeInputsMessages` | `—` | User-facing strings — the same key set the Angular package documents (clear/reveal/copy/spin labels, counter patterns and the validation messages). |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Basic usage
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAutocomplete } from '@oge-ui/react-inputs';
+
+const cities = ['Ankara', 'Berlin', 'Lisbon', 'Oslo', 'Tokyo'];
+
+export function AutocompleteBasicDemo() {
+  // the committed value is the TEXT itself, not an item value
+  const [cityName, setCityName] = useState('');
+  return (
+    <OgeAutocomplete
+      label="City"
+      items={cities}
+      value={cityName}
+      onValueChange={setCityName}
+    />
+  );
+}
+```
+
+### Suggestion tuning
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAutocomplete } from '@oge-ui/react-inputs';
+
+const products = [
+  { id: 1, name: 'Aurora Display' },
+  { id: 2, name: 'Aurora Keyboard' },
+  { id: 3, name: 'Nimbus Router' },
+];
+
+export function AutocompleteTuningDemo() {
+  const [productName, setProductName] = useState('');
+  return (
+    <OgeAutocomplete
+      label="Product"
+      items={products}
+      displayExpr="name"
+      searchMode="startswith"
+      minSearchLength={2}
+      maxItemCount={5}
+      value={productName}
+      onValueChange={setProductName}
+    />
+  );
+}
+```
+
+### Force selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAutocomplete } from '@oge-ui/react-inputs';
+
+const users = [
+  { id: 1, name: 'Elif Kaya', role: 'Engineering' },
+  { id: 2, name: 'Mert Demir', role: 'Design' },
+];
+
+export function AutocompleteForceDemo() {
+  const [assigneeName, setAssigneeName] = useState('');
+  // non-matching text reverts on blur; an exact match resolves to the item
+  // (canonical casing) and fires onSelectionChange
+  const [assigneeRole, setAssigneeRole] = useState<string | null>(null);
+  return (
+    <OgeAutocomplete
+      label="Assignee"
+      items={users}
+      displayExpr="name"
+      forceSelection
+      value={assigneeName}
+      onValueChange={setAssigneeName}
+      onSelectionChange={(event) => setAssigneeRole(event.item?.role ?? null)}
+    />
+  );
+}
+```
+
+### Virtual scrolling
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAutocomplete, OgeSelectBox } from '@oge-ui/react-inputs';
+
+const accounts = Array.from(
+  { length: 10000 },
+  (_, index) => `Account ${index + 1}`,
+);
+
+export function AutocompleteVirtualDemo() {
+  const [accountName, setAccountName] = useState('');
+  const [accountId, setAccountId] = useState<unknown>(null);
+  return (
+    <div className="demo-row">
+      {/* 10 000 rows, ~15 in the DOM */}
+      <OgeAutocomplete
+        label="Account"
+        items={accounts}
+        virtualScroll
+        maxItemCount={10000}
+        value={accountName}
+        onValueChange={setAccountName}
+      />
+
+      <OgeSelectBox
+        label="Account"
+        items={accounts}
+        searchEnabled
+        virtualScroll={{ overscan: 6 }}
+        value={accountId}
+        onValueChange={setAccountId}
+      />
+    </div>
+  );
+}
+```
+
+### Lazy & server-side data
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAutocomplete } from '@oge-ui/react-inputs';
+
+// invoked once, on first open
+const loadRepos = (): Promise<string[]> =>
+  fetch('/api/repos').then((response) => response.json());
+
+export function AutocompleteLazyDemo() {
+  const [repo, setRepo] = useState('');
+  const [serverItems, setServerItems] = useState<string[]>([]);
+  const [serverLoading, setServerLoading] = useState(false);
+
+  const queryServer = (text: string): void => {
+    setServerLoading(true);
+    fetch(`/api/repos?q=${encodeURIComponent(text)}`)
+      .then((response) => response.json())
+      .then((items: string[]) => setServerItems(items))
+      .finally(() => setServerLoading(false));
+  };
+  return (
+    <div className="demo-row">
+      <OgeAutocomplete
+        label="Repository"
+        items={loadRepos}
+        value={repo}
+        onValueChange={setRepo}
+      />
+
+      {/* or fully server-side: keep items in sync yourself */}
+      <OgeAutocomplete
+        items={serverItems}
+        loading={serverLoading}
+        searchTimeout={300}
+        onSearchChange={(event) => queryServer(event.text)}
+      />
+    </div>
+  );
+}
+```
+
+### Field chrome
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeAutocomplete } from '@oge-ui/react-inputs';
+
+const tags = ['angular', 'signals', 'zoneless'];
+
+export function AutocompleteChromeDemo() {
+  const [tag, setTag] = useState('');
+  return (
+    <OgeAutocomplete
+      label="Tag"
+      labelMode="floating"
+      showClearButton
+      showDropDownButton
+      openOnFieldClick
+      hint="Start typing to search"
+      items={tags}
+      value={tag}
+      onValueChange={setTag}
+    />
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorBox } from '@oge-ui/react-inputs';
+
+export function ColorBoxDemo() {
+  const [brand, setBrand] = useState<string | null>('#3aa0ff');
+  return (
+    <div>
+      {/* A dropdown color editor: the field shows a swatch + the committed
+          string; the popup is a role="dialog" that takes real DOM focus (no APG
+          color-picker pattern exists — it is composed from dialog, sliders and
+          grid primitives). ArrowDown opens; Escape restores focus to the input. */}
+      <OgeColorBox
+        label="Brand color"
+        value={brand}
+        onValueChange={setBrand}
+        showClearButton
+      />
+      <p>
+        Value: <code>{brand ?? 'null'}</code>
+      </p>
+    </div>
+  );
+}
+```
+
+### Formats and alpha
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorBox } from '@oge-ui/react-inputs';
+
+export function FormatsDemo() {
+  const [overlay, setOverlay] = useState<string | null>(
+    'rgba(58, 160, 255, 0.5)',
+  );
+  const [accent, setAccent] = useState<string | null>('hsl(210, 100%, 61%)');
+  return (
+    <div>
+      {/* format controls the committed string shape ('hex' default — the
+          DevExtreme choice; Kendo defaults to rgba). editAlphaChannel adds the
+          alpha slider + input; a translucent color then WIDENS the output
+          (#rrggbbaa / rgba() / hsla()), while opaque colors stay compact. */}
+      <div className="demo-row">
+        <OgeColorBox
+          label="Overlay"
+          format="rgba"
+          editAlphaChannel
+          value={overlay}
+          onValueChange={setOverlay}
+        />
+        <OgeColorBox
+          label="Accent (hsl)"
+          format="hsl"
+          value={accent}
+          onValueChange={setAccent}
+        />
+      </div>
+      <p>
+        Overlay: <code>{overlay}</code> — Accent: <code>{accent}</code>
+      </p>
+    </div>
+  );
+}
+```
+
+### Palette view
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorBox } from '@oge-ui/react-inputs';
+
+const swatches: readonly string[] = [
+  '#dc2626', '#ea580c', '#d97706', '#16a34a', '#0d9488',
+  '#2563eb', '#7c3aed', '#c026d3', '#475569', '#111827',
+];
+
+export function PaletteDemo() {
+  const [tag, setTag] = useState<string | null>('#16a34a');
+  return (
+    <>
+      {/* The palette is an APG grid: roving tabindex, arrows move by cell/row,
+          Home/End row edges, Ctrl+Home/End grid corners, Enter/Space picks (and
+          closes — a swatch is a final choice). Cells announce their color string;
+          the selected checkmark picks black or white by WCAG contrast. */}
+      <OgeColorBox
+        label="Tag color"
+        view="palette"
+        palette={swatches}
+        paletteColumns={5}
+        value={tag}
+        onValueChange={setTag}
+      />
+    </>
+  );
+}
+```
+
+### Apply with buttons
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorBox } from '@oge-ui/react-inputs';
+
+export function ButtonsDemo() {
+  const [theme, setTheme] = useState<string | null>('#7c3aed');
+  return (
+    <>
+      {/* applyValueMode: 'instantly' (default) commits every panel interaction
+          live — dragging streams through onValueCommitted. 'useButtons' collects
+          interactions in a draft, shows a committed | draft preview pair in the
+          footer and commits only on OK; Cancel (or Escape / outside click)
+          discards. The date box's exact contract, applied to color. */}
+      <OgeColorBox
+        label="Theme color"
+        view="both"
+        applyValueMode="useButtons"
+        value={theme}
+        onValueChange={setTheme}
+      />
+    </>
+  );
+}
+```
+
+### Typed colors
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorBox } from '@oge-ui/react-inputs';
+
+export function TypedDemo() {
+  const [typed, setTyped] = useState<string | null>('rebeccapurple');
+  return (
+    <div className="demo-row">
+      {/* Typed text parses ANY CSS color — #rgb/#rrggbb/#rrggbbaa,
+          rgb()/rgba() (comma and space/slash syntax), hsl(), the 148 named
+          colors, 'transparent'. Commits normalize to format; unparseable text
+          shows the invalid state while typing and REVERTS on blur — a wrong
+          color is never committed. acceptCustomValue makes the text read-only. */}
+      <OgeColorBox label="Any CSS color" value={typed} onValueChange={setTyped} />
+      <OgeColorBox
+        label="Picker only"
+        acceptCustomValue={false}
+        value={typed}
+        onValueChange={setTyped}
+      />
+    </div>
+  );
+}
+```
+
+### Inside a form
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorBox } from '@oge-ui/react-inputs';
+
+export function FormDemo() {
+  const [branding, setBranding] = useState({ primary: '#3aa0ff' });
+  return (
+    <div>
+      <OgeColorBox
+        label="Primary color"
+        format="hex"
+        showClearButton
+        value={branding.primary}
+        onValueChange={(primary) =>
+          setBranding((current) => ({ ...current, primary: primary ?? '' }))
+        }
+      />
+      <p>
+        Model: <code>{branding.primary}</code>
+      </p>
+    </div>
+  );
+}
+```
+
+### Calendar
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCalendar } from '@oge-ui/react-inputs';
+
+const min = new Date(2026, 7, 10);
+
+const isWeekend = (day: Date): boolean =>
+  day.getDay() === 0 || day.getDay() === 6;
+
+export function CalendarDemo() {
+  const [date, setDate] = useState<Date | null>(new Date(2026, 7, 15));
+  return (
+    <div className="demo-row">
+      <OgeCalendar value={date} onValueChange={setDate} />
+      <OgeCalendar
+        min={min}
+        disabledDates={isWeekend}
+        showTodayButton
+        showWeekNumbers
+        firstDayOfWeek={1}
+        value={date}
+        onValueChange={setDate}
+      />
+      <div>
+        value: <code>{date?.toDateString() ?? 'null'}</code>
+      </div>
+    </div>
+  );
+}
+```
+
+### Date Box
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDateBox } from '@oge-ui/react-inputs';
+
+const min = new Date(2026, 7, 10);
+
+export function DateBoxDemo() {
+  const [start, setStart] = useState<Date | null>(null);
+  const [delivery, setDelivery] = useState<Date | null>(null);
+  return (
+    <div className="demo-row">
+      <OgeDateBox label="Start date" value={start} onValueChange={setStart} />
+      {/* typed text parses locale-aware through Intl — never Date.parse */}
+      <OgeDateBox
+        label="Delivery"
+        min={min}
+        showClearButton
+        hint="Not before Aug 10"
+        value={delivery}
+        onValueChange={setDelivery}
+      />
+    </div>
+  );
+}
+```
+
+### Range selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCalendar, OgeDateRangeBox } from '@oge-ui/react-inputs';
+import type { OgeCalendarRange } from '@oge-ui/react-inputs';
+
+export function RangeDemo() {
+  const [range, setRange] = useState<OgeCalendarRange>([null, null]);
+  const [period, setPeriod] = useState<OgeCalendarRange>([
+    new Date(2026, 7, 10),
+    new Date(2026, 7, 20),
+  ]);
+  const [maintenance, setMaintenance] = useState<OgeCalendarRange>([
+    new Date(2026, 7, 14, 22, 0),
+    new Date(2026, 7, 15, 6, 30),
+  ]);
+  return (
+    <div className="demo-row">
+      {/* two-view range calendar with hover preview */}
+      <OgeCalendar
+        selectionMode="range"
+        viewsCount={2}
+        range={range}
+        onRangeChange={setRange}
+        firstDayOfWeek={1}
+      />
+      <div>
+        {/* start–end on one field; typed or picked, reversed pairs reorder */}
+        <OgeDateRangeBox
+          label="Period"
+          showClearButton
+          value={period}
+          onValueChange={setPeriod}
+        />
+        <div>
+          period:{' '}
+          <code>
+            {period[0]?.toDateString() ?? '—'} → {period[1]?.toDateString() ?? '—'}
+          </code>
+        </div>
+        {/* datetime range: start/end time lists + OK, commits as a draft */}
+        <OgeDateRangeBox
+          label="Maintenance window"
+          type="datetime"
+          interval={30}
+          showClearButton
+          value={maintenance}
+          onValueChange={setMaintenance}
+        />
+        <div>
+          window:{' '}
+          <code>
+            {maintenance[0]?.toLocaleString() ?? '—'} →{' '}
+            {maintenance[1]?.toLocaleString() ?? '—'}
+          </code>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### Time & datetime
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDateBox } from '@oge-ui/react-inputs';
+
+export function TimeDemo() {
+  const [meeting, setMeeting] = useState<Date | null>(
+    new Date(2026, 7, 15, 9, 30),
+  );
+  const [alarm, setAlarm] = useState<Date | null>(new Date(2026, 7, 15, 7, 0));
+  const [due, setDue] = useState<Date | null>(null);
+  return (
+    <div className="demo-row">
+      <OgeDateBox
+        label="Meeting"
+        type="datetime"
+        interval={15}
+        value={meeting}
+        onValueChange={setMeeting}
+      />
+      {/* one interval list (default) … */}
+      <OgeDateBox
+        label="Alarm (list)"
+        type="time"
+        value={alarm}
+        onValueChange={setAlarm}
+      />
+      {/* … or hour + minute columns */}
+      <OgeDateBox
+        label="Alarm (columns)"
+        type="time"
+        timeView="columns"
+        interval={5}
+        value={alarm}
+        onValueChange={setAlarm}
+      />
+      {/* OK/Cancel commit policy */}
+      <OgeDateBox
+        label="Due"
+        applyValueMode="useButtons"
+        value={due}
+        onValueChange={setDue}
+      />
+    </div>
+  );
+}
+```
+
+### The three editors
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeNumberBox, OgeTextArea, OgeTextBox } from '@oge-ui/react-inputs';
+
+export function EditorsDemo() {
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState<number | null>(null);
+  const [notes, setNotes] = useState('');
+  return (
+    <div className="demo-row">
+      <OgeTextBox label="Name" value={name} onValueChange={setName} placeholder="Jane Doe" />
+      <OgeTextBox label="E-mail" mode="email" hint="We never share it" showClearButton />
+      <OgeNumberBox label="Amount" value={amount} onValueChange={setAmount} min={0} showSpinButtons />
+      <OgeTextArea label="Notes" value={notes} onValueChange={setNotes} autoResize maxRows={6} />
+    </div>
+  );
+}
+```
+
+### Styling modes & sizes
+
+```ts
+'use client';
+
+import { OgeTextBox } from '@oge-ui/react-inputs';
+
+export function StylingDemo() {
+  return (
+    <div className="demo-row">
+      <OgeTextBox label="Outlined" stylingMode="outlined" />
+      <OgeTextBox label="Filled" stylingMode="filled" />
+      <OgeTextBox label="Underlined" stylingMode="underlined" />
+      <OgeTextBox label="Small" size="sm" />
+      <OgeTextBox label="Large" size="lg" />
+    </div>
+  );
+}
+```
+
+### Label modes
+
+```ts
+'use client';
+
+import { OgeTextBox } from '@oge-ui/react-inputs';
+
+export function LabelModesDemo() {
+  return (
+    <div className="demo-row">
+      <OgeTextBox label="Static (default)" labelMode="static" />
+      <OgeTextBox label="Floating" labelMode="floating" />
+      <OgeTextBox label="Outside" labelMode="outside" />
+      <OgeTextBox label="Hidden (aria-label)" labelMode="hidden" placeholder="Search…" />
+    </div>
+  );
+}
+```
+
+### Prefix & suffix slots
+
+```ts
+'use client';
+
+import { OgeTextBox } from '@oge-ui/react-inputs';
+
+export function AdornmentsDemo() {
+  return (
+    <div className="demo-row">
+      <OgeTextBox label="Price" prefix={<span>€</span>} />
+      <OgeTextBox label="Website" placeholder="example.com" prefix={<span>https://</span>} />
+    </div>
+  );
+}
+```
+
+### Basic usage
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+
+const cities = ['Ankara', 'Berlin', 'Lisbon', 'Oslo', 'Tokyo'];
+
+export function SelectBoxBasicDemo() {
+  const [city, setCity] = useState<unknown>(null);
+  return (
+    <OgeSelectBox
+      label="City"
+      items={cities}
+      value={city}
+      onValueChange={setCity}
+    />
+  );
+}
+```
+
+### Data mapping & search
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+
+const users = [
+  { id: 1, name: 'Elif Kaya', role: 'Engineering' },
+  { id: 2, name: 'Mert Demir', role: 'Design' },
+  { id: 3, name: 'Deniz Ünal', role: 'Engineering' },
+];
+
+export function SelectBoxMappingDemo() {
+  const [assigneeId, setAssigneeId] = useState<unknown>(null);
+  return (
+    <OgeSelectBox
+      label="Assignee"
+      items={users}
+      displayExpr="name"
+      valueExpr="id"
+      searchEnabled
+      showClearButton
+      value={assigneeId}
+      onValueChange={setAssigneeId}
+      onSearchChange={(event) => console.log('searching for', event.text)}
+    />
+  );
+}
+```
+
+### Grouping & custom values
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+
+const users = [
+  { id: 1, name: 'Elif Kaya', role: 'Engineering' },
+  { id: 2, name: 'Mert Demir', role: 'Design' },
+];
+
+export function SelectBoxGroupingDemo() {
+  const [memberId, setMemberId] = useState<unknown>(null);
+  const [tags, setTags] = useState(['angular', 'signals']);
+  const [tag, setTag] = useState<unknown>(null);
+  return (
+    <div className="demo-row">
+      {/* flat data, grouped on the fly */}
+      <OgeSelectBox
+        label="Team member"
+        items={users}
+        displayExpr="name"
+        valueExpr="id"
+        groupBy="role"
+        value={memberId}
+        onValueChange={setMemberId}
+      />
+
+      {/* typed text becomes a new item */}
+      <OgeSelectBox
+        label="Tag"
+        items={tags}
+        searchEnabled
+        acceptCustomValue
+        value={tag}
+        onValueChange={setTag}
+        onCustomItemCreating={(payload) => {
+          // or a promise, or null to reject
+          payload.customItem = payload.text;
+          setTags((current) => [...current, payload.text]);
+        }}
+      />
+    </div>
+  );
+}
+```
+
+### Lazy data
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+
+// invoked once, on first open — loading/error rows render while pending
+const loadWarehouses = (): Promise<string[]> =>
+  new Promise((resolve) =>
+    setTimeout(() => resolve(['Hamburg', 'İzmir', 'Rotterdam']), 900),
+  );
+
+export function SelectBoxLazyDemo() {
+  const [warehouse, setWarehouse] = useState<unknown>(null);
+  return (
+    <OgeSelectBox
+      label="Warehouse"
+      items={loadWarehouses}
+      value={warehouse}
+      onValueChange={setWarehouse}
+    />
+  );
+}
+```
+
+### Tag Box — multi-select
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTagBox } from '@oge-ui/react-inputs';
+
+const skills = ['Angular', 'TypeScript', 'CSS', 'Testing'];
+
+const users = [
+  { id: 1, name: 'Elif Kaya', avatar: '/avatars/1.png' },
+  { id: 2, name: 'Mert Demir', avatar: '/avatars/2.png' },
+];
+
+export function TagBoxDemo() {
+  const [selectedSkills, setSelectedSkills] = useState<readonly unknown[]>([
+    'Angular',
+  ]);
+  const [teamIds, setTeamIds] = useState<readonly unknown[]>([]);
+  return (
+    <div className="demo-row">
+      <OgeTagBox
+        label="Skills"
+        items={skills}
+        searchEnabled
+        value={selectedSkills}
+        onValueChange={setSelectedSkills}
+        onSelectionChange={(event) =>
+          console.log(event.addedItems, event.removedItems)
+        }
+      />
+
+      <OgeTagBox
+        label="Team"
+        items={users}
+        displayExpr="name"
+        valueExpr="id"
+        imageExpr="avatar"
+        maxDisplayedTags={3}
+        value={teamIds}
+        onValueChange={setTeamIds}
+      />
+    </div>
+  );
+}
+```
+
+### Item states & templates
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+
+const plans = [
+  { id: 'free', name: 'Free', soldOut: false },
+  { id: 'pro', name: 'Pro', soldOut: false },
+  { id: 'enterprise', name: 'Enterprise', soldOut: true },
+];
+
+export function SelectBoxStatesDemo() {
+  const [planId, setPlanId] = useState<unknown>('free');
+  return (
+    <OgeSelectBox
+      label="Plan"
+      items={plans}
+      displayExpr="name"
+      valueExpr="id"
+      disabledExpr="soldOut"
+      value={planId}
+      onValueChange={setPlanId}
+    />
+  );
+}
+```
+
+### Field chrome
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+
+const countries = ['Germany', 'Netherlands', 'Türkiye'];
+
+export function SelectBoxChromeDemo() {
+  const [country, setCountry] = useState<unknown>(null);
+  return (
+    <div className="demo-row">
+      <OgeSelectBox
+        label="Country"
+        labelMode="floating"
+        items={countries}
+        showClearButton
+        hint="Shipping destination"
+        value={country}
+        onValueChange={setCountry}
+      />
+
+      <OgeSelectBox
+        label="Country"
+        size="sm"
+        stylingMode="filled"
+        subscriptSizing="none"
+        items={countries}
+        value={country}
+        onValueChange={setCountry}
+      />
+    </div>
+  );
+}
+```
+
+### Character counter
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTextArea, OgeTextBox } from '@oge-ui/react-inputs';
+
+export function CounterDemo() {
+  const [bio, setBio] = useState('');
+  return (
+    <div className="demo-row">
+      {/* grapheme-accurate: a family emoji counts as 1 character, not 8 code units */}
+      <OgeTextBox
+        label="Bio"
+        value={bio}
+        onValueChange={setBio}
+        showCounter
+        maxLength={40}
+        hint="a family emoji counts as 1"
+      />
+
+      {/* soft mode: typing past the limit is allowed, the counter turns red */}
+      <OgeTextArea label="Tweet" showCounter maxLength={140} counterMode="soft" rows={2} />
+    </div>
+  );
+}
+```
+
+### Password reveal & copy
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTextBox } from '@oge-ui/react-inputs';
+
+export function PasswordDemo() {
+  const [password, setPassword] = useState('top-secret-42');
+  const [token] = useState('oge_live_4f8a2b91c3d7');
+  return (
+    <div className="demo-row">
+      <OgeTextBox label="Password" mode="password" value={password} onValueChange={setPassword} />
+      <OgeTextBox label="API token" value={token} showCopyButton readonly />
+    </div>
+  );
+}
+```
+
+### Locale-aware numbers
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeNumberBox } from '@oge-ui/react-inputs';
+
+export function NumbersDemo() {
+  const [price, setPrice] = useState<number | null>(1234.5);
+  const [quantity, setQuantity] = useState<number | null>(10);
+  return (
+    <div className="demo-row">
+      {/* Intl.NumberFormat display on blur, raw editing on focus */}
+      <OgeNumberBox
+        label="Price (de-DE)"
+        locale="de-DE"
+        format={{ style: 'currency', currency: 'EUR' }}
+        value={price}
+        onValueChange={setPrice}
+        showSpinButtons
+        step={0.5}
+      />
+      <OgeNumberBox
+        label="Quantity"
+        value={quantity}
+        onValueChange={setQuantity}
+        min={0}
+        max={100}
+        showSpinButtons
+        hint="0–100; arrow keys work too"
+      />
+    </div>
+  );
+}
+```
+
+### Debounced commits
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTextBox } from '@oge-ui/react-inputs';
+
+export function DebounceDemo() {
+  const [query, setQuery] = useState('');
+  const [keystrokes, setKeystrokes] = useState(0);
+  return (
+    <div className="demo-row">
+      {/* value commits 400ms after the last keystroke; blur/Enter flush instantly */}
+      <OgeTextBox
+        label="Search"
+        value={query}
+        onValueChange={setQuery}
+        debounce={400}
+        onInputChange={() => setKeystrokes((n) => n + 1)}
+      />
+      <span className="self-center text-sm opacity-70">
+        keystrokes: {keystrokes} · committed value: "{query}"
+      </span>
+    </div>
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSlider } from '@oge-ui/react-inputs';
+
+export function SliderDemo() {
+  // The WAI-ARIA APG slider: a focusable role="slider" thumb —
+  // arrows ±step (RTL-aware), PageUp/PageDown ±largeStep, Home/End to the
+  // ends. Dragging commits live; debounce throttles it; Escape cancels the
+  // gesture and restores the start value.
+  const [volume, setVolume] = useState(40);
+  return (
+    <>
+      <OgeSlider
+        value={volume}
+        onValueChange={setVolume}
+        min={0}
+        max={100}
+        ariaLabel="Volume"
+      />
+      <p className="mt-3 text-sm">
+        Value: <code>{volume}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Range slider
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeRangeSlider } from '@oge-ui/react-inputs';
+
+export function RangeSliderDemo() {
+  // APG multi-thumb: two focusable thumbs, each one's aria-valuemin/max
+  // dynamically constrained by the other (plus minRange). Clicking the
+  // track moves the NEAREST thumb.
+  const [price, setPrice] = useState<readonly [number, number]>([200, 600]);
+  return (
+    <>
+      <OgeRangeSlider
+        value={price}
+        onValueChange={setPrice}
+        min={0}
+        max={1000}
+        step={10}
+        minRange={50}
+      />
+      <p className="mt-3 text-sm">
+        Range:{' '}
+        <code>
+          {price[0]} – {price[1]}
+        </code>
+      </p>
+    </>
+  );
+}
+```
+
+### Ticks and labels
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSlider } from '@oge-ui/react-inputs';
+
+export function SliderTicksDemo() {
+  const [rating, setRating] = useState(6);
+  return (
+    <OgeSlider
+      value={rating}
+      onValueChange={setRating}
+      min={0}
+      max={10}
+      largeStep={2}
+      showTicks
+      showTickLabels
+      ariaLabel="Rating"
+    />
+  );
+}
+```
+
+### Value indicator
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSlider } from '@oge-ui/react-inputs';
+
+const asDecibels = (value: number): string => `${value} dB`;
+
+export function SliderIndicatorDemo() {
+  const [decibels, setDecibels] = useState(40);
+  return (
+    <OgeSlider
+      value={decibels}
+      onValueChange={setDecibels}
+      valueIndicator="active"
+      formatValue={asDecibels}
+      showLabels
+      ariaLabel="Volume"
+    />
+  );
+}
+```
+
+### Buttons and vertical
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSlider } from '@oge-ui/react-inputs';
+
+export function SliderButtonsDemo() {
+  const [level, setLevel] = useState(30);
+  return (
+    <>
+      <OgeSlider
+        value={level}
+        onValueChange={setLevel}
+        showButtons
+        ariaLabel="With buttons"
+      />
+      <div style={{ height: 180 }}>
+        <OgeSlider
+          value={level}
+          onValueChange={setLevel}
+          orientation="vertical"
+          ariaLabel="Vertical"
+        />
+      </div>
+    </>
+  );
+}
+```
+
+### Inside a form
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSlider } from '@oge-ui/react-inputs';
+
+export function SliderFormDemo() {
+  // A bare editor: the slider renders no label/hint/error chrome of its own.
+  // Any form library binds it the same way — read the value from your form
+  // state, write it back from onValueChange.
+  const [settings, setSettings] = useState({ brightness: 70 });
+  return (
+    <form onSubmit={(event) => event.preventDefault()}>
+      <span className="text-sm">Brightness</span>
+      <OgeSlider
+        value={settings.brightness}
+        onValueChange={(brightness) => setSettings({ brightness })}
+        min={0}
+        max={100}
+        step={5}
+        ariaLabel="Brightness"
+      />
+      <p className="mt-3 text-sm">
+        Model: <code>{settings.brightness}</code>
+      </p>
+    </form>
+  );
+}
+```
+
+### Check Box
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCheckBox } from '@oge-ui/react-inputs';
+
+export function CheckBoxDemo() {
+  const [agreed, setAgreed] = useState<boolean | null>(false);
+  const [all, setAll] = useState<boolean | null>(null);
+  return (
+    <div className="demo-row">
+      <OgeCheckBox value={agreed} onValueChange={setAgreed}>
+        I agree to the terms
+      </OgeCheckBox>
+
+      {/* tri-state: null renders the indeterminate dash;
+          threeState lets USERS cycle null → true → false → null */}
+      <OgeCheckBox threeState text="Select all" value={all} onValueChange={setAll} />
+
+      <div className="text-sm">
+        select all: <code>{all === null ? 'null (indeterminate)' : String(all)}</code>
+      </div>
+    </div>
+  );
+}
+```
+
+### Switch
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSwitch } from '@oge-ui/react-inputs';
+
+export function SwitchDemo() {
+  const [notify, setNotify] = useState(true);
+  const [enabled, setEnabled] = useState(false);
+  const [plain, setPlain] = useState(false);
+  const [small, setSmall] = useState(true);
+  return (
+    <div className="demo-row">
+      {/* label feeds aria-label — always name your switch */}
+      <OgeSwitch label="Notifications" value={notify} onValueChange={setNotify} />
+
+      {/* track texts come from the localized messages (ON/OFF);
+          override per instance, empty string hides them */}
+      <OgeSwitch
+        label="Localized"
+        onText="AÇIK"
+        offText="KAPALI"
+        value={enabled}
+        onValueChange={setEnabled}
+      />
+      <OgeSwitch
+        label="Plain"
+        onText=""
+        offText=""
+        value={plain}
+        onValueChange={setPlain}
+      />
+      <OgeSwitch label="Small" size="sm" value={small} onValueChange={setSmall} />
+      <OgeSwitch label="Disabled" disabled value={true} />
+    </div>
+  );
+}
+```
+
+### Radio Group
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeRadioGroup } from '@oge-ui/react-inputs';
+
+const plans = [
+  { id: 'starter', name: 'Starter' },
+  { id: 'team', name: 'Team' },
+  { id: 'scale', name: 'Scale (sold out)', soldOut: true },
+  { id: 'enterprise', name: 'Enterprise' },
+];
+
+export function RadioGroupDemo() {
+  const [planId, setPlanId] = useState<unknown>('team');
+  const [priority, setPriority] = useState<unknown>('Normal');
+  return (
+    <div className="demo-row demo-row-start">
+      <OgeRadioGroup
+        label="Plan"
+        items={plans}
+        displayExpr="name"
+        valueExpr="id"
+        disabledExpr="soldOut"
+        value={planId}
+        onValueChange={setPlanId}
+      />
+
+      <OgeRadioGroup
+        label="Priority"
+        layout="horizontal"
+        items={['Low', 'Normal', 'High']}
+        value={priority}
+        onValueChange={setPriority}
+      />
+
+      <div className="text-sm">
+        plan: <code>{String(planId ?? 'null')}</code>
+      </div>
+    </div>
+  );
+}
+```
+
+### Forms integration
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCheckBox, OgeRadioGroup, OgeSwitch } from '@oge-ui/react-inputs';
+
+const plans = [
+  { id: 'free', name: 'Free' },
+  { id: 'pro', name: 'Pro' },
+];
+
+export function ToggleFormDemo() {
+  // The form state lives here — with a form library it would live in the
+  // field object instead. Either way the binding is the same controlled pair.
+  const [model, setModel] = useState<{
+    terms: boolean;
+    marketing: boolean;
+    plan: unknown;
+  }>({ terms: false, marketing: false, plan: 'free' });
+  return (
+    <form className="demo-row demo-row-start" onSubmit={(event) => event.preventDefault()}>
+      <OgeCheckBox
+        value={model.terms}
+        onValueChange={(value) => setModel({ ...model, terms: value === true })}
+      >
+        Accept terms
+      </OgeCheckBox>
+
+      <OgeSwitch
+        label="Marketing"
+        value={model.marketing}
+        onValueChange={(marketing) => setModel({ ...model, marketing })}
+      />
+
+      <OgeRadioGroup
+        label="Plan"
+        items={plans}
+        displayExpr="name"
+        valueExpr="id"
+        value={model.plan}
+        onValueChange={(plan) => setModel({ ...model, plan })}
+      />
+
+      <div className="text-sm">
+        model: <code>{JSON.stringify(model)}</code>
+      </div>
+    </form>
+  );
+}
+```
+
+### Basic usage
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeSelect } from '@oge-ui/react-inputs';
+
+const folders = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 3, parentId: 2, name: 'Q1.pdf' },
+];
+
+export function TreeSelectBasicDemo() {
+  const [folderId, setFolderId] = useState<unknown>(null);
+  return (
+    <OgeTreeSelect
+      label="Folder"
+      items={folders}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      displayExpr="name"
+      rootValue={null}
+      value={folderId}
+      onValueChange={setFolderId}
+    />
+  );
+}
+```
+
+### Nested data & search
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeSelect } from '@oge-ui/react-inputs';
+
+// nested payloads need only itemsExpr
+const tree = [
+  { id: 1, name: 'src', children: [{ id: 2, name: 'main.ts' }] },
+];
+
+export function TreeSelectNestedDemo() {
+  const [fileId, setFileId] = useState<unknown>(null);
+  return (
+    <OgeTreeSelect
+      label="Source file"
+      items={tree}
+      itemsExpr="children"
+      displayExpr="name"
+      searchEnabled
+      value={fileId}
+      onValueChange={setFileId}
+    />
+  );
+}
+```
+
+### Multiple selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeSelect } from '@oge-ui/react-inputs';
+
+const folders = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 3, parentId: 2, name: 'Q1.pdf' },
+];
+
+export function TreeSelectMultipleDemo() {
+  // checking a node cascades to its descendants; 'leavesOnly' reports
+  // just the childless keys, so the value stays the concrete grants
+  const [permissions, setPermissions] = useState<unknown>([]);
+  return (
+    <OgeTreeSelect
+      label="Permissions"
+      items={folders}
+      displayExpr="name"
+      rootValue={null}
+      selectionMode="multiple"
+      showCheckBoxes="selectAll"
+      selectedKeysMode="leavesOnly"
+      value={permissions}
+      onValueChange={setPermissions}
+      onSelectionChanged={(event) => console.log(event.keys, event.previousKeys)}
+    />
+  );
+}
+```
+
+### Lazy load on demand
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeSelect } from '@oge-ui/react-inputs';
+
+interface Folder {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasItems?: boolean;
+}
+
+const roots: Folder[] = [
+  { id: 1, parentId: null, name: 'Server root', hasItems: true },
+  { id: 2, parentId: null, name: 'readme.txt', hasItems: false },
+];
+
+// called once per node, on first expand — a placeholder row shows meanwhile
+const loadChildren = (parent: Folder): Promise<Folder[]> =>
+  new Promise((resolve) =>
+    setTimeout(
+      () => resolve([{ id: parent.id * 100, parentId: parent.id, name: 'logs' }]),
+      700,
+    ),
+  );
+
+export function TreeSelectLazyDemo() {
+  const [remoteId, setRemoteId] = useState<unknown>(null);
+  return (
+    <OgeTreeSelect
+      label="Remote folder"
+      items={roots}
+      displayExpr="name"
+      rootValue={null}
+      hasItemsExpr="hasItems"
+      loadChildren={loadChildren}
+      value={remoteId}
+      onValueChange={setRemoteId}
+    />
+  );
+}
+```
+
+### Standalone validation
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTextBox } from '@oge-ui/react-inputs';
+
+export function StandaloneDemo() {
+  const [username, setUsername] = useState('');
+  return (
+    <div className="demo-row">
+      {/* no forms library: drive state via props */}
+      <OgeTextBox
+        label="Username"
+        value={username}
+        onValueChange={setUsername}
+        invalid={username.length > 0 && username.length < 3}
+        errorText="At least 3 characters"
+        errorDisplay="always"
+      />
+    </div>
+  );
+}
+```
+
+### Form library integration
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeNumberBox, OgeTextBox } from '@oge-ui/react-inputs';
+import type { OgeFieldError } from '@oge-ui/react-inputs';
+
+// Whatever produces them — a resolver, a schema, a reducer — the editor
+// only needs the shared `OgeFieldError` shape.
+function emailErrors(value: string): OgeFieldError[] {
+  if (value === '') return [{ kind: 'required' }];
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value) ? [] : [{ kind: 'email' }];
+}
+
+export function FormLibraryDemo() {
+  const [email, setEmail] = useState('');
+  const [quantity, setQuantity] = useState<number | null>(null);
+  const [touched, setTouched] = useState(false);
+  const errors = emailErrors(email);
+  return (
+    <div className="demo-row">
+      <OgeTextBox
+        label="E-mail"
+        mode="email"
+        value={email}
+        onValueChange={setEmail}
+        errors={errors}
+        onBlur={() => setTouched(true)}
+        hint="required + email"
+      />
+      <OgeNumberBox
+        label="Quantity (1–10)"
+        value={quantity}
+        onValueChange={setQuantity}
+        errors={quantity === null ? [{ kind: 'required' }] : []}
+        min={1}
+        max={10}
+        showSpinButtons
+      />
+      <span className="self-center text-sm opacity-70">
+        status: {errors.length ? 'INVALID' : 'VALID'} · touched: {String(touched)}
+      </span>
+    </div>
+  );
+}
+```
+
+### Schema-driven errors
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeNumberBox, OgeTextBox } from '@oge-ui/react-inputs';
+import type { OgeFieldError } from '@oge-ui/react-inputs';
+
+// One rule set, read by both the messages and the constraint props.
+const schema = { username: { required: true, minLength: 3 } };
+
+function usernameErrors(value: string): OgeFieldError[] {
+  if (value === '') return [{ kind: 'required' }];
+  if (value.length < schema.username.minLength) {
+    return [{ kind: 'minLength', message: 'At least 3 characters' }];
+  }
+  return [];
+}
+
+export function SchemaDemo() {
+  const [username, setUsername] = useState('');
+  const [age, setAge] = useState<number | null>(null);
+  const errors = usernameErrors(username);
+  return (
+    <div className="demo-row">
+      <OgeTextBox
+        label="Username"
+        value={username}
+        onValueChange={setUsername}
+        errors={errors}
+        required={schema.username.required}
+        minLength={schema.username.minLength}
+      />
+      <OgeNumberBox label="Age" value={age} onValueChange={setAge} />
+      <span className="self-center text-sm opacity-70">
+        value: {username} · valid: {String(errors.length === 0)}
+      </span>
+    </div>
+  );
+}
+```
+
+### Linked fields
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeButton, OgeButtonGroup } from '@oge-ui/react-buttons';
+import { OgeNumberBox, OgeTextBox } from '@oge-ui/react-inputs';
+
+export function LinkedDemo() {
+  const [invoiceType, setInvoiceType] = useState<readonly string[]>(['personal']);
+  const [taxId, setTaxId] = useState('');
+  const [minValue, setMinValue] = useState<number | null>(0);
+  const [maxValue, setMaxValue] = useState<number | null>(10);
+  const [lastChange, setLastChange] = useState('Change Max…');
+  return (
+    <div className="demo-row">
+      {/* cross-field rules: bind state to state — no callbacks needed */}
+      <OgeButtonGroup
+        selectionMode="single"
+        selectedKeys={invoiceType}
+        onSelectionChange={(change) => setInvoiceType(change.selectedKeys)}
+        ariaLabel="Invoice type"
+      >
+        <OgeButton value="personal" text="Personal" />
+        <OgeButton value="company" text="Company" />
+      </OgeButtonGroup>
+      <OgeTextBox
+        label="Tax ID"
+        value={taxId}
+        onValueChange={setTaxId}
+        disabled={!invoiceType.includes('company')}
+        hint="enabled for Company only"
+      />
+
+      {/* Max takes its lower bound from Min */}
+      <OgeNumberBox label="Min" value={minValue} onValueChange={setMinValue} showSpinButtons />
+      <OgeNumberBox
+        label="Max"
+        value={maxValue}
+        onValueChange={setMaxValue}
+        min={minValue ?? undefined}
+        showSpinButtons
+        hint="lower bound follows Min"
+        onValueCommitted={(e) =>
+          // rich change payload: { value, previousValue, event }
+          setLastChange(
+            `last change: ${e.previousValue ?? 'empty'} → ${e.value ?? 'empty'} ` +
+              `(${e.event ? 'user' : 'programmatic'})`,
+          )
+        }
+      />
+      <span className="self-center text-sm opacity-70">{lastChange}</span>
+    </div>
+  );
+}
+```
+
+### Async validation indicator
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeTextBox } from '@oge-ui/react-inputs';
+
+export function PendingDemo() {
+  const [apiKey, setApiKey] = useState('');
+  const [checking, setChecking] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // `pending` shows a rail spinner; pair it with your async validation
+  const simulateCheck = () => {
+    setChecking(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setChecking(false), 900);
+  };
+  return (
+    <div className="demo-row">
+      <OgeTextBox
+        label="API key"
+        value={apiKey}
+        onValueChange={setApiKey}
+        pending={checking}
+        showSuccessIcon="always"
+        hint="type to trigger a fake async check"
+        onInputChange={simulateCheck}
+      />
+    </div>
+  );
+}
+```
+

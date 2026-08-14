@@ -543,6 +543,12 @@ export const OGE_TOOLBAR_ITEM_API: ApiSections = {
           description: 'Emphasis of a toolbar-rendered button.',
         },
         {
+          name: 'data',
+          type: 'unknown',
+          description:
+            'Arbitrary payload echoed back on <code>itemClick</code> — the declarative counterpart of the same field on an <code>[items]</code> entry.',
+        },
+        {
           name: 'active',
           type: 'boolean | undefined (two-way)',
           description:

@@ -14,6 +14,12 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import {
+  OgeButtonPress,
+  resolveAutoRepeat,
+  resolveClickGuard,
+  resolveHoldToConfirm,
+} from '@oge-ui/behavior';
 import { OGE_BUTTONS_CONFIG, type OgeButtonsMessages } from '../config';
 import { OGE_BUTTON_GROUP } from '../button-group/button-group-context';
 import type {
@@ -29,11 +35,7 @@ import type {
   OgeHoldToConfirmOptions,
 } from './button-types';
 
-import { isThenable } from '../internal/thenable';
-
 declare const ngDevMode: boolean | undefined;
-
-type PressSource = 'idle' | 'pointer' | 'keyboard';
 
 /**
  * Action button with severity/styling variants, async single-flight `action`
@@ -279,45 +281,20 @@ export class OgeButton {
   });
   protected readonly showDot = computed(() => this.badge() === true);
 
-  private readonly guardOpts = computed<{
-    mode: 'debounce' | 'throttle';
-    ms: number;
-  } | null>(() => {
-    const guard = this.clickGuard();
-    if (!guard) return null;
-    if (guard === true) {
-      return { mode: 'throttle', ms: this.config.clickGuardMs };
-    }
-    return { mode: guard.mode, ms: guard.ms ?? this.config.clickGuardMs };
-  });
-  protected readonly holdOpts = computed<{ ms: number } | null>(() => {
-    const hold = this.holdToConfirm();
-    if (!hold) return null;
-    return {
-      ms:
-        hold === true
-          ? this.config.holdToConfirmMs
-          : (hold.ms ?? this.config.holdToConfirmMs),
-    };
-  });
-  private readonly repeatOpts = computed<{
-    delayMs: number;
-    intervalMs: number;
-  } | null>(() => {
-    if (this.holdOpts()) return null; // holdToConfirm wins
-    const repeat = this.autoRepeat();
-    if (!repeat) return null;
-    if (repeat === true) {
-      return {
-        delayMs: this.config.autoRepeatDelayMs,
-        intervalMs: this.config.autoRepeatIntervalMs,
-      };
-    }
-    return {
-      delayMs: repeat.delayMs ?? this.config.autoRepeatDelayMs,
-      intervalMs: repeat.intervalMs ?? this.config.autoRepeatIntervalMs,
-    };
-  });
+  // The shorthand-or-options resolution is shared with the React button, so a
+  // change to what `holdToConfirm: true` means lands in both at once.
+  private readonly guardOpts = computed(() =>
+    resolveClickGuard(this.clickGuard(), this.config.clickGuardMs),
+  );
+  protected readonly holdOpts = computed(() =>
+    resolveHoldToConfirm(this.holdToConfirm(), this.config.holdToConfirmMs),
+  );
+  private readonly repeatOpts = computed(() =>
+    resolveAutoRepeat(this.autoRepeat(), this.holdOpts() !== null, {
+      delayMs: this.config.autoRepeatDelayMs,
+      intervalMs: this.config.autoRepeatIntervalMs,
+    }),
+  );
   protected readonly hasGesture = computed(
     () => this.holdOpts() !== null || this.repeatOpts() !== null,
   );
@@ -337,23 +314,36 @@ export class OgeButton {
   /** Hold duration elapsed — releasing now confirms. */
   protected readonly holdReady = signal(false);
 
-  private press: PressSource = 'idle';
-  private pressPointerId: number | null = null;
-  private pressKey: string | null = null;
-  private lastPressEvent: MouseEvent | KeyboardEvent | null = null;
-  private holdTimer: ReturnType<typeof setTimeout> | null = null;
-  private repeatDelayTimer: ReturnType<typeof setTimeout> | null = null;
-  private repeatIntervalTimer: ReturnType<typeof setInterval> | null = null;
-  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  private lastFiredAt = Number.NEGATIVE_INFINITY;
-  private pendingRunId: number | null = null;
-  private actionSeq = 0;
-  private destroyed = false;
+  /**
+   * The whole press pipeline — gestures, click guard, single-flight `action` —
+   * lives in `@oge-ui/behavior` so the React button runs the identical
+   * machine rather than a re-implementation of it (ADR 0001). This component
+   * only maps its getters and callbacks onto signals.
+   */
+  private readonly pressMachine = new OgeButtonPress({
+    hold: () => this.holdOpts(),
+    repeat: () => this.repeatOpts(),
+    guard: () => this.guardOpts(),
+    isDisabled: () => this.isDisabled(),
+    action: () => this.action(),
+    captureTarget: () => this.nativeButton().nativeElement,
+    onClick: (event) => {
+      this.clicked.emit({ event });
+      this.group?.notifyClick(this.value(), event, this);
+    },
+    onHoldStateChange: ({ holding, ready }) => {
+      this.holding.set(holding);
+      this.holdReady.set(ready);
+    },
+    onLoadingChange: (loading) => this.loading.set(loading),
+    onActionDone: (result) => this.actionDone.emit({ result }),
+    onActionFailed: (error) => this.actionFailed.emit({ error }),
+  });
 
   constructor() {
     // A disabled (or newly loading) button must not keep a live gesture.
     effect(() => {
-      if (this.isDisabled()) untracked(() => this.cancelPress());
+      if (this.isDisabled()) untracked(() => this.pressMachine.cancel());
     });
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
       effect(() => {
@@ -364,15 +354,7 @@ export class OgeButton {
         }
       });
     }
-    this.destroyRef.onDestroy(() => {
-      this.destroyed = true;
-      this.clearHoldTimer();
-      this.clearRepeatTimers();
-      if (this.debounceTimer !== null) {
-        clearTimeout(this.debounceTimer);
-        this.debounceTimer = null;
-      }
-    });
+    this.destroyRef.onDestroy(() => this.pressMachine.destroy());
   }
 
   /** Moves keyboard focus to the inner native button. */
@@ -391,202 +373,33 @@ export class OgeButton {
     // Gesture modes produce their own dispatches; physical clicks are swallowed
     // and must not bubble — a quick tap on a hold-to-confirm button would
     // otherwise still reach native `(click)` listeners up the tree.
-    if (this.hasGesture()) {
+    if (this.pressMachine.click(event)) {
       event.preventDefault();
       event.stopPropagation();
-      return;
     }
-    this.dispatchClick(event);
   }
 
   protected onPointerDown(event: PointerEvent): void {
-    if (event.button !== 0 || !this.hasGesture() || this.press !== 'idle') {
-      return;
-    }
-    this.press = 'pointer';
-    this.pressPointerId = event.pointerId;
-    this.lastPressEvent = event;
-    // Capture on the button itself — a pressed descendant span could be
-    // removed mid-gesture, which would silently release the capture.
-    this.nativeButton().nativeElement.setPointerCapture?.(event.pointerId);
-    if (this.holdOpts()) this.startHold();
-    else this.startRepeat(event);
+    this.pressMachine.pointerDown(event);
   }
 
   protected onPointerUp(event: PointerEvent): void {
-    if (this.press !== 'pointer' || event.pointerId !== this.pressPointerId) {
-      return;
-    }
-    this.finishPress(event);
+    this.pressMachine.pointerUp(event);
   }
 
   protected onPointerCancel(): void {
-    if (this.press !== 'pointer') return;
-    this.cancelPress();
+    this.pressMachine.pointerCancel();
   }
 
   protected onContextMenu(event: Event): void {
-    // Long-press context menus would break hold/repeat gestures on touch.
-    if (this.hasGesture()) event.preventDefault();
+    if (this.pressMachine.contextMenu()) event.preventDefault();
   }
 
   protected onKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      this.cancelPress();
-      return;
-    }
-    if (event.key !== ' ' && event.key !== 'Enter') return;
-    if (!this.hasGesture()) return; // plain mode: native click path
-    event.preventDefault();
-    if (event.repeat || this.press !== 'idle') return;
-    this.press = 'keyboard';
-    this.pressKey = event.key;
-    this.lastPressEvent = event;
-    if (this.holdOpts()) this.startHold();
-    else this.startRepeat(event);
+    if (this.pressMachine.keyDown(event)) event.preventDefault();
   }
 
   protected onKeyUp(event: KeyboardEvent): void {
-    if (this.press !== 'keyboard') return;
-    // Only the key that started the gesture may finish it.
-    if (event.key !== this.pressKey) return;
-    this.finishPress(event);
-  }
-
-  // --- gestures --------------------------------------------------------------
-
-  private startHold(): void {
-    const hold = this.holdOpts();
-    if (!hold) return;
-    this.holdReady.set(false);
-    this.holding.set(true);
-    this.holdTimer = setTimeout(() => {
-      this.holdTimer = null;
-      this.holdReady.set(true);
-    }, hold.ms);
-  }
-
-  private startRepeat(event: MouseEvent | KeyboardEvent): void {
-    const repeat = this.repeatOpts();
-    if (!repeat) return;
-    this.dispatchClick(event);
-    this.repeatDelayTimer = setTimeout(() => {
-      this.repeatDelayTimer = null;
-      this.repeatIntervalTimer = setInterval(() => {
-        if (this.destroyed || this.isDisabled()) {
-          this.cancelPress();
-          return;
-        }
-        if (this.lastPressEvent) this.dispatchClick(this.lastPressEvent);
-      }, repeat.intervalMs);
-    }, repeat.delayMs);
-  }
-
-  private finishPress(event: MouseEvent | KeyboardEvent): void {
-    if (this.holdOpts()) {
-      const confirmed = this.holdReady();
-      this.resetHold();
-      this.resetPress();
-      if (confirmed) this.dispatchClick(event);
-      return;
-    }
-    this.clearRepeatTimers();
-    this.resetPress();
-  }
-
-  private cancelPress(): void {
-    if (this.press === 'idle') return;
-    this.resetHold();
-    this.clearRepeatTimers();
-    this.resetPress();
-  }
-
-  private resetPress(): void {
-    this.press = 'idle';
-    this.pressPointerId = null;
-    this.pressKey = null;
-    this.lastPressEvent = null;
-  }
-
-  private resetHold(): void {
-    this.clearHoldTimer();
-    this.holdReady.set(false);
-    this.holding.set(false);
-  }
-
-  private clearHoldTimer(): void {
-    if (this.holdTimer !== null) {
-      clearTimeout(this.holdTimer);
-      this.holdTimer = null;
-    }
-  }
-
-  private clearRepeatTimers(): void {
-    if (this.repeatDelayTimer !== null) {
-      clearTimeout(this.repeatDelayTimer);
-      this.repeatDelayTimer = null;
-    }
-    if (this.repeatIntervalTimer !== null) {
-      clearInterval(this.repeatIntervalTimer);
-      this.repeatIntervalTimer = null;
-    }
-  }
-
-  // --- click guard → single-flight → emit → action ---------------------------
-
-  private dispatchClick(event: MouseEvent | KeyboardEvent): void {
-    const guard = this.guardOpts();
-    if (guard) {
-      if (guard.mode === 'throttle') {
-        const now = performance.now();
-        if (now - this.lastFiredAt < guard.ms) return;
-        this.lastFiredAt = now;
-      } else {
-        if (this.debounceTimer !== null) clearTimeout(this.debounceTimer);
-        this.debounceTimer = setTimeout(() => {
-          this.debounceTimer = null;
-          this.fireClick(event);
-        }, guard.ms);
-        return;
-      }
-    }
-    this.fireClick(event);
-  }
-
-  private fireClick(event: MouseEvent | KeyboardEvent): void {
-    // Re-checked because debounced fires arrive later.
-    if (this.destroyed || this.isDisabled()) return;
-    if (this.pendingRunId !== null) return; // single-flight
-    this.clicked.emit({ event });
-    this.group?.notifyClick(this.value(), event, this);
-    const action = this.action();
-    if (!action) return;
-    let result: unknown;
-    try {
-      result = action();
-    } catch (error) {
-      this.actionFailed.emit({ error });
-      return;
-    }
-    if (!isThenable(result)) {
-      this.actionDone.emit({ result });
-      return;
-    }
-    const runId = ++this.actionSeq;
-    this.pendingRunId = runId;
-    this.loading.set(true);
-    result.then(
-      (value) =>
-        this.settleAction(runId, () => this.actionDone.emit({ result: value })),
-      (error: unknown) =>
-        this.settleAction(runId, () => this.actionFailed.emit({ error })),
-    );
-  }
-
-  private settleAction(runId: number, emit: () => void): void {
-    if (this.destroyed || runId !== this.pendingRunId) return;
-    this.pendingRunId = null;
-    this.loading.set(false);
-    emit();
+    this.pressMachine.keyUp(event);
   }
 }

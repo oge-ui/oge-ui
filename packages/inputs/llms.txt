@@ -515,7 +515,7 @@ _Popup_
 | Name | Type | Description |
 | --- | --- | --- |
 | `open() / close() / toggle()` | `() => void` | Imperative popup control. |
-| `focus() / blur() / reset()` | `() => void` | Inherited field-chrome control methods. |
+| `focus() / blur() / reset() / clear()` | `() => void` | Inherited field-chrome control methods. `clear()` empties the value, commits immediately and keeps focus in the field. |
 
 #### Events
 
@@ -749,6 +749,7 @@ _OgeCheckBox_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
+| `label` | `string` | `''` | Text rendered beside the control. |
 | `value` | `model<boolean \| null>` | `false` | `true`/`false`, or `null` for the indeterminate (dash) state — two-way. `null` renders regardless of `threeState`. |
 | `threeState` | `boolean` | `false` | Lets users cycle into the indeterminate state: `null → true → false → null` (the reference cycle). |
 | `text` | `string` | `''` | Label text; the default `` slot renders when unset. |
@@ -1094,6 +1095,7 @@ _OgeCalendar_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
+| `label` | `string` | `''` | Accessible name of the grid (`aria-label`); the messages supply a default. |
 | `value` | `model<Date \| null>` | `null` | The selected day (single mode) — two-way, local Date. |
 | `values` | `model<readonly Date[]>` | `[]` | Selected days for `selectionMode: 'multiple'` — two-way. |
 | `selectionMode` | `'single' \| 'multiple' \| 'range'` | `'single'` | Range mode picks a start–end pair with a live hover preview. |
@@ -1166,6 +1168,8 @@ _OgeDateBox_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
+| `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred popup side/alignment; flips when it would clip. |
+| `showDropDownButton` | `boolean` | `true` | Renders the rail button that toggles the picker; the field click and the keyboard still open it when hidden. |
 | `value` | `model<Date \| null>` | `null` | Always a local `Date` — serialization is the app's concern (no `dateSerializationFormat`). CVA writes accept ISO-like strings and epoch numbers leniently. |
 | `type` | `'date' \| 'time' \| 'datetime'` | `'date'` | Picker: calendar, interval time list, or both (no dx `pickerType`). The rail icon follows the type. |
 | `displayFormat` | `Intl.DateTimeFormatOptions \| ((d: Date) => string)` | `—` | Display text; `undefined` = per-type Intl defaults. No format strings, no date library. |
@@ -1281,6 +1285,8 @@ _OgeColorBox_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
+| `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred popup side/alignment; flips when it would clip. |
+| `showDropDownButton` | `boolean` | `true` | Renders the rail button that toggles the picker; the field click and the keyboard still open it when hidden. |
 | `value` | `model<string \| null>` | `null` | The committed color as a CSS string, normalized to `format` on user commits. Programmatic writes keep any parseable CSS color verbatim (never reformatted); unparseable writes land as `null`. |
 | `format` | `'hex' \| 'rgb' \| 'rgba' \| 'hsl'` | `'hex'` | Committed string shape (hex — the DevExtreme default; Kendo defaults to rgba). Translucent colors widen to carry alpha: `#rrggbbaa` / `rgba()` / `hsla()`. |
 | `view` | `'gradient' \| 'palette' \| 'both'` | `'gradient'` | Popup surfaces: the saturation/brightness gradient with sliders and inputs, the swatch palette, or both stacked — no view switcher (Kendo's `activeView` is deliberately skipped). |

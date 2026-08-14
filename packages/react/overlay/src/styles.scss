@@ -1,0 +1,6 @@
+// The React overlay renders the exact `.oge-popup` / `.oge-menu-*` markup the
+// Angular package styles — so its stylesheet IS the Angular package's SCSS,
+// compiled here into this package's own `styles.css`. No second stylesheet,
+// no drift (ADR 0001).
+@use '../../../overlay/src/lib/popup/popup';
+@use '../../../overlay/src/lib/menu/menu-list';

@@ -15,6 +15,13 @@
     "skipDefaultLibCheck": true,
     "paths": {
       "@oge-ui/behavior": ["./packages/behavior/src/index.ts"],
+      "@oge-ui/react-buttons": ["./packages/react/buttons/src/index.ts"],
+      "@oge-ui/react-inputs": ["./packages/react/inputs/src/index.ts"],
+      "@oge-ui/react-tabs": ["./packages/react/tabs/src/index.ts"],
+      "@oge-ui/react": ["./packages/react/oge/src/index.ts"],
+      "@oge-ui/react-layout": ["./packages/react/layout/src/index.ts"],
+      "@oge-ui/react-navigation": ["./packages/react/navigation/src/index.ts"],
+      "@oge-ui/react-overlay": ["./packages/react/overlay/src/index.ts"],
       "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
       "@oge-ui/core": ["./packages/core/src/index.ts"],
       "@oge-ui/forms": ["./packages/forms/src/index.ts"],
@@ -52,6 +59,7 @@
       "@oge-ui/tree-list/export-excel": [
         "./packages/tree-list/export-excel/src/index.ts"
       ],
+      "@oge-ui/upload": ["./packages/upload/src/index.ts"],
       "oge-ui": ["./packages/ui/src/index.ts"]
     }
   },

@@ -44,6 +44,7 @@
 .oge-scheduler,
 .oge-gantt,
 .oge-kanban,
+.oge-upload,
 .oge-chart,
 .oge-pivot-grid {
   --oge-border-color: var(--bs-border-color, #dee2e6);

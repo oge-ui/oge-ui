@@ -1,0 +1,4 @@
+// The React tabs render the exact `.oge-tab-*` markup the Angular package
+// styles — so this stylesheet IS the Angular package's SCSS, compiled into
+// this package's own `styles.css`. No second stylesheet, no drift (ADR 0001).
+@use '../../../tabs/src/lib/tabs';

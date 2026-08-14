@@ -16,13 +16,30 @@ import {
   untracked,
   viewChildren,
 } from '@angular/core';
+// The vocabulary, the config merge, the descriptor normalization and every
+// expand/collapse/render/keyboard decision live framework-free in
+// `@oge-ui/behavior` (`accordion-core`), shared with the React render layer —
+// this component is the Angular render of them.
 import {
+  accordionAriaDisabled,
+  accordionItemDescriptor,
+  accordionNavIntent,
+  accordionPageDirection,
+  canCollapseAccordionPanel,
   createTypeAheadBuffer,
   edgeEnabledIndex,
-  matchByPrefix,
+  expandedIdsAfterCollapse,
+  expandedIdsAfterExpand,
+  isAccordionTypeAheadKey,
+  matchAccordionTitle,
+  resolveAccordionIndex,
   runAsyncGuard,
+  sameAccordionIds,
+  sameAccordionKeys,
+  shouldRenderAccordionPanel,
   stepEnabledIndex,
-} from '@oge-ui/core';
+  type OgeAccordionLoadState,
+} from '@oge-ui/behavior';
 import type { OgeAccordionDescriptor } from './accordion-descriptor';
 import { OgeAccordionItem } from './accordion-item';
 import type {
@@ -53,13 +70,6 @@ import {
 declare const ngDevMode: boolean | undefined;
 
 let nextComponentId = 0;
-
-/** State of one panel's `contentLoader`. */
-interface LoadState {
-  readonly status: 'loading' | 'loaded' | 'failed';
-  readonly data?: unknown;
-  readonly error?: unknown;
-}
 
 /**
  * Vertically stacked disclosure panels following the WAI-ARIA APG accordion
@@ -470,9 +480,9 @@ export class OgeAccordion {
   /** Ids whose async `expandGuard` is currently in flight. */
   protected readonly pendingIds = this._pendingIds.asReadonly();
   private readonly renderedIds = signal<ReadonlySet<string>>(new Set());
-  private readonly loadStates = signal<ReadonlyMap<string, LoadState>>(
-    new Map(),
-  );
+  private readonly loadStates = signal<
+    ReadonlyMap<string, OgeAccordionLoadState>
+  >(new Map());
   private readonly fadePhases = signal<ReadonlyMap<string, number>>(new Map());
   private readonly seededIds = new Set<string>();
   /**
@@ -535,23 +545,8 @@ export class OgeAccordion {
       const fromItems = (this.items() ?? [])
         .filter((item) => item.visible !== false)
         .map((item, index) => ({
-          id: item.key ?? `i${index}`,
-          key: item.key,
-          title: item.title ?? '',
-          text: item.text,
-          description: item.description,
-          hideToggle: item.hideToggle,
-          togglePosition: item.togglePosition,
+          ...accordionItemDescriptor(item, index),
           source: undefined,
-          icon: item.icon,
-          badge: item.badge,
-          hint: item.hint,
-          disabled: item.disabled ?? false,
-          invalid: item.invalid ?? false,
-          initiallyExpanded: item.expanded ?? false,
-          item,
-          expandGuard: item.expandGuard,
-          contentLoader: item.contentLoader,
           headerTemplate: headerTpl,
           contentTemplate: contentTpl,
           toggleIconTemplate: iconTpl,
@@ -571,11 +566,10 @@ export class OgeAccordion {
       );
       ds.forEach((d) => this.seededIds.add(d.id));
       if (fresh.length === 0) return;
-      const next = new Set(untracked(this.expandedIds));
       const allowMany = untracked(this.multiple);
+      let next: ReadonlySet<string> = untracked(this.expandedIds);
       for (const d of fresh) {
-        if (!allowMany) next.clear();
-        next.add(d.id);
+        next = expandedIdsAfterExpand(next, d.id, allowMany);
         if (!allowMany) break;
       }
       this.expandedIds.set(next);
@@ -616,7 +610,7 @@ export class OgeAccordion {
     // initial key binding wins over the seeded `expanded` defaults.
     effect(() => {
       const keys = this.expandedKeys();
-      if (sameKeys(keys, this.lastEmittedKeys)) return;
+      if (sameAccordionKeys(keys, this.lastEmittedKeys)) return;
       this.lastEmittedKeys = keys;
       const ids = this.descriptors()
         .filter((d) => d.key !== undefined && keys.includes(d.key))
@@ -630,7 +624,7 @@ export class OgeAccordion {
       // panels without a key are not addressable by expandedKeys — keep them
       const next = new Set([...current].filter((id) => !keyed.has(id)));
       ids.forEach((id) => next.add(id));
-      if (!sameSet(next, current)) this.expandedIds.set(next);
+      if (!sameAccordionIds(next, current)) this.expandedIds.set(next);
     });
 
     // expandedIds → expandedKeys + selectedIndex.
@@ -641,7 +635,7 @@ export class OgeAccordion {
         .filter((d) => d.key !== undefined && ids.has(d.id))
         .map((d) => d.key as string);
       const currentKeys = untracked(this.expandedKeys);
-      if (!sameKeys(keys, currentKeys)) {
+      if (!sameAccordionKeys(keys, currentKeys)) {
         this.lastEmittedKeys = keys;
         this.expandedKeys.set(keys);
       }
@@ -658,9 +652,9 @@ export class OgeAccordion {
       if (index < 0 || index >= ds.length) return;
       const target = ds[index];
       if (ids.has(target.id)) return;
-      const next = untracked(this.multiple) ? new Set(ids) : new Set<string>();
-      next.add(target.id);
-      this.expandedIds.set(next);
+      this.expandedIds.set(
+        expandedIdsAfterExpand(ids, target.id, untracked(this.multiple)),
+      );
     });
 
     // State → declarative child `[(expanded)]`.
@@ -785,9 +779,11 @@ export class OgeAccordion {
     d: OgeAccordionDescriptor,
     _index: number,
   ): boolean | null {
-    if (this.isDisabled(d)) return true;
-    if (!this.expandedIds().has(d.id)) return null;
-    return this.canCollapse(d.id) ? null : true;
+    return accordionAriaDisabled({
+      disabled: this.isDisabled(d),
+      expanded: this.expandedIds().has(d.id),
+      canCollapse: this.canCollapse(d.id),
+    });
   }
 
   protected animationEnabled(): boolean {
@@ -799,7 +795,7 @@ export class OgeAccordion {
     return typeof value === 'number' ? `${value}ms` : null;
   }
 
-  protected loadState(id: string): LoadState | undefined {
+  protected loadState(id: string): OgeAccordionLoadState | undefined {
     return this.loadStates().get(id);
   }
 
@@ -808,9 +804,12 @@ export class OgeAccordion {
   }
 
   protected shouldRender(d: OgeAccordionDescriptor, _index: number): boolean {
-    if (!this.deferRendering()) return true;
-    if (this.expandedIds().has(d.id)) return true;
-    return this.keepAlive() && this.renderedIds().has(d.id);
+    return shouldRenderAccordionPanel({
+      deferRendering: this.deferRendering(),
+      keepAlive: this.keepAlive(),
+      expanded: this.expandedIds().has(d.id),
+      rendered: this.renderedIds().has(d.id),
+    });
   }
 
   protected headerContext(
@@ -864,32 +863,24 @@ export class OgeAccordion {
   protected onToggleKeydown(index: number, event: KeyboardEvent): void {
     if (event.ctrlKey || event.altKey || event.metaKey) return;
     if (this.keyboardNavigation()) {
-      const direction =
-        event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
-      if (direction !== 0) {
+      const intent = accordionNavIntent(event.key, event);
+      if (intent !== null) {
         event.preventDefault();
-        this.moveFocus(this.step(index, direction));
-        return;
-      }
-      if (event.key === 'Home' || event.key === 'End') {
-        event.preventDefault();
-        this.moveFocus(this.edge(event.key === 'Home' ? 1 : -1));
+        this.moveFocus(
+          intent === 'next'
+            ? this.step(index, 1)
+            : intent === 'previous'
+              ? this.step(index, -1)
+              : this.edge(intent === 'first' ? 1 : -1),
+        );
         return;
       }
     }
-    if (
-      this.typeAhead() &&
-      event.key.length === 1 &&
-      !/\s/.test(event.key) &&
-      event.key !== ' '
-    ) {
+    if (this.typeAhead() && isAccordionTypeAheadKey(event.key, event)) {
       const prefix = this.typeAheadBuffer.push(event.key.toLowerCase());
       const ds = this.descriptors();
-      const match = matchByPrefix(
-        ds.map((d) => d.title),
-        prefix,
-        prefix.length === 1 ? index : index - 1,
-        (i) => this.isDisabled(ds[i]),
+      const match = matchAccordionTitle(ds, prefix, index, (i) =>
+        this.isDisabled(ds[i]),
       );
       if (match !== null) {
         event.preventDefault();
@@ -903,10 +894,9 @@ export class OgeAccordion {
    * inside panel content — the APG-optional accordion shortcuts.
    */
   protected onHostKeydown(event: KeyboardEvent): void {
-    if (!this.keyboardNavigation() || !event.ctrlKey) return;
-    const direction =
-      event.key === 'PageDown' ? 1 : event.key === 'PageUp' ? -1 : 0;
-    if (direction === 0) return;
+    if (!this.keyboardNavigation()) return;
+    const direction = accordionPageDirection(event.key, event);
+    if (direction === null) return;
     const from = this.focusedIndex();
     event.preventDefault();
     this.moveFocus(this.step(from, direction));
@@ -1035,9 +1025,11 @@ export class OgeAccordion {
    * only while another panel stays expanded.
    */
   private canCollapse(id: string): boolean {
-    if (this.collapsible()) return true;
-    const expanded = this.expandedIds();
-    return expanded.size > 1 && expanded.has(id);
+    return canCollapseAccordionPanel(
+      this.expandedIds(),
+      id,
+      this.collapsible(),
+    );
   }
 
   private commitExpand(
@@ -1046,9 +1038,9 @@ export class OgeAccordion {
     event?: Event,
   ): void {
     const current = this.expandedIds();
-    const next = this.multiple() ? new Set(current) : new Set<string>();
-    next.add(d.id);
-    this.expandedIds.set(next);
+    this.expandedIds.set(
+      expandedIdsAfterExpand(current, d.id, this.multiple()),
+    );
     this.renderedIds.update((ids) => new Set(ids).add(d.id));
     if (d.contentLoader && !this.loadStates().has(d.id)) {
       this.startLoad(d, index);
@@ -1081,9 +1073,7 @@ export class OgeAccordion {
     // it still held it — hand focus back to the header first (Material's
     // MatExpansionPanelHeader does the same via _containsFocus).
     this.restoreFocusFromPanel(index);
-    const next = new Set(this.expandedIds());
-    next.delete(d.id);
-    this.expandedIds.set(next);
+    this.expandedIds.set(expandedIdsAfterCollapse(this.expandedIds(), d.id));
     if (this.deferRendering() && !this.keepAlive()) {
       this.renderedIds.update((ids) => {
         const copy = new Set(ids);
@@ -1196,7 +1186,7 @@ export class OgeAccordion {
     );
   }
 
-  private setLoadState(id: string, state: LoadState): void {
+  private setLoadState(id: string, state: OgeAccordionLoadState): void {
     this.loadStates.update((states) => new Map(states).set(id, state));
   }
 
@@ -1208,11 +1198,7 @@ export class OgeAccordion {
   }
 
   private resolveIndex(target: number | string): number {
-    const ds = this.descriptors();
-    if (typeof target === 'number') {
-      return target >= 0 && target < ds.length ? target : -1;
-    }
-    return ds.findIndex((d) => d.key === target);
+    return resolveAccordionIndex(this.descriptors(), target);
   }
 
   private warn(message: string): void {
@@ -1220,12 +1206,4 @@ export class OgeAccordion {
       console.warn(`[oge-accordion] ${message}`);
     }
   }
-}
-
-function sameSet(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
-  return a.size === b.size && [...a].every((id) => b.has(id));
-}
-
-function sameKeys(a: readonly string[], b: readonly string[]): boolean {
-  return a.length === b.length && a.every((key, index) => key === b[index]);
 }

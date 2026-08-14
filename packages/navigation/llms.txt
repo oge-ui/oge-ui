@@ -165,6 +165,7 @@ _Presentation_
 | `disabled` | `boolean` | `false` | Disables the whole component. |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density of the node rows. |
 | `ariaLabel` | `string \| undefined` | `—` | Aria label of the tree. |
+| `treeId` | `string \| undefined` | `—` | DOM id put on the inner `role="tree"` element — set it when an outside control (a combobox owning this tree as its popup) must point `aria-controls` at the list rather than the host. |
 | `messages` | `Partial<OgeTreeViewMessages>` | `{}` | Per-instance overrides of the config strings. |
 
 #### Methods
@@ -267,6 +268,7 @@ _Layout_
 | `size` | `number \| string` | `260` | Size of the open panel along its cross axis. A number means pixels. |
 | `minSize` | `number \| string \| undefined` | `—` | Size of the _closed_ panel — the compact rail that keeps icons visible. Only meaningful for `mode: 'side'`: a rail belongs to the layout, and a modal drawer still partly on screen is not closed. |
 | `compactBelow` | `number \| undefined` | `—` | Below this **container** inline size the drawer downgrades to `'overlay'` and closes. Measured against the drawer's own box, never the window, so a drawer nested in a dialog or a split pane adapts to the room it actually has. |
+| `disabled` | `boolean` | `false` | Blocks every open and close gesture, `open()` and `close()` included. A drawer already open stays open and stays usable; only a `compact` close still goes through, because a drawer with no room left must stop covering the content. |
 | `animationEnabled` | `boolean` | `true` | Enables the open/close transition. |
 | `animationDuration` | `number` | `240` | Duration of that transition in milliseconds. Suppressed entirely under `prefers-reduced-motion`. |
 
@@ -274,11 +276,12 @@ _Dismissal_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
+| `showCloseButton` | `boolean` | `false` | Renders the built-in close button in the panel, labelled by the `close` message. It closes through the full pipeline, so `closeGuard` still applies. |
 | `shading` | `boolean` | `true` | Renders the backdrop of a modal drawer. A persistent drawer never shades the content it shares the row with. |
 | `closeOnEscape` | `boolean` | `true` | Escape closes a modal drawer, and only when it is the topmost overlay — a popup opened inside it closes first. A persistent drawer never takes Escape from the page. |
 | `closeOnBackdropClick` | `boolean` | `true` | A click on the backdrop closes the drawer. Only a press that _started_ on the backdrop counts, so a drag ending there does not close it. |
 | `closeGuard` | `(() => boolean \| Promise<boolean>) \| undefined` | `—` | Vetoes a close. Return `false`, throw, or reject to keep the drawer open; a promise reports pending through `closePending` and a second gesture meanwhile is dropped. |
-| `scrollLock` | `boolean` | `true` | Locks body scroll while a modal drawer is open, through the same ref-counted lock every other OGE overlay uses. |
+| `scrollLock` | `boolean` | `false` | Locks body scroll while a modal drawer is open, through the same ref-counted lock every other OGE overlay uses. Off by default, because a drawer is usually an in-page region rather than a page-level dialog. |
 
 _Accessibility_
 
@@ -287,9 +290,10 @@ _Accessibility_
 | `landmark` | `'navigation' \| 'complementary' \| 'region'` | `'navigation'` | Landmark role while persistent. Ignored while modal, which is always `role="dialog"`. |
 | `ariaLabel` | `string \| undefined` | `—` | Accessible name of the panel. Falls back to the `drawer` message. |
 | `ariaLabelledBy` | `string \| undefined` | `—` | id of an element naming the panel. Wins over `ariaLabel`, which is then cleared so there is only one name. |
+| `messages` | `Partial<OgeDrawerMessages> \| undefined` | `—` | Per-instance overrides of the config strings — the panel&rsquo;s fallback accessible name (`drawer`) and the close button&rsquo;s label (`close`). |
 | `autoFocus` | `'first-tabbable' \| 'panel' \| 'none' \| string` | `'first-tabbable'` | Where focus lands when a _modal_ drawer opens; any other string is a CSS selector, and an `[autofocus]` element always wins. A persistent drawer never moves focus. |
 | `restoreFocus` | `boolean` | `true` | Returns focus to the opener on close, but only when focus would otherwise be orphaned — it never steals a target the user has moved to. |
-| `inertBackground` | `boolean` | `true` | Marks the page behind a modal drawer `inert`, so neither Tab nor assistive tech can reach it. None of the four reference drawers does this. |
+| `inertBackground` | `boolean` | `true` | Marks the content behind a modal drawer `inert`, so neither Tab nor assistive tech can reach it. Scoped to the drawer's own content region rather than the document, because a drawer wraps the very content it covers. None of the four reference drawers does this. |
 | `drawerId` | `string (readonly)` | `—` | id of the panel element. The panel stays in the DOM while closed, so a trigger's `aria-controls` always resolves to a real element. |
 
 #### Methods
@@ -383,6 +387,7 @@ _Accessibility_
 | --- | --- | --- | --- |
 | `keyboardNavigation` | `boolean` | `false` | Adds arrow / Home / End over the headers. Off by default because the headers are buttons in a list, not tabs, so they are already Tab-reachable. It moves focus only, and deliberately does **not** wrap. |
 | `ariaLabel` | `string \| undefined` | `—` | Accessible name of the step list. Falls back to the `stepper` message. |
+| `messages` | `Partial<OgeStepperMessages> \| undefined` | `—` | Per-instance overrides of the config strings — the list&rsquo;s accessible name, the optional/completed/invalid announcements and the navigation bar&rsquo;s labels. |
 | `stepperId` | `string (readonly)` | `—` | id prefix of the generated header / panel pairs. |
 | `changePending` | `Signal<boolean>` | `—` | True while an async `stepGuard` is in flight. |
 

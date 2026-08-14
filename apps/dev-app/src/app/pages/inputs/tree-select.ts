@@ -1,8 +1,18 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { OgeTreeSelect } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
+import {
+  REACT_INPUTS_TREE_SELECT_SECTIONS,
+  ReactInputsTreeSelectDemos,
+} from '../react-inputs/tree-select';
 import {
   BASIC_SNIPPET,
   LAZY_SNIPPET,
@@ -67,7 +77,13 @@ const REMOTE_ROOTS: Folder[] = [
 
 @Component({
   selector: 'app-inputs-tree-select',
-  imports: [OgeTreeSelect, DemoCard, DocHeader, PageToc],
+  imports: [
+    OgeTreeSelect,
+    DemoCard,
+    DocHeader,
+    PageToc,
+    ReactInputsTreeSelectDemos,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -75,109 +91,133 @@ const REMOTE_ROOTS: Folder[] = [
       category="Inputs"
       [chips]="['combobox', 'signals', 'tri-state', 'lazy load']"
     >
-      <p>
-        <code>&lt;oge-tree-select&gt;</code> is the hierarchical counterpart of
-        <code>&lt;oge-select-box&gt;</code>: the same field chrome — label
-        modes, validation subscript, clear button, Signal Forms and reactive
-        forms — with a full
-        <a href="/components/tree-view"><code>oge-tree-view</code></a> as the
-        popup. It is a WAI-ARIA combobox with <code>aria-haspopup="tree"</code>;
-        opening moves real DOM focus into the tree, so the tree's own APG
-        keyboard map (arrows, Home/End, type-ahead, <code>*</code>) keeps
-        working.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          <code>&lt;OgeTreeSelect /&gt;</code> from
+          <code>&#64;oge-ui/react-inputs</code> is the hierarchical counterpart
+          of <code>&lt;OgeSelectBox /&gt;</code>: the same field chrome — label
+          modes, validation subscript, clear button, the controlled
+          <code>value</code> + <code>onValueChange</code> pair — with a full
+          <a href="/components/tree-view"><code>OgeTreeView</code></a> as the
+          popup. It is a WAI-ARIA combobox with
+          <code>aria-haspopup="tree"</code>; opening moves real DOM focus into
+          the tree, so the tree's own APG keyboard map (arrows, Home/End,
+          type-ahead, <code>*</code>) keeps working. Traversal, the search
+          filter and the tri-state cascade are
+          <code>&#64;oge-ui/behavior</code>'s tree engine — the same code the
+          Angular editor runs.
+        </p>
+      } @else {
+        <p>
+          <code>&lt;oge-tree-select&gt;</code> is the hierarchical counterpart
+          of <code>&lt;oge-select-box&gt;</code>: the same field chrome — label
+          modes, validation subscript, clear button, Signal Forms and reactive
+          forms — with a full
+          <a href="/components/tree-view"><code>oge-tree-view</code></a> as the
+          popup. It is a WAI-ARIA combobox with
+          <code>aria-haspopup="tree"</code>; opening moves real DOM focus into
+          the tree, so the tree's own APG keyboard map (arrows, Home/End,
+          type-ahead, <code>*</code>) keeps working.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <app-demo-card
-      [chips]="['[(value)]', 'keyExpr / parentIdExpr', 'clear button']"
-      heading="Basic usage"
-      description="The committed value is the selected node's key. A single click picks a node and closes the popup; the chevron expands, so choosing never fights with browsing. Double-click also expands — <code>expandEvent</code> changes that."
-      [code]="basicSnippet"
-    >
-      <oge-tree-select
-        label="Folder"
-        placeholder="Pick a folder"
-        [items]="folders"
-        displayExpr="name"
-        [rootValue]="null"
-        [showClearButton]="true"
-        [expandedKeys]="[1]"
-        [(value)]="folderId"
-      />
-      <p class="mt-2 text-sm opacity-70">
-        value: <code>{{ folderId() ?? 'null' }}</code>
-      </p>
-    </app-demo-card>
+    @if (fw.isReact()) {
+      <app-react-inputs-tree-select-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['[(value)]', 'keyExpr / parentIdExpr', 'clear button']"
+        heading="Basic usage"
+        description="The committed value is the selected node's key. A single click picks a node and closes the popup; the chevron expands, so choosing never fights with browsing. Double-click also expands — <code>expandEvent</code> changes that."
+        [code]="basicSnippet"
+      >
+        <oge-tree-select
+          label="Folder"
+          placeholder="Pick a folder"
+          [items]="folders"
+          displayExpr="name"
+          [rootValue]="null"
+          [showClearButton]="true"
+          [expandedKeys]="[1]"
+          [(value)]="folderId"
+        />
+        <p class="mt-2 text-sm opacity-70">
+          value: <code>{{ folderId() ?? 'null' }}</code>
+        </p>
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['itemsExpr', 'searchEnabled']"
-      heading="Nested data & search"
-      description="Point <code>itemsExpr</code> at the children field for hierarchical payloads. <code>searchEnabled</code> puts the tree's own search box inside the popup — accent-insensitive, auto-expanding to matches and highlighting them."
-      [code]="nestedSnippet"
-    >
-      <oge-tree-select
-        label="Source file"
-        placeholder="Pick a file"
-        [items]="fileTree"
-        itemsExpr="children"
-        displayExpr="name"
-        [searchEnabled]="true"
-        [showClearButton]="true"
-        [expandedKeys]="[1, 2]"
-        [(value)]="fileId"
-      />
-      <p class="mt-2 text-sm opacity-70">
-        value: <code>{{ fileId() ?? 'null' }}</code>
-      </p>
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['itemsExpr', 'searchEnabled']"
+        heading="Nested data & search"
+        description="Point <code>itemsExpr</code> at the children field for hierarchical payloads. <code>searchEnabled</code> puts the tree's own search box inside the popup — accent-insensitive, auto-expanding to matches and highlighting them."
+        [code]="nestedSnippet"
+      >
+        <oge-tree-select
+          label="Source file"
+          placeholder="Pick a file"
+          [items]="fileTree"
+          itemsExpr="children"
+          displayExpr="name"
+          [searchEnabled]="true"
+          [showClearButton]="true"
+          [expandedKeys]="[1, 2]"
+          [(value)]="fileId"
+        />
+        <p class="mt-2 text-sm opacity-70">
+          value: <code>{{ fileId() ?? 'null' }}</code>
+        </p>
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['selectionMode', 'showCheckBoxes', 'selectedKeysMode']"
-      heading="Multiple selection"
-      description="With <code>multiple</code> the value becomes an array of keys and the popup stays open while you pick. Checking a node cascades to its descendants and normalizes up, so <code>selectedKeysMode: 'leavesOnly'</code> is often what you actually want to store."
-      [code]="multipleSnippet"
-    >
-      <oge-tree-select
-        label="Permissions"
-        placeholder="Grant access"
-        [items]="folders"
-        displayExpr="name"
-        [rootValue]="null"
-        selectionMode="multiple"
-        showCheckBoxes="selectAll"
-        selectedKeysMode="leavesOnly"
-        [showClearButton]="true"
-        [expandedKeys]="[1, 2, 6]"
-        [(value)]="permissions"
-      />
-      <p class="mt-2 text-sm opacity-70">
-        value: <code>{{ permissionsText() }}</code>
-      </p>
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['selectionMode', 'showCheckBoxes', 'selectedKeysMode']"
+        heading="Multiple selection"
+        description="With <code>multiple</code> the value becomes an array of keys and the popup stays open while you pick. Checking a node cascades to its descendants and normalizes up, so <code>selectedKeysMode: 'leavesOnly'</code> is often what you actually want to store."
+        [code]="multipleSnippet"
+      >
+        <oge-tree-select
+          label="Permissions"
+          placeholder="Grant access"
+          [items]="folders"
+          displayExpr="name"
+          [rootValue]="null"
+          selectionMode="multiple"
+          showCheckBoxes="selectAll"
+          selectedKeysMode="leavesOnly"
+          [showClearButton]="true"
+          [expandedKeys]="[1, 2, 6]"
+          [(value)]="permissions"
+        />
+        <p class="mt-2 text-sm opacity-70">
+          value: <code>{{ permissionsText() }}</code>
+        </p>
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['loadChildren', 'hasItemsExpr']"
-      heading="Lazy load on demand"
-      description="Bind only the roots and let <code>loadChildren</code> fetch the rest on first expand; a placeholder row shows while the promise is pending. Fetched nodes join the index, so a cascading selection reaches them too."
-      [code]="lazySnippet"
-    >
-      <oge-tree-select
-        label="Remote folder"
-        placeholder="Browse the server"
-        [items]="remoteRoots"
-        displayExpr="name"
-        [rootValue]="null"
-        hasItemsExpr="hasItems"
-        [loadChildren]="loadChildren"
-        [showClearButton]="true"
-        [(value)]="remoteId"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['loadChildren', 'hasItemsExpr']"
+        heading="Lazy load on demand"
+        description="Bind only the roots and let <code>loadChildren</code> fetch the rest on first expand; a placeholder row shows while the promise is pending. Fetched nodes join the index, so a cascading selection reaches them too."
+        [code]="lazySnippet"
+      >
+        <oge-tree-select
+          label="Remote folder"
+          placeholder="Browse the server"
+          [items]="remoteRoots"
+          displayExpr="name"
+          [rootValue]="null"
+          hasItemsExpr="hasItems"
+          [loadChildren]="loadChildren"
+          [showClearButton]="true"
+          [(value)]="remoteId"
+        />
+      </app-demo-card>
+    }
   `,
 })
 export class InputsTreeSelectPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly reactSections = REACT_INPUTS_TREE_SELECT_SECTIONS;
   protected readonly basicSnippet = BASIC_SNIPPET;
   protected readonly nestedSnippet = NESTED_SNIPPET;
   protected readonly multipleSnippet = MULTIPLE_SNIPPET;

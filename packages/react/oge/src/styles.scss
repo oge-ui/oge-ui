@@ -1,0 +1,15 @@
+// One stylesheet for the whole React suite — the umbrella's counterpart of the
+// per-family `styles.css`. Each family's stylesheet is the Angular package's
+// SCSS compiled verbatim (ADR 0001), so importing this once is exactly
+// equivalent to importing every family's stylesheet.
+//
+// Every file below is named `styles.scss`, so each needs an explicit
+// namespace: Sass derives the namespace from the filename and refuses a
+// second module with the same one. Nothing is referenced through these
+// namespaces — the families export no Sass members, only rules.
+@use '../../buttons/src/styles.scss' as buttons;
+@use '../../overlay/src/styles.scss' as overlay;
+@use '../../inputs/src/styles.scss' as inputs;
+@use '../../tabs/src/styles.scss' as tabs;
+@use '../../layout/src/styles.scss' as layout;
+@use '../../navigation/src/styles.scss' as navigation;

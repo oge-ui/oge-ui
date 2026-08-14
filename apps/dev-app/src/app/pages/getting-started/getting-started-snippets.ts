@@ -33,3 +33,43 @@ export class SearchBar {
   // async action: the button manages its own loading spinner
   readonly load = () => fetch('/api/search?q=' + this.query());
 }`;
+
+/**
+ * The React layer's counterpart of `QUICK_START` (ADR 0002) — the same search
+ * bar, in React idiom: a controlled editor and an async action button.
+ */
+export const QUICK_START_REACT = `'use client';
+
+import { useState } from 'react';
+import { OgeButton, OgeTextBox } from '@oge-ui/react';
+
+export function SearchBar() {
+  const [query, setQuery] = useState('');
+
+  // async action: the button manages its own loading spinner
+  const load = () => fetch('/api/search?q=' + query);
+
+  return (
+    <>
+      <OgeTextBox
+        label="Search"
+        value={query}
+        onValueChange={setQuery}
+        showClearButton
+        onEnterKey={load}
+      />
+      <OgeButton text="Search" severity="accent" action={load} />
+    </>
+  );
+}`;
+
+export const INSTALL_REACT_INTRO = `# everything at once — one install, one import path
+npm install @oge-ui/react
+
+# …or install only what you use — every package is standalone
+npm install @oge-ui/react-buttons  # buttons, groups, drop-downs
+npm install @oge-ui/react-inputs   # text, number, select, date, color editors
+npm install @oge-ui/react-tabs     # tab strip and tab panel
+npm install @oge-ui/react-layout   # card, accordion, splitter, toolbar, loaders
+npm install @oge-ui/react-navigation # tree view, drawer, stepper, menubar, breadcrumb
+npm install @oge-ui/react-overlay  # anchored popups and menus`;

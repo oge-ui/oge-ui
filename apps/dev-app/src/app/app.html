@@ -10,18 +10,30 @@
   "
 >
   <div
-    class="relative mx-auto flex h-13 items-center gap-1 px-5"
+    [class]="
+      isHome()
+        ? 'relative mx-auto flex h-13 items-center gap-1 px-5'
+        : 'relative mx-auto flex h-13 items-center gap-1 px-5 md:pl-[266px]'
+    "
     style="height: 52px"
   >
-    <a routerLink="/" class="group flex items-center gap-2.5 pr-4">
+    <!--
+      On doc pages the brand lives at the top of the full-height sidebar, so
+      the header carries it only on the landing page — and on small screens,
+      where the sidebar collapses into the flow and no longer leads the page.
+    -->
+    <a
+      routerLink="/"
+      [class]="
+        isHome()
+          ? 'group flex items-center gap-2.5 pr-3'
+          : 'group flex items-center gap-2.5 pr-3 md:hidden'
+      "
+    >
       <img src="favicon-192.png" alt="OGE logo" class="h-8 w-8" />
       <span
         class="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-100"
         >OGE</span
-      >
-      <span
-        class="rounded-md border border-gray-200 px-1.5 py-px font-mono text-[10.5px] leading-4 text-gray-400 dark:border-white/10 dark:text-gray-500"
-        >v{{ version }}</span
       >
     </a>
     <nav
@@ -43,21 +55,36 @@
     </nav>
     <div class="flex items-center gap-2 max-md:ml-auto">
       @if (!isHome()) {
-      <label class="flex items-center gap-2">
-        <span
-          class="text-[12px] font-medium text-gray-400 max-sm:hidden dark:text-gray-500"
-          >Theme</span
-        >
-        <select
-          class="h-7 rounded-md border border-gray-200 bg-transparent px-1.5 text-[12.5px] text-gray-700 outline-none transition-colors focus:border-indigo-400 dark:border-white/10 dark:text-gray-300 dark:focus:border-indigo-500 [&>option]:bg-white [&>option]:text-gray-700 dark:[&>option]:bg-[#0f121b] dark:[&>option]:text-gray-300"
-          [value]="themeService.theme()"
-          (change)="themeService.theme.set($any($event.target).value)"
-        >
-          @for (theme of themes; track theme.value) {
-          <option [value]="theme.value">{{ theme.label }}</option>
-          }
-        </select>
-      </label>
+      <!--
+        Framework lives in the header, beside the theme: it is a site-wide
+        preference, picked once and honoured on every page — the same place
+        Ionic and the DevExtreme gallery put it. Pages carry no switch of their
+        own, so there is exactly one control and no doubt about which wins.
+      -->
+      <app-framework-switch class="app-header-fw" />
+      <!--
+        The theme select is the suite's own OgeSelectBox — the docs chrome
+        dogfooding the components it documents — with each option led by the
+        mark of the library its theme bridges to.
+      -->
+      <oge-select-box
+        class="app-theme-select max-sm:hidden"
+        [items]="themes"
+        displayExpr="label"
+        valueExpr="value"
+        [value]="themeService.theme()"
+        (valueChange)="themeService.theme.set($any($event))"
+        [itemTemplate]="themeOption"
+        [showClearButton]="false"
+        label="Theme"
+        labelMode="hidden"
+      />
+      <ng-template #themeOption let-theme>
+        <span class="flex items-center gap-2">
+          <app-theme-logo [name]="theme.value" [size]="14" />
+          {{ theme.label }}
+        </span>
+      </ng-template>
       }
       <button
         type="button"
@@ -98,16 +125,34 @@
 </header>
 <div
   [class]="
-    isHome()
-      ? 'flex flex-1 flex-col'
-      : 'grid flex-1 grid-cols-[250px_minmax(0,1fr)] max-md:grid-cols-1'
+    isHome() ? 'flex flex-1 flex-col' : 'flex flex-1 flex-col md:pl-[250px]'
   "
 >
   @if (!isHome()) {
   <nav
-    class="scrollbar-hide sticky top-[52px] flex max-h-[calc(100vh-52px)] flex-col overflow-y-auto border-r border-gray-200 bg-gray-50/60 px-3 py-5 max-md:static max-md:max-h-none max-md:border-b max-md:border-r-0 dark:border-gray-800 dark:bg-gray-900/30"
+    class="app-sidebar-glow scrollbar-hide fixed inset-y-0 left-0 z-40 flex w-[250px] flex-col overflow-y-auto border-r border-gray-200 bg-gray-50 px-3 py-4 max-md:static max-md:z-auto max-md:w-auto max-md:border-b max-md:border-r-0 max-md:py-5 dark:border-gray-800 dark:bg-[#11141c]"
     aria-label="Documentation"
   >
+    <!--
+      The brand leads the sidebar: OGE mark, then the active framework's mark
+      right beside it. The framework colour radiates softly out of its badge
+      and down into the column below — which framework you are reading is
+      visible before a single word. (On small screens the sidebar joins the
+      flow and the header carries the brand instead.)
+    -->
+    <div class="mb-4 flex items-center gap-2.5 px-1 max-md:hidden">
+      <a routerLink="/" class="flex items-center gap-2.5">
+        <img src="favicon-192.png" alt="OGE logo" class="h-8 w-8" />
+        <span
+          class="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-100"
+          >OGE</span
+        >
+      </a>
+      <span class="app-fw-brandmark ml-auto" [attr.title]="frameworkLabel()">
+        <app-framework-logo [name]="framework.framework()" [size]="17" />
+        <span class="sr-only">{{ frameworkLabel() }}</span>
+      </span>
+    </div>
     <div class="relative mb-4 px-1">
       <span
         class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -203,6 +248,22 @@
   }
   <main [class]="isHome() ? 'min-w-0' : 'min-w-0 px-8 py-10 max-md:px-4'">
     <div [class]="isHome() ? '' : 'doc-shell'">
+      <!--
+        The framework preference is site-wide, so a reader can land on a page
+        that has no version in the layer they picked. Say so rather than quietly
+        showing the Angular page — otherwise they copy syntax that will not
+        compile in their app.
+      -->
+      @if (!framework.currentPageSupported()) {
+      <p class="app-fw-fallback" role="status">
+        <app-framework-logo name="react" [size]="14" [brand]="true" />
+        This page is not in the React packages yet — showing the Angular
+        version.
+        <button type="button" (click)="framework.set('angular')">
+          Switch to Angular
+        </button>
+      </p>
+      }
       <router-outlet></router-outlet>
     </div>
   </main>

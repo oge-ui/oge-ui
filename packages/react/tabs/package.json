@@ -1,0 +1,49 @@
+{
+  "name": "@oge-ui/react-tabs",
+  "version": "0.11.0",
+  "description": "React tabs from the OGE UI suite: a WAI-ARIA APG tab strip and tab panel with data-driven or declarative tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards and drag reordering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.",
+  "keywords": [
+    "react",
+    "tabs",
+    "tab-panel",
+    "tab-strip",
+    "navigation",
+    "accessibility",
+    "design-system",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.11.0",
+    "@oge-ui/react-overlay": "0.11.0"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/tabs"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

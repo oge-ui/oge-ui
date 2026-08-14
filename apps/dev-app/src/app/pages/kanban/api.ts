@@ -25,7 +25,7 @@ const SECTIONS = ['OgeKanban'] as const;
         package; live demos are on the
         <a
           routerLink="/components/kanban"
-          class="text-indigo-600 dark:text-indigo-400"
+          class="text-indigo-600 underline dark:text-indigo-400"
           >overview</a
         >
         page.

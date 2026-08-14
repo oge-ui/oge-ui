@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ApiReference } from '../../shared/api-reference';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
+import { ReactNavigationApiSections } from '../react-navigation/api';
+import { REACT_NAVIGATION_API_SECTIONS } from '../react-navigation/react-navigation-api-data';
 import {
   OGE_BREADCRUMB_API,
   OGE_BREADCRUMB_CONFIG_API,
@@ -42,7 +45,7 @@ const SECTIONS = [
 
 @Component({
   selector: 'app-navigation-api',
-  imports: [ApiReference, DocHeader, PageToc],
+  imports: [ApiReference, DocHeader, PageToc, ReactNavigationApiSections],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -50,79 +53,101 @@ const SECTIONS = [
       category="Navigation"
       [chips]="['Properties', 'Methods', 'Events', 'Types']"
     >
-      <p>
-        Full surface of <code>&#64;oge-ui/navigation</code>: the
-        <code>oge-tree-view</code> component, its three template slots, the
-        WAI-ARIA APG keyboard map and the config provider.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          Full surface of <code>&#64;oge-ui/react-navigation</code>: the
+          <code>&lt;OgeTreeView&gt;</code> component with its render props, the
+          drawer, stepper, menubar, breadcrumb and pagination components, the
+          WAI-ARIA APG keyboard maps and one context provider per component.
+          React has no projected child components, so the menubar's and
+          breadcrumb's declarative Angular children are plain data objects in an
+          <code>items</code> prop, and every public method lives on the
+          component's <code>ref</code> handle.
+        </p>
+      } @else {
+        <p>
+          Full surface of <code>&#64;oge-ui/navigation</code>: the
+          <code>oge-tree-view</code> component, its three template slots, the
+          WAI-ARIA APG keyboard map and the config provider.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <app-api-reference
-      title="OgeTreeView"
-      selector="oge-tree-view"
-      [sections]="treeViewApi"
-    />
-    <app-api-reference title="Tree view configuration" [sections]="configApi" />
-    <app-api-reference
-      title="OgeDrawer"
-      selector="oge-drawer"
-      [sections]="drawerApi"
-    />
-    <app-api-reference
-      title="Drawer configuration"
-      [sections]="drawerConfigApi"
-    />
-    <app-api-reference
-      title="OgeStepper"
-      selector="oge-stepper"
-      [sections]="stepperApi"
-    />
-    <app-api-reference
-      title="Stepper configuration"
-      [sections]="stepperConfigApi"
-    />
-    <app-api-reference
-      title="OgeMenubar"
-      selector="oge-menubar"
-      [sections]="menubarApi"
-    />
-    <app-api-reference
-      title="OgeMenubarItem"
-      selector="oge-menubar-item"
-      [sections]="menubarItemApi"
-    />
-    <app-api-reference
-      title="Menubar configuration"
-      [sections]="menubarConfigApi"
-    />
-    <app-api-reference
-      title="OgeBreadcrumb"
-      selector="oge-breadcrumb"
-      [sections]="breadcrumbApi"
-    />
-    <app-api-reference
-      title="OgeBreadcrumbItem"
-      selector="oge-breadcrumb-item"
-      [sections]="breadcrumbItemApi"
-    />
-    <app-api-reference
-      title="Breadcrumb configuration"
-      [sections]="breadcrumbConfigApi"
-    />
-    <app-api-reference
-      title="OgePagination"
-      selector="oge-pagination"
-      [sections]="paginationApi"
-    />
-    <app-api-reference
-      title="Pagination configuration"
-      [sections]="paginationConfigApi"
-    />
+    @if (fw.isReact()) {
+      <app-react-navigation-api />
+    } @else {
+      <app-api-reference
+        title="OgeTreeView"
+        selector="oge-tree-view"
+        [sections]="treeViewApi"
+      />
+      <app-api-reference
+        title="Tree view configuration"
+        [sections]="configApi"
+      />
+      <app-api-reference
+        title="OgeDrawer"
+        selector="oge-drawer"
+        [sections]="drawerApi"
+      />
+      <app-api-reference
+        title="Drawer configuration"
+        [sections]="drawerConfigApi"
+      />
+      <app-api-reference
+        title="OgeStepper"
+        selector="oge-stepper"
+        [sections]="stepperApi"
+      />
+      <app-api-reference
+        title="Stepper configuration"
+        [sections]="stepperConfigApi"
+      />
+      <app-api-reference
+        title="OgeMenubar"
+        selector="oge-menubar"
+        [sections]="menubarApi"
+      />
+      <app-api-reference
+        title="OgeMenubarItem"
+        selector="oge-menubar-item"
+        [sections]="menubarItemApi"
+      />
+      <app-api-reference
+        title="Menubar configuration"
+        [sections]="menubarConfigApi"
+      />
+      <app-api-reference
+        title="OgeBreadcrumb"
+        selector="oge-breadcrumb"
+        [sections]="breadcrumbApi"
+      />
+      <app-api-reference
+        title="OgeBreadcrumbItem"
+        selector="oge-breadcrumb-item"
+        [sections]="breadcrumbItemApi"
+      />
+      <app-api-reference
+        title="Breadcrumb configuration"
+        [sections]="breadcrumbConfigApi"
+      />
+      <app-api-reference
+        title="OgePagination"
+        selector="oge-pagination"
+        [sections]="paginationApi"
+      />
+      <app-api-reference
+        title="Pagination configuration"
+        [sections]="paginationConfigApi"
+      />
+    }
   `,
 })
 export class NavigationApiPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly reactSections = REACT_NAVIGATION_API_SECTIONS;
   protected readonly treeViewApi = OGE_TREE_VIEW_API;
   protected readonly configApi = OGE_TREE_VIEW_CONFIG_API;
   protected readonly drawerApi = OGE_DRAWER_API;

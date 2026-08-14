@@ -16,11 +16,15 @@ import {
   untracked,
   viewChildren,
 } from '@angular/core';
+import { runAsyncGuard } from '@oge-ui/core';
 import {
-  edgeEnabledIndex,
-  runAsyncGuard,
-  stepEnabledIndex,
-} from '@oge-ui/core';
+  isStepReachable,
+  resolveStepIndex,
+  stepBlockReason,
+  stepItemDescriptor,
+  stepState,
+  stepperKeyTarget,
+} from '@oge-ui/behavior';
 import { OGE_STEPPER_CONFIG, type OgeStepperMessages } from './config';
 import { OgeStep } from './step';
 import type { OgeStepDescriptor } from './stepper-descriptor';
@@ -113,7 +117,7 @@ let nextStepperId = 0;
             [attr.aria-controls]="panelId(i)"
             [attr.aria-describedby]="d.optional ? optionalId(i) : null"
             [disabled]="d.disabled || disabled()"
-            [attr.aria-disabled]="reachable(d, i) ? null : 'true'"
+            [attr.aria-disabled]="reachable(i) ? null : 'true'"
             (click)="onHeaderClick(i, $event)"
           >
             <span class="oge-stepper-indicator" aria-hidden="true">
@@ -373,21 +377,7 @@ export class OgeStepper {
       const fromItems = (this.steps() ?? [])
         .filter((item) => item.visible !== false)
         .map((item, index) => ({
-          id: item.key ?? `i${index}`,
-          key: item.key,
-          label: item.label ?? '',
-          description: item.description,
-          icon: item.icon,
-          iconClass: item.iconClass,
-          disabled: item.disabled ?? false,
-          completed: item.completed ?? false,
-          optional: item.optional ?? false,
-          editable: item.editable ?? true,
-          invalid: item.invalid ?? false,
-          errorMessage: item.errorMessage,
-          cssClass: item.cssClass,
-          stepGuard: item.stepGuard,
-          item,
+          ...stepItemDescriptor(item, index),
           headerTemplate: headerTpl,
           indicatorTemplate: indicatorTpl,
           contentTemplate: undefined,
@@ -435,10 +425,7 @@ export class OgeStepper {
 
   /** Moves to the step at an index or with a key, through the full pipeline. */
   goTo(target: number | string, event?: Event): void {
-    const index =
-      typeof target === 'number'
-        ? target
-        : this.descriptors().findIndex((d) => d.key === target);
+    const index = resolveStepIndex(this.descriptors(), target);
     if (index !== -1) this.requestChange(index, event);
   }
 
@@ -506,18 +493,23 @@ export class OgeStepper {
    * has already completed still reads as needing attention.
    */
   protected stateOf(d: OgeStepDescriptor, index: number): OgeStepState {
-    if (d.invalid) return 'error';
-    if (index === this.activeIndex()) return 'active';
-    if (d.completed) return 'done';
-    return 'number';
+    return stepState(d, index, this.activeIndex());
   }
 
   /** Whether a header may be activated at all — drives `aria-disabled`. */
-  protected reachable(d: OgeStepDescriptor, index: number): boolean {
-    if (d.disabled || this.disabled()) return false;
-    if (index === this.activeIndex()) return true;
-    if (index < this.activeIndex()) return d.editable;
-    return !this.linear() || this.stepsCompleteBefore(index);
+  protected reachable(index: number): boolean {
+    return isStepReachable(this.reachRequest(index));
+  }
+
+  /** The shared shape the framework-free linear-mode decisions take. */
+  private reachRequest(index: number) {
+    return {
+      descriptors: this.descriptors(),
+      index,
+      activeIndex: this.activeIndex(),
+      linear: this.linear(),
+      disabled: this.disabled(),
+    };
   }
 
   protected onHeaderClick(index: number, event: Event): void {
@@ -531,25 +523,18 @@ export class OgeStepper {
       !vertical &&
       getComputedStyle(this.headerEls()[0]?.nativeElement ?? document.body)
         .direction === 'rtl';
-    const nextKey = vertical ? 'ArrowDown' : rtl ? 'ArrowLeft' : 'ArrowRight';
-    const prevKey = vertical ? 'ArrowUp' : rtl ? 'ArrowRight' : 'ArrowLeft';
     const ds = this.descriptors();
-    const isDisabled = (i: number) => ds[i]?.disabled ?? true;
-    const current = this.focusedIndex();
-    let target: number | null = null;
-
-    if (event.key === nextKey) {
-      // wrap = false: a process does not loop from the last step to the first.
-      target = stepEnabledIndex(ds.length, current, 1, isDisabled, false);
-    } else if (event.key === prevKey) {
-      target = stepEnabledIndex(ds.length, current, -1, isDisabled, false);
-    } else if (event.key === 'Home') {
-      target = edgeEnabledIndex(ds.length, 1, isDisabled);
-    } else if (event.key === 'End') {
-      target = edgeEnabledIndex(ds.length, -1, isDisabled);
-    } else {
-      return;
-    }
+    // wrap = false inside the helper: a process does not loop from the last
+    // step back to the first.
+    const target = stepperKeyTarget({
+      key: event.key,
+      orientation: this.orientation(),
+      rtl,
+      count: ds.length,
+      current: this.focusedIndex(),
+      isDisabled: (i) => ds[i]?.disabled ?? true,
+    });
+    if (target === undefined) return;
     event.preventDefault();
     // Focus only — activation stays on Enter/Space, which the buttons handle
     // natively. Moving focus must not run a guard.
@@ -564,13 +549,6 @@ export class OgeStepper {
     return index === -1 ? this.activeIndex() : index;
   }
 
-  /** Every step before `index` is complete, optional, or was skipped legally. */
-  private stepsCompleteBefore(index: number): boolean {
-    return this.descriptors()
-      .slice(0, index)
-      .every((d) => d.completed || d.optional);
-  }
-
   /** `stepChanging` → `stepGuard` → commit → `stepChanged`. */
   private requestChange(index: number, event?: Event): void {
     const ds = this.descriptors();
@@ -578,27 +556,12 @@ export class OgeStepper {
     if (index === from || this.disabled() || this._changePending()) return;
     const target = ds[index];
     if (!target) return;
-    if (target.disabled) {
+    const blocked = stepBlockReason(this.reachRequest(index));
+    if (blocked) {
       this.stepBlocked.emit({
         fromIndex: from,
         toIndex: index,
-        reason: 'disabled',
-      });
-      return;
-    }
-    if (index < from && !target.editable) {
-      this.stepBlocked.emit({
-        fromIndex: from,
-        toIndex: index,
-        reason: 'editable',
-      });
-      return;
-    }
-    if (index > from && this.linear() && !this.stepsCompleteBefore(index)) {
-      this.stepBlocked.emit({
-        fromIndex: from,
-        toIndex: index,
-        reason: 'linear',
+        reason: blocked,
       });
       return;
     }

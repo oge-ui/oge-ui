@@ -42,11 +42,20 @@ const SECTIONS = [
     <h2 id="how-it-works" class="scroll-mt-20">How it works</h2>
     <p>
       Each package exports a <code>messages</code> interface (for example
-      <code>OgeGridMessages</code>, <code>OgeInputsMessages</code>) and a
-      <code>provideOge…Config()</code> provider. Catalogs are partial — you only
-      supply the strings you change, the rest keep their English defaults.
-      Patterns support <code>{{ '{' }}placeholder{{ '}' }}</code>
-      interpolation for dynamic values.
+      <code>OgeGridMessages</code>, <code>OgeInputsMessages</code>). Catalogs
+      are partial — you only supply the strings you change, the rest keep their
+      English defaults. Patterns support
+      <code>{{ '{' }}placeholder{{ '}' }}</code> interpolation for dynamic
+      values.
+    </p>
+    <p class="app-shared-note">
+      <strong>The catalogs themselves are shared.</strong> Message names,
+      defaults and placeholder syntax live in the framework-free packages, so a
+      translation written once is correct in both render layers. Only the
+      delivery differs: Angular takes a
+      <code>provideOge…Config()</code> provider, React an
+      <code>&lt;Oge…ConfigProvider&gt;</code> — the same object, handed over the
+      way each framework expects.
     </p>
 
     <h2 id="global-configuration" class="scroll-mt-20">Global configuration</h2>

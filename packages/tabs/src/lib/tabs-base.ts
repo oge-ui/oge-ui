@@ -13,9 +13,16 @@ import {
   viewChild,
 } from '@angular/core';
 import { runAsyncGuard } from '@oge-ui/core';
+import {
+  applyTabOrder,
+  canSelectTab,
+  reorderTabIds,
+  resolveTabIndex,
+  tabItemDescriptor,
+} from '@oge-ui/behavior';
 import { OGE_TABS_CONFIG, type OgeTabsMessages } from './config';
 import { OgeTab } from './tab';
-import { applyTabOrder, type OgeTabDescriptor } from './tab-descriptor';
+import { type OgeTabDescriptor } from './tab-descriptor';
 import {
   OgeTabStrip,
   type OgeTabStripActivateEvent,
@@ -158,18 +165,9 @@ export abstract class OgeTabsBase {
     const fromItems = (this.items() ?? [])
       .filter((item) => item.visible !== false)
       .map((item, index) => ({
-        id: item.key ?? `i${index}`,
-        key: item.key,
-        text: item.text ?? '',
-        hint: item.hint,
-        badge: item.badge,
-        disabled: item.disabled ?? false,
-        closable: item.closable ?? defaultClosable,
-        dirty: item.dirty ?? false,
-        item,
+        ...tabItemDescriptor(item, index, defaultClosable),
         headerTemplate: headerTpl,
         contentTemplate: contentTpl,
-        closeGuard: item.closeGuard,
       }));
     return applyTabOrder([...fromChildren, ...fromItems], this.tabOrder());
   });
@@ -253,10 +251,7 @@ export abstract class OgeTabsBase {
     this.tabReordering.emit(reordering);
     if (reordering.cancel) return;
     const selectedId = ds[this.selectedIndex()]?.id;
-    const ids = ds.map((d) => d.id);
-    ids.splice(from, 1);
-    ids.splice(to, 0, moved.id);
-    this.tabOrder.set(ids);
+    this.tabOrder.set(reorderTabIds(ds, from, to));
     if (selectedId !== undefined) {
       const newIndex = this.descriptors().findIndex((d) => d.id === selectedId);
       if (newIndex !== -1) this.selectedIndex.set(newIndex);
@@ -268,9 +263,8 @@ export abstract class OgeTabsBase {
   private requestSelect(index: number, event?: Event): void {
     const ds = this.descriptors();
     const from = this.selectedIndex();
-    if (index === from || this.disabled()) return;
+    if (!canSelectTab(ds, index, from, this.disabled())) return;
     const target = ds[index];
-    if (!target || target.disabled) return;
     const changing: OgeTabSelectionChangingEvent = {
       fromIndex: from,
       toIndex: index,
@@ -333,10 +327,6 @@ export abstract class OgeTabsBase {
   }
 
   private resolveIndex(target: number | string): number {
-    const ds = this.descriptors();
-    if (typeof target === 'number') {
-      return target >= 0 && target < ds.length ? target : -1;
-    }
-    return ds.findIndex((d) => d.key === target);
+    return resolveTabIndex(this.descriptors(), target);
   }
 }

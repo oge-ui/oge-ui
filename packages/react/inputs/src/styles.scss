@@ -1,0 +1,16 @@
+// The React editors render the exact `.oge-input-*` markup the Angular
+// package styles — so this stylesheet IS the Angular package's SCSS,
+// compiled into this package's own `styles.css`. No second stylesheet,
+// no drift (ADR 0001).
+@use '../../../inputs/src/lib/field/field-chrome';
+@use '../../../inputs/src/lib/check-box/check-box';
+@use '../../../inputs/src/lib/switch/switch';
+@use '../../../inputs/src/lib/radio-group/radio-group';
+@use '../../../inputs/src/lib/slider/slider';
+@use '../../../inputs/src/lib/color-box/color-box';
+@use '../../../inputs/src/lib/calendar/calendar';
+@use '../../../inputs/src/lib/date-box/date-box';
+// NOTE: the tree select's popup is `@oge-ui/react-navigation`'s tree component
+// itself, so its rules ship in *that* package's `styles.css` — exactly as the
+// popup box it sits in ships in `@oge-ui/react-overlay`'s. Inlining them here
+// would duplicate rules for markup this package does not render.

@@ -16,11 +16,16 @@ import {
 } from '@angular/core';
 import {
   OGE_PAGE_ELLIPSIS,
-  resolveMenubarCompact,
+  OGE_PAGINATION_DEFAULT_MAX_BUTTONS,
+  clampPaginationIndex,
+  formatPaginationMessage,
+  paginationHasNextPage,
+  paginationInfoText,
+  paginationIsCompact,
+  paginationPageCount,
   resolvePageCount,
-  resolvePageRange,
   resolvePageWindow,
-} from '@oge-ui/core';
+} from '@oge-ui/behavior';
 import { OGE_PAGINATION_CONFIG, type OgePaginationMessages } from './config';
 import type {
   OgePaginationDisplayMode,
@@ -283,11 +288,9 @@ export class OgePagination {
   }));
 
   /** Total pages — `undefined` while the total is unknown. */
-  readonly pageCount = computed<number | undefined>(() => {
-    const itemCount = this.itemCount();
-    if (itemCount === undefined) return undefined;
-    return resolvePageCount({ itemCount, pageSize: this.pageSize() });
-  });
+  readonly pageCount = computed<number | undefined>(() =>
+    paginationPageCount(this.itemCount(), this.pageSize()),
+  );
 
   protected readonly unknownTotal = computed(
     () => this.itemCount() === undefined,
@@ -297,7 +300,10 @@ export class OgePagination {
   protected readonly knownPageCount = computed(() => this.pageCount() ?? 1);
 
   private readonly resolvedMaxButtons = computed(
-    () => this.maxButtons() ?? this.config.maxButtons ?? 7,
+    () =>
+      this.maxButtons() ??
+      this.config.maxButtons ??
+      OGE_PAGINATION_DEFAULT_MAX_BUTTONS,
   );
 
   private readonly resolvedDisplayMode = computed(
@@ -306,15 +312,13 @@ export class OgePagination {
 
   private readonly containerSize = signal(0);
 
-  protected readonly isCompact = computed(() => {
-    const mode = this.resolvedDisplayMode();
-    if (mode === 'compact') return true;
-    if (mode !== 'adaptive') return false;
-    return resolveMenubarCompact({
+  protected readonly isCompact = computed(() =>
+    paginationIsCompact({
+      displayMode: this.resolvedDisplayMode(),
       containerSize: this.containerSize(),
-      compactBelow: this.config.compactBelow ?? 480,
-    }).compact;
-  });
+      compactBelow: this.config.compactBelow,
+    }),
+  );
 
   protected readonly window = computed(() =>
     resolvePageWindow({
@@ -324,19 +328,13 @@ export class OgePagination {
     }),
   );
 
-  protected readonly infoText = computed(() => {
-    const itemCount = this.itemCount() ?? 0;
-    const range = resolvePageRange({
+  protected readonly infoText = computed(() =>
+    paginationInfoText(this.msg().info, {
       pageIndex: this.pageIndex(),
       pageSize: this.pageSize(),
-      itemCount,
-    });
-    return this.format(this.msg().info, {
-      from: range.from,
-      to: range.to,
-      itemCount,
-    });
-  });
+      itemCount: this.itemCount(),
+    }),
+  );
 
   protected readonly indicatorText = computed(() =>
     this.format(this.msg().pageIndicator, {
@@ -400,8 +398,7 @@ export class OgePagination {
 
   /** `true` while the total is unknown — the component cannot know the end. */
   hasNextPage(): boolean {
-    const pageCount = this.pageCount();
-    return pageCount === undefined || this.pageIndex() < pageCount - 1;
+    return paginationHasNextPage(this.pageIndex(), this.pageCount());
   }
 
   /** Moves keyboard focus to the first enabled control. */
@@ -416,11 +413,7 @@ export class OgePagination {
   // --- interactions ----------------------------------------------------------
 
   protected goTo(page: number, event: Event): void {
-    const pageCount = this.pageCount();
-    const clamped = Math.max(
-      0,
-      pageCount === undefined ? page : Math.min(page, pageCount - 1),
-    );
+    const clamped = clampPaginationIndex(page, this.pageCount());
     const previousPageIndex = this.pageIndex();
     if (clamped === previousPageIndex) return;
     this.pageIndex.set(clamped);
@@ -472,9 +465,6 @@ export class OgePagination {
     template: string,
     params: Record<string, string | number>,
   ): string {
-    return Object.entries(params).reduce(
-      (text, [key, value]) => text.replace(`{${key}}`, String(value)),
-      template,
-    );
+    return formatPaginationMessage(template, params);
   }
 }

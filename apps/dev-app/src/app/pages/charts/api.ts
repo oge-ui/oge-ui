@@ -38,7 +38,7 @@ const SECTIONS = [
         the
         <a
           routerLink="/components/charts"
-          class="text-indigo-600 dark:text-indigo-400"
+          class="text-indigo-600 underline dark:text-indigo-400"
           >overview</a
         >
         page.

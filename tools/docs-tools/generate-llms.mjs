@@ -41,8 +41,10 @@ import { sectionsToMarkdown } from './lib/markdown.mjs';
 import {
   COMMERCIAL_NOTE,
   CONVENTIONS,
+  CONVENTIONS_REACT,
   INSTALL,
   MISTAKES,
+  MISTAKES_REACT,
   SUMMARY,
   readSiteVersion,
   buildSiteVersionFile,
@@ -226,9 +228,14 @@ function buildPackageDoc({ pkg, blocks, entries, demos }) {
   out.push(`npm i ${pkg.npm}`);
   out.push('```');
   out.push('');
-  out.push(CONVENTIONS);
+  // The rules a package ships must match the framework it is for. Handing the
+  // Angular conventions to a `@oge-ui/react-*` reader is not merely unhelpful —
+  // it instructs an assistant to write `imports: [OgeButton]` into a `.tsx`
+  // file (ADR 0001).
+  const isReact = pkg.platform === 'react';
+  out.push(isReact ? CONVENTIONS_REACT : CONVENTIONS);
   out.push('');
-  out.push(MISTAKES);
+  out.push(isReact ? MISTAKES_REACT : MISTAKES);
   out.push('');
   out.push(renderEntryPoints(entries));
   if (blocks.length) {
@@ -396,6 +403,9 @@ function pageDirOf(file) {
  * from (`columns-snippets.ts` → `Columns`).
  */
 function demoTitle(demo) {
+  // React demo entries carry a human title on the card; prefer it over the
+  // constant-name fallback, which reads as `Button demos[0]`.
+  if (demo.title) return demo.title;
   const fromName = humanize(demo.name.replace(/_?SNIPPET$/, ''));
   if (fromName) return fromName;
   const page = demo.file
@@ -470,10 +480,19 @@ function exactSeoDescription(routePath) {
  * has fallen behind its source.
  */
 function reportGaps() {
+  // `packages/react/` groups the React render layer's packages one level
+  // down and has no package.json of its own — recurse into it so a React
+  // family added without a manifest entry still trips this warning.
   const onDisk = readdirSync(abs('packages'), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .filter((dir) => existsSync(abs('packages', dir, 'package.json')));
+    .flatMap((entry) =>
+      existsSync(abs('packages', entry.name, 'package.json'))
+        ? [entry.name]
+        : readdirSync(abs('packages', entry.name), { withFileTypes: true })
+            .filter((nested) => nested.isDirectory())
+            .map((nested) => `${entry.name}/${nested.name}`)
+            .filter((dir) => existsSync(abs('packages', dir, 'package.json'))),
+    );
   const missing = onDisk.filter((dir) => !docs.has(dir));
   if (missing.length) {
     console.warn(

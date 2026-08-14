@@ -36,6 +36,10 @@ export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
  * - `docsRoot` — route the docs live under; `null` for engine-only packages.
  * - `pageDirs` — folders under `pages/` whose demos belong to this package.
  * - `tier` — `'mit'` or `'commercial'`; drives the licence banner.
+ * - `platform` — `'angular'` (default) or `'react'`. Selects which "Writing OGE
+ *   code" rules and which "Common mistakes" table the package's `llms.txt`
+ *   carries. Getting this wrong ships actively misleading instructions to every
+ *   coding assistant, so it is explicit rather than inferred from the name.
  */
 export const PACKAGES = [
   {
@@ -141,6 +145,17 @@ export const PACKAGES = [
     tier: 'mit',
   },
   {
+    dir: 'upload',
+    npm: '@oge-ui/upload',
+    label: 'Upload',
+    summary:
+      'File uploader — drag & drop with directory and paste support, client-side restrictions, image previews, per-file progress, and chunked resumable transfer with pause, resume and retry.',
+    docsRoot: '/components/upload',
+    pageDirs: ['upload'],
+    apiPage: 'apps/dev-app/src/app/pages/upload/api.ts',
+    tier: 'mit',
+  },
+  {
     dir: 'navigation',
     npm: '@oge-ui/navigation',
     label: 'Navigation',
@@ -229,6 +244,107 @@ export const PACKAGES = [
     tier: 'mit',
   },
   {
+    dir: 'react/buttons',
+    npm: '@oge-ui/react-buttons',
+    label: 'Buttons (React)',
+    summary:
+      'React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.',
+    // The React content renders inside the single Buttons route (ADR 0002:
+    // routes stay single, the header switch picks the layer) — there is no
+    // /components/react-buttons route to link to.
+    docsRoot: '/components/buttons',
+    pageDirs: ['react-buttons'],
+    apiPage: 'apps/dev-app/src/app/pages/react-buttons/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/inputs',
+    npm: '@oge-ui/react-inputs',
+    label: 'Inputs (React)',
+    summary:
+      'React form editors on the same field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete (virtual scrolling, custom values), CheckBox, Switch, RadioGroup, Slider/RangeSlider, ColorBox, Calendar and DateBox/DateRangeBox — running the same commit pipeline, list/selection machines and stylesheet as the Angular package.',
+    // The React content renders inside the single Inputs routes (ADR 0002:
+    // routes stay single, the header switch picks the layer).
+    docsRoot: '/components/inputs',
+    pageDirs: ['react-inputs'],
+    apiPage: 'apps/dev-app/src/app/pages/react-inputs/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/tabs',
+    npm: '@oge-ui/react-tabs',
+    label: 'Tabs (React)',
+    summary:
+      'React tab strip and tab panel: the WAI-ARIA APG tabs pattern with declarative or data-driven tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards, drag reordering and lazy panel rendering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.',
+    // The React content renders inside the single Tabs routes (ADR 0002:
+    // routes stay single, the header switch picks the layer).
+    docsRoot: '/components/tabs',
+    pageDirs: ['react-tabs'],
+    apiPage: 'apps/dev-app/src/app/pages/react-tabs/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/layout',
+    npm: '@oge-ui/react-layout',
+    label: 'Layout (React)',
+    summary:
+      'React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, plus the progress bar, load indicator and shimmer skeleton — running the same config defaults, decision functions and stylesheet as the Angular layout package.',
+    // The React content renders inside the single layout routes (ADR 0002:
+    // routes stay single, the header switch picks the layer). The docs pages
+    // branch when the family's docs parity lands.
+    docsRoot: '/components/accordion',
+    pageDirs: ['react-layout'],
+    apiPage: [
+      'apps/dev-app/src/app/pages/react-layout/api.ts',
+      'apps/dev-app/src/app/pages/react-layout/card-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/progress-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/splitter-api.ts',
+      'apps/dev-app/src/app/pages/react-layout/toolbar-api.ts',
+    ],
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/navigation',
+    npm: '@oge-ui/react-navigation',
+    label: 'Navigation (React)',
+    summary:
+      'React navigation and wayfinding: a virtualized tree view with lazy children, checkbox tri-state and drag reparenting, a drawer with overlay/push/side modes and derived modality, a linear or free stepper with async step guards, a full WAI-ARIA menubar with submenus and type-ahead, a collapsing breadcrumb and a pagination bar — running the same config defaults, decision functions and stylesheet as the Angular navigation package.',
+    // The React content renders inside the single navigation routes (ADR 0002:
+    // routes stay single, the header switch picks the layer).
+    docsRoot: '/components/tree-view',
+    pageDirs: ['react-navigation'],
+    apiPage: [
+      'apps/dev-app/src/app/pages/react-navigation/api.ts',
+      'apps/dev-app/src/app/pages/react-navigation/tree-view-api.ts',
+      'apps/dev-app/src/app/pages/react-navigation/drawer-api.ts',
+      'apps/dev-app/src/app/pages/react-navigation/stepper-api.ts',
+      'apps/dev-app/src/app/pages/react-navigation/menubar-api.ts',
+      'apps/dev-app/src/app/pages/react-navigation/breadcrumb-api.ts',
+      'apps/dev-app/src/app/pages/react-navigation/pagination-api.ts',
+    ],
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/overlay',
+    npm: '@oge-ui/react-overlay',
+    label: 'Overlay (React)',
+    summary:
+      'React overlay primitives: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack) and a full WAI-ARIA menu with submenus and type-ahead — running the same positioning and menu machines as the Angular overlay package.',
+    // The primitives are documented through their consumers today (the
+    // drop-down button demos); a dedicated React overlay page arrives with
+    // the tooltip/modal/toast surfaces.
+    docsRoot: '/components/buttons',
+    pageDirs: [],
+    apiPage: null,
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
     dir: 'behavior',
     npm: '@oge-ui/behavior',
     label: 'Behavior',
@@ -238,6 +354,18 @@ export const PACKAGES = [
     pageDirs: [],
     apiPage: null,
     tier: 'mit',
+  },
+  {
+    dir: 'react/oge',
+    npm: '@oge-ui/react',
+    label: 'Umbrella package (React)',
+    summary:
+      "Re-exports every React family from a single import path, with one stylesheet for all of them. `npm i @oge-ui/react` then `import { OgeButton, OgeTextBox } from '@oge-ui/react'`.",
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'mit',
+    platform: 'react',
   },
   {
     dir: 'ui',

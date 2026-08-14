@@ -2,6 +2,7 @@
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/packages/inputs",
   "allowedNonPeerDependencies": [
+    "@oge-ui/behavior",
     "@oge-ui/core",
     "@oge-ui/overlay",
     "@oge-ui/navigation"
