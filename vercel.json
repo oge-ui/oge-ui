@@ -3,5 +3,19 @@
   "buildCommand": "npx nx build dev-app",
   "outputDirectory": "dist/apps/dev-app/browser",
   "installCommand": "npm ci",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "trailingSlash": false,
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.csr.html" }],
+  "headers": [
+    {
+      "source": "/(llms.txt|llms-full.txt|llms/(.*))",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/(sitemap.xml|robots.txt)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
+    }
+  ]
 }

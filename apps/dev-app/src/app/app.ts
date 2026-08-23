@@ -92,7 +92,11 @@ export class App {
    * for free.
    */
   private readonly stampFramework = effect(() => {
-    this.doc.documentElement.dataset['framework'] = this.framework.framework();
+    // setAttribute rather than `dataset`: the prerender DOM has no dataset.
+    this.doc.documentElement.setAttribute(
+      'data-framework',
+      this.framework.framework(),
+    );
   });
 
   private readonly allSections: NavSection[] = [

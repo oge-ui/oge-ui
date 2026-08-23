@@ -1,7 +1,8 @@
 import { DOCUMENT, Injectable, inject } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
-import { NavigationEnd, Router } from '@angular/router';
+import { ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
+import { documentTitle } from './title.strategy';
 
 const ORIGIN = 'https://ogeui.com';
 
@@ -188,9 +189,24 @@ export class SeoService {
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
-    this.meta.updateTag({
-      property: 'og:title',
-      content: this.document.title,
-    });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
+
+    // The route `title` is applied by Angular's TitleStrategy on the same
+    // NavigationEnd; read it from the router state rather than document.title
+    // so prerendered HTML carries the right og/twitter title too.
+    const title = documentTitle(this.routeTitle(), url);
+    this.meta.updateTag({ property: 'og:title', content: title });
+    this.meta.updateTag({ name: 'twitter:title', content: title });
+  }
+
+  private routeTitle(): string | undefined {
+    let route: ActivatedRouteSnapshot | null =
+      this.router.routerState.snapshot.root;
+    let title: string | undefined;
+    while (route) {
+      if (route.title) title = route.title;
+      route = route.firstChild;
+    }
+    return title;
   }
 }

@@ -373,7 +373,11 @@ export class OgeTabStrip {
     });
     this.destroyRef.onDestroy(() => {
       this.menuPanel.destroy();
-      document.removeEventListener('keydown', this.onDragKeydown, true);
+      // Guarded: destroy also runs during build-time prerender, where there
+      // is no global `document`.
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('keydown', this.onDragKeydown, true);
+      }
     });
   }
 

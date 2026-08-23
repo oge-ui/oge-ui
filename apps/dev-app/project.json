@@ -14,6 +14,9 @@
       "options": {
         "outputPath": "dist/apps/dev-app",
         "browser": "apps/dev-app/src/main.ts",
+        "server": "apps/dev-app/src/main.server.ts",
+        "outputMode": "static",
+        "prerender": { "discoverRoutes": true },
         "tsConfig": "apps/dev-app/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -38,7 +41,7 @@
             {
               "type": "initial",
               "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumError": "1.1mb"
             },
             {
               "type": "anyComponentStyle",

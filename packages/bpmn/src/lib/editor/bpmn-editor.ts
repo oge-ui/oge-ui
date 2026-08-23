@@ -2753,10 +2753,14 @@ export class OgeBpmnEditor {
         this.maximized.set(false);
       }
     };
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    this.destroyRef.onDestroy(() =>
-      document.removeEventListener('fullscreenchange', onFullscreenChange),
-    );
+    // Guarded: the constructor also runs during build-time prerender, where
+    // there is no global `document`.
+    if (typeof document !== 'undefined') {
+      document.addEventListener('fullscreenchange', onFullscreenChange);
+      this.destroyRef.onDestroy(() =>
+        document.removeEventListener('fullscreenchange', onFullscreenChange),
+      );
+    }
     const unsubscribe = this.stack.onChange((m, source) => {
       this.diagram.set(m);
       const kept = this.selection().filter(
