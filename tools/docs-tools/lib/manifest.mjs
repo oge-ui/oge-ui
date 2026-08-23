@@ -361,7 +361,7 @@ export const PACKAGES = [
     npm: '@oge-ui/react-grid',
     label: 'Data Grid (React)',
     summary:
-      'React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, pinned and resizable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.',
+      'React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, grouping with summaries and deferred groups, master-detail, row render props, row drag, pinned/resizable/reorderable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.',
     // The React content renders inside the single Data Grid routes (ADR 0002).
     docsRoot: '/components/data-grid',
     pageDirs: ['react-grid'],

@@ -1,8 +1,8 @@
 # @oge-ui/react-grid
 
-> React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, pinned and resizable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.
+> React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, grouping with summaries and deferred groups, master-detail, row render props, row drag, pinned/resizable/reorderable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.
 
-Part of OGE UI v0.12.0.
+Part of OGE UI v0.13.0.
 Docs and live demos: https://ogeui.com/components/data-grid
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
