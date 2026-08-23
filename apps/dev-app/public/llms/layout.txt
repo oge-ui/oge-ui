@@ -98,7 +98,7 @@ _Panels & expansion_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeAccordionItemData[] \| undefined` | `—` | Data-driven panels rendered after the projected `` children. |
+| `items` | `readonly OgeAccordionItemData[] \| undefined` | `—` | Data-driven panels rendered after the projected `<oge-accordion-item>` children. |
 | `expandedKeys` | `readonly string[]` | `[]` | Keys of the expanded panels — two-way. The multi-expand counterpart of `selectedIndex`; only panels that declare a `key` can appear here. |
 | `selectedIndex` | `number` | `-1` | Index of the expanded panel in single-expand mode — two-way. `-1` means none; in `multiple` mode it reports the first expanded panel. |
 | `multiple` | `boolean` | `false` | Allows more than one panel to stay expanded. |
@@ -118,7 +118,7 @@ _Appearance_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `togglePosition` | `'start' \| 'end'` | `'end'` | Side of the header the chevron sits on — logical, so RTL mirrors it. |
-| `hideToggle` | `boolean` | `false` | Hides the chevron entirely. Overridable per panel via ``. |
+| `hideToggle` | `boolean` | `false` | Hides the chevron entirely. Overridable per panel via `<oge-accordion-item [hideToggle]>`. |
 | `collapsedHeaderHeight` | `string \| undefined` | `—` | Minimum height of a collapsed header (any CSS length). `undefined` lets `size` and the padding tokens decide. Material’s `collapsedHeight`. |
 | `expandedHeaderHeight` | `string \| undefined` | `—` | Minimum height of an expanded header; falls back to `collapsedHeaderHeight`. Material’s `expandedHeight`. |
 | `displayMode` | `'default' \| 'flat'` | `'default'` | `flat` removes the gutters between panels and joins them into one stack. |
@@ -264,14 +264,14 @@ _Behavioural defaults_
 | `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | `horizontal` turns the card into a two-column grid with the `[ogeCardMedia]` element spanning the inline-start column, sized by `--oge-card-media-size`. Falls back to `provideOgeCardConfig({ orientation })`. |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset — scales the section padding and type ramp together (`--oge-card-pad` is the per-card escape hatch). Falls back to `provideOgeCardConfig({ size })`. |
 | `severity` | `'accent' \| 'success' \| 'warning' \| 'danger' \| undefined` | `undefined` | Colored status rail on the inline-start edge — the toast&rsquo;s rail idiom on a static surface. `undefined` renders no rail. |
-| `interactive` | `boolean` | `false` | Purely visual affordance for the documented clickable-card pattern: a hover/focus-within lift and a keyboard focus ring on the surface. Adds **no** role, tabindex or wrapper — pair it with one primary `` in the content. |
+| `interactive` | `boolean` | `false` | Purely visual affordance for the documented clickable-card pattern: a hover/focus-within lift and a keyboard focus ring on the surface. Adds **no** role, tabindex or wrapper — pair it with one primary `<a>` in the content. |
 | `loading` | `boolean` | `false` | Replaces the content and action row with a shimmer skeleton and marks the card `aria-busy`. Header, media and footer stay, so the card keeps its footprint while the data arrives. |
 
 _Accessibility contract_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `(no role, no clickable input)` | `—` | There is no WAI-ARIA card pattern, so the card renders no role and no `tabindex`, and ships no clickable-card API — wrapping the card in a link or button is the `nested-interactive` trap. Add `role="article"` / `role="region"` on the host yourself, and make a card clickable with one primary `` in the content plus a CSS-stretched hit area. |
+| `(no role, no clickable input)` | `—` | There is no WAI-ARIA card pattern, so the card renders no role and no `tabindex`, and ships no clickable-card API — wrapping the card in a link or button is the `nested-interactive` trap. Add `role="article"` / `role="region"` on the host yourself, and make a card clickable with one primary `<a>` in the content plus a CSS-stretched hit area. |
 
 #### Types
 
@@ -290,12 +290,12 @@ _Accessibility contract_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `[ogeCardMedia]` | `OgeCardMedia` | Marks the full-bleed media element — an ``, `` or a wrapper. Sized by consumer CSS (`aspect-ratio`, `block-size`); there is deliberately no size input. |
+| `[ogeCardMedia]` | `OgeCardMedia` | Marks the full-bleed media element — an `<img>`, `<video>` or a wrapper. Sized by consumer CSS (`aspect-ratio`, `block-size`); there is deliberately no size input. |
 | `[ogeCardAvatar]` | `OgeCardAvatar` | The round image before the header titles — the counterpart of Material&rsquo;s `mat-card-avatar`. |
 | `[ogeCardHeaderActions]` | `OgeCardHeaderActions` | Controls at the inline end of the header row. Real controls in the Tab sequence — the card never wraps them in anything interactive. |
 | `[ogeCardActions]` | `OgeCardActions` | The action row under the content. Its `align` input takes `'start' \| 'center' \| 'end' \| 'stretched'` (default `'start'`) — the Kendo superset of Material&rsquo;s two values. |
 | `[ogeCardFooter]` | `OgeCardFooter` | A divided strip on the header surface after the actions — metadata rather than commands. |
-| `[ogeCardSeparator]` | `OgeCardSeparator` | A full-bleed hairline between content sections — put it on an `` inside the default projection. |
+| `[ogeCardSeparator]` | `OgeCardSeparator` | A full-bleed hairline between content sections — put it on an `<hr>` inside the default projection. |
 
 ### Card configuration
 
@@ -399,7 +399,7 @@ _Panes & sizing_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `panes` | `readonly OgeSplitterPaneData[] \| undefined` | `—` | Data-driven panes rendered after the projected `` children. |
+| `panes` | `readonly OgeSplitterPaneData[] \| undefined` | `—` | Data-driven panes rendered after the projected `<oge-splitter-pane>` children. |
 | `dataSource` | `DataSource<OgeSplitterPaneData> \| undefined` | `—` | Remote pane list, loaded through `@oge-ui/core`&rsquo;s `DataSource` contract and merged after `panes`. A source that publishes `changes` triggers a reload. |
 | `itemHoldTimeout` | `number` | `750` | Milliseconds a pointer must rest on a pane before `paneHold` fires. |
 | `sizes` | `readonly OgeSplitterSize[] \| undefined` | `—` | Current pane sizes — two-way, and the whole persistable state. Setting it overrides the per-pane `size` inputs. Numbers are ratios; `'240px'` pins a pane. |
@@ -458,7 +458,7 @@ _Types_
 | --- | --- | --- |
 | `OgeSplitterOrientation` | `'horizontal' \| 'vertical'` | Axis the panes are laid out along. |
 | `OgeSplitterGripSide` | `'start' \| 'end'` | Which neighbour a separator's collapse grip acts on: `'start'` is the pane before it (the APG primary pane), `'end'` the one after. |
-| `OgeSplitterSize` | `number \| string` | A number (or `'%'`) is a **ratio** of the space the flexible panes share, so `[30, 30]` lays out like `[50, 50]`. `'px'` pins the pane to a fixed track. Any other string is ignored with a dev-mode warning. |
+| `OgeSplitterSize` | `number \| string` | A number (or `'<n>%'`) is a **ratio** of the space the flexible panes share, so `[30, 30]` lays out like `[50, 50]`. `'<n>px'` pins the pane to a fixed track. Any other string is ignored with a dev-mode warning. |
 | `OgeSplitterPaneData` | `interface` | Data-driven counterpart of a declarative pane: `key`, `size`, `minSize`, `maxSize`, `collapsible`, `collapsed`, `collapsedSize`, `resizable`, `scrollable`, `disabled`, `visible`, `text`, `cssClass`, `htmlAttributes`, `panes`, `orientation`. |
 | `OgeSplitterPaneTemplateContext` | `interface` | Context of `[ogeSplitterPaneTemplate]`: `$implicit` (the pane entry), `index`, `collapsed`. |
 | `OgeSplitterResizeStartEvent` | `interface` | `separatorIndex`, `sizes` at the start of the gesture, and the originating `event` (absent for a keyboard resize). |
@@ -544,7 +544,7 @@ _Items_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeToolbarItemData[] \| undefined` | `—` | Data-driven entries, rendered after the declarative `` children. |
+| `items` | `readonly OgeToolbarItemData[] \| undefined` | `—` | Data-driven entries, rendered after the declarative `<oge-toolbar-item>` children. |
 | `dataSource` | `DataSource<OgeToolbarItemData> \| undefined` | `—` | Remote command list, loaded through `@oge-ui/core`&rsquo;s `DataSource` contract and merged after `items`. A source that publishes `changes` triggers a reload. |
 | `showText` | `'always' \| 'onBar' \| 'inMenu' \| 'never'` | `'always'` | Default for every item&rsquo;s `showText`: both places, the bar only, the menu only, or neither. An item that renders icon-only keeps its `text` as the accessible name. |
 | `showIcon` | `'always' \| 'onBar' \| 'inMenu' \| 'never'` | `'always'` | Default for every item&rsquo;s `showIcon`. It resolves separately for the bar and the overflow menu, so a collapsed command keeps its icon on its menu row unless you say `&apos;onBar&apos;`. |
@@ -578,7 +578,7 @@ _Template slots_
 | `ogeToolbarBefore` | `attribute slot` | Projects any control into the leading group. Slot content always stays on the bar — the toolbar cannot re-stamp DOM it does not own. |
 | `ogeToolbarCenter` | `attribute slot` | Projects any control into the centre group. |
 | `ogeToolbarAfter` | `attribute slot` | Projects any control into the trailing group. |
-| `ogeToolbarItemTemplate` | `TemplateRef<OgeToolbarItemTemplateContext>` | Replaces the default rendering of every `items` entry — the curated stand-in for the reference libraries&rsquo; string-keyed `widget` + `options` bag. Declared inside an `` it renders that one item instead, and stays re-stampable into the menu. |
+| `ogeToolbarItemTemplate` | `TemplateRef<OgeToolbarItemTemplateContext>` | Replaces the default rendering of every `items` entry — the curated stand-in for the reference libraries&rsquo; string-keyed `widget` + `options` bag. Declared inside an `<oge-toolbar-item>` it renders that one item instead, and stays re-stampable into the menu. |
 | `ogeToolbarMenuItemTemplate` | `TemplateRef<OgeToolbarItemTemplateContext>` | Replaces the default rendering of an item inside the overflow menu (the reference `menuItemTemplate`). |
 
 #### Methods
@@ -655,7 +655,7 @@ _Inputs_
 | `text` | `string \| undefined` | `—` | Label; also the accessible name when the item renders icon-only. |
 | `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading aria-hidden 16×16 icon. |
 | `suffixIcon` | `string \| undefined` | `—` | SVG path data (`d`) for a trailing icon, rendered after the text. |
-| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon rendered as an empty `_` — the hook for an icon font the application already ships. `icon` stays the dependency-free default. |
+| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon rendered as an empty `<i>` — the hook for an icon font the application already ships. `icon` stays the dependency-free default. |
 | `suffixIconClass` | `string \| undefined` | `—` | Class(es) for a trailing icon element. |
 | `width` | `number \| string \| undefined` | `—` | Fixed main-axis size of the item — a bare number is pixels. |
 | `htmlAttributes` | `Readonly<Record<string, string>> \| undefined` | `—` | Extra attributes on the item element. Keys removed from the bag are removed from the DOM, so clearing it clears the element. |

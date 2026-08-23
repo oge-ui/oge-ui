@@ -146,7 +146,7 @@ _Search_
 | `searchTimeout` | `number` | `0` | Debounce applied to the search box, in milliseconds. |
 | `filterMode` | `'matchOnly' \| 'withAncestors' \| 'fullBranch'` | `'withAncestors'` | Which relatives of a match stay visible. `fullBranch` also keeps a match's descendants. |
 | `expandNodesOnFiltering` | `boolean` | `true` | Auto-expands the ancestors of matches. |
-| `highlightSearchResults` | `boolean` | `true` | Wraps matches in ``. |
+| `highlightSearchResults` | `boolean` | `true` | Wraps matches in `<mark class="oge-highlight">`. |
 
 _Lazy loading, virtualization & drag_
 
@@ -326,7 +326,7 @@ _Content slots_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `[ogeDrawerPanel]` | `attribute` | Marks the element that becomes the drawer panel. Everything else projected into `` is the content. |
+| `[ogeDrawerPanel]` | `attribute` | Marks the element that becomes the drawer panel. Everything else projected into `<oge-drawer>` is the content. |
 
 _Types_
 
@@ -367,7 +367,7 @@ _Steps & selection_
 | --- | --- | --- | --- |
 | `activeIndex` | `number (two-way)` | `0` | Index of the active step. |
 | `activeKey` | `string \| undefined (two-way)` | `—` | Key of the active step. Reconciled before the index, so an initial key binding wins over the index default on first run. |
-| `steps` | `readonly OgeStepData[] \| undefined` | `—` | Data-driven steps, merged _after_ any declarative `` children. |
+| `steps` | `readonly OgeStepData[] \| undefined` | `—` | Data-driven steps, merged _after_ any declarative `<oge-step>` children. |
 | `linear` | `boolean` | `false` | Blocks moving past a step that is neither `completed` nor `optional`. The default matches Material and PrimeNG; Kendo is the outlier at `true`. |
 | `disabled` | `boolean` | `false` | Blocks every step change. |
 
@@ -434,7 +434,7 @@ _Types & directives_
 | `OgeStepGuard` | `() => boolean \| Promise<boolean>` | Core's `OgeAsyncGuard`, the same veto contract the tabs' close guard and the accordion's expand guard use. |
 | `[ogeStepperNext] / [ogeStepperPrevious]` | `directive` | Turn any button into a navigation control. They find the stepper by DI when written inside it, or take one explicitly (`ogeStepperNext [ogeStepperTarget]="wizard"`) from outside — which Material&rsquo;s equivalents cannot do. |
 | `[ogeStepHeaderTemplate] / [ogeStepIndicatorTemplate] / [ogeStepContentTemplate]` | `directive` | Replace the label block, the round indicator, or supply lazy body content. |
-| `<oge-form-steps>` | `directive (@oge-ui/forms)` | Wraps this component inside ``. Step completion comes from the form's own per-step error rollup, so it behaves identically in all three binding modes, and leaving a step touches only that step's fields. |
+| `<oge-form-steps>` | `directive (@oge-ui/forms)` | Wraps this component inside `<oge-form>`. Step completion comes from the form's own per-step error rollup, so it behaves identically in all three binding modes, and leaving a step touches only that step's fields. |
 
 ### Stepper configuration
 
@@ -458,7 +458,7 @@ _Data_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `items` | `readonly OgeMenubarItemData[] \| undefined` | Data-driven item tree; children at any depth open as nested submenus. Rendered **after** any declarative `` children — the house merge order. |
+| `items` | `readonly OgeMenubarItemData[] \| undefined` | Data-driven item tree; children at any depth open as nested submenus. Rendered **after** any declarative `<oge-menubar-item>` children — the house merge order. |
 | `activeKey` | `string \| undefined` | The item `key` rendered with `aria-current="page"` and the active style. Consumer-driven — bind it from the router; the menubar itself takes no router dependency. |
 | `messages` | `Partial<OgeMenubarMessages> \| undefined` | Per-instance overrides of the user-facing strings, merged over `provideOgeMenubarConfig()`. |
 
@@ -496,7 +496,7 @@ _Behavior_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenubarItemData<T>` | `interface` | The canonical overlay `OgeMenuItem` narrowed recursively — `badge` and `shortcut` included — plus `key` (identity for `activeKey`/`open()`/events), `url` (renders the item as a real `` at the bar **and** at any submenu depth; `itemClick` fires first so `preventDefault()` hands navigation to a router) and `visible`. Submenus come from `items`. |
+| `OgeMenubarItemData<T>` | `interface` | The canonical overlay `OgeMenuItem` narrowed recursively — `badge` and `shortcut` included — plus `key` (identity for `activeKey`/`open()`/events), `url` (renders the item as a real `<a href>` at the bar **and** at any submenu depth; `itemClick` fires first so `preventDefault()` hands navigation to a router) and `visible`. Submenus come from `items`. |
 | `OgeMenubarCloseReason` | `'escape' \| 'outside' \| 'select' \| 'tab' \| 'navigation' \| 'api'` | Why a submenu closed. `'navigation'` is a Left/Right or hover switch to a sibling top-level item. |
 | `OgeMenubarItemClickEvent` | `{ item; key?; index; path; event }` | `path` is the hierarchical index chain from the bar down to the item; `index` is its last entry. |
 | `OgeMenubarItemTemplate` | `directive — ng-template[ogeMenubarItemTemplate]` | Replaces the rendering of **top-level** bar items; context is `OgeMenubarItemTemplateContext`. Submenu rows keep the shared `oge-menu-list` rendering. |
@@ -511,7 +511,7 @@ _Behavior_
 | `text` | `string` | `''` | Label of the item. |
 | `key` | `string \| undefined` | `—` | Stable identity used by `activeKey`, `open()` and event payloads. |
 | `value` | `unknown` | `—` | Consumer-defined value carried through click events. |
-| `url` | `string \| undefined` | `—` | Top-level items only: renders the item as a real link (``). |
+| `url` | `string \| undefined` | `—` | Top-level items only: renders the item as a real link (`<a href>`). |
 | `hint` | `string \| undefined` | `—` | Tooltip (native `title`) — e.g. why an item is disabled. |
 | `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading `aria-hidden` icon. |
 | `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon element — the icon-font hook. |
@@ -539,7 +539,7 @@ _provideOgeMenubarConfig()_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeBreadcrumbItemData[] \| undefined` | `—` | Data-driven trail — a flat list, never nested. Rendered **after** any declarative `` children — the house merge order. |
+| `items` | `readonly OgeBreadcrumbItemData[] \| undefined` | `—` | Data-driven trail — a flat list, never nested. Rendered **after** any declarative `<oge-breadcrumb-item>` children — the house merge order. |
 | `collapseMode` | `'auto' \| 'wrap' \| 'none'` | `'auto'` | `'auto'` collapses the **oldest middle** crumbs into an ellipsis menu against the breadcrumb's own **container** width (never the window) — the first and last crumb always stay visible, and the collapsed crumbs remain reachable as real links. `'wrap'` breaks onto multiple rows; `'none'` keeps one scrollable row. The fitting arithmetic is core's pure `fitToolbarItems`. |
 | `messages` | `Partial<OgeBreadcrumbMessages> \| undefined` | `—` | Per-instance overrides of the user-facing strings, merged over `provideOgeBreadcrumbConfig()`. |
 
@@ -559,7 +559,7 @@ _provideOgeMenubarConfig()_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeBreadcrumbItemData<T>` | `{ text; key?; value?; url?; hint?; icon?; iconClass?; disabled?; visible? }` | A deliberately narrow interface — no submenu, checked or shortcut fields, because none of them mean anything on a trail. `url` renders the crumb as a real `` (ignored on the last crumb); `disabled` crumbs are exposed via `aria-disabled` but inert; `visible: false` removes the crumb. |
+| `OgeBreadcrumbItemData<T>` | `{ text; key?; value?; url?; hint?; icon?; iconClass?; disabled?; visible? }` | A deliberately narrow interface — no submenu, checked or shortcut fields, because none of them mean anything on a trail. `url` renders the crumb as a real `<a href>` (ignored on the last crumb); `disabled` crumbs are exposed via `aria-disabled` but inert; `visible: false` removes the crumb. |
 | `OgeBreadcrumbCollapseMode` | `'auto' \| 'wrap' \| 'none'` | How the breadcrumb behaves when room runs out. |
 | `OgeBreadcrumbItemClickEvent` | `{ item; key?; index; event }` | `index` is the position within the full trail, collapsed crumbs included. |
 | `OgeBreadcrumbItemTemplate` | `directive — ng-template[ogeBreadcrumbItemTemplate]` | Replaces the crumb's interior only — the link/current/disabled element semantics stay with the component. Context: `OgeBreadcrumbItemTemplateContext` (`$implicit`, `index`, `last`). |
@@ -574,7 +574,7 @@ _provideOgeMenubarConfig()_
 | `text` | `string` | `''` | Label of the crumb. |
 | `key` | `string \| undefined` | `—` | Stable identity used in event payloads and DOM ids. |
 | `value` | `unknown` | `—` | Consumer-defined value carried through click events. |
-| `url` | `string \| undefined` | `—` | Renders the crumb as a real link (``). |
+| `url` | `string \| undefined` | `—` | Renders the crumb as a real link (`<a href>`). |
 | `hint` | `string \| undefined` | `—` | Tooltip (native `title`). |
 | `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading `aria-hidden` icon. |
 | `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon element — the icon-font hook. |
@@ -589,7 +589,7 @@ _provideOgeBreadcrumbConfig()_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `messages` | `OgeBreadcrumbMessages` | Every user-facing string: `breadcrumb` (accessible name of the `` landmark, default `Breadcrumb`) and `collapsed` (aria label of the ellipsis button, default `Show hidden items`). |
+| `messages` | `OgeBreadcrumbMessages` | Every user-facing string: `breadcrumb` (accessible name of the `<nav>` landmark, default `Breadcrumb`) and `collapsed` (aria label of the ellipsis button, default `Show hidden items`). |
 | `collapseMode` | `'auto' \| 'wrap' \| 'none' \| undefined` | Default for the `collapseMode` input. |
 
 ### OgePagination — `<oge-pagination>`
@@ -646,7 +646,7 @@ _OgePaginationConfig_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `messages` | `OgePaginationMessages` | All strings: `paginationLabel` (the `` name), `firstPage`/`lastPage`/`previousPage`/`nextPage`, `pageLabel` (`{page}`, 1-based), `info` (`{from}` `{to}` `{itemCount}`), `pageInfoUnknown`, `pageIndicator` (`{page}` `{pageCount}`), `pageSizeLabel`, `allRows`, `jumpLabel`. |
+| `messages` | `OgePaginationMessages` | All strings: `paginationLabel` (the `<nav>` name), `firstPage`/`lastPage`/`previousPage`/`nextPage`, `pageLabel` (`{page}`, 1-based), `info` (`{from}` `{to}` `{itemCount}`), `pageInfoUnknown`, `pageIndicator` (`{page}` `{pageCount}`), `pageSizeLabel`, `allRows`, `jumpLabel`. |
 | `displayMode / compactBelow / maxButtons` | `OgePaginationDisplayMode / number / number` | Application-wide input defaults; the component resolves `input ?? config ?? literal` (480px / 7). |
 
 #### Methods

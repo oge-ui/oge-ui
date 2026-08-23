@@ -101,7 +101,7 @@ _Binding_
 | `fieldTree` | `FieldTree<T> \| undefined` | `undefined` | An Angular Signal Forms tree, as returned by `form()`. The caller owns validation, required marks, disabled and readonly state. |
 | `formGroup` | `FormGroup \| undefined` | `undefined` | A reactive `FormGroup`. Each item binds its matching control through the editors' control-value-accessor path. |
 | `formData` | `T \| undefined` | `undefined` | A plain model object — two-way. The form builds its own Signal Forms tree over it, compiling each item's `validationRules` into the schema. |
-| `items` | `readonly OgeFormItemData[] \| undefined` | `undefined` | Data-driven items, rendered after the projected `` children. |
+| `items` | `readonly OgeFormItemData[] \| undefined` | `undefined` | Data-driven items, rendered after the projected `<oge-form-item>` children. |
 | `groups` | `readonly OgeFormGroupData[] \| undefined` | `undefined` | Data-driven groups, matched to items by `key` (or `caption`) through an item's `group`. |
 | `mode` | `Signal<OgeFormMode>` | `—` | Read-only: which binding the form resolved to. Derived from the bound inputs, never configured. |
 
@@ -112,7 +112,7 @@ _Layout_
 | `colCount` | `number \| 'auto'` | `'auto'` | Layout columns. `'auto'` fits as many `minColWidth` tracks as the form is wide. |
 | `colCountByScreen` | `Partial<Record<OgeFormScreenSize, number>> \| undefined` | `undefined` | Column count per breakpoint. Implemented as container queries on the form itself, so a form in a dialog or a grid cell sizes from its own width — not the window's. |
 | `minColWidth` | `number` | `220` | Narrowest column `colCount: 'auto'` will produce, in pixels. |
-| `labelLocation` | `'top' \| 'start' \| 'end'` | `'top'` | `'top'` keeps each editor's own label chrome; the side values hand the label to the form, which draws a real `` in its own column. |
+| `labelLocation` | `'top' \| 'start' \| 'end'` | `'top'` | `'top'` keeps each editor's own label chrome; the side values hand the label to the form, which draws a real `<label for>` in its own column. |
 | `labelMode` | `'static' \| 'floating' \| 'hidden' \| 'outside'` | `'static'` | Forwarded to every editor. Forced to `'hidden'` when `labelLocation` is a side value, so no label renders twice. |
 | `alignItemLabels` | `boolean` | `true` | Gives side labels one shared column width so the editors line up. |
 | `showColonAfterLabel` | `boolean` | `false` | Appends `messages.labelColon` to every label. |
@@ -127,14 +127,14 @@ _State_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `readOnly` | `boolean` | `false` | Makes every editor read-only, overridable per group and per item. In `[fieldTree]` mode use the schema's `readonly()` instead. |
-| `disabled` | `boolean` | `false` | Wraps the fields in a ``. In `[fieldTree]` mode use the schema's `disabled()` — the `FormField` directive writes the editor's `disabled` input itself. |
-| `showValidationSummary` | `boolean` | `false` | Renders an `` above the fields once a submit has failed. |
+| `disabled` | `boolean` | `false` | Wraps the fields in a `<fieldset disabled>`. In `[fieldTree]` mode use the schema's `disabled()` — the `FormField` directive writes the editor's `disabled` input itself. |
+| `showValidationSummary` | `boolean` | `false` | Renders an `<oge-validation-summary>` above the fields once a submit has failed. |
 | `scrollToFirstInvalid` | `boolean` | `true` | Scrolls the first invalid field into view when a submit fails. Focus moves there either way. |
 | `errors` | `Signal<readonly OgeFormErrorEntry[]>` | `—` | Read-only: one entry per invalid field, in layout order, regardless of whether the field is showing its error yet. |
 | `valid` | `Signal<boolean>` | `—` | Read-only: whether every bound field currently validates. |
 | `dirty` | `Signal<boolean>` | `—` | Read-only: whether any bound field has been edited since the last reset. Works in all three binding modes. |
 | `messages` | `Partial<OgeFormsMessages> \| undefined` | `undefined` | Per-instance string overrides, merged over `provideOgeFormsConfig()`. |
-| `renderFormElement` | `boolean` | `true` | Whether the fields are wrapped in a real ``. Set `false` inside another form — nested forms are invalid HTML; the grid's row editor does exactly this. With `false` there is no native submit, so drive it with `submit()`. |
+| `renderFormElement` | `boolean` | `true` | Whether the fields are wrapped in a real `<form>`. Set `false` inside another form — nested forms are invalid HTML; the grid's row editor does exactly this. With `false` there is no native submit, so drive it with `submit()`. |
 
 #### Methods
 
@@ -264,7 +264,7 @@ _OgeFormAccordion — <oge-form-accordion>_
 | `multiple` | `boolean` | `true` | Whether more than one panel may be open at a time. |
 | `collapsible` | `boolean` | `true` | Whether the open panel may be closed again. |
 | `showInvalidSections` | `boolean` | `true` | Drives the accordion's own invalid indicator — danger rail, dot and screen-reader label — from the panel's field errors. |
-| `deferRendering / keepAlive` | `boolean` | `—` | As on ``. |
+| `deferRendering / keepAlive` | `boolean` | `—` | As on `<oge-form-tabs>`. |
 
 ### Template slots
 
@@ -274,17 +274,17 @@ _Slots_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `ogeFormItemTemplate` | `directive — [ogeFormItemTemplate]` | Replaces a field entirely: label, editor and error text. Legal at form level (every item) or inside one ``, where it wins. |
+| `ogeFormItemTemplate` | `directive — [ogeFormItemTemplate]` | Replaces a field entirely: label, editor and error text. Legal at form level (every item) or inside one `<oge-form-item>`, where it wins. |
 | `ogeFormEditorTemplate` | `directive — [ogeFormEditorTemplate]` | Replaces only the control, keeping the form's label, required mark and error chrome. The escape hatch for anything `editorOptions` cannot express. |
-| `ogeFormLabelTemplate` | `directive — [ogeFormLabelTemplate]` | Replaces the label content. The surrounding `` stays, so the control association and the required mark survive. |
-| `ogeFormGroupCaptionTemplate` | `directive — [ogeFormGroupCaptionTemplate]` | Replaces the content of a group's ``. The fieldset/legend pair itself stays — that is what makes the section a labelled group. |
+| `ogeFormLabelTemplate` | `directive — [ogeFormLabelTemplate]` | Replaces the label content. The surrounding `<label for>` stays, so the control association and the required mark survive. |
+| `ogeFormGroupCaptionTemplate` | `directive — [ogeFormGroupCaptionTemplate]` | Replaces the content of a group's `<legend>`. The fieldset/legend pair itself stays — that is what makes the section a labelled group. |
 | `ogeFormActions` | `directive — [ogeFormActions]` | Marks the projected action bar (submit, reset, …). A typed marker rather than a bare attribute. |
 
 #### Types
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeFormItemTemplateContext` | `{ $implicit: OgeResolvedFormItem; item; field; control; error; editorId }` | Context of the item and editor slots. `field` is the Signal Forms node (bind with `[formField]`), `control` the reactive one, and `editorId` the id the form's `` points at. |
+| `OgeFormItemTemplateContext` | `{ $implicit: OgeResolvedFormItem; item; field; control; error; editorId }` | Context of the item and editor slots. `field` is the Signal Forms node (bind with `[formField]`), `control` the reactive one, and `editorId` the id the form's `<label for>` points at. |
 | `OgeFormLabelTemplateContext` | `{ $implicit: string; item; required; editorId }` | Context of the label slot; `$implicit` is the resolved label text. |
 | `OgeFormGroupCaptionTemplateContext` | `{ $implicit: string }` | Context of the group caption slot. |
 

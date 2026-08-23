@@ -138,7 +138,7 @@ _Search_
 | `searchTimeout` | `number` | `0` | Debounce applied to the search box, in milliseconds. |
 | `filterMode` | `'matchOnly' \| 'withAncestors' \| 'fullBranch'` | `'withAncestors'` | Which relatives of a match stay visible. `fullBranch` also keeps a match's descendants. |
 | `expandNodesOnFiltering` | `boolean` | `true` | Auto-expands the ancestors of matches. |
-| `highlightSearchResults` | `boolean` | `true` | Wraps matches in ``. |
+| `highlightSearchResults` | `boolean` | `true` | Wraps matches in `<mark class="oge-highlight">`. |
 
 _Lazy loading, virtualization & drag_
 
@@ -339,7 +339,7 @@ _Types_
 | `OgeDrawerClosingEvent` | `{ cancel: boolean; reason: OgeDrawerCloseReason }` | Cancelable pre-event for closing. |
 | `OgeDrawerClosedEvent` | `{ reason: OgeDrawerCloseReason }` | Payload of `onClosed`. |
 | `OgeDrawerModeChangedEvent` | `{ mode; requestedMode; compact: boolean }` | Payload of `onModeChanged`. |
-| `OgeDrawerProps / OgeDrawerHandle` | `interface` | Props of `` and the shape of its `ref`. |
+| `OgeDrawerProps / OgeDrawerHandle` | `interface` | Props of `<OgeDrawer>` and the shape of its `ref`. |
 | `resolveDrawerMode()` | `(request: OgeDrawerModeRequest) => OgeDrawerModeResult` | The pure function in `@oge-ui/behavior` that decides whether a drawer keeps its mode or goes compact. DOM-free, so the rule is unit-tested on its own — and shared verbatim with the Angular drawer. A non-positive `containerSize` means &ldquo;not measured yet&rdquo; and the requested mode is returned unchanged. |
 
 ### Drawer configuration
@@ -367,7 +367,7 @@ _Steps & selection_
 | --- | --- | --- | --- |
 | `activeIndex / defaultActiveIndex / onActiveIndexChange` | `number \| (index: number) => void` | `0` | Index of the active step — controlled through `activeIndex` + `onActiveIndexChange`, uncontrolled through `defaultActiveIndex`. |
 | `activeKey / defaultActiveKey / onActiveKeyChange` | `string \| undefined \| (key: string \| undefined) => void` | `—` | Key of the active step. Resolved before the index, so an initial key binding wins over the index default on first run. |
-| `steps` | `readonly OgeStepDefinition[] \| undefined` | `—` | The steps, in render order — the shared `OgeStepData` fields plus the React content slots. React has no declarative `` child to project, so this array is the only step source. |
+| `steps` | `readonly OgeStepDefinition[] \| undefined` | `—` | The steps, in render order — the shared `OgeStepData` fields plus the React content slots. React has no declarative `<oge-step>` child to project, so this array is the only step source. |
 | `linear` | `boolean` | `false` | Blocks moving past a step that is neither `completed` nor `optional`. The default matches Material and PrimeNG; Kendo is the outlier at `true`. |
 | `disabled` | `boolean` | `false` | Blocks every step change. |
 
@@ -428,7 +428,7 @@ _OgeStepDefinition (a steps entry)_
 | `errorMessage` | `string \| undefined` | Shown under the label while `invalid`, replacing `description` so two sub-lines never compete. Angular Material has this; Kendo and PrimeNG do not. |
 | `invalid / disabled / visible` | `boolean` | Error state, non-activatable, and removal from the list. |
 | `stepGuard` | `() => boolean \| Promise<boolean>` | Veto hook run when leaving this step. A throw and a rejection both veto. |
-| `content` | `ReactNode` | The step body — the React counterpart of what an `` projects. |
+| `content` | `ReactNode` | The step body — the React counterpart of what an `<oge-step>` projects. |
 
 _Types & render props_
 
@@ -441,7 +441,7 @@ _Types & render props_
 | `OgeStepGuard` | `() => boolean \| Promise<boolean>` | Behavior's `OgeAsyncGuard`, the same veto contract the tabs' close guard and the accordion's expand guard use. |
 | `next() / previous() on the handle` | `OgeStepperHandle` | The React counterpart of the `[ogeStepperNext]` / `[ogeStepperPrevious]` directives: any button drives the stepper through the same pipeline by calling the ref, from inside a step body or from outside — which Material&rsquo;s equivalents cannot do. |
 | `renderHeader / renderIndicator / renderContent` | `(context) => ReactNode` | Render props replacing `[ogeStepHeaderTemplate]`, `[ogeStepIndicatorTemplate]` and `[ogeStepContentTemplate]`: the label block, the round indicator, or a lazily built body. Set on the stepper for all steps, or on one `steps` entry. |
-| `Stepper inside a form` | `@oge-ui/react-inputs` | Angular&rsquo;s `` wrapper has no React counterpart yet — `@oge-ui/forms` ships no React layer. Bind the editors to your own state and compute each step's `completed` / `invalid` from it; the linear gate and the per-step error display are the stepper's own. |
+| `Stepper inside a form` | `@oge-ui/react-inputs` | Angular&rsquo;s `<oge-form-steps>` wrapper has no React counterpart yet — `@oge-ui/forms` ships no React layer. Bind the editors to your own state and compute each step's `completed` / `invalid` from it; the linear gate and the per-step error display are the stepper's own. |
 
 ### Stepper configuration
 
@@ -466,9 +466,9 @@ _Data_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `items` | `readonly OgeMenubarItemData[] \| undefined` | Data-driven item tree; children at any depth open as nested submenus. The **only** item API in React — the Angular layer also accepts declarative `` children, which React cannot mirror because `key` is reserved by React itself. |
+| `items` | `readonly OgeMenubarItemData[] \| undefined` | Data-driven item tree; children at any depth open as nested submenus. The **only** item API in React — the Angular layer also accepts declarative `<oge-menubar-item>` children, which React cannot mirror because `key` is reserved by React itself. |
 | `activeKey` | `string \| undefined` | The item `key` rendered with `aria-current="page"` and the active style. Consumer-driven — bind it from your router; the menubar itself takes no router dependency. |
-| `messages` | `Partial<OgeMenubarMessages> \| undefined` | Per-instance overrides of the user-facing strings, merged over ``. |
+| `messages` | `Partial<OgeMenubarMessages> \| undefined` | Per-instance overrides of the user-facing strings, merged over `<OgeMenubarConfigProvider>`. |
 
 _Behavior_
 
@@ -514,11 +514,11 @@ _OgeMenubarHandle (ref)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenubarItemData<T>` | `interface` | The canonical overlay `OgeMenuItem` narrowed recursively — `badge` and `shortcut` included — plus `key` (identity for `activeKey`/`open()`/events), `url` (renders the item as a real `` at the bar **and** at any submenu depth; `onItemClick` fires first so `preventDefault()` hands navigation to a router) and `visible`. Submenus come from `items`. |
+| `OgeMenubarItemData<T>` | `interface` | The canonical overlay `OgeMenuItem` narrowed recursively — `badge` and `shortcut` included — plus `key` (identity for `activeKey`/`open()`/events), `url` (renders the item as a real `<a href>` at the bar **and** at any submenu depth; `onItemClick` fires first so `preventDefault()` hands navigation to a router) and `visible`. Submenus come from `items`. |
 | `OgeMenubarCloseReason` | `'escape' \| 'outside' \| 'select' \| 'tab' \| 'navigation' \| 'api'` | Why a submenu closed. `'navigation'` is a Left/Right or hover switch to a sibling top-level item. |
 | `OgeMenubarItemClickEvent` | `{ item; key?; index; path; event }` | `path` is the hierarchical index chain from the bar down to the item; `index` is its last entry. |
 | `OgeMenubarHandle` | `interface` | The `ref` handle: `open`, `close`, `focus` — the React face of the Angular public methods. |
-| `OgeMenubarProps` | `interface` | Props of ``, render props included. |
+| `OgeMenubarProps` | `interface` | Props of `<OgeMenubar>`, render props included. |
 
 ### OgeMenubarItem (OgeMenubarItemData)
 
@@ -529,7 +529,7 @@ _OgeMenubarHandle (ref)_
 | `text` | `string` | `''` | Label of the item. |
 | `key` | `string \| undefined` | `—` | Stable identity used by `activeKey`, the handle&rsquo;s `open()` and event payloads. Not React&rsquo;s `key` — an item is data, so nothing collides. |
 | `value` | `unknown` | `—` | Consumer-defined value carried through click events. |
-| `url` | `string \| undefined` | `—` | Renders the item as a real link (``). |
+| `url` | `string \| undefined` | `—` | Renders the item as a real link (`<a href>`). |
 | `hint` | `string \| undefined` | `—` | Tooltip (native `title`) — e.g. why an item is disabled. |
 | `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading `aria-hidden` icon. |
 | `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon element — the icon-font hook. |
@@ -557,9 +557,9 @@ _OgeMenubarConfigProvider_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeBreadcrumbItemData[] \| undefined` | `—` | Data-driven trail — a flat list, never nested. The **only** crumb API in React: the Angular layer also accepts declarative `` children, which React cannot mirror because `key` is reserved by React itself. |
+| `items` | `readonly OgeBreadcrumbItemData[] \| undefined` | `—` | Data-driven trail — a flat list, never nested. The **only** crumb API in React: the Angular layer also accepts declarative `<oge-breadcrumb-item>` children, which React cannot mirror because `key` is reserved by React itself. |
 | `collapseMode` | `'auto' \| 'wrap' \| 'none'` | `'auto'` | `'auto'` collapses the **oldest middle** crumbs into an ellipsis menu against the breadcrumb's own **container** width (never the window) — the first and last crumb always stay visible, and the collapsed crumbs remain reachable as real links. `'wrap'` breaks onto multiple rows; `'none'` keeps one scrollable row. The fitting arithmetic is core's pure `fitToolbarItems`. |
-| `messages` | `Partial<OgeBreadcrumbMessages> \| undefined` | `—` | Per-instance overrides of the user-facing strings, merged over ``. |
+| `messages` | `Partial<OgeBreadcrumbMessages> \| undefined` | `—` | Per-instance overrides of the user-facing strings, merged over `<OgeBreadcrumbConfigProvider>`. |
 | `renderItem` | `(context: OgeBreadcrumbItemRenderContext) => ReactNode` | `—` | Replaces the crumb's interior only — the link/current/disabled element semantics stay with the component. The React face of `[ogeBreadcrumbItemTemplate]` (documented in the Angular block&rsquo;s types table); the context carries `item`, `index` and `last`. |
 | `renderSeparator` | `(context: OgeBreadcrumbSeparatorRenderContext) => ReactNode` | `—` | Replaces the default chevron separator — the React face of `[ogeBreadcrumbSeparatorTemplate]`. Rendered `aria-hidden`: a separator is decoration, never content (APG). |
 
@@ -589,13 +589,13 @@ _OgeBreadcrumbHandle (ref)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeBreadcrumbItemData<T>` | `{ text; key?; value?; url?; hint?; icon?; iconClass?; disabled?; visible? }` | A deliberately narrow interface — no submenu, checked or shortcut fields, because none of them mean anything on a trail. `url` renders the crumb as a real `` (ignored on the last crumb); `disabled` crumbs are exposed via `aria-disabled` but inert; `visible: false` removes the crumb. |
+| `OgeBreadcrumbItemData<T>` | `{ text; key?; value?; url?; hint?; icon?; iconClass?; disabled?; visible? }` | A deliberately narrow interface — no submenu, checked or shortcut fields, because none of them mean anything on a trail. `url` renders the crumb as a real `<a href>` (ignored on the last crumb); `disabled` crumbs are exposed via `aria-disabled` but inert; `visible: false` removes the crumb. |
 | `OgeBreadcrumbCollapseMode` | `'auto' \| 'wrap' \| 'none'` | How the breadcrumb behaves when room runs out. |
 | `OgeBreadcrumbItemClickEvent` | `{ item; key?; index; event }` | `index` is the position within the full trail, collapsed crumbs included. |
 | `OgeBreadcrumbItemRenderContext` | `{ item; index; last }` | Context of `renderItem` — the React face of `OgeBreadcrumbItemTemplateContext`. `last` is `true` on the current page&rsquo;s crumb. |
 | `OgeBreadcrumbSeparatorRenderContext` | `{ index }` | Context of `renderSeparator` — the index of the crumb the separator precedes. |
 | `OgeBreadcrumbHandle` | `interface` | The `ref` handle: `focus` — the React face of the Angular public method. |
-| `OgeBreadcrumbProps` | `interface` | Props of ``, render props included. |
+| `OgeBreadcrumbProps` | `interface` | Props of `<OgeBreadcrumb>`, render props included. |
 
 ### OgeBreadcrumbItem (OgeBreadcrumbItemData)
 
@@ -606,7 +606,7 @@ _OgeBreadcrumbHandle (ref)_
 | `text` | `string` | `''` | Label of the crumb. |
 | `key` | `string \| undefined` | `—` | Stable identity used in event payloads and DOM ids. Not React&rsquo;s `key` — a crumb is data, so nothing collides. |
 | `value` | `unknown` | `—` | Consumer-defined value carried through click events. |
-| `url` | `string \| undefined` | `—` | Renders the crumb as a real link (``). |
+| `url` | `string \| undefined` | `—` | Renders the crumb as a real link (`<a href>`). |
 | `hint` | `string \| undefined` | `—` | Tooltip (native `title`). |
 | `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading `aria-hidden` icon. |
 | `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon element — the icon-font hook. |
@@ -621,7 +621,7 @@ _OgeBreadcrumbConfigProvider_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `messages` | `OgeBreadcrumbMessages` | Every user-facing string: `breadcrumb` (accessible name of the `` landmark, default `Breadcrumb`) and `collapsed` (aria label of the ellipsis button, default `Show hidden items`). |
+| `messages` | `OgeBreadcrumbMessages` | Every user-facing string: `breadcrumb` (accessible name of the `<nav>` landmark, default `Breadcrumb`) and `collapsed` (aria label of the ellipsis button, default `Show hidden items`). |
 | `collapseMode` | `'auto' \| 'wrap' \| 'none' \| undefined` | Default for the `collapseMode` prop. |
 
 ### <OgePagination>
@@ -673,7 +673,7 @@ _OgePaginationHandle (ref)_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgePaginationDisplayMode / OgePaginationSize` | `types` | The string unions of the mode and density props, re-exported from `@oge-ui/behavior`. |
-| `OgePaginationProps / OgePaginationHandle` | `interface` | The props of `` and the shape of its `ref` handle. |
+| `OgePaginationProps / OgePaginationHandle` | `interface` | The props of `<OgePagination>` and the shape of its `ref` handle. |
 | `resolvePageWindow / resolvePageRange / resolvePageCount / OGE_PAGE_ELLIPSIS` | `@oge-ui/behavior` | The DOM-free paging kernel (`pagination-math.ts`): the constant-width page window with real ellipsis markers, the from/to info arithmetic and the never-below-1 page-count division — the **same module** the Angular component runs on, unit-tested without a DOM. |
 
 ### Pagination configuration
@@ -684,7 +684,7 @@ _OgePaginationConfig_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `messages` | `OgePaginationMessages` | All strings: `paginationLabel` (the `` name), `firstPage`/`lastPage`/`previousPage`/`nextPage`, `pageLabel` (`{page}`, 1-based), `info` (`{from}` `{to}` `{itemCount}`), `pageInfoUnknown`, `pageIndicator` (`{page}` `{pageCount}`), `pageSizeLabel`, `allRows`, `jumpLabel`. |
+| `messages` | `OgePaginationMessages` | All strings: `paginationLabel` (the `<nav>` name), `firstPage`/`lastPage`/`previousPage`/`nextPage`, `pageLabel` (`{page}`, 1-based), `info` (`{from}` `{to}` `{itemCount}`), `pageInfoUnknown`, `pageIndicator` (`{page}` `{pageCount}`), `pageSizeLabel`, `allRows`, `jumpLabel`. |
 | `displayMode / compactBelow / maxButtons` | `OgePaginationDisplayMode / number / number` | Subtree-wide prop defaults; the component resolves `prop ?? config ?? literal` (480px / 7). |
 
 #### Methods
@@ -2148,48 +2148,28 @@ export function StepperNavDemo() {
 'use client';
 
 import { useState } from 'react';
-import { OgeTextBox } from '@oge-ui/react-inputs';
-import { OgeStepper } from '@oge-ui/react-navigation';
-
-// @oge-ui/forms has no React layer yet (docs/REACT-PARITY.md), so the
-// editors hold their value in your own state — useState here, but React
-// Hook Form, Formik or TanStack Form bind exactly the same way. Step
-// completion is a plain derivation of that state, which is what the Angular
-// <oge-form-steps> wrapper computes from the form's per-step error rollup.
+import { OgeForm } from '@oge-ui/react-forms';
 
 export function StepperFormDemo() {
   const [order, setOrder] = useState({ email: '', card: '' });
   return (
-    <OgeStepper
-      linear
-      showNavigation
-      ariaLabel="Order"
-      steps={[
+    <OgeForm
+      formData={order}
+      onFormDataChange={setOrder}
+      layout={[
         {
-          key: 'account',
-          label: 'Account',
-          completed: order.email !== '',
-          content: (
-            <OgeTextBox
-              label="E-mail"
-              required
-              value={order.email}
-              onValueChange={(email) => setOrder((o) => ({ ...o, email }))}
-            />
-          ),
-        },
-        {
-          key: 'payment',
-          label: 'Payment',
-          completed: order.card !== '',
-          content: (
-            <OgeTextBox
-              label="Card"
-              required
-              value={order.card}
-              onValueChange={(card) => setOrder((o) => ({ ...o, card }))}
-            />
-          ),
+          kind: 'steps',
+          linear: true,
+          children: [
+            {
+              caption: 'Account',
+              children: [{ field: 'email', label: 'E-mail', isRequired: true }],
+            },
+            {
+              caption: 'Payment',
+              children: [{ field: 'card', label: 'Card', isRequired: true }],
+            },
+          ],
         },
       ]}
     />

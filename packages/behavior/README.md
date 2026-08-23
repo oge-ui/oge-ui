@@ -34,6 +34,31 @@ Escape inside a popup opened within a drawer would close the drawer instead.
 for stacked modals, compensate the vanishing scrollbar width in a single
 measure-then-write pass, and restore the previously inlined styles verbatim.
 
+**Component machines.** Since 0.12 the package also carries the _behaviour_
+of every family that ships in more than one render layer, each machine
+written once against a tiny `OgeReactivityAdapter` (`cell` / `derived`) that
+Angular backs with signals and React with a versioned store:
+
+- inputs — commit/debounce pipeline, select-list (filter, group, lazy items),
+  dropdown virtualizer, number/date/calendar/slider/color math;
+- layout, tabs, navigation — accordion, splitter, toolbar overflow, tab
+  activation/closing, tree view, drawer, stepper, menubar cores;
+- forms — the item model, rule evaluator and layout math;
+- upload — chunk planning, transfer queue, XHR adapter, drag/paste reading,
+  validation and the `OgeFileUploaderCore` list machine;
+- overlay — `OgeAnchoredPanelCore`, menu navigation/type-ahead, tooltip, modal
+  (focus, inert background, drag/resize clamps) and toast cores;
+- grid — `OgeGridStateCore` (sort/paging/filter/grouping/expansion/columns/
+  selection/editing slices + `loadOptions`), `OgeGridDataCore` (switchMap
+  loads, windowed blocks, push patching), the column resolver and adaptive
+  hiding, `OgeGridColumnLayoutCore`, `OgeGridRowVirtualizerCore`,
+  `OgeGridKeyboardNavCore`, `OgeGridDeferredChildrenCore`,
+  `OgeGridStatePersistenceCore`, the filter-row/header-filter/builder helpers
+  and the grid's message catalog and option vocabulary.
+
+Every machine has a framework-free spec beside it; `src/index.spec.ts` guards
+the barrel, which is the React layer's entire import surface.
+
 ## Installation
 
 You rarely install this directly — the OGE component packages depend on it.

@@ -5,6 +5,66 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## 0.13.0 — 2026-08-23
+
+### React layer: three more families
+
+- **`@oge-ui/react-overlay`** is now the whole overlay family: `<OgeTooltip>`,
+  `<OgeContextMenu>`, `<OgeModal>` + `OgeModalProvider` (async close guards,
+  drag/resize, focus trap, initial-focus resolution) and `<OgeToastRegion>` +
+  `useOgeToast` (stacking, pause-on-hover timers, coalescing, promise morphing)
+  join the anchored panel and the menu. The tooltip, modal and toast cores
+  moved into `@oge-ui/behavior` and the Angular overlay was rewired onto them.
+- **`@oge-ui/react-upload`** — `<OgeFileUploader>` with its 28 callbacks and
+  six render-prop slots, `<OgeUploadDropZone>` / `<OgeUploadTrigger>`, config
+  and transport providers. The upload engine (chunk planning, queue, XHR
+  adapter, drag/paste reading, validation) and a new `OgeFileUploaderCore`
+  list machine moved into `@oge-ui/behavior`; the Angular uploader is now a
+  thin seam over them (83 specs unchanged). `<OgeForm>`'s `fileUploader`
+  editor renders the real uploader — the last forms exception closed.
+- **`@oge-ui/react-grid`** (new) — `<OgeGrid>` and `<OgePager>` over the grid
+  engine, shipped **in slices** because the Angular grid is the suite's
+  largest surface. Slices A and B are in: multi-column sorting, a typed filter
+  row with an operator menu, global search, paging, row and column
+  virtualization with measured heights, windowed remote loading and infinite
+  scrolling, single/multiple/checkbox selection with shift ranges and Ctrl+A,
+  Excel-like keyboard navigation, a focused row, pinned/resizable/reorderable
+  columns, responsive hiding, `stateKey` persistence, CSV and clipboard —
+  plus grouping with a drag-and-drop group panel, group/footer/total
+  summaries, custom summaries and deferred group loading, master-detail
+  (`renderDetail`), `renderRow` / `renderNoData`, and row drag with
+  `onRowReordered`. Editing, header filters, the filter builder, column
+  chooser and context menus are the next slices; every gap is dated and
+  recorded in `docs/REACT-PARITY.md`, and the React API table documents
+  exactly what ships.
+- **`@oge-ui/react`** re-exports the three and its combined stylesheet
+  includes them.
+
+### `@oge-ui/behavior`
+
+- Grid engine additions: `OgeGridStateCore` (the state slices composed, with
+  `loadOptions`, the serializable snapshot and the cross-slice invariants as
+  a host-driven `reconcile()`), `OgeGridDataCore` (switchMap loads, windowed
+  block fetching, push patching — the framework-free port of the Angular data
+  adapter), and the grid's message catalog, config shape, option objects and
+  event payloads, single-sourced for both layers. `@oge-ui/grid` re-exports
+  them unchanged.
+- The pager's stylesheet moved to `packages/grid/src/lib/pager/pager.scss`,
+  loaded by the Angular pager and compiled into the React grid's
+  `styles.css` — one pager stylesheet, two render layers.
+
+### Docs site
+
+- **Prerendered.** All 108 routes are now static HTML (Angular SSG) with a
+  per-route `<title>` (`<Component> | OGE UI`), canonical URL and meta
+  description — the cause of the "discovered, not indexed" backlog in Search
+  Console. `robots.txt` explicitly allows the AI crawlers (GPTBot, ClaudeBot,
+  PerplexityBot, Google-Extended, CCBot, …) and names the sitemap; the Vercel
+  rewrite falls back to `index.csr.html` for unknown routes.
+- The React views of the overlay, upload and data-grid families render on the
+  same routes as the Angular views (ADR 0002); the `llms.txt` generator no
+  longer drops `<code>&lt;Tag&gt;</code>` spans.
+
 ## 0.12.0 — 2026-08-14
 
 ### New render layer: React

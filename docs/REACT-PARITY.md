@@ -77,14 +77,17 @@ pages in both layers:
 
 ## Status
 
-| Family     | Components                  | Docs pages mirrored                                                                                                         | llms (react/full) | Parity gate                 |
-| ---------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------- | --------------------------- |
-| Buttons    | ✅ 3/3                      | ✅ overview, interactions, button-group, drop-down-button, api                                                              | ✅ / ✅           | ✅                          |
-| Overlay    | ✅ primitives (panel, menu) | documented through the drop-down demos until tooltip/modal/toast ship                                                       | ✅ / ✅           | joins with its own api page |
-| Inputs     | ✅ 15/15                    | ✅ overview, select-box, autocomplete, toggle-controls, slider, date-box, color-box, tree-select, showcase, validation, api | ✅ / ✅           | ✅                          |
-| Tabs       | ✅ 2/2                      | ✅ overview, api (routed is a recorded exception)                                                                           | ✅ / ✅           | ✅                          |
-| Layout     | ✅ 7/7                      | ✅ accordion, card, progress, splitter, toolbar — overview + api each                                                       | ✅ / ✅           | ✅ (five entries)           |
-| Navigation | ✅ 6/6                      | ✅ tree-view (overview + api), drawer, stepper, menubar, breadcrumb, pagination (both routed pages are recorded exceptions) | ✅ / ✅           | ✅                          |
+| Family     | Components                                                                                                                                                                                                                                                                                                                                                                        | Docs pages mirrored                                                                                                                                   | llms (react/full) | Parity gate                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------- |
+| Buttons    | ✅ 3/3                                                                                                                                                                                                                                                                                                                                                                            | ✅ overview, interactions, button-group, drop-down-button, api                                                                                        | ✅ / ✅           | ✅                                                                            |
+| Overlay    | ✅ panel, menu, tooltip, context menu, modal (+ provider), toast (+ provider)                                                                                                                                                                                                                                                                                                     | ✅ overview, tooltip-context-menu, modal, toast, api — all branch, section for section                                                                | ✅ / ✅           | ✅ `overlay` in `FAMILIES`                                                    |
+| Inputs     | ✅ 15/15                                                                                                                                                                                                                                                                                                                                                                          | ✅ overview, select-box, autocomplete, toggle-controls, slider, date-box, color-box, tree-select, showcase, validation, api                           | ✅ / ✅           | ✅                                                                            |
+| Tabs       | ✅ 2/2                                                                                                                                                                                                                                                                                                                                                                            | ✅ overview, api (routed is a recorded exception)                                                                                                     | ✅ / ✅           | ✅                                                                            |
+| Layout     | ✅ 7/7                                                                                                                                                                                                                                                                                                                                                                            | ✅ accordion, card, progress, splitter, toolbar — overview + api each                                                                                 | ✅ / ✅           | ✅ (five entries)                                                             |
+| Navigation | ✅ 6/6                                                                                                                                                                                                                                                                                                                                                                            | ✅ tree-view (overview + api), drawer, stepper, menubar, breadcrumb, pagination (both routed pages are recorded exceptions)                           | ✅ / ✅           | ✅                                                                            |
+| Forms      | ✅ 2/2                                                                                                                                                                                                                                                                                                                                                                            | ✅ overview, layout, validation, api (three validation sections are recorded exceptions)                                                              | ✅ / ✅           | ✅                                                                            |
+| Upload     | ✅ uploader, drop zone, trigger, config + transport providers                                                                                                                                                                                                                                                                                                                     | ✅ overview, api (the forms section is a recorded heading exception)                                                                                  | ✅ / ✅           | ✅ `upload` in `FAMILIES`                                                     |
+| Data Grid  | 🟡 slices A+B: grid (sort, filter row + operator menu, search, paging, row/column virtualization, windowed loading, selection, keyboard nav, focused row, pinned/resizable/reorderable columns, adaptive hiding, persistence, CSV, grouping with group panel + summaries + deferred groups, master-detail, row/no-data render props, row drag), pager, config + storage providers | 🟡 overview, api, grouping, master-detail, rows branch; columns, filtering, selection, editing, persistence, context-menu pages show the shell notice | ✅ / ✅           | ⏳ not in `FAMILIES` until the family is whole (see the R6 phase table below) |
 
 New families add a row here when they land — a family without its row (or
 with a partial one) is not done, whatever the code says.
@@ -94,33 +97,76 @@ with a partial one) is not done, whatever the code says.
 An exception is a **deliberate, dated, justified** gap — never a silent one.
 Anything not listed here is a defect.
 
+- **The forms `layout` prop (2026-08-15).** Angular builds its form from
+  projected `<oge-form-item>` / `<oge-form-group>` / `<oge-form-tabs>` children.
+  React has no content projection, so the same tree is a nested `layout` array
+  of item, group and section objects — the same fields, the same defaults, the
+  same resolver in `@oge-ui/behavior`. This is the one API shape the two layers
+  cannot share, and it is a syntax difference, not a feature gap.
+- **The forms `[fieldTree]` and `[formGroup]` bindings (2026-08-15).** Both bind
+  an Angular forms engine — Signal Forms and reactive forms. React has neither,
+  so `formData` + `onFormDataChange` is the single binding, and the same
+  `validationRules` run through the same `evaluateOgeValidationRules()` the
+  Angular schema calls. The validation page's "Angular Signal Forms", "Reactive
+  forms" and "Schema-carried layout" sections document those engines (the last
+  one via `metadata()` keys on a Signal Forms schema) and stay Angular-only;
+  the four remaining sections mirror section for section.
+- **The upload overview's forms section (2026-08-22).** The Angular page's
+  "Angular forms" section binds `formControl`; React has no forms engine, so
+  the React view's seventh section is "Controlled value & forms" — the
+  controlled `value` pair plus the handle's `valid` flag, which is also what
+  `<OgeForm>`'s `fileUploader` editor drives. Same position, same demo
+  content, one heading that names the idiom instead of the framework.
+- ~~**The `fileUploader` editor (2026-08-15).**~~ Closed 2026-08-22:
+  `@oge-ui/react-upload` shipped and `<OgeForm>` renders `<OgeFileUploader>`
+  for `editorType: 'fileUploader'`.
+- **The data grid, sliced (2026-08-23).** `@oge-ui/react-grid` ships the
+  engine in phases because the Angular grid is the suite's largest surface
+  (3.6k lines over a 1.2k-line template). What the React grid is _not_ a
+  trimmed copy of: every feature in slice A runs through the same behavior
+  cores the Angular grid was rewired onto (`OgeGridStateCore`,
+  `OgeGridDataCore`, the column resolver, the row/column virtualizers, the
+  keyboard machine, the persistence core, the deferred-children loader) —
+  none of it is reimplemented. Slice **B** (2026-08-23) added grouping (group
+  panel, summaries, group footers, deferred groups), master-detail, the row
+  and no-data render props, row drag and column reorder. The remaining
+  slices, each with its feature page branching when it lands: **C** editing
+  (cell/row/batch/popup/form with `<OgeForm>`), command column,
+  `addRow`/`editRow`/…; **D** header filter, filter builder/panel, column
+  chooser/bands, context menus, `highlightChanges`, deferred selection,
+  Excel/PDF export entries. The family joins `FAMILIES` (and the status row turns ✅)
+  when D lands; until then the React API table documents exactly what ships.
+- **The grid toolbar slot (2026-08-23).** The Angular overview projects its
+  export buttons into the grid toolbar through the `ogeToolbar` attribute;
+  React's toolbar items land with slice D (`toolbarItems` render prop), so the
+  React quick start reaches `exportCsv()` through the `ref` handle from a
+  button beside the grid. Same demo, same data, one projection difference.
+- **The grouping page's column chooser (2026-08-23).** The Angular group-panel
+  demo also switches on `columnChooser`; the chooser is slice D, so the React
+  demo runs without it (the `columnChooser` chip is replaced by `grouping`).
+  Same data, same grouping, same summaries.
 - **The tabs "Routed tabs" page (2026-08-13).** That page drives the selection
   from the Angular router's child routes — the demo _is_ an Angular-router
   integration, and React apps route with their own library. The React tabs
   expose the same controlled `selectedIndex`/`selectedKey` pair any router can
   drive, so nothing is missing from the component; the page stays Angular-only
   and React readers get the shell notice on it.
-- **Inputs pages that demo `@oge-ui/forms` (2026-08-13).** The color-box and
-  slider "Inside a form" sections and the validation page's form-library
-  sections wrap the editor in the Angular forms family, which has no React
-  layer yet. The sections keep their position so the mirror stays
-  section-for-section, but the React view shows the honest React idiom — the
-  editors' `errors` / `errorText` / `errorDisplay` / `invalid` / `pending`
-  props driven by plain state (or any React form library) — and says so in the
-  description. They get rewritten onto `@oge-ui/react-forms` when R5 lands.
-- **The splitter's "Forms inside a pane" section (2026-08-13).** The same gap,
-  one family over: the Angular section puts an `<oge-form>` inside a pane to
-  show that a pane is not a query container. The React mirror keeps the
-  section, its position and its point — the editors are `@oge-ui/react-inputs`
-  fields bound to plain state, the way any React form library would bind them —
-  and says so in the description. It moves onto `@oge-ui/react-forms` with the
-  inputs sections in R5.
-- **The stepper's "Inside a form" section (2026-08-13).** The same
-  `@oge-ui/forms` gap, one family over: the Angular section wraps the steps in
-  `<oge-form-steps>`. The React mirror keeps the section, its position and its
-  point — `@oge-ui/react-inputs` editors on plain state, with `completed`
-  derived from it — and says so in the description. It moves onto
-  `@oge-ui/react-forms` with the inputs and splitter sections in R5.
+- **~~Inputs pages that demo `@oge-ui/forms`~~ — CLOSED 2026-08-15.** The
+  color-box and slider "Inside a form" sections wrapped the editor in the
+  Angular forms family, which had no React layer. R5 shipped
+  `@oge-ui/react-forms`, so both React sections now render a real `<OgeForm>`
+  with the same `editorType` / `editorOptions` item the Angular section uses.
+  (The validation page's two renamed headings are a different exception — see
+  below — because they name `@angular/forms`, not `@oge-ui/forms`.)
+- **~~The splitter's "Forms inside a pane" section~~ — CLOSED 2026-08-15.**
+  The React mirror now puts an `<OgeForm>` with `colCountByScreen` inside the
+  pane, exactly as the Angular section does — the point of the section (a pane
+  is not a query container) is demonstrated by the same component in both
+  layers.
+- **~~The stepper's "Inside a form" section~~ — CLOSED 2026-08-15.** The React
+  mirror now wraps the steps in a `{ kind: 'steps' }` form section, so step
+  completion comes from the form's own per-step error rollup rather than from
+  hand-derived state.
 - **Two validation headings renamed (2026-08-13).** "Reactive Forms" →
   "Form library integration" and "Signal Forms" → "Schema-driven errors": both
   Angular headings name Angular-only bindings, so keeping them would promise an

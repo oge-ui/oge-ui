@@ -1,0 +1,1099 @@
+# @oge-ui/react-forms
+
+> React form layout over the editors: a nested layout array of items, groups and tabbed/accordion/wizard sections, responsive container-query columns, declarative validation rules and a validation summary — running the same item model, the same rule evaluator and the same stylesheet as the Angular forms package.
+
+Part of OGE UI v0.12.0.
+Docs and live demos: https://ogeui.com/components/forms
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-forms
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages:
+`@oge-ui/grid/themes/dark.css` (then put `class="oge-theme-dark"` on
+`<html>` or any subtree), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeForm>
+
+#### Properties
+
+_Binding_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `formData` | `T \| undefined` | `undefined` | The bound model — controlled when provided. The form compiles each item's `validationRules` with the shared evaluator from `@oge-ui/behavior`, the very code the Angular schema runs. |
+| `defaultFormData` | `T \| undefined` | `undefined` | Uncontrolled starting model. Give one of `formData` / `defaultFormData`. |
+| `onFormDataChange` | `(data: T) => void` | `—` | The controlled half of `formData` — fires on every model change. |
+| `items` | `readonly OgeFormItemDefinition[] \| undefined` | `undefined` | Data-driven items, rendered after the `layout` tree. |
+| `groups` | `readonly OgeFormGroupData[] \| undefined` | `undefined` | Data-driven groups, matched to items by `key` (or `caption`) through an item's `group`. |
+| `layout` | `readonly OgeFormNodeDefinition[] \| undefined` | `undefined` | The nested layout — items, groups and tabbed/accordion/wizard sections. React's stand-in for Angular's projected `<oge-form-item>` / `<oge-form-group>` / `<oge-form-tabs>` children. |
+
+_Layout_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `colCount` | `number \| 'auto'` | `'auto'` | Layout columns. `'auto'` fits as many `minColWidth` tracks as the form is wide. |
+| `colCountByScreen` | `Partial<Record<OgeFormScreenSize, number>> \| undefined` | `undefined` | Column count per breakpoint. Implemented as container queries on the form itself, so a form in a dialog or a grid cell sizes from its own width — not the window's. |
+| `minColWidth` | `number` | `220` | Narrowest column `colCount: 'auto'` will produce, in pixels. |
+| `labelLocation` | `'top' \| 'start' \| 'end'` | `'top'` | `'top'` keeps each editor's own label chrome; the side values hand the label to the form, which draws a real `<label htmlFor>` in its own column. |
+| `labelMode` | `'static' \| 'floating' \| 'hidden' \| 'outside'` | `'static'` | Forwarded to every editor. Forced to `'hidden'` when `labelLocation` is a side value, so no label renders twice. |
+| `alignItemLabels` | `boolean` | `true` | Gives side labels one shared column width so the editors line up. |
+| `showColonAfterLabel` | `boolean` | `false` | Appends `messages.labelColon` to every label. |
+| `showRequiredMark` | `boolean` | `true` | Renders `messages.requiredMark` after a required label, `aria-hidden`, with a screen-reader-only word beside it. |
+| `showOptionalMark` | `boolean` | `false` | Renders `messages.optionalMark` after every non-required label. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Forwarded to every editor. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'underlined'` | `'outlined'` | Forwarded to every editor. |
+| `subscriptSizing` | `'fixed' \| 'dynamic' \| 'none'` | `'fixed'` | Forwarded to every editor. `'fixed'` reserves the hint/error line so an appearing error never shifts the layout. |
+| `className / style / id` | `string \| CSSProperties \| undefined` | `undefined` | Host attributes. React's idiom for what an Angular host element takes natively. |
+
+_State_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `readOnly` | `boolean` | `false` | Makes every editor read-only, overridable per group and per item. |
+| `disabled` | `boolean` | `false` | Wraps the fields in a `<fieldset disabled>`, overridable per group and per item. |
+| `showValidationSummary` | `boolean` | `false` | Renders an `<OgeValidationSummary>` above the fields once a submit has failed. |
+| `scrollToFirstInvalid` | `boolean` | `true` | Scrolls the first invalid field into view when a submit fails. Focus moves there either way. |
+| `messages` | `Partial<OgeFormsMessages> \| undefined` | `undefined` | Per-instance string overrides, merged over `<OgeFormsConfigProvider>`. |
+| `renderFormElement` | `boolean` | `true` | Whether the fields are wrapped in a real `<form>`. Set `false` inside another form — nested forms are invalid HTML. With `false` there is no native submit, so drive it with the handle's `submit()`. |
+
+#### Methods
+
+_OgeFormHandle — via ref_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `submit(event?: Event)` | `Promise<boolean>` | Marks every field touched, validates, fires `onSubmitting` and then `onSubmitted`. Resolves `false` when the form was invalid or the submit was canceled, and focuses the first invalid field. |
+| `validate()` | `boolean` | Re-reads validity and fires `onValidated`. Does not move focus. |
+| `reset(values?: Partial<T>)` | `void` | Resets every field to `values`, or to the data the form started with, and hides the validation summary. |
+| `clear()` | `void` | Empties every editor using the per-`dataType` empty value (`''`, `null`, `false`, `[]`). |
+| `focus(field?: string)` | `void` | Focuses a named field, or the first one when called with no argument. |
+| `focusFirstInvalid()` | `boolean` | Reveals the section holding the first invalid field, focuses it — and, with `scrollToFirstInvalid`, scrolls to it. Returns `false` when the form is valid. |
+| `itemOption(field: string)` | `OgeResolvedFormItem \| undefined` | The resolved configuration of one item, as the form actually renders it. |
+| `updateData(field: string, value: unknown)` | `void` | Writes one field. The overload `updateData(partial)` merges an object into the bound data. |
+| `errors` | `readonly OgeFormErrorEntry[]` | One entry per invalid field, in layout order, regardless of whether the field is showing its error yet. |
+| `valid` | `boolean` | Whether every bound field currently validates. |
+| `dirty` | `boolean` | Whether any bound field has been edited since the last reset. |
+| `data` | `T` | The bound model, as the form currently holds it. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSubmitting` | `(event: OgeFormSubmittingEvent<T>) => void` | Cancelable pre-submit — `{ data, valid, cancel, event }`. Set `cancel` to stop the submit. |
+| `onSubmitted` | `(event: OgeFormSubmittedEvent<T>) => void` | Fires after a submit passed validation and was not canceled. |
+| `onFieldChanged` | `(event: OgeFormFieldChangedEvent) => void` | One field's value changed — `{ field, value, previousValue }`. |
+| `onValidated` | `(event: OgeFormValidatedEvent) => void` | Fires after `validate()` or a submit attempt — `{ valid, errors }`. |
+| `onEditorEnterKey` | `(event: OgeFormKeyEvent) => void` | Enter pressed inside an editor — `{ field, event }`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeFormDataType` | `'string' \| 'number' \| 'boolean' \| 'date' \| 'datetime' \| 'dateRange' \| 'array' \| 'object'` | Value shape of an item. Inferred from the model value when not set. |
+| `OgeFormEditorType` | `'textBox' \| 'textArea' \| 'numberBox' \| 'selectBox' \| 'tagBox' \| 'autocomplete' \| 'treeSelect' \| 'dateBox' \| 'dateRangeBox' \| 'calendar' \| 'checkBox' \| 'switch' \| 'radioGroup'` | Which `@oge-ui/react-inputs` editor renders an item. The same string union both layers share from `@oge-ui/behavior`. |
+| `OgeFormLabelLocation` | `'top' \| 'start' \| 'end'` | Where an item's label sits relative to its editor. |
+| `OgeFormScreenSize` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | Container-query breakpoints: under 480, then 480 / 720 / 960 / 1200 pixels of form width. |
+| `OgeFormColCount` | `number \| 'auto'` | A fixed track count, or auto-fit by `minColWidth`. |
+| `OgeValidationRule` | `{ type: 'required' \| 'email' \| 'numeric' \| 'stringLength' \| 'pattern' \| 'range' \| 'custom' \| 'async'; … }` | A declarative rule, evaluated by `evaluateOgeValidationRules()` in `@oge-ui/behavior` — the same function Angular's schema calls, so a rule can never be worded differently in the two layers. |
+| `OgeValidationContext` | `{ value: unknown; data: Record<string, unknown> }` | What a `custom` rule sees: its own value and the whole model, which is what makes cross-field rules possible. |
+| `OgeFormErrorEntry` | `{ field: string; label: string; message: string }` | One row of the validation summary. |
+| `OgeResolvedFormItem` | `interface` | An item after label defaulting, dataType inference, editor selection and state inheritance — what `itemOption()` returns. |
+| `OgeFormNodeDefinition` | `OgeFormItemDefinition \| OgeFormGroupDefinition \| OgeFormSectionDefinition` | One node of the `layout` tree. |
+
+### OgeFormItem (OgeFormItemDefinition)
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `field` | `string` | `—` | Required. Model property this item edits; dot-notation reaches nested objects. |
+| `key` | `string \| undefined` | `undefined` | Stable identity; defaults to `field`. |
+| `label` | `string \| undefined` | `undefined` | Label text. Defaults to a title-cased `field` — `postalCode` becomes “Postal code”. |
+| `labelVisible` | `boolean` | `true` | Set `false` to render the editor with no label. |
+| `hint` | `string \| undefined` | `undefined` | Help text under the editor. Chrome editors render it in their own subscript; bare controls get it from the form. |
+| `placeholder` | `string \| undefined` | `undefined` | Placeholder forwarded to the editor. |
+| `dataType` | `OgeFormDataType \| undefined` | `undefined` | Value shape. Inferred from the current model value when omitted. |
+| `editorType` | `OgeFormEditorType \| undefined` | `undefined` | Explicit editor; beats both `editorOptions.items` and `dataType`. |
+| `editorOptions` | `OgeFormEditorOptions \| undefined` | `undefined` | A curated, typed subset of editor props (`items`, `displayExpr`, `min`, `max`, `rows`, …). Supplying `items` selects a select box or tag box. |
+| `colSpan` | `number` | `1` | Layout columns the item spans, clamped to the column count in force. |
+| `visible` | `boolean` | `true` | A hidden item is dropped from the layout entirely — no hidden input, no stale DOM value. |
+| `visibleIndex` | `number \| undefined` | `undefined` | Items with an index come first, in index order; everything else keeps its declaration order behind them. |
+| `isRequired` | `boolean` | `false` | Adds a `required` rule and shows the required mark. |
+| `validationRules` | `readonly OgeValidationRule[] \| undefined` | `undefined` | Declarative rules, run by the shared evaluator in `@oge-ui/behavior`. `async` rules are scheduled by the form and reported when they settle. |
+| `readOnly` | `boolean \| undefined` | `undefined` | `undefined` falls back to the enclosing group, then the form. |
+| `disabled` | `boolean \| undefined` | `undefined` | `undefined` falls back to the enclosing group, then the form. |
+| `cssClass` | `string \| undefined` | `undefined` | Extra class on the item wrapper. |
+
+### OgeFormGroup (OgeFormGroupDefinition)
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `caption` | `string` | `''` | Legend text. An empty caption renders an unlabelled section. |
+| `key` | `string \| undefined` | `undefined` | Stable identity; defaults to the caption. |
+| `kind` | `'group' \| undefined` | `'group'` | Discriminates a group from a section inside the `layout` array. Optional — a node with `caption` or `children` and no section kind is a group. |
+| `children` | `readonly OgeFormNodeDefinition[] \| undefined` | `undefined` | Items, nested groups and sections inside this group — React's stand-in for the projected children. |
+| `colCount` | `OgeFormColCount \| undefined` | `undefined` | Columns inside this group; `undefined` inherits the form's count. |
+| `colSpan` | `number` | `1` | Columns the group itself spans in its parent layout. |
+| `visible` | `boolean` | `true` | Drops the whole section, and its items, from the layout. |
+| `disabled` | `boolean \| undefined` | `undefined` | Disables every item in the section, unless the item overrides it. |
+| `readOnly` | `boolean \| undefined` | `undefined` | Makes every item in the section read-only, unless the item overrides it. |
+| `visibleIndex` | `number \| undefined` | `undefined` | Explicit ordering among this group's siblings. Ordering is scoped per level. |
+| `cssClass` | `string \| undefined` | `undefined` | Extra class on the fieldset. |
+| `renderCaption` | `(context: OgeFormGroupCaptionContext) => ReactNode` | `undefined` | Per-group caption slot; wins over the form-level `renderGroupCaption`. |
+
+### <OgeValidationSummary>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `errors` | `readonly OgeFormErrorEntry[]` | `[]` | One entry per invalid field, in layout order. Pass `handle.errors`. |
+| `messages` | `Partial<OgeFormsMessages> \| undefined` | `undefined` | Per-instance string overrides. |
+| `className / style` | `string \| CSSProperties \| undefined` | `undefined` | Host attributes. React's idiom for what an Angular host element takes natively. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onErrorClick` | `(entry: OgeFormErrorEntry) => void` | A summary row was activated. Wire it to `handle.focus(entry.field)`. |
+
+### Sections (OgeFormSectionDefinition)
+
+#### Properties
+
+_Tabs — { kind: 'tabs' }_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `activeIndex / defaultActiveIndex / onActiveIndexChange` | `number \| ((index: number) => void)` | `0` | Open tab — the controlled pair, or its uncontrolled half. A failed submit selects the tab holding the first invalid field. |
+| `deferRendering` | `boolean` | `false` | Deliberately the opposite of the tab panel's own default: a form usually wants every field in the DOM. Validation runs on the model either way. |
+| `keepAlive` | `boolean` | `true` | Keeps a rendered tab's fields mounted while it is hidden. |
+| `showErrorBadges` | `boolean` | `true` | Shows each tab's invalid-field count as a badge on the tab. |
+| `key / visible / visibleIndex / colSpan / cssClass` | `string \| boolean \| number \| undefined` | `—` | The same section-level knobs a group has. |
+
+_Wizard — { kind: 'steps' }_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `activeIndex` | `number` | `0` | Active step — controlled with `onActiveIndexChange`, as on the tabs section. A failed submit moves to the step holding the first invalid field. |
+| `linear` | `boolean` | `false` | Blocks moving past a step that still has invalid fields. Completion comes from the form's own per-step error rollup. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Passed through to the stepper. |
+| `showNavigation` | `boolean` | `true` | Renders the stepper's built-in Back / Next bar. On by default here, because a wizard inside a form almost always wants one. |
+| `touchOnLeave` | `boolean` | `true` | Touches only the leaving step's fields on each advance, so the steps ahead stay quiet instead of turning red. |
+| `showInvalidSections` | `boolean` | `true` | Flags a step whose fields are invalid, driving the stepper's error indicator. |
+| `deferRendering / keepAlive` | `boolean` | `—` | See the tabs section — same defaults, same reasoning. |
+| `key / visible / visibleIndex / colSpan / cssClass` | `string \| boolean \| number \| undefined` | `—` | The same section-level knobs a group has. |
+
+_Accordion — { kind: 'accordion' }_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `expandedKeys / defaultExpandedKeys / onExpandedKeysChange` | `readonly string[] \| ((keys: readonly string[]) => void)` | `[]` | Expanded panels — the controlled pair, or its uncontrolled half. A failed submit adds the panel holding the first invalid field. |
+| `multiple` | `boolean` | `true` | Whether more than one panel may be open at a time. |
+| `collapsible` | `boolean` | `true` | Whether the open panel may be closed again. |
+| `showInvalidSections` | `boolean` | `true` | Drives the accordion's own invalid indicator — danger rail, dot and screen-reader label — from the panel's field errors. |
+| `deferRendering / keepAlive` | `boolean` | `—` | As on the tabs section. |
+
+### Template slots (render props)
+
+#### Properties
+
+_Render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderItem` | `(context: OgeFormItemContext) => ReactNode` | Replaces a field entirely: label, editor and subscript. Legal on `<OgeForm>` (every item) or on one item definition, where it wins. |
+| `renderEditor` | `(context: OgeFormItemContext) => ReactNode` | Replaces only the control, keeping the form's label, required mark and error chrome. The context carries `editorId`, so a custom control keeps the `<label htmlFor>` association. |
+| `renderLabel` | `(context: OgeFormLabelContext) => ReactNode` | Replaces the label content. The surrounding `<label htmlFor>` stays, so the control association and the required mark survive. |
+| `renderGroupCaption` | `(context: OgeFormGroupCaptionContext) => ReactNode` | Replaces the content of a group's `<legend>`. A group definition's own `renderCaption` wins over it. |
+| `actions` | `ReactNode` | Rendered under the fields — the action bar (submit, reset, …) Angular projects into `[ogeFormActions]`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeFormItemContext` | `{ item: OgeResolvedFormItem; value; setValue; error; editorId }` | Context of the item and editor slots. `setValue` writes straight into the bound model, and `editorId` is the id the form's label points at. |
+| `OgeFormLabelContext` | `{ label: string; item; required; editorId }` | Context of the label slot. |
+| `OgeFormGroupCaptionContext` | `{ caption: string; colCount }` | Context of the group caption slot. |
+
+### Forms configuration
+
+#### Properties
+
+_&lt;OgeFormsConfigProvider&gt;_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `labelLocation` | `OgeFormLabelLocation \| undefined` | `'top'` | Application-wide default for the prop of the same name. |
+| `minColWidth` | `number \| undefined` | `220` | Application-wide default for the prop of the same name. |
+| `showRequiredMark` | `boolean \| undefined` | `true` | Application-wide default for the prop of the same name. |
+| `showOptionalMark` | `boolean \| undefined` | `false` | Application-wide default for the prop of the same name. |
+| `showColonAfterLabel` | `boolean \| undefined` | `false` | Application-wide default for the prop of the same name. |
+| `useOgeFormsConfig()` | `OgeFormsConfig` | `—` | Reads the resolved configuration — defaults merged with the nearest provider. |
+
+_OgeFormsMessages_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `requiredMark` | `string` | `'*'` | Marker after a required label; rendered aria-hidden. |
+| `optionalMark` | `string` | `'optional'` | Marker after an optional label. |
+| `requiredLabel` | `string` | `'required'` | Screen-reader text beside the required mark. |
+| `optionalLabel` | `string` | `'optional'` | Screen-reader text beside the optional mark. |
+| `labelColon` | `string` | `':'` | Separator drawn when `showColonAfterLabel`. |
+| `validationSummaryTitle` | `string` | `'{count} fields need your attention'` | Summary heading; `{count}` is interpolated. |
+| `validationSummaryTitleOne` | `string` | `'1 field needs your attention'` | Summary heading when exactly one field is invalid. |
+| `validationSummaryLabel` | `string` | `'Validation summary'` | Accessible label of the summary region. |
+| `invalidError` | `string` | `'This value is invalid'` | Fallback text for an error with no resolvable message. |
+| `submitButton` | `string` | `'Submit'` | Label of the built-in submit button. |
+| `resetButton` | `string` | `'Reset'` | Label of the built-in reset button. |
+| `submitting` | `string` | `'Submitting…'` | Announced while an async submit handler is in flight. |
+| `noItems` | `string` | `'No fields to display'` | Shown when no visible item resolves. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Fixed columns
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+export function FixedColumnsDemo() {
+  const [columns, setColumns] = useState(3);
+  const [record, setRecord] = useState({
+    code: 'OGE-1',
+    name: 'Form layout',
+    owner: 'Ada',
+    summary: '',
+  });
+  return (
+    <>
+      <div className="mb-3 flex items-center gap-2 text-sm">
+        <span>columns:</span>
+        {[1, 2, 3].map((n) => (
+          <button
+            key={n}
+            type="button"
+            className={`rounded border px-2 py-0.5 ${columns === n ? 'font-semibold' : ''}`}
+            onClick={() => setColumns(n)}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      <OgeForm
+        formData={record}
+        onFormDataChange={setRecord}
+        colCount={columns}
+        layout={[
+          { field: 'code', label: 'Code' },
+          { field: 'name', label: 'Name' },
+          { field: 'owner', label: 'Owner' },
+          { field: 'summary', label: 'Summary', colSpan: columns },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+### Auto-fit columns
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
+
+const serverFields: OgeFormItemDefinition[] = [
+  { field: 'host', label: 'Host' },
+  { field: 'port', label: 'Port' },
+  { field: 'user', label: 'User' },
+  { field: 'database', label: 'Database' },
+];
+
+export function AutoFitDemo() {
+  const [server, setServer] = useState({
+    host: 'db.internal',
+    port: 5432,
+    user: 'postgres',
+    database: 'oge',
+  });
+  return (
+    <OgeForm
+      formData={server}
+      onFormDataChange={setServer}
+      items={serverFields}
+      colCount="auto"
+      minColWidth={260}
+    />
+  );
+}
+```
+
+### Responsive by container
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
+
+const serverFields: OgeFormItemDefinition[] = [
+  { field: 'host', label: 'Host' },
+  { field: 'port', label: 'Port' },
+  { field: 'user', label: 'User' },
+  { field: 'database', label: 'Database' },
+];
+
+export function BreakpointsDemo() {
+  const [server, setServer] = useState({
+    host: 'db.internal',
+    port: 5432,
+    user: 'postgres',
+    database: 'oge',
+  });
+  return (
+    <OgeForm
+      formData={server}
+      onFormDataChange={setServer}
+      items={serverFields}
+      colCountByScreen={{ xs: 1, sm: 2, md: 3, lg: 4 }}
+    />
+  );
+}
+```
+
+### Nested groups
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+export function NestedGroupsDemo() {
+  const [company, setCompany] = useState({
+    name: 'OGE UI',
+    taxId: '',
+    employees: 12,
+    street: '',
+    city: '',
+    postalCode: '',
+  });
+  return (
+    <OgeForm
+      formData={company}
+      onFormDataChange={setCompany}
+      colCount={2}
+      layout={[
+        {
+          caption: 'Company',
+          colCount: 2,
+          children: [
+            { field: 'name', label: 'Name', colSpan: 2 },
+            { field: 'taxId', label: 'Tax id' },
+            { field: 'employees', label: 'Employees' },
+            {
+              caption: 'Billing address',
+              colCount: 2,
+              children: [
+                { field: 'street', label: 'Street', colSpan: 2 },
+                { field: 'city', label: 'City' },
+                { field: 'postalCode', label: 'Postal code' },
+              ],
+            },
+          ],
+        },
+      ]}
+    />
+  );
+}
+```
+
+### Tab sections
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeFormHandle } from '@oge-ui/react-forms';
+
+export function TabSectionsDemo() {
+  const [employee, setEmployee] = useState({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    title: '',
+    salary: 120000,
+  });
+  const form = useRef<OgeFormHandle<typeof employee>>(null);
+  return (
+    <>
+      <OgeForm
+        ref={form}
+        formData={employee}
+        onFormDataChange={setEmployee}
+        showValidationSummary
+        layout={[
+          {
+            kind: 'tabs',
+            children: [
+              {
+                caption: 'Personal',
+                colCount: 2,
+                children: [
+                  { field: 'firstName', label: 'First name' },
+                  { field: 'lastName', label: 'Last name' },
+                ],
+              },
+              {
+                caption: 'Employment',
+                colCount: 2,
+                children: [
+                  { field: 'title', label: 'Title', isRequired: true },
+                  { field: 'salary', label: 'Salary' },
+                ],
+              },
+            ],
+          },
+        ]}
+      />
+      <button
+        type="button"
+        className="mt-3 rounded border px-2 py-1 text-sm"
+        onClick={() => form.current?.submit()}
+      >
+        Submit (Title is empty)
+      </button>
+    </>
+  );
+}
+```
+
+### Accordion sections
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeFormHandle } from '@oge-ui/react-forms';
+
+export function AccordionSectionsDemo() {
+  const [employee, setEmployee] = useState({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    title: '',
+    salary: 120000,
+  });
+  const form = useRef<OgeFormHandle<typeof employee>>(null);
+  return (
+    <>
+      <OgeForm
+        ref={form}
+        formData={employee}
+        onFormDataChange={setEmployee}
+        scrollToFirstInvalid={false}
+        layout={[
+          {
+            kind: 'accordion',
+            children: [
+              {
+                caption: 'Personal',
+                children: [{ field: 'firstName', label: 'First name' }],
+              },
+              {
+                caption: 'Employment',
+                children: [{ field: 'title', label: 'Title', isRequired: true }],
+              },
+            ],
+          },
+        ]}
+      />
+      <button
+        type="button"
+        className="mt-3 rounded border px-2 py-1 text-sm"
+        onClick={() => form.current?.submit()}
+      >
+        Submit (Title is empty)
+      </button>
+    </>
+  );
+}
+```
+
+### Read-only & disabled
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+export function ReadOnlyDemo() {
+  const [locked, setLocked] = useState(true);
+  const [archived, setArchived] = useState(false);
+  const [invoice, setInvoice] = useState({
+    number: 'INV-204',
+    total: 1290,
+    comment: '',
+  });
+  return (
+    <>
+      <div className="mb-3 flex gap-3 text-sm">
+        <label className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={locked}
+            onChange={() => setLocked((value) => !value)}
+          />
+          readOnly
+        </label>
+        <label className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={archived}
+            onChange={() => setArchived((value) => !value)}
+          />
+          disabled
+        </label>
+      </div>
+      <OgeForm
+        formData={invoice}
+        onFormDataChange={setInvoice}
+        readOnly={locked}
+        disabled={archived}
+        colCount={2}
+        layout={[
+          { field: 'number', label: 'Number' },
+          { field: 'total', label: 'Total' },
+          { field: 'comment', label: 'Comment', readOnly: false },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+### Visibility & order
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+export function VisibilityDemo() {
+  const [shipment, setShipment] = useState({
+    carrier: 'DHL',
+    reference: 'REF-9',
+    trackingNumber: '',
+  });
+  return (
+    <OgeForm
+      formData={shipment}
+      onFormDataChange={setShipment}
+      colCount={2}
+      layout={[
+        { field: 'carrier', label: 'Carrier', visibleIndex: 1 },
+        { field: 'reference', label: 'Reference', visibleIndex: 0 },
+        {
+          field: 'trackingNumber',
+          label: 'Tracking number',
+          visible: shipment.carrier !== '',
+        },
+      ]}
+    />
+  );
+}
+```
+
+### Declarative items
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+export function DeclarativeItemsDemo() {
+  const [employee, setEmployee] = useState({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    email: '',
+    notes: '',
+  });
+  return (
+    <>
+      <OgeForm
+        formData={employee}
+        onFormDataChange={setEmployee}
+        colCount={2}
+        layout={[
+          { field: 'firstName', label: 'First name', isRequired: true },
+          { field: 'lastName', label: 'Last name' },
+          { field: 'email', label: 'E-mail', hint: 'We never share it.' },
+          { field: 'notes', editorType: 'textArea', colSpan: 2 },
+        ]}
+      />
+      <p className="mt-2 text-sm opacity-70">
+        formData → {employee.firstName} {employee.lastName}
+      </p>
+    </>
+  );
+}
+```
+
+### Data-driven items
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
+
+const orderFields: OgeFormItemDefinition[] = [
+  { field: 'reference', label: 'Reference', isRequired: true },
+  { field: 'quantity', label: 'Quantity', editorOptions: { min: 1, max: 99 } },
+  {
+    field: 'priority',
+    label: 'Priority',
+    editorOptions: { items: ['low', 'normal', 'high'] },
+  },
+  { field: 'shipped', label: 'Shipped', dataType: 'boolean' },
+];
+
+export function ItemsDemo() {
+  const [order, setOrder] = useState({
+    reference: '',
+    quantity: 1,
+    priority: 'normal',
+    shipped: false,
+  });
+  return (
+    <OgeForm
+      formData={order}
+      onFormDataChange={setOrder}
+      items={orderFields}
+      colCount={2}
+    />
+  );
+}
+```
+
+### Editor selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+const teams = ['Platform', 'Design', 'Support'];
+
+export function EditorSelectionDemo() {
+  const [profile, setProfile] = useState({
+    name: 'Grace',
+    age: 45,
+    birthday: new Date(1980, 4, 12),
+    active: true,
+    team: 'Platform',
+    bio: '',
+  });
+  return (
+    <OgeForm
+      formData={profile}
+      onFormDataChange={setProfile}
+      colCount={2}
+      layout={[
+        { field: 'name', label: 'Name' },
+        { field: 'age', label: 'Age' },
+        { field: 'birthday', label: 'Birthday' },
+        { field: 'active', label: 'Active' },
+        { field: 'team', label: 'Team', editorOptions: { items: teams } },
+        { field: 'bio', label: 'Bio', editorType: 'textArea', colSpan: 2 },
+      ]}
+    />
+  );
+}
+```
+
+### Groups
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+export function GroupsDemo() {
+  const [account, setAccount] = useState({
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    email: 'ada@example.com',
+    phone: '',
+    address: '',
+  });
+  return (
+    <OgeForm
+      formData={account}
+      onFormDataChange={setAccount}
+      colCount={2}
+      layout={[
+        {
+          caption: 'Identity',
+          colCount: 2,
+          children: [
+            { field: 'firstName', label: 'First name' },
+            { field: 'lastName', label: 'Last name' },
+          ],
+        },
+        {
+          caption: 'Contact',
+          colCount: 2,
+          children: [
+            { field: 'email', label: 'E-mail' },
+            { field: 'phone', label: 'Phone' },
+            { field: 'address', label: 'Address', colSpan: 2 },
+          ],
+        },
+      ]}
+    />
+  );
+}
+```
+
+### Label placement
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+export function LabelPlacementDemo() {
+  const [settings, setSettings] = useState({
+    host: 'localhost',
+    port: 5432,
+    secure: true,
+  });
+  return (
+    <OgeForm
+      formData={settings}
+      onFormDataChange={setSettings}
+      labelLocation="start"
+      alignItemLabels
+      showColonAfterLabel
+      colCount={1}
+      layout={[
+        { field: 'host', label: 'Host', isRequired: true },
+        { field: 'port', label: 'Port' },
+        { field: 'secure', label: 'Use TLS' },
+      ]}
+    />
+  );
+}
+```
+
+### Template slots
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+
+export function RenderPropsDemo() {
+  const [ticket, setTicket] = useState({ title: '', rating: 3 });
+  return (
+    <OgeForm
+      formData={ticket}
+      onFormDataChange={setTicket}
+      labelLocation="start"
+      colCount={1}
+      layout={[
+        { field: 'title', label: 'Title', isRequired: true },
+        {
+          field: 'rating',
+          label: 'Rating',
+          renderLabel: ({ label }) => <em>{label}</em>,
+          renderEditor: ({ editorId, value, setValue }) => (
+            <>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                id={editorId}
+                value={Number(value)}
+                onChange={(event) => setValue(Number(event.target.value))}
+              />
+              <span className="ml-2 text-sm">{Number(value)} / 5</span>
+            </>
+          ),
+        },
+      ]}
+    />
+  );
+}
+```
+
+### Actions & submit
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeFormHandle } from '@oge-ui/react-forms';
+
+export function ActionsDemo() {
+  const form = useRef<OgeFormHandle<{ email: string; password: string }>>(null);
+  const [signup, setSignup] = useState({ email: '', password: '' });
+  const [saved, setSaved] = useState(false);
+  return (
+    <>
+      <OgeForm
+        ref={form}
+        formData={signup}
+        onFormDataChange={setSignup}
+        showValidationSummary
+        onSubmitted={() => setSaved(true)}
+        layout={[
+          { field: 'email', label: 'E-mail', isRequired: true },
+          { field: 'password', label: 'Password', isRequired: true },
+        ]}
+        actions={
+          <>
+            <OgeButton text="Create" stylingMode="contained" useSubmitBehavior />
+            <OgeButton text="Reset" onClick={() => form.current?.reset()} />
+          </>
+        }
+      />
+      {saved && <p className="mt-2 text-sm opacity-70">submitted → account created</p>}
+    </>
+  );
+}
+```
+
+### Declarative rules
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeValidationRule } from '@oge-ui/react-forms';
+
+const usernameRules: OgeValidationRule[] = [
+  { type: 'required' },
+  { type: 'stringLength', min: 3, max: 20 },
+];
+const emailRules: OgeValidationRule[] = [
+  { type: 'required' },
+  { type: 'email' },
+];
+const ageRules: OgeValidationRule[] = [{ type: 'numeric', min: 18, max: 120 }];
+
+export function DeclarativeRulesDemo() {
+  const [signup, setSignup] = useState({ username: '', email: '', age: 0 });
+  return (
+    <OgeForm
+      formData={signup}
+      onFormDataChange={setSignup}
+      showValidationSummary
+      layout={[
+        { field: 'username', label: 'Username', validationRules: usernameRules },
+        { field: 'email', label: 'E-mail', validationRules: emailRules },
+        { field: 'age', label: 'Age', validationRules: ageRules },
+      ]}
+    />
+  );
+}
+```
+
+### Custom & cross-field rules
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import type { OgeValidationRule } from '@oge-ui/react-forms';
+
+const matchRule: OgeValidationRule[] = [
+  {
+    type: 'custom',
+    validate: ({ value, data }) =>
+      value === data['password'] ? null : 'Passwords do not match',
+  },
+];
+
+export function CustomRulesDemo() {
+  const [account, setAccount] = useState({ password: '', confirm: '' });
+  return (
+    <OgeForm
+      formData={account}
+      onFormDataChange={setAccount}
+      layout={[
+        { field: 'password', label: 'Password', isRequired: true },
+        { field: 'confirm', label: 'Confirm', validationRules: matchRule },
+      ]}
+    />
+  );
+}
+```
+
+### Validation summary
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeForm, OgeValidationSummary } from '@oge-ui/react-forms';
+import type { OgeFormHandle } from '@oge-ui/react-forms';
+
+export function ValidationSummaryDemo() {
+  const [ticket, setTicket] = useState({ title: '', reporter: '' });
+  const [errors, setErrors] = useState<OgeFormHandle['errors']>([]);
+  const form = useRef<OgeFormHandle<typeof ticket>>(null);
+  return (
+    <>
+      <OgeValidationSummary
+        errors={errors}
+        onErrorClick={(entry) => form.current?.focus(entry.field)}
+      />
+      <OgeForm
+        ref={form}
+        formData={ticket}
+        onFormDataChange={setTicket}
+        onValidated={(event) => setErrors(event.errors)}
+        layout={[
+          { field: 'title', label: 'Title', isRequired: true },
+          { field: 'reporter', label: 'Reporter', isRequired: true },
+        ]}
+        actions={
+          <OgeButton text="Save" stylingMode="contained" useSubmitBehavior />
+        }
+      />
+    </>
+  );
+}
+```
+
+### Configuration
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeForm, OgeFormsConfigProvider } from '@oge-ui/react-forms';
+
+export function FormsConfigDemo() {
+  const [contact, setContact] = useState({ name: '', phone: '' });
+  return (
+    <OgeFormsConfigProvider
+      config={{
+        labelLocation: 'start',
+        showOptionalMark: true,
+        messages: {
+          requiredMark: '•',
+          optionalLabel: 'isteğe bağlı',
+          validationSummaryTitle: '{count} alan dikkatinizi bekliyor',
+          validationSummaryTitleOne: '1 alan dikkatinizi bekliyor',
+        },
+      }}
+    >
+      <OgeForm
+        formData={contact}
+        onFormDataChange={setContact}
+        layout={[
+          { field: 'name', label: 'Ad', isRequired: true },
+          { field: 'phone', label: 'Telefon' },
+        ]}
+      />
+    </OgeFormsConfigProvider>
+  );
+}
+```
+

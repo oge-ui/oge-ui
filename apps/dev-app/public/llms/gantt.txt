@@ -207,8 +207,8 @@ _Interaction_
 | `OgeGanttWorkCalendar` | `interface` | `{ workingDays?, holidays? }` — the work-time calendar (0 = Sunday; default working week Monday-Friday). |
 | `OgeGanttExportData<T> / OgeGanttExportColumn<T>` | `interface` | The exporter snapshot: `tasks`, `columns` (header + pane-identical `text()`), `rangeStart`/`rangeEnd`, `critical` keys and `resourceText()`. |
 | `OgeGanttTaskTitlePosition` | `'inside' \| 'outside' \| 'none'` | Task title placement relative to the bar. |
-| `[ogeGanttTaskTemplate]` | `structural directive (OgeGanttTaskTemplate)` | Replaces the bar's title content; context `OgeGanttTaskTemplateContext`: `{ $implicit: OgeGanttTask }`. |
-| `[ogeGanttTooltipTemplate]` | `structural directive (OgeGanttTooltipTemplate)` | Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context `OgeGanttTooltipTemplateContext`: `{ $implicit: OgeGanttTask }`. |
+| `[ogeGanttTaskTemplate]` | `structural directive (OgeGanttTaskTemplate)` | Replaces the bar's title content; context `OgeGanttTaskTemplateContext`: `{ $implicit: OgeGanttTask<T> }`. |
+| `[ogeGanttTooltipTemplate]` | `structural directive (OgeGanttTooltipTemplate)` | Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context `OgeGanttTooltipTemplateContext`: `{ $implicit: OgeGanttTask<T> }`. |
 
 ### Configuration
 

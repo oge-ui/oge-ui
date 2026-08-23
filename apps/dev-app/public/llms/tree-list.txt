@@ -147,7 +147,7 @@ _Layout, editing & misc (grid-shared)_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `columns` | `readonly (string \| ColumnDefLike)[] \| undefined` | `—` | Programmatic columns (or declarative ``). |
+| `columns` | `readonly (string \| ColumnDefLike)[] \| undefined` | `—` | Programmatic columns (or declarative `<oge-column>`). |
 | `virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth` | `various` | `—` | Virtualization knobs; `columnRenderingMode` is a top-level input here. |
 | `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false). |
 | `editing` | `false \| OgeEditingOptions` | `false` | cell/row/batch/form/popup via the shared EditingModel. |

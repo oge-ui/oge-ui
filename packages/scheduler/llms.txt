@@ -189,7 +189,7 @@ _Interaction_
 | `OgeSchedulerAppointment<T>` | `interface` | The normalized appointment: `key`, `source` (the original item), `text`, `startDate`/`endDate`, `allDay`, `color`, `description`, recurrence fields and `disabled`. |
 | `OgeSchedulerViewOptions` | `interface` | Per-view overrides: `type`, `name`, `dayStartHour`, `dayEndHour`, `cellDuration`. |
 | `OgeSchedulerWorkHours` | `interface` | `{ start, end, days? }` — the emphasized working hours. |
-| `[ogeAppointmentTemplate]` | `structural directive` | Replaces the chip content; context `{ $implicit: OgeSchedulerAppointment, view }`. |
+| `[ogeAppointmentTemplate]` | `structural directive` | Replaces the chip content; context `{ $implicit: OgeSchedulerAppointment<T>, view }`. |
 | `OgeSchedulerCellTemplate` | `structural directive [ogeCellTemplate]` | **OGE extra** — custom empty-cell content; context `{ $implicit: Date, view, allDay }`. |
 | `OgeDateHeaderTemplate` | `structural directive [ogeDateHeaderTemplate]` | **OGE extra** — custom date-header content; context `{ $implicit: Date, view }`. |
 

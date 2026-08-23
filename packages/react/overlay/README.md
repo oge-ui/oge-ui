@@ -1,9 +1,10 @@
 # @oge-ui/react-overlay
 
-React overlay primitives from the OGE UI suite — viewport-aware anchored
-popups and a full WAI-ARIA menu — running the **same** framework-free
-positioning, Escape-stack and menu machines as the Angular `@oge-ui/overlay`
-package, and the same stylesheet.
+React overlay surfaces from the OGE UI suite — viewport-aware anchored popups,
+a full WAI-ARIA menu, tooltips, a context menu, a modal dialog and toast
+notifications — running the **same** framework-free positioning, Escape-stack,
+timing and notification machines as the Angular `@oge-ui/overlay` package, and
+the same stylesheet.
 
 The OGE suite is one component engine with a native render layer per
 framework: nothing here wraps Angular, and the React layer is heading for full
@@ -22,12 +23,29 @@ component and feature parity with the Angular suite, family by family.
   printable-key type-ahead, checkbox items, link items, icons, badges,
   shortcuts — and nested submenus at every depth, opened by hover (with the
   suite's dwell timings) or keyboard.
+- **`<OgeTooltip>`** — an accessible tooltip on any child element: hover dwell
+  or instant on keyboard focus, `aria-describedby` wiring, viewport-aware
+  placement, transient (never swallows the Escape meant for a popup).
+- **`<OgeContextMenu>`** — right-click / Shift+F10 menu at the pointer over the
+  `OgeMenuItem` model, focus-managed and body-appended.
+- **`<OgeModal>`** — centered dialog with backdrop, focus trap, body scroll
+  lock, Escape/backdrop closing, focus restore, cancelable `onClosing`, async
+  `closeGuard` (single-flight), full-screen toggle, header drag, corner resize,
+  busy veil, typed results and render-prop slots (`renderTitle`,
+  `renderHeaderActions`, `renderFooter`).
+- **`<OgeModalProvider>` + `useOgeModals()`** — imperative, body-appended modals
+  (the counterpart of Angular's `OgeModalService`): `open(content, { data })`
+  returns a ref whose `closed` promise carries the typed result; content reads
+  `useOgeModalData()` / `useOgeModalRef()`.
+- **`<OgeToastProvider>` + `useOgeToasts()`** — stacked toasts in six logical
+  positions with a FIFO queue, severity sugar, pause-on-hover/focus/hidden-tab
+  timers, progress bar, action buttons, coalescing with a ×N badge, in-place
+  `update()` and `promise()` morphing, live-region announcements.
 - **`<OgeOverlayConfigProvider>`** — the React counterpart of
-  `provideOgeOverlayConfig()`; timing defaults are single-sourced in
-  `@oge-ui/behavior`.
+  `provideOgeOverlayConfig()`; every default and every message string is
+  single-sourced in `@oge-ui/behavior`.
 
-Tooltips, modals and toasts follow as the React layer scales out
-(see the suite's `ROADMAP-REACT.md`).
+This completes the overlay family's parity with the Angular package.
 
 ## Installation
 
@@ -84,12 +102,56 @@ export function Actions() {
 }
 ```
 
+### Modal and toast
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+import { OgeModal, OgeToastProvider, useOgeToasts } from '@oge-ui/react-overlay';
+
+function Editor() {
+  const toasts = useOgeToasts();
+  const [opened, setOpened] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpened(true)}>Edit</button>
+      <OgeModal
+        title="Edit row"
+        opened={opened}
+        onOpenedChange={setOpened}
+        closeGuard={() => confirm('Discard changes?')}
+        renderFooter={({ close }) => (
+          <button
+            onClick={() => {
+              close('saved');
+              toasts.success('Saved');
+            }}
+          >
+            Save
+          </button>
+        )}
+      >
+        <form>…</form>
+      </OgeModal>
+    </>
+  );
+}
+
+export function App() {
+  return (
+    <OgeToastProvider>
+      <Editor />
+    </OgeToastProvider>
+  );
+}
+```
+
 ## Docs
 
-Live demos and the full API reference: <https://ogeui.com/components/buttons>
-(the drop-down button demos exercise these primitives — pick **React** in the
-header). Machine-readable docs for coding assistants ship inside the package
-at `node_modules/@oge-ui/react-overlay/llms.txt`.
+Live demos and the full API reference: <https://ogeui.com/components/overlay>
+(pick **React** in the header). Machine-readable docs for coding assistants
+ship inside the package at `node_modules/@oge-ui/react-overlay/llms.txt`.
 
 ## License
 

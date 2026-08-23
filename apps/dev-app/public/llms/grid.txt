@@ -114,7 +114,7 @@ _Data & columns_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `data` | `readonly T[] \| DataSource<T>` | `[]` | Rows to render: a static array or any DataSource implementation (remote, OData…). |
-| `columns` | `readonly (string \| OgeColumnDef)[] \| undefined` | `—` | Programmatic columns; used only when no declarative `` children exist. When both are absent, columns derive from the first row. |
+| `columns` | `readonly (string \| OgeColumnDef)[] \| undefined` | `—` | Programmatic columns; used only when no declarative `<oge-column>` children exist. When both are absent, columns derive from the first row. |
 | `keyField` | `keyof T \| ((row: T) => RowKey) \| undefined` | `—` | Field (or selector) producing a stable row key; falls back to the row index. |
 
 _Sorting, filtering & search_
@@ -301,7 +301,7 @@ _Companion directives_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeColumnGroup` | `oge-column-group — input: caption (required)` | Banded header: wraps sibling `` elements under one shared caption. Re-exported by `@oge-ui/tree-list`. |
+| `OgeColumnGroup` | `oge-column-group — input: caption (required)` | Banded header: wraps sibling `<oge-column>` elements under one shared caption. Re-exported by `@oge-ui/tree-list`. |
 | `OgeGridToolbarItem` | `directive — [ogeToolbar]` | Marks projected content as a toolbar item. The toolbar appears as soon as one item exists, alongside the built-in controls. Named `OgeGridToolbarItem` so it cannot collide with `@oge-ui/layout`&rsquo;s `OgeToolbarItem`; the selector is unchanged. |
 
 _Basics_
@@ -344,7 +344,7 @@ _Summaries & editing_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `<oge-column-group caption="…">` | `component` | Banded (multi-row) headers — wraps child ``s. |
+| `<oge-column-group caption="…">` | `component` | Banded (multi-row) headers — wraps child `<oge-column>`s. |
 | `*ogeCellTemplate` | `OgeCellTemplateContext<T>` | `{ $implicit: value, row, rowIndex, column }`. |
 | `*ogeHeaderTemplate` | `OgeHeaderTemplateContext<T>` | `{ $implicit: column }`. |
 | `*ogeEditTemplate` | `OgeEditTemplateContext<T>` | `{ $implicit: FormControl, row, column }`. |

@@ -1,9 +1,9 @@
 # @oge-ui/react-overlay
 
-> React overlay primitives: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack) and a full WAI-ARIA menu with submenus and type-ahead — running the same positioning and menu machines as the Angular overlay package.
+> React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
 
 Part of OGE UI v0.12.0.
-Docs and live demos: https://ogeui.com/components/buttons
+Docs and live demos: https://ogeui.com/components/overlay
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
 ```sh
@@ -80,4 +80,947 @@ Predictable wrong guesses, and what to write instead.
 | `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
 | rendering it from a server component | mark the file `'use client'` |
 
+## API reference
+
+### <OgeModal>
+
+#### Properties
+
+_Content slots (render props)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderTitle` | `(context: OgeModalSlotContext<R>) => ReactNode` | Rich title slot, replacing the plain `title` text — the React face of `*ogeModalTitle`. |
+| `renderHeaderActions` | `(context: OgeModalSlotContext<R>) => ReactNode` | Extra buttons rendered next to ✕ — the React face of `*ogeModalHeaderActions`. Presses that start here never begin a header drag. |
+| `renderFooter` | `(context: OgeModalSlotContext<R>) => ReactNode` | Footer slot — the React face of `*ogeModalFooter`; `context.close(result)` closes with a typed result. |
+| `children` | `ReactNode` | Body content (Angular projects it via `<ng-content>`). |
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `opened` | `boolean` | `—` | Open state — controlled when provided, so pass `onOpenedChange` with it. Setting it `false` directly closes without the guard pipeline. |
+| `defaultOpened` | `boolean` | `false` | Uncontrolled initial open state. |
+| `onOpenedChange` | `(opened: boolean) => void` | `—` | The controlled half of `opened`; Angular’s `[(opened)]` model is both halves at once. |
+| `fullScreen` | `boolean` | `—` | Full-screen state — controlled when provided; size props are ignored while `true`. Driven by the maximize button when shown. |
+| `defaultFullScreen` | `boolean` | `false` | Uncontrolled initial full-screen state. |
+| `onFullScreenChange` | `(fullScreen: boolean) => void` | `—` | The controlled half of `fullScreen`. |
+| `title` | `string` | `—` | Header text; also the aria-label fallback when the header is hidden. |
+| `ariaLabel` | `string` | `—` | Accessible name override for headerless modals. |
+| `width / height / minWidth / minHeight / maxWidth / maxHeight` | `number \| string` | `—` | Panel size — numbers are px, strings pass through. Default width `min(560px, 100%)`. |
+| `placement` | `OgeModalPlacement` | `'center'` | Viewport position: centered or pinned near the top edge (`'top'`, command-palette style). |
+| `shading` | `boolean` | `true` | Dims the page behind the modal. `false` keeps the backdrop transparent while staying fully modal. |
+| `showCloseButton` | `boolean` | `true` | Shows the header ✕ button. |
+| `showMaximizeButton` | `boolean` | `false` | Shows a maximize/restore toggle in the header, driving `fullScreen`. |
+| `dragEnabled` | `boolean` | `false` | Lets the user drag the panel by its header (viewport-clamped unless `dragOutsideBoundary`). |
+| `dragOutsideBoundary` | `boolean` | `false` | Allows dragging the panel beyond the viewport edges. |
+| `restorePosition` | `boolean` | `true` | Resets drag offset and resized size on every reopen. |
+| `resizeEnabled` | `boolean` | `false` | Shows a bottom-end resize handle (min 160×120, viewport-capped). |
+| `inertBackground` | `boolean` | `false` | Marks everything outside the modal `inert` while open — opt-in; content appended to `body` after opening is not covered. |
+| `closeOnEscape` | `boolean` | `true` | Escape closes the modal when it is the topmost overlay (popups inside close first). |
+| `closeOnBackdropClick` | `boolean` | `true` | A click that starts _and_ ends on the backdrop closes the modal — a text-selection drag released outside never does. |
+| `scrollLock` | `boolean` | `true` | Locks body scroll while open (scrollbar-width compensated, ref-counted across stacked modals). |
+| `autoFocus` | `OgeModalAutoFocus` | `'first-tabbable'` | Initial focus target; an `[autofocus]` element inside the panel always wins. |
+| `restoreFocus` | `boolean` | `true` | Restores focus to the opener on close — only when focus would otherwise be lost. |
+| `padding` | `boolean` | `true` | `false` makes the body flush for grids and custom layouts. |
+| `busy` | `boolean` | `false` | Spinner veil + `aria-busy`; user-initiated closes are blocked, programmatic `close()` still works. |
+| `closeGuard` | `() => boolean \| Promise<boolean>` | `—` | Veto hook run before every pipeline close; may be async (single-flight — see `closePending`). A rejected promise vetoes with a dev warning. |
+| `messages` | `Partial<OgeOverlayMessages>` | `—` | Per-instance message overrides. |
+| `closePending` | `boolean (handle + slot context)` | `—` | `true` while an async `closeGuard` is pending — read it off the `ref` handle or the slot context to disable footer actions; `onClosePendingChange` reports the transitions. |
+| `onClosePendingChange` | `(pending: boolean) => void` | `—` | Fires whenever the async `closeGuard` starts or settles. |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the modal layer. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(): void` | `void` | Opens the modal. |
+| `close(result?: R): void` | `void` | Closes through the full pipeline (`onClosing` → `closeGuard`); reason `'api'`, the argument becomes `closed.result`. |
+| `toggle(): void` | `void` | Open ⇄ close. |
+| `focus(): void` | `void` | Re-applies the initial-focus resolution. No-op while closed. |
+| `toggleFullScreen(): void` | `void` | Switches between windowed and full-screen (the maximize button’s action). |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onOpening` | `(event: OgeModalOpeningEvent) => void` | Cancelable: fires before the modal opens (any open path). Set `cancel = true` to keep it closed. |
+| `onClosing` | `(event: OgeModalClosingEvent) => void` | Cancelable: fires before any pipeline close (Escape, backdrop, ✕, `close()`). Set `cancel = true` to keep the modal open. |
+| `onClosed` | `(event: OgeModalClosedEvent<R>) => void` | Fires after the modal closed, with the reason and the optional result. |
+| `onResizeStarted / onResized` | `(event: OgeModalResizeEvent) => void` | Fire when a resize gesture starts (starting size) and ends (final size). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeModalCloseReason` | `'api' \| 'escape' \| 'backdrop' \| 'closeButton'` | Why the modal closed. |
+| `OgeModalClosingEvent` | `{ reason: OgeModalCloseReason; cancel: boolean }` | Cancelable pre-close event. |
+| `OgeModalClosedEvent<R>` | `{ reason: OgeModalCloseReason; result?: R }` | Post-close event; `result` comes from `close(result)` or the slot close function. |
+| `OgeModalAutoFocus` | `'first-tabbable' \| 'panel' \| string` | Initial-focus strategy — a plain string is treated as a CSS selector inside the panel. |
+| `OgeModalPlacement` | `'center' \| 'top'` | Where the panel sits in the viewport. |
+| `OgeModalOpeningEvent` | `{ cancel: boolean }` | Cancelable pre-open event. |
+| `OgeModalResizeEvent` | `{ width: number; height: number; event: PointerEvent }` | Payload of the resize callbacks. |
+| `OgeModalSlotContext<R>` | `{ close: (result?: R) => void; closePending: boolean }` | Argument of `renderTitle` / `renderHeaderActions` / `renderFooter`. |
+| `OgeModalHandle<R>` | `{ opened; closePending; open(); close(result?); toggle(); focus(); toggleFullScreen() }` | The `ref` handle. |
+
+### OgeModalService (useOgeModals)
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open<R, D>(content: OgeModalContent<D, R>, config?: OgeModalOpenConfig<D>): OgeModalRef<R>` | `OgeModalRef<R>` | Opens `content` (a node, or a function receiving `{ data, close }`) in a body-appended modal — the escape hatch for `transform`ed ancestors and for prompt/confirm flows without a declared `<OgeModal>`. Returned by `useOgeModals()`; needs an `<OgeModalProvider>` above. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `<OgeModalProvider>` | `component` | Hosts the imperative modals; mount once near the app root. The React counterpart of the root-provided Angular service. |
+| `useOgeModals()` | `OgeModalsHandle` | Hook returning the `open()` API — the counterpart of `inject(OgeModalService)`. |
+| `OgeModalOpenConfig<D>` | `object` | The declarative props minus slots (`title`, sizing, `placement`, `closeGuard`, …) plus `data?: D`, made available to the content via `useOgeModalData()`. |
+| `OgeModalRef<R>` | `{ close(result?: R): void; closed: Promise<OgeModalClosedEvent<R>> }` | Handle of an imperatively opened modal; content reads it via `useOgeModalRef()` to close itself with a result. |
+| `useOgeModalData<D>()` | `D` | The `config.data` payload — the counterpart of injecting `OGE_MODAL_DATA`. |
+| `useOgeModalRef<R>()` | `OgeModalRef<R>` | The enclosing modal’s handle — the counterpart of injecting `OgeModalRef`. |
+
+### OgeToastService (useOgeToasts)
+
+#### Properties
+
+_OgeToastOptions_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `message` | `string (required)` | `—` | Body text; also the screen-reader announcement. |
+| `title` | `string \| undefined` | `—` | Optional bold first line above the message. |
+| `severity` | `OgeToastSeverity` | `'info'` | Drives the accent bar, icon and announcement mode. |
+| `displayTime` | `number` | `config toastDisplayTime (4000)` | Auto-dismiss time in ms. |
+| `sticky` | `boolean` | `false` | Never auto-dismisses (`loading` toasts are implicitly sticky). |
+| `closable` | `boolean` | `true` | Shows the ✕ button; aria label from `messages.toastClose`. |
+| `closeOnClick` | `boolean` | `false` | A click anywhere on the toast closes it (reason `'click'`); button presses excluded. |
+| `progressBar` | `boolean` | `config toastProgressBar (false)` | Remaining-time bar — freezes exactly in sync with the paused timer. |
+| `action` | `OgeToastAction \| undefined` | `—` | Inline action button; pressing it runs `handler` and closes with reason `'action'`. |
+| `position` | `OgeToastPosition` | `config toastPosition ('bottom-end')` | Region override for this toast. |
+| `announce` | `OgeToastAnnounce` | `severity-derived` | `'assertive'` for errors, `'polite'` otherwise; `'off'` silences. |
+| `announceText` | `string \| undefined` | `—` | Screen-reader text override — announced instead of `title` + `message`, so the visual text can stay short. |
+| `icon` | `ReactNode \| undefined` | `—` | Replaces the severity icon (the `loading` spinner still wins). A node instead of Angular’s `TemplateRef`. |
+| `loading` | `boolean` | `false` | Spinner instead of the severity icon; implicitly sticky while `true`. |
+| `coalesce` | `boolean` | `config toastCoalesceDuplicates (false)` | Merge with an identical visible toast into one with a live ×N badge (timer restarts, same ref returned). |
+| `id` | `string \| undefined` | `—` | Coalesce key override; defaults to severity+title+message. |
+| `cssClass` | `string \| undefined` | `—` | Extra class(es) on the toast element. |
+| `renderContent` | `(context: OgeToastSlotContext<D>) => ReactNode` | `—` | Replaces the title/message body — the React face of the `template` option; `context.close()` closes the toast, `context.data` is the payload. |
+| `data` | `D \| undefined` | `—` | Arbitrary payload surfaced in the content context and action event. |
+
+#### Methods
+
+_useOgeToasts()_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `show<D>(toast: string \| OgeToastOptions<D>): OgeToastRef<D>` | `OgeToastRef` | Shows a toast; a bare string becomes an info toast. SSR-safe no-op. Needs an `<OgeToastProvider>` above. |
+| `success / info / warning / error(message, options?): OgeToastRef` | `OgeToastRef` | Severity sugar for `show()`. |
+| `promise<T, D>(promise, options): OgeToastRef<D>` | `OgeToastRef` | Sticky spinner toast that morphs in place when the promise settles; the timer starts then. `success`/`error` accept a message or a function returning a message or an update patch. |
+| `clear(position?: OgeToastPosition): void` | `void` | Closes every toast (or one region) with reason `'clear'`. |
+
+_OgeToastRef_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `close(): void` | `void` | Closes the toast (reason `'api'`). |
+| `update(patch: OgeToastUpdate): void` | `void` | Patches the toast in place; timing changes restart the timer, a changed message re-announces. |
+| `closed` | `Promise<OgeToastClosedEvent>` | Resolves after the toast closed (exit transition included), with the typed reason. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `<OgeToastProvider>` | `component` | Hosts the toast regions and the live-region announcers; mount once near the app root. The React counterpart of the root-provided Angular service. |
+| `OgeToastSeverity` | `'info' \| 'success' \| 'warning' \| 'error'` | Toast severity. |
+| `OgeToastPosition` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | Logical, RTL-aware region positions. |
+| `OgeToastCloseReason` | `'timeout' \| 'closeButton' \| 'click' \| 'action' \| 'api' \| 'clear'` | Why a toast closed. |
+| `OgeToastAction<D>` | `{ text: string; handler?: (event: OgeToastActionEvent<D>) => void }` | Inline action button. |
+| `OgeToastSlotContext<D>` | `{ close: () => void; data?: D }` | Argument of `renderContent`. |
+| `Config keys` | `toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates` | Defaults via `<OgeOverlayConfigProvider>`; strings via `messages.toastClose/toastRegionLabel/toastCountBadge`. |
+
+### <OgeTooltip>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `text` | `string (required)` | `—` | Tooltip text — the React face of the `ogeTooltip` binding. The child element gets `aria-describedby` pointing at the bubble while it is shown. |
+| `placement` | `OgePopupPlacement` | `'top'` | Preferred side; flips and clamps against the viewport like every anchored panel. |
+| `showDelay` | `number \| undefined` | `—` | Hover dwell before showing, in ms. Falls back to `tooltipShowDelayMs` from the overlay config. Keyboard focus always shows immediately. |
+| `hideDelay` | `number \| undefined` | `—` | Grace period after the pointer leaves, in ms; falls back to `tooltipHideDelayMs`. |
+| `disabled` | `boolean` | `false` | Suppresses the tooltip without removing the wrapper — hides an already open bubble. |
+| `children` | `ReactNode` | `—` | The trigger — exactly one element child. Angular attaches the directive to the element itself; React wraps it in a `display: contents` span carrying the listeners, so the child keeps its own ref and props. |
+
+### <OgeContextMenu>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeMenuItem[] (required)` | `—` | Items of the menu opened on right-click or Shift+F10 — the React face of the `ogeContextMenu` binding. An empty array falls back to the native browser menu. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the menu. |
+| `disabled` | `boolean` | `false` | Leaves the browser menu in charge without removing the wrapper. |
+| `renderItem` | `(item: OgeMenuItem, index: number) => ReactNode` | `—` | Replaces the default item rendering of the hosted `<OgeMenuList>`. |
+| `children` | `ReactNode` | `—` | The target — exactly one element child; give it `tabIndex={0}` when it is not natively focusable. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `close(): void` | `void` | Closes the menu programmatically. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeMenuListItemClickEvent) => void` | An item was activated — same payload as `<OgeMenuList>`. The menu closes afterwards and focus returns to the target. |
+| `onOpened` | `() => void` | The menu opened at the pointer (or at the target for Shift+F10). |
+| `onClosed` | `() => void` | The menu closed — by selection, Escape, an outside click or a scroll. |
+
+### <OgeMenuList>
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly OgeMenuItem[] (required)` | `—` | Menu items, separators included. |
+| `menuId` | `string \| undefined` | `—` | Id of the `role="menu"` element; generated when omitted. |
+| `ariaLabel` | `string \| undefined` | `—` | Accessible name of the menu. |
+| `renderItem` | `(item: OgeMenuItem, index: number) => ReactNode` | `—` | Replaces the default check+text item rendering (icons, badges…) — the React face of `itemTemplate`. |
+| `nested` | `boolean` | `false` | Set on the nested list a submenu parent opens: ArrowLeft then closes the level (`'back'`) instead of bubbling to the owner. The component sets it on its own submenus; Angular derives it from the template. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus(position: 'first' \| 'last' = 'first'): void` | `void` | Focuses the menu container and activates the first/last enabled item. |
+
+#### Events
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeMenuListItemClickEvent) => void` | An enabled item was activated (click, Enter or Space). Order: `onItemClick` → `item.action?.()` → `onCloseRequest`. |
+| `onCloseRequest` | `(event: OgeMenuCloseRequestEvent) => void` | The menu asks its owner to close it; the owner handles focus. Tab does not `preventDefault`, so the browser keeps tabbing from the owner. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite, shared with the Angular overlay via `@oge-ui/behavior`. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field; `url` renders a real `<a href>`; `items` makes the row a submenu parent. |
+| `OgeMenuItemSeverity` | `'normal' \| 'danger'` | Destructive items render with the danger token. |
+| `OgeMenuListItemClickEvent` | `{ item: OgeMenuItem; index: number; event: MouseEvent \| KeyboardEvent }` | Index within the `items` prop (separators included). |
+| `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select' \| 'back'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. `'back'` is a nested submenu returning to its parent item — absorbed by the parent menu, it never reaches the root owner. |
+| `OgeMenuListHandle` | `{ focus(position?: 'first' \| 'last'): void }` | The `ref` handle. |
+
+### OgeAnchoredPanel (useAnchoredPanel)
+
+#### Properties
+
+_Handle members_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `panelId` | `string` | Unique id applied to the panel element (`oge-popup-N`) — wire to `aria-controls`. |
+| `isOpen` | `boolean` | Open state — re-renders the owner when it changes (Angular exposes a `Signal`). |
+| `position` | `OgeResolvedPopupPosition \| null` | `null` until the first measure after open; hide the panel while `null`. |
+
+_UseAnchoredPanelOptions (hook argument)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `anchor` | `() => HTMLElement \| null` | `—` | Anchor element getter (`null` while not rendered). Required. |
+| `panel` | `() => HTMLElement \| null` | `—` | Panel element getter (`null` while closed). Required. |
+| `placement` | `() => OgePopupPlacement` | `'bottom-start'` | Live getter — read current props/state inside so the next update sees changes. |
+| `width` | `() => number \| 'anchor' \| undefined` | `—` | Fixed pixel value or `'anchor'` to match the anchor width. |
+| `offset` | `() => number \| undefined` | `4` | Main-axis gap between anchor and panel. |
+| `viewportPadding` | `() => number \| undefined` | `8` | Minimum distance kept from viewport edges when clamping. |
+| `closeOnOutsidePointerDown` | `boolean` | `true` | Close on document pointerdown outside anchor+panel (capture phase, composedPath-aware). |
+| `closeOnEscape` | `boolean` | `true` | Close on Escape — stacked overlays only close the topmost. |
+| `restoreFocus` | `() => void` | `—` | Restores focus after closes caused by `escape`/`select` (only when focus would otherwise be orphaned). |
+| `onClosed` | `(reason: OgePopupCloseReason) => void` | `—` | Notified after every close with its reason. |
+| `anchorRect` | `() => OgeRect \| null` | `—` | Virtual anchor rectangle used for positioning when it returns a rect — e.g. the pointer location of a context menu. |
+| `transient` | `boolean` | `false` | Transient surfaces (tooltips) skip the Escape stack so an open tooltip never swallows the Escape meant for the popup underneath. |
+
+#### Methods
+
+_Handle methods_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `open(): void` | `void` | Opens (SSR-safe no-op without `window`); pushes onto the open-panel stack, adds listeners, measures. |
+| `close(reason: OgePopupCloseReason = 'api'): void` | `void` | Closes, removes listeners, restores focus for `escape`/`select`, then calls `onClosed(reason)`. |
+| `toggle(): void` | `void` | Open ⇄ close. |
+| `updatePosition(): void` | `void` | Re-measures anchor/panel and recomputes the position (rAF-coalesced). Also runs automatically on scroll/resize/panel growth. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePopupCloseReason` | `'api' \| 'outside' \| 'escape' \| 'select' \| 'tab' \| 'back'` | Why a panel closed. |
+| `OgeAnchoredPanelHandle` | `{ panelId; isOpen; position; open(); close(reason?); toggle(); updatePosition() }` | What `useAnchoredPanel()` returns — a stable object whose state fields update per render. |
+
+### <OgePopup>
+
+#### Properties
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `panel` | `OgeAnchoredPanelHandle (required)` | The anchored-panel handle driving id, position and visibility. |
+| `children` | `ReactNode` | Projected content. |
+| `className / style` | `string / CSSProperties` | Merged onto the popup element. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `<OgePopup>` | `component (forwardRef)` | Presentational chrome: fixed positioning, popup surface tokens, `--oge-z-popup` stacking, transparent (via `opacity`, so the subtree stays focusable) until the first measure. Hand its `ref` to the hook’s `panel` getter. |
+
+### resolvePopupPosition
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `resolvePopupPosition(req: OgePopupPositionRequest): OgeResolvedPopupPosition` | `OgeResolvedPopupPosition` | Pure anchored-popup placement, imported from `@oge-ui/behavior`: preferred side with flip when the opposite side has more room, cross-axis alignment fallback, and a final clamp into the viewport. Coordinates are viewport-relative (`position: fixed`). |
+
+#### Types
+
+_OgePopupPositionRequest_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `anchor` | `OgeRect` | `—` | Anchor rectangle (viewport-relative). Required. |
+| `panel` | `{ width: number; height: number }` | `—` | Measured panel size. Required. |
+| `viewport` | `{ width: number; height: number }` | `—` | Viewport size. Required. |
+| `placement` | `OgePopupPlacement` | `—` | Preferred placement. Required. |
+| `offset` | `number` | `4` | Gap between anchor and panel on the main axis. |
+| `viewportPadding` | `number` | `8` | Minimum distance kept from viewport edges when clamping. |
+| `rtl` | `boolean` | `false` | Resolves logical `start`/`end` (and left/right sides) against RTL. |
+
+_OgeResolvedPopupPosition_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `top / left` | `number` | Viewport-relative — apply with `position: fixed`. |
+| `placement` | `OgePopupPlacement` | Logical placement actually used after flipping. |
+| `width?` | `number` | Panel width when anchor-width matching or a fixed width was requested (set by the hook, not by the pure function). |
+
+_Supporting types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgePopupPlacement` | `'bottom-start' \| 'bottom-end' \| 'top-start' \| 'top-end' \| 'left-start' \| 'left-end' \| 'right-start' \| 'right-end'` | Side + cross-axis alignment. |
+| `OgePopupSide` | `'top' \| 'bottom' \| 'left' \| 'right'` | Main-axis side. |
+| `OgePopupAlign` | `'start' \| 'end'` | Cross-axis alignment. |
+| `OgeRect` | `{ top: number; left: number; width: number; height: number }` | Structurally compatible with `DOMRect`. |
+
+### Overlay configuration
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `<OgeOverlayConfigProvider config={…}>` | `component` | Subtree-scoped defaults — the React counterpart of `provideOgeOverlayConfig()`. Nested providers merge over the outer one, messages one level deep. |
+| `useOgeOverlayConfig(): OgeOverlayConfig` | `OgeOverlayConfig` | Reads the resolved config for the current subtree (the counterpart of `inject(OGE_OVERLAY_CONFIG)`). |
+
+#### Types
+
+_OgeOverlayConfig_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `offset` | `number` | `4` | Gap between anchor and panel on the main axis. |
+| `viewportPadding` | `number` | `8` | Minimum distance kept from viewport edges when clamping. |
+| `typeAheadMs` | `number` | `500` | Idle time after which the menu type-ahead buffer resets. |
+| `menuShowDelayMs` | `number` | `50` | Hover dwell time before a submenu parent row opens its submenu. |
+| `menuHideDelayMs` | `number` | `300` | Grace period before an open submenu closes after hovering a sibling row — the diagonal-pointer allowance. |
+| `tooltipShowDelayMs / tooltipHideDelayMs` | `number` | `400 / 100` | Hover dwell before a tooltip shows (focus shows immediately) and the grace period before it hides. |
+| `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons and the toast chrome: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`. |
+
+### Overlay primitives
+
+#### Methods
+
+_Escape stack_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pushOverlay(surface: object): void` | `void` | Registers a surface as the new topmost overlay. No-op if it is already in the stack. |
+| `removeOverlay(surface: object): void` | `void` | Removes a surface from the stack; tolerates surfaces that were never pushed. |
+| `isTopOverlay(surface: object): boolean` | `boolean` | True only for the topmost surface. Gate your Escape handler on this and a popup opened inside a modal or a drawer closes before its host does. |
+
+_Focus trap_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getTabbableElements(root: HTMLElement): HTMLElement[]` | `HTMLElement[]` | Tabbable descendants in DOM order. Recomputed per call rather than cached behind sentinel elements, so content added or removed after open is always accounted for. |
+| `trapTabKey(event, root, fallback): void` | `void` | Wraps Tab and Shift+Tab inside `root`. With no tabbable descendants it focuses `fallback`, so focus can never escape a modal surface. |
+
+_Scroll lock_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `lockBodyScroll(): void` | `void` | Locks body scroll and compensates for the scrollbar width. Ref-counted, so nested surfaces cannot unlock each other. |
+| `unlockBodyScroll(): void` | `void` | Releases one reference; the last release restores the inline styles exactly as they were. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Basics
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeModal } from '@oge-ui/react-overlay';
+
+export function BasicModal() {
+  const [opened, setOpened] = useState(false);
+  return (
+    <>
+      <OgeButton text="Open" onClick={() => setOpened(true)} />
+
+      <OgeModal
+        title="Team settings"
+        opened={opened}
+        onOpenedChange={setOpened}
+        renderFooter={({ close }) => (
+          <>
+            <OgeButton text="Cancel" stylingMode="text" onClick={() => close()} />
+            <OgeButton text="Save" onClick={() => close()} />
+          </>
+        )}
+      >
+        <p>Centered dialog with backdrop, focus trap and scroll lock.</p>
+      </OgeModal>
+
+      {/* Escape and backdrop clicks close it (closeOnEscape /
+          closeOnBackdropClick); focus returns to the opener. */}
+    </>
+  );
+}
+```
+
+### Form content & stacked popups
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeSelectBox } from '@oge-ui/react-inputs';
+import { OgeModal } from '@oge-ui/react-overlay';
+
+const statuses = ['Draft', 'In review', 'Published'];
+
+export function FormModal() {
+  const [opened, setOpened] = useState(false);
+  const [status, setStatus] = useState<unknown>('Draft');
+  return (
+    <OgeModal title="Edit record" opened={opened} onOpenedChange={setOpened} width={420}>
+      <OgeSelectBox label="Status" items={statuses} value={status} onValueChange={setStatus} />
+      {/* the select popup renders above the modal; the first Escape
+          closes the popup, the second closes the modal */}
+    </OgeModal>
+  );
+}
+```
+
+### Full screen, placement & sizing
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeModal } from '@oge-ui/react-overlay';
+
+export function SizingModals() {
+  const [opened, setOpened] = useState(false);
+  const [search, setSearch] = useState(false);
+  const [quiet, setQuiet] = useState(false);
+  const [max, setMax] = useState(false);
+  return (
+    <>
+      {/* maximize/restore toggle in the title bar drives fullScreen */}
+      <OgeModal
+        title="Report"
+        opened={opened}
+        onOpenedChange={setOpened}
+        fullScreen={max}
+        onFullScreenChange={setMax}
+        showMaximizeButton
+        width={480}
+        minHeight={240}
+        maxWidth="90vw"
+      />
+
+      {/* pinned near the top edge, command-palette style */}
+      <OgeModal title="Search" opened={search} onOpenedChange={setSearch} placement="top" />
+
+      {/* transparent backdrop — still modal (focus trap + scroll lock) */}
+      <OgeModal title="Quiet" opened={quiet} onOpenedChange={setQuiet} shading={false} />
+    </>
+  );
+}
+```
+
+### Window mode & modal service
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeModal, OgeModalProvider, useOgeModalData, useOgeModalRef, useOgeModals } from '@oge-ui/react-overlay';
+import type { OgeModalResizeEvent } from '@oge-ui/react-overlay';
+
+// content of an imperative modal: read its data + the ref to close with a result
+function RenameDialog() {
+  const data = useOgeModalData<{ name: string }>();
+  const ref = useOgeModalRef<string>();
+  return (
+    <p>
+      Renaming {data.name}{' '}
+      <button type="button" onClick={() => ref.close(data.name)}>Rename</button>
+    </p>
+  );
+}
+
+// <OgeModalProvider> sits once near the app root — the counterpart of the
+// root-provided Angular OgeModalService
+
+export function WindowModal() {
+  const [opened, setOpened] = useState(false);
+  const onResized = (event: OgeModalResizeEvent) => console.log(event.width, event.height);
+
+  // imperative, body-appended — for transformed ancestors & prompt flows
+  const modals = useOgeModals();
+  const openPrompt = async () => {
+    const ref = modals.open<string>(<RenameDialog />, {
+      title: 'Rename file',
+      width: 380,
+      data: { name: 'report.xlsx' },
+    });
+    const { result } = await ref.closed;
+    if (result) console.log('renamed to', result);
+  };
+  return (
+    <>
+      {/* drag by the title bar, resize by the corner handle */}
+      <OgeModal
+        title="Window"
+        opened={opened}
+        onOpenedChange={setOpened}
+        dragEnabled
+        resizeEnabled
+        onResized={onResized}
+      />
+      <button type="button" onClick={openPrompt}>Open via useOgeModals()</button>
+    </>
+  );
+}
+```
+
+### Async close guard
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeModal } from '@oge-ui/react-overlay';
+
+export function GuardedModal() {
+  const [opened, setOpened] = useState(false);
+  const [dirty] = useState(true);
+
+  // runs for every close reason (Escape, backdrop, ✕, close());
+  // may be async: the modal stays open until the promise resolves
+  const confirmDiscard = () => !dirty || confirm('Discard unsaved changes?');
+  return (
+    <OgeModal title="Draft" opened={opened} onOpenedChange={setOpened} closeGuard={confirmDiscard}>
+      <p>Unsaved work lives here.</p>
+    </OgeModal>
+  );
+}
+```
+
+### Busy state
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeModal } from '@oge-ui/react-overlay';
+
+export function BusyModal() {
+  const [opened, setOpened] = useState(false);
+  const [saving] = useState(true);
+  return (
+    <OgeModal title="Publishing…" opened={opened} onOpenedChange={setOpened} busy={saving}>
+      {/* spinner veil + aria-busy; Escape/backdrop/✕ are blocked
+          while busy — programmatic close() still works */}
+    </OgeModal>
+  );
+}
+```
+
+### Typed result
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeModal } from '@oge-ui/react-overlay';
+import type { OgeModalClosedEvent } from '@oge-ui/react-overlay';
+
+export function ConfirmModal() {
+  const [opened, setOpened] = useState(false);
+
+  // event: { reason: 'api' | 'escape' | 'backdrop' | 'closeButton', result? }
+  const onClosed = (event: OgeModalClosedEvent<string>) => {
+    if (event.result === 'delete') console.log('deleted');
+  };
+  return (
+    <OgeModal<string>
+      title="Delete file?"
+      opened={opened}
+      onOpenedChange={setOpened}
+      onClosed={onClosed}
+      renderFooter={({ close }) => (
+        <>
+          <OgeButton text="Cancel" stylingMode="text" onClick={() => close()} />
+          <OgeButton text="Delete" severity="danger" onClick={() => close('delete')} />
+        </>
+      )}
+    >
+      <p>This cannot be undone.</p>
+    </OgeModal>
+  );
+}
+```
+
+### Anchored panel
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgePopup, useAnchoredPanel } from '@oge-ui/react-overlay';
+import type { OgePopupPlacement } from '@oge-ui/react-overlay';
+
+export function AnchoredPanelDemo() {
+  const [placement, setPlacement] = useState<OgePopupPlacement>('bottom-start');
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const panel = useAnchoredPanel({
+    anchor: () => anchorRef.current,
+    panel: () => popupRef.current,
+    placement: () => placement,
+  });
+  return (
+    <>
+      <span ref={anchorRef} className="inline-flex">
+        <OgeButton
+          text="Toggle panel"
+          ariaHasPopup="dialog"
+          ariaExpanded={panel.isOpen}
+          ariaControls={panel.panelId}
+          onClick={() => panel.toggle()}
+        />
+      </span>
+      {panel.isOpen && (
+        <OgePopup panel={panel} ref={popupRef}>
+          <div className="w-56 p-3">Anchored content…</div>
+        </OgePopup>
+      )}
+    </>
+  );
+}
+```
+
+### Menu list
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMenuList } from '@oge-ui/react-overlay';
+import type { OgeMenuItem } from '@oge-ui/react-overlay';
+
+const items: OgeMenuItem[] = [
+  { text: 'Duplicate', checked: false },
+  { text: 'Move to…' },
+  { text: '', separator: true },
+  { text: 'Delete', severity: 'danger' },
+];
+
+export function MenuListDemo() {
+  const [last, setLast] = useState('');
+  return (
+    <>
+      <OgeMenuList
+        items={items}
+        ariaLabel="Demo actions"
+        onItemClick={(event) => setLast(event.item.text)}
+      />
+      <span className="text-sm opacity-70">last action: {last || '—'}</span>
+    </>
+  );
+}
+```
+
+### Severities
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeToastProvider, useOgeToasts } from '@oge-ui/react-overlay';
+
+export function SaveButton() {
+  // <OgeToastProvider> sits once near the app root
+  const toasts = useOgeToasts();
+
+  const save = () => {
+    toasts.success('Saved');
+    toasts.warning('Quota at 90%', { title: 'Heads up' });
+    toasts.error('Save failed'); // announces assertively
+    toasts.show({ message: 'Plain info toast' });
+  };
+  return (
+    <OgeButton text="Save" onClick={save} />
+  );
+}
+```
+
+### Positions & stacking
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeOverlayConfigProvider, OgeToastProvider, useOgeToasts } from '@oge-ui/react-overlay';
+
+// extras beyond toastMaxVisible queue FIFO and promote as slots free up
+export function App() {
+  return (
+    <OgeOverlayConfigProvider config={{ toastPosition: 'bottom-end', toastMaxVisible: 5 }}>
+      <OgeToastProvider>
+        <NotifyButton />
+      </OgeToastProvider>
+    </OgeOverlayConfigProvider>
+  );
+}
+
+export function NotifyButton() {
+  const toasts = useOgeToasts();
+
+  // 6 logical positions (RTL-aware); the default comes from config
+  const notify = () => toasts.info('Top center', { position: 'top-center' });
+  return (
+    <OgeButton text="Top center" onClick={notify} />
+  );
+}
+```
+
+### Sticky, action & undo
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { useOgeToasts } from '@oge-ui/react-overlay';
+
+export function DeleteRowButton() {
+  const toasts = useOgeToasts();
+
+  const deleteRow = async () => {
+    const ref = toasts.show({
+      message: 'Row deleted',
+      sticky: true, // action toasts should stick
+      action: { text: 'Undo', handler: () => restore() },
+    });
+    const { reason } = await ref.closed; // 'action' | 'closeButton' | …
+    console.log('closed because of', reason);
+  };
+
+  const restore = () => console.log('restored');
+  return (
+    <OgeButton text="Delete row" severity="danger" onClick={deleteRow} />
+  );
+}
+```
+
+### Promise toasts
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { useOgeToasts } from '@oge-ui/react-overlay';
+
+export function PublishButton() {
+  const toasts = useOgeToasts();
+
+  const publishPages = (): Promise<{ count: number }> =>
+    fetch('/api/publish').then((response) => response.json());
+
+  // spinner → severity morph in place; the timer starts on settle
+  const publish = () => {
+    toasts.promise(publishPages(), {
+      loading: 'Publishing…',
+      success: (result) => `Published ${result.count} pages`,
+      error: (error) => ({ title: 'Publish failed', message: String(error) }),
+    });
+  };
+  return (
+    <OgeButton text="Publish" onClick={publish} />
+  );
+}
+```
+
+### Coalescing & progress
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { useOgeToasts } from '@oge-ui/react-overlay';
+
+export function ImportButton() {
+  const toasts = useOgeToasts();
+  const failedRows = [3, 17, 42];
+
+  const report = () => {
+    // identical toasts merge into one with a live ×N badge
+    for (const _row of failedRows) {
+      toasts.error('Import row failed', { coalesce: true });
+    }
+
+    // remaining-time progress bar; pauses with the timer on hover/focus
+    toasts.info('With progress', { progressBar: true, displayTime: 6000 });
+  };
+  return (
+    <OgeButton text="Import" onClick={report} />
+  );
+}
+```
+
+### Tooltip basics
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeTooltip } from '@oge-ui/react-overlay';
+
+export function TooltipDemo() {
+  return (
+    <>
+      {/* any element becomes a tooltip trigger */}
+      <OgeTooltip text="Saves your changes">
+        <OgeButton text="Save" />
+      </OgeTooltip>
+      <OgeTooltip text="Plain elements work too">
+        <button type="button">Hover me</button>
+      </OgeTooltip>
+      {/* shows on hover after a dwell, immediately on keyboard focus;
+          hides on leave, blur or Escape; wired to aria-describedby */}
+    </>
+  );
+}
+```
+
+### Tooltip placement & delays
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { OgeOverlayConfigProvider, OgeTooltip } from '@oge-ui/react-overlay';
+
+export function TooltipOptionsDemo() {
+  return (
+    // application-wide defaults
+    <OgeOverlayConfigProvider config={{ tooltipShowDelayMs: 300, tooltipHideDelayMs: 150 }}>
+      <OgeTooltip text="Prefers the bottom edge" placement="bottom">
+        <OgeButton text="Below" />
+      </OgeTooltip>
+      <OgeTooltip text="Waits 800ms before showing" showDelay={800}>
+        <OgeButton text="Slow" />
+      </OgeTooltip>
+      <OgeTooltip text="Never appears" disabled>
+        <OgeButton text="Muted" />
+      </OgeTooltip>
+    </OgeOverlayConfigProvider>
+  );
+}
+```
+
+### Context menu
+
+```ts
+'use client';
+
+import { OgeContextMenu } from '@oge-ui/react-overlay';
+import type { OgeMenuItem } from '@oge-ui/react-overlay';
+
+// the canonical OgeMenuItem model: separators, checked state,
+// danger severity, per-item actions
+const rowMenu: OgeMenuItem[] = [
+  { text: 'Open', value: 'open' },
+  { text: 'Duplicate', value: 'duplicate' },
+  { separator: true, text: '' },
+  { text: 'Delete', value: 'delete', severity: 'danger' },
+];
+
+export function ContextMenuDemo() {
+  return (
+    <OgeContextMenu items={rowMenu}>
+      <div tabIndex={0}>Right-click me (or press Shift+F10)</div>
+    </OgeContextMenu>
+  );
+}
+```
+
+### Context menu events
+
+```ts
+'use client';
+
+import { OgeContextMenu } from '@oge-ui/react-overlay';
+import type { OgeMenuItem } from '@oge-ui/react-overlay';
+
+const menu: OgeMenuItem[] = [
+  { text: 'Open', value: 'open' },
+  { text: 'Delete', value: 'delete', severity: 'danger' },
+];
+
+export function ContextMenuEventsDemo() {
+  // event: { item, index, event } — the same payload as <OgeMenuList>
+  const run = (command: unknown) => console.log('run', command);
+  const log = (phase: string) => console.log(phase);
+  return (
+    <OgeContextMenu
+      items={menu}
+      ariaLabel="File actions"
+      onItemClick={(event) => run(event.item.value)}
+      onOpened={() => log('opened')}
+      onClosed={() => log('closed')}
+    >
+      <div tabIndex={0}>File: quarterly-report.xlsx</div>
+    </OgeContextMenu>
+  );
+}
+```
 

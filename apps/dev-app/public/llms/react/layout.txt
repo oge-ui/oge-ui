@@ -90,7 +90,7 @@ _Panels & expansion_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeAccordionItemDefinition[]` | `—` | The panels, in render order — the React counterpart of both the projected `` children and the Angular `items` array: the shared data fields plus `content` and the per-panel render props. |
+| `items` | `readonly OgeAccordionItemDefinition[]` | `—` | The panels, in render order — the React counterpart of both the projected `<oge-accordion-item>` children and the Angular `items` array: the shared data fields plus `content` and the per-panel render props. |
 | `expandedKeys` | `readonly string[]` | `—` | Keys of the expanded panels — controlled when provided, so pass `onExpandedKeysChange` with it. The multi-expand counterpart of `selectedIndex`; only panels that declare a `key` can appear here. |
 | `defaultExpandedKeys` | `readonly string[]` | `—` | Uncontrolled initial expansion by key — the component owns the set from there. Never combine with `expandedKeys`. |
 | `onExpandedKeysChange` | `(keys: readonly string[]) => void` | `—` | The controlled half of `expandedKeys`; Angular’s `[(expandedKeys)]` model is both halves at once. |
@@ -137,7 +137,7 @@ _Keyboard & accessibility_
 | `headingLevel` | `number` | `3` | `aria-level` of the heading wrapping each header button; 1–6 render a real `h1`–`h6`. |
 | `useRegionRole` | `boolean` | `true` | Gives each panel `role="region"` (APG-optional; adds one landmark per panel). |
 | `ariaLabel` | `string` | `—` | Aria label of the accordion container. |
-| `messages` | `Partial<OgeAccordionMessages>` | `—` | Per-instance overrides of the `` messages. |
+| `messages` | `Partial<OgeAccordionMessages>` | `—` | Per-instance overrides of the `<OgeAccordionConfigProvider>` messages. |
 
 #### Methods
 
@@ -208,8 +208,8 @@ _Types_
 | `invalid` | `boolean` | `false` | Flags the section as failing validation — renders the danger rail and feeds `expandInvalid()`. |
 | `expandGuard` | `OgeAccordionExpandGuard` | `—` | Veto hook run before this panel expands or collapses; may be async (single-flight). |
 | `contentLoader` | `OgeAccordionContentLoader` | `—` | Loads this panel's content on first expand, with a skeleton while pending and a retry button on failure. |
-| `content` | `ReactNode` | `—` | Panel body — the React face of the content projected into an ``. Eager: a panel that should be lazy uses `renderContent` instead. |
-| `renderHeader` | `(context: OgeAccordionHeaderContext) => ReactNode` | `—` | Custom header for this panel alone — the React face of an `[ogeAccordionHeaderTemplate]` inside an ``. |
+| `content` | `ReactNode` | `—` | Panel body — the React face of the content projected into an `<oge-accordion-item>`. Eager: a panel that should be lazy uses `renderContent` instead. |
+| `renderHeader` | `(context: OgeAccordionHeaderContext) => ReactNode` | `—` | Custom header for this panel alone — the React face of an `[ogeAccordionHeaderTemplate]` inside an `<oge-accordion-item>`. |
 | `renderContent` | `(context: OgeAccordionContentContext) => ReactNode` | `—` | Lazy body for this panel alone — the React face of an inline `[ogeAccordionContentTemplate]`. Ignored when `content` is set. |
 | `renderToggleIcon` | `(context: OgeAccordionToggleIconContext) => ReactNode` | `—` | Custom chevron for this panel alone. |
 | `renderHeaderActions` | `(context: OgeAccordionHeaderActionsContext) => ReactNode` | `—` | Actions for this panel, rendered beside the toggle button. |
@@ -266,20 +266,20 @@ _Behavioural defaults_
 | --- | --- | --- | --- |
 | `header` | `string \| undefined` | `—` | Header title. Named after the PrimeNG input rather than `title` — a static `title` attribute would double as a native tooltip. |
 | `subheader` | `string \| undefined` | `—` | Line rendered under `header` in the muted color. |
-| `stylingMode` | `'outlined' \| 'raised' \| 'filled' \| 'flat'` | `'outlined'` | Chrome preset: `outlined` (border), `raised` (rests on the `--oge-shadow-card` token), `filled` (tinted surface) or `flat` (no chrome — for a card nested in another surface). Falls back to ``. |
+| `stylingMode` | `'outlined' \| 'raised' \| 'filled' \| 'flat'` | `'outlined'` | Chrome preset: `outlined` (border), `raised` (rests on the `--oge-shadow-card` token), `filled` (tinted surface) or `flat` (no chrome — for a card nested in another surface). Falls back to `<OgeCardConfigProvider config={{ stylingMode }}>`. |
 | `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | `horizontal` turns the card into a two-column grid with the `media` node spanning the inline-start column, sized by `--oge-card-media-size`. Falls back to the config provider. |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset — scales the section padding and type ramp together (`--oge-card-pad` is the per-card escape hatch). Falls back to the config provider. |
 | `severity` | `'accent' \| 'success' \| 'warning' \| 'danger' \| undefined` | `undefined` | Colored status rail on the inline-start edge — the toast&rsquo;s rail idiom on a static surface. `undefined` renders no rail. |
-| `interactive` | `boolean` | `false` | Purely visual affordance for the documented clickable-card pattern: a hover/focus-within lift and a keyboard focus ring on the surface. Adds **no** role, tabindex or wrapper — pair it with one primary `` in the content. |
+| `interactive` | `boolean` | `false` | Purely visual affordance for the documented clickable-card pattern: a hover/focus-within lift and a keyboard focus ring on the surface. Adds **no** role, tabindex or wrapper — pair it with one primary `<a>` in the content. |
 | `loading` | `boolean` | `false` | Replaces the content and action row with a shimmer skeleton and marks the card `aria-busy`. Header, media and footer stay, so the card keeps its footprint while the data arrives. |
-| `children` | `ReactNode` | `—` | The card content — the React counterpart of the default `` projection. |
+| `children` | `ReactNode` | `—` | The card content — the React counterpart of the default `<ng-content>` projection. |
 | `className / style` | `string \| CSSProperties` | `—` | Merged onto the card host. `className` is appended to the generated `oge-card*` classes; the Angular host takes `class`/`style` natively. |
 
 _Accessibility contract_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `(no role, no clickable prop)` | `—` | There is no WAI-ARIA card pattern, so the card renders no role and no `tabIndex`, and ships no clickable-card API — wrapping the card in a link or button is the `nested-interactive` trap. Add `role="article"` / `role="region"` yourself, and make a card clickable with one primary `` in the content plus a CSS-stretched hit area. |
+| `(no role, no clickable prop)` | `—` | There is no WAI-ARIA card pattern, so the card renders no role and no `tabIndex`, and ships no clickable-card API — wrapping the card in a link or button is the `nested-interactive` trap. Add `role="article"` / `role="region"` yourself, and make a card clickable with one primary `<a>` in the content plus a CSS-stretched hit area. |
 
 #### Types
 
@@ -290,8 +290,8 @@ _Accessibility contract_
 | `OgeCardSize` | `'sm' \| 'md' \| 'lg'` | Density preset union. |
 | `OgeCardSeverity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | Status rail union for the `severity` prop. |
 | `OgeCardActionsAlign` | `'start' \| 'center' \| 'end' \| 'stretched'` | Justification vocabulary of the action row. The React `actions` node is plain markup, so this types your own state and maps to the `oge-card-actions-*` class. |
-| `OgeCardProps` | `interface` | Props of ``, including the slot nodes. |
-| `OgeCardConfig / OgeCardConfigInput` | `{ stylingMode?; orientation?; size? }` | The config shape and its partial input for ``; `OGE_DEFAULT_CARD_CONFIG` is the resolved default. |
+| `OgeCardProps` | `interface` | Props of `<OgeCard>`, including the slot nodes. |
+| `OgeCardConfig / OgeCardConfigInput` | `{ stylingMode?; orientation?; size? }` | The config shape and its partial input for `<OgeCardConfigProvider>`; `OGE_DEFAULT_CARD_CONFIG` is the resolved default. |
 
 ### Slot props
 
@@ -299,12 +299,12 @@ _Accessibility contract_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `media` | `ReactNode` | The full-bleed media element (`[ogeCardMedia]` in Angular) — an ``, `` or a wrapper carrying `className="oge-card-media"`. Sized by consumer CSS (`aspect-ratio`, `block-size`); there is deliberately no size prop. |
+| `media` | `ReactNode` | The full-bleed media element (`[ogeCardMedia]` in Angular) — an `<img>`, `<video>` or a wrapper carrying `className="oge-card-media"`. Sized by consumer CSS (`aspect-ratio`, `block-size`); there is deliberately no size prop. |
 | `avatar` | `ReactNode` | The round image before the header titles (`[ogeCardAvatar]`), rendered with `className="oge-card-avatar"`. |
 | `headerActions` | `ReactNode` | Controls at the inline end of the header row (`[ogeCardHeaderActions]`), in a node with `className="oge-card-header-actions"`. Real controls in the Tab sequence — the card never wraps them in anything interactive. |
 | `actions` | `ReactNode` | The action row under the content (`[ogeCardActions]`). Give it `className="oge-card-actions"` plus one of `oge-card-actions-center` / `-end` / `-stretched` — the alignment the Angular directive takes as its `align` input. |
 | `footer` | `ReactNode` | A divided strip on the header surface after the actions (`[ogeCardFooter]`, `className="oge-card-footer"`) — metadata rather than commands. |
-| `oge-card-separator` | `class` | A full-bleed hairline between content sections — put the class on an `` inside `children`. |
+| `oge-card-separator` | `class` | A full-bleed hairline between content sections — put the class on an `<hr>` inside `children`. |
 
 ### Card configuration
 
@@ -325,7 +325,7 @@ _Accessibility contract_
 | `min / max` | `number` | `0 / 100` | Scale bounds; the fill ratio clamps into them. |
 | `bufferValue` | `number \| undefined` | `—` | Material's buffer layer — a soft second fill behind the primary one (media pre-loading behind the play position). |
 | `chunkCount` | `number \| undefined` | `—` | Renders the bar as N discrete segments (Kendo's chunk progress bar); the filled count is the rounded ratio. |
-| `severity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill color — the card/toast severity vocabulary; recolors the fill only. Falls back to ``. |
+| `severity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | `'accent'` | Fill color — the card/toast severity vocabulary; recolors the fill only. Falls back to `<OgeProgressBarConfigProvider>`. |
 | `showLabel` | `boolean` | `false` | Renders the formatted value next to the bar (rounded percent by default). Falls back to the config provider. |
 | `formatLabel` | `(value: number, ratio: number) => string \| undefined` | `—` | Formats the visible label **and** `aria-valuetext` — DevExtreme's `statusFormat` in the house argument order; display and announcement never diverge. |
 | `ariaLabel` | `string \| undefined` | `—` | Accessible name; the localized `progress` message is the fallback. A progressbar must always be named. |
@@ -343,7 +343,7 @@ _Accessibility contract_
 | --- | --- | --- |
 | `OgeProgressBarSeverity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | Fill color vocabulary. |
 | `OgeProgressBarCompletedEvent` | `{ value: number }` | Payload of `onCompleted`. |
-| `OgeProgressBarProps` | `interface` | Props of ``. |
+| `OgeProgressBarProps` | `interface` | Props of `<OgeProgressBar>`. |
 
 ### <OgeLoadIndicator>
 
@@ -368,7 +368,7 @@ _Accessibility contract_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeLoadIndicatorSeverity` | `'accent' \| 'success' \| 'warning' \| 'danger'` | Ring color vocabulary. |
-| `OgeLoadIndicatorProps` | `interface` | Props of ``. |
+| `OgeLoadIndicatorProps` | `interface` | Props of `<OgeLoadIndicator>`. |
 
 ### <OgeSkeleton>
 
@@ -376,7 +376,7 @@ _Accessibility contract_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `shape` | `'text' \| 'circle' \| 'rectangle'` | `'text'` | What the placeholder stands in for; a `text` skeleton with no height derives it from the font. Falls back to ``. |
+| `shape` | `'text' \| 'circle' \| 'rectangle'` | `'text'` | What the placeholder stands in for; a `text` skeleton with no height derives it from the font. Falls back to `<OgeSkeletonConfigProvider>`. |
 | `animation` | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'` | `shimmer` is the card/accordion moving-gradient recipe, `pulse` the data grid filler rows' opacity beat, `none` a static block. Falls back to the config provider. |
 | `width / height` | `string \| number \| undefined` | `—` | Numbers mean pixels; strings pass through as CSS. |
 | `lines` | `number` | `1` | `text` shape only: renders N stacked lines with the last one tapered — the card/accordion placeholder pattern as one prop. Capped at 20. |
@@ -393,7 +393,7 @@ _Accessibility contract_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeSkeletonShape / OgeSkeletonAnimation` | `'text' \| 'circle' \| 'rectangle' / 'shimmer' \| 'pulse' \| 'none'` | The two vocabularies, shared with the Angular package. |
-| `OgeSkeletonProps` | `interface` | Props of ``. |
+| `OgeSkeletonProps` | `interface` | Props of `<OgeSkeleton>`. |
 
 ### Configuration
 
@@ -426,7 +426,7 @@ _Panes & sizing_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `panes` | `readonly OgeSplitterPaneItem[] \| undefined` | `—` | The panes, in layout order — the React counterpart of the projected `` children: every field of a pane plus its `content`. |
+| `panes` | `readonly OgeSplitterPaneItem[] \| undefined` | `—` | The panes, in layout order — the React counterpart of the projected `<oge-splitter-pane>` children: every field of a pane plus its `content`. |
 | `dataSource` | `OgeSplitterDataSourceLike \| undefined` | `—` | Remote pane list, loaded through `@oge-ui/core`&rsquo;s `DataSource` contract and merged after `panes`. A source that publishes `changes` triggers a reload. |
 | `itemHoldTimeout` | `number` | `750` | Milliseconds a pointer must rest on a pane before `onPaneHold` fires. |
 | `sizes` | `readonly OgeSplitterSize[] \| undefined` | `—` | Current pane sizes — the controlled half of the pair, and the whole persistable state. Setting it overrides the per-pane `size` fields. Numbers are ratios; `'240px'` pins a pane. |
@@ -450,7 +450,7 @@ _Accessibility & text_
 | Name | Type | Description |
 | --- | --- | --- |
 | `ariaLabel` | `string \| undefined` | Accessible name of the splitter container. |
-| `messages` | `Partial<OgeSplitterMessages>` | Per-instance overrides of the `` strings, including the separators’ accessible names. |
+| `messages` | `Partial<OgeSplitterMessages>` | Per-instance overrides of the `<OgeSplitterConfigProvider>` strings, including the separators’ accessible names. |
 
 _Host_
 
@@ -497,7 +497,7 @@ _Types_
 | --- | --- | --- |
 | `OgeSplitterOrientation` | `'horizontal' \| 'vertical'` | Axis the panes are laid out along. |
 | `OgeSplitterGripSide` | `'start' \| 'end'` | Which neighbour a separator's collapse grip acts on: `'start'` is the pane before it (the APG primary pane), `'end'` the one after. |
-| `OgeSplitterSize` | `number \| string` | A number (or `'%'`) is a **ratio** of the space the flexible panes share, so `[30, 30]` lays out like `[50, 50]`. `'px'` pins the pane to a fixed track. Any other string is ignored with a dev-mode warning. |
+| `OgeSplitterSize` | `number \| string` | A number (or `'<n>%'`) is a **ratio** of the space the flexible panes share, so `[30, 30]` lays out like `[50, 50]`. `'<n>px'` pins the pane to a fixed track. Any other string is ignored with a dev-mode warning. |
 | `OgeSplitterPaneItem` | `interface` | One pane of the `panes` prop — every field of `OgeSplitterPaneData` (`key`, `size`, `minSize`, `maxSize`, `collapsible`, `collapsed`, `collapsedSize`, `resizable`, `scrollable`, `disabled`, `visible`, `text`, `cssClass`, `htmlAttributes`, `orientation`) plus `content` and a nested `panes` array of the same shape. |
 | `OgeSplitterHandle` | `interface` | The `ref` handle: `collapse`, `expand`, `toggle`, `isCollapsed`, `resize`, `focus` — the React face of the Angular public methods. |
 | `OgeSplitterResizeStartEvent` | `interface` | `separatorIndex`, `sizes` at the start of the gesture, and the originating `event` (absent for a keyboard resize). |
@@ -527,8 +527,8 @@ _Types_
 | `text` | `string \| undefined` | `—` | Plain-text body, rendered when the pane has neither `content` nor a `renderPane`. |
 | `htmlAttributes` | `Readonly<Record<string, string>> \| undefined` | `—` | Extra attributes on the pane element. Keys removed from the bag are removed from the DOM, so clearing it clears the element. |
 | `cssClass` | `string \| undefined` | `—` | Extra class on the pane element. |
-| `content` | `ReactNode` | `—` | Pane body — the React counterpart of the content projected into an ``. Takes precedence over `renderPane` and `text`. |
-| `panes` | `readonly OgeSplitterPaneItem[] \| undefined` | `—` | Nested splitter inside this pane, rendered on the opposite axis by default — the data form of an `` placed in `content`. |
+| `content` | `ReactNode` | `—` | Pane body — the React counterpart of the content projected into an `<oge-splitter-pane>`. Takes precedence over `renderPane` and `text`. |
+| `panes` | `readonly OgeSplitterPaneItem[] \| undefined` | `—` | Nested splitter inside this pane, rendered on the opposite axis by default — the data form of an `<OgeSplitter>` placed in `content`. |
 | `orientation` | `'horizontal' \| 'vertical'` | `—` | Axis of the nested splitter, when this pane has one. |
 
 #### Types
@@ -537,7 +537,7 @@ _Render props_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `renderPane` | `(pane, index, collapsed) => ReactNode` | The splitter-level renderer for panes with no `content` — the React replacement for the `[ogeSplitterPaneTemplate]` structural directive. Documented as a prop of ``. |
+| `renderPane` | `(pane, index, collapsed) => ReactNode` | The splitter-level renderer for panes with no `content` — the React replacement for the `[ogeSplitterPaneTemplate]` structural directive. Documented as a prop of `<OgeSplitter>`. |
 
 ### Splitter configuration
 
@@ -591,8 +591,8 @@ _Layout & overflow_
 | `overflow` | `'menu' \| 'scroll' \| 'wrap' \| 'extended' \| 'none'` | `'menu'` | `menu` collapses what does not fit into an overflow menu, `scroll` keeps one line and adds scroll buttons, `wrap` flows onto more lines (the reference `multiline` mode), `extended` hides the remainder in a second row behind a toggle, `none` lets the row overflow. |
 | `scrollStep` | `number` | `120` | Pixels a scroll button moves the row in `overflow: 'scroll'`. |
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Main axis. Drives the arrow keys and `aria-orientation` (written only when vertical, since horizontal is the ARIA default). |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset. Falls back to ``. |
-| `stylingMode` | `'outlined' \| 'filled' \| 'flat'` | `'outlined'` | Container chrome. Falls back to ``. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Density preset. Falls back to `<OgeToolbarConfigProvider config={{ size }}>`. |
+| `stylingMode` | `'outlined' \| 'filled' \| 'flat'` | `'outlined'` | Container chrome. Falls back to `<OgeToolbarConfigProvider config={{ stylingMode }}>`. |
 
 _State & accessibility_
 
@@ -658,7 +658,7 @@ _Types_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeToolbarProps` | `interface` | Every prop of ``. |
+| `OgeToolbarProps` | `interface` | Every prop of `<OgeToolbar>`. |
 | `OgeToolbarHandle` | `interface` | The imperative handle reached through `ref` — the React counterpart of the Angular component&rsquo;s public methods. |
 | `OgeToolbarItemRenderContext` | `interface` | Argument of `renderItem` / `renderMenuItem`: `item` (the `items` entry), `index`, `inMenu`. |
 | `OgeToolbarItemData` | `interface` | One data-driven entry: `key`, `type`, `text`, `icon`, `suffixIcon`, `iconClass`, `suffixIconClass`, `hint`, `width`, `htmlAttributes`, `location`, `locateInMenu`, `overflowPriority`, `showText`, `showIcon`, `disabled`, `visible`, `cssClass`, `severity`, `active`, `data`. |
@@ -694,7 +694,7 @@ _Fields_
 | `text` | `string \| undefined` | `—` | Label; also the accessible name when the item renders icon-only. |
 | `icon` | `string \| undefined` | `—` | SVG path data (`d`) for a leading aria-hidden 16×16 icon. |
 | `suffixIcon` | `string \| undefined` | `—` | SVG path data (`d`) for a trailing icon, rendered after the text. |
-| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon rendered as an empty `_` — the hook for an icon font the application already ships. `icon` stays the dependency-free default. |
+| `iconClass` | `string \| undefined` | `—` | Class(es) for a leading icon rendered as an empty `<i>` — the hook for an icon font the application already ships. `icon` stays the dependency-free default. |
 | `suffixIconClass` | `string \| undefined` | `—` | Class(es) for a trailing icon element. |
 | `width` | `number \| string \| undefined` | `—` | Fixed main-axis size of the item — a bare number is pixels. |
 | `htmlAttributes` | `Readonly<Record<string, string>> \| undefined` | `—` | Extra attributes spread onto the item element. |
@@ -1907,16 +1907,20 @@ export function SplitterNestedDemo() {
 'use client';
 
 import { useState } from 'react';
-import { OgeNumberBox, OgeTextBox } from '@oge-ui/react-inputs';
+import { OgeForm } from '@oge-ui/react-forms';
 import { OgeSplitter } from '@oge-ui/react-layout';
+import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
+
+const serverFields: OgeFormItemDefinition[] = [
+  { field: 'host', label: 'Host' },
+  { field: 'port', label: 'Port' },
+  { field: 'user', label: 'User' },
+];
 
 export function SplitterFormDemo() {
-  // @oge-ui/forms has no React layer yet (docs/REACT-PARITY.md), so the
-  // editors hold their value in your own state — useState here, but React
-  // Hook Form, Formik or TanStack Form bind exactly the same way.
   const [server, setServer] = useState({
     host: 'db.internal',
-    port: 5432 as number | null,
+    port: 5432,
     user: 'app',
   });
   return (
@@ -1926,21 +1930,12 @@ export function SplitterFormDemo() {
         {
           size: 78,
           content: (
-            <div className="demo-row">
-              <OgeTextBox
-                label="Host"
-                value={server.host}
-                onValueChange={(host) => setServer((s) => ({ ...s, host }))}
-              />
-              <OgeNumberBox
-                label="Port"
-                value={server.port}
-                onValueChange={(port) => setServer((s) => ({ ...s, port }))}
-              />
-              <OgeTextBox
-                label="User"
-                value={server.user}
-                onValueChange={(user) => setServer((s) => ({ ...s, user }))}
+            <div className="p-3">
+              <OgeForm
+                formData={server}
+                onFormDataChange={setServer}
+                items={serverFields}
+                colCountByScreen={{ xs: 1, sm: 2, md: 3 }}
               />
             </div>
           ),

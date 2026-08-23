@@ -1,0 +1,453 @@
+# @oge-ui/react-upload
+
+> React file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews and a lightbox, per-file progress with rate and ETA, chunked resumable transfer with pause, resume and retry, a pluggable transport adapter, external drop zones and triggers — running the same upload engine, list machine and stylesheet as the Angular upload package.
+
+Part of OGE UI v0.12.0.
+Docs and live demos: https://ogeui.com/components/upload
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-upload
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages:
+`@oge-ui/grid/themes/dark.css` (then put `class="oge-theme-dark"` on
+`<html>` or any subtree), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeFileUploader>
+
+#### Properties
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `accept` | `string` | `''` | The `accept` attribute of the file input. Also filters drops and pastes, which the browser does not do for you. |
+| `multiple` | `boolean` | `true` | Allows several files. With `false` a new selection _replaces_ the list, which is what every reference does. |
+| `directory` | `boolean` | `false` | Lets the dialog pick a folder, and descends into dropped folders. Falls back to the flat file list where the entry API is unavailable. |
+| `pastable` | `boolean` | `false` | Adds files from a paste while the uploader has focus — a pasted screenshot included. |
+| `allowDrop` | `boolean` | `true` | Turns drag & drop off without hiding the browse affordance. |
+| `dropZone` | `string \| undefined` | `undefined` | Name this uploader answers to, so `<OgeUploadDropZone>` and `<OgeUploadTrigger>` elsewhere can reach it. dx `dropZone`, Kendo `zoneId`, Syncfusion `dropArea`. |
+| `dropEffect` | `'copy' \| 'move' \| 'link' \| 'none' \| 'default'` | `'copy'` | Pointer feedback while files hover the zone. |
+| `fieldName` | `string` | `'files[]'` | Multipart field name, and the `name` attribute of the file input — Kendo’s `saveField`. |
+| `openFileDialogOnClick` | `boolean` | `true` | Ant’s option. `false` makes the zone drop-only — and stops it being a button, because a button that does nothing on Enter is worse than none; the separate browse button appears instead so the keyboard path survives. |
+| `capture` | `boolean \| 'user' \| 'environment'` | `undefined` | The native `capture` attribute: opens the camera or microphone directly on mobile instead of the file browser. |
+| `transformFile` | `((file: File) => File \| Promise<File>) \| undefined` | `undefined` | Rewrites each file — compression, watermarking, EXIF stripping. Applied _before_ validation, so the restrictions judge the bytes that will be sent. |
+| `thumbnailFor` | `((file: OgeUploadFile) => string \| null \| Promise<string \| null>) \| undefined` | `undefined` | Supplies a preview the browser cannot make itself — a server-rendered PDF thumbnail, a downscaled canvas image. Returning `null` is the "not an image" half. |
+| `inputAttributes` | `Record<string, string>` | `{}` | Extra attributes for the internal file input, applied imperatively. |
+
+_Restrictions_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `allowedFileExtensions` | `readonly string[]` | `[]` | `.png`-style or bare `png`-style; empty allows everything. |
+| `maxFileSize / minFileSize` | `number \| undefined` | `undefined` | Inclusive bounds in bytes. `undefined` means no limit — an explicit `0` is a real limit. |
+| `maxFileCount` | `number \| undefined` | `undefined` | Only the files past the limit are rejected, and a rejected file never spends a count slot. |
+| `maxTotalFileSize` | `number \| undefined` | `undefined` | Budget across the whole list. **OGE extra**. |
+| `validateFile` | `((file: File) => string \| null) \| undefined` | `undefined` | Returns a message to reject, or `null` to accept — the validation half of Ant’s `beforeUpload`. |
+
+_Transport_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `uploadUrl` | `string \| ((files: readonly File[]) => string)` | `''` | Empty means there is nowhere to send to, and nothing is sent — the uploader stays a picker. |
+| `uploadMode` | `'instantly' \| 'useButtons' \| 'useForm' \| 'select'` | `'instantly'` | `select` never uploads: Kendo’s FileSelect as a mode rather than a second component. |
+| `uploadMethod / uploadHeaders / uploadCustomData` | `'post' \| 'put' \| 'patch' / Record / Record \| fn` | `'post' / {} / {}` | `uploadCustomData` also takes a per-file function — Ant’s `data` in both shapes. |
+| `withCredentials / responseType / timeout` | `boolean / 'json' \| 'text' \| 'blob' / number` | `false / json / undefined` | Standard request knobs. |
+| `batch` | `boolean` | `false` | Every file in one request. |
+| `concurrency` | `number \| undefined` | `3 (config)` | One number replaces two booleans: Kendo’s `concurrent: false` and Syncfusion’s `sequentialUpload: true` are both `1`. |
+| `chunk` | `boolean \| OgeUploadChunkOptions` | `false` | Kendo’s `ChunkSettings` defaults: `size: 1 MiB`, `autoRetryAfter: 100`, `maxAutoRetries: 1`, `resumable: true`. |
+| `autoRetry` | `boolean \| OgeUploadRetryOptions` | `false` | Whole-file retry; defaults `{ count: 3, delayMs: 500 }`. A run serving its backoff frees its concurrency slot. |
+| `uploadAdapter` | `OgeUploadAdapter \| undefined` | `undefined` | Replaces the transport wholesale for this instance; `<OgeUploadTransportProvider>` does it for a subtree. |
+| `abortable` | `boolean` | `true` | dx’s `allowCanceling`. |
+| `removeUrl / removeMethod / removeHeaders / removeField` | `string / 'post' \| 'delete' / Record / string` | `undefined / 'post' / {} / 'fileNames'` | Server-side delete. Only files that actually reached the server are deleted there. |
+
+_Display_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `displayMode` | `'full' \| 'compact' \| 'button'` | `'full'` | PrimeNG’s advanced/basic pair, plus a slim `compact` bar (**OGE extra**). |
+| `showFileList` | `boolean \| OgeUploadFileListOptions` | `true` | The boolean, or Ant’s options object (`showRemove`, `showRetry`, `showCancel`, `showPause`, …). |
+| `listType / previewWidth` | `'text' \| 'picture' \| 'pictureCard' / number` | `'text' / 50` | Preview rendering. |
+| `actionsLayout` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'end'` | Where the action row sits. |
+| `showUploadButton / showClearButton / showCancelButton` | `boolean \| undefined` | `undefined` | `undefined` derives visibility from `uploadMode` — no button that has nothing to do. |
+| `initialFiles` | `readonly OgeUploadPreloadedFile[]` | `[]` | Files that already live on the server — Syncfusion’s `files`, Ant’s `defaultFileList`. |
+| `messages` | `OgeUploadMessagesInput` | `undefined` | Per-instance override, layered over `<OgeUploadConfigProvider>`. |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the uploader host. |
+
+_State and forms_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `readonly File[]` | `[]` | Every row that carries a real `File`, **including invalid ones** — controlled when provided, so pass `onValueChange` with it. Hiding invalid rows would let `required` pass while a file is plainly on screen; the handle’s `valid` flag is what blocks submission. |
+| `defaultValue` | `readonly File[]` | `[]` | Uncontrolled initial value. |
+| `onValueChange` | `(files: readonly File[]) => void` | `—` | The controlled half of `value`; Angular’s `[(value)]` model is both halves at once. |
+| `disabled / readOnly / required / invalid / touched / dirty / name / errors` | `FormValueControl contract` | `—` | The same member names the Angular Signal Forms contract fixes — here plain props; `<OgeForm>` drives them for its `fileUploader` editor. |
+| `files` | `readonly OgeUploadFile[] (handle)` | `—` | Read off the `ref` handle. Every row, invalid and preloaded included. |
+| `progress / busy / uploadedCount / fileCount / limitExceeded / valid / validationErrors` | `handle getters` | `—` | Read off the `ref` handle — Angular exposes the same names as signals. Replaces dx’s `progress`/`isValid`/`validationErrors` and PrimeNG’s boolean methods. |
+
+#### Methods
+
+_OgeFileUploader_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `upload(uids?)` | `void` | Starts the queued transfers. Files that failed a restriction are never sent. |
+| `abort(uid?, reason?)` | `void` | dx `abortUpload`, Kendo `cancelUploadByUid`. |
+| `pause(uid) / resume(uid)` | `boolean` | Chunked and resumable transfers only; returns `false` otherwise rather than aborting and calling it a pause. |
+| `retry(uid?)` | `void` | With no argument, everything that failed or was aborted. |
+| `addFiles(files)` | `void` | Adds files through the same pipeline as a drop. |
+| `removeFile(uid) / clear()` | `void` | Both run their cancelable pre-event first. |
+| `openFileDialog()` | `void` | PrimeNG `choose`. |
+| `getFiles(index?) / sortFiles(compare?)` | `readonly OgeUploadFile[] / void` | Syncfusion `getFilesData` / `sortFileList`; sorts by name unless told otherwise. |
+| `preview(uid) / download(uid)` | `void` | Opens the built-in lightbox / downloads the file. Both fire a cancelable callback first, so an app can substitute its own viewer or signed-URL flow — Ant’s `onPreview` and `onDownload`. |
+| `reset(value?)` | `void` | dx’s `reset`: back to a pristine state. Fires no `onClearing` pipeline — a reset is the app rewinding its form, not the user removing files. |
+| `focus() / blur()` | `void` | Moves focus to the browse affordance. |
+| `formatFileSize(bytes, options?)` | `string` | Exported free function — PrimeNG `formatSize`, Syncfusion `bytesToSize`. |
+
+#### Events
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onFilesSelecting` | `(event: OgeUploadFilesSelectingEvent) => void` | **Cancelable** (set `event.cancel`). Before anything is validated or added. Carries the source: dialog, drop, paste or api. |
+| `onFilesSelected / onFileRejected / onFilesDropped` | `callback` | `onFileRejected` fires once per file that failed a restriction — **OGE extra**; the references only render a message. |
+| `onDropZoneEntered / onDropZoneLeft` | `(event: OgeUploadDropZoneEvent) => void` | dx `onDropZoneEnter` / `onDropZoneLeave`. |
+
+_Transfers_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onUploading` | `(event: OgeUploadUploadingEvent) => void` | **Cancelable**, and the one place the outgoing `request` is writable — dx’s `onBeforeSend`. |
+| `onUploadStarted / onUploadProgress / onUploaded / onUploadFailed / onUploadAborted / onAllUploaded` | `callback` | `onUploadStarted` fires when a request actually goes out — not when the file is queued, and again on a retry. |
+| `onChunkUploading / onChunkUploaded / onChunkFailed` | `callback` | `onChunkUploading` is cancelable, per slice. |
+| `onUploadPausing / onUploadPaused / onUploadResuming / onUploadResumed` | `callback` | The `-ing` halves are cancelable. |
+
+_List_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onFileRemoving / onFileRemoved` | `callback` | `onFileRemoving` is cancelable and reports whether a server delete will follow. |
+| `onClearing / onCleared` | `callback` | `onClearing` is cancelable. |
+| `onPreviewShowing / onPreviewHidden` | `callback` | `onPreviewShowing` is cancelable — veto it to open your own viewer instead of the built-in lightbox. |
+| `onFileDownloading` | `(event: OgeUploadFileDownloadingEvent) => void` | Cancelable. The default is an anchor click against the server `url`, or a temporary object URL for a file that only exists locally. |
+| `onThumbnailFailed / onValueChange / onTouch` | `callback` | Preview decode failure, the controlled value, and the forms contract (fires once per interaction that dirties the control). |
+
+#### Types
+
+_Types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeUploadFile` | `interface` | `uid`, `name`, `size`, `type`, `file`, `status`, `loaded`, `progress`, `errors`, `response`, `httpStatus`, `chunk`, `attempts`, plus `bytesPerSecond` and `secondsRemaining` (**OGE extra**). Shared with the Angular package via `@oge-ui/behavior`. |
+| `OgeUploadFileStatus` | `union` | `'pending' \| 'uploading' \| 'paused' \| 'uploaded' \| 'failed' \| 'aborted' \| 'invalid' \| 'removed'`. |
+| `OgeUploadAdapter` | `interface` | `send(parts, request, callbacks)` and optional `remove(...)`. Batch versus per-file is the shape of the argument, not a flag. |
+| `OgeUploadChunkMetadata` | `interface` | Kendo’s `ChunkMetadata` field for field, so a Kendo-shaped server needs no changes. |
+| `<OgeUploadTransportProvider adapter>` | `component` | The default adapter for a subtree — the counterpart of Angular’s `OGE_UPLOAD_TRANSPORT` token. Override it in tests and demos; jsdom’s XHR performs real network I/O. |
+| `<OgeUploadConfigProvider config>` | `component` | App-wide defaults and messages — five nested message blocks: buttons, dropZone, status, validation, announcements. The counterpart of `provideOgeUploadConfig()`. |
+| `<OgeUploadDropZone zone>` | `component` | Turns its element into a drop target for the uploader whose `dropZone` matches the given name. Reports hover through `onOverChange` for your own styling. |
+| `<OgeUploadTrigger zone>` | `component` | A real `<button>` that opens an uploader’s file dialog from elsewhere on the page — dx’s `dialogTrigger`. Disables itself while no uploader answers to that name. |
+| `createXhrUploadAdapter()` | `() => OgeUploadAdapter` | The default transport. Exported so a custom adapter can delegate to it. |
+| `OgeFileUploaderHandle` | `ref handle` | Every public method above plus the read-only getters `files`, `valid`, `validationErrors`, `busy`, `progress`, `uploadedCount`, `fileCount`, `limitExceeded`. |
+
+_Template directives (render props)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderFile` | `(context: OgeUploadFileRenderContext) => ReactNode` | Replaces one file row — the React face of `*ogeUploadFileTemplate`. Context: `file`, `index`, and the pre-formatted `size` and `status`. |
+| `renderHeader` | `(context: OgeUploadHeaderRenderContext) => ReactNode` | Replaces the strip above the list — `*ogeUploadHeaderTemplate`. Context: `files`, `count`, `uploadedCount` and a pre-formatted `totalSize`. |
+| `renderDropZone` | `(context: OgeUploadDropZoneRenderContext) => ReactNode` | Replaces the drop zone’s contents — `*ogeUploadDropZoneTemplate`. Context: `over` (`true` while files hover) and `disabled`. |
+| `renderEmpty` | `() => ReactNode` | Rendered in place of the list while nothing is selected — `*ogeUploadEmptyTemplate`. |
+| `renderToolbar` | `(context: OgeUploadToolbarRenderContext) => ReactNode` | Replaces the Upload/Clear action row — `*ogeUploadToolbarTemplate`. Context: `files` and `uploading`. |
+| `renderIcon` | `(slot: OgeUploadIconSlot) => ReactNode` | Replaces one glyph — `*ogeUploadIconTemplate`. The slot is one of 14 values covering PrimeNG’s four icon slots and Ant’s three, in one render prop instead of seven. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeFileUploader } from '@oge-ui/react-upload';
+
+export function AttachmentsPicker() {
+  const [attachments, setAttachments] = useState<readonly File[]>([]);
+  return (
+    <>
+      {/* With no uploadUrl this is a file picker: drag & drop, restrictions,
+          previews and removal, with everything chosen exposed through the
+          controlled value as plain File objects. Add uploadUrl and the same
+          element uploads. */}
+      <OgeFileUploader
+        value={attachments}
+        onValueChange={setAttachments}
+        accept="image/*,.pdf"
+        maxFileSize={5 * 1024 * 1024}
+        maxFileCount={5}
+      />
+
+      <p>{attachments.length} file(s) ready</p>
+    </>
+  );
+}
+```
+
+### Uploading
+
+```ts
+'use client';
+
+import { OgeFileUploader } from '@oge-ui/react-upload';
+
+export function UploadForm() {
+  // uploadMode decides when bytes move: 'instantly' on selection,
+  // 'useButtons' waits for the Upload button, 'select' never uploads.
+  // Progress, cancel and retry appear on each row as the transfer needs them.
+  const onUploaded = (name: string, response: unknown) => console.log('uploaded', name, response);
+  const onFailed = (name: string, message: string) => console.warn('failed', name, message);
+  return (
+    <OgeFileUploader
+      uploadUrl="/api/upload"
+      uploadMode="useButtons"
+      uploadHeaders={{ Authorization: 'Bearer demo' }}
+      concurrency={2}
+      onUploaded={(e) => onUploaded(e.file.name, e.response)}
+      onUploadFailed={(e) => onFailed(e.file.name, e.message)}
+    />
+  );
+}
+```
+
+### Chunked and resumable
+
+```ts
+'use client';
+
+import { OgeFileUploader } from '@oge-ui/react-upload';
+
+export function ChunkedUpload() {
+  // Chunked transfer sends one slice per request, carrying Kendo-shaped
+  // metadata so an existing chunked endpoint needs no changes. Pause and
+  // resume appear only here: a whole-file request has nothing to suspend,
+  // so the affordance is derived from the transport rather than configured.
+  const onChunk = (index: number, total: number) => console.log(`chunk ${index + 1} of ${total}`);
+  return (
+    <OgeFileUploader
+      uploadUrl="/api/upload"
+      chunk={{ size: 512 * 1024, maxAutoRetries: 2, resumable: true }}
+      autoRetry={{ count: 2, delayMs: 400 }}
+      onChunkUploaded={(e) => onChunk(e.chunkIndex, e.totalChunks)}
+    />
+  );
+}
+```
+
+### Restrictions
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeFileUploader } from '@oge-ui/react-upload';
+
+export function RestrictedPicker() {
+  const [lastRejection, setLastRejection] = useState<string | null>(null);
+
+  /** Returns a message to reject, or null to accept. */
+  const noSpaces = (file: File): string | null =>
+    file.name.includes(' ') ? 'File names must not contain spaces.' : null;
+  return (
+    <>
+      {/* A rejected file stays on the list with its reason next to it, rather
+          than vanishing. It is still in value — hiding it would let a required
+          field pass while the user can plainly see a file on screen — and the
+          handle's valid flag is what goes false. */}
+      <OgeFileUploader
+        allowedFileExtensions={['.png', '.jpg', '.pdf']}
+        maxFileSize={1024 * 1024}
+        minFileSize={1024}
+        maxTotalFileSize={4 * 1024 * 1024}
+        validateFile={noSpaces}
+        onFileRejected={(e) => setLastRejection(e.errors[0].message)}
+      />
+
+      {lastRejection && <p role="status">{lastRejection}</p>}
+    </>
+  );
+}
+```
+
+### Previews
+
+```ts
+'use client';
+
+import { OgeFileUploader } from '@oge-ui/react-upload';
+
+export function PicturePicker() {
+  return (
+    // listType renders previews instead of a text row. The object URLs
+    // behind them are owned by the component and revoked on remove, clear
+    // and unmount.
+    <OgeFileUploader accept="image/*" listType="pictureCard" previewWidth={96} />
+  );
+}
+```
+
+### External drop zone
+
+```ts
+'use client';
+
+import { OgeFileUploader, OgeUploadDropZone, OgeUploadTrigger } from '@oge-ui/react-upload';
+
+export function PanelUpload() {
+  return (
+    <>
+      {/* The drop surface is often a whole panel that has nothing to do with
+          the uploader's own markup. That is a different element, which no mode
+          value can express — hence a wrapper, matched by name. */}
+      <OgeUploadDropZone zone="attachments" className="panel">
+        Drop files anywhere in this panel
+      </OgeUploadDropZone>
+
+      <OgeUploadTrigger zone="attachments">Attach files…</OgeUploadTrigger>
+
+      <OgeFileUploader dropZone="attachments" displayMode="compact" />
+    </>
+  );
+}
+```
+
+### Controlled value & forms
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeFileUploader } from '@oge-ui/react-upload';
+import type { OgeFileUploaderHandle } from '@oge-ui/react-upload';
+
+export function RequiredAttachments() {
+  // The restrictions live on the uploader, so a form never restates
+  // maxFileSize as a second rule that could drift: read the handle's
+  // valid flag (or onFileRejected) and block submission on it. The same
+  // component is the fileUploader editor of <OgeForm> (@oge-ui/react-forms).
+  const uploader = useRef<OgeFileUploaderHandle>(null);
+  const [attachments, setAttachments] = useState<readonly File[]>([]);
+  const [valid, setValid] = useState(false);
+  return (
+    <>
+      <OgeFileUploader
+        ref={uploader}
+        value={attachments}
+        onValueChange={(files) => {
+          setAttachments(files);
+          setValid(uploader.current?.valid ?? false);
+        }}
+        maxFileSize={1024 * 1024}
+        required
+      />
+
+      <p>valid: {String(valid)}</p>
+    </>
+  );
+}
+```
+
+### Templates
+
+```ts
+'use client';
+
+import { OgeFileUploader } from '@oge-ui/react-upload';
+
+export function CustomRows() {
+  return (
+    // Six render props replace any part of the rendering. The row context
+    // arrives pre-formatted, so a custom row needs no size formatter of its own.
+    <OgeFileUploader
+      accept="image/*"
+      renderFile={({ file, size, status }) => (
+        <>
+          <strong>{file.name}</strong>
+          <span>{size} · {status}</span>
+        </>
+      )}
+    />
+  );
+}
+```
+

@@ -1,0 +1,769 @@
+# @oge-ui/react-grid
+
+> React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, pinned and resizable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.
+
+Part of OGE UI v0.12.0.
+Docs and live demos: https://ogeui.com/components/data-grid
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-grid
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages:
+`@oge-ui/grid/themes/dark.css` (then put `class="oge-theme-dark"` on
+`<html>` or any subtree), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeGrid>
+
+#### Properties
+
+_Data & columns_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `readonly T[] \| DataSource<T>` | `[]` | Rows to render: a static array or any `DataSource` implementation (remote, windowed, pushing live changes). |
+| `columns` | `readonly (string \| OgeColumnDef \| OgeGridColumnProps<T>)[]` | `undefined` | The columns. When omitted, columns are derived from the first row’s keys; a plain string is shorthand for `{ field }`. |
+| `keyField` | `keyof T \| ((row: T) => RowKey)` | `undefined` | Field (or selector) producing a stable row key; falls back to the row index. |
+
+_Sorting, filtering & search_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `sortable` | `boolean \| 'single' \| 'multi'` | `'multi'` | `false` disables sorting entirely; `'single'` restricts to one column (no shift+click chains). |
+| `sorting` | `OgeSortingOptions` | `undefined` | Sorting options (`mode`, `allowUnsorting`); overrides the `sortable` shorthand. |
+| `filterRow` | `boolean \| OgeFilterRowOptions` | `false` | Per-column filter editors below the header — text, number, date, boolean and lookup editors with a per-column operator menu. |
+| `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
+| `filterDebounce` | `number` | `config.filterDebounce (300)` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
+
+_Paging & scrolling_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `paging` | `false \| OgePagingOptions` | `false` | Enables paging with the pager: `pageSize`, optional `pageSizes`, `showInfo` and `displayMode`. |
+| `virtualScroll` | `boolean` | `false` | Renders only the rows inside the scroll viewport (plus overscan). Give the grid a bounded height when enabled. |
+| `scrolling` | `OgeScrollingOptions` | `undefined` | `mode` (`'virtual'` / `'infinite'`), `remote` windowed block loading and `columnRenderingMode: 'virtual'`; overrides the `virtualScroll` shorthand. |
+| `rowHeight` | `number` | `config.rowHeight (36)` | Fixed row height in px used by the virtualizer. |
+| `autoRowHeight` | `boolean` | `false` | Measures real row heights (wrapped text, render props) instead of forcing `rowHeight`, with scroll anchoring. Virtual mode only. |
+| `overscan` | `number` | `config.overscan (6)` | Extra rows rendered above/below the virtual window. |
+| `detailRowHeight` | `number` | `config.detailRowHeight (200)` | Height assumed for expanded master-detail rows in virtual mode. |
+
+_Grouping_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `groupPanel` | `boolean` | `false` | Shows the drop area for drag-and-drop row grouping; each group renders as a removable chip. |
+| `groupBy` | `readonly string[]` | `undefined` | Initial/programmatic grouping by field names (also drivable via the group panel). |
+| `grouping` | `OgeGroupingOptions` | `undefined` | `autoExpandAll: false` starts every group collapsed and enables deferred loading (`items: null` payloads fetched on expand). |
+
+_Selection & focus_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `'none' \| 'single' \| 'multiple' \| 'checkbox'` | `'none'` | Row selection: single, multiple (ctrl/shift ranges, Ctrl+A) or a checkbox column with a select-all header. |
+| `selectedKeys / defaultSelectedKeys` | `readonly RowKey[]` | `[]` | The selected row keys — controlled with `selectedKeys` + `onSelectedKeysChange`, or seeded once with `defaultSelectedKeys`. |
+| `selectAllMode` | `'allPages' \| 'page'` | `'allPages'` | Header select-all scope: the whole filtered set across pages, or only the rows on the current page. |
+| `focusedRowEnabled` | `boolean` | `false` | Highlights and tracks a single focused row. |
+| `focusedRowKey` | `RowKey \| null` | `undefined` | The focused row’s key — controlled when provided, with `onFocusedRowKeyChange`. |
+
+_Columns UX_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `columnMinWidth` | `number` | `config.columnMinWidth (120)` | Track minimum for columns without an explicit width. |
+| `columnResize` | `boolean` | `true` | Enables drag-resize handles on header edges. |
+| `columnReorder` | `boolean` | `true` | Enables drag-and-drop column reordering (headers dropped onto each other). |
+
+_Editing & rows_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rowDragging` | `boolean` | `false` | Drag-handle column for reordering rows. With plain-array data the array is mutated in place; DataSource consumers handle `onRowReordered` instead. |
+| `renderRow` | `(context: OgeGridRowRenderContext<T>) => ReactNode` | `undefined` | Replaces the whole data row — the React form of `*ogeRowTemplate`. Group, detail and summary rows keep their built-in rendering. |
+| `renderDetail` | `(context: OgeGridDetailRenderContext<T>) => ReactNode` | `undefined` | Master-detail content under an expanded row — the React form of `*ogeDetailTemplate`. Its presence adds the expander column and switches the role to `treegrid`. |
+
+_Appearance & misc_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `stateKey` | `string` | `undefined` | Persists user state (sort, filters, column layout, page size) under this key via the state storage (default `localStorage`) and restores it on mount. |
+| `stateStorage` | `OgeStateStorage` | `context storage` | Per-grid storage backend; overrides `<OgeGridStateStorageProvider>`. |
+| `messages` | `Partial<OgeGridMessages>` | `undefined` | Per-grid overrides of the UI strings (see `<OgeGridConfigProvider>` for app-wide). |
+| `loadPanel` | `boolean` | `false` | Spinner overlay while a load is in flight. |
+| `wordWrap` | `boolean` | `false` | Wraps cell text instead of clipping it. |
+| `rowAlternation` | `boolean` | `false` | Alternating row background (zebra striping), stable under virtualization. |
+| `rtlEnabled` | `boolean` | `undefined` | Right-to-left layout. `undefined` auto-detects the inherited CSS `direction`; `true`/`false` force it. |
+| `renderNoData` | `(context: OgeGridNoDataContext) => ReactNode` | `undefined` | Renders the empty state instead of the `noData` message — the React form of `*ogeNoDataTemplate`. |
+| `className / style / ariaLabel` | `string \| CSSProperties` | `undefined` | Host class, inline style (give the grid its height here) and the accessible name of the grid. |
+
+#### Methods
+
+_Data & view_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `refresh(): void` | `handle` | Re-runs the current load against the DataSource. |
+| `getVisibleRows(): readonly T[]` | `handle` | Data rows of the currently rendered page, in display order. |
+| `getRowByKey(key: RowKey): T \| undefined` | `handle` | The loaded row carrying `key`, if it is currently rendered. |
+| `totalCount(): number` | `handle` | Data row count of the current filtered set, across all pages. |
+
+_Navigation & expansion_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `scrollToRow(target: number \| RowKey): void` | `handle` | Scrolls a row into the viewport — by flat index, or by row key. |
+| `navigateToRow(key: RowKey): void` | `handle` | Scrolls the row carrying `key` into view and, with `focusedRowEnabled`, makes it the focused row. |
+| `expandRow(key) / collapseRow(key)` | `handle` | Expands or collapses a group row (by its group node key, e.g. `g:Sales`) or a master-detail row. |
+| `isRowExpanded(key): boolean` | `handle` | Whether the group or master-detail row carrying `key` is expanded. |
+| `expandAllGroups() / collapseAllGroups()` | `handle` | Expands or collapses every group row, all levels. |
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectAll(): void` | `handle` | Selects every row of the current filtered set; scope via `selectAllMode`. |
+| `deselectAll() / clearSelection()` | `handle` | Clears the selection (parity aliases). |
+| `isRowSelected(key): boolean` | `handle` | Whether the row carrying `key` is selected. |
+| `getSelectedRowsData(): T[]` | `handle` | Data of the selected rows among the currently loaded rows, in display order. |
+| `copyToClipboard(): Promise<void>` | `handle` | Copies the selected rows (with a header) — or, without a selection, the focused cell’s text — as tab-separated values. Also on Ctrl+C. |
+
+_Paging_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `pageIndex(): number / setPageIndex(index)` | `handle` | Reads or navigates to the zero-based page (clamped to the valid range). |
+| `pageSize(): number / setPageSize(size)` | `handle` | Reads or changes the page size; `0` turns paging off. |
+| `pageCount(): number` | `handle` | Number of pages; `1` when paging is off. |
+
+_Loading, state & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `beginCustomLoading(message?) / endCustomLoading()` | `handle` | Shows the load panel with an optional custom message, independent of data-source activity. |
+| `state(): GridStateSnapshot / applyState(snapshot)` | `handle` | Reads or applies the persistable UI state: sort, filters, column layout, page size. |
+| `clearFilters() / clearSorting()` | `handle` | Clears every filter (row filters and search) / the sort order. |
+| `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows and column metadata of the current view (filter + search + sort applied) — the shared source for exporters. `scope` narrows to the page or selection. |
+| `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells. |
+| `exportCsv(filename = 'grid.csv'): Promise<void>` | `handle` | Downloads the current view as a CSV file. Fires the cancelable `onExporting` first. |
+
+#### Events
+
+_Interaction_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onRowClick / onRowDblClick` | `(event: OgeRowClickEvent<T>) => void` | A data row was clicked / double-clicked: `{ row, key, event }`. |
+| `onCellClick / onCellDblClick` | `(event: OgeCellClickEvent<T>) => void` | A data cell was clicked / double-clicked: `{ row, key, field, value, event }`. |
+| `onRowReordered` | `(event: OgeRowReorderedEvent<T>) => void` | After a dragged row was dropped: the moved key, the target key and the from/to view positions. |
+
+_Selection & focus_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onSelectionChanged` | `(event: OgeSelectionChangedEvent) => void` | After the selection changed, with `addedKeys` / `removedKeys` diffs. The initial state is not a change. |
+| `onFocusedRowChanged` | `(event: OgeFocusedRowChangedEvent<T>) => void` | After the focused row changed (`focusedRowEnabled` or key writes), with the row when it is loaded. |
+| `onSelectedKeysChange / onFocusedRowKeyChange` | `(value) => void` | The controlled-pair callbacks of `selectedKeys` and `focusedRowKey`. |
+
+_Lifecycle & errors_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onContentReady` | `() => void` | After the grid has rendered a new result set. |
+| `onStateChange` | `(snapshot: GridStateSnapshot) => void` | Debounced notification whenever the persistable UI state changes — persist it anywhere without a storage backend. |
+| `onExporting` | `(event: OgeExportingEvent) => void` | Cancelable: before a CSV export starts; `fileName` is mutable. |
+| `onDataErrorOccurred` | `(event: OgeDataErrorEvent) => void` | A DataSource load failed. |
+
+### OgeGridColumnProps
+
+#### Properties
+
+_Basics_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `field` | `string` | `undefined` | Dotted paths are supported, e.g. `"customer.name"`. |
+| `caption` | `string` | `humanized field` | Header text; derived from `field` when omitted. |
+| `width` | `number \| string` | `undefined` | Number → px; string is used verbatim (e.g. `'2fr'`, `'150px'`). |
+| `dataType` | `'string' \| 'number' \| 'date' \| 'boolean'` | `'string'` | Drives the default formatting, the filter-row editor and the operator set. |
+| `format` | `(value: unknown) => string` | `undefined` | Custom value formatter applied to the default (non-rendered) cell text and to exports. |
+| `visible` | `boolean` | `true` | Hides the column without removing it. |
+| `minWidth` | `number` | `config.columnMinWidth` | Track minimum in px for flexible-width columns. |
+| `lookup` | `OgeColumnLookup` | `undefined` | Maps stored values to display texts (cells, filters, exports): `{ dataSource, valueExpr, displayExpr }`. |
+| `calculateCellValue` | `(row: T) => unknown` | `undefined` | Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). |
+| `hidingPriority` | `number` | `undefined` | Responsive hiding: lower priorities hide first when the grid runs out of width. |
+| `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge (requires a numeric `width`). |
+
+_Sort, filter & group_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `sortable` | `boolean` | `true` | Whether the header sorts on click. |
+| `sortOrder / sortIndex` | `'asc' \| 'desc' / number` | `undefined` | Initial sort direction applied on first render, ordered by `sortIndex` for multi-sort chains. |
+| `calculateSortValue` | `(row: T) => unknown` | `undefined` | Custom sort key for this column (client-side array data only). |
+| `filterable` | `boolean` | `true` | Whether the filter row offers an editor for this column. |
+| `filterOperator` | `FilterOperator` | `by dataType` | Filter-row operator override (default: `contains` for text, `eq` for number/date). |
+| `calculateFilterExpression` | `(value, operator) => FilterExpr \| null` | `undefined` | Custom filter expression for filter-row input on this column. |
+| `groupIndex` | `number` | `undefined` | Initial group level of this column (0 = first). |
+
+_Summaries & editing_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `groupSummary` | `SummaryType \| readonly SummaryType[]` | `undefined` | Aggregate(s) shown on group rows for this column’s field: `sum · avg · min · max · count · custom`. |
+| `groupSummaryPosition` | `'row' \| 'footer'` | `'row'` | Inline on the group header row, or on a dedicated footer row after the group’s children. |
+| `totalSummary` | `SummaryType \| readonly SummaryType[]` | `undefined` | Aggregate(s) shown in the grid’s sticky total row. |
+| `calculateCustomSummary` | `(rows: readonly T[]) => unknown` | `undefined` | Reducer for the `custom` summary type. Client-side data only. |
+
+_Render props_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `renderCell` | `(context: OgeGridCellRenderContext<T>) => ReactNode` | `undefined` | Renders the cell content from `{ value, row, rowIndex, key, column }` — the React form of `*ogeCellTemplate`. |
+| `renderHeader` | `(context: OgeGridHeaderRenderContext<T>) => ReactNode` | `undefined` | Renders the header caption from `{ column, caption }` — the React form of `*ogeHeaderTemplate`. |
+
+### Grid types & configuration
+
+#### Types
+
+_Standalone building blocks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `<OgePager>` | `OgePagerProps` | The grid’s pager on its own: `pageIndex`, `pageCount`, `totalCount`, `pageSizes`, `displayMode`, `onPageChange`, `onPageSizeChange`. |
+| `OgeGridHandle<T>` | `interface` | The `ref` handle — every imperative method listed under Methods. |
+
+_Option objects (boolean shorthands stay valid)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSortingOptions` | `{ mode?: 'none' \| 'single' \| 'multi'; allowUnsorting?: boolean }` | The same object the Angular grid accepts. |
+| `OgePagingOptions` | `{ pageSize: number; pageSizes?: (number \| 'all')[]; showInfo?: boolean; displayMode?: 'full' \| 'compact' \| 'adaptive' }` | The same object the Angular grid accepts. |
+| `OgeScrollingOptions` | `{ mode?: 'standard' \| 'virtual' \| 'infinite'; remote?: boolean; columnRenderingMode?: 'standard' \| 'virtual' }` | The same object the Angular grid accepts. |
+| `OgeGroupingOptions` | `{ autoExpandAll?: boolean }` | The same object the Angular grid accepts. |
+| `OgeFilterRowOptions / OgeSearchPanelOptions` | `{ visible?: boolean; debounce?: number } / { visible?: boolean; placeholder?: string; width?: number }` | The same objects the Angular grid accepts. |
+
+_Export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeExportOptions<T>` | `{ scope?: 'all' \| 'page' \| 'selection'; customizeCell?: (cell: OgeExportCellArgs<T>) => unknown }` | Narrows and rewrites what the exporters emit. |
+| `OgeExportData<T> / OgeExportColumn<T>` | `{ rows, columns } / { caption, field, dataType, accessor, format? }` | What `getExportData()` resolves to. |
+
+_Configuration_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `<OgeGridConfigProvider config>` | `OgeGridConfigInput` | App- or subtree-wide defaults and messages — the counterpart of `provideOgeGridConfig()`; read with `useOgeGridConfig()`. |
+| `<OgeGridStateStorageProvider storage>` | `OgeStateStorage` | Where `stateKey` persistence writes — the counterpart of the `OGE_STATE_STORAGE` token; read with `useOgeGridStateStorage()`. `OGE_LOCAL_STATE_STORAGE` is the default. |
+| `OgeGridMessages / OGE_DEFAULT_GRID_MESSAGES` | `interface / const` | Every user-facing string, single-sourced in `@oge-ui/behavior` with the Angular grid. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Group panel
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+declare const money: (value: unknown) => string;
+
+const columns: OgeGridColumnProps<Employee>[] = [
+  { field: 'id', caption: 'Id', width: 80, dataType: 'number', pinned: 'left' },
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'city', caption: 'City' },
+  // groupSummary renders on the group row, totalSummary on the sticky total row
+  { field: 'salary', caption: 'Salary', dataType: 'number', format: money, groupSummary: 'avg', totalSummary: 'sum' },
+];
+
+export function GroupedEmployees() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      groupPanel
+      groupBy={['department']}
+      style={{ height: 540 }}
+    />
+  );
+}
+```
+
+### Multiple, custom and group-footer summaries
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+declare const money: (value: unknown) => string;
+
+// custom summary: distinct city count per group
+const distinctCities = (rows: readonly Employee[]): string =>
+  `${new Set(rows.map((row) => row.city)).size} cities`;
+
+const columns: OgeGridColumnProps<Employee>[] = [
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'city', caption: 'City', groupSummary: 'custom', calculateCustomSummary: distinctCities },
+  {
+    field: 'salary',
+    caption: 'Salary',
+    dataType: 'number',
+    format: money,
+    groupSummary: ['min', 'max'],
+    groupSummaryPosition: 'footer',
+    totalSummary: ['sum', 'avg'],
+  },
+];
+
+export function SummaryEmployees() {
+  return (
+    <OgeGrid data={employees} keyField="id" columns={columns} groupBy={['department']} />
+  );
+}
+```
+
+### Deferred group loading
+
+```ts
+'use client';
+
+import { useMemo } from 'react';
+import { CustomDataSource } from '@oge-ui/core';
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  { field: 'city', caption: 'City' },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const },
+];
+
+export function DeferredGroups() {
+  // Fake deferred server: group headers only (items: null + count);
+  // a group's rows are fetched the moment it is expanded, filtered by the
+  // group value, and cached for later toggles.
+  const source = useMemo(
+    () =>
+      new CustomDataSource<Employee>({
+        key: 'id',
+        load: async (options) => {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          if (options.group?.length) {
+            const counts = new Map<string, number>();
+            for (const row of employees) counts.set(row.department, (counts.get(row.department) ?? 0) + 1);
+            return {
+              data: [...counts.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([key, count]) => ({ key, items: null, count })),
+              totalCount: employees.length,
+            };
+          }
+          const filter = options.filter;
+          const value = filter?.type === 'binary' ? filter.value : undefined;
+          return { data: employees.filter((row) => row.department === value) };
+        },
+      }),
+    [],
+  );
+  return (
+    <OgeGrid
+      data={source}
+      columns={columns}
+      groupBy={['department']}
+      grouping={{ autoExpandAll: false }}
+    />
+  );
+}
+```
+
+### Master-detail
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number' as const },
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'city', caption: 'City' },
+];
+
+export function EmployeeDetails() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      // renderDetail is the React form of *ogeDetailTemplate: its presence adds
+      // the expander column, and the row arrives fully typed
+      renderDetail={({ row }) => (
+        <div className="grid grid-cols-3 gap-4">
+          <section>
+            <h4>Employee</h4>
+            <p>{row.firstName} {row.lastName}</p>
+            <p>#{row.id} · {row.department}</p>
+          </section>
+          <section>
+            <h4>Location</h4>
+            <p>{row.city}</p>
+          </section>
+          <section>
+            <h4>Compensation</h4>
+            <p>₺{row.salary.toLocaleString('tr-TR')}</p>
+            <p>since {row.hireDate}</p>
+          </section>
+        </div>
+      )}
+    />
+  );
+}
+```
+
+### Quick start
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps, OgeGridHandle } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+
+const money = (value: unknown): string =>
+  typeof value === 'number' ? `₺${value.toLocaleString('tr-TR')}` : String(value ?? '');
+
+const columns: OgeGridColumnProps<Employee>[] = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number' },
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  {
+    field: 'department',
+    caption: 'Department',
+    // renderCell is the React form of *ogeCellTemplate
+    renderCell: ({ value }) => <span className="chip">{String(value)}</span>,
+  },
+  { field: 'city', caption: 'City' },
+  { field: 'salary', caption: 'Salary', dataType: 'number', format: money },
+  { field: 'hireDate', caption: 'Hire Date', dataType: 'date', width: 120 },
+];
+
+export function EmployeesGrid() {
+  const grid = useRef<OgeGridHandle<Employee>>(null);
+  return (
+    <>
+      <OgeGrid
+        ref={grid}
+        data={employees}
+        keyField="id"
+        columns={columns}
+        paging={{ pageSize: 10 }}
+      />
+      {/* the handle mirrors the Angular component's public methods */}
+      <button type="button" onClick={() => grid.current?.exportCsv('employees.csv')}>
+        Export CSV
+      </button>
+    </>
+  );
+}
+```
+
+### Row render prop
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+declare const money: (value: unknown) => string;
+
+const initials = (employee: Employee) => `${employee.firstName[0] ?? ''}${employee.lastName[0] ?? ''}`;
+
+// the declared columns still drive sorting, filtering and selection
+const columns = [
+  { field: 'firstName', caption: 'Employee' },
+  { field: 'department', caption: 'Department' },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const },
+];
+
+export function EmployeeCards() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      rowAlternation
+      paging={{ pageSize: 6 }}
+      // renderRow replaces the whole data row — the React form of *ogeRowTemplate
+      renderRow={({ row }) => (
+        <div className="flex w-full items-center gap-3 px-3 py-1.5">
+          <span className="avatar">{initials(row)}</span>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium">{row.firstName} {row.lastName}</div>
+            <div className="truncate text-xs text-gray-500">{row.department} · {row.city}</div>
+          </div>
+          <span className="ms-auto font-mono text-sm tabular-nums">{money(row.salary)}</span>
+        </div>
+      )}
+    />
+  );
+}
+```
+
+### Row drag & drop + focused row
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { RowKey } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number' as const },
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'department', caption: 'Department' },
+];
+
+export function ReorderableEmployees() {
+  const [focusedKey, setFocusedKey] = useState<RowKey | null>(null);
+  const [lastReorder, setLastReorder] = useState('');
+  return (
+    <>
+      <p>
+        Focused row key: <strong>{focusedKey ?? '—'}</strong>
+        {lastReorder ? <code>{lastReorder}</code> : null}
+      </p>
+      <OgeGrid
+        data={employees}
+        keyField="id"
+        columns={columns}
+        rowDragging
+        onRowReordered={(event) => setLastReorder(`#${String(event.key)} → index ${event.toIndex}`)}
+        focusedRowEnabled
+        focusedRowKey={focusedKey}
+        onFocusedRowKeyChange={setFocusedKey}
+      />
+    </>
+  );
+}
+```
+
+### Empty state & loading panel
+
+```ts
+'use client';
+
+import { useMemo, useRef } from 'react';
+import { CustomDataSource } from '@oge-ui/core';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridHandle } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+const columns = [
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'department', caption: 'Department' },
+];
+
+export function EmptyEmployees() {
+  const grid = useRef<OgeGridHandle<Employee>>(null);
+  // always-empty remote source with latency, to show loadPanel + the empty state
+  const source = useMemo(
+    () =>
+      new CustomDataSource<Employee>({
+        key: 'id',
+        load: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          return { data: [], totalCount: 0 };
+        },
+      }),
+    [],
+  );
+  return (
+    <>
+      <button type="button" onClick={() => grid.current?.refresh()}>
+        Reload (watch the panel)
+      </button>
+      <OgeGrid
+        ref={grid}
+        data={source}
+        columns={columns}
+        loadPanel
+        style={{ minHeight: 180 }}
+        // renderNoData is the React form of *ogeNoDataTemplate
+        renderNoData={() => (
+          <div className="flex flex-col items-center gap-2 py-6 text-gray-500">
+            <span>No employees match — adjust the filter or add a new record.</span>
+          </div>
+        )}
+      />
+    </>
+  );
+}
+```
+

@@ -9,7 +9,7 @@ npm install @oge-ui/react
 ```tsx
 'use client';
 
-import { OgeButton, OgeTextBox, OgeTabPanel, OgeCard } from '@oge-ui/react';
+import { OgeButton, OgeTextBox, OgeGrid, OgeCard } from '@oge-ui/react';
 import '@oge-ui/react/styles.css';
 ```
 
@@ -28,7 +28,10 @@ tokens. Nothing is wrapped: there is no Angular in your bundle.
 | `@oge-ui/react-tabs`       | `OgeTabs`, `OgeTabPanel`                                                                                                                                                                                                                                |
 | `@oge-ui/react-layout`     | `OgeCard`, `OgeProgressBar`, `OgeLoadIndicator`, `OgeSkeleton`, `OgeAccordion`, `OgeSplitter`, `OgeToolbar`                                                                                                                                             |
 | `@oge-ui/react-navigation` | `OgeTreeView`, `OgeDrawer`, `OgeStepper`, `OgeMenubar`, `OgeBreadcrumb`, `OgePagination`                                                                                                                                                                |
-| `@oge-ui/react-overlay`    | `useAnchoredPanel`, `OgePopup`, `OgeMenuList`                                                                                                                                                                                                           |
+| `@oge-ui/react-overlay`    | `useAnchoredPanel`, `OgePopup`, `OgeMenuList`, `OgeTooltip`, `OgeContextMenu`, `OgeModal`, `OgeModalProvider`, `OgeToastRegion`, `useOgeToast`                                                                                                          |
+| `@oge-ui/react-forms`      | `OgeForm`, `OgeValidationSummary`                                                                                                                                                                                                                       |
+| `@oge-ui/react-upload`     | `OgeFileUploader`, `OgeUploadDropZone`, `OgeUploadTrigger`, `OgeUploadConfigProvider`, `OgeUploadTransportProvider`                                                                                                                                     |
+| `@oge-ui/react-grid`       | `OgeGrid`, `OgePager`, `OgeGridConfigProvider`, `OgeGridStateStorageProvider` — the grid ships in slices; see the suite's `docs/REACT-PARITY.md` for what is in and what follows                                                                        |
 
 The scoped packages stay the canonical import paths for size-conscious apps:
 installing one family pulls in only that family. This umbrella exists for the

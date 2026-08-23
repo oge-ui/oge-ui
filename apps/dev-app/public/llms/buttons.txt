@@ -119,7 +119,7 @@ _Behavior_
 | `autoRepeat` | `boolean \| OgeAutoRepeatOptions` | `false` | Repeats `clicked` while held; ignored when `holdToConfirm` is set. |
 | `useSubmitBehavior` | `boolean` | `false` | Renders `type="submit"` so the button submits the enclosing form. |
 | `buttonType` | `'button' \| 'submit' \| 'reset'` | `'button'` | Native button type; `useSubmitBehavior` is sugar for `submit`. |
-| `value` | `string \| undefined` | `—` | Selection key inside an ``; unused standalone. |
+| `value` | `string \| undefined` | `—` | Selection key inside an `<oge-button-group>`; unused standalone. |
 | `tabIndex` | `number` | `0` | Tab order of the native button. |
 | `accessKey` | `string \| undefined` | `—` | Native `accesskey` of the inner button. |
 | `messages` | `Partial<OgeButtonsMessages> \| undefined` | `—` | Per-instance overrides of user-facing strings. |
@@ -171,7 +171,7 @@ _Accessibility_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeButtonGroupItem[] \| undefined` | `—` | Data-driven items rendered after projected `` children. |
+| `items` | `readonly OgeButtonGroupItem[] \| undefined` | `—` | Data-driven items rendered after projected `<oge-button>` children. |
 | `selectionMode` | `OgeButtonGroupSelectionMode` | `'none'` | Selection behavior; also drives the ARIA role (toolbar / radiogroup / group). |
 | `selectedKeys` | `model<readonly string[]>` | `[]` | Selected `value`s — two-way; `single` keeps at most one entry. |
 | `stylingMode` | `OgeButtonStylingMode` | `'contained'` | Cascaded to children without their own. |

@@ -98,7 +98,7 @@ _Tabs & selection_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeTabItem[] \| undefined` | `—` | Data-driven tabs rendered after the projected `` children. |
+| `items` | `readonly OgeTabItem[] \| undefined` | `—` | Data-driven tabs rendered after the projected `<oge-tab>` children. |
 | `selectedIndex` | `number` | `0` | Index of the selected tab — two-way. `-1` selects none; clamped when tabs are removed. |
 | `selectedKey` | `string \| undefined` | `undefined` | Key of the selected tab — two-way, reconciled with `selectedIndex` both ways. |
 | `activation` | `'automatic' \| 'manual'` | `'automatic'` | APG activation: arrows select immediately, or move focus only until Enter/Space commits. |
@@ -150,7 +150,7 @@ _Panel rendering (oge-tab-panel only)_
 | `selectionChanged` | `OgeTabSelectionChangedEvent` | After the selection committed — `index/key/previousIndex/previousKey/item/event`. |
 | `tabClick` | `OgeTabClickEvent` | A tab header was activated by pointer or keyboard (Enter/Space). |
 | `tabClosing` | `OgeTabClosingEvent` | Cancelable pre-event of a close, before the async `closeGuard` runs. |
-| `tabClosed` | `OgeTabClosedEvent` | The close passed all guards — remove the `items` entry or `` here. |
+| `tabClosed` | `OgeTabClosedEvent` | The close passed all guards — remove the `items` entry or `<oge-tab>` here. |
 | `tabReordering` | `OgeTabReorderingEvent` | Cancelable pre-event of a drag-reorder drop (`fromIndex/toIndex/key`). |
 | `tabReordered` | `OgeTabReorderedEvent` | A drag reorder committed to the display order. |
 
@@ -168,7 +168,7 @@ _Tabs & selection_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `items` | `readonly OgeTabItem[] \| undefined` | `—` | Data-driven tabs rendered after the projected `` children. |
+| `items` | `readonly OgeTabItem[] \| undefined` | `—` | Data-driven tabs rendered after the projected `<oge-tab>` children. |
 | `selectedIndex` | `number` | `0` | Index of the selected tab — two-way. `-1` selects none; clamped when tabs are removed. |
 | `selectedKey` | `string \| undefined` | `undefined` | Key of the selected tab — two-way, reconciled with `selectedIndex` both ways. |
 | `activation` | `'automatic' \| 'manual'` | `'automatic'` | APG activation: arrows select immediately, or move focus only until Enter/Space commits. |
@@ -210,7 +210,7 @@ _Appearance_
 | `selectionChanged` | `OgeTabSelectionChangedEvent` | After the selection committed — `index/key/previousIndex/previousKey/item/event`. |
 | `tabClick` | `OgeTabClickEvent` | A tab header was activated by pointer or keyboard (Enter/Space). |
 | `tabClosing` | `OgeTabClosingEvent` | Cancelable pre-event of a close, before the async `closeGuard` runs. |
-| `tabClosed` | `OgeTabClosedEvent` | The close passed all guards — remove the `items` entry or `` here. |
+| `tabClosed` | `OgeTabClosedEvent` | The close passed all guards — remove the `items` entry or `<oge-tab>` here. |
 | `tabReordering` | `OgeTabReorderingEvent` | Cancelable pre-event of a drag-reorder drop (`fromIndex/toIndex/key`). |
 | `tabReordered` | `OgeTabReorderedEvent` | A drag reorder committed to the display order. |
 
@@ -236,8 +236,8 @@ _Template slots_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `[ogeTabHeaderTemplate]` | `OgeTabHeaderTemplateContext` | Custom tab header (icons, rich markup). Inside an ``: that tab only; directly inside the component: every `items` tab. Context: `{ $implicit: item, index, selected, text }`. |
-| `[ogeTabContentTemplate]` | `OgeTabContentTemplateContext` | Lazily instantiated panel content. Inside an `` it replaces the projected content; directly inside `oge-tab-panel` it renders every `items` tab. Context: `{ $implicit: item, index }`. |
+| `[ogeTabHeaderTemplate]` | `OgeTabHeaderTemplateContext` | Custom tab header (icons, rich markup). Inside an `<oge-tab>`: that tab only; directly inside the component: every `items` tab. Context: `{ $implicit: item, index, selected, text }`. |
+| `[ogeTabContentTemplate]` | `OgeTabContentTemplateContext` | Lazily instantiated panel content. Inside an `<oge-tab>` it replaces the projected content; directly inside `oge-tab-panel` it renders every `items` tab. Context: `{ $implicit: item, index }`. |
 
 ### Tabs configuration
 

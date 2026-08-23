@@ -25,6 +25,16 @@ Fast, complete **data grid for Angular** — built on signals, runs zoneless, th
 - **Theming** — `--oge-*` design tokens, dark theme, Tailwind & Bootstrap bridge themes, row striping, loading panel
 - **Localization** — every UI string configurable via `provideOgeGridConfig`
 
+## React
+
+The same grid engine ships as native React components in
+[`@oge-ui/react-grid`](https://www.npmjs.com/package/@oge-ui/react-grid)
+(`<OgeGrid>`, `<OgePager>`): the state slices, data core, column resolver,
+virtualizers, keyboard and persistence cores live in `@oge-ui/behavior` and
+both render layers run that one copy. The React grid ships in slices; the
+phase table and every recorded difference are in the suite's
+`docs/REACT-PARITY.md`.
+
 ## Installation
 
 ```sh

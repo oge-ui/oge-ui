@@ -5,6 +5,11 @@ Legend: Done · Partial · Missing.
 
 Last updated: 2026-08-08 (after TreeView / `@oge-ui/navigation` initial release).
 
+> This roadmap tracks the **Angular** packages against the reference grids.
+> The React render layer — which families ship, in what slices, and every
+> recorded difference — is tracked in [`ROADMAP-REACT.md`](ROADMAP-REACT.md)
+> and [`docs/REACT-PARITY.md`](docs/REACT-PARITY.md).
+
 ## 1. Data binding & data operations
 
 | Feature                                 | Reference | OGE  | Notes                                                                                       |
