@@ -100,7 +100,7 @@ _Content slots (structural directives)_
 | --- | --- | --- |
 | `*ogeModalTitle` | `OgeModalTitle` | Rich title slot, replacing the plain `title` text. |
 | `*ogeModalHeaderActions` | `OgeModalHeaderActions` | Extra buttons rendered next to ✕. Presses that start here never begin a header drag. |
-| `*ogeModalFooter` | `OgeModalFooter` | Footer slot; `$implicit` is a close function whose optional argument becomes `closed.result` — ``. |
+| `*ogeModalFooter` | `OgeModalFooter` | Footer slot; `$implicit` is a close function whose optional argument becomes `closed.result` — `<div *ogeModalFooter="let close">`. |
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -168,7 +168,7 @@ _Content slots (structural directives)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `open<R, D>(content: Type<unknown> \| TemplateRef, config?: OgeModalOpenConfig<D>): OgeModalRef<R>` | `OgeModalRef<R>` | Opens a body-appended modal hosting the component or template — the escape hatch for `transform`ed ancestors and for prompt/confirm flows without a declared ``. |
+| `open<R, D>(content: Type<unknown> \| TemplateRef, config?: OgeModalOpenConfig<D>): OgeModalRef<R>` | `OgeModalRef<R>` | Opens a body-appended modal hosting the component or template — the escape hatch for `transform`ed ancestors and for prompt/confirm flows without a declared `<oge-modal>`. |
 
 #### Types
 
@@ -258,6 +258,12 @@ _OgeToastRef_
 | `contextMenuAriaLabel` | `string \| undefined` | `—` | Accessible name of the menu. |
 | `contextMenuDisabled` | `boolean` | `false` | Leaves the browser menu in charge without removing the directive. |
 
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `close(): void` | `void` | Closes the menu programmatically. |
+
 #### Events
 
 | Name | Type | Description |
@@ -294,7 +300,7 @@ _OgeToastRef_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. `url` renders the row as a real `` with `role="menuitem"` — keyboard activation clicks the link, so `preventDefault()` in `itemClick` hands navigation to a router exactly like a pointer click. `badge` renders a trailing counter pill; `shortcut` renders a right-aligned accelerator hint and is announced via `aria-keyshortcuts` (display only — the application owns the binding). `items` makes the row a **submenu parent** (trailing chevron, `aria-haspopup="menu"`, `aria-expanded`): activation or ArrowRight opens a nested `oge-menu-list`, hover opens after a dwell, and `checked`/`action`/`url` are ignored on it. |
+| `OgeMenuItem<T>` | `{ text: string; value?: T; hint?; disabled?; checked?; icon?; iconClass?; severity?; separator?; action?: () => void; url?; badge?; shortcut?; items?: readonly OgeMenuItem<T>[] }` | Canonical menu item of the suite. A defined `checked` renders `menuitemcheckbox`; `separator: true` ignores every other field. `icon` takes SVG path data and `iconClass` hooks an icon font — one row with either gives every row an icon column, so labels stay aligned. `url` renders the row as a real `<a href>` with `role="menuitem"` — keyboard activation clicks the link, so `preventDefault()` in `itemClick` hands navigation to a router exactly like a pointer click. `badge` renders a trailing counter pill; `shortcut` renders a right-aligned accelerator hint and is announced via `aria-keyshortcuts` (display only — the application owns the binding). `items` makes the row a **submenu parent** (trailing chevron, `aria-haspopup="menu"`, `aria-expanded`): activation or ArrowRight opens a nested `oge-menu-list`, hover opens after a dwell, and `checked`/`action`/`url` are ignored on it. |
 | `OgeMenuItemSeverity` | `'normal' \| 'danger'` | Destructive items render with the danger token. |
 | `OgeMenuListItemClickEvent` | `{ item: OgeMenuItem; index: number; event: MouseEvent \| KeyboardEvent }` | Index within the `items` input (separators included). |
 | `OgeMenuCloseRequestEvent` | `{ reason: 'escape' \| 'tab' \| 'select' \| 'back'; event: KeyboardEvent \| MouseEvent }` | Why the menu wants to close. `'back'` is a nested submenu returning to its parent item — absorbed by the parent menu, it never reaches the root owner; `'select'` and `'tab'` chain up so the owner still receives exactly one request. |
@@ -326,6 +332,8 @@ _OgeAnchoredPanelOptions (constructor)_
 | `closeOnEscape` | `boolean` | `true` | Close on Escape — stacked overlays only close the topmost. |
 | `restoreFocus` | `() => void` | `—` | Restores focus after closes caused by `escape`/`select` (only when focus would otherwise be orphaned). |
 | `onClosed` | `(reason: OgePopupCloseReason) => void` | `—` | Notified after every close with its reason. |
+| `anchorRect` | `() => OgeRect \| null` | `—` | Virtual anchor rectangle used for positioning when it returns a rect — e.g. the pointer location of a context menu. |
+| `transient` | `boolean` | `false` | Transient surfaces (tooltips) skip the Escape stack so an open tooltip never swallows the Escape meant for the popup underneath. |
 
 #### Methods
 
@@ -341,7 +349,7 @@ _OgeAnchoredPanelOptions (constructor)_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgePopupCloseReason` | `'api' \| 'outside' \| 'escape' \| 'select' \| 'tab'` | Why a panel closed. |
+| `OgePopupCloseReason` | `'api' \| 'outside' \| 'escape' \| 'select' \| 'tab' \| 'back'` | Why a panel closed. |
 
 ### OgePopup — `<oge-popup>`
 
@@ -415,7 +423,9 @@ _OgeOverlayConfig_
 | `typeAheadMs` | `number` | `500` | Idle time after which the menu type-ahead buffer resets. |
 | `menuShowDelayMs` | `number` | `50` | Hover dwell time before a submenu parent row opens its submenu. |
 | `menuHideDelayMs` | `number` | `300` | Grace period before an open submenu closes after hovering a sibling row — the diagonal-pointer allowance. |
-| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons: `modalClose`, `modalMaximize`, `modalRestore`. |
+| `tooltipShowDelayMs / tooltipHideDelayMs` | `number` | `400 / 100` | Hover dwell before a tooltip shows (focus shows immediately) and the grace period before it hides. |
+| `toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates` | `OgeToastPosition / number / number / boolean / boolean` | `'bottom-end' / 4000 / 5 / false / false` | Toast defaults. |
+| `messages` | `OgeOverlayMessages` | `—` | User-facing strings of the modal header buttons and the toast chrome: `modalClose`, `modalMaximize`, `modalRestore`, `toastClose`, `toastRegionLabel`, `toastCountBadge`. |
 
 ### Overlay primitives
 

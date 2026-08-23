@@ -5,6 +5,7 @@ import {
 } from '@angular/core';
 import { createElement, useState, type ReactNode } from 'react';
 import { OgeRangeSlider, OgeSlider } from '@oge-ui/react-inputs';
+import { OgeForm, type OgeFormItemDefinition } from '@oge-ui/react-forms';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { INPUTS_SLIDER_DEMOS } from './slider-snippets';
@@ -130,20 +131,28 @@ function SliderButtonsDemo(): ReactNode {
 }
 
 /** The React form integration point: the controlled pair itself. */
+interface Settings {
+  brightness: number;
+}
+
+const sliderItems: OgeFormItemDefinition[] = [
+  {
+    field: 'brightness',
+    label: 'Brightness',
+    editorType: 'slider',
+    editorOptions: { min: 0, max: 100, step: 5 },
+  },
+];
+
 function SliderFormDemo(): ReactNode {
-  const [settings, setSettings] = useState({ brightness: 70 });
+  const [settings, setSettings] = useState<Settings>({ brightness: 70 });
   return createElement(
-    'form',
-    { onSubmit: (event: { preventDefault(): void }) => event.preventDefault() },
-    createElement('span', { key: 'label', className: 'text-sm' }, 'Brightness'),
-    createElement(OgeSlider, {
-      key: 'slider',
-      value: settings.brightness,
-      onValueChange: (brightness: number) => setSettings({ brightness }),
-      min: 0,
-      max: 100,
-      step: 5,
-      ariaLabel: 'Brightness',
+    'div',
+    null,
+    createElement(OgeForm<Settings>, {
+      formData: settings,
+      onFormDataChange: setSettings,
+      items: sliderItems,
     }),
     createElement(
       'p',
@@ -222,7 +231,7 @@ function SliderFormDemo(): ReactNode {
     <app-demo-card
       [chips]="['controlled pair', 'bare editor']"
       heading="Inside a form"
-      description="React has no <code>formField</code>/<code>formControl</code> binding — <strong>the controlled pair is the integration point</strong>. Hold the value in your form state (<code>useState</code>, React Hook Form, Formik, TanStack Form) and feed it back through <code>value</code> + <code>onValueChange</code>. The slider stays a bare editor, so the label/hint/error chrome belongs to your form layer — the job the Angular <code>&lt;oge-form&gt;</code> does on the other side of this switch."
+      description="Inside <code>&lt;OgeForm&gt;</code> the slider is a bare editor — the form renders the label/hint/error chrome around it. <code>dataType: 'number'</code> still defaults to the number box; the slider is an explicit <code>editorType</code> choice."
       [code]="demos[5].source"
       language="tsx"
     >

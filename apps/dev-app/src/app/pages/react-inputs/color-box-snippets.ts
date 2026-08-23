@@ -158,23 +158,24 @@ const [accent, setAccent] = useState<string | null>('hsl(210, 100%, 61%)');`,
   {
     title: 'Inside a form',
     description:
-      'The forms family has no React render layer yet, so a React form composes the editor directly: one state object, one controlled OgeColorBox per field. Everything the Angular editorType: "colorBox" options configure (format, editAlphaChannel, view, palette) is a plain prop here.',
+      'A chrome’d editor: editorType: "colorBox" with colorFormat, editAlphaChannel, view and palette under editorOptions, exactly as in the Angular form. The React form binds one controlled model pair instead of Angular’s three bindings.',
     source: reactDemoSource({
       react: ['useState'],
-      use: { '@oge-ui/react-inputs': ['OgeColorBox'] },
+      use: { '@oge-ui/react-forms': ['OgeForm'] },
+      types: { '@oge-ui/react-forms': ['OgeFormItemDefinition'] },
       name: 'FormDemo',
+      before: `const items: OgeFormItemDefinition[] = [
+  {
+    field: 'primary',
+    label: 'Primary color',
+    editorType: 'colorBox',
+    editorOptions: { colorFormat: 'hex', showClearButton: true },
+  },
+];`,
       body: `const [branding, setBranding] = useState({ primary: '#3aa0ff' });`,
       jsx: `<div>
-  <OgeColorBox
-    label="Primary color"
-    format="hex"
-    showClearButton
-    value={branding.primary}
-    onValueChange={(primary) =>
-      setBranding((current) => ({ ...current, primary: primary ?? '' }))
-    }
-  />
-  <p>
+  <OgeForm formData={branding} onFormDataChange={setBranding} items={items} />
+  <p className="mt-3 text-sm">
     Model: <code>{branding.primary}</code>
   </p>
 </div>`,

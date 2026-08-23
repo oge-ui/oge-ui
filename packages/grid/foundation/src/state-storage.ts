@@ -1,4 +1,9 @@
 import { InjectionToken } from '@angular/core';
+import type { OgeStateStorage } from '@oge-ui/behavior';
+
+// The backend contract itself is framework-free and lives in
+// `@oge-ui/behavior`; only the token below is Angular.
+export type { OgeStateStorage } from '@oge-ui/behavior';
 
 /**
  * Pluggable persistence backend for `stateKey` (default: localStorage).
@@ -19,11 +24,6 @@ import { InjectionToken } from '@angular/core';
  * For full control without a token, use the grid's `state()` / `applyState()`
  * methods and the `stateChange` output instead.
  */
-export interface OgeStateStorage {
-  get(key: string): string | null | Promise<string | null>;
-  set(key: string, value: string): void | Promise<void>;
-}
-
 export const OGE_STATE_STORAGE = new InjectionToken<OgeStateStorage>(
   'OGE_STATE_STORAGE',
   {

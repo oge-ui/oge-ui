@@ -219,50 +219,29 @@ const [step, setStep] = useState(0);`,
   {
     title: 'Inside a form',
     description:
-      'Angular wraps the stepper in <oge-form-steps> and reads step completion from the form’s own per-step error rollup. @oge-ui/forms has no React layer yet (docs/REACT-PARITY.md), so the honest React idiom is the same shape one level down: @oge-ui/react-inputs editors bound to your own state, and completed computed from that state — the linear gate, the per-step error display and the “steps ahead stay quiet” behaviour are all the stepper’s, not the form’s.',
+      'A { kind: "steps" } section wraps the stepper the way a tabs section wraps the tabs. Step completion comes from the form’s own per-step error rollup — and leaving a step touches only THAT step’s fields, so the steps ahead stay quiet instead of turning red.',
     source: reactDemoSource({
       react: ['useState'],
-      use: {
-        '@oge-ui/react-inputs': ['OgeTextBox'],
-        '@oge-ui/react-navigation': ['OgeStepper'],
-      },
+      use: { '@oge-ui/react-forms': ['OgeForm'] },
       name: 'StepperFormDemo',
-      before: `// @oge-ui/forms has no React layer yet (docs/REACT-PARITY.md), so the
-// editors hold their value in your own state — useState here, but React
-// Hook Form, Formik or TanStack Form bind exactly the same way. Step
-// completion is a plain derivation of that state, which is what the Angular
-// <oge-form-steps> wrapper computes from the form's per-step error rollup.`,
       body: `const [order, setOrder] = useState({ email: '', card: '' });`,
-      jsx: `<OgeStepper
-  linear
-  showNavigation
-  ariaLabel="Order"
-  steps={[
+      jsx: `<OgeForm
+  formData={order}
+  onFormDataChange={setOrder}
+  layout={[
     {
-      key: 'account',
-      label: 'Account',
-      completed: order.email !== '',
-      content: (
-        <OgeTextBox
-          label="E-mail"
-          required
-          value={order.email}
-          onValueChange={(email) => setOrder((o) => ({ ...o, email }))}
-        />
-      ),
-    },
-    {
-      key: 'payment',
-      label: 'Payment',
-      completed: order.card !== '',
-      content: (
-        <OgeTextBox
-          label="Card"
-          required
-          value={order.card}
-          onValueChange={(card) => setOrder((o) => ({ ...o, card }))}
-        />
-      ),
+      kind: 'steps',
+      linear: true,
+      children: [
+        {
+          caption: 'Account',
+          children: [{ field: 'email', label: 'E-mail', isRequired: true }],
+        },
+        {
+          caption: 'Payment',
+          children: [{ field: 'card', label: 'Card', isRequired: true }],
+        },
+      ],
     },
   ]}
 />`,

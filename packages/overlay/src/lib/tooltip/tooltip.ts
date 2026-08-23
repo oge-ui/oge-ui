@@ -14,9 +14,14 @@ import {
   untracked,
   type ComponentRef,
 } from '@angular/core';
+import {
+  OGE_TOOLTIP_PANEL_OPTIONS,
+  OgeTooltipCore,
+  tooltipDescribedByTarget,
+  type OgePopupPlacement,
+} from '@oge-ui/behavior';
 import { OGE_OVERLAY_CONFIG } from '../config';
 import { OgeAnchoredPanel } from '../panel/anchored-panel';
-import type { OgePopupPlacement } from '@oge-ui/behavior';
 
 /**
  * Presentational tooltip bubble — created by the `OgeTooltip` directive and
@@ -60,6 +65,10 @@ export class OgeTooltipPanel {
  * visible the trigger's `aria-describedby` includes the tooltip id — any
  * existing value is preserved. The bubble is viewport-aware (flips and
  * clamps) and never receives pointer events.
+ *
+ * The timing machine and the `aria-describedby` bookkeeping are
+ * `@oge-ui/behavior`'s `OgeTooltipCore`, shared verbatim with the React
+ * tooltip (ADR 0001); this directive owns the Angular bubble component.
  */
 @Directive({
   selector: '[ogeTooltip]',
@@ -89,27 +98,35 @@ export class OgeTooltip {
   readonly tooltipDisabled = input(false);
 
   private componentRef: ComponentRef<OgeTooltipPanel> | null = null;
-  private showTimer: ReturnType<typeof setTimeout> | null = null;
-  private hideTimer: ReturnType<typeof setTimeout> | null = null;
 
   private readonly panel = new OgeAnchoredPanel({
     anchor: () => this.host.nativeElement,
     panel: () => this.componentRef?.location.nativeElement ?? null,
     placement: () => this.tooltipPlacement(),
-    // Tooltips are transient: no Escape stack, no outside-click handling —
-    // the directive owns every hide trigger itself.
-    transient: true,
-    closeOnEscape: false,
-    closeOnOutsidePointerDown: false,
-    onClosed: () => this.removeDescribedBy(),
+    ...OGE_TOOLTIP_PANEL_OPTIONS,
+    onClosed: () => this.core.onPanelClosed(),
+  });
+
+  private readonly core = new OgeTooltipCore({
+    text: () => this.ogeTooltip(),
+    disabled: () => this.tooltipDisabled(),
+    showDelay: () => this.tooltipShowDelay() ?? this.config.tooltipShowDelayMs,
+    hideDelay: () => this.tooltipHideDelay() ?? this.config.tooltipHideDelayMs,
+    isOpen: () => this.panel.isOpen(),
+    open: () => {
+      this.ensureBubble();
+      this.panel.open();
+    },
+    close: () => this.panel.close(),
+    describedByTarget: () => tooltipDescribedByTarget(this.host.nativeElement),
+    panelId: this.panel.panelId,
   });
 
   constructor() {
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(() => {
-      this.clearTimers();
+      this.core.destroy();
       this.panel.destroy();
-      this.removeDescribedBy();
       if (this.componentRef) {
         const bubbleEl = this.componentRef.location.nativeElement;
         this.componentRef.destroy();
@@ -121,52 +138,31 @@ export class OgeTooltip {
     // the tooltip is disabled) while visible.
     effect(() => {
       const text = this.ogeTooltip();
-      const disabled = this.tooltipDisabled();
+      this.tooltipDisabled();
       untracked(() => {
         this.componentRef?.setInput('text', text);
-        if ((disabled || !text) && this.panel.isOpen()) this.hide();
+        this.core.sync();
       });
     });
   }
 
   /** Shows after the hover dwell (pointer path). */
   protected scheduleShow(): void {
-    this.clearTimer('hide');
-    if (this.panel.isOpen() || !this.canShow()) return;
-    this.clearTimer('show');
-    this.showTimer = setTimeout(
-      () => this.show(),
-      this.tooltipShowDelay() ?? this.config.tooltipShowDelayMs,
-    );
+    this.core.scheduleShow();
   }
 
   /** Hides after the grace period (pointer path). */
   protected scheduleHide(): void {
-    this.clearTimer('show');
-    if (!this.panel.isOpen()) return;
-    this.clearTimer('hide');
-    this.hideTimer = setTimeout(
-      () => this.hide(),
-      this.tooltipHideDelay() ?? this.config.tooltipHideDelayMs,
-    );
+    this.core.scheduleHide();
   }
 
   /** Shows immediately (keyboard focus path). */
   show(): void {
-    this.clearTimers();
-    if (this.panel.isOpen() || !this.canShow()) return;
-    this.ensureBubble();
-    this.panel.open();
-    this.addDescribedBy();
+    this.core.show();
   }
 
   hide(): void {
-    this.clearTimers();
-    this.panel.close();
-  }
-
-  private canShow(): boolean {
-    return !this.tooltipDisabled() && this.ogeTooltip().trim().length > 0;
+    this.core.hide();
   }
 
   private ensureBubble(): void {
@@ -178,59 +174,5 @@ export class OgeTooltip {
     this.componentRef.setInput('text', this.ogeTooltip());
     this.appRef.attachView(this.componentRef.hostView);
     document.body.appendChild(this.componentRef.location.nativeElement);
-  }
-
-  /** The element written to last, so removal always hits the same node. */
-  private describedByEl: HTMLElement | null = null;
-
-  /**
-   * Screen readers only announce `aria-describedby` on the focused element,
-   * so on composite hosts (`<oge-button ogeTooltip>`) the id must land on
-   * the inner native control, not the custom-element wrapper.
-   */
-  private describedByTarget(): HTMLElement {
-    const el = this.host.nativeElement;
-    if (el.matches('button, input, select, textarea, a[href], [tabindex]')) {
-      return el;
-    }
-    return (
-      el.querySelector<HTMLElement>(
-        'button, input, select, textarea, a[href]',
-      ) ?? el
-    );
-  }
-
-  /** Appends the tooltip id to `aria-describedby`, preserving existing ids. */
-  private addDescribedBy(): void {
-    const el = this.describedByTarget();
-    this.describedByEl = el;
-    const existing = el.getAttribute('aria-describedby');
-    const ids = existing ? existing.split(/\s+/) : [];
-    if (!ids.includes(this.panel.panelId)) {
-      ids.push(this.panel.panelId);
-      el.setAttribute('aria-describedby', ids.join(' '));
-    }
-  }
-
-  private removeDescribedBy(): void {
-    const el = this.describedByEl;
-    this.describedByEl = null;
-    const existing = el?.getAttribute('aria-describedby');
-    if (!el || !existing) return;
-    const ids = existing.split(/\s+/).filter((id) => id !== this.panel.panelId);
-    if (ids.length) el.setAttribute('aria-describedby', ids.join(' '));
-    else el.removeAttribute('aria-describedby');
-  }
-
-  private clearTimer(kind: 'show' | 'hide'): void {
-    const timer = kind === 'show' ? this.showTimer : this.hideTimer;
-    if (timer !== null) clearTimeout(timer);
-    if (kind === 'show') this.showTimer = null;
-    else this.hideTimer = null;
-  }
-
-  private clearTimers(): void {
-    this.clearTimer('show');
-    this.clearTimer('hide');
   }
 }

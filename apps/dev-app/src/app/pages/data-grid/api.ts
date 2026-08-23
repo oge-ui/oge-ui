@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiReference } from '../../shared/api-reference';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
+import { ReactGridApiSections } from '../react-grid/api';
 import {
   OGE_COLUMN_API,
   OGE_GRID_API,
@@ -15,9 +17,16 @@ const SECTIONS = [
   'Grid types & configuration',
 ] as const;
 
+/** TOC of the React view — must mirror `ReactGridApiSections`' titles. */
+const SECTIONS_REACT = [
+  '<OgeGrid>',
+  'OgeGridColumnProps',
+  'Grid types & configuration',
+] as const;
+
 @Component({
   selector: 'app-data-grid-api',
-  imports: [ApiReference, DocHeader, PageToc, RouterLink],
+  imports: [ApiReference, DocHeader, PageToc, RouterLink, ReactGridApiSections],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -25,34 +34,52 @@ const SECTIONS = [
       category="Data Grid"
       [chips]="['Properties', 'Methods', 'Events', 'Types']"
     >
-      <p>
-        Complete API reference for <code>&#64;oge-ui/grid</code> — inputs,
-        two-way models, imperative methods, the full event surface and the
-        supporting types, compiled from the source TSDoc. Feature guides live on
-        the
-        <a
-          routerLink="/components/data-grid"
-          class="text-indigo-600 underline dark:text-indigo-400"
-          >demo pages</a
-        >.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          Complete API reference for <code>&#64;oge-ui/react-grid</code> —
+          props, callbacks, the <code>ref</code> handle and the supporting types
+          of this slice, compiled from the source TSDoc. Feature guides live on
+          the
+          <a
+            routerLink="/components/data-grid"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >demo pages</a
+          >.
+        </p>
+      } @else {
+        <p>
+          Complete API reference for <code>&#64;oge-ui/grid</code> — inputs,
+          two-way models, imperative methods, the full event surface and the
+          supporting types, compiled from the source TSDoc. Feature guides live
+          on the
+          <a
+            routerLink="/components/data-grid"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >demo pages</a
+          >.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? sectionsReact : sections" />
 
-    <app-api-reference
-      title="OgeGrid"
-      selector="oge-grid"
-      [sections]="gridApi"
-    />
-    <app-api-reference
-      title="OgeColumn"
-      selector="oge-column"
-      [sections]="columnApi"
-    />
-    <app-api-reference
-      title="Grid types & configuration"
-      [sections]="typesApi"
-    />
+    @if (fw.isReact()) {
+      <app-react-grid-api />
+    } @else {
+      <app-api-reference
+        title="OgeGrid"
+        selector="oge-grid"
+        [sections]="gridApi"
+      />
+      <app-api-reference
+        title="OgeColumn"
+        selector="oge-column"
+        [sections]="columnApi"
+      />
+      <app-api-reference
+        title="Grid types & configuration"
+        [sections]="typesApi"
+      />
+    }
 
     <h3>Notes</h3>
     <ul>
@@ -71,7 +98,9 @@ const SECTIONS = [
   `,
 })
 export class DataGridApiPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly gridApi = OGE_GRID_API;
   protected readonly columnApi = OGE_COLUMN_API;
   protected readonly typesApi = OGE_GRID_TYPES_API;

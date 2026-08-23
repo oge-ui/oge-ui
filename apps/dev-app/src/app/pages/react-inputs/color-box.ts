@@ -5,6 +5,7 @@ import {
 } from '@angular/core';
 import { createElement, useState, type ReactNode } from 'react';
 import { OgeColorBox } from '@oge-ui/react-inputs';
+import { OgeForm, type OgeFormItemDefinition } from '@oge-ui/react-forms';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { INPUTS_COLOR_BOX_DEMOS } from './color-box-snippets';
@@ -146,19 +147,28 @@ function TypedDemo(): ReactNode {
 }
 
 /** The editor inside a hand-composed React form model. */
+interface Branding {
+  primary: string;
+}
+
+const brandingItems: OgeFormItemDefinition[] = [
+  {
+    field: 'primary',
+    label: 'Primary color',
+    editorType: 'colorBox',
+    editorOptions: { colorFormat: 'hex', showClearButton: true },
+  },
+];
+
 function FormDemo(): ReactNode {
-  const [branding, setBranding] = useState({ primary: '#3aa0ff' });
+  const [branding, setBranding] = useState<Branding>({ primary: '#3aa0ff' });
   return createElement(
     'div',
     null,
-    createElement(OgeColorBox, {
-      key: 'primary',
-      label: 'Primary color',
-      format: 'hex',
-      showClearButton: true,
-      value: branding.primary,
-      onValueChange: (primary: string | null) =>
-        setBranding((current) => ({ ...current, primary: primary ?? '' })),
+    createElement(OgeForm<Branding>, {
+      formData: branding,
+      onFormDataChange: setBranding,
+      items: brandingItems,
     }),
     note('Model: ', createElement('code', { key: 'm' }, branding.primary)),
   );
@@ -230,9 +240,9 @@ function FormDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
-      [chips]="['controlled value', 'own form model']"
+      [chips]="['editorType', 'editorOptions']"
       heading="Inside a form"
-      description="The forms family has no React render layer yet, so a React form composes the editor directly: one state object, one controlled <code>OgeColorBox</code> per field. Everything the Angular <code>editorType: 'colorBox'</code> options configure — <code>format</code>, <code>editAlphaChannel</code>, <code>view</code>, <code>palette</code> — is a plain prop here."
+      description="A chrome'd editor: <code>editorType: 'colorBox'</code> with <code>colorFormat</code>, <code>editAlphaChannel</code>, <code>view</code> and <code>palette</code> under <code>editorOptions</code> — the same item model the Angular form reads, resolved by the same code in <code>&#64;oge-ui/behavior</code>."
       [code]="demos[5].source"
       language="tsx"
     >

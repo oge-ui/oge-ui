@@ -54,6 +54,32 @@ const ENTRY_POINTS = [
   'menubarBarKeys',
   'paginationIsCompact',
   'stepperKeyTarget',
+  // forms
+  'resolveItem',
+  'evaluateOgeValidationRules',
+  'resolveOgeFormsConfig',
+  'formColumnsCss',
+  // grid
+  'OgeGridKeyboardNavCore',
+  'OgeGridColumnLayoutCore',
+  'OgeGridRowVirtualizerCore',
+  'OgeGridDeferredChildrenCore',
+  'OgeGridEditingState',
+  'OgeGridSortState',
+  'OgeGridFilterState',
+  'OgeGridSelectionState',
+  'OgeGridEditingCore',
+  'formatCellValue',
+  'builderToExpr',
+  'operatorsFor',
+  'rowFilterExpr',
+  'rowClickSelectionIntent',
+  'deferredToggleExpr',
+  'toggleHeaderValue',
+  'OgeGridStatePersistenceCore',
+  'resolveOgeGridColumns',
+  'adaptiveHiddenColumnIds',
+  'buildRowFilterExpr',
 ] as const;
 
 describe('the @oge-ui/behavior barrel', () => {

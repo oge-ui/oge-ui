@@ -1,5 +1,5 @@
 import { OffsetTree, computeWindow, type ViewportWindow } from '@oge-ui/core';
-import type { OgeReactiveCell, OgeReactivityAdapter } from './select-list-core';
+import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
 import type { OgeInputSize } from './input-types';
 
 /** Options object form of the `virtualScroll` input. */

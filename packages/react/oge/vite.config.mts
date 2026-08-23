@@ -65,6 +65,8 @@ export default defineConfig(() => ({
         'react/jsx-runtime',
         '@oge-ui/behavior',
         '@oge-ui/react-buttons',
+        '@oge-ui/react-forms',
+        '@oge-ui/react-grid',
         '@oge-ui/react-inputs',
         '@oge-ui/react-layout',
         '@oge-ui/react-navigation',

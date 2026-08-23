@@ -163,6 +163,33 @@ export default [
                 'scope:react-tabs',
                 'scope:react-layout',
                 'scope:react-navigation',
+                'scope:react-forms',
+                'scope:react-upload',
+                'scope:react-grid',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React grid renders the inputs family's editors on its
+              // filter row and the overlay's popup/menu for the operator
+              // menu — the same edges the Angular grid package has
+              sourceTag: 'scope:react-grid',
+              onlyDependOnLibsWithTags: [
+                'scope:react-grid',
+                'scope:react-inputs',
+                'scope:react-layout',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              sourceTag: 'scope:react-upload',
+              onlyDependOnLibsWithTags: [
+                'scope:react-upload',
+                'scope:react-layout',
                 'scope:react-overlay',
                 'scope:behavior',
                 'scope:core',
@@ -173,6 +200,23 @@ export default [
               onlyDependOnLibsWithTags: [
                 'scope:react-layout',
                 'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React form renders the inputs family's editors and lays
+              // its sections out with the tabs / layout / navigation ones —
+              // the same edges the Angular forms package has
+              sourceTag: 'scope:react-forms',
+              onlyDependOnLibsWithTags: [
+                'scope:react-forms',
+                'scope:react-inputs',
+                'scope:react-layout',
+                'scope:react-navigation',
+                'scope:react-tabs',
+                'scope:react-overlay',
+                'scope:react-upload',
                 'scope:behavior',
                 'scope:core',
               ],
@@ -190,6 +234,7 @@ export default [
               sourceTag: 'scope:grid',
               onlyDependOnLibsWithTags: [
                 'scope:grid',
+                'scope:behavior',
                 'scope:core',
                 'scope:inputs',
                 'scope:overlay',
@@ -346,8 +391,9 @@ export default [
             },
             {
               // the uploader draws its own chrome, so it takes none of the
-              // editor packages — only core's navigation arithmetic today,
-              // and layout's progress bar once transfers land
+              // editor packages — the engine and the uploader machine live
+              // in behavior (shared with the React uploader), layout lends
+              // the progress bar and overlay the lightbox
               sourceTag: 'scope:upload',
               onlyDependOnLibsWithTags: [
                 'scope:upload',
@@ -355,12 +401,14 @@ export default [
                 'scope:buttons',
                 'scope:overlay',
                 'scope:core',
+                'scope:behavior',
               ],
             },
             {
               sourceTag: 'scope:forms',
               onlyDependOnLibsWithTags: [
                 'scope:forms',
+                'scope:behavior',
                 'scope:inputs',
                 'scope:buttons',
                 'scope:overlay',
@@ -402,6 +450,9 @@ export default [
                 'scope:react-tabs',
                 'scope:react-layout',
                 'scope:react-navigation',
+                'scope:react-forms',
+                'scope:react-upload',
+                'scope:react-grid',
                 'scope:react-oge',
                 'scope:react-overlay',
                 'scope:behavior',

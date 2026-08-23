@@ -5,6 +5,7 @@ import {
   untracked,
   type Signal,
 } from '@angular/core';
+import { OgeGridStatePersistenceCore } from '@oge-ui/behavior';
 import type { OgeStateStorage } from './state-storage';
 
 export interface StatePersistenceOptions<S> {
@@ -30,68 +31,37 @@ export interface StatePersistenceOptions<S> {
  * (sync or async storage, stale-key guarded) and a 250 ms debounced save +
  * change notification. Must run in an injection context (component
  * constructor or field initializer).
+ *
+ * Since ADR 0001's grid phase the rules live in `@oge-ui/behavior`'s
+ * `OgeGridStatePersistenceCore`, shared verbatim with the React grid. What
+ * stays here is only what is genuinely Angular: the two effects that decide
+ * *when* to restore and when a new snapshot exists, and the `DestroyRef`
+ * teardown.
  */
 export function createStatePersistence<S>(
   options: StatePersistenceOptions<S>,
 ): void {
   const destroyRef = inject(DestroyRef);
-  let restoredKey: string | null = null;
-  let saveTimer: ReturnType<typeof setTimeout> | undefined;
-  /** JSON of the last persisted/announced snapshot; null until the baseline is taken. */
-  let lastJson: string | null = null;
+  const core = new OgeGridStatePersistenceCore<S>({
+    prefix: options.prefix,
+    storage: options.storage,
+    snapshot: () => untracked(options.snapshot),
+    stateKey: () => untracked(options.stateKey),
+    apply: options.apply,
+    onChange: options.onChange,
+  });
 
   effect(() => {
     const key = options.stateKey();
     options.beforeRestore?.();
-    if (!key || restoredKey === key) return;
-    restoredKey = key;
-    const raw = untracked(() =>
-      options.storage.get(`${options.prefix}:${key}`),
-    );
-    const apply = (text: string | null): void => {
-      if (!text) return;
-      try {
-        options.apply(JSON.parse(text) as S);
-        // restored state becomes the new baseline — no save/onChange echo,
-        // while the next real user change still reports against it
-        lastJson = JSON.stringify(untracked(options.snapshot));
-      } catch {
-        // corrupt persisted state — start clean
-      }
-    };
-    if (raw !== null && typeof raw === 'object') {
-      // async backend (API / IndexedDB) — apply when it resolves, unless
-      // the host switched to a different stateKey in the meantime
-      void raw.then((text) => {
-        if (untracked(options.stateKey) === key) apply(text);
-      });
-    } else {
-      apply(raw);
-    }
+    untracked(() => core.restore(key));
   });
 
   effect(() => {
     const snapshot = options.snapshot();
     const key = options.stateKey();
-    untracked(() => {
-      const json = JSON.stringify(snapshot);
-      if (lastJson === null) {
-        // The very first snapshot is the baseline, not a change. Comparing
-        // against it (instead of skipping one debounce tick) means a user
-        // change landing within the first debounce window is still reported,
-        // and identical snapshots never re-save.
-        lastJson = json;
-        return;
-      }
-      if (json === lastJson) return;
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => {
-        lastJson = json;
-        if (key) void options.storage.set(`${options.prefix}:${key}`, json);
-        options.onChange?.(snapshot);
-      }, 250);
-    });
+    untracked(() => core.noteSnapshot(snapshot, key));
   });
 
-  destroyRef.onDestroy(() => clearTimeout(saveTimer));
+  destroyRef.onDestroy(() => core.dispose());
 }

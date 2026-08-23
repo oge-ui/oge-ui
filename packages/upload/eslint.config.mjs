@@ -25,25 +25,6 @@ export default [
     },
   },
   {
-    // The engine is framework-free by contract: pure TS + standard DOM APIs,
-    // unit-testable without Angular. Enforced, not just promised.
-    files: ['src/lib/engine/**/*.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['@angular/*', 'rxjs', 'rxjs/*', 'zone.js', 'zone.js/*'],
-              message:
-                'The upload engine is framework-free — no Angular, rxjs or zone.js imports.',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
     files: ['**/*.ts'],
     rules: {
       '@angular-eslint/directive-selector': [

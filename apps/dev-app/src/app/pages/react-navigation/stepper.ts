@@ -12,7 +12,7 @@ import {
   type OgeStepperHandle,
   type OgeStepperOrientation,
 } from '@oge-ui/react-navigation';
-import { OgeTextBox } from '@oge-ui/react-inputs';
+import { OgeForm } from '@oge-ui/react-forms';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { NAVIGATION_STEPPER_DEMOS } from './stepper-snippets';
@@ -254,36 +254,30 @@ function NavButtonsDemo(): ReactNode {
   );
 }
 
+interface Order {
+  email: string;
+  card: string;
+}
+
 function FormDemo(): ReactNode {
-  const [order, setOrder] = useState({ email: '', card: '' });
-  return createElement(OgeStepper, {
-    linear: true,
-    showNavigation: true,
-    ariaLabel: 'Order',
-    steps: [
+  const [order, setOrder] = useState<Order>({ email: '', card: '' });
+  return createElement(OgeForm<Order>, {
+    formData: order,
+    onFormDataChange: setOrder,
+    layout: [
       {
-        key: 'account',
-        label: 'Account',
-        completed: order.email !== '',
-        content: createElement(OgeTextBox, {
-          label: 'E-mail',
-          required: true,
-          value: order.email,
-          onValueChange: (email: string) =>
-            setOrder((current) => ({ ...current, email })),
-        }),
-      },
-      {
-        key: 'payment',
-        label: 'Payment',
-        completed: order.card !== '',
-        content: createElement(OgeTextBox, {
-          label: 'Card',
-          required: true,
-          value: order.card,
-          onValueChange: (card: string) =>
-            setOrder((current) => ({ ...current, card })),
-        }),
+        kind: 'steps',
+        linear: true,
+        children: [
+          {
+            caption: 'Account',
+            children: [{ field: 'email', label: 'E-mail', isRequired: true }],
+          },
+          {
+            caption: 'Payment',
+            children: [{ field: 'card', label: 'Card', isRequired: true }],
+          },
+        ],
       },
     ],
   });
@@ -370,7 +364,7 @@ function FormDemo(): ReactNode {
     <app-demo-card
       [chips]="['@oge-ui/react-inputs', 'linear', 'completed']"
       heading="Inside a form"
-      description="Angular wraps the stepper in <code>&lt;oge-form-steps&gt;</code> and reads step completion from the form's own per-step error rollup. <code>&#64;oge-ui/forms</code> has no React layer yet (<code>docs/REACT-PARITY.md</code>), so the honest React idiom is the same shape one level down: <code>&#64;oge-ui/react-inputs</code> editors bound to your own state, with <code>completed</code> computed from it. The linear gate, the per-step error display and the “steps ahead stay quiet” behaviour are the stepper's, not the form's."
+      description="A <code>&#123; kind: 'steps' &#125;</code> section wraps the stepper the way a tabs section wraps the tabs. Step completion comes from the form's own per-step error rollup — and leaving a step touches only <em>that</em> step's fields, so the steps ahead stay quiet instead of turning red."
       [code]="demos[6].source"
       language="tsx"
     >

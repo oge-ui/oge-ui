@@ -338,6 +338,56 @@ const FAMILIES = [
     },
   },
   {
+    family: 'forms',
+    angularApiPage: 'apps/dev-app/src/app/pages/forms/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-forms/api.ts',
+    exceptions: {
+      blocksAngularOnly: {
+        schemametadata:
+          'The OGE_FORM_* metadata keys attach layout to an Angular Signal Forms schema. React has no schema binding to read them from — its layout is the `layout` array — so the block is Angular-only by construction, not a missing feature.',
+      },
+      pairs: {
+        // angular ↔ react (both already normalized): deliberate renames
+        ogeformitemtemplate: 'renderitem', // TemplateRef ↔ render prop
+        ogeformeditortemplate: 'rendereditor',
+        ogeformlabeltemplate: 'renderlabel',
+        ogeformgroupcaptiontemplate: 'rendergroupcaption',
+        ogeformactions: 'actions', // projection directive ↔ ReactNode slot
+        selectedindex: 'activeindex', // one section index name in React, for tabs and steps alike
+      },
+      angularOnly: {
+        fieldtree:
+          'Binds an Angular Signal Forms tree. React has no Signal Forms; the same rules run through `validationRules` and the shared evaluator in @oge-ui/behavior.',
+        formgroup:
+          'Binds an Angular reactive-forms FormGroup — an Angular-only forms engine. A React app keeps its own form state and binds it through `formData` / `onFormDataChange`.',
+        mode: 'Reports which of the three Angular bindings resolved. React has one binding, so there is nothing to report.',
+      },
+      reactOnly: {
+        layout:
+          'The nested `layout` array replaces Angular’s projected <oge-form-item> / <oge-form-group> / <oge-form-tabs> children — React has no content projection.',
+        formdatachange:
+          'The controlled half of `formData`; Angular’s [(formData)] model is both halves at once.',
+        data: 'The bound model read off the imperative handle; Angular reads the same value from the [(formData)] signal it wrote.',
+        kind: 'Discriminates a group from a section inside the `layout` array; Angular discriminates by which component the template used.',
+        children:
+          'A group’s child nodes as data; Angular projects them via <ng-content> and needs no member.',
+        rendercaption:
+          'Per-group caption slot, the object form of an [ogeFormGroupCaptionTemplate] placed inside one <oge-form-group>.',
+        activeindexchange:
+          'The controlled half of a section’s `activeIndex`; Angular’s [(selectedIndex)] / [(activeIndex)] models are both halves at once.',
+        expandedkeyschange:
+          'The controlled half of the accordion section’s `expandedKeys` model.',
+        classname:
+          'React host styling idiom; Angular hosts take class/style natively.',
+        style:
+          'React host styling idiom; Angular hosts take class/style natively.',
+        id: 'React host attribute idiom; an Angular host takes id natively.',
+        useogeformsconfig:
+          'Hook reading the resolved config; the Angular counterpart is `inject(OGE_FORMS_CONFIG)`, not a documented member.',
+      },
+    },
+  },
+  {
     // The navigation family documents all six components on one API page in
     // both layers, so it is one entry — unlike layout, which ships five
     // separate Angular API pages and therefore five entries.
@@ -413,6 +463,84 @@ const FAMILIES = [
           'Hook reading the resolved config; the Angular counterpart is `inject(OGE_BREADCRUMB_CONFIG)`, not a documented member.',
         useogepaginationconfig:
           'Hook reading the resolved config; the Angular counterpart is `inject(OGE_PAGINATION_CONFIG)`, not a documented member.',
+      },
+    },
+  },
+  {
+    family: 'upload',
+    angularApiPage: 'apps/dev-app/src/app/pages/upload/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-upload/api.ts',
+    exceptions: {
+      reactOnly: {
+        classname:
+          'React host styling idiom; Angular hosts take class/style natively.',
+        style:
+          'React host styling idiom; Angular hosts take class/style natively.',
+        valuechange:
+          'The controlled half of `[(value)]`, documented as a prop in the React table; Angular documents it inside the events row “thumbnailFailed / valueChange / touch”, where it is matched.',
+      },
+    },
+  },
+  {
+    family: 'overlay',
+    angularApiPage: 'apps/dev-app/src/app/pages/overlay/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-overlay/api.ts',
+    exceptions: {
+      pairs: {
+        // angular ↔ react (both already normalized): deliberate renames
+        ogemodaltitle: 'rendertitle', // structural directive ↔ render prop
+        ogemodalheaderactions: 'renderheaderactions',
+        ogemodalfooter: 'renderfooter',
+        itemtemplate: 'renderitem', // TemplateRef ↔ render prop
+        template: 'rendercontent', // toast body TemplateRef ↔ render prop
+        ogetooltip: 'text', // the directive's selector binding ↔ the prop
+        tooltipplacement: 'placement', // directive inputs drop the prefix
+        tooltipshowdelay: 'showdelay',
+        tooltiphidedelay: 'hidedelay',
+        tooltipdisabled: 'disabled',
+        ogecontextmenu: 'items', // the directive's selector binding ↔ the prop
+        contextmenuarialabel: 'arialabel',
+        contextmenudisabled: 'disabled',
+        contextmenuitemclick: 'itemclick', // outputs drop the prefix too
+        contextmenuopened: 'opened',
+        contextmenuclosed: 'closed',
+        onclosed: 'closed', // hook option, not a callback prop: the gate strips `on`
+        provideogeoverlayconfig: 'ogeoverlayconfigprovider', // DI provider ↔ context provider
+      },
+      angularOnly: {
+        destroy:
+          'The Angular panel model is torn down from DestroyRef; the React hook destroys its machine on unmount, so there is no member to call.',
+        provideogeoverlayconfig:
+          'DI provider; the React counterpart is the <OgeOverlayConfigProvider> row (a JSX tag, which the gate cannot pair by name).',
+      },
+      reactOnly: {
+        // The reverse half of the directive-prefix pairs above: a pair maps
+        // one Angular name to one React name, while the React `disabled` and
+        // `closed` names are the target of two pairs each (tooltip + context
+        // menu, context menu + anchored panel).
+        disabled:
+          'Target of the `tooltipDisabled` / `contextMenuDisabled` pairs — the directive-prefixed Angular inputs.',
+        closed:
+          'Target of the `contextMenuClosed` / `onClosed` pairs — the directive-prefixed Angular output and the panel option.',
+        ogeoverlayconfigprovider:
+          'Context provider; the Angular counterpart is `provideOgeOverlayConfig()` (excepted above).',
+        classname:
+          'React host styling idiom; Angular hosts take class/style natively.',
+        style:
+          'React host styling idiom; Angular hosts take class/style natively.',
+        children:
+          'JSX content projection; Angular projects via <ng-content> (modal, popup) or attaches a directive to the element itself (tooltip, context menu).',
+        openedchange: 'The controlled half of the modal’s `[(opened)]` model.',
+        fullscreenchange:
+          'The controlled half of the modal’s `[(fullScreen)]` model.',
+        closependingchange:
+          'Callback reporting the modal’s async close guard settling; Angular’s `closePending` signal is read directly in the template.',
+        renderitem:
+          'The context menu forwards a render prop to its hosted menu list; the Angular directive has no item template input.',
+        nested:
+          'Set by the React menu list on its own submenus; the Angular menu list derives the same flag from its template.',
+        useogeoverlayconfig:
+          'Hook reading the resolved config; the Angular counterpart is `inject(OGE_OVERLAY_CONFIG)`, not a documented member.',
       },
     },
   },

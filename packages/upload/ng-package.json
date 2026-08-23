@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/packages/upload",
   "allowedNonPeerDependencies": [
-    "@oge-ui/core",
+    "@oge-ui/behavior",
     "@oge-ui/layout",
     "@oge-ui/overlay"
   ],

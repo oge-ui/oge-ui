@@ -39,6 +39,7 @@
     }
   },
   "dependencies": {
+    "@oge-ui/behavior": "0.12.0",
     "@oge-ui/core": "0.12.0",
     "@oge-ui/inputs": "0.12.0",
     "@oge-ui/forms": "0.12.0",

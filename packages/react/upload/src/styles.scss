@@ -1,0 +1,6 @@
+// The React uploader renders the exact `.oge-upload-*` markup the Angular
+// package styles — so its stylesheet IS the Angular package's SCSS, compiled
+// here into this package's own `styles.css`. No second stylesheet, no drift
+// (ADR 0001). The progress bar and the lightbox come from the layout and
+// overlay packages' own stylesheets, which the app imports alongside.
+@use '../../../upload/src/lib/file-uploader/file-uploader';

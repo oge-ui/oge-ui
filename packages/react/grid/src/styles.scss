@@ -1,0 +1,8 @@
+// The React grid renders the exact `.oge-grid` / `.oge-pager` markup the
+// Angular package styles — so its stylesheet IS the Angular package's SCSS,
+// compiled here into this package's own `styles.css`. No second stylesheet,
+// no drift (ADR 0001). The filter-row editors and the operator menu come from
+// the inputs and overlay packages' own stylesheets, which the app imports
+// alongside.
+@use '../../../grid/src/lib/grid/grid';
+@use '../../../grid/src/lib/pager/pager';

@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiReference } from '../../shared/api-reference';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
+import { ReactOverlayApiSections } from '../react-overlay/api';
 import {
   OGE_ANCHORED_PANEL_API,
   OGE_CONTEXT_MENU_API,
@@ -31,9 +33,30 @@ const SECTIONS = [
   'Overlay primitives',
 ] as const;
 
+/** TOC of the React view — must mirror `ReactOverlayApiSections`' titles. */
+const SECTIONS_REACT = [
+  '<OgeModal>',
+  'OgeModalService (useOgeModals)',
+  'OgeToastService (useOgeToasts)',
+  '<OgeTooltip>',
+  '<OgeContextMenu>',
+  '<OgeMenuList>',
+  'OgeAnchoredPanel (useAnchoredPanel)',
+  '<OgePopup>',
+  'resolvePopupPosition',
+  'Overlay configuration',
+  'Overlay primitives',
+] as const;
+
 @Component({
   selector: 'app-overlay-api',
-  imports: [ApiReference, DocHeader, PageToc, RouterLink],
+  imports: [
+    ApiReference,
+    DocHeader,
+    PageToc,
+    RouterLink,
+    ReactOverlayApiSections,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -41,58 +64,90 @@ const SECTIONS = [
       category="Overlay"
       [chips]="['Properties', 'Methods', 'Events', 'Types']"
     >
-      <p>
-        Complete API reference for <code>&#64;oge-ui/overlay</code>. Note that
-        <code>OgeAnchoredPanel</code> is a plain DI-free class (not a component)
-        and <code>resolvePopupPosition</code> is a pure function — see the
-        <a
-          routerLink="/components/overlay"
-          class="text-indigo-600 underline dark:text-indigo-400"
-          >demos</a
-        >
-        for the wiring pattern.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          Complete API reference for <code>&#64;oge-ui/react-overlay</code>: the
+          modal, toast, tooltip, context menu and menu list components, the
+          <code>useAnchoredPanel</code> hook, the popup chrome, the pure
+          placement function, the config provider and the shared primitives.
+          Services become providers + hooks, structural directives become render
+          props, public methods live on <code>ref</code> handles — see the
+          <a
+            routerLink="/components/overlay"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >demos</a
+          >
+          for the wiring pattern.
+        </p>
+      } @else {
+        <p>
+          Complete API reference for <code>&#64;oge-ui/overlay</code>. Note that
+          <code>OgeAnchoredPanel</code> is a plain DI-free class (not a
+          component) and <code>resolvePopupPosition</code> is a pure function —
+          see the
+          <a
+            routerLink="/components/overlay"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >demos</a
+          >
+          for the wiring pattern.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? sectionsReact : sections" />
 
-    <app-api-reference
-      title="OgeModal"
-      selector="oge-modal"
-      [sections]="modalApi"
-    />
-    <app-api-reference title="OgeModalService" [sections]="modalServiceApi" />
-    <app-api-reference title="OgeToastService" [sections]="toastApi" />
-    <app-api-reference
-      title="OgeTooltip"
-      selector="[ogeTooltip]"
-      [sections]="tooltipApi"
-    />
-    <app-api-reference
-      title="OgeContextMenu"
-      selector="[ogeContextMenu]"
-      [sections]="contextMenuApi"
-    />
-    <app-api-reference
-      title="OgeMenuList"
-      selector="oge-menu-list"
-      [sections]="menuListApi"
-    />
-    <app-api-reference title="OgeAnchoredPanel" [sections]="anchoredPanelApi" />
-    <app-api-reference
-      title="OgePopup"
-      selector="oge-popup"
-      [sections]="popupApi"
-    />
-    <app-api-reference title="resolvePopupPosition" [sections]="positionApi" />
-    <app-api-reference title="Overlay configuration" [sections]="configApi" />
-    <app-api-reference title="Overlay primitives" [sections]="primitivesApi" />
+    @if (fw.isReact()) {
+      <app-react-overlay-api />
+    } @else {
+      <app-api-reference
+        title="OgeModal"
+        selector="oge-modal"
+        [sections]="modalApi"
+      />
+      <app-api-reference title="OgeModalService" [sections]="modalServiceApi" />
+      <app-api-reference title="OgeToastService" [sections]="toastApi" />
+      <app-api-reference
+        title="OgeTooltip"
+        selector="[ogeTooltip]"
+        [sections]="tooltipApi"
+      />
+      <app-api-reference
+        title="OgeContextMenu"
+        selector="[ogeContextMenu]"
+        [sections]="contextMenuApi"
+      />
+      <app-api-reference
+        title="OgeMenuList"
+        selector="oge-menu-list"
+        [sections]="menuListApi"
+      />
+      <app-api-reference
+        title="OgeAnchoredPanel"
+        [sections]="anchoredPanelApi"
+      />
+      <app-api-reference
+        title="OgePopup"
+        selector="oge-popup"
+        [sections]="popupApi"
+      />
+      <app-api-reference
+        title="resolvePopupPosition"
+        [sections]="positionApi"
+      />
+      <app-api-reference title="Overlay configuration" [sections]="configApi" />
+      <app-api-reference
+        title="Overlay primitives"
+        [sections]="primitivesApi"
+      />
+    }
 
     <h3>Notes</h3>
     <ul>
       <li>
         The overlay config's <code>messages</code> block is minimal — the
         anchored primitives render no user-facing strings (consumer components
-        own their i18n); only the modal's ✕ button label lives there.
+        own their i18n); only the modal's and the toast's chrome labels live
+        there.
       </li>
       <li>
         Panels reposition (never detach) on capture-phase scroll and resize; a
@@ -102,7 +157,9 @@ const SECTIONS = [
   `,
 })
 export class OverlayApiPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly modalApi = OGE_MODAL_API;
   protected readonly modalServiceApi = OGE_MODAL_SERVICE_API;
   protected readonly toastApi = OGE_TOAST_API;

@@ -106,7 +106,7 @@ _Behavior_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `disabled` | `boolean` | `false` | Disables the button. |
-| `value` | `string` | `—` | Selection key within an enclosing ``; also stamped as `data-oge-value` so the group resolves clicks and arrow-selection off the DOM. |
+| `value` | `string` | `—` | Selection key within an enclosing `<OgeButtonGroup>`; also stamped as `data-oge-value` so the group resolves clicks and arrow-selection off the DOM. |
 | `loading` | `boolean` | `—` | Busy state. Omit it to let the component own the flag while an `action` is pending; pass it to control the flag yourself. |
 | `action` | `() => unknown` | `—` | Async click handler. Turns `loading` on while the returned promise is pending and ignores further clicks until it settles (single-flight). |
 | `clickGuard` | `boolean \| OgeClickGuardOptions` | `false` | Rate-limits `onClick`. `true` throttles with `config.clickGuardMs`. |

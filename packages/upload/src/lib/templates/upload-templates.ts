@@ -1,5 +1,5 @@
 import { Directive, TemplateRef, inject } from '@angular/core';
-import type { OgeUploadFile } from '../upload-types';
+import type { OgeUploadFile } from '@oge-ui/behavior';
 
 /**
  * Every glyph the uploader draws, as one discriminated slot.

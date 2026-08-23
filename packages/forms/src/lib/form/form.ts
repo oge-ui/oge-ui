@@ -52,7 +52,14 @@ import {
   OgeFormItemTemplate,
   OgeFormLabelTemplate,
 } from './templates/form-templates';
-import { orderByVisibleIndex, readPath, resolveItem } from './item-model';
+import {
+  emptyValueForDataType,
+  formColumnsCount,
+  formColumnsCss,
+  orderByVisibleIndex,
+  readPath,
+  resolveItem,
+} from './item-model';
 import { itemFromMetadata } from './metadata';
 import { schemaFromRules, type RuleSource } from './schema-from-rules';
 import type {
@@ -1055,15 +1062,11 @@ export class OgeForm<T extends object = Record<string, unknown>> {
   }
 
   protected columnsFor(colCount: OgeFormColCount | undefined): string {
-    if (colCount === undefined || colCount === 'auto') {
-      return 'repeat(auto-fit, minmax(var(--oge-form-min-col), 1fr))';
-    }
-    return `repeat(${Math.max(1, Math.floor(colCount))}, minmax(0, 1fr))`;
+    return formColumnsCss(colCount);
   }
 
   protected columnsOf(colCount: OgeFormColCount | undefined): number {
-    const effective = colCount ?? this.colCount();
-    return typeof effective === 'number' ? Math.max(1, effective) : 12;
+    return formColumnsCount(colCount, this.colCount());
   }
 
   /**
@@ -1191,21 +1194,7 @@ export class OgeForm<T extends object = Record<string, unknown>> {
   }
 
   private emptyValueFor(item: OgeResolvedFormItem): unknown {
-    switch (item.dataType) {
-      case 'boolean':
-        return false;
-      case 'number':
-        return null;
-      case 'date':
-      case 'datetime':
-        return null;
-      case 'dateRange':
-        return [null, null];
-      case 'array':
-        return [];
-      default:
-        return '';
-    }
+    return emptyValueForDataType(item.dataType);
   }
 
   private emitFieldChanges(previous: unknown, next: unknown): void {

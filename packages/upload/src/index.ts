@@ -30,7 +30,7 @@ export {
 export { OgeUploadDropZone } from './lib/drop-zone/upload-drop-zone';
 export { OgeUploadTrigger } from './lib/drop-zone/upload-trigger';
 export { OGE_UPLOAD_TRANSPORT } from './lib/transport';
-export { createXhrUploadAdapter } from './lib/engine/xhr-adapter';
+export { createXhrUploadAdapter } from '@oge-ui/behavior';
 export { createHttpClientUploadAdapter } from './lib/http-client-adapter';
 export type {
   OgeUploadAdapter,
@@ -39,17 +39,17 @@ export type {
   OgeUploadHandle,
   OgeUploadPart,
   OgeUploadRequest,
-} from './lib/engine/transport-types';
+} from '@oge-ui/behavior';
 // The engine is internal plumbing, with two exceptions: the size formatter a
 // custom file template needs, and the restriction shapes its rules describe.
 export {
   formatFileSize,
   type OgeFormatFileSizeOptions,
-} from './lib/engine/file-size';
+} from '@oge-ui/behavior';
 export type {
   OgeUploadCandidate,
   OgeUploadRestrictions,
-} from './lib/engine/file-validation';
+} from '@oge-ui/behavior';
 export type {
   OgeUploadAbortReason,
   OgeUploadAbortedEvent,
@@ -95,4 +95,4 @@ export type {
   OgeUploadRetryOptions,
   OgeUploadSelectionSource,
   OgeUploadThumbnailFailedEvent,
-} from './lib/upload-types';
+} from '@oge-ui/behavior';

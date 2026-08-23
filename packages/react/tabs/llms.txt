@@ -90,7 +90,7 @@ _Common — tabs & selection_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `tabs` | `readonly OgeTabDefinition[]` | `—` | Declarative tabs — the React counterpart of the projected `` children: an item plus its `content` and optional `renderHeader`. |
+| `tabs` | `readonly OgeTabDefinition[]` | `—` | Declarative tabs — the React counterpart of the projected `<oge-tab>` children: an item plus its `content` and optional `renderHeader`. |
 | `items` | `readonly OgeTabItem[]` | `—` | Data-driven tabs, rendered after the `tabs` entries. |
 | `selectedIndex` | `number` | `—` | Index of the selected tab — controlled when provided, so pass `onSelectedIndexChange` with it. `-1` selects none; clamped when tabs are removed. |
 | `defaultSelectedIndex` | `number` | `0` | Uncontrolled initial selection — the component owns the index from there. Never combine with `selectedIndex`. |
@@ -101,7 +101,7 @@ _Common — tabs & selection_
 | `activation` | `'automatic' \| 'manual'` | `'automatic'` | APG activation: arrows select immediately, or move focus only until Enter/Space commits. |
 | `disabled` | `boolean` | `false` | Disables the whole component. |
 | `ariaLabel` | `string` | `—` | Aria label of the tablist. |
-| `messages` | `Partial<OgeTabsMessages>` | `—` | Per-instance overrides of the `` messages. |
+| `messages` | `Partial<OgeTabsMessages>` | `—` | Per-instance overrides of the `<OgeTabsConfigProvider>` messages. |
 
 _Common — closing, overflow & order_
 
@@ -179,7 +179,7 @@ _Common — tabs & selection_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `tabs` | `readonly OgeTabDefinition[]` | `—` | Declarative tabs — the React counterpart of the projected `` children: an item plus its `content` and optional `renderHeader`. |
+| `tabs` | `readonly OgeTabDefinition[]` | `—` | Declarative tabs — the React counterpart of the projected `<oge-tab>` children: an item plus its `content` and optional `renderHeader`. |
 | `items` | `readonly OgeTabItem[]` | `—` | Data-driven tabs, rendered after the `tabs` entries. |
 | `selectedIndex` | `number` | `—` | Index of the selected tab — controlled when provided, so pass `onSelectedIndexChange` with it. `-1` selects none; clamped when tabs are removed. |
 | `defaultSelectedIndex` | `number` | `0` | Uncontrolled initial selection — the component owns the index from there. Never combine with `selectedIndex`. |
@@ -190,7 +190,7 @@ _Common — tabs & selection_
 | `activation` | `'automatic' \| 'manual'` | `'automatic'` | APG activation: arrows select immediately, or move focus only until Enter/Space commits. |
 | `disabled` | `boolean` | `false` | Disables the whole component. |
 | `ariaLabel` | `string` | `—` | Aria label of the tablist. |
-| `messages` | `Partial<OgeTabsMessages>` | `—` | Per-instance overrides of the `` messages. |
+| `messages` | `Partial<OgeTabsMessages>` | `—` | Per-instance overrides of the `<OgeTabsConfigProvider>` messages. |
 
 _Common — closing, overflow & order_
 
@@ -258,8 +258,8 @@ _Common — callbacks_
 | `dirty` | `boolean` | `false` | Renders the unsaved-changes dot and announces it to screen readers (`messages.dirty`). |
 | `hint` | `string` | `—` | Tooltip — rendered as the native `title` attribute. |
 | `closeGuard` | `() => boolean \| Promise<boolean>` | `—` | Veto hook run before this tab closes; may be async (single-flight, rejection = veto, pending spinner on the ✕). |
-| `content` | `ReactNode` | `—` | Panel content rendered while the tab is displayed — the React face of the content projected into an ``. |
-| `renderHeader` | `(context: OgeTabHeaderContext) => ReactNode` | `—` | Custom header for this tab alone — the React face of an `[ogeTabHeaderTemplate]` inside an ``. |
+| `content` | `ReactNode` | `—` | Panel content rendered while the tab is displayed — the React face of the content projected into an `<oge-tab>`. |
+| `renderHeader` | `(context: OgeTabHeaderContext) => ReactNode` | `—` | Custom header for this tab alone — the React face of an `[ogeTabHeaderTemplate]` inside an `<oge-tab>`. |
 
 #### Types
 
@@ -268,7 +268,7 @@ _Render props_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeTabHeaderContext` | `{ item: OgeTabItem \| undefined; index: number; selected: boolean; text: string }` | Context handed to `renderHeader` / `renderTabHeader` — the React face of `OgeTabHeaderTemplateContext`. `item` is `undefined` for `tabs`-declared entries. |
-| `renderTabContent context` | `{ item: OgeTabItem; index: number }` | Context handed to ``’s `renderTabContent` — the React face of `OgeTabContentTemplateContext`. Lazy by default: it runs on first activation, honoring `deferRendering` / `keepAlive`. |
+| `renderTabContent context` | `{ item: OgeTabItem; index: number }` | Context handed to `<OgeTabPanel>`’s `renderTabContent` — the React face of `OgeTabContentTemplateContext`. Lazy by default: it runs on first activation, honoring `deferRendering` / `keepAlive`. |
 
 ### Tabs configuration
 
@@ -295,8 +295,8 @@ _OgeTabsConfig_
 | `OgeTabDefinition` | `OgeTabItem & { content?, renderHeader? }` | One declarative tab of the `tabs` prop — an item plus its panel content. |
 | `OgeTabCloseGuard` | `() => boolean \| Promise<boolean>` | Per-tab veto hook; resolving `false` (or rejecting) keeps the tab open. |
 | `OgeTabsActivation` | `'automatic' \| 'manual'` | How keyboard focus interacts with selection (APG). |
-| `OgeTabsPosition` | `'top' \| 'bottom' \| 'start' \| 'end'` | Logical strip placement of ``. |
-| `OgeTabsOrientation` | `'horizontal' \| 'vertical'` | Direction of a stand-alone `` strip. |
+| `OgeTabsPosition` | `'top' \| 'bottom' \| 'start' \| 'end'` | Logical strip placement of `<OgeTabPanel>`. |
+| `OgeTabsOrientation` | `'horizontal' \| 'vertical'` | Direction of a stand-alone `<OgeTabs>` strip. |
 | `OgeTabsNavButtonsMode` | `'auto' \| 'always' \| 'never'` | When the overflow nav arrows are shown. |
 | `OgeTabsAlignment` | `'start' \| 'center' \| 'end' \| 'justify' \| 'stretch'` | How tabs are distributed along the strip. |
 | `OgeTabsIndicatorFit` | `'tab' \| 'content'` | Width of the selected-tab indicator. |

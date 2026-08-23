@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  inject,
   signal,
   viewChild,
 } from '@angular/core';
@@ -14,6 +15,8 @@ import {
 } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import { ReactGridRowsDemos } from '../react-grid/rows';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 import {
   DRAG_SNIPPET,
@@ -30,18 +33,29 @@ import {
     OgeNoDataTemplate,
     DemoCard,
     DocHeader,
+    ReactGridRowsDemos,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
       title="Rows & Templates"
-      [chips]="[
-        'ogeRowTemplate',
-        'ogeNoDataTemplate',
-        'rowDragging',
-        'focusedRow',
-        'loadPanel',
-      ]"
+      [chips]="
+        fw.isReact()
+          ? [
+              'renderRow',
+              'renderNoData',
+              'rowDragging',
+              'focusedRow',
+              'loadPanel',
+            ]
+          : [
+              'ogeRowTemplate',
+              'ogeNoDataTemplate',
+              'rowDragging',
+              'focusedRow',
+              'loadPanel',
+            ]
+      "
     >
       <p>
         Full control over row rendering: replace entire rows with
@@ -51,154 +65,159 @@ import {
       </p>
     </app-doc-header>
 
-    <app-demo-card
-      [chips]="['ogeRowTemplate', 'rowAlternation']"
-      [code]="rowTemplateSnippet"
-      language="ts"
-    >
-      <oge-grid
-        [data]="cards"
-        keyField="id"
-        [rowAlternation]="true"
-        [paging]="{ pageSize: 6 }"
+    @if (fw.isReact()) {
+      <app-react-grid-rows-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['ogeRowTemplate', 'rowAlternation']"
+        [code]="rowTemplateSnippet"
+        language="ts"
       >
-        <oge-column field="firstName" caption="Employee" />
-        <oge-column field="department" caption="Department" />
-        <oge-column field="salary" caption="Salary" dataType="number" />
-        <div
-          *ogeRowTemplate="let employee of cards"
-          class="flex w-full items-center gap-3 px-3 py-1.5"
+        <oge-grid
+          [data]="cards"
+          keyField="id"
+          [rowAlternation]="true"
+          [paging]="{ pageSize: 6 }"
         >
-          <span
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+          <oge-column field="firstName" caption="Employee" />
+          <oge-column field="department" caption="Department" />
+          <oge-column field="salary" caption="Salary" dataType="number" />
+          <div
+            *ogeRowTemplate="let employee of cards"
+            class="flex w-full items-center gap-3 px-3 py-1.5"
           >
-            {{ initials(employee) }}
-          </span>
-          <div class="min-w-0">
-            <div class="truncate text-sm font-medium">
-              {{ employee.firstName }} {{ employee.lastName }}
+            <span
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+            >
+              {{ initials(employee) }}
+            </span>
+            <div class="min-w-0">
+              <div class="truncate text-sm font-medium">
+                {{ employee.firstName }} {{ employee.lastName }}
+              </div>
+              <div class="truncate text-xs text-gray-500 dark:text-gray-400">
+                {{ employee.department }} · {{ employee.city }}
+              </div>
             </div>
-            <div class="truncate text-xs text-gray-500 dark:text-gray-400">
-              {{ employee.department }} · {{ employee.city }}
-            </div>
+            <span class="ms-auto font-mono text-sm tabular-nums">{{
+              money(employee.salary)
+            }}</span>
           </div>
-          <span class="ms-auto font-mono text-sm tabular-nums">{{
-            money(employee.salary)
-          }}</span>
-        </div>
-      </oge-grid>
-    </app-demo-card>
+        </oge-grid>
+      </app-demo-card>
 
-    <h3>Row drag & drop + focused row</h3>
-    <app-demo-card
-      [chips]="['rowDragging', 'focusedRowEnabled']"
-      [code]="dragSnippet"
-      language="ts"
-    >
-      <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-        Focused row key:
-        <span
-          class="font-mono font-semibold text-gray-900 dark:text-gray-100"
-          >{{ focusedKey() ?? '—' }}</span
-        >
-        @if (lastReorder()) {
-          <span
-            class="ml-3 rounded bg-gray-100 px-2 py-0.5 font-mono text-xs dark:bg-gray-800"
-            >{{ lastReorder() }}</span
-          >
-        }
-      </div>
-      <oge-grid
-        [data]="dragRows"
-        keyField="id"
-        [rowDragging]="true"
-        (rowReordered)="onReordered($event)"
-        [focusedRowEnabled]="true"
-        [focusedRowKey]="focusedKey()"
-        (focusedRowKeyChange)="focusedKey.set($event)"
+      <h3>Row drag & drop + focused row</h3>
+      <app-demo-card
+        [chips]="['rowDragging', 'focusedRowEnabled']"
+        [code]="dragSnippet"
+        language="ts"
       >
-        <oge-column field="id" caption="Id" [width]="70" dataType="number" />
-        <oge-column field="firstName" caption="First Name" />
-        <oge-column field="department" caption="Department" />
-      </oge-grid>
-    </app-demo-card>
-
-    <h3>Empty state & loading panel</h3>
-    <app-demo-card
-      [chips]="['ogeNoDataTemplate', 'loadPanel', '800ms latency']"
-      [code]="noDataSnippet"
-      language="ts"
-    >
-      <div class="mb-2">
-        <button
-          type="button"
-          class="rounded-md border border-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-          (click)="reloadEmpty()"
-        >
-          Reload (watch the panel)
-        </button>
-      </div>
-      <oge-grid
-        #emptyGrid
-        [data]="emptySource"
-        keyField="id"
-        [loadPanel]="true"
-        style="min-height: 180px"
-      >
-        <oge-column field="firstName" caption="First Name" />
-        <oge-column field="department" caption="Department" />
-        <div
-          *ogeNoDataTemplate
-          class="flex flex-col items-center gap-2 py-6 text-gray-500 dark:text-gray-400"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="28"
-            height="28"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5M8 11h6" />
-          </svg>
+        <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+          Focused row key:
           <span
-            >No employees match — adjust the filter or add a new record.</span
+            class="font-mono font-semibold text-gray-900 dark:text-gray-100"
+            >{{ focusedKey() ?? '—' }}</span
           >
+          @if (lastReorder()) {
+            <span
+              class="ml-3 rounded bg-gray-100 px-2 py-0.5 font-mono text-xs dark:bg-gray-800"
+              >{{ lastReorder() }}</span
+            >
+          }
         </div>
-      </oge-grid>
-    </app-demo-card>
+        <oge-grid
+          [data]="dragRows"
+          keyField="id"
+          [rowDragging]="true"
+          (rowReordered)="onReordered($event)"
+          [focusedRowEnabled]="true"
+          [focusedRowKey]="focusedKey()"
+          (focusedRowKeyChange)="focusedKey.set($event)"
+        >
+          <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="department" caption="Department" />
+        </oge-grid>
+      </app-demo-card>
 
-    <h3>Notes</h3>
-    <ul>
-      <li>
-        <code>*ogeRowTemplate</code> replaces only <em>data</em> rows — group
-        rows, detail rows and summaries keep their built-in rendering;
-        sorting/filtering/selection still work through the declared columns.
-      </li>
-      <li>
-        <code>rowAlternation</code> stripes odd rows via the
-        <code>--oge-row-alt-bg</code> token.
-      </li>
-      <li>
-        <code>rowReordered</code> reports the moved key plus from/to view
-        positions; with a plain array the order is persisted in place.
-      </li>
-      <li>
-        <code>focusedRowKey</code> is a two-way model — set it programmatically
-        and the row highlights (and vice versa).
-      </li>
-      <li>
-        <code>loadPanel</code> shows a spinner overlay for any in-flight load of
-        a remote source.
-      </li>
-    </ul>
+      <h3>Empty state & loading panel</h3>
+      <app-demo-card
+        [chips]="['ogeNoDataTemplate', 'loadPanel', '800ms latency']"
+        [code]="noDataSnippet"
+        language="ts"
+      >
+        <div class="mb-2">
+          <button
+            type="button"
+            class="rounded-md border border-gray-200 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+            (click)="reloadEmpty()"
+          >
+            Reload (watch the panel)
+          </button>
+        </div>
+        <oge-grid
+          #emptyGrid
+          [data]="emptySource"
+          keyField="id"
+          [loadPanel]="true"
+          style="min-height: 180px"
+        >
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="department" caption="Department" />
+          <div
+            *ogeNoDataTemplate
+            class="flex flex-col items-center gap-2 py-6 text-gray-500 dark:text-gray-400"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="28"
+              height="28"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5M8 11h6" />
+            </svg>
+            <span
+              >No employees match — adjust the filter or add a new record.</span
+            >
+          </div>
+        </oge-grid>
+      </app-demo-card>
+
+      <h3>Notes</h3>
+      <ul>
+        <li>
+          <code>*ogeRowTemplate</code> replaces only <em>data</em> rows — group
+          rows, detail rows and summaries keep their built-in rendering;
+          sorting/filtering/selection still work through the declared columns.
+        </li>
+        <li>
+          <code>rowAlternation</code> stripes odd rows via the
+          <code>--oge-row-alt-bg</code> token.
+        </li>
+        <li>
+          <code>rowReordered</code> reports the moved key plus from/to view
+          positions; with a plain array the order is persisted in place.
+        </li>
+        <li>
+          <code>focusedRowKey</code> is a two-way model — set it
+          programmatically and the row highlights (and vice versa).
+        </li>
+        <li>
+          <code>loadPanel</code> shows a spinner overlay for any in-flight load
+          of a remote source.
+        </li>
+      </ul>
+    }
   `,
 })
 export class RowsPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly rowTemplateSnippet = ROW_TEMPLATE_SNIPPET;
   protected readonly dragSnippet = DRAG_SNIPPET;
   protected readonly noDataSnippet = NODATA_SNIPPET;

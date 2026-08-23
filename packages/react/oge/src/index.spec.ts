@@ -19,6 +19,7 @@ import {
   OgeDateRangeBox,
   OgeDrawer,
   OgeDropDownButton,
+  OgeForm,
   OgeLoadIndicator,
   OgeMenubar,
   OgeMenuList,
@@ -39,12 +40,14 @@ import {
   OgeTextArea,
   OgeTextBox,
   OgeTreeView,
+  OgeValidationSummary,
   OgeButtonsConfigProvider,
   OgeInputsConfigProvider,
   OgeTabsConfigProvider,
   OgeCardConfigProvider,
   OgeOverlayConfigProvider,
   OgeTreeViewConfigProvider,
+  OgeFormsConfigProvider,
   useAnchoredPanel,
 } from './index';
 
@@ -86,6 +89,9 @@ describe('@oge-ui/react umbrella barrel', () => {
       OgeMenubar,
       OgeBreadcrumb,
       OgePagination,
+      // forms
+      OgeForm,
+      OgeValidationSummary,
       // overlay
       OgePopup,
       OgeMenuList,
@@ -103,6 +109,7 @@ describe('@oge-ui/react umbrella barrel', () => {
       OgeCardConfigProvider,
       OgeOverlayConfigProvider,
       OgeTreeViewConfigProvider,
+      OgeFormsConfigProvider,
     ]) {
       expect(provider).toBeTypeOf('function');
     }

@@ -20,9 +20,22 @@ import {
   type Signal,
 } from '@angular/core';
 import { OGE_OVERLAY_CONFIG } from '../config';
-import { isTopOverlay, pushOverlay, removeOverlay } from '@oge-ui/behavior';
-import { getTabbableElements, trapTabKey } from '@oge-ui/behavior';
-import { lockBodyScroll, unlockBodyScroll } from '@oge-ui/behavior';
+import {
+  clampModalDrag,
+  clampModalResize,
+  inertModalBackground,
+  isModalFocusOrphaned,
+  isTopOverlay,
+  lockBodyScroll,
+  modalCssSize,
+  pushOverlay,
+  removeOverlay,
+  resolveModalInitialFocus,
+  runAsyncGuard,
+  trackPointerGesture,
+  trapTabKey,
+  unlockBodyScroll,
+} from '@oge-ui/behavior';
 import {
   OgeModalFooter,
   OgeModalHeaderActions,
@@ -39,8 +52,6 @@ import type {
   OgeModalSlotContext,
 } from './modal-types';
 import type { OgeOverlayMessages } from '../config';
-
-declare const ngDevMode: boolean | undefined;
 
 let nextModalId = 0;
 
@@ -393,7 +404,7 @@ export class OgeModal<R = unknown> {
   private backdropPress = false;
   /** Removes the document listeners of an in-flight drag/resize gesture. */
   private activeGestureCleanup: (() => void) | null = null;
-  private inertedElements: Element[] = [];
+  private releaseInert: (() => void) | null = null;
 
   constructor() {
     // `opened` model ↔ DOM-side state, loop-guarded by comparing states first.
@@ -473,33 +484,13 @@ export class OgeModal<R = unknown> {
     const closingEvent: OgeModalClosingEvent = { reason, cancel: false };
     this.closing.emit(closingEvent);
     if (closingEvent.cancel) return;
-    const guard = this.closeGuard();
-    if (!guard) {
-      this.finalizeClose(reason, result);
-      return;
-    }
-    let verdict: boolean | Promise<boolean>;
-    try {
-      verdict = guard();
-    } catch {
-      this.warnGuardFailure();
-      return;
-    }
-    if (typeof verdict === 'boolean') {
-      if (verdict) this.finalizeClose(reason, result);
-      return;
-    }
-    this._closePending.set(true);
-    verdict.then(
-      (allowed) => {
-        this._closePending.set(false);
-        if (allowed && this.shown) this.finalizeClose(reason, result);
+    runAsyncGuard(this.closeGuard(), {
+      allow: () => {
+        if (this.shown) this.finalizeClose(reason, result);
       },
-      () => {
-        this._closePending.set(false);
-        this.warnGuardFailure();
-      },
-    );
+      pending: (active) => this._closePending.set(active),
+      label: 'oge-overlay modal closeGuard',
+    });
   }
 
   private finalizeClose(reason: OgeModalCloseReason, result?: R): void {
@@ -509,12 +500,7 @@ export class OgeModal<R = unknown> {
     if (this.restoreFocus() && this.previouslyFocused) {
       // Only restore when focus would otherwise be lost — never steal the
       // user's new focus target.
-      const active = document.activeElement;
-      const orphaned =
-        !active ||
-        active === document.body ||
-        (panelEl?.contains(active) ?? false);
-      if (orphaned) this.previouslyFocused.focus();
+      if (isModalFocusOrphaned(panelEl)) this.previouslyFocused.focus();
     }
     this.previouslyFocused = null;
     if (this.opened()) this.opened.set(false);
@@ -528,8 +514,8 @@ export class OgeModal<R = unknown> {
     this.backdropPress = false;
     this.activeGestureCleanup?.();
     this.activeGestureCleanup = null;
-    for (const el of this.inertedElements) el.removeAttribute('inert');
-    this.inertedElements = [];
+    this.releaseInert?.();
+    this.releaseInert = null;
     removeOverlay(this);
     if (this.holdingScrollLock) {
       unlockBodyScroll();
@@ -538,36 +524,20 @@ export class OgeModal<R = unknown> {
     document.removeEventListener('keydown', this.onDocumentKeydown);
   }
 
-  /**
-   * Marks siblings of every ancestor of the layer `inert`, so assistive tech
-   * and Tab can never reach the page behind the modal. Elements already inert
-   * are skipped, keeping stacked modals' bookkeeping independent.
-   */
+  /** Marks the page behind the modal `inert` (shared walk in `behavior`). */
   private applyInertBackground(): void {
-    let node: HTMLElement | null = this.layerRef()?.nativeElement ?? null;
-    while (node?.parentElement && node !== document.body) {
-      for (const sibling of Array.from(node.parentElement.children)) {
-        if (sibling !== node && !sibling.hasAttribute('inert')) {
-          sibling.setAttribute('inert', '');
-          this.inertedElements.push(sibling);
-        }
-      }
-      node = node.parentElement;
-    }
+    const layer = this.layerRef()?.nativeElement;
+    if (!layer) return;
+    this.releaseInert?.();
+    this.releaseInert = inertModalBackground(layer);
   }
 
   private applyInitialFocus(): void {
     const panelEl = this.panelRef()?.nativeElement;
     if (!panelEl) return;
-    const mode = this.autoFocus();
-    let target: HTMLElement | null = panelEl.querySelector('[autofocus]');
-    if (!target && mode !== 'first-tabbable' && mode !== 'panel') {
-      target = panelEl.querySelector(mode);
-    }
-    if (!target && mode !== 'panel') {
-      target = getTabbableElements(panelEl)[0] ?? null;
-    }
-    (target ?? panelEl).focus({ preventScroll: true });
+    resolveModalInitialFocus(panelEl, this.autoFocus()).focus({
+      preventScroll: true,
+    });
   }
 
   private readonly onDocumentKeydown = (event: KeyboardEvent): void => {
@@ -600,22 +570,17 @@ export class OgeModal<R = unknown> {
     const startX = event.clientX;
     const startY = event.clientY;
     const rect = panelEl.getBoundingClientRect();
-    // Base position without the current offset — clamp against it so the
-    // panel can always be dragged back.
-    const baseLeft = rect.left - start.x;
-    const baseTop = rect.top - start.y;
     const onMove = (e: PointerEvent): void => {
-      let dx = start.x + (e.clientX - startX);
-      let dy = start.y + (e.clientY - startY);
-      if (!this.dragOutsideBoundary()) {
-        const minX = -baseLeft;
-        const minY = -baseTop;
-        const maxX = Math.max(minX, window.innerWidth - rect.width - baseLeft);
-        const maxY = Math.max(minY, window.innerHeight - rect.height - baseTop);
-        dx = Math.min(Math.max(dx, minX), maxX);
-        dy = Math.min(Math.max(dy, minY), maxY);
-      }
-      this.dragOffset.set({ x: dx, y: dy });
+      this.dragOffset.set(
+        clampModalDrag({
+          start,
+          dx: e.clientX - startX,
+          dy: e.clientY - startY,
+          rect,
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          allowOutside: this.dragOutsideBoundary(),
+        }),
+      );
     };
     this.trackGesture(onMove);
   }
@@ -632,16 +597,14 @@ export class OgeModal<R = unknown> {
     const startY = event.clientY;
     this.resizeStarted.emit({ width: startWidth, height: startHeight, event });
     const onMove = (e: PointerEvent): void => {
-      this.resizeSize.set({
-        width: Math.min(
-          Math.max(160, startWidth + (e.clientX - startX)),
-          window.innerWidth,
-        ),
-        height: Math.min(
-          Math.max(120, startHeight + (e.clientY - startY)),
-          window.innerHeight,
-        ),
-      });
+      this.resizeSize.set(
+        clampModalResize({
+          start: { width: startWidth, height: startHeight },
+          dx: e.clientX - startX,
+          dy: e.clientY - startY,
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+        }),
+      );
     };
     this.trackGesture(onMove, (e) => {
       const size = this.resizeSize();
@@ -659,18 +622,14 @@ export class OgeModal<R = unknown> {
     onEnd?: (e: PointerEvent) => void,
   ): void {
     this.activeGestureCleanup?.();
-    const onUp = (e: PointerEvent): void => {
-      cleanup();
+    const cleanup = trackPointerGesture(onMove, (e) => {
+      this.activeGestureCleanup = null;
       onEnd?.(e);
-    };
-    const cleanup = (): void => {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
+    });
+    this.activeGestureCleanup = () => {
+      cleanup();
       this.activeGestureCleanup = null;
     };
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-    this.activeGestureCleanup = cleanup;
   }
 
   protected onLayerClick(event: MouseEvent): void {
@@ -682,17 +641,6 @@ export class OgeModal<R = unknown> {
     }
     this.backdropPress = false;
   }
-
-  private warnGuardFailure(): void {
-    if (typeof ngDevMode === 'undefined' || ngDevMode) {
-      console.warn(
-        '[oge-overlay] modal closeGuard threw or rejected — treating it as a veto.',
-      );
-    }
-  }
 }
 
-function toCssSize(value: number | string | undefined): string | null {
-  if (value === undefined) return null;
-  return typeof value === 'number' ? `${value}px` : value;
-}
+const toCssSize = modalCssSize;

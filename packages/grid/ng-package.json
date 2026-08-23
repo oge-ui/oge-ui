@@ -2,6 +2,7 @@
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/packages/grid",
   "allowedNonPeerDependencies": [
+    "@oge-ui/behavior",
     "@oge-ui/core",
     "@oge-ui/inputs",
     "@oge-ui/forms",

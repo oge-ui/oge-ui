@@ -330,17 +330,55 @@ export const PACKAGES = [
     platform: 'react',
   },
   {
+    dir: 'react/forms',
+    npm: '@oge-ui/react-forms',
+    label: 'Forms (React)',
+    summary:
+      'React form layout over the editors: a nested layout array of items, groups and tabbed/accordion/wizard sections, responsive container-query columns, declarative validation rules and a validation summary — running the same item model, the same rule evaluator and the same stylesheet as the Angular forms package.',
+    // The React content renders inside the single Forms routes (ADR 0002:
+    // routes stay single, the header switch picks the layer).
+    docsRoot: '/components/forms',
+    pageDirs: ['react-forms'],
+    apiPage: 'apps/dev-app/src/app/pages/react-forms/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/upload',
+    npm: '@oge-ui/react-upload',
+    label: 'Upload (React)',
+    summary:
+      'React file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews and a lightbox, per-file progress with rate and ETA, chunked resumable transfer with pause, resume and retry, a pluggable transport adapter, external drop zones and triggers — running the same upload engine, list machine and stylesheet as the Angular upload package.',
+    // The React content renders inside the single Upload routes (ADR 0002).
+    docsRoot: '/components/upload',
+    pageDirs: ['react-upload'],
+    apiPage: 'apps/dev-app/src/app/pages/react-upload/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/grid',
+    npm: '@oge-ui/react-grid',
+    label: 'Data Grid (React)',
+    summary:
+      'React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, pinned and resizable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.',
+    // The React content renders inside the single Data Grid routes (ADR 0002).
+    docsRoot: '/components/data-grid',
+    pageDirs: ['react-grid'],
+    apiPage: 'apps/dev-app/src/app/pages/react-grid/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
     dir: 'react/overlay',
     npm: '@oge-ui/react-overlay',
     label: 'Overlay (React)',
     summary:
-      'React overlay primitives: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack) and a full WAI-ARIA menu with submenus and type-ahead — running the same positioning and menu machines as the Angular overlay package.',
-    // The primitives are documented through their consumers today (the
-    // drop-down button demos); a dedicated React overlay page arrives with
-    // the tooltip/modal/toast surfaces.
-    docsRoot: '/components/buttons',
-    pageDirs: [],
-    apiPage: null,
+      'React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.',
+    // The React content renders inside the single Overlay routes (ADR 0002).
+    docsRoot: '/components/overlay',
+    pageDirs: ['react-overlay'],
+    apiPage: 'apps/dev-app/src/app/pages/react-overlay/api.ts',
     tier: 'mit',
     platform: 'react',
   },

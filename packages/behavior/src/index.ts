@@ -79,12 +79,172 @@ export {
   type OgeListVirtualizerDeps,
   type OgeVirtualScrollOptions,
 } from './lib/input/list-virtualizer-core';
+export type { OgeReactiveCell, OgeReactivityAdapter } from './lib/reactivity';
+
+// --- grid ---
+export {
+  OgeGridColumnLayoutCore,
+  type OgeGridColumnLayoutDeps,
+  type OgeGridColumnRange,
+  type OgeGridLayoutColumn,
+} from './lib/grid/grid-column-layout';
+export {
+  OgeGridRowVirtualizerCore,
+  type OgeGridRowVirtualizerDeps,
+  type OgeGridRowWindowAdapter,
+} from './lib/grid/grid-row-virtualizer';
+export {
+  OgeGridDeferredChildrenCore,
+  type OgeDeferredBaseOptions,
+  type OgeGridDeferredChildrenDeps,
+  type OgePendingChildRequest,
+} from './lib/grid/grid-deferred-children';
+export {
+  OgeGridEditingState,
+  type OgeEditFormItem,
+  type OgeEditMode,
+  type OgeEditingCell,
+  type OgeEditingOptions,
+} from './lib/grid/grid-editing-state';
+export {
+  OgeGridStatePersistenceCore,
+  type OgeGridStatePersistenceOptions,
+  type OgeStateStorage,
+} from './lib/grid/grid-state-persistence';
+export {
+  adaptiveHiddenColumnIds,
+  buildRowFilterExpr,
+  dateFilterExpr,
+  defaultOperatorFor,
+  humanize,
+  isDataSource,
+  lookupTextOf,
+  mapLookupItems,
+  ogeGridBandRow,
+  resolveLookupItems,
+  resolveOgeGridColumns,
+  type LookupItem,
+  type OgeColumnLookup,
+  type OgeDataType,
+  type OgeGridAdaptiveHidingInput,
+  type OgeGridBandCell,
+  type OgeGridColumnDef,
+  type OgeGridColumnResolveInput,
+  type OgeGridColumnSpec,
+  type OgeGridResolvedColumn,
+} from './lib/grid/grid-columns';
+export {
+  OgeGridEditingCore,
+  type OgeDataChange,
+  type OgeEditingStartEvent,
+  type OgeGridEditingCoreDeps,
+  type OgeGridEditorBridge,
+  type OgeGridEditorState,
+  type OgeRowInsertedEvent,
+  type OgeRowInsertingEvent,
+  type OgeRowRemovedEvent,
+  type OgeRowRemovingEvent,
+  type OgeRowUpdatedEvent,
+  type OgeRowUpdatingEvent,
+  type OgeSavedChangesEvent,
+  type OgeSavingChangesEvent,
+} from './lib/grid/grid-editing-core';
+export {
+  allHeaderValuesSelected,
+  filterHeaderValues,
+  formatCellValue,
+  groupHeaderValuesByYear,
+  headerGroupState,
+  headerValueText,
+  headerYearLabel,
+  isHeaderValueSelected,
+  toggleAllHeaderValues,
+  toggleHeaderGroup,
+  toggleHeaderValue,
+  type OgeHeaderFilterMessages,
+  type OgeHeaderFilterSelection,
+  type OgeHeaderValueGroup,
+  type OgeHeaderValueTextOptions,
+} from './lib/grid/grid-header-filter';
+export {
+  builderToExpr,
+  describeExpr,
+  effectiveFilterOperator,
+  exprToBuilder,
+  filterOperatorSymbol,
+  filterRowOperatorChoices,
+  operatorsFor,
+  rowFilterExpr,
+  type OgeBuilderCondition,
+  type OgeBuilderGroup,
+  type OgeFilterBuilderField,
+  type OgeFilterDescribeMessages,
+  type OgeFilterRowColumn,
+} from './lib/grid/grid-filtering';
+export {
+  allRowsSelected,
+  deferredToggleExpr,
+  keyEqualsExpr,
+  rowClickSelectionIntent,
+  someRowsSelected,
+  type OgeGridSelectAllState,
+  type OgeGridSelectionIntent,
+  type OgeGridSelectionMode,
+  type OgeGridSelectionModifiers,
+} from './lib/grid/grid-selection';
+export {
+  OgeGridColumnsState,
+  OgeGridExpansionState,
+  OgeGridFilterState,
+  OgeGridGroupingState,
+  OgeGridPagingState,
+  OgeGridSelectionState,
+  OgeGridSortState,
+  type OgeGridFilterStateSnapshot,
+  type OgePinOverride,
+} from './lib/grid/grid-state';
+export {
+  OgeGridKeyboardNavCore,
+  type OgeGridFocusedCell,
+  type OgeGridKeyboardNavDeps,
+  type OgeGridKeyboardNavTreeHooks,
+} from './lib/grid/grid-keyboard-nav';
+export { OgeGridStateCore, loadOptionsEqual } from './lib/grid/grid-state-core';
+export {
+  OGE_GRID_WINDOW_BLOCK_SIZE,
+  OgeGridDataCore,
+  type OgeGridDataCoreDeps,
+} from './lib/grid/grid-data-core';
+export {
+  OGE_DEFAULT_GRID_CONFIG,
+  OGE_DEFAULT_GRID_MESSAGES,
+  resolveGridConfig,
+  type OgeGridConfig,
+  type OgeGridConfigInput,
+  type OgeGridMessages,
+} from './lib/grid/grid-config';
+export type {
+  OgeDataErrorEvent,
+  OgeExportCellArgs,
+  OgeExportColumn,
+  OgeExportData,
+  OgeExportOptions,
+  OgeExportingEvent,
+  OgeFilterRowOptions,
+  OgeFocusedRowChangedEvent,
+  OgeGroupingOptions,
+  OgeHeaderFilterOptions,
+  OgePagingOptions,
+  OgeRowReorderedEvent,
+  OgeScrollingOptions,
+  OgeSearchPanelOptions,
+  OgeSelectionChangedEvent,
+  OgeSortingOptions,
+} from './lib/grid/grid-options';
 export {
   OgeSelectListCore,
   type OgeSelectListCoreDeps,
   type OgeSelectListRow,
-  type OgeReactiveCell,
-  type OgeReactivityAdapter,
 } from './lib/input/select-list-core';
 export {
   clampValue,
@@ -261,6 +421,177 @@ export {
   isTopOverlay,
 } from './lib/overlay/overlay-stack';
 export { getTabbableElements, trapTabKey } from './lib/overlay/focus-trap';
+export {
+  OGE_DEFAULT_OVERLAY_MESSAGES,
+  OGE_DEFAULT_OVERLAY_CONFIG,
+  resolveOverlayConfig,
+  type OgeOverlayMessages,
+  type OgeOverlayConfig,
+  type OgeOverlayConfigInput,
+} from './lib/overlay/overlay-config';
+export {
+  OGE_TOOLTIP_PANEL_OPTIONS,
+  OgeTooltipCore,
+  tooltipDescribedByTarget,
+  type OgeTooltipCoreOptions,
+} from './lib/overlay/tooltip-core';
+export {
+  OGE_MODAL_MIN_RESIZE,
+  modalCssSize,
+  resolveModalInitialFocus,
+  isModalFocusOrphaned,
+  inertModalBackground,
+  clampModalDrag,
+  clampModalResize,
+  trackPointerGesture,
+  type OgeModalCloseReason,
+  type OgeModalOpeningEvent,
+  type OgeModalClosingEvent,
+  type OgeModalClosedEvent,
+  type OgeModalResizeEvent,
+  type OgeModalAutoFocus,
+  type OgeModalPlacement,
+  type OgeModalDragRequest,
+  type OgeModalResizeRequest,
+} from './lib/overlay/modal-core';
+// --- upload ------------------------------------------------------------------
+export type {
+  OgeUploadFileStatus,
+  OgeUploadErrorKind,
+  OgeUploadFileError,
+  OgeUploadFile,
+  OgeUploadPreloadedFile,
+  OgeUploadListType,
+  OgeUploadDisplayMode,
+  OgeUploadActionsLayout,
+  OgeUploadDropEffect,
+  OgeUploadMode,
+  OgeUploadFileListOptions,
+  OgeUploadChunkOptions,
+  OgeUploadRetryOptions,
+  OgeUploadFieldError,
+  OgeUploadSelectionSource,
+  OgeUploadAbortReason,
+  OgeUploadCancelableEvent,
+  OgeUploadFilesSelectingEvent,
+  OgeUploadFilesSelectedEvent,
+  OgeUploadFileRejectedEvent,
+  OgeUploadFilesDroppedEvent,
+  OgeUploadDropZoneEvent,
+  OgeUploadFileRemovingEvent,
+  OgeUploadFileRemovedEvent,
+  OgeUploadClearingEvent,
+  OgeUploadClearedEvent,
+  OgeUploadPreviewShowingEvent,
+  OgeUploadPreviewHiddenEvent,
+  OgeUploadFileDownloadingEvent,
+  OgeUploadUploadingEvent,
+  OgeUploadStartedEvent,
+  OgeUploadProgressEvent,
+  OgeUploadUploadedEvent,
+  OgeUploadFailedEvent,
+  OgeUploadAbortedEvent,
+  OgeUploadAllUploadedEvent,
+  OgeUploadChunkUploadingEvent,
+  OgeUploadChunkUploadedEvent,
+  OgeUploadChunkFailedEvent,
+  OgeUploadPausingEvent,
+  OgeUploadPausedEvent,
+  OgeUploadResumingEvent,
+  OgeUploadResumedEvent,
+  OgeUploadThumbnailFailedEvent,
+} from './lib/upload/upload-types';
+export type {
+  OgeUploadRequest,
+  OgeUploadChunkMetadata,
+  OgeUploadPart,
+  OgeUploadCallbacks,
+  OgeUploadHandle,
+  OgeUploadAdapter,
+} from './lib/upload/transport-types';
+export { createXhrUploadAdapter } from './lib/upload/xhr-adapter';
+export {
+  planChunks,
+  chunkedLoaded,
+  type OgeUploadChunk,
+} from './lib/upload/chunk-plan';
+export {
+  formatFileSize,
+  type OgeFormatFileSizeOptions,
+} from './lib/upload/file-size';
+export {
+  fileExtension,
+  matchesAccept,
+  validateFile,
+  validateSelection,
+  type OgeUploadCandidate,
+  type OgeUploadRestrictions,
+  type OgeUploadValidationResult,
+} from './lib/upload/file-validation';
+export { isPreviewable, ObjectUrlRegistry } from './lib/upload/thumbnails';
+export {
+  DragDepthCounter,
+  dataTransferHasFiles,
+  dropEffectFor,
+  readDataTransferFiles,
+  readClipboardFiles,
+} from './lib/upload/upload-dnd';
+export {
+  UploadQueue,
+  type OgeResolvedChunkOptions,
+  type OgeResolvedRetryOptions,
+  type OgeUploadTimers,
+  type OgeUploadQueueEvent,
+  type OgeUploadTask,
+  type OgeUploadQueueOptions,
+} from './lib/upload/upload-queue';
+export {
+  OgeFileUploaderCore,
+  type OgeFileUploaderCoreOptions,
+  type OgeFileUploaderEvents,
+  type OgeFileUploaderEventName,
+  type OgeFileUploaderProps,
+} from './lib/upload/file-uploader-core';
+export {
+  OGE_DEFAULT_UPLOAD_MESSAGES,
+  OGE_DEFAULT_UPLOAD_CONFIG,
+  mergeUploadMessages,
+  resolveUploadConfig,
+  formatUploadMessage,
+  type OgeUploadButtonMessages,
+  type OgeUploadDropZoneMessages,
+  type OgeUploadStatusMessages,
+  type OgeUploadValidationMessages,
+  type OgeUploadAnnouncementMessages,
+  type OgeUploadMessages,
+  type OgeUploadMessagesInput,
+  type OgeUploadConfig,
+  type OgeUploadConfigInput,
+} from './lib/upload/upload-messages';
+export {
+  OGE_DEFAULT_TOAST_DEFAULTS,
+  OGE_TOAST_EXIT_MS,
+  OGE_TOAST_ANNOUNCE_DELAY_MS,
+  OGE_TOAST_POSITIONS,
+  OgeToastCore,
+  OgeToastRef,
+  type OgeToastSeverity,
+  type OgeToastPosition,
+  type OgeToastCloseReason,
+  type OgeToastAnnounce,
+  type OgeToastAction,
+  type OgeToastActionEvent,
+  type OgeToastClosedEvent,
+  type OgeToastBaseOptions,
+  type OgeToastBasePatch,
+  type OgeToastDefaults,
+  type OgeResolvedToastOptions,
+  type OgeToastProgressStyle,
+  type OgeToastEntry,
+  type OgeToastPromiseBaseOptions,
+  type OgeToastRegion,
+  type OgeToastCoreOptions,
+} from './lib/overlay/toast-core';
 export {
   lockBodyScroll,
   unlockBodyScroll,
@@ -658,3 +989,49 @@ export {
   type OgeMenubarConfig,
   type OgeMenubarConfigInput,
 } from './lib/navigation/menubar-core';
+
+// --- forms -----------------------------------------------------------------
+
+export {
+  captionize,
+  readPath,
+  writePath,
+  inferDataType,
+  pickEditorType,
+  isBareEditor,
+  resolveItem,
+  orderByVisibleIndex,
+  emptyValueForDataType,
+  formColumnsCss,
+  formColumnsCount,
+} from './lib/forms/form-model';
+export {
+  evaluateOgeValidationRules,
+  asyncValidationRules,
+  isEmptyFormValue,
+} from './lib/forms/form-validation';
+export {
+  OGE_DEFAULT_FORMS_CONFIG,
+  OGE_DEFAULT_FORMS_MESSAGES,
+  resolveOgeFormsConfig,
+  validationSummaryTitle,
+  type OgeFormsConfig,
+  type OgeFormsConfigInput,
+  type OgeFormsMessages,
+} from './lib/forms/form-config';
+export type {
+  OgeFormColCount,
+  OgeFormDataType,
+  OgeFormEditorOptions,
+  OgeFormEditorType,
+  OgeFormErrorEntry,
+  OgeFormFieldChangedEvent,
+  OgeFormGroupData,
+  OgeFormItemDataBase,
+  OgeFormLabelLocation,
+  OgeFormScreenSize,
+  OgeFormValidatedEvent,
+  OgeResolvedFormItem,
+  OgeValidationContext,
+  OgeValidationRule,
+} from './lib/forms/form-types';

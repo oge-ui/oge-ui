@@ -1,3 +1,4 @@
+import type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
 import {
   resolveDisabled,
   resolveDisplay,
@@ -12,21 +13,9 @@ import {
   type OgeSelectValueExpr,
 } from './select-expr';
 
-/**
- * A writable reactive cell — callable getter plus `set`. The Angular adapter
- * backs it with `signal()`, the React adapter with plain state and a
- * change-notification, so the select-list machine itself stays framework-free.
- */
-export interface OgeReactiveCell<T> {
-  (): T;
-  set(value: T): void;
-}
-
-/** How the machine creates its reactive state — supplied per render layer. */
-export interface OgeReactivityAdapter {
-  cell<T>(initial: T): OgeReactiveCell<T>;
-  derived<T>(compute: () => T): () => T;
-}
+// The reactivity contract lives in `../reactivity`; re-exported here because
+// this module was its original home and both names are public API.
+export type { OgeReactiveCell, OgeReactivityAdapter } from '../reactivity';
 
 /** A rendered dropdown row: a group header or an option carrying its absolute index. */
 export type OgeSelectListRow<TItem> =

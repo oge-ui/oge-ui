@@ -5,9 +5,9 @@ import type {
   OgeUploadCallbacks,
   OgeUploadPart,
   OgeUploadRequest,
-} from '../engine/transport-types';
+} from '@oge-ui/behavior';
 import { OGE_UPLOAD_TRANSPORT } from '../transport';
-import type { OgeUploadChunkOptions } from '../upload-types';
+import type { OgeUploadChunkOptions } from '@oge-ui/behavior';
 import { OgeFileUploader } from './file-uploader';
 
 const settle = async (fixture: ComponentFixture<unknown>) => {

@@ -10,7 +10,6 @@ import {
   type ChangeEvent,
   type ReactNode,
 } from 'react';
-import { OgeNumberBox, OgeTextBox } from '@oge-ui/react-inputs';
 import {
   OgeSplitter,
   type OgeSplitterOrientation,
@@ -20,6 +19,7 @@ import {
   type OgeSplitterResizeEvent,
   type OgeSplitterSize,
 } from '@oge-ui/react-layout';
+import { OgeForm, type OgeFormItemDefinition } from '@oge-ui/react-forms';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { LAYOUT_SPLITTER_DEMOS } from './splitter-snippets';
@@ -167,10 +167,22 @@ const AREAS: readonly OgeSplitterPaneItem[] = [
   { key: 'inspector', size: 25, minSize: 15 },
 ];
 
+interface Server {
+  host: string;
+  port: number;
+  user: string;
+}
+
+const serverFields: OgeFormItemDefinition[] = [
+  { field: 'host', label: 'Host' },
+  { field: 'port', label: 'Port' },
+  { field: 'user', label: 'User' },
+];
+
 function SplitterFormDemo(): ReactNode {
-  const [server, setServer] = useState({
+  const [server, setServer] = useState<Server>({
     host: 'db.internal',
-    port: 5432 as number | null,
+    port: 5432,
     user: 'app',
   });
   return createElement(OgeSplitter, {
@@ -180,27 +192,12 @@ function SplitterFormDemo(): ReactNode {
         size: 78,
         content: createElement(
           'div',
-          { className: 'demo-row', style: { padding: 12 } },
-          createElement(OgeTextBox, {
-            key: 'host',
-            label: 'Host',
-            value: server.host,
-            onValueChange: (host: string) =>
-              setServer((current) => ({ ...current, host })),
-          }),
-          createElement(OgeNumberBox, {
-            key: 'port',
-            label: 'Port',
-            value: server.port,
-            onValueChange: (port: number | null) =>
-              setServer((current) => ({ ...current, port })),
-          }),
-          createElement(OgeTextBox, {
-            key: 'user',
-            label: 'User',
-            value: server.user,
-            onValueChange: (user: string) =>
-              setServer((current) => ({ ...current, user })),
+          { style: { padding: 12 } },
+          createElement(OgeForm<Server>, {
+            formData: server,
+            onFormDataChange: setServer,
+            items: serverFields,
+            colCountByScreen: { xs: 1, sm: 2, md: 3 },
           }),
         ),
       },
@@ -369,7 +366,7 @@ function SplitterPersistDemo(): ReactNode {
     <app-demo-card
       [chips]="['&#64;container', 'controlled editors']"
       heading="Forms inside a pane"
-      description="A pane is a plain block box and never a query container, so a form inside one keeps resolving its <code>&#64;container</code> queries against itself. Drag the separator: the layout follows the <em>pane</em> width while the window stays put. <code>&#64;oge-ui/forms</code> has no React layer yet (a recorded exception in <code>docs/REACT-PARITY.md</code>), so this mirror binds <code>&#64;oge-ui/react-inputs</code> editors to plain state — the honest React idiom, and how any React form library would bind them."
+      description="A pane is a plain block box and never a query container, so an <code>&lt;OgeForm&gt;</code> inside one keeps resolving its <code>&#64;container</code> queries against itself. Drag the separator: the column count follows the <em>pane</em> width while the window stays put."
       [code]="demos[6].source"
       language="tsx"
     >

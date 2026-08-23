@@ -185,20 +185,23 @@ const onCollapsed = (event: OgeSplitterPaneCollapsedEvent) => {
   {
     title: 'Forms inside a pane',
     description:
-      'A pane is a plain block box and never a query container, so a form inside one keeps resolving its @container queries against itself. There is no React @oge-ui/forms layer yet, so the fields here are @oge-ui/react-inputs editors bound to plain state — the honest React idiom, and the same demonstration: drag the separator and the form reflows with the pane, not the window.',
+      'A pane is a plain block box and never a query container, so an <OgeForm> inside one keeps resolving its @container queries against itself. Drag the separator: the column count follows the pane width while the window stays put.',
     source: reactDemoSource({
       react: ['useState'],
       use: {
-        '@oge-ui/react-inputs': ['OgeNumberBox', 'OgeTextBox'],
+        '@oge-ui/react-forms': ['OgeForm'],
         '@oge-ui/react-layout': ['OgeSplitter'],
       },
+      types: { '@oge-ui/react-forms': ['OgeFormItemDefinition'] },
       name: 'SplitterFormDemo',
-      body: `// @oge-ui/forms has no React layer yet (docs/REACT-PARITY.md), so the
-// editors hold their value in your own state — useState here, but React
-// Hook Form, Formik or TanStack Form bind exactly the same way.
-const [server, setServer] = useState({
+      before: `const serverFields: OgeFormItemDefinition[] = [
+  { field: 'host', label: 'Host' },
+  { field: 'port', label: 'Port' },
+  { field: 'user', label: 'User' },
+];`,
+      body: `const [server, setServer] = useState({
   host: 'db.internal',
-  port: 5432 as number | null,
+  port: 5432,
   user: 'app',
 });`,
       jsx: `<OgeSplitter
@@ -207,21 +210,12 @@ const [server, setServer] = useState({
     {
       size: 78,
       content: (
-        <div className="demo-row">
-          <OgeTextBox
-            label="Host"
-            value={server.host}
-            onValueChange={(host) => setServer((s) => ({ ...s, host }))}
-          />
-          <OgeNumberBox
-            label="Port"
-            value={server.port}
-            onValueChange={(port) => setServer((s) => ({ ...s, port }))}
-          />
-          <OgeTextBox
-            label="User"
-            value={server.user}
-            onValueChange={(user) => setServer((s) => ({ ...s, user }))}
+        <div className="p-3">
+          <OgeForm
+            formData={server}
+            onFormDataChange={setServer}
+            items={serverFields}
+            colCountByScreen={{ xs: 1, sm: 2, md: 3 }}
           />
         </div>
       ),

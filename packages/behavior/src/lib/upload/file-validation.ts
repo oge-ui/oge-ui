@@ -7,7 +7,7 @@
  *
  * Framework-free by contract — see the `src/lib/engine` lint block.
  */
-import type { OgeUploadErrorKind } from '../upload-types';
+import type { OgeUploadErrorKind } from './upload-types';
 
 /** The subset of a `File` the rules read. Preloaded rows satisfy it too. */
 export interface OgeUploadCandidate {

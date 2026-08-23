@@ -6,152 +6,33 @@ import {
   input,
   output,
 } from '@angular/core';
-import type { FilterExpr, FilterOperator } from '@oge-ui/core';
+import type { FilterOperator } from '@oge-ui/core';
+import {
+  operatorsFor,
+  type OgeBuilderCondition,
+  type OgeBuilderGroup,
+  type OgeFilterBuilderField,
+} from '@oge-ui/behavior';
 import { OgeSelectBox, OgeTextBox } from '@oge-ui/inputs';
 import type { OgeDataType } from '../columns/column';
 import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
 
-export interface OgeFilterBuilderField {
-  field: string;
-  caption: string;
-  dataType: OgeDataType;
-}
-
-export interface OgeBuilderCondition {
-  kind: 'condition';
-  field: string;
-  op: FilterOperator;
-  value: string;
-}
-
-export interface OgeBuilderGroup {
-  kind: 'group';
-  logic: 'and' | 'or';
-  items: (OgeBuilderGroup | OgeBuilderCondition)[];
-}
-
-export function operatorsFor(dataType: OgeDataType): FilterOperator[] {
-  switch (dataType) {
-    case 'number':
-    case 'date':
-      return ['eq', 'ne', 'lt', 'le', 'gt', 'ge', 'isnull', 'isnotnull'];
-    case 'boolean':
-      return ['eq', 'ne'];
-    default:
-      return [
-        'contains',
-        'notcontains',
-        'startswith',
-        'endswith',
-        'eq',
-        'ne',
-        'isnull',
-        'isnotnull',
-      ];
-  }
-}
-
-function typedValue(raw: string, dataType: OgeDataType): unknown {
-  if (dataType === 'number') {
-    const parsed = Number(raw);
-    return Number.isNaN(parsed) ? raw : parsed;
-  }
-  if (dataType === 'boolean') return raw === 'true';
-  return raw;
-}
-
-/** Converts the mutable builder tree into a FilterExpr (drops empty parts). */
-export function builderToExpr(
-  group: OgeBuilderGroup,
-  fields: readonly OgeFilterBuilderField[],
-): FilterExpr | null {
-  const operands: FilterExpr[] = [];
-  for (const item of group.items) {
-    if (item.kind === 'group') {
-      const nested = builderToExpr(item, fields);
-      if (nested) operands.push(nested);
-      continue;
-    }
-    const meta = fields.find((candidate) => candidate.field === item.field);
-    if (!meta) continue;
-    const needsValue = item.op !== 'isnull' && item.op !== 'isnotnull';
-    if (needsValue && item.value.trim() === '') continue;
-    operands.push({
-      type: 'binary',
-      field: item.field,
-      op: item.op,
-      ...(needsValue
-        ? { value: typedValue(item.value.trim(), meta.dataType) }
-        : {}),
-    });
-  }
-  if (!operands.length) return null;
-  return operands.length === 1 ? operands[0] : { type: group.logic, operands };
-}
-
-/** Converts a FilterExpr back into an editable builder tree. */
-export function exprToBuilder(
-  expr: FilterExpr | null,
-  fields: readonly OgeFilterBuilderField[],
-): OgeBuilderGroup {
-  const root: OgeBuilderGroup = { kind: 'group', logic: 'and', items: [] };
-  if (!expr) return root;
-
-  const toCondition = (node: FilterExpr): OgeBuilderCondition | null => {
-    if (node.type !== 'binary') return null;
-    return {
-      kind: 'condition',
-      field: node.field,
-      op: node.op,
-      value: node.value == null ? '' : String(node.value),
-    };
-  };
-
-  if (expr.type === 'and' || expr.type === 'or') {
-    root.logic = expr.type;
-    for (const operand of expr.operands) {
-      if (operand.type === 'and' || operand.type === 'or') {
-        const nested = exprToBuilder(operand, fields);
-        root.items.push(nested);
-      } else {
-        const condition = toCondition(operand);
-        if (condition) root.items.push(condition);
-      }
-    }
-  } else {
-    const condition = toCondition(expr);
-    if (condition) root.items.push(condition);
-  }
-  return root;
-}
-
-/** Human-readable summary of a FilterExpr for the filter panel. */
-export function describeExpr(
-  expr: FilterExpr,
-  fields: readonly OgeFilterBuilderField[],
-  messages: OgeGridMessages,
-): string {
-  if (expr.type === 'binary') {
-    const caption =
-      fields.find((f) => f.field === expr.field)?.caption ?? expr.field;
-    const op = messages.operators[expr.op] ?? expr.op;
-    const needsValue = expr.op !== 'isnull' && expr.op !== 'isnotnull';
-    return needsValue
-      ? `[${caption}] ${op} '${String(expr.value ?? '')}'`
-      : `[${caption}] ${op}`;
-  }
-  if (expr.type === 'not') {
-    return `NOT (${describeExpr(expr.operand, fields, messages)})`;
-  }
-  const logic = expr.type === 'and' ? messages.logicAnd : messages.logicOr;
-  return expr.operands
-    .map((operand) =>
-      operand.type === 'binary'
-        ? describeExpr(operand, fields, messages)
-        : `(${describeExpr(operand, fields, messages)})`,
-    )
-    .join(` ${logic} `);
-}
+// The builder's kernel — the condition tree, the operator table and the
+// expression conversions — is framework-free and lives in `@oge-ui/behavior`
+// (ADR 0001), so the React grid builds the very same expressions. This module
+// keeps the Angular editor and re-exports the kernel, which is public API of
+// `@oge-ui/grid`.
+export {
+  builderToExpr,
+  describeExpr,
+  exprToBuilder,
+  operatorsFor,
+} from '@oge-ui/behavior';
+export type {
+  OgeBuilderCondition,
+  OgeBuilderGroup,
+  OgeFilterBuilderField,
+} from '@oge-ui/behavior';
 
 /**
  * Visual editor for arbitrary and/or condition trees (`FilterExpr`).

@@ -5,7 +5,7 @@ import type {
   OgeUploadHandle,
   OgeUploadPart,
   OgeUploadRequest,
-} from './engine/transport-types';
+} from '@oge-ui/behavior';
 
 /**
  * An adapter over Angular's `HttpClient`, for apps whose auth token is added

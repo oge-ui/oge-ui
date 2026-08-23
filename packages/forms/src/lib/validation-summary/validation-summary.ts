@@ -7,7 +7,7 @@ import {
   input,
   output,
 } from '@angular/core';
-import { formatPattern } from '@oge-ui/inputs';
+import { validationSummaryTitle } from '@oge-ui/behavior';
 import { OGE_FORMS_CONFIG, type OgeFormsMessages } from '../config';
 import type { OgeFormErrorEntry } from '../form/form-types';
 
@@ -73,11 +73,7 @@ export class OgeValidationSummary {
     ...this.messages(),
   }));
 
-  protected readonly title = computed(() => {
-    const count = this.errors().length;
-    if (count === 1) return this.msg().validationSummaryTitleOne;
-    return formatPattern(this.msg().validationSummaryTitle, {
-      count: String(count),
-    });
-  });
+  protected readonly title = computed(() =>
+    validationSummaryTitle(this.errors().length, this.msg()),
+  );
 }

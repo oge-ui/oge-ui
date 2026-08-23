@@ -11,7 +11,7 @@ import {
   dataTransferHasFiles,
   dropEffectFor,
   readDataTransferFiles,
-} from '../engine/upload-dnd';
+} from '@oge-ui/behavior';
 import { OgeUploadDropZoneRegistry } from './drop-zone-registry';
 
 /**

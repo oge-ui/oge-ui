@@ -140,29 +140,27 @@ const [price, setPrice] = useState<readonly [number, number]>([200, 600]);`,
   {
     title: 'Inside a form',
     description:
-      "React has no formField/formControl binding — the controlled pair IS the integration point. Hold the value in your form state (useState, React Hook Form, Formik, TanStack Form) and feed it back through value + onValueChange; the slider stays a bare editor, so the label/hint/error chrome is your form layer's job.",
+      "Inside <OgeForm> the slider is a bare editor — the form renders the label/hint/error chrome around it. dataType 'number' still defaults to the number box; the slider is an explicit editorType choice.",
     source: reactDemoSource({
       react: ['useState'],
-      use: { '@oge-ui/react-inputs': ['OgeSlider'] },
+      use: { '@oge-ui/react-forms': ['OgeForm'] },
+      types: { '@oge-ui/react-forms': ['OgeFormItemDefinition'] },
       name: 'SliderFormDemo',
-      body: `// A bare editor: the slider renders no label/hint/error chrome of its own.
-// Any form library binds it the same way — read the value from your form
-// state, write it back from onValueChange.
-const [settings, setSettings] = useState({ brightness: 70 });`,
-      jsx: `<form onSubmit={(event) => event.preventDefault()}>
-  <span className="text-sm">Brightness</span>
-  <OgeSlider
-    value={settings.brightness}
-    onValueChange={(brightness) => setSettings({ brightness })}
-    min={0}
-    max={100}
-    step={5}
-    ariaLabel="Brightness"
-  />
+      before: `const items: OgeFormItemDefinition[] = [
+  {
+    field: 'brightness',
+    label: 'Brightness',
+    editorType: 'slider',
+    editorOptions: { min: 0, max: 100, step: 5 },
+  },
+];`,
+      body: `const [settings, setSettings] = useState({ brightness: 70 });`,
+      jsx: `<div>
+  <OgeForm formData={settings} onFormDataChange={setSettings} items={items} />
   <p className="mt-3 text-sm">
     Model: <code>{settings.brightness}</code>
   </p>
-</form>`,
+</div>`,
     }),
   },
 ];

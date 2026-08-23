@@ -2,27 +2,29 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import {
-  OGE_DEFAULT_OVERLAY_TIMINGS,
-  type OgeOverlayTimings,
+  OGE_DEFAULT_OVERLAY_CONFIG,
+  resolveOverlayConfig,
+  type OgeOverlayConfig,
+  type OgeOverlayConfigInput,
 } from '@oge-ui/behavior';
 
-/**
- * React overlay defaults — the anchored-primitive slice of the Angular
- * package's `OgeOverlayConfig`. The timing values themselves are
- * single-sourced in `@oge-ui/behavior`, so the two layers cannot drift; the
- * modal/toast fields join here when those surfaces ship in React.
- */
-export type OgeOverlayConfig = OgeOverlayTimings;
-
-export type OgeOverlayConfigInput = Partial<OgeOverlayConfig>;
+// The config shape, its defaults and the `messages` catalog are
+// single-sourced in `@oge-ui/behavior`, so the two render layers cannot
+// drift (ADR 0001); re-exported so React consumers import one package.
+export type {
+  OgeOverlayConfig,
+  OgeOverlayConfigInput,
+  OgeOverlayMessages,
+} from '@oge-ui/behavior';
 
 const OgeOverlayConfigContext = createContext<OgeOverlayConfig>(
-  OGE_DEFAULT_OVERLAY_TIMINGS,
+  OGE_DEFAULT_OVERLAY_CONFIG,
 );
 
 /**
  * The React counterpart of Angular's `provideOgeOverlayConfig()` — wrap a
- * subtree to change the overlay defaults beneath it.
+ * subtree to change the overlay defaults beneath it. Nested providers merge
+ * over the outer one, messages one level deep.
  */
 export function OgeOverlayConfigProvider({
   config,
@@ -31,9 +33,10 @@ export function OgeOverlayConfigProvider({
   config?: OgeOverlayConfigInput;
   children?: ReactNode;
 }) {
+  const parent = useContext(OgeOverlayConfigContext);
   const value = useMemo<OgeOverlayConfig>(
-    () => ({ ...OGE_DEFAULT_OVERLAY_TIMINGS, ...config }),
-    [config],
+    () => resolveOverlayConfig(config, parent),
+    [config, parent],
   );
   return (
     <OgeOverlayConfigContext.Provider value={value}>

@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
-import { createXhrUploadAdapter } from './engine/xhr-adapter';
-import type { OgeUploadAdapter } from './engine/transport-types';
+import { createXhrUploadAdapter } from '@oge-ui/behavior';
+import type { OgeUploadAdapter } from '@oge-ui/behavior';
 
 /**
  * The transport every uploader resolves unless one is bound to `uploadAdapter`.

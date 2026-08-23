@@ -1,18 +1,9 @@
 import { resource, type Signal } from '@angular/core';
+import { validate, validateAsync } from '@angular/forms/signals';
 import {
-  email,
-  max,
-  maxDate,
-  maxLength,
-  min,
-  minDate,
-  minLength,
-  pattern,
-  required,
-  validate,
-  validateAsync,
-  type SchemaPath,
-} from '@angular/forms/signals';
+  asyncValidationRules,
+  evaluateOgeValidationRules,
+} from '@oge-ui/behavior';
 import type { OgeFormItemData, OgeValidationRule } from './form-types';
 
 /**
@@ -39,84 +30,19 @@ function pathFor(root: any, field: string): any {
   return current;
 }
 
-function applyRule(path: any, rule: OgeValidationRule, root: any): void {
-  switch (rule.type) {
-    case 'required':
-      required(path as SchemaPath<unknown>, { message: rule.message });
-      return;
-    case 'email':
-      email(path as SchemaPath<string>, { message: rule.message });
-      return;
-    case 'numeric':
-      if (rule.min !== undefined) {
-        min(path, rule.min, { message: rule.message });
-      }
-      if (rule.max !== undefined) {
-        max(path, rule.max, { message: rule.message });
-      }
-      return;
-    case 'stringLength':
-      if (rule.min !== undefined) {
-        minLength(path, rule.min, { message: rule.message });
-      }
-      if (rule.max !== undefined) {
-        maxLength(path, rule.max, { message: rule.message });
-      }
-      return;
-    case 'pattern':
-      pattern(path as SchemaPath<string>, rule.pattern, {
-        message: rule.message,
-      });
-      return;
-    case 'range':
-      if (rule.min !== undefined) {
-        minDate(path, rule.min, { message: rule.message });
-      }
-      if (rule.max !== undefined) {
-        maxDate(path, rule.max, { message: rule.message });
-      }
-      return;
-    case 'custom':
-      // `root` is the schema path the compiler was handed, so `valueOf(root)`
-      // is how a cross-field rule reaches the whole model
-      validate(path, (ctx: any) => {
-        const message = rule.validate({
-          value: ctx.value(),
-          data: (ctx.valueOf(root) ?? {}) as Record<string, unknown>,
-        });
-        return message ? { kind: 'custom', message } : undefined;
-      });
-      return;
-    case 'async':
-      validateAsync(path, {
-        params: (ctx: any) => ctx.value(),
-        // `factory` must return a real `Resource`, not a config object — the
-        // loader re-runs whenever the field's value changes
-        factory: (params: Signal<unknown>) =>
-          resource({
-            params: () => params(),
-            loader: ({ params: value }: { params: unknown }) =>
-              value === undefined
-                ? Promise.resolve(null)
-                : rule.validate(value),
-          }),
-        onSuccess: (message: unknown) =>
-          typeof message === 'string' && message.length > 0
-            ? { kind: 'async', message }
-            : undefined,
-        // no explicit message falls through to the inputs package's
-        // `invalidError`, so every user-facing string stays in one table
-        onError: () => ({ kind: 'async', message: rule.message }),
-      } as any);
-      return;
-  }
-}
-
 /**
  * Compiles every item's `isRequired` / `validationRules` into an Angular
  * Signal Forms schema function. This is the whole of OGE's validation story in
  * `formData` mode — no second engine exists, and in `[fieldTree]` /
  * `[formGroup]` mode this compiler is never called at all.
+ *
+ * The **semantics** are not implemented here: the synchronous rules run
+ * through `@oge-ui/behavior`'s `evaluateOgeValidationRules`, which is the same
+ * function React's `<OgeForm>` calls, so the two layers cannot disagree about
+ * what a rule means or which message it produces (ADR 0001). What stays here
+ * is the Angular plumbing: one `validate()` per field that reports the shared
+ * verdict, and a `resource`-backed `validateAsync()` per async rule, since
+ * scheduling a promise is exactly the part each framework does its own way.
  */
 export function schemaFromRules(
   items: readonly RuleSource[],
@@ -125,11 +51,41 @@ export function schemaFromRules(
     for (const item of items) {
       const path = pathFor(root, item.field);
       if (path === undefined) continue;
-      if (item.isRequired === true) {
-        required(path as SchemaPath<unknown>);
+      const rules = item.validationRules ?? [];
+      const isRequired = item.isRequired === true;
+
+      if (isRequired || rules.some((rule) => rule.type !== 'async')) {
+        validate(path, (ctx: any) =>
+          evaluateOgeValidationRules(
+            ctx.value(),
+            (ctx.valueOf(root) ?? {}) as Record<string, unknown>,
+            rules,
+            isRequired,
+          ),
+        );
       }
-      for (const rule of item.validationRules ?? []) {
-        applyRule(path, rule, root);
+
+      for (const rule of asyncValidationRules(rules)) {
+        validateAsync(path, {
+          params: (ctx: any) => ctx.value(),
+          // `factory` must return a real `Resource`, not a config object — the
+          // loader re-runs whenever the field's value changes
+          factory: (params: Signal<unknown>) =>
+            resource({
+              params: () => params(),
+              loader: ({ params: value }: { params: unknown }) =>
+                value === undefined
+                  ? Promise.resolve(null)
+                  : rule.validate(value),
+            }),
+          onSuccess: (message: unknown) =>
+            typeof message === 'string' && message.length > 0
+              ? { kind: 'async', message }
+              : undefined,
+          // no explicit message falls through to the inputs package's
+          // `invalidError`, so every user-facing string stays in one table
+          onError: () => ({ kind: 'async', message: rule.message }),
+        } as any);
       }
     }
   };

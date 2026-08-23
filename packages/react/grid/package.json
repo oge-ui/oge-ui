@@ -1,0 +1,55 @@
+{
+  "name": "@oge-ui/react-grid",
+  "version": "0.12.0",
+  "description": "React data grid from the OGE UI suite: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging with a full pager, row and column virtualization, windowed remote loading and infinite scrolling, single/multiple/checkbox selection with shift ranges and Ctrl+A, Excel-like keyboard navigation, a focused row, pinned and resizable columns, responsive column hiding, state persistence, CSV export and clipboard copy — running the same framework-free grid engine, the same state slices and the same stylesheet as the Angular grid package.",
+  "keywords": [
+    "react",
+    "data-grid",
+    "datagrid",
+    "table",
+    "virtual-scroll",
+    "sorting",
+    "filtering",
+    "paging",
+    "accessibility",
+    "design-system",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.12.0",
+    "@oge-ui/core": "0.12.0",
+    "@oge-ui/react-inputs": "0.12.0",
+    "@oge-ui/react-layout": "0.12.0",
+    "@oge-ui/react-overlay": "0.12.0"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/grid"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

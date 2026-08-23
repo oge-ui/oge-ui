@@ -190,6 +190,19 @@ export const OGE_ANCHORED_PANEL_API: ApiSections = {
           type: '(reason: OgePopupCloseReason) =&gt; void',
           description: 'Notified after every close with its reason.',
         },
+        {
+          name: 'anchorRect',
+          type: '() =&gt; OgeRect | null',
+          description:
+            'Virtual anchor rectangle used for positioning when it returns a rect — e.g. the pointer location of a context menu.',
+        },
+        {
+          name: 'transient',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Transient surfaces (tooltips) skip the Escape stack so an open tooltip never swallows the Escape meant for the popup underneath.',
+        },
       ],
     },
   ],
@@ -229,7 +242,7 @@ export const OGE_ANCHORED_PANEL_API: ApiSections = {
       entries: [
         {
           name: 'OgePopupCloseReason',
-          type: "'api' | 'outside' | 'escape' | 'select' | 'tab'",
+          type: "'api' | 'outside' | 'escape' | 'select' | 'tab' | 'back'",
           description: 'Why a panel closed.',
         },
       ],
@@ -424,10 +437,23 @@ export const OGE_OVERLAY_CONFIG_API: ApiSections = {
             'Grace period before an open submenu closes after hovering a sibling row — the diagonal-pointer allowance.',
         },
         {
+          name: 'tooltipShowDelayMs / tooltipHideDelayMs',
+          type: 'number',
+          default: '400 / 100',
+          description:
+            'Hover dwell before a tooltip shows (focus shows immediately) and the grace period before it hides.',
+        },
+        {
+          name: 'toastPosition / toastDisplayTime / toastMaxVisible / toastProgressBar / toastCoalesceDuplicates',
+          type: 'OgeToastPosition / number / number / boolean / boolean',
+          default: "'bottom-end' / 4000 / 5 / false / false",
+          description: 'Toast defaults.',
+        },
+        {
           name: 'messages',
           type: 'OgeOverlayMessages',
           description:
-            'User-facing strings of the modal header buttons: <code>modalClose</code>, <code>modalMaximize</code>, <code>modalRestore</code>.',
+            'User-facing strings of the modal header buttons and the toast chrome: <code>modalClose</code>, <code>modalMaximize</code>, <code>modalRestore</code>, <code>toastClose</code>, <code>toastRegionLabel</code>, <code>toastCountBadge</code>.',
         },
       ],
     },
@@ -1055,6 +1081,17 @@ export const OGE_CONTEXT_MENU_API: ApiSections = {
           default: 'false',
           description:
             'Leaves the browser menu in charge without removing the directive.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'close(): void',
+          type: 'void',
+          description: 'Closes the menu programmatically.',
         },
       ],
     },

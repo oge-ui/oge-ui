@@ -1,200 +1,24 @@
 import { InjectionToken, type Provider } from '@angular/core';
-import type { FilterOperator, SummaryType } from '@oge-ui/core';
+import {
+  OGE_DEFAULT_GRID_CONFIG,
+  OGE_DEFAULT_GRID_MESSAGES,
+  resolveGridConfig,
+  type OgeGridConfig,
+  type OgeGridConfigInput,
+} from '@oge-ui/behavior';
 
-/**
- * Every user-facing string in the grid — override globally via
- * `provideOgeGridConfig({ messages: {...} })` or per grid via `[messages]`.
- */
-export interface OgeGridMessages {
-  noData: string;
-  loading: string;
-  search: string;
-  selectAllValues: string;
-  blankValue: string;
-  columnChooser: string;
-  columnChooserTitle: string;
-  /** Accessible name of the grid's `role="toolbar"` command bar. */
-  toolbar: string;
-  /** Accessible name of the toolbar's overflow button. */
-  moreCommands: string;
-  groupPanelHint: string;
-  ungroupPrefix: string;
-  expandAllGroups: string;
-  collapseAllGroups: string;
-  filterPrefix: string;
-  filterValues: string;
-  selectAllRows: string;
-  selectRow: string;
-  toggleDetail: string;
-  /** Aria label of a collapsed tree row's expander (tree-list). */
-  expandRow: string;
-  /** Aria label of an expanded tree row's expander (tree-list). */
-  collapseRow: string;
-  previousPage: string;
-  nextPage: string;
-  rowsSuffix: string;
-  pageSizeLabel: string;
-  allRows: string;
-  confirmDelete: string;
-  booleanTrue: string;
-  booleanFalse: string;
-  editRow: string;
-  deleteRow: string;
-  undeleteRow: string;
-  saveRow: string;
-  cancelEdit: string;
-  addRow: string;
-  saveChanges: string;
-  discardChanges: string;
-  requiredError: string;
-  invalidError: string;
-  sortAscending: string;
-  sortDescending: string;
-  clearSort: string;
-  groupByColumn: string;
-  ungroupColumn: string;
-  pinLeft: string;
-  pinRight: string;
-  unpin: string;
-  hideColumn: string;
-  exportCsv: string;
-  /** Operator labels for the filter-row operator menu and the filter builder. */
-  operators: Record<FilterOperator, string>;
-  resetOperator: string;
-  filterBuilderTitle: string;
-  createFilter: string;
-  clearFilter: string;
-  addCondition: string;
-  addGroup: string;
-  removeItem: string;
-  logicAnd: string;
-  logicOr: string;
-  apply: string;
-  filterValuePlaceholder: string;
-  summaryLabels: Record<SummaryType, string>;
-  /** Pattern for group-row summaries; placeholders: {label} {column} {value} */
-  groupSummaryPattern: string;
-  /** Pattern for the total row; placeholders: {label} {value} */
-  totalSummaryPattern: string;
-}
+// The message catalog, the config shape and its defaults are single-sourced
+// in `@oge-ui/behavior`, so the Angular and React grids cannot drift
+// (ADR 0001); re-exported so consumers keep importing one package.
+export {
+  OGE_DEFAULT_GRID_CONFIG,
+  type OgeGridConfig,
+  type OgeGridConfigInput,
+  type OgeGridMessages,
+} from '@oge-ui/behavior';
 
-export const OGE_DEFAULT_MESSAGES: OgeGridMessages = {
-  noData: 'No data',
-  loading: 'Loading…',
-  search: 'Search…',
-  selectAllValues: '(All)',
-  blankValue: '(Blank)',
-  columnChooser: 'Column chooser',
-  columnChooserTitle: 'Columns',
-  toolbar: 'Grid toolbar',
-  moreCommands: 'More commands',
-  groupPanelHint: 'Drag a column header here to group',
-  ungroupPrefix: 'Ungroup',
-  expandAllGroups: 'Expand all groups',
-  collapseAllGroups: 'Collapse all groups',
-  filterPrefix: 'Filter',
-  filterValues: 'Filter values',
-  selectAllRows: 'Select all rows',
-  selectRow: 'Select row',
-  toggleDetail: 'Toggle detail',
-  expandRow: 'Expand row',
-  collapseRow: 'Collapse row',
-  previousPage: 'Previous page',
-  nextPage: 'Next page',
-  rowsSuffix: 'rows',
-  pageSizeLabel: 'Rows per page',
-  allRows: 'All',
-  confirmDelete: 'Delete this row?',
-  booleanTrue: '✓',
-  booleanFalse: '✗',
-  editRow: 'Edit',
-  deleteRow: 'Delete',
-  undeleteRow: 'Undo delete',
-  saveRow: 'Save',
-  cancelEdit: 'Cancel',
-  addRow: 'Add',
-  saveChanges: 'Save changes',
-  discardChanges: 'Discard changes',
-  requiredError: 'This field is required',
-  invalidError: 'Invalid value',
-  sortAscending: 'Sort ascending',
-  sortDescending: 'Sort descending',
-  clearSort: 'Clear sort',
-  groupByColumn: 'Group by this column',
-  ungroupColumn: 'Ungroup',
-  pinLeft: 'Pin left',
-  pinRight: 'Pin right',
-  unpin: 'Unpin',
-  hideColumn: 'Hide column',
-  exportCsv: 'Export CSV',
-  operators: {
-    eq: 'Equals',
-    ne: 'Does not equal',
-    gt: 'Greater than',
-    ge: 'Greater than or equal',
-    lt: 'Less than',
-    le: 'Less than or equal',
-    contains: 'Contains',
-    notcontains: 'Does not contain',
-    startswith: 'Starts with',
-    endswith: 'Ends with',
-    in: 'Is any of',
-    between: 'Between',
-    isnull: 'Is blank',
-    isnotnull: 'Is not blank',
-  },
-  resetOperator: 'Reset',
-  filterBuilderTitle: 'Filter Builder',
-  createFilter: 'Create filter',
-  clearFilter: 'Clear',
-  addCondition: 'Add condition',
-  addGroup: 'Add group',
-  removeItem: 'Remove',
-  logicAnd: 'And',
-  logicOr: 'Or',
-  apply: 'Apply',
-  filterValuePlaceholder: 'Value',
-  summaryLabels: {
-    sum: 'Sum',
-    avg: 'Avg',
-    min: 'Min',
-    max: 'Max',
-    count: 'Count',
-    custom: 'Custom',
-  },
-  groupSummaryPattern: '{label} of {column}: {value}',
-  totalSummaryPattern: '{label}: {value}',
-};
-
-/** Application-wide defaults, overridable per grid via the matching inputs. */
-export interface OgeGridConfig {
-  rowHeight: number;
-  detailRowHeight: number;
-  filterDebounce: number;
-  /** Extra rows rendered above/below the virtual window. */
-  overscan: number;
-  /** Track minimum for columns without an explicit width. */
-  columnMinWidth: number;
-  /** Width assumed for pinned columns without a numeric width. */
-  pinnedDefaultWidth: number;
-  /** Maximum distinct values listed in the header filter popup. */
-  headerFilterValueLimit: number;
-  /** Whether a third header click clears the sort. */
-  allowUnsorting: boolean;
-  messages: OgeGridMessages;
-}
-
-export const OGE_DEFAULT_GRID_CONFIG: OgeGridConfig = {
-  rowHeight: 36,
-  detailRowHeight: 200,
-  filterDebounce: 300,
-  overscan: 6,
-  columnMinWidth: 120,
-  pinnedDefaultWidth: 150,
-  headerFilterValueLimit: 200,
-  allowUnsorting: true,
-  messages: OGE_DEFAULT_MESSAGES,
-};
+/** The default message catalog — `OGE_DEFAULT_GRID_MESSAGES` under its historical name. */
+export const OGE_DEFAULT_MESSAGES = OGE_DEFAULT_GRID_MESSAGES;
 
 export const OGE_GRID_CONFIG = new InjectionToken<OgeGridConfig>(
   'OGE_GRID_CONFIG',
@@ -202,10 +26,6 @@ export const OGE_GRID_CONFIG = new InjectionToken<OgeGridConfig>(
     factory: () => OGE_DEFAULT_GRID_CONFIG,
   },
 );
-
-export type OgeGridConfigInput = Partial<Omit<OgeGridConfig, 'messages'>> & {
-  messages?: Partial<OgeGridMessages>;
-};
 
 /**
  * Application- or component-scoped grid defaults:
@@ -220,14 +40,9 @@ export type OgeGridConfigInput = Partial<Omit<OgeGridConfig, 'messages'>> & {
  * ```
  */
 export function provideOgeGridConfig(config: OgeGridConfigInput): Provider {
-  const { messages, ...rest } = config;
   return {
     provide: OGE_GRID_CONFIG,
-    useValue: {
-      ...OGE_DEFAULT_GRID_CONFIG,
-      ...rest,
-      messages: { ...OGE_DEFAULT_MESSAGES, ...messages },
-    } satisfies OgeGridConfig,
+    useValue: resolveGridConfig(config),
   };
 }
 

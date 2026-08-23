@@ -49,6 +49,16 @@ const COVERAGE: Readonly<
     // React readers get the shell notice there (see docs/REACT-PARITY.md)
     tabs: ['', 'api'],
     inputs: '*',
+    // overview, layout, validation and api all branch (R5)
+    forms: '*',
+    // overview, tooltip-context-menu, modal, toast and api all branch
+    overlay: '*',
+    // overview and api both branch
+    upload: '*',
+    // R6 in progress: the overview and the API page branch; the feature
+    // pages (columns, filtering, selection, …) follow slice by slice — see
+    // docs/REACT-PARITY.md for the phase table.
+    'data-grid': ['', 'api', 'grouping', 'master-detail', 'rows'],
     // The navigation package ships as six route families. The tree view owns
     // the family's overview and API pages; the rest are single-page families.
     'tree-view': ['', 'api'],

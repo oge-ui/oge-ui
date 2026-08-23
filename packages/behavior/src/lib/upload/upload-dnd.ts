@@ -6,7 +6,7 @@
  *
  * Framework-free by contract — see the `src/lib/engine` lint block.
  */
-import type { OgeUploadDropEffect } from '../upload-types';
+import type { OgeUploadDropEffect } from './upload-types';
 
 /**
  * `dragleave` fires on every child the pointer crosses, so a boolean

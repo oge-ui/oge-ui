@@ -28,7 +28,6 @@ import {
   createFilterPredicate,
   flattenGroupedData,
   buildSearchHighlightHtml,
-  foldText,
   groupNodeKey,
   resolveKeySelector,
   type CsvOptions,
@@ -46,6 +45,30 @@ import {
   type SummaryType,
 } from '@oge-ui/core';
 import {
+  allRowsSelected,
+  deferredToggleExpr,
+  keyEqualsExpr,
+  rowClickSelectionIntent,
+} from '@oge-ui/behavior';
+import {
+  effectiveFilterOperator,
+  filterOperatorSymbol,
+  filterRowOperatorChoices,
+  rowFilterExpr,
+} from '@oge-ui/behavior';
+import {
+  allHeaderValuesSelected,
+  filterHeaderValues,
+  groupHeaderValuesByYear,
+  headerGroupState,
+  headerValueText,
+  headerYearLabel,
+  isHeaderValueSelected,
+  toggleAllHeaderValues as toggleAllHeaderValueSelection,
+  toggleHeaderGroup as toggleHeaderGroupSelection,
+  toggleHeaderValue as toggleHeaderValueSelection,
+} from '@oge-ui/behavior';
+import {
   CHECKBOX_WIDTH,
   COMMAND_WIDTH,
   ColumnLayoutModel,
@@ -56,9 +79,7 @@ import {
   RowVirtualizerModel,
   DRAG_WIDTH,
   EXPANDER_WIDTH,
-  buildRowFilterExpr,
   dateFilterExpr,
-  defaultOperatorFor,
   humanize,
   isDataSource,
   lookupTextOf,
@@ -78,7 +99,7 @@ import {
   OGE_STATE_STORAGE,
   createStatePersistence,
 } from '@oge-ui/grid/foundation';
-import { OgeColumn, type OgeDataType } from '../columns/column';
+import { OgeColumn } from '../columns/column';
 import { OgeColumnGroup } from '../columns/column-group';
 import { formatCellValue } from '../columns/value-format';
 import {
@@ -129,6 +150,45 @@ import { OgeToolbar } from '@oge-ui/layout';
 import { OgeGridToolbarItem } from '../templates/toolbar-item';
 import type { OgeHeaderTemplateContext } from '../templates/header-template';
 
+// The option objects and framework-free event payloads are single-sourced in
+// `@oge-ui/behavior` (the React grid accepts the very same types); re-exported
+// so `@oge-ui/grid` consumers are unaffected.
+export type {
+  OgeDataErrorEvent,
+  OgeExportCellArgs,
+  OgeExportColumn,
+  OgeExportData,
+  OgeExportOptions,
+  OgeExportingEvent,
+  OgeFilterRowOptions,
+  OgeFocusedRowChangedEvent,
+  OgeGroupingOptions,
+  OgeHeaderFilterOptions,
+  OgePagingOptions,
+  OgeRowReorderedEvent,
+  OgeScrollingOptions,
+  OgeSearchPanelOptions,
+  OgeSelectionChangedEvent,
+  OgeSortingOptions,
+} from '@oge-ui/behavior';
+import type {
+  OgeDataErrorEvent,
+  OgeExportColumn,
+  OgeExportData,
+  OgeExportOptions,
+  OgeExportingEvent,
+  OgeFilterRowOptions,
+  OgeFocusedRowChangedEvent,
+  OgeGroupingOptions,
+  OgeHeaderFilterOptions,
+  OgePagingOptions,
+  OgeRowReorderedEvent,
+  OgeScrollingOptions,
+  OgeSearchPanelOptions,
+  OgeSelectionChangedEvent,
+  OgeSortingOptions,
+} from '@oge-ui/behavior';
+
 /** Programmatic column definition (alternative to declarative `<oge-column>`). */
 export interface OgeColumnDef {
   field: string;
@@ -141,47 +201,6 @@ export interface OgeRowClickEvent<T = unknown> {
   event: MouseEvent;
 }
 
-/** Column metadata handed to exporters (CSV / Excel). */
-export interface OgeExportColumn<T = unknown> {
-  caption: string;
-  field: string | undefined;
-  dataType: OgeDataType;
-  accessor: (row: T) => unknown;
-  format?: ((value: unknown) => string) | undefined;
-}
-
-export interface OgeExportData<T = unknown> {
-  rows: readonly T[];
-  columns: readonly OgeExportColumn<T>[];
-}
-
-/** Arguments handed to `customizeCell` for every exported cell. */
-export interface OgeExportCellArgs<T = unknown> {
-  row: T;
-  field: string | undefined;
-  caption: string;
-  /** Raw accessor value. */
-  value: unknown;
-  /** Default text the exporter would emit for this cell. */
-  text: string;
-}
-
-export interface OgeExportOptions<T = unknown> {
-  /**
-   * Which rows to export. `'all'` (default) ignores paging and exports the
-   * full filtered + sorted set; `'page'` exports only the current page;
-   * `'selection'` exports the selected rows. Master-detail content and group
-   * headers are never exported — data rows only.
-   */
-  scope?: 'all' | 'page' | 'selection';
-  /**
-   * Override what a cell exports: return a replacement (string for CSV/PDF;
-   * string/number/Date/boolean stay typed in Excel) or `undefined` to keep
-   * the default.
-   */
-  customizeCell?: (cell: OgeExportCellArgs<T>) => unknown;
-}
-
 /** One button of the command column (`commandButtons` input). */
 export interface OgeCommandButton<T = unknown> {
   /** Built-in behavior; omit for custom buttons. */
@@ -191,15 +210,6 @@ export interface OgeCommandButton<T = unknown> {
   onClick?: (row: T, key: RowKey) => void;
   /** Per-row visibility. */
   visible?: (row: T) => boolean;
-}
-
-export interface OgeRowReorderedEvent<T = unknown> {
-  key: RowKey;
-  targetKey: RowKey;
-  /** Positions within the rendered (filtered/sorted) view. */
-  fromIndex: number;
-  toIndex: number;
-  row: T;
 }
 
 export interface OgeCellClickEvent<T = unknown> {
@@ -235,69 +245,6 @@ export interface OgeHeaderContextMenuEvent {
   items: OgeMenuItem[];
 }
 
-// --- Option objects (boolean shorthands remain valid) ------
-
-export interface OgeFilterRowOptions {
-  visible?: boolean;
-  /** Debounce for typing, in ms. */
-  debounce?: number;
-}
-
-export interface OgeHeaderFilterOptions {
-  visible?: boolean;
-  /** Maximum distinct values listed in the popup. */
-  valueLimit?: number;
-}
-
-export interface OgeSearchPanelOptions {
-  visible?: boolean;
-  placeholder?: string;
-  /** Input width in px. */
-  width?: number;
-}
-
-export interface OgePagingOptions {
-  pageSize: number;
-  /** Shows a page-size selector in the pager; `'all'` adds an unpaged option. */
-  pageSizes?: readonly (number | 'all')[];
-  /** Shows the total row count in the pager. Default true. */
-  showInfo?: boolean;
-  /** 'compact' shows `page / count`; 'adaptive' switches to compact on narrow grids. */
-  displayMode?: 'full' | 'compact' | 'adaptive';
-}
-
-export interface OgeSortingOptions {
-  mode?: 'none' | 'single' | 'multi';
-  /** Whether a third header click clears the sort. Defaults from global config. */
-  allowUnsorting?: boolean;
-}
-
-export interface OgeGroupingOptions {
-  /**
-   * `false` starts every group collapsed and enables deferred loading:
-   * a grouped payload may return `items: null` per group, and the grid
-   * fetches a group's children only when it is expanded.
-   */
-  autoExpandAll?: boolean;
-}
-
-export interface OgeScrollingOptions {
-  /** 'virtual' windows the DOM; 'infinite' additionally loads on demand while scrolling down. */
-  mode?: 'standard' | 'virtual' | 'infinite';
-  /**
-   * Fetch rows in blocks from the DataSource instead of loading everything
-   * (server-side windowing). Defaults to true for 'infinite'.
-   * Windowed mode is row-only: grouping and master-detail are unavailable.
-   */
-  remote?: boolean;
-  /**
-   * 'virtual' renders only the columns inside the horizontal viewport.
-   * Requires plain columns: no pinned columns and no column bands; columns
-   * without a numeric `width` fall back to their min width.
-   */
-  columnRenderingMode?: 'standard' | 'virtual';
-}
-
 // Save-flow types moved to the foundation entry with the editing model;
 // re-exported so `@oge-ui/grid` consumers are unaffected.
 export {
@@ -313,35 +260,10 @@ export {
   type OgeSavingChangesEvent,
 } from '@oge-ui/grid/foundation';
 
-/** Fires after the selection changed, with full state plus diffs. */
-export interface OgeSelectionChangedEvent {
-  selectedKeys: RowKey[];
-  addedKeys: RowKey[];
-  removedKeys: RowKey[];
-}
-
-/** Fires after the focused row changed. */
-export interface OgeFocusedRowChangedEvent<T = unknown> {
-  key: RowKey | null;
-  /** The focused row when it is currently loaded; `undefined` otherwise. */
-  row: T | undefined;
-}
-
-/** Cancelable: fires before a CSV export starts; `fileName` is mutable. */
-export interface OgeExportingEvent {
-  fileName: string;
-  cancel: boolean;
-}
-
 /** Prefill hook for `addRow()`: values written here stage onto the new row. */
 export interface OgeInitNewRowEvent {
   key: RowKey;
   values: Record<string, unknown>;
-}
-
-/** A DataSource load or save failed. */
-export interface OgeDataErrorEvent {
-  error: unknown;
 }
 
 /** Grid-side view of the shared column view-model: `source` is the OgeColumn. */
@@ -2218,25 +2140,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   });
 
   private keyEqualsExpr(key: RowKey): FilterExpr | null {
-    const field = this.deferredKeyFieldName();
-    return field ? { type: 'binary', field, op: 'eq', value: key } : null;
+    return keyEqualsExpr(this.deferredKeyFieldName(), key);
   }
 
   private deferredToggle(key: RowKey): void {
     const eq = this.keyEqualsExpr(key);
     if (!eq) return;
-    const current = untracked(this.selectionFilter);
-    if (untracked(this.deferredSelectedKeys).has(key)) {
-      this.selectionFilter.set(
-        current
-          ? { type: 'and', operands: [current, { type: 'not', operand: eq }] }
-          : null,
-      );
-    } else {
-      this.selectionFilter.set(
-        current ? { type: 'or', operands: [current, eq] } : eq,
-      );
-    }
+    this.selectionFilter.set(
+      deferredToggleExpr(
+        untracked(this.selectionFilter),
+        eq,
+        untracked(this.deferredSelectedKeys).has(key),
+      ),
+    );
   }
 
   private deferredSelectOnly(key: RowKey): void {
@@ -2257,11 +2173,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       const selected = this.deferredSelectedKeys();
       return keys.every((key) => selected.has(key));
     }
-    const selected = this.store.selection.selected();
-    if (this.selectAllMode() === 'page' || selected.size >= this.totalCount()) {
-      return keys.every((key) => selected.has(key));
-    }
-    return false;
+    return allRowsSelected({
+      keys,
+      selected: this.store.selection.selected(),
+      totalCount: this.totalCount(),
+      selectAllMode: this.selectAllMode(),
+    });
   });
 
   protected readonly someSelected = computed(() => {
@@ -2281,15 +2198,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       else this.deferredToggle(node.key);
       return;
     }
-    if (mode === 'single') {
-      this.store.selection.selectOnly(node.key);
-      return;
+    switch (rowClickSelectionIntent(mode, event)) {
+      case 'range':
+        this.store.selection.selectRange(this.dataKeys(), node.key);
+        break;
+      case 'toggle':
+        this.store.selection.toggle(node.key);
+        break;
+      case 'selectOnly':
+        this.store.selection.selectOnly(node.key);
+        break;
+      default:
+        break;
     }
-    if (event.shiftKey)
-      this.store.selection.selectRange(this.dataKeys(), node.key);
-    else if (event.ctrlKey || event.metaKey || mode === 'checkbox') {
-      this.store.selection.toggle(node.key);
-    } else this.store.selection.selectOnly(node.key);
   }
 
   // --- row drag reordering -------------------------------------------------
@@ -3224,17 +3145,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     raw: string,
     operator?: FilterOperator,
   ): FilterExpr | null {
-    const field = column.field;
-    if (!field) return null;
-    if (column.calculateFilterExpression) {
-      const text = raw.trim();
-      const op =
-        operator ??
-        column.filterOperator ??
-        defaultOperatorFor(column.dataType);
-      return text ? column.calculateFilterExpression(text, op) : null;
-    }
-    return buildRowFilterExpr(field, column.dataType, raw, operator);
+    return rowFilterExpr(column, raw, operator);
   }
 
   /** Selects apply immediately (no debounce). */
@@ -3292,28 +3203,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected currentOperator(column: ResolvedColumn<T>): FilterOperator {
-    if (!column.field) return 'contains';
-    return (
-      this.rowFilterOps().get(column.field) ??
-      column.filterOperator ??
-      defaultOperatorFor(column.dataType)
+    return effectiveFilterOperator(
+      column,
+      column.field ? this.rowFilterOps().get(column.field) : undefined,
     );
   }
 
   protected operatorSymbol(column: ResolvedColumn<T>): string {
-    const symbols: Partial<Record<FilterOperator, string>> = {
-      eq: '=',
-      ne: '≠',
-      gt: '>',
-      ge: '≥',
-      lt: '<',
-      le: '≤',
-      contains: '∗',
-      notcontains: '!∗',
-      startswith: 'a…',
-      endswith: '…z',
-    };
-    return symbols[this.currentOperator(column)] ?? '=';
+    return filterOperatorSymbol(this.currentOperator(column));
   }
 
   protected toggleOperatorMenu(
@@ -3334,9 +3231,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected operatorChoices(column: ResolvedColumn<T>): FilterOperator[] {
-    return operatorsFor(column.dataType).filter(
-      (op) => op !== 'isnull' && op !== 'isnotnull',
-    );
+    return filterRowOperatorChoices(column.dataType);
   }
 
   protected chooseOperator(op: FilterOperator | null): void {
@@ -3350,10 +3245,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.rowFilterOps.set(next);
     // re-apply the current editor value with the new operator
     const raw = this.rowFilterRaw.get(field) ?? '';
-    const effective =
-      op ??
-      menu.column.filterOperator ??
-      defaultOperatorFor(menu.column.dataType);
+    const effective = effectiveFilterOperator(menu.column, op ?? undefined);
     this.store.filter.setRowFilter(
       field,
       this.rowFilterExprFor(menu.column, raw, effective),
@@ -3485,10 +3377,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     () => {
       const values = this.headerFilterValues();
       if (!values) return null;
-      const query = foldText(this.headerFilterSearch().trim());
-      if (!query) return values;
-      return values.filter((value) =>
-        foldText(this.headerValueText(value)).includes(query),
+      return filterHeaderValues(values, this.headerFilterSearch(), (value) =>
+        this.headerValueText(value),
       );
     },
   );
@@ -3506,49 +3396,34 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (column?.dataType !== 'date') return null;
     const values = this.headerFilterValues();
     if (!values) return null;
-    const buckets = new Map<string, unknown[]>();
-    for (const value of values) {
-      const label = this.headerYearOf(value);
-      const bucket = buckets.get(label);
-      if (bucket) bucket.push(value);
-      else buckets.set(label, [value]);
-    }
-    const groups = [...buckets.entries()].map(([label, groupValues]) => ({
-      label,
-      values: groupValues as readonly unknown[],
-    }));
-    const query = foldText(this.headerFilterSearch().trim());
-    if (!query) return groups;
-    return groups.flatMap((group) => {
-      if (foldText(group.label).includes(query)) return [group];
-      const leaves = group.values.filter((value) =>
-        foldText(this.headerValueText(value)).includes(query),
-      );
-      return leaves.length ? [{ label: group.label, values: leaves }] : [];
-    });
+    return groupHeaderValuesByYear(
+      values,
+      this.headerFilterSearch(),
+      (value) => this.headerValueText(value),
+      (value) => this.headerYearOf(value),
+    );
   });
 
   private headerYearOf(value: unknown): string {
-    if (value == null || value === '') return this.msg().blankValue;
-    const date = value instanceof Date ? value : new Date(String(value));
-    return Number.isNaN(date.getTime())
-      ? String(value)
-      : String(date.getFullYear());
+    return headerYearLabel(value, this.msg().blankValue);
   }
 
   protected isHeaderGroupSelected(group: {
     values: readonly unknown[];
   }): boolean {
-    return group.values.every((value) => this.isHeaderValueSelected(value));
+    return headerGroupState(this.headerSelection(), group.values) === 'all';
   }
 
   protected isHeaderGroupIndeterminate(group: {
     values: readonly unknown[];
   }): boolean {
-    const selected = group.values.filter((value) =>
-      this.isHeaderValueSelected(value),
-    ).length;
-    return selected > 0 && selected < group.values.length;
+    return headerGroupState(this.headerSelection(), group.values) === 'some';
+  }
+
+  /** The open column's selection; `null` means every value (no filter). */
+  private headerSelection(): readonly unknown[] | null {
+    const field = this.headerFilterField();
+    return field == null ? null : this.store.filter.headerFilterOf(field);
   }
 
   /** Checks/unchecks every value of a year group at once. */
@@ -3556,17 +3431,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const field = this.headerFilterField();
     const all = this.headerFilterValues();
     if (field == null || all == null) return;
-    const current = this.store.filter.headerFilterOf(field) ?? all;
-    const allSelected = group.values.every((value) => current.includes(value));
-    const next = allSelected
-      ? current.filter((value) => !group.values.includes(value))
-      : [
-          ...current,
-          ...group.values.filter((value) => !current.includes(value)),
-        ];
     this.store.filter.setHeaderFilter(
       field,
-      next.length === all.length ? null : next,
+      toggleHeaderGroupSelection(all, this.headerSelection(), group.values),
     );
   }
 
@@ -3624,50 +3491,45 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected isHeaderValueSelected(value: unknown): boolean {
-    const field = this.headerFilterField();
-    if (field == null) return false;
-    const selection = this.store.filter.headerFilterOf(field);
-    return selection == null || selection.includes(value);
+    if (this.headerFilterField() == null) return false;
+    return isHeaderValueSelected(this.headerSelection(), value);
   }
 
   protected toggleHeaderValue(value: unknown): void {
     const field = this.headerFilterField();
     const all = this.headerFilterValues();
     if (field == null || all == null) return;
-    const current = this.store.filter.headerFilterOf(field) ?? all;
-    const next = current.includes(value)
-      ? current.filter((candidate) => candidate !== value)
-      : [...current, value];
     this.store.filter.setHeaderFilter(
       field,
-      next.length === all.length ? null : next,
+      toggleHeaderValueSelection(all, this.headerSelection(), value),
     );
   }
 
   protected toggleAllHeaderValues(): void {
     const field = this.headerFilterField();
     if (field == null) return;
-    const selection = this.store.filter.headerFilterOf(field);
-    // all selected → keep none; otherwise reset to all
-    this.store.filter.setHeaderFilter(field, selection == null ? [] : null);
+    this.store.filter.setHeaderFilter(
+      field,
+      toggleAllHeaderValueSelection(this.headerSelection()),
+    );
   }
 
   protected allHeaderValuesSelected(): boolean {
-    const field = this.headerFilterField();
-    return field != null && this.store.filter.headerFilterOf(field) == null;
+    return (
+      this.headerFilterField() != null &&
+      allHeaderValuesSelected(this.headerSelection())
+    );
   }
 
   protected headerValueText(value: unknown): string {
-    if (value == null || value === '') return this.msg().blankValue;
     const field = this.headerFilterField();
     const column = field ? this.columnByField(field) : undefined;
-    if (column?.lookupItems) return lookupTextOf(column.lookupItems, value);
-    if (column?.dataType === 'date')
-      return formatCellValue(value, 'date', column.format);
-    if (column?.dataType === 'boolean') {
-      return value ? this.msg().booleanTrue : this.msg().booleanFalse;
-    }
-    return String(value);
+    return headerValueText(value, {
+      dataType: column?.dataType ?? 'string',
+      lookupItems: column?.lookupItems,
+      format: column?.format,
+      messages: this.msg(),
+    });
   }
 
   protected onPageSizeChange(pageSize: number): void {
