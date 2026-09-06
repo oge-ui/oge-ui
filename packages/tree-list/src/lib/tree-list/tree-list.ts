@@ -15,7 +15,6 @@ import {
   OgePopup,
   type OgeMenuListItemClickEvent,
 } from '@oge-ui/overlay';
-import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -49,7 +48,8 @@ import {
   filterTreeKeys,
   flattenNestedTree,
   flattenTreeData,
-  buildSearchHighlightHtml,
+  buildSearchHighlightSegments,
+  type SearchHighlightSegment,
   foldText,
   type FilterExpr,
   resolveSelectedKeys,
@@ -1964,18 +1964,21 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   // --- search highlighting ---------------------------------------------------
 
-  private readonly sanitizer = inject(DomSanitizer);
-
-  /** Escaped cell text with `<mark>` around search matches, or null when inactive. */
-  protected searchHighlightHtml(
+  /**
+   * Cell text split into search-match runs, or null when the search is off.
+   * Segments rather than a trusted HTML string — see the grid's
+   * `searchHighlightRuns` for why the sink is gone rather than defended.
+   */
+  protected searchHighlightRuns(
     node: DataRowNode<T>,
     column: ResolvedColumn<T>,
-  ): SafeHtml | null {
+  ): readonly SearchHighlightSegment[] | null {
     const query = this.store.filter.searchText().trim();
     if (!query) return null;
-    const text = this.cellDisplayText(node, column);
-    const html = buildSearchHighlightHtml(text, query);
-    return html === null ? null : this.sanitizer.bypassSecurityTrustHtml(html);
+    return buildSearchHighlightSegments(
+      this.cellDisplayText(node, column),
+      query,
+    );
   }
 
   /** Filter-row lookup select: applies an exact-match filter on the raw value. */

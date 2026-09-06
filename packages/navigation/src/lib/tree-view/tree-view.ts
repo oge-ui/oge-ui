@@ -313,8 +313,9 @@ let nextComponentId = 0;
                         context: itemContext(node)
                       "
                     />
-                  } @else if (node.highlightedHtml; as html) {
-                    <span class="oge-tree-view-text" [innerHTML]="html"></span>
+                  } @else if (node.highlighted; as runs) {
+                    <!-- prettier-ignore -->
+                    <span class="oge-tree-view-text">@for (run of runs; track $index) {@if (run.match) {<mark class="oge-highlight">{{ run.text }}</mark>} @else {{{ run.text }}}}</span>
                   } @else {
                     <span class="oge-tree-view-text">{{ node.text }}</span>
                   }
@@ -808,7 +809,7 @@ export class OgeTreeView<T extends object = Record<string, unknown>> {
       selected: node.selected,
       checkState: node.checkState,
       hasChildren: node.hasChildren,
-      highlightedHtml: node.highlightedHtml,
+      highlighted: node.highlighted,
     };
   }
 

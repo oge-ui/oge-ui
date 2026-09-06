@@ -27,12 +27,18 @@ rules below are what that data is allowed to do.
 
 ### Cell and node text is text
 
-Row data reaches the DOM as text nodes and attributes, never as markup. The
-one place row data becomes HTML is search highlighting, where the cell text is
-HTML-escaped first and only the `<mark>` wrapper is added by the library
-(`buildSearchHighlightHtml`), so the rendered `textContent` is byte-for-byte
-the input. The result is trusted at the render layer _because_ it was built by
-escaping, not because it was assumed safe.
+Row data reaches the DOM as text nodes and attributes, never as markup —
+including search highlighting, which used to be the one exception. The kernel
+(`buildSearchHighlightSegments`) returns the matched and unmatched **runs** of
+the cell text, and each render layer emits real text nodes and `<mark>`
+elements from them. No component calls `bypassSecurityTrustHtml` or
+`dangerouslySetInnerHTML`.
+
+That matters beyond correctness: the previous version escaped the text and
+handed the result to a trusted-HTML API, which was safe but unusable in a
+codebase that bans those APIs outright — and a grid whose cells show reported,
+hostile content is exactly where such a ban exists. The sink is gone rather
+than defended.
 
 Two APIs deliberately accept markup, and say so at the call site:
 

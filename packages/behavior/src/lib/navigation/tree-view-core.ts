@@ -1,6 +1,7 @@
 import {
   ancestorsOf,
-  buildSearchHighlightHtml,
+  buildSearchHighlightSegments,
+  type SearchHighlightSegment,
   buildTreeIndex,
   computeTreeCheckStates,
   createFieldAccessor,
@@ -359,7 +360,13 @@ export interface OgeTreeViewNode<T> {
   readonly checkState: CheckState;
   readonly icon?: string;
   /** Display text with `<mark>` around search matches, `null` when unmatched. */
-  readonly highlightedHtml: string | null;
+  /**
+   * Search-match runs of {@link text}, or `null` when nothing matched.
+   * Segments rather than markup so neither render layer needs a
+   * trusted-HTML API to show a highlight — see
+   * `buildSearchHighlightSegments`.
+   */
+  readonly highlighted: readonly SearchHighlightSegment[] | null;
 }
 
 /** State of one node's lazy child load. */
@@ -611,7 +618,7 @@ export function buildTreeViewNodes<T>(
         selected: false,
         loading: false,
         checkState: 'unchecked',
-        highlightedHtml: null,
+        highlighted: null,
         item: undefined as unknown as T,
       });
       continue;
@@ -637,7 +644,7 @@ export function buildTreeViewNodes<T>(
         input.checkStates.get(node.key) ??
         (input.selectedKeys.has(node.key) ? 'checked' : 'unchecked'),
       icon: input.iconOf?.(node.data),
-      highlightedHtml: needle ? buildSearchHighlightHtml(text, needle) : null,
+      highlighted: needle ? buildSearchHighlightSegments(text, needle) : null,
     });
   }
   return out;

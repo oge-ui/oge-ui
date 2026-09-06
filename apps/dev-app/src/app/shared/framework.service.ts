@@ -172,10 +172,25 @@ function isFramework(value: string | null): value is DocsFramework {
   return FRAMEWORKS.some((entry) => entry.id === value);
 }
 
+/**
+ * `?framework=` as it was when the bundle loaded.
+ *
+ * Read at module evaluation, not inside {@link readInitial}, because a route
+ * redirect (`/components/tabs/routed` → `…/routed/overview`) drops query
+ * params, and Angular runs the initial navigation before the shell injects
+ * this service — so by the time the service is constructed the parameter is
+ * already gone and every redirecting page silently ignored the link's
+ * framework. Module evaluation happens before the router touches the URL,
+ * which is the one moment the original query string is guaranteed to be there.
+ */
+const FRAMEWORK_FROM_LOAD_URL: string | null =
+  typeof window === 'undefined'
+    ? null
+    : new URLSearchParams(window.location.search).get('framework');
+
 function readInitial(): DocsFramework {
   if (typeof window === 'undefined') return 'angular';
-  const fromUrl = new URLSearchParams(window.location.search).get('framework');
-  if (isFramework(fromUrl)) return fromUrl;
+  if (isFramework(FRAMEWORK_FROM_LOAD_URL)) return FRAMEWORK_FROM_LOAD_URL;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (isFramework(stored)) return stored;

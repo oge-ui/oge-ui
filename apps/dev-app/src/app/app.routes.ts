@@ -1,4 +1,42 @@
-import { Route } from '@angular/router';
+import { inject } from '@angular/core';
+import {
+  PRIMARY_OUTLET,
+  Router,
+  type Route,
+  type UrlTree,
+} from '@angular/router';
+
+/**
+ * A `redirectTo` that keeps the query string and fragment.
+ *
+ * Angular's string form builds a `UrlTree` with no query params, and under SSR
+ * that becomes an HTTP 302 that strips them before the bundle ever loads — so
+ * `?framework=react` was silently dropped on every redirecting page and a
+ * React reader landed on the Angular version of a page their layer does not
+ * cover, with no notice, which is exactly the failure the coverage notice
+ * exists to prevent. The function form can carry them across.
+ *
+ * `target` is the child segment, matching what the string form took.
+ */
+function keepQuery(target: string): NonNullable<Route['redirectTo']> {
+  return (snapshot): UrlTree => {
+    const router = inject(Router);
+    // The redirect snapshot carries no parent chain, and these are all
+    // `path: '', pathMatch: 'full'` children — so the URL being navigated to
+    // *is* the parent path, and the target is one segment below it.
+    const requested =
+      router.getCurrentNavigation()?.extractedUrl ??
+      router.parseUrl(router.url);
+    const segments =
+      requested.root.children[PRIMARY_OUTLET]?.segments.map(
+        (segment) => segment.path,
+      ) ?? [];
+    return router.createUrlTree([...segments, target], {
+      queryParams: snapshot.queryParams,
+      fragment: snapshot.fragment ?? undefined,
+    });
+  };
+}
 
 export const appRoutes: Route[] = [
   {
@@ -292,7 +330,7 @@ export const appRoutes: Route[] = [
           import('./pages/tabs/routed').then((m) => m.TabsRoutedPage),
         title: 'OGE — Routed Tabs',
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'overview' },
+          { path: '', pathMatch: 'full', redirectTo: keepQuery('overview') },
           {
             path: 'overview',
             loadComponent: () =>
@@ -483,7 +521,7 @@ export const appRoutes: Route[] = [
           ),
         title: 'OGE — Routed Breadcrumb',
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'reports' },
+          { path: '', pathMatch: 'full', redirectTo: keepQuery('reports') },
           {
             path: 'reports',
             loadComponent: () =>
@@ -534,7 +572,7 @@ export const appRoutes: Route[] = [
           ),
         title: 'OGE — Routed Menubar',
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'overview' },
+          { path: '', pathMatch: 'full', redirectTo: keepQuery('overview') },
           {
             path: 'overview',
             loadComponent: () =>

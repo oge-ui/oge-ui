@@ -9,6 +9,25 @@ are versioned independently, which is the case here.
 
 ### Fixed (security)
 
+- **No component uses a trusted-HTML API any more.** Search highlighting was
+  the last one: the kernel escaped the cell text and the grid, tree list and
+  tree view handed the result to `bypassSecurityTrustHtml` (Angular) or
+  `dangerouslySetInnerHTML` (React). Safe, but unusable — a codebase that bans
+  those APIs by lint rule lost those components outright, and a grid showing
+  reported, hostile content is exactly where such a ban lives. The new
+  `buildSearchHighlightSegments` returns the matched and unmatched _runs_ of
+  the text and each layer emits real text nodes and `<mark>` elements, so the
+  sink is gone rather than defended. `buildSearchHighlightHtml` stays exported
+  and deprecated for hosts that were calling it directly.
+
+- **`?framework=react` was silently dropped on every redirecting docs page.**
+  Angular's string `redirectTo` builds a `UrlTree` with no query params, and
+  under SSR that became an HTTP 302 that stripped them before the bundle
+  loaded — so a React reader following a shared link to `…/tabs/routed` landed
+  on the Angular version of a page their layer does not cover, with none of
+  the coverage notice that exists to prevent exactly that. The three child
+  redirects now use the function form and carry the query string across.
+
 - **CSV formula injection (CWE-1236) in every exporter.** `getCsv()` /
   `exportCsv()` on the grid, tree list and pivot — and the clipboard TSV path
   — quoted cells per RFC 4180 but left a cell opening with `=`, `+`, `-`, `@`,

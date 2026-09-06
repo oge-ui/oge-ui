@@ -273,11 +273,13 @@ describe('buildTreeViewNodes', () => {
 
   it('highlights the search match, and only while highlighting is on', () => {
     const nodes = nodesOf([1], { highlight: 'mon' });
-    expect(nodes[1].highlightedHtml).toBe(
-      '<mark class="oge-highlight">Mon</mark>thly',
-    );
-    expect(nodes[0].highlightedHtml).toBe(null); // no match on this row
-    expect(nodesOf([1])[1].highlightedHtml).toBe(null);
+    // runs, not markup: the render layers emit `<mark>` elements themselves
+    expect(nodes[1].highlighted).toEqual([
+      { text: 'Mon', match: true },
+      { text: 'thly', match: false },
+    ]);
+    expect(nodes[0].highlighted).toBe(null); // no match on this row
+    expect(nodesOf([1])[1].highlighted).toBe(null);
   });
 
   it('renders a filler row under an expanded, unloaded lazy parent', () => {

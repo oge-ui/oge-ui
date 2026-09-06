@@ -33,6 +33,7 @@ export type {
   OgeTreeReorderingEvent,
   OgeTreeReorderedEvent,
 } from '@oge-ui/behavior';
+import type { SearchHighlightSegment } from '@oge-ui/behavior';
 
 /** Context of `[ogeTreeItemTemplate]`. */
 export interface OgeTreeItemTemplateContext<T = unknown> {
@@ -44,7 +45,12 @@ export interface OgeTreeItemTemplateContext<T = unknown> {
   checkState: CheckState;
   hasChildren: boolean;
   /** Display text with `<mark>` around search matches, or `null` when not matched. */
-  highlightedHtml: string | null;
+  /**
+   * Search-match runs of `text`, or `null` when nothing matched. Rendered as
+   * real text nodes and `<mark>` elements — no `[innerHTML]`, so a codebase
+   * that bans trusted-HTML APIs can still use the tree.
+   */
+  highlighted: readonly SearchHighlightSegment[] | null;
 }
 
 /** Context of `[ogeTreeExpandIconTemplate]`. */

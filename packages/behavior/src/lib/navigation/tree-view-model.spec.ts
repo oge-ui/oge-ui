@@ -70,7 +70,9 @@ describe('buildTreeViewModel', () => {
       'Reports',
       'Monthly',
     ]);
-    expect(built.nodes[1].highlightedHtml).toContain('Monthly');
+    expect(built.nodes[1].highlighted?.map((run) => run.text).join('')).toBe(
+      'Monthly',
+    );
   });
 
   it('can auto-expansion be turned off, leaving the match collapsed away', () => {
@@ -83,7 +85,7 @@ describe('buildTreeViewModel', () => {
 
   it('can turn highlighting off without turning filtering off', () => {
     const built = model({ search: 'monthly', highlightSearchResults: false });
-    expect(built.nodes[1].highlightedHtml).toBe(null);
+    expect(built.nodes[1].highlighted).toBe(null);
     expect(built.visibleKeys).not.toBe(null);
   });
 

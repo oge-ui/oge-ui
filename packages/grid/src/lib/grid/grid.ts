@@ -1,6 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -27,7 +26,8 @@ import {
   buildCsv,
   createFilterPredicate,
   flattenGroupedData,
-  buildSearchHighlightHtml,
+  buildSearchHighlightSegments,
+  type SearchHighlightSegment,
   groupNodeKey,
   resolveKeySelector,
   type CsvOptions,
@@ -3319,17 +3319,28 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   // --- search highlighting --------------------------------------------------
 
-  private readonly sanitizer = inject(DomSanitizer);
-
-  /** Escaped cell text with `<mark>` around search matches, or null when inactive. */
-  /** Highlight results memoized per cell text — cleared when the query changes. */
+  /** Cell text split into search-match runs, or null when the search is off. */
+  /** Highlight runs memoized per cell text — cleared when the query changes. */
   private highlightCacheQuery = '';
-  private readonly highlightCache = new Map<string, SafeHtml | null>();
+  private readonly highlightCache = new Map<
+    string,
+    readonly SearchHighlightSegment[] | null
+  >();
 
-  protected searchHighlightHtml(
+  /**
+   * The runs the template wraps in `<mark>`.
+   *
+   * Segments rather than a trusted HTML string: the previous version escaped
+   * the cell text and handed the result to `bypassSecurityTrustHtml`, which is
+   * safe but unusable in a codebase that bans the trusted-HTML APIs outright —
+   * and a grid whose cells show reported, hostile content is exactly where such
+   * a ban exists. Emitting real text nodes and `<mark>` elements removes the
+   * sink instead of defending it.
+   */
+  protected searchHighlightRuns(
     node: DataRowNode<T>,
     column: ResolvedColumn<T>,
-  ): SafeHtml | null {
+  ): readonly SearchHighlightSegment[] | null {
     const query = this.store.filter.searchText().trim();
     if (!query) return null;
     const text = this.cellDisplayText(node, column);
@@ -3339,12 +3350,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     }
     const cached = this.highlightCache.get(text);
     if (cached !== undefined) return cached;
-    const html = buildSearchHighlightHtml(text, query);
-    const result =
-      html === null ? null : this.sanitizer.bypassSecurityTrustHtml(html);
+    const runs = buildSearchHighlightSegments(text, query);
     if (this.highlightCache.size > 1000) this.highlightCache.clear();
-    this.highlightCache.set(text, result);
-    return result;
+    this.highlightCache.set(text, runs);
+    return runs;
   }
 
   // --- header filter (Excel-style distinct values) -------------------------

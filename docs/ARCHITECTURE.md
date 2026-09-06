@@ -433,12 +433,15 @@ Every component renders data the host did not write, so these are invariants,
 not guidelines. `SECURITY.md` is the consumer-facing statement of the same
 rules — change both together.
 
-- **Row/item data never becomes markup.** Bind text, not HTML. The only
-  exception is search highlighting, and it is safe because
-  `buildSearchHighlightHtml` (`@oge-ui/core`) escapes the cell text and adds
-  only the `<mark>` wrapper. A new `bypassSecurityTrustHtml` /
-  `dangerouslySetInnerHTML` call site needs the same "escaped by
-  construction" argument in a comment above it, or it does not land.
+- **Row/item data never becomes markup, and no component uses a trusted-HTML
+  API.** Bind text, not HTML. Search highlighting goes through
+  `buildSearchHighlightSegments` (`@oge-ui/core`), which returns matched and
+  unmatched _runs_; each layer emits real text nodes and `<mark>` elements.
+  There is no `bypassSecurityTrustHtml` or `dangerouslySetInnerHTML` left in
+  any package, and a new one does not land: "escaped by construction" is a
+  correct argument but not a sufficient one, because consumers who ban those
+  APIs by lint rule lose the whole component either way — return data the
+  template can render instead.
 - **Data-driven `href`/`src` goes through `sanitizeUrl` /
   `sanitizeResourceUrl` (`@oge-ui/behavior`) in the React layer.** Angular
   gets this free from `DomSanitizer`; React does not, so `href={item.url}`

@@ -92,12 +92,12 @@ test.describe('framework switch', () => {
   test('an uncovered page shows the notice instead of silent Angular content', async ({
     page,
   }) => {
-    // buttons, inputs, tabs, layout and navigation are all covered now, so
-    // the uncovered case has to be a family with no React package at all.
-    // Use the real route (`data-grid`, not `grid`): a URL that 404s never
-    // reaches the coverage check, so a typo here would make this pass for
-    // the wrong reason.
-    await page.goto('/components/data-grid?framework=react');
+    // buttons, inputs, tabs, layout, navigation, forms, upload and the data
+    // grid's shipped pages are all covered now, so the uncovered case has to
+    // be a family with no React package at all — the tree list. Use the real
+    // route: a URL that 404s never reaches the coverage check, so a typo here
+    // would make this pass for the wrong reason.
+    await page.goto('/components/tree-list?framework=react');
     const notice = page.getByRole('status');
     await expect(notice).toContainText('not in the React packages yet');
     // the covered pages never show it
@@ -123,7 +123,7 @@ test.describe('framework switch', () => {
   test('switching back from the notice returns to Angular content', async ({
     page,
   }) => {
-    await page.goto('/components/data-grid?framework=react');
+    await page.goto('/components/tree-list?framework=react');
     await page
       .getByRole('status')
       .getByRole('button', { name: 'Switch to Angular' })

@@ -838,6 +838,9 @@ export {
   type OgeTreeIndexInput,
   type OgeTreeNodesInput,
 } from './lib/navigation/tree-view-core';
+// The highlight segment shape travels with the tree's view model, so the
+// render layers get it from here rather than reaching past this package.
+export type { SearchHighlightSegment } from '@oge-ui/core';
 // the composed pipeline + key map — what a second tree renderer runs instead
 // of re-deriving the steps above (the tree select's popup, ADR 0001)
 export {

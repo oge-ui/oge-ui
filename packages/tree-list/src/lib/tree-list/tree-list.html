@@ -568,8 +568,9 @@ store.editing.hasPending())) {
           <ng-container
             *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
           />
-          } @else if (searchHighlightHtml(node, column); as highlighted) {
-          <span class="oge-tree-cell-text" [innerHTML]="highlighted"></span>
+          } @else if (searchHighlightRuns(node, column); as runs) {
+          <!-- prettier-ignore -->
+          <span class="oge-tree-cell-text">@for (run of runs; track $index) {@if (run.match) {<mark class="oge-highlight">{{ run.text }}</mark>} @else {{{ run.text }}}}</span>
           } @else {
           <span class="oge-tree-cell-text"
             >{{ cellDisplayText(node, column) }}</span

@@ -20,7 +20,6 @@
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
-    "@angular/platform-browser": "^22.0.0",
     "exceljs": "^4.4.0"
   },
   "peerDependenciesMeta": {

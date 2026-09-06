@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   forwardRef,
   useCallback,
   useEffect,
@@ -66,6 +67,7 @@ import {
   type OgeTreeViewNode,
   type OgeTreeVirtualScrollOptions,
   type RowKey,
+  type SearchHighlightSegment,
   type TreeFilterMode,
 } from '@oge-ui/behavior';
 import { useOgeTreeViewConfig } from './navigation-config';
@@ -81,7 +83,11 @@ export interface OgeTreeItemRenderContext<T> {
   checkState: CheckState;
   hasChildren: boolean;
   /** Display text with `<mark>` around search matches, `null` when unmatched. */
-  highlightedHtml: string | null;
+  /**
+   * Search-match runs of `text`, or `null` when nothing matched — rendered as
+   * real `<mark>` elements, so the tree needs no `dangerouslySetInnerHTML`.
+   */
+  highlighted: readonly SearchHighlightSegment[] | null;
 }
 
 /** Context handed to `renderExpandIcon`. */
@@ -1455,17 +1461,20 @@ export const OgeTreeView = forwardRef(function OgeTreeViewRender<
                             selected: node.selected,
                             checkState: node.checkState,
                             hasChildren: node.hasChildren,
-                            highlightedHtml: node.highlightedHtml,
+                            highlighted: node.highlighted,
                           })
-                        ) : node.highlightedHtml ? (
-                          <span
-                            className="oge-tree-view-text"
-                            // core escapes the text before wrapping matches in
-                            // <mark>, so this is the engine's own markup
-                            dangerouslySetInnerHTML={{
-                              __html: node.highlightedHtml,
-                            }}
-                          />
+                        ) : node.highlighted ? (
+                          <span className="oge-tree-view-text">
+                            {node.highlighted.map((run, runIndex) =>
+                              run.match ? (
+                                <mark key={runIndex} className="oge-highlight">
+                                  {run.text}
+                                </mark>
+                              ) : (
+                                <Fragment key={runIndex}>{run.text}</Fragment>
+                              ),
+                            )}
+                          </span>
                         ) : (
                           <span className="oge-tree-view-text">
                             {node.text}

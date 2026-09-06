@@ -671,8 +671,9 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           <ng-container
             *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
           />
-          } @else if (searchHighlightHtml(node, column); as highlighted) {
-          <span [innerHTML]="highlighted"></span>
+          } @else if (searchHighlightRuns(node, column); as runs) {
+          <!-- prettier-ignore -->
+          <span>@for (run of runs; track $index) {@if (run.match) {<mark class="oge-highlight">{{ run.text }}</mark>} @else {{{ run.text }}}}</span>
           } @else { {{ cellDisplayText(node, column) }} }
         </div>
         } @if (colSpacerRight() > 0) {
