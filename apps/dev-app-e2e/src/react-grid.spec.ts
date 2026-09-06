@@ -2,10 +2,11 @@ import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '@playwright/test';
 
 /**
- * The React view of the data-grid family (ADR 0002 + `docs/REACT-PARITY.md`,
- * slice A): the overview and API pages render the real React grid on the
- * same routes the Angular view uses, sorting and paging work through the
- * shared engine, and the pages are axe-clean.
+ * The React view of the data-grid family (ADR 0002 + `docs/REACT-PARITY.md`).
+ * Every feature page renders the real React grid on the same route the
+ * Angular view uses — no page in the family may fall back to silent Angular
+ * content — sorting and paging work through the shared engine, and the pages
+ * are axe-clean.
  */
 const REACT = '?framework=react';
 
@@ -94,12 +95,64 @@ test.describe('React data-grid docs', () => {
     );
   });
 
+  test('the feature pages branch to React rather than showing the notice', async ({
+    page,
+  }) => {
+    // slices C and D shipped, so every one of these mounts a real React tree;
+    // the coverage notice on any of them is a regression, not a gap
+    for (const path of [
+      '/components/data-grid/columns',
+      '/components/data-grid/filtering',
+      '/components/data-grid/selection',
+      '/components/data-grid/editing',
+      '/components/data-grid/persistence',
+      '/components/data-grid/context-menu',
+    ]) {
+      await page.goto(`${path}${REACT}`);
+      await expect(page.getByRole('status'), path).toHaveCount(0);
+      await expect(
+        page.locator('app-react-host .oge-grid').first(),
+        path,
+      ).toBeVisible();
+    }
+  });
+
+  test('cell editing commits through the React grid', async ({ page }) => {
+    await page.goto(`/components/data-grid/editing${REACT}`);
+    await page.getByRole('button', { name: 'cell', exact: true }).click();
+    const grid = page.locator('app-react-host .oge-grid').first();
+    const cell = grid.locator('.oge-row').first().locator('.oge-cell').nth(1);
+    const before = (await cell.textContent())?.trim();
+    await cell.click();
+    const editor = grid.locator('.oge-editor input').first();
+    await expect(editor).toBeVisible();
+    await editor.fill(`${before} Jr.`);
+    await editor.press('Enter');
+    await expect(grid.locator('.oge-editor')).toHaveCount(0);
+    await expect(cell).toHaveText(`${before} Jr.`);
+  });
+
+  test('the header filter lists distinct values', async ({ page }) => {
+    await page.goto(`/components/data-grid/filtering${REACT}`);
+    const grid = page.locator('app-react-host .oge-grid').first();
+    await grid.locator('.oge-header-filter-btn').nth(3).click();
+    const popup = page.locator('.oge-header-filter-popup');
+    await expect(popup).toBeVisible();
+    await expect(popup.locator('.oge-hf-item').first()).toBeVisible();
+  });
+
   for (const path of [
     '/components/data-grid',
     '/components/data-grid/api',
     '/components/data-grid/grouping',
     '/components/data-grid/master-detail',
     '/components/data-grid/rows',
+    '/components/data-grid/columns',
+    '/components/data-grid/filtering',
+    '/components/data-grid/selection',
+    '/components/data-grid/editing',
+    '/components/data-grid/persistence',
+    '/components/data-grid/context-menu',
   ]) {
     test(`${path} in React has no axe violations`, async ({ page }) => {
       // the grouping demo renders 500 rows in a 540px viewport without

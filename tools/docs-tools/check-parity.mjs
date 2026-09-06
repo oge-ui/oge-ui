@@ -40,6 +40,7 @@ const abs = (...parts) => path.join(workspaceRoot, ...parts);
  *   exceptions: {
  *     blocksAngularOnly?: Record<string, string>,
  *     blocksReactOnly?: Record<string, string>,
+ *     blockPairs?: Record<string, string>,
  *     pairs?: Record<string, string>,
  *     angularOnly?: Record<string, string>,
  *     reactOnly?: Record<string, string>,
@@ -544,6 +545,50 @@ const FAMILIES = [
       },
     },
   },
+  {
+    family: 'grid',
+    angularApiPage: 'apps/dev-app/src/app/pages/data-grid/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-grid/api.ts',
+    exceptions: {
+      blockPairs: {
+        // the same column contract: a component in Angular, a props interface
+        // in React — every member below is still compared
+        ogecolumn: 'ogegridcolumnprops',
+      },
+      pairs: {
+        // same feature, different shape: Angular wraps columns in a
+        // <oge-column-group>, React tags each column with the band's caption
+        // and adjacent matches merge into one spanning header
+        ogecolumngroup: 'bandcaption',
+      },
+      angularOnly: {
+        ogegridtoolbaritem:
+          'Content-projection directive for the grid toolbar. React has no projection; the toolbar slot lands with the render-prop pass (recorded in docs/REACT-PARITY.md).',
+      },
+      reactOnly: {
+        rendercell:
+          'React form of the `*ogeCellTemplate` structural directive, documented in the Angular page’s companion-directives block rather than as a column input (ROADMAP exception: TemplateRef ↔ render prop).',
+        renderheader:
+          'React form of `*ogeHeaderTemplate` — same companion-directive split as `renderCell`.',
+        rendereditor:
+          'React form of `*ogeEditTemplate` — same companion-directive split as `renderCell`.',
+        renderrow:
+          'React form of the `*ogeRowTemplate` structural directive, which the Angular page documents in its companion-directives block rather than as a grid input (ROADMAP exception: TemplateRef ↔ render prop).',
+        renderdetail:
+          'React form of `*ogeDetailTemplate` — same companion-directive split as `renderRow`.',
+        rendernodata:
+          'React form of `*ogeNoDataTemplate` — same companion-directive split as `renderRow`.',
+        statestorage:
+          'Per-grid storage override. Angular reaches the same seam by providing the `OGE_STATE_STORAGE` token in the injector tree, documented in the types block; React has no DI, so the escape hatch is a prop.',
+        classname:
+          'React host styling idiom; an Angular host takes `class` natively and needs no input.',
+        style:
+          'React host styling idiom; an Angular host takes `style` natively and needs no input.',
+        arialabel:
+          'React needs a prop to reach the host element; an Angular consumer writes `aria-label` on `<oge-grid>` directly, so there is nothing to document as a grid input.',
+      },
+    },
+  },
 ];
 
 /** `'<OgeButton>'` / `'OgeButton'` → `'ogebutton'`. Angle brackets go first —
@@ -619,7 +664,20 @@ for (const config of FAMILIES) {
   const angularByKey = new Map(
     angularBlocks.map((b) => [blockKey(b.title), b]),
   );
-  const reactByKey = new Map(reactBlocks.map((b) => [blockKey(b.title), b]));
+  // A block whose two layers name the same concept differently (`OgeColumn`
+  // is a component, `OgeGridColumnProps` an interface) is *renamed*, not
+  // absent — pairing them keeps their members compared, where excepting both
+  // blocks would silently drop the whole table from the gate.
+  const blockPairs = config.exceptions.blockPairs ?? {};
+  const reactByKey = new Map(
+    reactBlocks.map((b) => {
+      const key = blockKey(b.title);
+      const angularName = Object.entries(blockPairs).find(
+        ([, react]) => react === key,
+      )?.[0];
+      return [angularName ?? key, b];
+    }),
+  );
 
   for (const [key, block] of angularByKey) {
     if (reactByKey.has(key)) continue;

@@ -26836,8 +26836,6 @@ _Loading, state & export_
 | `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows and column metadata of the current view (filter + search + sort applied) — the shared source for exporters. `scope` narrows to the page or selection. |
 | `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 | `exportCsv(filename = 'grid.csv'): Promise<void>` | `handle` | Downloads the current view as a CSV file. Fires the cancelable `onExporting` first. |
-| `exportGridToExcel(grid, options?)` | `@oge-ui/react-grid/export-excel` | Downloads the current view as `.xlsx`. Takes the grid’s handle; `exceljs` is an optional peer, imported only by this entry point. `buildExcelWorkbook` is exported alongside for a workbook you assemble yourself — the same builder the Angular package calls. |
-| `exportGridToPdf(grid, options?)` | `@oge-ui/react-grid/export-pdf` | Downloads the current view as `.pdf` (`title`, `orientation`, `pageFormat`). `jspdf` and `jspdf-autotable` are optional peers; `buildPdfDocument` is exported alongside. |
 
 _Editing_
 
@@ -26972,6 +26970,8 @@ _Export_
 | --- | --- | --- |
 | `OgeExportOptions<T>` | `{ scope?: 'all' \| 'page' \| 'selection'; customizeCell?: (cell: OgeExportCellArgs<T>) => unknown }` | Narrows and rewrites what the exporters emit. |
 | `OgeExportData<T> / OgeExportColumn<T>` | `{ rows, columns } / { caption, field, dataType, accessor, format? }` | What `getExportData()` resolves to. |
+| `exportGridToExcel(grid, options?)` | `@oge-ui/react-grid/export-excel` | Downloads the current view as `.xlsx`. Takes the grid’s handle where the Angular signature takes the component. `exceljs` is an optional peer, imported only by this entry point; `buildExcelWorkbook` is exported alongside for a workbook you assemble yourself — the same builder the Angular package calls. |
+| `exportGridToPdf(grid, options?)` | `@oge-ui/react-grid/export-pdf` | Downloads the current view as `.pdf` (`title`, `orientation`, `pageFormat`). `jspdf` and `jspdf-autotable` are optional peers; `buildPdfDocument` is exported alongside. |
 
 _Configuration_
 
@@ -26984,6 +26984,476 @@ _Configuration_
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Bands, lookups, calculated and adaptive columns
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const departments = [
+  { code: 'Engineering', label: 'Mühendislik' },
+  { code: 'Sales', label: 'Satış' },
+  { code: 'HR', label: 'İnsan Kaynakları' },
+  { code: 'Finance', label: 'Finans' },
+  { code: 'Support', label: 'Destek' },
+];
+
+// `bandCaption` is the React form of <oge-column-group>: adjacent columns
+// sharing a caption merge into one spanning band header
+const columns = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number' as const,
+    sortOrder: 'desc' as const, editable: false },
+  { field: 'firstName', caption: 'First Name', bandCaption: 'Person' },
+  { field: 'lastName', caption: 'Last Name', bandCaption: 'Person', hidingPriority: 1 },
+  { field: 'department', caption: 'Department',
+    lookup: { dataSource: departments, valueExpr: 'code', displayExpr: 'label' } },
+  { caption: 'Yearly', dataType: 'number' as const, width: 110,
+    calculateCellValue: (row: Employee) => row.salary * 12 },
+  { field: 'city', caption: 'City', hidingPriority: 0 },
+];
+
+export function ColumnsGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      wordWrap
+      editing={{ mode: 'cell' }}
+      filterRow
+      filterDebounce={200}
+      paging={{ pageSize: 10 }}
+    />
+  );
+}
+```
+
+#### Custom sort keys & filter expressions
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { FilterExpr } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const departments = [
+  { code: 'Engineering', label: 'Mühendislik' },
+  { code: 'Sales', label: 'Satış' },
+  { code: 'HR', label: 'İnsan Kaynakları' },
+  { code: 'Finance', label: 'Finans' },
+  { code: 'Support', label: 'Destek' },
+];
+
+// sort the lookup column by its display label, not the stored code
+const departmentLabel = (row: Employee) =>
+  departments.find((d) => d.code === row.department)?.label ?? row.department;
+
+// '60' in the filter row means the 60k band: 60000 <= salary < 61000
+const salaryBandFilter = (value: unknown): FilterExpr | null => {
+  const band = Number(value);
+  if (value == null || value === '' || Number.isNaN(band)) return null;
+  return {
+    type: 'and',
+    operands: [
+      { type: 'binary', field: 'salary', op: 'ge', value: band * 1000 },
+      { type: 'binary', field: 'salary', op: 'lt', value: (band + 1) * 1000 },
+    ],
+  };
+};
+
+const columns = [
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'department', caption: 'Department',
+    lookup: { dataSource: departments, valueExpr: 'code', displayExpr: 'label' },
+    calculateSortValue: departmentLabel },
+  { field: 'salary', caption: 'Salary Band (k)', dataType: 'number' as const,
+    format: (v: unknown) => `${Math.floor(Number(v) / 1000)}k`,
+    calculateFilterExpression: salaryBandFilter },
+];
+
+export function CalculatedColumns() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      filterRow
+      paging={{ pageSize: 8 }}
+    />
+  );
+}
+```
+
+#### Right-to-left
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const departments = [
+  { code: 'Engineering', label: 'Mühendislik' },
+  { code: 'Sales', label: 'Satış' },
+  { code: 'HR', label: 'İnsan Kaynakları' },
+  { code: 'Finance', label: 'Finans' },
+  { code: 'Support', label: 'Destek' },
+];
+
+const columns = [
+  { field: 'id', caption: 'No', width: 70, dataType: 'number' as const, pinned: 'left' as const },
+  { field: 'firstName', caption: 'Ad' },
+  { field: 'lastName', caption: 'Soyad' },
+  { field: 'city', caption: 'Şehir' },
+  { field: 'salary', caption: 'Maaş', dataType: 'number' as const },
+];
+
+export function RtlGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      rtlEnabled
+      paging={{ pageSize: 6, displayMode: 'compact' }}
+    />
+  );
+}
+```
+
+#### Row context menu
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  { field: 'department', caption: 'Department' },
+];
+
+export function RowMenuGrid() {
+  const [lastAction, setLastAction] = useState('');
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      paging={{ pageSize: 6 }}
+      // push items to open the grid's own menu; leave the array empty and the
+      // browser's native menu is left alone
+      onRowContextMenu={(event) => {
+        event.items.push(
+          {
+            text: `Open ${event.row.firstName} ${event.row.lastName}`,
+            action: () => setLastAction(`open #${String(event.key)}`),
+          },
+          {
+            text: 'Duplicate',
+            action: () => setLastAction(`duplicate #${String(event.key)}`),
+          },
+          { text: 'Delete (no permission)', disabled: true },
+        );
+      }}
+    />
+  );
+}
+```
+
+#### Header menu customization
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const },
+];
+
+export function HeaderMenuGrid() {
+  const [lastAction, setLastAction] = useState('');
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      groupPanel
+      paging={{ pageSize: 6 }}
+      // the built-in sort / group / pin / hide items arrive prefilled — mutate
+      // the array to extend, filter or replace them per column
+      onHeaderContextMenu={(event) => {
+        if (event.field === 'salary') {
+          const pinless = event.items.filter(
+            (item) => !item.text.toLowerCase().includes('pin'),
+          );
+          event.items.length = 0;
+          event.items.push(...pinless);
+        }
+        event.items.push({
+          text: `Say hello to ${event.caption}`,
+          action: () => setLastAction(`hello ${event.field}`),
+        });
+      }}
+    />
+  );
+}
+```
+
+#### Five edit modes
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeEditMode, OgeGridColumnProps } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+// annotated so `renderEditor`'s context arrives typed rather than `any`
+const columns: OgeGridColumnProps<Employee>[] = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number', editable: false },
+  { field: 'firstName', caption: 'First Name', required: true },
+  { field: 'lastName', caption: 'Last Name', required: true },
+  {
+    field: 'department',
+    caption: 'Department',
+    // renderEditor is the React form of *ogeEditTemplate: the draft value,
+    // a setter, the validation message and commit/cancel arrive typed
+    renderEditor: ({ value, setValue, commit, cancel }) => (
+      <select
+        className="oge-editor w-full rounded border px-2 py-1 text-sm"
+        value={String(value ?? '')}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') commit();
+          if (event.key === 'Escape') cancel();
+        }}
+      >
+        {['Engineering', 'Sales', 'HR', 'Finance', 'Support'].map((name) => (
+          <option key={name}>{name}</option>
+        ))}
+      </select>
+    ),
+  },
+  { field: 'salary', caption: 'Salary', dataType: 'number' },
+];
+
+export function EditableGrid() {
+  const [mode, setMode] = useState<OgeEditMode>('batch');
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      editing={{
+        mode,
+        allowUpdating: true,
+        allowAdding: true,
+        allowDeleting: true,
+        confirmDelete: true,
+      }}
+      paging={{ pageSize: 10 }}
+      // cancelable: inspect or rewrite the change set before it reaches the
+      // DataSource — batch mode sends every staged change as one ordered list
+      onSavingChanges={(event) => console.log(event.changes)}
+    />
+  );
+}
+```
+
+#### Cascading lookups & command buttons
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeCommandButton } from '@oge-ui/react-grid';
+
+interface Assignment {
+  id: number;
+  title: string;
+  countryId: number;
+  cityId: number;
+  done: boolean;
+}
+
+declare const assignments: Assignment[];
+
+const countries = [
+  { id: 1, name: 'Türkiye' },
+  { id: 2, name: 'Germany' },
+];
+
+const cities = [
+  { id: 1, countryId: 1, name: 'İstanbul' },
+  { id: 2, countryId: 1, name: 'Ankara' },
+  { id: 3, countryId: 2, name: 'Berlin' },
+  { id: 4, countryId: 2, name: 'Munich' },
+];
+
+const columns = [
+  { field: 'title', caption: 'Task' },
+  { field: 'countryId', caption: 'Country',
+    lookup: { dataSource: countries, valueExpr: 'id', displayExpr: 'name' } },
+  { field: 'cityId', caption: 'City',
+    // a lookup dataSource may be a function of the row: while editing it
+    // receives the *draft* values, so picking a country re-filters the cities
+    lookup: {
+      dataSource: (row: Assignment) =>
+        cities.filter((city) => city.countryId === row.countryId),
+      valueExpr: 'id',
+      displayExpr: 'name',
+    } },
+  { field: 'done', caption: 'Done', dataType: 'boolean' as const, width: 90 },
+];
+
+export function AssignmentsGrid() {
+  const [lastCommand, setLastCommand] = useState('');
+
+  const commandButtons: OgeCommandButton<Assignment>[] = [
+    { name: 'edit' },
+    { name: 'delete' },
+    {
+      name: 'archive',
+      text: 'Archive',
+      visible: (row) => !row.done,
+      onClick: ({ row }) => setLastCommand(`archive #${row.id} (${row.title})`),
+    },
+  ];
+  return (
+    <OgeGrid
+      data={assignments}
+      keyField="id"
+      columns={columns}
+      editing={{ mode: 'row', allowUpdating: true, allowDeleting: true }}
+      commandButtons={commandButtons}
+    />
+  );
+}
+```
+
+#### Every filter surface
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { FilterExpr } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number' as const, filterable: false },
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'city', caption: 'City' },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const },
+  { field: 'hireDate', caption: 'Hire Date', dataType: 'date' as const, width: 120 },
+];
+
+export function FilteredGrid() {
+  // filterValue is a serializable and/or expression tree — the same
+  // shape every surface produces, and the same one the builder edits
+  const [filter, setFilter] = useState<FilterExpr | null>(null);
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      filterRow          // per-column editors + operator menu
+      headerFilter       // distinct values with a search box
+      searchPanel        // global search + highlighting
+      filterPanel        // filter builder entry point
+      filterValue={filter}
+      onFilterValueChange={setFilter}
+      paging={{ pageSize: 12 }}
+    />
+  );
+}
+```
 
 #### Group panel
 
@@ -27257,6 +27727,149 @@ export function EmployeesGrid() {
 }
 ```
 
+#### stateKey
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number' as const },
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const },
+];
+
+export function PersistedGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      // sorting, filters, grouping, column widths/order/pins/visibility and the
+      // page size are one serializable snapshot, saved under this key
+      stateKey="docs-persistence"
+      groupPanel
+      filterRow
+      columnChooser
+      paging={{ pageSize: 8 }}
+    />
+  );
+}
+```
+
+#### Custom backend
+
+```ts
+'use client';
+
+import { OgeGrid, OgeGridStateStorageProvider } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps, OgeStateStorage } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+declare const columns: OgeGridColumnProps<Employee>[];
+
+// both methods may return promises, so an HTTP backend plugs in directly
+const apiStorage: OgeStateStorage = {
+  get: (key) => fetch(`/api/grid-state/${key}`).then((r) => r.text()),
+  set: (key, value) =>
+    fetch(`/api/grid-state/${key}`, { method: 'PUT', body: value }).then(
+      () => undefined,
+    ),
+};
+
+export function ApiPersistedGrid() {
+  return (
+    <OgeGridStateStorageProvider storage={apiStorage}>
+      <OgeGrid
+        data={employees}
+        keyField="id"
+        columns={columns}
+        stateKey="api-demo"
+        filterRow
+        paging={{ pageSize: 6 }}
+      />
+    </OgeGridStateStorageProvider>
+  );
+}
+```
+
+#### Imperative state
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { GridStateSnapshot } from '@oge-ui/core';
+import type { OgeGridColumnProps, OgeGridHandle } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+declare const columns: OgeGridColumnProps<Employee>[];
+
+export function ImperativeState() {
+  const grid = useRef<OgeGridHandle<Employee>>(null);
+  const [captured, setCaptured] = useState<GridStateSnapshot | null>(null);
+  return (
+    <>
+      <button onClick={() => setCaptured(grid.current?.state() ?? null)}>
+        Capture view
+      </button>
+      <button
+        disabled={!captured}
+        onClick={() => captured && grid.current?.applyState(captured)}
+      >
+        Restore captured view
+      </button>
+      <OgeGrid
+        ref={grid}
+        data={employees}
+        keyField="id"
+        columns={columns}
+        filterRow
+        groupPanel
+        paging={{ pageSize: 6 }}
+        // debounced: rapid interactions produce one notification
+        onStateChange={(snapshot) => console.log(snapshot)}
+      />
+    </>
+  );
+}
+```
+
 #### Row render prop
 
 ```ts
@@ -27419,6 +28032,115 @@ export function EmptyEmployees() {
         )}
       />
     </>
+  );
+}
+```
+
+#### Checkbox selection & context menu
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { RowKey } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'id', caption: 'Id', width: 80, dataType: 'number' as const },
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'city', caption: 'City' },
+];
+
+export function SelectableGrid() {
+  const [selected, setSelected] = useState<RowKey[]>([]);
+  const [lastAction, setLastAction] = useState('');
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      selectionMode="checkbox"
+      selectedKeys={selected}
+      onSelectedKeysChange={setSelected}
+      filterRow
+      filterDebounce={200}
+      virtualScroll
+      style={{ height: 480 }}
+      // push items to open the grid's own menu at the pointer; leave the array
+      // empty and the browser's native menu is left alone
+      onRowContextMenu={(event) => {
+        event.items.push(
+          {
+            text: `Copy "${event.row.firstName} ${event.row.lastName}"`,
+            action: () => setLastAction(`copied #${event.row.id}`),
+          },
+          {
+            text: 'Select this row only',
+            action: () => setSelected([event.key]),
+          },
+          { text: 'Delete (disabled)', disabled: true },
+        );
+      }}
+    />
+  );
+}
+```
+
+#### Deferred selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { FilterExpr } from '@oge-ui/core';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number' as const },
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const },
+];
+
+export function DeferredSelection() {
+  // the selection *is* the expression — no key list is ever materialized,
+  // so select-all over a million remote rows costs nothing
+  const [selectionFilter, setSelectionFilter] = useState<FilterExpr | null>(null);
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      selectionMode="checkbox"
+      selectionDeferred
+      selectionFilter={selectionFilter}
+      onSelectionFilterChange={setSelectionFilter}
+      paging={{ pageSize: 8 }}
+    />
   );
 }
 ```

@@ -55,10 +55,24 @@ const COVERAGE: Readonly<
     overlay: '*',
     // overview and api both branch
     upload: '*',
-    // R6 in progress: the overview and the API page branch; the feature
-    // pages (columns, filtering, selection, …) follow slice by slice — see
-    // docs/REACT-PARITY.md for the phase table.
-    'data-grid': ['', 'api', 'grouping', 'master-detail', 'rows'],
+    // R6 complete: every feature page of the grid now branches. The
+    // engine-level sub-pages that share this family — playground, sorting,
+    // virtual-scroll, infinite-scroll, remote-data, live-updates — stay
+    // Angular-only and still show the shell notice, which is why this is a
+    // page list rather than `'*'`.
+    'data-grid': [
+      '',
+      'api',
+      'columns',
+      'filtering',
+      'selection',
+      'editing',
+      'persistence',
+      'context-menu',
+      'grouping',
+      'master-detail',
+      'rows',
+    ],
     // The navigation package ships as six route families. The tree view owns
     // the family's overview and API pages; the rest are single-page families.
     'tree-view': ['', 'api'],

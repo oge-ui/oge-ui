@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import {
   OgeColumn,
@@ -11,6 +16,8 @@ import {
 import { OgeCard } from '@oge-ui/layout';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import { ReactGridEditingDemos } from '../react-grid/editing';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 import { LOOKUP_SNIPPET, SNIPPET } from './editing-snippets';
 
@@ -38,6 +45,7 @@ interface City {
     DemoCard,
     DocHeader,
     ReactiveFormsModule,
+    ReactGridEditingDemos,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -55,187 +63,197 @@ interface City {
       </p>
     </app-doc-header>
 
-    <div
-      class="mb-4 flex gap-1 rounded-lg border border-gray-200 p-1 dark:border-gray-800 w-fit"
-    >
-      @for (mode of modes; track mode) {
-        <button
-          type="button"
-          class="rounded-md px-3 py-1.5 text-sm capitalize transition-colors"
-          [class]="
-            editMode() === mode
-              ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
-          "
-          (click)="editMode.set(mode)"
-        >
-          {{ mode }}
-        </button>
-      }
-    </div>
-
-    <app-demo-card
-      [chips]="['editing: ' + editMode(), '30 rows']"
-      [code]="snippet"
-      language="ts"
-    >
+    @if (fw.isReact()) {
+      <app-react-grid-editing-demos />
+    } @else {
       <div
-        class="grid grid-cols-[minmax(0,2fr)_minmax(240px,1fr)] items-start gap-4 max-lg:grid-cols-1"
+        class="mb-4 flex gap-1 rounded-lg border border-gray-200 p-1 dark:border-gray-800 w-fit"
+      >
+        @for (mode of modes; track mode) {
+          <button
+            type="button"
+            class="rounded-md px-3 py-1.5 text-sm capitalize transition-colors"
+            [class]="
+              editMode() === mode
+                ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+            "
+            (click)="editMode.set(mode)"
+          >
+            {{ mode }}
+          </button>
+        }
+      </div>
+
+      <app-demo-card
+        [chips]="['editing: ' + editMode(), '30 rows']"
+        [code]="snippet"
+        language="ts"
+      >
+        <div
+          class="grid grid-cols-[minmax(0,2fr)_minmax(240px,1fr)] items-start gap-4 max-lg:grid-cols-1"
+        >
+          <oge-grid
+            [data]="employees"
+            keyField="id"
+            [editing]="{
+              mode: editMode(),
+              allowUpdating: true,
+              allowAdding: true,
+              allowDeleting: true,
+              confirmDelete: true,
+            }"
+            [paging]="{ pageSize: 10 }"
+            (savingChanges)="onSaving($event)"
+          >
+            <oge-column
+              field="id"
+              caption="Id"
+              [width]="70"
+              dataType="number"
+              [editable]="false"
+            />
+            <oge-column
+              field="firstName"
+              caption="First Name"
+              [required]="true"
+            />
+            <oge-column
+              field="lastName"
+              caption="Last Name"
+              [required]="true"
+            />
+            <oge-column field="department" caption="Department">
+              <select
+                *ogeEditTemplate="let control"
+                [formControl]="$any(control)"
+                class="oge-editor w-full rounded border border-indigo-400 px-2 py-1 text-sm dark:bg-gray-900"
+              >
+                <option>Engineering</option>
+                <option>Sales</option>
+                <option>HR</option>
+                <option>Finance</option>
+                <option>Support</option>
+              </select>
+            </oge-column>
+            <oge-column field="salary" caption="Salary" dataType="number" />
+          </oge-grid>
+          <oge-card
+            stylingMode="filled"
+            size="sm"
+            class="save-log max-h-[480px]"
+            style="overflow: auto"
+            role="complementary"
+          >
+            <h3 class="!mt-0 mb-2 text-sm font-semibold">savingChanges log</h3>
+            <ol class="m-0 list-decimal pl-4 font-mono text-xs leading-relaxed">
+              @for (entry of saveLog(); track $index) {
+                <li class="break-all">{{ entry }}</li>
+              } @empty {
+                <li class="list-none text-gray-400">No saves yet</li>
+              }
+            </ol>
+          </oge-card>
+        </div>
+      </app-demo-card>
+
+      <h3>Cascading lookups & command-column customization</h3>
+      <p>
+        A lookup's <code>dataSource</code> may be a
+        <em>function of the row</em>: while editing, it receives the draft
+        values, so picking a country immediately re-filters the city editor. The
+        command column is customizable through <code>commandButtons</code> —
+        built-in <code>edit</code>/<code>delete</code>
+        plus your own buttons with per-row visibility.
+      </p>
+
+      <app-demo-card
+        [chips]="['lookup', 'cascading', 'commandButtons']"
+        [code]="lookupSnippet"
+        language="ts"
       >
         <oge-grid
-          [data]="employees"
+          [data]="assignments"
           keyField="id"
-          [editing]="{
-            mode: editMode(),
-            allowUpdating: true,
-            allowAdding: true,
-            allowDeleting: true,
-            confirmDelete: true,
-          }"
-          [paging]="{ pageSize: 10 }"
-          (savingChanges)="onSaving($event)"
+          [editing]="{ mode: 'row', allowUpdating: true, allowDeleting: true }"
+          [commandButtons]="commandButtons"
         >
+          <oge-column field="title" caption="Task" />
           <oge-column
-            field="id"
-            caption="Id"
-            [width]="70"
-            dataType="number"
-            [editable]="false"
+            field="countryId"
+            caption="Country"
+            [lookup]="{
+              dataSource: countries,
+              valueExpr: 'id',
+              displayExpr: 'name',
+            }"
           />
           <oge-column
-            field="firstName"
-            caption="First Name"
-            [required]="true"
+            field="cityId"
+            caption="City"
+            [lookup]="{
+              dataSource: citiesOf,
+              valueExpr: 'id',
+              displayExpr: 'name',
+            }"
           />
-          <oge-column field="lastName" caption="Last Name" [required]="true" />
-          <oge-column field="department" caption="Department">
-            <select
-              *ogeEditTemplate="let control"
-              [formControl]="$any(control)"
-              class="oge-editor w-full rounded border border-indigo-400 px-2 py-1 text-sm dark:bg-gray-900"
-            >
-              <option>Engineering</option>
-              <option>Sales</option>
-              <option>HR</option>
-              <option>Finance</option>
-              <option>Support</option>
-            </select>
-          </oge-column>
-          <oge-column field="salary" caption="Salary" dataType="number" />
+          <oge-column
+            field="done"
+            caption="Done"
+            dataType="boolean"
+            [width]="90"
+          />
         </oge-grid>
-        <oge-card
-          stylingMode="filled"
-          size="sm"
-          class="save-log max-h-[480px]"
-          style="overflow: auto"
-          role="complementary"
-        >
-          <h3 class="!mt-0 mb-2 text-sm font-semibold">savingChanges log</h3>
-          <ol class="m-0 list-decimal pl-4 font-mono text-xs leading-relaxed">
-            @for (entry of saveLog(); track $index) {
-              <li class="break-all">{{ entry }}</li>
-            } @empty {
-              <li class="list-none text-gray-400">No saves yet</li>
-            }
-          </ol>
-        </oge-card>
-      </div>
-    </app-demo-card>
+        @if (lastCommand()) {
+          <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Last command: <span class="font-mono">{{ lastCommand() }}</span>
+          </div>
+        }
+      </app-demo-card>
 
-    <h3>Cascading lookups & command-column customization</h3>
-    <p>
-      A lookup's <code>dataSource</code> may be a <em>function of the row</em>:
-      while editing, it receives the draft values, so picking a country
-      immediately re-filters the city editor. The command column is customizable
-      through <code>commandButtons</code> — built-in <code>edit</code>/<code
-        >delete</code
-      >
-      plus your own buttons with per-row visibility.
-    </p>
-
-    <app-demo-card
-      [chips]="['lookup', 'cascading', 'commandButtons']"
-      [code]="lookupSnippet"
-      language="ts"
-    >
-      <oge-grid
-        [data]="assignments"
-        keyField="id"
-        [editing]="{ mode: 'row', allowUpdating: true, allowDeleting: true }"
-        [commandButtons]="commandButtons"
-      >
-        <oge-column field="title" caption="Task" />
-        <oge-column
-          field="countryId"
-          caption="Country"
-          [lookup]="{
-            dataSource: countries,
-            valueExpr: 'id',
-            displayExpr: 'name',
-          }"
-        />
-        <oge-column
-          field="cityId"
-          caption="City"
-          [lookup]="{
-            dataSource: citiesOf,
-            valueExpr: 'id',
-            displayExpr: 'name',
-          }"
-        />
-        <oge-column
-          field="done"
-          caption="Done"
-          dataType="boolean"
-          [width]="90"
-        />
-      </oge-grid>
-      @if (lastCommand()) {
-        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Last command: <span class="font-mono">{{ lastCommand() }}</span>
-        </div>
-      }
-    </app-demo-card>
-
-    <h3>Notes</h3>
-    <ul>
-      <li>
-        <strong>cell</strong>: click a cell (or press <kbd>Enter</kbd>/<kbd
-          >F2</kbd
-        >
-        on a focused one), edit, commit with <kbd>Enter</kbd>;
-        <kbd>Tab</kbd> commits and moves to the next editable cell,
-        <kbd>Esc</kbd> reverts.
-      </li>
-      <li>
-        <strong>row / popup / form</strong>: use the command column's pencil
-        button — all editable cells, a dialog, or an inline labeled form open at
-        once with Save/Cancel.
-      </li>
-      <li><code>confirmDelete: true</code> asks before a non-batch delete.</li>
-      <li>
-        <code>editing.formItems</code> picks the fields (and their order, labels
-        and <code>colSpan</code>) that the <em>form</em> and
-        <em>popup</em> editors show; <code>formColCount</code> fixes the layout
-        column count.
-      </li>
-      <li>
-        <strong>batch</strong>: nothing touches the DataSource until
-        <em>Save changes</em>; dirty cells get a corner marker, deletions a
-        strike-through, and everything is sent as one ordered change set.
-      </li>
-      <li>
-        Validation blocks commits: <code>[required]</code> or any Angular
-        <code>[validators]</code> mark the editor red and keep it open.
-      </li>
-      <li>
-        The same flow drives remote sources — implement
-        <code>insert/update/remove</code> on your DataSource.
-      </li>
-    </ul>
+      <h3>Notes</h3>
+      <ul>
+        <li>
+          <strong>cell</strong>: click a cell (or press <kbd>Enter</kbd>/<kbd
+            >F2</kbd
+          >
+          on a focused one), edit, commit with <kbd>Enter</kbd>;
+          <kbd>Tab</kbd> commits and moves to the next editable cell,
+          <kbd>Esc</kbd> reverts.
+        </li>
+        <li>
+          <strong>row / popup / form</strong>: use the command column's pencil
+          button — all editable cells, a dialog, or an inline labeled form open
+          at once with Save/Cancel.
+        </li>
+        <li>
+          <code>confirmDelete: true</code> asks before a non-batch delete.
+        </li>
+        <li>
+          <code>editing.formItems</code> picks the fields (and their order,
+          labels and <code>colSpan</code>) that the <em>form</em> and
+          <em>popup</em> editors show; <code>formColCount</code> fixes the
+          layout column count.
+        </li>
+        <li>
+          <strong>batch</strong>: nothing touches the DataSource until
+          <em>Save changes</em>; dirty cells get a corner marker, deletions a
+          strike-through, and everything is sent as one ordered change set.
+        </li>
+        <li>
+          Validation blocks commits: <code>[required]</code> or any Angular
+          <code>[validators]</code> mark the editor red and keep it open.
+        </li>
+        <li>
+          The same flow drives remote sources — implement
+          <code>insert/update/remove</code> on your DataSource.
+        </li>
+      </ul>
+    }
   `,
 })
 export class EditingPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly snippet = SNIPPET;
   protected readonly modes: OgeEditMode[] = [
     'cell',

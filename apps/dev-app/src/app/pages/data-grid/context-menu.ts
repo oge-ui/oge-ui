@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   OgeColumn,
   OgeGrid,
@@ -7,12 +12,14 @@ import {
 } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import { ReactGridContextMenuDemos } from '../react-grid/context-menu';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
 import { HEADER_MENU_SNIPPET, ROW_MENU_SNIPPET } from './context-menu-snippets';
 
 @Component({
   selector: 'app-context-menu',
-  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader],
+  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader, ReactGridContextMenuDemos],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -28,120 +35,125 @@ import { HEADER_MENU_SNIPPET, ROW_MENU_SNIPPET } from './context-menu-snippets';
       </p>
     </app-doc-header>
 
-    <app-demo-card
-      [chips]="['rowContextMenu']"
-      [code]="rowMenuSnippet"
-      language="ts"
-    >
-      <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-        Right-click any row.
-        @if (lastAction()) {
-          <span
-            class="ml-2 rounded bg-gray-100 px-2 py-0.5 font-mono text-xs dark:bg-gray-800"
-            >{{ lastAction() }}</span
-          >
-        }
-      </div>
-      <oge-grid
-        [data]="employees"
-        keyField="id"
-        [paging]="{ pageSize: 6 }"
-        (rowContextMenu)="onRowMenu($event)"
+    @if (fw.isReact()) {
+      <app-react-grid-context-menu-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['rowContextMenu']"
+        [code]="rowMenuSnippet"
+        language="ts"
       >
-        <oge-column field="firstName" caption="First Name" />
-        <oge-column field="lastName" caption="Last Name" />
-        <oge-column field="department" caption="Department" />
-      </oge-grid>
-    </app-demo-card>
+        <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+          Right-click any row.
+          @if (lastAction()) {
+            <span
+              class="ml-2 rounded bg-gray-100 px-2 py-0.5 font-mono text-xs dark:bg-gray-800"
+              >{{ lastAction() }}</span
+            >
+          }
+        </div>
+        <oge-grid
+          [data]="employees"
+          keyField="id"
+          [paging]="{ pageSize: 6 }"
+          (rowContextMenu)="onRowMenu($event)"
+        >
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="lastName" caption="Last Name" />
+          <oge-column field="department" caption="Department" />
+        </oge-grid>
+      </app-demo-card>
 
-    <h3>Header menu customization</h3>
-    <p>
-      The header menu works out of the box (right-click any header). With
-      <code>headerContextMenu</code> you receive the prebuilt items and mutate
-      the array: below, every column gains a custom <em>Say hello</em> item, and
-      the Salary column loses its pin entries.
-    </p>
-    <app-demo-card
-      [chips]="['headerContextMenu', 'built-ins + custom']"
-      [code]="headerMenuSnippet"
-      language="ts"
-    >
-      <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-        Right-click a column header — try Salary, its pin items are removed.
-        @if (lastAction()) {
-          <span
-            class="ml-2 rounded bg-gray-100 px-2 py-0.5 font-mono text-xs dark:bg-gray-800"
-            >{{ lastAction() }}</span
-          >
-        }
-      </div>
-      <oge-grid
-        [data]="employees"
-        keyField="id"
-        [groupPanel]="true"
-        [paging]="{ pageSize: 6 }"
-        (headerContextMenu)="onHeaderMenu($event)"
+      <h3>Header menu customization</h3>
+      <p>
+        The header menu works out of the box (right-click any header). With
+        <code>headerContextMenu</code> you receive the prebuilt items and mutate
+        the array: below, every column gains a custom <em>Say hello</em> item,
+        and the Salary column loses its pin entries.
+      </p>
+      <app-demo-card
+        [chips]="['headerContextMenu', 'built-ins + custom']"
+        [code]="headerMenuSnippet"
+        language="ts"
       >
-        <oge-column field="firstName" caption="First Name" />
-        <oge-column field="department" caption="Department" />
-        <oge-column field="salary" caption="Salary" dataType="number" />
-      </oge-grid>
-    </app-demo-card>
+        <div class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+          Right-click a column header — try Salary, its pin items are removed.
+          @if (lastAction()) {
+            <span
+              class="ml-2 rounded bg-gray-100 px-2 py-0.5 font-mono text-xs dark:bg-gray-800"
+              >{{ lastAction() }}</span
+            >
+          }
+        </div>
+        <oge-grid
+          [data]="employees"
+          keyField="id"
+          [groupPanel]="true"
+          [paging]="{ pageSize: 6 }"
+          (headerContextMenu)="onHeaderMenu($event)"
+        >
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="department" caption="Department" />
+          <oge-column field="salary" caption="Salary" dataType="number" />
+        </oge-grid>
+      </app-demo-card>
 
-    <h3>API</h3>
-    <table class="api-table">
-      <thead>
-        <tr>
-          <th>Member</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>(rowContextMenu)</code></td>
-          <td>
-            <code>OgeContextMenuEvent&lt;T&gt;</code>: <code>row</code>,
-            <code>key</code>, <code>clientX/Y</code>, mutable
-            <code>items</code>. Empty items → native browser menu.
-          </td>
-        </tr>
-        <tr>
-          <td><code>(headerContextMenu)</code></td>
-          <td>
-            <code>OgeHeaderContextMenuEvent</code>: <code>field</code>,
-            <code>caption</code>, <code>clientX/Y</code>, mutable
-            <code>items</code> prefilled with the built-ins.
-          </td>
-        </tr>
-        <tr>
-          <td><code>OgeMenuItem</code></td>
-          <td>
-            <code>{{ '{' }} text, action?, disabled? {{ '}' }}</code> — the menu
-            closes automatically after an action runs.
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <h3>API</h3>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>(rowContextMenu)</code></td>
+            <td>
+              <code>OgeContextMenuEvent&lt;T&gt;</code>: <code>row</code>,
+              <code>key</code>, <code>clientX/Y</code>, mutable
+              <code>items</code>. Empty items → native browser menu.
+            </td>
+          </tr>
+          <tr>
+            <td><code>(headerContextMenu)</code></td>
+            <td>
+              <code>OgeHeaderContextMenuEvent</code>: <code>field</code>,
+              <code>caption</code>, <code>clientX/Y</code>, mutable
+              <code>items</code> prefilled with the built-ins.
+            </td>
+          </tr>
+          <tr>
+            <td><code>OgeMenuItem</code></td>
+            <td>
+              <code>{{ '{' }} text, action?, disabled? {{ '}' }}</code> — the
+              menu closes automatically after an action runs.
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-    <h3>Notes</h3>
-    <ul>
-      <li>
-        Menus close on outside click, on <kbd>Escape</kbd>, and after running an
-        item.
-      </li>
-      <li>
-        Header built-ins adapt to the column: sort items only for sortable
-        columns, group items only with a group panel, pin items reflect the
-        current pin state.
-      </li>
-      <li>
-        All built-in texts are localizable through
-        <code>provideOgeGridConfig</code> messages.
-      </li>
-    </ul>
+      <h3>Notes</h3>
+      <ul>
+        <li>
+          Menus close on outside click, on <kbd>Escape</kbd>, and after running
+          an item.
+        </li>
+        <li>
+          Header built-ins adapt to the column: sort items only for sortable
+          columns, group items only with a group panel, pin items reflect the
+          current pin state.
+        </li>
+        <li>
+          All built-in texts are localizable through
+          <code>provideOgeGridConfig</code> messages.
+        </li>
+      </ul>
+    }
   `,
 })
 export class ContextMenuPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly employees = makeEmployees(30, 17);
   protected readonly rowMenuSnippet = ROW_MENU_SNIPPET;
   protected readonly headerMenuSnippet = HEADER_MENU_SNIPPET;

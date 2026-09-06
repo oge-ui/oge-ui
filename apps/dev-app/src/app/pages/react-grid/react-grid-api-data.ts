@@ -532,18 +532,6 @@ export const OGE_REACT_GRID_API: ApiSections = {
           description:
             'Downloads the current view as a CSV file. Fires the cancelable <code>onExporting</code> first.',
         },
-        {
-          name: 'exportGridToExcel(grid, options?)',
-          type: '@oge-ui/react-grid/export-excel',
-          description:
-            'Downloads the current view as <code>.xlsx</code>. Takes the grid’s handle; <code>exceljs</code> is an optional peer, imported only by this entry point. <code>buildExcelWorkbook</code> is exported alongside for a workbook you assemble yourself — the same builder the Angular package calls.',
-        },
-        {
-          name: 'exportGridToPdf(grid, options?)',
-          type: '@oge-ui/react-grid/export-pdf',
-          description:
-            'Downloads the current view as <code>.pdf</code> (<code>title</code>, <code>orientation</code>, <code>pageFormat</code>). <code>jspdf</code> and <code>jspdf-autotable</code> are optional peers; <code>buildPdfDocument</code> is exported alongside.',
-        },
       ],
     },
     {
@@ -1013,6 +1001,18 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
           name: 'OgeExportData&lt;T&gt; / OgeExportColumn&lt;T&gt;',
           type: '{ rows, columns } / { caption, field, dataType, accessor, format? }',
           description: 'What <code>getExportData()</code> resolves to.',
+        },
+        {
+          name: 'exportGridToExcel(grid, options?)',
+          type: '@oge-ui/react-grid/export-excel',
+          description:
+            'Downloads the current view as <code>.xlsx</code>. Takes the grid’s handle where the Angular signature takes the component. <code>exceljs</code> is an optional peer, imported only by this entry point; <code>buildExcelWorkbook</code> is exported alongside for a workbook you assemble yourself — the same builder the Angular package calls.',
+        },
+        {
+          name: 'exportGridToPdf(grid, options?)',
+          type: '@oge-ui/react-grid/export-pdf',
+          description:
+            'Downloads the current view as <code>.pdf</code> (<code>title</code>, <code>orientation</code>, <code>pageFormat</code>). <code>jspdf</code> and <code>jspdf-autotable</code> are optional peers; <code>buildPdfDocument</code> is exported alongside.',
         },
       ],
     },
