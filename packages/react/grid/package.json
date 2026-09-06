@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-grid",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "React data grid from the OGE UI suite: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging with a full pager, row and column virtualization, windowed remote loading and infinite scrolling, single/multiple/checkbox selection with shift ranges and Ctrl+A, Excel-like keyboard navigation, a focused row, pinned, resizable and reorderable columns, responsive column hiding, grouping with a drag-and-drop group panel, group/footer/total summaries and deferred group loading, master-detail, row and empty-state render props, row drag, state persistence, CSV export and clipboard copy — running the same framework-free grid engine, the same state slices and the same stylesheet as the Angular grid package.",
   "keywords": [
     "react",
@@ -48,12 +48,12 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "0.13.0",
-    "@oge-ui/core": "0.13.0",
-    "@oge-ui/react-forms": "0.13.0",
-    "@oge-ui/react-inputs": "0.13.0",
-    "@oge-ui/react-layout": "0.13.0",
-    "@oge-ui/react-overlay": "0.13.0"
+    "@oge-ui/behavior": "0.13.1",
+    "@oge-ui/core": "0.13.1",
+    "@oge-ui/react-forms": "0.13.1",
+    "@oge-ui/react-inputs": "0.13.1",
+    "@oge-ui/react-layout": "0.13.1",
+    "@oge-ui/react-overlay": "0.13.1"
   },
   "homepage": "https://ogeui.com",
   "repository": {

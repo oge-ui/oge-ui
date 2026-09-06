@@ -5,7 +5,11 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
-## Unreleased — security hardening + React grid slices C/D
+## 0.13.1 — 2026-09-06
+
+Every package moves to 0.13.1 together. A patch release by version number, but
+the substance is a security pass over the whole suite plus the React grid's
+remaining slices — see below.
 
 ### Fixed (security)
 

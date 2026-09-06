@@ -2,7 +2,7 @@
 
 > React file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews and a lightbox, per-file progress with rate and ETA, chunked resumable transfer with pause, resume and retry, a pluggable transport adapter, external drop zones and triggers — running the same upload engine, list machine and stylesheet as the Angular upload package.
 
-Part of OGE UI v0.13.0.
+Part of OGE UI v0.13.1.
 Docs and live demos: https://ogeui.com/components/upload
 Whole-suite reference: https://ogeui.com/llms-full.txt
 
