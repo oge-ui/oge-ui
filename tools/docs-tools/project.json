@@ -19,6 +19,14 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "csp-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/docs-tools/check-csp.mjs",
+        "cwd": "{workspaceRoot}"
+      },
+      "dependsOn": ["dev-app:build"]
+    },
     "parity": {
       "executor": "nx:run-commands",
       "options": {

@@ -123,7 +123,7 @@ Predictable wrong guesses, and what to write instead.
 | `getFieldLayout(): readonly PivotFieldConfig[]` | `readonly PivotFieldConfig[]` | Declared fields merged with user overrides. |
 | `showFieldChooser(): void` | `void` | Opens the field-chooser dialog. |
 | `state() / applyState(snapshot)` | `PivotGridStateSnapshot / void` | Field layout + expansion snapshot. |
-| `getCsv(options?) / exportCsv(filename?)` | `string / void` | CSV of exactly what is on screen (multi-level headers flattened). |
+| `getCsv(options?) / exportCsv(filename?)` | `string / void` | CSV of exactly what is on screen (multi-level headers flattened).Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 
 #### Events
 

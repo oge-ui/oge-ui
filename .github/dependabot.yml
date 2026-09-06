@@ -1,0 +1,44 @@
+version: 2
+
+# Every dependency in this workspace is a build-time one — nothing here is
+# shipped to a consumer of `@oge-ui/*` — so the point of these updates is to
+# keep the *build* off advisory-bearing versions, not to chase releases. The
+# Angular and Nx families move together or not at all: a partial bump inside
+# either one fails peer resolution, so they are grouped into one PR each.
+updates:
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      angular:
+        patterns:
+          - '@angular/*'
+          - '@angular-devkit/*'
+          - '@schematics/angular'
+          - 'angular-eslint'
+          - 'ng-packagr'
+      nx:
+        patterns:
+          - 'nx'
+          - '@nx/*'
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+          - '@testing-library/*'
+      tooling:
+        patterns:
+          - '*'
+        exclude-patterns:
+          - '@angular/*'
+          - '@angular-devkit/*'
+          - '@nx/*'
+
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: monthly

@@ -327,7 +327,8 @@ export const OGE_TREE_LIST_API: ApiSections = {
           name: 'getExportData() / getCsv() / exportCsv()',
           type: 'sync',
           description:
-            '<strong>Synchronous</strong> (grid: async); CSV indents the first column 2 spaces per level; Excel entry sets real outline levels.',
+            '<strong>Synchronous</strong> (grid: async); CSV indents the first column 2 spaces per level; Excel entry sets real outline levels.' +
+            'Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); <code>formulaGuard: false</code> opts out.',
         },
       ],
     },

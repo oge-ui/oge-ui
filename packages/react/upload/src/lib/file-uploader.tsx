@@ -28,6 +28,7 @@ import {
   type OgeUploadFileError,
   type OgeUploadMessagesInput,
   type OgeUploadPreloadedFile,
+  sanitizeResourceUrl,
 } from '@oge-ui/behavior';
 import { OgeProgressBar } from '@oge-ui/react-layout';
 import { OgeModal } from '@oge-ui/react-overlay';
@@ -611,7 +612,7 @@ export const OgeFileUploader = forwardRef<
           <img
             className="oge-upload-file-thumb"
             alt=""
-            src={thumb}
+            src={sanitizeResourceUrl(thumb)}
             width={previewWidth}
             crossOrigin={file.crossOrigin}
             onError={(event: SyntheticEvent<HTMLImageElement>) =>
@@ -907,7 +908,9 @@ export const OgeFileUploader = forwardRef<
         >
           <img
             className="oge-upload-lightbox-image"
-            src={core.previewing.thumbnailUrl ?? core.previewing.url}
+            src={sanitizeResourceUrl(
+              core.previewing.thumbnailUrl ?? core.previewing.url,
+            )}
             alt={core.previewing.name}
             crossOrigin={core.previewing.crossOrigin}
           />

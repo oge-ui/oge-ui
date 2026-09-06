@@ -45,7 +45,15 @@ export default defineConfig(() => ({
       // consumer that renders on the server (or bundles without a CSS loader)
       // is not forced to resolve it. `styles.css` is imported once by the app,
       // which is what the docs tell people to do.
-      entry: { index: 'src/index.ts', styles: 'src/styles.ts' },
+      // The two export entries are separate on purpose: `exceljs` / `jspdf`
+      // are optional peers, so only an app that imports one of them pays for
+      // it — the same shape the Angular package's secondary entry points have.
+      entry: {
+        index: 'src/index.ts',
+        styles: 'src/styles.ts',
+        'export-excel': 'src/export-excel.ts',
+        'export-pdf': 'src/export-pdf.ts',
+      },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
       formats: ['es', 'cjs'],
@@ -58,8 +66,15 @@ export default defineConfig(() => ({
         'react-dom',
         'react/jsx-runtime',
         '@oge-ui/behavior',
+        '@oge-ui/behavior/export-excel',
+        '@oge-ui/behavior/export-pdf',
         '@oge-ui/core',
+        'exceljs',
+        'jspdf',
+        'jspdf-autotable',
+        '@oge-ui/react-forms',
         '@oge-ui/react-inputs',
+        '@oge-ui/react-layout',
         '@oge-ui/react-overlay',
       ],
       output: {

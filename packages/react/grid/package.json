@@ -29,6 +29,16 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.js",
+      "require": "./export-excel.cjs"
+    },
+    "./export-pdf": {
+      "types": "./export-pdf.d.ts",
+      "import": "./export-pdf.js",
+      "require": "./export-pdf.cjs"
+    },
     "./styles.css": "./styles.css"
   },
   "sideEffects": [
@@ -40,6 +50,7 @@
   "dependencies": {
     "@oge-ui/behavior": "0.13.0",
     "@oge-ui/core": "0.13.0",
+    "@oge-ui/react-forms": "0.13.0",
     "@oge-ui/react-inputs": "0.13.0",
     "@oge-ui/react-layout": "0.13.0",
     "@oge-ui/react-overlay": "0.13.0"

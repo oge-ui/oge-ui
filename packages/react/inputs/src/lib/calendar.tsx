@@ -181,8 +181,28 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
     const focusedDate =
       props.focusedDate !== undefined ? props.focusedDate : uncontrolledFocused;
 
-    /** Anchor of the visible view (any date inside the month/year/decade). */
-    const [viewDate, setViewDate] = useState(() => startOfDay(new Date()));
+    /**
+     * Anchor of the visible view (any date inside the month/year/decade).
+     *
+     * Seeded from whatever the calendar already holds, not from today:
+     * Angular's `onValueWritten` runs for the *initial* write too, so a
+     * calendar bound to a March date opens on March there. The effect below
+     * only fires on a later change, so without this seed the React calendar
+     * would open on the current month and silently disagree with the Angular
+     * one for eleven months of the year.
+     */
+    /**
+     * The day the calendar is "on", whatever the selection mode writes to.
+     * `value` alone is not it: a range calendar leaves `value` null and fills
+     * `range`, a multiple one fills `values` — reading only `value` is how
+     * both the visible month and the roving-tabindex cell fell back to
+     * *today* in those two modes.
+     */
+    const selectionAnchor: Date | null = value ?? range[0] ?? values[0] ?? null;
+
+    const [viewDate, setViewDate] = useState(() =>
+      startOfDay(selectionAnchor ?? focusedDate ?? new Date()),
+    );
 
     const latest = useRef({ props, field, zoom, focusedDate, viewDate, value });
     latest.current = { props, field, zoom, focusedDate, viewDate, value };
@@ -213,8 +233,8 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
       latest.current.props.onRangeChange?.(next);
     };
 
-    // A programmatic value write re-anchors the view (Angular
-    // `onValueWritten`).
+    // A programmatic value write re-anchors the view *and* the keyboard
+    // focus (Angular `onValueWritten`).
     const lastWritten = useRef(value);
     useEffect(() => {
       if (value && !sameDay(value, lastWritten.current)) {
@@ -223,6 +243,22 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
       }
       lastWritten.current = value;
     }, [value?.getTime()]);
+
+    // Range and multiple modes never write `value`, so the effect above never
+    // sees their selection change — a date-range popup reopened on a new
+    // range would stay on the old month. The view follows the anchor; the
+    // keyboard focus does not, because in those modes the user's next pick is
+    // the one driving it.
+    const lastAnchor = useRef(selectionAnchor);
+    useEffect(() => {
+      if (
+        selectionAnchor &&
+        (!lastAnchor.current || !sameDay(selectionAnchor, lastAnchor.current))
+      ) {
+        setViewDate(startOfDay(selectionAnchor));
+      }
+      lastAnchor.current = selectionAnchor;
+    }, [selectionAnchor?.getTime()]);
 
     // --- derivations --------------------------------------------------------
 
@@ -266,7 +302,7 @@ export const OgeCalendar = forwardRef<OgeCalendarHandle, OgeCalendarProps>(
 
     /** The single grid cell carrying the reachable tabindex. */
     const focusTarget: Date = (() => {
-      const focused = focusedDate ?? value ?? new Date();
+      const focused = focusedDate ?? selectionAnchor ?? new Date();
       if (zoom === 'month') {
         const visible = viewOffsets.some((offset) =>
           sameMonth(focused, addMonths(viewDate, offset)),

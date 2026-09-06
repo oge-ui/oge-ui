@@ -3,6 +3,15 @@ const { withNx } = require('@nx/rollup/with-nx');
 module.exports = withNx(
   {
     main: './src/index.ts',
+    // Optional-peer entry points: the pure `.xlsx` / `.pdf` builders shared by
+    // both render layers. Separate entries so `exceljs` and `jspdf` are pulled
+    // in only by an app that actually imports one of them.
+    // note: workspace-relative, and each file name becomes the entry name —
+    // `<dir>/index.ts` would collide with the main `index` entry
+    additionalEntryPoints: [
+      'packages/behavior/src/export-excel.ts',
+      'packages/behavior/src/export-pdf.ts',
+    ],
     outputPath: '../../dist/packages/behavior',
     tsConfig: './tsconfig.lib.json',
     compiler: 'swc',

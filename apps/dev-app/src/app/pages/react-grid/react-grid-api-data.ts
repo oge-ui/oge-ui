@@ -63,6 +63,27 @@ export const OGE_REACT_GRID_API: ApiSections = {
             'Per-column filter editors below the header — text, number, date, boolean and lookup editors with a per-column operator menu.',
         },
         {
+          name: 'headerFilter',
+          type: 'boolean | OgeHeaderFilterOptions',
+          default: 'false',
+          description:
+            'Excel-style distinct-value filter button in the headers. Needs a DataSource that implements <code>distinct()</code>; date columns list their values grouped by year.',
+        },
+        {
+          name: 'filterPanel',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Filter summary bar above the grid; clicking it opens the visual filter builder (arbitrary and/or condition trees).',
+        },
+        {
+          name: 'filterValue / defaultFilterValue',
+          type: 'FilterExpr | null',
+          default: 'null',
+          description:
+            'The filter-builder expression — controlled with <code>onFilterValueChange</code>. Combines with the filter row, the header filters and the search panel.',
+        },
+        {
           name: 'searchPanel',
           type: 'boolean | OgeSearchPanelOptions',
           default: 'false',
@@ -173,6 +194,20 @@ export const OGE_REACT_GRID_API: ApiSections = {
             'The selected row keys — controlled with <code>selectedKeys</code> + <code>onSelectedKeysChange</code>, or seeded once with <code>defaultSelectedKeys</code>.',
         },
         {
+          name: 'selectionDeferred',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Deferred selection: the selection is an expression rather than a key set, so "select all" over a remote source never materializes keys. Requires a string <code>keyField</code>.',
+        },
+        {
+          name: 'selectionFilter',
+          type: 'FilterExpr | null',
+          default: 'null',
+          description:
+            'The selection expression (deferred mode) — controlled with <code>onSelectionFilterChange</code>.',
+        },
+        {
           name: 'selectAllMode',
           type: "'allPages' | 'page'",
           default: "'allPages'",
@@ -216,11 +251,39 @@ export const OGE_REACT_GRID_API: ApiSections = {
           description:
             'Enables drag-and-drop column reordering (headers dropped onto each other).',
         },
+        {
+          name: 'columnChooser',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Toolbar button opening the show/hide column list; with <code>columnReorder</code> its rows also drag to reorder.',
+        },
       ],
     },
     {
       title: 'Editing & rows',
       entries: [
+        {
+          name: 'editing',
+          type: 'false | OgeEditingOptions',
+          default: 'false',
+          description:
+            "Enables editing: <code>{ mode: 'cell' | 'row' | 'batch' | 'popup' | 'form', allowUpdating, allowAdding, allowDeleting, confirmDelete, formItems, formColCount }</code>. <code>form</code> replaces the row with an inline <code>&lt;OgeForm&gt;</code>; <code>popup</code> opens the same form in a modal.",
+        },
+        {
+          name: 'commandButtons',
+          type: 'readonly OgeCommandButton&lt;T&gt;[]',
+          default: 'undefined',
+          description:
+            "Customizes the trailing command column: reorder or mix the built-in <code>'edit'</code> / <code>'delete'</code> buttons with your own. Omitted, the column shows the built-ins the <code>editing</code> permissions allow.",
+        },
+        {
+          name: 'highlightChanges',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Briefly flashes cells whose value changed under a live-updating source; consecutive updates to one cell restart the animation.',
+        },
         {
           name: 'rowDragging',
           type: 'boolean',
@@ -460,13 +523,67 @@ export const OGE_REACT_GRID_API: ApiSections = {
           name: 'getCsv(options?): Promise&lt;string&gt;',
           type: 'handle',
           description:
-            'Builds CSV of the current view; <code>customizeCell</code> rewrites individual cells.',
+            'Builds CSV of the current view; <code>customizeCell</code> rewrites individual cells.' +
+            'Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); <code>formulaGuard: false</code> opts out.',
         },
         {
           name: "exportCsv(filename = 'grid.csv'): Promise&lt;void&gt;",
           type: 'handle',
           description:
             'Downloads the current view as a CSV file. Fires the cancelable <code>onExporting</code> first.',
+        },
+        {
+          name: 'exportGridToExcel(grid, options?)',
+          type: '@oge-ui/react-grid/export-excel',
+          description:
+            'Downloads the current view as <code>.xlsx</code>. Takes the grid’s handle; <code>exceljs</code> is an optional peer, imported only by this entry point. <code>buildExcelWorkbook</code> is exported alongside for a workbook you assemble yourself — the same builder the Angular package calls.',
+        },
+        {
+          name: 'exportGridToPdf(grid, options?)',
+          type: '@oge-ui/react-grid/export-pdf',
+          description:
+            'Downloads the current view as <code>.pdf</code> (<code>title</code>, <code>orientation</code>, <code>pageFormat</code>). <code>jspdf</code> and <code>jspdf-autotable</code> are optional peers; <code>buildPdfDocument</code> is exported alongside.',
+        },
+      ],
+    },
+    {
+      title: 'Editing',
+      entries: [
+        {
+          name: 'addRow(): void',
+          type: 'handle',
+          description:
+            'Adds an empty draft row on top and opens its editor(s); requires <code>editing.allowAdding</code>. <code>onInitNewRow</code> prefills it.',
+        },
+        {
+          name: 'editRow(key): void',
+          type: 'handle',
+          description:
+            'Opens the row editor for <code>key</code> — effective in <code>row</code>, <code>form</code> and <code>popup</code> modes; requires <code>editing.allowUpdating</code>.',
+        },
+        {
+          name: 'deleteRow(key): void',
+          type: 'handle',
+          description:
+            'Staged in batch mode (toggles, undoable), applied immediately otherwise; requires <code>editing.allowDeleting</code>.',
+        },
+        {
+          name: 'saveChanges(): void',
+          type: 'handle',
+          description:
+            'Commits the open editor and, in batch mode, saves the whole staged change set. <code>onSavingChanges</code> can still cancel it.',
+        },
+        {
+          name: 'discardChanges(): void',
+          type: 'handle',
+          description:
+            'Drops every pending change and closes any open editor; fires <code>onEditCanceled</code> when anything was open or pending.',
+        },
+        {
+          name: 'hasChanges(): boolean',
+          type: 'handle',
+          description:
+            'Whether unsaved edits exist: staged changes, added or removed rows.',
         },
       ],
     },
@@ -493,6 +610,18 @@ export const OGE_REACT_GRID_API: ApiSections = {
           description:
             'After a dragged row was dropped: the moved key, the target key and the from/to view positions.',
         },
+        {
+          name: 'onRowContextMenu',
+          type: '(event: OgeContextMenuEvent&lt;T&gt;) =&gt; void',
+          description:
+            'Right-click on a data row. Push entries into <code>items</code> to open the gridâs own menu at the pointer; leave it empty and the browserâs native menu is left alone.',
+        },
+        {
+          name: 'onHeaderContextMenu',
+          type: '(event: OgeHeaderContextMenuEvent) =&gt; void',
+          description:
+            'Right-click on a header, with the built-in items (sort / group / pin / hide) prebuilt — add, remove or reorder them before the menu opens.',
+        },
       ],
     },
     {
@@ -515,6 +644,58 @@ export const OGE_REACT_GRID_API: ApiSections = {
           type: '(value) =&gt; void',
           description:
             'The controlled-pair callbacks of <code>selectedKeys</code> and <code>focusedRowKey</code>.',
+        },
+      ],
+    },
+    {
+      title: 'Editing',
+      entries: [
+        {
+          name: 'onEditingStart',
+          type: '(event: OgeEditingStartEvent&lt;T&gt;) =&gt; void',
+          description:
+            'Cancelable: before a row or cell editor opens. Set <code>cancel</code> to keep it closed.',
+        },
+        {
+          name: 'onInitNewRow',
+          type: '(event: OgeInitNewRowEvent) =&gt; void',
+          description:
+            'After <code>addRow()</code> created a draft row — values written into <code>event.values</code> stage onto it.',
+        },
+        {
+          name: 'onRowInserting / onRowInserted',
+          type: '(event) =&gt; void',
+          description:
+            'Around an added row reaching the DataSource; the <code>-ing</code> half is cancelable.',
+        },
+        {
+          name: 'onRowUpdating / onRowUpdated',
+          type: '(event) =&gt; void',
+          description:
+            'Around an edited row reaching the DataSource; the <code>-ing</code> half is cancelable and carries the change set.',
+        },
+        {
+          name: 'onRowRemoving / onRowRemoved',
+          type: '(event) =&gt; void',
+          description:
+            'Around a row being removed; the <code>-ing</code> half is cancelable.',
+        },
+        {
+          name: 'onSavingChanges / onSavedChanges',
+          type: '(event) =&gt; void',
+          description:
+            'Around a save batch: the <code>-ing</code> half is cancelable and can rewrite the change list; the past-tense half reports what was applied.',
+        },
+        {
+          name: 'onEditCanceled',
+          type: '() =&gt; void',
+          description: 'After an edit session ended without saving.',
+        },
+        {
+          name: 'onFilterValueChange / onSelectionFilterChange',
+          type: '(value: FilterExpr | null) =&gt; void',
+          description:
+            'The controlled halves of <code>filterValue</code> (filter builder) and <code>selectionFilter</code> (deferred selection).',
         },
       ],
     },
@@ -711,6 +892,41 @@ export const OGE_REACT_GRID_COLUMN_API: ApiSections = {
           default: 'undefined',
           description:
             'Reducer for the <code>custom</code> summary type. Client-side data only.',
+        },
+        {
+          name: 'editable',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Lets <code>editing</code> open an editor on this column. A column without a <code>field</code>, or one with <code>calculateCellValue</code>, is never editable.',
+        },
+        {
+          name: 'required',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Rejects an empty value while editing; the commit is refused and the editor stays open.',
+        },
+        {
+          name: 'validators',
+          type: 'readonly OgeGridValidator&lt;T&gt;[]',
+          default: 'undefined',
+          description:
+            'Extra cell rules: <code>(value, row) =&gt; string | null</code>, first failing message wins. A message rather than a boolean, because React has no forms engine to carry an error map.',
+        },
+        {
+          name: 'renderEditor',
+          type: '(context: OgeGridEditorRenderContext&lt;T&gt;) =&gt; ReactNode',
+          default: 'undefined',
+          description:
+            'Renders the cell’s editor — the React form of <code>*ogeEditTemplate</code>. The context carries the draft <code>value</code>, <code>setValue</code>, the validation <code>error</code> and <code>commit</code>/<code>cancel</code>.',
+        },
+        {
+          name: 'bandCaption',
+          type: 'string',
+          default: 'undefined',
+          description:
+            'Groups the column under a spanning band header — the React form of <code>&lt;oge-column-group caption&gt;</code>. Adjacent columns sharing a caption merge into one band cell.',
         },
       ],
     },

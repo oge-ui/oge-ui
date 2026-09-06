@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   forwardRef,
   useEffect,
   useImperativeHandle,
@@ -16,6 +17,7 @@ import {
 import {
   ArrayDataSource,
   buildCsv,
+  createFilterPredicate,
   flattenGroupedData,
   groupNodeKey,
   resolveKeySelector,
@@ -47,17 +49,36 @@ import {
   effectiveFilterOperator,
   filterOperatorSymbol,
   filterRowOperatorChoices,
+  allHeaderValuesSelected as everyHeaderValueSelected,
+  filterHeaderValues,
   formatCellValue,
   formatPattern,
+  groupHeaderValuesByYear,
+  headerGroupState,
+  headerValueText,
+  headerYearLabel,
+  isHeaderValueSelected as headerValueIsSelected,
+  toggleAllHeaderValues as toggleAllHeaderValueSelection,
+  toggleHeaderGroup as toggleHeaderGroupSelection,
+  toggleHeaderValue as toggleHeaderValueSelection,
   humanize,
+  deferredToggleExpr,
   isDataSource,
+  keyEqualsExpr,
   lookupTextOf,
+  ogeGridBandRow,
   resolveOgeGridColumns,
   rowClickSelectionIntent,
   rowFilterExpr,
   someRowsSelected,
+  builderToExpr,
+  describeExpr,
+  exprToBuilder,
+  operatorsFor,
   type LookupItem,
+  type OgeBuilderGroup,
   type OgeExportColumn,
+  type OgeFilterBuilderField,
   type OgeExportData,
   type OgeExportOptions,
   type OgeExportingEvent,
@@ -76,13 +97,24 @@ import {
   OgeSelectBox,
   OgeTextBox,
 } from '@oge-ui/react-inputs';
+import { OgeForm } from '@oge-ui/react-forms';
 import { OgeToolbar } from '@oge-ui/react-layout';
-import { OgeMenuList, OgePopup, useAnchoredPanel } from '@oge-ui/react-overlay';
+import { OgeCellEditor } from './cell-editor';
+import { OgeFilterBuilderGroup } from './filter-builder';
+import { OgeGridEditingModel } from './grid-editing';
+import {
+  OgeMenuList,
+  OgeModal,
+  OgePopup,
+  useAnchoredPanel,
+} from '@oge-ui/react-overlay';
 import { useOgeGridConfig, useOgeGridStateStorage } from './grid-config';
 import type {
+  OgeCommandButton,
   OgeGridColumnProps,
   OgeGridHandle,
   OgeGridProps,
+  OgeInitNewRowEvent,
 } from './grid-types';
 import { OgePager } from './pager';
 import { createGridRxAdapter } from './rx-adapter';
@@ -90,6 +122,8 @@ import { createGridRxAdapter } from './rx-adapter';
 // the same leading-cell widths the Angular grid lays out with
 const EXPANDER_WIDTH = 32;
 const CHECKBOX_WIDTH = 36;
+/** Trailing command column width — the Angular grid's `COMMAND_WIDTH`. */
+const COMMAND_WIDTH = 90;
 const DRAG_WIDTH = 28;
 const COLUMN_DRAG_TYPE = 'application/x-oge-column';
 
@@ -114,6 +148,22 @@ const asList = (
   value: SummaryType | readonly SummaryType[] | undefined,
 ): readonly SummaryType[] =>
   value === undefined ? [] : typeof value === 'string' ? [value] : value;
+
+/** Command-column glyph — the Angular template's inline 13px stroke icon. */
+const commandIcon = (path: string, width = 2) => (
+  <svg
+    viewBox="0 0 16 16"
+    width="13"
+    height="13"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={width}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d={path} />
+  </svg>
+);
 
 const chevron = (path: string, size = 12, width = 2) => (
   <svg
@@ -218,6 +268,28 @@ function OgeGridInner<T extends object>(
       const value = p().filterRow ?? false;
       return typeof value === 'boolean' ? value : value.visible !== false;
     });
+    const headerFilterVisible = rx.derived(() => {
+      const value = p().headerFilter ?? false;
+      return typeof value === 'boolean' ? value : value.visible !== false;
+    });
+    const effHeaderFilterLimit = rx.derived(() => {
+      const value = p().headerFilter;
+      return (
+        (typeof value === 'object' ? value.valueLimit : undefined) ??
+        cfg().headerFilterValueLimit
+      );
+    });
+    /** The funnel only shows where the source can actually list distinct values. */
+    const headerFilterAvailable = rx.derived(
+      () =>
+        headerFilterVisible() && typeof data.source()?.distinct === 'function',
+    );
+    const headerFilterField = rx.cell<string | null>(null);
+    const headerFilterAnchor = rx.cell<HTMLElement | null>(null);
+    /** `null` while the distinct values are loading. */
+    const headerFilterValues = rx.cell<readonly unknown[] | null>(null);
+    const headerFilterSearch = rx.cell('');
+
     const effFilterDebounce = rx.derived(() => {
       const row = p().filterRow;
       const fromOptions = typeof row === 'object' ? row.debounce : undefined;
@@ -278,7 +350,10 @@ function OgeGridInner<T extends object>(
         width: column.width,
         dataType: column.dataType ?? 'string',
         format: column.format,
-        visible: column.visible !== false,
+        // lazy: `hiddenOverrides` is declared below and read from a closure
+        visible:
+          column.visible !== false &&
+          !(column.field !== undefined && hiddenOverrides().has(column.field)),
         sortable: column.sortable !== false,
         filterable: column.filterable !== false,
         filterOperator: column.filterOperator,
@@ -288,11 +363,13 @@ function OgeGridInner<T extends object>(
         calculateFilterExpression: column.calculateFilterExpression,
         hidingPriority: column.hidingPriority,
         pinned: column.pinned ?? false,
-        editable: false,
+        editable: column.editable !== false,
         cellTemplate: column.renderCell,
+        // header and editor slots have their own context shapes, so the
+        // render layer reads them off `source` instead of the one-slot field
         headerTemplate: undefined,
         editTemplate: undefined,
-        bandCaption: undefined,
+        bandCaption: column.bandCaption,
         source: column,
       })),
     );
@@ -415,9 +492,17 @@ function OgeGridInner<T extends object>(
 
     const flatNodes = rx.derived<RowNode<T>[]>(() => {
       const result = data.result();
-      if (!result) return [];
       const toggledGroups = state.expansion.collapsedGroups();
-      return flattenGroupedData<T>(result.data as readonly T[], {
+      if (!result) {
+        return state.editing.added().map((key, index) => ({
+          kind: 'data' as const,
+          key,
+          data: {} as T,
+          sourceIndex: -1 - index,
+          level: 0,
+        }));
+      }
+      const flattened = flattenGroupedData<T>(result.data as readonly T[], {
         keyOf: keySelector(),
         groups: state.grouping.descriptors(),
         groupSummary: state.grouping.groupSummary(),
@@ -430,6 +515,17 @@ function OgeGridInner<T extends object>(
           : undefined,
         groupFooters: groupFooterFields().size > 0,
       });
+      // unsaved new rows render on top
+      const added = state.editing.added();
+      if (!added.length) return flattened;
+      const addedNodes: RowNode<T>[] = added.map((key, index) => ({
+        kind: 'data',
+        key,
+        data: {} as T,
+        sourceIndex: -1 - index,
+        level: 0,
+      }));
+      return [...addedNodes, ...flattened];
     });
 
     const firstDataRow = rx.derived<T | undefined>(() => {
@@ -481,9 +577,14 @@ function OgeGridInner<T extends object>(
       }),
     );
 
+    /** Adjacent columns sharing a `bandCaption` merge into one spanning cell. */
+    const bandRow = rx.derived(() => ogeGridBandRow(resolvedColumns()));
+
     const colVirtualized = rx.derived(
       () =>
         p().scrolling?.columnRenderingMode === 'virtual' &&
+        // bands and pinned columns rely on every column being in the DOM
+        bandRow() === null &&
         resolvedColumns().every((column) => column.pinned === false),
     );
 
@@ -494,7 +595,10 @@ function OgeGridInner<T extends object>(
         scrollLeft,
         hostWidth,
         leadingTracks,
-        trailingTracks: () => [],
+        // lazy: `hasCommandColumn` is declared below and only ever read from
+        // a closure the layout core calls after this function has returned
+        trailingTracks: () =>
+          hasCommandColumn() ? [`${COMMAND_WIDTH}px`] : [],
         leadingWidth,
         defaultMinWidth: effColumnMinWidth,
         pinnedDefaultWidth: () => cfg().pinnedDefaultWidth,
@@ -632,6 +736,215 @@ function OgeGridInner<T extends object>(
       onChange: (snapshot) => latest.current.onStateChange?.(snapshot),
     });
 
+    const editing = new OgeGridEditingModel<T, Slot<T>>(
+      {
+        editing: () => p().editing ?? false,
+        state: state.editing,
+        columns: resolvedColumns,
+        flatNodes,
+        source: data.source,
+        confirmDeleteMessage: () => msgRef.current.confirmDelete,
+        requiredMessage: () => msgRef.current.requiredError,
+        events: {
+          savingChanges: (event) => p().onSavingChanges?.(event),
+          savedChanges: (event) => p().onSavedChanges?.(event),
+          editingStart: (event) => p().onEditingStart?.(event),
+          rowInserting: (event) => p().onRowInserting?.(event),
+          rowInserted: (event) => p().onRowInserted?.(event),
+          rowUpdating: (event) => p().onRowUpdating?.(event),
+          rowUpdated: (event) => p().onRowUpdated?.(event),
+          rowRemoving: (event) => p().onRowRemoving?.(event),
+          rowRemoved: (event) => p().onRowRemoved?.(event),
+          editCanceled: () => p().onEditCanceled?.(),
+          dataError: (error) => data.error.set(error),
+        },
+        reload: () => data.reload(),
+      },
+      rx,
+    );
+
+    /**
+     * Fields the form/popup editors render, resolved from `editing.formItems`
+     * (selection, order, labels, spans) — default: every editable column.
+     */
+    const editFormItems = rx.derived<
+      readonly { column: ResolvedColumn<T>; label: string; colSpan: number }[]
+    >(() => {
+      const editable = resolvedColumns().filter(
+        (column) => column.editable && column.field,
+      );
+      const items = editing.editingOptions()?.formItems;
+      if (!items?.length) {
+        return editable.map((column) => ({
+          column,
+          label: column.caption,
+          colSpan: 1,
+        }));
+      }
+      return items.flatMap((entry) => {
+        const spec = typeof entry === 'string' ? { field: entry } : entry;
+        const column = editable.find(
+          (candidate) => candidate.field === spec.field,
+        );
+        if (!column) return [];
+        return [
+          {
+            column,
+            label: spec.label ?? column.caption,
+            colSpan: Math.max(1, spec.colSpan ?? 1),
+          },
+        ];
+      });
+    });
+
+    /**
+     * The row currently rendered as an inline edit form or a popup, if any.
+     * Both surfaces edit exactly one row at a time, which is what lets one
+     * draft map back either.
+     */
+    const editFormNode = rx.derived<DataRowNode<T> | null>(() => {
+      const mode = editing.editMode();
+      if (mode !== 'form' && mode !== 'popup') return null;
+      const key = state.editing.editRowKey();
+      if (key === null) return null;
+      return (
+        flatNodes().find(
+          (node): node is DataRowNode<T> =>
+            node.kind === 'data' && node.key === key,
+        ) ?? null
+      );
+    });
+
+    /** Layout columns for the edit form; `'auto'` keeps the auto-fit default. */
+    const editFormColCount = rx.derived<number | 'auto'>(() => {
+      const count = editing.editingOptions()?.formColCount;
+      return count && count > 0 ? count : 'auto';
+    });
+
+    /**
+     * `highlightChanges`: cells a push updated, stamped with the batch that
+     * changed them. 1/2 alternate per batch so consecutive updates to the
+     * same cell restart the CSS animation (two identical keyframes, new class).
+     */
+    const updatedCells = rx.cell<ReadonlyMap<string, number>>(new Map());
+
+    /**
+     * The builder's condition tree — a plain mutable object, edited in place
+     * by the recursive editor and stamped by `builderVersion` so the preview
+     * and the modal re-render. The kernel in `@oge-ui/behavior` works on this
+     * exact shape, so both layers edit the same model.
+     */
+    let builderTree: OgeBuilderGroup = {
+      kind: 'group',
+      logic: 'and',
+      items: [],
+    };
+    const builderOpen = rx.cell(false);
+    const builderVersion = rx.cell(0);
+
+    const builderFields = rx.derived<OgeFilterBuilderField[]>(() =>
+      resolvedColumns()
+        .filter((column) => column.filterable && column.field)
+        .map((column) => ({
+          field: column.field as string,
+          caption: column.caption,
+          dataType: column.dataType,
+        })),
+    );
+
+    // --- deferred selection ---
+    const uncontrolledSelectionFilter = rx.cell<FilterExpr | null>(null);
+    const selectionFilter = rx.derived<FilterExpr | null>(() =>
+      p().selectionFilter !== undefined
+        ? (p().selectionFilter ?? null)
+        : uncontrolledSelectionFilter(),
+    );
+    const setSelectionFilter = (next: FilterExpr | null): void => {
+      if (p().selectionFilter === undefined)
+        uncontrolledSelectionFilter.set(next);
+      p().onSelectionFilterChange?.(next);
+    };
+    const selectionDeferred = rx.derived(() => p().selectionDeferred === true);
+    const deferredKeyFieldName = rx.derived<string | null>(() => {
+      const key = p().keyField;
+      return typeof key === 'string' ? key : null;
+    });
+    /** Keys of the currently rendered rows that match `selectionFilter`. */
+    const deferredSelectedKeys = rx.derived<ReadonlySet<RowKey>>(() => {
+      const expr = selectionFilter();
+      if (!selectionDeferred() || !expr) return new Set<RowKey>();
+      const predicate = createFilterPredicate<T>(expr);
+      const keys = new Set<RowKey>();
+      for (const node of flatNodes()) {
+        if (node.kind === 'data' && predicate(node.data)) keys.add(node.key);
+      }
+      return keys;
+    });
+
+    const contextMenu = rx.cell<{
+      x: number;
+      y: number;
+      items: OgeMenuItem[];
+    } | null>(null);
+
+    const chooserOpen = rx.cell(false);
+    const chooserAnchor = rx.cell<HTMLElement | null>(null);
+    /** Chooser row the dragged column would be inserted in front of. */
+    const chooserDropTargetId = rx.cell<string | null>(null);
+
+    /** Chooser rows: every column with its id and caption, in display order. */
+    const chooserEntries = rx.derived<
+      readonly { id: string; caption: string; field: string | undefined }[]
+    >(() => {
+      const declared = declaredColumns() ?? [];
+      const entries = declared.length
+        ? declared.map((column, index) => ({
+            id: column.field ?? `col-${index}`,
+            caption:
+              column.caption ?? (column.field ? humanize(column.field) : ''),
+            field: column.field,
+          }))
+        : resolvedColumns().map((column) => ({
+            id: column.id,
+            caption: column.caption,
+            field: column.field,
+          }));
+      const order = state.columns.order();
+      if (!order) return entries;
+      return [...entries].sort((a, b) => {
+        const ia = order.indexOf(a.id);
+        const ib = order.indexOf(b.id);
+        return (
+          (ia < 0 ? Number.MAX_SAFE_INTEGER : ia) -
+          (ib < 0 ? Number.MAX_SAFE_INTEGER : ib)
+        );
+      });
+    });
+
+    const hasCommandColumn = rx.derived(() => {
+      if (p().commandButtons?.length) return true;
+      const mode = editing.editMode();
+      if (!mode) return false;
+      if (mode === 'row' || mode === 'popup' || mode === 'form')
+        return editing.canUpdate() || editing.canDelete();
+      return editing.canDelete();
+    });
+
+    /** Buttons rendered in a row's idle command cell — the prop overrides the defaults. */
+    const effCommandButtons = rx.derived<readonly OgeCommandButton<T>[]>(() => {
+      const custom = p().commandButtons;
+      if (custom?.length) return custom;
+      const mode = editing.editMode();
+      const buttons: OgeCommandButton<T>[] = [];
+      if (
+        (mode === 'row' || mode === 'popup' || mode === 'form') &&
+        editing.canUpdate()
+      )
+        buttons.push({ name: 'edit' });
+      if (mode && editing.canDelete()) buttons.push({ name: 'delete' });
+      return buttons;
+    });
+
     /** All group node keys of the current result, across levels. */
     function collectGroupKeys(): Set<RowKey> {
       const keys = new Set<RowKey>();
@@ -683,6 +996,13 @@ function OgeGridInner<T extends object>(
       allowUnsorting,
       pagingOptions,
       filterRowVisible,
+      headerFilterVisible,
+      headerFilterAvailable,
+      effHeaderFilterLimit,
+      headerFilterField,
+      headerFilterAnchor,
+      headerFilterValues,
+      headerFilterSearch,
       effFilterDebounce,
       searchPanelVisible,
       searchPanelOptions,
@@ -704,6 +1024,7 @@ function OgeGridInner<T extends object>(
       declaredColumns,
       groupFooterFields,
       resolvedColumns,
+      bandRow,
       colVirtualized,
       layout,
       columnsByField,
@@ -716,6 +1037,31 @@ function OgeGridInner<T extends object>(
       persistedSnapshot,
       applyState,
       deferredLoader,
+      editing,
+      updatedCells,
+      selectionDeferred,
+      selectionFilter,
+      setSelectionFilter,
+      deferredKeyFieldName,
+      deferredSelectedKeys,
+      contextMenu,
+      builderOpen,
+      builderVersion,
+      builderFields,
+      getBuilderTree: () => builderTree,
+      setBuilderTree: (tree: OgeBuilderGroup) => {
+        builderTree = tree;
+      },
+      chooserOpen,
+      chooserAnchor,
+      chooserDropTargetId,
+      chooserEntries,
+      hiddenOverrides,
+      editFormItems,
+      editFormNode,
+      editFormColCount,
+      hasCommandColumn,
+      effCommandButtons,
       collectGroupKeys,
     };
   }, []);
@@ -960,10 +1306,72 @@ function OgeGridInner<T extends object>(
   });
   useEffect(() => () => model.persistence.dispose(), [model]);
 
-  // focus follows the keyboard-navigation cell
-  const focusedCell = model.keyboard.focusedCell();
+  // highlightChanges: stamp pushed cells, clear each batch after its flash
+  const pushed = data.pushedCells();
   useEffect(() => {
-    if (!focusedCell) return;
+    if (!pushed.cells.length || !latest.current.highlightChanges) return;
+    const next = new Map(model.updatedCells());
+    for (const cell of pushed.cells)
+      next.set(`${String(cell.key)}::${cell.field}`, pushed.batch);
+    model.updatedCells.set(next);
+    const timer = setTimeout(() => {
+      const current = new Map(model.updatedCells());
+      let changed = false;
+      for (const [cellKey, cellBatch] of current) {
+        if (cellBatch === pushed.batch) {
+          current.delete(cellKey);
+          changed = true;
+        }
+      }
+      if (changed) model.updatedCells.set(current);
+    }, 1300);
+    return () => clearTimeout(timer);
+  }, [pushed.batch]);
+
+  // filterValue ⇄ the builder filter slice (guarded both ways, like Angular's
+  // two effects: whichever side changed wins, and neither echoes back)
+  const filterValueProp = props.filterValue;
+  useEffect(() => {
+    if (filterValueProp === undefined) return;
+    const current = state.filter.builderFilter();
+    if (JSON.stringify(filterValueProp) === JSON.stringify(current)) return;
+    state.filter.setBuilderFilter(filterValueProp ?? null);
+  }, [JSON.stringify(filterValueProp ?? null)]);
+
+  const builderFilter = state.filter.builderFilter();
+  useEffect(() => {
+    if (
+      JSON.stringify(builderFilter) === JSON.stringify(filterValueProp ?? null)
+    )
+      return;
+    latest.current.onFilterValueChange?.(builderFilter);
+  }, [JSON.stringify(builderFilter)]);
+
+  // focus the first editor when one opens
+  const editorSession =
+    state.editing.editCell() ?? state.editing.editRowKey() ?? null;
+  useEffect(() => {
+    if (editorSession === null) return;
+    const editor = hostRef.current?.querySelector<HTMLElement>('.oge-editor');
+    // composite editors carry .oge-editor on the host — focus the control
+    (
+      editor?.querySelector<HTMLElement>('input, select, textarea') ?? editor
+    )?.focus();
+  }, [
+    typeof editorSession === 'object' && editorSession !== null
+      ? `${String(editorSession.key)}::${editorSession.field}`
+      : editorSession,
+  ]);
+
+  // focus follows the keyboard-navigation cell — unless an editor is open,
+  // in which case the effect above owns the focus. Without this guard the
+  // cell steals focus back the moment its own editor mounts, the editor's
+  // focusout commits, and click-to-edit closes on the frame it opened.
+  const focusedCell = model.keyboard.focusedCell();
+  const editorOpen =
+    state.editing.editCell() !== null || state.editing.editRowKey() !== null;
+  useEffect(() => {
+    if (!focusedCell || editorOpen) return;
     model.virtualizer.scrollRowIntoView(focusedCell.row);
     scrollColumnIntoView(focusedCell.col);
     const viewport = viewportRef.current;
@@ -971,7 +1379,7 @@ function OgeGridInner<T extends object>(
       `[data-cell="${focusedCell.row}-${focusedCell.col}"]`,
     );
     if (el && document.activeElement !== el) el.focus({ preventScroll: true });
-  }, [focusedCell?.row, focusedCell?.col]);
+  }, [focusedCell?.row, focusedCell?.col, editorOpen]);
 
   // debounced filter writes
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -1254,7 +1662,33 @@ function OgeGridInner<T extends object>(
     }
   }
 
+  /** True when `key` is selected, whichever selection model is in force. */
+  function isRowSelected(key: RowKey): boolean {
+    return model.selectionDeferred()
+      ? model.deferredSelectedKeys().has(key)
+      : state.selection.isSelected(key);
+  }
+
+  /** Adds or removes one key from the deferred selection expression. */
+  function deferredToggle(key: RowKey): void {
+    const eq = keyEqualsExpr(model.deferredKeyFieldName(), key);
+    if (!eq) return;
+    model.setSelectionFilter(
+      deferredToggleExpr(model.selectionFilter(), eq, isRowSelected(key)),
+    );
+  }
+
   function selectAll(): void {
+    if (model.selectionDeferred()) {
+      const field = model.deferredKeyFieldName();
+      if (!field) return;
+      // the selection *is* the current filter, so no keys are materialized
+      const filter = state.loadOptions().filter;
+      model.setSelectionFilter(
+        filter ?? { type: 'binary', field, op: 'isnotnull' },
+      );
+      return;
+    }
     if ((latest.current.selectAllMode ?? 'allPages') === 'page') {
       state.selection.replace(model.dataKeys());
       return;
@@ -1266,12 +1700,40 @@ function OgeGridInner<T extends object>(
   }
 
   function clearSelection(): void {
+    if (model.selectionDeferred()) {
+      model.setSelectionFilter(null);
+      return;
+    }
     state.selection.clear();
   }
 
   function toggleSelectAll(): void {
     if (model.allSelected()) clearSelection();
     else selectAll();
+  }
+
+  /** Shared toolbar/imperative add-row path — stages `onInitNewRow` prefills. */
+  function createNewRow(): void {
+    model.editing.addNewRow();
+    const key = state.editing.added()[0];
+    if (key === undefined) return;
+    const event: OgeInitNewRowEvent = { key, values: {} };
+    latest.current.onInitNewRow?.(event);
+    if (Object.keys(event.values).length) {
+      state.editing.setRowChanges(key, event.values);
+    }
+  }
+
+  function saveChanges(): void {
+    const mode = model.editing.editMode();
+    if (mode === 'batch') {
+      model.editing.commitActiveCell();
+      model.editing.saveAllChanges();
+    } else if (mode === 'cell') {
+      model.editing.commitActiveCell();
+    } else {
+      model.editing.commitActiveRow();
+    }
   }
 
   useImperativeHandle(ref, (): OgeGridHandle<T> => ({
@@ -1307,7 +1769,9 @@ function OgeGridInner<T extends object>(
         .flatMap((node) => (node.kind === 'data' ? [node.data] : [])),
     getRowByKey: (key) => dataNodeByKey(key)?.data,
     getSelectedRowsData: () => {
-      const selectedNow = state.selection.selected();
+      const selectedNow = model.selectionDeferred()
+        ? model.deferredSelectedKeys()
+        : state.selection.selected();
       return model
         .flatNodes()
         .filter(
@@ -1319,13 +1783,29 @@ function OgeGridInner<T extends object>(
     selectAll,
     clearSelection,
     deselectAll: clearSelection,
-    isRowSelected: (key) => state.selection.isSelected(key),
+    isRowSelected,
     state: () => model.persistedSnapshot(),
     applyState: (snapshot) => model.applyState(snapshot),
     getExportData,
     getCsv,
     exportCsv,
     copyToClipboard,
+    addRow: () => {
+      if (model.editing.canAdd()) createNewRow();
+    },
+    editRow: (key) => {
+      if (!model.editing.canUpdate()) return;
+      const node = dataNodeByKey(key);
+      if (node) model.editing.startRowEdit(node);
+    },
+    deleteRow: (key) => {
+      if (!model.editing.canDelete()) return;
+      const node = dataNodeByKey(key);
+      if (node) model.editing.deleteRow(node);
+    },
+    saveChanges,
+    discardChanges: () => model.editing.cancelEditing(),
+    hasChanges: () => state.editing.hasPending(),
   }));
 
   // --- event handlers ------------------------------------------------------
@@ -1509,8 +1989,81 @@ function OgeGridInner<T extends object>(
       value: column.accessor(node.data),
       event,
     };
+    // ignore events bubbling out of an open editor (e.g. its own Enter commit)
+    if ((event.target as HTMLElement | null)?.closest?.('.oge-editor')) return;
     if (double) latest.current.onCellDblClick?.(payload);
     else latest.current.onCellClick?.(payload);
+
+    const mode = model.editing.editMode();
+    if (
+      (mode !== 'cell' && mode !== 'batch') ||
+      !model.editing.canUpdate() ||
+      !column.editable ||
+      !column.field ||
+      state.editing.isRemoved(node.key)
+    ) {
+      return;
+    }
+    if (!state.editing.isCellEditing(node.key, column.field)) {
+      if (!model.editing.notifyEditingStart(node.key, node.data, column.field))
+        return;
+      state.editing.startCell(node.key, column.field);
+    }
+  }
+
+  /** Renders one cell's editor — shared by the cell, row and popup surfaces. */
+  function renderCellEditor(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+    surface: 'cell' | 'form' | 'popup',
+  ): ReactNode {
+    const field = column.field as string;
+    const entry = model.editing.editorAt(node, column);
+    if (!entry) return null;
+    const setValue = (next: unknown) =>
+      model.editing.setEditorValue(node.key, field, next);
+    const spec = column.source as OgeGridColumnProps<T> | undefined;
+    if (spec?.renderEditor) {
+      return spec.renderEditor({
+        value: entry.value,
+        setValue,
+        row: node.data,
+        key: node.key,
+        column: spec,
+        error: entry.touched ? entry.error : null,
+        commit: () => model.editing.commitActiveCell(),
+        cancel: () => model.editing.cancelActiveEditor(),
+      });
+    }
+    const showError = entry.touched && entry.error !== null;
+    return (
+      <OgeCellEditor
+        surface={surface}
+        autoFocus={surface === 'cell'}
+        value={entry.value}
+        onValueChange={setValue}
+        dataType={column.dataType}
+        lookupItems={model.editing.lookupItemsFor(node, column)}
+        label={column.caption}
+        invalid={showError}
+        errorTitle={showError ? entry.error : null}
+        onEnterKey={() =>
+          surface === 'cell'
+            ? model.editing.commitActiveCell()
+            : model.editing.commitActiveRow()
+        }
+        onEscapeKey={() => model.editing.cancelActiveEditor()}
+        onTabKey={(event) =>
+          surface === 'cell'
+            ? model.editing.commitAndNext(node, column, event.nativeEvent)
+            : undefined
+        }
+        onFocusLeft={() => {
+          if (surface === 'cell') model.editing.onEditorBlur();
+          else model.editing.touchEditor(node.key, field);
+        }}
+      />
+    );
   }
 
   function onGridKeydown(event: React.KeyboardEvent): void {
@@ -1607,6 +2160,285 @@ function OgeGridInner<T extends object>(
     );
   }
 
+  // --- filter panel + builder ---
+  const filterPanelText = (): string | null => {
+    const expr = state.filter.builderFilter();
+    return expr ? describeExpr(expr, model.builderFields(), msg) : null;
+  };
+
+  function openFilterBuilder(): void {
+    const tree = exprToBuilder(
+      state.filter.builderFilter(),
+      model.builderFields(),
+    );
+    if (!tree.items.length) {
+      const first = model.builderFields()[0];
+      if (first) {
+        tree.items.push({
+          kind: 'condition',
+          field: first.field,
+          op: operatorsFor(first.dataType)[0],
+          value: '',
+        });
+      }
+    }
+    model.setBuilderTree(tree);
+    model.builderVersion.set(model.builderVersion() + 1);
+    model.builderOpen.set(true);
+  }
+
+  function applyFilterBuilder(): void {
+    state.filter.setBuilderFilter(
+      builderToExpr(model.getBuilderTree(), model.builderFields()),
+    );
+    model.builderOpen.set(false);
+  }
+
+  // --- context menus ---
+  const contextMenuPopupRef = useRef<HTMLDivElement>(null);
+  /** Pointer-point positioning with viewport clamping. */
+  const contextMenuPanel = useAnchoredPanel({
+    anchor: () => hostRef.current,
+    anchorRect: () => {
+      const menu = model.contextMenu();
+      return menu ? { top: menu.y, left: menu.x, width: 0, height: 0 } : null;
+    },
+    panel: () => contextMenuPopupRef.current,
+    placement: () => 'bottom-start',
+    onClosed: () => model.contextMenu.set(null),
+  });
+
+  function openContextMenu(x: number, y: number, items: OgeMenuItem[]): void {
+    model.contextMenu.set({ x, y, items });
+    contextMenuPanel.open();
+    contextMenuPanel.updatePosition();
+    // the WAI-ARIA menu keyboard lives on the focused menu-list container
+    setTimeout(() =>
+      contextMenuPopupRef.current
+        ?.querySelector<HTMLElement>('.oge-menu-list')
+        ?.focus(),
+    );
+  }
+
+  function onRowContextMenuOpen(
+    node: DataRowNode<T>,
+    event: React.MouseEvent,
+  ): void {
+    const handler = latest.current.onRowContextMenu;
+    if (!handler) return;
+    const items: OgeMenuItem[] = [];
+    handler({
+      row: node.data,
+      key: node.key,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      items,
+    });
+    if (!items.length) return; // fall back to the native browser menu
+    event.preventDefault();
+    openContextMenu(event.clientX, event.clientY, items);
+  }
+
+  /** Built-in header context menu: sort / group / pin / hide. */
+  function onHeaderContextMenu(
+    column: ResolvedColumn<T>,
+    event: React.MouseEvent,
+  ): void {
+    const field = column.field;
+    if (!field) return;
+    const items: OgeMenuItem[] = [];
+    if (column.sortable && model.sortMode() !== 'none') {
+      items.push(
+        {
+          text: msg.sortAscending,
+          action: () => state.sort.set([{ field, dir: 'asc' }]),
+        },
+        {
+          text: msg.sortDescending,
+          action: () => state.sort.set([{ field, dir: 'desc' }]),
+        },
+      );
+      if (state.sort.stateOf(field)) {
+        items.push({ text: msg.clearSort, action: () => state.sort.clear() });
+      }
+    }
+    if (groupPanel) {
+      const isGrouped = state.grouping
+        .descriptors()
+        .some((descriptor) => descriptor.field === field);
+      items.push(
+        isGrouped
+          ? {
+              text: msg.ungroupColumn,
+              action: () => state.grouping.ungroup(field),
+            }
+          : {
+              text: msg.groupByColumn,
+              action: () => state.grouping.groupBy(field),
+            },
+      );
+    }
+    if (column.pinned !== 'left') {
+      items.push({
+        text: msg.pinLeft,
+        action: () => state.columns.setPinned(column.id, 'left'),
+      });
+    }
+    if (column.pinned !== 'right') {
+      items.push({
+        text: msg.pinRight,
+        action: () => state.columns.setPinned(column.id, 'right'),
+      });
+    }
+    if (column.pinned !== false) {
+      items.push({
+        text: msg.unpin,
+        action: () => state.columns.setPinned(column.id, false),
+      });
+    }
+    items.push({
+      text: msg.hideColumn,
+      action: () => toggleChooserVisible(field),
+    });
+    // consumers may add / remove / reorder the built-in items
+    latest.current.onHeaderContextMenu?.({
+      field,
+      caption: column.caption,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      items,
+    });
+    if (!items.length) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openContextMenu(event.clientX, event.clientY, items);
+  }
+
+  // --- column chooser ---
+  const chooserPopupRef = useRef<HTMLDivElement>(null);
+  const chooserPanel = useAnchoredPanel({
+    anchor: () => model.chooserAnchor() ?? hostRef.current,
+    panel: () => chooserPopupRef.current,
+    placement: () => 'bottom-end',
+    onClosed: () => model.chooserOpen.set(false),
+  });
+  const chooserDragId = useRef<string | null>(null);
+
+  function toggleChooser(event: React.MouseEvent): void {
+    event.stopPropagation();
+    if (model.chooserOpen()) {
+      chooserPanel.close();
+      return;
+    }
+    model.chooserAnchor.set(event.currentTarget as HTMLElement);
+    model.chooserOpen.set(true);
+    chooserPanel.open();
+    chooserPanel.updatePosition();
+  }
+
+  function toggleChooserVisible(field: string | undefined): void {
+    if (!field) return;
+    const next = new Set(model.hiddenOverrides());
+    if (next.has(field)) next.delete(field);
+    else next.add(field);
+    model.hiddenOverrides.set(next);
+  }
+
+  function onChooserDragEnd(): void {
+    chooserDragId.current = null;
+    model.chooserDropTargetId.set(null);
+  }
+
+  function onChooserDrop(targetId: string, event: React.DragEvent): void {
+    const sourceId = chooserDragId.current;
+    onChooserDragEnd();
+    if (!sourceId || sourceId === targetId || props.columnReorder === false)
+      return;
+    event.preventDefault();
+    state.columns.reorder(
+      model.chooserEntries().map((entry) => entry.id),
+      sourceId,
+      targetId,
+    );
+  }
+
+  // --- header filter (Excel-style distinct values) ---
+  const headerFilterPopupRef = useRef<HTMLDivElement>(null);
+  const headerFilterPanel = useAnchoredPanel({
+    anchor: () => model.headerFilterAnchor() ?? hostRef.current,
+    panel: () => headerFilterPopupRef.current,
+    placement: () => 'bottom-start',
+    onClosed: () => {
+      model.headerFilterField.set(null);
+      model.headerFilterValues.set(null);
+    },
+  });
+
+  const headerSelection = (): readonly unknown[] | null => {
+    const field = model.headerFilterField();
+    return field == null ? null : state.filter.headerFilterOf(field);
+  };
+
+  const headerValueTextOf = (value: unknown): string => {
+    const field = model.headerFilterField();
+    const column = field ? model.columnsByField().get(field) : undefined;
+    return headerValueText(value, {
+      dataType: column?.dataType ?? 'string',
+      format: column?.format,
+      lookupItems: column?.lookupItems,
+      messages: msg,
+    });
+  };
+
+  function toggleHeaderFilter(
+    column: ResolvedColumn<T>,
+    event: React.MouseEvent,
+  ): void {
+    event.stopPropagation();
+    const field = column.field;
+    if (!field) return;
+    if (model.headerFilterField() === field) {
+      headerFilterPanel.close();
+      return;
+    }
+    model.headerFilterAnchor.set(event.currentTarget as HTMLElement);
+    model.headerFilterField.set(field);
+    model.headerFilterValues.set(null);
+    model.headerFilterSearch.set('');
+    headerFilterPanel.open();
+    headerFilterPanel.updatePosition();
+    void data
+      .source()
+      ?.distinct?.(field)
+      .then((values) => {
+        if (model.headerFilterField() === field) {
+          model.headerFilterValues.set(
+            values.slice(0, model.effHeaderFilterLimit()),
+          );
+        }
+      });
+  }
+
+  function toggleHeaderValue(value: unknown): void {
+    const field = model.headerFilterField();
+    const all = model.headerFilterValues();
+    if (field == null || all == null) return;
+    state.filter.setHeaderFilter(
+      field,
+      toggleHeaderValueSelection(all, headerSelection(), value),
+    );
+  }
+
+  function toggleHeaderGroup(group: { values: readonly unknown[] }): void {
+    const field = model.headerFilterField();
+    const all = model.headerFilterValues();
+    if (field == null || all == null) return;
+    state.filter.setHeaderFilter(
+      field,
+      toggleHeaderGroupSelection(all, headerSelection(), group.values),
+    );
+  }
+
   // --- filter-row operator menu ---
   const operatorPopupRef = useRef<HTMLDivElement>(null);
   const operatorPanel = useAnchoredPanel({
@@ -1679,6 +2511,31 @@ function OgeGridInner<T extends object>(
   const rowDragging = model.rowDragging();
   const groupPanel = model.groupPanel();
   const leadingCellCount = model.leadingCellCount();
+  const hasCommandColumn = model.hasCommandColumn();
+  const headerFilterAvailable = model.headerFilterAvailable();
+  const bandRow = model.bandRow();
+  const headerFilterField = model.headerFilterField();
+  const headerFilterRawValues = model.headerFilterValues();
+  const headerFilterColumn = headerFilterField
+    ? model.columnsByField().get(headerFilterField)
+    : undefined;
+  /** Date columns present their values grouped by year; everything else is flat. */
+  const headerValueGroups =
+    headerFilterColumn?.dataType === 'date' && headerFilterRawValues
+      ? groupHeaderValuesByYear(
+          headerFilterRawValues,
+          model.headerFilterSearch(),
+          (value) => headerValueTextOf(value),
+          (value) => headerYearLabel(value, msg.blankValue),
+        )
+      : null;
+  const visibleHeaderValues = headerFilterRawValues
+    ? filterHeaderValues(
+        headerFilterRawValues,
+        model.headerFilterSearch(),
+        (value) => headerValueTextOf(value),
+      )
+    : null;
   const totalCount = model.totalCount();
   const pagingOptions = model.pagingOptions();
   const sortMode = model.sortMode();
@@ -1688,6 +2545,8 @@ function OgeGridInner<T extends object>(
   const rtl = model.rtl();
   const focusedRowEnabled = props.focusedRowEnabled ?? false;
   const operatorMenu = model.operatorMenu();
+  const popupEditNode =
+    model.editing.editMode() === 'popup' ? model.editFormNode() : null;
   const groupDescriptors = state.grouping.descriptors();
   const grouped = groupDescriptors.length > 0;
   const totalSummaryByColumn = model.totalSummaryByColumn();
@@ -1703,11 +2562,22 @@ function OgeGridInner<T extends object>(
     insetInlineEnd: model.layout.pinnedRightOf(column) ?? undefined,
   });
 
+  /** 0 = no flash; 1/2 alternate per push batch (see `updatedCells`). */
+  const cellFlashPhase = (key: RowKey, field: string | undefined): number => {
+    if (field == null || !props.highlightChanges) return 0;
+    const cells = model.updatedCells();
+    if (!cells.size) return 0; // fast path: no per-cell key allocation while idle
+    const batch = cells.get(`${String(key)}::${field}`);
+    return batch === undefined ? 0 : (batch % 2) + 1;
+  };
+
   const cellText = (
     node: DataRowNode<T>,
     column: ResolvedColumn<T>,
   ): string => {
-    const value = column.accessor(node.data);
+    // pending (batch) edits and staged new-row values show through, so a
+    // dirty cell reads what will be saved rather than what is stored
+    const value = model.editing.displayValue(node, column);
     if (column.format) return column.format(value);
     if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
     if (column.dataType === 'boolean' && value != null)
@@ -1864,7 +2734,15 @@ function OgeGridInner<T extends object>(
     );
   };
 
-  const toolbarVisible = model.searchPanelVisible() || groupPanel;
+  const canAddRow = model.editing.canAdd();
+  const batchPending =
+    model.editing.editMode() === 'batch' && state.editing.hasPending();
+  const toolbarVisible =
+    model.searchPanelVisible() ||
+    groupPanel ||
+    canAddRow ||
+    batchPending ||
+    props.columnChooser === true;
   const toolButton = (label: string, icon: ReactNode, onClick: () => void) => (
     <button
       type="button"
@@ -1878,10 +2756,31 @@ function OgeGridInner<T extends object>(
   );
 
   const renderDataRow = (node: DataRowNode<T>, rowIndex: number): ReactNode => {
-    const rowSelected =
-      selectionMode !== 'none' && state.selection.isSelected(node.key);
+    const rowSelected = selectionMode !== 'none' && isRowSelected(node.key);
     const rowHeightStyle =
       virtualized && !autoRowHeight ? effRowHeight : undefined;
+    // `form` mode replaces the whole row with the edit form
+    if (model.editing.isFormRow(node.key)) {
+      return (
+        <div
+          key={node.key}
+          className="oge-row oge-edit-form-row"
+          role="row"
+          aria-rowindex={rowIndex + 2}
+          data-rowindex={rowIndex}
+        >
+          <div
+            className="oge-edit-form-cell"
+            role="gridcell"
+            aria-colspan={model.resolvedColumns().length + leadingCellCount}
+            style={{ maxWidth: model.hostWidth() || undefined }}
+          >
+            {renderEditForm(node)}
+            {editFormActions}
+          </div>
+        </div>
+      );
+    }
     const renderRow = latest.current.renderRow;
     if (renderRow) {
       const customClasses = ['oge-row', 'oge-custom-row'];
@@ -1897,6 +2796,7 @@ function OgeGridInner<T extends object>(
           aria-rowindex={rowIndex + 2}
           data-rowindex={rowIndex}
           style={{ height: rowHeightStyle }}
+          onContextMenu={(event) => onRowContextMenuOpen(node, event)}
           onClick={(event) => onRowClick(node, event)}
           onDoubleClick={(event) =>
             latest.current.onRowDblClick?.({
@@ -2007,10 +2907,14 @@ function OgeGridInner<T extends object>(
           <div className="oge-cell oge-checkbox-cell" role="gridcell">
             <input
               type="checkbox"
-              checked={state.selection.isSelected(node.key)}
+              checked={isRowSelected(node.key)}
               aria-label={msg.selectRow}
               onClick={(event) => event.stopPropagation()}
-              onChange={() => state.selection.toggle(node.key)}
+              onChange={() =>
+                model.selectionDeferred()
+                  ? deferredToggle(node.key)
+                  : state.selection.toggle(node.key)
+              }
             />
           </div>
         ) : null}
@@ -2019,6 +2923,13 @@ function OgeGridInner<T extends object>(
           const cellClasses = ['oge-cell'];
           if (column.dataType === 'number') cellClasses.push('oge-cell-number');
           if (column.pinned !== false) cellClasses.push('oge-pinned');
+          const cellEditorOpen = model.editing.isCellEditorOpen(node, column);
+          if (model.editing.isCellDirty(node, column))
+            cellClasses.push('oge-cell-dirty');
+          if (cellEditorOpen) cellClasses.push('oge-cell-editing');
+          const flash = cellFlashPhase(node.key, column.field);
+          if (flash)
+            cellClasses.push(`oge-cell-flash-${flash === 1 ? 'a' : 'b'}`);
           const tabbable = model.keyboard.isCellTabbable(
             rowIndex,
             column.absIndex,
@@ -2038,19 +2949,209 @@ function OgeGridInner<T extends object>(
               onClick={(event) => onCellClick(node, column, event, false)}
               onDoubleClick={(event) => onCellClick(node, column, event, true)}
             >
-              {column.cellTemplate
-                ? column.cellTemplate({
-                    value: column.accessor(node.data),
-                    row: node.data,
-                    rowIndex: node.sourceIndex,
-                    key: node.key,
-                    column: column.source as OgeGridColumnProps<T>,
-                  })
-                : cellText(node, column)}
+              {cellEditorOpen
+                ? renderCellEditor(node, column, 'cell')
+                : column.cellTemplate
+                  ? column.cellTemplate({
+                      value: column.accessor(node.data),
+                      row: node.data,
+                      rowIndex: node.sourceIndex,
+                      key: node.key,
+                      column: column.source as OgeGridColumnProps<T>,
+                    })
+                  : cellText(node, column)}
             </div>
           );
         })}
         {spacer('right', 'oge-cell')}
+        {hasCommandColumn ? renderCommandCell(node) : null}
+      </div>
+    );
+  };
+
+  /**
+   * The edit form shared by the `form` and `popup` modes.
+   *
+   * Angular hands `<oge-form>` a `FormGroup` built from the same controls the
+   * cell editors use; React has no forms engine, so the draft map is handed
+   * over as `formData` and every change written straight back to it. Same
+   * fields, same layout, same single source of truth for the row's draft.
+   */
+  const renderEditForm = (node: DataRowNode<T>): ReactNode => {
+    const items = model.editFormItems();
+    const formData: Record<string, unknown> = {};
+    for (const item of items) {
+      const field = item.column.field as string;
+      formData[field] = model.editing.editorAt(node, item.column)?.value;
+    }
+    return (
+      <OgeForm
+        className="oge-edit-form-fields"
+        renderFormElement={false}
+        subscriptSizing="dynamic"
+        colCount={model.editFormColCount()}
+        formData={formData}
+        onFormDataChange={(next) => {
+          for (const item of items) {
+            const field = item.column.field as string;
+            if (!Object.is(next[field], formData[field])) {
+              model.editing.setEditorValue(node.key, field, next[field]);
+            }
+          }
+        }}
+        items={items.map((item) => {
+          const field = item.column.field as string;
+          const lookupItems = model.editing.lookupItemsFor(node, item.column);
+          const rules = item.column.source?.validators ?? [];
+          return {
+            field,
+            label: item.label,
+            colSpan: item.colSpan,
+            dataType: item.column.dataType,
+            isRequired: item.column.source?.required,
+            editorType: lookupItems ? ('selectBox' as const) : undefined,
+            editorOptions: lookupItems
+              ? {
+                  items: lookupItems,
+                  displayExpr: 'text',
+                  valueExpr: 'value',
+                }
+              : undefined,
+            // the column's own rules, run by the form rather than mirrored:
+            // one evaluation, and the message lands on the right field
+            validationRules: rules.length
+              ? rules.map((rule) => ({
+                  type: 'custom' as const,
+                  validate: (context: { value: unknown }) =>
+                    rule(context.value, node.data),
+                }))
+              : undefined,
+          };
+        })}
+      />
+    );
+  };
+
+  const editFormActions = (
+    <div className="oge-edit-form-actions">
+      <button
+        type="button"
+        className="oge-tool-btn oge-tool-text-btn oge-btn-accent"
+        onClick={() => model.editing.commitActiveRow()}
+      >
+        {msg.saveRow}
+      </button>
+      <button
+        type="button"
+        className="oge-tool-btn oge-tool-text-btn"
+        onClick={() => model.editing.cancelActiveEditor()}
+      >
+        {msg.cancelEdit}
+      </button>
+    </div>
+  );
+
+  /** The trailing command cell: save/cancel while editing, the buttons otherwise. */
+  const renderCommandCell = (node: DataRowNode<T>): ReactNode => {
+    const editingRow =
+      model.editing.isRowEditing(node.key) ||
+      (model.editing.editMode() === 'popup' &&
+        state.editing.editRowKey() === node.key);
+    if (editingRow) {
+      return (
+        <div className="oge-cell oge-command-cell" role="gridcell">
+          <button
+            type="button"
+            className="oge-command-btn oge-command-save"
+            aria-label={msg.saveRow}
+            onClick={(event) => {
+              model.editing.commitActiveRow();
+              event.stopPropagation();
+            }}
+          >
+            {commandIcon('m3 8.5 3.5 3.5L13 5')}
+          </button>
+          <button
+            type="button"
+            className="oge-command-btn"
+            aria-label={msg.cancelEdit}
+            onClick={(event) => {
+              model.editing.cancelActiveEditor();
+              event.stopPropagation();
+            }}
+          >
+            {commandIcon('m4 4 8 8M12 4l-8 8')}
+          </button>
+        </div>
+      );
+    }
+    const removed = state.editing.isRemoved(node.key);
+    return (
+      <div className="oge-cell oge-command-cell" role="gridcell">
+        {model
+          .effCommandButtons()
+          .filter((button) =>
+            button.visible ? button.visible(node.data) : true,
+          )
+          .map((button, index) => {
+            if (button.name === 'edit') {
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  className="oge-command-btn"
+                  aria-label={msg.editRow}
+                  onClick={(event) => {
+                    model.editing.startRowEdit(node, event.nativeEvent);
+                    event.stopPropagation();
+                  }}
+                >
+                  {commandIcon('M10.5 2.5 13.5 5.5 5.5 13.5H2.5v-3z', 1.6)}
+                </button>
+              );
+            }
+            if (button.name === 'delete') {
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  className="oge-command-btn oge-command-delete"
+                  aria-label={removed ? msg.undeleteRow : msg.deleteRow}
+                  onClick={(event) => {
+                    model.editing.deleteRow(node, event.nativeEvent);
+                    event.stopPropagation();
+                  }}
+                >
+                  {removed
+                    ? commandIcon(
+                        'M3 7c1-2.5 3-4 5.5-4A5.5 5.5 0 1 1 3.5 10M3 3v4h4',
+                        1.6,
+                      )
+                    : commandIcon(
+                        'M2.5 4.5h11M5.5 4.5V3a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.5M4 4.5l.7 8.2a1 1 0 0 0 1 .8h4.6a1 1 0 0 0 1-.8l.7-8.2',
+                        1.6,
+                      )}
+                </button>
+              );
+            }
+            return (
+              <button
+                key={index}
+                type="button"
+                className="oge-command-btn oge-command-text-btn"
+                onClick={(event) => {
+                  button.onClick?.({
+                    row: node.data,
+                    key: node.key,
+                    event,
+                  });
+                  event.stopPropagation();
+                }}
+              >
+                {button.text}
+              </button>
+            );
+          })}
       </div>
     );
   };
@@ -2249,6 +3350,66 @@ function OgeGridInner<T extends object>(
           }
           after={
             <>
+              {canAddRow ? (
+                <button
+                  type="button"
+                  className="oge-tool-btn oge-tool-text-btn"
+                  onClick={createNewRow}
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="12"
+                    height="12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M8 3v10M3 8h10" />
+                  </svg>
+                  {msg.addRow}
+                </button>
+              ) : null}
+              {batchPending ? (
+                <span className="oge-toolbar-cluster">
+                  <button
+                    type="button"
+                    className="oge-tool-btn oge-tool-text-btn oge-btn-accent"
+                    onClick={() => model.editing.saveAllChanges()}
+                  >
+                    {msg.saveChanges}
+                  </button>
+                  <button
+                    type="button"
+                    className="oge-tool-btn oge-tool-text-btn"
+                    onClick={() => model.editing.discardAllChanges()}
+                  >
+                    {msg.discardChanges}
+                  </button>
+                </span>
+              ) : null}
+              {props.columnChooser ? (
+                <button
+                  type="button"
+                  className="oge-tool-btn"
+                  aria-label={msg.columnChooserTitle}
+                  onClick={toggleChooser}
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="14"
+                    height="14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.6}
+                    aria-hidden="true"
+                  >
+                    <rect x="2" y="2.5" width="12" height="11" rx="1.5" />
+                    <path d="M6.5 2.5v11M10 2.5v11" />
+                  </svg>
+                </button>
+              ) : null}
               {grouped ? (
                 <span className="oge-toolbar-cluster">
                   {toolButton(
@@ -2288,6 +3449,49 @@ function OgeGridInner<T extends object>(
           }
         />
       ) : null}
+      {props.filterPanel ? (
+        <div className="oge-filter-panel">
+          <svg
+            viewBox="0 0 16 16"
+            width="12"
+            height="12"
+            aria-hidden="true"
+            className="oge-filter-panel-icon"
+          >
+            <path d="M1 2h14L10 8.5V14l-4-1.8V8.5L1 2z" fill="currentColor" />
+          </svg>
+          <button
+            type="button"
+            className="oge-filter-panel-text"
+            onClick={openFilterBuilder}
+          >
+            {filterPanelText() ?? msg.createFilter}
+          </button>
+          {filterPanelText() ? (
+            <button
+              type="button"
+              className="oge-filter-panel-clear"
+              aria-label={msg.clearFilter}
+              onClick={(event) => {
+                event.stopPropagation();
+                state.filter.setBuilderFilter(null);
+              }}
+            >
+              <svg
+                viewBox="0 0 16 16"
+                width="11"
+                height="11"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+              >
+                <path d="m4 4 8 8M12 4l-8 8" />
+              </svg>
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {/* Delegated keyboard handler: focus lives on the grid cells inside (roving tabindex). */}
       <div
         ref={viewportRef}
@@ -2309,6 +3513,41 @@ function OgeGridInner<T extends object>(
         onKeyDown={onGridKeydown}
       >
         <div className="oge-header" role="rowgroup">
+          {bandRow ? (
+            <div
+              className="oge-band-row"
+              role="row"
+              style={{ gridTemplateColumns }}
+            >
+              {model.rowDragging() ? (
+                <div className="oge-band-cell" role="columnheader" />
+              ) : null}
+              {model.hasExpander() ? (
+                <div className="oge-band-cell" role="columnheader" />
+              ) : null}
+              {model.hasCheckboxColumn() ? (
+                <div className="oge-band-cell" role="columnheader" />
+              ) : null}
+              {bandRow.map((band, index) => (
+                <div
+                  key={index}
+                  className={
+                    band.caption !== null
+                      ? 'oge-band-cell oge-band-filled'
+                      : 'oge-band-cell'
+                  }
+                  role="columnheader"
+                  style={{ gridColumn: `span ${band.span}` }}
+                  aria-colspan={band.span}
+                >
+                  {band.caption ?? ''}
+                </div>
+              ))}
+              {hasCommandColumn ? (
+                <div className="oge-band-cell" role="columnheader" />
+              ) : null}
+            </div>
+          ) : null}
           <div
             className="oge-header-row"
             role="row"
@@ -2356,6 +3595,7 @@ function OgeGridInner<T extends object>(
                   className={headerClasses.join(' ')}
                   role="columnheader"
                   style={pinnedStyle(column)}
+                  onContextMenu={(event) => onHeaderContextMenu(column, event)}
                   aria-sort={ariaSortOf(column)}
                   tabIndex={sortable || draggable ? 0 : undefined}
                   draggable={draggable || undefined}
@@ -2378,6 +3618,31 @@ function OgeGridInner<T extends object>(
                       : column.caption}
                   </span>
                   {sortIndicator(column)}
+                  {headerFilterAvailable && column.filterable ? (
+                    <button
+                      type="button"
+                      className={
+                        column.field != null &&
+                        state.filter.headerFilterOf(column.field) != null
+                          ? 'oge-header-filter-btn oge-header-filter-active'
+                          : 'oge-header-filter-btn'
+                      }
+                      aria-label={msg.filterValues}
+                      onClick={(event) => toggleHeaderFilter(column, event)}
+                    >
+                      <svg
+                        viewBox="0 0 16 16"
+                        width="12"
+                        height="12"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M1 2h14L10 8.5V14l-4-1.8V8.5L1 2z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </button>
+                  ) : null}
                   {props.columnResize !== false ? (
                     <span
                       className="oge-resize-handle"
@@ -2388,6 +3653,12 @@ function OgeGridInner<T extends object>(
               );
             })}
             {spacer('right', 'oge-header-cell')}
+            {hasCommandColumn ? (
+              <div
+                className="oge-header-cell oge-command-cell"
+                role="columnheader"
+              />
+            ) : null}
           </div>
           {model.filterRowVisible() ? (
             <div
@@ -2412,6 +3683,12 @@ function OgeGridInner<T extends object>(
                 </div>
               ))}
               {spacer('right', 'oge-filter-cell')}
+              {hasCommandColumn ? (
+                <div
+                  className="oge-filter-cell oge-command-cell"
+                  role="gridcell"
+                />
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -2491,6 +3768,249 @@ function OgeGridInner<T extends object>(
             onCloseRequest={(event) => operatorPanel.close(event.reason)}
           />
         </OgePopup>
+      ) : null}
+      {model.builderOpen() ? (
+        <OgeModal
+          className="oge-builder-modal"
+          opened
+          title={msg.filterBuilderTitle}
+          width={560}
+          onClosed={() => model.builderOpen.set(false)}
+          renderFooter={() => (
+            <>
+              <button
+                type="button"
+                className="oge-tool-btn oge-tool-text-btn oge-btn-accent"
+                onClick={applyFilterBuilder}
+              >
+                {msg.apply}
+              </button>
+              <button
+                type="button"
+                className="oge-tool-btn oge-tool-text-btn"
+                onClick={() => model.builderOpen.set(false)}
+              >
+                {msg.cancelEdit}
+              </button>
+            </>
+          )}
+        >
+          <OgeFilterBuilderGroup
+            key={model.builderVersion()}
+            root
+            group={model.getBuilderTree()}
+            fields={model.builderFields()}
+            messages={msg}
+            onTreeChanged={() =>
+              model.builderVersion.set(model.builderVersion() + 1)
+            }
+          />
+          <div className="oge-fb-preview">
+            {(() => {
+              model.builderVersion();
+              const expr = builderToExpr(
+                model.getBuilderTree(),
+                model.builderFields(),
+              );
+              return expr
+                ? describeExpr(expr, model.builderFields(), msg)
+                : '—';
+            })()}
+          </div>
+        </OgeModal>
+      ) : null}
+      {model.contextMenu() ? (
+        <OgePopup
+          ref={contextMenuPopupRef}
+          panel={contextMenuPanel}
+          className="oge-grid-context-menu"
+        >
+          <OgeMenuList
+            items={model.contextMenu()?.items ?? []}
+            ariaLabel={props.ariaLabel ?? msg.toolbar}
+            onItemClick={() => contextMenuPanel.close('select')}
+            onCloseRequest={(event) => contextMenuPanel.close(event.reason)}
+          />
+        </OgePopup>
+      ) : null}
+      {model.chooserOpen() ? (
+        <OgePopup ref={chooserPopupRef} panel={chooserPanel}>
+          <div className="oge-chooser-popup">
+            <div className="oge-chooser-title">{msg.columnChooserTitle}</div>
+            {model.chooserEntries().map((entry) => (
+              <label
+                key={entry.id}
+                className={
+                  model.chooserDropTargetId() === entry.id
+                    ? 'oge-hf-item oge-chooser-item oge-chooser-drop-target'
+                    : 'oge-hf-item oge-chooser-item'
+                }
+                draggable={props.columnReorder !== false}
+                onDragStart={(event) => {
+                  chooserDragId.current = entry.id;
+                  event.dataTransfer.setData('text/plain', entry.id);
+                  event.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={(event) => {
+                  if (!chooserDragId.current) return;
+                  event.preventDefault();
+                  if (model.chooserDropTargetId() !== entry.id)
+                    model.chooserDropTargetId.set(entry.id);
+                }}
+                onDragEnd={onChooserDragEnd}
+                onDrop={(event) => onChooserDrop(entry.id, event)}
+              >
+                {props.columnReorder !== false ? (
+                  <span className="oge-chooser-grip" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 16 16"
+                      width="10"
+                      height="10"
+                      fill="currentColor"
+                    >
+                      <circle cx="5" cy="3.5" r="1.2" />
+                      <circle cx="11" cy="3.5" r="1.2" />
+                      <circle cx="5" cy="8" r="1.2" />
+                      <circle cx="11" cy="8" r="1.2" />
+                      <circle cx="5" cy="12.5" r="1.2" />
+                      <circle cx="11" cy="12.5" r="1.2" />
+                    </svg>
+                  </span>
+                ) : null}
+                <OgeCheckBox
+                  value={
+                    entry.field
+                      ? !model.hiddenOverrides().has(entry.field)
+                      : true
+                  }
+                  disabled={!entry.field}
+                  onValueCommitted={() => toggleChooserVisible(entry.field)}
+                />
+                <span>{entry.caption}</span>
+              </label>
+            ))}
+          </div>
+        </OgePopup>
+      ) : null}
+      {headerFilterField !== null ? (
+        <OgePopup ref={headerFilterPopupRef} panel={headerFilterPanel}>
+          <div className="oge-header-filter-popup" role="listbox">
+            <input
+              className="oge-hf-search"
+              type="search"
+              placeholder={msg.search}
+              aria-label={msg.search}
+              value={model.headerFilterSearch()}
+              onChange={(event) =>
+                model.headerFilterSearch.set(event.target.value)
+              }
+            />
+            {headerValueGroups ? (
+              <>
+                <label className="oge-hf-item oge-hf-all">
+                  <OgeCheckBox
+                    value={everyHeaderValueSelected(headerSelection())}
+                    onValueCommitted={() =>
+                      state.filter.setHeaderFilter(
+                        headerFilterField,
+                        toggleAllHeaderValueSelection(headerSelection()),
+                      )
+                    }
+                  />
+                  <span>{msg.selectAllValues}</span>
+                </label>
+                {headerValueGroups.map((group) => (
+                  <Fragment key={group.label}>
+                    <label className="oge-hf-item oge-hf-group">
+                      <OgeCheckBox
+                        value={
+                          headerGroupState(headerSelection(), group.values) ===
+                          'some'
+                            ? null
+                            : headerGroupState(
+                                headerSelection(),
+                                group.values,
+                              ) === 'all'
+                        }
+                        onValueCommitted={() => toggleHeaderGroup(group)}
+                      />
+                      <span>{group.label}</span>
+                    </label>
+                    {group.values.map((value, index) => (
+                      <label key={index} className="oge-hf-item oge-hf-leaf">
+                        <OgeCheckBox
+                          value={headerValueIsSelected(
+                            headerSelection(),
+                            value,
+                          )}
+                          onValueCommitted={() => toggleHeaderValue(value)}
+                        />
+                        <span>{headerValueTextOf(value)}</span>
+                      </label>
+                    ))}
+                  </Fragment>
+                ))}
+              </>
+            ) : visibleHeaderValues ? (
+              <>
+                <label className="oge-hf-item oge-hf-all">
+                  <OgeCheckBox
+                    value={everyHeaderValueSelected(headerSelection())}
+                    onValueCommitted={() =>
+                      state.filter.setHeaderFilter(
+                        headerFilterField,
+                        toggleAllHeaderValueSelection(headerSelection()),
+                      )
+                    }
+                  />
+                  <span>{msg.selectAllValues}</span>
+                </label>
+                {visibleHeaderValues.map((value, index) => (
+                  <label key={index} className="oge-hf-item">
+                    <OgeCheckBox
+                      value={headerValueIsSelected(headerSelection(), value)}
+                      onValueCommitted={() => toggleHeaderValue(value)}
+                    />
+                    <span>{headerValueTextOf(value)}</span>
+                  </label>
+                ))}
+              </>
+            ) : (
+              <div className="oge-hf-loading">{msg.loading}</div>
+            )}
+          </div>
+        </OgePopup>
+      ) : null}
+      {popupEditNode ? (
+        <OgeModal
+          className="oge-edit-modal"
+          opened
+          title={msg.editRow}
+          width={420}
+          onClosed={() => model.editing.cancelActiveEditor()}
+          renderFooter={() => (
+            <>
+              <button
+                type="button"
+                className="oge-tool-btn oge-tool-text-btn oge-btn-accent"
+                onClick={() => model.editing.commitActiveRow()}
+              >
+                {msg.saveRow}
+              </button>
+              <button
+                type="button"
+                className="oge-tool-btn oge-tool-text-btn"
+                onClick={() => model.editing.cancelActiveEditor()}
+              >
+                {msg.cancelEdit}
+              </button>
+            </>
+          )}
+        >
+          <div className="oge-popup-fields">
+            {renderEditForm(popupEditNode)}
+          </div>
+        </OgeModal>
       ) : null}
     </div>
   );

@@ -1,0 +1,9 @@
+# RFC 9116 — how to report a vulnerability in OGE UI or in this site.
+# The full policy, including what is in and out of scope, is in SECURITY.md.
+
+Contact: mailto:security@ogeui.com
+Contact: https://github.com/oge-ui/oge-ui/security/advisories/new
+Policy: https://github.com/oge-ui/oge-ui/blob/main/SECURITY.md
+Preferred-Languages: en, tr
+Canonical: https://ogeui.com/.well-known/security.txt
+Expires: 2027-09-06T00:00:00.000Z

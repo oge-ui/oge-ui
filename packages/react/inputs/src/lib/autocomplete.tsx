@@ -21,6 +21,7 @@ import {
   type OgeSelectItemsFn,
   type OgeSelectSearchExpr,
   type OgeSelectSearchMode,
+  sanitizeResourceUrl,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -586,7 +587,7 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
           {list.imageOf(item) && (
             <img
               className="oge-select-option-img"
-              src={list.imageOf(item) ?? undefined}
+              src={sanitizeResourceUrl(list.imageOf(item)) || undefined}
               alt=""
               loading="lazy"
             />

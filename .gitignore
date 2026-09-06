@@ -63,3 +63,12 @@ vitest.config.*.timestamp*
 .nx/migrate-runs
 test-results/
 test-output/
+
+# Credentials and local environment — never committed. `.npmrc` in particular
+# holds the publish token, and this repo publishes by hand.
+.env
+.env.*
+!.env.example
+.npmrc
+*.pem
+*.key

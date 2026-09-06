@@ -15,6 +15,10 @@
     "skipDefaultLibCheck": true,
     "paths": {
       "@oge-ui/behavior": ["./packages/behavior/src/index.ts"],
+      "@oge-ui/behavior/export-excel": [
+        "./packages/behavior/src/export-excel.ts"
+      ],
+      "@oge-ui/behavior/export-pdf": ["./packages/behavior/src/export-pdf.ts"],
       "@oge-ui/react-buttons": ["./packages/react/buttons/src/index.ts"],
       "@oge-ui/react-inputs": ["./packages/react/inputs/src/index.ts"],
       "@oge-ui/react-tabs": ["./packages/react/tabs/src/index.ts"],

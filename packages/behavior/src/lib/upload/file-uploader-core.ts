@@ -39,6 +39,7 @@ import {
   type OgeUploadTask,
   type OgeUploadTimers,
 } from './upload-queue';
+import { sanitizeResourceUrl } from '../security/sanitize-url';
 import type {
   OgeUploadAbortReason,
   OgeUploadAbortedEvent,
@@ -745,8 +746,11 @@ export class OgeFileUploaderCore {
     const event: OgeUploadFileDownloadingEvent = { file, cancel: false };
     this.options.emit('fileDownloading', event);
     if (event.cancel) return;
-    const href = file.url ?? this.temporaryUrl(file);
-    if (!href) return;
+    // `file.url` is server data (a preloaded file, or an upload response), so
+    // it goes through the same gate as any other data-driven URL: an anchor
+    // this code clicks itself would happily run a `javascript:` href.
+    const href = sanitizeResourceUrl(file.url ?? this.temporaryUrl(file));
+    if (!href || href === 'about:blank') return;
     const doc =
       this.options.document?.() ??
       (typeof document !== 'undefined' ? document : null);

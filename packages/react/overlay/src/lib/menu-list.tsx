@@ -20,6 +20,7 @@ import {
   menuMoveIndex,
   type OgeMenuCloseReason,
   type OgeMenuItem,
+  sanitizeUrl,
 } from '@oge-ui/behavior';
 import { useOgeOverlayConfig } from './overlay-config';
 import { OgePopup } from './popup';
@@ -534,7 +535,7 @@ export const OgeMenuList: ForwardRefExoticComponent<
               role="menuitem"
               tabIndex={-1}
               id={itemId(index)}
-              href={item.url}
+              href={sanitizeUrl(item.url)}
               aria-disabled={item.disabled ? 'true' : undefined}
               aria-keyshortcuts={item.shortcut}
               title={item.hint}

@@ -1,4 +1,4 @@
-import { buildCsv, type CsvColumn } from './csv';
+import { buildCsv, guardCsvFormula, type CsvColumn } from './csv';
 
 interface Row {
   name: string | null;
@@ -33,5 +33,50 @@ describe('buildCsv', () => {
       separator: ';',
     });
     expect(csv).toBe(';2 TL');
+  });
+});
+
+describe('CSV formula injection guard', () => {
+  const nameColumn: CsvColumn<Row>[] = [
+    { caption: 'N', accessor: (r: Row) => r.name },
+  ];
+  const cell = (value: string) =>
+    buildCsv([{ name: value, amount: 0 }], nameColumn, {
+      bom: false,
+      header: false,
+    });
+
+  it('prefixes cells a spreadsheet would evaluate', () => {
+    expect(guardCsvFormula('=1+1')).toBe("'=1+1");
+    expect(guardCsvFormula("=cmd|'/c calc'!A1")).toBe("'=cmd|'/c calc'!A1");
+    expect(guardCsvFormula('@SUM(A1:A9)')).toBe("'@SUM(A1:A9)");
+    expect(guardCsvFormula('+HYPERLINK("http://evil.test")')).toBe(
+      '\'+HYPERLINK("http://evil.test")',
+    );
+    // Excel strips leading whitespace before it decides, so the guard must too
+    expect(guardCsvFormula('\t=1+1')).toBe("'\t=1+1");
+    expect(guardCsvFormula('\r=1+1')).toBe("'\r=1+1");
+  });
+
+  it('leaves numbers and ordinary text alone', () => {
+    for (const value of ['-5', '+3.14', '-.5', '1e9', 'Ankara', '', 'a=b']) {
+      expect(guardCsvFormula(value)).toBe(value);
+    }
+  });
+
+  it('guards through buildCsv, and quotes the guarded cell when needed', () => {
+    expect(cell('=1+1')).toBe("'=1+1");
+    expect(cell('-5')).toBe('-5');
+    // the guard runs before RFC 4180 quoting, so the apostrophe stays inside
+    expect(cell('=A1,B1')).toBe('"\'=A1,B1"');
+  });
+
+  it('can be turned off for machine-read output', () => {
+    const csv = buildCsv([{ name: '=1+1', amount: 0 }], nameColumn, {
+      bom: false,
+      header: false,
+      formulaGuard: false,
+    });
+    expect(csv).toBe('=1+1');
   });
 });

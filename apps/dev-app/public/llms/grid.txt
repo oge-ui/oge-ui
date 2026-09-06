@@ -249,7 +249,7 @@ _Loading, state & export_
 | `state(): GridStateSnapshot / applyState(snapshot)` | `GridStateSnapshot / void` | Captures / applies the persistable UI state. |
 | `clearFilters() / clearSorting()` | `void` | Clears every filter (row, header, builder, search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `Promise` | Rows + column metadata of the current view; `scope: 'all' \| 'page' \| 'selection'`. |
-| `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. |
+| `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (`=`, `+`, `-`, `@` or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
 | `exportCsv(filename = 'grid.csv'): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. |
 
 #### Events

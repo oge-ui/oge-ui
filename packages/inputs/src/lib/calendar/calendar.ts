@@ -10,6 +10,7 @@ import {
   contentChild,
   inject,
   input,
+  linkedSignal,
   model,
   output,
   signal,
@@ -321,8 +322,36 @@ export class OgeCalendar
 
   protected readonly zoom = this.zoomLevel;
 
-  /** Anchor of the visible view (any date inside the month/year/decade). */
-  private readonly viewDate = signal(startOfDay(new Date()));
+  /**
+   * The day the calendar is "on", whatever the selection mode writes to.
+   *
+   * `value` alone is not it: a range calendar leaves `value` null and fills
+   * `range`, a multiple one fills `values`. Reading only `value` is how both
+   * the visible month and the roving-tabindex cell used to fall back to
+   * *today* for those two modes — which put the keyboard entry point on a
+   * cell in a different month from the selection.
+   */
+  private readonly selectionAnchor = computed<Date | null>(
+    () => this.value() ?? this.range()[0] ?? this.values()[0] ?? null,
+  );
+
+  /**
+   * Anchor of the visible view (any date inside the month/year/decade).
+   *
+   * A `linkedSignal`, not a plain one: `onValueWritten()` re-anchors the view
+   * on a `writeValue`/`reset`, which covers the forms path but *not* a
+   * `[(value)]` template binding — the model input writes the signal
+   * directly. A calendar bound to a March date therefore opened on the
+   * current month, a disagreement invisible for the one month of the year
+   * when the two coincide. Linking to the selection re-anchors on every
+   * write whatever its source, while the `previous` branch keeps the month
+   * the user navigated to when the selection has not changed.
+   */
+  private readonly viewDate = linkedSignal<Date | null, Date>({
+    source: () => this.selectionAnchor() ?? this.focusedDate(),
+    computation: (anchor, previous) =>
+      anchor ? startOfDay(anchor) : (previous?.value ?? startOfDay(new Date())),
+  });
 
   protected readonly effFirstDay = computed(() =>
     resolveFirstDayOfWeek(this.firstDayOfWeek(), this.effectiveLocale()),
@@ -395,7 +424,7 @@ export class OgeCalendar
 
   /** The single grid cell carrying the reachable tabindex. */
   private readonly focusTarget = computed<Date>(() => {
-    const focused = this.focusedDate() ?? this.value() ?? new Date();
+    const focused = this.focusedDate() ?? this.selectionAnchor() ?? new Date();
     const anchor = this.viewDate();
     if (this.zoom() === 'month') {
       const visible = this.viewOffsets().some((offset) =>

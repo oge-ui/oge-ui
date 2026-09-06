@@ -173,11 +173,13 @@ export default [
             },
             {
               // the React grid renders the inputs family's editors on its
-              // filter row and the overlay's popup/menu for the operator
-              // menu — the same edges the Angular grid package has
+              // filter row, the overlay's popup/menu for the operator and
+              // context menus, and the forms family for `editing` in `form`
+              // and `popup` mode — the same edges the Angular grid package has
               sourceTag: 'scope:react-grid',
               onlyDependOnLibsWithTags: [
                 'scope:react-grid',
+                'scope:react-forms',
                 'scope:react-inputs',
                 'scope:react-layout',
                 'scope:react-overlay',

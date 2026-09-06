@@ -11,6 +11,8 @@ import type {
 import type {
   OgeColumnLookup,
   OgeDataErrorEvent,
+  OgeEditingOptions,
+  OgeEditingStartEvent,
   OgeDataType,
   OgeExportData,
   OgeExportOptions,
@@ -19,9 +21,19 @@ import type {
   OgeFocusedRowChangedEvent,
   OgeGridMessages,
   OgeGridSelectionMode,
+  OgeHeaderFilterOptions,
+  OgeMenuItem,
   OgeGroupingOptions,
   OgePagingOptions,
+  OgeRowInsertedEvent,
+  OgeRowInsertingEvent,
+  OgeRowRemovedEvent,
+  OgeRowRemovingEvent,
   OgeRowReorderedEvent,
+  OgeRowUpdatedEvent,
+  OgeRowUpdatingEvent,
+  OgeSavedChangesEvent,
+  OgeSavingChangesEvent,
   OgeScrollingOptions,
   OgeSearchPanelOptions,
   OgeSelectionChangedEvent,
@@ -58,6 +70,53 @@ export interface OgeGridRowRenderContext<T = unknown> {
 export interface OgeGridDetailRenderContext<T = unknown> {
   row: T;
   key: RowKey;
+}
+
+/**
+ * A cell-level rule: returns the message to show, or `null` to accept.
+ *
+ * A message rather than a boolean, and a plain function rather than Angular's
+ * `ValidatorFn`: React has no forms engine to carry an error map, so the rule
+ * that rejects a value is also the thing that says why.
+ */
+export type OgeGridValidator<T = unknown> = (
+  value: unknown,
+  row: T,
+) => string | null;
+
+/** What an editor render prop receives — the React form of `*ogeEditTemplate`. */
+export interface OgeGridEditorRenderContext<T = unknown> {
+  /** The draft value — not the row's stored value while an edit is open. */
+  value: unknown;
+  /** Writes the draft; the grid commits it on Enter/Tab/blur or Save. */
+  setValue: (value: unknown) => void;
+  row: T;
+  key: RowKey;
+  column: OgeGridColumnProps<T>;
+  /** Validation message once the editor has been touched, else `null`. */
+  error: string | null;
+  /** Commits the edit and closes the editor. */
+  commit: () => void;
+  /** Abandons the edit and closes the editor. */
+  cancel: () => void;
+}
+
+/** Prefill hook for `addRow()`: values written here stage onto the new row. */
+export interface OgeInitNewRowEvent {
+  key: RowKey;
+  values: Record<string, unknown>;
+}
+
+/** One button of the command column (`commandButtons`). */
+export interface OgeCommandButton<T = unknown> {
+  /** `'edit'` and `'delete'` render the built-ins; anything else is custom. */
+  name: 'edit' | 'delete' | (string & {});
+  /** Label of a custom button. */
+  text?: string;
+  /** Hides the button for rows it does not apply to. */
+  visible?: (row: T) => boolean;
+  /** What a custom button does. */
+  onClick?: (context: { row: T; key: RowKey; event: React.MouseEvent }) => void;
 }
 
 /**
@@ -101,6 +160,12 @@ export interface OgeGridColumnProps<T = unknown> {
   hidingPriority?: number;
   /** Pins the column to an edge (requires a numeric `width`). */
   pinned?: false | 'left' | 'right';
+  /**
+   * Groups this column under a spanning band header — the React form of
+   * `<oge-column-group caption>`. Adjacent columns carrying the same caption
+   * share one band cell; a column without one leaves a blank above it.
+   */
+  bandCaption?: string;
   /** Aggregate(s) shown on group rows for this column's field. */
   groupSummary?: SummaryType | readonly SummaryType[];
   /**
@@ -115,6 +180,14 @@ export interface OgeGridColumnProps<T = unknown> {
    * rows and returns the aggregate value. Client-side data only.
    */
   calculateCustomSummary?: (rows: readonly T[]) => unknown;
+  /** Lets `editing` open an editor on this column. Default: true when a `field` is set. */
+  editable?: boolean;
+  /** Rejects an empty value while editing. */
+  required?: boolean;
+  /** Extra cell rules, first failing message wins. */
+  validators?: readonly OgeGridValidator<T>[];
+  /** Renders the cell's editor — the React form of `*ogeEditTemplate`. */
+  renderEditor?: (context: OgeGridEditorRenderContext<T>) => ReactNode;
   /** Renders the cell content — the React form of `*ogeCellTemplate`. */
   renderCell?: (context: OgeGridCellRenderContext<T>) => ReactNode;
   /** Renders the header caption — the React form of `*ogeHeaderTemplate`. */
@@ -139,6 +212,30 @@ export interface OgeCellClickEvent<T = unknown> {
   field: string | undefined;
   value: unknown;
   event: React.SyntheticEvent;
+}
+
+/**
+ * Emitted on data-row right-click. Push items to open the grid's own menu at
+ * the pointer; leave it empty and the browser's native menu is left alone.
+ */
+export interface OgeContextMenuEvent<T = unknown> {
+  row: T;
+  key: RowKey;
+  clientX: number;
+  clientY: number;
+  items: OgeMenuItem[];
+}
+
+/**
+ * Emitted on header right-click with the built-in items (sort / group / pin /
+ * hide) prebuilt — add, remove or reorder them before the menu opens.
+ */
+export interface OgeHeaderContextMenuEvent {
+  field: string;
+  caption: string;
+  clientX: number;
+  clientY: number;
+  items: OgeMenuItem[];
 }
 
 /** What `renderNoData` receives. */
@@ -184,6 +281,22 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   columnMinWidth?: number;
   /** Per-column filter editors below the header. */
   filterRow?: boolean | OgeFilterRowOptions;
+  /** Excel-style distinct-value filter button in the headers. */
+  headerFilter?: boolean | OgeHeaderFilterOptions;
+  /** Toolbar button opening the show/hide (and reorder) column list. */
+  columnChooser?: boolean;
+  /** Filter summary bar above the grid, opening the visual filter builder. */
+  filterPanel?: boolean;
+  /**
+   * The filter-builder expression — controlled when provided. Combines with
+   * the filter row, the header filters and the search panel.
+   */
+  filterValue?: FilterExpr | null;
+  /** Uncontrolled initial filter-builder expression. */
+  defaultFilterValue?: FilterExpr | null;
+  onFilterValueChange?: (value: FilterExpr | null) => void;
+  /** Briefly flashes cells whose value changed under a live-updating source. */
+  highlightChanges?: boolean;
   /** Global search box above the grid. */
   searchPanel?: boolean | OgeSearchPanelOptions;
   /** Debounce for text filter inputs, in ms. Set to 0 in tests. */
@@ -216,6 +329,14 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
    * filtered set across pages; `'page'` only the rows on the current page.
    */
   selectAllMode?: 'allPages' | 'page';
+  /**
+   * Deferred selection: the selection is an expression rather than a key set,
+   * so "select all" over a remote source never materializes keys.
+   */
+  selectionDeferred?: boolean;
+  /** The selection expression — controlled when provided (deferred mode). */
+  selectionFilter?: FilterExpr | null;
+  onSelectionFilterChange?: (filter: FilterExpr | null) => void;
   /** Highlights and tracks a single focused row. */
   focusedRowEnabled?: boolean;
   /** The focused row's key — controlled when provided. */
@@ -241,6 +362,18 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   rowDragging?: boolean;
   /** Spinner overlay while a load is in flight. */
   loadPanel?: boolean;
+  /**
+   * Enables editing: `{ mode: 'cell' | 'row' | 'batch' | 'popup' | 'form',
+   * allowUpdating, allowAdding, allowDeleting, confirmDelete, formItems,
+   * formColCount }`. `false` (default) disables it.
+   */
+  editing?: false | OgeEditingOptions;
+  /**
+   * Customizes the trailing command column: reorder or mix the built-in
+   * `'edit'` / `'delete'` buttons with your own. Omitted, the column shows the
+   * built-ins the `editing` permissions allow.
+   */
+  commandButtons?: readonly OgeCommandButton<T>[];
   /** Renders the empty state instead of the `noData` message. */
   renderNoData?: (context: OgeGridNoDataContext) => ReactNode;
   /**
@@ -265,6 +398,10 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   onCellClick?: (event: OgeCellClickEvent<T>) => void;
   /** Fires when a data cell is double-clicked. */
   onCellDblClick?: (event: OgeCellClickEvent<T>) => void;
+  /** Right-click on a data row — push items to open the grid's menu. */
+  onRowContextMenu?: (event: OgeContextMenuEvent<T>) => void;
+  /** Customize (or extend) the built-in header context menu per column. */
+  onHeaderContextMenu?: (event: OgeHeaderContextMenuEvent) => void;
   /** Fires after a row is dropped in a new position. */
   onRowReordered?: (event: OgeRowReorderedEvent<T>) => void;
   /** Fires after the grid has rendered a new result set. */
@@ -275,6 +412,24 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   onFocusedRowChanged?: (event: OgeFocusedRowChangedEvent<T>) => void;
   /** Fires when a DataSource load fails. */
   onDataErrorOccurred?: (event: OgeDataErrorEvent) => void;
+  /** Cancelable: fires before a row or cell editor opens. */
+  onEditingStart?: (event: OgeEditingStartEvent<T>) => void;
+  /** Fires when `addRow()` created a draft row — values written here stage onto it. */
+  onInitNewRow?: (event: OgeInitNewRowEvent) => void;
+  /** Cancelable: fires before an added row reaches the DataSource. */
+  onRowInserting?: (event: OgeRowInsertingEvent) => void;
+  onRowInserted?: (event: OgeRowInsertedEvent) => void;
+  /** Cancelable: fires before an edited row reaches the DataSource. */
+  onRowUpdating?: (event: OgeRowUpdatingEvent<T>) => void;
+  onRowUpdated?: (event: OgeRowUpdatedEvent) => void;
+  /** Cancelable: fires before a row is removed. */
+  onRowRemoving?: (event: OgeRowRemovingEvent<T>) => void;
+  onRowRemoved?: (event: OgeRowRemovedEvent) => void;
+  /** Cancelable: fires before a save batch reaches the DataSource. */
+  onSavingChanges?: (event: OgeSavingChangesEvent<T>) => void;
+  onSavedChanges?: (event: OgeSavedChangesEvent<T>) => void;
+  /** Fires after an edit session ended without saving. */
+  onEditCanceled?: () => void;
   /** Cancelable: fires before a CSV export starts; `fileName` is mutable. */
   onExporting?: (event: OgeExportingEvent) => void;
   /**
@@ -346,4 +501,16 @@ export interface OgeGridHandle<T extends object = Record<string, unknown>> {
   exportCsv(filename?: string): Promise<void>;
   /** Copies the selected rows (with a header) — or the focused cell's text — as TSV. */
   copyToClipboard(): Promise<void>;
+  /** Adds an empty draft row on top; requires `editing.allowAdding`. */
+  addRow(): void;
+  /** Opens the row editor for `key` (`row`/`form`/`popup` modes); requires `editing.allowUpdating`. */
+  editRow(key: RowKey): void;
+  /** Marks the row removed in batch mode, deletes it immediately otherwise; requires `editing.allowDeleting`. */
+  deleteRow(key: RowKey): void;
+  /** Commits the open editor and saves every pending change. */
+  saveChanges(): void;
+  /** Drops every pending change and closes the editor. */
+  discardChanges(): void;
+  /** Whether any change is waiting to be saved. */
+  hasChanges(): boolean;
 }

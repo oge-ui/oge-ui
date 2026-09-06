@@ -1,4 +1,10 @@
-import { Directive, computed, inject, input } from '@angular/core';
+import {
+  Directive,
+  computed,
+  inject,
+  input,
+  type InputSignal,
+} from '@angular/core';
 import { OgeStepper } from './stepper';
 
 /**
@@ -15,10 +21,15 @@ import { OgeStepper } from './stepper';
 abstract class OgeStepperNavBase {
   private readonly ambient = inject(OgeStepper, { optional: true });
 
-  /** The stepper to drive; defaults to the enclosing one. */
-  abstract readonly ogeStepperTarget: ReturnType<
-    typeof input<OgeStepper | undefined>
-  >;
+  /**
+   * The stepper to drive; defaults to the enclosing one.
+   *
+   * Spelled as `InputSignal<…>` rather than `ReturnType<typeof input<…>>`:
+   * that form resolves against whichever `input()` overload TypeScript picks
+   * last, so an Angular release that adds or reorders one silently changes
+   * this type and the two subclasses stop matching the base (TS2416).
+   */
+  abstract readonly ogeStepperTarget: InputSignal<OgeStepper | undefined>;
 
   protected readonly stepper = computed(() => {
     // The target is a *separate* input, not an alias of the selector: aliasing

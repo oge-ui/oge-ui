@@ -31,5 +31,38 @@
     "directory": "packages/behavior"
   },
   "bugs": "https://github.com/oge-ui/oge-ui/issues",
-  "license": "MIT"
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.esm.js",
+      "require": "./index.cjs.js"
+    },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.esm.js",
+      "require": "./export-excel.cjs.js"
+    },
+    "./export-pdf": {
+      "types": "./export-pdf.d.ts",
+      "import": "./export-pdf.esm.js",
+      "require": "./export-pdf.cjs.js"
+    }
+  },
+  "peerDependencies": {
+    "exceljs": "^4.4.0",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "exceljs": {
+      "optional": true
+    },
+    "jspdf": {
+      "optional": true
+    },
+    "jspdf-autotable": {
+      "optional": true
+    }
+  }
 }

@@ -22,6 +22,7 @@ import {
   type OgeSelectSearchExpr,
   type OgeSelectSearchMode,
   type OgeSelectValueExpr,
+  sanitizeResourceUrl,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -735,7 +736,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
           {list.imageOf(item) && (
             <img
               className="oge-select-option-img"
-              src={list.imageOf(item) ?? undefined}
+              src={sanitizeResourceUrl(list.imageOf(item)) || undefined}
               alt=""
               loading="lazy"
             />

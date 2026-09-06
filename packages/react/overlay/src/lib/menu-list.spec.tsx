@@ -108,6 +108,14 @@ describe('<OgeMenuList>', () => {
     expect(link).toHaveAttribute('href', '/docs');
   });
 
+  it('neutralizes a javascript: url — Angular gets this from DomSanitizer', () => {
+    render(
+      <OgeMenuList items={[{ text: 'Evil', url: 'javascript:alert(1)' }]} />,
+    );
+    const link = screen.getByRole('menuitem', { name: 'Evil' });
+    expect(link).toHaveAttribute('href', 'about:blank');
+  });
+
   it('a submenu parent opens its nested list on ArrowRight', async () => {
     const nested: readonly OgeMenuItem[] = [
       { text: 'Parent', items: [{ text: 'Child A' }, { text: 'Child B' }] },

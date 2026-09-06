@@ -101,6 +101,9 @@ _Sorting, filtering & search_
 | `sortable` | `boolean \| 'single' \| 'multi'` | `'multi'` | `false` disables sorting entirely; `'single'` restricts to one column (no shift+click chains). |
 | `sorting` | `OgeSortingOptions` | `undefined` | Sorting options (`mode`, `allowUnsorting`); overrides the `sortable` shorthand. |
 | `filterRow` | `boolean \| OgeFilterRowOptions` | `false` | Per-column filter editors below the header — text, number, date, boolean and lookup editors with a per-column operator menu. |
+| `headerFilter` | `boolean \| OgeHeaderFilterOptions` | `false` | Excel-style distinct-value filter button in the headers. Needs a DataSource that implements `distinct()`; date columns list their values grouped by year. |
+| `filterPanel` | `boolean` | `false` | Filter summary bar above the grid; clicking it opens the visual filter builder (arbitrary and/or condition trees). |
+| `filterValue / defaultFilterValue` | `FilterExpr \| null` | `null` | The filter-builder expression — controlled with `onFilterValueChange`. Combines with the filter row, the header filters and the search panel. |
 | `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
 | `filterDebounce` | `number` | `config.filterDebounce (300)` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
 
@@ -130,6 +133,8 @@ _Selection & focus_
 | --- | --- | --- | --- |
 | `selectionMode` | `'none' \| 'single' \| 'multiple' \| 'checkbox'` | `'none'` | Row selection: single, multiple (ctrl/shift ranges, Ctrl+A) or a checkbox column with a select-all header. |
 | `selectedKeys / defaultSelectedKeys` | `readonly RowKey[]` | `[]` | The selected row keys — controlled with `selectedKeys` + `onSelectedKeysChange`, or seeded once with `defaultSelectedKeys`. |
+| `selectionDeferred` | `boolean` | `false` | Deferred selection: the selection is an expression rather than a key set, so "select all" over a remote source never materializes keys. Requires a string `keyField`. |
+| `selectionFilter` | `FilterExpr \| null` | `null` | The selection expression (deferred mode) — controlled with `onSelectionFilterChange`. |
 | `selectAllMode` | `'allPages' \| 'page'` | `'allPages'` | Header select-all scope: the whole filtered set across pages, or only the rows on the current page. |
 | `focusedRowEnabled` | `boolean` | `false` | Highlights and tracks a single focused row. |
 | `focusedRowKey` | `RowKey \| null` | `undefined` | The focused row’s key — controlled when provided, with `onFocusedRowKeyChange`. |
@@ -141,11 +146,15 @@ _Columns UX_
 | `columnMinWidth` | `number` | `config.columnMinWidth (120)` | Track minimum for columns without an explicit width. |
 | `columnResize` | `boolean` | `true` | Enables drag-resize handles on header edges. |
 | `columnReorder` | `boolean` | `true` | Enables drag-and-drop column reordering (headers dropped onto each other). |
+| `columnChooser` | `boolean` | `false` | Toolbar button opening the show/hide column list; with `columnReorder` its rows also drag to reorder. |
 
 _Editing & rows_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
+| `editing` | `false \| OgeEditingOptions` | `false` | Enables editing: `{ mode: 'cell' \| 'row' \| 'batch' \| 'popup' \| 'form', allowUpdating, allowAdding, allowDeleting, confirmDelete, formItems, formColCount }`. `form` replaces the row with an inline `<OgeForm>`; `popup` opens the same form in a modal. |
+| `commandButtons` | `readonly OgeCommandButton<T>[]` | `undefined` | Customizes the trailing command column: reorder or mix the built-in `'edit'` / `'delete'` buttons with your own. Omitted, the column shows the built-ins the `editing` permissions allow. |
+| `highlightChanges` | `boolean` | `false` | Briefly flashes cells whose value changed under a live-updating source; consecutive updates to one cell restart the animation. |
 | `rowDragging` | `boolean` | `false` | Drag-handle column for reordering rows. With plain-array data the array is mutated in place; DataSource consumers handle `onRowReordered` instead. |
 | `renderRow` | `(context: OgeGridRowRenderContext<T>) => ReactNode` | `undefined` | Replaces the whole data row — the React form of `*ogeRowTemplate`. Group, detail and summary rows keep their built-in rendering. |
 | `renderDetail` | `(context: OgeGridDetailRenderContext<T>) => ReactNode` | `undefined` | Master-detail content under an expanded row — the React form of `*ogeDetailTemplate`. Its presence adds the expander column and switches the role to `treegrid`. |
@@ -211,8 +220,21 @@ _Loading, state & export_
 | `state(): GridStateSnapshot / applyState(snapshot)` | `handle` | Reads or applies the persistable UI state: sort, filters, column layout, page size. |
 | `clearFilters() / clearSorting()` | `handle` | Clears every filter (row filters and search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows and column metadata of the current view (filter + search + sort applied) — the shared source for exporters. `scope` narrows to the page or selection. |
-| `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells. |
+| `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 | `exportCsv(filename = 'grid.csv'): Promise<void>` | `handle` | Downloads the current view as a CSV file. Fires the cancelable `onExporting` first. |
+| `exportGridToExcel(grid, options?)` | `@oge-ui/react-grid/export-excel` | Downloads the current view as `.xlsx`. Takes the grid’s handle; `exceljs` is an optional peer, imported only by this entry point. `buildExcelWorkbook` is exported alongside for a workbook you assemble yourself — the same builder the Angular package calls. |
+| `exportGridToPdf(grid, options?)` | `@oge-ui/react-grid/export-pdf` | Downloads the current view as `.pdf` (`title`, `orientation`, `pageFormat`). `jspdf` and `jspdf-autotable` are optional peers; `buildPdfDocument` is exported alongside. |
+
+_Editing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addRow(): void` | `handle` | Adds an empty draft row on top and opens its editor(s); requires `editing.allowAdding`. `onInitNewRow` prefills it. |
+| `editRow(key): void` | `handle` | Opens the row editor for `key` — effective in `row`, `form` and `popup` modes; requires `editing.allowUpdating`. |
+| `deleteRow(key): void` | `handle` | Staged in batch mode (toggles, undoable), applied immediately otherwise; requires `editing.allowDeleting`. |
+| `saveChanges(): void` | `handle` | Commits the open editor and, in batch mode, saves the whole staged change set. `onSavingChanges` can still cancel it. |
+| `discardChanges(): void` | `handle` | Drops every pending change and closes any open editor; fires `onEditCanceled` when anything was open or pending. |
+| `hasChanges(): boolean` | `handle` | Whether unsaved edits exist: staged changes, added or removed rows. |
 
 #### Events
 
@@ -223,6 +245,8 @@ _Interaction_
 | `onRowClick / onRowDblClick` | `(event: OgeRowClickEvent<T>) => void` | A data row was clicked / double-clicked: `{ row, key, event }`. |
 | `onCellClick / onCellDblClick` | `(event: OgeCellClickEvent<T>) => void` | A data cell was clicked / double-clicked: `{ row, key, field, value, event }`. |
 | `onRowReordered` | `(event: OgeRowReorderedEvent<T>) => void` | After a dragged row was dropped: the moved key, the target key and the from/to view positions. |
+| `onRowContextMenu` | `(event: OgeContextMenuEvent<T>) => void` | Right-click on a data row. Push entries into `items` to open the gridâs own menu at the pointer; leave it empty and the browserâs native menu is left alone. |
+| `onHeaderContextMenu` | `(event: OgeHeaderContextMenuEvent) => void` | Right-click on a header, with the built-in items (sort / group / pin / hide) prebuilt — add, remove or reorder them before the menu opens. |
 
 _Selection & focus_
 
@@ -231,6 +255,19 @@ _Selection & focus_
 | `onSelectionChanged` | `(event: OgeSelectionChangedEvent) => void` | After the selection changed, with `addedKeys` / `removedKeys` diffs. The initial state is not a change. |
 | `onFocusedRowChanged` | `(event: OgeFocusedRowChangedEvent<T>) => void` | After the focused row changed (`focusedRowEnabled` or key writes), with the row when it is loaded. |
 | `onSelectedKeysChange / onFocusedRowKeyChange` | `(value) => void` | The controlled-pair callbacks of `selectedKeys` and `focusedRowKey`. |
+
+_Editing_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onEditingStart` | `(event: OgeEditingStartEvent<T>) => void` | Cancelable: before a row or cell editor opens. Set `cancel` to keep it closed. |
+| `onInitNewRow` | `(event: OgeInitNewRowEvent) => void` | After `addRow()` created a draft row — values written into `event.values` stage onto it. |
+| `onRowInserting / onRowInserted` | `(event) => void` | Around an added row reaching the DataSource; the `-ing` half is cancelable. |
+| `onRowUpdating / onRowUpdated` | `(event) => void` | Around an edited row reaching the DataSource; the `-ing` half is cancelable and carries the change set. |
+| `onRowRemoving / onRowRemoved` | `(event) => void` | Around a row being removed; the `-ing` half is cancelable. |
+| `onSavingChanges / onSavedChanges` | `(event) => void` | Around a save batch: the `-ing` half is cancelable and can rewrite the change list; the past-tense half reports what was applied. |
+| `onEditCanceled` | `() => void` | After an edit session ended without saving. |
+| `onFilterValueChange / onSelectionFilterChange` | `(value: FilterExpr \| null) => void` | The controlled halves of `filterValue` (filter builder) and `selectionFilter` (deferred selection). |
 
 _Lifecycle & errors_
 
@@ -281,6 +318,11 @@ _Summaries & editing_
 | `groupSummaryPosition` | `'row' \| 'footer'` | `'row'` | Inline on the group header row, or on a dedicated footer row after the group’s children. |
 | `totalSummary` | `SummaryType \| readonly SummaryType[]` | `undefined` | Aggregate(s) shown in the grid’s sticky total row. |
 | `calculateCustomSummary` | `(rows: readonly T[]) => unknown` | `undefined` | Reducer for the `custom` summary type. Client-side data only. |
+| `editable` | `boolean` | `true` | Lets `editing` open an editor on this column. A column without a `field`, or one with `calculateCellValue`, is never editable. |
+| `required` | `boolean` | `false` | Rejects an empty value while editing; the commit is refused and the editor stays open. |
+| `validators` | `readonly OgeGridValidator<T>[]` | `undefined` | Extra cell rules: `(value, row) => string \| null`, first failing message wins. A message rather than a boolean, because React has no forms engine to carry an error map. |
+| `renderEditor` | `(context: OgeGridEditorRenderContext<T>) => ReactNode` | `undefined` | Renders the cell’s editor — the React form of `*ogeEditTemplate`. The context carries the draft `value`, `setValue`, the validation `error` and `commit`/`cancel`. |
+| `bandCaption` | `string` | `undefined` | Groups the column under a spanning band header — the React form of `<oge-column-group caption>`. Adjacent columns sharing a caption merge into one band cell. |
 
 _Render props_
 

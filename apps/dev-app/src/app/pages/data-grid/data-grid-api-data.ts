@@ -489,7 +489,8 @@ export const OGE_GRID_API: ApiSections = {
         {
           name: 'getCsv(options?): Promise&lt;string&gt;',
           type: 'Promise&lt;string&gt;',
-          description: 'CSV of the current view.',
+          description:
+            'CSV of the current view. Cells a spreadsheet would evaluate as a formula (<code>=</code>, <code>+</code>, <code>-</code>, <code>@</code> or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a <code>-5</code> column stays numeric. Pass <code>formulaGuard: false</code> when the output is machine-read rather than opened in a spreadsheet.',
         },
         {
           name: "exportCsv(filename = 'grid.csv'): Promise&lt;void&gt;",

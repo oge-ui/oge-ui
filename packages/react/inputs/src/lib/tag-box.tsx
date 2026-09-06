@@ -20,6 +20,7 @@ import {
   type OgeSelectSearchExpr,
   type OgeSelectSearchMode,
   type OgeSelectValueExpr,
+  sanitizeResourceUrl,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -495,7 +496,7 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
       {list.imageOf(item) && (
         <img
           className="oge-select-option-img"
-          src={list.imageOf(item) ?? undefined}
+          src={sanitizeResourceUrl(list.imageOf(item)) || undefined}
           alt=""
           loading="lazy"
         />
@@ -584,7 +585,9 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
               {list.imageOf(chip.item) && (
                 <img
                   className="oge-tag-img"
-                  src={list.imageOf(chip.item) ?? undefined}
+                  src={
+                    sanitizeResourceUrl(list.imageOf(chip.item)) || undefined
+                  }
                   alt=""
                 />
               )}

@@ -10,6 +10,11 @@ export interface PivotCsvOptions {
   grandTotalText?: string;
   /** Corner-cell caption above the row headers. Default empty. */
   cornerText?: string;
+  /**
+   * Neutralize cells a spreadsheet would evaluate as a formula. Default true —
+   * see `guardCsvFormula`.
+   */
+  formulaGuard?: boolean;
 }
 
 function slotLabels(
@@ -44,6 +49,7 @@ export function buildPivotCsv(
   options: PivotCsvOptions = {},
 ): string {
   const separator = options.separator ?? ',';
+  const guard = options.formulaGuard !== false;
   const grandText = options.grandTotalText ?? 'Grand Total';
   const rowLabels = slotLabels(result.rowRoot, grandText);
   const columnLabels = slotLabels(result.columnRoot, grandText);
@@ -62,7 +68,7 @@ export function buildPivotCsv(
   }
 
   const lines: string[] = [
-    header.map((cell) => escapeCsvCell(cell, separator)).join(separator),
+    header.map((cell) => escapeCsvCell(cell, separator, guard)).join(separator),
   ];
   for (let r = 0; r < result.rowLeafCount; r++) {
     const cells: string[] = [rowLabels[r] ?? ''];
@@ -73,7 +79,9 @@ export function buildPivotCsv(
       }
     }
     lines.push(
-      cells.map((cell) => escapeCsvCell(cell, separator)).join(separator),
+      cells
+        .map((cell) => escapeCsvCell(cell, separator, guard))
+        .join(separator),
     );
   }
   const body = lines.join('\r\n');

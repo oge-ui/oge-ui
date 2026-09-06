@@ -24,6 +24,7 @@ import {
   type OgeBreadcrumbItemClickEvent,
   type OgeBreadcrumbItemData,
   type OgeBreadcrumbMessages,
+  sanitizeUrl,
 } from '@oge-ui/behavior';
 import {
   OgeMenuList,
@@ -369,7 +370,7 @@ export const OgeBreadcrumb = forwardRef<
       return (
         <a
           className="oge-breadcrumb-item oge-breadcrumb-interactive"
-          href={d.item.url}
+          href={sanitizeUrl(d.item.url)}
           title={d.item.hint}
           onClick={(event) => emit(d, index, event.nativeEvent)}
         >

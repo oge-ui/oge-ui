@@ -35,3 +35,26 @@ jobs:
       - run: npx nx run-many -t lint test build typecheck e2e
       # the ng-add bundle only ships if it builds — release runs this too
       - run: npx nx run oge-schematics:schematics
+      # the site's CSP is a fixed string on a static host, so it has to be
+      # checked against what the build actually emits (runs after the build)
+      - run: npx nx run docs-tools:csp-check
+
+  # A dependency advisory is a build failure, not a dashboard item: every
+  # vulnerable package in this workspace is a build-time one, so the fix is
+  # always an upgrade and never a consumer-facing caveat. Runs beside `main`
+  # so an advisory published overnight does not hold up an unrelated PR's
+  # test signal.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          filter: tree:0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm audit --audit-level=moderate

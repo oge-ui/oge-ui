@@ -106,7 +106,8 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
           name: 'getCsv(options?) / exportCsv(filename?)',
           type: 'string / void',
           description:
-            'CSV of exactly what is on screen (multi-level headers flattened).',
+            'CSV of exactly what is on screen (multi-level headers flattened).' +
+            'Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); <code>formulaGuard: false</code> opts out.',
         },
       ],
     },

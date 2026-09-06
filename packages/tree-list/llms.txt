@@ -187,7 +187,7 @@ _Editing, paging, state & export_
 | `beginCustomLoading(message?) / endCustomLoading()` | `void` | Load panel independent of data activity. |
 | `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. |
 | `clearFilters() / clearSorting()` | `void` | Reset the view. |
-| `getExportData() / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async); CSV indents the first column 2 spaces per level; Excel entry sets real outline levels. |
+| `getExportData() / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async); CSV indents the first column 2 spaces per level; Excel entry sets real outline levels.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 
 #### Events
 

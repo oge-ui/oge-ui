@@ -45,6 +45,7 @@ import {
   type OgeMenubarSubmenuOpenedEvent,
   type OgeMenubarSubmenuOpeningEvent,
   type OgeMenuItem,
+  sanitizeUrl,
 } from '@oge-ui/behavior';
 import {
   OgeMenuList,
@@ -896,7 +897,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
                     .join(' ')}
                   role="menuitem"
                   id={itemDomId(i)}
-                  href={d.item.url}
+                  href={sanitizeUrl(d.item.url)}
                   aria-current={isActive(d.item) ? 'page' : undefined}
                   aria-disabled={
                     disabled || d.item.disabled ? 'true' : undefined
