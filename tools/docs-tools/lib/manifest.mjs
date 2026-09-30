@@ -36,9 +36,10 @@ export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
  * - `docsRoot` — route the docs live under; `null` for engine-only packages.
  * - `pageDirs` — folders under `pages/` whose demos belong to this package.
  * - `tier` — `'mit'` or `'commercial'`; drives the licence banner.
- * - `platform` — `'angular'` (default) or `'react'`. Selects which "Writing OGE
+ * - `platform` — `'angular'` (default), `'react'` or `'agnostic'` (a
+ *   framework-free engine package, ADR 0003). Selects which "Writing OGE
  *   code" rules and which "Common mistakes" table the package's `llms.txt`
- *   carries. Getting this wrong ships actively misleading instructions to every
+ *   carries — an engine gets neither pair, only a framework-free note. Getting this wrong ships actively misleading instructions to every
  *   coding assistant, so it is explicit rather than inferred from the name.
  */
 export const PACKAGES = [
@@ -187,6 +188,18 @@ export const PACKAGES = [
     pageDirs: ['bpmn'],
     apiPage: 'apps/dev-app/src/app/pages/bpmn/api.ts',
     tier: 'commercial',
+  },
+  {
+    dir: 'bpmn-engine',
+    npm: '@oge-ui/bpmn-engine',
+    label: 'BPMN Engine',
+    summary:
+      'Framework-free engine of the BPMN editor (ADR 0003): the diagram model, BPMN XML + DI reader/writer, JSON envelope, SVG export, orthogonal routing, snapping, alignment, modeling rules, the snapshot command stack and the editor core both the Angular and the React editor run. Installed automatically by either editor — import it directly for server-side or test pipelines.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+    platform: 'agnostic',
   },
   {
     dir: 'charts',

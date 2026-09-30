@@ -218,3 +218,24 @@ Predictable wrong guesses, and what to write instead.
 | \`<OgeButton icon="save" />\` | \`icon={<SaveIcon />}\` — slots take nodes |
 | \`::part\` / overriding \`.oge-button-native\` | override a \`--oge-*\` token |
 | rendering it from a server component | mark the file \`'use client'\` |`;
+
+// ---------------------------------------------------------------------------
+// Framework-free engine packages (ADR 0003). Neither render layer's rules
+// apply to them — an engine has no components — so packages marked
+// `platform: 'agnostic'` in the manifest get this note instead of either
+// "Writing OGE code" pair.
+// ---------------------------------------------------------------------------
+
+export const CONVENTIONS_AGNOSTIC = `## Writing code against this package
+
+This is a framework-free engine: plain TypeScript, no Angular or React import,
+no components and no stylesheet. It runs in Node, in a worker, in tests and
+under either render layer.
+
+1. **You rarely install it directly.** The Angular and the React editor of the
+   family depend on it and re-export the surface an app needs — import from
+   the editor package in UI code.
+2. **Import it directly for pipelines.** Server-side conversion, validation or
+   rendering (XML in, XML/JSON/SVG out) and test fixtures are what it is for.
+3. **Everything is immutable.** Commands return a new model; the command stack
+   keeps snapshots. Never mutate a model object in place.`;

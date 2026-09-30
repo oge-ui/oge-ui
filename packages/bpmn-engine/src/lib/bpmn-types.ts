@@ -1,7 +1,7 @@
-import type { BpmnDiagramJson } from './engine/bpmn-json';
-import type { BpmnEdgeType, BpmnNodeType } from './engine/bpmn-model';
-import type { Point } from './engine/geometry';
-import type { BpmnImportWarning } from './engine/bpmn-xml-reader';
+import type { BpmnDiagramJson } from './bpmn-json';
+import type { BpmnEdgeType, BpmnNodeType } from './bpmn-model';
+import type { Point } from './geometry';
+import type { BpmnImportWarning } from './bpmn-xml-reader';
 import type { BpmnPaletteItemType } from './config';
 
 /** Summary of one diagram element carried in editor event payloads. */
@@ -51,19 +51,21 @@ export interface OgeBpmnPaletteItem {
 
 /**
  * A programmatic HTML badge attached to a diagram element (process-monitoring
- * overlays), registered via `OgeBpmnEditor.addOverlay()`. The badge tracks the
+ * overlays), registered via the editor's `addOverlay()`. The badge tracks the
  * element's screen position through pan/zoom/model changes; when the element
  * disappears from the model the badge is hidden (not removed) and reappears
  * if an element with the same id returns.
  *
- * `html` is bound through Angular's `[innerHTML]`, so the framework's default
- * HTML sanitizer applies: script tags and inline event handlers are stripped.
- * Do not feed untrusted user content through a sanitizer bypass.
+ * `html` is sanitized by each render layer: Angular binds it through its
+ * sanitizing `[innerHTML]`, React renders it through
+ * `sanitizeBpmnOverlayHtml()` — both strip script tags, inline event
+ * handlers and unsafe URLs. Do not feed untrusted user content through a
+ * sanitizer bypass.
  */
 export interface OgeBpmnOverlay {
   /** Id of the node, pool or edge the badge is anchored to. */
   readonly elementId: string;
-  /** Badge markup, rendered through Angular's sanitizing `[innerHTML]` binding. */
+  /** Badge markup — sanitized before it renders (see the interface note). */
   readonly html: string;
   /** Which corner (or the center) of the element's bounds the badge anchors to. */
   readonly position:

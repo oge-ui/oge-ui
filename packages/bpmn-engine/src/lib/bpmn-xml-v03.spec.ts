@@ -1,7 +1,7 @@
 import { readBpmnXml } from './bpmn-xml-reader';
 import { writeBpmnXml } from './bpmn-xml-writer';
 import { hiddenByCollapsed } from './bpmn-model';
-import type { BpmnDiagram } from './bpmn-model';
+import type { BpmnDiagram, BpmnFlowNode } from './bpmn-model';
 import { V03_FIXTURE_XML } from './xml-fixtures';
 
 function readModel(xml: string): BpmnDiagram {
@@ -30,12 +30,9 @@ describe('bpmn-xml v0.3 element coverage', () => {
     const m = readModel(V03_FIXTURE_XML);
     const kinds = Object.fromEntries(
       Object.values(m.nodes)
-        .filter((n) => n.type !== 'textAnnotation')
-        .filter((n) => n.type !== 'textAnnotation' && n.eventDefinition)
-        .map((n) => [
-          n.id,
-          n.type !== 'textAnnotation' ? n.eventDefinition : undefined,
-        ]),
+        .filter((n): n is BpmnFlowNode => n.type !== 'textAnnotation')
+        .filter((n) => n.eventDefinition)
+        .map((n) => [n.id, n.eventDefinition]),
     );
     expect(kinds).toEqual({
       Start_v3: 'message',

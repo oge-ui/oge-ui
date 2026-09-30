@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import type { BpmnNodeType } from '../engine/bpmn-model';
+import type { BpmnNodeType } from '@oge-ui/bpmn-engine';
 import { OGE_DEFAULT_BPMN_MESSAGES } from '../config';
 import { OgeBpmnPalette } from './bpmn-palette';
 

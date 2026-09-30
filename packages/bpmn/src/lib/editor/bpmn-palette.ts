@@ -8,7 +8,10 @@ import {
   output,
   signal,
 } from '@angular/core';
-import type { BpmnPaletteItemType } from '../config';
+import {
+  bpmnPaletteNavIndex,
+  type BpmnPaletteItemType,
+} from '@oge-ui/bpmn-engine';
 
 /**
  * Internal elements palette of the BPMN editor: a vertical toolbar of real
@@ -267,26 +270,10 @@ export class OgeBpmnPalette {
   }
 
   protected onKeydown(event: KeyboardEvent, index: number): void {
-    const count = this.items().length;
-    if (count === 0) {
+    // the roving-tabindex key map is shared with the React palette
+    const next = bpmnPaletteNavIndex(event.key, index, this.items().length);
+    if (next === null) {
       return;
-    }
-    let next: number;
-    switch (event.key) {
-      case 'ArrowDown':
-        next = (index + 1) % count;
-        break;
-      case 'ArrowUp':
-        next = (index - 1 + count) % count;
-        break;
-      case 'Home':
-        next = 0;
-        break;
-      case 'End':
-        next = count - 1;
-        break;
-      default:
-        return;
     }
     event.preventDefault();
     this.focusIndex.set(next);

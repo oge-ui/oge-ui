@@ -269,11 +269,37 @@ export default [
               ],
             },
             {
-              // commercial BPMN editor: self-contained by design — the whole
-              // engine (XML + geometry) lives inside the package, so the only
-              // allowed edge is core (and today not even that is used)
+              // the commercial BPMN engine (ADR 0003): framework-free and
+              // dependency-free — model, XML/JSON/SVG, routing, rules, the
+              // command stack and the editor core both render layers run.
+              // It may take the MIT substrate, never a render layer.
+              sourceTag: 'scope:bpmn-engine',
+              onlyDependOnLibsWithTags: [
+                'scope:bpmn-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // commercial BPMN editor (Angular): a thin template over the
+              // engine package — nothing else
               sourceTag: 'scope:bpmn',
-              onlyDependOnLibsWithTags: ['scope:bpmn', 'scope:core'],
+              onlyDependOnLibsWithTags: [
+                'scope:bpmn',
+                'scope:bpmn-engine',
+                'scope:core',
+              ],
+            },
+            {
+              // commercial BPMN editor (React): the same engine, and the MIT
+              // behavior layer for URL sanitizing — no other React family
+              sourceTag: 'scope:react-bpmn',
+              onlyDependOnLibsWithTags: [
+                'scope:react-bpmn',
+                'scope:bpmn-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
             },
             {
               // commercial charts: dependency-free SVG rendering; only the
@@ -455,6 +481,7 @@ export default [
                 'scope:react-forms',
                 'scope:react-upload',
                 'scope:react-grid',
+                'scope:react-bpmn',
                 'scope:react-oge',
                 'scope:react-overlay',
                 'scope:behavior',
@@ -462,6 +489,7 @@ export default [
                 'scope:tree-list',
                 'scope:pivot',
                 'scope:bpmn',
+                'scope:bpmn-engine',
                 'scope:scheduler',
                 'scope:gantt',
                 'scope:kanban',

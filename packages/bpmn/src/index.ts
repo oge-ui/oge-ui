@@ -19,7 +19,10 @@ export {
   type OgeBpmnPropertiesMessages,
 } from './lib/config';
 
-// Event payloads
+// Event payloads and the engine surface users need for import/export and
+// model inspection. The engine is the framework-free `@oge-ui/bpmn-engine`
+// package, shared with the React editor (ADR 0003); re-exported so Angular
+// consumers import one package — the surface this barrel always had.
 export type {
   OgeBpmnChangeSource,
   OgeBpmnDiagramChangedEvent,
@@ -29,42 +32,40 @@ export type {
   OgeBpmnOverlay,
   OgeBpmnPaletteItem,
   OgeBpmnSelectionEvent,
-} from './lib/bpmn-types';
-
-// Engine surface users need for import/export and model inspection
+} from '@oge-ui/bpmn-engine';
 export {
   VALID_EVENT_DEFINITIONS,
+  alignElements,
   createEmptyDiagram,
-} from './lib/engine/bpmn-model';
+  distributeElements,
+  fromBpmnJson,
+  readBpmnXml,
+  renderDiagramSvg,
+  toBpmnJson,
+  writeBpmnXml,
+} from '@oge-ui/bpmn-engine';
 export type {
   BpmnActivityMarker,
+  BpmnAlignMode,
+  BpmnClipboard,
   BpmnDataNodeType,
   BpmnDiagram,
+  BpmnDiagramJson,
+  BpmnDistributeAxis,
   BpmnEdge,
   BpmnEdgeType,
   BpmnEventDefinitionKind,
+  BpmnImportResult,
+  BpmnImportWarning,
+  BpmnImportWarningCode,
+  BpmnJsonParseResult,
   BpmnLane,
   BpmnMessageFlow,
   BpmnNode,
   BpmnNodeType,
   BpmnPool,
   BpmnSubProcessType,
-} from './lib/engine/bpmn-model';
-export type { Point, Rect } from './lib/engine/geometry';
-export { alignElements, distributeElements } from './lib/engine/alignment';
-export type { BpmnAlignMode, BpmnDistributeAxis } from './lib/engine/alignment';
-export { readBpmnXml } from './lib/engine/bpmn-xml-reader';
-export type {
-  BpmnImportResult,
-  BpmnImportWarning,
-  BpmnImportWarningCode,
-} from './lib/engine/bpmn-xml-reader';
-export { writeBpmnXml } from './lib/engine/bpmn-xml-writer';
-export { fromBpmnJson, toBpmnJson } from './lib/engine/bpmn-json';
-export type {
-  BpmnDiagramJson,
-  BpmnJsonParseResult,
-} from './lib/engine/bpmn-json';
-export { renderDiagramSvg } from './lib/engine/svg-export';
-export type { BpmnSvgExportOptions } from './lib/engine/svg-export';
-export type { BpmnClipboard } from './lib/engine/commands';
+  BpmnSvgExportOptions,
+  Point,
+  Rect,
+} from '@oge-ui/bpmn-engine';

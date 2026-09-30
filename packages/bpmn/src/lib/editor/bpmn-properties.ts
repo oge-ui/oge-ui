@@ -8,69 +8,40 @@ import {
 } from '@angular/core';
 import {
   OGE_DEFAULT_BPMN_COLOR_PRESETS,
-  type OgeBpmnMessages,
-} from '../config';
-import type {
-  BpmnActivityMarker,
-  BpmnDiagram,
-  BpmnEventDefinitionKind,
-  BpmnFlowNode,
-  BpmnFlowNodeType,
-  BpmnMessageFlow,
-  BpmnPool,
-  BpmnSequenceFlow,
-  BpmnTextAnnotation,
-} from '../engine/bpmn-model';
-import {
-  VALID_EVENT_DEFINITIONS,
-  isBpmnActivityType,
-  isBpmnEventType,
-  isBpmnSubProcessType,
-} from '../engine/bpmn-model';
-import type { BpmnCommand } from '../engine/command-stack';
-import {
   addLaneCommand,
+  bpmnClearColorsCommand,
+  bpmnColorInputValue,
+  bpmnCompensationCommand,
+  bpmnDefaultFlowCommand,
+  bpmnFieldKey,
+  bpmnLaneNameLabel,
+  bpmnMarkerCommand,
+  bpmnPresetCommand,
+  bpmnPresetLabel,
+  bpmnRemoveLaneLabel,
+  buildBpmnPropertiesModel,
   morphNodeCommand,
   removeLaneCommand,
   renameLaneCommand,
-  setActivityMarkersCommand,
   setBoundaryInterruptingCommand,
   setCalledElementCommand,
   setConditionCommand,
-  setDefaultFlowCommand,
   setElementColorsCommand,
   setEventDefinitionCommand,
   toggleSubProcessCollapseCommand,
   updateLabelCommand,
   updateProcessCommand,
-} from '../engine/commands';
-import { canMorph, morphGroupOf } from '../engine/rules';
+  type BpmnCommand,
+  type BpmnDiagram,
+  type BpmnEventDefinitionKind,
+  type BpmnFlowNodeType,
+  type BpmnLoopMarker,
+  type BpmnPropertiesView,
+  type BpmnSequenceFlow,
+  type OgeBpmnMessages,
+} from '@oge-ui/bpmn-engine';
 
-/** The loop-family markers offered by the marker select (compensation is a checkbox). */
-type BpmnLoopMarker = Exclude<BpmnActivityMarker, 'compensation'>;
-
-type PropertiesView =
-  | { readonly kind: 'process' }
-  | { readonly kind: 'multi'; readonly count: number }
-  | {
-      readonly kind: 'node';
-      readonly node: BpmnFlowNode;
-      readonly typeName: string;
-    }
-  | { readonly kind: 'annotation'; readonly node: BpmnTextAnnotation }
-  | {
-      readonly kind: 'flow';
-      readonly edge: BpmnSequenceFlow;
-      readonly canDefault: boolean;
-      readonly isDefault: boolean;
-    }
-  | { readonly kind: 'messageFlow'; readonly edge: BpmnMessageFlow }
-  | {
-      readonly kind: 'pool';
-      readonly pool: BpmnPool;
-      readonly typeName: string;
-    }
-  | { readonly kind: 'other'; readonly id: string; readonly typeName: string };
+type PropertiesView = BpmnPropertiesView;
 
 let nextUid = 0;
 
@@ -470,198 +441,55 @@ export class OgeBpmnProperties {
   protected readonly msg = computed(() => this.messages().properties);
 
   /**
+   * The whole panel model — view kind, selects, checkboxes and labels —
+   * built by the engine's `buildBpmnPropertiesModel`, shared with the React
+   * panel (ADR 0003).
+   */
+  private readonly model = computed(() =>
+    buildBpmnPropertiesModel(this.diagram(), this.selection(), this.messages()),
+  );
+
+  /**
    * Accessible name of the region — the editor's canvas label composed with
    * the panel label, so several editors on one page expose distinguishable
    * landmarks.
    */
-  protected readonly regionLabel = computed(
-    () => `${this.messages().canvasLabel} — ${this.msg().panelLabel}`,
-  );
+  protected readonly regionLabel = computed(() => this.model().regionLabel);
 
   /** What the panel shows for the current selection. */
-  protected readonly view = computed<PropertiesView>(() => {
-    const m = this.diagram();
-    const sel = this.selection();
-    if (sel.length === 0) {
-      return { kind: 'process' };
-    }
-    if (sel.length > 1) {
-      return { kind: 'multi', count: sel.length };
-    }
-    const id = sel[0];
-    const names = this.messages().elementNames;
-    const node = m.nodes[id];
-    if (node) {
-      return node.type === 'textAnnotation'
-        ? { kind: 'annotation', node }
-        : { kind: 'node', node, typeName: names[node.type] };
-    }
-    const pool = m.pools[id];
-    if (pool) {
-      return { kind: 'pool', pool, typeName: names['pool'] };
-    }
-    const edge = m.edges[id];
-    if (edge?.type === 'sequenceFlow') {
-      const source = m.nodes[edge.sourceRef];
-      const canDefault = source?.type === 'exclusiveGateway';
-      const isDefault = canDefault && source.defaultFlowId === id;
-      return { kind: 'flow', edge, canDefault, isDefault };
-    }
-    if (edge?.type === 'messageFlow') {
-      return { kind: 'messageFlow', edge };
-    }
-    if (edge) {
-      return { kind: 'other', id, typeName: names[edge.type] };
-    }
-    return { kind: 'process' };
-  });
+  protected readonly view = computed<PropertiesView>(() => this.model().view);
 
-  /**
-   * The appearance (colors) section state: every selected element with DI
-   * (nodes and edges alike) plus the first element's current colors, or null
-   * when nothing colorable is selected.
-   */
-  protected readonly appearance = computed<{
-    readonly ids: readonly string[];
-    readonly fill: string;
-    readonly stroke: string;
-  } | null>(() => {
-    const m = this.diagram();
-    const ids = this.selection().filter(
-      (id) => m.shapeDi[id] !== undefined || m.edgeDi[id] !== undefined,
-    );
-    if (ids.length === 0) {
-      return null;
-    }
-    const first = m.shapeDi[ids[0]] ?? m.edgeDi[ids[0]];
-    return { ids, fill: first.fill ?? '', stroke: first.stroke ?? '' };
-  });
+  /** The appearance (colors) section state, or null when nothing colorable is selected. */
+  protected readonly appearance = computed(() => this.model().appearance);
 
   /** The morph (type) select of a single selected flow node, or null. */
-  protected readonly morphView = computed<{
-    readonly current: BpmnFlowNodeType;
-    readonly options: readonly {
-      readonly type: BpmnFlowNodeType;
-      readonly label: string;
-      readonly disabled: boolean;
-      readonly reason: string | null;
-    }[];
-  } | null>(() => {
-    const v = this.view();
-    if (v.kind !== 'node') {
-      return null;
-    }
-    const group = morphGroupOf(v.node.type);
-    if (group === null || group.length < 2) {
-      return null;
-    }
-    const m = this.diagram();
-    const labels = this.messages().paletteLabels;
-    return {
-      // A non-null morph group implies a flow-node type.
-      current: v.node.type as BpmnFlowNodeType,
-      options: group.map((type) => {
-        const result = canMorph(m, v.node.id, type);
-        return {
-          type,
-          label: labels[type],
-          disabled: !result.allowed,
-          reason: result.allowed ? null : (result.reason ?? null),
-        };
-      }),
-    };
-  });
+  protected readonly morphView = computed(() => this.model().morph);
 
   /** The event-definition select of a single selected event, or null. */
-  protected readonly eventDefView = computed<{
-    readonly id: string;
-    readonly current: BpmnEventDefinitionKind | null;
-    readonly kinds: readonly BpmnEventDefinitionKind[];
-  } | null>(() => {
-    const v = this.view();
-    if (v.kind !== 'node' || !isBpmnEventType(v.node.type)) {
-      return null;
-    }
-    return {
-      id: v.node.id,
-      current: v.node.eventDefinition ?? null,
-      kinds: VALID_EVENT_DEFINITIONS[v.node.type],
-    };
-  });
+  protected readonly eventDefView = computed(
+    () => this.model().eventDefinition,
+  );
 
   /** The "Interrupting" checkbox of a single selected boundary event, or null. */
-  protected readonly boundaryView = computed<{
-    readonly id: string;
-    readonly interrupting: boolean;
-  } | null>(() => {
-    const v = this.view();
-    if (v.kind !== 'node' || v.node.type !== 'boundaryEvent') {
-      return null;
-    }
-    return { id: v.node.id, interrupting: v.node.cancelActivity !== false };
-  });
+  protected readonly boundaryView = computed(() => this.model().boundary);
 
   /** The "Collapsed" checkbox of a single selected sub-process, or null. */
-  protected readonly subProcessView = computed<{
-    readonly id: string;
-    readonly collapsed: boolean;
-  } | null>(() => {
-    const v = this.view();
-    if (v.kind !== 'node' || !isBpmnSubProcessType(v.node.type)) {
-      return null;
-    }
-    return { id: v.node.id, collapsed: v.node.collapsed === true };
-  });
+  protected readonly subProcessView = computed(() => this.model().subProcess);
 
   /** The marker select + compensation checkbox of a single selected activity, or null. */
-  protected readonly markerView = computed<{
-    readonly id: string;
-    readonly loopMarker: BpmnLoopMarker | null;
-    readonly loopKinds: readonly BpmnLoopMarker[];
-    readonly compensation: boolean;
-  } | null>(() => {
-    const v = this.view();
-    if (v.kind !== 'node' || !isBpmnActivityType(v.node.type)) {
-      return null;
-    }
-    const markers = v.node.markers ?? [];
-    const loopMarker =
-      markers.find(
-        (marker): marker is BpmnLoopMarker =>
-          marker === 'loop' ||
-          marker === 'multiInstanceParallel' ||
-          marker === 'multiInstanceSequential',
-      ) ?? null;
-    return {
-      id: v.node.id,
-      loopMarker,
-      loopKinds: ['loop', 'multiInstanceParallel', 'multiInstanceSequential'],
-      compensation: markers.includes('compensation'),
-    };
-  });
+  protected readonly markerView = computed(() => this.model().marker);
 
   /** The "Called element" field of a single selected call activity, or null. */
-  protected readonly calledElementView = computed<{
-    readonly id: string;
-    readonly calledElement: string;
-  } | null>(() => {
-    const v = this.view();
-    if (v.kind !== 'node' || v.node.type !== 'callActivity') {
-      return null;
-    }
-    return { id: v.node.id, calledElement: v.node.calledElement ?? '' };
-  });
+  protected readonly calledElementView = computed(
+    () => this.model().calledElement,
+  );
 
   /** Display name of the message-flow heading. */
   protected readonly messageFlowTypeName = computed(
-    () => this.messages().elementNames['messageFlow'],
+    () => this.model().messageFlowTypeName,
   );
 
-  protected readonly multiSummary = computed(() => {
-    const v = this.view();
-    const count = v.kind === 'multi' ? v.count : 0;
-    return this.msg().selectionCount.replace('{count}', String(count));
-  });
+  protected readonly multiSummary = computed(() => this.model().multiSummary);
 
   // Narrowing helpers for the template (the @case guard guarantees the kind).
   protected nodeView(): Extract<PropertiesView, { kind: 'node' }> {
@@ -688,12 +516,12 @@ export class OgeBpmnProperties {
 
   /** Aria label of a lane's name input. */
   protected laneNameLabel(lane: { id: string; name?: string }): string {
-    return this.msg().laneName.replace('{name}', lane.name ?? lane.id);
+    return bpmnLaneNameLabel(this.messages(), lane);
   }
 
   /** Aria label / title of a lane's remove button. */
   protected removeLaneLabel(lane: { id: string; name?: string }): string {
-    return this.msg().removeLane.replace('{name}', lane.name ?? lane.id);
+    return bpmnRemoveLaneLabel(this.messages(), lane);
   }
 
   protected onAddLane(poolId: string): void {
@@ -743,25 +571,24 @@ export class OgeBpmnProperties {
   }
 
   protected onDefaultFlow(edge: BpmnSequenceFlow, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
     this.commandRequested.emit(
-      setDefaultFlowCommand(edge.sourceRef, checked ? edge.id : undefined),
+      bpmnDefaultFlowCommand(edge, (event.target as HTMLInputElement).checked),
     );
   }
 
   /** Aria label / title of a preset swatch button. */
   protected presetLabelFor(color: string): string {
-    return this.msg().presetLabel.replace('{color}', color);
+    return bpmnPresetLabel(this.messages(), color);
   }
 
   /** Returns the color when it is a 6-digit hex (what `type="color"` accepts). */
   protected colorValue(color: string, fallback: string): string {
-    return /^#[0-9a-fA-F]{6}$/.test(color) ? color : fallback;
+    return bpmnColorInputValue(color, fallback);
   }
 
   /** A preset swatch applies its color as fill only; the stroke is untouched. */
   protected onPreset(ids: readonly string[], color: string): void {
-    this.commandRequested.emit(setElementColorsCommand(ids, { fill: color }));
+    this.commandRequested.emit(bpmnPresetCommand(ids, color));
   }
 
   protected onColor(
@@ -775,9 +602,7 @@ export class OgeBpmnProperties {
   }
 
   protected onClearColors(ids: readonly string[]): void {
-    this.commandRequested.emit(
-      setElementColorsCommand(ids, { fill: null, stroke: null }),
-    );
+    this.commandRequested.emit(bpmnClearColorsCommand(ids));
   }
 
   protected onMorph(id: string, event: Event): void {
@@ -818,13 +643,9 @@ export class OgeBpmnProperties {
     view: { readonly id: string; readonly compensation: boolean },
     event: Event,
   ): void {
-    const value = (event.target as HTMLSelectElement).value;
-    const markers: BpmnActivityMarker[] =
-      value === '' ? [] : [value as BpmnActivityMarker];
-    if (view.compensation) {
-      markers.push('compensation');
-    }
-    this.commandRequested.emit(setActivityMarkersCommand(view.id, markers));
+    this.commandRequested.emit(
+      bpmnMarkerCommand(view, (event.target as HTMLSelectElement).value),
+    );
   }
 
   /** Compensation checkbox: toggles the flag, keeping the loop-family marker. */
@@ -832,26 +653,17 @@ export class OgeBpmnProperties {
     view: { readonly id: string; readonly loopMarker: BpmnLoopMarker | null },
     event: Event,
   ): void {
-    const markers: BpmnActivityMarker[] =
-      view.loopMarker === null ? [] : [view.loopMarker];
-    if ((event.target as HTMLInputElement).checked) {
-      markers.push('compensation');
-    }
-    this.commandRequested.emit(setActivityMarkersCommand(view.id, markers));
+    this.commandRequested.emit(
+      bpmnCompensationCommand(view, (event.target as HTMLInputElement).checked),
+    );
   }
 
   /** Enter commits text inputs immediately; Escape reverts to the model value. */
   protected onFieldKeydown(event: KeyboardEvent, modelValue: string): void {
     event.stopPropagation();
     const target = event.target as HTMLInputElement | HTMLTextAreaElement;
-    if (event.key === 'Escape') {
+    if (bpmnFieldKey(event.key, target, modelValue) !== null) {
       event.preventDefault();
-      target.value = modelValue;
-      return;
-    }
-    if (event.key === 'Enter' && target.tagName === 'INPUT') {
-      event.preventDefault();
-      target.dispatchEvent(new Event('change', { bubbles: false }));
     }
   }
 
