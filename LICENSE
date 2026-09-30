@@ -12,10 +12,10 @@ Portions of this repository are licensed as follows:
   Commercial License — see `packages/scheduler/LICENSE`. Same terms:
   source-available, free for evaluation and development, paid for
   production use.
-- Everything under `packages/gantt` is licensed under the OGE UI
-  Commercial License — see `packages/gantt/LICENSE`. Same terms:
-  source-available, free for evaluation and development, paid for
-  production use.
+- Everything under `packages/gantt`, `packages/gantt-engine` and
+  `packages/react/gantt` is licensed under the OGE UI Commercial License —
+  see each directory's `LICENSE`. Same terms: source-available, free for
+  evaluation and development, paid for production use.
 - Everything under `packages/charts` is licensed under the OGE UI
   Commercial License — see `packages/charts/LICENSE`. Same terms:
   source-available, free for evaluation and development, paid for

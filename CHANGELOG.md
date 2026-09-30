@@ -11,6 +11,23 @@ Driven by what the first production consumer (an Angular admin console built on
 `@oge-ui/grid` + `@oge-ui/overlay`) had to work around, written down in its own
 design notes. Every item below removes one of those workarounds.
 
+### Added (React)
+
+- **`@oge-ui/react-gantt` and `@oge-ui/gantt-engine` (commercial).** Per ADR
+  0003 the Gantt engine left the Angular package for a framework-free,
+  commercially licensed `@oge-ui/gantt-engine`: the kernel, the message
+  catalog and config defaults, the public types, the pointer-gesture machine
+  and `OgeGanttCore` — the whole controller (stores, undo/redo, view models,
+  editing pipelines, keyboard map, gestures, context-menu model) — plus the
+  `/export-excel`, `/export-pdf` and `/export-image` builders (optional
+  `exceljs` / `jspdf` peers). `@oge-ui/gantt` runs on it with an unchanged
+  public API (it now also exports `OgeGanttResource`; its `exceljs` /
+  `jspdf` optional peers moved to the engine). The new React `<OgeGantt>`
+  mirrors every input, output and method (props, `onX` callbacks, a `ref`
+  handle, `renderTask` / `renderTooltip`, `<OgeGanttConfigProvider>`) on the
+  same core and the same stylesheet, with export entry points taking the
+  handle. Not part of the MIT `@oge-ui/react` umbrella.
+
 ### Fixed (theming)
 
 - **A `:root` token override now works — on every component.** Each component
