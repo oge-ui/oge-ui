@@ -8,13 +8,11 @@ import {
   output,
 } from '@angular/core';
 import { ReactiveFormsModule, type FormControl } from '@angular/forms';
-import {
-  OgeCheckBox,
-  OgeDateBox,
-  OgeNumberBox,
-  OgeSelectBox,
-  OgeTextBox,
-} from '@oge-ui/inputs';
+import { OgeCheckBox } from '@oge-ui/inputs/check-box';
+import { OgeDateBox } from '@oge-ui/inputs/date-box';
+import { OgeNumberBox } from '@oge-ui/inputs/number-box';
+import { OgeSelectBox } from '@oge-ui/inputs/select-box';
+import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import type { LookupItem, OgeDataType } from '@oge-ui/grid/foundation';
 
 /** Where the editor renders — decides which keyboard/blur wiring the host binds. */

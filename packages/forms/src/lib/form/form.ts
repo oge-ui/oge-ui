@@ -35,13 +35,13 @@ import {
   type OgeInputSize,
   type OgeInputStylingMode,
   type OgeInputSubscriptSizing,
-} from '@oge-ui/inputs';
+} from '@oge-ui/inputs/field';
 import { OGE_FORMS_CONFIG, type OgeFormsMessages } from '../config';
 import { OgeValidationSummary } from '../validation-summary/validation-summary';
 import { OgeFormField } from './form-field';
 import { OgeFormGroup } from './form-group';
 import { OgeFormItem } from './form-item';
-import { OgeAccordion, OgeAccordionItem } from '@oge-ui/layout';
+import { OgeAccordion, OgeAccordionItem } from '@oge-ui/layout/accordion';
 import { OgeTab, OgeTabPanel } from '@oge-ui/tabs';
 import { OgeStep, OgeStepper } from '@oge-ui/navigation';
 import { OgeFormNode } from './form-node';

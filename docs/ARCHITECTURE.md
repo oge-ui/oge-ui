@@ -230,6 +230,27 @@ Then register in **four** places:
 
 There is **no test target in project.json** — `@nx/vitest` infers it from `vite.config.mts`.
 
+### Per-component entry points (`@oge-ui/inputs/*`, `@oge-ui/layout/*`)
+
+A family whose components are used independently ships one **secondary entry point per component**
+(`packages/<pkg>/<component>/ng-package.json` + `src/`), with the primary `@oge-ui/<pkg>` entry
+re-exporting the exact public list from them. Why: every entry point is one FESM module and esbuild
+code-splits at module granularity, so when two lazy chunks use different parts of one monolithic
+family, the _union_ lands in the eager shared chunk. Measured on a one-grid CLI app: splitting
+inputs and layout took the initial JS from 913 KB to 704 KB.
+
+- Library packages import siblings from the component entry (`@oge-ui/inputs/text-box`), never from
+  the primary; apps and docs may use either. `rewrite_imports`-style tooling keys off the primary
+  index, so keep its `export { … } from '@oge-ui/<pkg>/<entry>'` statements explicit (no `export *`).
+- Code shared between sibling entries lives in a base entry (`@oge-ui/inputs/field`,
+  `@oge-ui/layout/element-attrs`) and is exported there under a "shared with sibling entry points"
+  comment — reachable, but deliberately absent from the primary's public list.
+- The entry graph must stay acyclic (ng-packagr builds entries in dependency order); specs may import
+  siblings by relative path because they are not part of the build.
+- `tsconfig.base.json` maps `@oge-ui/<pkg>/*` → `./packages/<pkg>/*/src/index.ts`; `tsconfig.lib.json`,
+  `tsconfig.spec.json` and `vite.config.mts` include `*/src/**` alongside `src/**`. SCSS token paths
+  from an entry are three levels deep (`@use '../../../grid/src/lib/styles/tokens'`).
+
 ## Cross-package sharing (what gets extracted vs. copied)
 
 Sibling component packages (tabs, layout, …) grow the same shapes. The rule:
@@ -389,7 +410,7 @@ smallest complete example):
   `--oge-text-color`, `--oge-border-color`, `--oge-accent`, `--oge-accent-soft`, `--oge-focus-ring`,
   `--oge-radius`, severity tokens, etc. **Components must reference tokens, never raw values.**
 - Other packages `@use` the tokens via a relative path into grid
-  (`@use '../../../../grid/src/lib/styles/tokens';`) and `@include tokens.core-tokens;` at their host class.
+  (`@use '../../../../grid/src/lib/styles/tokens';` — three `../` from a per-component entry's `src/`) and `@include tokens.core-tokens;` at their host class.
   SCSS reads source, not dist — no Nx graph edge results (accepted limitation).
 - **Token defaults never live on a component host.** `core-tokens` hoists them (`@at-root`) to
   `:where(:root, .oge-theme-light, [data-oge-theme='light'], .oge-theme-auto, [data-oge-theme='auto'])`

@@ -25,7 +25,7 @@ import {
   type DataSource,
   type RowKey,
 } from '@oge-ui/core';
-import { OgeCalendar } from '@oge-ui/inputs';
+import { OgeCalendar } from '@oge-ui/inputs/calendar';
 import { OgeAnchoredPanel, OgePopup } from '@oge-ui/overlay';
 import type { OgeSchedulerMessages } from '../config';
 import { OGE_SCHEDULER_CONFIG } from '../config';
@@ -1706,9 +1706,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     });
     setTimeout(() => {
       this.hostEl.nativeElement
-        .querySelector<HTMLElement>(
-          '.oge-scheduler-menu-item:not(:disabled)',
-        )
+        .querySelector<HTMLElement>('.oge-scheduler-menu-item:not(:disabled)')
         ?.focus();
     });
   }

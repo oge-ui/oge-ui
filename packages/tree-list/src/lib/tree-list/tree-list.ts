@@ -1,12 +1,10 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import {
-  OgeCheckBox,
-  OgeDateBox,
-  OgeNumberBox,
-  OgeSelectBox,
-  OgeTextBox,
-} from '@oge-ui/inputs';
+import { OgeCheckBox } from '@oge-ui/inputs/check-box';
+import { OgeDateBox } from '@oge-ui/inputs/date-box';
+import { OgeNumberBox } from '@oge-ui/inputs/number-box';
+import { OgeSelectBox } from '@oge-ui/inputs/select-box';
+import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import {
   OgeAnchoredPanel,
   OgeMenuList,
@@ -92,7 +90,7 @@ import {
   type ResolvedColumn as FoundationResolvedColumn,
 } from '@oge-ui/grid/foundation';
 import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
-import { OgeToolbar } from '@oge-ui/layout';
+import { OgeToolbar } from '@oge-ui/layout/toolbar';
 import {
   GridDataAdapter,
   GridStateStore,

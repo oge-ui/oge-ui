@@ -13,7 +13,8 @@ import {
   type OgeBuilderGroup,
   type OgeFilterBuilderField,
 } from '@oge-ui/behavior';
-import { OgeSelectBox, OgeTextBox } from '@oge-ui/inputs';
+import { OgeSelectBox } from '@oge-ui/inputs/select-box';
+import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import type { OgeDataType } from '../columns/column';
 import { OGE_DEFAULT_MESSAGES, type OgeGridMessages } from '../config';
 

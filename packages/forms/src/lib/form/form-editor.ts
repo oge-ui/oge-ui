@@ -10,24 +10,21 @@ import {
 } from '@angular/core';
 import { ReactiveFormsModule, type FormControl } from '@angular/forms';
 import { FormField } from '@angular/forms/signals';
-import {
-  OgeAutocomplete,
-  OgeCalendar,
-  OgeCheckBox,
-  OgeColorBox,
-  OgeDateBox,
-  OgeDateRangeBox,
-  OgeNumberBox,
-  OgeRadioGroup,
-  OgeSelectBox,
-  OgeSlider,
-  OgeSwitch,
-  OgeTagBox,
-  OgeTextArea,
-  OgeTextBox,
-  OgeTreeSelect,
-  type OgeTextBoxMode,
-} from '@oge-ui/inputs';
+import { OgeAutocomplete } from '@oge-ui/inputs/autocomplete';
+import { OgeCalendar } from '@oge-ui/inputs/calendar';
+import { OgeCheckBox } from '@oge-ui/inputs/check-box';
+import { OgeColorBox } from '@oge-ui/inputs/color-box';
+import { OgeDateBox, OgeDateRangeBox } from '@oge-ui/inputs/date-box';
+import { type OgeTextBoxMode } from '@oge-ui/inputs/field';
+import { OgeNumberBox } from '@oge-ui/inputs/number-box';
+import { OgeRadioGroup } from '@oge-ui/inputs/radio-group';
+import { OgeSelectBox } from '@oge-ui/inputs/select-box';
+import { OgeSlider } from '@oge-ui/inputs/slider';
+import { OgeSwitch } from '@oge-ui/inputs/switch';
+import { OgeTagBox } from '@oge-ui/inputs/tag-box';
+import { OgeTextArea } from '@oge-ui/inputs/text-area';
+import { OgeTextBox } from '@oge-ui/inputs/text-box';
+import { OgeTreeSelect } from '@oge-ui/inputs/tree-select';
 import { OgeFileUploader } from '@oge-ui/upload';
 import type {
   OgeFormEditorAppearance,

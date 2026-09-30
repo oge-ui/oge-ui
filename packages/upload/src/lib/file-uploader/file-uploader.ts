@@ -20,7 +20,7 @@ import {
   type ControlValueAccessor,
   type ValidationErrors,
 } from '@angular/forms';
-import { OgeProgressBar } from '@oge-ui/layout';
+import { OgeProgressBar } from '@oge-ui/layout/progress-bar';
 import { OgeModal } from '@oge-ui/overlay';
 import {
   OgeFileUploaderCore,

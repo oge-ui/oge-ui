@@ -5,7 +5,7 @@ import type {
   OgeInputSize,
   OgeInputStylingMode,
   OgeInputSubscriptSizing,
-} from '@oge-ui/inputs';
+} from '@oge-ui/inputs/field';
 
 /**
  * A Signal Forms field node, as `[formField]` consumes it. `Field<T>` is

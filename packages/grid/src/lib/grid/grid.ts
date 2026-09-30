@@ -127,14 +127,11 @@ import {
   type OgeBuilderGroup,
   type OgeFilterBuilderField,
 } from '../filter-builder/filter-builder';
-import {
-  OgeCheckBox,
-  OgeDateBox,
-  OgeDateRangeBox,
-  OgeNumberBox,
-  OgeSelectBox,
-  OgeTextBox,
-} from '@oge-ui/inputs';
+import { OgeCheckBox } from '@oge-ui/inputs/check-box';
+import { OgeDateBox, OgeDateRangeBox } from '@oge-ui/inputs/date-box';
+import { OgeNumberBox } from '@oge-ui/inputs/number-box';
+import { OgeSelectBox } from '@oge-ui/inputs/select-box';
+import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import {
   OgeAnchoredPanel,
   OgeMenuList,
@@ -157,7 +154,7 @@ import {
 } from '../templates/detail-template';
 import { OgeNoDataTemplate } from '../templates/no-data-template';
 import { OgeRowTemplate } from '../templates/row-template';
-import { OgeToolbar } from '@oge-ui/layout';
+import { OgeToolbar } from '@oge-ui/layout/toolbar';
 import { OgeGridToolbarItem } from '../templates/toolbar-item';
 import type { OgeHeaderTemplateContext } from '../templates/header-template';
 

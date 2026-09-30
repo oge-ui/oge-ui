@@ -125,6 +125,15 @@ design notes. Every item below removes one of those workarounds.
   on a minimal CLI app rendering one `<oge-grid>`: initial JS 1,080 KB →
   913 KB, with a 184 KB lazy chunk.
 
+- **Per-component entry points for `@oge-ui/inputs` and `@oge-ui/layout`**
+  (`@oge-ui/inputs/text-box`, `@oge-ui/inputs/date-box`, `@oge-ui/layout/toolbar`,
+  …). `@oge-ui/inputs` and `@oge-ui/layout` still export everything, unchanged.
+  Each family used to be one module, and bundlers split code per module: when
+  two lazily loaded parts of an app used different editors, all of inputs landed
+  in the eager chunk. The suite's own packages now import per component; apps
+  can too. Same one-grid measurement: **913 KB → 704 KB** initial (1,080 KB
+  before this release).
+
 ### Fixed (inputs)
 
 - **The number box ignored `provideOgeInputsConfig({ locale })`** and parsed

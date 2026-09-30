@@ -20,7 +20,9 @@ export default defineConfig(() => ({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    // the primary entry plus every secondary entry point's sources
+    include: ['{src,*/src}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules/**'],
     setupFiles: ['src/test-setup.ts'],
     reporters: ['default'],
     coverage: {

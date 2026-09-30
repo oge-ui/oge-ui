@@ -1,12 +1,12 @@
-export { OgeAccordion } from './lib/accordion/accordion';
-export { OgeAccordionItem } from './lib/accordion/accordion-item';
+export { OgeAccordion } from '@oge-ui/layout/accordion';
+export { OgeAccordionItem } from '@oge-ui/layout/accordion';
 export {
   OgeAccordionActionRow,
   OgeAccordionContentTemplate,
   OgeAccordionHeaderActionsTemplate,
   OgeAccordionHeaderTemplate,
   OgeAccordionToggleIconTemplate,
-} from './lib/accordion/templates';
+} from '@oge-ui/layout/accordion';
 export {
   OGE_ACCORDION_CONFIG,
   OGE_DEFAULT_ACCORDION_CONFIG,
@@ -15,7 +15,7 @@ export {
   type OgeAccordionConfig,
   type OgeAccordionConfigInput,
   type OgeAccordionMessages,
-} from './lib/accordion/config';
+} from '@oge-ui/layout/accordion';
 export type {
   OgeAccordionCollapsedEvent,
   OgeAccordionCollapsingEvent,
@@ -35,8 +35,8 @@ export type {
   OgeAccordionStylingMode,
   OgeAccordionTogglePosition,
   OgeAccordionToggleIconTemplateContext,
-} from './lib/accordion/accordion-types';
-export { OgeCard } from './lib/card/card';
+} from '@oge-ui/layout/accordion';
+export { OgeCard } from '@oge-ui/layout/card';
 export {
   OgeCardActions,
   OgeCardAvatar,
@@ -44,25 +44,25 @@ export {
   OgeCardHeaderActions,
   OgeCardMedia,
   OgeCardSeparator,
-} from './lib/card/templates';
+} from '@oge-ui/layout/card';
 export {
   OGE_CARD_CONFIG,
   OGE_DEFAULT_CARD_CONFIG,
   provideOgeCardConfig,
   type OgeCardConfig,
   type OgeCardConfigInput,
-} from './lib/card/config';
+} from '@oge-ui/layout/card';
 export type {
   OgeCardActionsAlign,
   OgeCardOrientation,
   OgeCardSeverity,
   OgeCardSize,
   OgeCardStylingMode,
-} from './lib/card/card-types';
+} from '@oge-ui/layout/card';
 export {
   OgeLoadIndicator,
   type OgeLoadIndicatorSeverity,
-} from './lib/load-indicator/load-indicator';
+} from '@oge-ui/layout/load-indicator';
 export {
   OGE_DEFAULT_LOAD_INDICATOR_CONFIG,
   OGE_DEFAULT_LOAD_INDICATOR_MESSAGES,
@@ -71,8 +71,8 @@ export {
   type OgeLoadIndicatorConfig,
   type OgeLoadIndicatorConfigInput,
   type OgeLoadIndicatorMessages,
-} from './lib/load-indicator/config';
-export { OgeProgressBar } from './lib/progress-bar/progress-bar';
+} from '@oge-ui/layout/load-indicator';
+export { OgeProgressBar } from '@oge-ui/layout/progress-bar';
 export {
   OGE_DEFAULT_PROGRESS_BAR_CONFIG,
   OGE_DEFAULT_PROGRESS_BAR_MESSAGES,
@@ -81,26 +81,26 @@ export {
   type OgeProgressBarConfig,
   type OgeProgressBarConfigInput,
   type OgeProgressBarMessages,
-} from './lib/progress-bar/config';
+} from '@oge-ui/layout/progress-bar';
 export type {
   OgeProgressBarCompletedEvent,
   OgeProgressBarSeverity,
-} from './lib/progress-bar/progress-bar-types';
-export { OgeSkeleton } from './lib/skeleton/skeleton';
+} from '@oge-ui/layout/progress-bar';
+export { OgeSkeleton } from '@oge-ui/layout/skeleton';
 export {
   OGE_DEFAULT_SKELETON_CONFIG,
   OGE_SKELETON_CONFIG,
   provideOgeSkeletonConfig,
   type OgeSkeletonConfig,
   type OgeSkeletonConfigInput,
-} from './lib/skeleton/config';
+} from '@oge-ui/layout/skeleton';
 export type {
   OgeSkeletonAnimation,
   OgeSkeletonShape,
-} from './lib/skeleton/skeleton-types';
-export { OgeSplitter } from './lib/splitter/splitter';
-export { OgeSplitterPane } from './lib/splitter/splitter-pane';
-export { OgeSplitterPaneTemplate } from './lib/splitter/templates';
+} from '@oge-ui/layout/skeleton';
+export { OgeSplitter } from '@oge-ui/layout/splitter';
+export { OgeSplitterPane } from '@oge-ui/layout/splitter';
+export { OgeSplitterPaneTemplate } from '@oge-ui/layout/splitter';
 export {
   OGE_DEFAULT_SPLITTER_CONFIG,
   OGE_DEFAULT_SPLITTER_MESSAGES,
@@ -109,7 +109,7 @@ export {
   type OgeSplitterConfig,
   type OgeSplitterConfigInput,
   type OgeSplitterMessages,
-} from './lib/splitter/config';
+} from '@oge-ui/layout/splitter';
 export type {
   OgeSplitterGripSide,
   OgeSplitterOrientation,
@@ -122,13 +122,13 @@ export type {
   OgeSplitterResizeEvent,
   OgeSplitterResizeStartEvent,
   OgeSplitterSize,
-} from './lib/splitter/splitter-types';
-export { OgeToolbar } from './lib/toolbar/toolbar';
-export { OgeToolbarItem } from './lib/toolbar/toolbar-item';
+} from '@oge-ui/layout/splitter';
+export { OgeToolbar } from '@oge-ui/layout/toolbar';
+export { OgeToolbarItem } from '@oge-ui/layout/toolbar';
 export {
   OgeToolbarItemTemplate,
   OgeToolbarMenuItemTemplate,
-} from './lib/toolbar/templates';
+} from '@oge-ui/layout/toolbar';
 export {
   OGE_DEFAULT_TOOLBAR_CONFIG,
   OGE_DEFAULT_TOOLBAR_MESSAGES,
@@ -137,7 +137,7 @@ export {
   type OgeToolbarConfig,
   type OgeToolbarConfigInput,
   type OgeToolbarMessages,
-} from './lib/toolbar/config';
+} from '@oge-ui/layout/toolbar';
 export type {
   OgeToolbarDisplayMode,
   OgeToolbarItemActiveChangedEvent,
@@ -158,4 +158,4 @@ export type {
   OgeToolbarOverflowChangedEvent,
   OgeToolbarSize,
   OgeToolbarStylingMode,
-} from './lib/toolbar/toolbar-types';
+} from '@oge-ui/layout/toolbar';

@@ -1,20 +1,20 @@
-export { OgeTextBox } from './lib/text-box/text-box';
-export { OgeSelectBox } from './lib/select-box/select-box';
-export { OgeTreeSelect } from './lib/tree-select/tree-select';
-export { OgeTagBox } from './lib/tag-box/tag-box';
-export { OgeAutocomplete } from './lib/autocomplete/autocomplete';
+export { OgeTextBox } from '@oge-ui/inputs/text-box';
+export { OgeSelectBox } from '@oge-ui/inputs/select-box';
+export { OgeTreeSelect } from '@oge-ui/inputs/tree-select';
+export { OgeTagBox } from '@oge-ui/inputs/tag-box';
+export { OgeAutocomplete } from '@oge-ui/inputs/autocomplete';
 export {
   type OgeAutocompleteSelectionChangedEvent,
   type OgeAutocompleteItemClickEvent,
-} from './lib/autocomplete/autocomplete-types';
+} from '@oge-ui/inputs/autocomplete';
 export {
   OGE_SELECT_OPTION_HEIGHT,
   type OgeVirtualScrollOptions,
-} from './lib/select-list/list-virtualizer';
+} from '@oge-ui/inputs/select-list';
 export {
   type OgeTagBoxSelectionChangedEvent,
   type OgeTagBoxItemClickEvent,
-} from './lib/tag-box/tag-box-types';
+} from '@oge-ui/inputs/tag-box';
 export {
   type OgeSelectBoxDisplayExpr,
   type OgeSelectBoxValueExpr,
@@ -29,21 +29,21 @@ export {
   type OgeSelectBoxItemsFn,
   type OgeSelectBoxGroupExpr,
   type OgeSelectBoxCustomItemEvent,
-} from './lib/select-box/select-box-types';
-export { OgeTextArea, measureTextAreaHeight } from './lib/text-area/text-area';
-export { OgeNumberBox } from './lib/number-box/number-box';
-export { OgeCheckBox } from './lib/check-box/check-box';
-export { OgeSwitch } from './lib/switch/switch';
-export { OgeRadioGroup } from './lib/radio-group/radio-group';
-export { OgeSlider } from './lib/slider/slider';
-export { OgeRangeSlider } from './lib/slider/range-slider';
+} from '@oge-ui/inputs/select-box';
+export { OgeTextArea, measureTextAreaHeight } from '@oge-ui/inputs/text-area';
+export { OgeNumberBox } from '@oge-ui/inputs/number-box';
+export { OgeCheckBox } from '@oge-ui/inputs/check-box';
+export { OgeSwitch } from '@oge-ui/inputs/switch';
+export { OgeRadioGroup } from '@oge-ui/inputs/radio-group';
+export { OgeSlider } from '@oge-ui/inputs/slider';
+export { OgeRangeSlider } from '@oge-ui/inputs/slider';
 export {
   type OgeSliderDragStartedEvent,
   type OgeSliderOrientation,
   type OgeSliderSlideEndedEvent,
   type OgeSliderValueIndicator,
-} from './lib/slider/slider-types';
-export { OgeCalendar, OgeCalendarCellTemplate } from './lib/calendar/calendar';
+} from '@oge-ui/inputs/slider';
+export { OgeCalendar, OgeCalendarCellTemplate } from '@oge-ui/inputs/calendar';
 export {
   type OgeCalendarZoomLevel,
   type OgeCalendarSelectionMode,
@@ -52,35 +52,35 @@ export {
   type OgeCalendarDisabledDates,
   type OgeCalendarCellTemplateContext,
   type OgeCalendarCellClickEvent,
-} from './lib/calendar/calendar-types';
-export { OgeDateBox } from './lib/date-box/date-box';
-export { OgeDateRangeBox } from './lib/date-box/date-range-box';
+} from '@oge-ui/inputs/calendar';
+export { OgeDateBox } from '@oge-ui/inputs/date-box';
+export { OgeDateRangeBox } from '@oge-ui/inputs/date-box';
 export {
   type OgeDateBoxType,
   type OgeDateBoxApplyValueMode,
   type OgeDateBoxDisplayFormat,
   type OgeDateBoxTimeView,
-} from './lib/date-box/date-box-types';
-export { parseDateText, datePartOrder } from './lib/date-box/date-parse';
-export { OgeColorBox } from './lib/color-box/color-box';
+} from '@oge-ui/inputs/date-box';
+export { parseDateText, datePartOrder } from '@oge-ui/inputs/date-box';
+export { OgeColorBox } from '@oge-ui/inputs/color-box';
 export {
   type OgeColorBoxView,
   type OgeColorBoxApplyValueMode,
   OGE_DEFAULT_COLOR_PALETTE,
-} from './lib/color-box/color-box-types';
+} from '@oge-ui/inputs/color-box';
 export {
   type OgeRadioGroupItemClickEvent,
   type OgeRadioGroupLayout,
-} from './lib/radio-group/radio-group-types';
+} from '@oge-ui/inputs/radio-group';
 export {
   type OgeInputCounterState,
   type OgeInputRevealApi,
   type OgeInputCopyApi,
   type OgeInputSpinApi,
   type OgeInputDropDownApi,
-} from './lib/field/input-host';
-export { OgeInputPrefix, OgeInputSuffix } from './lib/field/input-slots';
-export { resolveErrorMessage, formatPattern } from './lib/field/error-messages';
+} from '@oge-ui/inputs/field';
+export { OgeInputPrefix, OgeInputSuffix } from '@oge-ui/inputs/field';
+export { resolveErrorMessage, formatPattern } from '@oge-ui/inputs/field';
 export {
   type OgeInputLabelMode,
   type OgeInputStylingMode,
@@ -96,7 +96,7 @@ export {
   type OgeInputValueCommittedEvent,
   type OgeInputKeyEvent,
   type OgeInputFocusEvent,
-} from './lib/field/input-types';
+} from '@oge-ui/inputs/field';
 export {
   provideOgeInputsConfig,
   OGE_INPUTS_CONFIG,
@@ -105,9 +105,9 @@ export {
   type OgeInputsConfig,
   type OgeInputsConfigInput,
   type OgeInputsMessages,
-} from './lib/config';
+} from '@oge-ui/inputs/field';
 export type {
   OgeTreeSelectDisplayMode,
   OgeTreeSelectSelectionChangedEvent,
   OgeTreeSelectSelectionMode,
-} from './lib/tree-select/tree-select-types';
+} from '@oge-ui/inputs/tree-select';
