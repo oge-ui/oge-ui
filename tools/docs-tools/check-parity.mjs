@@ -483,6 +483,25 @@ const FAMILIES = [
     },
   },
   {
+    // commercial: @oge-ui/bpmn ↔ @oge-ui/react-bpmn, both thin templates over
+    // @oge-ui/bpmn-engine's editor core (ADR 0003)
+    family: 'bpmn',
+    angularApiPage: 'apps/dev-app/src/app/pages/bpmn/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-bpmn/api.ts',
+    exceptions: {
+      reactOnly: {
+        modechange:
+          'The controlled half of `mode`; Angular’s `[(mode)]` model is both halves at once (its `modeChange` output is implied by the model and documented on the `mode` row).',
+        zoomchange:
+          'The controlled half of `zoom`; Angular’s `[(zoom)]` model is both halves at once (its `zoomChange` output is implied by the model and documented on the `zoom` row).',
+        classname:
+          'React host styling idiom; Angular hosts take class/style natively.',
+        style:
+          'React host styling idiom; Angular hosts take class/style natively — the editor’s height is set the same way in both layers.',
+      },
+    },
+  },
+  {
     family: 'overlay',
     angularApiPage: 'apps/dev-app/src/app/pages/overlay/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-overlay/api.ts',

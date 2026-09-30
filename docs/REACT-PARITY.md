@@ -98,6 +98,7 @@ pages in both layers:
 | Forms      | ✅ 2/2                                                                                                                                                                                                                                                                                                                                                                                                                                    | ✅ overview, layout, validation, api (three validation sections are recorded exceptions)                                        | ✅ / ✅           | ✅                         |
 | Upload     | ✅ uploader, drop zone, trigger, config + transport providers                                                                                                                                                                                                                                                                                                                                                                             | ✅ overview, api (the forms section is a recorded heading exception)                                                            | ✅ / ✅           | ✅ `upload` in `FAMILIES`  |
 | Data Grid  | ✅ grid (sorting, filtering, search, paging, virtualization, windowed loading, selection incl. deferred, keyboard nav, pinned/resizable/reorderable columns, bands, adaptive hiding, persistence, CSV + Excel + PDF, grouping, master-detail, row/no-data render props, row drag, editing in all five modes, header filter, filter panel + builder, column chooser, context menus, `highlightChanges`), pager, config + storage providers | ✅ overview, api, columns, filtering, selection, editing, persistence, context-menu, grouping, master-detail, rows — all branch | ✅ / ✅           | ✅ `grid` in `FAMILIES`    |
+| BPMN       | ✅ editor (palette, tool strip, context pad + align flyout, properties panel, minimap, search, header, overlays, pools/lanes, every gesture and key), config provider — all on `@oge-ui/bpmn-engine`'s editor core                                                                                                                                                                                                                        | ✅ overview, api — all branch, section for section                                                                              | ✅ / ✅           | ✅ `bpmn` in `FAMILIES`    |
 
 New families add a row here when they land — a family without its row (or
 with a partial one) is not done, whatever the code says.
@@ -158,6 +159,18 @@ Anything not listed here is a defect.
   including the column table, which needed the gate to learn that
   `OgeColumn` and `OgeGridColumnProps` are the _same_ block under two names
   (`blockPairs`) rather than two blocks to except away.
+- **The BPMN editor's two-way inputs and text commits (2026-09-30).** Not a
+  gap, an idiom: Angular's `[(mode)]` and `[(zoom)]` models are the React
+  controlled pairs `mode`/`defaultMode`/`onModeChange` and
+  `zoom`/`defaultZoom`/`onZoomChange` (the `modechange`/`zoomchange` rows are
+  recorded in `check-parity.mjs`). The header name and the properties panel's
+  text fields commit on the native `change` event exactly as Angular's
+  `(change)` does — one undoable command per blur/Enter, not per keystroke —
+  so they are uncontrolled fields synced from the model, not React
+  `onChange` inputs. Overlay `html` keeps its string shape in both layers;
+  React renders it through the engine's allow-list sanitizer instead of a
+  trusted-HTML API, which is the same policy Angular's `[innerHTML]`
+  sanitizer applies.
 - ~~**The grid toolbar slot and the grouping page's column chooser
   (2026-08-23)**~~ — CLOSED 2026-09-30. React gained `toolbarBefore` /
   `toolbarCenter` / `toolbarAfter` (the three `OgeToolbar` groups Angular's

@@ -1,0 +1,39 @@
+# @oge-ui/bpmn-engine
+
+> Framework-free engine of the BPMN editor (ADR 0003): the diagram model, BPMN XML + DI reader/writer, JSON envelope, SVG export, orthogonal routing, snapping, alignment, modeling rules, the snapshot command stack and the editor core both the Angular and the React editor run. Installed automatically by either editor — import it directly for server-side or test pipelines.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.13.1.
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/bpmn-engine
+```
+
+## Writing code against this package
+
+This is a framework-free engine: plain TypeScript, no Angular or React import,
+no components and no stylesheet. It runs in Node, in a worker, in tests and
+under either render layer.
+
+1. **You rarely install it directly.** The Angular and the React editor of the
+   family depend on it and re-export the surface an app needs — import from
+   the editor package in UI code.
+2. **Import it directly for pipelines.** Server-side conversion, validation or
+   rendering (XML in, XML/JSON/SVG out) and test fixtures are what it is for.
+3. **Everything is immutable.** Commands return a new model; the command stack
+   keeps snapshots. Never mutate a model object in place.
+
+## Entry points
+
+`@oge-ui/bpmn-engine`
+
+- values: `BPMN_CANVAS_KEY_SHORTCUTS`, `BPMN_GRID_SIZE`, `BPMN_OVERLAY_ALLOWED_TAGS`, `BPMN_OVERLAY_URL_ATTRIBUTES`, `BpmnCommandStack`, `DEFAULT_SIZES`, `LANE_DEFAULT_HEIGHT`, `MIN_SIZES`, `MORPH_GROUPS`, `OGE_DEFAULT_BPMN_COLOR_PRESETS`, `OGE_DEFAULT_BPMN_CONFIG`, `OGE_DEFAULT_BPMN_MESSAGES`, `OGE_DEFAULT_BPMN_PALETTE_ITEMS`, `OgeBpmnEditorCore`, `POOL_DEFAULT_SIZE`, `POOL_HEADER_WIDTH`, `POOL_MIN_SIZE`, `SUBPROCESS_EXPANDED_SIZE`, `VALID_EVENT_DEFINITIONS`, `activityMarkerPaths`, `addLaneCommand`, `addNodeCommand`, `addPoolCommand`, `alignElements`, `alignElementsCommand`, `boundsOfRects`, `bpmnAppearanceView`, `bpmnClearColorsCommand`, `bpmnColorInputValue`, `bpmnCompensationCommand`, `bpmnDefaultFlowCommand`, `bpmnFieldKey`, `bpmnLaneNameLabel`, `bpmnMarkerCommand`, `bpmnPaletteNavIndex`, `bpmnPresetCommand`, `bpmnPresetLabel`, `bpmnPropertiesView`, `bpmnRemoveLaneLabel`, `buildBpmnPropertiesModel`, `canConnect`, `canMorph`, `chooseDockSides`, `collapsedMarkerPath`, `connectCommand`, `connectionKindFor`, `createEmptyDiagram`, `createPlainBpmnReactivity`, `dataObjectPath`, `dataStorePath`, `deleteElementsCommand`, `diagramToScreen`, `distanceToSegment`, `distributeElements`, `distributeElementsCommand`, `dockPoint`, `edgeHitTest`, `edgeLabelAnchor`, `effectivePoolId`, `estimateLabelBounds`, `eventDefinitionFilled`, `eventDefinitionPath`, `expandMoveSet`, `extractClipboard`, `fitViewport`, `fromBpmnJson`, `generateBpmnId`, `hiddenByCollapsed`, `idPrefixFor`, `inflateRect`, `isBpmnActivityType`, `isBpmnDataNodeType`, `isBpmnEventType`, `isBpmnFlowNodeType`, `isBpmnSubProcessType`, `makeSpaceCommand`, `morphGroupOf`, `morphNodeCommand`, `moveElementsCommand`, `moveLabelCommand`, `nearestPointOnRectPerimeter`, `pasteCommand`, `placeMissingDi`, `poolAtPoint`, `readBpmnXml`, `rectCenter`, `rectContainsPoint`, `rectsIntersect`, `removeLaneCommand`, `renameLaneCommand`, `renderDiagramSvg`, `resizeNodeCommand`, `resolveOgeBpmnConfig`, `routeOrthogonal`, `sanitizeBpmnOverlayHtml`, `screenToDiagram`, `setActivityMarkersCommand`, `setBoundaryInterruptingCommand`, `setCalledElementCommand`, `setConditionCommand`, `setDefaultFlowCommand`, `setElementColorsCommand`, `setEventDefinitionCommand`, `snapPoint`, `snapToNeighbors`, `snapValue`, `syncLaneMembership`, `takenIds`, `toBpmnJson`, `toggleSubProcessCollapseCommand`, `translateRect`, `updateLabelCommand`, `updateProcessCommand`, `updateWaypointsCommand`, `wrapBpmnLabel`, `writeBpmnXml`, `zoomAt`
+- types: `BpmnActivityMarker`, `BpmnActivityType`, `BpmnAddNodeOptions`, `BpmnAlignMode`, `BpmnAppearanceView`, `BpmnAssociation`, `BpmnClipboard`, `BpmnColorPatch`, `BpmnCommand`, `BpmnCommandStackListener`, `BpmnCommandStackSource`, `BpmnConnectDenialReason`, `BpmnDataAssociation`, `BpmnDataNodeType`, `BpmnDiagram`, `BpmnDiagramJson`, `BpmnDistributeAxis`, `BpmnDragState`, `BpmnEdge`, `BpmnEdgeDi`, `BpmnEdgeType`, `BpmnEdgeView`, `BpmnElementNameKey`, `BpmnEventDefinitionKind`, `BpmnEventDefinitionView`, `BpmnEventType`, `BpmnFlowNode`, `BpmnFlowNodeType`, `BpmnGatewayType`, `BpmnGuideLine`, `BpmnIdRect`, `BpmnImportResult`, `BpmnImportWarning`, `BpmnImportWarningCode`, `BpmnJsonParseResult`, `BpmnKeyInput`, `BpmnLabelEditView`, `BpmnLabelLine`, `BpmnLane`, `BpmnLaneView`, `BpmnLoopMarker`, `BpmnMarkerView`, `BpmnMessageFlow`, `BpmnMinimapView`, `BpmnMorphDenialReason`, `BpmnMorphView`, `BpmnMouseInput`, `BpmnMultiPadView`, `BpmnNode`, `BpmnNodeType`, `BpmnNodeView`, `BpmnOverlayElementNode`, `BpmnOverlayNode`, `BpmnOverlayTextNode`, `BpmnOverlayView`, `BpmnPadView`, `BpmnPaletteDragStart`, `BpmnPaletteItemType`, `BpmnPanel`, `BpmnPointerInput`, `BpmnPool`, `BpmnPoolView`, `BpmnPropertiesModel`, `BpmnPropertiesView`, `BpmnResizeCorner`, `BpmnRuleResult`, `BpmnSearchResult`, `BpmnSequenceFlow`, `BpmnShapeDi`, `BpmnSnapGuide`, `BpmnSnapResult`, `BpmnStripTool`, `BpmnSubProcessType`, `BpmnSvgExportOptions`, `BpmnTextAnnotation`, `BpmnTool`, `BpmnViewport`, `BpmnWheelInput`, `OgeBpmnAlignMessages`, `OgeBpmnAnnouncementMessages`, `OgeBpmnChangeSource`, `OgeBpmnConfig`, `OgeBpmnConfigInput`, `OgeBpmnContextPadMessages`, `OgeBpmnDiagramChangedEvent`, `OgeBpmnEditorEmitter`, `OgeBpmnEditorHost`, `OgeBpmnEditorMode`, `OgeBpmnElementInfo`, `OgeBpmnElementsChangedEvent`, `OgeBpmnHeaderMessages`, `OgeBpmnImportEvent`, `OgeBpmnMessages`, `OgeBpmnOverlay`, `OgeBpmnPaletteItem`, `OgeBpmnPropertiesMessages`, `OgeBpmnReactiveCell`, `OgeBpmnReactivity`, `OgeBpmnSearchMessages`, `OgeBpmnSelectionEvent`, `OgeBpmnToolsMessages`, `Point`, `Rect`, `RectSide`
+
+`@oge-ui/bpmn-engine/testing`
+
+- values: `CDATA_FIXTURE_XML`, `COLLABORATION_FIXTURE_XML`, `COLORED_FIXTURE_XML`, `DEMO_EXPECTED_MODEL`, `FOREIGN_FIXTURE_XML`, `MULTI_PROCESS_FIXTURE_XML`, `NO_DI_FIXTURE_XML`, `PRESERVE_FIXTURE_XML`, `V03_FIXTURE_XML`, `V04_FIXTURE_XML`, `demoProcessXml`
+
+

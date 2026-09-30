@@ -144,6 +144,28 @@ design notes. Every item below removes one of those workarounds.
   `bootstrapApplication`. The object form is unchanged. (React providers
   already re-resolve when their `config` prop changes.)
 
+### Added (React)
+
+- **`@oge-ui/react-bpmn` and `@oge-ui/bpmn-engine` — the BPMN editor in
+  React, on one engine (ADR 0003).** The BPMN family's framework-free engine
+  now ships as its own commercial package, `@oge-ui/bpmn-engine`: the model,
+  the BPMN XML + DI reader/writer, the JSON envelope, SVG export, routing,
+  snapping, alignment, rules, the command stack — and the editor core both
+  layers run (`OgeBpmnEditorCore`: every tool, pointer gesture, the canvas
+  keyboard map, clipboard, search, announcements, autosave and the view
+  models), plus the properties-panel view model, the palette key map, the
+  message catalog and `@oge-ui/bpmn-engine/testing` sample documents. The
+  Angular `@oge-ui/bpmn` is rewired onto it with its public API unchanged
+  (97 specs pass with only import paths changed). The new
+  `<OgeBpmnEditor>` renders the same `.oge-bpmn-*` markup from the Angular
+  SCSS: palette, tool strip, context pad and align flyout, properties
+  panel, minimap, element search, header, overlays, pools and lanes —
+  controlled `mode` / `zoom` pairs, an `on*` callback per output, a `ref`
+  handle per public method and `<OgeBpmnConfigProvider>`. Overlay `html` is
+  sanitized into real elements (no `dangerouslySetInnerHTML`). Commercial,
+  like the Angular package, and not part of the MIT `@oge-ui/react`
+  umbrella.
+
 ### Fixed (inputs)
 
 - **The number box ignored `provideOgeInputsConfig({ locale })`** and parsed
