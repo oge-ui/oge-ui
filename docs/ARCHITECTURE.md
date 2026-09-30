@@ -376,10 +376,29 @@ smallest complete example):
 - Other packages `@use` the tokens via a relative path into grid
   (`@use '../../../../grid/src/lib/styles/tokens';`) and `@include tokens.core-tokens;` at their host class.
   SCSS reads source, not dist — no Nx graph edge results (accepted limitation).
+- **Token defaults never live on a component host.** `core-tokens` hoists them (`@at-root`) to
+  `:where(:root, .oge-theme-light, [data-oge-theme='light'], .oge-theme-auto, [data-oge-theme='auto'])`
+  — zero specificity, so any consumer declaration wins and tokens cascade into subtrees. (Before 0.14
+  every host re-declared the whole set, so a `:root` override silently lost and consumers needed
+  `html .oge-button` selectors.) A new shared token goes into `literal-tokens` (raw value) or
+  `derived-tokens` (an expression over other tokens) — never into a component's host rule.
+  Component-local knobs with size variants (`--oge-card-pad`, `--oge-toolbar-gap`) may stay on the host.
+- A `var(--oge-x, <literal>)` fallback for a shared token is a bug: the token is always declared, so the
+  literal only misleads (and, when the name is misspelt, silently wins — `themes.spec.ts` style checks
+  exist because `--oge-text-muted`, `--oge-border` and `--oge-muted-text-color` once did exactly that).
 - All styles are global `.oge-*` classes (ViewEncapsulation.None), BEM-ish dashes.
-- Themes: `packages/grid/src/lib/styles/themes/{dark,bootstrap,tailwind}.css`. Each lists component root
-  selectors explicitly — **a new component's host class must be added to all three files**. Dark mode is
-  activated by `.oge-theme-dark` on any ancestor.
+- Themes: source in `packages/grid/src/lib/styles/themes/{dark,bootstrap,tailwind}.css`, shipped as
+  **`@oge-ui/core/themes/*`** (core's rollup assets — every package installs core, React ones included)
+  and, for pre-0.14 imports, `@oge-ui/grid/themes/*`. They target **scopes, not component hosts**:
+  dark is `.oge-theme-dark, [data-oge-theme='dark']` plus the same block under
+  `prefers-color-scheme: dark` for `.oge-theme-auto` / `[data-oge-theme='auto']`; the bridges target
+  `:root` (bootstrap also `[data-bs-theme]`). A new component needs **no** theme-file entry. Every
+  scoped block must re-declare each derived token so a themed subtree re-resolves it —
+  `packages/grid/src/lib/styles/themes.spec.ts` enforces that, the zero-specificity emission, and the
+  dark/auto blocks being identical.
+- Scroll containers the suite draws use `--oge-scrollbar-thumb` / `-thumb-hover` / `-track` (the
+  `tokens.scrollbar` mixin, or `scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track)`),
+  never `--oge-border-color` — a border-coloured thumb is invisible on a mouse desktop.
 - Focus convention: two rings. Pointer/programmatic focus gets the soft ring
   (`box-shadow: 0 0 0 3px var(--oge-accent-soft)`); keyboard `:focus-visible` gets the strong ring
   (`outline: none; box-shadow: 0 0 0 3px var(--oge-focus-ring)`) — see `field-chrome.scss`.

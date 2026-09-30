@@ -1,0 +1,216 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { compileString } from 'sass';
+
+/**
+ * Guards the token architecture described at the top of `_tokens.scss`:
+ * defaults on a zero-specificity root scope (never on a component host), and
+ * scoped theme files that re-declare every derived token so a themed subtree
+ * re-resolves it.
+ */
+const stylesDir = __dirname;
+const themesDir = join(stylesDir, 'themes');
+const tokensSource = readFileSync(join(stylesDir, '_tokens.scss'), 'utf8');
+
+/** `--name: value;` pairs of one SCSS mixin body. */
+function mixinDeclarations(name: string): Map<string, string> {
+  const start = tokensSource.indexOf(`@mixin ${name} {`);
+  expect(start).toBeGreaterThanOrEqual(0);
+  const end = tokensSource.indexOf('\n}\n', start);
+  return declarations(tokensSource.slice(start, end));
+}
+
+function declarations(block: string): Map<string, string> {
+  const withoutComments = block.replace(/\/\*[\s\S]*?\*\//g, '');
+  const out = new Map<string, string>();
+  for (const match of withoutComments.matchAll(
+    /(--oge-[a-z0-9-]+)\s*:\s*([^;]+);/g,
+  )) {
+    // formatting-insensitive: prettier wraps long values differently at
+    // different indentation depths
+    const value = match[2]
+      .replace(/\s+/g, ' ')
+      .replace(/\(\s+/g, '(')
+      .replace(/\s+\)/g, ')')
+      .trim();
+    out.set(match[1], value);
+  }
+  return out;
+}
+
+/**
+ * The style rules of a plain CSS file with their selector text; at-rule
+ * blocks (`@media`) are descended into transparently.
+ */
+function ruleBodies(css: string): { selector: string; body: string }[] {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const rules: { selector: string; body: string }[] = [];
+  const stack: { prelude: string; bodyStart: number }[] = [];
+  let preludeStart = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '{') {
+      stack.push({
+        // a statement before the prelude (`@charset …;`) is not part of it
+        prelude: text.slice(preludeStart, i).split(';').pop()?.trim() ?? '',
+        bodyStart: i + 1,
+      });
+      preludeStart = i + 1;
+    } else if (text[i] === '}') {
+      const frame = stack.pop();
+      if (frame && !frame.prelude.startsWith('@')) {
+        rules.push({
+          selector: frame.prelude,
+          body: text.slice(frame.bodyStart, i),
+        });
+      }
+      preludeStart = i + 1;
+    }
+  }
+  return rules;
+}
+
+const derived = mixinDeclarations('derived-tokens');
+const literal = mixinDeclarations('literal-tokens');
+
+describe('design tokens', () => {
+  it('keeps literal and derived tokens apart', () => {
+    for (const [name, value] of literal) {
+      expect(value, `${name} is an expression`).not.toMatch(/var\(--oge-/);
+    }
+    for (const [name, value] of derived) {
+      expect(value, `${name} is not derived`).toMatch(/var\(--oge-/);
+      expect(literal.has(name), `${name} is declared twice`).toBe(false);
+    }
+  });
+
+  it('emits the defaults at zero specificity, never on the component host', () => {
+    const css = compileString(
+      `@use 'tokens';\n.oge-probe { @include tokens.core-tokens; color: red; }`,
+      { loadPaths: [stylesDir] },
+    ).css;
+    const host = ruleBodies(css).find((r) => r.selector === '.oge-probe');
+    expect(host?.body).not.toMatch(/--oge-/);
+    const root = ruleBodies(css).find((r) =>
+      r.selector.replace(/\s+/g, ' ').startsWith(':where(:root,'),
+    );
+    expect(root).toBeDefined();
+    const emitted = declarations(root?.body ?? '');
+    expect(emitted.get('--oge-bg')).toBe('#ffffff');
+    expect(emitted.get('--oge-accent-soft')).toBe(
+      derived.get('--oge-accent-soft'),
+    );
+  });
+});
+
+describe('theme files', () => {
+  const files = readdirSync(themesDir).filter((f) => f.endsWith('.css'));
+
+  it('ships the three themes', () => {
+    expect(files.sort()).toEqual(['bootstrap.css', 'dark.css', 'tailwind.css']);
+  });
+
+  for (const file of files) {
+    const css = readFileSync(join(themesDir, file), 'utf8');
+    const rules = ruleBodies(css);
+
+    it(`${file}: targets scopes, not component hosts`, () => {
+      for (const rule of rules) {
+        expect(rule.selector, file).not.toMatch(/\.oge-(?!theme-)[a-z-]+/);
+      }
+    });
+
+    it(`${file}: re-declares every derived token in each scope (a theme may re-derive one differently, never drop it)`, () => {
+      expect(rules.length).toBeGreaterThan(0);
+      for (const rule of rules) {
+        const scoped = declarations(rule.body);
+        for (const name of derived.keys()) {
+          expect(scoped.has(name), `${file} ${rule.selector}: ${name}`).toBe(
+            true,
+          );
+        }
+      }
+    });
+  }
+
+  it('dark.css: the auto block is the explicit block, verbatim', () => {
+    const rules = ruleBodies(readFileSync(join(themesDir, 'dark.css'), 'utf8'));
+    expect(rules.map((r) => r.selector.replace(/\s+/g, ' '))).toEqual([
+      ".oge-theme-dark, [data-oge-theme='dark']",
+      ".oge-theme-auto, [data-oge-theme='auto']",
+    ]);
+    expect([...declarations(rules[1].body)]).toEqual([
+      ...declarations(rules[0].body),
+    ]);
+  });
+});
+
+/**
+ * Consumer knobs a stylesheet reads with a fallback and nothing declares by
+ * design — setting one is how an app opts in. Anything else a stylesheet
+ * reads must be declared: a misspelt token with a literal fallback renders
+ * the literal forever (`--oge-text-muted` did, on every theme).
+ */
+const OPTIONAL_HOOKS = new Set([
+  '--oge-form-cols-xs',
+  '--oge-form-cols-sm',
+  '--oge-form-cols-md',
+  '--oge-form-cols-lg',
+  '--oge-form-cols-xl',
+  '--oge-gantt-list-width',
+  '--oge-gantt-row-height',
+  '--oge-gantt-scale-bg',
+  '--oge-input-width',
+  '--oge-kanban-slot',
+  '--oge-modal-transition',
+  '--oge-toast-gap',
+  '--oge-toast-offset',
+  '--oge-toast-transition',
+  '--oge-scheduler-slot-height',
+]);
+
+describe('token references', () => {
+  const packagesDir = join(stylesDir, '../../../..');
+
+  function walk(dir: string, out: string[] = []): string[] {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path, out);
+      else if (
+        /\.(scss|css|ts|tsx)$/.test(entry.name) &&
+        !/\.spec\./.test(entry.name)
+      )
+        out.push(path);
+    }
+    return out;
+  }
+
+  it('every var(--oge-*) a stylesheet reads is declared somewhere', () => {
+    const files = walk(packagesDir);
+    const declared = new Set<string>();
+    const read = new Map<string, string>();
+    for (const file of files) {
+      const text = readFileSync(file, 'utf8');
+      // stylesheet declarations, and TS/TSX style bindings that set a
+      // property at runtime (`[style.--oge-x]`, `'--oge-x': …`, setProperty)
+      for (const m of text.matchAll(
+        /(--oge-[a-z0-9-]+)(?:\.[a-z%]+)?\s*['"]?\s*[:\]]/g,
+      ))
+        declared.add(m[1]);
+      for (const m of text.matchAll(/setProperty\(\s*['"`](--oge-[a-z0-9-]+)/g))
+        declared.add(m[1]);
+      if (/\.s?css$/.test(file)) {
+        for (const m of text.matchAll(/var\(\s*(--oge-[a-z0-9-]+)/g))
+          if (!read.has(m[1])) read.set(m[1], file);
+      }
+    }
+    const unknown = [...read].filter(
+      ([name]) => !declared.has(name) && !OPTIONAL_HOOKS.has(name),
+    );
+    expect(
+      unknown.map(
+        ([name, file]) => `${name} (${file.slice(packagesDir.length)})`,
+      ),
+    ).toEqual([]);
+  });
+});

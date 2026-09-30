@@ -139,7 +139,7 @@ The shared theme files ship with `@oge-ui/grid` and style all suite
 components:
 
 ```css
-@import '@oge-ui/grid/themes/dark.css';
+@import '@oge-ui/core/themes/dark.css';
 ```
 
 ## For AI coding assistants

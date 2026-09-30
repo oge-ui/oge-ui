@@ -91,7 +91,7 @@
 .oge-gantt-btn-primary {
   background: var(--oge-accent);
   border-color: var(--oge-accent);
-  color: #fff;
+  color: var(--oge-severity-contrast);
 
   &:hover:not(:disabled) {
     background: var(--oge-accent);
@@ -664,14 +664,14 @@
 /* ---------- resource workload band ---------- */
 
 .oge-gantt-workload {
-  border-block-start: 1px solid var(--oge-gantt-grid-line, var(--oge-border));
+  border-block-start: 1px solid var(--oge-gantt-grid-line);
   background: var(--oge-gantt-scale-bg, var(--oge-header-bg));
 }
 
 .oge-gantt-workload-row {
   position: relative;
   height: 22px;
-  border-block-end: 1px solid var(--oge-gantt-grid-line, var(--oge-border));
+  border-block-end: 1px solid var(--oge-gantt-grid-line);
 }
 
 .oge-gantt-workload-label {

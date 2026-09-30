@@ -64,7 +64,7 @@
   &:focus-visible {
     outline: none;
     border-color: var(--oge-accent);
-    box-shadow: 0 0 0 3px var(--oge-accent-soft, rgba(37, 99, 235, 0.08));
+    box-shadow: 0 0 0 3px var(--oge-accent-soft);
   }
 }
 
@@ -277,7 +277,7 @@
 }
 
 .oge-highlight {
-  background: var(--oge-accent-25, rgba(37, 99, 235, 0.25));
+  background: var(--oge-accent-25);
   color: inherit;
   border-radius: 2px;
   padding: 0 1px;
@@ -303,9 +303,10 @@
   flex: 1;
   min-height: 0;
   position: relative;
-  // slim, quiet scrollbars keep the chrome out of the data's way
+  // slim scrollbars, but a thumb that reads against the surface: a wide
+  // grid on a mouse desktop must show there is more to the right
   scrollbar-width: thin;
-  scrollbar-color: var(--oge-border-color) transparent;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
 
   &::-webkit-scrollbar {
     width: 8px;
@@ -313,16 +314,16 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: var(--oge-border-color);
+    background: var(--oge-scrollbar-thumb);
     border-radius: 4px;
 
     &:hover {
-      background: var(--oge-muted-color);
+      background: var(--oge-scrollbar-thumb-hover);
     }
   }
 
   &::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--oge-scrollbar-track);
   }
 }
 
@@ -578,7 +579,7 @@
   display: flex;
   min-height: var(--oge-row-height);
   border-bottom: 1px solid var(--oge-border-color);
-  background: var(--oge-group-bg, #f0f2f6);
+  background: var(--oge-group-bg);
   cursor: pointer;
   user-select: none;
   position: sticky;
@@ -692,7 +693,7 @@
 
 @keyframes oge-cell-flash-a {
   from {
-    background-color: var(--oge-update-flash-bg, rgba(99, 102, 241, 0.24));
+    background-color: var(--oge-update-flash-bg);
   }
   to {
     background-color: transparent;
@@ -701,7 +702,7 @@
 
 @keyframes oge-cell-flash-b {
   from {
-    background-color: var(--oge-update-flash-bg, rgba(99, 102, 241, 0.24));
+    background-color: var(--oge-update-flash-bg);
   }
   to {
     background-color: transparent;
@@ -821,7 +822,7 @@
 }
 
 .oge-row-new .oge-cell {
-  background: var(--oge-accent-soft, rgba(37, 99, 235, 0.08));
+  background: var(--oge-accent-soft);
 }
 
 .oge-command-cell {
@@ -862,7 +863,7 @@
   position: fixed;
   inset: 0;
   z-index: 1090;
-  background: var(--oge-modal-backdrop-bg, rgb(15 23 42 / 0.32));
+  background: var(--oge-modal-backdrop-bg);
   backdrop-filter: blur(1.5px);
 }
 
@@ -918,19 +919,19 @@
 
 // zebra striping (rowAlternation)
 .oge-row-alt .oge-cell {
-  background: var(--oge-row-alt-bg, rgba(148, 163, 184, 0.08));
+  background: var(--oge-row-alt-bg);
 }
 
 // focused row (focusedRowEnabled)
 .oge-row-focused .oge-cell {
-  background: var(--oge-row-focused-bg, rgba(79, 70, 229, 0.1));
+  background: var(--oge-row-focused-bg);
 }
 
 // inline form editing (editing.mode: 'form')
 .oge-edit-form-row {
   display: block;
   border-bottom: 1px solid var(--oge-border-color);
-  background: var(--oge-group-bg, #f0f2f6);
+  background: var(--oge-group-bg);
 }
 
 .oge-edit-form-cell {
@@ -1039,7 +1040,7 @@
   width: 70%;
   height: 10px;
   border-radius: 5px;
-  background: var(--oge-skeleton-color, rgba(148, 163, 184, 0.25));
+  background: var(--oge-skeleton-color);
   animation: oge-grid-skeleton-pulse 1.2s ease-in-out infinite;
 }
 
@@ -1095,7 +1096,7 @@
   color: var(--oge-text-color, inherit);
   font-size: var(--oge-font-size);
   scrollbar-width: thin;
-  scrollbar-color: var(--oge-border-color) transparent;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
 }
 
 .oge-chooser-item {

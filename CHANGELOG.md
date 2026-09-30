@@ -5,6 +5,61 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## Unreleased
+
+Driven by what the first production consumer (an Angular admin console built on
+`@oge-ui/grid` + `@oge-ui/overlay`) had to work around, written down in its own
+design notes. Every item below removes one of those workarounds.
+
+### Fixed (theming)
+
+- **A `:root` token override now works — on every component.** Each component
+  re-declared the full `--oge-*` set on its own host (`.oge-button { --oge-bg:
+… }`), and an element's own declaration beats every inherited value, so
+  `:root { --oge-accent: … }` silently lost and the documented "scope tokens to
+  a subtree" example did nothing. Consumers wrote `html .oge-button, html
+.oge-grid, …` bridges listing twenty-odd hosts. The defaults now sit once on
+  `:where(:root, .oge-theme-light, [data-oge-theme='light'], …)` — zero
+  specificity — so any declaration wins wherever it is placed. Existing
+  higher-specificity bridges keep working.
+- **Tints follow the accent.** `--oge-accent-soft`, `--oge-accent-25`,
+  `--oge-focus-ring`, the focused-row and update-flash tints (previously a
+  hard-coded indigo that matched no theme) are now derived from `--oge-accent`:
+  set the accent on `:root` and the rest follow.
+- **Dark mode is scope-based and ships for everyone.** The theme files listed
+  component hosts one by one (the Tailwind bridge covered 12 of them — no
+  buttons, inputs or overlays) and lived only in `@oge-ui/grid`, so React-only
+  and buttons-only apps had to install the Angular grid to get a dark theme.
+  They now target scopes — `.oge-theme-dark` / `[data-oge-theme='dark']`, a new
+  `oge-theme-auto` / `data-oge-theme="auto"` that follows
+  `prefers-color-scheme`, and `oge-theme-light` for a light island — and ship
+  as **`@oge-ui/core/themes/{dark,tailwind,bootstrap}.css`** (the
+  `@oge-ui/grid/themes/…` paths keep working). The Bootstrap bridge also
+  follows `data-bs-theme` subtrees. `ng add … --theme=<name>` makes
+  `@oge-ui/core` a direct dependency so the path resolves under pnpm; before,
+  it skipped the theme for any package other than the grid.
+- **`sideEffects` no longer lets bundlers drop a theme import.** `@oge-ui/core`
+  and `@oge-ui/grid` declared `"sideEffects": false`, so webpack could discard
+  `import '@oge-ui/core/themes/dark.css'` from a React entry; both now declare
+  `["*.css"]`.
+- **Scrollbars are visible.** Every scroll area the suite draws painted its
+  thumb in `--oge-border-color`, nearly invisible on a mouse desktop — wide
+  grids looked cut off at the right edge with no visible way across. New
+  `--oge-scrollbar-thumb` / `-thumb-hover` / `-track` tokens (dark values
+  included) drive them all.
+- **Misspelt tokens that always rendered their fallback:** the form hint and
+  empty text read `--oge-text-muted` (grey `#6b7280` on every theme, dark
+  included), the gantt scale border `--oge-border`, the splitter's empty text
+  `--oge-muted-text-color`. All now read real tokens, and a spec fails the
+  build when a stylesheet reads an undeclared token.
+- **White text on the accent in dark mode.** The pager's current page and the
+  gantt/kanban primary buttons hard-coded `#fff`, which fails contrast on the
+  dark theme's light-blue accent; they use `--oge-severity-contrast`.
+- New tokens: `--oge-row-alt-bg`, `--oge-row-focused-bg`,
+  `--oge-update-flash-bg`, `--oge-skeleton-color`, `--oge-switch-thumb`,
+  `--oge-font-mono`, `--oge-scrollbar-*` — each previously a literal fallback
+  inside one component.
+
 ## 0.13.1 — 2026-09-06
 
 Every package moves to 0.13.1 together. A patch release by version number, but

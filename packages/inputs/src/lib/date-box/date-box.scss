@@ -81,7 +81,7 @@
   overflow-y: auto;
   padding-inline-end: 2px;
   scrollbar-width: thin;
-  scrollbar-color: var(--oge-border-color) transparent;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
 
   & + & {
     border-inline-start: 1px solid var(--oge-border-color);
@@ -98,7 +98,7 @@
   overflow-y: auto;
   padding: 2px;
   scrollbar-width: thin;
-  scrollbar-color: var(--oge-border-color) transparent;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
 }
 
 .oge-date-box-time {

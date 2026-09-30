@@ -15,7 +15,7 @@
   place-items: center;
   overflow: auto;
   padding: 24px;
-  background: var(--oge-modal-backdrop-bg, rgb(15 23 42 / 0.32));
+  background: var(--oge-modal-backdrop-bg);
   backdrop-filter: blur(1.5px);
 
   /* entrance: backdrop fades, panel lifts in once mounted; duration/curve

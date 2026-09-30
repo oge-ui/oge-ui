@@ -1,52 +1,17 @@
 /**
- * Tailwind bridge theme for @oge-ui/grid.
+ * Tailwind bridge theme for the OGE suite (Angular and React).
  *
  * Maps oge design tokens onto Tailwind v4 theme variables so the grid blends
  * into a Tailwind app (slate surfaces, indigo accents). Every mapping has a
  * plain-CSS fallback, so the file is safe even where a variable is not emitted.
  *
  * Usage (global styles, after your `@import "tailwindcss";`):
- *   @import '@oge-ui/grid/themes/tailwind.css';
+ *   @import '@oge-ui/core/themes/tailwind.css';
+ *
+ * Applied at the document root, so every OGE component — buttons, inputs,
+ * popups portalled to <body> included — follows it.
  */
-.oge-grid,
-.oge-tree-list,
-.oge-button,
-.oge-button-group,
-.oge-drop-down-button,
-.oge-popup,
-.oge-menu-list,
-.oge-input,
-.oge-check-box,
-.oge-switch,
-.oge-slider,
-.oge-radio-group,
-.oge-calendar,
-.oge-modal-layer,
-.oge-toast-region,
-.oge-tooltip,
-.oge-tabs,
-.oge-tab-panel,
-.oge-accordion,
-.oge-card,
-.oge-load-indicator,
-.oge-progress-bar,
-.oge-skeleton,
-.oge-breadcrumb,
-.oge-drawer,
-.oge-menubar,
-.oge-stepper,
-.oge-splitter,
-.oge-toolbar,
-.oge-form,
-.oge-tree-view,
-.oge-pagination,
-.oge-bpmn-editor,
-.oge-scheduler,
-.oge-gantt,
-.oge-kanban,
-.oge-upload,
-.oge-chart,
-.oge-pivot-grid {
+:root {
   --oge-border-color: var(--color-slate-200, #e2e8f0);
   --oge-header-bg: var(--color-slate-50, #f8fafc);
   --oge-header-color: var(--color-slate-600, #475569);
@@ -82,4 +47,23 @@
   --oge-accent-soft: color-mix(in srgb, var(--oge-accent) 10%, transparent);
   --oge-accent-25: color-mix(in srgb, var(--oge-accent) 25%, transparent);
   --oge-focus-ring: color-mix(in srgb, var(--oge-accent) 40%, transparent);
+  /* derived tokens, re-resolved inside this scope (keep in sync with
+     derived-tokens in _tokens.scss) */
+  --oge-row-focused-bg: color-mix(in srgb, var(--oge-accent) 10%, transparent);
+  --oge-update-flash-bg: color-mix(in srgb, var(--oge-accent) 24%, transparent);
+  --oge-input-muted: var(--oge-header-color);
+  --oge-input-filled-bg: var(--oge-header-bg);
+  --oge-scheduler-chip-bg: var(--oge-accent);
+  --oge-scheduler-grid-line: var(--oge-border-color);
+  --oge-scheduler-allday-bg: var(--oge-header-bg);
+  --oge-scheduler-hour-fg: var(--oge-muted-color);
+  --oge-gantt-bar-bg: var(--oge-accent);
+  --oge-gantt-grid-line: var(--oge-border-color);
+  --oge-kanban-card-bg: var(--oge-bg);
+  --oge-kanban-card-fg: var(--oge-text-color);
+  --oge-kanban-placeholder-border: var(--oge-accent-25);
+  --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  --oge-kanban-lane-border: var(--oge-border-color);
+  --oge-chart-axis-line: var(--oge-border-color);
+  --oge-chart-axis-fg: var(--oge-muted-color);
 }

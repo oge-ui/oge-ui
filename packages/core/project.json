@@ -12,6 +12,18 @@
   },
   "tags": ["scope:core", "platform:agnostic"],
   "targets": {
+    "build": {
+      "inputs": [
+        "production",
+        "^production",
+        { "externalDependencies": ["rollup"] },
+        {
+          "json": "{workspaceRoot}/tsconfig.json",
+          "fields": ["extends", "files", "include"]
+        },
+        "{workspaceRoot}/packages/grid/src/lib/styles/themes/*.css"
+      ]
+    },
     "nx-release-publish": {
       "options": {
         "packageRoot": "dist/{projectRoot}"

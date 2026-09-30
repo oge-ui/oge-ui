@@ -58,14 +58,17 @@ const SECTIONS = [
     <p>
       Tokens are plain CSS custom properties. Set them on
       <code>:root</code> (or any stylesheet you already own) — no build step, no
-      theme API, live at runtime:
+      theme API, live at runtime. The defaults sit at zero specificity, so a
+      plain <code>:root</code> rule wins wherever your stylesheet loads:
     </p>
     <app-code-block [code]="tokens" language="css" />
     <p>
       The suite covers surfaces, text, accent and severity colors, radii, row
-      and control heights, focus rings, shadows and popup layering. Use the
-      <em>Theme</em> selector in the top bar to see token remapping live on
-      every example in these docs.
+      and control heights, focus rings, shadows, scrollbars and popup layering.
+      Tints derive from their base token — set <code>--oge-accent</code> on
+      <code>:root</code> and the soft accent, the focus ring and the focused row
+      follow it. Use the <em>Theme</em> selector in the top bar to see token
+      remapping live on every example in these docs.
     </p>
 
     <h2 id="scoped-overrides" class="scroll-mt-20">Scoped overrides</h2>
@@ -87,8 +90,13 @@ const SECTIONS = [
     <h2 id="dark-mode" class="scroll-mt-20">Dark mode</h2>
     <p>
       Dark mode is a token remap behind the
-      <code>.oge-theme-dark</code> class — it composes with bridge themes and
-      scoped overrides:
+      <code>.oge-theme-dark</code> class (or <code>data-oge-theme="dark"</code>)
+      — it composes with bridge themes and scoped overrides.
+      <code>data-oge-theme="auto"</code> follows the operating system's
+      <code>prefers-color-scheme</code>, and <code>.oge-theme-light</code> marks
+      a light island inside a dark page. The rules target the scope element, not
+      a list of components, so popups portalled to
+      <code>&lt;body&gt;</code> follow a themed <code>&lt;html&gt;</code>:
     </p>
     <app-code-block [code]="dark" language="css" />
     <app-code-block [code]="darkHtml" language="html" />

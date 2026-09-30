@@ -22,19 +22,25 @@ export const SCOPED = `/* Tokens cascade — scope them to re-skin a single area
 
 export const BRIDGE = `/* Bridge themes map --oge-* tokens onto your framework's variables,
    so components automatically follow your existing design system. */
-@import '@oge-ui/grid/themes/tailwind.css';   /* Tailwind v4  */
-@import '@oge-ui/grid/themes/bootstrap.css';  /* Bootstrap 5  */`;
+@import '@oge-ui/core/themes/tailwind.css';   /* Tailwind v4  */
+@import '@oge-ui/core/themes/bootstrap.css';  /* Bootstrap 5  */`;
 
-export const DARK = `/* Import once, then toggle a class — on <html> for the whole app
-   or on any subtree for a mixed page. */
-@import '@oge-ui/grid/themes/dark.css';`;
+export const DARK = `/* Import once, then pick a scope — <html> for the whole app or any
+   subtree for a mixed page. Ships in @oge-ui/core, which every OGE
+   package installs (with pnpm or Yarn PnP, add @oge-ui/core directly). */
+@import '@oge-ui/core/themes/dark.css';`;
 
-export const DARK_HTML = `<!-- whole application -->
+export const DARK_HTML = `<!-- whole application: a class or the attribute form -->
 <html class="oge-theme-dark">
+<html data-oge-theme="dark">
 
-<!-- or a single region -->
+<!-- follow the operating system's light/dark setting -->
+<html data-oge-theme="auto">
+
+<!-- or a single region — and a light island inside a dark page -->
 <section class="oge-theme-dark">
   <oge-grid [data]="rows" />
+  <aside class="oge-theme-light">…</aside>
 </section>`;
 
 export const COLORS = `<!-- Semantic severities cover most cases… -->

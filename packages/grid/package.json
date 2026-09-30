@@ -35,7 +35,9 @@
     "./themes/*": "./themes/*"
   },
   "schematics": "./schematics/collection.json",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "homepage": "https://ogeui.com",
   "repository": {
     "type": "git",

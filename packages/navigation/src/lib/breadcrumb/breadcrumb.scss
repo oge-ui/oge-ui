@@ -32,6 +32,7 @@
   .oge-breadcrumb-scroll & {
     overflow-x: auto;
     scrollbar-width: thin;
+    scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
   }
 }
 

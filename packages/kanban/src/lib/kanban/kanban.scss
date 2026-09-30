@@ -91,7 +91,7 @@
 .oge-kanban-btn-primary {
   background: var(--oge-accent);
   border-color: var(--oge-accent);
-  color: #fff;
+  color: var(--oge-severity-contrast);
 
   &:hover:not(:disabled) {
     background: var(--oge-accent);
@@ -498,6 +498,7 @@
   box-shadow: inset 0 0 0 1px
     color-mix(in srgb, var(--oge-border-color) 55%, transparent);
   scrollbar-width: thin;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
 }
 
 .oge-kanban-cards-inner {

@@ -62,7 +62,7 @@ export const STYLES_REACT = `// once, at your app entry — the components ship 
 import '@oge-ui/react-buttons/styles.css';
 
 // optional themes, shared with the Angular packages
-import '@oge-ui/grid/themes/dark.css';`;
+import '@oge-ui/core/themes/dark.css';`;
 
 export const PROVIDERS_REACT = `'use client';
 

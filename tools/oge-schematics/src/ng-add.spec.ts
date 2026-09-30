@@ -53,6 +53,7 @@ const ANGULAR_JSON = JSON.stringify({
 });
 
 const NO_OPTIONS: NgAddOptions = {};
+const V = '0.14.0';
 
 describe('ng-add → AGENTS.md', () => {
   it('creates the file with a usage block for the installed package', async () => {
@@ -169,7 +170,7 @@ describe('ng-add → AGENTS.md', () => {
 describe('ng-add → theme stylesheet', () => {
   it('does nothing by default — the light theme is built in', async () => {
     const tree = await run(
-      addThemeStyle('@oge-ui/grid', NO_OPTIONS),
+      addThemeStyle('@oge-ui/grid', NO_OPTIONS, V),
       workspaceTree({ '/angular.json': ANGULAR_JSON }),
     );
 
@@ -178,23 +179,23 @@ describe('ng-add → theme stylesheet', () => {
 
   it('registers the requested theme first so app styles still win', async () => {
     const tree = await run(
-      addThemeStyle('@oge-ui/grid', { theme: 'dark' }),
+      addThemeStyle('@oge-ui/grid', { theme: 'dark' }, V),
       workspaceTree({ '/angular.json': ANGULAR_JSON }),
     );
 
     expect(readStyles(tree)).toEqual([
-      'node_modules/@oge-ui/grid/themes/dark.css',
+      'node_modules/@oge-ui/core/themes/dark.css',
       'src/styles.css',
     ]);
   });
 
   it('does not duplicate an already registered theme', async () => {
     const once = await run(
-      addThemeStyle('@oge-ui/grid', { theme: 'dark' }),
+      addThemeStyle('@oge-ui/grid', { theme: 'dark' }, V),
       workspaceTree({ '/angular.json': ANGULAR_JSON }),
     );
     const twice = await run(
-      addThemeStyle('@oge-ui/grid', { theme: 'dark' }),
+      addThemeStyle('@oge-ui/grid', { theme: 'dark' }, V),
       once,
     );
 
@@ -205,21 +206,60 @@ describe('ng-add → theme stylesheet', () => {
     const tree = workspaceTree();
 
     await expect(
-      run(addThemeStyle('@oge-ui/grid', { theme: 'tailwind' }), tree),
+      run(addThemeStyle('@oge-ui/grid', { theme: 'tailwind' }, V), tree),
     ).resolves.toBeDefined();
     expect(tree.exists('/angular.json')).toBe(false);
   });
 
-  it('skips the theme when the package owning it is not installed', async () => {
+  it('makes @oge-ui/core a direct dependency so the path resolves under pnpm', async () => {
     const tree = new HostTree();
     tree.create(
       '/package.json',
-      JSON.stringify({ dependencies: { '@oge-ui/buttons': '0.6.0' } }),
+      JSON.stringify({ dependencies: { '@oge-ui/buttons': V } }),
     );
     tree.create('/angular.json', ANGULAR_JSON);
 
     const result = await run(
-      addThemeStyle('@oge-ui/buttons', { theme: 'bootstrap' }),
+      addThemeStyle('@oge-ui/buttons', { theme: 'bootstrap' }, V),
+      tree,
+    );
+
+    expect(readStyles(result)).toEqual([
+      'node_modules/@oge-ui/core/themes/bootstrap.css',
+      'src/styles.css',
+    ]);
+    const manifest = JSON.parse(result.readText('/package.json')) as {
+      dependencies: Record<string, string>;
+    };
+    expect(manifest.dependencies).toEqual({
+      '@oge-ui/buttons': V,
+      '@oge-ui/core': V,
+    });
+    expect(runner.tasks.map((task) => task.name)).toContain('node-package');
+  });
+
+  it('leaves an existing @oge-ui/core entry alone', async () => {
+    const tree = new HostTree();
+    const manifest = JSON.stringify({
+      dependencies: { '@oge-ui/grid': V, '@oge-ui/core': '~0.14.0' },
+    });
+    tree.create('/package.json', manifest);
+    tree.create('/angular.json', ANGULAR_JSON);
+
+    const result = await run(
+      addThemeStyle('@oge-ui/grid', { theme: 'dark' }, V),
+      tree,
+    );
+
+    expect(result.readText('/package.json')).toBe(manifest);
+  });
+
+  it('skips the theme without a package.json to edit', async () => {
+    const tree = new HostTree();
+    tree.create('/angular.json', ANGULAR_JSON);
+
+    const result = await run(
+      addThemeStyle('@oge-ui/buttons', { theme: 'bootstrap' }, V),
       tree,
     );
 

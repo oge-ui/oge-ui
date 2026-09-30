@@ -1,90 +1,27 @@
 /**
- * Dark theme for @oge-ui/grid.
+ * Dark theme for the OGE suite — Angular and React packages alike.
  *
- * Apply the `oge-theme-dark` class to any ancestor (typically <html> or
- * <body>) — or to a single grid — to switch it to dark tokens:
+ * Import it once, in global styles:
  *
- *   <html class="oge-theme-dark">…
- *   <oge-grid class="oge-theme-dark">…
+ *   @import '@oge-ui/core/themes/dark.css';
+ *   (also shipped as @oge-ui/grid/themes/dark.css for pre-0.14 imports)
+ *
+ * Then choose a scope — the page, or any subtree:
+ *
+ *   <html class="oge-theme-dark">          always dark
+ *   <html data-oge-theme="dark">           the same, attribute form
+ *   <html class="oge-theme-auto">          follow prefers-color-scheme
+ *   <html data-oge-theme="auto">
+ *   <section class="oge-theme-light">      a light island inside a dark page
+ *
+ * The rules target the scope element itself, not a list of component hosts:
+ * tokens inherit, so every component — including popups portalled to <body>
+ * under a themed <html> — picks them up, and a new component needs no entry
+ * here. Your own overrides win over these defaults when they are at least as
+ * specific (a class) or declared on a descendant.
  */
-.oge-theme-dark .oge-grid,
-.oge-theme-dark .oge-tree-list,
-.oge-theme-dark .oge-button,
-.oge-theme-dark .oge-button-group,
-.oge-theme-dark .oge-drop-down-button,
-.oge-theme-dark .oge-popup,
-.oge-theme-dark .oge-menu-list,
-.oge-theme-dark .oge-input,
-.oge-theme-dark .oge-check-box,
-.oge-theme-dark .oge-switch,
-.oge-theme-dark .oge-slider,
-.oge-theme-dark .oge-radio-group,
-.oge-theme-dark .oge-calendar,
-.oge-theme-dark .oge-modal-layer,
-.oge-theme-dark .oge-toast-region,
-.oge-theme-dark .oge-tooltip,
-.oge-theme-dark .oge-tabs,
-.oge-theme-dark .oge-tab-panel,
-.oge-theme-dark .oge-accordion,
-.oge-theme-dark .oge-card,
-.oge-theme-dark .oge-load-indicator,
-.oge-theme-dark .oge-progress-bar,
-.oge-theme-dark .oge-skeleton,
-.oge-theme-dark .oge-breadcrumb,
-.oge-theme-dark .oge-drawer,
-.oge-theme-dark .oge-menubar,
-.oge-theme-dark .oge-stepper,
-.oge-theme-dark .oge-splitter,
-.oge-theme-dark .oge-toolbar,
-.oge-theme-dark .oge-form,
-.oge-theme-dark .oge-tree-view,
-.oge-theme-dark .oge-pagination,
-.oge-theme-dark .oge-bpmn-editor,
-.oge-theme-dark .oge-scheduler,
-.oge-theme-dark .oge-gantt,
-.oge-theme-dark .oge-kanban,
-.oge-theme-dark .oge-upload,
-.oge-theme-dark .oge-chart,
-.oge-theme-dark .oge-pivot-grid,
-.oge-grid.oge-theme-dark,
-.oge-tree-list.oge-theme-dark,
-.oge-button.oge-theme-dark,
-.oge-button-group.oge-theme-dark,
-.oge-drop-down-button.oge-theme-dark,
-.oge-popup.oge-theme-dark,
-.oge-menu-list.oge-theme-dark,
-.oge-input.oge-theme-dark,
-.oge-check-box.oge-theme-dark,
-.oge-switch.oge-theme-dark,
-.oge-slider.oge-theme-dark,
-.oge-radio-group.oge-theme-dark,
-.oge-calendar.oge-theme-dark,
-.oge-modal-layer.oge-theme-dark,
-.oge-toast-region.oge-theme-dark,
-.oge-tooltip.oge-theme-dark,
-.oge-tabs.oge-theme-dark,
-.oge-tab-panel.oge-theme-dark,
-.oge-accordion.oge-theme-dark,
-.oge-card.oge-theme-dark,
-.oge-load-indicator.oge-theme-dark,
-.oge-progress-bar.oge-theme-dark,
-.oge-skeleton.oge-theme-dark,
-.oge-breadcrumb.oge-theme-dark,
-.oge-drawer.oge-theme-dark,
-.oge-menubar.oge-theme-dark,
-.oge-stepper.oge-theme-dark,
-.oge-splitter.oge-theme-dark,
-.oge-toolbar.oge-theme-dark,
-.oge-form.oge-theme-dark,
-.oge-tree-view.oge-theme-dark,
-.oge-pagination.oge-theme-dark,
-.oge-bpmn-editor.oge-theme-dark,
-.oge-scheduler.oge-theme-dark,
-.oge-gantt.oge-theme-dark,
-.oge-kanban.oge-theme-dark,
-.oge-upload.oge-theme-dark,
-.oge-chart.oge-theme-dark,
-.oge-pivot-grid.oge-theme-dark {
+.oge-theme-dark,
+[data-oge-theme='dark'] {
   /* native form controls (checkboxes, selects, date pickers) follow suit */
   color-scheme: dark;
   --oge-bg: #111827;
@@ -145,4 +82,112 @@
   --oge-chart-crosshair: rgba(148, 163, 184, 0.5);
   --oge-chart-strip-bg: rgba(148, 163, 184, 0.1);
   --oge-chart-zoom-bg: rgba(129, 140, 248, 0.18);
+  --oge-scrollbar-thumb: rgba(148, 163, 184, 0.4);
+  --oge-scrollbar-thumb-hover: rgba(148, 163, 184, 0.62);
+  /* derived tokens, re-resolved inside this scope so a dark subtree gets
+     dark tints (keep in sync with derived-tokens in _tokens.scss) */
+  --oge-row-focused-bg: color-mix(in srgb, var(--oge-accent) 10%, transparent);
+  --oge-input-muted: var(--oge-header-color);
+  --oge-scheduler-chip-bg: var(--oge-accent);
+  --oge-scheduler-grid-line: var(--oge-border-color);
+  --oge-scheduler-allday-bg: var(--oge-header-bg);
+  --oge-scheduler-hour-fg: var(--oge-muted-color);
+  --oge-gantt-bar-bg: var(--oge-accent);
+  --oge-gantt-grid-line: var(--oge-border-color);
+  --oge-kanban-card-bg: var(--oge-bg);
+  --oge-kanban-card-fg: var(--oge-text-color);
+  --oge-kanban-placeholder-border: var(--oge-accent-25);
+  --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  --oge-kanban-lane-border: var(--oge-border-color);
+  --oge-chart-axis-line: var(--oge-border-color);
+  --oge-chart-axis-fg: var(--oge-muted-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .oge-theme-auto,
+  [data-oge-theme='auto'] {
+    /* native form controls (checkboxes, selects, date pickers) follow suit */
+    color-scheme: dark;
+    --oge-bg: #111827;
+    --oge-text-color: #d1d5db;
+    --oge-border-color: #374151;
+    --oge-header-bg: #1f2937;
+    --oge-header-color: #e5e7eb;
+    --oge-row-hover-bg: #1e293b;
+    --oge-selected-bg: #1e3a5f;
+    --oge-muted-color: #6b7280;
+    --oge-group-bg: #182031;
+    --oge-detail-bg: #0f1623;
+    --oge-popup-bg: #1f2937;
+    --oge-accent: #60a5fa;
+    --oge-accent-soft: rgba(96, 165, 250, 0.12);
+    --oge-accent-25: rgba(96, 165, 250, 0.3);
+    --oge-focus-ring: rgba(96, 165, 250, 0.45);
+    --oge-shadow-popup:
+      0 12px 32px -8px rgba(0, 0, 0, 0.55), 0 4px 12px -6px rgba(0, 0, 0, 0.4);
+    --oge-row-alt-bg: rgba(148, 163, 184, 0.06);
+    --oge-update-flash-bg: rgba(96, 165, 250, 0.28);
+    --oge-skeleton-color: rgba(148, 163, 184, 0.18);
+    --oge-success: #22c55e;
+    --oge-success-soft: rgba(34, 197, 94, 0.16);
+    --oge-warning: #f59e0b;
+    --oge-warning-soft: rgba(245, 158, 11, 0.16);
+    --oge-danger: #ef4444;
+    --oge-danger-soft: rgba(239, 68, 68, 0.16);
+    /* dark text on the brighter dark-mode severity fills */
+    --oge-severity-contrast: #0b1220;
+    --oge-badge-bg: #ef4444;
+    --oge-badge-color: #0b1220;
+    --oge-shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --oge-shadow-btn-hover: 0 2px 6px rgba(0, 0, 0, 0.5);
+    --oge-shadow-card:
+      0 1px 3px rgba(0, 0, 0, 0.35), 0 4px 12px -4px rgba(0, 0, 0, 0.3);
+    --oge-input-filled-bg: rgba(148, 163, 184, 0.08);
+    --oge-tooltip-bg: #334155;
+    --oge-tooltip-color: #f1f5f9;
+    --oge-modal-backdrop-bg: rgb(0 0 0 / 0.55);
+    --oge-scheduler-chip-fg: #0b1220;
+    --oge-scheduler-now-color: #ef4444;
+    --oge-gantt-bar-fg: #0b1220;
+    --oge-gantt-summary-bg: #94a3b8;
+    --oge-gantt-offday-bg: rgba(148, 163, 184, 0.07);
+    --oge-gantt-today-color: #ef4444;
+    --oge-gantt-arrow-color: #64748b;
+    --oge-kanban-column-bg: rgba(148, 163, 184, 0.08);
+    --oge-kanban-card-ring: rgba(255, 255, 255, 0.08);
+    --oge-kanban-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --oge-kanban-card-shadow-hover: 0 3px 10px rgba(0, 0, 0, 0.5);
+    --oge-kanban-card-shadow-drag:
+      0 12px 28px -6px rgba(0, 0, 0, 0.6), 0 4px 10px -4px rgba(0, 0, 0, 0.45);
+    --oge-kanban-tag-bg: rgba(148, 163, 184, 0.18);
+    --oge-kanban-avatar-bg: #94a3b8;
+    --oge-kanban-avatar-fg: #0b1220;
+    --oge-chart-grid-line: rgba(148, 163, 184, 0.14);
+    --oge-chart-crosshair: rgba(148, 163, 184, 0.5);
+    --oge-chart-strip-bg: rgba(148, 163, 184, 0.1);
+    --oge-chart-zoom-bg: rgba(129, 140, 248, 0.18);
+    --oge-scrollbar-thumb: rgba(148, 163, 184, 0.4);
+    --oge-scrollbar-thumb-hover: rgba(148, 163, 184, 0.62);
+    /* derived tokens, re-resolved inside this scope so a dark subtree gets
+       dark tints (keep in sync with derived-tokens in _tokens.scss) */
+    --oge-row-focused-bg: color-mix(
+      in srgb,
+      var(--oge-accent) 10%,
+      transparent
+    );
+    --oge-input-muted: var(--oge-header-color);
+    --oge-scheduler-chip-bg: var(--oge-accent);
+    --oge-scheduler-grid-line: var(--oge-border-color);
+    --oge-scheduler-allday-bg: var(--oge-header-bg);
+    --oge-scheduler-hour-fg: var(--oge-muted-color);
+    --oge-gantt-bar-bg: var(--oge-accent);
+    --oge-gantt-grid-line: var(--oge-border-color);
+    --oge-kanban-card-bg: var(--oge-bg);
+    --oge-kanban-card-fg: var(--oge-text-color);
+    --oge-kanban-placeholder-border: var(--oge-accent-25);
+    --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+    --oge-kanban-lane-border: var(--oge-border-color);
+    --oge-chart-axis-line: var(--oge-border-color);
+    --oge-chart-axis-fg: var(--oge-muted-color);
+  }
 }

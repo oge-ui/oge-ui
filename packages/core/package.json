@@ -20,7 +20,9 @@
   "main": "./index.cjs.js",
   "module": "./index.esm.js",
   "types": "./index.d.ts",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "dependencies": {},
   "homepage": "https://ogeui.com",
   "repository": {

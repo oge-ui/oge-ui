@@ -101,7 +101,8 @@ One set of CSS design tokens drives every component:
 }
 ```
 
-Bundled bridges: **dark** (add `.oge-theme-dark` to any ancestor),
+Bundled bridges in `@oge-ui/core/themes/`: **dark** (add `.oge-theme-dark` or
+`data-oge-theme="dark"` to any ancestor, `"auto"` follows the OS),
 **Tailwind** and **Bootstrap** —
 [styling guide](https://ogeui.com/getting-started/styling).
 All user-facing strings (aria labels included) are overridable via

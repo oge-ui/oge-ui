@@ -136,7 +136,7 @@ The host includes the shared `--oge-*` token set. Severity colors add
 `--oge-success`, `--oge-warning`, `--oge-danger` (+ `-soft` tints),
 `--oge-severity-contrast`, `--oge-badge-bg` and `--oge-badge-color` — override
 them per theme exactly like the grid tokens. `.oge-theme-dark` on any ancestor
-switches the dark palette. Note: the buttons SCSS consumes the token source in
+(with `@oge-ui/core/themes/dark.css` imported) switches the dark palette. Note: the buttons SCSS consumes the token source in
 `@oge-ui/grid` at build time; there is no runtime dependency on the grid.
 
 ## For AI coding assistants

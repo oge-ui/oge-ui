@@ -1,52 +1,19 @@
 /**
- * Bootstrap 5 bridge theme for @oge-ui/grid.
+ * Bootstrap 5 bridge theme for the OGE suite (Angular and React).
  *
  * Maps oge design tokens onto Bootstrap CSS variables so the grid follows the
  * app's Bootstrap theme (primary-blue accents, Bootstrap grays, its dark mode
  * via `data-bs-theme="dark"`). Every mapping has a plain-CSS fallback.
  *
  * Usage (global styles, after bootstrap.css):
- *   @import '@oge-ui/grid/themes/bootstrap.css';
+ *   @import '@oge-ui/core/themes/bootstrap.css';
+ *
+ * Applied at the document root and re-applied on every `data-bs-theme`
+ * scope, so a Bootstrap dark subtree (`<div data-bs-theme="dark">`) turns the
+ * OGE components inside it dark too.
  */
-.oge-grid,
-.oge-tree-list,
-.oge-button,
-.oge-button-group,
-.oge-drop-down-button,
-.oge-popup,
-.oge-menu-list,
-.oge-input,
-.oge-check-box,
-.oge-switch,
-.oge-slider,
-.oge-radio-group,
-.oge-calendar,
-.oge-modal-layer,
-.oge-toast-region,
-.oge-tooltip,
-.oge-tabs,
-.oge-tab-panel,
-.oge-accordion,
-.oge-card,
-.oge-load-indicator,
-.oge-progress-bar,
-.oge-skeleton,
-.oge-breadcrumb,
-.oge-drawer,
-.oge-menubar,
-.oge-stepper,
-.oge-splitter,
-.oge-toolbar,
-.oge-form,
-.oge-tree-view,
-.oge-pagination,
-.oge-bpmn-editor,
-.oge-scheduler,
-.oge-gantt,
-.oge-kanban,
-.oge-upload,
-.oge-chart,
-.oge-pivot-grid {
+:root,
+[data-bs-theme] {
   --oge-border-color: var(--bs-border-color, #dee2e6);
   --oge-header-bg: var(--bs-tertiary-bg, #f8f9fa);
   --oge-header-color: var(--bs-emphasis-color, #212529);
@@ -76,4 +43,23 @@
   --oge-accent-soft: color-mix(in srgb, var(--oge-accent) 10%, transparent);
   --oge-accent-25: color-mix(in srgb, var(--oge-accent) 25%, transparent);
   --oge-focus-ring: color-mix(in srgb, var(--oge-accent) 40%, transparent);
+  /* derived tokens, re-resolved inside this scope (keep in sync with
+     derived-tokens in _tokens.scss) */
+  --oge-row-focused-bg: color-mix(in srgb, var(--oge-accent) 10%, transparent);
+  --oge-update-flash-bg: color-mix(in srgb, var(--oge-accent) 24%, transparent);
+  --oge-input-muted: var(--oge-header-color);
+  --oge-input-filled-bg: var(--oge-header-bg);
+  --oge-scheduler-chip-bg: var(--oge-accent);
+  --oge-scheduler-grid-line: var(--oge-border-color);
+  --oge-scheduler-allday-bg: var(--oge-header-bg);
+  --oge-scheduler-hour-fg: var(--oge-muted-color);
+  --oge-gantt-bar-bg: var(--oge-accent);
+  --oge-gantt-grid-line: var(--oge-border-color);
+  --oge-kanban-card-bg: var(--oge-bg);
+  --oge-kanban-card-fg: var(--oge-text-color);
+  --oge-kanban-placeholder-border: var(--oge-accent-25);
+  --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  --oge-kanban-lane-border: var(--oge-border-color);
+  --oge-chart-axis-line: var(--oge-border-color);
+  --oge-chart-axis-fg: var(--oge-muted-color);
 }

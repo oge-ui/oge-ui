@@ -135,7 +135,7 @@ How the DevExtreme TreeList callbacks map onto this component:
 The shared theme files ship with `@oge-ui/grid` and style both components:
 
 ```css
-@import '@oge-ui/grid/themes/dark.css';
+@import '@oge-ui/core/themes/dark.css';
 ```
 
 ## For AI coding assistants

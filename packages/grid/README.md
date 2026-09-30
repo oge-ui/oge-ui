@@ -139,9 +139,10 @@ const source = new CustomDataSource<Order>({
 }
 
 /* or use a bridge theme so the grid follows your CSS framework */
-@import '@oge-ui/grid/themes/tailwind.css'; /* Tailwind v4  */
-@import '@oge-ui/grid/themes/bootstrap.css'; /* Bootstrap 5  */
-@import '@oge-ui/grid/themes/dark.css'; /* + <html class="oge-theme-dark"> */
+@import '@oge-ui/core/themes/tailwind.css'; /* Tailwind v4  */
+@import '@oge-ui/core/themes/bootstrap.css'; /* Bootstrap 5  */
+@import '@oge-ui/core/themes/dark.css'; /* + <html class="oge-theme-dark"> */
+/* (the pre-0.14 @oge-ui/grid/themes/… paths keep working) */
 ```
 
 ## Global configuration & localization

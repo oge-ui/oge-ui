@@ -111,7 +111,7 @@
   flex: 1;
   min-height: 0;
   scrollbar-width: thin;
-  scrollbar-color: var(--oge-border-color) transparent;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
 }
 
 .oge-pivot-matrix {
@@ -289,6 +289,7 @@
   max-height: 260px;
   overflow: auto;
   scrollbar-width: thin;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
 }
 
 // --- inline-fixed popups (legacy) -------------------------------------------

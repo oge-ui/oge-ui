@@ -18,12 +18,16 @@ import { addThemeStyle } from './theme';
  * Everything it touches is optional and reversible; nothing throws when the
  * workspace does not look like a stock Angular CLI project.
  */
-export function ogeNgAdd(packageName: string, options: NgAddOptions): Rule {
+export function ogeNgAdd(
+  packageName: string,
+  packageVersion: string,
+  options: NgAddOptions,
+): Rule {
   return chain([
     (_tree, context) => {
       context.logger.info(`\nSetting up ${packageName}:`);
     },
-    addThemeStyle(packageName, options),
+    addThemeStyle(packageName, options, packageVersion),
     updateAgentsFile(packageName, options),
     (_tree, context) => {
       context.logger.info(

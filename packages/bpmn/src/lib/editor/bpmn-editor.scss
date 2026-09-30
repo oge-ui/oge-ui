@@ -657,11 +657,7 @@
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
   background: var(--oge-popup-bg);
-  box-shadow: var(
-    --oge-shadow-card,
-    0 1px 3px rgba(15, 23, 42, 0.08),
-    0 4px 12px -4px rgba(15, 23, 42, 0.1)
-  );
+  box-shadow: var(--oge-shadow-card);
   z-index: 2;
 }
 
@@ -731,11 +727,7 @@
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
   background: var(--oge-popup-bg);
-  box-shadow: var(
-    --oge-shadow-card,
-    0 1px 3px rgba(15, 23, 42, 0.08),
-    0 4px 12px -4px rgba(15, 23, 42, 0.1)
-  );
+  box-shadow: var(--oge-shadow-card);
 
   .oge-bpmn-pad-btn:disabled {
     color: var(--oge-muted-color);
@@ -765,11 +757,7 @@
   background: var(--oge-popup-bg);
   color: var(--oge-text-color);
   font: inherit;
-  box-shadow: var(
-    --oge-shadow-card,
-    0 1px 3px rgba(15, 23, 42, 0.08),
-    0 4px 12px -4px rgba(15, 23, 42, 0.1)
-  );
+  box-shadow: var(--oge-shadow-card);
 
   &:focus-visible {
     outline: none;
@@ -784,11 +772,7 @@
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
   background: var(--oge-popup-bg);
-  box-shadow: var(
-    --oge-shadow-card,
-    0 1px 3px rgba(15, 23, 42, 0.08),
-    0 4px 12px -4px rgba(15, 23, 42, 0.1)
-  );
+  box-shadow: var(--oge-shadow-card);
   max-block-size: 240px;
   overflow-y: auto;
 }
@@ -834,11 +818,7 @@
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
   background: var(--oge-popup-bg);
-  box-shadow: var(
-    --oge-shadow-card,
-    0 1px 3px rgba(15, 23, 42, 0.08),
-    0 4px 12px -4px rgba(15, 23, 42, 0.1)
-  );
+  box-shadow: var(--oge-shadow-card);
   overflow: hidden;
   z-index: 2;
   cursor: pointer;

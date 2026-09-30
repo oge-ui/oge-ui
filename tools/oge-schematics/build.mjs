@@ -74,7 +74,10 @@ for (const pkg of PACKAGES) {
     target: 'node20',
     // provided by the Angular CLI that runs the schematic
     external: ['@angular-devkit/*', '@schematics/angular/*', 'typescript'],
-    define: { OGE_PACKAGE_NAME: JSON.stringify(pkg.npm) },
+    define: {
+      OGE_PACKAGE_NAME: JSON.stringify(pkg.npm),
+      OGE_PACKAGE_VERSION: JSON.stringify(manifest.version),
+    },
     logLevel: 'warning',
   });
 

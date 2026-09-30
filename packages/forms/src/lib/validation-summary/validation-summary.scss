@@ -5,10 +5,10 @@
 
 .oge-validation-summary {
   display: block;
-  border: 1px solid var(--oge-danger, #dc2626);
+  border: 1px solid var(--oge-danger);
   border-radius: var(--oge-radius);
   padding: 10px 12px;
-  background: var(--oge-danger-soft, rgb(220 38 38 / 8%));
+  background: var(--oge-danger-soft);
 
   &[hidden] {
     display: none;
@@ -18,7 +18,7 @@
 .oge-validation-summary-title {
   margin: 0 0 6px;
   font-weight: 600;
-  color: var(--oge-danger, #dc2626);
+  color: var(--oge-danger);
 }
 
 .oge-validation-summary-list {

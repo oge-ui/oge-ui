@@ -487,7 +487,7 @@
   overflow-y: auto;
   outline: none;
   scrollbar-width: thin;
-  scrollbar-color: var(--oge-border-color) transparent;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
 }
 
 .oge-select-option {

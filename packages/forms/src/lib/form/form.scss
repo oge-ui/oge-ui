@@ -118,7 +118,7 @@
 
 .oge-form-required-mark {
   margin-inline-start: 2px;
-  color: var(--oge-danger, #dc2626);
+  color: var(--oge-danger);
 }
 
 .oge-form-optional-mark {
@@ -167,17 +167,17 @@
 }
 
 .oge-form-hint {
-  color: var(--oge-text-muted, #6b7280);
+  color: var(--oge-input-muted);
 }
 
 .oge-form-error {
-  color: var(--oge-danger, #dc2626);
+  color: var(--oge-danger);
 }
 
 .oge-form-empty {
   margin: 0;
   padding: 12px;
-  color: var(--oge-text-muted, #6b7280);
+  color: var(--oge-input-muted);
 }
 
 .oge-form-actions {

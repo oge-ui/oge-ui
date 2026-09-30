@@ -173,8 +173,10 @@ in the cascade:
 }
 ```
 
-Bundled themes: **dark** (`.oge-theme-dark` on any ancestor), **Tailwind** and
-**Bootstrap** bridge stylesheets. See the
+Token defaults have zero specificity, so a plain `:root` rule wins and tokens
+cascade into any subtree. Bundled themes ship in `@oge-ui/core/themes/`:
+**dark** (`.oge-theme-dark` or `data-oge-theme="dark"` on any ancestor,
+`"auto"` to follow the OS), **Tailwind** and **Bootstrap** bridge stylesheets. See the
 [styling guide](https://ogeui.com/getting-started/styling).
 
 ## Localization

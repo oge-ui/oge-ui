@@ -1,13 +1,18 @@
-import type { Rule, Tree } from '@angular-devkit/schematics';
+import type { Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
+import { NodePackageInstallTask } from '@angular-devkit/schematics/tasks';
 import {
   updateWorkspace,
   type WorkspaceDefinition,
 } from '@schematics/angular/utility/workspace';
 import type { NgAddOptions } from './options';
 
-/** Theme stylesheets ship in `@oge-ui/grid` — the package that owns the tokens. */
-const THEME_OWNER = '@oge-ui/grid';
-const UMBRELLA = 'oge-ui';
+/**
+ * Theme stylesheets ship in `@oge-ui/core`, which every OGE package installs.
+ * The schematic makes it a **direct** dependency before pointing `styles` at it:
+ * under pnpm (or Yarn PnP) a transitive package is not reachable from the app,
+ * so `node_modules/@oge-ui/core/…` would otherwise not resolve.
+ */
+const THEME_OWNER = '@oge-ui/core';
 
 /**
  * Registers an optional theme stylesheet in the target project's `styles` array.
@@ -20,10 +25,14 @@ const UMBRELLA = 'oge-ui';
  * Never throws. A workspace this schematic cannot understand (an Nx repo, a bare
  * library, a project with no `build` target) gets a warning and the manual
  * one-liner instead.
+ *
+ * @param packageVersion the version of the package being added — every OGE
+ *   package is released in lockstep, so `@oge-ui/core` is pinned to the same one
  */
 export function addThemeStyle(
   packageName: string,
   options: NgAddOptions,
+  packageVersion: string,
 ): Rule {
   return (tree, context) => {
     const theme = options.theme ?? 'none';
@@ -32,9 +41,9 @@ export function addThemeStyle(
     const entry = `node_modules/${THEME_OWNER}/themes/${theme}.css`;
     const manual = `Add \`@import '${THEME_OWNER}/themes/${theme}.css';\` to your global stylesheet instead.`;
 
-    if (!ownsThemes(tree, packageName)) {
+    if (!ensureDirectDependency(tree, context, packageName, packageVersion)) {
       context.logger.warn(
-        `  ! theme stylesheets live in ${THEME_OWNER}, which is not installed. Run \`npm i ${THEME_OWNER}\` (or \`${UMBRELLA}\`) first.`,
+        `  ! no readable package.json — run \`npm i ${THEME_OWNER}@${packageVersion}\`, then ${manual.charAt(0).toLowerCase()}${manual.slice(1)}`,
       );
       return;
     }
@@ -80,23 +89,42 @@ export function addThemeStyle(
   };
 }
 
-/** True when the theme stylesheets are reachable from the consumer's deps. */
-function ownsThemes(tree: Tree, packageName: string): boolean {
-  if (packageName === THEME_OWNER || packageName === UMBRELLA) return true;
+/**
+ * Makes `@oge-ui/core` a direct dependency (pinned to the added package's
+ * version) and schedules an install when it was not one. False when there is no
+ * package.json to edit.
+ */
+function ensureDirectDependency(
+  tree: Tree,
+  context: SchematicContext,
+  packageName: string,
+  version: string,
+): boolean {
   const raw = tree.read('/package.json')?.toString('utf8');
   if (!raw) return false;
+  let json: {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
   try {
-    const json = JSON.parse(raw) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
-    return [json.dependencies, json.devDependencies].some(
-      (group) =>
-        group !== undefined && (THEME_OWNER in group || UMBRELLA in group),
-    );
+    json = JSON.parse(raw) as typeof json;
   } catch {
     return false;
   }
+  if (packageName === THEME_OWNER) return true;
+  if (json.dependencies?.[THEME_OWNER] || json.devDependencies?.[THEME_OWNER])
+    return true;
+  json.dependencies = { ...json.dependencies, [THEME_OWNER]: version };
+  tree.overwrite(
+    '/package.json',
+    `${JSON.stringify(json, null, 2)}
+`,
+  );
+  context.addTask(new NodePackageInstallTask());
+  context.logger.info(
+    `  ✓ added ${THEME_OWNER}@${version} to dependencies (the theme stylesheets ship there)`,
+  );
+  return true;
 }
 
 /**

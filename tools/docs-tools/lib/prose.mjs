@@ -75,9 +75,13 @@ Follow these rules and generated code compiles on the first try.
 }
 \`\`\`
 
-Optional stylesheets, imported once: \`@oge-ui/grid/themes/dark.css\` (then put
-\`class="oge-theme-dark"\` on \`<html>\` or any subtree),
-\`@oge-ui/grid/themes/tailwind.css\` and \`@oge-ui/grid/themes/bootstrap.css\`
+Token defaults have zero specificity: a plain \`:root\` rule (or any class)
+wins, and tokens cascade into subtrees. Optional stylesheets, imported once,
+ship in \`@oge-ui/core\` (installed with every package; add it directly under
+pnpm): \`@oge-ui/core/themes/dark.css\` (then \`class="oge-theme-dark"\` or
+\`data-oge-theme="dark"\` on \`<html>\` or any subtree; \`"auto"\` follows
+\`prefers-color-scheme\`, \`oge-theme-light\` marks a light island),
+\`@oge-ui/core/themes/tailwind.css\` and \`@oge-ui/core/themes/bootstrap.css\`
 (bridge \`--oge-*\` onto an existing design system).`;
 
 export const MISTAKES = `## Common mistakes
@@ -188,9 +192,11 @@ Follow these rules and generated code compiles on the first try.
 }
 \`\`\`
 
-The theme stylesheets are shared with the Angular packages:
-\`@oge-ui/grid/themes/dark.css\` (then put \`class="oge-theme-dark"\` on
-\`<html>\` or any subtree), plus the \`tailwind.css\` and \`bootstrap.css\`
+The theme stylesheets are shared with the Angular packages and ship in
+\`@oge-ui/core\` (installed with every package; add it directly under pnpm):
+\`@oge-ui/core/themes/dark.css\` (then \`class="oge-theme-dark"\` or
+\`data-oge-theme="dark"\` on \`<html>\` or any subtree; \`"auto"\` follows
+\`prefers-color-scheme\`), plus the \`tailwind.css\` and \`bootstrap.css\`
 bridges.`;
 
 export const MISTAKES_REACT = `## Common mistakes

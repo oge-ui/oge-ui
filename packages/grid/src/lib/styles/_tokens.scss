@@ -1,6 +1,33 @@
-// Core design tokens of the oge grid. Components must reference these
+// Core design tokens of the OGE suite. Components must reference these
 // variables instead of raw values so themes only need to override tokens.
-@mixin core-tokens {
+//
+// Where the defaults live — and why not on the component host:
+//
+// Every token is declared ONCE, on a zero-specificity root scope
+// (`:where(:root, .oge-theme-light, [data-oge-theme='light'], …)`), so any
+// consumer declaration of the same property wins — `:root { --oge-accent: … }`,
+// a theme scope on `<body>`, or a class on one subtree — whatever the
+// stylesheet order. Declaring the defaults on each component host (`.oge-button {
+// --oge-bg: … }`, the pre-0.14 layout) made the element's own declaration
+// beat every inherited value, so a `:root` override silently lost and
+// consumers needed `html .oge-button` selectors to theme anything.
+//
+// Two kinds of token:
+//   - literal tokens: a raw value (`#ffffff`, `14px`);
+//   - derived tokens: an expression over other tokens (`var(--oge-accent)`,
+//     `color-mix(… var(--oge-accent) …)`). A custom property's `var()` is
+//     resolved on the element that declares it, so a derived token follows
+//     overrides made on that same element — `:root` / `<html>` or a theme
+//     scope. Scoped themes re-declare the derived set (`derived-tokens`) so a
+//     subtree theme re-resolves it; `themes.spec.ts` keeps the copies in the
+//     theme files identical to this list.
+//
+// Each component stylesheet includes `core-tokens` at its host rule; the
+// mixin hoists the declarations to the root scope, so the component's CSS is
+// self-sufficient (no global stylesheet to import) and identical copies
+// across components are harmless.
+
+@mixin literal-tokens {
   --oge-bg: #ffffff;
   --oge-text-color: #1e2430;
   --oge-border-color: #e6e9ef;
@@ -8,9 +35,12 @@
   --oge-header-color: #5b6472;
   --oge-row-hover-bg: #f5f7fa;
   --oge-selected-bg: #e9f0fd;
+  --oge-row-alt-bg: rgba(148, 163, 184, 0.08);
   --oge-cell-padding-x: 14px;
   --oge-cell-padding-y: 8px;
   --oge-font-size: 14px;
+  --oge-font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   --oge-row-height: 36px;
   --oge-muted-color: #98a1af;
   --oge-radius: 6px;
@@ -19,22 +49,18 @@
   --oge-detail-bg: #fafbfd;
   --oge-popup-bg: #ffffff;
   --oge-accent: #2563eb;
-  /* soft accent tints; themes overriding --oge-accent should override these too */
-  --oge-accent-soft: rgba(37, 99, 235, 0.08);
-  --oge-accent-25: rgba(37, 99, 235, 0.25);
-  --oge-focus-ring: rgba(37, 99, 235, 0.4);
   --oge-shadow-popup:
     0 12px 32px -8px rgba(15, 23, 42, 0.18),
     0 4px 12px -6px rgba(15, 23, 42, 0.1);
   --oge-tree-indent: 20px;
-  /* severity palette (buttons; future inputs/toasts) */
+  /* severity palette (buttons, inputs, toasts, badges) */
   --oge-success: #16a34a;
   --oge-success-soft: rgba(22, 163, 74, 0.12);
   --oge-warning: #d97706;
   --oge-warning-soft: rgba(217, 119, 6, 0.14);
   --oge-danger: #dc2626;
   --oge-danger-soft: rgba(220, 38, 38, 0.12);
-  /* text color on contained severity fills */
+  /* text color on contained severity/accent fills */
   --oge-severity-contrast: #ffffff;
   --oge-badge-bg: #dc2626;
   --oge-badge-color: #ffffff;
@@ -44,10 +70,15 @@
   /* resting elevation of raised cards — lighter than --oge-shadow-popup */
   --oge-shadow-card:
     0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 12px -4px rgba(15, 23, 42, 0.1);
-  /* readable muted text (labels/placeholders/hints — WCAG-safe) */
-  --oge-input-muted: var(--oge-header-color);
-  /* filled-field surface; dark theme overrides with a surface-independent tint */
-  --oge-input-filled-bg: var(--oge-header-bg);
+  /* loading placeholders (skeleton bones, grid skeleton rows) */
+  --oge-skeleton-color: rgba(148, 163, 184, 0.25);
+  /* switch knob — stays light on both themes, like the platform controls */
+  --oge-switch-thumb: #ffffff;
+  /* scrollbars of every scroll area the suite draws (grid body, lists,
+     calendars, pivot); visible against the surface on a mouse desktop */
+  --oge-scrollbar-thumb: rgba(100, 116, 139, 0.45);
+  --oge-scrollbar-thumb-hover: rgba(100, 116, 139, 0.7);
+  --oge-scrollbar-track: transparent;
   /* stacking layer of anchored popups/menus */
   --oge-z-popup: 1000;
   /* modal layer (above anchored popups; legacy grid dialogs sit at 1090/1100) */
@@ -62,19 +93,13 @@
   --oge-tooltip-bg: #1e2430;
   --oge-tooltip-color: #f5f7fa;
   /* scheduler surfaces (commercial package hooks into the same theme files) */
-  --oge-scheduler-chip-bg: var(--oge-accent);
   --oge-scheduler-chip-fg: #ffffff;
-  --oge-scheduler-grid-line: var(--oge-border-color);
   --oge-scheduler-now-color: #dc2626;
-  --oge-scheduler-allday-bg: var(--oge-header-bg);
-  --oge-scheduler-hour-fg: var(--oge-muted-color);
   /* gantt surfaces */
-  --oge-gantt-bar-bg: var(--oge-accent);
   --oge-gantt-bar-fg: #ffffff;
   --oge-gantt-summary-bg: #475569;
   --oge-gantt-milestone-bg: #7c3aed;
   --oge-gantt-baseline-bg: rgba(100, 116, 139, 0.45);
-  --oge-gantt-grid-line: var(--oge-border-color);
   --oge-gantt-offday-bg: rgba(148, 163, 184, 0.1);
   --oge-gantt-today-color: #dc2626;
   --oge-gantt-arrow-color: #94a3b8;
@@ -82,27 +107,97 @@
   --oge-kanban-board-bg: transparent;
   --oge-kanban-column-bg: #f6f8fb;
   --oge-kanban-column-header-bg: transparent;
-  --oge-kanban-card-bg: var(--oge-bg);
-  --oge-kanban-card-fg: var(--oge-text-color);
   --oge-kanban-card-ring: rgba(15, 23, 42, 0.07);
   --oge-kanban-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
   --oge-kanban-card-shadow-hover: 0 3px 10px rgba(15, 23, 42, 0.16);
   --oge-kanban-card-shadow-drag:
     0 12px 28px -6px rgba(15, 23, 42, 0.28),
     0 4px 10px -4px rgba(15, 23, 42, 0.18);
-  --oge-kanban-placeholder-border: var(--oge-accent-25);
-  --oge-kanban-placeholder-bg: var(--oge-accent-soft);
-  --oge-kanban-lane-border: var(--oge-border-color);
   --oge-kanban-tag-bg: rgba(100, 116, 139, 0.14);
   --oge-kanban-avatar-bg: #64748b;
   --oge-kanban-avatar-fg: #ffffff;
   /* charts surfaces */
   --oge-chart-grid-line: rgba(148, 163, 184, 0.22);
-  --oge-chart-axis-line: var(--oge-border-color);
-  --oge-chart-axis-fg: var(--oge-muted-color);
   --oge-chart-crosshair: rgba(100, 116, 139, 0.55);
   --oge-chart-strip-bg: rgba(148, 163, 184, 0.14);
   --oge-chart-zoom-bg: rgba(99, 102, 241, 0.14);
   --oge-chart-candle-up: #10b981;
   --oge-chart-candle-down: #ef4444;
+}
+
+// Tokens computed from other tokens. Keep this list in sync with the
+// "derived" block of every file in ./themes (themes.spec.ts enforces it).
+@mixin derived-tokens {
+  /* soft accent tints: follow --oge-accent wherever it is set with them */
+  --oge-accent-soft: color-mix(in srgb, var(--oge-accent) 8%, transparent);
+  --oge-accent-25: color-mix(in srgb, var(--oge-accent) 25%, transparent);
+  --oge-focus-ring: color-mix(in srgb, var(--oge-accent) 40%, transparent);
+  --oge-row-focused-bg: color-mix(in srgb, var(--oge-accent) 10%, transparent);
+  --oge-update-flash-bg: color-mix(in srgb, var(--oge-accent) 24%, transparent);
+  /* readable muted text (labels/placeholders/hints — WCAG-safe) */
+  --oge-input-muted: var(--oge-header-color);
+  /* filled-field surface; dark theme overrides with a surface-independent tint */
+  --oge-input-filled-bg: var(--oge-header-bg);
+  --oge-scheduler-chip-bg: var(--oge-accent);
+  --oge-scheduler-grid-line: var(--oge-border-color);
+  --oge-scheduler-allday-bg: var(--oge-header-bg);
+  --oge-scheduler-hour-fg: var(--oge-muted-color);
+  --oge-gantt-bar-bg: var(--oge-accent);
+  --oge-gantt-grid-line: var(--oge-border-color);
+  --oge-kanban-card-bg: var(--oge-bg);
+  --oge-kanban-card-fg: var(--oge-text-color);
+  --oge-kanban-placeholder-border: var(--oge-accent-25);
+  --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  --oge-kanban-lane-border: var(--oge-border-color);
+  --oge-chart-axis-line: var(--oge-border-color);
+  --oge-chart-axis-fg: var(--oge-muted-color);
+}
+
+/// Included by every component at its host rule (`.oge-x { @include
+/// tokens.core-tokens; … }`); emits the default theme at zero specificity.
+@mixin core-tokens {
+  @at-root {
+    // `auto` scopes are light here and turn dark under
+    // `prefers-color-scheme: dark` in themes/dark.css (a class selector,
+    // which outranks this `:where()`), so an auto island inside a dark page
+    // still follows the OS.
+    :where(
+      :root,
+      .oge-theme-light,
+      [data-oge-theme='light'],
+      .oge-theme-auto,
+      [data-oge-theme='auto']
+    ) {
+      @include literal-tokens;
+      @include derived-tokens;
+    }
+
+    :where(.oge-theme-light, [data-oge-theme='light']) {
+      color-scheme: light;
+    }
+  }
+}
+
+/// Thin, token-coloured scrollbars for a scroll container the suite draws.
+@mixin scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--oge-scrollbar-thumb);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--oge-scrollbar-thumb-hover);
+    }
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--oge-scrollbar-track);
+  }
 }

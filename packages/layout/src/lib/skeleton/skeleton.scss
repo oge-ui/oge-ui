@@ -44,7 +44,7 @@
 }
 
 .oge-skeleton-pulse {
-  background: var(--oge-skeleton-color, rgba(148, 163, 184, 0.25));
+  background: var(--oge-skeleton-color);
   background-size: auto;
   animation: oge-skeleton-beat 1200ms ease-in-out infinite;
 }
@@ -84,7 +84,7 @@
   }
 
   .oge-skeleton-pulse & {
-    background: var(--oge-skeleton-color, rgba(148, 163, 184, 0.25));
+    background: var(--oge-skeleton-color);
     background-size: auto;
     animation: oge-skeleton-beat 1200ms ease-in-out infinite;
   }
