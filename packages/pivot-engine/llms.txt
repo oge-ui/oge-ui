@@ -11,19 +11,25 @@ Whole-suite reference: https://ogeui.com/llms-full.txt
 npm i @oge-ui/pivot-engine
 ```
 
-## Writing code against this package
+## Using this package
 
-This is a framework-free engine: plain TypeScript, no Angular or React import,
-no components and no stylesheet. It runs in Node, in a worker, in tests and
-under either render layer.
+This is a **framework-free engine package**: plain TypeScript with no Angular
+or React import, shared by a family's render layers. You almost never import it
+directly.
 
-1. **You rarely install it directly.** The Angular and the React editor of the
-   family depend on it and re-export the surface an app needs — import from
-   the editor package in UI code.
-2. **Import it directly for pipelines.** Server-side conversion, validation or
-   rendering (XML in, XML/JSON/SVG out) and test fixtures are what it is for.
-3. **Everything is immutable.** Commands return a new model; the command stack
-   keeps snapshots. Never mutate a model object in place.
+1. **Install the render package instead.** The Angular package (`@oge-ui/<family>`)
+   and the React package (`@oge-ui/react-<family>`) depend on this engine and
+   re-export its public types under the same names — import types from the
+   render package you use, not from here.
+2. **Reach for it directly only to build outside a component**: the export
+   builders on its `/export-*` entry points (optional peers, e.g. `exceljs` /
+   `jspdf`), the pure kernel functions in a Node script or a test, or a third
+   render layer.
+3. **Its controller takes an `OgeReactivityAdapter`** (`cell` / `derived`,
+   from `@oge-ui/behavior`). The render packages supply one — signals in
+   Angular, a versioned store in React; a new layer supplies its own.
+4. **Licensing follows the family.** A commercial family's engine carries the
+   same commercial license as its render packages.
 
 ## Entry points
 
