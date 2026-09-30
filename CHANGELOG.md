@@ -156,6 +156,21 @@ design notes. Every item below removes one of those workarounds.
   the counter and the native `maxlength` — do not bind `[maxLength]` as well
   (Angular rejects it, NG8022). Now covered by a test and documented.
 
+### Added (React)
+
+- **`@oge-ui/react-kanban` and `@oge-ui/kanban-engine`** — the Kanban board
+  in React, at full parity with `<oge-kanban>`: columns and swimlanes, WIP
+  limits, per-column virtualization, drag & drop with Escape-cancel and edge
+  auto-scroll, Ctrl+Arrow keyboard moving with announcements, column reorder
+  and add, context menu, toolbar search and the edit dialog, with every input
+  as a prop, the models as controlled/uncontrolled pairs, the outputs as `onX`
+  callbacks, the methods on a `ref` handle, the templates as `renderCard` /
+  `renderColumnHeader` and `<OgeKanbanConfigProvider>` for the config. Both
+  layers run the new framework-free, commercially licensed
+  `@oge-ui/kanban-engine` (ADR 0003); the Angular `@oge-ui/kanban` was rewired
+  onto it with an unchanged public API. Fixed on the way: a move into a cell
+  with no midpoint order room dropped the moved card's renumbered order.
+
 ## 0.13.1 — 2026-09-06
 
 Every package moves to 0.13.1 together. A patch release by version number, but
