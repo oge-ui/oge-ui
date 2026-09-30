@@ -1,0 +1,517 @@
+# @oge-ui/react-tree-list
+
+> React tree list: the data-grid feature set on hierarchical data — flat parentId or nested payloads, lazy per-expansion loading with remote match discovery, ancestor-preserving filtering, recursive tri-state selection, paging over visible rows, virtualization, editing in all five modes and drag & drop reparenting — running the same framework-free tree engine, state slices and stylesheet as the Angular tree-list package.
+
+Part of OGE UI v0.13.1.
+Docs and live demos: https://ogeui.com/components/tree-list
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-tree-list
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages and ship in
+`@oge-ui/core` (installed with every package; add it directly under pnpm):
+`@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
+`data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
+`prefers-color-scheme`), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeTreeList>
+
+#### Properties
+
+_Tree data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `readonly T[] \| DataSource<T>` | `[]` | Flat self-referencing rows: a static array or any DataSource. |
+| `keyExpr` | `string \| ((row: T) => RowKey)` | `'id'` | Row key: field path or selector (the grid uses `keyField`). |
+| `parentIdExpr` | `string \| ((row: T) => unknown)` | `'parentId'` | Parent reference: field path or selector. |
+| `rootValue` | `unknown` | `null` | Parent value marking root rows. |
+| `orphanPolicy` | `'discard' \| 'promoteToRoot'` | `'discard'` | Rows whose parent key is missing: drop or render as roots. |
+| `itemsExpr` | `string \| ((row: T) => readonly T[] \| undefined)` | `—` | Nested payloads: rows carry children inline (plain arrays only; `parentIdExpr` ignored). |
+| `hasItemsExpr` | `string \| ((row: T) => boolean)` | `—` | Expandability hint for lazily loaded children. |
+| `loadMode` | `'full' \| 'lazy'` | `—` | `'lazy'` fetches children per expansion (`filter: [parentIdExpr,'=',key]`); defaults to lazy with DataSource + `hasItemsExpr`. |
+
+_Expansion & focus_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `autoExpandAll` | `boolean` | `false` | Expands every row initially; the toggled-set polarity follows. |
+| `expandedRowKeys / defaultExpandedRowKeys` | `readonly RowKey[]` | `undefined` | The expanded row keys — controlled with `onExpandedRowKeysChange`, or seeded once with `defaultExpandedRowKeys`. |
+| `expandNodesOnFiltering` | `boolean` | `true` | Auto-expands ancestor chains of matches while a filter is active. |
+| `focusedRowEnabled` | `boolean` | `false` | Highlights and tracks a single focused row. |
+| `focusedRowKey` | `RowKey \| null` | `undefined` | The focused row's key — controlled when provided, with `onFocusedRowKeyChange`. |
+| `autoNavigateToFocusedRow` | `boolean` | `false` | A `focusedRowKey` change expands its ancestor path and scrolls (tree-only). |
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `OgeGridSelectionMode` | `'none'` | none \| single \| multiple \| checkbox. |
+| `selectedKeys / defaultSelectedKeys` | `readonly RowKey[]` | `undefined` | The selected row keys — controlled with `onSelectedKeysChange`, or seeded once with `defaultSelectedKeys`. |
+| `selectionRecursive` | `boolean` | `false` | Tri-state cascade to descendants and ancestors. |
+| `allowSelectAll` | `boolean` | `true` | Hides the header select-all checkbox when false. |
+
+_Filtering & paging_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `filterRow / headerFilter / searchPanel / filterPanel` | `boolean \| options` | `false` | Same options objects as the grid — all client-side over the loaded rows. |
+| `filterMode` | `TreeFilterMode` | `'withAncestors'` | Matches keep their ancestors; `'fullBranch'` also keeps all descendants. |
+| `filterValue / defaultFilterValue` | `FilterExpr \| null` | `undefined` | The filter expression (builder) — controlled with `onFilterValueChange`. |
+| `filterDebounce` | `number` | `—` | Debounce for text filter inputs. |
+| `paging` | `false \| OgePagingOptions` | `false` | Pages the visible (flattened) rows client-side; paging wins over `virtualScroll`. |
+| `sortable / sorting` | `boolean \| 'single' \| 'multi' / OgeSortingOptions` | `true` | Sibling-scoped, multi-column by default. |
+
+_Layout, editing & misc (grid-shared)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `columns` | `readonly (string \| OgeGridColumnProps<T>)[]` | `—` | The columns — the React grid’s column props (`renderCell`, `renderHeader`, `renderEditor`, `bandCaption`, validators…), or a plain field name. |
+| `virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth` | `various` | `—` | Virtualization knobs; `columnRenderingMode` is a top-level prop here. |
+| `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false). |
+| `editing` | `false \| OgeEditingOptions` | `false` | cell/row/batch/form/popup via the shared editing core. |
+| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid. |
+| `stateStorage` | `OgeStateStorage` | `undefined` | Per-tree storage backend for `stateKey`; overrides `<OgeGridStateStorageProvider>`. |
+| `renderNoData` | `(context: OgeGridNoDataContext) => ReactNode` | `—` | Renders the empty state — the React form of `*ogeNoDataTemplate`. |
+| `toolbarBefore` | `ReactNode` | `—` | Your own toolbar content at the start edge, ahead of the built-in tools — the React form of projected `[ogeToolbar]` items. |
+| `className / style / ariaLabel` | `string / CSSProperties / string` | `—` | Host styling and the accessible name of the treegrid. |
+
+#### Methods
+
+_Tree navigation & data_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `expandAll() / collapseAll()` | `void` | Polarity-aware over the expandable keys. |
+| `expandRow(key) / collapseRow(key) / isRowExpanded(key)` | `void / boolean` | Per-row expansion (the handle bypasses the cancelable callbacks). |
+| `focusRow(key) / navigateToRow(key)` | `void` | Expands the ancestor path, scrolls to the row and focuses its first cell. |
+| `scrollToRow(target: number \| RowKey)` | `void` | Scrolls a visible row into the viewport. |
+| `getNodeByKey(key): T \| undefined` | `T \| undefined` | The loaded row carrying `key`. |
+| `forEachNode(callback)` | `void` | Runs the callback for every loaded row with `(row, key, parentKey)`. |
+| `getVisibleRows(): readonly T[]` | `readonly T[]` | Data rows of the rendered page, in display order. |
+| `refresh(): void` | `void` | Re-runs the load and drops lazily fetched rows. |
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSelectedRowKeys(mode = 'all')` | `RowKey[]` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` narrows recursive selections. |
+| `getSelectedRowsData(mode = 'all')` | `T[]` | Row data per the same modes. |
+| `selectAll() / deselectAll() / clearSelection() / isRowSelected(key)` | `void / boolean` | Recursive mode cascades select-all to descendants. |
+| `copyToClipboard(): Promise<void>` | `Promise<void>` | Selected rows as tab-separated values (with header). |
+
+_Editing, paging, state & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addRow(parentKey?)` | `void` | New unsaved row; parent pre-staged with a string `parentIdExpr`; `onInitNewRow` can prefill. |
+| `editRow(key) / deleteRow(key) / saveChanges() / discardChanges() / hasChanges()` | `void / boolean` | Same semantics as the grid. |
+| `pageIndex() / setPageIndex(i) / pageSize() / setPageSize(n) / pageCount() / totalCount()` | `methods` | `pageIndex()` reads the page Angular exposes as a writable signal; `totalCount()` spans all pages. |
+| `beginCustomLoading(message?) / endCustomLoading()` | `void` | Load panel independent of data activity. |
+| `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. |
+| `clearFilters() / clearSorting()` | `void` | Reset the view. |
+| `getExportData() / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async); CSV indents the first column 2 spaces per level; the Excel entry sets real outline levels. Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
+
+#### Events
+
+_Tree-specific_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onRowExpanding / onRowCollapsing` | `(event: OgeTreeRowTogglingEvent<T>) => void` | Cancelable — UI-driven toggles only (the handle stays silent). |
+| `onRowExpanded / onRowCollapsed` | `(event: OgeTreeRowToggleEvent<T>) => void` | `{ key, row }` after a toggle. |
+| `onRowReparented` | `(event: OgeTreeRowReparentEvent<T>) => void` | Drag & drop: `{ key, row, fromParentKey, toParentKey, position: 'inside' \| 'before' \| 'after' }`. |
+| `onInitNewRow` | `(event: OgeTreeInitNewRowEvent) => void` | `{ key, parentKey, values }` prefill hook. |
+
+_Shared with the grid_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onRowClick / onRowDblClick / onCellClick / onCellDblClick` | `OgeRowClickEvent / OgeCellClickEvent` | Flat payloads with the originating React event. |
+| `onRowContextMenu / onHeaderContextMenu` | `context-menu callbacks` | Mutable `items`; also opened by the Menu key / Shift+F10 on a focused cell or header (`source: 'keyboard'`, anchored at the cell). |
+| `onSelectionChanged / onFocusedRowChanged` | `diff / focus callbacks` | Same payloads as the grid. |
+| `onEditingStart / onRowInserting / onRowInserted / onRowUpdating / onRowUpdated / onRowRemoving / onRowRemoved / onSavingChanges / onSavedChanges / onEditCanceled` | `editing lifecycle` | Same shared editing pipeline as the grid; `-ing` callbacks are cancelable. |
+| `onExpandedRowKeysChange / onSelectedKeysChange / onFocusedRowKeyChange / onFilterValueChange` | `controlled-value callbacks` | The change halves of the controlled `expandedRowKeys`, `selectedKeys`, `focusedRowKey` and `filterValue` props. |
+| `onExporting / onDataErrorOccurred / onContentReady / onStateChange` | `misc` | Same semantics as the grid (`onStateChange` receives a `TreeListStateSnapshot`). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTreeListHandle<T>` | `ref handle` | The methods above, reached through `useRef<OgeTreeListHandle<T>>()`. |
+| `OgeTreeListProps<T>` | `props` | Every prop and callback of this page. |
+| `OgeTreeContextMenuEvent<T> / OgeTreeHeaderContextMenuEvent` | `context-menu payloads` | Row / header menu payloads: `items` to push into, `source`, the originating `event`. |
+| `OgeTreeDropPosition` | `'inside' \| 'before' \| 'after'` | Reparent vs sibling ordering. |
+| `OgeTreeExportData<T>` | `OgeExportData<T> & { levels: readonly number[] }` | Zero-based depth per exported row (drives spreadsheet outline levels). |
+| `TreeFilterMode` | `'withAncestors' \| 'fullBranch'` | Visible set under a filter. |
+| `exportOgeTreeListToExcel(handle, options?)` | `@oge-ui/react-tree-list/export-excel` | Lazy Excel export with native outline grouping (optional `exceljs` peer). |
+| `Re-exports` | `from @oge-ui/react-grid` | `OgeGridColumnProps`, the render-prop contexts, `<OgeGridConfigProvider>` / `<OgeGridStateStorageProvider>` and the shared event payload types are re-exported so tree-only consumers have a single import source. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Reparenting
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+import type { OgeTreeRowReparentEvent } from '@oge-ui/react-tree-list';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function DraggableOrg() {
+  const onReparent = (event: OgeTreeRowReparentEvent<OrgNode>) => {
+    console.log(event.key, 'moved under', event.toParentKey);
+  };
+  return (
+    <OgeTreeList
+      data={org}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      rowDragging
+      onRowReparented={onReparent}
+      columns={[
+        { field: 'name', caption: 'Name' },
+        { field: 'title', caption: 'Title', width: 140 },
+        { field: 'office', caption: 'Office', width: 140 },
+      ]}
+    />
+  );
+}
+```
+
+### Form mode, prefill, insert under a parent
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+import type { OgeTreeListHandle } from '@oge-ui/react-tree-list';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function EditableOrg() {
+  const tree = useRef<OgeTreeListHandle<OrgNode>>(null);
+  // tree.current?.addRow(parentKey) inserts under a chosen node
+  const addUnderFirstVp = () => {
+    const firstVp = org.find((row) => row.title === 'VP');
+    if (firstVp) tree.current?.addRow(firstVp.id);
+  };
+  return (
+    <>
+      <button type="button" onClick={addUnderFirstVp}>
+        Add under the first VP
+      </button>
+      <OgeTreeList
+        ref={tree}
+        data={org}
+        keyExpr="id"
+        parentIdExpr="parentId"
+        autoExpandAll
+        editing={{
+          mode: 'form',
+          allowUpdating: true,
+          allowAdding: true,
+          allowDeleting: true,
+          confirmDelete: false,
+          formColCount: 2,
+          formItems: ['name', 'title', { field: 'office', colSpan: 2 }],
+        }}
+        onInitNewRow={(event) => {
+          event.values['title'] = 'Engineer';
+        }}
+        columns={[
+          { field: 'name', caption: 'Name', required: true },
+          { field: 'title', caption: 'Title', width: 140 },
+          { field: 'office', caption: 'Office', width: 140 },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+### Ancestors preserved
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function FilteredOrg() {
+  return (
+    <OgeTreeList
+      data={org}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      filterRow
+      searchPanel
+      headerFilter
+      filterMode="withAncestors"
+      columns={[
+        { field: 'name', caption: 'Name' },
+        { field: 'office', caption: 'Office' },
+      ]}
+    />
+  );
+}
+```
+
+### Children per expansion
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+import { CustomDataSource } from '@oge-ui/core';
+
+interface Node {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasReports: boolean;
+}
+
+/** The tree list asks for one level at a time: ['parentId', '=', key]. */
+function parentKeyOf(options: { filter?: unknown }): string {
+  const filter = options.filter as [string, string, unknown] | undefined;
+  return String(filter?.[2] ?? '');
+}
+
+// children are fetched per expansion:
+// load({ filter: ['parentId', '=', parentKey] })
+const source = new CustomDataSource<Node>({
+  key: 'id',
+  load: (options) =>
+    fetch(`/api/org?parent=${parentKeyOf(options)}`)
+      .then((response) => response.json())
+      .then((data: Node[]) => ({ data, totalCount: data.length })),
+});
+
+export function LazyOrg() {
+  return (
+    <OgeTreeList
+      data={source}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      hasItemsExpr="hasReports"
+      columns={[{ field: 'name' }]}
+    />
+  );
+}
+```
+
+### Flat id/parentId data
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function OrgChart() {
+  return (
+    <OgeTreeList
+      data={org}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      columns={[
+        { field: 'name', caption: 'Name' },
+        { field: 'title', caption: 'Title', width: 140 },
+        { field: 'office', caption: 'Office', width: 140 },
+        { field: 'headcount', caption: 'Reports', dataType: 'number', width: 110 },
+      ]}
+    />
+  );
+}
+```
+
+### Recursive tri-state selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+import type { RowKey } from '@oge-ui/core';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function SelectableOrg() {
+  const [selectedKeys, setSelectedKeys] = useState<RowKey[]>([]);
+  return (
+    <OgeTreeList
+      data={org}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      selectionMode="checkbox"
+      selectionRecursive
+      selectedKeys={selectedKeys}
+      onSelectedKeysChange={setSelectedKeys}
+      columns={[
+        { field: 'name', caption: 'Name' },
+        { field: 'title', caption: 'Title', width: 140 },
+        { field: 'office', caption: 'Office', width: 140 },
+      ]}
+    />
+  );
+}
+```
+
+### 100.000 nodes
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+
+// 100 branches × 999 rows = 100.000 nodes
+const rows = Array.from({ length: 100 }, (_, branch) => [
+  { id: branch * 1000, parentId: null, name: `Branch ${branch + 1}` },
+  ...Array.from({ length: 999 }, (_, leaf) => ({
+    id: branch * 1000 + leaf + 1,
+    parentId: branch * 1000,
+    name: `Node ${leaf + 1}`,
+  })),
+]).flat();
+
+export function BigTree() {
+  return (
+    <OgeTreeList
+      data={rows}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      virtualScroll
+      style={{ height: 480 }}
+      columns={[{ field: 'name' }]}
+    />
+  );
+}
+```
+

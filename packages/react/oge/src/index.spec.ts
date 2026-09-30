@@ -40,6 +40,8 @@ import {
   OgeTextArea,
   OgeTextBox,
   OgeTreeView,
+  OgeTreeList,
+  OgeGridConfigProvider,
   OgeValidationSummary,
   OgeButtonsConfigProvider,
   OgeInputsConfigProvider,
@@ -54,6 +56,10 @@ import {
 describe('@oge-ui/react umbrella barrel', () => {
   it('re-exports every family without star-export collisions', () => {
     for (const symbol of [
+      // tree list — its re-exported grid config provider is the same binding
+      // `@oge-ui/react-grid` exports, so the two stars must not collide
+      OgeTreeList,
+      OgeGridConfigProvider,
       // buttons
       OgeButton,
       OgeButtonGroup,

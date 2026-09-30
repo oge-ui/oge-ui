@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -14,9 +14,6 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 const publishAssets = (outDir: string): Plugin => ({
   name: 'oge:publish-assets',
   closeBundle() {
-    // The umbrella emits only re-export chunks, so make the folder rather
-    // than assume an earlier write created it.
-    mkdirSync(join(__dirname, outDir), { recursive: true });
     for (const file of ['README.md', 'LICENSE', 'llms.txt']) {
       copyFileSync(join(__dirname, file), join(__dirname, outDir, file));
     }
@@ -25,11 +22,11 @@ const publishAssets = (outDir: string): Plugin => ({
 
 export default defineConfig(() => ({
   root: __dirname,
-  cacheDir: '../../../node_modules/.vite/packages/react/oge',
+  cacheDir: '../../../node_modules/.vite/packages/react/tree-list',
   plugins: [
     react(),
     nxViteTsPaths(),
-    publishAssets('../../../dist/packages/react/oge'),
+    publishAssets('../../../dist/packages/react/tree-list'),
     dts({
       entryRoot: 'src',
       tsconfigPath: `${__dirname}/tsconfig.lib.json`,
@@ -40,39 +37,40 @@ export default defineConfig(() => ({
     }),
   ],
   build: {
-    outDir: '../../../dist/packages/react/oge',
+    outDir: '../../../dist/packages/react/tree-list',
     emptyOutDir: true,
     reportCompressedSize: true,
     lib: {
-      // Two entries on purpose: the JS never imports the stylesheet, so a
-      // consumer that renders on the server (or bundles without a CSS loader)
-      // is not forced to resolve it. `styles.css` is imported once by the app,
-      // which is what the docs tell people to do.
-      entry: { index: 'src/index.ts', styles: 'src/styles.ts' },
+      // Separate entries on purpose: the JS never imports the stylesheet (a
+      // consumer rendering on the server is not forced to resolve it), and
+      // `exceljs` is an optional peer that only the `export-excel` entry
+      // pulls in — the same shape as the Angular package's secondary entry.
+      entry: {
+        index: 'src/index.ts',
+        styles: 'src/styles.ts',
+        'export-excel': 'src/export-excel.ts',
+      },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      // Never bundle the host's React — and never bundle a sibling family
-      // either: this package is a re-export barrel, so every `@oge-ui/*`
-      // import stays a real dependency. Bundling them would ship a second
-      // copy of each component next to the one an app that also installs a
-      // scoped package already has.
+      // never bundle the host's React, and keep the shared substrate a real
+      // dependency so both render layers load exactly one copy of it
       external: [
         'react',
         'react-dom',
         'react/jsx-runtime',
         '@oge-ui/behavior',
-        '@oge-ui/react-buttons',
+        '@oge-ui/behavior/export-excel',
+        '@oge-ui/core',
+        'exceljs',
         '@oge-ui/react-forms',
         '@oge-ui/react-grid',
-        '@oge-ui/react-tree-list',
+        '@oge-ui/react-grid/foundation',
         '@oge-ui/react-inputs',
         '@oge-ui/react-layout',
-        '@oge-ui/react-navigation',
         '@oge-ui/react-overlay',
-        '@oge-ui/react-tabs',
       ],
       output: {
         // Rollup strips module-level directives when it bundles, so the
@@ -88,7 +86,7 @@ export default defineConfig(() => ({
     },
   },
   test: {
-    name: 'react-oge',
+    name: 'react-tree-list',
     watch: false,
     globals: true,
     environment: 'jsdom',
@@ -96,7 +94,7 @@ export default defineConfig(() => ({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '../../../coverage/packages/react/oge',
+      reportsDirectory: '../../../coverage/packages/react/tree-list',
       provider: 'v8' as const,
     },
   },

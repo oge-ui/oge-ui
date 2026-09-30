@@ -39,6 +39,11 @@
       "import": "./export-pdf.js",
       "require": "./export-pdf.cjs"
     },
+    "./foundation": {
+      "types": "./foundation.d.ts",
+      "import": "./foundation.js",
+      "require": "./foundation.cjs"
+    },
     "./styles.css": "./styles.css"
   },
   "sideEffects": [

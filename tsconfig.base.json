@@ -28,6 +28,10 @@
       "@oge-ui/react-overlay": ["./packages/react/overlay/src/index.ts"],
       "@oge-ui/react-forms": ["./packages/react/forms/src/index.ts"],
       "@oge-ui/react-grid": ["./packages/react/grid/src/index.ts"],
+      "@oge-ui/react-grid/foundation": [
+        "./packages/react/grid/src/foundation.ts"
+      ],
+      "@oge-ui/react-tree-list": ["./packages/react/tree-list/src/index.ts"],
       "@oge-ui/react-upload": ["./packages/react/upload/src/index.ts"],
       "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
       "@oge-ui/core": ["./packages/core/src/index.ts"],

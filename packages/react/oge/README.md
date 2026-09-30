@@ -32,6 +32,7 @@ tokens. Nothing is wrapped: there is no Angular in your bundle.
 | `@oge-ui/react-forms`      | `OgeForm`, `OgeValidationSummary`                                                                                                                                                                                                                       |
 | `@oge-ui/react-upload`     | `OgeFileUploader`, `OgeUploadDropZone`, `OgeUploadTrigger`, `OgeUploadConfigProvider`, `OgeUploadTransportProvider`                                                                                                                                     |
 | `@oge-ui/react-grid`       | `OgeGrid`, `OgePager`, `OgeGridConfigProvider`, `OgeGridStateStorageProvider` — the grid ships in slices; see the suite's `docs/REACT-PARITY.md` for what is in and what follows                                                                        |
+| `@oge-ui/react-tree-list`  | `OgeTreeList` — the hierarchical data grid on the same tree engine as the Angular tree list                                                                                                                                                             |
 
 The scoped packages stay the canonical import paths for size-conscious apps:
 installing one family pulls in only that family. This umbrella exists for the
