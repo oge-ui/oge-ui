@@ -11,21 +11,36 @@ import {
   viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { sameDay, sameMonth, startOfDay } from '@oge-ui/core';
-import { proposeMove, type AppointmentProposal } from '../engine/gesture-math';
-import { beginPointerGesture } from './gesture';
-import type { LaneLayout } from '../engine/lanes';
-import { buildMonthWeekLanes } from '../engine/month-layout';
-import type { SchedulerAppointment } from '../engine/scheduler-model';
-import { buildMonthGrid, type MonthGridVm } from '../engine/view-model';
-import type { OgeSchedulerGridMessages } from '../config';
-import { OgeSchedulerAppointmentChip } from './appointment';
+import { sameDay, sameMonth } from '@oge-ui/core';
 import {
+  beginPointerGesture,
+  buildMonthGrid,
+  buildMonthWeekLayouts,
+  chipKey,
+  chipTabIndexOf,
   escapeAttr,
+  monthCellKey,
+  monthChipOrder,
+  monthDropCell,
+  monthMaxLanes,
+  monthOriginIndex,
+  monthOverflowEntries,
+  proposeMove,
+  schedulerChipAriaLabel,
+  schedulerDayCellAriaLabel,
+  schedulerGridAriaLabel,
+  schedulerMoreText,
+  weekdayShortText,
+  type AppointmentProposal,
+  type LaneLayout,
+  type MonthGridVm,
+  type SchedulerAppointment,
   type SchedulerCellEvent,
   type SchedulerChipEvent,
   type SchedulerProposalEvent,
-} from './day-week-view';
+} from '@oge-ui/scheduler-engine';
+import type { OgeSchedulerGridMessages } from '../config';
+import { OgeSchedulerAppointmentChip } from './appointment';
 import type {
   OgeAppointmentTemplate,
   OgeSchedulerCellTemplate,
@@ -238,41 +253,25 @@ export class OgeSchedulerMonthView<T = unknown> {
     buildMonthGrid(this.anchorDate(), this.firstDayOfWeek()),
   );
 
-  protected readonly maxLanes = computed(() => {
-    const raw = this.maxAppointmentsPerCell();
-    return raw === 'auto' ? 3 : Math.max(1, raw);
-  });
+  protected readonly maxLanes = computed(() =>
+    monthMaxLanes(this.maxAppointmentsPerCell()),
+  );
 
-  protected readonly weekLanes = computed<readonly LaneLayout<T>[]>(() => {
-    const appointments = this.appointments();
-    const maxLanes = this.maxLanes();
-    return this.grid().weeks.map((week) =>
-      buildMonthWeekLanes(appointments, week, maxLanes),
-    );
-  });
+  protected readonly weekLanes = computed<readonly LaneLayout<T>[]>(() =>
+    buildMonthWeekLayouts(
+      this.appointments(),
+      this.grid().weeks,
+      this.maxLanes(),
+    ),
+  );
 
   protected readonly overflowEntries = computed(() =>
-    this.weekLanes().map((layout) =>
-      [...layout.overflowByDay.entries()]
-        .map(([dayIndex, count]) => ({ dayIndex, count }))
-        .sort((a, b) => a.dayIndex - b.dayIndex),
-    ),
+    monthOverflowEntries(this.weekLanes()),
   );
 
   /** Chronological order of the visible chips for the keyboard cycle. */
   protected readonly chipOrder = computed<readonly SchedulerAppointment<T>[]>(
-    () => {
-      const seen = new Set<unknown>();
-      const ordered: SchedulerAppointment<T>[] = [];
-      for (const layout of this.weekLanes()) {
-        for (const item of layout.visible) {
-          if (seen.has(item.appointment.key)) continue;
-          seen.add(item.appointment.key);
-          ordered.push(item.appointment);
-        }
-      }
-      return ordered;
-    },
+    () => monthChipOrder(this.weekLanes()),
   );
 
   /* ---------- roving focus ---------- */
@@ -289,11 +288,7 @@ export class OgeSchedulerMonthView<T = unknown> {
   }
 
   protected chipTabIndex(appointment: SchedulerAppointment<T>): number {
-    const order = this.chipOrder();
-    if (order.length === 0) return -1;
-    const focusedKey = this.focusedChipKey();
-    const active = order.find((entry) => entry.key === focusedKey) ?? order[0];
-    return appointment.key === active.key ? 0 : -1;
+    return chipTabIndexOf(this.chipOrder(), this.focusedChipKey(), appointment);
   }
 
   private queueFocusTarget(): void {
@@ -330,41 +325,18 @@ export class OgeSchedulerMonthView<T = unknown> {
     dayIndex: number,
     event: KeyboardEvent,
   ): void {
-    let week = weekIndex;
-    let day = dayIndex;
-    switch (event.key) {
-      case 'ArrowUp':
-        week = Math.max(0, week - 1);
-        break;
-      case 'ArrowDown':
-        week = Math.min(5, week + 1);
-        break;
-      case 'ArrowLeft':
-        day = Math.max(0, day - 1);
-        break;
-      case 'ArrowRight':
-        day = Math.min(6, day + 1);
-        break;
-      case 'Home':
-        day = 0;
-        break;
-      case 'End':
-        day = 6;
-        break;
-      case 'Enter':
-      case ' ':
-        event.preventDefault();
-        this.cellActivated.emit({
-          cellDate: this.grid().weeks[weekIndex][dayIndex],
-          allDay: true,
-          event,
-        });
-        return;
-      default:
-        return;
-    }
+    const action = monthCellKey(event.key, weekIndex, dayIndex);
+    if (action === null) return;
     event.preventDefault();
-    this.focusedCell.set({ week, day });
+    if (action.kind === 'activate') {
+      this.cellActivated.emit({
+        cellDate: this.grid().weeks[weekIndex][dayIndex],
+        allDay: true,
+        event,
+      });
+      return;
+    }
+    this.focusedCell.set({ week: action.row, day: action.col });
     this.queueFocusTarget();
   }
 
@@ -372,9 +344,10 @@ export class OgeSchedulerMonthView<T = unknown> {
     appointment: SchedulerAppointment<T>,
     event: KeyboardEvent,
   ): void {
-    switch (event.key) {
-      case 'Enter':
-      case ' ':
+    const action = chipKey(event.key, appointment, this.chipOrder());
+    if (action === null) return;
+    switch (action.kind) {
+      case 'activate':
         event.preventDefault();
         this.chipActivated.emit({
           appointment,
@@ -382,29 +355,16 @@ export class OgeSchedulerMonthView<T = unknown> {
           rect: (event.target as HTMLElement).getBoundingClientRect(),
         });
         return;
-      case 'Delete':
-      case 'Backspace':
+      case 'delete':
         event.preventDefault();
         this.chipDeleteRequested.emit(appointment);
         return;
-      case 'ArrowLeft':
-      case 'ArrowRight': {
+      case 'focus':
         event.preventDefault();
-        const order = this.chipOrder();
-        const index = order.findIndex((entry) => entry.key === appointment.key);
-        const next =
-          order[
-            event.key === 'ArrowRight'
-              ? Math.min(order.length - 1, index + 1)
-              : Math.max(0, index - 1)
-          ];
-        this.focusChip(next.key);
+        this.focusChip(action.key);
         return;
-      }
-      case 'Escape':
+      case 'escape':
         this.escapePressed.emit();
-        return;
-      default:
         return;
     }
   }
@@ -436,26 +396,14 @@ export class OgeSchedulerMonthView<T = unknown> {
     const gridEl = this.monthGridEl()?.nativeElement;
     if (gridEl === undefined) return;
     const rect = gridEl.getBoundingClientRect();
-    const days = this.grid().weeks.flat();
-    const originIndex = days.findIndex((day) =>
-      sameDay(day, startOfDay(appointment.startDate)),
-    );
+    const originIndex = monthOriginIndex(this.grid().weeks, appointment);
     let proposal: AppointmentProposal | null = null;
     beginPointerGesture(event, {
       onMove: (_deltaX, _deltaY, moveEvent) => {
-        const week = Math.min(
-          5,
-          Math.max(
-            0,
-            Math.floor(((moveEvent.clientY - rect.top) / rect.height) * 6),
-          ),
-        );
-        const day = Math.min(
-          6,
-          Math.max(
-            0,
-            Math.floor(((moveEvent.clientX - rect.left) / rect.width) * 7),
-          ),
+        const { week, day } = monthDropCell(
+          moveEvent.clientX,
+          moveEvent.clientY,
+          rect,
         );
         this.dropTarget.set({ week, day });
         if (originIndex === -1) return;
@@ -521,29 +469,15 @@ export class OgeSchedulerMonthView<T = unknown> {
   /* ---------- labels ---------- */
 
   protected gridAriaLabel(): string {
-    const label = this.messages().gridLabel.replace(
-      '{period}',
-      this.periodLabel(),
-    );
-    return `${label}. ${this.messages().gridHint}`;
+    return schedulerGridAriaLabel(this.messages(), this.periodLabel());
   }
 
   protected cellAriaLabel(day: Date): string {
-    return this.messages().dayCellLabel.replace(
-      '{date}',
-      new Intl.DateTimeFormat(this.locale(), { dateStyle: 'full' }).format(day),
-    );
+    return schedulerDayCellAriaLabel(this.messages(), day, this.locale());
   }
 
   protected chipLabel(appointment: SchedulerAppointment<T>): string {
-    const format = new Intl.DateTimeFormat(this.locale(), {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
-    return this.messages()
-      .appointmentLabel.replace('{text}', appointment.text)
-      .replace('{start}', format.format(appointment.startDate))
-      .replace('{end}', format.format(appointment.endDate));
+    return schedulerChipAriaLabel(this.messages(), appointment, this.locale());
   }
 
   protected isCurrentMonth(day: Date): boolean {
@@ -555,13 +489,11 @@ export class OgeSchedulerMonthView<T = unknown> {
   }
 
   protected weekdayText(day: Date): string {
-    return new Intl.DateTimeFormat(this.locale(), { weekday: 'short' }).format(
-      day,
-    );
+    return weekdayShortText(day, this.locale());
   }
 
   protected moreText(count: number): string {
-    return this.messages().moreLabel.replace('{count}', String(count));
+    return schedulerMoreText(this.messages(), count);
   }
 
   protected readonly String = String;

@@ -28,10 +28,7 @@ export interface LaneLayout<T = unknown> {
   readonly laneCount: number;
   /** Per-day hidden counts for "+N more" (only days with overflow appear). */
   readonly overflowByDay: ReadonlyMap<number, number>;
-  readonly hiddenByDay: ReadonlyMap<
-    number,
-    readonly SchedulerAppointment<T>[]
-  >;
+  readonly hiddenByDay: ReadonlyMap<number, readonly SchedulerAppointment<T>[]>;
 }
 
 /**

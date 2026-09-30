@@ -88,9 +88,7 @@ function periodCandidates(
       if (rule.byMonthDay !== undefined && rule.byMonthDay.length > 0) {
         const lastDay = new Date(year, month + 1, 0).getDate();
         return rule.byMonthDay
-          .map((dayOfMonth) =>
-            dayOfMonth === -1 ? lastDay : dayOfMonth,
-          )
+          .map((dayOfMonth) => (dayOfMonth === -1 ? lastDay : dayOfMonth))
           .filter((dayOfMonth) => dayOfMonth >= 1 && dayOfMonth <= lastDay)
           .map((dayOfMonth) =>
             withTime(new Date(year, month, dayOfMonth), seriesStart),

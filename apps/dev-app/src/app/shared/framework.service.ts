@@ -62,6 +62,9 @@ const COVERAGE: Readonly<
     bpmn: '*',
     // the commercial charts family: overview and api both branch
     charts: '*',
+    // commercial: overview and api both branch (ADR 0003 — the engine is
+    // @oge-ui/scheduler-engine, shared by both layers)
+    scheduler: '*',
     // R6 complete: every feature page of the grid now branches. The
     // engine-level sub-pages that share this family — playground, sorting,
     // virtual-scroll, infinite-scroll, remote-data, live-updates — stay

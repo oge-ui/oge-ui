@@ -125,6 +125,7 @@ pages in both layers:
 | BPMN       | ✅ editor (palette, tool strip, context pad + align flyout, properties panel, minimap, search, header, overlays, pools/lanes, every gesture and key), config provider — all on `@oge-ui/bpmn-engine`'s editor core                                                                                                                                                                                                                        | ✅ overview, api — all branch, section for section                                                                              | ✅ / ✅           | ✅ `bpmn` in `FAMILIES`      |
 
 | Charts | ✅ chart (cartesian), pie chart, polar chart, range selector, config provider, `export-image` entry — on `@oge-ui/charts-engine` (ADR 0003), the Angular charts rewired onto it | ✅ overview, api — both branch, section for section | ✅ / ✅ | ✅ `charts` in `FAMILIES` |
+| Scheduler | ✅ scheduler (8 views, gestures, recurrence, resources, reminders, popup, editor, context menu), config provider — on `@oge-ui/scheduler-engine` (commercial, ADR 0003) | ✅ overview, api — both branch, section for section | ✅ / ✅ | ✅ `scheduler` in `FAMILIES` |
 
 New families add a row here when they land — a family without its row (or
 with a partial one) is not done, whatever the code says.
@@ -224,6 +225,16 @@ Anything not listed here is a defect.
   only (its API row claimed marker/sector clicks), and the pie chart queries
   `*ogeChartTooltipTemplate` but never renders it — so the React pie has no
   `renderTooltip`, matching what the Angular pie actually does.
+- **The scheduler's slot directives and host props (2026-09-30).**
+  `*ogeAppointmentTemplate`, `[ogeCellTemplate]` and
+  `[ogeDateHeaderTemplate]` are documented in the Angular types table; React
+  carries them as the `renderAppointment` / `renderCell` /
+  `renderDateHeader` props (TemplateRef ↔ render prop), plus `className` /
+  `style` for the host. `provideOgeSchedulerConfig()` pairs with
+  `<OgeSchedulerConfigProvider>`; `useOgeSchedulerConfig()` is React-only
+  (Angular injects `OGE_SCHEDULER_CONFIG`). The internal views' unbound
+  `escapePressed` output (no Angular listener ever existed) has no React
+  counterpart. All recorded in `check-parity.mjs`.
 - **The tabs "Routed tabs" page (2026-08-13).** That page drives the selection
   from the Angular router's child routes — the demo _is_ an Angular-router
   integration, and React apps route with their own library. The React tabs

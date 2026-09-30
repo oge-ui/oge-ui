@@ -1,0 +1,7 @@
+// The React scheduler renders the exact `.oge-scheduler-*` markup the Angular
+// package styles — so its stylesheet IS the Angular package's SCSS, compiled
+// here into this package's own `styles.css`. No second stylesheet, no drift
+// (ADR 0001 / 0003). The popup, the modal, the calendar and the form come
+// from the overlay, inputs and forms packages' own stylesheets, which the app
+// imports alongside.
+@use '../../../scheduler/src/lib/scheduler/scheduler';

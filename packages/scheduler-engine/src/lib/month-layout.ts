@@ -65,7 +65,10 @@ export function buildMonthWeekLanes<T>(
         clippedEnd,
       },
       multiDay:
-        appointment.displayAllDay || endDayIndex > startDayIndex || clippedStart || clippedEnd,
+        appointment.displayAllDay ||
+        endDayIndex > startDayIndex ||
+        clippedStart ||
+        clippedEnd,
       startMs: appointment.startDate.getTime(),
     });
   }

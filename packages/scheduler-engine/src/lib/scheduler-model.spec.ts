@@ -165,7 +165,11 @@ describe('scheduler-model', () => {
       startDateExpr: (item) => item.startDate,
     });
     const patch = appointmentPatch(
-      { id: 1, startDate: new Date(2026, 7, 6, 9), endDate: new Date(2026, 7, 6, 10) },
+      {
+        id: 1,
+        startDate: new Date(2026, 7, 6, 9),
+        endDate: new Date(2026, 7, 6, 10),
+      },
       {
         startDate: new Date(2026, 7, 7, 9),
         endDate: new Date(2026, 7, 7, 10),

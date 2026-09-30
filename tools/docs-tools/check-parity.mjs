@@ -683,6 +683,32 @@ const FAMILIES = [
       },
     },
   },
+  {
+    family: 'scheduler',
+    angularApiPage: 'apps/dev-app/src/app/pages/scheduler/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-scheduler/api.ts',
+    exceptions: {
+      pairs: {
+        // DI provider ↔ context provider (both documented in the
+        // Configuration block)
+        provideogeschedulerconfig: 'ogeschedulerconfigprovider',
+      },
+      reactOnly: {
+        renderappointment:
+          'React form of the `*ogeAppointmentTemplate` structural directive, which the Angular page documents in its types table rather than as an input (ROADMAP exception: TemplateRef ↔ render prop).',
+        rendercell:
+          'React form of `[ogeCellTemplate]` — same types-table split as `renderAppointment`.',
+        renderdateheader:
+          'React form of `[ogeDateHeaderTemplate]` — same types-table split as `renderAppointment`.',
+        classname:
+          'React host styling idiom; an Angular host takes `class` natively and needs no input.',
+        style:
+          'React host styling idiom; an Angular host takes `style` natively and needs no input.',
+        useogeschedulerconfig:
+          'Hook reading the resolved config; the Angular counterpart is `inject(OGE_SCHEDULER_CONFIG)`, not a documented member.',
+      },
+    },
+  },
 ];
 
 /** `'<OgeButton>'` / `'OgeButton'` → `'ogebutton'`. Angle brackets go first —

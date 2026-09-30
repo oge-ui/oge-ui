@@ -1,0 +1,631 @@
+# @oge-ui/react-scheduler
+
+> React scheduler / event calendar: day, work-week, week, month, agenda, timeline and year views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, drag-to-create, recurrence with occurrence-vs-series editing, resource grouping, reminders, an appointment popup and a form editor — running the same scheduler engine and stylesheet as the Angular scheduler package.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.13.1.
+Docs and live demos: https://ogeui.com/components/scheduler
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-scheduler
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages and ship in
+`@oge-ui/core` (installed with every package; add it directly under pnpm):
+`@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
+`data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
+`prefers-color-scheme`), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeScheduler>
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource` | `readonly T[] \| DataSource<T> \| null` | `null` | Appointment items: a plain array (copied into an internal working set — the prop is never mutated) or any `@oge-ui/core` `DataSource`, whose `insert`/`update`/`remove` are used for CRUD when present. Bound before the first paint. |
+| `keyExpr` | `string \| ((item: T) => unknown)` | `'id'` | Key field or selector; items without a resolvable key fall back to their index. |
+| `textExpr / startDateExpr / endDateExpr / allDayExpr / colorExpr / locationExpr / descriptionExpr / disabledExpr` | `string \| ((item: T) => unknown)` | `'text' / 'startDate' / …` | Field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
+| `recurrenceRuleExpr / recurrenceExceptionExpr` | `string \| ((item: T) => unknown)` | `'recurrenceRule' / 'recurrenceException'` | Recurrence fields: rules in the documented RFC 5545 subset expand into occurrence instances in every view; exceptions are comma-separated EXDATE stamps. |
+| `reminderExpr` | `string \| ((item: T) => unknown)` | `'reminder'` | Minutes before the start a reminder fires (see `onReminderTriggered`) — **OGE extra** (Outlook parity). |
+| `resources` | `readonly OgeSchedulerResource[]` | `[]` | Resource kinds (`{ fieldExpr, items, label?, useColorAsDefault? }`): editor select fields, default appointment colors and timeline rows. |
+| `groups` | `readonly string[]` | `[]` | Resource field grouping the views (first entry): timeline rows, and day/week columns split per resource — grouped cells prefill the resource on create, and drags across subcolumns/rows reassign it. |
+| `recurrenceEditMode` | `'dialog' \| 'occurrence' \| 'series'` | `'dialog'` | How edits to a recurring occurrence apply: ask per action, always detach the occurrence (EXDATE + standalone copy), or always change the series. |
+
+_Date & views_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `currentDate` | `Date` | `—` | Anchor date of the visible period — controlled when given, with `onCurrentDateChange`; `defaultCurrentDate` (today when omitted) seeds the uncontrolled state at mount. Writes clamp into `[min, max]`. |
+| `defaultCurrentDate` | `Date` | `new Date()` | Uncontrolled initial anchor date. |
+| `currentView` | `'day' \| 'week' \| 'workWeek' \| 'month' \| 'agenda' \| 'timelineDay' \| 'timelineWeek' \| 'year'` | `—` | The active view — controlled when given, with `onCurrentViewChange`. |
+| `defaultCurrentView` | `OgeSchedulerView` | `'week'` | Uncontrolled initial view. |
+| `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour` and `cellDuration` per view. |
+| `min / max` | `Date \| undefined` | `—` | Navigable date bounds: navigation buttons disable at the edges and every date write clamps. |
+| `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday); `undefined` resolves from the locale via `Intl.Locale.weekInfo`. |
+| `hiddenWeekDays` | `readonly number[] \| undefined` | `—` | Weekdays removed from the week views; the `workWeek` view always drops the weekend on top. |
+| `dayStartHour / dayEndHour / cellDuration` | `number` | `0 / 24 / 30` | Visible hour window and slot raster (minutes) of the time grids. |
+| `agendaDuration` | `number` | `7` | Days the agenda view lists from the anchor date. |
+| `scrollTime` | `number \| undefined` | `—` | Initial scroll position of the day/week body in hours (fractions allowed, e.g. `8.5`); applied at mount and re-applied on view/period changes. |
+
+_Behavior_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `allowAdding / allowUpdating / allowDeleting / allowDragging / allowResizing` | `boolean` | `true` | Per-capability editing gates. |
+| `readOnly` | `boolean` | `false` | **Display-only shorthand**: overrides every `allow*` flag at once and hides the editing affordances. |
+| `snapDuration` | `number \| undefined` | `—` | Drag/resize snap raster in minutes; defaults to `cellDuration`. |
+| `workHours` | `OgeSchedulerWorkHours \| null` | `null` | Working-hours emphasis: cells outside `{ start, end, days? }` get the off-hours shading. |
+| `showAddButton` | `boolean` | `true` | Shows the toolbar "new appointment" button (Outlook parity) — creation without double-click; hidden while `readOnly` or `allowAdding={false}`. |
+| `showAllDayPanel` | `boolean` | `true` | Shows the all-day strip in the day/week views. |
+| `showCurrentTimeIndicator` | `boolean` | `true` | The accent now-line in today's column. |
+| `shadeUntilCurrentTime` | `boolean` | `false` | Dims today's column above the now-line. |
+| `maxAppointmentsPerCell` | `number \| 'auto'` | `'auto'` | Month-view lane budget per cell; the overflow folds into a "+N more" button that drills into the day view. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the browser locale. |
+| `messages` | `Partial<OgeSchedulerMessages>` | `—` | Per-instance message overrides, merged over `<OgeSchedulerConfigProvider>` per top-level block. |
+| `dateNavigatorText` | `(start: Date, end: Date, view: OgeSchedulerView) => string` | `—` | Custom period-title formatter for the toolbar. |
+| `renderAppointment` | `(context: OgeAppointmentRenderContext<T>) => ReactNode` | `—` | Replaces the chip content — the React face of `*ogeAppointmentTemplate`. Context: `appointment` and `view`; the colored surface, gestures and keyboard semantics stay with the component. |
+| `renderCell` | `(context: OgeSchedulerCellRenderContext) => ReactNode` | `—` | **OGE extra** — rendered inside every empty grid cell; the React face of `ogeCellTemplate`. Context: `date`, `view`, `allDay`. |
+| `renderDateHeader` | `(context: OgeDateHeaderRenderContext) => ReactNode` | `—` | **OGE extra** — replaces the day/week date headers; the React face of `ogeDateHeaderTemplate`. Context: `date`, `view`. |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-scheduler` host. |
+
+#### Methods
+
+_Imperative handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addAppointment(appointmentData)` | `void` | Inserts programmatically through the same cancelable `onAppointmentAdding` pipeline as interactive creation. |
+| `updateAppointment(appointmentData, patch)` | `void` | Applies a patch through the guarded update pipeline. |
+| `deleteAppointment(appointmentData)` | `void` | Deletes through the guarded delete pipeline. |
+| `showAppointmentPopup(appointmentData?, createNew?)` | `void` | Opens the editing form — prefilled create form with `createNew`/no data, edit form otherwise (dx parity: the method opens the _form_). |
+| `hideAppointmentPopup()` | `void` | Closes the editor dialog and the summary popup. |
+| `scrollToTime(hours, minutes?)` | `void` | Scrolls the day/week body to the given time of day. |
+| `scrollTo(date)` | `void` | Navigates to `date` and scrolls to its time of day. |
+| `getStartViewDate() / getEndViewDate()` | `Date` | First moment / exclusive end of the visible period. |
+| `getDataSource()` | `readonly T[] \| DataSource<T> \| null` | The bound data source, as given. |
+| `focus()` | `void` | Focuses the active view's grid (roving cell). |
+| `goToday() / navigate(direction)` | `void` | Toolbar equivalents: jump to today / step one period (respects `min`/`max`). |
+
+#### Events
+
+_Editing (cancelable pipeline)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onAppointmentAdding / onAppointmentUpdating / onAppointmentDeleting` | `(event: OgeSchedulerAppointment*ingEvent<T>) => void` | Cancelable pre-events — set `event.cancel = true` to veto before the store changes. |
+| `onAppointmentAdded / onAppointmentUpdated / onAppointmentDeleted` | `(event: OgeSchedulerAppointment*edEvent<T>) => void` | Fired only for applied changes — persist from these when binding plain arrays. |
+| `onEditorShowing` | `(event: OgeSchedulerEditorShowingEvent<T>) => void` | Cancelable, before the editor opens; replace `formItems` (`<OgeForm>` item definitions, render props included) to customize the form (dx `onAppointmentFormOpening` parity). |
+
+_Reminders_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onReminderTriggered` | `(event: OgeSchedulerReminderEvent<T>) => void` | Fires once per occurrence when `start − reminder` minutes is reached (checked about every 30 s while mounted) — **OGE extra**. |
+
+_Interaction_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onAppointmentClick / onAppointmentDblClick` | `(event: OgeSchedulerAppointmentClickEvent<T>) => void` | Chip clicks; single click also opens the popup, double click the editor. |
+| `onCellClick / onCellDblClick` | `(event: OgeSchedulerCellClickEvent) => void` | Empty-cell clicks; double click also opens the prefilled create editor. |
+| `onAppointmentContextMenu / onCellContextMenu` | `(event: OgeSchedulerAppointmentClickEvent<T> \| OgeSchedulerCellClickEvent) => void` | Right-clicks with full payloads. A **built-in context menu** also opens (chip: edit/delete through the guarded pipelines incl. recurrence scope; cell: new appointment prefilled at that slot — labels in `messages.menu`); listen to these to add your own entries alongside it. |
+| `onRangeSelected` | `(event: OgeSchedulerRangeSelectedEvent) => void` | A drag-to-create cell-range selection landed; the prefilled create editor opens next. |
+| `onCurrentDateChange / onCurrentViewChange` | `(value: Date) => void / (value: OgeSchedulerView) => void` | The controlled halves of `currentDate` / `currentView`; they also report uncontrolled changes. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeSchedulerAppointment<T>` | `interface` | The normalized appointment: `key`, `source` (the original item), `text`, `startDate`/`endDate`, `allDay`, `color`, `description`, recurrence fields and `disabled`. |
+| `OgeSchedulerViewOptions` | `interface` | Per-view overrides: `type`, `name`, `dayStartHour`, `dayEndHour`, `cellDuration`. |
+| `OgeSchedulerWorkHours` | `interface` | `{ start, end, days? }` — the emphasized working hours. |
+| `OgeAppointmentRenderContext<T>` | `interface` | `{ appointment, view }` — what `renderAppointment` receives. |
+| `OgeSchedulerCellRenderContext` | `interface` | `{ date, view, allDay }` — what `renderCell` receives. |
+| `OgeDateHeaderRenderContext` | `interface` | `{ date, view }` — what `renderDateHeader` receives. |
+| `OgeSchedulerHandle<T>` | `interface` | The `ref` surface — every method in the table above. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `OgeSchedulerConfigProvider` | `(props: { config?: OgeSchedulerConfigInput; children?: ReactNode }) => JSX.Element` | `—` | Configures every scheduler below the provider — the React counterpart of Angular’s `provideOgeSchedulerConfig()`; shallow merge per top-level key (a partial `messages` replaces whole nested blocks). Nested providers merge over the outer one, and a new `config` object re-resolves the subtree (switch the UI language at runtime). |
+| `useOgeSchedulerConfig()` | `() => OgeSchedulerConfig` | `—` | Reads the resolved config of the current subtree. |
+| `messages` | `OgeSchedulerMessages` | `—` | Every user-facing string, aria labels included: `toolbar` (labels, view names, date-navigator), `popup`, `editor` (titles, field labels, validation), `grid` (aria templates with `{token}` placeholders, "+{count} more") and `announcements` (live-region templates). Single-sourced in `@oge-ui/scheduler-engine`, shared with the Angular scheduler. |
+| `minAppointmentMinutes` | `number` | `15` | Minimum rendered chip height in minutes — zero-length reminders stay clickable. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerView } from '@oge-ui/react-scheduler';
+
+const appointments = [
+  {
+    id: 1,
+    text: 'Design review',
+    startDate: new Date(2026, 7, 4, 9, 30),
+    endDate: new Date(2026, 7, 4, 11, 0),
+    color: '#2563eb',
+  },
+  {
+    id: 2,
+    text: 'Sprint planning',
+    startDate: new Date(2026, 7, 6, 10, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+    color: '#16a34a',
+  },
+  {
+    id: 3,
+    text: 'Customer workshop',
+    startDate: new Date(2026, 7, 5),
+    endDate: new Date(2026, 7, 7),
+    allDay: true,
+    color: '#d97706',
+  },
+];
+
+export function TeamCalendar() {
+  const [date, setDate] = useState(new Date(2026, 7, 6));
+  const [view, setView] = useState<OgeSchedulerView>('week');
+  return (
+    // One element, a working scheduler: week view with an all-day strip,
+    // drag-move / edge-resize (Escape cancels mid-gesture), double-click or
+    // Enter creates through the form dialog, single click opens the summary
+    // popup. Dates are plain local Dates — no date library, no adapter.
+    <OgeScheduler
+      dataSource={appointments}
+      currentDate={date}
+      onCurrentDateChange={setDate}
+      currentView={view}
+      onCurrentViewChange={setView}
+      dayStartHour={8}
+      dayEndHour={19}
+      style={{ height: 640 }}
+    />
+  );
+}
+```
+
+### Field mapping
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+const meetings = [
+  {
+    meetingId: 'a',
+    subject: 'Standup',
+    slot: { begin: '2026-08-06T09:00', finish: '2026-08-06T09:15' },
+    badge: '#7c3aed',
+  },
+  {
+    meetingId: 'b',
+    subject: '1:1',
+    slot: { begin: '2026-08-06T09:00', finish: '2026-08-06T10:00' },
+    badge: '#0891b2',
+  },
+];
+
+export function MappedMeetings() {
+  return (
+    // Any item shape binds through the *Expr props (field names, dotted
+    // paths or getter functions). String dates parse as LOCAL wall time and
+    // write back in the SAME storage shape — a string-dated store never
+    // silently turns into Date objects after an edit.
+    <OgeScheduler
+      dataSource={meetings}
+      keyExpr="meetingId"
+      textExpr="subject"
+      startDateExpr="slot.begin"
+      endDateExpr="slot.finish"
+      colorExpr="badge"
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      dayStartHour={8}
+      dayEndHour={18}
+      style={{ height: 560 }}
+    />
+  );
+}
+```
+
+### Editing pipeline
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerAppointmentAddingEvent, OgeSchedulerAppointmentDeletingEvent } from '@oge-ui/react-scheduler';
+
+const appointments = [
+  {
+    id: 1,
+    text: 'Release',
+    startDate: new Date(2026, 7, 7, 14, 0),
+    endDate: new Date(2026, 7, 7, 15, 0),
+  },
+];
+
+function blockWeekends(
+  event: OgeSchedulerAppointmentAddingEvent<Record<string, unknown>>,
+): void {
+  const day = (event.appointmentData['startDate'] as Date).getDay();
+  if (day === 0 || day === 6) event.cancel = true;
+}
+
+function confirmDelete(
+  event: OgeSchedulerAppointmentDeletingEvent<Record<string, unknown>>,
+): void {
+  event.cancel = !confirm('Delete this appointment?');
+}
+
+export function GuardedScheduler() {
+  return (
+    // Every mutation runs a cancelable '-ing' callback before the store
+    // changes; set cancel = true to veto (weekends here). The matching
+    // past-tense callback fires only for applied changes — persist from there.
+    // allowAdding/Updating/Deleting/Dragging/Resizing gate each capability.
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      dayStartHour={8}
+      dayEndHour={18}
+      allowResizing={false}
+      onAppointmentAdding={blockWeekends}
+      onAppointmentDeleting={confirmDelete}
+      style={{ height: 560 }}
+    />
+  );
+}
+```
+
+### Planner ergonomics
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+const appointments = [
+  {
+    id: 1,
+    text: 'Architecture sync',
+    startDate: new Date(2026, 7, 6, 9, 30),
+    endDate: new Date(2026, 7, 6, 10, 30),
+  },
+  {
+    id: 2,
+    text: 'Late incident review',
+    startDate: new Date(2026, 7, 6, 18, 0),
+    endDate: new Date(2026, 7, 6, 19, 0),
+    color: '#dc2626',
+  },
+];
+
+export function PlannerWeek() {
+  return (
+    // Planner ergonomics in one place: the workWeek view drops the weekend,
+    // workHours shades off-hours cells, shadeUntilCurrentTime dims the elapsed
+    // part of today, scrollTime opens the grid at 08:00 instead of midnight,
+    // min/max clamp navigation (prev/next disable at the bounds), and
+    // snapDuration makes drag/resize snap at 15 minutes on a 30-minute raster.
+    // Drag over empty cells to select a range — the create dialog opens
+    // prefilled (onRangeSelected fires first). readOnly turns it all off.
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="workWeek"
+      views={['day', 'workWeek', 'week', 'month']}
+      scrollTime={8}
+      workHours={{ start: 9, end: 17 }}
+      shadeUntilCurrentTime
+      snapDuration={15}
+      min={new Date(2026, 6, 1)}
+      max={new Date(2026, 8, 30)}
+      style={{ height: 640 }}
+    />
+  );
+}
+```
+
+### Teams, recurrence & timeline
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+import type { OgeSchedulerResource } from '@oge-ui/react-scheduler';
+
+const resources: OgeSchedulerResource[] = [
+  {
+    fieldExpr: 'ownerId',
+    label: 'Owner',
+    useColorAsDefault: true,
+    items: [
+      { id: 'ada', text: 'Ada', color: '#7c3aed' },
+      { id: 'grace', text: 'Grace', color: '#0891b2' },
+    ],
+  },
+];
+
+const appointments = [
+  {
+    id: 1,
+    text: 'Daily standup',
+    startDate: new Date(2026, 7, 3, 9, 0),
+    endDate: new Date(2026, 7, 3, 9, 15),
+    recurrenceRule: 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+    ownerId: 'ada',
+    reminder: 5,
+  },
+  {
+    id: 2,
+    text: 'Design pairing',
+    startDate: new Date(2026, 7, 5, 14, 0),
+    endDate: new Date(2026, 7, 5, 16, 0),
+    ownerId: 'grace',
+  },
+  {
+    id: 3,
+    text: 'Ops review',
+    startDate: new Date(2026, 7, 6, 11, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+  },
+];
+
+export function TeamTimeline() {
+  return (
+    // Recurring series (RFC 5545 subset) expand into occurrences in every
+    // view; editing or deleting one asks "this appointment or the entire
+    // series?" (recurrenceEditMode). resources drive the editor's assignment
+    // selects, default colors (useColorAsDefault) and the timeline rows
+    // (groups). The agenda view lists the coming days; onReminderTriggered
+    // fires when a reminder lead time is reached.
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="timelineWeek"
+      views={['week', 'timelineDay', 'timelineWeek', 'agenda', 'month']}
+      resources={resources}
+      groups={['ownerId']}
+      dayStartHour={8}
+      dayEndHour={18}
+      style={{ height: 560 }}
+    />
+  );
+}
+```
+
+### Views
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+const appointments = [
+  {
+    id: 1,
+    text: 'Board meeting',
+    startDate: new Date(2026, 7, 3, 9, 0),
+    endDate: new Date(2026, 7, 3, 10, 0),
+  },
+  {
+    id: 2,
+    text: 'Audit',
+    startDate: new Date(2026, 7, 3, 10, 0),
+    endDate: new Date(2026, 7, 3, 11, 0),
+    color: '#dc2626',
+  },
+  {
+    id: 3,
+    text: 'Retro',
+    startDate: new Date(2026, 7, 3, 15, 0),
+    endDate: new Date(2026, 7, 3, 16, 0),
+    color: '#16a34a',
+  },
+  {
+    id: 4,
+    text: 'Conference',
+    startDate: new Date(2026, 7, 12),
+    endDate: new Date(2026, 7, 15),
+    allDay: true,
+    color: '#7c3aed',
+  },
+];
+
+export function MonthOverview() {
+  return (
+    // views takes plain names or per-view option objects: a compact
+    // 'Office hours' day view with 15-minute slots next to the stock week and
+    // month views. The month '+N more' overflow drills into the day view.
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="month"
+      views={[
+        { type: 'day', name: 'Office hours', dayStartHour: 9, dayEndHour: 17, cellDuration: 15 },
+        'week',
+        'month',
+      ]}
+      maxAppointmentsPerCell={2}
+      style={{ height: 640 }}
+    />
+  );
+}
+```
+
+### Appointment template
+
+```ts
+'use client';
+
+import { OgeScheduler } from '@oge-ui/react-scheduler';
+
+const appointments = [
+  {
+    id: 1,
+    text: 'Usability session',
+    description: 'Recording — join muted',
+    startDate: new Date(2026, 7, 6, 9, 0),
+    endDate: new Date(2026, 7, 6, 11, 0),
+    color: '#0f766e',
+  },
+];
+
+export function TemplatedDay() {
+  return (
+    // renderAppointment replaces the chip content; the colored surface,
+    // drag/resize handles and keyboard semantics stay with the component.
+    // renderCell / renderDateHeader exist too.
+    <OgeScheduler
+      dataSource={appointments}
+      defaultCurrentDate={new Date(2026, 7, 6)}
+      defaultCurrentView="day"
+      dayStartHour={8}
+      dayEndHour={16}
+      style={{ height: 560 }}
+      renderAppointment={({ appointment }) => (
+        <>
+          <strong>{appointment.text}</strong>
+          {appointment.description && (
+            <em className="block text-[11px] opacity-80">{appointment.description}</em>
+          )}
+        </>
+      )}
+    />
+  );
+}
+```
+
+### Configuration & i18n
+
+```ts
+'use client';
+
+import { OgeScheduler, OgeSchedulerConfigProvider } from '@oge-ui/react-scheduler';
+
+// Typically once near the app root — shown per-component here. The merge
+// is shallow per top-level key: replace whole nested blocks, not single
+// strings. A messages prop on one instance overrides the provider the same
+// way, and a new config object re-resolves the subtree at runtime.
+const config = {
+  messages: {
+    toolbar: {
+      label: 'Terminplaner',
+      today: 'Heute',
+      previous: 'Zurück',
+      next: 'Weiter',
+      viewSwitcherLabel: 'Ansichten',
+      dateNavigatorLabel: 'Datum wählen',
+      newAppointment: 'Neu',
+      viewNames: {
+        day: 'Tag',
+        week: 'Woche',
+        workWeek: 'Arbeitswoche',
+        month: 'Monat',
+        agenda: 'Agenda',
+        timelineDay: 'Zeitachse Tag',
+        timelineWeek: 'Zeitachse Woche',
+        year: 'Jahr',
+      },
+    },
+  },
+};
+
+export function GermanScheduler() {
+  return (
+    <OgeSchedulerConfigProvider config={config}>
+      <OgeScheduler
+        dataSource={[]}
+        defaultCurrentDate={new Date(2026, 7, 6)}
+        locale="de"
+        style={{ height: 480 }}
+      />
+    </OgeSchedulerConfigProvider>
+  );
+}
+```
+

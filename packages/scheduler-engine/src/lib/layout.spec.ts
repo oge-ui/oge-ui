@@ -117,9 +117,9 @@ describe('layoutDayColumn', () => {
     const result = layout([segment(1, 1075, 1080)]);
     expect(result[0].topFraction).toBeCloseTo((1065 - 480) / 600);
     expect(result[0].heightFraction).toBeCloseTo(15 / 600);
-    expect(result[0].topFraction + result[0].heightFraction).toBeLessThanOrEqual(
-      1,
-    );
+    expect(
+      result[0].topFraction + result[0].heightFraction,
+    ).toBeLessThanOrEqual(1);
   });
 
   it('is deterministic across input order', () => {

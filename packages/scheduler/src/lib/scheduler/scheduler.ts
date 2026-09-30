@@ -4,47 +4,34 @@ import {
   DestroyRef,
   ElementRef,
   ViewEncapsulation,
-  computed,
   contentChild,
   effect,
   inject,
   input,
   model,
   output,
-  signal,
   untracked,
   viewChild,
 } from '@angular/core';
-import {
-  addMinutes,
-  clampDate,
-  nextDay,
-  rangesOverlap,
-  resolveFirstDayOfWeek,
-  startOfDay,
-  type DataSource,
-  type RowKey,
-} from '@oge-ui/core';
+import type { DataSource } from '@oge-ui/core';
+import type { OgeFormItemData } from '@oge-ui/forms';
 import { OgeCalendar } from '@oge-ui/inputs/calendar';
 import { OgeAnchoredPanel, OgePopup } from '@oge-ui/overlay';
+import {
+  OgeSchedulerCore,
+  scrollOffsetForTime,
+  type SchedulerCellEvent,
+  type SchedulerChipEvent,
+  type SchedulerEditorResult,
+  type SchedulerFieldExpr,
+  type SchedulerProposalEvent,
+  type SchedulerRangeEvent,
+  type SchedulerScopeAction,
+} from '@oge-ui/scheduler-engine';
 import type { OgeSchedulerMessages } from '../config';
 import { OGE_SCHEDULER_CONFIG } from '../config';
-import {
-  parseRecurrenceRule,
-  serializeRecurrenceRule,
-  type RecurrenceRule,
-} from '../engine/rrule';
-import { appendException } from '../engine/rrule-expand';
-import {
-  appointmentPatch,
-  expandAppointment,
-  normalizeAppointment,
-  resolveSchedulerFields,
-  type SchedulerAppointment,
-  type SchedulerFieldExpr,
-} from '../engine/scheduler-model';
-import { navigateDate, viewRange } from '../engine/view-model';
 import type {
+  OgeSchedulerAppointment,
   OgeSchedulerAppointmentAddedEvent,
   OgeSchedulerAppointmentAddingEvent,
   OgeSchedulerAppointmentClickEvent,
@@ -61,23 +48,11 @@ import type {
   OgeSchedulerViewOptions,
   OgeSchedulerWorkHours,
 } from '../scheduler-types';
-import {
-  OgeSchedulerAppointmentDialog,
-  type SchedulerEditorModel,
-  type SchedulerEditorResult,
-} from './appointment-dialog';
+import { OgeSchedulerAppointmentDialog } from './appointment-dialog';
 import { OgeSchedulerAppointmentPopup } from './appointment-popup';
-import {
-  OgeSchedulerDayWeekView,
-  type SchedulerCellEvent,
-  type SchedulerChipEvent,
-  type SchedulerProposalEvent,
-} from './day-week-view';
+import { OgeSchedulerDayWeekView } from './day-week-view';
 import { OgeSchedulerAgendaView } from './agenda-view';
-import {
-  OgeSchedulerTimelineView,
-  type TimelineMoveEvent,
-} from './timeline-view';
+import { OgeSchedulerTimelineView } from './timeline-view';
 import { OgeSchedulerYearView } from './year-view';
 import { OgeSchedulerMonthView } from './month-view';
 import {
@@ -85,15 +60,7 @@ import {
   OgeDateHeaderTemplate,
   OgeSchedulerCellTemplate,
 } from './scheduler-templates';
-
-/** A resolved view-switcher entry. */
-interface ResolvedView {
-  readonly type: OgeSchedulerView;
-  readonly name: string;
-  readonly dayStartHour: number;
-  readonly dayEndHour: number;
-  readonly cellDuration: number;
-}
+import { SIGNAL_ADAPTER } from './signal-adapter';
 
 /**
  * Signal-based scheduler / event calendar with day, week and month views —
@@ -602,22 +569,6 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     ((start: Date, end: Date, view: OgeSchedulerView) => string) | undefined
   >(undefined);
 
-  protected readonly canAdd = computed(
-    () => this.allowAdding() && !this.readOnly(),
-  );
-  protected readonly canUpdate = computed(
-    () => this.allowUpdating() && !this.readOnly(),
-  );
-  protected readonly canDelete = computed(
-    () => this.allowDeleting() && !this.readOnly(),
-  );
-  protected readonly canDrag = computed(
-    () => this.allowDragging() && !this.readOnly(),
-  );
-  protected readonly canResize = computed(
-    () => this.allowResizing() && !this.readOnly(),
-  );
-
   /* ---------- events ---------- */
 
   /** Cancelable: before a new appointment reaches the store. */
@@ -672,138 +623,82 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   private readonly dayWeekViewRef = viewChild(OgeSchedulerDayWeekView<T>);
   private readonly monthViewRef = viewChild(OgeSchedulerMonthView<T>);
 
-  protected readonly msg = computed<OgeSchedulerMessages>(() => ({
-    ...this.config.messages,
-    ...this.messages(),
-  }));
-
-  protected readonly minAppointmentMinutes = computed(
-    () => this.config.minAppointmentMinutes ?? 15,
-  );
-
-  /** Per-instance locale, falling back to the DI config, then the browser. */
-  protected readonly effectiveLocale = computed(
-    () => this.locale() ?? this.config.locale,
-  );
-
-  protected readonly resolvedFirstDayOfWeek = computed(() =>
-    resolveFirstDayOfWeek(this.firstDayOfWeek(), this.effectiveLocale()),
-  );
-
-  protected readonly resolvedViews = computed<readonly ResolvedView[]>(() =>
-    this.views().map((entry) => {
-      const options: OgeSchedulerViewOptions =
-        typeof entry === 'string' ? { type: entry } : entry;
-      return {
-        type: options.type,
-        name: options.name ?? this.msg().toolbar.viewNames[options.type],
-        dayStartHour: options.dayStartHour ?? this.dayStartHour(),
-        dayEndHour: options.dayEndHour ?? this.dayEndHour(),
-        cellDuration: options.cellDuration ?? this.cellDuration(),
-      };
-    }),
-  );
-
-  protected readonly activeView = computed<ResolvedView>(() => {
-    const view = this.currentView();
-    return (
-      this.resolvedViews().find((entry) => entry.type === view) ?? {
-        type: view,
-        name: this.msg().toolbar.viewNames[view],
-        dayStartHour: this.dayStartHour(),
-        dayEndHour: this.dayEndHour(),
-        cellDuration: this.cellDuration(),
-      }
-    );
-  });
-
-  protected readonly dayWeekView = computed<'day' | 'week' | 'workWeek'>(() => {
-    const view = this.currentView();
-    return view === 'day' || view === 'week' || view === 'workWeek'
-      ? view
-      : 'week';
-  });
-
-  private readonly fields = computed(() =>
-    resolveSchedulerFields<T>({
-      textExpr: this.textExpr(),
-      startDateExpr: this.startDateExpr(),
-      endDateExpr: this.endDateExpr(),
-      allDayExpr: this.allDayExpr(),
-      colorExpr: this.colorExpr(),
-      locationExpr: this.locationExpr(),
-      descriptionExpr: this.descriptionExpr(),
-      reminderExpr: this.reminderExpr(),
-      recurrenceRuleExpr: this.recurrenceRuleExpr(),
-      recurrenceExceptionExpr: this.recurrenceExceptionExpr(),
-      disabledExpr: this.disabledExpr(),
-    }),
-  );
-
-  /** The resource that colors uncolored appointments, if any. */
-  private readonly colorResource = computed<OgeSchedulerResource | null>(() => {
-    const resources = this.resources();
-    return (
-      resources.find((resource) => resource.useColorAsDefault) ??
-      resources[0] ??
-      null
-    );
-  });
-
-  /** The timeline grouping resource (first `groups` field). */
-  protected readonly groupResource = computed<OgeSchedulerResource | null>(
-    () => {
-      const field = this.groups()[0];
-      if (field === undefined) return null;
-      return (
-        this.resources().find((resource) => resource.fieldExpr === field) ??
-        null
-      );
-    },
-  );
-
-  protected readonly groupResourceIdOf = computed<(item: T) => unknown>(() => {
-    const resource = this.groupResource();
-    if (resource === null) return () => null;
-    return (item) => (item as Record<string, unknown>)[resource.fieldExpr];
-  });
-
-  /** Resolves an appointment's fallback color from the color resource. */
-  private resourceColorOf(item: T): string | undefined {
-    const resource = this.colorResource();
-    if (resource === null) return undefined;
-    const id = (item as Record<string, unknown>)[resource.fieldExpr];
-    return resource.items.find((entry) => entry.id === id)?.color;
-  }
-
-  /* ---------- data store ---------- */
-
   /**
-   * The writable working set. Array inputs are copied here (the input array
-   * itself is never mutated — hosts persist through the CRUD events);
-   * `DataSource` loads land here too and CRUD goes through the source's own
-   * `insert`/`update`/`remove` before a reload.
+   * The shell machine (`@oge-ui/scheduler-engine`, shared with the React
+   * scheduler): the working set, the CRUD pipelines, recurrence scope
+   * routing, editor mapping, navigation and the context-menu state. This
+   * component is the Angular seam over it — inputs in, outputs and surfaces
+   * out.
    */
-  private readonly store = signal<readonly T[]>([]);
-  private loadEpoch = 0;
+  protected readonly core = new OgeSchedulerCore<T, OgeFormItemData>({
+    rx: SIGNAL_ADAPTER,
+    inputs: this,
+    config: () => this.config,
+    setCurrentDate: (date) => this.currentDate.set(date),
+    setCurrentView: (view) => this.currentView.set(view),
+    events: {
+      appointmentAdding: (event) => this.appointmentAdding.emit(event),
+      appointmentAdded: (event) => this.appointmentAdded.emit(event),
+      appointmentUpdating: (event) => this.appointmentUpdating.emit(event),
+      appointmentUpdated: (event) => this.appointmentUpdated.emit(event),
+      appointmentDeleting: (event) => this.appointmentDeleting.emit(event),
+      appointmentDeleted: (event) => this.appointmentDeleted.emit(event),
+      appointmentClick: (event) => this.appointmentClick.emit(event),
+      appointmentDblClick: (event) => this.appointmentDblClick.emit(event),
+      cellClick: (event) => this.cellClick.emit(event),
+      cellDblClick: (event) => this.cellDblClick.emit(event),
+      editorShowing: (event) => this.editorShowing.emit(event),
+      rangeSelected: (event) => this.rangeSelected.emit(event),
+      appointmentContextMenu: (event) =>
+        this.appointmentContextMenu.emit(event),
+      cellContextMenu: (event) => this.cellContextMenu.emit(event),
+      reminderTriggered: (event) => this.reminderTriggered.emit(event),
+    },
+    surfaces: {
+      openPopup: (appointment, rect) => this.popup().open(appointment, rect),
+      closePopup: () => this.popup().close(),
+      editorItems: (editorModel) => this.dialog().defaultItems(editorModel),
+      openEditor: (editorModel, isNew, items) =>
+        this.dialog().open(editorModel, isNew, items),
+      closeEditor: () => this.dialog().close(),
+      hostRect: () => this.hostEl.nativeElement.getBoundingClientRect(),
+      focusMenu: () =>
+        setTimeout(() => {
+          this.hostEl.nativeElement
+            .querySelector<HTMLElement>(
+              '.oge-scheduler-menu-item:not(:disabled)',
+            )
+            ?.focus();
+        }),
+    },
+  });
+
+  protected readonly msg = this.core.msg;
+  protected readonly canAdd = this.core.canAdd;
+  protected readonly canUpdate = this.core.canUpdate;
+  protected readonly canDelete = this.core.canDelete;
+  protected readonly canDrag = this.core.canDrag;
+  protected readonly canResize = this.core.canResize;
+  protected readonly minAppointmentMinutes = this.core.minAppointmentMinutes;
+  protected readonly effectiveLocale = this.core.effectiveLocale;
+  protected readonly resolvedFirstDayOfWeek = this.core.resolvedFirstDayOfWeek;
+  protected readonly resolvedViews = this.core.resolvedViews;
+  protected readonly activeView = this.core.activeView;
+  protected readonly dayWeekView = this.core.dayWeekView;
+  protected readonly groupResource = this.core.groupResource;
+  protected readonly groupResourceIdOf = this.core.groupResourceIdOf;
+  protected readonly visibleAppointments = this.core.visibleAppointments;
+  protected readonly periodTitle = this.core.periodTitle;
+  protected readonly announcement = this.core.announcement;
+  protected readonly scopePending = this.core.scopePending;
+  protected readonly contextMenu = this.core.contextMenu;
 
   constructor() {
     effect(() => {
       const source = this.dataSource();
-      this.loadEpoch++;
-      if (source === null) {
-        this.store.set([]);
-        return;
-      }
-      if (Array.isArray(source)) {
-        this.store.set([...(source as readonly T[])]);
-        return;
-      }
-      this.reload(source as DataSource<T>);
+      untracked(() => this.core.bindSource(source));
     });
-    this.destroyRef.onDestroy(() => {
-      this.loadEpoch++;
-    });
+    this.destroyRef.onDestroy(() => this.core.destroy());
     // initial scroll position of the time grid (FC scrollTime parity);
     // re-applied when the view or period changes
     effect(() => {
@@ -817,159 +712,11 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     });
     // reminder ticker: fires reminderTriggered once per occurrence when
     // now >= start - reminderMinutes (looking 24h ahead)
-    const firedReminders = new Set<unknown>();
-    const reminderTimer = setInterval(() => {
-      const now = new Date();
-      const horizon = new Date(now.getTime() + 86_400_000);
-      for (const base of untracked(this.appointments)) {
-        for (const appointment of expandAppointment(base, now, horizon)) {
-          const lead = appointment.reminderMinutes;
-          if (lead === undefined) continue;
-          const dueAt = appointment.startDate.getTime() - lead * 60_000;
-          if (
-            now.getTime() >= dueAt &&
-            now.getTime() < appointment.startDate.getTime() &&
-            !firedReminders.has(appointment.key)
-          ) {
-            firedReminders.add(appointment.key);
-            this.reminderTriggered.emit({
-              appointmentData: appointment.source,
-              appointment,
-            });
-          }
-        }
-      }
-    }, 30_000);
+    const reminderTimer = setInterval(
+      () => untracked(() => this.core.checkReminders()),
+      30_000,
+    );
     this.destroyRef.onDestroy(() => clearInterval(reminderTimer));
-  }
-
-  private reload(source: DataSource<T>): void {
-    const epoch = ++this.loadEpoch;
-    void source
-      .load({})
-      .then((result) => {
-        if (epoch !== this.loadEpoch) return;
-        this.store.set(result.data as readonly T[]);
-      })
-      .catch(() => {
-        if (epoch === this.loadEpoch) this.store.set([]);
-      });
-  }
-
-  private readonly keyOf = computed<(item: T, index: number) => unknown>(() => {
-    const keyExpr = this.keyExpr();
-    if (typeof keyExpr === 'function') return (item) => keyExpr(item);
-    const field = keyExpr ?? 'id';
-    return (item, index) => {
-      const value = (item as Record<string, unknown>)[field];
-      return value === undefined ? index : value;
-    };
-  });
-
-  /** Every normalized appointment (unfiltered). */
-  private readonly appointments = computed<readonly SchedulerAppointment<T>[]>(
-    () => {
-      const fields = this.fields();
-      const keyOf = this.keyOf();
-      const result: SchedulerAppointment<T>[] = [];
-      this.store().forEach((item, index) => {
-        const appointment = normalizeAppointment(
-          item,
-          keyOf(item, index),
-          fields,
-        );
-        if (appointment === null) return;
-        result.push(
-          appointment.color === undefined
-            ? { ...appointment, color: this.resourceColorOf(item) }
-            : appointment,
-        );
-      });
-      return result;
-    },
-  );
-
-  /** Appointments overlapping the visible period (client-side window). */
-  protected readonly visibleAppointments = computed<
-    readonly SchedulerAppointment<T>[]
-  >(() => {
-    const { start, end } = viewRange(
-      this.currentView(),
-      this.currentDate(),
-      this.resolvedFirstDayOfWeek(),
-      this.agendaDuration(),
-    );
-    return this.appointments()
-      .flatMap((appointment) => expandAppointment(appointment, start, end))
-      .filter(
-        (appointment) =>
-          rangesOverlap(
-            appointment.startDate,
-            appointment.endDate,
-            start,
-            end,
-          ) ||
-          (appointment.startDate.getTime() === appointment.endDate.getTime() &&
-            appointment.startDate.getTime() >= start.getTime() &&
-            appointment.startDate.getTime() < end.getTime()),
-      );
-  });
-
-  protected readonly periodTitle = computed(() => {
-    const view = this.currentView();
-    const date = this.currentDate();
-    const locale = this.effectiveLocale();
-    const custom = this.dateNavigatorText();
-    if (custom !== undefined) {
-      const range = viewRange(
-        view,
-        date,
-        this.resolvedFirstDayOfWeek(),
-        this.agendaDuration(),
-      );
-      return custom(range.start, new Date(range.end.getTime() - 1), view);
-    }
-    if (view === 'day') {
-      return new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(
-        date,
-      );
-    }
-    if (view === 'month') {
-      return new Intl.DateTimeFormat(locale, {
-        month: 'long',
-        year: 'numeric',
-      }).format(date);
-    }
-    if (view === 'year') {
-      return new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(date);
-    }
-    const { start, end } = viewRange(
-      view === 'agenda' ? 'agenda' : 'week',
-      date,
-      this.resolvedFirstDayOfWeek(),
-      this.agendaDuration(),
-    );
-    const last = new Date(end.getTime() - 1);
-    return new Intl.DateTimeFormat(locale, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }).formatRange(start, last);
-  });
-
-  /* ---------- announcements ---------- */
-
-  protected readonly announcement = signal('');
-
-  private announce(
-    template: string,
-    tokens: Readonly<Record<string, string>>,
-  ): void {
-    let text = template;
-    for (const [token, value] of Object.entries(tokens)) {
-      text = text.replace(`{${token}}`, value);
-    }
-    this.announcement.set(text);
   }
 
   /* ---------- navigation ---------- */
@@ -985,811 +732,130 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   });
 
   protected onNavigatorPicked(date: Date | null): void {
-    if (date !== null) this.setDate(date);
+    this.core.onNavigatorPicked(date);
     this.navigatorPanel.close();
-  }
-
-  private setDate(date: Date): void {
-    this.currentDate.set(clampDate(date, this.min(), this.max()));
   }
 
   /** Whether today falls inside the visible period (disables "Today"). */
   protected isTodayVisible(): boolean {
-    const { start, end } = viewRange(
-      this.currentView(),
-      this.currentDate(),
-      this.resolvedFirstDayOfWeek(),
-      this.agendaDuration(),
-    );
-    const now = Date.now();
-    return now >= start.getTime() && now < end.getTime();
+    return this.core.isTodayVisible();
   }
 
   /** Whether stepping one period keeps some of `[min, max]` visible. */
   protected canNavigate(direction: -1 | 1): boolean {
-    const candidate = navigateDate(
-      this.currentView(),
-      this.currentDate(),
-      direction,
-      this.agendaDuration(),
-    );
-    const { start, end } = viewRange(
-      this.currentView(),
-      candidate,
-      this.resolvedFirstDayOfWeek(),
-    );
-    const min = this.min();
-    const max = this.max();
-    if (min !== undefined && end.getTime() <= startOfDay(min).getTime()) {
-      return false;
-    }
-    if (max !== undefined && start.getTime() > max.getTime()) return false;
-    return true;
+    return this.core.canNavigate(direction);
   }
 
   /** Moves the visible period to today. */
   goToday(): void {
-    this.setDate(new Date());
+    this.core.goToday();
   }
 
   /** Steps the visible period backwards (`-1`) or forwards (`1`). */
   navigate(direction: -1 | 1): void {
-    if (!this.canNavigate(direction)) return;
-    this.setDate(
-      navigateDate(
-        this.currentView(),
-        untracked(this.currentDate),
-        direction,
-        this.agendaDuration(),
-      ),
-    );
+    untracked(() => this.core.navigate(direction));
   }
 
   protected drillIntoDay(date: Date): void {
-    this.setDate(date);
-    this.currentView.set('day');
+    this.core.drillIntoDay(date);
   }
 
   /* ---------- interaction plumbing ---------- */
 
   protected onCellClicked(event: SchedulerCellEvent): void {
-    if (event.event instanceof MouseEvent) {
-      this.cellClick.emit({
-        cellDate: event.cellDate,
-        allDay: event.allDay,
-        event: event.event,
-      });
-    }
+    this.core.onCellClicked(event);
   }
 
   protected onCellDblClicked(event: SchedulerCellEvent): void {
-    if (event.event instanceof MouseEvent) {
-      this.cellDblClick.emit({
-        cellDate: event.cellDate,
-        allDay: event.allDay,
-        event: event.event,
-      });
-    }
-    this.openCreateEditor(event.cellDate, event.allDay, event.resourceId);
+    this.core.onCellDblClicked(event);
   }
 
   protected onCellActivated(event: SchedulerCellEvent): void {
-    this.openCreateEditor(event.cellDate, event.allDay, event.resourceId);
+    this.core.onCellActivated(event);
   }
 
   protected onChipClicked(event: SchedulerChipEvent<T>): void {
-    if (event.event instanceof MouseEvent) {
-      this.appointmentClick.emit({
-        appointment: event.appointment,
-        event: event.event,
-      });
-    }
-    this.popup().open(event.appointment, event.rect);
+    this.core.onChipClicked(event);
   }
 
   protected onChipDblClicked(event: SchedulerChipEvent<T>): void {
-    if (event.event instanceof MouseEvent) {
-      this.appointmentDblClick.emit({
-        appointment: event.appointment,
-        event: event.event,
-      });
-    }
-    this.openEditorFor(event.appointment);
+    this.core.onChipDblClicked(event);
   }
 
   protected onChipActivated(event: SchedulerChipEvent<T>): void {
-    this.popup().open(event.appointment, event.rect);
+    this.core.onChipActivated(event);
   }
 
-  /* ---------- recurrence scope routing ---------- */
-
-  /** A pending occurrence action awaiting the scope choice. */
-  protected readonly scopePending = signal<{
-    action: 'edit' | 'delete' | 'moved' | 'resized';
-    appointment: SchedulerAppointment<T>;
-    proposal?: SchedulerProposalEvent<T>['proposal'];
-  } | null>(null);
-
-  protected scopeText(pending: {
-    action: 'edit' | 'delete' | 'moved' | 'resized';
-  }): string {
-    const messages = this.msg().recurrenceScope;
-    const action =
-      pending.action === 'edit'
-        ? messages.editAction
-        : pending.action === 'delete'
-          ? messages.deleteAction
-          : messages.moveAction;
-    return messages.text.replace('{action}', action);
-  }
-
-  private routeRecurring(
-    action: 'edit' | 'delete' | 'moved' | 'resized',
-    appointment: SchedulerAppointment<T>,
-    proposal?: SchedulerProposalEvent<T>['proposal'],
-  ): void {
-    const mode = this.recurrenceEditMode();
-    if (mode === 'dialog') {
-      this.scopePending.set({ action, appointment, proposal });
-      return;
-    }
-    this.applyScoped(mode, { action, appointment, proposal });
+  protected scopeText(pending: { action: SchedulerScopeAction }): string {
+    return this.core.scopeText(pending);
   }
 
   protected resolveScope(scope: 'occurrence' | 'series'): void {
-    const pending = untracked(this.scopePending);
-    this.scopePending.set(null);
-    if (pending !== null) this.applyScoped(scope, pending);
+    untracked(() => this.core.resolveScope(scope));
   }
-
-  private applyScoped(
-    scope: 'occurrence' | 'series',
-    pending: {
-      action: 'edit' | 'delete' | 'moved' | 'resized';
-      appointment: SchedulerAppointment<T>;
-      proposal?: SchedulerProposalEvent<T>['proposal'];
-    },
-  ): void {
-    switch (pending.action) {
-      case 'edit':
-        this.performEdit(pending.appointment, scope);
-        return;
-      case 'delete':
-        this.performDelete(pending.appointment, scope);
-        return;
-      default:
-        if (pending.proposal !== undefined) {
-          this.performProposal(
-            pending.appointment,
-            pending.proposal,
-            scope,
-            pending.action,
-          );
-        }
-    }
-  }
-
-  /** The series template appointment an occurrence was expanded from. */
-  private seriesOf(
-    occurrence: SchedulerAppointment<T>,
-  ): SchedulerAppointment<T> | undefined {
-    return untracked(this.appointments).find(
-      (entry) => entry.key === occurrence.seriesKey,
-    );
-  }
-
-  /** Detaches an occurrence: EXDATE on the series + a standalone copy. */
-  private detachOccurrence(
-    occurrence: SchedulerAppointment<T>,
-    replacement: SchedulerEditorModel | null,
-  ): void {
-    const fields = this.fields();
-    const source = occurrence.source;
-    const exceptionField = fields.fieldNames.recurrenceException;
-    if (exceptionField !== null) {
-      this.updateItem(source, {
-        [exceptionField]: appendException(
-          occurrence.recurrenceException,
-          occurrence.startDate,
-        ),
-      } as Partial<T>);
-    }
-    if (replacement !== null) {
-      this.insertItem(this.buildItem(replacement));
-    } else {
-      this.announce(this.msg().announcements.deleted, {
-        text: occurrence.text,
-      });
-    }
-  }
-
-  private performDelete(
-    appointment: SchedulerAppointment<T>,
-    scope: 'occurrence' | 'series',
-  ): void {
-    if (scope === 'occurrence') {
-      this.detachOccurrence(appointment, null);
-      return;
-    }
-    this.deleteBySource(appointment.source);
-  }
-
-  private performEdit(
-    appointment: SchedulerAppointment<T>,
-    scope: 'occurrence' | 'series',
-  ): void {
-    if (!this.canUpdate()) return;
-    if (scope === 'occurrence') {
-      this.editingOccurrence = appointment;
-      this.openEditor(
-        this.editorModelFrom(appointment, false),
-        appointment.source,
-        false,
-      );
-      return;
-    }
-    const series = this.seriesOf(appointment) ?? appointment;
-    this.editingOccurrence = null;
-    this.openEditor(this.editorModelFrom(series, true), series.source, false);
-  }
-
-  private performProposal(
-    appointment: SchedulerAppointment<T>,
-    proposal: SchedulerProposalEvent<T>['proposal'],
-    scope: 'occurrence' | 'series',
-    kind: 'moved' | 'resized',
-  ): void {
-    if (!this.canUpdate()) return;
-    if (scope === 'occurrence') {
-      const model = this.editorModelFrom(appointment, false);
-      this.detachOccurrence(appointment, {
-        ...model,
-        startDate: proposal.startDate,
-        endDate: proposal.endDate,
-        allDay: proposal.allDay,
-      });
-      return;
-    }
-    const series = this.seriesOf(appointment);
-    if (series === undefined) return;
-    const deltaMs =
-      proposal.startDate.getTime() - appointment.startDate.getTime();
-    const lengthMs = proposal.endDate.getTime() - proposal.startDate.getTime();
-    const newStart = new Date(series.startDate.getTime() + deltaMs);
-    this.commitProposal(
-      {
-        appointment: series,
-        proposal: {
-          startDate: newStart,
-          endDate: new Date(newStart.getTime() + lengthMs),
-          allDay: proposal.allDay,
-        },
-      },
-      kind,
-    );
-  }
-
-  /* ---------- recurrence <-> editor mapping ---------- */
-
-  private ruleFields(
-    ruleString: string | undefined,
-  ): Pick<
-    SchedulerEditorModel,
-    'repeat' | 'interval' | 'byDays' | 'endMode' | 'count' | 'until'
-  > {
-    const rule =
-      ruleString === undefined ? null : parseRecurrenceRule(ruleString);
-    if (rule === null) {
-      return {
-        repeat: 'never',
-        interval: 1,
-        byDays: [],
-        endMode: 'never',
-        count: 10,
-        until: undefined,
-      };
-    }
-    return {
-      repeat: rule.freq,
-      interval: rule.interval,
-      byDays: rule.byDay?.map((entry) => entry.weekday) ?? [],
-      endMode:
-        rule.count !== undefined
-          ? 'count'
-          : rule.until !== undefined
-            ? 'until'
-            : 'never',
-      count: rule.count ?? 10,
-      until: rule.until,
-    };
-  }
-
-  private editorRuleString(model: SchedulerEditorModel): string | undefined {
-    if (model.repeat === 'never') return undefined;
-    const rule: RecurrenceRule = {
-      freq: model.repeat,
-      interval: Math.max(1, Math.round(model.interval || 1)),
-      ...(model.endMode === 'count'
-        ? { count: Math.max(1, Math.round(model.count || 1)) }
-        : {}),
-      ...(model.endMode === 'until' && model.until instanceof Date
-        ? {
-            until: new Date(
-              model.until.getFullYear(),
-              model.until.getMonth(),
-              model.until.getDate(),
-              23,
-              59,
-              59,
-            ),
-          }
-        : {}),
-      ...(model.repeat === 'weekly' && model.byDays.length > 0
-        ? {
-            byDay: model.byDays.map((weekday) => ({
-              ordinal: null,
-              weekday,
-            })),
-          }
-        : {}),
-      weekStart: 1,
-    };
-    return serializeRecurrenceRule(rule);
-  }
-
-  /** Editor model of an appointment; `withRecurrence` maps its rule too. */
-  private editorModelFrom(
-    appointment: SchedulerAppointment<T>,
-    withRecurrence: boolean,
-  ): SchedulerEditorModel {
-    return {
-      text: appointment.text,
-      allDay: appointment.allDay,
-      startDate: appointment.startDate,
-      endDate: appointment.endDate,
-      color: appointment.color,
-      location: appointment.location,
-      description: appointment.description,
-      reminder: appointment.reminderMinutes ?? null,
-      resourceValues: this.resourceValuesOf(appointment.source),
-      ...this.ruleFields(
-        withRecurrence ? appointment.recurrenceRule : undefined,
-      ),
-    };
-  }
-
-  private resourceValuesOf(item: T): Record<string, unknown> {
-    const values: Record<string, unknown> = {};
-    for (const resource of this.resources()) {
-      values[resource.fieldExpr] = (item as Record<string, unknown>)[
-        resource.fieldExpr
-      ];
-    }
-    return values;
-  }
-
-  /* ---------- editor ---------- */
-
-  private editedSource: T | null = null;
-  /** The occurrence being detached by an occurrence-scope edit. */
-  private editingOccurrence: SchedulerAppointment<T> | null = null;
 
   /** Opens the editor for an existing appointment (occurrences route). */
-  protected openEditorFor(appointment: SchedulerAppointment<T>): void {
-    if (!this.canUpdate()) return;
-    if (appointment.seriesKey !== null) {
-      this.routeRecurring('edit', appointment);
-      return;
-    }
-    this.editingOccurrence = null;
-    this.openEditor(
-      this.editorModelFrom(appointment, true),
-      appointment.source,
-      false,
-    );
+  protected openEditorFor(appointment: OgeSchedulerAppointment<T>): void {
+    this.core.openEditorFor(appointment);
   }
 
   /** Deletes an appointment, routing recurring occurrences by scope. */
-  protected onDeleteRequested(appointment: SchedulerAppointment<T>): void {
-    if (!this.canDelete()) return;
-    if (appointment.seriesKey !== null) {
-      this.routeRecurring('delete', appointment);
-      return;
-    }
-    this.deleteBySource(appointment.source);
-  }
-
-  private openCreateEditor(
-    cellDate: Date,
-    allDay: boolean,
-    resourceId?: unknown,
-  ): void {
-    if (!this.canAdd()) return;
-    const startDate = allDay ? startOfDay(cellDate) : cellDate;
-    const endDate = allDay
-      ? nextDay(startDate)
-      : addMinutes(startDate, this.activeView().cellDuration);
-    const model: SchedulerEditorModel = {
-      text: '',
-      allDay,
-      startDate,
-      endDate,
-      reminder: null,
-      resourceValues: this.prefillResources(resourceId),
-      ...this.ruleFields(undefined),
-    };
-    this.openEditor(model, this.buildItem(model), true);
-  }
-
-  private openEditor(
-    editorModel: SchedulerEditorModel,
-    source: T,
-    isNew: boolean,
-  ): void {
-    const dialog = this.dialog();
-    const event: OgeSchedulerEditorShowingEvent<T> = {
-      appointmentData: source,
-      isNew,
-      formItems: dialog.defaultItems(),
-      cancel: false,
-    };
-    this.editorShowing.emit(event);
-    if (event.cancel) return;
-    this.editedSource = isNew ? null : source;
-    dialog.open(editorModel, isNew, event.formItems);
+  protected onDeleteRequested(appointment: OgeSchedulerAppointment<T>): void {
+    this.core.onDeleteRequested(appointment);
   }
 
   protected onEditorSaved(result: SchedulerEditorResult): void {
-    if (result.isNew) {
-      this.insertItem(this.buildItem(result.model));
-    } else if (this.editingOccurrence !== null) {
-      this.detachOccurrence(this.editingOccurrence, result.model);
-    } else if (this.editedSource !== null) {
-      this.updateItem(this.editedSource, this.buildPatch(result.model));
-    }
-    this.editedSource = null;
-    this.editingOccurrence = null;
-  }
-
-  /** Builds a new item from the editor model using the string field names. */
-  private buildItem(editorModel: SchedulerEditorModel): T {
-    const fields = this.fields();
-    const item: Record<string, unknown> = {};
-    const set = (field: string | null, value: unknown): void => {
-      if (field !== null && value !== undefined) item[field] = value;
-    };
-    set(fields.fieldNames.text, editorModel.text);
-    set(fields.fieldNames.startDate, editorModel.startDate);
-    set(fields.fieldNames.endDate, editorModel.endDate);
-    if (editorModel.allDay) set(fields.fieldNames.allDay, true);
-    set(fields.fieldNames.color, editorModel.color);
-    set(fields.fieldNames.location, editorModel.location);
-    set(fields.fieldNames.description, editorModel.description);
-    set(fields.fieldNames.recurrenceRule, this.editorRuleString(editorModel));
-    set(fields.fieldNames.reminder, editorModel.reminder ?? undefined);
-    for (const resource of this.resources()) {
-      set(resource.fieldExpr, editorModel.resourceValues[resource.fieldExpr]);
-    }
-    return item as T;
-  }
-
-  private buildPatch(editorModel: SchedulerEditorModel): Partial<T> {
-    const fields = this.fields();
-    const original = this.editedSource as T;
-    const patch: Record<string, unknown> = {
-      ...(appointmentPatch(original, editorModel, fields) as Record<
-        string,
-        unknown
-      >),
-    };
-    const set = (field: string | null, value: unknown): void => {
-      if (field !== null && value !== undefined) patch[field] = value;
-    };
-    set(fields.fieldNames.text, editorModel.text);
-    set(fields.fieldNames.allDay, editorModel.allDay);
-    set(fields.fieldNames.color, editorModel.color);
-    set(fields.fieldNames.location, editorModel.location);
-    set(fields.fieldNames.description, editorModel.description);
-    const ruleString = this.editorRuleString(editorModel);
-    set(fields.fieldNames.recurrenceRule, ruleString ?? '');
-    if (ruleString === undefined) {
-      set(fields.fieldNames.recurrenceException, '');
-    }
-    set(fields.fieldNames.reminder, editorModel.reminder);
-    for (const resource of this.resources()) {
-      set(resource.fieldExpr, editorModel.resourceValues[resource.fieldExpr]);
-    }
-    return patch as Partial<T>;
-  }
-
-  /* ---------- CRUD executor ---------- */
-
-  private dataSourceOf(): DataSource<T> | null {
-    const source = this.dataSource();
-    return source !== null && !Array.isArray(source)
-      ? (source as DataSource<T>)
-      : null;
-  }
-
-  private insertItem(item: T): void {
-    if (!this.canAdd()) return;
-    const event: OgeSchedulerAppointmentAddingEvent<T> = {
-      appointmentData: item,
-      cancel: false,
-    };
-    this.appointmentAdding.emit(event);
-    if (event.cancel) return;
-    const source = this.dataSourceOf();
-    if (source?.insert) {
-      void source.insert(item).then(() => {
-        this.reload(source);
-        this.finishAdd(item);
-      });
-      return;
-    }
-    this.store.set([...this.store(), item]);
-    this.finishAdd(item);
-  }
-
-  private finishAdd(item: T): void {
-    this.appointmentAdded.emit({ appointmentData: item });
-    this.announce(this.msg().announcements.created, {
-      text: String(this.fields().text(item) ?? ''),
-    });
-  }
-
-  private updateItem(original: T, patch: Partial<T>): void {
-    if (!this.canUpdate()) return;
-    const event: OgeSchedulerAppointmentUpdatingEvent<T> = {
-      oldData: original,
-      newData: patch,
-      cancel: false,
-    };
-    this.appointmentUpdating.emit(event);
-    if (event.cancel) return;
-    const updated = { ...original, ...patch };
-    const source = this.dataSourceOf();
-    if (source?.update) {
-      const index = this.store().indexOf(original);
-      const key = this.keyOf()(original, index) as RowKey;
-      void source.update(key, patch).then(() => {
-        this.reload(source);
-        this.finishUpdate(updated);
-      });
-      return;
-    }
-    this.store.set(
-      this.store().map((entry) => (entry === original ? updated : entry)),
-    );
-    this.finishUpdate(updated);
-  }
-
-  private finishUpdate(updated: T): void {
-    this.appointmentUpdated.emit({ appointmentData: updated });
-    this.announce(this.msg().announcements.updated, {
-      text: String(this.fields().text(updated) ?? ''),
-    });
+    this.core.onEditorSaved(result);
   }
 
   protected onMoveCommitted(event: SchedulerProposalEvent<T>): void {
-    if (event.appointment.seriesKey !== null) {
-      this.routeRecurring('moved', event.appointment, event.proposal);
-      return;
-    }
-    this.commitProposal(event, 'moved');
+    this.core.onMoveCommitted(event);
   }
 
   protected onResizeCommitted(event: SchedulerProposalEvent<T>): void {
-    if (event.appointment.seriesKey !== null) {
-      this.routeRecurring('resized', event.appointment, event.proposal);
-      return;
-    }
-    this.commitProposal(event, 'resized');
+    this.core.onResizeCommitted(event);
   }
 
   protected onGestureCancelled(): void {
-    this.announcement.set(this.msg().announcements.cancelled);
+    this.core.onGestureCancelled();
   }
 
-  /**
-   * Timeline drag commit: the time shift runs the normal (recurrence-aware)
-   * move pipeline; a resource-row change patches the grouping field — for
-   * plain appointments and series scope only (an occurrence keeps its row).
-   */
-  protected onTimelineMoveCommitted(event: TimelineMoveEvent<T>): void {
-    const resource = this.groupResource();
-    if (event.appointment.seriesKey !== null) {
-      this.routeRecurring('moved', event.appointment, event.proposal);
-      return;
-    }
-    if (!this.canUpdate()) return;
-    const fields = this.fields();
-    const patch: Record<string, unknown> = {
-      ...(appointmentPatch(
-        event.appointment.source,
-        event.proposal,
-        fields,
-      ) as Record<string, unknown>),
-    };
-    if (event.resourceId !== undefined && resource !== null) {
-      patch[resource.fieldExpr] = event.resourceId;
-    }
-    this.updateItem(event.appointment.source, patch as Partial<T>);
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
-      dateStyle: 'medium',
-      timeStyle: event.appointment.allDay ? undefined : 'short',
-    });
-    this.announce(this.msg().announcements.moved, {
-      text: event.appointment.text,
-      start: format.format(event.proposal.startDate),
-      end: format.format(event.proposal.endDate),
-    });
+  /** Time-grid / timeline drag commit (resource-aware). */
+  protected onTimelineMoveCommitted(event: SchedulerProposalEvent<T>): void {
+    this.core.onGroupedMoveCommitted(event);
   }
 
-  protected onRangeSelected(
-    range: OgeSchedulerRangeSelectedEvent & { resourceId?: unknown },
-  ): void {
-    this.rangeSelected.emit(range);
-    if (!this.canAdd()) return;
-    const model: SchedulerEditorModel = {
-      text: '',
-      allDay: false,
-      startDate: range.startDate,
-      endDate: range.endDate,
-      reminder: null,
-      resourceValues: this.prefillResources(range.resourceId),
-      ...this.ruleFields(undefined),
-    };
-    this.openEditor(model, this.buildItem(model), true);
-  }
-
-  /** Resource prefill of grouped create flows. */
-  private prefillResources(resourceId: unknown): Record<string, unknown> {
-    const resource = this.groupResource();
-    return resource !== null && resourceId !== undefined
-      ? { [resource.fieldExpr]: resourceId }
-      : {};
+  protected onRangeSelected(range: SchedulerRangeEvent): void {
+    this.core.onRangeSelected(range);
   }
 
   protected onChipContextMenu(event: SchedulerChipEvent<T>): void {
-    if (event.event instanceof MouseEvent) {
-      this.appointmentContextMenu.emit({
-        appointment: event.appointment,
-        event: event.event,
-      });
-      this.openMenu(event.event, event.appointment, null);
-    }
+    this.core.onChipContextMenu(event);
   }
 
   protected onCellContextMenu(event: SchedulerCellEvent): void {
-    if (event.event instanceof MouseEvent) {
-      this.cellContextMenu.emit({
-        cellDate: event.cellDate,
-        allDay: event.allDay,
-        event: event.event,
-      });
-      this.openMenu(event.event, null, {
-        cellDate: event.cellDate,
-        allDay: event.allDay,
-        resourceId: event.resourceId,
-      });
-    }
-  }
-
-  /* ---------------- built-in context menu ---------------- */
-
-  protected readonly contextMenu = signal<{
-    x: number;
-    y: number;
-    appointment: SchedulerAppointment<T> | null;
-    cell: { cellDate: Date; allDay: boolean; resourceId?: unknown } | null;
-  } | null>(null);
-
-  private openMenu(
-    event: MouseEvent,
-    appointment: SchedulerAppointment<T> | null,
-    cell: { cellDate: Date; allDay: boolean; resourceId?: unknown } | null,
-  ): void {
-    // no available action → keep the native browser menu
-    const available =
-      appointment !== null
-        ? this.canUpdate() || this.canDelete()
-        : this.canAdd();
-    if (!available) return;
-    event.preventDefault();
-    const hostRect = this.hostEl.nativeElement.getBoundingClientRect();
-    this.contextMenu.set({
-      x: event.clientX - hostRect.left,
-      y: event.clientY - hostRect.top,
-      appointment,
-      cell,
-    });
-    setTimeout(() => {
-      this.hostEl.nativeElement
-        .querySelector<HTMLElement>('.oge-scheduler-menu-item:not(:disabled)')
-        ?.focus();
-    });
+    this.core.onCellContextMenu(event);
   }
 
   protected closeMenu(): void {
-    this.contextMenu.set(null);
+    this.core.closeMenu();
   }
 
   protected menuEdit(): void {
-    const menu = untracked(this.contextMenu);
-    this.closeMenu();
-    if (menu?.appointment) this.openEditorFor(menu.appointment);
+    untracked(() => this.core.menuEdit());
   }
 
   protected menuDelete(): void {
-    const menu = untracked(this.contextMenu);
-    this.closeMenu();
-    if (menu?.appointment) this.onDeleteRequested(menu.appointment);
+    untracked(() => this.core.menuDelete());
   }
 
   protected menuCreate(): void {
-    const menu = untracked(this.contextMenu);
-    this.closeMenu();
-    if (menu?.cell) {
-      this.openCreateEditor(
-        menu.cell.cellDate,
-        menu.cell.allDay,
-        menu.cell.resourceId,
-      );
-    }
-  }
-
-  private commitProposal(
-    event: SchedulerProposalEvent<T>,
-    kind: 'moved' | 'resized',
-  ): void {
-    if (!this.canUpdate()) return;
-    const fields = this.fields();
-    const patch = appointmentPatch(
-      event.appointment.source,
-      event.proposal,
-      fields,
-    );
-    this.updateItem(event.appointment.source, patch);
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
-      dateStyle: 'medium',
-      timeStyle: event.appointment.allDay ? undefined : 'short',
-    });
-    this.announce(this.msg().announcements[kind], {
-      text: event.appointment.text,
-      start: format.format(event.proposal.startDate),
-      end: format.format(event.proposal.endDate),
-    });
+    untracked(() => this.core.menuCreate());
   }
 
   /** Deletes the appointment rendered from `item` (guarded + evented). */
   protected deleteBySource(item: T): void {
-    if (!this.canDelete()) return;
-    const event: OgeSchedulerAppointmentDeletingEvent<T> = {
-      appointmentData: item,
-      cancel: false,
-    };
-    this.appointmentDeleting.emit(event);
-    if (event.cancel) return;
-    const source = this.dataSourceOf();
-    if (source?.remove) {
-      const index = this.store().indexOf(item);
-      const key = this.keyOf()(item, index) as RowKey;
-      void source.remove(key).then(() => {
-        this.reload(source);
-        this.finishDelete(item);
-      });
-      return;
-    }
-    this.store.set(this.store().filter((entry) => entry !== item));
-    this.finishDelete(item);
-  }
-
-  private finishDelete(item: T): void {
-    this.appointmentDeleted.emit({ appointmentData: item });
-    this.announce(this.msg().announcements.deleted, {
-      text: String(this.fields().text(item) ?? ''),
-    });
+    this.core.deleteBySource(item);
   }
 
   /* ---------- imperative API ---------- */
@@ -1812,13 +878,14 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     );
     if (body === null || rows === null) return;
     const grid = view.grid();
-    const span = grid.windowEndMinutes - grid.windowStartMinutes;
-    if (span <= 0) return;
-    const fraction = Math.min(
-      1,
-      Math.max(0, (hours * 60 + minutes - grid.windowStartMinutes) / span),
+    const offset = scrollOffsetForTime(
+      hours,
+      minutes,
+      grid.windowStartMinutes,
+      grid.windowEndMinutes,
+      rows.scrollHeight,
     );
-    body.scrollTop = fraction * rows.scrollHeight;
+    if (offset !== null) body.scrollTop = offset;
   }
 
   /**
@@ -1827,29 +894,12 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
    * `showAppointmentPopup` opens the *form*, not the summary popup).
    */
   showAppointmentPopup(appointmentData?: Partial<T>, createNew = false): void {
-    if (createNew || appointmentData === undefined) {
-      const base = untracked(this.currentDate);
-      this.openCreateEditor(
-        new Date(
-          base.getFullYear(),
-          base.getMonth(),
-          base.getDate(),
-          this.activeView().dayStartHour,
-        ),
-        false,
-      );
-      return;
-    }
-    const appointment = untracked(this.appointments).find(
-      (entry) => entry.source === appointmentData,
-    );
-    if (appointment !== undefined) this.openEditorFor(appointment);
+    untracked(() => this.core.showAppointmentPopup(appointmentData, createNew));
   }
 
   /** Closes the appointment editor and the summary popup. */
   hideAppointmentPopup(): void {
-    this.dialog().close();
-    this.popup().close();
+    this.core.hideAppointmentPopup();
   }
 
   /**
@@ -1857,37 +907,27 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
    * `appointmentAdding` pipeline as interactive creation.
    */
   addAppointment(appointmentData: T): void {
-    this.insertItem(appointmentData);
+    untracked(() => this.core.addAppointment(appointmentData));
   }
 
   /** Applies a patch to an existing item through the guarded pipeline. */
   updateAppointment(appointmentData: T, patch: Partial<T>): void {
-    this.updateItem(appointmentData, patch);
+    untracked(() => this.core.updateAppointment(appointmentData, patch));
   }
 
   /** Deletes an item through the guarded pipeline. */
   deleteAppointment(appointmentData: T): void {
-    this.deleteBySource(appointmentData);
+    untracked(() => this.core.deleteAppointment(appointmentData));
   }
 
   /** First moment of the visible period. */
   getStartViewDate(): Date {
-    return viewRange(
-      untracked(this.currentView),
-      untracked(this.currentDate),
-      this.resolvedFirstDayOfWeek(),
-      this.agendaDuration(),
-    ).start;
+    return untracked(() => this.core.getStartViewDate());
   }
 
   /** Exclusive end of the visible period. */
   getEndViewDate(): Date {
-    return viewRange(
-      untracked(this.currentView),
-      untracked(this.currentDate),
-      this.resolvedFirstDayOfWeek(),
-      this.agendaDuration(),
-    ).end;
+    return untracked(() => this.core.getEndViewDate());
   }
 
   /** The bound data source, as given. */
@@ -1897,7 +937,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
 
   /** Navigates to `date` and scrolls the time grid to its time of day. */
   scrollTo(date: Date): void {
-    this.setDate(date);
+    this.core.setDate(date);
     this.scrollToTime(date.getHours(), date.getMinutes());
   }
 }

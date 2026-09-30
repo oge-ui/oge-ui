@@ -1,273 +1,29 @@
 import { computed, InjectionToken, type Provider } from '@angular/core';
 import { ogeLiveConfig } from '@oge-ui/core';
+import {
+  OGE_DEFAULT_SCHEDULER_CONFIG,
+  resolveOgeSchedulerConfig,
+  type OgeSchedulerConfig,
+  type OgeSchedulerConfigInput,
+} from '@oge-ui/scheduler-engine';
 
-/** Labels of the header toolbar (navigation + view switcher). */
-export interface OgeSchedulerToolbarMessages {
-  /** Accessible name of the header toolbar. */
-  readonly label: string;
-  /** "Today" button. */
-  readonly today: string;
-  /** Previous-period button aria label. */
-  readonly previous: string;
-  /** Next-period button aria label. */
-  readonly next: string;
-  /** Accessible name of the view-switcher group. */
-  readonly viewSwitcherLabel: string;
-  /** Aria label of the date-navigator button (opens the calendar). */
-  readonly dateNavigatorLabel: string;
-  /** The "new appointment" toolbar button. */
-  readonly newAppointment: string;
-  /** Display names of the built-in views. */
-  readonly viewNames: Readonly<
-    Record<
-      | 'day'
-      | 'week'
-      | 'workWeek'
-      | 'month'
-      | 'agenda'
-      | 'timelineDay'
-      | 'timelineWeek'
-      | 'year',
-      string
-    >
-  >;
-}
-
-/** Labels of the appointment popup (click on a chip). */
-export interface OgeSchedulerPopupMessages {
-  /** "Edit" action. */
-  readonly edit: string;
-  /** "Delete" action. */
-  readonly deleteAppointment: string;
-  /** "Close" action aria label. */
-  readonly close: string;
-}
-
-/** Labels of the appointment editor dialog. */
-export interface OgeSchedulerEditorMessages {
-  /** Dialog title when creating a new appointment. */
-  readonly titleNew: string;
-  /** Dialog title when editing an existing appointment. */
-  readonly titleEdit: string;
-  readonly subjectLabel: string;
-  /** Placeholder of the subject field. */
-  readonly subjectPlaceholder: string;
-  readonly locationLabel: string;
-  readonly locationPlaceholder: string;
-  readonly allDayLabel: string;
-  readonly startDateLabel: string;
-  readonly endDateLabel: string;
-  readonly colorLabel: string;
-  readonly descriptionLabel: string;
-  readonly descriptionPlaceholder: string;
-  readonly save: string;
-  readonly cancel: string;
-  /** Validation message when the end date is not after the start date. */
-  readonly endBeforeStart: string;
-  /** Recurrence section labels. */
-  readonly repeatLabel: string;
-  readonly repeatOptions: Readonly<
-    Record<'never' | 'daily' | 'weekly' | 'monthly' | 'yearly', string>
-  >;
-  readonly intervalLabel: string;
-  /** Weekday picker label of the weekly recurrence. */
-  readonly repeatOnLabel: string;
-  readonly endLabel: string;
-  readonly endOptions: Readonly<Record<'never' | 'count' | 'until', string>>;
-  readonly countLabel: string;
-  readonly untilLabel: string;
-  /** Reminder picker labels. */
-  readonly reminderLabel: string;
-  readonly reminderNone: string;
-  readonly reminderAtStart: string;
-  /** `{minutes}` is replaced with the lead time. */
-  readonly reminderBefore: string;
-}
-
-/** Strings of the occurrence-vs-series scope dialog. */
-export interface OgeSchedulerRecurrenceScopeMessages {
-  /** Dialog title. */
-  readonly title: string;
-  /** Body text; `{action}` is the localized action name. */
-  readonly text: string;
-  readonly editAction: string;
-  readonly deleteAction: string;
-  readonly moveAction: string;
-  /** "Only this appointment" button. */
-  readonly occurrence: string;
-  /** "The entire series" button. */
-  readonly series: string;
-  readonly cancel: string;
-}
-
-/**
- * Grid-surface strings: aria templates use `{token}` placeholders replaced
- * with `Intl`-formatted values at render time.
- */
-/** Built-in context-menu labels. */
-export interface OgeSchedulerMenuMessages {
-  readonly newAppointment: string;
-  readonly edit: string;
-  readonly deleteAppointment: string;
-}
-
-export interface OgeSchedulerGridMessages {
-  /** Accessible name of the scheduler grid; `{period}` is the visible period. */
-  readonly gridLabel: string;
-  /** Row header of the all-day strip. */
-  readonly allDayLabel: string;
-  /** Cell aria label; `{date}` full date, `{time}` slot start time. */
-  readonly cellLabel: string;
-  /** All-day / month cell aria label; `{date}` is the full date. */
-  readonly dayCellLabel: string;
-  /** Chip aria label; `{text}`, `{start}` and `{end}` are formatted values. */
-  readonly appointmentLabel: string;
-  /** The "+N more" overflow button; `{count}` is the hidden count. */
-  readonly moreLabel: string;
-  /** Hint appended to the grid label for keyboard users. */
-  readonly gridHint: string;
-  /** Empty state of the agenda view. */
-  readonly agendaNoData: string;
-  /** Timeline row label for appointments without a resource. */
-  readonly unassignedLabel: string;
-}
-
-/** Templates written to the polite live region after actions. */
-export interface OgeSchedulerAnnouncementMessages {
-  /** After creating; `{text}` is the appointment subject. */
-  readonly created: string;
-  /** After an update (move/resize/edit); `{text}` is the subject. */
-  readonly updated: string;
-  /** After a deletion; `{text}` is the subject. */
-  readonly deleted: string;
-  /** After a keyboard/pointer move lands; `{text}`, `{start}` formatted. */
-  readonly moved: string;
-  /** After a resize lands; `{text}`, `{start}`, `{end}` formatted. */
-  readonly resized: string;
-  /** After a gesture is cancelled with Escape. */
-  readonly cancelled: string;
-}
-
-/** Every user-facing string of the scheduler (house i18n rule). */
-export interface OgeSchedulerMessages {
-  readonly toolbar: OgeSchedulerToolbarMessages;
-  readonly popup: OgeSchedulerPopupMessages;
-  readonly editor: OgeSchedulerEditorMessages;
-  readonly recurrenceScope: OgeSchedulerRecurrenceScopeMessages;
-  readonly grid: OgeSchedulerGridMessages;
-  readonly menu: OgeSchedulerMenuMessages;
-  readonly announcements: OgeSchedulerAnnouncementMessages;
-}
-
-export const OGE_DEFAULT_SCHEDULER_MESSAGES: OgeSchedulerMessages = {
-  toolbar: {
-    label: 'Scheduler toolbar',
-    today: 'Today',
-    previous: 'Previous period',
-    next: 'Next period',
-    viewSwitcherLabel: 'Views',
-    dateNavigatorLabel: 'Choose a date',
-    newAppointment: 'New',
-    viewNames: {
-      day: 'Day',
-      week: 'Week',
-      workWeek: 'Work Week',
-      month: 'Month',
-      agenda: 'Agenda',
-      timelineDay: 'Timeline Day',
-      timelineWeek: 'Timeline Week',
-      year: 'Year',
-    },
-  },
-  popup: {
-    edit: 'Edit',
-    deleteAppointment: 'Delete',
-    close: 'Close',
-  },
-  editor: {
-    titleNew: 'New appointment',
-    titleEdit: 'Edit appointment',
-    subjectLabel: 'Subject',
-    subjectPlaceholder: 'Add a title',
-    locationLabel: 'Location',
-    locationPlaceholder: 'Add a location',
-    allDayLabel: 'All day',
-    startDateLabel: 'Start',
-    endDateLabel: 'End',
-    colorLabel: 'Color',
-    descriptionLabel: 'Description',
-    descriptionPlaceholder: 'Add notes',
-    save: 'Save',
-    cancel: 'Cancel',
-    endBeforeStart: 'The end date must be after the start date',
-    repeatLabel: 'Repeat',
-    repeatOptions: {
-      never: 'Never',
-      daily: 'Daily',
-      weekly: 'Weekly',
-      monthly: 'Monthly',
-      yearly: 'Yearly',
-    },
-    intervalLabel: 'Every',
-    repeatOnLabel: 'Repeat on',
-    endLabel: 'Ends',
-    endOptions: { never: 'Never', count: 'After', until: 'On date' },
-    countLabel: 'Occurrences',
-    untilLabel: 'End date',
-    reminderLabel: 'Reminder',
-    reminderNone: 'None',
-    reminderAtStart: 'At start',
-    reminderBefore: '{minutes} minutes before',
-  },
-  recurrenceScope: {
-    title: 'Recurring appointment',
-    text: 'Apply the {action} to this appointment only, or to the entire series?',
-    editAction: 'change',
-    deleteAction: 'deletion',
-    moveAction: 'move',
-    occurrence: 'Only this appointment',
-    series: 'The entire series',
-    cancel: 'Cancel',
-  },
-  menu: {
-    newAppointment: 'New appointment',
-    edit: 'Edit',
-    deleteAppointment: 'Delete',
-  },
-  grid: {
-    gridLabel: 'Scheduler, {period}',
-    allDayLabel: 'All day',
-    cellLabel: '{date}, {time}',
-    dayCellLabel: '{date}',
-    appointmentLabel: '{text}, {start} to {end}',
-    moreLabel: '+{count} more',
-    gridHint: 'Press Escape then Tab to leave the scheduler',
-    agendaNoData: 'No appointments in this period',
-    unassignedLabel: 'Unassigned',
-  },
-  announcements: {
-    created: '{text} created',
-    updated: '{text} updated',
-    deleted: '{text} deleted',
-    moved: '{text} moved to {start}',
-    resized: '{text} now lasts from {start} to {end}',
-    cancelled: 'Cancelled',
-  },
-};
-
-/** DI-level configuration of every scheduler in the injector's scope. */
-export interface OgeSchedulerConfig {
-  readonly messages: OgeSchedulerMessages;
-  /** BCP 47 locale for every `Intl` format; unset = the browser locale. */
-  readonly locale?: string;
-  /** Minimum rendered height of a chip, in minutes of the slot raster. */
-  readonly minAppointmentMinutes?: number;
-}
-
-export const OGE_DEFAULT_SCHEDULER_CONFIG: OgeSchedulerConfig = {
-  messages: OGE_DEFAULT_SCHEDULER_MESSAGES,
-  minAppointmentMinutes: 15,
-};
+// The message catalog, the config shape and its defaults are single-sourced
+// in `@oge-ui/scheduler-engine`, shared with `@oge-ui/react-scheduler`
+// (ADR 0003); re-exported so every import path of this package is unchanged.
+export {
+  OGE_DEFAULT_SCHEDULER_CONFIG,
+  OGE_DEFAULT_SCHEDULER_MESSAGES,
+  type OgeSchedulerAnnouncementMessages,
+  type OgeSchedulerConfig,
+  type OgeSchedulerConfigInput,
+  type OgeSchedulerEditorMessages,
+  type OgeSchedulerGridMessages,
+  type OgeSchedulerMenuMessages,
+  type OgeSchedulerMessages,
+  type OgeSchedulerPopupMessages,
+  type OgeSchedulerRecurrenceScopeMessages,
+  type OgeSchedulerToolbarMessages,
+} from '@oge-ui/scheduler-engine';
 
 export const OGE_SCHEDULER_CONFIG = new InjectionToken<OgeSchedulerConfig>(
   'OGE_SCHEDULER_CONFIG',
@@ -275,12 +31,6 @@ export const OGE_SCHEDULER_CONFIG = new InjectionToken<OgeSchedulerConfig>(
     factory: () => OGE_DEFAULT_SCHEDULER_CONFIG,
   },
 );
-
-export type OgeSchedulerConfigInput = Partial<
-  Omit<OgeSchedulerConfig, 'messages'>
-> & {
-  messages?: Partial<OgeSchedulerMessages>;
-};
 
 /**
  * Configures every `<oge-scheduler>` below the provider. The merge is
@@ -295,18 +45,6 @@ export type OgeSchedulerConfigInput = Partial<
  * ]
  * ```
  */
-/** Merges an input over the defaults (messages merged one level deep). */
-function resolveOgeSchedulerConfig(
-  config: OgeSchedulerConfigInput,
-): OgeSchedulerConfig {
-  const { messages, ...rest } = config;
-  return {
-    ...OGE_DEFAULT_SCHEDULER_CONFIG,
-    ...rest,
-    messages: { ...OGE_DEFAULT_SCHEDULER_MESSAGES, ...messages },
-  };
-}
-
 export function provideOgeSchedulerConfig(
   config: OgeSchedulerConfigInput | (() => OgeSchedulerConfigInput),
 ): Provider {

@@ -3,10 +3,12 @@
   "dest": "../../dist/packages/scheduler",
   "assets": ["llms.txt"],
   "allowedNonPeerDependencies": [
+    "@oge-ui/behavior",
     "@oge-ui/core",
     "@oge-ui/forms",
     "@oge-ui/inputs",
-    "@oge-ui/overlay"
+    "@oge-ui/overlay",
+    "@oge-ui/scheduler-engine"
   ],
   "lib": {
     "entryFile": "src/index.ts"

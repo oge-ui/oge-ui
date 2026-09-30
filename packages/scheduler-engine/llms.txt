@@ -1,0 +1,99 @@
+# @oge-ui/scheduler-engine
+
+> Framework-free engine behind both scheduler render layers (ADR 0003): view-model builders, the transitive-overlap column layout, lane packing, the RFC 5545 RRULE-subset parser and expander, gesture math, keyboard maps, the editing/recurrence/CRUD core (`OgeSchedulerCore`), default config and message catalog. Installed automatically with `@oge-ui/scheduler` or `@oge-ui/react-scheduler` — you rarely import it directly.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.13.1.
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/scheduler-engine
+```
+
+## Writing OGE code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
+   Import the component class and list it in the host component's `imports`
+   array: `imports: [OgeGrid, OgeColumn]`.
+2. **Signal APIs, never decorators.** Public members are `input()`,
+   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
+   Read them as signals in TypeScript (`grid.selectedKeys()`).
+3. **Two-way state is `model()`.** Bind with the banana box against a signal:
+   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
+   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
+   idiomatic form.
+4. **Modes are string unions, never enums.** Write the literal:
+   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
+   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
+5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
+   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
+6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
+   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
+   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
+   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
+   past-tense event never fires.
+7. **App-wide defaults and every user-facing string** come from a provider:
+   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
+   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
+   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
+   `messages` block — that is how localization works; there is no i18n
+   dependency. Pass a function instead of an object
+   (`provideOgeGridConfig(() => ({ messages: lang() === 'tr' ? TR : {} }))`)
+   and the config is live: components re-render their strings when the signals
+   it reads change, so the language switches without a reload.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
+   internal class names to change colors or sizing; override the token.
+9. **Templates and slots are structural directives on the markup you want**,
+   not `<ng-template>` wrappers:
+   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
+   `<div *ogeModalFooter>…</div>`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+  --oge-row-height: 32px;  /* grid & tree-list density */
+}
+```
+
+Token defaults have zero specificity: a plain `:root` rule (or any class)
+wins, and tokens cascade into subtrees. Optional stylesheets, imported once,
+ship in `@oge-ui/core` (installed with every package; add it directly under
+pnpm): `@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
+`data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
+`prefers-color-scheme`, `oge-theme-light` marks a light island),
+`@oge-ui/core/themes/tailwind.css` and `@oge-ui/core/themes/bootstrap.css`
+(bridge `--oge-*` onto an existing design system).
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `<oge-data-grid>` | `<oge-grid>` |
+| `[dataSource]="rows"` | `[data]="rows"` |
+| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
+| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
+| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
+| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
+| `<oge-grid-column>` | `<oge-column>` |
+| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
+| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
+| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
+| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
+| importing a theme to get default styles | not needed — styles ship with the components |
+
+## Entry points
+
+`@oge-ui/scheduler-engine`
+
+- values: `OGE_DEFAULT_SCHEDULER_CONFIG`, `OGE_DEFAULT_SCHEDULER_MESSAGES`, `OgeSchedulerCore`, `agendaDayText`, `agendaTimeText`, `allDayDragProposal`, `appendException`, `appointmentPatch`, `beginPointerGesture`, `buildAgendaDays`, `buildAllDayLayout`, `buildDayWeekColumns`, `buildGutterSlots`, `buildItemFromEditor`, `buildMonthGrid`, `buildMonthWeekLanes`, `buildMonthWeekLayouts`, `buildPatchFromEditor`, `buildSchedulerEditorItems`, `buildTimeGrid`, `buildTimelineGrid`, `buildTimelineRows`, `buildYearMonths`, `canNavigateScheduler`, `cellDateAt`, `chipForeground`, `chipKey`, `chipLeftPercent`, `chipTabIndexOf`, `chipTimeText`, `chipWidthPercent`, `clampMinutesToWindow`, `countAppointmentsByDay`, `dayWeekCellDate`, `dayWeekChipOrder`, `dayWeekDragMove`, `dayWeekGroupItems`, `dayWeekPreviewBox`, `dayWeekResizeProposal`, `dayWeekSelectionBox`, `dayWeekViewOf`, `draftEditorModel`, `dragSelectionRange`, `dueSchedulerReminders`, `durationMinutes`, `editorModelFrom`, `editorRuleFields`, `editorRuleString`, `escapeAttr`, `expandAppointment`, `expandRecurrence`, `fillSchedulerTemplate`, `fractionForMinutes`, `groupResourceIdReader`, `isOffHoursCell`, `isTodayInSchedulerView`, `isWeekendDay`, `layoutDayColumn`, `layoutDayWeekSegments`, `layoutTimelineBars`, `mergeSchedulerMessages`, `minutesOfDay`, `monthCellKey`, `monthChipOrder`, `monthDropCell`, `monthMaxLanes`, `monthOriginIndex`, `monthOverflowEntries`, `navigateDate`, `normalizeAppointment`, `normalizeSchedulerStore`, `nowLineFraction`, `originDayIndex`, `packLanes`, `parseRecurrenceException`, `parseRecurrenceRule`, `partitionAllDay`, `pointToGridPosition`, `popupTimeText`, `proposeMove`, `proposeResize`, `resolveActiveSchedulerView`, `resolveColorResource`, `resolveGroupResource`, `resolveHiddenWeekDays`, `resolveOgeSchedulerConfig`, `resolveSchedulerFields`, `resolveSchedulerViews`, `resourceColorOf`, `resourceIndexOf`, `resourceValuesOf`, `schedulerCellAriaLabel`, `schedulerChipAriaLabel`, `schedulerDayCellAriaLabel`, `schedulerGridAriaLabel`, `schedulerKeyReader`, `schedulerMoreText`, `schedulerPeriodTitle`, `schedulerReminderItems`, `schedulerWeekdayItems`, `scrollOffsetForTime`, `segmentKey`, `segmentTimedAppointments`, `serializeRecurrenceRule`, `setMinutesOfDay`, `slotCount`, `snapToSlot`, `timeGridCellKey`, `timeGridChipCtrlKey`, `timelineBarCtrlKey`, `timelineDayText`, `timelineDragMove`, `timelineHourLabels`, `timelineRowAt`, `viewRange`, `visibleSchedulerAppointments`, `weekdayShortText`, `yearCellLabel`, `yearWeekdayText`
+- types: `AgendaDay`, `AllDayBar`, `AppointmentProposal`, `AppointmentSegment`, `DayWeekColumn`, `DayWeekSegment`, `DayWeekSelection`, `LaneInput`, `LaneLayout`, `LanedItem`, `LayoutedSegment`, `MonthGridVm`, `MonthOverflowEntry`, `OgeSchedulerAnnouncementMessages`, `OgeSchedulerAppointment`, `OgeSchedulerAppointmentAddedEvent`, `OgeSchedulerAppointmentAddingEvent`, `OgeSchedulerAppointmentClickEvent`, `OgeSchedulerAppointmentDeletedEvent`, `OgeSchedulerAppointmentDeletingEvent`, `OgeSchedulerAppointmentUpdatedEvent`, `OgeSchedulerAppointmentUpdatingEvent`, `OgeSchedulerCellClickEvent`, `OgeSchedulerConfig`, `OgeSchedulerConfigInput`, `OgeSchedulerCoreEvents`, `OgeSchedulerCoreInputs`, `OgeSchedulerCoreOptions`, `OgeSchedulerCoreSurfaces`, `OgeSchedulerEditorMessages`, `OgeSchedulerEditorShowingEvent`, `OgeSchedulerGridMessages`, `OgeSchedulerMenuMessages`, `OgeSchedulerMessages`, `OgeSchedulerPopupMessages`, `OgeSchedulerRangeSelectedEvent`, `OgeSchedulerRecurrenceScopeMessages`, `OgeSchedulerReminderEvent`, `OgeSchedulerResource`, `OgeSchedulerResourceItem`, `OgeSchedulerToolbarMessages`, `OgeSchedulerView`, `OgeSchedulerViewOptions`, `OgeSchedulerWorkHours`, `RecurrenceByDay`, `RecurrenceFrequency`, `RecurrenceRule`, `ResolvedSchedulerFields`, `ResolvedSchedulerView`, `SchedulerAppointment`, `SchedulerAppointmentChange`, `SchedulerCellEvent`, `SchedulerCellKeyAction`, `SchedulerChipEvent`, `SchedulerChipKeyAction`, `SchedulerContextMenuState`, `SchedulerCtrlCommit`, `SchedulerCtrlKeyResult`, `SchedulerEditorModel`, `SchedulerEditorResult`, `SchedulerEditorRuleFields`, `SchedulerFieldExpr`, `SchedulerFieldExprs`, `SchedulerFieldKey`, `SchedulerGestureCallbacks`, `SchedulerGutterSlot`, `SchedulerKeyInput`, `SchedulerOverlayBox`, `SchedulerProposalEvent`, `SchedulerRangeEvent`, `SchedulerScopeAction`, `SchedulerScopePending`, `SchedulerViewDefaults`, `SchedulerViewType`, `TimeGridConfig`, `TimeGridVm`, `TimelineBar`, `TimelineHourLabel`, `TimelineMoveEvent`, `TimelineRow`, `YearCell`, `YearMonth`
+
+

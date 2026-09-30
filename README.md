@@ -125,17 +125,11 @@ No modules, no forms boilerplate — `[(value)]` binds straight to a
 
 ## Packages
 
-All packages are MIT except `@oge-ui/pivot`, `@oge-ui/bpmn`,
-`@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` (with its
-`@oge-ui/kanban-engine` and `@oge-ui/react-kanban`) and `@oge-ui/charts`, which are
-commercial (free for evaluation and development) — see [Licensing](#licensing).
-`@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`, which are
-commercial (free for evaluation and development) — see [Licensing](#licensing). Their
-framework-free engines (`@oge-ui/bpmn-engine`) and their React render layers
-(`@oge-ui/react-bpmn`) carry the same commercial license.
-`@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`
-(with its engine `@oge-ui/charts-engine` and its React layer
-`@oge-ui/react-charts`), which are commercial (free for evaluation and
+All packages are MIT except the six commercial families — `@oge-ui/pivot`,
+`@oge-ui/bpmn`, `@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` and
+`@oge-ui/charts` — together with their framework-free engines
+(`@oge-ui/<family>-engine`, ADR 0003) and their React layers
+(`@oge-ui/react-<family>`). Those are commercial (free for evaluation and
 development) — see [Licensing](#licensing).
 
 | Package                                                 | Description                                                                                                                                                                                                                                                                                                                                                                               | npm                                                           |
@@ -147,6 +141,7 @@ development) — see [Licensing](#licensing).
 | [`@oge-ui/bpmn`](packages/bpmn)                         | BPMN Editor (commercial): from-scratch BPMN 2.0 modeler with its own XML + DI engine, no watermark                                                                                                                                                                                                                                                                                        | [npm](https://www.npmjs.com/package/@oge-ui/bpmn)             |
 | [`@oge-ui/bpmn-engine`](packages/bpmn-engine)           | BPMN engine (commercial): the framework-free model, XML/JSON/SVG, routing, rules, command stack and editor core both BPMN editors run                                                                                                                                                                                                                                                     | [npm](https://www.npmjs.com/package/@oge-ui/bpmn-engine)      |
 | [`@oge-ui/scheduler`](packages/scheduler)               | Scheduler (commercial): day/week/month event calendar, all-day strip, drag & resize with Escape-cancel, appointment popup + form                                                                                                                                                                                                                                                          | [npm](https://www.npmjs.com/package/@oge-ui/scheduler)        |
+| [`@oge-ui/scheduler-engine`](packages/scheduler-engine) | Scheduler engine (commercial): the framework-free core both scheduler render layers run — layout kernels, RRULE expansion, gesture math, keyboard maps, the CRUD/recurrence core and the message catalog                                                                                                                                                                                  | [npm](https://www.npmjs.com/package/@oge-ui/scheduler-engine) |
 | [`@oge-ui/gantt`](packages/gantt)                       | Gantt (commercial): task tree + timeline, dependencies, critical path, baselines, drag editing, undo/redo                                                                                                                                                                                                                                                                                 | [npm](https://www.npmjs.com/package/@oge-ui/gantt)            |
 | [`@oge-ui/kanban`](packages/kanban)                     | Kanban (commercial): columns + swimlanes, WIP limits, per-column virtualization, drag & drop with Escape-cancel, keyboard card moving, built-in dialog and menu                                                                                                                                                                                                                           | [npm](https://www.npmjs.com/package/@oge-ui/kanban)           |
 | [`@oge-ui/kanban-engine`](packages/kanban-engine)       | Kanban engine (commercial): the framework-free board model, drag/keyboard machines, move pipeline and editor model both Kanban render layers run                                                                                                                                                                                                                                          | [npm](https://www.npmjs.com/package/@oge-ui/kanban-engine)    |
@@ -176,6 +171,7 @@ development) — see [Licensing](#licensing).
 | [`@oge-ui/react-kanban`](packages/react/kanban)         | **React.** Kanban (commercial): columns + swimlanes, WIP limits, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving, built-in dialog, menu and toolbar — the same engine and stylesheet as the Angular package                                                                                                                                    | [npm](https://www.npmjs.com/package/@oge-ui/react-kanban)     |
 | [`@oge-ui/react-tree-list`](packages/react/tree-list)   | **React.** Tree list on the shared tree engine: flat or nested data, lazy per-expansion loading, ancestor-preserving filtering, recursive tri-state selection, paging, virtualization, editing, drag & drop reparenting, treegrid keyboard, persistence, CSV/Excel                                                                                                                        | [npm](https://www.npmjs.com/package/@oge-ui/react-tree-list)  |
 | [`@oge-ui/react-bpmn`](packages/react/bpmn)             | **React** (commercial, not in the MIT umbrella). BPMN 2.0 editor: palette, context pad, properties panel, minimap, undo/redo, XML/JSON/SVG import & export — the same engine and stylesheet as the Angular editor                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/react-bpmn)       |
+| [`@oge-ui/react-scheduler`](packages/react/scheduler)   | **React.** Scheduler (commercial): day/week/work-week/month/agenda/timeline/year views, drag & resize with Escape-cancel, recurrence with occurrence-vs-series editing, resources, reminders, popup + form editor — the same engine and stylesheet as the Angular package                                                                                                                 | [npm](https://www.npmjs.com/package/@oge-ui/react-scheduler)  |
 
 ## Theming
 
@@ -253,22 +249,15 @@ OGE UI is **open-core**:
   `@oge-ui/forms`, `@oge-ui/upload` and `@oge-ui/overlay` are [MIT-licensed](LICENSE). This is a commitment:
   these packages and every feature currently in them will remain MIT.
 - **Commercial — `@oge-ui/pivot`, `@oge-ui/bpmn`, `@oge-ui/scheduler`,
-  `@oge-ui/gantt`, `@oge-ui/kanban` (plus its engine `@oge-ui/kanban-engine`
-  and its React layer `@oge-ui/react-kanban`) and `@oge-ui/charts`.** The pivot grid,
-  the BPMN editor, the scheduler, the Gantt, the Kanban and the Charts are
-  source-available commercial software: free for evaluation,
-  development and testing; production use requires a paid license
-  ([packages/pivot/LICENSE](packages/pivot/LICENSE),
-  [packages/bpmn/LICENSE](packages/bpmn/LICENSE) — also shipped by
-  `@oge-ui/bpmn-engine` and `@oge-ui/react-bpmn`,
-  [packages/scheduler/LICENSE](packages/scheduler/LICENSE),
-  [packages/gantt/LICENSE](packages/gantt/LICENSE),
-  [packages/kanban/LICENSE](packages/kanban/LICENSE),
-  [packages/kanban-engine/LICENSE](packages/kanban-engine/LICENSE),
-  [packages/react/kanban/LICENSE](packages/react/kanban/LICENSE),
-  [packages/charts/LICENSE](packages/charts/LICENSE),
-  [ogeui.com/license](https://ogeui.com/license)). The charts' engine
-  (`@oge-ui/charts-engine`) and React layer (`@oge-ui/react-charts`) carry
-  the same license. Future
-  enterprise-oriented packages may join this tier — never
-  anything that is MIT today.
+  `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`, with each family's
+  framework-free engine (`@oge-ui/<family>-engine`) and React layer
+  (`@oge-ui/react-<family>`).** The pivot grid, the BPMN editor, the
+  scheduler, the Gantt, the Kanban and the Charts are source-available
+  commercial software: free for evaluation, development and testing;
+  production use requires a paid license. Every package of a family ships
+  the family's `LICENSE` (e.g. [packages/charts/LICENSE](packages/charts/LICENSE),
+  also in `packages/charts-engine` and `packages/react/charts`); the root
+  [LICENSE](LICENSE) lists every commercial directory, and
+  [ogeui.com/license](https://ogeui.com/license) has the terms. Future
+  enterprise-oriented packages may join this tier — never anything that is
+  MIT today.

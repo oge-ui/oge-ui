@@ -415,10 +415,40 @@ export default [
               sourceTag: 'scope:scheduler',
               onlyDependOnLibsWithTags: [
                 'scope:scheduler',
+                // ADR 0003: the framework-free engine both render layers run
+                'scope:scheduler-engine',
+                'scope:behavior',
                 'scope:core',
                 'scope:overlay',
                 'scope:inputs',
                 'scope:forms',
+              ],
+            },
+            {
+              // ADR 0003: the scheduler's commercial engine — framework-free
+              // (the platform:agnostic rules above ban Angular/React), and
+              // like every commercial package it may take the MIT substrate,
+              // never the reverse
+              sourceTag: 'scope:scheduler-engine',
+              onlyDependOnLibsWithTags: [
+                'scope:scheduler-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React scheduler mirrors the Angular package's edges onto
+              // the React families: popup/modal (overlay), the calendar
+              // (inputs) and the appointment form (forms)
+              sourceTag: 'scope:react-scheduler',
+              onlyDependOnLibsWithTags: [
+                'scope:react-scheduler',
+                'scope:scheduler-engine',
+                'scope:react-forms',
+                'scope:react-inputs',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
               ],
             },
             {
@@ -555,6 +585,7 @@ export default [
                 'scope:react-bpmn',
                 'scope:react-oge',
                 'scope:react-overlay',
+                'scope:react-scheduler',
                 'scope:behavior',
                 'scope:kanban-engine',
                 'scope:react-charts',
@@ -568,6 +599,7 @@ export default [
                 'scope:bpmn',
                 'scope:bpmn-engine',
                 'scope:scheduler',
+                'scope:scheduler-engine',
                 'scope:gantt',
                 'scope:kanban',
                 'scope:charts',

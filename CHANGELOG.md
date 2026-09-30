@@ -11,6 +11,116 @@ Driven by what the first production consumer (an Angular admin console built on
 `@oge-ui/grid` + `@oge-ui/overlay`) had to work around, written down in its own
 design notes. Every item below removes one of those workarounds.
 
+### Added (React)
+
+- **`@oge-ui/react-scheduler` + `@oge-ui/scheduler-engine` (commercial,
+  ADR 0003).** The scheduler's framework-free half now lives in its own
+  commercial engine package — the former `engine/` folder plus the
+  pointer-gesture machine, view-model builders for every view, keyboard
+  maps, the editor mapping and default form items, the message catalog and
+  `OgeSchedulerCore` (working set, DataSource write-through, cancelable CRUD
+  pipelines, occurrence-vs-series routing, navigation, context menu,
+  announcements, reminders). The Angular `@oge-ui/scheduler` is rewired onto
+  it with its specs unchanged, and `<OgeScheduler>` for React renders the
+  same markup from the same engine: all eight views, drag/resize/
+  drag-to-create with Escape-cancel, recurrence, resources, reminders, the
+  popup, the `<OgeForm>` editor, the built-in context menu, render props,
+  an imperative handle and `<OgeSchedulerConfigProvider>`. Both docs pages
+  branch; the family is in the parity gate. Fix riding along: the editor's
+  default form items are built for the appointment being opened (recurrence
+  fields of a recurring appointment are visible on open), not for the
+  previously opened one.
+
+- **`@oge-ui/react-tree-list` — the React tree list, at full parity with
+  `@oge-ui/tree-list` (roadmap R7).** `<OgeTreeList>` renders flat
+  `id`/`parentId` data or nested payloads (`itemsExpr`), loads children lazily
+  per expansion from any `DataSource` (with remote filter-match discovery and
+  bulk subtree loads for recursive selection), filters client-side with
+  ancestor preservation (filter row + operator menu, header filter, search
+  panel with highlighting, filter builder, `filterMode`), sorts siblings,
+  selects recursively with tri-state checkboxes, pages the visible rows,
+  virtualizes rows and columns, edits in all five modes (`addRow(parentKey)` +
+  `onInitNewRow`), reparents by drag & drop, speaks WAI-ARIA treegrid on the
+  keyboard (and opens context menus from the Menu key / Shift+F10), and ships
+  pinned / resizable / reorderable columns, bands, the column chooser,
+  `stateKey` persistence and synchronous CSV + outlined Excel export
+  (`@oge-ui/react-tree-list/export-excel`). Every Angular input, output and
+  public method has its prop, callback or handle member — the
+  `docs-tools:parity` gate compares the two tables member for member.
+- **One tree engine for both layers.** The Angular tree list's inline data
+  model — index, expansion polarity, filter predicate and visible keys, the
+  flattened rows, lazy child requests, remote match discovery, subtree loads,
+  recursive selection, paging over the flattened rows, the keyboard hierarchy
+  hooks, drop validation and in-place reparenting, header-filter values and
+  the export shape — moved into `@oge-ui/behavior` as `OgeTreeListCore`, and
+  the Angular component was rewired onto it (its 99 specs unchanged). The
+  filter-row, header-filter and selection gestures now run on the grid's
+  shared helpers, the drop zones on the tree view's `resolveTreeDropPosition`,
+  and the outlined workbook builder (`buildTreeExcelWorkbook`) moved to
+  `@oge-ui/behavior/export-excel`, re-exported from both tree packages so
+  neither public API changed.
+- **`@oge-ui/react-grid/foundation`** — the React half of the grid foundation
+  (the editing bridge, the reactivity adapter, the filter-builder editor),
+  shared with the React tree list exactly as `@oge-ui/grid/foundation` is with
+  the Angular one. `@oge-ui/react` re-exports the tree list and bundles its
+  stylesheet.
+- The tree-list docs pages all branch on the framework switch, section for
+  section, with React demos, API tables and `llms.txt` coverage.
+- **`@oge-ui/react-bpmn` and `@oge-ui/bpmn-engine` — the BPMN editor in
+  React, on one engine (ADR 0003).** The BPMN family's framework-free engine
+  now ships as its own commercial package, `@oge-ui/bpmn-engine`: the model,
+  the BPMN XML + DI reader/writer, the JSON envelope, SVG export, routing,
+  snapping, alignment, rules, the command stack — and the editor core both
+  layers run (`OgeBpmnEditorCore`: every tool, pointer gesture, the canvas
+  keyboard map, clipboard, search, announcements, autosave and the view
+  models), plus the properties-panel view model, the palette key map, the
+  message catalog and `@oge-ui/bpmn-engine/testing` sample documents. The
+  Angular `@oge-ui/bpmn` is rewired onto it with its public API unchanged
+  (97 specs pass with only import paths changed). The new
+  `<OgeBpmnEditor>` renders the same `.oge-bpmn-*` markup from the Angular
+  SCSS: palette, tool strip, context pad and align flyout, properties
+  panel, minimap, element search, header, overlays, pools and lanes —
+  controlled `mode` / `zoom` pairs, an `on*` callback per output, a `ref`
+  handle per public method and `<OgeBpmnConfigProvider>`. Overlay `html` is
+  sanitized into real elements (no `dangerouslySetInnerHTML`). Commercial,
+  like the Angular package, and not part of the MIT `@oge-ui/react`
+  umbrella.
+
+- **`@oge-ui/react-kanban` and `@oge-ui/kanban-engine`** — the Kanban board
+  in React, at full parity with `<oge-kanban>`: columns and swimlanes, WIP
+  limits, per-column virtualization, drag & drop with Escape-cancel and edge
+  auto-scroll, Ctrl+Arrow keyboard moving with announcements, column reorder
+  and add, context menu, toolbar search and the edit dialog, with every input
+  as a prop, the models as controlled/uncontrolled pairs, the outputs as `onX`
+  callbacks, the methods on a `ref` handle, the templates as `renderCard` /
+  `renderColumnHeader` and `<OgeKanbanConfigProvider>` for the config. Both
+  layers run the new framework-free, commercially licensed
+  `@oge-ui/kanban-engine` (ADR 0003); the Angular `@oge-ui/kanban` was rewired
+  onto it with an unchanged public API. Fixed on the way: a move into a cell
+  with no midpoint order room dropped the moved card's renumbered order.
+
+- **`@oge-ui/react-charts` — the charts family in React, and
+  `@oge-ui/charts-engine` under both layers (ADR 0003).** `<OgeChart>`,
+  `<OgePieChart>`, `<OgePolarChart>` and `<OgeRangeSelector>` with every
+  member of their Angular counterparts (controlled `visualRange` /
+  `selectedPoints` / `selectedSlices` / `value` pairs, `on*` callbacks incl.
+  the cancelable `onLegendClick` / `onTooltipShowing`, `ref` handles,
+  `renderTooltip` / `renderLegendItem` / `renderAnnotation`,
+  `<OgeChartsConfigProvider>`) plus the `@oge-ui/react-charts/export-image`
+  entry. They render the Angular markup from the same view models, so the
+  Angular stylesheet applies unchanged. The framework-free half of the family
+  — scales, series layout, path builders, pie/radar geometry, the new
+  cartesian/pie/polar/range-selector view-model builders, keyboard maps, the
+  gesture machine, the message catalog and the image exporter — moved out of
+  `@oge-ui/charts` into the new commercial `@oge-ui/charts-engine`, and the
+  Angular components were rewired onto it with their specs unchanged
+  (`@oge-ui/charts`' public API is unchanged). Both packages carry the charts'
+  commercial license; neither enters the MIT `@oge-ui/react` umbrella.
+  Also fixed on the way, in both layers: an `argumentField` given only through
+  `commonSeries` was ignored by argument-axis detection (the docs' stacked
+  series demo plotted nothing), and the Angular charts' size observers are now
+  disconnected on destroy.
+
 ### Fixed (theming)
 
 - **A `:root` token override now works — on every component.** Each component
@@ -143,98 +253,6 @@ design notes. Every item below removes one of those workarounds.
   formats — without a reload; apps no longer have to fetch the catalog before
   `bootstrapApplication`. The object form is unchanged. (React providers
   already re-resolve when their `config` prop changes.)
-
-### Added (React)
-
-- **`@oge-ui/react-tree-list` — the React tree list, at full parity with
-  `@oge-ui/tree-list` (roadmap R7).** `<OgeTreeList>` renders flat
-  `id`/`parentId` data or nested payloads (`itemsExpr`), loads children lazily
-  per expansion from any `DataSource` (with remote filter-match discovery and
-  bulk subtree loads for recursive selection), filters client-side with
-  ancestor preservation (filter row + operator menu, header filter, search
-  panel with highlighting, filter builder, `filterMode`), sorts siblings,
-  selects recursively with tri-state checkboxes, pages the visible rows,
-  virtualizes rows and columns, edits in all five modes (`addRow(parentKey)` +
-  `onInitNewRow`), reparents by drag & drop, speaks WAI-ARIA treegrid on the
-  keyboard (and opens context menus from the Menu key / Shift+F10), and ships
-  pinned / resizable / reorderable columns, bands, the column chooser,
-  `stateKey` persistence and synchronous CSV + outlined Excel export
-  (`@oge-ui/react-tree-list/export-excel`). Every Angular input, output and
-  public method has its prop, callback or handle member — the
-  `docs-tools:parity` gate compares the two tables member for member.
-- **One tree engine for both layers.** The Angular tree list's inline data
-  model — index, expansion polarity, filter predicate and visible keys, the
-  flattened rows, lazy child requests, remote match discovery, subtree loads,
-  recursive selection, paging over the flattened rows, the keyboard hierarchy
-  hooks, drop validation and in-place reparenting, header-filter values and
-  the export shape — moved into `@oge-ui/behavior` as `OgeTreeListCore`, and
-  the Angular component was rewired onto it (its 99 specs unchanged). The
-  filter-row, header-filter and selection gestures now run on the grid's
-  shared helpers, the drop zones on the tree view's `resolveTreeDropPosition`,
-  and the outlined workbook builder (`buildTreeExcelWorkbook`) moved to
-  `@oge-ui/behavior/export-excel`, re-exported from both tree packages so
-  neither public API changed.
-- **`@oge-ui/react-grid/foundation`** — the React half of the grid foundation
-  (the editing bridge, the reactivity adapter, the filter-builder editor),
-  shared with the React tree list exactly as `@oge-ui/grid/foundation` is with
-  the Angular one. `@oge-ui/react` re-exports the tree list and bundles its
-  stylesheet.
-- The tree-list docs pages all branch on the framework switch, section for
-  section, with React demos, API tables and `llms.txt` coverage.
-- **`@oge-ui/react-bpmn` and `@oge-ui/bpmn-engine` — the BPMN editor in
-  React, on one engine (ADR 0003).** The BPMN family's framework-free engine
-  now ships as its own commercial package, `@oge-ui/bpmn-engine`: the model,
-  the BPMN XML + DI reader/writer, the JSON envelope, SVG export, routing,
-  snapping, alignment, rules, the command stack — and the editor core both
-  layers run (`OgeBpmnEditorCore`: every tool, pointer gesture, the canvas
-  keyboard map, clipboard, search, announcements, autosave and the view
-  models), plus the properties-panel view model, the palette key map, the
-  message catalog and `@oge-ui/bpmn-engine/testing` sample documents. The
-  Angular `@oge-ui/bpmn` is rewired onto it with its public API unchanged
-  (97 specs pass with only import paths changed). The new
-  `<OgeBpmnEditor>` renders the same `.oge-bpmn-*` markup from the Angular
-  SCSS: palette, tool strip, context pad and align flyout, properties
-  panel, minimap, element search, header, overlays, pools and lanes —
-  controlled `mode` / `zoom` pairs, an `on*` callback per output, a `ref`
-  handle per public method and `<OgeBpmnConfigProvider>`. Overlay `html` is
-  sanitized into real elements (no `dangerouslySetInnerHTML`). Commercial,
-  like the Angular package, and not part of the MIT `@oge-ui/react`
-  umbrella.
-
-- **`@oge-ui/react-kanban` and `@oge-ui/kanban-engine`** — the Kanban board
-  in React, at full parity with `<oge-kanban>`: columns and swimlanes, WIP
-  limits, per-column virtualization, drag & drop with Escape-cancel and edge
-  auto-scroll, Ctrl+Arrow keyboard moving with announcements, column reorder
-  and add, context menu, toolbar search and the edit dialog, with every input
-  as a prop, the models as controlled/uncontrolled pairs, the outputs as `onX`
-  callbacks, the methods on a `ref` handle, the templates as `renderCard` /
-  `renderColumnHeader` and `<OgeKanbanConfigProvider>` for the config. Both
-  layers run the new framework-free, commercially licensed
-  `@oge-ui/kanban-engine` (ADR 0003); the Angular `@oge-ui/kanban` was rewired
-  onto it with an unchanged public API. Fixed on the way: a move into a cell
-  with no midpoint order room dropped the moved card's renumbered order.
-
-- **`@oge-ui/react-charts` — the charts family in React, and
-  `@oge-ui/charts-engine` under both layers (ADR 0003).** `<OgeChart>`,
-  `<OgePieChart>`, `<OgePolarChart>` and `<OgeRangeSelector>` with every
-  member of their Angular counterparts (controlled `visualRange` /
-  `selectedPoints` / `selectedSlices` / `value` pairs, `on*` callbacks incl.
-  the cancelable `onLegendClick` / `onTooltipShowing`, `ref` handles,
-  `renderTooltip` / `renderLegendItem` / `renderAnnotation`,
-  `<OgeChartsConfigProvider>`) plus the `@oge-ui/react-charts/export-image`
-  entry. They render the Angular markup from the same view models, so the
-  Angular stylesheet applies unchanged. The framework-free half of the family
-  — scales, series layout, path builders, pie/radar geometry, the new
-  cartesian/pie/polar/range-selector view-model builders, keyboard maps, the
-  gesture machine, the message catalog and the image exporter — moved out of
-  `@oge-ui/charts` into the new commercial `@oge-ui/charts-engine`, and the
-  Angular components were rewired onto it with their specs unchanged
-  (`@oge-ui/charts`' public API is unchanged). Both packages carry the charts'
-  commercial license; neither enters the MIT `@oge-ui/react` umbrella.
-  Also fixed on the way, in both layers: an `argumentField` given only through
-  `commonSeries` was ignored by argument-axis detection (the docs' stacked
-  series demo plotted nothing), and the Angular charts' size observers are now
-  disconnected on destroy.
 
 ### Fixed (inputs)
 

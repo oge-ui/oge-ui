@@ -19,53 +19,20 @@
         "./packages/behavior/src/export-excel.ts"
       ],
       "@oge-ui/behavior/export-pdf": ["./packages/behavior/src/export-pdf.ts"],
-      "@oge-ui/react-buttons": ["./packages/react/buttons/src/index.ts"],
-      "@oge-ui/react-inputs": ["./packages/react/inputs/src/index.ts"],
-      "@oge-ui/react-tabs": ["./packages/react/tabs/src/index.ts"],
-      "@oge-ui/react": ["./packages/react/oge/src/index.ts"],
-      "@oge-ui/react-layout": ["./packages/react/layout/src/index.ts"],
-      "@oge-ui/react-navigation": ["./packages/react/navigation/src/index.ts"],
-      "@oge-ui/react-overlay": ["./packages/react/overlay/src/index.ts"],
-      "@oge-ui/react-forms": ["./packages/react/forms/src/index.ts"],
-      "@oge-ui/react-grid": ["./packages/react/grid/src/index.ts"],
-      "@oge-ui/react-grid/foundation": [
-        "./packages/react/grid/src/foundation.ts"
-      ],
-      "@oge-ui/react-tree-list": ["./packages/react/tree-list/src/index.ts"],
-      "@oge-ui/react-upload": ["./packages/react/upload/src/index.ts"],
-      "@oge-ui/react-charts": ["./packages/react/charts/src/index.ts"],
-      "@oge-ui/react-charts/export-image": [
-        "./packages/react/charts/src/export-image.ts"
-      ],
+      "@oge-ui/bpmn": ["./packages/bpmn/src/index.ts"],
+      "@oge-ui/bpmn-engine": ["./packages/bpmn-engine/src/index.ts"],
+      "@oge-ui/bpmn-engine/testing": ["./packages/bpmn-engine/src/testing.ts"],
+      "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
+      "@oge-ui/charts": ["./packages/charts/src/index.ts"],
       "@oge-ui/charts-engine": ["./packages/charts-engine/src/index.ts"],
       "@oge-ui/charts-engine/export-image": [
         "./packages/charts-engine/src/export-image.ts"
       ],
-      "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
-      "@oge-ui/core": ["./packages/core/src/index.ts"],
-      "@oge-ui/forms": ["./packages/forms/src/index.ts"],
-      "@oge-ui/inputs": ["./packages/inputs/src/index.ts"],
-      "@oge-ui/inputs/*": ["./packages/inputs/*/src/index.ts"],
-      "@oge-ui/layout": ["./packages/layout/src/index.ts"],
-      "@oge-ui/layout/*": ["./packages/layout/*/src/index.ts"],
-      "@oge-ui/navigation": ["./packages/navigation/src/index.ts"],
-      "@oge-ui/overlay": ["./packages/overlay/src/index.ts"],
-      "@oge-ui/grid": ["./packages/grid/src/index.ts"],
-      "@oge-ui/grid/export-excel": [
-        "./packages/grid/export-excel/src/index.ts"
-      ],
-      "@oge-ui/grid/foundation": ["./packages/grid/foundation/src/index.ts"],
-      "@oge-ui/bpmn": ["./packages/bpmn/src/index.ts"],
-      "@oge-ui/bpmn-engine": ["./packages/bpmn-engine/src/index.ts"],
-      "@oge-ui/bpmn-engine/testing": ["./packages/bpmn-engine/src/testing.ts"],
-      "@oge-ui/react-bpmn": ["./packages/react/bpmn/src/index.ts"],
-      "@oge-ui/charts": ["./packages/charts/src/index.ts"],
       "@oge-ui/charts/export-image": [
         "./packages/charts/export-image/src/index.ts"
       ],
-      "@oge-ui/kanban": ["./packages/kanban/src/index.ts"],
-      "@oge-ui/kanban-engine": ["./packages/kanban-engine/src/index.ts"],
-      "@oge-ui/react-kanban": ["./packages/react/kanban/src/index.ts"],
+      "@oge-ui/core": ["./packages/core/src/index.ts"],
+      "@oge-ui/forms": ["./packages/forms/src/index.ts"],
       "@oge-ui/gantt": ["./packages/gantt/src/index.ts"],
       "@oge-ui/gantt/export-excel": [
         "./packages/gantt/export-excel/src/index.ts"
@@ -74,12 +41,47 @@
         "./packages/gantt/export-image/src/index.ts"
       ],
       "@oge-ui/gantt/export-pdf": ["./packages/gantt/export-pdf/src/index.ts"],
-      "@oge-ui/scheduler": ["./packages/scheduler/src/index.ts"],
+      "@oge-ui/grid": ["./packages/grid/src/index.ts"],
+      "@oge-ui/grid/export-excel": [
+        "./packages/grid/export-excel/src/index.ts"
+      ],
+      "@oge-ui/grid/export-pdf": ["./packages/grid/export-pdf/src/index.ts"],
+      "@oge-ui/grid/foundation": ["./packages/grid/foundation/src/index.ts"],
+      "@oge-ui/inputs": ["./packages/inputs/src/index.ts"],
+      "@oge-ui/inputs/*": ["./packages/inputs/*/src/index.ts"],
+      "@oge-ui/kanban": ["./packages/kanban/src/index.ts"],
+      "@oge-ui/kanban-engine": ["./packages/kanban-engine/src/index.ts"],
+      "@oge-ui/layout": ["./packages/layout/src/index.ts"],
+      "@oge-ui/layout/*": ["./packages/layout/*/src/index.ts"],
+      "@oge-ui/navigation": ["./packages/navigation/src/index.ts"],
+      "@oge-ui/overlay": ["./packages/overlay/src/index.ts"],
       "@oge-ui/pivot": ["./packages/pivot/src/index.ts"],
       "@oge-ui/pivot/export-excel": [
         "./packages/pivot/export-excel/src/index.ts"
       ],
-      "@oge-ui/grid/export-pdf": ["./packages/grid/export-pdf/src/index.ts"],
+      "@oge-ui/react": ["./packages/react/oge/src/index.ts"],
+      "@oge-ui/react-bpmn": ["./packages/react/bpmn/src/index.ts"],
+      "@oge-ui/react-buttons": ["./packages/react/buttons/src/index.ts"],
+      "@oge-ui/react-charts": ["./packages/react/charts/src/index.ts"],
+      "@oge-ui/react-charts/export-image": [
+        "./packages/react/charts/src/export-image.ts"
+      ],
+      "@oge-ui/react-forms": ["./packages/react/forms/src/index.ts"],
+      "@oge-ui/react-grid": ["./packages/react/grid/src/index.ts"],
+      "@oge-ui/react-grid/foundation": [
+        "./packages/react/grid/src/foundation.ts"
+      ],
+      "@oge-ui/react-inputs": ["./packages/react/inputs/src/index.ts"],
+      "@oge-ui/react-kanban": ["./packages/react/kanban/src/index.ts"],
+      "@oge-ui/react-layout": ["./packages/react/layout/src/index.ts"],
+      "@oge-ui/react-navigation": ["./packages/react/navigation/src/index.ts"],
+      "@oge-ui/react-overlay": ["./packages/react/overlay/src/index.ts"],
+      "@oge-ui/react-scheduler": ["./packages/react/scheduler/src/index.ts"],
+      "@oge-ui/react-tabs": ["./packages/react/tabs/src/index.ts"],
+      "@oge-ui/react-tree-list": ["./packages/react/tree-list/src/index.ts"],
+      "@oge-ui/react-upload": ["./packages/react/upload/src/index.ts"],
+      "@oge-ui/scheduler": ["./packages/scheduler/src/index.ts"],
+      "@oge-ui/scheduler-engine": ["./packages/scheduler-engine/src/index.ts"],
       "@oge-ui/tabs": ["./packages/tabs/src/index.ts"],
       "@oge-ui/tree-list": ["./packages/tree-list/src/index.ts"],
       "@oge-ui/tree-list/export-excel": [

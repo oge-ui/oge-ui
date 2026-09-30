@@ -6,24 +6,17 @@ import {
   input,
   output,
 } from '@angular/core';
-import { sameDay, sameMonth } from '@oge-ui/core';
-import { buildMonthGrid } from '../engine/view-model';
-import type { SchedulerAppointment } from '../engine/scheduler-model';
+import { sameDay } from '@oge-ui/core';
+import {
+  buildYearMonths,
+  countAppointmentsByDay,
+  yearCellLabel,
+  yearWeekdayText,
+  type SchedulerAppointment,
+  type YearCell,
+  type YearMonth,
+} from '@oge-ui/scheduler-engine';
 import type { OgeSchedulerGridMessages } from '../config';
-
-/** One mini-month cell. */
-interface YearCell {
-  readonly day: Date;
-  readonly otherMonth: boolean;
-  readonly count: number;
-}
-
-/** One mini month of the year grid. */
-interface YearMonth {
-  readonly anchor: Date;
-  readonly title: string;
-  readonly weeks: readonly (readonly YearCell[])[];
-}
 
 /**
  * Internal year view: twelve mini months with per-day appointment counts
@@ -86,69 +79,28 @@ export class OgeSchedulerYearView<T = unknown> {
   readonly dayPicked = output<Date>();
 
   /** Appointment counts per local day key (`y-m-d`). */
-  private readonly countsByDay = computed<ReadonlyMap<string, number>>(() => {
-    const counts = new Map<string, number>();
-    for (const appointment of this.appointments()) {
-      const cursor = new Date(
-        appointment.startDate.getFullYear(),
-        appointment.startDate.getMonth(),
-        appointment.startDate.getDate(),
-      );
-      const lastMs = Math.max(
-        appointment.endDate.getTime() - 1,
-        appointment.startDate.getTime(),
-      );
-      for (let guard = 0; guard < 366; guard++) {
-        if (cursor.getTime() > lastMs) break;
-        const key = `${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`;
-        counts.set(key, (counts.get(key) ?? 0) + 1);
-        cursor.setDate(cursor.getDate() + 1);
-      }
-    }
-    return counts;
-  });
+  private readonly countsByDay = computed<ReadonlyMap<string, number>>(() =>
+    countAppointmentsByDay(this.appointments()),
+  );
 
-  protected readonly months = computed<readonly YearMonth[]>(() => {
-    const year = this.anchorDate().getFullYear();
-    const firstDayOfWeek = this.firstDayOfWeek();
-    const counts = this.countsByDay();
-    const titleFormat = new Intl.DateTimeFormat(this.locale(), {
-      month: 'long',
-    });
-    return Array.from({ length: 12 }, (_, month) => {
-      const anchor = new Date(year, month, 1);
-      const grid = buildMonthGrid(anchor, firstDayOfWeek);
-      return {
-        anchor,
-        title: titleFormat.format(anchor),
-        weeks: grid.weeks.map((week) =>
-          week.map((day) => ({
-            day,
-            otherMonth: !sameMonth(day, anchor),
-            count:
-              counts.get(
-                `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`,
-              ) ?? 0,
-          })),
-        ),
-      };
-    });
-  });
+  protected readonly months = computed<readonly YearMonth[]>(() =>
+    buildYearMonths(
+      this.anchorDate().getFullYear(),
+      this.firstDayOfWeek(),
+      this.countsByDay(),
+      this.locale(),
+    ),
+  );
 
   protected isToday(day: Date): boolean {
     return sameDay(day, new Date());
   }
 
   protected weekdayText(day: Date): string {
-    return new Intl.DateTimeFormat(this.locale(), {
-      weekday: 'narrow',
-    }).format(day);
+    return yearWeekdayText(day, this.locale());
   }
 
   protected cellLabel(cell: YearCell): string {
-    const date = new Intl.DateTimeFormat(this.locale(), {
-      dateStyle: 'full',
-    }).format(cell.day);
-    return cell.count > 0 ? `${date} (${cell.count})` : date;
+    return yearCellLabel(cell, this.locale());
   }
 }
