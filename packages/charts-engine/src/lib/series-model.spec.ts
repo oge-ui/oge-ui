@@ -87,10 +87,20 @@ describe('buildSeries', () => {
       'linear',
       new Map(),
     );
-    expect(candle.points[0]).toMatchObject({ open: 5, high: 9, low: 3, close: 7 });
+    expect(candle.points[0]).toMatchObject({
+      open: 5,
+      high: 9,
+      low: 3,
+      close: 7,
+    });
     const range = buildSeries(
       [{ t: 1, lo: 2, hi: 8 }],
-      { type: 'rangeArea', argumentField: 't', value1Field: 'lo', value2Field: 'hi' },
+      {
+        type: 'rangeArea',
+        argumentField: 't',
+        value1Field: 'lo',
+        value2Field: 'hi',
+      },
       0,
       'linear',
       new Map(),
@@ -131,13 +141,7 @@ describe('seriesValueExtent', () => {
       ]),
     );
     expect(seriesValueExtent(series)).toEqual({ min: 10, max: 30 });
-    const empty = buildSeries(
-      [],
-      LINE,
-      0,
-      'category',
-      categories,
-    );
+    const empty = buildSeries([], LINE, 0, 'category', categories);
     expect(seriesValueExtent(empty)).toBeNull();
   });
 

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   ViewEncapsulation,
   afterNextRender,
@@ -12,27 +13,26 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { toLocalDate } from '@oge-ui/core';
 import {
-  clampRange,
-  createLinearScale,
-  createTimeScale,
-  type ChartRange,
-  type ChartScaleKind,
-} from '../engine/scale';
-import {
-  linePath,
-  baselineAreaPath,
-  type PathPoint,
-} from '../engine/path-builder';
-import { buildSeries, type ChartSeriesInput } from '../engine/series-model';
-import { timeTickFormatter, numberFormat } from '../engine/tick-format';
-import { beginChartGesture } from './chart-gesture';
+  beginChartGesture,
+  buildRangeSelectorData,
+  buildRangeSelectorScene,
+  commitRangeSelection,
+  mergeOgeChartsMessages,
+  observeChartSize,
+  rangeCenteredAt,
+  rangeHandleDragRange,
+  rangeHandleKeyRange,
+  rangeSelectorAnnouncement,
+  rangeSelectorDeltaValue,
+  rangeSelectorEffective,
+  rangeSelectorLabel,
+  rangeSelectorWindowPx,
+  rangeWindowDragRange,
+  type OgeChartRange,
+  type OgeChartSeriesInput,
+} from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
-import { OGE_CHART_PALETTE } from './chart';
-import type { OgeChartRange } from '../charts-types';
-
-const H_SCALE = 18;
 
 /**
  * `<oge-range-selector>` — the overview strip (dxRangeSelector parity):
@@ -146,7 +146,7 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
 
   readonly dataSource = input<readonly T[]>([]);
   /** Background mini series (line/area recommended). */
-  readonly series = input<readonly ChartSeriesInput<T>[]>([]);
+  readonly series = input<readonly OgeChartSeriesInput<T>[]>([]);
   /** `'time' | 'linear'`; auto-detects from the first argument when unset. */
   readonly scaleType = input<'time' | 'linear' | undefined>(undefined);
   readonly palette = input<readonly string[] | undefined>(undefined);
@@ -160,15 +160,9 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
   private readonly svgEl =
     viewChild.required<ElementRef<SVGSVGElement>>('svgEl');
 
-  protected readonly msg = computed<OgeChartsMessages>(() => ({
-    ...this.config.messages,
-    ...this.messages(),
-    aria: { ...this.config.messages.aria, ...this.messages().aria },
-    announcements: {
-      ...this.config.messages.announcements,
-      ...this.messages().announcements,
-    },
-  }));
+  protected readonly msg = computed<OgeChartsMessages>(() =>
+    mergeOgeChartsMessages(this.config.messages, this.messages()),
+  );
   protected readonly effectiveLocale = computed(
     () => this.locale() ?? this.config.locale,
   );
@@ -176,164 +170,58 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
   private readonly hostSize = signal({ width: 600, height: 90 });
   protected readonly width = computed(() => this.hostSize().width);
   protected readonly height = computed(() => this.hostSize().height);
-  protected readonly plotH = computed(() => this.height() - H_SCALE);
   protected readonly announcement = signal('');
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
-      const wrap = this.plotWrapEl().nativeElement;
-      const measure = (): void => {
-        const rect = wrap.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          this.hostSize.set({
-            width: Math.round(rect.width),
-            height: Math.round(rect.height),
-          });
-        }
-      };
-      measure();
-      if (typeof ResizeObserver === 'undefined') return; // jsdom
-      let frame = false;
-      const observer = new ResizeObserver(() => {
-        if (frame) return;
-        frame = true;
-        requestAnimationFrame(() => {
-          frame = false;
-          measure();
-        });
-      });
-      observer.observe(wrap);
+      const stop = observeChartSize(this.plotWrapEl().nativeElement, (size) =>
+        this.hostSize.set(size),
+      );
+      destroyRef.onDestroy(stop);
     });
   }
 
-  protected readonly kind = computed<ChartScaleKind>(() => {
-    const explicit = this.scaleType();
-    if (explicit !== undefined) return explicit;
-    for (const item of this.dataSource()) {
-      for (const seriesInput of this.series()) {
-        const expr = seriesInput.argumentField;
-        if (expr === undefined) return 'linear';
-        const raw =
-          typeof expr === 'string'
-            ? (item as Record<string, unknown>)[expr]
-            : expr(item);
-        if (raw === undefined || raw === null) continue;
-        if (raw instanceof Date) return 'time';
-        if (typeof raw === 'string' && toLocalDate(raw) !== null) return 'time';
-        return 'linear';
-      }
-    }
-    return 'linear';
-  });
+  /* ---------------- the engine's view model (ADR 0003) ---------------- */
 
-  protected readonly seriesList = computed(() =>
-    this.series().map((input, index) =>
-      buildSeries(this.dataSource(), input, index, this.kind(), new Map()),
-    ),
+  private readonly data = computed(() =>
+    buildRangeSelectorData<T>({
+      dataSource: this.dataSource(),
+      series: this.series(),
+      scaleType: this.scaleType(),
+    }),
+  );
+  private readonly scene = computed(() =>
+    buildRangeSelectorScene<T>({
+      data: this.data(),
+      palette: this.palette(),
+      width: this.width(),
+      height: this.height(),
+      locale: this.effectiveLocale(),
+    }),
   );
 
-  protected readonly bounds = computed<ChartRange>(() => {
-    let min = Infinity;
-    let max = -Infinity;
-    for (const series of this.seriesList()) {
-      for (const point of series.points) {
-        if (point.argNumeric === null) continue;
-        if (point.argNumeric < min) min = point.argNumeric;
-        if (point.argNumeric > max) max = point.argNumeric;
-      }
-    }
-    return min <= max ? { min, max } : { min: 0, max: 1 };
-  });
-
-  protected readonly effective = computed<ChartRange>(() => {
-    const value = this.value();
-    const bounds = this.bounds();
-    return value === null ? bounds : clampRange(value, bounds);
-  });
-
-  protected readonly scale = computed(() => {
-    const bounds = this.bounds();
-    const options = {
-      min: bounds.min,
-      max: bounds.max,
-      rangePx: this.width(),
-    };
-    return this.kind() === 'time'
-      ? createTimeScale(options)
-      : createLinearScale(options);
-  });
-
-  protected readonly windowPx = computed(() => {
-    const scale = this.scale();
-    const range = this.effective();
-    return { start: scale.toPx(range.min), end: scale.toPx(range.max) };
-  });
-
-  protected readonly backgroundSeries = computed(() => {
-    const scale = this.scale();
-    const palette = this.palette() ?? OGE_CHART_PALETTE;
-    let valueMin = Infinity;
-    let valueMax = -Infinity;
-    for (const series of this.seriesList()) {
-      for (const point of series.points) {
-        if (point.value === null) continue;
-        if (point.value < valueMin) valueMin = point.value;
-        if (point.value > valueMax) valueMax = point.value;
-      }
-    }
-    if (valueMin > valueMax) return [];
-    const valueScale = createLinearScale({
-      min: Math.min(0, valueMin),
-      max: valueMax,
-      rangePx: this.plotH() - 6,
-      inverted: true,
-    });
-    return this.seriesList().map((series, index) => {
-      const points: PathPoint[] = series.points.map((point) => ({
-        x: point.argNumeric === null ? 0 : scale.toPx(point.argNumeric),
-        y:
-          point.argNumeric === null || point.value === null
-            ? null
-            : valueScale.toPx(point.value) + 3,
-      }));
-      const isArea = series.type === 'area' || series.type === 'splineArea';
-      return {
-        index,
-        color: series.input.color ?? palette[index % palette.length],
-        linePathD: linePath(points) || null,
-        areaPathD: isArea
-          ? baselineAreaPath(points, this.plotH()) || null
-          : null,
-      };
-    });
-  });
-
-  protected readonly ticksVm = computed(() => {
-    const scale = this.scale();
-    const format =
-      this.kind() === 'time'
-        ? timeTickFormatter(scale.tickUnit ?? 'day', this.effectiveLocale())
-        : (value: number): string =>
-            numberFormat(value, this.effectiveLocale());
-    return scale.ticks
-      .filter((_, index, ticks) => index % Math.ceil(ticks.length / 8) === 0)
-      .map((tick) => ({ px: scale.toPx(tick), label: format(tick) }));
-  });
+  protected readonly plotH = computed(() => this.scene().plotH);
+  protected readonly bounds = computed(() => this.data().bounds);
+  protected readonly effective = computed(() =>
+    rangeSelectorEffective(this.data(), this.value()),
+  );
+  protected readonly windowPx = computed(() =>
+    rangeSelectorWindowPx(this.scene(), this.effective()),
+  );
+  protected readonly backgroundSeries = computed(
+    () => this.scene().backgroundSeries,
+  );
+  protected readonly ticksVm = computed(() => this.scene().ticks);
 
   protected labelOf(value: number): string {
-    return this.kind() === 'time'
-      ? new Intl.DateTimeFormat(this.effectiveLocale(), {
-          dateStyle: 'medium',
-        }).format(new Date(value))
-      : numberFormat(value, this.effectiveLocale());
+    return rangeSelectorLabel(this.data().kind, value, this.effectiveLocale());
   }
 
   /* ---------------- interaction ---------------- */
 
-  private commit(range: ChartRange): void {
-    const bounds = untracked(this.bounds);
-    const minSpan = (bounds.max - bounds.min) * 0.01;
-    this.value.set(clampRange(range, bounds, minSpan));
+  private commit(range: OgeChartRange): void {
+    this.value.set(commitRangeSelection(range, untracked(this.bounds)));
   }
 
   protected onHandlePointerDown(
@@ -343,20 +231,15 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
     if (event.button !== 0) return;
     event.stopPropagation();
     const startRange = untracked(this.effective);
-    const scale = untracked(this.scale);
+    const scale = untracked(this.scene).scale;
     beginChartGesture(event, {
       onMove: (deltaX) => {
-        const deltaValue = scale.fromPx(deltaX) - scale.fromPx(0);
         this.commit(
-          side === 'start'
-            ? {
-                min: Math.min(startRange.min + deltaValue, startRange.max),
-                max: startRange.max,
-              }
-            : {
-                min: startRange.min,
-                max: Math.max(startRange.max + deltaValue, startRange.min),
-              },
+          rangeHandleDragRange(
+            side,
+            startRange,
+            rangeSelectorDeltaValue(scale, deltaX),
+          ),
         );
       },
       onFinish: (_commit, cancelled) => {
@@ -369,14 +252,15 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
     if (event.button !== 0) return;
     event.stopPropagation();
     const startRange = untracked(this.effective);
-    const scale = untracked(this.scale);
+    const scale = untracked(this.scene).scale;
     beginChartGesture(event, {
       onMove: (deltaX) => {
-        const deltaValue = scale.fromPx(deltaX) - scale.fromPx(0);
-        this.commit({
-          min: startRange.min + deltaValue,
-          max: startRange.max + deltaValue,
-        });
+        this.commit(
+          rangeWindowDragRange(
+            startRange,
+            rangeSelectorDeltaValue(scale, deltaX),
+          ),
+        );
       },
       onFinish: (_commit, cancelled) => {
         if (cancelled) this.value.set(startRange);
@@ -389,52 +273,27 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
     if (event.button !== 0) return;
     const svgRect = this.svgEl().nativeElement.getBoundingClientRect();
     const px = event.clientX - svgRect.left;
-    const scale = untracked(this.scale);
-    const range = untracked(this.effective);
-    const span = range.max - range.min;
-    const center = scale.fromPx(px);
-    this.commit({ min: center - span / 2, max: center + span / 2 });
+    const center = untracked(this.scene).scale.fromPx(px);
+    this.commit(rangeCenteredAt(untracked(this.effective), center));
   }
 
   protected onHandleKeydown(side: 'start' | 'end', event: KeyboardEvent): void {
-    const bounds = untracked(this.bounds);
-    const range = untracked(this.effective);
-    const step = (bounds.max - bounds.min) / 50;
-    let next: ChartRange | null = null;
-    switch (event.key) {
-      case 'ArrowLeft':
-      case 'ArrowDown':
-        next =
-          side === 'start'
-            ? { min: range.min - step, max: range.max }
-            : { min: range.min, max: Math.max(range.max - step, range.min) };
-        break;
-      case 'ArrowRight':
-      case 'ArrowUp':
-        next =
-          side === 'start'
-            ? { min: Math.min(range.min + step, range.max), max: range.max }
-            : { min: range.min, max: range.max + step };
-        break;
-      case 'Home':
-        next =
-          side === 'start'
-            ? { min: bounds.min, max: range.max }
-            : { min: range.min, max: range.min };
-        break;
-      case 'End':
-        next =
-          side === 'start'
-            ? { min: range.max, max: range.max }
-            : { min: range.min, max: bounds.max };
-        break;
-      default:
-        return;
-    }
+    const next = rangeHandleKeyRange(
+      side,
+      event.key,
+      untracked(this.effective),
+      untracked(this.bounds),
+    );
+    if (next === null) return;
     event.preventDefault();
     this.commit(next);
     this.announcement.set(
-      `${this.msg().aria.rangeWindow}: ${this.labelOf(untracked(this.effective).min)} – ${this.labelOf(untracked(this.effective).max)}`,
+      rangeSelectorAnnouncement(
+        this.msg(),
+        untracked(this.data).kind,
+        untracked(this.effective),
+        this.effectiveLocale(),
+      ),
     );
   }
 

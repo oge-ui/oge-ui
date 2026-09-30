@@ -24,6 +24,7 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
+    "@oge-ui/charts-engine": "0.13.1",
     "@oge-ui/core": "0.13.1"
   },
   "sideEffects": false,

@@ -29,12 +29,7 @@ export interface ChartScale {
 }
 
 export type TimeTickUnit =
-  | 'minute'
-  | 'hour'
-  | 'day'
-  | 'week'
-  | 'month'
-  | 'year';
+  'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
 
 /* ---------------- linear ---------------- */
 
@@ -49,11 +44,7 @@ export function niceStep(span: number, targetCount: number): number {
   return magnitude * 10;
 }
 
-export function niceTicks(
-  min: number,
-  max: number,
-  targetCount = 6,
-): number[] {
+export function niceTicks(min: number, max: number, targetCount = 6): number[] {
   if (!(max > min)) return [min];
   const step = niceStep(max - min, targetCount);
   const first = Math.ceil(min / step) * step;

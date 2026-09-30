@@ -98,10 +98,7 @@ describe('computeBarSlots', () => {
   it('stacked series share one slot per stack group', () => {
     const list = [
       series({ type: 'stackedBar', argumentField: 'cat', valueField: 'a' }),
-      series(
-        { type: 'stackedBar', argumentField: 'cat', valueField: 'b' },
-        1,
-      ),
+      series({ type: 'stackedBar', argumentField: 'cat', valueField: 'b' }, 1),
     ];
     const slots = computeBarSlots(list, 100, 0.2);
     expect(slots[0]).toEqual(slots[1]);
@@ -111,18 +108,18 @@ describe('computeBarSlots', () => {
 
 describe('candleGeometry', () => {
   it('splits body and wicks, flags direction', () => {
-    expect(
-      candleGeometry({ open: 5, high: 9, low: 3, close: 7 }),
-    ).toEqual({
+    expect(candleGeometry({ open: 5, high: 9, low: 3, close: 7 })).toEqual({
       bodyTop: 7,
       bodyBottom: 5,
       wickTop: 9,
       wickBottom: 3,
       rising: true,
     });
+    expect(candleGeometry({ open: 7, high: 9, low: 3, close: 5 })?.rising).toBe(
+      false,
+    );
     expect(
-      candleGeometry({ open: 7, high: 9, low: 3, close: 5 })?.rising,
-    ).toBe(false);
-    expect(candleGeometry({ open: null, high: 9, low: 3, close: 5 })).toBeNull();
+      candleGeometry({ open: null, high: 9, low: 3, close: 5 }),
+    ).toBeNull();
   });
 });

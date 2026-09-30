@@ -7,7 +7,7 @@ import type {
   OgeChartLegendClickEvent,
   OgeChartRange,
   OgeChartSeriesInput,
-} from '../charts-types';
+} from '@oge-ui/charts-engine';
 
 interface Row {
   month: string;

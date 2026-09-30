@@ -57,7 +57,9 @@ describe('sliceArcPath', () => {
   });
 
   it('a full circle renders as two arcs, empty sweep as nothing', () => {
-    expect(sliceArcPath(0, 0, 10, 0, 0, Math.PI * 2)).toContain('A 10 10 0 1 1');
+    expect(sliceArcPath(0, 0, 10, 0, 0, Math.PI * 2)).toContain(
+      'A 10 10 0 1 1',
+    );
     expect(sliceArcPath(0, 0, 10, 0, 1, 1)).toBe('');
   });
 });

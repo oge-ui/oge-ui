@@ -20,6 +20,11 @@ Portions of this repository are licensed as follows:
   Commercial License — see `packages/charts/LICENSE`. Same terms:
   source-available, free for evaluation and development, paid for
   production use.
+- Everything under `packages/charts-engine` (the charts family's
+  framework-free engine) and `packages/react/charts` (its React render layer)
+  is licensed under the OGE UI Commercial License — see each directory's
+  `LICENSE`. Same terms as `packages/charts`: source-available, free for
+  evaluation and development, paid for production use.
 - Everything under `packages/kanban` is licensed under the OGE UI
   Commercial License — see `packages/kanban/LICENSE`. Same terms:
   source-available, free for evaluation and development, paid for

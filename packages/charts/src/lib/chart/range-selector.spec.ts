@@ -1,7 +1,7 @@
 import { Component, signal, viewChild } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { OgeRangeSelector } from './range-selector';
-import type { OgeChartRange, OgeChartSeriesInput } from '../charts-types';
+import type { OgeChartRange, OgeChartSeriesInput } from '@oge-ui/charts-engine';
 
 @Component({
   imports: [OgeRangeSelector],

@@ -36,7 +36,9 @@ export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
  * - `docsRoot` — route the docs live under; `null` for engine-only packages.
  * - `pageDirs` — folders under `pages/` whose demos belong to this package.
  * - `tier` — `'mit'` or `'commercial'`; drives the licence banner.
- * - `platform` — `'angular'` (default) or `'react'`. Selects which "Writing OGE
+ * - `platform` — `'angular'` (default), `'react'`, or `'agnostic'` for an
+ *   engine package with no render layer of its own (it reads like `'angular'`
+ *   today, as `core`/`behavior` do). Selects which "Writing OGE
  *   code" rules and which "Common mistakes" table the package's `llms.txt`
  *   carries. Getting this wrong ships actively misleading instructions to every
  *   coding assistant, so it is explicit rather than inferred from the name.
@@ -198,6 +200,19 @@ export const PACKAGES = [
     pageDirs: ['charts'],
     apiPage: 'apps/dev-app/src/app/pages/charts/api.ts',
     tier: 'commercial',
+  },
+  {
+    dir: 'charts-engine',
+    npm: '@oge-ui/charts-engine',
+    label: 'Charts engine',
+    summary:
+      'Framework-free charts engine shared by the Angular and React charts: scales, series normalization, stacking, path builders with LTTB downsampling, pie and radar geometry, the cartesian/pie/polar/range-selector view models, keyboard maps, the gesture machine, the message catalog and the image exporter. Installed automatically — you rarely import it directly.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+    // no render layer of its own (ADR 0003)
+    platform: 'agnostic',
   },
   {
     dir: 'gantt',

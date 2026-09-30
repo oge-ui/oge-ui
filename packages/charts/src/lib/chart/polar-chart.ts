@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   ViewEncapsulation,
   afterNextRender,
@@ -16,52 +17,31 @@ import {
   viewChild,
 } from '@angular/core';
 import {
-  angleForIndex,
-  polarToCartesian,
-  radarGridPath,
-  radarLoopPath,
-  type PolarXY,
-} from '../engine/polar-layout';
-import { sliceArcPath } from '../engine/pie-layout';
-import { niceTicks } from '../engine/scale';
-import {
-  buildSeries,
-  collectCategories,
-  type ChartSeriesInput,
-} from '../engine/series-model';
-import { numberFormat } from '../engine/tick-format';
+  buildPolarData,
+  buildPolarScene,
+  cartesianAriaLabel,
+  formatOgeChartMessage,
+  isChartPointSelected,
+  mergeOgeChartsMessages,
+  nextPolarSelection,
+  observeChartSize,
+  polarKeyCommand,
+  polarPointAnnouncement,
+  polarPointIndex,
+  polarSrRows,
+  polarTooltip,
+  type OgeChartAxisOptions,
+  type OgeChartLegendClickEvent,
+  type OgeChartLegendOptions,
+  type OgeChartPointEvent,
+  type OgeChartPointRef,
+  type OgeChartSeriesInput,
+  type OgePolarSeriesVm,
+} from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
-import { OGE_CHART_PALETTE } from './chart';
 import { OgeChartLegendTemplate } from './chart-templates';
-import type {
-  OgeChartAxisOptions,
-  OgeChartLegendClickEvent,
-  OgeChartLegendOptions,
-  OgeChartPointEvent,
-  OgeChartPointRef,
-} from '../charts-types';
 
-interface PolarMarkerVm {
-  readonly x: number;
-  readonly y: number;
-  readonly seriesIndex: number;
-  readonly pointIndex: number;
-}
-
-interface PolarSeriesVm {
-  readonly seriesIndex: number;
-  readonly name: string;
-  readonly color: string;
-  readonly linePathD: string | null;
-  readonly areaPathD: string | null;
-  readonly sectors: readonly {
-    readonly path: string;
-    readonly pointIndex: number;
-  }[];
-  readonly markers: readonly PolarMarkerVm[];
-  readonly strokeWidth: number;
-  readonly opacity: number;
-}
+type PolarSeriesVm = OgePolarSeriesVm;
 
 /**
  * `<oge-polar-chart>` — radar/polar charts on the shared kernel:
@@ -289,8 +269,8 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
 
   readonly dataSource = input<readonly T[]>([]);
   /** Supported polar types: `line`, `area`, `scatter`, `bar`. */
-  readonly series = input<readonly ChartSeriesInput<T>[]>([]);
-  readonly commonSeries = input<Partial<ChartSeriesInput<T>>>({});
+  readonly series = input<readonly OgeChartSeriesInput<T>[]>([]);
+  readonly commonSeries = input<Partial<OgeChartSeriesInput<T>>>({});
   /** `min`/`max`/`labelFormat` of the radial value axis. */
   readonly valueAxis = input<OgeChartAxisOptions>({});
   /** Straight-segment (polygon) grid instead of circles. */
@@ -317,15 +297,9 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   private readonly svgEl =
     viewChild.required<ElementRef<SVGSVGElement>>('svgEl');
 
-  protected readonly msg = computed<OgeChartsMessages>(() => ({
-    ...this.config.messages,
-    ...this.messages(),
-    aria: { ...this.config.messages.aria, ...this.messages().aria },
-    announcements: {
-      ...this.config.messages.announcements,
-      ...this.messages().announcements,
-    },
-  }));
+  protected readonly msg = computed<OgeChartsMessages>(() =>
+    mergeOgeChartsMessages(this.config.messages, this.messages()),
+  );
   protected readonly effectiveLocale = computed(
     () => this.locale() ?? this.config.locale,
   );
@@ -333,11 +307,6 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   private readonly hostSize = signal({ width: 480, height: 360 });
   protected readonly width = computed(() => this.hostSize().width);
   protected readonly height = computed(() => this.hostSize().height);
-  protected readonly cx = computed(() => this.width() / 2);
-  protected readonly cy = computed(() => this.height() / 2);
-  protected readonly radius = computed(() =>
-    Math.max(30, Math.min(this.width(), this.height()) / 2 - 42),
-  );
   protected readonly hover = signal<{
     seriesIndex: number;
     pointIndex: number;
@@ -347,197 +316,49 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   protected readonly activeSeriesIndex = signal(0);
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
-      const wrap = this.plotWrapEl().nativeElement;
-      const measure = (): void => {
-        const rect = wrap.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          this.hostSize.set({
-            width: Math.round(rect.width),
-            height: Math.round(rect.height),
-          });
-        }
-      };
-      measure();
-      if (typeof ResizeObserver === 'undefined') return; // jsdom
-      let frame = false;
-      const observer = new ResizeObserver(() => {
-        if (frame) return;
-        frame = true;
-        requestAnimationFrame(() => {
-          frame = false;
-          measure();
-        });
-      });
-      observer.observe(wrap);
+      const stop = observeChartSize(this.plotWrapEl().nativeElement, (size) =>
+        this.hostSize.set(size),
+      );
+      destroyRef.onDestroy(stop);
     });
   }
 
-  private readonly mergedSeriesInputs = computed<
-    readonly ChartSeriesInput<T>[]
-  >(() => {
-    const common = this.commonSeries();
-    return this.series().map(
-      (entry) => ({ ...common, ...entry }) as ChartSeriesInput<T>,
-    );
-  });
+  /* ---------------- the engine's view model (ADR 0003) ---------------- */
 
-  protected readonly categories = computed<readonly unknown[]>(() =>
-    collectCategories(this.dataSource(), this.mergedSeriesInputs()),
+  private readonly data = computed(() =>
+    buildPolarData<T>({
+      dataSource: this.dataSource(),
+      series: this.series(),
+      commonSeries: this.commonSeries(),
+    }),
   );
-  private readonly categoryIndex = computed<ReadonlyMap<unknown, number>>(
-    () =>
-      new Map(this.categories().map((category, index) => [category, index])),
-  );
-
-  protected readonly seriesList = computed(() => {
-    const categoryIndex = this.categoryIndex();
-    const data = this.dataSource();
-    return this.mergedSeriesInputs().map((input, index) =>
-      buildSeries(data, input, index, 'category', categoryIndex),
-    );
-  });
 
   private readonly hiddenSeries = signal<ReadonlySet<number>>(new Set());
 
-  protected readonly valueMax = computed(() => {
-    const override = this.valueAxis().max;
-    if (typeof override === 'number') return override;
-    let max = 0;
-    this.seriesList().forEach((series, index) => {
-      if (this.hiddenSeries().has(index)) return;
-      for (const point of series.points) {
-        if (point.value !== null && point.value > max) max = point.value;
-      }
-    });
-    return max > 0 ? max : 1;
-  });
-
-  protected readonly ticks = computed(() =>
-    niceTicks(0, this.valueMax(), 4).filter((tick) => tick > 0),
+  private readonly scene = computed(() =>
+    buildPolarScene<T>({
+      data: this.data(),
+      valueAxis: this.valueAxis(),
+      spider: this.spider(),
+      startAngle: this.startAngle(),
+      palette: this.palette(),
+      hiddenSeries: this.hiddenSeries(),
+      width: this.width(),
+      height: this.height(),
+      locale: this.effectiveLocale(),
+    }),
   );
 
-  private radiusOf(value: number): number {
-    return (value / this.valueMax()) * this.radius();
-  }
-
-  protected readonly rings = computed(() => {
-    const format = this.valueAxis().labelFormat;
-    return this.ticks().map((tick) => ({
-      radius: this.radiusOf(tick),
-      path: radarGridPath(
-        this.cx(),
-        this.cy(),
-        this.radiusOf(tick),
-        this.categories().length,
-        this.spider(),
-        this.startAngle(),
-      ),
-      label:
-        format !== undefined
-          ? format(tick)
-          : numberFormat(tick, this.effectiveLocale()),
-    }));
-  });
-
-  protected readonly spokes = computed(() => {
-    const count = this.categories().length;
-    return this.categories().map((category, index) => {
-      const angle = angleForIndex(index, count, this.startAngle());
-      const edge = polarToCartesian(this.cx(), this.cy(), this.radius(), angle);
-      const label = polarToCartesian(
-        this.cx(),
-        this.cy(),
-        this.radius() + 14,
-        angle,
-      );
-      const sin = Math.sin(angle);
-      return {
-        index,
-        x: edge.x,
-        y: edge.y,
-        labelX: label.x,
-        labelY: label.y + 4,
-        anchor:
-          Math.abs(sin) < 0.3
-            ? ('middle' as const)
-            : sin > 0
-              ? ('start' as const)
-              : ('end' as const),
-        label: String(category),
-      };
-    });
-  });
-
-  protected colorOf(seriesIndex: number): string {
-    const palette = this.palette() ?? OGE_CHART_PALETTE;
-    return (
-      this.seriesList()[seriesIndex]?.input.color ??
-      palette[seriesIndex % palette.length]
-    );
-  }
-
-  protected readonly renderSeries = computed<readonly PolarSeriesVm[]>(() => {
-    const count = this.categories().length;
-    const result: PolarSeriesVm[] = [];
-    this.seriesList().forEach((series, seriesIndex) => {
-      if (this.hiddenSeries().has(seriesIndex)) return;
-      const color = this.colorOf(seriesIndex);
-      const type = series.type;
-      const points: (PolarXY | null)[] = series.points.map((point) => {
-        if (point.argNumeric === null || point.value === null) return null;
-        return polarToCartesian(
-          this.cx(),
-          this.cy(),
-          this.radiusOf(Math.max(0, point.value)),
-          angleForIndex(point.argNumeric, count, this.startAngle()),
-        );
-      });
-      const markers: PolarMarkerVm[] = [];
-      points.forEach((point, pointIndex) => {
-        if (point !== null) {
-          markers.push({ x: point.x, y: point.y, seriesIndex, pointIndex });
-        }
-      });
-      const sectors: { path: string; pointIndex: number }[] = [];
-      if (type === 'bar') {
-        const half = Math.PI / Math.max(3, count) / 1.6;
-        series.points.forEach((point, pointIndex) => {
-          if (point.argNumeric === null || point.value === null) return;
-          const angle = angleForIndex(
-            point.argNumeric,
-            count,
-            this.startAngle(),
-          );
-          sectors.push({
-            path: sliceArcPath(
-              this.cx(),
-              this.cy(),
-              this.radiusOf(Math.max(0, point.value)),
-              0,
-              angle - half,
-              angle + half,
-            ),
-            pointIndex,
-          });
-        });
-      }
-      const loop = type === 'line' || type === 'area';
-      result.push({
-        seriesIndex,
-        name: series.name,
-        color,
-        linePathD: loop ? radarLoopPath(points, true) || null : null,
-        areaPathD:
-          type === 'area' ? `${radarLoopPath(points, true)}` || null : null,
-        sectors,
-        markers: type === 'bar' ? [] : markers,
-        strokeWidth: series.input.width ?? 2,
-        opacity: series.input.opacity ?? 1,
-      });
-    });
-    return result;
-  });
+  protected readonly cx = computed(() => this.scene().cx);
+  protected readonly cy = computed(() => this.scene().cy);
+  protected readonly categories = computed(() => this.data().categories);
+  protected readonly rings = computed(() => this.scene().rings);
+  protected readonly spokes = computed(() => this.scene().spokes);
+  protected readonly renderSeries = computed<readonly PolarSeriesVm[]>(
+    () => this.scene().renderSeries,
+  );
 
   /* ---------------- legend ---------------- */
 
@@ -547,22 +368,12 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   protected readonly legendPosition = computed(
     () => this.legend().position ?? 'bottom',
   );
-  protected readonly legendItems = computed(() =>
-    this.seriesList()
-      .map((series, seriesIndex) => ({
-        seriesIndex,
-        name: series.name,
-        color: this.colorOf(seriesIndex),
-        hidden: this.hiddenSeries().has(seriesIndex),
-        inLegend: series.input.showInLegend !== false,
-      }))
-      .filter((item) => item.inLegend),
-  );
+  protected readonly legendItems = computed(() => this.scene().legendItems);
 
   protected onLegendClick(seriesIndex: number): void {
     const hidden = untracked(this.hiddenSeries);
     const willHide = !hidden.has(seriesIndex);
-    const series = untracked(this.seriesList)[seriesIndex];
+    const series = untracked(this.data).seriesList[seriesIndex];
     const event: OgeChartLegendClickEvent = {
       seriesIndex,
       seriesName: series?.name ?? '',
@@ -575,89 +386,52 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
     if (willHide) next.add(seriesIndex);
     else next.delete(seriesIndex);
     this.hiddenSeries.set(next);
-    this.announce(
-      willHide
-        ? this.msg().announcements.seriesHidden
-        : this.msg().announcements.seriesShown,
-      { series: event.seriesName },
+    this.announcement.set(
+      formatOgeChartMessage(
+        willHide
+          ? this.msg().announcements.seriesHidden
+          : this.msg().announcements.seriesShown,
+        { series: event.seriesName },
+      ),
     );
   }
 
   /* ---------------- tooltip / selection / keyboard ---------------- */
 
-  protected readonly tooltipVm = computed(() => {
-    if (!this.tooltipEnabled()) return null;
-    const hover = this.hover();
-    if (hover === null) return null;
-    const series = this.seriesList()[hover.seriesIndex];
-    const point = series?.points[hover.pointIndex];
-    if (point === undefined || point.value === null) return null;
-    const position = polarToCartesian(
-      this.cx(),
-      this.cy(),
-      this.radiusOf(point.value),
-      angleForIndex(
-        point.argNumeric ?? 0,
-        this.categories().length,
-        this.startAngle(),
-      ),
-    );
-    return {
-      x: position.x + 12,
-      y: position.y - 8,
-      argument: String(point.argument),
-      seriesName: series.name,
-      color: this.colorOf(hover.seriesIndex),
-      valueText: numberFormat(point.value, this.effectiveLocale()),
-    };
-  });
+  protected readonly tooltipVm = computed(() =>
+    this.tooltipEnabled() ? polarTooltip(this.scene(), this.hover()) : null,
+  );
 
   protected isSelected(seriesIndex: number, pointIndex: number): boolean {
-    return this.selectedPoints().some(
-      (ref) => ref.seriesIndex === seriesIndex && ref.pointIndex === pointIndex,
-    );
+    return isChartPointSelected(this.selectedPoints(), seriesIndex, pointIndex);
   }
 
   protected onPlotKeydown(event: KeyboardEvent): void {
-    const count = this.categories().length;
-    if (count === 0) return;
-    const seriesCount = untracked(this.seriesList).length;
+    const scene = untracked(this.scene);
     const active = untracked(this.activeArg);
-    const step = (delta: number): void => {
-      event.preventDefault();
-      const next = ((active ?? -delta) + delta + count) % count;
-      this.activeArg.set(next);
-      this.announceActive();
-    };
-    switch (event.key) {
-      case 'ArrowRight':
-        step(1);
-        return;
-      case 'ArrowLeft':
-        step(-1);
-        return;
-      case 'ArrowDown':
-      case 'ArrowUp': {
-        event.preventDefault();
-        const delta = event.key === 'ArrowDown' ? 1 : -1;
-        let next = untracked(this.activeSeriesIndex);
-        for (let i = 0; i < seriesCount; i++) {
-          next = (next + delta + seriesCount) % seriesCount;
-          if (!untracked(this.hiddenSeries).has(next)) break;
-        }
-        this.activeSeriesIndex.set(next);
+    const command = polarKeyCommand(event.key, {
+      argCount: scene.data.categories.length,
+      position: active,
+      seriesIndex: untracked(this.activeSeriesIndex),
+      seriesCount: scene.data.seriesList.length,
+      isSeriesVisible: (index) => !scene.hiddenSeries.has(index),
+    });
+    if (command === null) return;
+    event.preventDefault();
+    switch (command.type) {
+      case 'argument':
+        this.activeArg.set(command.position);
         this.announceActive();
         return;
-      }
-      case 'Enter':
-      case ' ': {
+      case 'series':
+        this.activeSeriesIndex.set(command.seriesIndex);
+        this.announceActive();
+        return;
+      case 'activate': {
         if (active === null) return;
-        event.preventDefault();
         const seriesIndex = untracked(this.activeSeriesIndex);
-        const series = untracked(this.seriesList)[seriesIndex];
-        const pointIndex = series?.points.findIndex(
-          (point) => point.argNumeric === active,
-        );
+        const series = scene.data.seriesList[seriesIndex];
+        const pointIndex = polarPointIndex(scene, seriesIndex, active);
         if (series === undefined || pointIndex === -1) return;
         const payload: OgeChartPointEvent<T> = {
           seriesIndex,
@@ -668,21 +442,12 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
         };
         this.pointClick.emit(payload);
         if (this.selectionMode() === 'point') {
-          const current = untracked(this.selectedPoints);
-          const exists = current.some(
-            (ref) =>
-              ref.seriesIndex === seriesIndex && ref.pointIndex === pointIndex,
-          );
           this.selectedPoints.set(
-            exists
-              ? current.filter(
-                  (ref) =>
-                    !(
-                      ref.seriesIndex === seriesIndex &&
-                      ref.pointIndex === pointIndex
-                    ),
-                )
-              : [{ seriesIndex, pointIndex }],
+            nextPolarSelection(
+              untracked(this.selectedPoints),
+              seriesIndex,
+              pointIndex,
+            ),
           );
         }
         return;
@@ -695,55 +460,23 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   private announceActive(): void {
     const active = untracked(this.activeArg);
     if (active === null) return;
-    const seriesIndex = untracked(this.activeSeriesIndex);
-    const series = untracked(this.seriesList)[seriesIndex];
-    const point = series?.points.find((entry) => entry.argNumeric === active);
-    this.announce(this.msg().announcements.point, {
-      series: series?.name ?? '',
-      argument: String(this.categories()[active] ?? ''),
-      value:
-        point?.value == null
-          ? ''
-          : numberFormat(point.value, this.effectiveLocale()),
-    });
+    this.announcement.set(
+      polarPointAnnouncement(
+        untracked(this.scene),
+        this.msg(),
+        active,
+        untracked(this.activeSeriesIndex),
+      ),
+    );
   }
 
-  protected readonly srRows = computed(() => {
-    const limit = this.config.a11yTableLimit ?? 50;
-    return this.categories()
-      .slice(0, limit)
-      .map((category, argPosition) => ({
-        argText: String(category),
-        cells: this.legendItems().map((item) => {
-          const point = this.seriesList()[item.seriesIndex].points.find(
-            (entry) => entry.argNumeric === argPosition,
-          );
-          return point?.value == null
-            ? ''
-            : numberFormat(point.value, this.effectiveLocale());
-        }),
-      }));
-  });
+  protected readonly srRows = computed(() =>
+    polarSrRows(this.scene(), this.config.a11yTableLimit ?? 50),
+  );
 
-  protected readonly rootAriaLabel = computed(() => {
-    return `${this.msg()
-      .aria.chartLabel.replace('{title}', this.title() || 'Data')
-      .replace(
-        '{count}',
-        String(this.seriesList().length),
-      )}. ${this.msg().aria.plotHint}`;
-  });
-
-  private announce(
-    template: string,
-    tokens: Readonly<Record<string, string>>,
-  ): void {
-    let text = template;
-    for (const [token, value] of Object.entries(tokens)) {
-      text = text.replace(`{${token}}`, value);
-    }
-    this.announcement.set(text);
-  }
+  protected readonly rootAriaLabel = computed(() =>
+    cartesianAriaLabel(this.msg(), this.title(), this.data().seriesList.length),
+  );
 
   focus(): void {
     this.plotWrapEl().nativeElement.focus();

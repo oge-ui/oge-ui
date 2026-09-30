@@ -101,6 +101,28 @@ export default [
               onlyDependOnLibsWithTags: ['scope:behavior', 'scope:core'],
             },
             {
+              // the charts family's commercial, framework-free engine
+              // (ADR 0003): commercial may depend on MIT substrate, never the
+              // reverse — no MIT project lists this tag.
+              sourceTag: 'scope:charts-engine',
+              onlyDependOnLibsWithTags: [
+                'scope:charts-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // React render layer of the commercial charts family: the
+              // engine is its whole substrate, like the Angular package's.
+              sourceTag: 'scope:react-charts',
+              onlyDependOnLibsWithTags: [
+                'scope:react-charts',
+                'scope:charts-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
               // React render layer. Note there is no `scope:buttons` here: the
               // React buttons must reach the shared substrate directly, never
               // the Angular package — the `platform:` rules above already
@@ -277,10 +299,12 @@ export default [
             },
             {
               // commercial charts: dependency-free SVG rendering; only the
-              // shared kernel (core) and the overlay primitives are taken
+              // shared kernel (core), the family's engine package (ADR 0003)
+              // and the overlay primitives are taken
               sourceTag: 'scope:charts',
               onlyDependOnLibsWithTags: [
                 'scope:charts',
+                'scope:charts-engine',
                 'scope:core',
                 'scope:overlay',
               ],
@@ -455,9 +479,11 @@ export default [
                 'scope:react-forms',
                 'scope:react-upload',
                 'scope:react-grid',
+                'scope:react-charts',
                 'scope:react-oge',
                 'scope:react-overlay',
                 'scope:behavior',
+                'scope:charts-engine',
                 'scope:grid',
                 'scope:tree-list',
                 'scope:pivot',

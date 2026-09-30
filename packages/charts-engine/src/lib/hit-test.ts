@@ -8,10 +8,7 @@
  * Index of the value in sorted `args` nearest to `target`
  * (-1 for an empty list).
  */
-export function nearestIndex(
-  args: readonly number[],
-  target: number,
-): number {
+export function nearestIndex(args: readonly number[], target: number): number {
   const n = args.length;
   if (n === 0) return -1;
   if (target <= args[0]) return 0;
@@ -34,10 +31,7 @@ export function nearestIndex(
 export interface ArgumentIndex {
   readonly sortedArgs: readonly number[];
   /** Per sorted arg: series index → point index (sparse, -1 = none). */
-  readonly pointIndexAt: (
-    argPosition: number,
-    seriesIndex: number,
-  ) => number;
+  readonly pointIndexAt: (argPosition: number, seriesIndex: number) => number;
 }
 
 export function buildArgumentIndex(

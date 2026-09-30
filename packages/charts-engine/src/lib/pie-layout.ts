@@ -96,8 +96,7 @@ const pt = (
   y: cy - r * Math.cos(angle),
 });
 
-const fmt = (value: number): string =>
-  String(Math.round(value * 100) / 100);
+const fmt = (value: number): string => String(Math.round(value * 100) / 100);
 
 /** Donut-capable slice path (innerR = 0 → plain pie wedge). */
 export function sliceArcPath(
@@ -201,7 +200,8 @@ export function layoutPieLabels(
         sliceIndex: entry.slice.index,
         arcX: entry.arc.x,
         arcY: entry.arc.y,
-        labelX: side === 'end' ? cx + outerR + labelGap : cx - outerR - labelGap,
+        labelX:
+          side === 'end' ? cx + outerR + labelGap : cx - outerR - labelGap,
         labelY: y,
         side,
       });
