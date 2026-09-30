@@ -193,9 +193,16 @@ _Export entry point (lazy, dependency-free)_
 | `dataSource / argumentField / valueField` | `readonly T[] / string \| getter` | `[] / 'argument' / 'value'` | One slice per item; negative values clamp to zero. |
 | `type / innerRadius / startAngle` | `'pie' \| 'doughnut' / number / number` | `'pie' / 0.5 / 0` | Doughnut hole as an outer-radius fraction; start angle in radians (0 = 12 o'clock, clockwise). |
 | `smallValuesGrouping` | `OgeChartSmallValuesGrouping \| null` | `null` | `{ mode: 'topN' \| 'smallValueThreshold', topCount?, threshold? }` — the tail folds into an "Others" slice (`othersLabel`). |
+| `othersLabel` | `string` | `'Others'` | Label (and `argument` of the event payload) of the grouped tail slice. |
 | `showLabels` | `boolean` | `true` | Outside labels in two anti-overlap columns with connector lines. |
 | `selectedSlices` | `readonly number[]` | `[]` | Selected slice indexes — selected slices explode. Two-way (`[(selectedSlices)]`). |
 | `legend / tooltipEnabled / palette / title / locale / messages` | `see OgeChart` | `—` | Shared options with the cartesian chart. |
+
+#### Methods
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSvgElement()` | `SVGSVGElement` | The live SVG root — what the image exporters serialize. |
 
 #### Events
 
@@ -214,7 +221,7 @@ _Export entry point (lazy, dependency-free)_
 | `spider` | `boolean` | `false` | Straight-segment (polygon) grid rings instead of circles. |
 | `startAngle` | `number` | `0` | First category's angle in radians (0 = 12 o'clock, clockwise). |
 | `valueAxis` | `OgeChartAxisOptions` | `{}` | The radial axis: `max` override and `labelFormat` of the nice-tick rings. |
-| `selectionMode / selectedPoints` | `'point' \| 'none' / readonly OgeChartPointRef[]` | `'none' / []` | Keyboard Enter (and clicks on markers/sectors) select; two-way (`[(selectedPoints)]`). |
+| `selectionMode / selectedPoints` | `'point' \| 'none' / readonly OgeChartPointRef[]` | `'none' / []` | Keyboard Enter on the active point selects it (a second Enter clears it); hovering markers and sectors shows the tooltip. Two-way (`[(selectedPoints)]`). |
 | `legend / tooltipEnabled / palette / title / locale / messages` | `see OgeChart` | `—` | Shared options — the legend, tooltip, sr data table and keyboard inspection (arrows walk categories and series) work exactly like the cartesian chart. |
 
 #### Methods

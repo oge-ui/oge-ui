@@ -99,6 +99,8 @@ pages in both layers:
 | Upload     | ✅ uploader, drop zone, trigger, config + transport providers                                                                                                                                                                                                                                                                                                                                                                             | ✅ overview, api (the forms section is a recorded heading exception)                                                            | ✅ / ✅           | ✅ `upload` in `FAMILIES`  |
 | Data Grid  | ✅ grid (sorting, filtering, search, paging, virtualization, windowed loading, selection incl. deferred, keyboard nav, pinned/resizable/reorderable columns, bands, adaptive hiding, persistence, CSV + Excel + PDF, grouping, master-detail, row/no-data render props, row drag, editing in all five modes, header filter, filter panel + builder, column chooser, context menus, `highlightChanges`), pager, config + storage providers | ✅ overview, api, columns, filtering, selection, editing, persistence, context-menu, grouping, master-detail, rows — all branch | ✅ / ✅           | ✅ `grid` in `FAMILIES`    |
 
+| Charts | ✅ chart (cartesian), pie chart, polar chart, range selector, config provider, `export-image` entry — on `@oge-ui/charts-engine` (ADR 0003), the Angular charts rewired onto it | ✅ overview, api — both branch, section for section | ✅ / ✅ | ✅ `charts` in `FAMILIES` |
+
 New families add a row here when they land — a family without its row (or
 with a partial one) is not done, whatever the code says.
 
@@ -164,6 +166,18 @@ Anything not listed here is a defect.
   `ogeToolbar="before|center|after"` projects into), so the React quick start
   puts its export button in the toolbar like the Angular one, and the grouping
   demo switches on `columnChooser` again.
+- **The charts family's idiom differences (2026-09-30).** No feature gap:
+  both layers run `@oge-ui/charts-engine`. What `check-parity.mjs` records for
+  `charts` is idiom only — `<OgeChartsConfigProvider>` for
+  `provideOgeChartsConfig()`, the `useOgeChartsConfig()` hook for
+  `inject(OGE_CHARTS_CONFIG)`, `className`/`style` host props, and
+  `renderLegendItem` on the pie and polar tables (Angular documents the
+  `*ogeChartLegendTemplate` directive they query once, in the OgeChart types
+  table). Two things were found in the Angular package on the way and fixed
+  in the docs rather than copied: the polar chart selects from the keyboard
+  only (its API row claimed marker/sector clicks), and the pie chart queries
+  `*ogeChartTooltipTemplate` but never renders it — so the React pie has no
+  `renderTooltip`, matching what the Angular pie actually does.
 - **The tabs "Routed tabs" page (2026-08-13).** That page drives the selection
   from the Angular router's child routes — the demo _is_ an Angular-router
   integration, and React apps route with their own library. The React tabs

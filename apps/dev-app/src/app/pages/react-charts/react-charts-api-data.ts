@@ -1,8 +1,15 @@
-// Hand-compiled from packages/charts/src/lib/** — keep in sync with the
+// Hand-compiled from packages/react/charts/src/lib/** — keep in sync with the
 // source TSDoc.
+//
+// Mirrors `pages/charts/charts-api-data.ts` block for block and group for
+// group, so the two views read as one page across the switch and the parity
+// gate can diff them member by member. What differs is the idiom — controlled
+// `value` + `onValueChange` pairs instead of `model()`, `on`-prefixed callbacks
+// instead of outputs, a `ref` handle instead of public methods, render props
+// instead of structural directives, a context provider instead of DI.
 import type { ApiSections } from '../../shared/api-reference';
 
-export const OGE_CHART_API: ApiSections = {
+export const OGE_REACT_CHART_API: ApiSections = {
   properties: [
     {
       title: 'Data & series',
@@ -18,7 +25,7 @@ export const OGE_CHART_API: ApiSections = {
           type: 'readonly OgeChartSeriesInput[]',
           default: '[]',
           description:
-            'Series definitions: <code>type</code> (16 kinds), field mapping (<code>valueField</code>/<code>argumentField</code> — names, dotted paths or getters), <code>name</code>, <code>color</code>, <code>axis</code> (value-axis index), <code>stack</code> group, <code>dashStyle</code>/<code>width</code>/<code>opacity</code>, <code>showInLegend</code>, rangeArea bounds (<code>value1Field</code>/<code>value2Field</code>) and candlestick OHLC (<code>openField</code>/<code>highField</code>/<code>lowField</code>/<code>closeField</code>), <code>sizeField</code> (bubble area), <code>visible</code> (start hidden; the legend re-shows) and <code>showLabels</code> (SI-formatted value labels on small series). Null/NaN values render as gaps.',
+            'Series definitions: <code>type</code> (16 kinds), field mapping (<code>valueField</code>/<code>argumentField</code> — names, dotted paths or getters), <code>name</code>, <code>color</code>, <code>axis</code> (value-axis index), <code>stack</code> group, <code>dashStyle</code>/<code>width</code>/<code>opacity</code>, <code>showInLegend</code>, rangeArea bounds (<code>value1Field</code>/<code>value2Field</code>) and candlestick OHLC (<code>openField</code>/<code>highField</code>/<code>lowField</code>/<code>closeField</code>), <code>sizeField</code> (bubble area), <code>visible</code> (start hidden; the legend re-shows) and <code>showLabels</code> (SI-formatted value labels on small series). Null/NaN values render as gaps. Inline arrays are fine: structurally equal props never rebuild the chart.',
         },
         {
           name: 'commonSeries',
@@ -76,14 +83,14 @@ export const OGE_CHART_API: ApiSections = {
           type: "'none' | 'wheel' | 'drag' | 'both' / boolean",
           default: "'none' / false",
           description:
-            'Cursor-centered wheel zoom, drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom.',
+            'Cursor-centered wheel zoom (a non-passive listener, so the page does not scroll under it), drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom.',
         },
         {
-          name: 'visualRange',
+          name: 'visualRange / defaultVisualRange',
           type: 'OgeChartRange | null',
-          default: 'null',
+          default: 'undefined / null',
           description:
-            'The zoom window in argument-axis units (<code>null</code> = full extent). Two-way (<code>[(visualRange)]</code>); writes clamp into the data bounds.',
+            'The zoom window in argument-axis units (<code>null</code> = full extent) — controlled when <code>visualRange</code> is provided (pair it with <code>onVisualRangeChange</code>), otherwise seeded by <code>defaultVisualRange</code>. Writes clamp into the data bounds.',
         },
         {
           name: 'tooltip',
@@ -107,11 +114,11 @@ export const OGE_CHART_API: ApiSections = {
             '<code>{ visible?, position? (top/bottom/start/end), interactive? }</code> — real buttons with <code>aria-pressed</code>; clicking toggles the series and the axes rescale.',
         },
         {
-          name: 'selectionMode / selectedPoints',
+          name: 'selectionMode / selectedPoints / defaultSelectedPoints',
           type: "'point' | 'series' | 'none' / readonly OgeChartPointRef[]",
-          default: "'none' / []",
+          default: "'none' / undefined / []",
           description:
-            'Click (or Enter) selects; Ctrl adds points to the set; series mode selects the whole series. Two-way (<code>[(selectedPoints)]</code>).',
+            'Click (or Enter) selects; Ctrl adds points to the set; series mode selects the whole series. <code>selectedPoints</code> is controlled when provided (pair it with <code>onSelectedPointsChange</code>).',
         },
       ],
     },
@@ -142,13 +149,20 @@ export const OGE_CHART_API: ApiSections = {
           type: 'Partial&lt;OgeChartsMessages&gt;',
           default: '{}',
           description:
-            'Per-instance message overrides, merged over the DI config per top-level block.',
+            'Per-instance message overrides, merged over the provider config per top-level block.',
+        },
+        {
+          name: 'className / style',
+          type: 'string / CSSProperties',
+          description:
+            'Applied to the <code>.oge-chart</code> host element — give it a height (<code>style={{ height: 380 }}</code>).',
         },
       ],
     },
   ],
   methods: [
     {
+      title: 'OgeChartHandle (ref)',
       entries: [
         {
           name: 'zoomToRange(range) / resetZoom()',
@@ -191,9 +205,9 @@ export const OGE_CHART_API: ApiSections = {
       entries: [
         {
           name: 'exportChartToPng(chart, options?) / exportChartToSvg(chart, options?) / serializeChartSvg(svg, options?)',
-          type: '@oge-ui/charts/export-image',
+          type: '@oge-ui/react-charts/export-image',
           description:
-            'No third-party libraries: the live SVG is cloned with computed styles inlined, then downloaded as a standalone <code>.svg</code> or rasterized onto a canvas for <code>.png</code> (<code>pixelRatio</code>, <code>background</code>). Import the entry point dynamically.',
+            'The same functions as <code>@oge-ui/charts/export-image</code> (they live in the shared engine): the live SVG is cloned with computed styles inlined, then downloaded as a standalone <code>.svg</code> or rasterized onto a canvas for <code>.png</code> (<code>pixelRatio</code>, <code>background</code>). Pass any chart’s <code>ref</code> handle; import the entry point dynamically.',
         },
       ],
     },
@@ -202,32 +216,33 @@ export const OGE_CHART_API: ApiSections = {
     {
       entries: [
         {
-          name: 'pointClick / seriesClick',
-          type: 'OgeChartPointEvent&lt;T&gt; / OgeChartSeriesEvent',
+          name: 'onPointClick / onSeriesClick',
+          type: '(event: OgeChartPointEvent&lt;T&gt;) =&gt; void / (event: OgeChartSeriesEvent) =&gt; void',
           description:
             'Pointer (and keyboard Enter) activation with the normalized point payload.',
         },
         {
-          name: 'legendClick',
-          type: 'OgeChartLegendClickEvent',
+          name: 'onLegendClick',
+          type: '(event: OgeChartLegendClickEvent) =&gt; void',
           description:
-            'Cancelable — set <code>cancel = true</code> to veto the visibility toggle; carries <code>willHide</code>.',
+            'Cancelable — set <code>event.cancel = true</code> to veto the visibility toggle; carries <code>willHide</code>.',
         },
         {
-          name: 'tooltipShowing',
-          type: 'OgeChartTooltipShowingEvent&lt;T&gt;',
+          name: 'onTooltipShowing',
+          type: '(event: OgeChartTooltipShowingEvent&lt;T&gt;) =&gt; void',
           description:
             'Cancelable, before the tooltip shows for a new argument.',
         },
         {
-          name: 'visualRangeChange / selectedPointsChange',
-          type: 'OgeChartRange | null / readonly OgeChartPointRef[]',
-          description: 'The two-way model outputs.',
+          name: 'onVisualRangeChange / onSelectedPointsChange',
+          type: '(range: OgeChartRange | null) =&gt; void / (points: readonly OgeChartPointRef[]) =&gt; void',
+          description:
+            'The controlled halves of <code>visualRange</code> / <code>selectedPoints</code>; Angular’s <code>[(…)]</code> models are both halves at once.',
         },
         {
-          name: 'drawn',
-          type: 'void',
-          description: 'After every render pass.',
+          name: 'onDrawn',
+          type: '() =&gt; void',
+          description: 'After every render pass of the series.',
         },
       ],
     },
@@ -254,29 +269,40 @@ export const OGE_CHART_API: ApiSections = {
             'Axis kinds and the numeric window type (time axes: epoch ms; category: index space).',
         },
         {
-          name: '[ogeChartTooltipTemplate]',
-          type: 'structural directive (OgeChartTooltipTemplate)',
+          name: 'OgeChartHandle&lt;T&gt;',
+          type: 'ref handle',
           description:
-            "Replaces the tooltip's content; context <code>OgeChartTooltipTemplateContext</code>: <code>{ $implicit: OgeChartPointEvent[] }</code>.",
+            'Every method above: <code>zoomToRange</code>, <code>resetZoom</code>, <code>hideTooltip</code>, <code>refresh</code>, <code>focus</code>, <code>getExportData</code>, <code>getSvgElement</code>.',
+        },
+      ],
+    },
+    {
+      title: 'Template directives (render props)',
+      entries: [
+        {
+          name: 'renderTooltip',
+          type: '(points: readonly OgeChartPointEvent&lt;T&gt;[]) =&gt; ReactNode',
+          description:
+            "Replaces the tooltip's content — the React face of <code>*ogeChartTooltipTemplate</code>; one entry per series in shared mode.",
         },
         {
-          name: '[ogeChartAnnotationTemplate]',
-          type: 'structural directive (OgeChartAnnotationTemplate)',
+          name: 'renderAnnotation',
+          type: '(note: { text: string }) =&gt; ReactNode',
           description:
-            "Replaces an annotation's label (rendered in a <code>foreignObject</code>, so any HTML works); context <code>OgeChartAnnotationTemplateContext</code>: <code>{ $implicit: { text } }</code>.",
+            "Replaces an annotation's label (rendered in a <code>foreignObject</code>, so any markup works) — <code>*ogeChartAnnotationTemplate</code>.",
         },
         {
-          name: '[ogeChartLegendTemplate]',
-          type: 'structural directive (OgeChartLegendTemplate)',
+          name: 'renderLegendItem',
+          type: '(item: OgeChartLegendItem) =&gt; ReactNode',
           description:
-            "Replaces a legend item's content; context <code>OgeChartLegendTemplateContext</code>: <code>{ $implicit: { name, color, hidden } }</code>.",
+            "Replaces a legend item's content — <code>*ogeChartLegendTemplate</code>; the item is <code>{ name, color, hidden }</code>.",
         },
       ],
     },
   ],
 };
 
-export const OGE_POLAR_CHART_API: ApiSections = {
+export const OGE_REACT_POLAR_CHART_API: ApiSections = {
   properties: [
     {
       entries: [
@@ -309,11 +335,11 @@ export const OGE_POLAR_CHART_API: ApiSections = {
             'The radial axis: <code>max</code> override and <code>labelFormat</code> of the nice-tick rings.',
         },
         {
-          name: 'selectionMode / selectedPoints',
+          name: 'selectionMode / selectedPoints / defaultSelectedPoints',
           type: "'point' | 'none' / readonly OgeChartPointRef[]",
-          default: "'none' / []",
+          default: "'none' / undefined / []",
           description:
-            'Keyboard Enter on the active point selects it (a second Enter clears it); hovering markers and sectors shows the tooltip. Two-way (<code>[(selectedPoints)]</code>).',
+            'Keyboard Enter on the active point selects it (a second Enter clears it); hovering markers and sectors shows the tooltip. <code>selectedPoints</code> is controlled when provided.',
         },
         {
           name: 'legend / tooltipEnabled / palette / title / locale / messages',
@@ -321,11 +347,18 @@ export const OGE_POLAR_CHART_API: ApiSections = {
           description:
             'Shared options — the legend, tooltip, sr data table and keyboard inspection (arrows walk categories and series) work exactly like the cartesian chart.',
         },
+        {
+          name: 'renderLegendItem / className / style',
+          type: 'see OgeChart',
+          description:
+            'The legend render prop (<code>*ogeChartLegendTemplate</code>) and the host styling props.',
+        },
       ],
     },
   ],
   methods: [
     {
+      title: 'OgePolarChartHandle (ref)',
       entries: [
         {
           name: 'focus() / getSvgElement()',
@@ -340,17 +373,17 @@ export const OGE_POLAR_CHART_API: ApiSections = {
     {
       entries: [
         {
-          name: 'pointClick / legendClick / selectedPointsChange',
-          type: 'OgeChartPointEvent&lt;T&gt; / OgeChartLegendClickEvent / readonly OgeChartPointRef[]',
+          name: 'onPointClick / onLegendClick / onSelectedPointsChange',
+          type: '(event: OgeChartPointEvent&lt;T&gt;) =&gt; void / (event: OgeChartLegendClickEvent) =&gt; void / (points) =&gt; void',
           description:
-            'Point activation, the cancelable legend toggle and the two-way selection output.',
+            'Point activation, the cancelable legend toggle and the controlled half of <code>selectedPoints</code>.',
         },
       ],
     },
   ],
 };
 
-export const OGE_RANGE_SELECTOR_API: ApiSections = {
+export const OGE_REACT_RANGE_SELECTOR_API: ApiSections = {
   properties: [
     {
       entries: [
@@ -362,11 +395,11 @@ export const OGE_RANGE_SELECTOR_API: ApiSections = {
             'The mini background chart (line/area recommended) drawn behind the selection window.',
         },
         {
-          name: 'value',
+          name: 'value / defaultValue',
           type: 'OgeChartRange | null',
-          default: 'null',
+          default: 'undefined / null',
           description:
-            "The selected window in argument units (<code>null</code> = full range). Two-way (<code>[(value)]</code>) — bind the same signal to a chart's <code>[(visualRange)]</code> and the two stay in lockstep.",
+            "The selected window in argument units (<code>null</code> = full range) — controlled when provided. Share one state between it and a chart's <code>visualRange</code> and the two stay in lockstep.",
         },
         {
           name: 'scaleType',
@@ -380,16 +413,23 @@ export const OGE_RANGE_SELECTOR_API: ApiSections = {
           description:
             'Shared options; handle labels come from <code>messages.aria.rangeStart/rangeEnd/rangeWindow</code>.',
         },
+        {
+          name: 'className / style',
+          type: 'string / CSSProperties',
+          description: 'Applied to the <code>.oge-range-selector</code> host.',
+        },
       ],
     },
   ],
   methods: [
     {
+      title: 'OgeRangeSelectorHandle (ref)',
       entries: [
         {
           name: 'reset()',
           type: 'void',
-          description: 'Back to the full range (<code>value = null</code>).',
+          description:
+            'Back to the full range (<code>onValueChange(null)</code>).',
         },
       ],
     },
@@ -398,17 +438,17 @@ export const OGE_RANGE_SELECTOR_API: ApiSections = {
     {
       entries: [
         {
-          name: 'valueChange',
-          type: 'OgeChartRange | null',
+          name: 'onValueChange',
+          type: '(value: OgeChartRange | null) =&gt; void',
           description:
-            'The two-way model output. Interaction: drag the window (grab cursor), drag either handle, click the track to center the window there — Escape mid-drag restores; the handles are WAI-ARIA sliders (arrow keys adjust by 2%, Home/End jump to the bounds, changes announced).',
+            'The controlled half of <code>value</code>. Interaction: drag the window (grab cursor), drag either handle, click the track to center the window there — Escape mid-drag restores; the handles are WAI-ARIA sliders (arrow keys adjust by 2%, Home/End jump to the bounds, changes announced).',
         },
       ],
     },
   ],
 };
 
-export const OGE_PIE_CHART_API: ApiSections = {
+export const OGE_REACT_PIE_CHART_API: ApiSections = {
   properties: [
     {
       entries: [
@@ -447,22 +487,29 @@ export const OGE_PIE_CHART_API: ApiSections = {
             'Outside labels in two anti-overlap columns with connector lines.',
         },
         {
-          name: 'selectedSlices',
+          name: 'selectedSlices / defaultSelectedSlices',
           type: 'readonly number[]',
-          default: '[]',
+          default: 'undefined / []',
           description:
-            'Selected slice indexes — selected slices explode. Two-way (<code>[(selectedSlices)]</code>).',
+            'Selected slice indexes — selected slices explode. Controlled when <code>selectedSlices</code> is provided.',
         },
         {
           name: 'legend / tooltipEnabled / palette / title / locale / messages',
           type: 'see OgeChart',
           description: 'Shared options with the cartesian chart.',
         },
+        {
+          name: 'renderLegendItem / className / style',
+          type: 'see OgeChart',
+          description:
+            'The legend render prop (<code>*ogeChartLegendTemplate</code>) and the host styling props.',
+        },
       ],
     },
   ],
   methods: [
     {
+      title: 'OgePieChartHandle (ref)',
       entries: [
         {
           name: 'getSvgElement()',
@@ -477,31 +524,36 @@ export const OGE_PIE_CHART_API: ApiSections = {
     {
       entries: [
         {
-          name: 'sliceClick',
-          type: 'OgeChartPieSliceEvent&lt;T&gt;',
+          name: 'onSliceClick',
+          type: '(event: OgeChartPieSliceEvent&lt;T&gt;) =&gt; void',
           description:
             'Slice activation: <code>argument</code>, <code>value</code>, <code>fraction</code>, merged <code>sources</code> and the <code>grouped</code> flag for the &quot;Others&quot; slice.',
         },
         {
-          name: 'legendClick / selectedSlicesChange',
-          type: 'OgeChartLegendClickEvent / readonly number[]',
+          name: 'onLegendClick / onSelectedSlicesChange',
+          type: '(event: OgeChartLegendClickEvent) =&gt; void / (slices: readonly number[]) =&gt; void',
           description:
-            'Cancelable legend toggle; the two-way selection output.',
+            'Cancelable legend toggle; the controlled half of <code>selectedSlices</code>.',
         },
       ],
     },
   ],
 };
 
-export const OGE_CHARTS_CONFIG_API: ApiSections = {
+export const OGE_REACT_CHARTS_CONFIG_API: ApiSections = {
   properties: [
     {
       entries: [
         {
-          name: 'provideOgeChartsConfig(config)',
-          type: 'Provider',
+          name: 'OgeChartsConfigProvider',
+          type: 'component ({ config?: OgeChartsConfigInput })',
           description:
-            'Configures every chart below the provider (<code>OgeChartsConfigInput</code>); shallow merge over <code>OGE_DEFAULT_CHARTS_CONFIG</code> per top-level key — a partial <code>messages</code> replaces whole nested blocks. The token is <code>OGE_CHARTS_CONFIG</code> (<code>OgeChartsConfig</code>).',
+            'Configures every chart below the provider — the React counterpart of <code>provideOgeChartsConfig()</code>. Shallow merge over the outer provider (or <code>OGE_DEFAULT_CHARTS_CONFIG</code>) per top-level key — a partial <code>messages</code> replaces whole nested blocks — and it re-resolves whenever <code>config</code> changes, which is how the UI language switches at runtime.',
+        },
+        {
+          name: 'useOgeChartsConfig()',
+          type: 'OgeChartsConfig',
+          description: 'The resolved config of the current subtree.',
         },
         {
           name: 'messages',
@@ -513,7 +565,7 @@ export const OGE_CHARTS_CONFIG_API: ApiSections = {
           name: 'locale',
           type: 'string | undefined',
           description:
-            'BCP 47 locale for every <code>Intl</code> format in scope; a per-instance <code>[locale]</code> input wins.',
+            'BCP 47 locale for every <code>Intl</code> format in scope; a per-instance <code>locale</code> prop wins.',
         },
         {
           name: 'a11yTableLimit',

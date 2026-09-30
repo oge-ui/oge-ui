@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   OgeChart,
@@ -14,7 +19,12 @@ import {
 } from '@oge-ui/charts';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
+import {
+  REACT_CHARTS_OVERVIEW_SECTIONS,
+  ReactChartsOverviewDemos,
+} from '../react-charts/overview';
 import {
   ANNOTATIONS_SNIPPET,
   EVENTS_EXPORT_SNIPPET,
@@ -53,6 +63,7 @@ const SECTIONS = [
     OgePolarChart,
     OgeRangeSelector,
     PageToc,
+    ReactChartsOverviewDemos,
     RouterLink,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,243 +80,291 @@ const SECTIONS = [
         'dependency-free SVG',
       ]"
     >
-      <p>
-        Data visualization on a dependency-free SVG kernel — no D3, no Chart.js,
-        no canvas library. Eleven cartesian series types
-        (line/spline/area/spline-area/stacked-area/bar/stacked/full-stacked/
-        scatter/range-area/candlestick) plus pie and doughnut share pure engines
-        for 1-2-5 nice-tick scales, calendar-true time axes, log axes, stacking
-        with separate negative branches and single-path rendering that stays
-        fluid at 10k+ points. Wheel and drag-select zoom (cursor-centered,
-        Escape resets), crosshair, shared tooltips, an interactive legend and
-        point/series selection are built in. No WAI-ARIA APG chart pattern
-        exists, so the widget composes:
-        <code>role="img"</code> with a generated label, a screen-reader-only
-        data table, real legend buttons, and
-        <strong>keyboard point inspection</strong> — arrows walk arguments and
-        series with polite live-region announcements.
-      </p>
-      <p>
-        <code>&#64;oge-ui/charts</code> is a commercial package — free for
-        evaluation and development, with no watermark and no runtime license
-        checks. See
-        <a
-          routerLink="/license"
-          class="text-indigo-600 underline dark:text-indigo-400"
-          >licensing</a
-        >
-        for the terms.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          Data visualization on a dependency-free SVG kernel — no D3, no
+          Chart.js, no canvas library. The React components run the same
+          framework-free engine as the Angular ones
+          (<code>&#64;oge-ui/charts-engine</code>): eleven cartesian series
+          types
+          (line/spline/area/spline-area/stacked-area/bar/stacked/full-stacked/
+          scatter/range-area/candlestick) plus pie and doughnut share pure
+          engines for 1-2-5 nice-tick scales, calendar-true time axes, log axes,
+          stacking with separate negative branches and single-path rendering
+          that stays fluid at 10k+ points. Wheel and drag-select zoom
+          (cursor-centered, Escape resets), crosshair, shared tooltips, an
+          interactive legend and point/series selection are built in, with a
+          controlled <code>visualRange</code> pair, <code>on</code>-prefixed
+          callbacks and a <code>ref</code> handle. No WAI-ARIA APG chart pattern
+          exists, so the widget composes: <code>role="img"</code> with a
+          generated label, a screen-reader-only data table, real legend buttons,
+          and <strong>keyboard point inspection</strong> — arrows walk arguments
+          and series with polite live-region announcements.
+        </p>
+        <p>
+          <code>&#64;oge-ui/react-charts</code> is a commercial package — free
+          for evaluation and development, with no watermark and no runtime
+          license checks. See
+          <a
+            routerLink="/license"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >licensing</a
+          >
+          for the terms.
+        </p>
+      } @else {
+        <p>
+          Data visualization on a dependency-free SVG kernel — no D3, no
+          Chart.js, no canvas library. Eleven cartesian series types
+          (line/spline/area/spline-area/stacked-area/bar/stacked/full-stacked/
+          scatter/range-area/candlestick) plus pie and doughnut share pure
+          engines for 1-2-5 nice-tick scales, calendar-true time axes, log axes,
+          stacking with separate negative branches and single-path rendering
+          that stays fluid at 10k+ points. Wheel and drag-select zoom
+          (cursor-centered, Escape resets), crosshair, shared tooltips, an
+          interactive legend and point/series selection are built in. No
+          WAI-ARIA APG chart pattern exists, so the widget composes:
+          <code>role="img"</code> with a generated label, a screen-reader-only
+          data table, real legend buttons, and
+          <strong>keyboard point inspection</strong> — arrows walk arguments and
+          series with polite live-region announcements.
+        </p>
+        <p>
+          <code>&#64;oge-ui/charts</code> is a commercial package — free for
+          evaluation and development, with no watermark and no runtime license
+          checks. See
+          <a
+            routerLink="/license"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >licensing</a
+          >
+          for the terms.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <app-demo-card
-      [chips]="['auto axes', 'legend', 'tooltip', 'crosshair']"
-      heading="Getting started"
-      description="One element, a working chart: the category axis auto-detects from the string arguments, the value axis picks nice ticks, the legend toggles series, and hovering shows the crosshair and tooltip."
-      [code]="gettingStartedSnippet"
-      language="ts"
-    >
-      <oge-chart
-        [dataSource]="basicData"
-        [series]="basicSeries"
-        title="Quarterly revenue"
-        style="height: 380px"
-      />
-    </app-demo-card>
+    @if (fw.isReact()) {
+      <app-react-charts-overview-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['auto axes', 'legend', 'tooltip', 'crosshair']"
+        heading="Getting started"
+        description="One element, a working chart: the category axis auto-detects from the string arguments, the value axis picks nice ticks, the legend toggles series, and hovering shows the crosshair and tooltip."
+        [code]="gettingStartedSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="basicData"
+          [series]="basicSeries"
+          title="Quarterly revenue"
+          style="height: 380px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['stepLine', 'bubble', 'rangeBar', 'showLabels']"
-      heading="Series types"
-      description="Sixteen series types share one kernel — line/spline/step lines, five area flavors, four bar flavors (incl. <code>rangeBar</code> spanning value1..value2), scatter, <code>bubble</code> (<code>sizeField</code> drives each bubble's area), rangeArea and candlestick. <code>showLabels</code> prints values next to small series, null values become gaps, and hovering a legend item spotlights its series."
-      [code]="seriesTypesSnippet"
-      language="ts"
-    >
-      <oge-chart
-        [dataSource]="mixData"
-        [series]="mixSeries"
-        [commonSeries]="{ argumentField: 'day' }"
-        style="height: 380px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['stepLine', 'bubble', 'rangeBar', 'showLabels']"
+        heading="Series types"
+        description="Sixteen series types share one kernel — line/spline/step lines, five area flavors, four bar flavors (incl. <code>rangeBar</code> spanning value1..value2), scatter, <code>bubble</code> (<code>sizeField</code> drives each bubble's area), rangeArea and candlestick. <code>showLabels</code> prints values next to small series, null values become gaps, and hovering a legend item spotlights its series."
+        [code]="seriesTypesSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="mixData"
+          [series]="mixSeries"
+          [commonSeries]="{ argumentField: 'day' }"
+          style="height: 380px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['time axis', 'Intl labels', 'stripLines']"
-      heading="Time axis & strip lines"
-      description="Date arguments auto-detect the time axis: ticks are calendar-true (real month boundaries, DST-safe) and labels format through <code>Intl</code> in your locale. <code>stripLines</code> mark a deadline (line) or a window (band)."
-      [code]="timeAxisSnippet"
-      language="ts"
-    >
-      <oge-chart
-        [dataSource]="timeData"
-        [series]="timeSeries"
-        [stripLines]="timeStripLines"
-        [argumentAxis]="{ grid: true }"
-        style="height: 380px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['time axis', 'Intl labels', 'stripLines']"
+        heading="Time axis & strip lines"
+        description="Date arguments auto-detect the time axis: ticks are calendar-true (real month boundaries, DST-safe) and labels format through <code>Intl</code> in your locale. <code>stripLines</code> mark a deadline (line) or a window (band)."
+        [code]="timeAxisSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="timeData"
+          [series]="timeSeries"
+          [stripLines]="timeStripLines"
+          [argumentAxis]="{ grid: true }"
+          style="height: 380px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['stackedBar', 'negative stacks', 'stack groups']"
-      heading="Stacked series"
-      description="<code>stackedBar</code> accumulates per argument with negatives stacking downward separately; <code>fullStackedBar</code> normalizes each argument to 100%; the <code>stack</code> option splits independent groups."
-      [code]="stacksSnippet"
-      language="ts"
-    >
-      <oge-chart
-        [dataSource]="stackData"
-        [series]="stackSeries"
-        [commonSeries]="{ argumentField: 'month' }"
-        [valueAxis]="{ abbreviate: false }"
-        style="height: 380px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['stackedBar', 'negative stacks', 'stack groups']"
+        heading="Stacked series"
+        description="<code>stackedBar</code> accumulates per argument with negatives stacking downward separately; <code>fullStackedBar</code> normalizes each argument to 100%; the <code>stack</code> option splits independent groups."
+        [code]="stacksSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="stackData"
+          [series]="stackSeries"
+          [commonSeries]="{ argumentField: 'month' }"
+          [valueAxis]="{ abbreviate: false }"
+          style="height: 380px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['50k points', 'LTTB downsampling', 'wheel zoom', 'drag-select']"
-      heading="Zoom, pan & tooltips"
-      description="50,000 points per series stay fluid: paths auto-downsample with <strong>LTTB</strong> (Largest-Triangle-Three-Buckets — peaks survive) to roughly one point per pixel, while hit-testing stays a binary search over the <em>full</em> data. Wheel zooms around the cursor, dragging selects a range, Shift+drag pans, Escape resets — <code>[(visualRange)]</code> is two-way and shared tooltips list every series."
-      [code]="zoomSnippet"
-      language="ts"
-    >
-      <oge-chart
-        [dataSource]="perfData"
-        [series]="perfSeries"
-        [(visualRange)]="perfRange"
-        zoomEnabled="both"
-        [panEnabled]="true"
-        [tooltip]="{ shared: true }"
-        [crosshair]="{ horizontal: true }"
-        style="height: 380px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="[
+          '50k points',
+          'LTTB downsampling',
+          'wheel zoom',
+          'drag-select',
+        ]"
+        heading="Zoom, pan & tooltips"
+        description="50,000 points per series stay fluid: paths auto-downsample with <strong>LTTB</strong> (Largest-Triangle-Three-Buckets — peaks survive) to roughly one point per pixel, while hit-testing stays a binary search over the <em>full</em> data. Wheel zooms around the cursor, dragging selects a range, Shift+drag pans, Escape resets — <code>[(visualRange)]</code> is two-way and shared tooltips list every series."
+        [code]="zoomSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="perfData"
+          [series]="perfSeries"
+          [(visualRange)]="perfRange"
+          zoomEnabled="both"
+          [panEnabled]="true"
+          [tooltip]="{ shared: true }"
+          [crosshair]="{ horizontal: true }"
+          style="height: 380px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['candlestick', 'OHLC', 'multi value axes']"
-      heading="Candlestick & multi-axis"
-      description="Candlesticks read OHLC fields; a second value axis (<code>position: 'end'</code>) carries the volume bars so the two scales stay independent. Rising/falling bodies color via the theme tokens."
-      [code]="financialSnippet"
-      language="ts"
-    >
-      <oge-chart
-        [dataSource]="ohlcData"
-        [series]="ohlcSeries"
-        [valueAxis]="[{ title: 'Price' }, { position: 'end', title: 'Volume' }]"
-        style="height: 380px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['candlestick', 'OHLC', 'multi value axes']"
+        heading="Candlestick & multi-axis"
+        description="Candlesticks read OHLC fields; a second value axis (<code>position: 'end'</code>) carries the volume bars so the two scales stay independent. Rising/falling bodies color via the theme tokens."
+        [code]="financialSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="ohlcData"
+          [series]="ohlcSeries"
+          [valueAxis]="[
+            { title: 'Price' },
+            { position: 'end', title: 'Volume' },
+          ]"
+          style="height: 380px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['doughnut', 'smallValuesGrouping', 'explode']"
-      heading="Pie & doughnut"
-      description='Pie and doughnut share the kernel: outside labels with connector lines, small-value grouping folds the tail into an "Others" slice, and clicking a slice (or its legend button) selects and explodes it.'
-      [code]="pieSnippet"
-      language="ts"
-    >
-      <oge-pie-chart
-        [dataSource]="pieData"
-        argumentField="browser"
-        valueField="share"
-        type="doughnut"
-        [innerRadius]="0.55"
-        [smallValuesGrouping]="{ mode: 'topN', topCount: 4 }"
-        title="Browser share"
-        style="height: 360px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['doughnut', 'smallValuesGrouping', 'explode']"
+        heading="Pie & doughnut"
+        description='Pie and doughnut share the kernel: outside labels with connector lines, small-value grouping folds the tail into an "Others" slice, and clicking a slice (or its legend button) selects and explodes it.'
+        [code]="pieSnippet"
+        language="ts"
+      >
+        <oge-pie-chart
+          [dataSource]="pieData"
+          argumentField="browser"
+          valueField="share"
+          type="doughnut"
+          [innerRadius]="0.55"
+          [smallValuesGrouping]="{ mode: 'topN', topCount: 4 }"
+          title="Browser share"
+          style="height: 360px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['radar', 'spider grid', 'polar bar']"
-      heading="Polar & radar"
-      description="Radar/polar on the same kernel: categories slot around the circle, values map radially with nice-tick rings. <code>line</code>/<code>area</code> draw closed radar loops (a null value breaks the loop into a gap), <code>scatter</code> renders markers, <code>bar</code> renders sectors — and <code>spider</code> swaps circular rings for polygons."
-      [code]="polarSnippet"
-      language="ts"
-    >
-      <oge-polar-chart
-        [dataSource]="polarData"
-        [series]="polarSeries"
-        [commonSeries]="{ argumentField: 'skill' }"
-        [spider]="true"
-        title="Team skills"
-        style="height: 400px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['radar', 'spider grid', 'polar bar']"
+        heading="Polar & radar"
+        description="Radar/polar on the same kernel: categories slot around the circle, values map radially with nice-tick rings. <code>line</code>/<code>area</code> draw closed radar loops (a null value breaks the loop into a gap), <code>scatter</code> renders markers, <code>bar</code> renders sectors — and <code>spider</code> swaps circular rings for polygons."
+        [code]="polarSnippet"
+        language="ts"
+      >
+        <oge-polar-chart
+          [dataSource]="polarData"
+          [series]="polarSeries"
+          [commonSeries]="{ argumentField: 'skill' }"
+          [spider]="true"
+          title="Team skills"
+          style="height: 400px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['point annotations', 'text annotations', 'template']"
-      heading="Annotations"
-      description="Annotations anchor on the plot: <code>point</code> draws a marker dot with a connector into a label box at (argument, value); <code>text</code> places the label alone. <code>*ogeChartAnnotationTemplate</code> swaps in arbitrary HTML."
-      [code]="annotationsSnippet"
-      language="ts"
-    >
-      <oge-chart
-        [dataSource]="annoData"
-        [series]="annoSeries"
-        [annotations]="annotations"
-        style="height: 380px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['point annotations', 'text annotations', 'template']"
+        heading="Annotations"
+        description="Annotations anchor on the plot: <code>point</code> draws a marker dot with a connector into a label box at (argument, value); <code>text</code> places the label alone. <code>*ogeChartAnnotationTemplate</code> swaps in arbitrary HTML."
+        [code]="annotationsSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="annoData"
+          [series]="annoSeries"
+          [annotations]="annotations"
+          style="height: 380px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['overview strip', '[(value)]', 'slider handles']"
-      heading="Range selector"
-      description="The overview strip: a mini background chart with a draggable window and two WAI-ARIA slider handles (arrows adjust, Home/End jump, Escape mid-drag restores). Bound to the chart's <code>[(visualRange)]</code>, the two stay in lockstep — drag the window and the chart zooms."
-      [code]="rangeSelectorSnippet"
-      language="ts"
-    >
-      <oge-chart
-        [dataSource]="rangeData"
-        [series]="rangeSeries"
-        [(visualRange)]="linkedRange"
-        zoomEnabled="both"
-        style="height: 300px"
-      />
-      <oge-range-selector
-        [dataSource]="rangeData"
-        [series]="rangeMiniSeries"
-        [(value)]="linkedRange"
-        style="display: block; margin-top: 8px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['overview strip', '[(value)]', 'slider handles']"
+        heading="Range selector"
+        description="The overview strip: a mini background chart with a draggable window and two WAI-ARIA slider handles (arrows adjust, Home/End jump, Escape mid-drag restores). Bound to the chart's <code>[(visualRange)]</code>, the two stay in lockstep — drag the window and the chart zooms."
+        [code]="rangeSelectorSnippet"
+        language="ts"
+      >
+        <oge-chart
+          [dataSource]="rangeData"
+          [series]="rangeSeries"
+          [(visualRange)]="linkedRange"
+          zoomEnabled="both"
+          style="height: 300px"
+        />
+        <oge-range-selector
+          [dataSource]="rangeData"
+          [series]="rangeMiniSeries"
+          [(value)]="linkedRange"
+          style="display: block; margin-top: 8px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['selectionMode', 'locale', 'export-image', 'PNG/SVG']"
-      heading="Selection, i18n & export"
-      description='<code>selectionMode="point"</code> rings clicked points (Ctrl adds to the set). Every user-facing string, aria labels included, lives in <code>OgeChartsMessages</code> (<code>provideOgeChartsConfig()</code>, <code>locale</code>). The dependency-free <code>&#64;oge-ui/charts/export-image</code> entry serializes the live SVG with inlined styles — PNG via canvas rasterization, or the standalone <code>.svg</code> itself.'
-      [code]="eventsExportSnippet"
-      language="ts"
-    >
-      <div class="mb-2 flex gap-2">
-        <button
-          type="button"
-          class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-          (click)="exportPng(chart)"
-        >
-          Export PNG
-        </button>
-        <button
-          type="button"
-          class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-          (click)="exportSvg(chart)"
-        >
-          Export SVG
-        </button>
-      </div>
-      <oge-chart
-        #chart
-        [dataSource]="selectData"
-        [series]="selectSeries"
-        selectionMode="point"
-        [(selectedPoints)]="selected"
-        locale="de"
-        (pointClick)="lastPoint = $event"
-        style="height: 340px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['selectionMode', 'locale', 'export-image', 'PNG/SVG']"
+        heading="Selection, i18n & export"
+        description='<code>selectionMode="point"</code> rings clicked points (Ctrl adds to the set). Every user-facing string, aria labels included, lives in <code>OgeChartsMessages</code> (<code>provideOgeChartsConfig()</code>, <code>locale</code>). The dependency-free <code>&#64;oge-ui/charts/export-image</code> entry serializes the live SVG with inlined styles — PNG via canvas rasterization, or the standalone <code>.svg</code> itself.'
+        [code]="eventsExportSnippet"
+        language="ts"
+      >
+        <div class="mb-2 flex gap-2">
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            (click)="exportPng(chart)"
+          >
+            Export PNG
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            (click)="exportSvg(chart)"
+          >
+            Export SVG
+          </button>
+        </div>
+        <oge-chart
+          #chart
+          [dataSource]="selectData"
+          [series]="selectSeries"
+          selectionMode="point"
+          [(selectedPoints)]="selected"
+          locale="de"
+          (pointClick)="lastPoint = $event"
+          style="height: 340px"
+        />
+      </app-demo-card>
+    }
   `,
 })
 export class ChartsOverviewPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly reactSections = REACT_CHARTS_OVERVIEW_SECTIONS;
   protected readonly gettingStartedSnippet = GETTING_STARTED_SNIPPET;
   protected readonly seriesTypesSnippet = SERIES_TYPES_SNIPPET;
   protected readonly timeAxisSnippet = TIME_AXIS_SNIPPET;

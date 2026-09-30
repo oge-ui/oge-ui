@@ -156,6 +156,30 @@ design notes. Every item below removes one of those workarounds.
   the counter and the native `maxlength` — do not bind `[maxLength]` as well
   (Angular rejects it, NG8022). Now covered by a test and documented.
 
+### Added (React)
+
+- **`@oge-ui/react-charts` — the charts family in React, and
+  `@oge-ui/charts-engine` under both layers (ADR 0003).** `<OgeChart>`,
+  `<OgePieChart>`, `<OgePolarChart>` and `<OgeRangeSelector>` with every
+  member of their Angular counterparts (controlled `visualRange` /
+  `selectedPoints` / `selectedSlices` / `value` pairs, `on*` callbacks incl.
+  the cancelable `onLegendClick` / `onTooltipShowing`, `ref` handles,
+  `renderTooltip` / `renderLegendItem` / `renderAnnotation`,
+  `<OgeChartsConfigProvider>`) plus the `@oge-ui/react-charts/export-image`
+  entry. They render the Angular markup from the same view models, so the
+  Angular stylesheet applies unchanged. The framework-free half of the family
+  — scales, series layout, path builders, pie/radar geometry, the new
+  cartesian/pie/polar/range-selector view-model builders, keyboard maps, the
+  gesture machine, the message catalog and the image exporter — moved out of
+  `@oge-ui/charts` into the new commercial `@oge-ui/charts-engine`, and the
+  Angular components were rewired onto it with their specs unchanged
+  (`@oge-ui/charts`' public API is unchanged). Both packages carry the charts'
+  commercial license; neither enters the MIT `@oge-ui/react` umbrella.
+  Also fixed on the way, in both layers: an `argumentField` given only through
+  `commonSeries` was ignored by argument-axis detection (the docs' stacked
+  series demo plotted nothing), and the Angular charts' size observers are now
+  disconnected on destroy.
+
 ## 0.13.1 — 2026-09-06
 
 Every package moves to 0.13.1 together. A patch release by version number, but
