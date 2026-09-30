@@ -1,6 +1,6 @@
 import { computePivot, pathKey } from '@oge-ui/core';
 import type { PivotFieldConfig } from '@oge-ui/core';
-import { buildPivotWorkbook } from './index';
+import { buildPivotWorkbook } from './export-excel';
 
 interface Sale {
   region: string;

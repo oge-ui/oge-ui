@@ -17,6 +17,13 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
             'Local rows, or any <code>OgePivotStore</code> for remote (pre-aggregated) data.',
         },
         {
+          name: 'fields',
+          type: 'readonly OgePivotFieldDef&lt;T&gt;[]',
+          default: '[]',
+          description:
+            'Fields as data — the programmatic twin of <code>&lt;oge-pivot-field&gt;</code> children (same members), appended after them. Use it when the grid is wrapped in another component, where content queries cannot see projected children.',
+        },
+        {
           name: 'virtualScrolling',
           type: 'boolean',
           default: 'false',
@@ -42,7 +49,7 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
         },
         {
           name: 'fieldChooser',
-          type: "{ applyChangesMode?: 'instantly' | 'onDemand' }",
+          type: 'OgePivotFieldChooserOptions',
           default: '{}',
           description: 'Field-chooser dialog behavior.',
         },
@@ -152,6 +159,23 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
           name: 'OgePivotHeaderCell',
           type: 'OgePivotAxisLine &amp; { rowStart, rowEnd, columnStart, span }',
           description: 'Header cell with 1-based matrix coordinates.',
+        },
+        {
+          name: 'OgePivotFieldDef',
+          type: '{ dataField; id?, caption?, area?, … every &lt;oge-pivot-field&gt; input }',
+          description:
+            'Element type of <code>fields</code> — one declared field as data, with the directive’s defaults.',
+        },
+        {
+          name: 'OgePivotFieldChooserOptions',
+          type: "{ applyChangesMode?: 'instantly' | 'onDemand' }",
+          description:
+            "Field-chooser behavior; <code>'onDemand'</code> edits a draft that applies on Apply.",
+        },
+        {
+          name: 'OgePivotMenuItem',
+          type: '{ text, disabled?, active?, action? }',
+          description: 'One item of the header / measure context menus.',
         },
         {
           name: 'OGE_PIVOT_FIELD_DRAG_TYPE',

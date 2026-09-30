@@ -56,6 +56,10 @@
       "@oge-ui/navigation": ["./packages/navigation/src/index.ts"],
       "@oge-ui/overlay": ["./packages/overlay/src/index.ts"],
       "@oge-ui/pivot": ["./packages/pivot/src/index.ts"],
+      "@oge-ui/pivot-engine": ["./packages/pivot-engine/src/index.ts"],
+      "@oge-ui/pivot-engine/export-excel": [
+        "./packages/pivot-engine/src/export-excel.ts"
+      ],
       "@oge-ui/pivot/export-excel": [
         "./packages/pivot/export-excel/src/index.ts"
       ],
@@ -76,6 +80,10 @@
       "@oge-ui/react-layout": ["./packages/react/layout/src/index.ts"],
       "@oge-ui/react-navigation": ["./packages/react/navigation/src/index.ts"],
       "@oge-ui/react-overlay": ["./packages/react/overlay/src/index.ts"],
+      "@oge-ui/react-pivot": ["./packages/react/pivot/src/index.ts"],
+      "@oge-ui/react-pivot/export-excel": [
+        "./packages/react/pivot/src/export-excel.ts"
+      ],
       "@oge-ui/react-scheduler": ["./packages/react/scheduler/src/index.ts"],
       "@oge-ui/react-tabs": ["./packages/react/tabs/src/index.ts"],
       "@oge-ui/react-tree-list": ["./packages/react/tree-list/src/index.ts"],

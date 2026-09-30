@@ -1,0 +1,7 @@
+// The React pivot renders the exact `.oge-pivot-*` markup the Angular package
+// styles — so its stylesheet IS the Angular package's SCSS, compiled here into
+// this package's own `styles.css`. No second stylesheet, no drift (ADR 0001).
+// That file already pulls the grid's shared structure (context menu, header
+// filter popup, edit popup, load panel, toolbar buttons), so the menus, the
+// value filter and the field chooser are styled without the grid's own CSS.
+@use '../../../pivot/src/lib/pivot-grid/pivot-grid';

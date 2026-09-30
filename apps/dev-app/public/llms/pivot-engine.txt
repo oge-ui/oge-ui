@@ -1,0 +1,35 @@
+# @oge-ui/pivot-engine
+
+> Framework-free pivot grid engine shared by @oge-ui/pivot and @oge-ui/react-pivot (ADR 0003): field layout, header layout and virtualization math, the remote-store adapter, menus, value filters, the field chooser, keyboard navigation, persistence snapshots, the message catalog and the Excel workbook builder. Installed automatically — you rarely import it directly.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.13.1.
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/pivot-engine
+```
+
+## Using this package
+
+This is a **framework-free engine** — no Angular or React import anywhere. It
+is installed automatically as a dependency of the family's render packages
+(the Angular package and its `@oge-ui/react-*` twin), which is where
+component code is written: follow the "Writing OGE code" rules in that
+package's own `llms.txt`. Import from the engine directly only for headless
+use or custom integrations (the pure helpers and the workbook builder).
+
+## Entry points
+
+`@oge-ui/pivot-engine`
+
+- values: `OGE_DEFAULT_PIVOT_MESSAGES`, `OGE_EMPTY_PIVOT_RESULT`, `OGE_PIVOT_FIELD_DRAG_TYPE`, `OGE_PIVOT_OVERSCAN`, `OGE_PIVOT_VIRTUAL_COLUMN_WIDTH`, `OGE_PIVOT_VIRTUAL_HEADER_HEIGHT`, `OGE_PIVOT_VIRTUAL_ROW_HEADER_WIDTH`, `OGE_PIVOT_VIRTUAL_ROW_HEIGHT`, `OgePivotGridCore`, `OgePivotStateCore`, `applyPivotFieldOverrides`, `buildPivotLoadOptions`, `pivotAreaFields`, `pivotAxisDepth`, `pivotAxisLines`, `pivotColumnHeaderCells`, `pivotColumnWindow`, `pivotCustomSummariesOf`, `pivotExpandablePaths`, `pivotFieldConfigOf`, `pivotFieldFnsOf`, `pivotHeaderCellKey`, `pivotHeaderCellsInWindow`, `pivotHeaderRows`, `pivotLineOf`, `pivotMatrixKeyTarget`, `pivotMatrixTemplate`, `pivotOverridesFromSnapshot`, `pivotPanelAreas`, `pivotResultFromPayload`, `pivotRowWindow`, `pivotSlotFlags`, `pivotStateSnapshot`, `pivotVirtualColumnWidth`, `pivotWindowIndexes`, `resolvePivotMessages`
+- types: `OgePivotAxisLine`, `OgePivotCellClickEvent`, `OgePivotCellPosition`, `OgePivotCellPrepared`, `OgePivotDragLike`, `OgePivotFieldChooserOptions`, `OgePivotFieldDef`, `OgePivotFilterPopupState`, `OgePivotGridCoreDeps`, `OgePivotGridInputs`, `OgePivotHeaderCell`, `OgePivotHeaderRow`, `OgePivotMatrixKeyResult`, `OgePivotMatrixTemplate`, `OgePivotMenuItem`, `OgePivotMenuState`, `OgePivotMessages`, `OgePivotPanelArea`, `OgePivotPointer`, `OgePivotRemoteRequest`, `OgePivotWindow`
+
+`@oge-ui/pivot-engine/export-excel`
+
+- values: `buildPivotWorkbook`, `downloadPivotWorkbook`
+- types: `OgePivotExcelExportOptions`
+
+

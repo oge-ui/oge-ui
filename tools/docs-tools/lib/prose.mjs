@@ -140,6 +140,20 @@ export const SITE_VERSION = '${version}';
 export const COMMERCIAL_NOTE =
   'This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.';
 
+/**
+ * What a `platform: 'agnostic'` engine package (ADR 0003) carries instead of
+ * either layer's "Writing OGE code" rules: it has no components, so the rules
+ * of one framework would only mislead a reader of the other.
+ */
+export const ENGINE_NOTE = `## Using this package
+
+This is a **framework-free engine** — no Angular or React import anywhere. It
+is installed automatically as a dependency of the family's render packages
+(the Angular package and its \`@oge-ui/react-*\` twin), which is where
+component code is written: follow the "Writing OGE code" rules in that
+package's own \`llms.txt\`. Import from the engine directly only for headless
+use or custom integrations (the pure helpers and the workbook builder).`;
+
 // ---------------------------------------------------------------------------
 // React render layer (ADR 0001). The rules above describe the Angular packages
 // and are actively wrong for `@oge-ui/react-*`: an assistant that read them

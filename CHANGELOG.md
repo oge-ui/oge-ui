@@ -121,6 +121,24 @@ design notes. Every item below removes one of those workarounds.
   series demo plotted nothing), and the Angular charts' size observers are now
   disconnected on destroy.
 
+- **`@oge-ui/react-pivot` + `@oge-ui/pivot-engine` (commercial, ADR 0003).**
+  The pivot grid's logic above `@oge-ui/core`'s MIT `PivotEngine` — field
+  layout, header layout and virtualization math, the remote-store adapter,
+  header/measure menus, value filters, the field chooser, keyboard
+  navigation, persistence snapshots, the message catalog and the Excel
+  workbook builder — moved into the new framework-free `@oge-ui/pivot-engine`,
+  and `@oge-ui/pivot` became a thin seam over it (its specs pass unchanged;
+  `buildPivotWorkbook` is re-exported from `@oge-ui/pivot/export-excel`, whose
+  `exceljs` optional peer now sits on the engine). `@oge-ui/react-pivot`
+  renders the same `.oge-pivot-*` markup over the same core: `<OgePivotGrid>`
+  with a `fields` array, every input as a prop, `onCellClick` /
+  `onCellDblClick` / `onFieldLayoutChange` / `onStateChange`, a `ref` handle
+  (`drillDown`, `expandAll`, `state`, `getCsv`, `showFieldChooser`, …),
+  `<OgePivotMessagesProvider>`, `stateKey` through `OgeGridStateStorageProvider`,
+  and `@oge-ui/react-pivot/export-excel`. The Angular pivot gains the matching
+  `[fields]` input (the data twin of `<oge-pivot-field>` children). All three
+  pivot-grid docs pages branch to React; the family is in the parity gate.
+
 ### Fixed (theming)
 
 - **A `:root` token override now works — on every component.** Each component

@@ -530,6 +530,31 @@ export const PACKAGES = [
     tier: 'commercial',
     platform: 'react',
   },
+  {
+    dir: 'pivot-engine',
+    npm: '@oge-ui/pivot-engine',
+    label: 'Pivot Engine',
+    summary:
+      'Framework-free pivot grid engine shared by @oge-ui/pivot and @oge-ui/react-pivot (ADR 0003): field layout, header layout and virtualization math, the remote-store adapter, menus, value filters, the field chooser, keyboard navigation, persistence snapshots, the message catalog and the Excel workbook builder. Installed automatically — you rarely import it directly.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+    platform: 'agnostic',
+  },
+  {
+    dir: 'react/pivot',
+    npm: '@oge-ui/react-pivot',
+    label: 'Pivot Grid (React)',
+    summary:
+      'React pivot grid: local rows or a remote pre-aggregated store, four drag & drop field areas, multi-level column headers, expand/collapse on both axes, sub and grand totals, display modes and running totals, header and measure menus, value filters, a field chooser, two-axis virtual scrolling, state persistence and CSV/Excel export — running the same framework-free pivot engine (@oge-ui/pivot-engine) and the same stylesheet as the Angular pivot package.',
+    // The React content renders inside the single Pivot Grid routes (ADR 0002).
+    docsRoot: '/components/pivot-grid',
+    pageDirs: ['react-pivot'],
+    apiPage: 'apps/dev-app/src/app/pages/react-pivot/api.ts',
+    tier: 'commercial',
+    platform: 'react',
+  },
 ];
 
 /** Package dir → entry, for `packages/<dir>/llms.txt` lookups. */
