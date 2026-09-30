@@ -1,10 +1,9 @@
-// Hand-compiled from packages/gantt/src/lib/** and the shared
-// packages/gantt-engine/src/lib/** — keep in sync with the source TSDoc and
-// with the React mirror in ../react-gantt/react-gantt-api-data.ts
-// (`docs-tools:parity` diffs the two).
+// Hand-compiled from packages/react/gantt/src/lib/** — keep in sync with the
+// source TSDoc. Mirrors `../gantt/gantt-api-data.ts` block for block and member
+// for member (`docs-tools:parity` diffs the two).
 import type { ApiSections } from '../../shared/api-reference';
 
-export const OGE_GANTT_API: ApiSections = {
+export const OGE_REACT_GANTT_API: ApiSections = {
   properties: [
     {
       title: 'Data',
@@ -14,7 +13,7 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'readonly T[]',
           default: '[]',
           description:
-            'Task items — a plain array, copied into an internal working set; the input is never mutated. Edits surface through the past-tense events.',
+            'Task items — a plain array, copied into an internal working set; the prop is never mutated. Edits surface through the past-tense callbacks. A new array reference resets the working set and the undo history.',
         },
         {
           name: 'dependencies',
@@ -50,14 +49,14 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'readonly OgeGanttResource[]',
           default: '[]',
           description:
-            "Resource choices: labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own <code>calendar</code> overrides <code>workCalendar</code> for its tasks (first assigned resource with a calendar wins).",
+            "Resource choices (<code>{ id, text, color?, calendar? }</code>): labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own <code>calendar</code> overrides <code>workCalendar</code> for its tasks (first assigned resource with a calendar wins).",
         },
         {
           name: 'resourceIdExpr',
           type: 'string | ((item: T) =&gt; unknown)',
           default: "'resourceId'",
           description:
-            "The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape: array stores stay arrays, scalar stores stay scalar while at most one id is assigned.",
+            "The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape.",
         },
       ],
     },
@@ -65,11 +64,11 @@ export const OGE_GANTT_API: ApiSections = {
       title: 'Appearance & behavior',
       entries: [
         {
-          name: 'scaleType',
+          name: 'scaleType / defaultScaleType',
           type: "'hours' | 'days' | 'weeks' | 'months'",
           default: "'days'",
           description:
-            'Timeline scale — calendar-true ticks (real month lengths, DST-safe). Two-way (<code>[(scaleType)]</code>); the toolbar zoom and Ctrl+wheel write it.',
+            'Timeline scale — calendar-true ticks (real month lengths, DST-safe). Controlled when <code>scaleType</code> is set (pair it with <code>onScaleTypeChange</code>); <code>defaultScaleType</code> seeds the uncontrolled state. The toolbar zoom and zoom-to-fit write it.',
         },
         {
           name: 'firstDayOfWeek',
@@ -89,7 +88,7 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'number',
           default: '360',
           description:
-            'Initial width (px) of the task pane; the splitter between the panes drags.',
+            'Width (px) of the task pane; the splitter between the panes drags it, and a new value re-applies.',
         },
         {
           name: 'taskTitlePosition',
@@ -121,21 +120,21 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'OgeGanttWorkCalendar | null',
           default: 'null',
           description:
-            'Work-time calendar (<code>{ workingDays?, holidays? }</code>, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in <em>working</em> days. The <code>holidays</code> input merges in; per-resource <code>calendar</code>s override it per task.',
+            'Work-time calendar (<code>{ workingDays?, holidays? }</code>, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in <em>working</em> days. The <code>holidays</code> prop merges in; per-resource <code>calendar</code>s override it per task.',
         },
         {
           name: 'showResourceWorkload',
           type: 'boolean',
           default: 'false',
           description:
-            'Renders the per-resource workload band under the chart: merged assignment segments per resource, overallocated stretches (concurrent assignments) in the danger color.',
+            'Renders the per-resource workload band under the chart: merged assignment segments per resource, overallocated stretches in the danger color.',
         },
         {
           name: 'stripLines',
           type: 'readonly OgeGanttStripLine[]',
           default: '[]',
           description:
-            'Vertical markers: <code>{ start, end?, label?, color? }</code> — a line without <code>end</code>, a shaded range with it (dx parity).',
+            'Vertical markers: <code>{ start, end?, label?, color? }</code> — a line without <code>end</code>, a shaded range with it.',
         },
         {
           name: 'autoScheduling',
@@ -148,21 +147,27 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'locale',
           type: 'string | undefined',
           description:
-            'BCP 47 locale for every <code>Intl</code> format; defaults to the config locale, then the browser locale.',
+            'BCP 47 locale for every <code>Intl</code> format; defaults to the provider locale, then the browser locale.',
         },
         {
           name: 'messages',
           type: 'Partial&lt;OgeGanttMessages&gt;',
           default: '{}',
           description:
-            'Per-instance message overrides, merged over the DI config per top-level block.',
+            'Per-instance message overrides, merged over the provider config per top-level block.',
         },
         {
-          name: 'selectedTaskKey',
+          name: 'selectedTaskKey / defaultSelectedTaskKey',
           type: 'RowKey | null',
           default: 'null',
           description:
-            'The selected task. Two-way (<code>[(selectedTaskKey)]</code>).',
+            'The selected task. Controlled when <code>selectedTaskKey</code> is set (pair it with <code>onSelectedTaskKeyChange</code>); <code>defaultSelectedTaskKey</code> seeds the uncontrolled state and is applied at mount.',
+        },
+        {
+          name: 'className / style',
+          type: 'string / CSSProperties',
+          description:
+            'Applied to the <code>.oge-gantt</code> host — give it a height (the body scrolls inside it).',
         },
       ],
     },
@@ -187,13 +192,31 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'boolean',
           default: 'false',
           description:
-            '<strong>Display-only shorthand</strong>: equivalent to <code>editingEnabled=false</code>, hides every editing affordance.',
+            '<strong>Display-only shorthand</strong>: equivalent to <code>editingEnabled={false}</code>, hides every editing affordance.',
+        },
+      ],
+    },
+    {
+      title: 'Render props',
+      entries: [
+        {
+          name: 'renderTask',
+          type: '(context: OgeGanttTaskRenderContext&lt;T&gt;) =&gt; ReactNode',
+          description:
+            "Replaces the bar's title content; context <code>{ task }</code> — the React form of <code>*ogeGanttTaskTemplate</code>.",
+        },
+        {
+          name: 'renderTooltip',
+          type: '(context: OgeGanttTooltipRenderContext&lt;T&gt;) =&gt; ReactNode',
+          description:
+            "Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context <code>{ task }</code> — the React form of <code>*ogeGanttTooltipTemplate</code>.",
         },
       ],
     },
   ],
   methods: [
     {
+      title: 'Handle (ref)',
       entries: [
         {
           name: 'insertTask(taskData) / updateTask(taskData, patch) / deleteTask(taskData)',
@@ -202,7 +225,7 @@ export const OGE_GANTT_API: ApiSections = {
             'Programmatic CRUD through the same cancelable pipelines as interactive editing — one undo step each.',
         },
         {
-          name: 'insertDependency(predecessorData, successorData, type?) / deleteDependency(dependencyData)',
+          name: 'insertDependency(predecessorKey, successorKey, type?) / deleteDependency(dependencyData)',
           type: 'void',
           description:
             'Guarded link CRUD; inserting runs the same cycle check as interactive drawing.',
@@ -217,7 +240,7 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'zoomIn() / zoomOut() / zoomToFit()',
           type: 'void',
           description:
-            'Steps the scale (hours ⇄ days ⇄ weeks ⇄ months) / picks the scale that fits the whole plan and scrolls to it.',
+            'Steps the scale (hours ⇄ days ⇄ weeks ⇄ months) / picks the finest scale that fits the whole plan. Each reports through <code>onScaleTypeChange</code>.',
         },
         {
           name: 'scrollToDate(date)',
@@ -228,7 +251,7 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'expandAll() / collapseAll() / expandAllToLevel(level) / expandToTask(key)',
           type: 'void',
           description:
-            'Tree expansion control; <code>expandToTask</code> also selects and reveals the row.',
+            'Tree expansion control; <code>expandToTask</code> also focuses and reveals the row.',
         },
         {
           name: 'showTaskDetailsDialog(taskData?)',
@@ -240,7 +263,7 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'indentTask(task) / outdentTask(task)',
           type: 'void',
           description:
-            'Reparents through the guarded update pipeline: indent makes the task a child of its previous sibling (MS Project parity), outdent lifts it to the grandparent. Also on the built-in context menu and <strong>Alt+Shift+Left/Right</strong> on the focused row.',
+            'Reparents through the guarded update pipeline: indent makes the task a child of its previous sibling, outdent lifts it to the grandparent. Also on the built-in context menu and <strong>Alt+Shift+Left/Right</strong> on the focused row.',
         },
         {
           name: 'focus()',
@@ -259,22 +282,22 @@ export const OGE_GANTT_API: ApiSections = {
       title: 'Export entry points (lazy, optional peers)',
       entries: [
         {
-          name: 'exportGanttToExcel(gantt, options?) / buildGanttExcelWorkbook(data, options?)',
-          type: '@oge-ui/gantt/export-excel',
+          name: 'exportGanttToExcel(handle, options?) / buildGanttExcelWorkbook(data, options?)',
+          type: '@oge-ui/react-gantt/export-excel',
           description:
-            'Lazy Excel export (<code>exceljs</code> peer): the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. Import the entry point dynamically so exceljs stays out of the initial bundle.',
+            "Lazy Excel export (<code>exceljs</code> peer) from the Gantt's <code>ref</code> handle: the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. The builder is the same one the Angular entry re-exports.",
         },
         {
-          name: 'exportGanttToPdf(gantt, options?) / buildGanttPdfDocument(data, options?)',
-          type: '@oge-ui/gantt/export-pdf',
+          name: 'exportGanttToPdf(handle, options?) / buildGanttPdfDocument(data, options?)',
+          type: '@oge-ui/react-gantt/export-pdf',
           description:
             'Lazy PDF export (<code>jspdf</code> peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination.',
         },
         {
-          name: 'exportGanttToPng(gantt, options?) / buildGanttCanvas(data, options?)',
-          type: '@oge-ui/gantt/export-image',
+          name: 'exportGanttToPng(handle, options?) / buildGanttCanvas(data, options?)',
+          type: '@oge-ui/react-gantt/export-image',
           description:
-            'Lazy PNG export with <strong>no dependencies</strong> — plain canvas drawing of the same chart (configurable width, pixel ratio, background and critical-path outlining).',
+            'Lazy PNG export with <strong>no dependencies</strong> — plain canvas drawing of the same chart.',
         },
       ],
     },
@@ -284,32 +307,32 @@ export const OGE_GANTT_API: ApiSections = {
       title: 'Editing (cancelable pipeline)',
       entries: [
         {
-          name: 'taskInserting / taskUpdating / taskDeleting',
-          type: 'OgeGanttTask*ingEvent&lt;T&gt;',
+          name: 'onTaskInserting / onTaskUpdating / onTaskDeleting',
+          type: '(event: OgeGanttTask*ingEvent&lt;T&gt;) =&gt; void',
           description:
-            'Cancelable pre-events — set <code>cancel = true</code> to veto before the store changes.',
+            'Cancelable pre-events — set <code>event.cancel = true</code> to veto before the store changes.',
         },
         {
-          name: 'taskInserted / taskUpdated / taskDeleted',
-          type: 'OgeGanttTask*edEvent&lt;T&gt;',
+          name: 'onTaskInserted / onTaskUpdated / onTaskDeleted',
+          type: '(event: OgeGanttTask*edEvent&lt;T&gt;) =&gt; void',
           description: 'Fired only for applied changes — persist from these.',
         },
         {
-          name: 'dependencyInserting / dependencyDeleting',
-          type: 'OgeGanttDependency*ingEvent',
+          name: 'onDependencyInserting / onDependencyDeleting',
+          type: '(event: OgeGanttDependency*ingEvent) =&gt; void',
           description:
             'Cancelable link pre-events; inserting carries <code>predecessorKey</code>, <code>successorKey</code> and <code>type</code>.',
         },
         {
-          name: 'dependencyInserted / dependencyDeleted',
-          type: 'OgeGanttDependency*edEvent&lt;D&gt;',
+          name: 'onDependencyInserted / onDependencyDeleted',
+          type: '(event: OgeGanttDependency*edEvent&lt;D&gt;) =&gt; void',
           description: 'Applied link changes.',
         },
         {
-          name: 'taskEditDialogShowing',
-          type: 'OgeGanttDialogShowingEvent&lt;T&gt;',
+          name: 'onTaskEditDialogShowing',
+          type: '(event: OgeGanttDialogShowingEvent&lt;T&gt;) =&gt; void',
           description:
-            'Cancelable, before the task dialog opens; replace <code>formItems</code> to customize the form (dx <code>onTaskEditDialogShowing</code> parity).',
+            'Cancelable, before the task dialog opens; replace <code>formItems</code> (React form items, render props allowed) to customize the form.',
         },
       ],
     },
@@ -317,21 +340,22 @@ export const OGE_GANTT_API: ApiSections = {
       title: 'Interaction',
       entries: [
         {
-          name: 'taskClick / taskDblClick / taskContextMenu',
-          type: 'OgeGanttTaskClickEvent&lt;T&gt;',
+          name: 'onTaskClick / onTaskDblClick / onTaskContextMenu',
+          type: '(event: OgeGanttTaskClickEvent&lt;T&gt;) =&gt; void',
           description:
-            'Bar/row pointer events with the normalized task and the raw <code>MouseEvent</code>. Right-click also opens the <strong>built-in context menu</strong> (edit, new task/subtask, indent/outdent, delete — labels in <code>messages.menu</code>); listen to <code>taskContextMenu</code> to add your own entries alongside it.',
+            'Bar/row pointer events with the normalized task and the native <code>MouseEvent</code>. Right-click also opens the <strong>built-in context menu</strong> (labels in <code>messages.menu</code>).',
         },
         {
-          name: 'selectionChanged',
-          type: 'OgeGanttSelectionChangedEvent&lt;T&gt;',
+          name: 'onSelectionChanged',
+          type: '(event: OgeGanttSelectionChangedEvent&lt;T&gt;) =&gt; void',
           description:
             'Single-row selection changed (task or <code>null</code>).',
         },
         {
-          name: 'scaleTypeChange / selectedTaskKeyChange',
-          type: 'OgeGanttScaleType / RowKey | null',
-          description: 'The two-way model outputs.',
+          name: 'onScaleTypeChange / onSelectedTaskKeyChange',
+          type: '(value: OgeGanttScaleType) / (key: RowKey | null) =&gt; void',
+          description:
+            'The controlled halves of <code>scaleType</code> and <code>selectedTaskKey</code>.',
         },
       ],
     },
@@ -340,10 +364,16 @@ export const OGE_GANTT_API: ApiSections = {
     {
       entries: [
         {
+          name: 'OgeGanttHandle&lt;T, D&gt;',
+          type: 'interface',
+          description:
+            'The <code>ref</code> handle: every method listed above.',
+        },
+        {
           name: 'OgeGanttTask&lt;T&gt;',
           type: 'interface',
           description:
-            'The normalized task — the payload of events and templates: <code>key</code>, <code>parentKey</code>, <code>source</code> (the original item), <code>title</code>, <code>start</code>/<code>end</code>, <code>progress</code>, <code>color</code>, baseline dates, <code>isSummary</code>/<code>isMilestone</code> and <code>level</code>.',
+            'The normalized task — the payload of callbacks and render props: <code>key</code>, <code>parentKey</code>, <code>source</code> (the original item), <code>title</code>, <code>start</code>/<code>end</code>, <code>progress</code>, <code>color</code>, baseline dates, <code>isSummary</code>/<code>isMilestone</code> and <code>level</code>.',
         },
         {
           name: 'OgeGanttDependency&lt;D&gt;',
@@ -384,7 +414,7 @@ export const OGE_GANTT_API: ApiSections = {
           name: 'OgeGanttResource',
           type: 'interface',
           description:
-            '<code>{ id, text, color?, calendar? }</code> — one assignable resource (the <code>resources</code> item type).',
+            '<code>{ id, text, color?, calendar? }</code> — one assignable resource.',
         },
         {
           name: 'OgeGanttExportData&lt;T&gt; / OgeGanttExportColumn&lt;T&gt;',
@@ -398,43 +428,42 @@ export const OGE_GANTT_API: ApiSections = {
           description: 'Task title placement relative to the bar.',
         },
         {
-          name: '[ogeGanttTaskTemplate]',
-          type: 'structural directive (OgeGanttTaskTemplate)',
+          name: 'OgeGanttTaskRenderContext&lt;T&gt; / OgeGanttTooltipRenderContext&lt;T&gt;',
+          type: 'interface',
           description:
-            "Replaces the bar's title content; context <code>OgeGanttTaskTemplateContext</code>: <code>{ $implicit: OgeGanttTask&lt;T&gt; }</code>.",
-        },
-        {
-          name: '[ogeGanttTooltipTemplate]',
-          type: 'structural directive (OgeGanttTooltipTemplate)',
-          description:
-            "Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context <code>OgeGanttTooltipTemplateContext</code>: <code>{ $implicit: OgeGanttTask&lt;T&gt; }</code>.",
+            'The render-prop contexts: <code>{ task: OgeGanttTask&lt;T&gt; }</code>.',
         },
       ],
     },
   ],
 };
 
-export const OGE_GANTT_CONFIG_API: ApiSections = {
+export const OGE_REACT_GANTT_CONFIG_API: ApiSections = {
   properties: [
     {
       entries: [
         {
-          name: 'provideOgeGanttConfig(config)',
-          type: 'Provider',
+          name: 'OgeGanttConfigProvider',
+          type: '<OgeGanttConfigProvider config>',
           description:
-            'Configures every Gantt below the provider (<code>OgeGanttConfigInput</code>); shallow merge over <code>OGE_DEFAULT_GANTT_CONFIG</code> per top-level key — a partial <code>messages</code> replaces whole nested blocks. The token is <code>OGE_GANTT_CONFIG</code> (<code>OgeGanttConfig</code>).',
+            'Configures every Gantt below it (<code>OgeGanttConfigInput</code>); shallow merge over the enclosing provider (or <code>OGE_DEFAULT_GANTT_CONFIG</code>) per top-level key — a partial <code>messages</code> replaces whole nested blocks. A new <code>config</code> object re-resolves, so switching the UI language at runtime is a state change.',
+        },
+        {
+          name: 'useOgeGanttConfig()',
+          type: 'OgeGanttConfig',
+          description: 'The resolved Gantt config for the current subtree.',
         },
         {
           name: 'messages',
           type: 'OgeGanttMessages',
           description:
-            'Every user-facing string, aria labels included: <code>toolbar</code> (<code>OgeGanttToolbarMessages</code>), <code>columns</code> (<code>OgeGanttColumnMessages</code>), <code>dialog</code> (<code>OgeGanttDialogMessages</code>), <code>grid</code> (<code>OgeGanttGridMessages</code>, aria templates with <code>{token}</code> placeholders) and <code>announcements</code> (<code>OgeGanttAnnouncementMessages</code>, live-region templates). Defaults: <code>OGE_DEFAULT_GANTT_MESSAGES</code>.',
+            'Every user-facing string, aria labels included: <code>toolbar</code>, <code>menu</code>, <code>columns</code>, <code>dialog</code>, <code>grid</code> (aria templates with <code>{token}</code> placeholders) and <code>announcements</code> (live-region templates). Defaults: <code>OGE_DEFAULT_GANTT_MESSAGES</code> — single-sourced in <code>@oge-ui/gantt-engine</code>, identical to the Angular catalog.',
         },
         {
           name: 'locale',
           type: 'string | undefined',
           description:
-            'BCP 47 locale for every <code>Intl</code> format in scope; a per-instance <code>[locale]</code> input wins.',
+            'BCP 47 locale for every <code>Intl</code> format in scope; a per-instance <code>locale</code> prop wins.',
         },
         {
           name: 'rowHeight',

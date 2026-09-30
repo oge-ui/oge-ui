@@ -384,6 +384,19 @@ export const PACKAGES = [
     platform: 'react',
   },
   {
+    dir: 'react/gantt',
+    npm: '@oge-ui/react-gantt',
+    label: 'Gantt (React)',
+    summary:
+      'React Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, auto-scheduling on work calendars, resources and workload, drag editing with Escape-cancel, snapshot undo/redo, built-in context menu and task dialog, Excel/PDF/PNG export — running the same @oge-ui/gantt-engine controller and stylesheet as the Angular Gantt package.',
+    // The React content renders inside the single Gantt routes (ADR 0002).
+    docsRoot: '/components/gantt',
+    pageDirs: ['react-gantt'],
+    apiPage: 'apps/dev-app/src/app/pages/react-gantt/api.ts',
+    tier: 'commercial',
+    platform: 'react',
+  },
+  {
     dir: 'react/overlay',
     npm: '@oge-ui/react-overlay',
     label: 'Overlay (React)',

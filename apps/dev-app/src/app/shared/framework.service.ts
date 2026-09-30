@@ -55,6 +55,9 @@ const COVERAGE: Readonly<
     overlay: '*',
     // overview and api both branch
     upload: '*',
+    // commercial: @oge-ui/react-gantt on @oge-ui/gantt-engine (ADR 0003);
+    // overview and api both branch
+    gantt: '*',
     // R6 complete: every feature page of the grid now branches. The
     // engine-level sub-pages that share this family — playground, sorting,
     // virtual-scroll, infinite-scroll, remote-data, live-updates — stay

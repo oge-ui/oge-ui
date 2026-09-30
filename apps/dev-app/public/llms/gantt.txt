@@ -127,7 +127,7 @@ _Data_
 | `keyExpr / parentKeyExpr / titleExpr / startExpr / endExpr / progressExpr / colorExpr` | `string \| ((item: T) => unknown)` | `'id' / 'parentId' / 'title' / 'start' / 'end' / 'progress' / 'color'` | Task field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
 | `baselineStartExpr / baselineEndExpr` | `string \| ((item: T) => unknown)` | `'baselineStart' / 'baselineEnd'` | Baseline plan fields — tasks with both render the original plan as a slim bar under the live bar. |
 | `dependencyKeyExpr / predecessorKeyExpr / successorKeyExpr / dependencyTypeExpr` | `string \| ((item: D) => unknown)` | `'id' / 'predecessorId' / 'successorId' / 'type'` | Dependency field mapping. Types are `'FS' \| 'SS' \| 'FF' \| 'SF'` (dx numeric codes 0–3 also parse); missing type means FS. |
-| `resources` | `readonly { id, text, color?, calendar? }[]` | `[]` | Resource choices: labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own `calendar` overrides `workCalendar` for its tasks (first assigned resource with a calendar wins). |
+| `resources` | `readonly OgeGanttResource[]` | `[]` | Resource choices: labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own `calendar` overrides `workCalendar` for its tasks (first assigned resource with a calendar wins). |
 | `resourceIdExpr` | `string \| ((item: T) => unknown)` | `'resourceId'` | The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape: array stores stay arrays, scalar stores stay scalar while at most one id is assigned. |
 
 _Appearance & behavior_
@@ -212,6 +212,7 @@ _Interaction_
 | `OgeGanttColumn` | `interface` | A task-list column: `{ field, header?, widthPx?, format? }`. |
 | `OgeGanttStripLine` | `interface` | `{ start, end?, label?, color? }` — a chart marker line or range. |
 | `OgeGanttWorkCalendar` | `interface` | `{ workingDays?, holidays? }` — the work-time calendar (0 = Sunday; default working week Monday-Friday). |
+| `OgeGanttResource` | `interface` | `{ id, text, color?, calendar? }` — one assignable resource (the `resources` item type). |
 | `OgeGanttExportData<T> / OgeGanttExportColumn<T>` | `interface` | The exporter snapshot: `tasks`, `columns` (header + pane-identical `text()`), `rangeStart`/`rangeEnd`, `critical` keys and `resourceText()`. |
 | `OgeGanttTaskTitlePosition` | `'inside' \| 'outside' \| 'none'` | Task title placement relative to the bar. |
 | `[ogeGanttTaskTemplate]` | `structural directive (OgeGanttTaskTemplate)` | Replaces the bar's title content; context `OgeGanttTaskTemplateContext`: `{ $implicit: OgeGanttTask<T> }`. |
