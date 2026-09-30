@@ -17,6 +17,7 @@ import type {
   OgeExportData,
   OgeExportOptions,
 } from './lib/grid/grid-options';
+import type { OgeTreeExportData } from './lib/tree-list/tree-list-core';
 
 export interface OgeExcelExportOptions<
   T = unknown,
@@ -87,5 +88,46 @@ export function buildExcelWorkbook<T>(
       to: { row: 1, column: data.columns.length },
     };
   }
+  return workbook;
+}
+
+// --- tree list ----------------------------------------------------------------
+
+/** Options of {@link buildTreeExcelWorkbook} and the tree-list download helpers. */
+export interface OgeTreeExcelExportOptions {
+  /** Download file name. Default: `tree-list.xlsx`. */
+  filename?: string;
+  /** Worksheet name. Default: `Data`. */
+  sheetName?: string;
+}
+
+/**
+ * Builds an exceljs Workbook from tree export data — pure and testable; the
+ * one-call tree list → download flow is `exportOgeTreeListToExcel` in
+ * `@oge-ui/tree-list/export-excel` (Angular) or
+ * `@oge-ui/react-tree-list/export-excel`.
+ *
+ * Each data row's `outlineLevel` is set to its tree depth so Excel's native
+ * row outlining (collapse/expand groups) mirrors the on-screen hierarchy —
+ * no whitespace indentation in the first column.
+ */
+export function buildTreeExcelWorkbook<T>(
+  data: OgeTreeExportData<T>,
+  options: OgeTreeExcelExportOptions = {},
+): Workbook {
+  const workbook = new Workbook();
+  const sheet = workbook.addWorksheet(options.sheetName ?? 'Data');
+  sheet.columns = data.columns.map((column) => ({
+    header: column.caption,
+    key: column.field ?? column.caption,
+    width: Math.max(column.caption.length + 4, 12),
+  }));
+  sheet.getRow(1).font = { bold: true };
+  data.rows.forEach((row, index) => {
+    const excelRow = sheet.addRow(
+      data.columns.map((column) => cellValue(column, row, undefined)),
+    );
+    excelRow.outlineLevel = data.levels[index] ?? 0;
+  });
   return workbook;
 }

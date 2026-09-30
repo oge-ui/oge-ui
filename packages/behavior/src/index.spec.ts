@@ -59,6 +59,13 @@ const ENTRY_POINTS = [
   'evaluateOgeValidationRules',
   'resolveOgeFormsConfig',
   'formColumnsCss',
+  // tree list
+  'OgeTreeListCore',
+  'ogeTreeCsv',
+  'ogeTreeDataSource',
+  'ogeTreeDropPosition',
+  'ogeTreeHeaderValueGroups',
+  'ogeTreeHeaderValueText',
   // grid
   'OgeGridKeyboardNavCore',
   'OgeGridColumnLayoutCore',

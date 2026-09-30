@@ -1,54 +1,16 @@
-import { Workbook } from 'exceljs';
-import type { OgeExportColumn } from '@oge-ui/grid';
-import type { OgeTreeExportData, OgeTreeList } from '@oge-ui/tree-list';
+import type { OgeTreeList } from '@oge-ui/tree-list';
+import {
+  buildTreeExcelWorkbook,
+  type OgeTreeExcelExportOptions,
+} from '@oge-ui/behavior/export-excel';
 
-export interface OgeTreeExcelExportOptions {
-  /** Download file name. Default: `tree-list.xlsx`. */
-  filename?: string;
-  /** Worksheet name. Default: `Data`. */
-  sheetName?: string;
-}
-
-/** Cell value per data type: numbers/dates stay typed, lookups/booleans use their display text. */
-function cellValue<T>(column: OgeExportColumn<T>, row: T): unknown {
-  const raw = column.accessor(row);
-  if (raw == null) return '';
-  if (column.dataType === 'number' && typeof raw === 'number') return raw;
-  if (column.dataType === 'date') {
-    const date = raw instanceof Date ? raw : new Date(String(raw));
-    if (!Number.isNaN(date.getTime())) return date;
-  }
-  return column.format ? column.format(raw) : raw;
-}
-
-/**
- * Builds an exceljs Workbook from tree export data — pure and testable; use
- * {@link exportOgeTreeListToExcel} for the one-call tree-list → download flow.
- *
- * Each data row's `outlineLevel` is set to its tree depth so Excel's native
- * row outlining (collapse/expand groups) mirrors the on-screen hierarchy —
- * no whitespace indentation in the first column.
- */
-export function buildTreeExcelWorkbook<T>(
-  data: OgeTreeExportData<T>,
-  options: OgeTreeExcelExportOptions = {},
-): Workbook {
-  const workbook = new Workbook();
-  const sheet = workbook.addWorksheet(options.sheetName ?? 'Data');
-  sheet.columns = data.columns.map((column) => ({
-    header: column.caption,
-    key: column.field ?? column.caption,
-    width: Math.max(column.caption.length + 4, 12),
-  }));
-  sheet.getRow(1).font = { bold: true };
-  data.rows.forEach((row, index) => {
-    const excelRow = sheet.addRow(
-      data.columns.map((column) => cellValue(column, row)),
-    );
-    excelRow.outlineLevel = data.levels[index] ?? 0;
-  });
-  return workbook;
-}
+// The outlined workbook builder is non-trivial and framework-free, so it lives
+// in `@oge-ui/behavior` and both render layers call the same one. Re-exported
+// here so this entry point's public API is unchanged.
+export {
+  buildTreeExcelWorkbook,
+  type OgeTreeExcelExportOptions,
+} from '@oge-ui/behavior/export-excel';
 
 /**
  * Exports the tree-list's current view (expansion + filter applied) as an

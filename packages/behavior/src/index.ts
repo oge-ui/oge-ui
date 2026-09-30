@@ -257,6 +257,28 @@ export type {
   OgeSortChangedEvent,
   OgeSortingOptions,
 } from './lib/grid/grid-options';
+// --- tree list ---
+export {
+  OgeTreeListCore,
+  ogeTreeCsv,
+  ogeTreeDataSource,
+  ogeTreeDropPosition,
+  ogeTreeHeaderValueGroups,
+  ogeTreeHeaderValueText,
+  type OgeTreeBooleanMessages,
+  type OgeTreeExportData,
+  type OgeTreeExportSourceColumn,
+  type OgeTreeInitNewRowEvent,
+  type OgeTreeListCoreDeps,
+  type OgeTreeListStateSlices,
+  type OgeTreeLoadMode,
+  type OgeTreeOrphanPolicy,
+  type OgeTreeRowReparentEvent,
+  type OgeTreeRowToggleEvent,
+  type OgeTreeRowTogglingEvent,
+  type OgeTreeSearchColumn,
+  type OgeTreeToggleNotifier,
+} from './lib/tree-list/tree-list-core';
 export {
   OgeSelectListCore,
   type OgeSelectListCoreDeps,

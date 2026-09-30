@@ -35,33 +35,45 @@ import {
   type TemplateRef,
 } from '@angular/core';
 import {
-  ArrayDataSource,
-  ancestorsOf,
-  buildCsv,
-  buildTreeIndex,
-  computeTreeCheckStates,
-  type CsvOptions,
-  createFieldAccessor,
-  createFilterPredicate,
-  filterTreeKeys,
-  flattenNestedTree,
-  flattenTreeData,
-  buildSearchHighlightSegments,
-  type SearchHighlightSegment,
-  foldText,
-  type FilterExpr,
-  resolveSelectedKeys,
-  toggleTreeSelection,
   type CheckState,
+  type CsvOptions,
   type DataRowNode,
   type DataSource,
+  type FilterExpr,
   type FilterOperator,
   type RowKey,
   type RowNode,
+  type SearchHighlightSegment,
   type TreeFilterMode,
   type TreeIndex,
   type TreeListStateSnapshot,
+  buildSearchHighlightSegments,
+  foldText,
 } from '@oge-ui/core';
+import {
+  OgeTreeListCore,
+  allHeaderValuesSelected,
+  effectiveFilterOperator,
+  filterOperatorSymbol,
+  filterRowOperatorChoices,
+  headerGroupState,
+  isHeaderValueSelected,
+  ogeTreeCsv,
+  ogeTreeDropPosition,
+  ogeTreeHeaderValueGroups,
+  ogeTreeHeaderValueText,
+  rowClickSelectionIntent,
+  rowFilterExpr,
+  toggleAllHeaderValues,
+  toggleHeaderGroup,
+  toggleHeaderValue,
+  type OgeTreeDropPosition,
+  type OgeTreeExportData,
+  type OgeTreeInitNewRowEvent,
+  type OgeTreeRowReparentEvent,
+  type OgeTreeRowToggleEvent,
+  type OgeTreeRowTogglingEvent,
+} from '@oge-ui/behavior';
 import {
   OgeContextMenuEcho,
   isOgeContextMenuKey,
@@ -75,18 +87,13 @@ import {
   ColumnLayoutModel,
   EditingModel,
   ColumnModel,
-  DeferredChildrenLoader,
   KeyboardNavModel,
   OGE_STATE_STORAGE,
   RowVirtualizerModel,
-  buildRowFilterExpr,
   dateFilterExpr,
   createStatePersistence,
-  defaultOperatorFor,
   humanize,
-  isDataSource,
   lookupTextOf,
-  type PendingChildRequest,
   type ResolvedColumn as FoundationResolvedColumn,
 } from '@oge-ui/grid/foundation';
 import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
@@ -112,8 +119,6 @@ import {
   type OgeBuilderGroup,
   type OgeFilterBuilderField,
   type OgeCommandButton,
-  type OgeExportColumn,
-  type OgeExportData,
   type OgeCellClickEvent,
   type OgeCellTemplateContext,
   type OgeContextMenuEvent,
@@ -144,89 +149,24 @@ import {
   type OgeSortingOptions,
   type OgeSelectionMode,
 } from '@oge-ui/grid';
+import { SIGNAL_ADAPTER, cellOf } from './signal-adapter';
 
 /** Tree-list view of the shared column view-model: `source` is the OgeColumn. */
 type ResolvedColumn<T = unknown> = FoundationResolvedColumn<T, OgeColumn<T>>;
 
-/** Fired when a row is expanded or collapsed. */
-export interface OgeTreeRowToggleEvent<T = unknown> {
-  key: RowKey;
-  row: T;
-}
-
-/** Cancelable pre-toggle notification; set `cancel = true` to veto. */
-export interface OgeTreeRowTogglingEvent<T = unknown> {
-  key: RowKey;
-  row: T;
-  cancel: boolean;
-}
-
-/** Prefill hook for `addRow()`: values written here stage onto the new row. */
-export interface OgeTreeInitNewRowEvent {
-  key: RowKey;
-  /** Parent staged by `addRow(parentKey)`, if any. */
-  parentKey: RowKey | null;
-  values: Record<string, unknown>;
-}
-
-const EMPTY_CHECK_STATES: ReadonlyMap<RowKey, CheckState> = new Map();
+// The event payloads and the export shape are the tree list's shared
+// vocabulary — they live in `@oge-ui/behavior` beside `OgeTreeListCore` so both
+// render layers speak the same types, and are re-exported here unchanged.
+export type {
+  OgeTreeDropPosition,
+  OgeTreeExportData,
+  OgeTreeInitNewRowEvent,
+  OgeTreeRowReparentEvent,
+  OgeTreeRowToggleEvent,
+  OgeTreeRowTogglingEvent,
+};
 
 const COLUMN_DRAG_TYPE = 'application/x-oge-column';
-
-/** Export payload of the visible tree; `levels` aligns with `rows`. */
-export interface OgeTreeExportData<T = unknown> extends OgeExportData<T> {
-  /** Zero-based depth per exported row (drives spreadsheet outline levels). */
-  levels: readonly number[];
-}
-
-/** Where a dragged row lands relative to the drop target. */
-export type OgeTreeDropPosition = 'inside' | 'before' | 'after';
-
-/** Fired after a row is dropped onto (or next to) another row. */
-export interface OgeTreeRowReparentEvent<T = unknown> {
-  key: RowKey;
-  row: T;
-  fromParentKey: RowKey | null;
-  toParentKey: RowKey | null;
-  /** `'inside'` reparents; `'before'`/`'after'` order among the target's siblings. */
-  position: OgeTreeDropPosition;
-}
-
-/**
- * Wraps the user source for tree semantics: filter/search never reach the
- * source (filtering runs client-side so ancestor rows survive), and lazy
- * mode narrows the base load to the root rows.
- */
-function treeSource<T>(
-  inner: DataSource<T>,
-  lazy: { parentField: string; rootValue: unknown } | null,
-): DataSource<T> {
-  return {
-    capabilities: { ...inner.capabilities, filter: false },
-    keyOf: (item) => inner.keyOf(item),
-    load: (options) => {
-      const { filter: _filter, searchText: _search, ...rest } = options;
-      return inner.load(
-        lazy
-          ? {
-              ...rest,
-              filter: {
-                type: 'binary',
-                field: lazy.parentField,
-                op: 'eq',
-                value: lazy.rootValue,
-              },
-            }
-          : rest,
-      );
-    },
-    ...(inner.distinct ? { distinct: inner.distinct.bind(inner) } : {}),
-    ...(inner.insert ? { insert: inner.insert.bind(inner) } : {}),
-    ...(inner.update ? { update: inner.update.bind(inner) } : {}),
-    ...(inner.remove ? { remove: inner.remove.bind(inner) } : {}),
-    ...(inner.changes ? { changes: inner.changes } : {}),
-  };
-}
 
 /**
  * Hierarchical data grid over flat self-referencing data (`id`/`parentId`).
@@ -635,77 +575,63 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return value === false ? null : value;
   });
 
-  /** Lazy child requests filter on this field; requires a string `parentIdExpr`. */
-  private readonly lazyParentField = computed<string | null>(() => {
-    const parent = this.parentIdExpr();
-    return typeof parent === 'string' ? parent : null;
+  // --- the tree model (shared with @oge-ui/react-tree-list) ---------------
+
+  /** Current zero-based page index (writable signal). */
+  readonly pageIndex = signal(0);
+
+  /**
+   * Everything the tree derives from its data — index, expansion polarity,
+   * client-side filtering, lazy children, remote match discovery, recursive
+   * selection, paging over the flattened rows — is `@oge-ui/behavior`'s
+   * `OgeTreeListCore`, the same machine the React tree list runs. This
+   * component hands it signals (inputs, the store slices, the adapter's
+   * result) and decides *when* its syncs run.
+   */
+  private readonly core = new OgeTreeListCore<T>(
+    {
+      data: this.data,
+      keyExpr: this.keyExpr,
+      parentIdExpr: this.parentIdExpr,
+      rootValue: this.rootValue,
+      orphanPolicy: this.orphanPolicy,
+      autoExpandAll: this.autoExpandAll,
+      hasItemsExpr: this.hasItemsExpr,
+      itemsExpr: this.itemsExpr,
+      loadMode: this.loadMode,
+      filterMode: this.filterMode,
+      expandNodesOnFiltering: this.expandNodesOnFiltering,
+      selectionRecursive: this.selectionRecursive,
+      paging: () => this.pagingOptions(),
+      searchColumns: () => this.resolvedColumns(),
+      state: {
+        expansion: this.store.expansion,
+        filter: this.store.filter,
+        selection: this.store.selection,
+        editing: this.store.editing,
+        loadOptions: this.store.loadOptions,
+      },
+      result: this.adapter.result,
+      pageIndex: cellOf(this.pageIndex),
+      onError: (err) => this.adapter.error.set(err),
+    },
+    SIGNAL_ADAPTER,
+  );
+
+  /** Lazy children load as soon as an expansion makes them pending. */
+  private readonly childLoadEffect = effect(() => {
+    this.core.pendingChildRequests();
+    this.core.childLoadBase();
+    untracked(() => this.core.deferredLoader.sync());
   });
 
-  /** Remote lookups by key (`[keyField, 'in', keys]`) need a string `keyExpr`. */
-  private readonly lazyKeyField = computed<string | null>(() => {
-    const key = this.keyExpr();
-    return typeof key === 'string' ? key : null;
-  });
-
-  private readonly effLoadMode = computed<'full' | 'lazy'>(() => {
-    // without a string parent field no child request can ever be built
-    if (this.lazyParentField() === null) return 'full';
-    const explicit = this.loadMode();
-    if (explicit) return explicit;
-    return isDataSource(this.data()) && this.hasItemsExpr() !== undefined
-      ? 'lazy'
-      : 'full';
-  });
-
-  // --- keys & tree index ----------------------------------------------------
-
-  /** Row → key accessor (trees always need an intrinsic key). */
-  private readonly rowKeyOf = computed<(row: T) => RowKey>(() => {
-    const key = this.keyExpr();
-    if (typeof key === 'function') return key;
-    const accessor = createFieldAccessor<T>(key);
-    return (row) => accessor(row) as RowKey;
-  });
-
-  /** Parent map produced from a nested (`itemsExpr`) payload, else null. */
-  private readonly nestedParents = signal<ReadonlyMap<
-    RowKey,
-    RowKey | null
-  > | null>(null);
-
-  private readonly parentIdOf = computed<(row: T) => unknown>(() => {
-    const nested = this.nestedParents();
-    if (nested) {
-      const keyOf = this.rowKeyOf();
-      return (row) => nested.get(keyOf(row)) ?? null;
-    }
-    const parent = this.parentIdExpr();
-    return typeof parent === 'function'
-      ? parent
-      : createFieldAccessor<T>(parent);
-  });
-
-  private readonly nestedItemsOf = computed<
-    ((row: T) => readonly T[] | undefined) | null
-  >(() => {
-    const expr = this.itemsExpr();
-    if (expr === undefined) return null;
-    if (typeof expr === 'function') return expr;
-    const accessor = createFieldAccessor<T>(expr);
-    return (row) => accessor(row) as readonly T[] | undefined;
-  });
-
-  private readonly hasChildrenHint = computed<
-    ((row: T) => boolean | undefined) | undefined
-  >(() => {
-    const expr = this.hasItemsExpr();
-    if (expr === undefined) return undefined;
-    if (typeof expr === 'function') return expr;
-    const accessor = createFieldAccessor<T>(expr);
-    return (row) => {
-      const value = accessor(row);
-      return value === undefined || value === null ? undefined : Boolean(value);
-    };
+  /**
+   * Lazy trees also ask the source for filter/search matches under unloaded
+   * branches (see `OgeTreeListCore.syncRemoteFilter`).
+   */
+  private readonly remoteFilterEffect = effect(() => {
+    this.core.remoteFilterInputs();
+    untracked(() => this.core.syncRemoteFilter());
   });
 
   /** Per-field `calculateSortValue` selectors (array data only). */
@@ -720,459 +646,35 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return entries.length ? Object.fromEntries(entries) : undefined;
   });
 
-  /**
-   * Rows discovered by remote filtering (matches + their ancestor chains) —
-   * they join the index so lazy filtering can reach unloaded branches.
-   */
-  private readonly remoteFilterRows = signal<readonly T[]>([]);
-
-  /** Loaded rows: base result + lazily fetched children + remote matches. */
-  private readonly indexRows = computed<readonly T[]>(() => {
-    const base = (this.adapter.result()?.data ?? []) as readonly T[];
-    const cache = this.deferredLoader.children();
-    const remote = this.remoteFilterRows();
-    if (!cache.size && !remote.length) return base;
-    // duplicates resolve first-wins in buildTreeIndex, so order is base →
-    // lazily fetched children → remotely discovered rows
-    const all = [...base];
-    for (const rows of cache.values()) all.push(...rows);
-    all.push(...remote);
-    return all;
-  });
-
-  /**
-   * Adjacency index, rebuilt only when the loaded rows change. The source
-   * applies the global sort, so buckets inherit sibling order for free; lazy
-   * child batches keep their per-request order.
-   */
-  protected readonly treeIndex = computed<TreeIndex<T>>(() => {
-    // track the result identity: a reload must re-index even when the source
-    // returns the same (in-place mutated) array reference
-    this.adapter.result();
-    return buildTreeIndex<T>(this.indexRows(), {
-      keyOf: this.rowKeyOf(),
-      parentIdOf: this.parentIdOf(),
-      rootValue: this.rootValue(),
-      orphanPolicy: this.orphanPolicy(),
-    });
-  });
-
-  /** Rows that can expand: loaded buckets plus lazy `hasItemsExpr` hints. */
-  private readonly expandableKeys = computed<ReadonlySet<RowKey>>(() => {
-    const index = this.treeIndex();
-    const keys = new Set<RowKey>(index.childrenOf.keys());
-    const hint = this.hasChildrenHint();
-    if (hint && this.effLoadMode() === 'lazy') {
-      for (const [key, row] of index.byKey) {
-        if (hint(row) === true) keys.add(key);
-      }
-    }
-    return keys;
-  });
-
-  // --- expansion ------------------------------------------------------------
-
-  /** Toggled keys with `autoExpandAll` polarity (mirrors grid group expansion). */
-  private readonly toggledKeys = computed(() =>
-    this.store.expansion.collapsedGroups(),
-  );
-
-  /** Effective expanded set (independent of polarity). */
-  private readonly expandedSet = computed<ReadonlySet<RowKey>>(() => {
-    const toggled = this.toggledKeys();
-    if (!this.autoExpandAll()) return toggled;
-    const expanded = new Set<RowKey>();
-    for (const key of this.expandableKeys()) {
-      if (!toggled.has(key)) expanded.add(key);
-    }
-    return expanded;
-  });
+  /** Adjacency index, rebuilt only when the loaded rows change. */
+  protected readonly treeIndex: () => TreeIndex<T> = this.core.treeIndex;
 
   protected isRowExpandedKey(key: RowKey): boolean {
-    return this.expandedSet().has(key);
+    return this.core.expandedSet().has(key);
   }
 
-  // --- filtering (client-side, ancestors preserved) --------------------------
-
-  /**
-   * Row predicate from the filter slice + search text. Filtering always runs
-   * client-side over the loaded nodes — the DataSource never receives
-   * filter/search (a source-side filter would drop ancestor rows).
-   */
-  private readonly filterPredicate = computed<((row: T) => boolean) | null>(
-    () => {
-      const expr = this.store.filter.combinedExpr();
-      const search = this.store.filter.searchText().trim();
-      const exprPredicate = expr ? createFilterPredicate<T>(expr) : null;
-      if (!search) return exprPredicate;
-      const needle = foldText(search);
-      const columns = this.resolvedColumns();
-      const searchPredicate = (row: T): boolean =>
-        columns.some((column) => {
-          const value = column.accessor(row);
-          return value != null && foldText(String(value)).includes(needle);
-        });
-      if (!exprPredicate) return searchPredicate;
-      return (row) => exprPredicate(row) && searchPredicate(row);
-    },
-  );
-
-  /** Keys visible under the active filter (`null` = everything). */
-  private readonly visibleKeys = computed<ReadonlySet<RowKey> | null>(() => {
-    const predicate = this.filterPredicate();
-    if (!predicate) return null;
-    return filterTreeKeys(this.treeIndex(), predicate, this.filterMode());
-  });
-
-  /**
-   * While filtering, parents of visible rows must expand or the matches stay
-   * hidden under collapsed branches (`expandNodesOnFiltering`).
-   */
-  private readonly filterExpandedKeys = computed<ReadonlySet<RowKey> | null>(
-    () => {
-      if (!this.expandNodesOnFiltering()) return null;
-      const visible = this.visibleKeys();
-      if (!visible) return null;
-      const index = this.treeIndex();
-      const parents = new Set<RowKey>();
-      for (const key of visible) {
-        const parent = index.parentOf.get(key);
-        if (parent != null && visible.has(parent)) parents.add(parent);
-      }
-      return parents;
-    },
-  );
-
-  // --- flat rows ------------------------------------------------------------
-
-  protected readonly flatNodes = computed<RowNode<T>[]>(() => {
-    let toggled = this.toggledKeys();
-    const filterExpanded = this.filterExpandedKeys();
-    if (filterExpanded?.size) {
-      if (this.autoExpandAll()) {
-        // toggled = collapsed: matched paths must not stay collapsed
-        const next = new Set(toggled);
-        for (const key of filterExpanded) next.delete(key);
-        toggled = next;
-      } else {
-        // toggled = expanded: matched paths join the expanded set
-        const next = new Set(toggled);
-        for (const key of filterExpanded) next.add(key);
-        toggled = next;
-      }
-    }
-    const nodes = flattenTreeData<T>({
-      index: this.treeIndex(),
-      keyOf: this.rowKeyOf(),
-      ...(this.autoExpandAll()
-        ? { collapsedRowKeys: toggled }
-        : { expandedRowKeys: toggled }),
-      // the hint only means something when a lazy loader can satisfy it —
-      // honoring it in full mode would render an eternal loading skeleton
-      hasChildren:
-        this.effLoadMode() === 'lazy' ? this.hasChildrenHint() : undefined,
-      deferredChildren: this.deferredLoader.children(),
-      visibleKeys: this.visibleKeys(),
-    });
-    // unsaved added rows render on top as roots, like the grid
-    const added = this.store.editing.added();
-    if (!added.length) return nodes;
-    const changes = this.store.editing.changes();
-    const newNodes: RowNode<T>[] = added.map((key, i) => ({
-      kind: 'data',
-      key,
-      data: (changes.get(key) ?? {}) as T,
-      sourceIndex: -1 - i,
-      level: 0,
-      parentKey: null,
-      hasChildren: false,
-      expanded: false,
-    }));
-    return [...newNodes, ...nodes];
-  });
-
-  // --- lazy child loading ----------------------------------------------------
-
-  /** Expanded lazy nodes whose children are neither indexed nor cached yet. */
-  private readonly pendingChildRequests = computed<
-    readonly PendingChildRequest[]
-  >(() => {
-    if (this.effLoadMode() !== 'lazy') return [];
-    const parentField = this.lazyParentField();
-    if (!parentField) return [];
-    const index = this.treeIndex();
-    const cache = this.deferredLoader.children();
-    const requests: PendingChildRequest[] = [];
-    for (const node of this.flatNodes()) {
-      if (node.kind !== 'data' || !node.expanded) continue;
-      if (index.childrenOf.has(node.key) || cache.has(node.key)) continue;
-      const value = node.key;
-      requests.push({
-        key: node.key,
-        buildOptions: (base) => ({
-          ...(base.sort?.length ? { sort: base.sort } : {}),
-          filter: { type: 'binary', field: parentField, op: 'eq', value },
-        }),
-      });
-    }
-    return requests;
-  });
-
-  /** Unwrapped user source — lazy child requests bypass the tree wrapper. */
-  private readonly innerSource = signal<DataSource<T> | null>(null);
-
-  /**
-   * Loader fingerprint without filter/search: the tree filters client-side,
-   * so a filter keystroke must not wipe the child cache and refetch every
-   * open level.
-   */
-  private readonly childLoadBase = computed(() => {
-    const {
-      filter: _filter,
-      searchText: _search,
-      ...rest
-    } = this.store.loadOptions();
-    return rest;
-  });
-
-  private readonly deferredLoader = new DeferredChildrenLoader<T>({
-    pending: this.pendingChildRequests,
-    baseOptions: this.childLoadBase,
-    source: this.innerSource,
-    onError: (err) => this.adapter.error.set(err),
-  });
-
-  // --- lazy remote filtering -------------------------------------------------
-
-  /** Fingerprint of the discovery currently applied/in flight. */
-  private remoteFilterJson: string | null = null;
-
-  /**
-   * Lazy trees cannot find matches under unloaded branches client-side, so an
-   * active filter/search additionally asks the source for ALL matching rows
-   * and then completes their ancestor chains via `[keyField, 'in', keys]`
-   * lookups. Needs string `keyExpr` + `parentIdExpr`; the contract is the
-   * plain filter language, so OData/custom stores work unchanged.
-   */
-  private readonly remoteFilterEffect = effect(() => {
-    const expr = this.store.filter.combinedExpr();
-    const search = this.store.filter.searchText().trim();
-    const lazy = this.effLoadMode() === 'lazy';
-    const source = this.innerSource();
-    const keyField = this.lazyKeyField();
-    untracked(() => {
-      if (!lazy || !source || !keyField || (!expr && !search)) {
-        this.remoteFilterJson = null;
-        if (this.remoteFilterRows().length) this.remoteFilterRows.set([]);
-        return;
-      }
-      const fingerprint = JSON.stringify({ expr, search });
-      if (fingerprint === this.remoteFilterJson) return;
-      this.remoteFilterJson = fingerprint;
-      void this.discoverRemoteMatches(
-        source,
-        expr,
-        search,
-        keyField,
-        fingerprint,
-      );
-    });
-  });
-
-  private async discoverRemoteMatches(
-    source: DataSource<T>,
-    expr: FilterExpr | null,
-    search: string,
-    keyField: string,
-    fingerprint: string,
-  ): Promise<void> {
-    try {
-      const result = await source.load({
-        ...(expr ? { filter: expr } : {}),
-        ...(search ? { searchText: search } : {}),
-      });
-      let rows = [...(result.data as readonly T[])];
-      const keyOf = untracked(this.rowKeyOf);
-      const parentIdOf = untracked(this.parentIdOf);
-      const rootValue = untracked(this.rootValue);
-      const known = new Set<RowKey>(untracked(this.indexRows).map(keyOf));
-      for (const row of rows) known.add(keyOf(row));
-      // complete the ancestor chains level by level (depth-capped)
-      for (let depth = 0; depth < 32; depth++) {
-        const missing = new Set<RowKey>();
-        for (const row of rows) {
-          const parent = parentIdOf(row);
-          if (parent == null || parent === rootValue) continue;
-          if (!known.has(parent as RowKey)) missing.add(parent as RowKey);
-        }
-        if (!missing.size) break;
-        const parents = await source.load({
-          filter: {
-            type: 'binary',
-            field: keyField,
-            op: 'in',
-            value: [...missing],
-          },
-        });
-        const fetched = parents.data as readonly T[];
-        if (!fetched.length) break; // the source cannot resolve further
-        for (const row of fetched) known.add(keyOf(row));
-        rows = [...rows, ...fetched];
-      }
-      if (this.remoteFilterJson !== fingerprint) return; // stale discovery
-      this.remoteFilterRows.set(rows);
-    } catch (err) {
-      if (this.remoteFilterJson === fingerprint) this.adapter.error.set(err);
-    }
-  }
-
-  // --- lazy subtree loading (recursive selection) ----------------------------
-
-  /** True when a hint-expandable descendant of `key` has no loaded children. */
-  private hasUnloadedDescendants(key: RowKey): boolean {
-    const hint = untracked(this.hasChildrenHint);
-    if (!hint || untracked(this.effLoadMode) !== 'lazy') return false;
-    const index = untracked(this.treeIndex);
-    const cache = untracked(this.deferredLoader.children);
-    const keyOf = untracked(this.rowKeyOf);
-    const stack: RowKey[] = [key];
-    while (stack.length) {
-      const current = stack.pop() as RowKey;
-      const row = index.byKey.get(current);
-      if (!row) return true;
-      const bucket = index.childrenOf.get(current);
-      if (hint(row) === true && !bucket && !cache.has(current)) return true;
-      if (bucket) for (const child of bucket) stack.push(keyOf(child));
-    }
-    return false;
-  }
-
-  /** Bulk-fetches every missing level under `rootKey` (`parentId in [...]`). */
-  private async loadSubtree(rootKey: RowKey): Promise<void> {
-    const source = untracked(this.innerSource);
-    const parentField = untracked(this.lazyParentField);
-    const hint = untracked(this.hasChildrenHint);
-    if (!source || !parentField || !hint) return;
-    const keyOf = untracked(this.rowKeyOf);
-    const parentIdOf = untracked(this.parentIdOf);
-    // seed: every hint-expandable node under the root with no loaded bucket
-    const missingUnder = (): RowKey[] => {
-      const index = untracked(this.treeIndex);
-      const cache = untracked(this.deferredLoader.children);
-      const out: RowKey[] = [];
-      const stack: RowKey[] = [rootKey];
-      while (stack.length) {
-        const current = stack.pop() as RowKey;
-        const row = index.byKey.get(current);
-        if (!row) continue;
-        const bucket = index.childrenOf.get(current);
-        if (hint(row) === true && !bucket && !cache.has(current))
-          out.push(current);
-        if (bucket) for (const child of bucket) stack.push(keyOf(child));
-      }
-      return out;
-    };
-    let frontier = missingUnder();
-    for (let depth = 0; depth < 32 && frontier.length; depth++) {
-      const result = await source.load({
-        filter: {
-          type: 'binary',
-          field: parentField,
-          op: 'in',
-          value: frontier,
-        },
-      });
-      const rows = result.data as readonly T[];
-      const byParent = new Map<RowKey, T[]>();
-      for (const row of rows) {
-        const parent = parentIdOf(row) as RowKey;
-        const bucket = byParent.get(parent);
-        if (bucket) bucket.push(row);
-        else byParent.set(parent, [row]);
-      }
-      // parents that came back empty are primed too, so they never refetch
-      for (const key of frontier) {
-        if (!byParent.has(key)) byParent.set(key, []);
-      }
-      this.deferredLoader.prime(byParent);
-      frontier = rows
-        .filter((row) => hint(row) === true)
-        .map(keyOf)
-        .filter(
-          (key) =>
-            !untracked(this.treeIndex).childrenOf.has(key) &&
-            !untracked(this.deferredLoader.children).has(key),
-        );
-    }
-  }
-
-  // --- client-side paging over the visible rows ------------------------------
-
-  /** Current zero-based page index (writable signal). */
-  readonly pageIndex = signal(0);
-  /** User-picked size from the pager; `0` = "all rows", `null` = use options. */
-  private readonly pageSizeOverride = signal<number | null>(null);
-
-  protected readonly effPageSize = computed<number | null>(() => {
-    const options = this.pagingOptions();
-    if (!options) return null;
-    const override = this.pageSizeOverride();
-    const size = override ?? options.pageSize ?? 20;
-    return size > 0 ? size : null; // 0 = "all"
-  });
-
-  protected readonly pageCount = computed(() => {
-    const size = this.effPageSize();
-    if (size === null) return 1;
-    return Math.max(1, Math.ceil(this.flatNodes().length / size));
-  });
-
+  protected readonly flatNodes: () => RowNode<T>[] = this.core.flatNodes;
+  protected readonly effPageSize: () => number | null = this.core.effPageSize;
+  protected readonly pageCount: () => number = this.core.pageCount;
   /** The flat rows actually rendered: the current page, or everything. */
-  protected readonly renderNodes = computed<readonly RowNode<T>[]>(() => {
-    const nodes = this.flatNodes();
-    const size = this.effPageSize();
-    if (size === null) return nodes;
-    const page = Math.min(this.pageIndex(), this.pageCount() - 1);
-    return nodes.slice(page * size, (page + 1) * size);
-  });
+  protected readonly renderNodes: () => readonly RowNode<T>[] =
+    this.core.renderNodes;
 
   protected onPageSizeChange(size: number): void {
-    this.pageSizeOverride.set(size);
-    this.pageIndex.set(0);
+    this.core.setPageSize(size);
   }
 
   protected readonly keyOf = computed<(row: T, index: number) => RowKey>(() => {
-    const selector = this.rowKeyOf();
+    const selector = this.core.rowKeyOf();
     return (row) => selector(row);
   });
 
   /** Visible data-row count across all pages (pager totals, select-all). */
-  readonly totalCount = computed(() =>
-    this.flatNodes().reduce(
-      (count, node) => (node.kind === 'data' ? count + 1 : count),
-      0,
-    ),
-  );
+  readonly totalCount: () => number = this.core.totalCount;
 
   /** Rendered data-row count (aria-rowcount of the current page). */
-  protected readonly renderedRowCount = computed(() =>
-    this.renderNodes().reduce(
-      (count, node) => (node.kind === 'data' ? count + 1 : count),
-      0,
-    ),
-  );
-
-  /** Key → flat node index of the current view (keyboard hierarchy jumps). */
-  private readonly keyToFlatIndex = computed<ReadonlyMap<RowKey, number>>(
-    () => {
-      const map = new Map<RowKey, number>();
-      const nodes = this.renderNodes();
-      for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].kind === 'data') map.set(nodes[i].key, i);
-      }
-      return map;
-    },
-  );
+  protected readonly renderedRowCount: () => number =
+    this.core.renderedRowCount;
 
   // --- columns --------------------------------------------------------------
 
@@ -1201,10 +703,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
   );
 
-  protected readonly firstDataRow = computed<T | undefined>(() => {
-    const node = this.flatNodes().find((entry) => entry.kind === 'data');
-    return node?.kind === 'data' ? node.data : undefined;
-  });
+  protected readonly firstDataRow: () => T | undefined = this.core.firstDataRow;
 
   private readonly columnModel = new ColumnModel<T, OgeColumn<T>>({
     declaredColumns: this.declaredColumns,
@@ -1311,30 +810,9 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     pageSize: computed(() =>
       Math.max(1, Math.floor(this.viewportHeight() / this.effRowHeight()) - 1),
     ),
-    tree: {
-      isExpandable: (row) => this.dataNodeAt(row)?.hasChildren === true,
-      isExpanded: (row) => this.dataNodeAt(row)?.expanded === true,
-      toggle: (row, expand) => {
-        const node = this.dataNodeAt(row);
-        if (node) this.setRowExpanded(node, expand);
-      },
-      parentRowIndex: (row) => {
-        const node = this.dataNodeAt(row);
-        if (!node || node.parentKey == null) return -1;
-        return untracked(this.keyToFlatIndex).get(node.parentKey) ?? -1;
-      },
-      firstChildRowIndex: (row) => {
-        const node = this.dataNodeAt(row);
-        if (!node?.expanded) return -1;
-        const nodes = untracked(this.renderNodes);
-        for (let i = row + 1; i < nodes.length; i++) {
-          const next = nodes[i];
-          if (next.kind !== 'data') continue;
-          return next.parentKey === node.key ? i : -1;
-        }
-        return -1;
-      },
-    },
+    tree: this.core.keyboardTreeHooks((node, expand) =>
+      this.setRowExpanded(node, expand),
+    ),
   });
 
   protected readonly focusedCell = this.keyboard.focusedCell;
@@ -1347,41 +825,18 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.keyboard.onCellFocus(row, col);
   }
 
-  private dataNodeAt(row: number): DataRowNode<T> | undefined {
-    const node = untracked(this.renderNodes)[row];
-    return node?.kind === 'data' ? node : undefined;
-  }
-
   // --- selection ------------------------------------------------------------
 
   /** Keys of all visible data rows in display order. */
-  protected readonly dataKeys = computed<readonly RowKey[]>(() =>
-    this.flatNodes().flatMap((node) =>
-      node.kind === 'data' ? [node.key] : [],
-    ),
-  );
+  protected readonly dataKeys: () => readonly RowKey[] = this.core.dataKeys;
 
   /** Whether the row carrying `key` is currently selected. */
   isRowSelected(key: RowKey): boolean {
     return this.store.selection.isSelected(key);
   }
 
-  /** Tri-state map (recursive selection); empty when the feature is off. */
-  private readonly checkStates = computed<ReadonlyMap<RowKey, CheckState>>(
-    () => {
-      if (!this.selectionRecursive()) return EMPTY_CHECK_STATES;
-      return computeTreeCheckStates(
-        this.treeIndex(),
-        this.store.selection.selected(),
-      );
-    },
-  );
-
   protected rowCheckState(key: RowKey): CheckState {
-    if (!this.selectionRecursive()) {
-      return this.isRowSelected(key) ? 'checked' : 'unchecked';
-    }
-    return this.checkStates().get(key) ?? 'unchecked';
+    return this.core.rowCheckState(key);
   }
 
   /**
@@ -1390,64 +845,36 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    * branches that were never expanded.
    */
   private toggleSelection(key: RowKey): void {
-    if (!untracked(this.selectionRecursive)) {
-      this.store.selection.toggle(key);
-      return;
-    }
-    if (this.hasUnloadedDescendants(key)) {
-      void this.loadSubtree(key).then(() => this.applyRecursiveToggle(key));
-      return;
-    }
-    this.applyRecursiveToggle(key);
-  }
-
-  private applyRecursiveToggle(key: RowKey): void {
-    this.store.selection.replace([
-      ...toggleTreeSelection(
-        untracked(this.treeIndex),
-        untracked(this.store.selection.selected),
-        key,
-        true,
-      ),
-    ]);
+    untracked(() => this.core.toggleSelection(key));
   }
 
   /** Selected keys narrowed per mode (recursive selection reporting). */
   getSelectedRowKeys(
     mode: 'all' | 'leavesOnly' | 'excludeRecursive' = 'all',
   ): RowKey[] {
-    return resolveSelectedKeys(
-      untracked(this.treeIndex),
-      untracked(this.store.selection.selected),
-      mode,
-    );
+    return untracked(() => this.core.getSelectedRowKeys(mode));
   }
 
-  protected readonly allSelected = computed(() => {
-    const keys = this.dataKeys();
-    if (!keys.length) return false;
-    const selected = this.store.selection.selected();
-    return keys.every((key) => selected.has(key));
-  });
+  protected readonly allSelected: () => boolean = this.core.allSelected;
 
-  protected readonly someSelected = computed(
-    () => this.store.selection.count() > 0 && !this.allSelected(),
-  );
+  protected readonly someSelected: () => boolean = this.core.someSelected;
 
   protected onRowClick(node: DataRowNode<T>, event: MouseEvent): void {
     this.rowClick.emit({ row: node.data, key: node.key, event });
     if (this.focusedRowEnabled()) this.focusedRowKey.set(node.key);
-    const mode = this.selectionMode();
-    if (mode === 'none') return;
-    if (mode === 'single') {
-      this.store.selection.selectOnly(node.key);
-      return;
+    switch (rowClickSelectionIntent(this.selectionMode(), event)) {
+      case 'range':
+        this.store.selection.selectRange(this.dataKeys(), node.key);
+        break;
+      case 'toggle':
+        this.toggleSelection(node.key);
+        break;
+      case 'selectOnly':
+        this.store.selection.selectOnly(node.key);
+        break;
+      default:
+        break;
     }
-    if (event.shiftKey)
-      this.store.selection.selectRange(this.dataKeys(), node.key);
-    else if (event.ctrlKey || event.metaKey || mode === 'checkbox') {
-      this.toggleSelection(node.key);
-    } else this.store.selection.selectOnly(node.key);
   }
 
   protected onCheckboxToggle(node: DataRowNode<T>): void {
@@ -1465,28 +892,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    * under a filter.
    */
   selectAll(): void {
-    const keys = untracked(this.dataKeys);
-    if (!untracked(this.selectionRecursive)) {
-      this.store.selection.replace(keys);
-      return;
-    }
-    const index = untracked(this.treeIndex);
-    const keyOf = untracked(this.rowKeyOf);
-    const selected = new Set<RowKey>(keys);
-    const stack = [...keys];
-    while (stack.length) {
-      const key = stack.pop() as RowKey;
-      const children = index.childrenOf.get(key);
-      if (!children) continue;
-      for (const child of children) {
-        const childKey = keyOf(child);
-        if (!selected.has(childKey)) {
-          selected.add(childKey);
-          stack.push(childKey);
-        }
-      }
-    }
-    this.store.selection.replace([...selected]);
+    untracked(() => this.core.selectAll());
   }
 
   /** Clears the selection. */
@@ -1605,28 +1011,14 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   protected currentOperator(column: ResolvedColumn<T>): FilterOperator {
-    if (!column.field) return 'contains';
-    return (
-      this.rowFilterOps().get(column.field) ??
-      column.filterOperator ??
-      defaultOperatorFor(column.dataType)
+    return effectiveFilterOperator(
+      column,
+      column.field ? this.rowFilterOps().get(column.field) : undefined,
     );
   }
 
   protected operatorSymbol(column: ResolvedColumn<T>): string {
-    const symbols: Partial<Record<FilterOperator, string>> = {
-      eq: '=',
-      ne: '≠',
-      gt: '>',
-      ge: '≥',
-      lt: '<',
-      le: '≤',
-      contains: '∗',
-      notcontains: '!∗',
-      startswith: 'a…',
-      endswith: '…z',
-    };
-    return symbols[this.currentOperator(column)] ?? '=';
+    return filterOperatorSymbol(this.currentOperator(column));
   }
 
   protected toggleOperatorMenu(
@@ -1646,9 +1038,13 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.operatorPanel.updatePosition();
   }
 
+  /**
+   * The grid's filter-row choices minus `between`: the tree's date filter
+   * cell is a single date box, not a range picker.
+   */
   protected operatorChoices(column: ResolvedColumn<T>): FilterOperator[] {
-    return operatorsFor(column.dataType).filter(
-      (op) => op !== 'isnull' && op !== 'isnotnull',
+    return filterRowOperatorChoices(column.dataType).filter(
+      (op) => op !== 'between',
     );
   }
 
@@ -1663,33 +1059,14 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.rowFilterOps.set(next);
     // re-apply the current editor value with the new operator
     const raw = this.rowFilterRaw.get(field) ?? '';
-    const effective =
-      op ??
-      menu.column.filterOperator ??
-      defaultOperatorFor(menu.column.dataType);
     this.store.filter.setRowFilter(
       field,
-      this.rowFilterExprFor(menu.column, raw, effective),
+      rowFilterExpr(
+        menu.column,
+        raw,
+        effectiveFilterOperator(menu.column, op ?? undefined),
+      ),
     );
-  }
-
-  /** Row-filter expression for a column — the column's custom builder wins. */
-  private rowFilterExprFor(
-    column: ResolvedColumn<T>,
-    raw: string,
-    operator?: FilterOperator,
-  ) {
-    const field = column.field;
-    if (!field) return null;
-    if (column.calculateFilterExpression) {
-      const text = raw.trim();
-      const op =
-        operator ??
-        column.filterOperator ??
-        defaultOperatorFor(column.dataType);
-      return text ? column.calculateFilterExpression(text, op) : null;
-    }
-    return buildRowFilterExpr(field, column.dataType, raw, operator);
   }
 
   protected onFilterInput(column: ResolvedColumn<T>, raw: string): void {
@@ -1699,7 +1076,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.debounced(`f:${field}`, () => {
       this.store.filter.setRowFilter(
         field,
-        this.rowFilterExprFor(column, raw, this.currentOperator(column)),
+        rowFilterExpr(column, raw, this.currentOperator(column)),
       );
     });
   }
@@ -1711,7 +1088,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.rowFilterRaw.set(field, raw);
     this.store.filter.setRowFilter(
       field,
-      this.rowFilterExprFor(column, raw, this.currentOperator(column)),
+      rowFilterExpr(column, raw, this.currentOperator(column)),
     );
   }
 
@@ -1831,29 +1208,18 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   private readonly headerValues = computed<readonly unknown[]>(() => {
     const column = this.headerFilterColumn();
     if (!column) return [];
-    const seen = new Map<string, unknown>();
-    for (const row of this.indexRows()) {
-      const value = column.accessor(row);
-      const text = String(value ?? '');
-      if (!seen.has(text)) seen.set(text, value);
-    }
-    // fold-based ordering: locale-independent, so local and CI runs agree
-    return [...seen.entries()]
-      .sort(([a], [b]) => {
-        const fa = foldText(a);
-        const fb = foldText(b);
-        return fa < fb ? -1 : fa > fb ? 1 : 0;
-      })
-      .slice(0, this.effHeaderFilterLimit())
-      .map(([, value]) => value);
+    return this.core.distinctValues(
+      column.accessor,
+      this.effHeaderFilterLimit(),
+    );
   });
 
   protected headerValueText(value: unknown): string {
-    const column = untracked(this.headerFilterColumn);
-    if (!column) return String(value ?? '');
-    if (value == null || value === '') return this.msg().blankValue;
-    if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
-    return formatCellValue(value, column.dataType, column.format);
+    return ogeTreeHeaderValueText(
+      value,
+      untracked(this.headerFilterColumn),
+      this.msg().blankValue,
+    );
   }
 
   /** Popup rows after the popup's own search box. */
@@ -1875,97 +1241,78 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   >(() => {
     const column = this.headerFilterColumn();
     if (!column || column.dataType !== 'date') return null;
-    const byYear = new Map<string, unknown[]>();
-    for (const value of this.headerValues()) {
-      const date = value instanceof Date ? value : new Date(String(value));
-      const label = Number.isNaN(date.getTime())
-        ? this.msg().blankValue
-        : String(date.getFullYear());
-      const bucket = byYear.get(label);
-      if (bucket) bucket.push(value);
-      else byYear.set(label, [value]);
-    }
-    const query = foldText(this.headerFilterSearch().trim());
-    return [...byYear.entries()]
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([label, values]) => ({
-        label,
-        values: query
-          ? values.filter(
-              (value) =>
-                foldText(label).includes(query) ||
-                foldText(this.headerValueText(value)).includes(query),
-            )
-          : values,
-      }))
-      .filter((group) => group.values.length > 0);
+    return ogeTreeHeaderValueGroups(
+      this.headerValues(),
+      this.headerFilterSearch(),
+      (value) => this.headerValueText(value),
+      this.msg().blankValue,
+    );
   });
+
+  /** The open column's selection; `null` = every value (no filter). */
+  private headerSelection(): readonly unknown[] | null {
+    const field = this.headerFilterField();
+    return field === null ? null : this.store.filter.headerFilterOf(field);
+  }
 
   protected isHeaderGroupSelected(group: {
     values: readonly unknown[];
   }): boolean {
-    return group.values.every((value) => this.isHeaderValueSelected(value));
+    return headerGroupState(this.headerSelection(), group.values) === 'all';
   }
 
   protected isHeaderGroupIndeterminate(group: {
     values: readonly unknown[];
   }): boolean {
-    const selected = group.values.filter((value) =>
-      this.isHeaderValueSelected(value),
-    ).length;
-    return selected > 0 && selected < group.values.length;
+    return headerGroupState(this.headerSelection(), group.values) === 'some';
   }
 
   /** Group checkbox: selects the whole year, or clears it when complete. */
   protected toggleHeaderGroup(group: { values: readonly unknown[] }): void {
     const field = untracked(this.headerFilterField);
     if (field === null) return;
-    const all = untracked(this.headerValues);
-    const current = this.store.filter.headerFilterOf(field) ?? [...all];
-    const complete = group.values.every((value) => current.includes(value));
-    const next = complete
-      ? current.filter((value) => !group.values.includes(value))
-      : [...new Set([...current, ...group.values])];
     this.store.filter.setHeaderFilter(
       field,
-      next.length === all.length ? null : next,
+      toggleHeaderGroup(
+        untracked(this.headerValues),
+        untracked(() => this.headerSelection()),
+        group.values,
+      ),
     );
   }
 
   protected isHeaderValueSelected(value: unknown): boolean {
-    const field = this.headerFilterField();
-    if (field === null) return false;
-    const selected = this.store.filter.headerFilterOf(field);
-    return selected === null || selected.includes(value);
+    if (this.headerFilterField() === null) return false;
+    return isHeaderValueSelected(this.headerSelection(), value);
   }
 
   protected toggleHeaderValue(value: unknown): void {
     const field = untracked(this.headerFilterField);
     if (field === null) return;
-    const all = untracked(this.headerValues);
-    const current = this.store.filter.headerFilterOf(field) ?? [...all]; // null = all selected
-    const next = current.includes(value)
-      ? current.filter((candidate) => candidate !== value)
-      : [...current, value];
     // back to the full set = filter off
     this.store.filter.setHeaderFilter(
       field,
-      next.length === all.length ? null : next,
+      toggleHeaderValue(
+        untracked(this.headerValues),
+        untracked(() => this.headerSelection()),
+        value,
+      ),
     );
   }
 
   protected readonly allHeaderValuesSelected = computed(() => {
-    const field = this.headerFilterField();
-    if (field === null) return false;
-    return this.store.filter.headerFilterOf(field) === null;
+    if (this.headerFilterField() === null) return false;
+    return allHeaderValuesSelected(this.headerSelection());
   });
 
   protected toggleAllHeaderValues(): void {
     const field = untracked(this.headerFilterField);
     if (field === null) return;
-    const selected = this.store.filter.headerFilterOf(field);
     // all → none; anything else → all
-    this.store.filter.setHeaderFilter(field, selected === null ? [] : null);
+    this.store.filter.setHeaderFilter(
+      field,
+      toggleAllHeaderValues(untracked(() => this.headerSelection())),
+    );
   }
 
   protected isHeaderFilterActive(column: ResolvedColumn<T>): boolean {
@@ -2461,21 +1808,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   private isValidDropTarget(targetKey: RowKey): boolean {
-    const dragged = this.draggedRowKey;
-    if (dragged === null || dragged === targetKey) return false;
-    // a row must not become a descendant of itself
-    return !ancestorsOf(untracked(this.treeIndex), targetKey).includes(dragged);
+    return untracked(() =>
+      this.core.isValidDropTarget(this.draggedRowKey, targetKey),
+    );
   }
 
   /** Top/bottom quarter of a row = order before/after; middle = reparent inside. */
   private dropPositionOf(event: DragEvent): OgeTreeDropPosition {
     const row = (event.currentTarget ?? event.target) as HTMLElement | null;
-    const rect = row?.getBoundingClientRect?.();
-    if (!rect || rect.height <= 0) return 'inside';
-    const offset = (event.clientY - rect.top) / rect.height;
-    if (offset < 0.25) return 'before';
-    if (offset > 0.75) return 'after';
-    return 'inside';
+    return ogeTreeDropPosition(event.clientY, row?.getBoundingClientRect?.());
   }
 
   protected onRowDragOver(node: DataRowNode<T>, event: DragEvent): void {
@@ -2500,50 +1841,15 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.onRowDragEnd();
     if (!valid || draggedKey === null) return;
     event.preventDefault();
-    const index = untracked(this.treeIndex);
-    const row = index.byKey.get(draggedKey);
-    if (row === undefined) return;
-    const fromParentKey = index.parentOf.get(draggedKey) ?? null;
-    const toParentKey =
-      position === 'inside'
-        ? target.key
-        : (index.parentOf.get(target.key) ?? null);
-    if (position === 'inside' && fromParentKey === target.key) return;
-    const data = untracked(this.data);
-    const parentField = untracked(this.lazyParentField);
-    // auto-apply only for plain arrays with a writable top-level parent
-    // field; dotted paths, nested payloads and DataSources are the
-    // consumer's job (handle rowReparented)
-    if (
-      !isDataSource(data) &&
-      untracked(this.nestedItemsOf) === null &&
-      parentField !== null &&
-      !parentField.includes('.')
-    ) {
-      const rootValue = untracked(this.rootValue);
-      (row as Record<string, unknown>)[parentField] =
-        toParentKey === null ? rootValue : toParentKey;
-      if (position !== 'inside') {
-        // before/after: also move the row next to the target in the backing
-        // array, so sibling order (data order) reflects the drop
-        const array = data as T[];
-        const from = array.indexOf(row);
-        if (from >= 0) array.splice(from, 1);
-        const targetRow = index.byKey.get(target.key);
-        const at = targetRow === undefined ? -1 : array.indexOf(targetRow);
-        if (at < 0) array.push(row);
-        else array.splice(position === 'before' ? at : at + 1, 0, row);
-      }
-      this.adapter.reload();
-    }
-    if (position === 'inside') this.expandRow(target.key);
-    this.rowReparented.emit({
-      key: draggedKey,
-      row,
-      fromParentKey,
-      toParentKey,
-      position,
-    });
+    // plain arrays with a writable top-level parent field are moved in place;
+    // dotted paths, nested payloads and DataSources are the consumer's job
+    // (handle rowReparented)
+    const moved = untracked(() =>
+      this.core.applyDrop(draggedKey, target.key, position, () =>
+        this.adapter.reload(),
+      ),
+    );
+    if (moved) this.rowReparented.emit(moved);
   }
 
   // --- editing ---------------------------------------------------------------
@@ -2571,7 +1877,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     // saved rows may live in the lazy child cache — drop it so the reload
     // re-fetches open levels and the UI shows the persisted values
     reload: () => {
-      this.deferredLoader.reset();
+      this.core.deferredLoader.reset();
       this.adapter.reload();
     },
   });
@@ -2897,10 +2203,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.editingModel.addNewRow();
     const key = untracked(this.store.editing.added)[0];
     if (key === undefined) return;
-    const parentField = untracked(this.lazyParentField);
-    if (parentKey !== undefined && parentField !== null) {
-      this.store.editing.setChange(key, parentField, parentKey);
-    }
+    untracked(() => this.core.stageNewRowParent(key, parentKey));
     // prefill hook: values the consumer writes stage onto the new row
     const event: OgeTreeInitNewRowEvent = {
       key,
@@ -2917,35 +2220,26 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   forEachNode(
     callback: (row: T, key: RowKey, parentKey: RowKey | null) => void,
   ): void {
-    const index = untracked(this.treeIndex);
-    for (const [key, row] of index.byKey) {
-      callback(row, key, index.parentOf.get(key) ?? null);
-    }
+    untracked(() => this.core.forEachNode(callback));
   }
 
   /** Data rows of the currently rendered page, in display order. */
   getVisibleRows(): readonly T[] {
-    return untracked(this.renderNodes).flatMap((node) =>
-      node.kind === 'data' ? [node.data] : [],
-    );
+    return untracked(() => this.core.getVisibleRows());
   }
 
   // --- expansion actions ----------------------------------------------------
 
   private setRowExpanded(node: DataRowNode<T>, expand: boolean): void {
-    if (!node.hasChildren || node.expanded === expand) return;
     // consumers may veto UI-driven toggles (imperative API stays silent)
-    const toggling: OgeTreeRowTogglingEvent<T> = {
-      key: node.key,
-      row: node.data,
-      cancel: false,
-    };
-    if (expand) this.rowExpanding.emit(toggling);
-    else this.rowCollapsing.emit(toggling);
-    if (toggling.cancel) return;
-    this.store.expansion.toggleGroup(node.key);
-    if (expand) this.rowExpanded.emit({ key: node.key, row: node.data });
-    else this.rowCollapsed.emit({ key: node.key, row: node.data });
+    untracked(() =>
+      this.core.requestToggle(node, expand, {
+        expanding: (event) => this.rowExpanding.emit(event),
+        collapsing: (event) => this.rowCollapsing.emit(event),
+        expanded: (event) => this.rowExpanded.emit(event),
+        collapsed: (event) => this.rowCollapsed.emit(event),
+      }),
+    );
   }
 
   protected onExpanderClick(node: DataRowNode<T>, event: Event): void {
@@ -2996,7 +2290,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return {
       ...base,
       columns: { ...base.columns, hidden },
-      expansion: { toggled: [...this.toggledKeys()] },
+      expansion: this.core.expansionSnapshot(),
     };
   });
 
@@ -3009,9 +2303,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   applyState(snapshot: TreeListStateSnapshot): void {
     untracked(() => {
       this.store.applySnapshot(snapshot);
-      if (snapshot.expansion) {
-        this.store.expansion.setGroups(new Set(snapshot.expansion.toggled));
-      }
+      this.core.applyExpansionSnapshot(snapshot);
       const hidden = new Set(snapshot.columns?.hidden ?? []);
       for (const column of this.declaredColumns()) {
         const field = column.field();
@@ -3024,9 +2316,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Re-runs the current load and drops lazily fetched/discovered rows. */
   refresh(): void {
-    this.deferredLoader.reset();
-    this.remoteFilterJson = null;
-    this.remoteFilterRows.set([]);
+    untracked(() => this.core.refresh());
     this.adapter.reload();
   }
 
@@ -3039,49 +2329,35 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   expandAll(): void {
-    this.store.expansion.setGroups(
-      untracked(this.autoExpandAll)
-        ? new Set()
-        : new Set(untracked(this.expandableKeys)),
-    );
+    untracked(() => this.core.expandAll());
   }
 
   collapseAll(): void {
-    this.store.expansion.setGroups(
-      untracked(this.autoExpandAll)
-        ? new Set(untracked(this.expandableKeys))
-        : new Set(),
-    );
+    untracked(() => this.core.collapseAll());
   }
 
   expandRow(key: RowKey): void {
     // polarity-aware: expanded means "not toggled" under autoExpandAll
-    const toggled = untracked(this.toggledKeys).has(key);
-    const shouldToggle = untracked(this.autoExpandAll) ? toggled : !toggled;
-    if (shouldToggle) this.store.expansion.toggleGroup(key);
+    untracked(() => this.core.expandRow(key));
   }
 
   collapseRow(key: RowKey): void {
-    const toggled = untracked(this.toggledKeys).has(key);
-    const shouldToggle = untracked(this.autoExpandAll) ? !toggled : toggled;
-    if (shouldToggle) this.store.expansion.toggleGroup(key);
+    untracked(() => this.core.collapseRow(key));
   }
 
   isRowExpanded(key: RowKey): boolean {
-    return untracked(this.expandedSet).has(key);
+    return untracked(() => this.core.isRowExpanded(key));
   }
 
   getNodeByKey(key: RowKey): T | undefined {
-    return untracked(this.treeIndex).byKey.get(key);
+    return untracked(() => this.core.getNodeByKey(key));
   }
 
   /** Expands the ancestors of `key`, scrolls to it and focuses its first cell. */
   focusRow(key: RowKey): void {
-    const index = untracked(this.treeIndex);
-    if (!index.byKey.has(key)) return;
-    for (const ancestor of ancestorsOf(index, key)) this.expandRow(ancestor);
+    if (!untracked(this.treeIndex).byKey.has(key)) return;
+    const flatIndex = untracked(() => this.core.revealRow(key));
     if (untracked(this.focusedRowEnabled)) this.focusedRowKey.set(key);
-    const flatIndex = untracked(this.keyToFlatIndex).get(key);
     if (flatIndex !== undefined) {
       this.virtualizer.scrollRowIntoView(flatIndex);
       this.keyboard.focusedCell.set({ row: flatIndex, col: 0 });
@@ -3115,37 +2391,29 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Navigates to the given zero-based page (clamped to the valid range). */
   setPageIndex(index: number): void {
-    const count = untracked(this.pageCount);
-    this.pageIndex.set(Math.min(Math.max(0, index), count - 1));
+    untracked(() => this.core.setPageIndex(index));
   }
 
   /** Current page size; `0` when paging is off or set to "all rows". */
   pageSize(): number {
-    return untracked(this.effPageSize) ?? 0;
+    return untracked(() => this.core.pageSize());
   }
 
   /** Changes the page size (`0` shows all rows) and resets to the first page. */
   setPageSize(size: number): void {
-    this.pageSizeOverride.set(size);
-    this.pageIndex.set(0);
+    this.core.setPageSize(size);
   }
 
   /** The flat data node carrying `key`, if it is currently rendered. */
   private dataNodeByKey(key: RowKey): DataRowNode<T> | undefined {
-    return untracked(this.flatNodes).find(
-      (node): node is DataRowNode<T> =>
-        node.kind === 'data' && node.key === key,
-    );
+    return untracked(() => this.core.dataNodeByKey(key));
   }
 
   /** Data of the selected rows, narrowed per mode like `getSelectedRowKeys`. */
   getSelectedRowsData(
     mode: 'all' | 'leavesOnly' | 'excludeRecursive' = 'all',
   ): T[] {
-    const index = untracked(this.treeIndex);
-    return this.getSelectedRowKeys(mode)
-      .map((key) => index.byKey.get(key))
-      .filter((row): row is T => row !== undefined);
+    return untracked(() => this.core.getSelectedRowsData(mode));
   }
 
   /**
@@ -3153,17 +2421,9 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    * tab-separated values.
    */
   async copyToClipboard(): Promise<void> {
-    const selected = untracked(this.store.selection.selected);
-    if (!selected.size) return;
     const { columns } = this.getExportData();
-    const rows = untracked(this.flatNodes)
-      .filter(
-        (node): node is DataRowNode<T> =>
-          node.kind === 'data' && selected.has(node.key),
-      )
-      .map((node) => node.data);
-    if (!rows.length) return;
-    const text = buildCsv(rows, columns, { separator: '\t', bom: false });
+    const text = untracked(() => this.core.clipboardText(columns));
+    if (!text) return;
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       await navigator.clipboard.writeText(text);
     }
@@ -3219,63 +2479,21 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   /**
-   * CSV of the currently visible rows (expansion + filter applied), the
-   * hierarchy expressed by indenting the first column.
-   */
-  /**
    * Rows, column metadata and depth levels of the currently visible tree
    * (expansion + filter applied) — the shared source for exporters.
    */
   getExportData(): OgeTreeExportData<T> {
-    const nodes = untracked(this.flatNodes).filter(
-      (node): node is DataRowNode<T> => node.kind === 'data',
+    return untracked(() =>
+      this.core.getExportData(this.resolvedColumns(), this.msg()),
     );
-    const messages = untracked(this.msg);
-    // display-faithful text per cell: format > lookup text > boolean labels
-    const columns: OgeExportColumn<T>[] = untracked(this.resolvedColumns).map(
-      (column) => ({
-        caption: column.caption,
-        field: column.field,
-        dataType: column.dataType,
-        accessor: column.accessor,
-        format: column.format
-          ? column.format
-          : column.lookupItems
-            ? (value: unknown): string =>
-                lookupTextOf(column.lookupItems ?? [], value)
-            : column.dataType === 'boolean'
-              ? (value: unknown): string =>
-                  value == null
-                    ? ''
-                    : value
-                      ? messages.booleanTrue
-                      : messages.booleanFalse
-              : undefined,
-      }),
-    );
-    return {
-      rows: nodes.map((node) => node.data),
-      columns,
-      levels: nodes.map((node) => node.level),
-    };
   }
 
+  /**
+   * CSV of the currently visible rows (expansion + filter applied), the
+   * hierarchy expressed by indenting the first column.
+   */
   getCsv(options?: CsvOptions): string {
-    const { rows, columns, levels } = this.getExportData();
-    const indexOf = new Map<T, number>(rows.map((row, i) => [row, i]));
-    const csvColumns = columns.map((column, columnIndex) => ({
-      ...column,
-      accessor: (row: T): unknown => {
-        const value = column.accessor(row);
-        if (columnIndex !== 0) return value;
-        const text = column.format
-          ? column.format(value)
-          : formatCellValue(value, column.dataType, undefined);
-        return '  '.repeat(levels[indexOf.get(row) ?? 0] ?? 0) + text;
-      },
-      format: columnIndex === 0 ? undefined : column.format,
-    }));
-    return buildCsv(rows, csvColumns, options);
+    return ogeTreeCsv(this.getExportData(), options);
   }
 
   /**
@@ -3328,40 +2546,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       untracked(() => this.contentReady.emit());
     });
     effect(() => {
-      let data = this.data();
-      const key = this.rowKeyOf();
+      const data = this.data();
+      this.core.connectInputs();
       const sortValues = this.sortValueSelectors();
-      const parentField = this.lazyParentField();
-      const lazy = this.effLoadMode() === 'lazy' && parentField !== null;
-      const rootValue = this.rootValue();
-      const itemsOf = this.nestedItemsOf();
-      let nestedParents: ReadonlyMap<RowKey, RowKey | null> | null = null;
-      if (itemsOf && !isDataSource(data)) {
-        // nested payload: flatten inline children into the plain shape
-        const flattened = flattenNestedTree(data, { keyOf: key, itemsOf });
-        data = flattened.rows;
-        nestedParents = flattened.parentOf;
-      }
-      const inner = isDataSource(data)
-        ? data
-        : new ArrayDataSource<T>(data, { key, sortValues });
-      untracked(() => {
-        this.nestedParents.set(nestedParents);
-        // a new source (or key/parent mapping) invalidates the child cache —
-        // stale rows from the previous source must never join the new tree
-        if (this.innerSource() !== null) {
-          this.deferredLoader.reset();
-          this.remoteFilterJson = null;
-          this.remoteFilterRows.set([]);
-        }
-        this.innerSource.set(inner);
-        this.adapter.setSource(
-          treeSource(
-            inner,
-            lazy && parentField ? { parentField, rootValue } : null,
-          ),
-        );
-      });
+      untracked(() =>
+        this.adapter.setSource(this.core.connect(data, sortValues)),
+      );
     });
     // the SOURCE never pages: paging happens over the flattened rows
     effect(() => {
@@ -3378,11 +2568,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       const key = this.focusedRowKey();
       if (key === null || !this.autoNavigateToFocusedRow()) return;
       untracked(() => {
-        const index = this.treeIndex();
-        if (!index.byKey.has(key)) return;
-        for (const ancestor of ancestorsOf(index, key))
-          this.expandRow(ancestor);
-        const flatIndex = this.keyToFlatIndex().get(key);
+        const flatIndex = this.core.revealRow(key);
         if (flatIndex !== undefined)
           this.virtualizer.scrollRowIntoView(flatIndex);
       });
@@ -3450,27 +2636,10 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     // expandedRowKeys model ⇄ expansion slice (guarded both ways, polarity-aware)
     effect(() => {
       const keys = this.expandedRowKeys();
-      untracked(() => {
-        const current = this.expandedSet();
-        if (
-          keys.length === current.size &&
-          keys.every((key) => current.has(key))
-        )
-          return;
-        const wanted = new Set(keys);
-        if (this.autoExpandAll()) {
-          const toggled = new Set<RowKey>();
-          for (const key of this.expandableKeys()) {
-            if (!wanted.has(key)) toggled.add(key);
-          }
-          this.store.expansion.setGroups(toggled);
-        } else {
-          this.store.expansion.setGroups(wanted);
-        }
-      });
+      untracked(() => this.core.applyExpandedRowKeys(keys));
     });
     effect(() => {
-      const expanded = this.expandedSet();
+      const expanded = this.core.expandedSet();
       untracked(() => {
         const keys = this.expandedRowKeys();
         if (
