@@ -1,0 +1,70 @@
+{
+  "name": "@oge-ui/react-gantt",
+  "version": "0.13.1",
+  "description": "React Gantt chart from the OGE UI suite: a virtualized task tree pane and a timeline chart with summary brackets, milestone diamonds, baseline bars, FS/SS/FF/SF dependency arrows, critical path, forward auto-scheduling on work calendars, resource labels and a workload band, drag move/resize/progress with Escape-cancel, link drawing with cycle rejection, snapshot undo/redo, keyboard bar editing, a built-in context menu and task dialog, and Excel/PDF/PNG export — running the same framework-free Gantt engine and the same stylesheet as the Angular package. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "react",
+    "gantt",
+    "gantt-chart",
+    "project-management",
+    "timeline",
+    "tasks",
+    "dependencies",
+    "critical-path",
+    "excel-export",
+    "pdf-export",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.js",
+      "require": "./export-excel.cjs"
+    },
+    "./export-pdf": {
+      "types": "./export-pdf.d.ts",
+      "import": "./export-pdf.js",
+      "require": "./export-pdf.cjs"
+    },
+    "./export-image": {
+      "types": "./export-image.d.ts",
+      "import": "./export-image.js",
+      "require": "./export-image.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.13.1",
+    "@oge-ui/core": "0.13.1",
+    "@oge-ui/gantt-engine": "0.13.1",
+    "@oge-ui/react-forms": "0.13.1",
+    "@oge-ui/react-overlay": "0.13.1"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/gantt"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

@@ -1,0 +1,8 @@
+// The React Gantt renders the exact `.oge-gantt` markup the Angular package
+// styles — so its stylesheet IS the Angular package's SCSS, compiled here into
+// this package's own `styles.css`. No second stylesheet, no drift (ADR 0001).
+// That one file is every partial the Angular Gantt has (tree pane, chart,
+// toolbar, menu, tooltip, dialog footer). The task dialog's modal and form
+// come from the overlay and forms packages' own stylesheets, which the app
+// imports alongside.
+@use '../../../gantt/src/lib/gantt/gantt';
