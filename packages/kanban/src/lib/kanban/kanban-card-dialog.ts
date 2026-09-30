@@ -10,46 +10,18 @@ import {
 } from '@angular/core';
 import { OgeModal, OgeModalFooter } from '@oge-ui/overlay';
 import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
-import type { OgeKanbanDialogMessages } from '../config';
+import {
+  KANBAN_EMPTY_EDITOR_CHOICES,
+  buildKanbanEditorItems,
+  type KanbanEditorChoices,
+  type KanbanEditorModel,
+  type KanbanEditorResult,
+  type OgeKanbanDialogMessages,
+} from '@oge-ui/kanban-engine';
 
-/** The editor's working model (independent of the user's item shape). */
-export interface KanbanEditorModel {
-  title: string;
-  description: string;
-  column: string;
-  swimlane: string | null;
-  color: string | undefined;
-  tags: string[];
-  assignees: string[];
-  dueDate: Date | null;
-  priority: string | null;
-}
-
-/** The dialog's save payload. */
-export interface KanbanEditorResult {
-  readonly model: KanbanEditorModel;
-  readonly isNew: boolean;
-}
-
-/**
- * Choice lists the default form offers (built by the shell from the board).
- * The `has*` flags mirror which `*Expr` inputs are actually configured —
- * the default form only renders editors for fields the board can persist.
- */
-export interface KanbanEditorChoices {
-  readonly columns: readonly { value: string; text: string }[];
-  readonly swimlanes: readonly string[];
-  readonly tags: readonly string[];
-  readonly assignees: readonly string[];
-  readonly priorities: readonly string[];
-  readonly hasSwimlanes: boolean;
-  readonly hasTags: boolean;
-  readonly hasAssignees: boolean;
-  readonly hasDueDate: boolean;
-  readonly hasPriority: boolean;
-  readonly hasColor: boolean;
-  readonly hasDescription: boolean;
-}
+// The editor model, the choice lists and the default form live in
+// `@oge-ui/kanban-engine` (shared with the React dialog, ADR 0003).
+export type { KanbanEditorChoices, KanbanEditorModel, KanbanEditorResult };
 
 /**
  * Internal card editor: an `OgeModal` embedding an `OgeForm` in
@@ -106,20 +78,7 @@ export interface KanbanEditorChoices {
 export class OgeKanbanCardDialog {
   readonly messages = input.required<OgeKanbanDialogMessages>();
   readonly locale = input<string | undefined>(undefined);
-  readonly choices = input<KanbanEditorChoices>({
-    columns: [],
-    swimlanes: [],
-    tags: [],
-    assignees: [],
-    priorities: [],
-    hasSwimlanes: false,
-    hasTags: false,
-    hasAssignees: false,
-    hasDueDate: false,
-    hasPriority: false,
-    hasColor: true,
-    hasDescription: true,
-  });
+  readonly choices = input<KanbanEditorChoices>(KANBAN_EMPTY_EDITOR_CHOICES);
   readonly allowDeleting = input<boolean>(true);
 
   readonly saved = output<KanbanEditorResult>();
@@ -142,110 +101,7 @@ export class OgeKanbanCardDialog {
    * value could never persist back would be a lie.
    */
   defaultItems(): OgeFormItemData[] {
-    const messages = this.messages();
-    const choices = this.choices();
-    const items: OgeFormItemData[] = [
-      {
-        field: 'title',
-        label: messages.titleLabel,
-        placeholder: messages.titlePlaceholder,
-        isRequired: true,
-        colSpan: 2,
-        validationRules: [
-          {
-            type: 'custom',
-            validate: (context) => {
-              const data = context.data as unknown as KanbanEditorModel;
-              return data.title.trim() === '' ? messages.titleRequired : null;
-            },
-          },
-        ],
-      },
-    ];
-    if (choices.hasDescription) {
-      items.push({
-        field: 'description',
-        label: messages.descriptionLabel,
-        editorType: 'textArea',
-        editorOptions: { rows: 3, autoResize: true },
-        colSpan: 2,
-      });
-    }
-    items.push({
-      field: 'column',
-      label: messages.columnLabel,
-      editorType: 'selectBox',
-      editorOptions: {
-        items: choices.columns as unknown as readonly unknown[],
-        valueExpr: 'value',
-        displayExpr: 'text',
-      },
-      colSpan: choices.hasSwimlanes ? 1 : 2,
-    });
-    if (choices.hasSwimlanes) {
-      items.push({
-        field: 'swimlane',
-        label: messages.swimlaneLabel,
-        editorType: 'selectBox',
-        editorOptions: {
-          items: choices.swimlanes as readonly unknown[],
-          acceptCustomValue: true,
-        },
-      });
-    }
-    if (choices.hasDueDate) {
-      items.push({
-        field: 'dueDate',
-        label: messages.dueDateLabel,
-        editorType: 'dateBox',
-        editorOptions: { type: 'date', showClearButton: true },
-      });
-    }
-    if (choices.hasPriority) {
-      items.push({
-        field: 'priority',
-        label: messages.priorityLabel,
-        editorType: 'selectBox',
-        editorOptions: {
-          items: choices.priorities as readonly unknown[],
-          showClearButton: true,
-          acceptCustomValue: true,
-        },
-      });
-    }
-    if (choices.hasTags) {
-      items.push({
-        field: 'tags',
-        label: messages.tagsLabel,
-        editorType: 'tagBox',
-        editorOptions: {
-          items: choices.tags as readonly unknown[],
-          acceptCustomValue: true,
-        },
-        colSpan: 2,
-      });
-    }
-    if (choices.hasAssignees) {
-      items.push({
-        field: 'assignees',
-        label: messages.assigneesLabel,
-        editorType: 'tagBox',
-        editorOptions: {
-          items: choices.assignees as readonly unknown[],
-          acceptCustomValue: true,
-        },
-        colSpan: 2,
-      });
-    }
-    if (choices.hasColor) {
-      items.push({
-        field: 'color',
-        label: messages.colorLabel,
-        editorType: 'colorBox',
-        colSpan: 2,
-      });
-    }
-    return items;
+    return buildKanbanEditorItems(this.messages(), this.choices());
   }
 
   protected readonly items = computed<readonly OgeFormItemData[]>(

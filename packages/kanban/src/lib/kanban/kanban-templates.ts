@@ -1,6 +1,9 @@
 import { Directive, TemplateRef, inject } from '@angular/core';
-import type { KanbanCard, KanbanColumnDef } from '../engine/board-model';
-import type { KanbanWipState } from '../engine/wip';
+import type {
+  KanbanCard,
+  KanbanColumnDef,
+  KanbanWipState,
+} from '@oge-ui/kanban-engine';
 
 /** Context of `*ogeKanbanCardTemplate`. */
 export interface OgeKanbanCardTemplateContext<T = unknown> {

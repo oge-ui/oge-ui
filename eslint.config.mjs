@@ -299,6 +299,30 @@ export default [
               ],
             },
             {
+              // the commercial kanban engine both render layers run (ADR 0003):
+              // framework-free like behavior, and it may take the MIT substrate
+              // (commercial may depend on MIT, never the reverse) — nothing else
+              sourceTag: 'scope:kanban-engine',
+              onlyDependOnLibsWithTags: [
+                'scope:kanban-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React kanban mirrors the Angular package's edges: the card
+              // dialog is the React form, the modal comes from react-overlay
+              sourceTag: 'scope:react-kanban',
+              onlyDependOnLibsWithTags: [
+                'scope:react-kanban',
+                'scope:kanban-engine',
+                'scope:react-forms',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
               // commercial kanban: like the scheduler and gantt, a deliberate
               // consumer of the MIT suite (card dialog = forms, menus/modal =
               // overlay, editors = inputs); virtualization and field
@@ -306,6 +330,7 @@ export default [
               sourceTag: 'scope:kanban',
               onlyDependOnLibsWithTags: [
                 'scope:kanban',
+                'scope:kanban-engine',
                 'scope:core',
                 'scope:overlay',
                 'scope:inputs',
@@ -455,9 +480,11 @@ export default [
                 'scope:react-forms',
                 'scope:react-upload',
                 'scope:react-grid',
+                'scope:react-kanban',
                 'scope:react-oge',
                 'scope:react-overlay',
                 'scope:behavior',
+                'scope:kanban-engine',
                 'scope:grid',
                 'scope:tree-list',
                 'scope:pivot',

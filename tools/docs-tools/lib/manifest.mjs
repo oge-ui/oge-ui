@@ -222,6 +222,17 @@ export const PACKAGES = [
     tier: 'commercial',
   },
   {
+    dir: 'kanban-engine',
+    npm: '@oge-ui/kanban-engine',
+    label: 'Kanban engine',
+    summary:
+      'Framework-free engine both Kanban render layers run: card normalization and write-back, swimlane grouping, search, drag hit-testing and auto-scroll, virtual windows, WIP arithmetic, keyboard and move machines, the edit-dialog model and the message catalog. Installed automatically with @oge-ui/kanban or @oge-ui/react-kanban.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+  },
+  {
     dir: 'scheduler',
     npm: '@oge-ui/scheduler',
     label: 'Scheduler',

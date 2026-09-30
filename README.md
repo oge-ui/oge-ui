@@ -126,7 +126,8 @@ No modules, no forms boilerplate — `[(value)]` binds straight to a
 ## Packages
 
 All packages are MIT except `@oge-ui/pivot`, `@oge-ui/bpmn`,
-`@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`, which are
+`@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` (with its
+`@oge-ui/kanban-engine` and `@oge-ui/react-kanban`) and `@oge-ui/charts`, which are
 commercial (free for evaluation and development) — see [Licensing](#licensing).
 
 | Package                                                 | Description                                                                                                                                                                                                                                                                                                                                                                               | npm                                                           |
@@ -139,6 +140,7 @@ commercial (free for evaluation and development) — see [Licensing](#licensing)
 | [`@oge-ui/scheduler`](packages/scheduler)               | Scheduler (commercial): day/week/month event calendar, all-day strip, drag & resize with Escape-cancel, appointment popup + form                                                                                                                                                                                                                                                          | [npm](https://www.npmjs.com/package/@oge-ui/scheduler)        |
 | [`@oge-ui/gantt`](packages/gantt)                       | Gantt (commercial): task tree + timeline, dependencies, critical path, baselines, drag editing, undo/redo                                                                                                                                                                                                                                                                                 | [npm](https://www.npmjs.com/package/@oge-ui/gantt)            |
 | [`@oge-ui/kanban`](packages/kanban)                     | Kanban (commercial): columns + swimlanes, WIP limits, per-column virtualization, drag & drop with Escape-cancel, keyboard card moving, built-in dialog and menu                                                                                                                                                                                                                           | [npm](https://www.npmjs.com/package/@oge-ui/kanban)           |
+| [`@oge-ui/kanban-engine`](packages/kanban-engine)       | Kanban engine (commercial): the framework-free board model, drag/keyboard machines, move pipeline and editor model both Kanban render layers run                                                                                                                                                                                                                                          | [npm](https://www.npmjs.com/package/@oge-ui/kanban-engine)    |
 | [`@oge-ui/charts`](packages/charts)                     | Charts (commercial): line/spline/area/bar/stacked/scatter/range/candlestick + pie/doughnut on a dependency-free SVG kernel — zoom & pan, crosshair, tooltips, legend                                                                                                                                                                                                                      | [npm](https://www.npmjs.com/package/@oge-ui/charts)           |
 | [`@oge-ui/buttons`](packages/buttons)                   | Buttons, groups & drop-down/split buttons: async actions, click guards, hold-to-confirm                                                                                                                                                                                                                                                                                                   | [npm](https://www.npmjs.com/package/@oge-ui/buttons)          |
 | [`@oge-ui/inputs`](packages/inputs)                     | Form editors: text, number, select / tree select / tag / autocomplete, date, color, checkbox/switch/radio                                                                                                                                                                                                                                                                                 | [npm](https://www.npmjs.com/package/@oge-ui/inputs)           |
@@ -160,6 +162,7 @@ commercial (free for evaluation and development) — see [Licensing](#licensing)
 | [`@oge-ui/react-forms`](packages/react/forms)           | **React.** Form layout over the editors: nested `layout` array of items, groups and tabbed/accordion/wizard sections, responsive columns, declarative validation rules and the validation summary                                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/react-forms)      |
 | [`@oge-ui/react-upload`](packages/react/upload)         | **React.** File upload: drag & drop with directory and paste, restrictions with on-row reasons, previews, chunked resumable transfer, external drop zones and triggers — the same upload engine as the Angular package                                                                                                                                                                    | [npm](https://www.npmjs.com/package/@oge-ui/react-upload)     |
 | [`@oge-ui/react-grid`](packages/react/grid)             | **React.** Data grid on the shared grid engine: sorting, filter row + search, paging, row/column virtualization, windowed remote loading, selection, keyboard navigation, grouping with summaries and deferred groups, master-detail, row render props, row drag, pinned/resizable/reorderable columns, persistence, CSV — editing and header filters follow (see `docs/REACT-PARITY.md`) | [npm](https://www.npmjs.com/package/@oge-ui/react-grid)       |
+| [`@oge-ui/react-kanban`](packages/react/kanban)         | **React.** Kanban (commercial): columns + swimlanes, WIP limits, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving, built-in dialog, menu and toolbar — the same engine and stylesheet as the Angular package                                                                                                                                    | [npm](https://www.npmjs.com/package/@oge-ui/react-kanban)     |
 
 ## Theming
 
@@ -237,7 +240,8 @@ OGE UI is **open-core**:
   `@oge-ui/forms`, `@oge-ui/upload` and `@oge-ui/overlay` are [MIT-licensed](LICENSE). This is a commitment:
   these packages and every feature currently in them will remain MIT.
 - **Commercial — `@oge-ui/pivot`, `@oge-ui/bpmn`, `@oge-ui/scheduler`,
-  `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`.** The pivot grid,
+  `@oge-ui/gantt`, `@oge-ui/kanban` (plus its engine `@oge-ui/kanban-engine`
+  and its React layer `@oge-ui/react-kanban`) and `@oge-ui/charts`.** The pivot grid,
   the BPMN editor, the scheduler, the Gantt, the Kanban and the Charts are
   source-available commercial software: free for evaluation,
   development and testing; production use requires a paid license
@@ -246,6 +250,8 @@ OGE UI is **open-core**:
   [packages/scheduler/LICENSE](packages/scheduler/LICENSE),
   [packages/gantt/LICENSE](packages/gantt/LICENSE),
   [packages/kanban/LICENSE](packages/kanban/LICENSE),
+  [packages/kanban-engine/LICENSE](packages/kanban-engine/LICENSE),
+  [packages/react/kanban/LICENSE](packages/react/kanban/LICENSE),
   [packages/charts/LICENSE](packages/charts/LICENSE),
   [ogeui.com/license](https://ogeui.com/license)). Future
   enterprise-oriented packages may join this tier — never
