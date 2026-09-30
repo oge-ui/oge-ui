@@ -333,7 +333,7 @@ describe('cartesian model — text, hover and interaction', () => {
     expect(chartWheelZoomEnabled('drag')).toBe(false);
     const zoomed = cartesianWheelRange(s, s.plot.w / 2, -1);
     expect(zoomed).not.toBeNull();
-    expect(zoomed!.max - zoomed!.min).toBeLessThan(
+    expect((zoomed?.max ?? 0) - (zoomed?.min ?? 0)).toBeLessThan(
       s.argBounds.max - s.argBounds.min,
     );
     expect(cartesianWheelRange(s, -1, -1)).toBeNull();

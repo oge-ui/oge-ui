@@ -684,7 +684,12 @@ export function buildCartesianScene<T>(
       inLegend: series.input.showInLegend !== false,
     }))
     .filter((item) => item.inLegend)
-    .map(({ inLegend: _inLegend, ...item }) => item);
+    .map(({ seriesIndex, name, color, hidden }) => ({
+      seriesIndex,
+      name,
+      color,
+      hidden,
+    }));
 
   return {
     data,
