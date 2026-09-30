@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_MENUBAR_CONFIG,
   resolveOgeMenubarConfig,
@@ -40,10 +41,18 @@ export const OGE_MENUBAR_CONFIG = new InjectionToken<OgeMenubarConfig>(
  * ```
  */
 export function provideOgeMenubarConfig(
-  config: OgeMenubarConfigInput,
+  config: OgeMenubarConfigInput | (() => OgeMenubarConfigInput),
 ): Provider {
-  return {
-    provide: OGE_MENUBAR_CONFIG,
-    useValue: resolveOgeMenubarConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_MENUBAR_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeMenubarConfig(config()), computed),
+      }
+    : {
+        provide: OGE_MENUBAR_CONFIG,
+        useValue: resolveOgeMenubarConfig(config),
+      };
 }

@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 
 /** Toolbar labels. */
 export interface OgeGanttToolbarMessages {
@@ -205,14 +206,26 @@ export type OgeGanttConfigInput = Partial<Omit<OgeGanttConfig, 'messages'>> & {
  * Configures every `<oge-gantt>` below the provider; shallow merge per
  * top-level key (a partial `messages` replaces whole nested blocks).
  */
-export function provideOgeGanttConfig(config: OgeGanttConfigInput): Provider {
+/** Merges an input over the defaults (messages merged one level deep). */
+function resolveOgeGanttConfig(config: OgeGanttConfigInput): OgeGanttConfig {
   const { messages, ...rest } = config;
   return {
-    provide: OGE_GANTT_CONFIG,
-    useValue: {
-      ...OGE_DEFAULT_GANTT_CONFIG,
-      ...rest,
-      messages: { ...OGE_DEFAULT_GANTT_MESSAGES, ...messages },
-    } satisfies OgeGanttConfig,
+    ...OGE_DEFAULT_GANTT_CONFIG,
+    ...rest,
+    messages: { ...OGE_DEFAULT_GANTT_MESSAGES, ...messages },
   };
+}
+
+export function provideOgeGanttConfig(
+  config: OgeGanttConfigInput | (() => OgeGanttConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_GANTT_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeGanttConfig(config()), computed),
+      }
+    : { provide: OGE_GANTT_CONFIG, useValue: resolveOgeGanttConfig(config) };
 }

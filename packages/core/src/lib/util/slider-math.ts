@@ -60,7 +60,12 @@ export function ratioToValue(
   max: number,
   step: number,
 ): number {
-  return snapToStep(min + clampValue(ratio, 0, 1) * (max - min), min, max, step);
+  return snapToStep(
+    min + clampValue(ratio, 0, 1) * (max - min),
+    min,
+    max,
+    step,
+  );
 }
 
 /** Which thumb of a range pair is being constrained. */

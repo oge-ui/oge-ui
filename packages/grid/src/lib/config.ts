@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_GRID_CONFIG,
   OGE_DEFAULT_GRID_MESSAGES,
@@ -39,11 +40,18 @@ export const OGE_GRID_CONFIG = new InjectionToken<OgeGridConfig>(
  * ]
  * ```
  */
-export function provideOgeGridConfig(config: OgeGridConfigInput): Provider {
-  return {
-    provide: OGE_GRID_CONFIG,
-    useValue: resolveGridConfig(config),
-  };
+export function provideOgeGridConfig(
+  config: OgeGridConfigInput | (() => OgeGridConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_GRID_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveGridConfig(config()), computed),
+      }
+    : { provide: OGE_GRID_CONFIG, useValue: resolveGridConfig(config) };
 }
 
 export function formatPattern(

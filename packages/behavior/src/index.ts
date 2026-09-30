@@ -1055,3 +1055,7 @@ export type {
   OgeValidationRule,
 } from './lib/forms/form-types';
 export { sanitizeUrl, sanitizeResourceUrl } from './lib/security/sanitize-url';
+
+// the live-config helper behind provideOge<X>Config(() => …), re-exported for
+// packages that depend on behavior but not on core
+export { ogeLiveConfig } from '@oge-ui/core';

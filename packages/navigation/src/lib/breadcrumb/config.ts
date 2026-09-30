@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_BREADCRUMB_CONFIG,
   resolveOgeBreadcrumbConfig,
@@ -37,10 +38,18 @@ export const OGE_BREADCRUMB_CONFIG = new InjectionToken<OgeBreadcrumbConfig>(
  * ```
  */
 export function provideOgeBreadcrumbConfig(
-  config: OgeBreadcrumbConfigInput,
+  config: OgeBreadcrumbConfigInput | (() => OgeBreadcrumbConfigInput),
 ): Provider {
-  return {
-    provide: OGE_BREADCRUMB_CONFIG,
-    useValue: resolveOgeBreadcrumbConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_BREADCRUMB_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeBreadcrumbConfig(config()), computed),
+      }
+    : {
+        provide: OGE_BREADCRUMB_CONFIG,
+        useValue: resolveOgeBreadcrumbConfig(config),
+      };
 }

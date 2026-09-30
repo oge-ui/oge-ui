@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_TOOLBAR_CONFIG,
   resolveOgeToolbarConfig,
@@ -35,10 +36,18 @@ export const OGE_TOOLBAR_CONFIG = new InjectionToken<OgeToolbarConfig>(
  * ```
  */
 export function provideOgeToolbarConfig(
-  config: OgeToolbarConfigInput,
+  config: OgeToolbarConfigInput | (() => OgeToolbarConfigInput),
 ): Provider {
-  return {
-    provide: OGE_TOOLBAR_CONFIG,
-    useValue: resolveOgeToolbarConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_TOOLBAR_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeToolbarConfig(config()), computed),
+      }
+    : {
+        provide: OGE_TOOLBAR_CONFIG,
+        useValue: resolveOgeToolbarConfig(config),
+      };
 }

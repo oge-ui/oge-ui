@@ -66,3 +66,28 @@ provideOgeInputsConfig({
   spinRepeatIntervalMs: 60,
   copiedResetMs: 1500,     // "copied" indicator duration
 })`;
+
+export const RUNTIME = `import { signal } from '@angular/core';
+import { provideOgeGridConfig } from '@oge-ui/grid';
+import { provideOgeInputsConfig } from '@oge-ui/inputs';
+import { GRID_TR, INPUTS_TR } from './i18n/tr';
+
+/** The app's own language state — a cookie, a store, a user setting… */
+export const uiLanguage = signal<'en' | 'tr'>('en');
+
+// Pass a function instead of an object: the config becomes live. Every OGE
+// component re-renders its strings when a signal the function reads changes —
+// no reload, no re-bootstrap. English is the built-in default, so '{}' is enough.
+export const appConfig = {
+  providers: [
+    provideOgeGridConfig(() => ({
+      messages: uiLanguage() === 'tr' ? GRID_TR : {},
+    })),
+    provideOgeInputsConfig(() => ({
+      messages: uiLanguage() === 'tr' ? INPUTS_TR : {},
+      locale: uiLanguage() === 'tr' ? 'tr-TR' : 'en-US', // Intl formats follow too
+    })),
+  ],
+};
+
+// anywhere: uiLanguage.set('tr');`;

@@ -7,12 +7,14 @@ import {
   GLOBAL,
   NUMBER_LOCALE,
   PER_COMPONENT,
+  RUNTIME,
   VALIDATION,
 } from './localization-snippets';
 
 const SECTIONS = [
   'How it works',
   'Global configuration',
+  'Switching language at runtime',
   'Per-component overrides',
   'Validation messages',
   'Number & date locales',
@@ -61,6 +63,21 @@ const SECTIONS = [
     <h2 id="global-configuration" class="scroll-mt-20">Global configuration</h2>
     <app-code-block [code]="global" language="ts" />
 
+    <h2 id="switching-language-at-runtime" class="scroll-mt-20">
+      Switching language at runtime
+    </h2>
+    <p>
+      Every <code>provideOge…Config()</code> also accepts a <em>function</em>.
+      The config then follows the signals that function reads: flip your
+      language signal and every OGE component re-renders its strings — and, with
+      <code>locale</code>, its number and date formats — without reloading the
+      page or fetching the catalog before bootstrap. A component-level
+      <code>[messages]</code> input still wins over it. In React, pass a new
+      <code>config</code> to the <code>&lt;Oge…ConfigProvider&gt;</code>;
+      context already re-renders.
+    </p>
+    <app-code-block [code]="runtime" language="ts" />
+
     <h2 id="per-component-overrides" class="scroll-mt-20">
       Per-component overrides
     </h2>
@@ -100,6 +117,7 @@ const SECTIONS = [
 })
 export class GettingStartedLocalizationPage {
   protected readonly sections = SECTIONS;
+  protected readonly runtime = RUNTIME;
   protected readonly global = GLOBAL;
   protected readonly perComponent = PER_COMPONENT;
   protected readonly validation = VALIDATION;

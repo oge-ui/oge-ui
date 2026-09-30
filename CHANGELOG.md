@@ -134,6 +134,16 @@ design notes. Every item below removes one of those workarounds.
   can too. Same one-grid measurement: **913 KB → 704 KB** initial (1,080 KB
   before this release).
 
+### Added (all Angular families)
+
+- **Switch the UI language at runtime.** Every `provideOge…Config()` (all 25)
+  also accepts a function: `provideOgeGridConfig(() => ({ messages: lang() ===
+'tr' ? TR : {} }))`. The config then follows the signals the function reads,
+  and components re-render their strings — and, with `locale`, their Intl
+  formats — without a reload; apps no longer have to fetch the catalog before
+  `bootstrapApplication`. The object form is unchanged. (React providers
+  already re-resolve when their `config` prop changes.)
+
 ### Fixed (inputs)
 
 - **The number box ignored `provideOgeInputsConfig({ locale })`** and parsed

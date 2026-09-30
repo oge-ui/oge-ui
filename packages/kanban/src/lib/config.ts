@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 
 /** Toolbar labels. */
 export interface OgeKanbanToolbarMessages {
@@ -186,14 +187,26 @@ export type OgeKanbanConfigInput = Partial<
  * Configures every `<oge-kanban>` below the provider; shallow merge per
  * top-level key (a partial `messages` replaces whole nested blocks).
  */
-export function provideOgeKanbanConfig(config: OgeKanbanConfigInput): Provider {
+/** Merges an input over the defaults (messages merged one level deep). */
+function resolveOgeKanbanConfig(config: OgeKanbanConfigInput): OgeKanbanConfig {
   const { messages, ...rest } = config;
   return {
-    provide: OGE_KANBAN_CONFIG,
-    useValue: {
-      ...OGE_DEFAULT_KANBAN_CONFIG,
-      ...rest,
-      messages: { ...OGE_DEFAULT_KANBAN_MESSAGES, ...messages },
-    } satisfies OgeKanbanConfig,
+    ...OGE_DEFAULT_KANBAN_CONFIG,
+    ...rest,
+    messages: { ...OGE_DEFAULT_KANBAN_MESSAGES, ...messages },
   };
+}
+
+export function provideOgeKanbanConfig(
+  config: OgeKanbanConfigInput | (() => OgeKanbanConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_KANBAN_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeKanbanConfig(config()), computed),
+      }
+    : { provide: OGE_KANBAN_CONFIG, useValue: resolveOgeKanbanConfig(config) };
 }

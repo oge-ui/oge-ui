@@ -36,6 +36,7 @@ export * from './lib/virtual/viewport-window';
 export * from './lib/util/comparators';
 export * from './lib/util/text-fold';
 export * from './lib/util/value-accessor';
+export * from './lib/util/live-config';
 export * from './lib/util/date-utils';
 export * from './lib/util/async-guard';
 export * from './lib/util/nav-index';

@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/behavior';
 import {
   OGE_DEFAULT_BUTTONS_CONFIG,
   resolveOgeButtonsConfig,
@@ -38,10 +39,18 @@ export const OGE_BUTTONS_CONFIG = new InjectionToken<OgeButtonsConfig>(
  * ```
  */
 export function provideOgeButtonsConfig(
-  config: OgeButtonsConfigInput,
+  config: OgeButtonsConfigInput | (() => OgeButtonsConfigInput),
 ): Provider {
-  return {
-    provide: OGE_BUTTONS_CONFIG,
-    useValue: resolveOgeButtonsConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_BUTTONS_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeButtonsConfig(config()), computed),
+      }
+    : {
+        provide: OGE_BUTTONS_CONFIG,
+        useValue: resolveOgeButtonsConfig(config),
+      };
 }

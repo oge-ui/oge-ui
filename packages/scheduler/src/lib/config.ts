@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 
 /** Labels of the header toolbar (navigation + view switcher). */
 export interface OgeSchedulerToolbarMessages {
@@ -294,16 +295,31 @@ export type OgeSchedulerConfigInput = Partial<
  * ]
  * ```
  */
-export function provideOgeSchedulerConfig(
+/** Merges an input over the defaults (messages merged one level deep). */
+function resolveOgeSchedulerConfig(
   config: OgeSchedulerConfigInput,
-): Provider {
+): OgeSchedulerConfig {
   const { messages, ...rest } = config;
   return {
-    provide: OGE_SCHEDULER_CONFIG,
-    useValue: {
-      ...OGE_DEFAULT_SCHEDULER_CONFIG,
-      ...rest,
-      messages: { ...OGE_DEFAULT_SCHEDULER_MESSAGES, ...messages },
-    } satisfies OgeSchedulerConfig,
+    ...OGE_DEFAULT_SCHEDULER_CONFIG,
+    ...rest,
+    messages: { ...OGE_DEFAULT_SCHEDULER_MESSAGES, ...messages },
   };
+}
+
+export function provideOgeSchedulerConfig(
+  config: OgeSchedulerConfigInput | (() => OgeSchedulerConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_SCHEDULER_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeSchedulerConfig(config()), computed),
+      }
+    : {
+        provide: OGE_SCHEDULER_CONFIG,
+        useValue: resolveOgeSchedulerConfig(config),
+      };
 }

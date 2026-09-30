@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/behavior';
 import {
   OGE_DEFAULT_UPLOAD_CONFIG,
   resolveUploadConfig,
@@ -40,9 +41,16 @@ export const OGE_UPLOAD_CONFIG = new InjectionToken<OgeUploadConfig>(
  * })
  * ```
  */
-export function provideOgeUploadConfig(config: OgeUploadConfigInput): Provider {
-  return {
-    provide: OGE_UPLOAD_CONFIG,
-    useValue: resolveUploadConfig(config),
-  };
+export function provideOgeUploadConfig(
+  config: OgeUploadConfigInput | (() => OgeUploadConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_UPLOAD_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveUploadConfig(config()), computed),
+      }
+    : { provide: OGE_UPLOAD_CONFIG, useValue: resolveUploadConfig(config) };
 }

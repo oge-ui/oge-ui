@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_STEPPER_CONFIG,
   resolveOgeStepperConfig,
@@ -37,10 +38,18 @@ export const OGE_STEPPER_CONFIG = new InjectionToken<OgeStepperConfig>(
  * ```
  */
 export function provideOgeStepperConfig(
-  config: OgeStepperConfigInput,
+  config: OgeStepperConfigInput | (() => OgeStepperConfigInput),
 ): Provider {
-  return {
-    provide: OGE_STEPPER_CONFIG,
-    useValue: resolveOgeStepperConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_STEPPER_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeStepperConfig(config()), computed),
+      }
+    : {
+        provide: OGE_STEPPER_CONFIG,
+        useValue: resolveOgeStepperConfig(config),
+      };
 }

@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_INPUTS_CONFIG,
   resolveOgeInputsConfig,
@@ -36,9 +37,16 @@ export const OGE_INPUTS_CONFIG = new InjectionToken<OgeInputsConfig>(
  * ]
  * ```
  */
-export function provideOgeInputsConfig(config: OgeInputsConfigInput): Provider {
-  return {
-    provide: OGE_INPUTS_CONFIG,
-    useValue: resolveOgeInputsConfig(config),
-  };
+export function provideOgeInputsConfig(
+  config: OgeInputsConfigInput | (() => OgeInputsConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_INPUTS_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeInputsConfig(config()), computed),
+      }
+    : { provide: OGE_INPUTS_CONFIG, useValue: resolveOgeInputsConfig(config) };
 }

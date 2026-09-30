@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_LOAD_INDICATOR_CONFIG,
   resolveOgeLoadIndicatorConfig,
@@ -32,10 +33,21 @@ export const OGE_LOAD_INDICATOR_CONFIG =
  * ```
  */
 export function provideOgeLoadIndicatorConfig(
-  config: OgeLoadIndicatorConfigInput,
+  config: OgeLoadIndicatorConfigInput | (() => OgeLoadIndicatorConfigInput),
 ): Provider {
-  return {
-    provide: OGE_LOAD_INDICATOR_CONFIG,
-    useValue: resolveOgeLoadIndicatorConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_LOAD_INDICATOR_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(
+            () => resolveOgeLoadIndicatorConfig(config()),
+            computed,
+          ),
+      }
+    : {
+        provide: OGE_LOAD_INDICATOR_CONFIG,
+        useValue: resolveOgeLoadIndicatorConfig(config),
+      };
 }

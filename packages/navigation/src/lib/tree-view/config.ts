@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_TREE_VIEW_CONFIG,
   resolveOgeTreeViewConfig,
@@ -36,10 +37,18 @@ export const OGE_TREE_VIEW_CONFIG = new InjectionToken<OgeTreeViewConfig>(
  * ```
  */
 export function provideOgeTreeViewConfig(
-  config: OgeTreeViewConfigInput,
+  config: OgeTreeViewConfigInput | (() => OgeTreeViewConfigInput),
 ): Provider {
-  return {
-    provide: OGE_TREE_VIEW_CONFIG,
-    useValue: resolveOgeTreeViewConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_TREE_VIEW_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeTreeViewConfig(config()), computed),
+      }
+    : {
+        provide: OGE_TREE_VIEW_CONFIG,
+        useValue: resolveOgeTreeViewConfig(config),
+      };
 }

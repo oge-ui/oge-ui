@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_TABS_CONFIG,
   resolveOgeTabsConfig,
@@ -35,9 +36,16 @@ export const OGE_TABS_CONFIG = new InjectionToken<OgeTabsConfig>(
  * ]
  * ```
  */
-export function provideOgeTabsConfig(config: OgeTabsConfigInput): Provider {
-  return {
-    provide: OGE_TABS_CONFIG,
-    useValue: resolveOgeTabsConfig(config),
-  };
+export function provideOgeTabsConfig(
+  config: OgeTabsConfigInput | (() => OgeTabsConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_TABS_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeTabsConfig(config()), computed),
+      }
+    : { provide: OGE_TABS_CONFIG, useValue: resolveOgeTabsConfig(config) };
 }

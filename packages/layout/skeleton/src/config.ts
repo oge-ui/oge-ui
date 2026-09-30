@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_SKELETON_CONFIG,
   resolveOgeSkeletonConfig,
@@ -23,10 +24,18 @@ export const OGE_SKELETON_CONFIG = new InjectionToken<OgeSkeletonConfig>(
 
 /** Application- or component-scoped skeleton defaults. */
 export function provideOgeSkeletonConfig(
-  config: OgeSkeletonConfigInput,
+  config: OgeSkeletonConfigInput | (() => OgeSkeletonConfigInput),
 ): Provider {
-  return {
-    provide: OGE_SKELETON_CONFIG,
-    useValue: resolveOgeSkeletonConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_SKELETON_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeSkeletonConfig(config()), computed),
+      }
+    : {
+        provide: OGE_SKELETON_CONFIG,
+        useValue: resolveOgeSkeletonConfig(config),
+      };
 }

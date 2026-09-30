@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_ACCORDION_CONFIG,
   resolveOgeAccordionConfig,
@@ -36,10 +37,18 @@ export const OGE_ACCORDION_CONFIG = new InjectionToken<OgeAccordionConfig>(
  * ```
  */
 export function provideOgeAccordionConfig(
-  config: OgeAccordionConfigInput,
+  config: OgeAccordionConfigInput | (() => OgeAccordionConfigInput),
 ): Provider {
-  return {
-    provide: OGE_ACCORDION_CONFIG,
-    useValue: resolveOgeAccordionConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_ACCORDION_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeAccordionConfig(config()), computed),
+      }
+    : {
+        provide: OGE_ACCORDION_CONFIG,
+        useValue: resolveOgeAccordionConfig(config),
+      };
 }

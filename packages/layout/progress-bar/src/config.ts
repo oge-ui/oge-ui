@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_PROGRESS_BAR_CONFIG,
   resolveOgeProgressBarConfig,
@@ -34,10 +35,18 @@ export const OGE_PROGRESS_BAR_CONFIG = new InjectionToken<OgeProgressBarConfig>(
  * ```
  */
 export function provideOgeProgressBarConfig(
-  config: OgeProgressBarConfigInput,
+  config: OgeProgressBarConfigInput | (() => OgeProgressBarConfigInput),
 ): Provider {
-  return {
-    provide: OGE_PROGRESS_BAR_CONFIG,
-    useValue: resolveOgeProgressBarConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_PROGRESS_BAR_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeProgressBarConfig(config()), computed),
+      }
+    : {
+        provide: OGE_PROGRESS_BAR_CONFIG,
+        useValue: resolveOgeProgressBarConfig(config),
+      };
 }

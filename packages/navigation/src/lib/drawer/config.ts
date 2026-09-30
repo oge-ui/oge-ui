@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_DRAWER_CONFIG,
   resolveOgeDrawerConfig,
@@ -36,9 +37,16 @@ export const OGE_DRAWER_CONFIG = new InjectionToken<OgeDrawerConfig>(
  * ]
  * ```
  */
-export function provideOgeDrawerConfig(config: OgeDrawerConfigInput): Provider {
-  return {
-    provide: OGE_DRAWER_CONFIG,
-    useValue: resolveOgeDrawerConfig(config),
-  };
+export function provideOgeDrawerConfig(
+  config: OgeDrawerConfigInput | (() => OgeDrawerConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_DRAWER_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeDrawerConfig(config()), computed),
+      }
+    : { provide: OGE_DRAWER_CONFIG, useValue: resolveOgeDrawerConfig(config) };
 }

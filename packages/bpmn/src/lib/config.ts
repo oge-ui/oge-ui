@@ -1,4 +1,4 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
 import type {
   BpmnActivityMarker,
   BpmnEdgeType,
@@ -532,14 +532,42 @@ export type OgeBpmnConfigInput = Partial<Omit<OgeBpmnConfig, 'messages'>> & {
  * ]
  * ```
  */
-export function provideOgeBpmnConfig(config: OgeBpmnConfigInput): Provider {
+/** Merges an input over the defaults (messages merged one level deep). */
+function resolveOgeBpmnConfig(config: OgeBpmnConfigInput): OgeBpmnConfig {
   const { messages, ...rest } = config;
   return {
-    provide: OGE_BPMN_CONFIG,
-    useValue: {
-      ...OGE_DEFAULT_BPMN_CONFIG,
-      ...rest,
-      messages: { ...OGE_DEFAULT_BPMN_MESSAGES, ...messages },
-    } satisfies OgeBpmnConfig,
+    ...OGE_DEFAULT_BPMN_CONFIG,
+    ...rest,
+    messages: { ...OGE_DEFAULT_BPMN_MESSAGES, ...messages },
   };
+}
+
+export function provideOgeBpmnConfig(
+  config: OgeBpmnConfigInput | (() => OgeBpmnConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_BPMN_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeBpmnConfig(config()), computed),
+      }
+    : { provide: OGE_BPMN_CONFIG, useValue: resolveOgeBpmnConfig(config) };
+}
+
+/** Local copy of `@oge-ui/core`'s `ogeLiveConfig` — this package has no dependencies. */
+function ogeLiveConfig<T extends object>(
+  read: () => T,
+  derive: <V>(compute: () => V) => () => V,
+): T {
+  const current = derive(read);
+  const live = {} as T;
+  for (const key of Object.keys(current()) as (keyof T)[]) {
+    Object.defineProperty(live, key, {
+      enumerable: true,
+      get: () => current()[key],
+    });
+  }
+  return live;
 }

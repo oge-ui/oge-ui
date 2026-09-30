@@ -39,7 +39,10 @@ Follow these rules and generated code compiles on the first try.
    `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
    `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
    `messages` block — that is how localization works; there is no i18n
-   dependency.
+   dependency. Pass a function instead of an object
+   (`provideOgeGridConfig(() => ({ messages: lang() === 'tr' ? TR : {} }))`)
+   and the config is live: components re-render their strings when the signals
+   it reads change, so the language switches without a reload.
 8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
    internal class names to change colors or sizing; override the token.
 9. **Templates and slots are structural directives on the markup you want**,

@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_PAGINATION_CONFIG,
   resolveOgePaginationConfig,
@@ -37,10 +38,18 @@ export const OGE_PAGINATION_CONFIG = new InjectionToken<OgePaginationConfig>(
  * ```
  */
 export function provideOgePaginationConfig(
-  config: OgePaginationConfigInput,
+  config: OgePaginationConfigInput | (() => OgePaginationConfigInput),
 ): Provider {
-  return {
-    provide: OGE_PAGINATION_CONFIG,
-    useValue: resolveOgePaginationConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_PAGINATION_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgePaginationConfig(config()), computed),
+      }
+    : {
+        provide: OGE_PAGINATION_CONFIG,
+        useValue: resolveOgePaginationConfig(config),
+      };
 }

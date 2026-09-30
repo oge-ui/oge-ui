@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/behavior';
 import {
   OGE_DEFAULT_OVERLAY_CONFIG,
   resolveOverlayConfig,
@@ -33,10 +34,15 @@ export const OGE_OVERLAY_CONFIG = new InjectionToken<OgeOverlayConfig>(
  * ```
  */
 export function provideOgeOverlayConfig(
-  config: OgeOverlayConfigInput,
+  config: OgeOverlayConfigInput | (() => OgeOverlayConfigInput),
 ): Provider {
-  return {
-    provide: OGE_OVERLAY_CONFIG,
-    useValue: resolveOverlayConfig(config),
-  };
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_OVERLAY_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOverlayConfig(config()), computed),
+      }
+    : { provide: OGE_OVERLAY_CONFIG, useValue: resolveOverlayConfig(config) };
 }

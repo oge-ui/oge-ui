@@ -1,4 +1,5 @@
-import { InjectionToken, type Provider } from '@angular/core';
+import { computed, InjectionToken, type Provider } from '@angular/core';
+import { ogeLiveConfig } from '@oge-ui/core';
 import {
   OGE_DEFAULT_CARD_CONFIG,
   resolveOgeCardConfig,
@@ -20,6 +21,16 @@ export const OGE_CARD_CONFIG = new InjectionToken<OgeCardConfig>(
 );
 
 /** Application- or component-scoped card defaults. */
-export function provideOgeCardConfig(config: OgeCardConfigInput): Provider {
-  return { provide: OGE_CARD_CONFIG, useValue: resolveOgeCardConfig(config) };
+export function provideOgeCardConfig(
+  config: OgeCardConfigInput | (() => OgeCardConfigInput),
+): Provider {
+  // a function makes the config live: components re-render when a signal it
+  // reads changes — e.g. switching the UI language without a reload
+  return typeof config === 'function'
+    ? {
+        provide: OGE_CARD_CONFIG,
+        useFactory: () =>
+          ogeLiveConfig(() => resolveOgeCardConfig(config()), computed),
+      }
+    : { provide: OGE_CARD_CONFIG, useValue: resolveOgeCardConfig(config) };
 }
