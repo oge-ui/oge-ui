@@ -188,6 +188,33 @@ export default [
               ],
             },
             {
+              // commercial engine (ADR 0003): framework-free like core and
+              // behavior, and like them it may take only the MIT substrate —
+              // commercial may depend on MIT, never the reverse, so no MIT
+              // scope lists this tag except the two Gantt render layers
+              sourceTag: 'scope:gantt-engine',
+              onlyDependOnLibsWithTags: [
+                'scope:gantt-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React Gantt mirrors the Angular package's edges: its
+              // engine, the task dialog (react-forms → react-inputs) and the
+              // modal around it (react-overlay)
+              sourceTag: 'scope:react-gantt',
+              onlyDependOnLibsWithTags: [
+                'scope:react-gantt',
+                'scope:gantt-engine',
+                'scope:react-forms',
+                'scope:react-inputs',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
               sourceTag: 'scope:react-upload',
               onlyDependOnLibsWithTags: [
                 'scope:react-upload',
@@ -292,6 +319,8 @@ export default [
               sourceTag: 'scope:gantt',
               onlyDependOnLibsWithTags: [
                 'scope:gantt',
+                'scope:gantt-engine',
+                'scope:behavior',
                 'scope:core',
                 'scope:overlay',
                 'scope:inputs',
@@ -455,9 +484,11 @@ export default [
                 'scope:react-forms',
                 'scope:react-upload',
                 'scope:react-grid',
+                'scope:react-gantt',
                 'scope:react-oge',
                 'scope:react-overlay',
                 'scope:behavior',
+                'scope:gantt-engine',
                 'scope:grid',
                 'scope:tree-list',
                 'scope:pivot',

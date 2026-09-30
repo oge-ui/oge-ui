@@ -23,8 +23,9 @@ describe('time-scale', () => {
     const scale = buildGanttScale(start, end, 'days', 1);
     const px = dateToPx(scale, new Date(2026, 0, 7, 12));
     const back = pxToDate(scale, px);
-    expect(Math.abs(back.getTime() - new Date(2026, 0, 7, 12).getTime()))
-      .toBeLessThan(60_000);
+    expect(
+      Math.abs(back.getTime() - new Date(2026, 0, 7, 12).getTime()),
+    ).toBeLessThan(60_000);
   });
 
   it('months scale keeps calendar-true ticks with uneven widths handled', () => {

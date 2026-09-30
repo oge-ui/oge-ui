@@ -1,61 +1,28 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   ViewEncapsulation,
-  computed,
   contentChild,
   effect,
   inject,
   input,
   model,
   output,
-  signal,
   untracked,
   viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import type { OgeFormItemData } from '@oge-ui/forms';
+import type { RowKey } from '@oge-ui/core';
 import {
-  contrastForeground,
-  parseColor,
-  resolveFirstDayOfWeek,
-  sameDay,
-  startOfDay,
-  type RowKey,
-} from '@oge-ui/core';
+  OgeGanttCore,
+  type GanttFieldExpr,
+  type OgeGanttCoreEvents,
+} from '@oge-ui/gantt-engine';
 import type { OgeGanttMessages } from '../config';
 import { OGE_GANTT_CONFIG } from '../config';
-import {
-  dependencyAnchors,
-  dependencyPath,
-  routeDependency,
-} from '../engine/dependency-routing';
-import {
-  chartPxToDate,
-  proposeTaskMove,
-  proposeTaskProgress,
-  proposeTaskResize,
-  type GanttTaskProposal,
-} from '../engine/gantt-gesture-math';
-import {
-  buildGanttDependencies,
-  buildGanttTasks,
-  ganttTaskPatch,
-  resolveGanttFields,
-  wouldCreateCycle,
-  type GanttDependency,
-  type GanttFieldExpr,
-  type GanttTask,
-} from '../engine/gantt-model';
-import { autoScheduleForward, criticalPathKeys } from '../engine/schedule';
-import { isWorkingDay, type GanttWorkCalendar } from '../engine/work-calendar';
-import { buildResourceWorkload } from '../engine/workload';
-import {
-  buildGanttScale,
-  dateToPx,
-  GANTT_SCALE_ORDER,
-  type GanttScale,
-} from '../engine/time-scale';
 import type {
   OgeGanttColumn,
   OgeGanttDependencyDeletedEvent,
@@ -65,6 +32,7 @@ import type {
   OgeGanttDependencyType,
   OgeGanttDialogShowingEvent,
   OgeGanttExportData,
+  OgeGanttResource,
   OgeGanttScaleType,
   OgeGanttSelectionChangedEvent,
   OgeGanttStripLine,
@@ -77,42 +45,14 @@ import type {
   OgeGanttTaskTitlePosition,
   OgeGanttTaskUpdatedEvent,
   OgeGanttTaskUpdatingEvent,
+  OgeGanttWorkCalendar,
 } from '../gantt-types';
-import { beginGanttGesture } from './gantt-gesture';
-import {
-  OgeGanttTaskDialog,
-  type GanttEditorModel,
-  type GanttEditorResult,
-} from './gantt-task-dialog';
+import { OgeGanttTaskDialog } from './gantt-task-dialog';
 import {
   OgeGanttTaskTemplate,
   OgeGanttTooltipTemplate,
 } from './gantt-templates';
-
-/** One rendered chart bar with its pixel geometry. */
-interface GanttBar<T> {
-  readonly task: GanttTask<T>;
-  readonly index: number;
-  readonly leftPx: number;
-  readonly widthPx: number;
-  readonly baselineLeftPx: number | null;
-  readonly baselineWidthPx: number | null;
-  readonly critical: boolean;
-}
-
-/** One routed dependency arrow. */
-interface GanttArrow<D> {
-  readonly dependency: GanttDependency<D>;
-  readonly path: string;
-  readonly critical: boolean;
-}
-
-interface UndoSnapshot<T, D> {
-  readonly tasks: readonly T[];
-  readonly dependencies: readonly D[];
-}
-
-const OVERSCAN_ROWS = 6;
+import { SIGNAL_ADAPTER } from './signal-adapter';
 
 /**
  * Signal-based Gantt chart — commercial (`@oge-ui/gantt`). A task tree
@@ -136,9 +76,9 @@ const OVERSCAN_ROWS = 6;
     <div
       class="oge-gantt-toolbar"
       role="toolbar"
-      [attr.aria-label]="msg().toolbar.label"
+      [attr.aria-label]="core.msg().toolbar.label"
     >
-      @if (effectiveEditing() && allowTaskAdding()) {
+      @if (core.effectiveEditing() && allowTaskAdding()) {
         <button
           type="button"
           class="oge-gantt-btn oge-gantt-btn-primary oge-gantt-btn-add"
@@ -156,15 +96,15 @@ const OVERSCAN_ROWS = 6;
           >
             <path d="M8 3.5v9M3.5 8h9" />
           </svg>
-          {{ msg().toolbar.addTask }}
+          {{ core.msg().toolbar.addTask }}
         </button>
       }
       <div class="oge-gantt-toolbar-group">
         <button
           type="button"
           class="oge-gantt-btn oge-gantt-btn-icon"
-          [attr.aria-label]="msg().toolbar.zoomOut"
-          [disabled]="!canZoom(1)"
+          [attr.aria-label]="core.msg().toolbar.zoomOut"
+          [disabled]="!core.canZoom(1)"
           (click)="zoomOut()"
         >
           <svg
@@ -184,8 +124,8 @@ const OVERSCAN_ROWS = 6;
         <button
           type="button"
           class="oge-gantt-btn oge-gantt-btn-icon"
-          [attr.aria-label]="msg().toolbar.zoomIn"
-          [disabled]="!canZoom(-1)"
+          [attr.aria-label]="core.msg().toolbar.zoomIn"
+          [disabled]="!core.canZoom(-1)"
           (click)="zoomIn()"
         >
           <svg
@@ -203,27 +143,27 @@ const OVERSCAN_ROWS = 6;
           </svg>
         </button>
         <button type="button" class="oge-gantt-btn" (click)="zoomToFit()">
-          {{ msg().toolbar.zoomToFit }}
+          {{ core.msg().toolbar.zoomToFit }}
         </button>
-        <button type="button" class="oge-gantt-btn" (click)="goToday()">
-          {{ msg().toolbar.today }}
+        <button type="button" class="oge-gantt-btn" (click)="core.goToday()">
+          {{ core.msg().toolbar.today }}
         </button>
       </div>
       <div class="oge-gantt-toolbar-group">
         <button type="button" class="oge-gantt-btn" (click)="expandAll()">
-          {{ msg().toolbar.expandAll }}
+          {{ core.msg().toolbar.expandAll }}
         </button>
         <button type="button" class="oge-gantt-btn" (click)="collapseAll()">
-          {{ msg().toolbar.collapseAll }}
+          {{ core.msg().toolbar.collapseAll }}
         </button>
       </div>
-      @if (effectiveEditing()) {
+      @if (core.effectiveEditing()) {
         <div class="oge-gantt-toolbar-group">
           <button
             type="button"
             class="oge-gantt-btn oge-gantt-btn-icon"
-            [attr.aria-label]="msg().toolbar.undo"
-            [disabled]="!canUndo()"
+            [attr.aria-label]="core.msg().toolbar.undo"
+            [disabled]="!core.canUndo()"
             (click)="undo()"
           >
             <svg
@@ -243,8 +183,8 @@ const OVERSCAN_ROWS = 6;
           <button
             type="button"
             class="oge-gantt-btn oge-gantt-btn-icon"
-            [attr.aria-label]="msg().toolbar.redo"
-            [disabled]="!canRedo()"
+            [attr.aria-label]="core.msg().toolbar.redo"
+            [disabled]="!core.canRedo()"
             (click)="redo()"
           >
             <svg
@@ -265,8 +205,8 @@ const OVERSCAN_ROWS = 6;
       }
     </div>
 
-    <div class="oge-gantt-body" #bodyEl (scroll)="onBodyScroll()">
-      @if (visibleTasks().length === 0) {
+    <div class="oge-gantt-body" #bodyEl (scroll)="core.onBodyScroll()">
+      @if (core.visibleTasks().length === 0) {
         <div class="oge-gantt-empty">
           <svg
             viewBox="0 0 48 48"
@@ -282,23 +222,25 @@ const OVERSCAN_ROWS = 6;
             <rect x="14" y="21" width="28" height="7" rx="3.5" />
             <rect x="10" y="32" width="18" height="7" rx="3.5" />
           </svg>
-          <div class="oge-gantt-empty-title">{{ msg().grid.noTasks }}</div>
-          <div class="oge-gantt-empty-hint">{{ msg().grid.noTasksHint }}</div>
-          @if (effectiveEditing() && allowTaskAdding()) {
+          <div class="oge-gantt-empty-title">{{ core.msg().grid.noTasks }}</div>
+          <div class="oge-gantt-empty-hint">
+            {{ core.msg().grid.noTasksHint }}
+          </div>
+          @if (core.effectiveEditing() && allowTaskAdding()) {
             <button
               type="button"
               class="oge-gantt-btn oge-gantt-btn-primary"
               (click)="showTaskDetailsDialog()"
             >
-              {{ msg().toolbar.addTask }}
+              {{ core.msg().toolbar.addTask }}
             </button>
           }
         </div>
       }
       <div
         class="oge-gantt-layout"
-        [style.--oge-gantt-list-width.px]="listWidth()"
-        [style.--oge-gantt-row-height.px]="rowHeight()"
+        [style.--oge-gantt-list-width.px]="core.listWidth()"
+        [style.--oge-gantt-row-height.px]="core.rowHeight()"
       >
         <!-- ======== task list pane ======== -->
         <!-- delegated keydown; focus lives on the roving row -->
@@ -306,12 +248,12 @@ const OVERSCAN_ROWS = 6;
         <div
           class="oge-gantt-pane"
           role="treegrid"
-          [attr.aria-label]="paneAriaLabel()"
+          [attr.aria-label]="core.paneAriaLabel()"
           [attr.aria-rowcount]="tasks().length"
-          (keydown)="onPaneKeydown($event)"
+          (keydown)="core.onPaneKeydown($event)"
         >
           <div class="oge-gantt-pane-header" role="row">
-            @for (column of resolvedColumns(); track column.field) {
+            @for (column of core.resolvedColumns(); track column.field) {
               <div
                 class="oge-gantt-pane-headcell"
                 role="columnheader"
@@ -321,29 +263,31 @@ const OVERSCAN_ROWS = 6;
               </div>
             }
           </div>
-          <div [style.height.px]="windowTopPx()" aria-hidden="true"></div>
-          @for (task of windowTasks(); track task.key) {
+          <div [style.height.px]="core.windowTopPx()" aria-hidden="true"></div>
+          @for (task of core.windowTasks(); track task.key) {
             <div
               class="oge-gantt-row"
               role="row"
               [attr.aria-level]="task.level + 1"
               [attr.aria-expanded]="task.hasChildren ? task.expanded : null"
               [attr.aria-selected]="task.key === selectedTaskKey()"
-              [attr.aria-rowindex]="rowIndexOf(task) + 1"
-              [attr.aria-label]="taskAriaLabel(task)"
+              [attr.aria-rowindex]="core.rowIndexOf(task) + 1"
+              [attr.aria-label]="core.taskAriaLabel(task)"
               [class.oge-gantt-row-selected]="task.key === selectedTaskKey()"
-              [class.oge-gantt-row-hover]="task.key === hoverKey()"
-              [tabindex]="task.key === rovingKey() ? 0 : -1"
-              [attr.data-focus-target]="task.key === rovingKey() ? '' : null"
-              (click)="onRowClick(task, $event)"
-              (dblclick)="onRowDblClick(task, $event)"
-              (contextmenu)="onRowContextMenu(task, $event)"
-              (mouseenter)="hoverKey.set(task.key)"
-              (mouseleave)="hoverKey.set(null)"
-              (keydown)="onRowKeydown(task, $event)"
+              [class.oge-gantt-row-hover]="task.key === core.hoverKey()"
+              [tabindex]="task.key === core.rovingKey() ? 0 : -1"
+              [attr.data-focus-target]="
+                task.key === core.rovingKey() ? '' : null
+              "
+              (click)="core.onRowClick(task, $event)"
+              (dblclick)="core.onRowDblClick(task, $event)"
+              (contextmenu)="core.onRowContextMenu(task, $event)"
+              (mouseenter)="core.hoverKey.set(task.key)"
+              (mouseleave)="core.hoverKey.set(null)"
+              (keydown)="core.onRowKeydown(task, $event)"
             >
               @for (
-                column of resolvedColumns();
+                column of core.resolvedColumns();
                 track column.field;
                 let colIndex = $index
               ) {
@@ -363,7 +307,7 @@ const OVERSCAN_ROWS = 6;
                         class="oge-gantt-toggle"
                         [class.oge-gantt-toggle-open]="task.expanded"
                         aria-hidden="true"
-                        (click)="toggleExpanded(task, $event)"
+                        (click)="core.toggleExpanded(task, $event)"
                       >
                         <svg
                           viewBox="0 0 16 16"
@@ -386,13 +330,16 @@ const OVERSCAN_ROWS = 6;
                     }
                   }
                   <span class="oge-gantt-cell-text">{{
-                    cellText(task, column)
+                    core.cellText(task, column)
                   }}</span>
                 </div>
               }
             </div>
           }
-          <div [style.height.px]="windowBottomPx()" aria-hidden="true"></div>
+          <div
+            [style.height.px]="core.windowBottomPx()"
+            aria-hidden="true"
+          ></div>
         </div>
 
         <!-- ======== splitter ======== -->
@@ -402,9 +349,9 @@ const OVERSCAN_ROWS = 6;
           aria-orientation="vertical"
           [attr.aria-valuemin]="160"
           [attr.aria-valuemax]="720"
-          [attr.aria-valuenow]="listWidth()"
+          [attr.aria-valuenow]="core.listWidth()"
           tabindex="-1"
-          (pointerdown)="onSplitterPointerDown($event)"
+          (pointerdown)="core.onSplitterPointerDown($event)"
         ></div>
 
         <!-- ======== chart ======== -->
@@ -412,28 +359,28 @@ const OVERSCAN_ROWS = 6;
           class="oge-gantt-chart-scroll"
           #chartScrollEl
           role="group"
-          [attr.aria-label]="msg().grid.chartLabel"
+          [attr.aria-label]="core.msg().grid.chartLabel"
           tabindex="0"
         >
-          <div class="oge-gantt-chart" [style.width.px]="scale().totalPx">
+          <div class="oge-gantt-chart" [style.width.px]="core.scale().totalPx">
             <div class="oge-gantt-scale" role="presentation">
               <div class="oge-gantt-scale-major">
-                @for (tick of scale().majorTicks; track tick.px) {
+                @for (tick of core.scale().majorTicks; track tick.px) {
                   <span
                     class="oge-gantt-scale-cell"
                     [style.inset-inline-start.px]="tick.px"
                     [style.width.px]="tick.widthPx"
-                    >{{ majorLabel(tick.date) }}</span
+                    >{{ core.majorLabel(tick.date) }}</span
                   >
                 }
               </div>
               <div class="oge-gantt-scale-minor">
-                @for (tick of scale().ticks; track tick.px) {
+                @for (tick of core.scale().ticks; track tick.px) {
                   <span
                     class="oge-gantt-scale-cell"
                     [style.inset-inline-start.px]="tick.px"
                     [style.width.px]="tick.widthPx"
-                    >{{ minorLabel(tick.date) }}</span
+                    >{{ core.minorLabel(tick.date) }}</span
                   >
                 }
               </div>
@@ -441,12 +388,12 @@ const OVERSCAN_ROWS = 6;
             <div
               class="oge-gantt-canvas"
               #canvasEl
-              [style.height.px]="tasks().length * rowHeight()"
-              (dblclick)="onCanvasDblClick($event)"
-              (pointerdown)="onCanvasPointerDown($event)"
-              (contextmenu)="onCanvasContextMenu($event)"
+              [style.height.px]="tasks().length * core.rowHeight()"
+              (dblclick)="core.onCanvasDblClick($event)"
+              (pointerdown)="core.onCanvasPointerDown($event)"
+              (contextmenu)="core.onCanvasContextMenu($event)"
             >
-              @for (shade of shadedTicks(); track shade.px) {
+              @for (shade of core.shadedTicks(); track shade.px) {
                 <div
                   class="oge-gantt-offday"
                   [style.inset-inline-start.px]="shade.px"
@@ -454,7 +401,7 @@ const OVERSCAN_ROWS = 6;
                   aria-hidden="true"
                 ></div>
               }
-              @for (strip of stripRects(); track strip.px) {
+              @for (strip of core.stripRects(); track strip.px) {
                 <div
                   class="oge-gantt-strip"
                   [class.oge-gantt-strip-line]="strip.widthPx === 0"
@@ -468,54 +415,59 @@ const OVERSCAN_ROWS = 6;
                   }
                 </div>
               }
-              @if (todayPx(); as px) {
+              @if (core.todayPx(); as px) {
                 <div
                   class="oge-gantt-today"
                   [style.inset-inline-start.px]="px"
-                  [title]="msg().grid.todayLabel"
+                  [title]="core.msg().grid.todayLabel"
                   aria-hidden="true"
                 ></div>
               }
               @if (showRowLines()) {
-                @for (task of windowTasks(); track task.key) {
+                @for (task of core.windowTasks(); track task.key) {
                   <div
                     class="oge-gantt-rowline"
-                    [style.top.px]="(rowIndexOf(task) + 1) * rowHeight()"
+                    [style.top.px]="
+                      (core.rowIndexOf(task) + 1) * core.rowHeight()
+                    "
                     aria-hidden="true"
                   ></div>
                 }
               }
-              @for (task of windowTasks(); track task.key) {
+              @for (task of core.windowTasks(); track task.key) {
                 <div
                   class="oge-gantt-lane"
                   [class.oge-gantt-row-selected]="
                     task.key === selectedTaskKey()
                   "
-                  [class.oge-gantt-row-hover]="task.key === hoverKey()"
-                  [style.top.px]="rowIndexOf(task) * rowHeight()"
-                  [style.height.px]="rowHeight()"
-                  (mouseenter)="hoverKey.set(task.key)"
-                  (mouseleave)="hoverKey.set(null)"
+                  [class.oge-gantt-row-hover]="task.key === core.hoverKey()"
+                  [style.top.px]="core.rowIndexOf(task) * core.rowHeight()"
+                  [style.height.px]="core.rowHeight()"
+                  (mouseenter)="core.hoverKey.set(task.key)"
+                  (mouseleave)="core.hoverKey.set(null)"
                 ></div>
               }
               <svg
                 class="oge-gantt-arrows"
-                [attr.height]="tasks().length * rowHeight()"
-                [attr.width]="scale().totalPx"
+                [attr.height]="tasks().length * core.rowHeight()"
+                [attr.width]="core.scale().totalPx"
                 aria-hidden="true"
               >
-                @for (arrow of windowArrows(); track arrow.dependency.key) {
+                @for (
+                  arrow of core.windowArrows();
+                  track arrow.dependency.key
+                ) {
                   <path
                     class="oge-gantt-arrow"
                     [class.oge-gantt-arrow-critical]="arrow.critical"
                     [class.oge-gantt-arrow-selected]="
-                      arrow.dependency.key === selectedDependencyKey()
+                      arrow.dependency.key === core.selectedDependencyKey()
                     "
                     [attr.d]="arrow.path"
-                    (click)="onArrowClick(arrow.dependency, $event)"
+                    (click)="core.onArrowClick(arrow.dependency, $event)"
                   />
                 }
-                @if (linkPreview(); as preview) {
+                @if (core.linkPreview(); as preview) {
                   <path
                     class="oge-gantt-arrow oge-gantt-arrow-preview"
                     [class.oge-gantt-arrow-invalid]="!preview.valid"
@@ -523,11 +475,11 @@ const OVERSCAN_ROWS = 6;
                   />
                 }
               </svg>
-              @for (bar of windowBars(); track bar.task.key) {
+              @for (bar of core.windowBars(); track bar.task.key) {
                 <div
                   class="oge-gantt-bar-box"
-                  [style.top.px]="bar.index * rowHeight()"
-                  [style.height.px]="rowHeight()"
+                  [style.top.px]="bar.index * core.rowHeight()"
+                  [style.height.px]="core.rowHeight()"
                 >
                   @if (bar.baselineLeftPx !== null) {
                     <div
@@ -544,10 +496,10 @@ const OVERSCAN_ROWS = 6;
                       [style.inset-inline-start.px]="bar.leftPx - 7"
                       [style.background-color]="bar.task.color ?? null"
                       [attr.data-task-key]="String(bar.task.key)"
-                      (pointerdown)="onBarPointerDown(bar, 'move', $event)"
-                      (dblclick)="onRowDblClick(bar.task, $event)"
-                      (mouseenter)="tooltipKey.set(bar.task.key)"
-                      (mouseleave)="tooltipKey.set(null)"
+                      (pointerdown)="core.onBarPointerDown(bar, 'move', $event)"
+                      (dblclick)="core.onRowDblClick(bar.task, $event)"
+                      (mouseenter)="core.tooltipKey.set(bar.task.key)"
+                      (mouseleave)="core.tooltipKey.set(null)"
                     ></div>
                   } @else if (bar.task.isSummary) {
                     <div
@@ -557,42 +509,44 @@ const OVERSCAN_ROWS = 6;
                       [style.width.px]="bar.widthPx"
                       [style.background-color]="bar.task.color ?? null"
                       [attr.data-task-key]="String(bar.task.key)"
-                      (mouseenter)="tooltipKey.set(bar.task.key)"
-                      (mouseleave)="tooltipKey.set(null)"
+                      (mouseenter)="core.tooltipKey.set(bar.task.key)"
+                      (mouseleave)="core.tooltipKey.set(null)"
                     ></div>
                   } @else {
                     <div
                       class="oge-gantt-bar oge-gantt-target"
                       [class.oge-gantt-critical]="bar.critical"
-                      [class.oge-gantt-dragging]="dragKey() === bar.task.key"
+                      [class.oge-gantt-dragging]="
+                        core.dragKey() === bar.task.key
+                      "
                       [style.inset-inline-start.px]="bar.leftPx"
                       [style.width.px]="bar.widthPx"
                       [style.background-color]="bar.task.color ?? null"
-                      [style.color]="barForeground(bar.task)"
+                      [style.color]="core.barForeground(bar.task)"
                       [attr.data-task-key]="String(bar.task.key)"
-                      (pointerdown)="onBarPointerDown(bar, 'move', $event)"
-                      (dblclick)="onRowDblClick(bar.task, $event)"
-                      (mouseenter)="tooltipKey.set(bar.task.key)"
-                      (mouseleave)="tooltipKey.set(null)"
+                      (pointerdown)="core.onBarPointerDown(bar, 'move', $event)"
+                      (dblclick)="core.onRowDblClick(bar.task, $event)"
+                      (mouseenter)="core.tooltipKey.set(bar.task.key)"
+                      (mouseleave)="core.tooltipKey.set(null)"
                     >
                       <div
                         class="oge-gantt-progress"
                         [style.width.%]="bar.task.progress"
                         aria-hidden="true"
                       ></div>
-                      @if (effectiveEditing() && allowTaskUpdating()) {
+                      @if (core.effectiveEditing() && allowTaskUpdating()) {
                         <div
                           class="oge-gantt-handle oge-gantt-handle-start"
                           aria-hidden="true"
                           (pointerdown)="
-                            onBarPointerDown(bar, 'resize-start', $event)
+                            core.onBarPointerDown(bar, 'resize-start', $event)
                           "
                         ></div>
                         <div
                           class="oge-gantt-handle oge-gantt-handle-end"
                           aria-hidden="true"
                           (pointerdown)="
-                            onBarPointerDown(bar, 'resize-end', $event)
+                            core.onBarPointerDown(bar, 'resize-end', $event)
                           "
                         ></div>
                         <div
@@ -600,20 +554,24 @@ const OVERSCAN_ROWS = 6;
                           [style.inset-inline-start.%]="bar.task.progress"
                           aria-hidden="true"
                           (pointerdown)="
-                            onBarPointerDown(bar, 'progress', $event)
+                            core.onBarPointerDown(bar, 'progress', $event)
                           "
                         ></div>
                       }
-                      @if (effectiveEditing() && allowDependencyAdding()) {
+                      @if (core.effectiveEditing() && allowDependencyAdding()) {
                         <div
                           class="oge-gantt-link-dot oge-gantt-link-dot-start"
                           aria-hidden="true"
-                          (pointerdown)="onLinkPointerDown(bar, false, $event)"
+                          (pointerdown)="
+                            core.onLinkPointerDown(bar, false, $event)
+                          "
                         ></div>
                         <div
                           class="oge-gantt-link-dot oge-gantt-link-dot-end"
                           aria-hidden="true"
-                          (pointerdown)="onLinkPointerDown(bar, true, $event)"
+                          (pointerdown)="
+                            core.onLinkPointerDown(bar, true, $event)
+                          "
                         ></div>
                       }
                       @if (taskTitlePosition() === 'inside') {
@@ -641,46 +599,44 @@ const OVERSCAN_ROWS = 6;
                       >
                     }
                   }
-                  @if (resourceText(bar.task); as text) {
+                  @if (core.resourceText(bar.task); as text) {
                     <span
                       class="oge-gantt-resource"
-                      [style.inset-inline-start.px]="resourceLabelLeft(bar)"
+                      [style.inset-inline-start.px]="
+                        core.resourceLabelLeft(bar)
+                      "
                       >{{ text }}</span
                     >
                   }
                 </div>
               }
-              @if (drawPreview(); as draw) {
+              @if (core.drawPreview(); as draw) {
                 <div
                   class="oge-gantt-draw-preview"
                   [style.inset-inline-start.px]="draw.leftPx"
                   [style.width.px]="draw.widthPx"
                   [style.top.px]="draw.top"
-                  [style.height.px]="rowHeight() - 12"
+                  [style.height.px]="core.rowHeight() - 12"
                   aria-hidden="true"
                 ></div>
               }
             </div>
-            @if (dragTip(); as tip) {
+            @if (core.dragTip(); as tip) {
               <div
                 class="oge-gantt-drag-tip"
                 [style.inset-inline-start.px]="tip.x"
-                [style.top.px]="scaleHeadH + Math.max(4, tip.y)"
+                [style.top.px]="core.dragTipTop(tip)"
                 aria-hidden="true"
               >
                 {{ tip.text }}
               </div>
             }
-            @if (tooltipBar(); as bar) {
+            @if (core.tooltipBar(); as bar) {
               <div
                 class="oge-gantt-tooltip"
                 [class.oge-gantt-tooltip-below]="bar.index < 2"
                 [style.inset-inline-start.px]="bar.leftPx"
-                [style.top.px]="
-                  bar.index < 2
-                    ? scaleHeadH + (bar.index + 1) * rowHeight() + 6
-                    : scaleHeadH + bar.index * rowHeight() - 6
-                "
+                [style.top.px]="core.tooltipTop(bar)"
                 aria-hidden="true"
               >
                 @if (tooltipTemplate(); as tpl) {
@@ -693,22 +649,22 @@ const OVERSCAN_ROWS = 6;
                     bar.task.title
                   }}</strong>
                   <span class="oge-gantt-tooltip-line">{{
-                    tooltipDates(bar.task)
+                    core.tooltipDates(bar.task)
                   }}</span>
                   @if (!bar.task.isMilestone) {
                     <span class="oge-gantt-tooltip-line"
                       >{{ bar.task.progress }}%</span
                     >
                   }
-                  @if (resourceText(bar.task); as names) {
+                  @if (core.resourceText(bar.task); as names) {
                     <span class="oge-gantt-tooltip-line">{{ names }}</span>
                   }
                 }
               </div>
             }
-            @if (workloadRows().length > 0) {
+            @if (core.workloadRows().length > 0) {
               <div class="oge-gantt-workload" aria-hidden="true">
-                @for (row of workloadRows(); track row.id) {
+                @for (row of core.workloadRows(); track row.id) {
                   <div class="oge-gantt-workload-row">
                     <span class="oge-gantt-workload-label">{{ row.text }}</span>
                     @for (segment of row.segments; track segment.px) {
@@ -732,20 +688,20 @@ const OVERSCAN_ROWS = 6;
     </div>
 
     <oge-gantt-task-dialog
-      [messages]="msg().dialog"
-      [locale]="effectiveLocale()"
+      [messages]="core.msg().dialog"
+      [locale]="core.effectiveLocale()"
       [resources]="resources()"
-      [allowDeleting]="effectiveEditing() && allowTaskDeleting()"
-      (saved)="onDialogSaved($event)"
-      (deleteRequested)="onDialogDelete()"
+      [allowDeleting]="core.effectiveEditing() && allowTaskDeleting()"
+      (saved)="core.onDialogSaved($event)"
+      (deleteRequested)="core.onDialogDelete()"
     />
-    @if (contextMenu(); as menu) {
+    @if (core.contextMenu(); as menu) {
       <!-- click-away surface only; Escape on the focused menu closes too -->
       <!-- eslint-disable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
       <div
         class="oge-gantt-menu-backdrop"
-        (click)="closeMenu()"
-        (contextmenu)="$event.preventDefault(); closeMenu()"
+        (click)="core.closeMenu()"
+        (contextmenu)="$event.preventDefault(); core.closeMenu()"
       ></div>
       <!-- eslint-enable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
       <div
@@ -754,36 +710,36 @@ const OVERSCAN_ROWS = 6;
         tabindex="-1"
         [style.left.px]="menu.x"
         [style.top.px]="menu.y"
-        (keydown.escape)="closeMenu()"
+        (keydown.escape)="core.closeMenu()"
       >
         @if (menu.task !== null) {
           <button
             type="button"
             role="menuitem"
             class="oge-gantt-menu-item"
-            [disabled]="!allowTaskUpdating()"
-            (click)="menuEdit()"
+            [disabled]="!core.menuState().edit"
+            (click)="core.menuEdit()"
           >
-            {{ msg().menu.editTask }}
+            {{ core.msg().menu.editTask }}
           </button>
           <button
             type="button"
             role="menuitem"
             class="oge-gantt-menu-item"
-            [disabled]="!allowTaskAdding()"
-            (click)="menuNewSubtask()"
+            [disabled]="!core.menuState().newSubtask"
+            (click)="core.menuNewSubtask()"
           >
-            {{ msg().menu.newSubtask }}
+            {{ core.msg().menu.newSubtask }}
           </button>
         }
         <button
           type="button"
           role="menuitem"
           class="oge-gantt-menu-item"
-          [disabled]="!allowTaskAdding()"
-          (click)="menuNewTask()"
+          [disabled]="!core.menuState().newTask"
+          (click)="core.menuNewTask()"
         >
-          {{ msg().menu.newTask }}
+          {{ core.msg().menu.newTask }}
         </button>
         @if (menu.task !== null) {
           <div class="oge-gantt-menu-sep" role="separator"></div>
@@ -791,34 +747,36 @@ const OVERSCAN_ROWS = 6;
             type="button"
             role="menuitem"
             class="oge-gantt-menu-item"
-            [disabled]="!canIndent(menu.task)"
-            (click)="menuIndent()"
+            [disabled]="!core.menuState().indent"
+            (click)="core.menuIndent()"
           >
-            {{ msg().menu.indent }}
+            {{ core.msg().menu.indent }}
           </button>
           <button
             type="button"
             role="menuitem"
             class="oge-gantt-menu-item"
-            [disabled]="menu.task.parentKey === null || !allowTaskUpdating()"
-            (click)="menuOutdent()"
+            [disabled]="!core.menuState().outdent"
+            (click)="core.menuOutdent()"
           >
-            {{ msg().menu.outdent }}
+            {{ core.msg().menu.outdent }}
           </button>
           <div class="oge-gantt-menu-sep" role="separator"></div>
           <button
             type="button"
             role="menuitem"
             class="oge-gantt-menu-item oge-gantt-menu-danger"
-            [disabled]="!allowTaskDeleting()"
-            (click)="menuDelete()"
+            [disabled]="!core.menuState().delete"
+            (click)="core.menuDelete()"
           >
-            {{ msg().menu.deleteTask }}
+            {{ core.msg().menu.deleteTask }}
           </button>
         }
       </div>
     }
-    <div class="oge-gantt-live" aria-live="polite">{{ announcement() }}</div>
+    <div class="oge-gantt-live" aria-live="polite">
+      {{ core.announcement() }}
+    </div>
   `,
 })
 export class OgeGantt<
@@ -826,9 +784,6 @@ export class OgeGantt<
   D extends object = Record<string, unknown>,
 > {
   private readonly config = inject(OGE_GANTT_CONFIG);
-  /** Sticky scale header height (two 24px tick rows). */
-  protected readonly scaleHeadH = 48;
-  protected readonly Math = Math;
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /* ---------------- data inputs ---------------- */
@@ -856,14 +811,7 @@ export class OgeGantt<
    * own `calendar` overrides `workCalendar` for tasks assigned to it
    * (first assigned resource with a calendar wins).
    */
-  readonly resources = input<
-    readonly {
-      id: unknown;
-      text: string;
-      color?: string;
-      calendar?: GanttWorkCalendar;
-    }[]
-  >([]);
+  readonly resources = input<readonly OgeGanttResource[]>([]);
   readonly resourceIdExpr = input<GanttFieldExpr<T>>('resourceId');
 
   /* ---------------- appearance / behavior ---------------- */
@@ -888,7 +836,7 @@ export class OgeGantt<
    * makes auto-scheduling roll starts onto working days, preserving
    * durations in working days (day granularity).
    */
-  readonly workCalendar = input<GanttWorkCalendar | null>(null);
+  readonly workCalendar = input<OgeGanttWorkCalendar | null>(null);
   /** Renders the per-resource workload band under the chart. */
   readonly showResourceWorkload = input(false);
   readonly stripLines = input<readonly OgeGanttStripLine[]>([]);
@@ -938,953 +886,177 @@ export class OgeGantt<
     viewChild<ElementRef<HTMLElement>>('chartScrollEl');
   private readonly canvasEl = viewChild<ElementRef<HTMLElement>>('canvasEl');
 
-  protected readonly msg = computed<OgeGanttMessages>(() => ({
-    ...this.config.messages,
-    ...this.messages(),
-  }));
+  protected readonly String = String;
 
-  protected readonly rowHeight = computed(() => this.config.rowHeight ?? 36);
-
-  /** Per-instance locale, falling back to the DI config, then the browser. */
-  protected readonly effectiveLocale = computed(
-    () => this.locale() ?? this.config.locale,
+  /**
+   * The whole controller — stores, undo/redo, view models, editing
+   * pipelines, keyboard map and gestures — is the framework-free
+   * `OgeGanttCore` from `@oge-ui/gantt-engine`, the same instance type the
+   * React `<OgeGantt>` runs. This component binds its signals into it and
+   * renders what it derives.
+   */
+  protected readonly core: OgeGanttCore<T, D> = new OgeGanttCore<T, D>(
+    {
+      inputs: {
+        tasks: () => this.tasks(),
+        dependencies: () => this.dependencies(),
+        keyExpr: () => this.keyExpr(),
+        parentKeyExpr: () => this.parentKeyExpr(),
+        titleExpr: () => this.titleExpr(),
+        startExpr: () => this.startExpr(),
+        endExpr: () => this.endExpr(),
+        progressExpr: () => this.progressExpr(),
+        colorExpr: () => this.colorExpr(),
+        baselineStartExpr: () => this.baselineStartExpr(),
+        baselineEndExpr: () => this.baselineEndExpr(),
+        dependencyKeyExpr: () => this.dependencyKeyExpr(),
+        predecessorKeyExpr: () => this.predecessorKeyExpr(),
+        successorKeyExpr: () => this.successorKeyExpr(),
+        dependencyTypeExpr: () => this.dependencyTypeExpr(),
+        resources: () => this.resources(),
+        resourceIdExpr: () => this.resourceIdExpr(),
+        scaleType: () => this.scaleType(),
+        firstDayOfWeek: () => this.firstDayOfWeek(),
+        taskListWidth: () => this.taskListWidth(),
+        columns: () => this.columns(),
+        taskTitlePosition: () => this.taskTitlePosition(),
+        showDependencies: () => this.showDependencies(),
+        showCriticalPath: () => this.showCriticalPath(),
+        weekendsHighlighted: () => this.weekendsHighlighted(),
+        holidays: () => this.holidays(),
+        workCalendar: () => this.workCalendar(),
+        showResourceWorkload: () => this.showResourceWorkload(),
+        stripLines: () => this.stripLines(),
+        autoScheduling: () => this.autoScheduling(),
+        locale: () => this.locale(),
+        messages: () => this.messages(),
+        editingEnabled: () => this.editingEnabled(),
+        allowTaskAdding: () => this.allowTaskAdding(),
+        allowTaskUpdating: () => this.allowTaskUpdating(),
+        allowTaskDeleting: () => this.allowTaskDeleting(),
+        allowDependencyAdding: () => this.allowDependencyAdding(),
+        allowDependencyDeleting: () => this.allowDependencyDeleting(),
+        readOnly: () => this.readOnly(),
+        selectedTaskKey: () => this.selectedTaskKey(),
+        config: () => this.config,
+      },
+      events: this.coreEvents(),
+      openDialog: (model, isNew, items) =>
+        this.dialog().open(model, isNew, items as readonly OgeFormItemData[]),
+      hostElement: () => this.hostEl.nativeElement,
+      bodyElement: () => this.bodyEl()?.nativeElement ?? null,
+      chartScrollElement: () => this.chartScrollEl()?.nativeElement ?? null,
+      canvasElement: () => this.canvasEl()?.nativeElement ?? null,
+      untracked,
+    },
+    SIGNAL_ADAPTER,
   );
-
-  protected readonly effectiveEditing = computed(
-    () => this.editingEnabled() && !this.readOnly(),
-  );
-
-  private readonly resolvedFirstDayOfWeek = computed(() =>
-    resolveFirstDayOfWeek(this.firstDayOfWeek(), this.effectiveLocale()),
-  );
-
-  /* ---------------- stores + undo ---------------- */
-
-  private readonly taskStore = signal<readonly T[]>([]);
-  private readonly dependencyStore = signal<readonly D[]>([]);
-  private readonly undoStack = signal<readonly UndoSnapshot<T, D>[]>([]);
-  private readonly redoStack = signal<readonly UndoSnapshot<T, D>[]>([]);
 
   constructor() {
+    effect(() => this.core.syncRenderedRange());
     effect(() => {
-      const next = this.stableRange();
-      const prev = untracked(this.renderedRange);
-      if (
-        prev === null ||
-        prev.min.getTime() !== next.min.getTime() ||
-        prev.max.getTime() !== next.max.getTime()
-      ) {
-        this.renderedRange.set(next);
-      }
+      const tasks = this.tasks();
+      untracked(() => this.core.resetTasks(tasks));
     });
     effect(() => {
-      this.taskStore.set([...this.tasks()]);
-      this.undoStack.set([]);
-      this.redoStack.set([]);
+      const dependencies = this.dependencies();
+      untracked(() => this.core.resetDependencies(dependencies));
     });
     effect(() => {
-      this.dependencyStore.set([...this.dependencies()]);
+      const width = this.taskListWidth();
+      untracked(() => this.core.resetListWidth(width));
     });
-    effect(() => {
-      this.listWidth.set(this.taskListWidth());
-    });
+    inject(DestroyRef).onDestroy(() => this.core.destroy());
   }
 
-  private snapshot(): void {
-    const limit = this.config.undoLimit ?? 50;
-    this.undoStack.set(
-      [
-        ...untracked(this.undoStack),
-        {
-          tasks: untracked(this.taskStore),
-          dependencies: untracked(this.dependencyStore),
-        },
-      ].slice(-limit),
-    );
-    this.redoStack.set([]);
+  private coreEvents(): OgeGanttCoreEvents<T, D> {
+    return {
+      taskInserting: (event) => this.taskInserting.emit(event),
+      taskInserted: (event) => this.taskInserted.emit(event),
+      taskUpdating: (event) => this.taskUpdating.emit(event),
+      taskUpdated: (event) => this.taskUpdated.emit(event),
+      taskDeleting: (event) => this.taskDeleting.emit(event),
+      taskDeleted: (event) => this.taskDeleted.emit(event),
+      dependencyInserting: (event) => this.dependencyInserting.emit(event),
+      dependencyInserted: (event) => this.dependencyInserted.emit(event),
+      dependencyDeleting: (event) => this.dependencyDeleting.emit(event),
+      dependencyDeleted: (event) => this.dependencyDeleted.emit(event),
+      taskClick: (event) => this.taskClick.emit(event),
+      taskDblClick: (event) => this.taskDblClick.emit(event),
+      taskContextMenu: (event) => this.taskContextMenu.emit(event),
+      selectionChanged: (event) => this.selectionChanged.emit(event),
+      // the same object travels on, so a listener's `cancel` / replaced
+      // `formItems` reach the core; Angular listeners may add
+      // TemplateRef-carrying items, hence the layer's own item type
+      taskEditDialogShowing: (event) =>
+        this.taskEditDialogShowing.emit(
+          event as OgeGanttDialogShowingEvent<T, OgeFormItemData>,
+        ),
+      scaleTypeChange: (type) => this.scaleType.set(type),
+      selectedTaskKeyChange: (key) => this.selectedTaskKey.set(key),
+    };
   }
 
-  protected canUndo(): boolean {
-    return this.undoStack().length > 0;
-  }
-  protected canRedo(): boolean {
-    return this.redoStack().length > 0;
-  }
+  /* ---------------- public API (delegates to the engine) ---------------- */
 
   /** Reverts the last committed change (bounded snapshot stack). */
   undo(): void {
-    const stack = untracked(this.undoStack);
-    const last = stack.at(-1);
-    if (last === undefined) return;
-    this.redoStack.set([
-      ...untracked(this.redoStack),
-      {
-        tasks: untracked(this.taskStore),
-        dependencies: untracked(this.dependencyStore),
-      },
-    ]);
-    this.undoStack.set(stack.slice(0, -1));
-    this.taskStore.set(last.tasks);
-    this.dependencyStore.set(last.dependencies);
-    this.announcement.set(this.msg().announcements.undone);
+    this.core.undo();
   }
 
   /** Re-applies the last undone change. */
   redo(): void {
-    const stack = untracked(this.redoStack);
-    const last = stack.at(-1);
-    if (last === undefined) return;
-    this.undoStack.set([
-      ...untracked(this.undoStack),
-      {
-        tasks: untracked(this.taskStore),
-        dependencies: untracked(this.dependencyStore),
-      },
-    ]);
-    this.redoStack.set(stack.slice(0, -1));
-    this.taskStore.set(last.tasks);
-    this.dependencyStore.set(last.dependencies);
-    this.announcement.set(this.msg().announcements.redone);
-  }
-
-  /* ---------------- derived model ---------------- */
-
-  private readonly fields = computed(() =>
-    resolveGanttFields<T>({
-      keyExpr: this.keyExpr(),
-      parentKeyExpr: this.parentKeyExpr(),
-      titleExpr: this.titleExpr(),
-      startExpr: this.startExpr(),
-      endExpr: this.endExpr(),
-      progressExpr: this.progressExpr(),
-      colorExpr: this.colorExpr(),
-      baselineStartExpr: this.baselineStartExpr(),
-      baselineEndExpr: this.baselineEndExpr(),
-      resourceIdExpr: this.resourceIdExpr(),
-    }),
-  );
-
-  private readonly collapsedKeys = signal<ReadonlySet<RowKey>>(new Set());
-
-  /** The visible task rows (tree order, roll-ups applied). */
-  protected readonly visibleTasks = computed<readonly GanttTask<T>[]>(() =>
-    buildGanttTasks(this.taskStore(), this.fields(), this.collapsedKeys()),
-  );
-
-  /** All tasks incl. collapsed subtrees — arrows/critical path need them. */
-  private readonly allTasks = computed<readonly GanttTask<T>[]>(() =>
-    buildGanttTasks(this.taskStore(), this.fields(), new Set()),
-  );
-
-  protected readonly ganttDependencies = computed<
-    readonly GanttDependency<D>[]
-  >(() =>
-    buildGanttDependencies(
-      this.dependencyStore(),
-      {
-        keyExpr: this.dependencyKeyExpr(),
-        predecessorKeyExpr: this.predecessorKeyExpr(),
-        successorKeyExpr: this.successorKeyExpr(),
-        typeExpr: this.dependencyTypeExpr(),
-      },
-      new Set(this.allTasks().map((task) => task.key)),
-    ),
-  );
-
-  private readonly criticalKeys = computed<ReadonlySet<RowKey>>(() =>
-    this.showCriticalPath()
-      ? criticalPathKeys(this.allTasks(), this.ganttDependencies())
-      : new Set(),
-  );
-
-  private readonly dataRange = computed<{ min: Date; max: Date }>(() => {
-    const tasks = this.allTasks();
-    const now = startOfDay(new Date());
-    let min = now;
-    let max = now;
-    for (const task of tasks) {
-      if (task.start.getTime() < min.getTime()) min = task.start;
-      if (task.end.getTime() > max.getTime()) max = task.end;
-      if (
-        task.baselineStart !== undefined &&
-        task.baselineStart.getTime() < min.getTime()
-      ) {
-        min = task.baselineStart;
-      }
-      if (
-        task.baselineEnd !== undefined &&
-        task.baselineEnd.getTime() > max.getTime()
-      ) {
-        max = task.baselineEnd;
-      }
-    }
-    return { min, max };
-  });
-
-  /**
-   * The rendered range only ever WIDENS while the component lives —
-   * dragging the earliest task to the right must not re-anchor the whole
-   * chart under the pointer. A disjoint new dataset resets it;
-   * `zoomToFit()` snaps it back to the data.
-   */
-  private readonly renderedRange = signal<{ min: Date; max: Date } | null>(
-    null,
-  );
-
-  private readonly stableRange = computed<{ min: Date; max: Date }>(() => {
-    const data = this.dataRange();
-    const rendered = this.renderedRange();
-    if (
-      rendered === null ||
-      data.max.getTime() < rendered.min.getTime() ||
-      data.min.getTime() > rendered.max.getTime()
-    ) {
-      return data;
-    }
-    return {
-      min:
-        data.min.getTime() < rendered.min.getTime() ? data.min : rendered.min,
-      max:
-        data.max.getTime() > rendered.max.getTime() ? data.max : rendered.max,
-    };
-  });
-
-  protected readonly scale = computed<GanttScale>(() => {
-    const range = this.stableRange();
-    return buildGanttScale(
-      range.min,
-      range.max,
-      this.scaleType(),
-      this.resolvedFirstDayOfWeek(),
-    );
-  });
-
-  /* ---------------- virtualization ---------------- */
-
-  private readonly scrollTop = signal(0);
-  private readonly viewportPx = signal(600);
-
-  protected onBodyScroll(): void {
-    const body = this.bodyEl()?.nativeElement;
-    if (body === undefined) return;
-    this.scrollTop.set(body.scrollTop);
-    this.viewportPx.set(body.clientHeight);
-  }
-
-  private readonly windowRange = computed(() => {
-    const rowHeight = this.rowHeight();
-    const count = this.visibleTasks().length;
-    const first = Math.max(
-      0,
-      Math.floor(this.scrollTop() / rowHeight) - OVERSCAN_ROWS,
-    );
-    const last = Math.min(
-      count,
-      Math.ceil((this.scrollTop() + this.viewportPx()) / rowHeight) +
-        OVERSCAN_ROWS,
-    );
-    return { first, last };
-  });
-
-  protected readonly windowTasks = computed<readonly GanttTask<T>[]>(() => {
-    const { first, last } = this.windowRange();
-    return this.visibleTasks().slice(first, last);
-  });
-
-  protected readonly windowTopPx = computed(
-    () => this.windowRange().first * this.rowHeight(),
-  );
-  protected readonly windowBottomPx = computed(
-    () =>
-      Math.max(0, this.visibleTasks().length - this.windowRange().last) *
-      this.rowHeight(),
-  );
-
-  private readonly rowIndexByKey = computed<ReadonlyMap<RowKey, number>>(() => {
-    const map = new Map<RowKey, number>();
-    this.visibleTasks().forEach((task, index) => map.set(task.key, index));
-    return map;
-  });
-
-  protected rowIndexOf(task: GanttTask<T>): number {
-    return this.rowIndexByKey().get(task.key) ?? 0;
-  }
-
-  /* ---------------- bars & arrows ---------------- */
-
-  protected readonly windowBars = computed<readonly GanttBar<T>[]>(() => {
-    const scale = this.scale();
-    const critical = this.criticalKeys();
-    return this.windowTasks().map((task) => {
-      const leftPx = dateToPx(scale, task.start);
-      const widthPx = Math.max(4, dateToPx(scale, task.end) - leftPx);
-      const hasBaseline =
-        task.baselineStart !== undefined && task.baselineEnd !== undefined;
-      const baselineLeftPx = hasBaseline
-        ? dateToPx(scale, task.baselineStart as Date)
-        : null;
-      return {
-        task,
-        index: this.rowIndexOf(task),
-        leftPx,
-        widthPx,
-        baselineLeftPx,
-        baselineWidthPx: hasBaseline
-          ? Math.max(
-              4,
-              dateToPx(scale, task.baselineEnd as Date) -
-                (baselineLeftPx as number),
-            )
-          : null,
-        critical: critical.has(task.key),
-      };
-    });
-  });
-
-  protected readonly windowArrows = computed<readonly GanttArrow<D>[]>(() => {
-    if (!this.showDependencies()) return [];
-    const scale = this.scale();
-    const rowHeight = this.rowHeight();
-    const rows = this.rowIndexByKey();
-    const tasksByKey = new Map(
-      this.visibleTasks().map((task) => [task.key, task]),
-    );
-    const { first, last } = this.windowRange();
-    const critical = this.criticalKeys();
-    const arrows: GanttArrow<D>[] = [];
-    for (const dependency of this.ganttDependencies()) {
-      const from = tasksByKey.get(dependency.predecessorKey);
-      const to = tasksByKey.get(dependency.successorKey);
-      if (from === undefined || to === undefined) continue;
-      const fromRow = rows.get(from.key) as number;
-      const toRow = rows.get(to.key) as number;
-      if (
-        (fromRow < first - OVERSCAN_ROWS && toRow < first - OVERSCAN_ROWS) ||
-        (fromRow > last + OVERSCAN_ROWS && toRow > last + OVERSCAN_ROWS)
-      ) {
-        continue;
-      }
-      const anchors = dependencyAnchors(dependency.type);
-      const fromX = dateToPx(scale, anchors.fromEnd ? from.end : from.start);
-      const toX = dateToPx(scale, anchors.toEnd ? to.end : to.start);
-      arrows.push({
-        dependency,
-        path: dependencyPath(
-          routeDependency(
-            { x: fromX, y: fromRow * rowHeight + rowHeight / 2 },
-            { x: toX, y: toRow * rowHeight + rowHeight / 2 },
-            dependency.type,
-          ),
-        ),
-        critical:
-          critical.has(dependency.predecessorKey) &&
-          critical.has(dependency.successorKey),
-      });
-    }
-    return arrows;
-  });
-
-  /** The calendar merging `workCalendar` with the `holidays` input. */
-  protected readonly effectiveWorkCalendar = computed<GanttWorkCalendar | null>(
-    () => {
-      const calendar = this.workCalendar();
-      const holidays = this.holidays();
-      if (calendar === null) return null;
-      return holidays.length === 0
-        ? calendar
-        : {
-            ...calendar,
-            holidays: [...(calendar.holidays ?? []), ...holidays],
-          };
-    },
-  );
-
-  protected readonly shadedTicks = computed(() => {
-    const scale = this.scale();
-    if (scale.type === 'weeks' || scale.type === 'months') return [];
-    const calendar = this.effectiveWorkCalendar();
-    const holidays = this.holidays();
-    return scale.ticks.filter((tick) => {
-      if (calendar !== null) return !isWorkingDay(tick.date, calendar);
-      const day = tick.date.getDay();
-      const weekend = this.weekendsHighlighted() && (day === 0 || day === 6);
-      return weekend || holidays.some((holiday) => sameDay(holiday, tick.date));
-    });
-  });
-
-  /** Per-resource workload segments in chart px; `over` = overallocated. */
-  protected readonly workloadRows = computed(() => {
-    if (!this.showResourceWorkload()) return [];
-    const resources = this.resources();
-    if (resources.length === 0) return [];
-    const scale = this.scale();
-    const workload = buildResourceWorkload(
-      this.allTasks(),
-      resources.map((resource) => resource.id),
-    );
-    return resources.map((resource) => ({
-      id: resource.id,
-      text: resource.text,
-      color: resource.color,
-      segments: (workload.get(resource.id) ?? []).map((segment) => {
-        const px = dateToPx(scale, segment.start);
-        return {
-          px,
-          widthPx: Math.max(1, dateToPx(scale, segment.end) - px),
-          over: segment.count > 1,
-        };
-      }),
-    }));
-  });
-
-  protected readonly stripRects = computed(() => {
-    const scale = this.scale();
-    return this.stripLines().map((strip) => {
-      const px = dateToPx(scale, strip.start);
-      const widthPx =
-        strip.end !== undefined
-          ? Math.max(0, dateToPx(scale, strip.end) - px)
-          : 0;
-      return { px, widthPx, label: strip.label, color: strip.color };
-    });
-  });
-
-  protected todayPx(): number | null {
-    const scale = this.scale();
-    const now = new Date();
-    if (
-      now.getTime() < scale.start.getTime() ||
-      now.getTime() > scale.end.getTime()
-    ) {
-      return null;
-    }
-    return dateToPx(scale, now);
-  }
-
-  /* ---------------- columns / labels ---------------- */
-
-  protected readonly resolvedColumns = computed(() => {
-    const messages = this.msg().columns;
-    const builtIn: Record<string, { header: string; width: number }> = {
-      title: { header: messages.title, width: 180 },
-      start: { header: messages.start, width: 88 },
-      end: { header: messages.end, width: 88 },
-      duration: { header: messages.duration, width: 64 },
-      progress: { header: messages.progress, width: 64 },
-    };
-    return this.columns().map((column) => ({
-      field: column.field,
-      header: column.header ?? builtIn[column.field]?.header ?? column.field,
-      widthPx: column.widthPx ?? builtIn[column.field]?.width ?? 100,
-      format: column.format,
-    }));
-  });
-
-  protected cellText(
-    task: GanttTask<T>,
-    column: { field: string; format?: (task: GanttTask) => string },
-  ): string {
-    if (column.format !== undefined) return column.format(task);
-    const dateFormat = new Intl.DateTimeFormat(this.effectiveLocale(), {
-      day: 'numeric',
-      month: 'short',
-    });
-    switch (column.field) {
-      case 'title':
-        return task.title;
-      case 'start':
-        return dateFormat.format(task.start);
-      case 'end':
-        return dateFormat.format(task.end);
-      case 'duration': {
-        const days = Math.round(
-          (task.end.getTime() - task.start.getTime()) / 86_400_000,
-        );
-        return this.msg().columns.durationDays.replace('{days}', String(days));
-      }
-      case 'progress':
-        return `${task.progress}%`;
-      default: {
-        const value = (task.source as Record<string, unknown>)[column.field];
-        return value == null ? '' : String(value);
-      }
-    }
-  }
-
-  protected paneAriaLabel(): string {
-    return `${this.msg().grid.treeLabel}. ${this.msg().grid.treeHint}`;
-  }
-
-  protected taskAriaLabel(task: GanttTask<T>): string {
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
-      dateStyle: 'medium',
-    });
-    return this.msg()
-      .grid.taskLabel.replace('{title}', task.title)
-      .replace('{start}', format.format(task.start))
-      .replace('{end}', format.format(task.end))
-      .replace('{progress}', String(task.progress));
-  }
-
-  protected majorLabel(date: Date): string {
-    const scale = this.scale();
-    const locale = this.effectiveLocale();
-    if (scale.type === 'hours') {
-      return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
-        date,
-      );
-    }
-    return new Intl.DateTimeFormat(locale, {
-      month: 'long',
-      year: 'numeric',
-    }).format(date);
-  }
-
-  protected minorLabel(date: Date): string {
-    const scale = this.scale();
-    const locale = this.effectiveLocale();
-    switch (scale.type) {
-      case 'hours':
-        return new Intl.DateTimeFormat(locale, { hour: 'numeric' }).format(
-          date,
-        );
-      case 'days':
-        return String(date.getDate());
-      case 'weeks':
-        return new Intl.DateTimeFormat(locale, {
-          day: 'numeric',
-          month: 'short',
-        }).format(date);
-      case 'months':
-        return new Intl.DateTimeFormat(locale, { month: 'short' }).format(date);
-    }
-  }
-
-  protected barForeground(task: GanttTask<T>): string | null {
-    if (task.color === undefined) return null;
-    const parsed = parseColor(task.color);
-    return parsed === null ? null : contrastForeground(parsed);
-  }
-
-  protected resourceText(task: GanttTask<T>): string | null {
-    const resources = this.resources();
-    if (resources.length === 0 || task.resourceIds.length === 0) return null;
-    const names = task.resourceIds
-      .map((id) => resources.find((resource) => resource.id === id)?.text)
-      .filter((text): text is string => text !== undefined);
-    return names.length === 0 ? null : names.join(', ');
-  }
-
-  protected resourceLabelLeft(bar: GanttBar<T>): number {
-    const extra = this.taskTitlePosition() === 'outside' ? 90 : 8;
-    return bar.leftPx + bar.widthPx + extra;
-  }
-
-  protected readonly hoverKey = signal<RowKey | null>(null);
-  protected readonly focusKey = signal<RowKey | null>(null);
-  /** The roving tab stop: the focused row, or the first visible one. */
-  protected readonly rovingKey = computed<RowKey | null>(
-    () => this.focusKey() ?? this.visibleTasks()[0]?.key ?? null,
-  );
-  protected readonly selectedDependencyKey = signal<RowKey | null>(null);
-  protected readonly announcement = signal('');
-  protected readonly dragKey = signal<RowKey | null>(null);
-  /** Key of the bar under the pointer — drives the hover tooltip. */
-  protected readonly tooltipKey = signal<RowKey | null>(null);
-  protected readonly tooltipBar = computed<GanttBar<T> | null>(() => {
-    const key = this.tooltipKey();
-    if (key === null || this.dragKey() !== null) return null;
-    return this.windowBars().find((bar) => bar.task.key === key) ?? null;
-  });
-
-  protected tooltipDates(task: GanttTask<T>): string {
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
-      day: 'numeric',
-      month: 'short',
-    });
-    const days = Math.max(
-      1,
-      Math.round((task.end.getTime() - task.start.getTime()) / 86_400_000),
-    );
-    const duration = this.msg().columns.durationDays.replace(
-      '{days}',
-      String(days),
-    );
-    return `${format.format(task.start)} – ${format.format(task.end)} · ${duration}`;
-  }
-  protected readonly dragTip = signal<{
-    x: number;
-    y: number;
-    text: string;
-  } | null>(null);
-  protected readonly linkPreview = signal<{
-    path: string;
-    valid: boolean;
-  } | null>(null);
-
-  protected readonly listWidth = signal(360);
-
-  protected readonly String = String;
-
-  /* ---------------- selection / expansion / keyboard ---------------- */
-
-  protected toggleExpanded(task: GanttTask<T>, event?: Event): void {
-    event?.stopPropagation();
-    const next = new Set(untracked(this.collapsedKeys));
-    if (next.has(task.key)) next.delete(task.key);
-    else next.add(task.key);
-    this.collapsedKeys.set(next);
+    this.core.redo();
   }
 
   /** Expands every summary task. */
   expandAll(): void {
-    this.collapsedKeys.set(new Set());
+    this.core.expandAll();
   }
 
   /** Collapses every summary task. */
   collapseAll(): void {
-    this.collapsedKeys.set(
-      new Set(
-        untracked(this.allTasks)
-          .filter((task) => task.hasChildren)
-          .map((task) => task.key),
-      ),
-    );
+    this.core.collapseAll();
   }
 
   /** Collapses summaries at or below `level` (dx expandAllToLevel parity). */
   expandAllToLevel(level: number): void {
-    this.collapsedKeys.set(
-      new Set(
-        untracked(this.allTasks)
-          .filter((task) => task.hasChildren && task.level >= level)
-          .map((task) => task.key),
-      ),
-    );
+    this.core.expandAllToLevel(level);
   }
 
   /** Expands every ancestor of `key` and scrolls its row into view. */
   expandToTask(key: RowKey): void {
-    const all = untracked(this.allTasks);
-    const byKey = new Map(all.map((task) => [task.key, task]));
-    const next = new Set(untracked(this.collapsedKeys));
-    let current = byKey.get(key)?.parentKey ?? null;
-    while (current !== null) {
-      next.delete(current);
-      current = byKey.get(current)?.parentKey ?? null;
-    }
-    this.collapsedKeys.set(next);
-    const index = untracked(this.rowIndexByKey).get(key);
-    const body = this.bodyEl()?.nativeElement;
-    if (index !== undefined && body !== undefined) {
-      body.scrollTop = Math.max(0, index * this.rowHeight() - 80);
-    }
-    this.focusKey.set(key);
-  }
-
-  private select(task: GanttTask<T> | null): void {
-    const key = task?.key ?? null;
-    if (untracked(this.selectedTaskKey) === key) return;
-    this.selectedTaskKey.set(key);
-    this.selectionChanged.emit({ task });
-  }
-
-  protected onRowClick(task: GanttTask<T>, event: MouseEvent): void {
-    this.focusKey.set(task.key);
-    this.select(task);
-    this.taskClick.emit({ task, event });
-  }
-
-  protected onRowDblClick(task: GanttTask<T>, event: MouseEvent): void {
-    this.taskDblClick.emit({ task, event });
-    this.openEditDialog(task);
-  }
-
-  protected onRowContextMenu(task: GanttTask<T>, event: MouseEvent): void {
-    this.taskContextMenu.emit({ task, event });
-    this.openMenu(task, event);
-  }
-
-  /* ---------------- built-in context menu ---------------- */
-
-  protected readonly contextMenu = signal<{
-    x: number;
-    y: number;
-    task: GanttTask<T> | null;
-  } | null>(null);
-
-  private openMenu(task: GanttTask<T> | null, event: MouseEvent): void {
-    if (!this.effectiveEditing()) return;
-    event.preventDefault();
-    const hostRect = this.hostEl.nativeElement.getBoundingClientRect();
-    this.contextMenu.set({
-      x: event.clientX - hostRect.left,
-      y: event.clientY - hostRect.top,
-      task,
-    });
-    if (task !== null) this.select(task);
-    setTimeout(() => {
-      this.hostEl.nativeElement
-        .querySelector<HTMLElement>('.oge-gantt-menu-item:not(:disabled)')
-        ?.focus();
-    });
-  }
-
-  protected closeMenu(): void {
-    this.contextMenu.set(null);
-  }
-
-  protected onCanvasContextMenu(event: MouseEvent): void {
-    const target = (event.target as HTMLElement).closest<HTMLElement>(
-      '[data-task-key]',
-    );
-    if (target !== null) {
-      const key = target.getAttribute('data-task-key');
-      const task = untracked(this.visibleTasks).find(
-        (entry) => String(entry.key) === key,
-      );
-      if (task !== undefined) {
-        this.taskContextMenu.emit({ task, event });
-        this.openMenu(task, event);
-        return;
-      }
-    }
-    this.openMenu(null, event);
-  }
-
-  protected menuEdit(): void {
-    const task = untracked(this.contextMenu)?.task;
-    this.closeMenu();
-    if (task) this.openEditDialog(task);
-  }
-
-  protected menuNewTask(): void {
-    this.closeMenu();
-    this.showTaskDetailsDialog();
-  }
-
-  protected menuNewSubtask(): void {
-    const task = untracked(this.contextMenu)?.task;
-    this.closeMenu();
-    if (!task) return;
-    const start = new Date(
-      task.start.getFullYear(),
-      task.start.getMonth(),
-      task.start.getDate(),
-    );
-    this.openCreateDialog(
-      start,
-      new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1),
-      this.fields().key(task.source),
-    );
-  }
-
-  protected menuDelete(): void {
-    const task = untracked(this.contextMenu)?.task;
-    this.closeMenu();
-    if (task) this.deleteTask(task.source);
-  }
-
-  protected menuIndent(): void {
-    const task = untracked(this.contextMenu)?.task;
-    this.closeMenu();
-    if (task) this.indentTask(task);
-  }
-
-  protected menuOutdent(): void {
-    const task = untracked(this.contextMenu)?.task;
-    this.closeMenu();
-    if (task) this.outdentTask(task);
-  }
-
-  /* ---------------- indent / outdent ---------------- */
-
-  /** The previous visible sibling — the indent target. */
-  private previousSibling(task: GanttTask<T>): GanttTask<T> | null {
-    const visible = untracked(this.visibleTasks);
-    const index = visible.findIndex((entry) => entry.key === task.key);
-    for (let i = index - 1; i >= 0; i--) {
-      if (visible[i].parentKey === task.parentKey) return visible[i];
-      if (visible[i].level < task.level) break;
-    }
-    return null;
-  }
-
-  protected canIndent(task: GanttTask<T>): boolean {
-    return (
-      this.allowTaskUpdating() &&
-      this.effectiveEditing() &&
-      this.previousSibling(task) !== null
-    );
+    this.core.expandToTask(key);
   }
 
   /** Makes the task a child of its previous sibling (MS Project parity). */
-  indentTask(task: GanttTask<T>): void {
-    const sibling = this.previousSibling(task);
-    const names = this.fields().fieldNames;
-    if (sibling === null || names.parentKey === null) return;
-    if (!this.effectiveEditing() || !this.allowTaskUpdating()) return;
-    const patch = {
-      [names.parentKey]: this.fields().key(sibling.source),
-    } as Partial<T>;
-    this.updateTask(task.source, patch);
-    if (untracked(this.collapsedKeys).has(sibling.key)) {
-      this.toggleExpanded(sibling);
-    }
-    this.announce(this.msg().announcements.indented, {
-      title: task.title,
-      parent: sibling.title,
-    });
+  indentTask(task: OgeGanttTask<T>): void {
+    this.core.indentTask(task);
   }
 
   /** Moves the task up to its grandparent (or the root). */
-  outdentTask(task: GanttTask<T>): void {
-    const names = this.fields().fieldNames;
-    if (task.parentKey === null || names.parentKey === null) return;
-    if (!this.effectiveEditing() || !this.allowTaskUpdating()) return;
-    const parent = untracked(this.allTasks).find(
-      (entry) => entry.key === task.parentKey,
-    );
-    const grandRaw =
-      parent !== undefined && parent.parentKey !== null
-        ? this.fields().key(
-            untracked(this.allTasks).find(
-              (entry) => entry.key === parent.parentKey,
-            )?.source as T,
-          )
-        : null;
-    const patch = { [names.parentKey]: grandRaw } as Partial<T>;
-    this.updateTask(task.source, patch);
-    this.announce(this.msg().announcements.outdented, { title: task.title });
-  }
-
-  protected onPaneKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') this.select(null);
-  }
-
-  protected onRowKeydown(task: GanttTask<T>, event: KeyboardEvent): void {
-    const visible = this.visibleTasks();
-    const index = this.rowIndexOf(task);
-    const focusRow = (next: GanttTask<T> | undefined): void => {
-      if (next === undefined) return;
-      event.preventDefault();
-      this.focusKey.set(next.key);
-      this.select(next);
-      setTimeout(() => {
-        this.hostEl.nativeElement
-          .querySelector<HTMLElement>('[data-focus-target]')
-          ?.focus();
-      });
-    };
-    if (event.ctrlKey && this.handleBarKey(task, event)) return;
-    if (event.altKey && event.shiftKey) {
-      // MS Project parity: Alt+Shift+Right indents, Alt+Shift+Left outdents
-      if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        this.indentTask(task);
-        return;
-      }
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        this.outdentTask(task);
-        return;
-      }
-    }
-    switch (event.key) {
-      case 'ArrowDown':
-        focusRow(visible[index + 1]);
-        return;
-      case 'ArrowUp':
-        focusRow(visible[index - 1]);
-        return;
-      case 'ArrowRight':
-        if (task.hasChildren && !task.expanded) {
-          event.preventDefault();
-          this.toggleExpanded(task);
-        }
-        return;
-      case 'ArrowLeft':
-        if (task.hasChildren && task.expanded) {
-          event.preventDefault();
-          this.toggleExpanded(task);
-        } else if (task.parentKey !== null) {
-          focusRow(visible.find((row) => row.key === task.parentKey));
-        }
-        return;
-      case 'Enter':
-        event.preventDefault();
-        this.openEditDialog(task);
-        return;
-      case 'Delete':
-      case 'Backspace':
-        event.preventDefault();
-        this.deleteTask(task.source);
-        return;
-      default:
-        return;
-    }
-  }
-
-  /** Ctrl+Arrows move the focused bar; Ctrl+Shift resizes the end edge. */
-  private handleBarKey(task: GanttTask<T>, event: KeyboardEvent): boolean {
-    if (task.isSummary) return false;
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return false;
-    if (!this.effectiveEditing() || !this.allowTaskUpdating()) return true;
-    event.preventDefault();
-    const scale = this.scale();
-    const tick = scale.ticks[0]?.widthPx ?? 40;
-    const deltaPx = event.key === 'ArrowRight' ? tick : -tick;
-    const proposal = event.shiftKey
-      ? proposeTaskResize(
-          task,
-          'end',
-          deltaPx,
-          scale,
-          this.resolvedFirstDayOfWeek(),
-        )
-      : proposeTaskMove(task, deltaPx, scale, this.resolvedFirstDayOfWeek());
-    this.commitProposal(task, proposal, event.shiftKey ? 'resized' : 'moved');
-    return true;
-  }
-
-  /* ---------------- zoom / scrolling ---------------- */
-
-  protected canZoom(direction: -1 | 1): boolean {
-    const index = GANTT_SCALE_ORDER.indexOf(untracked(this.scaleType));
-    const next = index + direction;
-    return next >= 0 && next < GANTT_SCALE_ORDER.length;
+  outdentTask(task: OgeGanttTask<T>): void {
+    this.core.outdentTask(task);
   }
 
   /** Steps to the next finer scale. */
   zoomIn(): void {
-    const index = GANTT_SCALE_ORDER.indexOf(untracked(this.scaleType));
-    if (index > 0) this.scaleType.set(GANTT_SCALE_ORDER[index - 1]);
+    this.core.zoomIn();
   }
 
   /** Steps to the next coarser scale. */
   zoomOut(): void {
-    const index = GANTT_SCALE_ORDER.indexOf(untracked(this.scaleType));
-    if (index < GANTT_SCALE_ORDER.length - 1) {
-      this.scaleType.set(GANTT_SCALE_ORDER[index + 1]);
-    }
+    this.core.zoomOut();
   }
 
   /** Picks the finest scale whose full range fits the chart viewport. */
   zoomToFit(): void {
-    this.renderedRange.set(untracked(this.dataRange));
-    const viewport = this.chartScrollEl()?.nativeElement.clientWidth ?? 800;
-    for (const type of GANTT_SCALE_ORDER) {
-      this.scaleType.set(type);
-      if (untracked(this.scale).totalPx <= viewport) return;
-    }
-    this.scaleType.set(GANTT_SCALE_ORDER[GANTT_SCALE_ORDER.length - 1]);
+    this.core.zoomToFit();
   }
 
   /** Scrolls the chart so `date` sits near the left edge. */
   scrollToDate(date: Date): void {
-    const chart = this.chartScrollEl()?.nativeElement;
-    if (chart === undefined) return;
-    chart.scrollLeft = Math.max(0, dateToPx(untracked(this.scale), date) - 40);
+    this.core.scrollToDate(date);
   }
 
   /**
@@ -1894,310 +1066,27 @@ export class OgeGantt<
    * range and the critical-path keys.
    */
   getExportData(): OgeGanttExportData<T> {
-    const tasks = untracked(this.allTasks);
-    const scale = untracked(this.scale);
-    const columns = untracked(this.resolvedColumns).map((column) => ({
-      field: column.field,
-      header: column.header,
-      text: (task: OgeGanttTask<T>) => this.cellText(task, column),
-    }));
-    return {
-      tasks,
-      columns,
-      rangeStart: scale.start,
-      rangeEnd: scale.end,
-      critical: criticalPathKeys(tasks, untracked(this.ganttDependencies)),
-      resourceText: (task) => this.resourceText(task),
-    };
+    return this.core.getExportData();
   }
 
   /** Focuses the roving task row. */
   focus(): void {
-    const key =
-      untracked(this.focusKey) ?? untracked(this.visibleTasks)[0]?.key;
-    if (key === undefined) return;
-    this.focusKey.set(key);
-    setTimeout(() => {
-      this.hostEl.nativeElement
-        .querySelector<HTMLElement>('[data-focus-target]')
-        ?.focus();
-    });
-  }
-
-  /* ---------------- splitter ---------------- */
-
-  protected onSplitterPointerDown(event: PointerEvent): void {
-    if (event.button !== 0) return;
-    const startWidth = untracked(this.listWidth);
-    beginGanttGesture(event, {
-      onMove: (deltaX) => {
-        this.listWidth.set(Math.min(720, Math.max(160, startWidth + deltaX)));
-      },
-      onFinish: () => undefined,
-    });
-  }
-
-  /* ---------------- bar gestures ---------------- */
-
-  protected onBarPointerDown(
-    bar: GanttBar<T>,
-    kind: 'move' | 'resize-start' | 'resize-end' | 'progress',
-    event: PointerEvent,
-  ): void {
-    if (
-      !this.effectiveEditing() ||
-      !this.allowTaskUpdating() ||
-      event.button !== 0 ||
-      bar.task.isSummary
-    ) {
-      return;
-    }
-    if (kind !== 'move') event.stopPropagation();
-    const scale = this.scale();
-    const firstDay = this.resolvedFirstDayOfWeek();
-    const dateFormat = new Intl.DateTimeFormat(this.effectiveLocale(), {
-      day: 'numeric',
-      month: 'short',
-    });
-    let proposal: GanttTaskProposal | null = null;
-    let progress: number | null = null;
-    this.dragKey.set(bar.task.key);
-    beginGanttGesture(event, {
-      onMove: (deltaX, _deltaY, moveEvent) => {
-        const canvasRect =
-          this.canvasEl()?.nativeElement.getBoundingClientRect();
-        const tipX =
-          canvasRect !== undefined ? moveEvent.clientX - canvasRect.left : 0;
-        const tipY =
-          canvasRect !== undefined
-            ? moveEvent.clientY - canvasRect.top - 28
-            : 0;
-        if (kind === 'progress') {
-          progress = proposeTaskProgress(
-            bar.leftPx,
-            bar.leftPx + bar.widthPx,
-            tipX,
-          );
-          this.dragTip.set({ x: tipX, y: tipY, text: `${progress}%` });
-          return;
-        }
-        proposal =
-          kind === 'move'
-            ? proposeTaskMove(bar.task, deltaX, scale, firstDay)
-            : proposeTaskResize(
-                bar.task,
-                kind === 'resize-start' ? 'start' : 'end',
-                deltaX,
-                scale,
-                firstDay,
-              );
-        this.dragTip.set({
-          x: tipX,
-          y: tipY,
-          text: `${dateFormat.format(proposal.start)} - ${dateFormat.format(proposal.end)}`,
-        });
-      },
-      onFinish: (commit, cancelled) => {
-        this.dragKey.set(null);
-        this.dragTip.set(null);
-        if (commit && progress !== null) {
-          this.applyPatch(
-            bar.task,
-            ganttTaskPatch(bar.task.source, { progress }, this.fields()),
-            'progressChanged',
-            { title: bar.task.title, progress: String(progress) },
-          );
-          return;
-        }
-        if (commit && proposal !== null) {
-          this.commitProposal(
-            bar.task,
-            proposal,
-            kind === 'move' ? 'moved' : 'resized',
-          );
-        } else if (cancelled) {
-          this.announcement.set(this.msg().announcements.cancelled);
-        }
-      },
-    });
-  }
-
-  /* ---------------- dependency drawing ---------------- */
-
-  protected onLinkPointerDown(
-    bar: GanttBar<T>,
-    fromEnd: boolean,
-    event: PointerEvent,
-  ): void {
-    if (
-      !this.effectiveEditing() ||
-      !this.allowDependencyAdding() ||
-      event.button !== 0
-    ) {
-      return;
-    }
-    event.stopPropagation();
-    const rowHeight = this.rowHeight();
-    const fromX = fromEnd ? bar.leftPx + bar.widthPx : bar.leftPx;
-    const fromY = bar.index * rowHeight + rowHeight / 2;
-    let target: { task: GanttTask<T>; toEnd: boolean } | null = null;
-    beginGanttGesture(event, {
-      onMove: (_dx, _dy, moveEvent) => {
-        const rect = this.canvasEl()?.nativeElement.getBoundingClientRect();
-        if (rect === undefined) return;
-        const x = moveEvent.clientX - rect.left;
-        const y = moveEvent.clientY - rect.top;
-        const rowIndex = Math.floor(y / rowHeight);
-        const task = this.visibleTasks()[rowIndex];
-        target = null;
-        let valid = false;
-        if (
-          task !== undefined &&
-          task.key !== bar.task.key &&
-          !task.isSummary
-        ) {
-          const scale = this.scale();
-          const mid =
-            (dateToPx(scale, task.start) + dateToPx(scale, task.end)) / 2;
-          target = { task, toEnd: x > mid };
-          valid = !wouldCreateCycle(
-            this.ganttDependencies(),
-            bar.task.key,
-            task.key,
-          );
-        }
-        this.linkPreview.set({
-          path: `M ${fromX} ${fromY} L ${x} ${y}`,
-          valid,
-        });
-      },
-      onFinish: (commit, cancelled) => {
-        this.linkPreview.set(null);
-        if (commit && target !== null) {
-          const type = ((fromEnd ? 'F' : 'S') +
-            (target.toEnd ? 'F' : 'S')) as OgeGanttDependencyType;
-          this.insertDependency(bar.task.key, target.task.key, type);
-        } else if (cancelled) {
-          this.announcement.set(this.msg().announcements.cancelled);
-        }
-      },
-    });
-  }
-
-  protected onArrowClick(dependency: GanttDependency<D>, event: Event): void {
-    event.stopPropagation();
-    this.selectedDependencyKey.set(dependency.key);
-    const onKey = (keyEvent: KeyboardEvent): void => {
-      if (keyEvent.key === 'Delete' || keyEvent.key === 'Backspace') {
-        this.deleteDependency(dependency.source);
-      }
-      document.removeEventListener('keydown', onKey);
-      this.selectedDependencyKey.set(null);
-    };
-    document.addEventListener('keydown', onKey);
-  }
-
-  /* ---------------- CRUD ---------------- */
-
-  private commitProposal(
-    task: GanttTask<T>,
-    proposal: GanttTaskProposal,
-    kind: 'moved' | 'resized',
-  ): void {
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
-      dateStyle: 'medium',
-    });
-    this.applyPatch(
-      task,
-      ganttTaskPatch(
-        task.source,
-        { start: proposal.start, end: proposal.end },
-        this.fields(),
-      ),
-      kind === 'moved' ? 'taskMoved' : 'taskResized',
-      {
-        title: task.title,
-        start: format.format(proposal.start),
-        end: format.format(proposal.end),
-      },
-    );
-  }
-
-  /** Guarded update used by every mutation path. */
-  private applyPatch(
-    task: GanttTask<T>,
-    patch: Partial<T>,
-    announceKey: keyof OgeGanttMessages['announcements'],
-    tokens: Readonly<Record<string, string>>,
-  ): void {
-    if (!this.effectiveEditing() || !this.allowTaskUpdating()) return;
-    const event: OgeGanttTaskUpdatingEvent<T> = {
-      oldData: task.source,
-      newData: patch,
-      cancel: false,
-    };
-    this.taskUpdating.emit(event);
-    if (event.cancel) return;
-    this.snapshot();
-    const updated = { ...task.source, ...patch };
-    this.taskStore.set(
-      untracked(this.taskStore).map((item) =>
-        item === task.source ? updated : item,
-      ),
-    );
-    this.taskUpdated.emit({ taskData: updated });
-    this.announce(this.msg().announcements[announceKey], tokens);
-    this.runAutoSchedule();
+    this.core.focus();
   }
 
   /** Inserts a task through the cancelable pipeline. */
   insertTask(taskData: T): void {
-    if (!this.effectiveEditing() || !this.allowTaskAdding()) return;
-    const event: OgeGanttTaskInsertingEvent<T> = { taskData, cancel: false };
-    this.taskInserting.emit(event);
-    if (event.cancel) return;
-    this.snapshot();
-    this.taskStore.set([...untracked(this.taskStore), taskData]);
-    this.taskInserted.emit({ taskData });
-    this.announce(this.msg().announcements.taskCreated, {
-      title: String(this.fields().title(taskData) ?? ''),
-    });
-    this.runAutoSchedule();
+    this.core.insertTask(taskData);
   }
 
   /** Updates a task's fields through the cancelable pipeline. */
   updateTask(taskData: T, patch: Partial<T>): void {
-    const task = untracked(this.allTasks).find(
-      (entry) => entry.source === taskData,
-    );
-    if (task === undefined) return;
-    this.applyPatch(task, patch, 'taskUpdated', { title: task.title });
+    this.core.updateTask(taskData, patch);
   }
 
   /** Deletes a task (and its dependency links) through the pipeline. */
   deleteTask(taskData: T): void {
-    if (!this.effectiveEditing() || !this.allowTaskDeleting()) return;
-    const event: OgeGanttTaskDeletingEvent<T> = { taskData, cancel: false };
-    this.taskDeleting.emit(event);
-    if (event.cancel) return;
-    this.snapshot();
-    const fields = this.fields();
-    const key = fields.key(taskData) as RowKey;
-    const linked = new Set(
-      untracked(this.ganttDependencies)
-        .filter((dep) => dep.predecessorKey === key || dep.successorKey === key)
-        .map((dep) => dep.source),
-    );
-    this.taskStore.set(
-      untracked(this.taskStore).filter((item) => item !== taskData),
-    );
-    this.dependencyStore.set(
-      untracked(this.dependencyStore).filter((item) => !linked.has(item)),
-    );
-    this.taskDeleted.emit({ taskData });
-    this.announce(this.msg().announcements.taskDeleted, {
-      title: String(fields.title(taskData) ?? ''),
-    });
+    this.core.deleteTask(taskData);
   }
 
   /** Inserts a dependency link (cycle-checked, cancelable). */
@@ -2206,313 +1095,16 @@ export class OgeGantt<
     successorKey: RowKey,
     type: OgeGanttDependencyType = 'FS',
   ): void {
-    if (!this.effectiveEditing() || !this.allowDependencyAdding()) return;
-    if (
-      wouldCreateCycle(
-        untracked(this.ganttDependencies),
-        predecessorKey,
-        successorKey,
-      )
-    ) {
-      this.announcement.set(this.msg().announcements.dependencyRejected);
-      return;
-    }
-    const event: OgeGanttDependencyInsertingEvent = {
-      predecessorKey,
-      successorKey,
-      type,
-      cancel: false,
-    };
-    this.dependencyInserting.emit(event);
-    if (event.cancel) return;
-    this.snapshot();
-    const item: Record<string, unknown> = {};
-    const set = (expr: GanttFieldExpr<D>, value: unknown): void => {
-      if (typeof expr === 'string') item[expr] = value;
-    };
-    set(
-      this.dependencyKeyExpr(),
-      `${String(predecessorKey)}-${String(successorKey)}`,
-    );
-    set(this.predecessorKeyExpr(), predecessorKey);
-    set(this.successorKeyExpr(), successorKey);
-    set(this.dependencyTypeExpr(), type);
-    const dependencyData = item as D;
-    this.dependencyStore.set([
-      ...untracked(this.dependencyStore),
-      dependencyData,
-    ]);
-    this.dependencyInserted.emit({ dependencyData });
-    this.announce(this.msg().announcements.dependencyCreated, {
-      from: String(predecessorKey),
-      to: String(successorKey),
-    });
-    this.runAutoSchedule();
+    this.core.insertDependency(predecessorKey, successorKey, type);
   }
 
   /** Deletes a dependency link through the pipeline. */
   deleteDependency(dependencyData: D): void {
-    if (!this.effectiveEditing() || !this.allowDependencyDeleting()) return;
-    const event: OgeGanttDependencyDeletingEvent<D> = {
-      dependencyData,
-      cancel: false,
-    };
-    this.dependencyDeleting.emit(event);
-    if (event.cancel) return;
-    this.snapshot();
-    const normalized = untracked(this.ganttDependencies).find(
-      (entry) => entry.source === dependencyData,
-    );
-    this.dependencyStore.set(
-      untracked(this.dependencyStore).filter((item) => item !== dependencyData),
-    );
-    this.dependencyDeleted.emit({ dependencyData });
-    this.announce(this.msg().announcements.dependencyDeleted, {
-      from: String(normalized?.predecessorKey ?? ''),
-      to: String(normalized?.successorKey ?? ''),
-    });
+    this.core.deleteDependency(dependencyData);
   }
-
-  /** Applies the forward pass when `autoScheduling` is on. */
-  private runAutoSchedule(): void {
-    if (!this.autoScheduling()) return;
-    const resources = untracked(this.resources);
-    const planCalendar = untracked(this.effectiveWorkCalendar) ?? undefined;
-    const changes = autoScheduleForward(
-      untracked(this.allTasks),
-      untracked(this.ganttDependencies),
-      (task) => {
-        for (const id of task.resourceIds) {
-          const calendar = resources.find(
-            (resource) => resource.id === id,
-          )?.calendar;
-          if (calendar !== undefined) return calendar;
-        }
-        return planCalendar;
-      },
-    );
-    if (changes.length === 0) return;
-    const fields = this.fields();
-    const byKey = new Map(
-      untracked(this.allTasks).map((task) => [task.key, task]),
-    );
-    let next = untracked(this.taskStore);
-    for (const change of changes) {
-      const task = byKey.get(change.key);
-      if (task === undefined) continue;
-      const patch = ganttTaskPatch(
-        task.source,
-        { start: change.start, end: change.end },
-        fields,
-      );
-      next = next.map((item) =>
-        item === task.source ? { ...item, ...patch } : item,
-      );
-    }
-    this.taskStore.set(next);
-  }
-
-  /* ---------------- dialog ---------------- */
-
-  private editedSource: T | null = null;
-  private draftCounter = 0;
-
-  /** Today button: scrolls the chart to the current date. */
-  protected goToday(): void {
-    this.scrollToDate(new Date());
-  }
-
-  protected readonly drawPreview = signal<{
-    leftPx: number;
-    widthPx: number;
-    top: number;
-  } | null>(null);
-
-  /** Double-click on empty chart space creates a task at that date. */
-  protected onCanvasDblClick(event: MouseEvent): void {
-    if (!this.effectiveEditing() || !this.allowTaskAdding()) return;
-    if ((event.target as HTMLElement).closest('.oge-gantt-target')) return;
-    const canvas = this.canvasEl()?.nativeElement;
-    if (canvas === undefined) return;
-    const rect = canvas.getBoundingClientRect();
-    const start = chartPxToDate(
-      untracked(this.scale),
-      event.clientX - rect.left,
-      this.resolvedFirstDayOfWeek(),
-    );
-    this.openCreateDialog(
-      start,
-      new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1),
-    );
-  }
-
-  /** Drag on empty chart space draws a bar, then opens the create dialog. */
-  protected onCanvasPointerDown(event: PointerEvent): void {
-    if (event.button !== 0) return;
-    if (!this.effectiveEditing() || !this.allowTaskAdding()) return;
-    if ((event.target as HTMLElement).closest('.oge-gantt-target')) return;
-    const canvas = this.canvasEl()?.nativeElement;
-    if (canvas === undefined) return;
-    const rect = canvas.getBoundingClientRect();
-    const startPx = event.clientX - rect.left;
-    const rowIndex = Math.floor((event.clientY - rect.top) / this.rowHeight());
-    beginGanttGesture(event, {
-      onMove: (deltaX) => {
-        this.drawPreview.set({
-          leftPx: Math.min(startPx, startPx + deltaX),
-          widthPx: Math.abs(deltaX),
-          top: rowIndex * this.rowHeight() + 6,
-        });
-      },
-      onFinish: (commit, cancelled) => {
-        const draw = untracked(this.drawPreview);
-        this.drawPreview.set(null);
-        if (!commit || cancelled || draw === null || draw.widthPx < 12) {
-          return;
-        }
-        const scale = untracked(this.scale);
-        const firstDay = this.resolvedFirstDayOfWeek();
-        const start = chartPxToDate(scale, draw.leftPx, firstDay);
-        let end = chartPxToDate(scale, draw.leftPx + draw.widthPx, firstDay);
-        if (end.getTime() <= start.getTime()) {
-          end = new Date(
-            start.getFullYear(),
-            start.getMonth(),
-            start.getDate() + 1,
-          );
-        }
-        this.openCreateDialog(start, end);
-      },
-    });
-  }
-
-  /** Prefilled create dialog (double-click, draw-to-create, subtask). */
-  private openCreateDialog(start: Date, end: Date, parentRaw?: unknown): void {
-    this.pendingParentRaw = parentRaw;
-    this.openDialog(
-      {
-        title: '',
-        start,
-        end,
-        progress: 0,
-        ...(this.resources().length > 0 ? { resourceIds: [] } : {}),
-      },
-      this.buildDraft(start, parentRaw),
-      true,
-    );
-  }
-
-  private pendingParentRaw: unknown = undefined;
 
   /** Opens the task dialog: a prefilled create form without arguments. */
   showTaskDetailsDialog(taskData?: T): void {
-    if (taskData !== undefined) {
-      const task = untracked(this.allTasks).find(
-        (entry) => entry.source === taskData,
-      );
-      if (task !== undefined) this.openEditDialog(task);
-      return;
-    }
-    if (!this.effectiveEditing() || !this.allowTaskAdding()) return;
-    const today = startOfDay(new Date());
-    this.openDialog(
-      {
-        title: '',
-        start: today,
-        end: new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate() + 1,
-        ),
-        progress: 0,
-        ...(this.resources().length > 0 ? { resourceIds: [] } : {}),
-      },
-      this.buildDraft(today),
-      true,
-    );
-  }
-
-  private buildDraft(start: Date, parentRaw?: unknown): T {
-    const item: Record<string, unknown> = {};
-    const set = (expr: GanttFieldExpr<T>, value: unknown): void => {
-      if (typeof expr === 'string') item[expr] = value;
-    };
-    if (parentRaw !== undefined) set(this.parentKeyExpr(), parentRaw);
-    set(
-      this.keyExpr(),
-      `oge-task-${++this.draftCounter}-${untracked(this.taskStore).length}`,
-    );
-    set(this.titleExpr(), '');
-    set(this.startExpr(), start);
-    set(
-      this.endExpr(),
-      new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1),
-    );
-    set(this.progressExpr(), 0);
-    return item as T;
-  }
-
-  private openEditDialog(task: GanttTask<T>): void {
-    if (!this.effectiveEditing() || !this.allowTaskUpdating()) return;
-    this.openDialog(
-      {
-        title: task.title,
-        start: task.start,
-        end: task.end,
-        progress: task.progress,
-        color: task.color,
-        ...(this.resources().length > 0
-          ? { resourceIds: task.resourceIds }
-          : {}),
-      },
-      task.source,
-      false,
-    );
-  }
-
-  private openDialog(model: GanttEditorModel, source: T, isNew: boolean): void {
-    const dialog = this.dialog();
-    const event: OgeGanttDialogShowingEvent<T> = {
-      taskData: source,
-      isNew,
-      formItems: dialog.defaultItems(),
-      cancel: false,
-    };
-    this.taskEditDialogShowing.emit(event);
-    if (event.cancel) return;
-    this.editedSource = isNew ? null : source;
-    dialog.open(model, isNew, event.formItems);
-  }
-
-  protected onDialogSaved(result: GanttEditorResult): void {
-    const fields = this.fields();
-    if (result.isNew) {
-      const draft = this.buildDraft(result.model.start, this.pendingParentRaw);
-      this.pendingParentRaw = undefined;
-      const patch = ganttTaskPatch(draft, result.model, fields);
-      this.insertTask({ ...draft, ...patch });
-    } else if (this.editedSource !== null) {
-      this.updateTask(
-        this.editedSource,
-        ganttTaskPatch(this.editedSource, result.model, fields),
-      );
-    }
-    this.editedSource = null;
-  }
-
-  protected onDialogDelete(): void {
-    if (this.editedSource !== null) this.deleteTask(this.editedSource);
-    this.editedSource = null;
-  }
-
-  private announce(
-    template: string,
-    tokens: Readonly<Record<string, string>>,
-  ): void {
-    let text = template;
-    for (const [token, value] of Object.entries(tokens)) {
-      text = text.replace(`{${token}}`, value);
-    }
-    this.announcement.set(text);
+    this.core.showTaskDetailsDialog(taskData);
   }
 }

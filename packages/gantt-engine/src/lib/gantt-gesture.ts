@@ -3,18 +3,39 @@
  * state, pointer capture as a progressive enhancement, document listeners
  * incl. a capture-phase Escape, a single `finish(cancelled)` and a 3px
  * movement threshold so a plain click never commits a drag.
+ *
+ * Framework-free: it only needs the fields every pointer event carries, so
+ * the Angular layer hands it the native `PointerEvent` and the React layer
+ * its synthetic one (whose `stopPropagation()` is the one that stops React's
+ * own propagation).
  */
 export interface GanttGestureCallbacks {
   onMove(deltaX: number, deltaY: number, event: PointerEvent): void;
   onFinish(commit: boolean, cancelled: boolean): void;
 }
 
+/** The slice of a pointer event the gesture handlers read. */
+export interface GanttPointerLike {
+  readonly button: number;
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly pointerId: number;
+  readonly target: EventTarget | null;
+  preventDefault(): void;
+  stopPropagation(): void;
+}
+
+/** A running gesture; `cancel()` finishes it as cancelled (teardown). */
+export interface GanttGestureHandle {
+  cancel(): void;
+}
+
 const MOVE_THRESHOLD = 3;
 
 export function beginGanttGesture(
-  event: PointerEvent,
+  event: GanttPointerLike,
   callbacks: GanttGestureCallbacks,
-): void {
+): GanttGestureHandle {
   // A native selection drag would auto-scroll the chart under the gesture.
   event.preventDefault();
   const startX = event.clientX;
@@ -22,9 +43,9 @@ export function beginGanttGesture(
   let moved = false;
   let finished = false;
 
-  const target = event.target as HTMLElement;
+  const target = event.target as HTMLElement | null;
   try {
-    target.setPointerCapture(event.pointerId);
+    target?.setPointerCapture(event.pointerId);
   } catch {
     // jsdom / detached elements — capture is a progressive enhancement
   }
@@ -66,4 +87,5 @@ export function beginGanttGesture(
   document.addEventListener('pointercancel', onPointerCancel);
   document.addEventListener('keydown', onKeyDown, true);
   window.addEventListener('blur', onBlur);
+  return { cancel: () => finish(true) };
 }

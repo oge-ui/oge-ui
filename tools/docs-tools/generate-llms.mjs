@@ -41,6 +41,7 @@ import { sectionsToMarkdown } from './lib/markdown.mjs';
 import {
   COMMERCIAL_NOTE,
   CONVENTIONS,
+  CONVENTIONS_AGNOSTIC,
   CONVENTIONS_REACT,
   INSTALL,
   MISTAKES,
@@ -232,11 +233,18 @@ function buildPackageDoc({ pkg, blocks, entries, demos }) {
   // Angular conventions to a `@oge-ui/react-*` reader is not merely unhelpful —
   // it instructs an assistant to write `imports: [OgeButton]` into a `.tsx`
   // file (ADR 0001).
-  const isReact = pkg.platform === 'react';
-  out.push(isReact ? CONVENTIONS_REACT : CONVENTIONS);
-  out.push('');
-  out.push(isReact ? MISTAKES_REACT : MISTAKES);
-  out.push('');
+  // A framework-free engine package (ADR 0003) gets neither rule set — no
+  // component is rendered from it — only the pointer to its render packages.
+  if (pkg.platform === 'agnostic') {
+    out.push(CONVENTIONS_AGNOSTIC);
+    out.push('');
+  } else {
+    const isReact = pkg.platform === 'react';
+    out.push(isReact ? CONVENTIONS_REACT : CONVENTIONS);
+    out.push('');
+    out.push(isReact ? MISTAKES_REACT : MISTAKES);
+    out.push('');
+  }
   out.push(renderEntryPoints(entries));
   if (blocks.length) {
     out.push('## API reference');

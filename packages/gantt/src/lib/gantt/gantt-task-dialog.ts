@@ -10,23 +10,15 @@ import {
 } from '@angular/core';
 import { OgeModal, OgeModalFooter } from '@oge-ui/overlay';
 import { OgeForm, type OgeFormItemData } from '@oge-ui/forms';
+import {
+  buildGanttDialogItems,
+  type GanttEditorModel,
+  type GanttEditorResult,
+  type OgeGanttResource,
+} from '@oge-ui/gantt-engine';
 import type { OgeGanttDialogMessages } from '../config';
 
-/** The dialog's working model (independent of the user's item shape). */
-export interface GanttEditorModel {
-  title: string;
-  start: Date;
-  end: Date;
-  progress: number;
-  color?: string;
-  /** Present only when resources are configured — enables the tag editor. */
-  resourceIds?: readonly unknown[];
-}
-
-export interface GanttEditorResult {
-  readonly model: GanttEditorModel;
-  readonly isNew: boolean;
-}
+export type { GanttEditorModel, GanttEditorResult };
 
 /**
  * Internal task editor: an `OgeModal` embedding an `OgeForm` in
@@ -84,9 +76,7 @@ export class OgeGanttTaskDialog {
   readonly locale = input<string | undefined>(undefined);
   readonly allowDeleting = input(true);
   /** Resource choices; non-empty adds the multi-assignment tag editor. */
-  readonly resources = input<
-    readonly { id: unknown; text: string; color?: string }[]
-  >([]);
+  readonly resources = input<readonly OgeGanttResource[]>([]);
 
   readonly saved = output<GanttEditorResult>();
   readonly deleteRequested = output<void>();
@@ -103,67 +93,8 @@ export class OgeGanttTaskDialog {
 
   /** The default items; exposed so the shell can pass them to hooks. */
   defaultItems(): OgeFormItemData[] {
-    const messages = this.messages();
-    return [
-      {
-        field: 'title',
-        label: messages.titleLabel,
-        placeholder: messages.titlePlaceholder,
-        isRequired: true,
-        colSpan: 2,
-      },
-      {
-        field: 'start',
-        label: messages.startLabel,
-        editorType: 'dateBox',
-        editorOptions: { type: 'date' },
-      },
-      {
-        field: 'end',
-        label: messages.endLabel,
-        editorType: 'dateBox',
-        editorOptions: { type: 'date' },
-        validationRules: [
-          {
-            type: 'custom',
-            validate: (context) => {
-              const data = context.data as unknown as GanttEditorModel;
-              return data.end instanceof Date &&
-                data.start instanceof Date &&
-                data.end.getTime() < data.start.getTime()
-                ? messages.endBeforeStart
-                : null;
-            },
-          },
-        ],
-      },
-      {
-        field: 'progress',
-        label: messages.progressLabel,
-        editorType: 'slider',
-        editorOptions: { min: 0, max: 100, step: 5 },
-      },
-      {
-        field: 'color',
-        label: messages.colorLabel,
-        editorType: 'colorBox',
-      },
-      ...(this.resources().length > 0
-        ? [
-            {
-              field: 'resourceIds',
-              label: messages.resourcesLabel,
-              editorType: 'tagBox',
-              editorOptions: {
-                items: [...this.resources()],
-                valueExpr: 'id',
-                displayExpr: 'text',
-              },
-              colSpan: 2,
-            } satisfies OgeFormItemData,
-          ]
-        : []),
-    ];
+    // single-sourced in the engine: the React dialog renders the same form
+    return buildGanttDialogItems(this.messages(), this.resources());
   }
 
   protected readonly items = computed<readonly OgeFormItemData[]>(

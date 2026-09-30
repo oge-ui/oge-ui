@@ -57,6 +57,26 @@
         "./packages/gantt/export-image/src/index.ts"
       ],
       "@oge-ui/gantt/export-pdf": ["./packages/gantt/export-pdf/src/index.ts"],
+      "@oge-ui/gantt-engine": ["./packages/gantt-engine/src/index.ts"],
+      "@oge-ui/gantt-engine/export-excel": [
+        "./packages/gantt-engine/src/export-excel.ts"
+      ],
+      "@oge-ui/gantt-engine/export-image": [
+        "./packages/gantt-engine/src/export-image.ts"
+      ],
+      "@oge-ui/gantt-engine/export-pdf": [
+        "./packages/gantt-engine/src/export-pdf.ts"
+      ],
+      "@oge-ui/react-gantt": ["./packages/react/gantt/src/index.ts"],
+      "@oge-ui/react-gantt/export-excel": [
+        "./packages/react/gantt/src/export-excel.ts"
+      ],
+      "@oge-ui/react-gantt/export-image": [
+        "./packages/react/gantt/src/export-image.ts"
+      ],
+      "@oge-ui/react-gantt/export-pdf": [
+        "./packages/react/gantt/src/export-pdf.ts"
+      ],
       "@oge-ui/scheduler": ["./packages/scheduler/src/index.ts"],
       "@oge-ui/pivot": ["./packages/pivot/src/index.ts"],
       "@oge-ui/pivot/export-excel": [

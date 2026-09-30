@@ -36,10 +36,12 @@ export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
  * - `docsRoot` — route the docs live under; `null` for engine-only packages.
  * - `pageDirs` — folders under `pages/` whose demos belong to this package.
  * - `tier` — `'mit'` or `'commercial'`; drives the licence banner.
- * - `platform` — `'angular'` (default) or `'react'`. Selects which "Writing OGE
- *   code" rules and which "Common mistakes" table the package's `llms.txt`
- *   carries. Getting this wrong ships actively misleading instructions to every
- *   coding assistant, so it is explicit rather than inferred from the name.
+ * - `platform` — `'angular'` (default), `'react'` or `'agnostic'`. Selects which
+ *   "Writing OGE code" rules and which "Common mistakes" table the package's
+ *   `llms.txt` carries; `'agnostic'` (a framework-free engine package, ADR
+ *   0003) carries neither, only a pointer to its render packages. Getting this
+ *   wrong ships actively misleading instructions to every coding assistant, so
+ *   it is explicit rather than inferred from the name.
  */
 export const PACKAGES = [
   {
@@ -209,6 +211,18 @@ export const PACKAGES = [
     pageDirs: ['gantt'],
     apiPage: 'apps/dev-app/src/app/pages/gantt/api.ts',
     tier: 'commercial',
+  },
+  {
+    dir: 'gantt-engine',
+    npm: '@oge-ui/gantt-engine',
+    label: 'Gantt engine',
+    summary:
+      'Framework-free engine behind the Angular and React Gantt (ADR 0003): task-tree model and field mapping, calendar-true time scales, auto-scheduling, critical path, dependency routing, the OgeGanttCore controller, message catalogs and the Excel/PDF/PNG export builders. Installed automatically by @oge-ui/gantt and @oge-ui/react-gantt — you rarely import it directly.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+    platform: 'agnostic',
   },
   {
     dir: 'kanban',

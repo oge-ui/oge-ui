@@ -3,8 +3,10 @@
   "dest": "../../dist/packages/gantt",
   "assets": ["llms.txt"],
   "allowedNonPeerDependencies": [
+    "@oge-ui/behavior",
     "@oge-ui/core",
     "@oge-ui/forms",
+    "@oge-ui/gantt-engine",
     "@oge-ui/overlay"
   ],
   "lib": {

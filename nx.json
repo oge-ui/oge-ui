@@ -69,6 +69,7 @@
       "charts",
       "scheduler",
       "gantt",
+      "gantt-engine",
       "kanban",
       "buttons",
       "overlay",

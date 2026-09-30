@@ -132,7 +132,10 @@ export function buildGanttScale(
 ): GanttScale {
   let cursor = unitFloor(rangeStart, type, firstDayOfWeek);
   cursor = new Date(
-    Math.min(cursor.getTime(), unitFloor(rangeStart, type, firstDayOfWeek).getTime()),
+    Math.min(
+      cursor.getTime(),
+      unitFloor(rangeStart, type, firstDayOfWeek).getTime(),
+    ),
   );
   // one padding unit before the range
   cursor = unitFloorBack(cursor, type);
@@ -238,7 +241,13 @@ function dateToPxIn(
 
 /** Date → x pixel inside the scale. */
 export function dateToPx(scale: GanttScale, date: Date): number {
-  return dateToPxIn(scale.start, scale.ticks, scale.ticks[0]?.widthPx ?? 1, scale.type, date);
+  return dateToPxIn(
+    scale.start,
+    scale.ticks,
+    scale.ticks[0]?.widthPx ?? 1,
+    scale.type,
+    date,
+  );
 }
 
 /** x pixel → date (linear within the containing tick). */
@@ -249,10 +258,7 @@ export function pxToDate(scale: GanttScale, px: number): Date {
   for (let i = ticks.length - 1; i >= 0; i--) {
     const tick = ticks[i];
     if (clamped >= tick.px) {
-      const next =
-        i + 1 < ticks.length
-          ? ticks[i + 1].date
-          : scale.end;
+      const next = i + 1 < ticks.length ? ticks[i + 1].date : scale.end;
       const unitMs = next.getTime() - tick.date.getTime();
       return new Date(
         tick.date.getTime() +
@@ -271,8 +277,7 @@ export function snapToUnit(
 ): Date {
   const floor = unitFloor(date, scale.type, firstDayOfWeek);
   const next = unitNext(floor, scale.type);
-  return date.getTime() - floor.getTime() <
-    next.getTime() - date.getTime()
+  return date.getTime() - floor.getTime() < next.getTime() - date.getTime()
     ? floor
     : next;
 }

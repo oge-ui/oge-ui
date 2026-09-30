@@ -218,3 +218,30 @@ Predictable wrong guesses, and what to write instead.
 | \`<OgeButton icon="save" />\` | \`icon={<SaveIcon />}\` — slots take nodes |
 | \`::part\` / overriding \`.oge-button-native\` | override a \`--oge-*\` token |
 | rendering it from a server component | mark the file \`'use client'\` |`;
+
+// ---------------------------------------------------------------------------
+// Framework-free engine packages (ADR 0003). Neither the Angular nor the React
+// rules apply: nobody renders anything from them. Packages marked
+// `platform: 'agnostic'` in the manifest get this instead — mostly a pointer
+// to the render package the reader actually wants.
+// ---------------------------------------------------------------------------
+
+export const CONVENTIONS_AGNOSTIC = `## Using this package
+
+This is a **framework-free engine package**: plain TypeScript with no Angular
+or React import, shared by a family's render layers. You almost never import it
+directly.
+
+1. **Install the render package instead.** The Angular package (\`@oge-ui/<family>\`)
+   and the React package (\`@oge-ui/react-<family>\`) depend on this engine and
+   re-export its public types under the same names — import types from the
+   render package you use, not from here.
+2. **Reach for it directly only to build outside a component**: the export
+   builders on its \`/export-*\` entry points (optional peers, e.g. \`exceljs\` /
+   \`jspdf\`), the pure kernel functions in a Node script or a test, or a third
+   render layer.
+3. **Its controller takes an \`OgeReactivityAdapter\`** (\`cell\` / \`derived\`,
+   from \`@oge-ui/behavior\`). The render packages supply one — signals in
+   Angular, a versioned store in React; a new layer supplies its own.
+4. **Licensing follows the family.** A commercial family's engine carries the
+   same commercial license as its render packages.`;
