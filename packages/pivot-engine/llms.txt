@@ -11,14 +11,19 @@ Whole-suite reference: https://ogeui.com/llms-full.txt
 npm i @oge-ui/pivot-engine
 ```
 
-## Using this package
+## Writing code against this package
 
-This is a **framework-free engine** — no Angular or React import anywhere. It
-is installed automatically as a dependency of the family's render packages
-(the Angular package and its `@oge-ui/react-*` twin), which is where
-component code is written: follow the "Writing OGE code" rules in that
-package's own `llms.txt`. Import from the engine directly only for headless
-use or custom integrations (the pure helpers and the workbook builder).
+This is a framework-free engine: plain TypeScript, no Angular or React import,
+no components and no stylesheet. It runs in Node, in a worker, in tests and
+under either render layer.
+
+1. **You rarely install it directly.** The Angular and the React editor of the
+   family depend on it and re-export the surface an app needs — import from
+   the editor package in UI code.
+2. **Import it directly for pipelines.** Server-side conversion, validation or
+   rendering (XML in, XML/JSON/SVG out) and test fixtures are what it is for.
+3. **Everything is immutable.** Commands return a new model; the command stack
+   keeps snapshots. Never mutate a model object in place.
 
 ## Entry points
 
