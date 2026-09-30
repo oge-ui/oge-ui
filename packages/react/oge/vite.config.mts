@@ -67,6 +67,7 @@ export default defineConfig(() => ({
         '@oge-ui/react-buttons',
         '@oge-ui/react-forms',
         '@oge-ui/react-grid',
+        '@oge-ui/react-tree-list',
         '@oge-ui/react-inputs',
         '@oge-ui/react-layout',
         '@oge-ui/react-navigation',

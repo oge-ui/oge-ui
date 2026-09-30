@@ -1,0 +1,61 @@
+{
+  "name": "@oge-ui/react-tree-list",
+  "version": "0.13.1",
+  "description": "React tree list (hierarchical data grid) from the OGE UI suite: flat parentId or nested data, lazy per-expansion child loading with remote match discovery, ancestor-preserving filtering (filter row, header filter, search, filter builder), sibling-scoped sorting, recursive tri-state selection, paging over the visible rows, row and column virtualization, editing in all five modes, drag and drop reparenting, treegrid keyboard navigation, keyboard context menus, pinned/resizable/reorderable columns and bands, state persistence and CSV/Excel export — running the same framework-free tree engine, the same grid state slices and the same stylesheet as the Angular tree-list package.",
+  "keywords": [
+    "react",
+    "tree-list",
+    "treelist",
+    "tree-grid",
+    "treegrid",
+    "hierarchical-data",
+    "virtual-scroll",
+    "accessibility",
+    "design-system",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.js",
+      "require": "./export-excel.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.13.1",
+    "@oge-ui/core": "0.13.1",
+    "@oge-ui/react-forms": "0.13.1",
+    "@oge-ui/react-grid": "0.13.1",
+    "@oge-ui/react-inputs": "0.13.1",
+    "@oge-ui/react-layout": "0.13.1",
+    "@oge-ui/react-overlay": "0.13.1"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/tree-list"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "MIT"
+}

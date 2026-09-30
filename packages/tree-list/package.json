@@ -19,15 +19,10 @@
   "peerDependencies": {
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
-    "@angular/forms": "^22.0.0",
-    "exceljs": "^4.4.0"
-  },
-  "peerDependenciesMeta": {
-    "exceljs": {
-      "optional": true
-    }
+    "@angular/forms": "^22.0.0"
   },
   "dependencies": {
+    "@oge-ui/behavior": "0.13.1",
     "@oge-ui/core": "0.13.1",
     "@oge-ui/grid": "0.13.1",
     "@oge-ui/inputs": "0.13.1",

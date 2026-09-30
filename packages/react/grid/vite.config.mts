@@ -53,6 +53,9 @@ export default defineConfig(() => ({
         styles: 'src/styles.ts',
         'export-excel': 'src/export-excel.ts',
         'export-pdf': 'src/export-pdf.ts',
+        // the React half of the grid foundation, shared with react-tree-list
+        // (the counterpart of Angular's `@oge-ui/grid/foundation`)
+        foundation: 'src/foundation.ts',
       },
       fileName: (format, name) =>
         format === 'es' ? `${name}.js` : `${name}.cjs`,

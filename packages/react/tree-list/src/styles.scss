@@ -1,0 +1,9 @@
+// The React tree list renders the exact `.oge-tree-list` markup the Angular
+// package styles — so its stylesheet IS the Angular package's SCSS, compiled
+// here into this package's own `styles.css`. No second stylesheet, no drift
+// (ADR 0001). The pager is the grid's pager, whose stylesheet the Angular
+// pager component loads alongside; the filter-row editors, the toolbar, the
+// popups and the edit form come from the inputs, layout, overlay and forms
+// packages' own stylesheets, which the app imports alongside.
+@use '../../../tree-list/src/lib/tree-list/tree-list';
+@use '../../../grid/src/lib/pager/pager';

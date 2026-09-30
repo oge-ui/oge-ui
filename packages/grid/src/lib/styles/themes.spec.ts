@@ -11,12 +11,10 @@ import { compileString } from 'sass';
 const stylesDir = __dirname;
 const themesDir = join(stylesDir, 'themes');
 // line endings normalized: a Windows checkout with core.autocrlf reads CRLF
-const tokensSource = readFileSync(join(stylesDir, '_tokens.scss'), 'utf8').replace(
-  /
-/g,
-  '
-',
-);
+const tokensSource = readFileSync(
+  join(stylesDir, '_tokens.scss'),
+  'utf8',
+).replace(/\r\n/g, '\n');
 
 /** `--name: value;` pairs of one SCSS mixin body. */
 function mixinDeclarations(name: string): Map<string, string> {

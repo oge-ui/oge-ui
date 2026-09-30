@@ -381,10 +381,16 @@ export const OGE_TREE_LIST_API: ApiSections = {
           description: 'Same payloads as the grid.',
         },
         {
-          name: 'editingStart / rowInserting‑ed / rowUpdating‑ed / rowRemoving‑ed / savingChanges / savedChanges / editCanceled',
+          name: 'editingStart / rowInserting / rowInserted / rowUpdating / rowUpdated / rowRemoving / rowRemoved / savingChanges / savedChanges / editCanceled',
           type: 'editing lifecycle',
           description:
             'Same shared EditingModel pipeline as the grid; <code>-ing</code> events cancelable.',
+        },
+        {
+          name: 'expandedRowKeysChange / selectedKeysChange / focusedRowKeyChange / filterValueChange',
+          type: 'model change events',
+          description:
+            'The change halves of the <code>[(expandedRowKeys)]</code>, <code>[(selectedKeys)]</code>, <code>[(focusedRowKey)]</code> and <code>[(filterValue)]</code> two-way bindings.',
         },
         {
           name: 'exporting / dataErrorOccurred / contentReady / stateChange',

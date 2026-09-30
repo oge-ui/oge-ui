@@ -1,14 +1,27 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import type { TreeFilterMode } from '@oge-ui/core';
 import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import { ReactTreeFilteringDemos } from '../react-tree-list/filtering';
 import { makeOrgTree } from './tree-data';
 import { SNIPPET } from './filtering-snippets';
 
 @Component({
   selector: 'app-tree-filtering',
-  imports: [OgeTreeList, OgeColumn, DemoCard, DocHeader],
+  imports: [
+    OgeTreeList,
+    OgeColumn,
+    DemoCard,
+    DocHeader,
+    ReactTreeFilteringDemos,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -23,66 +36,71 @@ import { SNIPPET } from './filtering-snippets';
       </p>
     </app-doc-header>
 
-    <app-demo-card
-      [chips]="['ancestors preserved', 'fullBranch']"
-      [code]="snippet"
-      language="ts"
-    >
-      <div class="mb-3 flex items-center gap-2 text-sm">
-        <span class="text-gray-500 dark:text-gray-400">filterMode:</span>
-        @for (mode of modes; track mode) {
-          <button
-            type="button"
-            class="rounded-md border px-2 py-1 text-xs"
-            [class.border-indigo-500]="filterMode() === mode"
-            [class.text-indigo-600]="filterMode() === mode"
-            [class.border-gray-300]="filterMode() !== mode"
-            (click)="filterMode.set(mode)"
-          >
-            {{ mode }}
-          </button>
-        }
-      </div>
-      <oge-tree-list
-        style="max-height: 480px"
-        [data]="org"
-        keyExpr="id"
-        parentIdExpr="parentId"
-        [autoExpandAll]="true"
-        [filterRow]="true"
-        [searchPanel]="true"
-        [headerFilter]="true"
-        [filterMode]="filterMode()"
+    @if (fw.isReact()) {
+      <app-react-tree-filtering-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['ancestors preserved', 'fullBranch']"
+        [code]="snippet"
+        language="ts"
       >
-        <oge-column field="name" caption="Name" />
-        <oge-column field="title" caption="Title" [width]="140" />
-        <oge-column field="office" caption="Office" [width]="160" />
-      </oge-tree-list>
-    </app-demo-card>
+        <div class="mb-3 flex items-center gap-2 text-sm">
+          <span class="text-gray-500 dark:text-gray-400">filterMode:</span>
+          @for (mode of modes; track mode) {
+            <button
+              type="button"
+              class="rounded-md border px-2 py-1 text-xs"
+              [class.border-indigo-500]="filterMode() === mode"
+              [class.text-indigo-600]="filterMode() === mode"
+              [class.border-gray-300]="filterMode() !== mode"
+              (click)="filterMode.set(mode)"
+            >
+              {{ mode }}
+            </button>
+          }
+        </div>
+        <oge-tree-list
+          style="max-height: 480px"
+          [data]="org"
+          keyExpr="id"
+          parentIdExpr="parentId"
+          [autoExpandAll]="true"
+          [filterRow]="true"
+          [searchPanel]="true"
+          [headerFilter]="true"
+          [filterMode]="filterMode()"
+        >
+          <oge-column field="name" caption="Name" />
+          <oge-column field="title" caption="Title" [width]="140" />
+          <oge-column field="office" caption="Office" [width]="160" />
+        </oge-tree-list>
+      </app-demo-card>
 
-    <h3>Notes</h3>
-    <ul>
-      <li>
-        <code>'withAncestors'</code> (default) shows matches plus their ancestor
-        rows; <code>'fullBranch'</code> additionally keeps every descendant of a
-        match.
-      </li>
-      <li>
-        The DataSource never receives filter or search — matching runs over the
-        rows already loaded, and lazily fetched children stay cached across
-        filter changes.
-      </li>
-      <li>
-        The search box matches any visible column, locale-safe (İ/i folding
-        included).
-      </li>
-      <li>
-        Text inputs debounce (<code>filterDebounce</code>, default 300 ms).
-      </li>
-    </ul>
+      <h3>Notes</h3>
+      <ul>
+        <li>
+          <code>'withAncestors'</code> (default) shows matches plus their
+          ancestor rows; <code>'fullBranch'</code> additionally keeps every
+          descendant of a match.
+        </li>
+        <li>
+          The DataSource never receives filter or search — matching runs over
+          the rows already loaded, and lazily fetched children stay cached
+          across filter changes.
+        </li>
+        <li>
+          The search box matches any visible column, locale-safe (İ/i folding
+          included).
+        </li>
+        <li>
+          Text inputs debounce (<code>filterDebounce</code>, default 300 ms).
+        </li>
+      </ul>
+    }
   `,
 })
 export class TreeFilteringPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly org = makeOrgTree(5, 3, 6);
   protected readonly snippet = SNIPPET;
   protected readonly modes: TreeFilterMode[] = ['withAncestors', 'fullBranch'];

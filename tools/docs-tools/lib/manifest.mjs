@@ -394,6 +394,19 @@ export const PACKAGES = [
     platform: 'react',
   },
   {
+    dir: 'react/tree-list',
+    npm: '@oge-ui/react-tree-list',
+    label: 'Tree List (React)',
+    summary:
+      'React tree list: the data-grid feature set on hierarchical data — flat parentId or nested payloads, lazy per-expansion loading with remote match discovery, ancestor-preserving filtering, recursive tri-state selection, paging over visible rows, virtualization, editing in all five modes and drag & drop reparenting — running the same framework-free tree engine, state slices and stylesheet as the Angular tree-list package.',
+    // The React content renders inside the single Tree List routes (ADR 0002).
+    docsRoot: '/components/tree-list',
+    pageDirs: ['react-tree-list'],
+    apiPage: 'apps/dev-app/src/app/pages/react-tree-list/api.ts',
+    tier: 'mit',
+    platform: 'react',
+  },
+  {
     dir: 'react/overlay',
     npm: '@oge-ui/react-overlay',
     label: 'Overlay (React)',

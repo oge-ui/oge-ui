@@ -166,6 +166,23 @@ export default [
                 'scope:react-forms',
                 'scope:react-upload',
                 'scope:react-grid',
+                'scope:react-tree-list',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React tree list builds on the React grid's foundation
+              // (cell editor, pager, filter builder, editing bridge) exactly as
+              // the Angular tree list builds on `@oge-ui/grid/foundation`
+              sourceTag: 'scope:react-tree-list',
+              onlyDependOnLibsWithTags: [
+                'scope:react-tree-list',
+                'scope:react-grid',
+                'scope:react-forms',
+                'scope:react-inputs',
+                'scope:react-layout',
                 'scope:react-overlay',
                 'scope:behavior',
                 'scope:core',
@@ -252,6 +269,9 @@ export default [
               onlyDependOnLibsWithTags: [
                 'scope:tree-list',
                 'scope:grid',
+                // the tree list's data model is `@oge-ui/behavior`'s
+                // OgeTreeListCore, shared with @oge-ui/react-tree-list
+                'scope:behavior',
                 'scope:core',
                 'scope:inputs',
                 'scope:overlay',
@@ -481,6 +501,7 @@ export default [
                 'scope:react-upload',
                 'scope:react-grid',
                 'scope:react-kanban',
+                'scope:react-tree-list',
                 'scope:react-oge',
                 'scope:react-overlay',
                 'scope:behavior',

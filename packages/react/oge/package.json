@@ -37,6 +37,7 @@
     "@oge-ui/react-buttons": "0.13.1",
     "@oge-ui/react-forms": "0.13.1",
     "@oge-ui/react-grid": "0.13.1",
+    "@oge-ui/react-tree-list": "0.13.1",
     "@oge-ui/react-inputs": "0.13.1",
     "@oge-ui/react-layout": "0.13.1",
     "@oge-ui/react-navigation": "0.13.1",

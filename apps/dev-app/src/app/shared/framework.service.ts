@@ -75,6 +75,9 @@ const COVERAGE: Readonly<
       'master-detail',
       'rows',
     ],
+    // R7: every tree-list page branches — overview, lazy-loading, filtering,
+    // selection, virtual-scroll, drag-drop, editing and api
+    'tree-list': '*',
     // The navigation package ships as six route families. The tree view owns
     // the family's overview and API pages; the rest are single-page families.
     'tree-view': ['', 'api'],

@@ -620,6 +620,27 @@ const FAMILIES = [
       },
     },
   },
+  {
+    family: 'tree-list',
+    angularApiPage: 'apps/dev-app/src/app/pages/tree-list/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-tree-list/api.ts',
+    exceptions: {
+      reactOnly: {
+        statestorage:
+          'Per-tree storage override. Angular reaches the same seam by providing the `OGE_STATE_STORAGE` token in the injector tree; React has no DI, so the escape hatch is a prop (the React grid records the same exception).',
+        rendernodata:
+          'React form of the `*ogeNoDataTemplate` content child, which the Angular tree list queries from its projected content rather than taking as an input (ROADMAP exception: TemplateRef ↔ render prop).',
+        toolbarbefore:
+          'Slot prop standing in for projected `[ogeToolbar]` items — the Angular tree list projects every one of them to the toolbar’s start edge (`ngProjectAs="[ogeToolbarBefore]"`), so React has exactly that one slot. React has no content projection.',
+        classname:
+          'React host styling idiom; an Angular host takes `class` natively and needs no input.',
+        style:
+          'React host styling idiom; an Angular host takes `style` natively and needs no input.',
+        arialabel:
+          'React needs a prop to reach the host element; an Angular consumer writes `aria-label` on `<oge-tree-list>` directly.',
+      },
+    },
+  },
 ];
 
 /** `'<OgeButton>'` / `'OgeButton'` → `'ogebutton'`. Angle brackets go first —
