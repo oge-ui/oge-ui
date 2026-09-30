@@ -11,83 +11,19 @@ Whole-suite reference: https://ogeui.com/llms-full.txt
 npm i @oge-ui/charts-engine
 ```
 
-## Writing OGE code
+## Writing code against this package
 
-Follow these rules and generated code compiles on the first try.
+This is a framework-free engine: plain TypeScript, no Angular or React import,
+no components and no stylesheet. It runs in Node, in a worker, in tests and
+under either render layer.
 
-1. **Standalone only.** There are no NgModules and no `Oge*Module` symbols.
-   Import the component class and list it in the host component's `imports`
-   array: `imports: [OgeGrid, OgeColumn]`.
-2. **Signal APIs, never decorators.** Public members are `input()`,
-   `input.required()`, `model()` and `output()` — not `@Input()`/`@Output()`.
-   Read them as signals in TypeScript (`grid.selectedKeys()`).
-3. **Two-way state is `model()`.** Bind with the banana box against a signal:
-   `[(selectedKeys)]="keys"`. `ngModel` is supported by the editors in
-   `@oge-ui/inputs` for reactive/template forms, but signal binding is the
-   idiomatic form.
-4. **Modes are string unions, never enums.** Write the literal:
-   `selectionMode="multiple"`, `editMode="batch"`, `stylingMode="outlined"`,
-   `severity="danger"`. There is no `OgeSelectionMode.Multiple`.
-5. **Outputs are past tense with no `on` prefix** — `(rowClick)`,
-   `(selectionChanged)`, `(savedChanges)`, `(clicked)`. Never `(onRowClick)`.
-6. **`-ing` outputs are cancelable.** Events like `rowInserting`,
-   `rowUpdating`, `rowRemoving`, `savingChanges`, `exporting`, the modal's
-   `opening`/`closing` and the tab strip's `selectionChanging` carry a mutable
-   `cancel: boolean` — set `event.cancel = true` to veto, and the matching
-   past-tense event never fires.
-7. **App-wide defaults and every user-facing string** come from a provider:
-   `provideOgeGridConfig()`, `provideOgeInputsConfig()`,
-   `provideOgeButtonsConfig()`, `provideOgeOverlayConfig()`,
-   `provideOgeTabsConfig()`, `provideOgeAccordionConfig()`. Each takes a
-   `messages` block — that is how localization works; there is no i18n
-   dependency. Pass a function instead of an object
-   (`provideOgeGridConfig(() => ({ messages: lang() === 'tr' ? TR : {} }))`)
-   and the config is live: components re-render their strings when the signals
-   it reads change, so the language switches without a reload.
-8. **Styling is CSS custom properties**, all prefixed `--oge-`. Never target
-   internal class names to change colors or sizing; override the token.
-9. **Templates and slots are structural directives on the markup you want**,
-   not `<ng-template>` wrappers:
-   `<oge-column field="price"><span *ogeCellTemplate="let value">…</span></oge-column>`,
-   `<div *ogeModalFooter>…</div>`.
-
-### Theming
-
-```css
-:root {
-  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
-  --oge-radius-lg: 10px;
-  --oge-row-height: 32px;  /* grid & tree-list density */
-}
-```
-
-Token defaults have zero specificity: a plain `:root` rule (or any class)
-wins, and tokens cascade into subtrees. Optional stylesheets, imported once,
-ship in `@oge-ui/core` (installed with every package; add it directly under
-pnpm): `@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
-`data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
-`prefers-color-scheme`, `oge-theme-light` marks a light island),
-`@oge-ui/core/themes/tailwind.css` and `@oge-ui/core/themes/bootstrap.css`
-(bridge `--oge-*` onto an existing design system).
-
-## Common mistakes
-
-Predictable wrong guesses, and what to write instead.
-
-| Wrong | Right |
-| --- | --- |
-| `<oge-data-grid>` | `<oge-grid>` |
-| `[dataSource]="rows"` | `[data]="rows"` |
-| `import { OgeGridModule }` | no modules — `imports: [OgeGrid, OgeColumn]` |
-| `@Input() foo` on an OGE component | `readonly foo = input<T>()` |
-| `(onRowClick)` / `(onSelectionChanged)` | `(rowClick)` / `(selectionChanged)` |
-| `selectionMode="[SelectionMode.Multiple]"` | `selectionMode="multiple"` |
-| `<oge-grid-column>` | `<oge-column>` |
-| `MatDialog` / `DialogService` | `<oge-modal>` or `OgeModalService.open()` |
-| `MessageService` / `ToastrService` / `MatSnackBar` | `OgeToastService.show()` (plus `success/info/warning/error`) |
-| `<oge-dropdown>` / `<oge-combobox>` | `<oge-select-box>` (`<oge-tag-box>` when multiple) |
-| `::ng-deep .oge-grid-row { … }` | override a `--oge-*` token |
-| importing a theme to get default styles | not needed — styles ship with the components |
+1. **You rarely install it directly.** The Angular and the React editor of the
+   family depend on it and re-export the surface an app needs — import from
+   the editor package in UI code.
+2. **Import it directly for pipelines.** Server-side conversion, validation or
+   rendering (XML in, XML/JSON/SVG out) and test fixtures are what it is for.
+3. **Everything is immutable.** Commands return a new model; the command stack
+   keeps snapshots. Never mutate a model object in place.
 
 ## Entry points
 
