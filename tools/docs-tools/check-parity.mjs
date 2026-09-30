@@ -483,6 +483,31 @@ const FAMILIES = [
     },
   },
   {
+    family: 'kanban',
+    angularApiPage: 'apps/dev-app/src/app/pages/kanban/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-kanban/api.ts',
+    exceptions: {
+      reactOnly: {
+        collapsedcolumnschange:
+          'The controlled half of `collapsedColumns`; Angular’s [(collapsedColumns)] model is both halves at once.',
+        collapsedswimlaneschange:
+          'The controlled half of `collapsedSwimlanes`; Angular’s [(collapsedSwimlanes)] model is both halves at once.',
+        columnorderchange:
+          'The controlled half of `columnOrder`; Angular’s [(columnOrder)] model is both halves at once.',
+        selectedcardkeychange:
+          'The controlled half of `selectedCardKey`; Angular’s [(selectedCardKey)] model is both halves at once.',
+        rendercard:
+          'Render prop replacing the `*ogeKanbanCardTemplate` structural directive, which the Angular page documents in its Templates types block (ROADMAP exception: TemplateRef ↔ render prop).',
+        rendercolumnheader:
+          'Render prop replacing the `*ogeKanbanColumnHeaderTemplate` structural directive — same Templates-block split as `renderCard`.',
+        classname:
+          'React host styling idiom; an Angular host takes `class` natively and needs no input.',
+        style:
+          'React host styling idiom; an Angular host takes `style` natively and needs no input.',
+      },
+    },
+  },
+  {
     family: 'overlay',
     angularApiPage: 'apps/dev-app/src/app/pages/overlay/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-overlay/api.ts',

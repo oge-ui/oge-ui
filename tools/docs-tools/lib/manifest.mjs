@@ -368,6 +368,19 @@ export const PACKAGES = [
     platform: 'react',
   },
   {
+    dir: 'react/kanban',
+    npm: '@oge-ui/react-kanban',
+    label: 'Kanban (React)',
+    summary:
+      'React Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move callbacks, built-in edit dialog, context menu and toolbar — running the same engine and stylesheet as the Angular Kanban package.',
+    // The React content renders inside the single Kanban routes (ADR 0002).
+    docsRoot: '/components/kanban',
+    pageDirs: ['react-kanban'],
+    apiPage: 'apps/dev-app/src/app/pages/react-kanban/api.ts',
+    tier: 'commercial',
+    platform: 'react',
+  },
+  {
     dir: 'react/grid',
     npm: '@oge-ui/react-grid',
     label: 'Data Grid (React)',
