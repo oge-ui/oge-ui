@@ -383,6 +383,19 @@ export const PACKAGES = [
     platform: 'react',
   },
   {
+    dir: 'react/bpmn',
+    npm: '@oge-ui/react-bpmn',
+    label: 'BPMN Editor (React)',
+    summary:
+      'React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG import/export and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark.',
+    // The React content renders inside the single BPMN routes (ADR 0002).
+    docsRoot: '/components/bpmn',
+    pageDirs: ['react-bpmn'],
+    apiPage: 'apps/dev-app/src/app/pages/react-bpmn/api.ts',
+    tier: 'commercial',
+    platform: 'react',
+  },
+  {
     dir: 'react/overlay',
     npm: '@oge-ui/react-overlay',
     label: 'Overlay (React)',

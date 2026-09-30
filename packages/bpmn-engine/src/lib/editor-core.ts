@@ -795,15 +795,21 @@ export class OgeBpmnEditorCore {
     this.minimapView = rx.derived(() => this.buildMinimapView());
     this.overlayViews = rx.derived(() => this.buildOverlayViews());
 
-    this.revive();
+    // The model subscription is on this instance's own stack, so taking it
+    // here leaks nothing if a render layer discards the instance (React's
+    // StrictMode double render). Document listeners wait for `revive()`.
+    this.unsubscribe = this.stack.onChange((m, source) =>
+      this.onModelChange(m, source),
+    );
   }
 
   // ------------------------------------------------------------- lifecycle
 
   /**
-   * (Re)connects the model subscription and the fullscreen listener.
-   * Idempotent; called by the constructor and by React's effect mount side,
-   * which StrictMode runs again after a cleanup on the same instance.
+   * (Re)connects the model subscription and the document-level fullscreen
+   * listener. Idempotent; called once the host exists (Angular's
+   * constructor, React's effect mount side — which StrictMode runs again
+   * after a cleanup on the same instance).
    */
   revive(): void {
     if (this.unsubscribe === null) {

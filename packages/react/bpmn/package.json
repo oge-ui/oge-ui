@@ -1,0 +1,50 @@
+{
+  "name": "@oge-ui/react-bpmn",
+  "version": "0.13.1",
+  "description": "React BPMN 2.0 editor from the OGE UI suite: palette click-then-place and drag-to-canvas, context pad connect/append, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events, sub-processes, a properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG import/export, overlays and a keyboard-accessible canvas — running the same framework-free engine and editor core (@oge-ui/bpmn-engine) and the same stylesheet as the Angular editor. No watermark. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "react",
+    "bpmn",
+    "bpmn-2.0",
+    "workflow",
+    "process-modeler",
+    "diagram",
+    "flowchart",
+    "accessibility",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/behavior": "0.13.1",
+    "@oge-ui/bpmn-engine": "0.13.1"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/bpmn"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

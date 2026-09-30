@@ -1485,6 +1485,7 @@ export class OgeBpmnEditor {
   protected readonly maximized = this.core.maximized;
 
   constructor() {
+    this.core.revive();
     this.destroyRef.onDestroy(() => this.core.destroy());
     // zoom model → viewport (zoom around the canvas center).
     effect(() => {
