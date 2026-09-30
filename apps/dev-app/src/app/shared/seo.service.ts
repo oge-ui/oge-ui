@@ -29,7 +29,7 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   ],
   [
     '/components/bpmn',
-    'Angular BPMN Editor: a from-scratch BPMN 2.0 modeler with its own dependency-free XML + diagram-interchange engine — palette, orthogonal routing, snapping, undo/redo, keyboard-accessible canvas with live-region announcements, and no watermark. Commercial, free for evaluation.',
+    'BPMN Editor for Angular and React: a from-scratch BPMN 2.0 modeler on one dependency-free XML + diagram-interchange engine — palette, orthogonal routing, snapping, undo/redo, keyboard-accessible canvas with live-region announcements, and no watermark. Commercial, free for evaluation.',
   ],
   [
     '/components/charts',

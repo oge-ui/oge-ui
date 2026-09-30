@@ -4,9 +4,9 @@ import type {
   OgeBpmnElementsChangedEvent,
   OgeBpmnImportEvent,
   OgeBpmnSelectionEvent,
-} from '../bpmn-types';
+} from '@oge-ui/bpmn-engine';
 import { OGE_DEFAULT_BPMN_MESSAGES, type OgeBpmnMessages } from '../config';
-import { demoProcessXml } from '../engine/xml-fixtures';
+import { demoProcessXml } from '@oge-ui/bpmn-engine/testing';
 import { OgeBpmnEditor } from './bpmn-editor';
 
 @Component({

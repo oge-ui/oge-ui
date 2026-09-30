@@ -7,7 +7,9 @@ Portions of this repository are licensed as follows:
   evaluation and development, and requires a paid license for production use.
 - Everything under `packages/bpmn` is licensed under the OGE UI Commercial
   License — see `packages/bpmn/LICENSE`. Same terms: source-available, free
-  for evaluation and development, paid for production use.
+  for evaluation and development, paid for production use. The same applies
+  to the BPMN family's engine and React packages, `packages/bpmn-engine` and
+  `packages/react/bpmn` (each carries its own copy of that license).
 - Everything under `packages/scheduler` is licensed under the OGE UI
   Commercial License — see `packages/scheduler/LICENSE`. Same terms:
   source-available, free for evaluation and development, paid for

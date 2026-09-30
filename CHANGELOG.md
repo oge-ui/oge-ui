@@ -181,20 +181,25 @@ design notes. Every item below removes one of those workarounds.
   stylesheet.
 - The tree-list docs pages all branch on the framework switch, section for
   section, with React demos, API tables and `llms.txt` coverage.
-
-### Fixed (inputs)
-
-- **The number box ignored `provideOgeInputsConfig({ locale })`** and parsed
-  with `LOCALE_ID` (en-US unless set), so "1.250,50" became 1.2505 in an app
-  that set its locale through the config — the date editors already honoured
-  it.
-- New **`[width]`** on every text-style field (number = px, or any CSS length)
-  — `--oge-input-width` was global only.
-- Under Signal Forms `[formField]`, the schema's `maxLength()` already drives
-  the counter and the native `maxlength` — do not bind `[maxLength]` as well
-  (Angular rejects it, NG8022). Now covered by a test and documented.
-
-### Added (React)
+- **`@oge-ui/react-bpmn` and `@oge-ui/bpmn-engine` — the BPMN editor in
+  React, on one engine (ADR 0003).** The BPMN family's framework-free engine
+  now ships as its own commercial package, `@oge-ui/bpmn-engine`: the model,
+  the BPMN XML + DI reader/writer, the JSON envelope, SVG export, routing,
+  snapping, alignment, rules, the command stack — and the editor core both
+  layers run (`OgeBpmnEditorCore`: every tool, pointer gesture, the canvas
+  keyboard map, clipboard, search, announcements, autosave and the view
+  models), plus the properties-panel view model, the palette key map, the
+  message catalog and `@oge-ui/bpmn-engine/testing` sample documents. The
+  Angular `@oge-ui/bpmn` is rewired onto it with its public API unchanged
+  (97 specs pass with only import paths changed). The new
+  `<OgeBpmnEditor>` renders the same `.oge-bpmn-*` markup from the Angular
+  SCSS: palette, tool strip, context pad and align flyout, properties
+  panel, minimap, element search, header, overlays, pools and lanes —
+  controlled `mode` / `zoom` pairs, an `on*` callback per output, a `ref`
+  handle per public method and `<OgeBpmnConfigProvider>`. Overlay `html` is
+  sanitized into real elements (no `dangerouslySetInnerHTML`). Commercial,
+  like the Angular package, and not part of the MIT `@oge-ui/react`
+  umbrella.
 
 - **`@oge-ui/react-kanban` and `@oge-ui/kanban-engine`** — the Kanban board
   in React, at full parity with `<oge-kanban>`: columns and swimlanes, WIP
@@ -208,6 +213,18 @@ design notes. Every item below removes one of those workarounds.
   `@oge-ui/kanban-engine` (ADR 0003); the Angular `@oge-ui/kanban` was rewired
   onto it with an unchanged public API. Fixed on the way: a move into a cell
   with no midpoint order room dropped the moved card's renumbered order.
+
+### Fixed (inputs)
+
+- **The number box ignored `provideOgeInputsConfig({ locale })`** and parsed
+  with `LOCALE_ID` (en-US unless set), so "1.250,50" became 1.2505 in an app
+  that set its locale through the config — the date editors already honoured
+  it.
+- New **`[width]`** on every text-style field (number = px, or any CSS length)
+  — `--oge-input-width` was global only.
+- Under Signal Forms `[formField]`, the schema's `maxLength()` already drives
+  the counter and the native `maxlength` — do not bind `[maxLength]` as well
+  (Angular rejects it, NG8022). Now covered by a test and documented.
 
 ## 0.13.1 — 2026-09-06
 

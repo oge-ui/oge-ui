@@ -6,10 +6,13 @@
 > No watermark, no runtime license checks. See [LICENSE](LICENSE) and
 > [ogeui.com/license](https://ogeui.com/license).
 
-A from-scratch, Angular-native BPMN 2.0 modeler — not a bpmn-js wrapper. The
-package carries its own dependency-free XML + diagram-interchange engine in
-pure TypeScript; the signal-based `<oge-bpmn-editor>` component renders it
-with an accessible `role="application"` canvas.
+A from-scratch, Angular-native BPMN 2.0 modeler — not a bpmn-js wrapper. Its
+dependency-free XML + diagram-interchange engine and editor core are pure
+TypeScript in [`@oge-ui/bpmn-engine`](https://www.npmjs.com/package/@oge-ui/bpmn-engine)
+(installed with this package, shared with the React editor
+[`@oge-ui/react-bpmn`](https://www.npmjs.com/package/@oge-ui/react-bpmn));
+the signal-based `<oge-bpmn-editor>` component renders it with an accessible
+`role="application"` canvas.
 
 **Modeling**
 
@@ -120,8 +123,9 @@ with `exportXml()` / `exportJson()` / `exportSvg()`.
 
 ## Engine without the component
 
-The engine is framework-free and exported from the same barrel — usable in
-Node for server-side or test pipelines:
+The engine is framework-free (`@oge-ui/bpmn-engine`) and its user-facing
+surface is re-exported from this barrel — usable in Node for server-side or
+test pipelines:
 
 ```ts
 import { readBpmnXml, writeBpmnXml, toBpmnJson, fromBpmnJson, renderDiagramSvg } from '@oge-ui/bpmn';

@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { demoProcessXml } from '../engine/xml-fixtures';
+import { demoProcessXml } from '@oge-ui/bpmn-engine/testing';
 import { OgeBpmnEditor } from './bpmn-editor';
 
 @Component({

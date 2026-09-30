@@ -48,6 +48,9 @@
       ],
       "@oge-ui/grid/foundation": ["./packages/grid/foundation/src/index.ts"],
       "@oge-ui/bpmn": ["./packages/bpmn/src/index.ts"],
+      "@oge-ui/bpmn-engine": ["./packages/bpmn-engine/src/index.ts"],
+      "@oge-ui/bpmn-engine/testing": ["./packages/bpmn-engine/src/testing.ts"],
+      "@oge-ui/react-bpmn": ["./packages/react/bpmn/src/index.ts"],
       "@oge-ui/charts": ["./packages/charts/src/index.ts"],
       "@oge-ui/charts/export-image": [
         "./packages/charts/export-image/src/index.ts"

@@ -1,0 +1,8 @@
+// The React editor renders the exact `.oge-bpmn-*` markup the Angular package
+// styles — so its stylesheet IS the Angular package's SCSS, compiled here into
+// this package's own `styles.css`. No second stylesheet, no drift (ADR 0001).
+// Every partial of the Angular family is listed: the editor (header, rail,
+// palette, tool strip, canvas, context pad, search, minimap, overlays) and
+// the properties panel.
+@use '../../../bpmn/src/lib/editor/bpmn-editor';
+@use '../../../bpmn/src/lib/editor/bpmn-properties';

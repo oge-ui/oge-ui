@@ -11,7 +11,7 @@ import { writeBpmnXml } from './bpmn-xml-writer';
 import { canMorph, MORPH_GROUPS } from './rules';
 import { renderDiagramSvg } from './svg-export';
 import { COLORED_FIXTURE_XML } from './xml-fixtures';
-import { OGE_DEFAULT_BPMN_COLOR_PRESETS } from '../config';
+import { OGE_DEFAULT_BPMN_COLOR_PRESETS } from './config';
 
 function baseModel(): BpmnDiagram {
   return {

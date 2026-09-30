@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import { V04_FIXTURE_XML } from '../engine/xml-fixtures';
+import { V04_FIXTURE_XML } from '@oge-ui/bpmn-engine/testing';
 import { OgeBpmnEditor } from './bpmn-editor';
 
 @Component({

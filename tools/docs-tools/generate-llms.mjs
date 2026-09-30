@@ -41,6 +41,7 @@ import { sectionsToMarkdown } from './lib/markdown.mjs';
 import {
   COMMERCIAL_NOTE,
   CONVENTIONS,
+  CONVENTIONS_AGNOSTIC,
   CONVENTIONS_REACT,
   INSTALL,
   MISTAKES,
@@ -233,10 +234,16 @@ function buildPackageDoc({ pkg, blocks, entries, demos }) {
   // it instructs an assistant to write `imports: [OgeButton]` into a `.tsx`
   // file (ADR 0001).
   const isReact = pkg.platform === 'react';
-  out.push(isReact ? CONVENTIONS_REACT : CONVENTIONS);
-  out.push('');
-  out.push(isReact ? MISTAKES_REACT : MISTAKES);
-  out.push('');
+  if (pkg.platform === 'agnostic') {
+    // a framework-free engine (ADR 0003): neither layer's rules apply
+    out.push(CONVENTIONS_AGNOSTIC);
+    out.push('');
+  } else {
+    out.push(isReact ? CONVENTIONS_REACT : CONVENTIONS);
+    out.push('');
+    out.push(isReact ? MISTAKES_REACT : MISTAKES);
+    out.push('');
+  }
   out.push(renderEntryPoints(entries));
   if (blocks.length) {
     out.push('## API reference');

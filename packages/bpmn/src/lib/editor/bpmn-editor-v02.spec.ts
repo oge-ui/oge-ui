@@ -1,8 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
-import type { OgeBpmnDiagramChangedEvent } from '../bpmn-types';
+import type { OgeBpmnDiagramChangedEvent } from '@oge-ui/bpmn-engine';
 import { provideOgeBpmnConfig } from '../config';
-import { demoProcessXml } from '../engine/xml-fixtures';
+import { demoProcessXml } from '@oge-ui/bpmn-engine/testing';
 import { OgeBpmnEditor } from './bpmn-editor';
 
 @Component({

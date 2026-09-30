@@ -1,0 +1,275 @@
+// @oge-ui/bpmn-engine — the framework-free engine of the commercial BPMN
+// family (ADR 0003). Both render layers (`@oge-ui/bpmn` for Angular,
+// `@oge-ui/react-bpmn` for React) import exactly this surface; it is also
+// usable on its own for server-side or test pipelines (XML in, XML/JSON/SVG
+// out, no DOM rendering).
+
+// --- the diagram model -------------------------------------------------------
+export {
+  DEFAULT_SIZES,
+  LANE_DEFAULT_HEIGHT,
+  MIN_SIZES,
+  POOL_DEFAULT_SIZE,
+  POOL_HEADER_WIDTH,
+  POOL_MIN_SIZE,
+  SUBPROCESS_EXPANDED_SIZE,
+  VALID_EVENT_DEFINITIONS,
+  createEmptyDiagram,
+  effectivePoolId,
+  generateBpmnId,
+  hiddenByCollapsed,
+  idPrefixFor,
+  isBpmnActivityType,
+  isBpmnDataNodeType,
+  isBpmnEventType,
+  isBpmnFlowNodeType,
+  isBpmnSubProcessType,
+  poolAtPoint,
+  takenIds,
+  type BpmnActivityMarker,
+  type BpmnActivityType,
+  type BpmnAssociation,
+  type BpmnDataAssociation,
+  type BpmnDataNodeType,
+  type BpmnDiagram,
+  type BpmnEdge,
+  type BpmnEdgeDi,
+  type BpmnEdgeType,
+  type BpmnEventDefinitionKind,
+  type BpmnEventType,
+  type BpmnFlowNode,
+  type BpmnFlowNodeType,
+  type BpmnGatewayType,
+  type BpmnLane,
+  type BpmnMessageFlow,
+  type BpmnNode,
+  type BpmnNodeType,
+  type BpmnPool,
+  type BpmnSequenceFlow,
+  type BpmnShapeDi,
+  type BpmnSubProcessType,
+  type BpmnTextAnnotation,
+} from './lib/bpmn-model';
+
+// --- geometry, routing, snapping, viewport ----------------------------------
+export {
+  boundsOfRects,
+  distanceToSegment,
+  edgeHitTest,
+  inflateRect,
+  nearestPointOnRectPerimeter,
+  rectCenter,
+  rectContainsPoint,
+  rectsIntersect,
+  translateRect,
+  type Point,
+  type Rect,
+} from './lib/geometry';
+export {
+  chooseDockSides,
+  dockPoint,
+  edgeLabelAnchor,
+  routeOrthogonal,
+  type RectSide,
+} from './lib/edge-routing';
+export {
+  BPMN_GRID_SIZE,
+  snapPoint,
+  snapToNeighbors,
+  snapValue,
+  type BpmnSnapGuide,
+  type BpmnSnapResult,
+} from './lib/snapping';
+export {
+  diagramToScreen,
+  fitViewport,
+  screenToDiagram,
+  zoomAt,
+  type BpmnViewport,
+} from './lib/viewport';
+export {
+  alignElements,
+  distributeElements,
+  type BpmnAlignMode,
+  type BpmnDistributeAxis,
+} from './lib/alignment';
+export { placeMissingDi } from './lib/auto-layout';
+export {
+  activityMarkerPaths,
+  collapsedMarkerPath,
+  dataObjectPath,
+  dataStorePath,
+  eventDefinitionFilled,
+  eventDefinitionPath,
+} from './lib/glyphs';
+
+// --- rules, commands, history -----------------------------------------------
+export {
+  MORPH_GROUPS,
+  canConnect,
+  canMorph,
+  connectionKindFor,
+  morphGroupOf,
+  type BpmnConnectDenialReason,
+  type BpmnMorphDenialReason,
+  type BpmnRuleResult,
+} from './lib/rules';
+export {
+  BpmnCommandStack,
+  type BpmnCommand,
+  type BpmnCommandStackListener,
+  type BpmnCommandStackSource,
+} from './lib/command-stack';
+export {
+  addLaneCommand,
+  addNodeCommand,
+  addPoolCommand,
+  alignElementsCommand,
+  connectCommand,
+  deleteElementsCommand,
+  distributeElementsCommand,
+  estimateLabelBounds,
+  expandMoveSet,
+  extractClipboard,
+  makeSpaceCommand,
+  morphNodeCommand,
+  moveElementsCommand,
+  moveLabelCommand,
+  pasteCommand,
+  removeLaneCommand,
+  renameLaneCommand,
+  resizeNodeCommand,
+  setActivityMarkersCommand,
+  setBoundaryInterruptingCommand,
+  setCalledElementCommand,
+  setConditionCommand,
+  setDefaultFlowCommand,
+  setElementColorsCommand,
+  setEventDefinitionCommand,
+  syncLaneMembership,
+  toggleSubProcessCollapseCommand,
+  updateLabelCommand,
+  updateProcessCommand,
+  updateWaypointsCommand,
+  type BpmnAddNodeOptions,
+  type BpmnClipboard,
+  type BpmnColorPatch,
+} from './lib/commands';
+
+// --- persistence -------------------------------------------------------------
+export {
+  readBpmnXml,
+  type BpmnImportResult,
+  type BpmnImportWarning,
+  type BpmnImportWarningCode,
+} from './lib/bpmn-xml-reader';
+export { writeBpmnXml } from './lib/bpmn-xml-writer';
+export {
+  fromBpmnJson,
+  toBpmnJson,
+  type BpmnDiagramJson,
+  type BpmnJsonParseResult,
+} from './lib/bpmn-json';
+export { renderDiagramSvg, type BpmnSvgExportOptions } from './lib/svg-export';
+
+// --- editor configuration, messages and event payloads ----------------------
+export {
+  OGE_DEFAULT_BPMN_COLOR_PRESETS,
+  OGE_DEFAULT_BPMN_CONFIG,
+  OGE_DEFAULT_BPMN_MESSAGES,
+  resolveOgeBpmnConfig,
+  type BpmnElementNameKey,
+  type BpmnPaletteItemType,
+  type OgeBpmnAlignMessages,
+  type OgeBpmnAnnouncementMessages,
+  type OgeBpmnConfig,
+  type OgeBpmnConfigInput,
+  type OgeBpmnContextPadMessages,
+  type OgeBpmnHeaderMessages,
+  type OgeBpmnMessages,
+  type OgeBpmnPropertiesMessages,
+  type OgeBpmnSearchMessages,
+  type OgeBpmnToolsMessages,
+} from './lib/config';
+export type {
+  OgeBpmnChangeSource,
+  OgeBpmnDiagramChangedEvent,
+  OgeBpmnElementInfo,
+  OgeBpmnElementsChangedEvent,
+  OgeBpmnImportEvent,
+  OgeBpmnOverlay,
+  OgeBpmnPaletteItem,
+  OgeBpmnSelectionEvent,
+} from './lib/bpmn-types';
+
+// --- the editor core both render layers run ---------------------------------
+export {
+  createPlainBpmnReactivity,
+  type OgeBpmnReactiveCell,
+  type OgeBpmnReactivity,
+} from './lib/reactivity';
+export {
+  BPMN_CANVAS_KEY_SHORTCUTS,
+  OgeBpmnEditorCore,
+  wrapBpmnLabel,
+  type BpmnDragState,
+  type BpmnEdgeView,
+  type BpmnGuideLine,
+  type BpmnIdRect,
+  type BpmnKeyInput,
+  type BpmnLabelEditView,
+  type BpmnLabelLine,
+  type BpmnLaneView,
+  type BpmnMinimapView,
+  type BpmnMouseInput,
+  type BpmnMultiPadView,
+  type BpmnNodeView,
+  type BpmnOverlayView,
+  type BpmnPadView,
+  type BpmnPaletteDragStart,
+  type BpmnPanel,
+  type BpmnPointerInput,
+  type BpmnPoolView,
+  type BpmnResizeCorner,
+  type BpmnSearchResult,
+  type BpmnStripTool,
+  type BpmnTool,
+  type BpmnWheelInput,
+  type OgeBpmnEditorEmitter,
+  type OgeBpmnEditorHost,
+  type OgeBpmnEditorMode,
+} from './lib/editor-core';
+export {
+  OGE_DEFAULT_BPMN_PALETTE_ITEMS,
+  bpmnPaletteNavIndex,
+} from './lib/palette';
+export {
+  bpmnAppearanceView,
+  bpmnClearColorsCommand,
+  bpmnColorInputValue,
+  bpmnCompensationCommand,
+  bpmnDefaultFlowCommand,
+  bpmnFieldKey,
+  bpmnLaneNameLabel,
+  bpmnMarkerCommand,
+  bpmnPresetCommand,
+  bpmnPresetLabel,
+  bpmnPropertiesView,
+  bpmnRemoveLaneLabel,
+  buildBpmnPropertiesModel,
+  type BpmnAppearanceView,
+  type BpmnEventDefinitionView,
+  type BpmnLoopMarker,
+  type BpmnMarkerView,
+  type BpmnMorphView,
+  type BpmnPropertiesModel,
+  type BpmnPropertiesView,
+} from './lib/properties-view';
+export {
+  BPMN_OVERLAY_ALLOWED_TAGS,
+  BPMN_OVERLAY_URL_ATTRIBUTES,
+  sanitizeBpmnOverlayHtml,
+  type BpmnOverlayElementNode,
+  type BpmnOverlayNode,
+  type BpmnOverlayTextNode,
+} from './lib/overlay-html';
