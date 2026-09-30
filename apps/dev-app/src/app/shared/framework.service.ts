@@ -55,6 +55,8 @@ const COVERAGE: Readonly<
     overlay: '*',
     // overview and api both branch
     upload: '*',
+    // overview, analytics and api all branch (ADR 0003: one pivot engine)
+    'pivot-grid': '*',
     // R6 complete: every feature page of the grid now branches. The
     // engine-level sub-pages that share this family — playground, sorting,
     // virtual-scroll, infinite-scroll, remote-data, live-updates — stay

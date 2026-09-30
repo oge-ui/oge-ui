@@ -595,6 +595,30 @@ const FAMILIES = [
       },
     },
   },
+  {
+    family: 'pivot',
+    angularApiPage: 'apps/dev-app/src/app/pages/pivot-grid/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-pivot/api.ts',
+    exceptions: {
+      blockPairs: {
+        // the same field contract: a renderless directive in Angular, a plain
+        // object in React's `fields` array — every member below is compared
+        ogepivotfield: 'ogepivotfielddef',
+      },
+      angularOnly: {
+        ogepivotstatestore:
+          'Documented under "Internals — not a supported API": the Angular grid’s signal-backed subclass of @oge-ui/pivot-engine’s OgePivotStateCore, public only because the class is exported. The React grid holds the same core privately; both layers point applications at stateKey / state() / applyState(), which are compared above.',
+      },
+      reactOnly: {
+        statestorage:
+          'Per-grid storage override. Angular reaches the same seam by providing the `OGE_STATE_STORAGE` token in the injector tree; React has no DI, so the escape hatch is a prop (the react-grid precedent).',
+        classname:
+          'React host styling idiom; an Angular host takes `class` natively and needs no input.',
+        style:
+          'React host styling idiom; an Angular host takes `style` natively and needs no input.',
+      },
+    },
+  },
 ];
 
 /** `'<OgeButton>'` / `'OgeButton'` → `'ogebutton'`. Angle brackets go first —

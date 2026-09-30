@@ -98,6 +98,7 @@ pages in both layers:
 | Forms      | ✅ 2/2                                                                                                                                                                                                                                                                                                                                                                                                                                    | ✅ overview, layout, validation, api (three validation sections are recorded exceptions)                                        | ✅ / ✅           | ✅                         |
 | Upload     | ✅ uploader, drop zone, trigger, config + transport providers                                                                                                                                                                                                                                                                                                                                                                             | ✅ overview, api (the forms section is a recorded heading exception)                                                            | ✅ / ✅           | ✅ `upload` in `FAMILIES`  |
 | Data Grid  | ✅ grid (sorting, filtering, search, paging, virtualization, windowed loading, selection incl. deferred, keyboard nav, pinned/resizable/reorderable columns, bands, adaptive hiding, persistence, CSV + Excel + PDF, grouping, master-detail, row/no-data render props, row drag, editing in all five modes, header filter, filter panel + builder, column chooser, context menus, `highlightChanges`), pager, config + storage providers | ✅ overview, api, columns, filtering, selection, editing, persistence, context-menu, grouping, master-detail, rows — all branch | ✅ / ✅           | ✅ `grid` in `FAMILIES`    |
+| Pivot Grid | ✅ pivot grid (local + remote store, field panel, header/measure menus, value filters, field chooser, virtual scrolling, persistence, CSV + Excel), messages provider                                                                                                                                                                                                                                                                     | ✅ overview, analytics, api — all branch                                                                                        | ✅ / ✅           | ✅ `pivot` in `FAMILIES`   |
 
 New families add a row here when they land — a family without its row (or
 with a partial one) is not done, whatever the code says.
@@ -164,6 +165,17 @@ Anything not listed here is a defect.
   `ogeToolbar="before|center|after"` projects into), so the React quick start
   puts its export button in the toolbar like the Angular one, and the grouping
   demo switches on `columnChooser` again.
+- **The pivot `fields` array and the private state store (2026-09-30).**
+  Angular declares fields as `<oge-pivot-field>` children; React takes the
+  same members as plain objects in `fields` (`OgePivotFieldDef`, the parity
+  gate pairs the two blocks and compares every member). Angular gained the
+  identical `[fields]` input in the same change, so both layers now accept
+  the data form. `OgePivotStateStore` stays Angular-only: it is the
+  signal-backed subclass of `@oge-ui/pivot-engine`'s `OgePivotStateCore`,
+  documented as "not a supported API"; the React grid holds the same core
+  privately. Everything else — the machine, menus, chooser, persistence,
+  keyboard map, messages and the workbook builder — is one copy in
+  `@oge-ui/pivot-engine` (ADR 0003).
 - **The tabs "Routed tabs" page (2026-08-13).** That page drives the selection
   from the Angular router's child routes — the demo _is_ an Angular-router
   integration, and React apps route with their own library. The React tabs
