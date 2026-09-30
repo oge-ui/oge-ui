@@ -1,0 +1,54 @@
+{
+  "name": "@oge-ui/pivot-engine",
+  "version": "0.13.1",
+  "description": "Framework-free pivot grid engine behind @oge-ui/pivot (Angular) and @oge-ui/react-pivot (React): field layout model, axis and header layout math, two-axis virtualization windows, the remote-store adapter, header and measure menus, value filters, the field chooser, keyboard navigation, persistence snapshots, the message catalog and the Excel workbook builder. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "pivot",
+    "pivot-grid",
+    "pivot-table",
+    "olap",
+    "analytics",
+    "headless",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@oge-ui/behavior": "0.13.1",
+    "@oge-ui/core": "0.13.1"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.esm.js",
+      "require": "./index.cjs.js"
+    },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.esm.js",
+      "require": "./export-excel.cjs.js"
+    }
+  },
+  "peerDependencies": {
+    "exceljs": "^4.4.0"
+  },
+  "peerDependenciesMeta": {
+    "exceljs": {
+      "optional": true
+    }
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/pivot-engine"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

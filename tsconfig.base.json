@@ -29,6 +29,10 @@
       "@oge-ui/react-forms": ["./packages/react/forms/src/index.ts"],
       "@oge-ui/react-grid": ["./packages/react/grid/src/index.ts"],
       "@oge-ui/react-upload": ["./packages/react/upload/src/index.ts"],
+      "@oge-ui/pivot-engine": ["./packages/pivot-engine/src/index.ts"],
+      "@oge-ui/pivot-engine/export-excel": [
+        "./packages/pivot-engine/src/export-excel.ts"
+      ],
       "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
       "@oge-ui/core": ["./packages/core/src/index.ts"],
       "@oge-ui/forms": ["./packages/forms/src/index.ts"],

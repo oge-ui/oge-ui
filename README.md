@@ -125,7 +125,7 @@ No modules, no forms boilerplate — `[(value)]` binds straight to a
 
 ## Packages
 
-All packages are MIT except `@oge-ui/pivot`, `@oge-ui/bpmn`,
+All packages are MIT except `@oge-ui/pivot` (and its `@oge-ui/pivot-engine`), `@oge-ui/bpmn`,
 `@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`, which are
 commercial (free for evaluation and development) — see [Licensing](#licensing).
 
@@ -135,6 +135,7 @@ commercial (free for evaluation and development) — see [Licensing](#licensing)
 | [`@oge-ui/grid`](packages/grid)                         | Virtualized Data Grid: sorting, filtering, grouping, editing, master-detail, export                                                                                                                                                                                                                                                                                                       | [npm](https://www.npmjs.com/package/@oge-ui/grid)             |
 | [`@oge-ui/tree-list`](packages/tree-list)               | Hierarchical grid: lazy loading, tri-state selection, drag & drop                                                                                                                                                                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/tree-list)        |
 | [`@oge-ui/pivot`](packages/pivot)                       | Pivot Grid (commercial): rows × columns × measures, totals, two-axis virtualization                                                                                                                                                                                                                                                                                                       | [npm](https://www.npmjs.com/package/@oge-ui/pivot)            |
+| [`@oge-ui/pivot-engine`](packages/pivot-engine)         | Pivot engine (commercial): the framework-free field-layout, header-layout, menu, filter, chooser and keyboard machines both pivot render layers run                                                                                                                                                                                                                                       | [npm](https://www.npmjs.com/package/@oge-ui/pivot-engine)     |
 | [`@oge-ui/bpmn`](packages/bpmn)                         | BPMN Editor (commercial): from-scratch BPMN 2.0 modeler with its own XML + DI engine, no watermark                                                                                                                                                                                                                                                                                        | [npm](https://www.npmjs.com/package/@oge-ui/bpmn)             |
 | [`@oge-ui/scheduler`](packages/scheduler)               | Scheduler (commercial): day/week/month event calendar, all-day strip, drag & resize with Escape-cancel, appointment popup + form                                                                                                                                                                                                                                                          | [npm](https://www.npmjs.com/package/@oge-ui/scheduler)        |
 | [`@oge-ui/gantt`](packages/gantt)                       | Gantt (commercial): task tree + timeline, dependencies, critical path, baselines, drag editing, undo/redo                                                                                                                                                                                                                                                                                 | [npm](https://www.npmjs.com/package/@oge-ui/gantt)            |
@@ -236,12 +237,14 @@ OGE UI is **open-core**:
   `@oge-ui/tabs`, `@oge-ui/layout`, `@oge-ui/navigation`,
   `@oge-ui/forms`, `@oge-ui/upload` and `@oge-ui/overlay` are [MIT-licensed](LICENSE). This is a commitment:
   these packages and every feature currently in them will remain MIT.
-- **Commercial — `@oge-ui/pivot`, `@oge-ui/bpmn`, `@oge-ui/scheduler`,
+- **Commercial — `@oge-ui/pivot` (with its framework-free
+  `@oge-ui/pivot-engine`), `@oge-ui/bpmn`, `@oge-ui/scheduler`,
   `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`.** The pivot grid,
   the BPMN editor, the scheduler, the Gantt, the Kanban and the Charts are
   source-available commercial software: free for evaluation,
   development and testing; production use requires a paid license
   ([packages/pivot/LICENSE](packages/pivot/LICENSE),
+  [packages/pivot-engine/LICENSE](packages/pivot-engine/LICENSE),
   [packages/bpmn/LICENSE](packages/bpmn/LICENSE),
   [packages/scheduler/LICENSE](packages/scheduler/LICENSE),
   [packages/gantt/LICENSE](packages/gantt/LICENSE),

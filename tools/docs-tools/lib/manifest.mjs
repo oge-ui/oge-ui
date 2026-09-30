@@ -36,10 +36,12 @@ export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
  * - `docsRoot` — route the docs live under; `null` for engine-only packages.
  * - `pageDirs` — folders under `pages/` whose demos belong to this package.
  * - `tier` — `'mit'` or `'commercial'`; drives the licence banner.
- * - `platform` — `'angular'` (default) or `'react'`. Selects which "Writing OGE
- *   code" rules and which "Common mistakes" table the package's `llms.txt`
- *   carries. Getting this wrong ships actively misleading instructions to every
- *   coding assistant, so it is explicit rather than inferred from the name.
+ * - `platform` — `'angular'` (default), `'react'` or `'agnostic'`. Selects which
+ *   "Writing OGE code" rules and which "Common mistakes" table the package's
+ *   `llms.txt` carries; `'agnostic'` (the commercial `*-engine` packages of
+ *   ADR 0003) carries neither framework's rules, only a pointer to the render
+ *   packages. Getting this wrong ships actively misleading instructions to
+ *   every coding assistant, so it is explicit rather than inferred from the name.
  */
 export const PACKAGES = [
   {
@@ -176,6 +178,18 @@ export const PACKAGES = [
     pageDirs: ['pivot-grid'],
     apiPage: 'apps/dev-app/src/app/pages/pivot-grid/api.ts',
     tier: 'commercial',
+  },
+  {
+    dir: 'pivot-engine',
+    npm: '@oge-ui/pivot-engine',
+    label: 'Pivot Engine',
+    summary:
+      'Framework-free pivot grid engine shared by @oge-ui/pivot and @oge-ui/react-pivot (ADR 0003): field layout, header layout and virtualization math, the remote-store adapter, menus, value filters, the field chooser, keyboard navigation, persistence snapshots, the message catalog and the Excel workbook builder. Installed automatically — you rarely import it directly.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+    platform: 'agnostic',
   },
   {
     dir: 'bpmn',

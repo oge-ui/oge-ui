@@ -6,6 +6,8 @@ export {
   type OgePivotMenuItem,
   type OgePivotAxisLine,
   type OgePivotHeaderCell,
+  type OgePivotFieldDef,
+  type OgePivotFieldChooserOptions,
 } from './lib/pivot-grid/pivot-grid';
 export { OgePivotField } from './lib/pivot-grid/pivot-field';
 export { OgePivotStateStore } from './lib/pivot-grid/pivot-state.store';

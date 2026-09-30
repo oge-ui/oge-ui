@@ -95,7 +95,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/pivot`
 
 - values: `OGE_DEFAULT_PIVOT_MESSAGES`, `OGE_PIVOT_FIELD_DRAG_TYPE`, `OGE_PIVOT_MESSAGES`, `OgePivotField`, `OgePivotGrid`, `OgePivotStateStore`, `provideOgePivotMessages`
-- types: `OgePivotAxisLine`, `OgePivotCellClickEvent`, `OgePivotCellPrepared`, `OgePivotHeaderCell`, `OgePivotMenuItem`, `OgePivotMessages`
+- types: `OgePivotAxisLine`, `OgePivotCellClickEvent`, `OgePivotCellPrepared`, `OgePivotFieldChooserOptions`, `OgePivotFieldDef`, `OgePivotHeaderCell`, `OgePivotMenuItem`, `OgePivotMessages`
 
 `@oge-ui/pivot/export-excel`
 
@@ -111,11 +111,12 @@ Predictable wrong guesses, and what to write instead.
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `data` | `readonly T[] \| OgePivotStore<T>` | `[]` | Local rows, or any `OgePivotStore` for remote (pre-aggregated) data. |
+| `fields` | `readonly OgePivotFieldDef<T>[]` | `[]` | Fields as data — the programmatic twin of `<oge-pivot-field>` children (same members), appended after them. Use it when the grid is wrapped in another component, where content queries cannot see projected children. |
 | `virtualScrolling` | `boolean` | `false` | Two-axis fixed-track windowing. |
 | `showRowTotals / showColumnTotals` | `boolean` | `true` | Sub-total lines per axis. |
 | `showRowGrandTotals / showColumnGrandTotals` | `boolean` | `true` | Grand-total lines per axis. |
 | `fieldPanel` | `boolean` | `true` | Collapsible drag & drop field panel. |
-| `fieldChooser` | `{ applyChangesMode?: 'instantly' \| 'onDemand' }` | `{}` | Field-chooser dialog behavior. |
+| `fieldChooser` | `OgePivotFieldChooserOptions` | `{}` | Field-chooser dialog behavior. |
 | `customizeCell` | `(cell: OgePivotCellPrepared) => void` | `—` | Appearance hook: mutate `text` / `cssClass` per cell (the reference `cellPrepared` equivalent). |
 | `stateKey` | `string \| undefined` | `—` | Persists the field layout + expansion via `OGE_STATE_STORAGE`. |
 | `messages` | `Partial<OgePivotMessages>` | `{}` | Per-instance overrides of the UI strings. |
@@ -149,6 +150,9 @@ _Cell & axis types_
 | `OgePivotCellPrepared` | `{ rowPath, columnPath, measureId, isTotal, isGrandTotal, value; mutable text, cssClass? }` | Args of the `customizeCell` hook. |
 | `OgePivotAxisLine` | `{ text, path, level, expanded, hasChildren, isTotal, isGrandTotal }` | One visible axis line, in matrix order. |
 | `OgePivotHeaderCell` | `OgePivotAxisLine & { rowStart, rowEnd, columnStart, span }` | Header cell with 1-based matrix coordinates. |
+| `OgePivotFieldDef` | `{ dataField; id?, caption?, area?, … every <oge-pivot-field> input }` | Element type of `fields` — one declared field as data, with the directive’s defaults. |
+| `OgePivotFieldChooserOptions` | `{ applyChangesMode?: 'instantly' \| 'onDemand' }` | Field-chooser behavior; `'onDemand'` edits a draft that applies on Apply. |
+| `OgePivotMenuItem` | `{ text, disabled?, active?, action? }` | One item of the header / measure context menus. |
 | `OGE_PIVOT_FIELD_DRAG_TYPE` | `'application/x-oge-pivot-field'` | DataTransfer type of field chips. |
 
 _Configuration & engine_

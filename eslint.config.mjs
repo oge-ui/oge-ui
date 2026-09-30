@@ -24,6 +24,7 @@ export default [
           checkDynamicDependenciesExceptions: [
             '@oge-ui/grid',
             '@oge-ui/pivot',
+            '@oge-ui/react-pivot',
             '@oge-ui/gantt',
             '@oge-ui/charts',
           ],
@@ -261,10 +262,37 @@ export default [
               ],
             },
             {
+              // commercial engine packages (ADR 0003): framework-free like
+              // core/behavior, carrying the family's commercial license. They
+              // may take the MIT substrate (commercial may depend on MIT,
+              // never the reverse) and nothing above it.
+              sourceTag: 'scope:pivot-engine',
+              onlyDependOnLibsWithTags: [
+                'scope:pivot-engine',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
               sourceTag: 'scope:pivot',
               onlyDependOnLibsWithTags: [
                 'scope:pivot',
+                'scope:pivot-engine',
                 'scope:grid',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
+              // the React pivot: the shared engine, plus react-grid for the
+              // same `stateKey` storage context the React grid persists
+              // through — the edge the Angular pivot → grid has
+              sourceTag: 'scope:react-pivot',
+              onlyDependOnLibsWithTags: [
+                'scope:react-pivot',
+                'scope:react-grid',
+                'scope:pivot-engine',
+                'scope:behavior',
                 'scope:core',
               ],
             },
@@ -455,12 +483,14 @@ export default [
                 'scope:react-forms',
                 'scope:react-upload',
                 'scope:react-grid',
+                'scope:react-pivot',
                 'scope:react-oge',
                 'scope:react-overlay',
                 'scope:behavior',
                 'scope:grid',
                 'scope:tree-list',
                 'scope:pivot',
+                'scope:pivot-engine',
                 'scope:bpmn',
                 'scope:scheduler',
                 'scope:gantt',
