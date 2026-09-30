@@ -11,6 +11,26 @@ Driven by what the first production consumer (an Angular admin console built on
 `@oge-ui/grid` + `@oge-ui/overlay`) had to work around, written down in its own
 design notes. Every item below removes one of those workarounds.
 
+### Added (React)
+
+- **`@oge-ui/react-scheduler` + `@oge-ui/scheduler-engine` (commercial,
+  ADR 0003).** The scheduler's framework-free half now lives in its own
+  commercial engine package — the former `engine/` folder plus the
+  pointer-gesture machine, view-model builders for every view, keyboard
+  maps, the editor mapping and default form items, the message catalog and
+  `OgeSchedulerCore` (working set, DataSource write-through, cancelable CRUD
+  pipelines, occurrence-vs-series routing, navigation, context menu,
+  announcements, reminders). The Angular `@oge-ui/scheduler` is rewired onto
+  it with its specs unchanged, and `<OgeScheduler>` for React renders the
+  same markup from the same engine: all eight views, drag/resize/
+  drag-to-create with Escape-cancel, recurrence, resources, reminders, the
+  popup, the `<OgeForm>` editor, the built-in context menu, render props,
+  an imperative handle and `<OgeSchedulerConfigProvider>`. Both docs pages
+  branch; the family is in the parity gate. Fix riding along: the editor's
+  default form items are built for the appointment being opened (recurrence
+  fields of a recurring appointment are visible on open), not for the
+  previously opened one.
+
 ### Fixed (theming)
 
 - **A `:root` token override now works — on every component.** Each component

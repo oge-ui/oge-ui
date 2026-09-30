@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiReference } from '../../shared/api-reference';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
+import { ReactSchedulerApiSections } from '../react-scheduler/api';
 import {
   OGE_SCHEDULER_API,
   OGE_SCHEDULER_CONFIG_API,
@@ -10,9 +12,18 @@ import {
 
 const SECTIONS = ['OgeScheduler', 'Configuration'] as const;
 
+/** TOC of the React view — must mirror `ReactSchedulerApiSections`' titles. */
+const SECTIONS_REACT = ['<OgeScheduler>', 'Configuration'] as const;
+
 @Component({
   selector: 'app-scheduler-api',
-  imports: [ApiReference, DocHeader, PageToc, RouterLink],
+  imports: [
+    ApiReference,
+    DocHeader,
+    PageToc,
+    ReactSchedulerApiSections,
+    RouterLink,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -21,27 +32,50 @@ const SECTIONS = ['OgeScheduler', 'Configuration'] as const;
       categoryLink="/components/scheduler"
       [chips]="['Properties', 'Methods', 'Events', 'Types']"
     >
-      <p>
-        Complete API reference for <code>&#64;oge-ui/scheduler</code>. The
-        layout kernel — view-model builders, the transitive-overlap column
-        layout, lane packing, gesture math and the RFC 5545 RRULE-subset parser
-        — is pure TypeScript inside the package; live demos are on the
-        <a
-          routerLink="/components/scheduler"
-          class="text-indigo-600 underline dark:text-indigo-400"
-          >overview</a
-        >
-        page.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          Complete API reference for <code>&#64;oge-ui/react-scheduler</code>.
+          The layout kernel — view-model builders, the transitive-overlap column
+          layout, lane packing, gesture math, the RFC 5545 RRULE-subset parser
+          and the editing/recurrence core — is pure TypeScript in
+          <code>&#64;oge-ui/scheduler-engine</code>, the same engine the Angular
+          scheduler runs; live demos are on the
+          <a
+            routerLink="/components/scheduler"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >overview</a
+          >
+          page.
+        </p>
+      } @else {
+        <p>
+          Complete API reference for <code>&#64;oge-ui/scheduler</code>. The
+          layout kernel — view-model builders, the transitive-overlap column
+          layout, lane packing, gesture math and the RFC 5545 RRULE-subset
+          parser — is pure TypeScript in
+          <code>&#64;oge-ui/scheduler-engine</code>, shared with the React
+          scheduler; live demos are on the
+          <a
+            routerLink="/components/scheduler"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >overview</a
+          >
+          page.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? sectionsReact : sections" />
 
-    <app-api-reference
-      title="OgeScheduler"
-      selector="oge-scheduler"
-      [sections]="schedulerApi"
-    />
-    <app-api-reference title="Configuration" [sections]="configApi" />
+    @if (fw.isReact()) {
+      <app-react-scheduler-api />
+    } @else {
+      <app-api-reference
+        title="OgeScheduler"
+        selector="oge-scheduler"
+        [sections]="schedulerApi"
+      />
+      <app-api-reference title="Configuration" [sections]="configApi" />
+    }
 
     <h3>Notes</h3>
     <ul>
@@ -51,8 +85,7 @@ const SECTIONS = ['OgeScheduler', 'Configuration'] as const;
         <code>UNTIL=…Z</code> stamps are therefore read as local wall time; the
         supported RFC 5545 subset is FREQ DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL,
         COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY, BYMONTH and WKST — anything else
-        rejects the whole rule rather than truncating it. The expansion engine
-        ships in v0.2.
+        rejects the whole rule rather than truncating it.
       </li>
       <li>
         No WAI-ARIA APG scheduler pattern exists. The widget composes the
@@ -64,17 +97,30 @@ const SECTIONS = ['OgeScheduler', 'Configuration'] as const;
         <strong>Ctrl+Arrow moves / Ctrl+Shift+Up/Down resizes</strong> as the
         keyboard equivalent of drag, announced through a polite live region.
       </li>
-      <li>
-        Binding a plain array never mutates it — edits land in an internal
-        working set and the past-tense events carry the data to persist. A
-        <code>DataSource</code> with <code>insert</code>/<code>update</code>/
-        <code>remove</code> is written through and reloaded instead.
-      </li>
+      @if (fw.isReact()) {
+        <li>
+          Binding a plain array never mutates it — edits land in an internal
+          working set and the past-tense callbacks carry the data to persist. A
+          <code>DataSource</code> with <code>insert</code>/<code>update</code>/
+          <code>remove</code> is written through and reloaded instead. The data
+          is bound before the first paint, and a StrictMode remount revives the
+          same core.
+        </li>
+      } @else {
+        <li>
+          Binding a plain array never mutates it — edits land in an internal
+          working set and the past-tense events carry the data to persist. A
+          <code>DataSource</code> with <code>insert</code>/<code>update</code>/
+          <code>remove</code> is written through and reloaded instead.
+        </li>
+      }
     </ul>
   `,
 })
 export class SchedulerApiPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly schedulerApi = OGE_SCHEDULER_API;
   protected readonly configApi = OGE_SCHEDULER_CONFIG_API;
 }

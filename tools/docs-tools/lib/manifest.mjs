@@ -247,6 +247,19 @@ export const PACKAGES = [
     platform: 'agnostic',
   },
   {
+    dir: 'react/scheduler',
+    npm: '@oge-ui/react-scheduler',
+    label: 'Scheduler (React)',
+    summary:
+      'React scheduler / event calendar: day, work-week, week, month, agenda, timeline and year views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, drag-to-create, recurrence with occurrence-vs-series editing, resource grouping, reminders, an appointment popup and a form editor — running the same scheduler engine and stylesheet as the Angular scheduler package.',
+    // The React content renders inside the single Scheduler routes (ADR 0002).
+    docsRoot: '/components/scheduler',
+    pageDirs: ['react-scheduler'],
+    apiPage: 'apps/dev-app/src/app/pages/react-scheduler/api.ts',
+    tier: 'commercial',
+    platform: 'react',
+  },
+  {
     dir: 'core',
     npm: '@oge-ui/core',
     label: 'Core',
