@@ -1,0 +1,68 @@
+{
+  "name": "@oge-ui/gantt-engine",
+  "version": "0.13.1",
+  "description": "Framework-free engine behind the OGE UI Gantt chart, shared by the Angular and React render layers: task-tree model with field mapping and summary roll-ups, calendar-true time scales, forward auto-scheduling on work calendars, the critical-path pass, orthogonal dependency routing, gesture math, the Gantt controller (editing pipelines, undo/redo, virtualization, keyboard map), message catalogs and the Excel/PDF/PNG export builders. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "gantt",
+    "gantt-chart",
+    "project-management",
+    "scheduling",
+    "critical-path",
+    "headless",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@oge-ui/behavior": "0.13.1",
+    "@oge-ui/core": "0.13.1"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/gantt-engine"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.esm.js",
+      "require": "./index.cjs.js"
+    },
+    "./export-excel": {
+      "types": "./export-excel.d.ts",
+      "import": "./export-excel.esm.js",
+      "require": "./export-excel.cjs.js"
+    },
+    "./export-pdf": {
+      "types": "./export-pdf.d.ts",
+      "import": "./export-pdf.esm.js",
+      "require": "./export-pdf.cjs.js"
+    },
+    "./export-image": {
+      "types": "./export-image.d.ts",
+      "import": "./export-image.esm.js",
+      "require": "./export-image.cjs.js"
+    }
+  },
+  "peerDependencies": {
+    "exceljs": "^4.4.0",
+    "jspdf": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "exceljs": {
+      "optional": true
+    },
+    "jspdf": {
+      "optional": true
+    }
+  }
+}

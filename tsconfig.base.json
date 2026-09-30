@@ -34,6 +34,16 @@
       "@oge-ui/core": ["./packages/core/src/index.ts"],
       "@oge-ui/forms": ["./packages/forms/src/index.ts"],
       "@oge-ui/gantt": ["./packages/gantt/src/index.ts"],
+      "@oge-ui/gantt-engine": ["./packages/gantt-engine/src/index.ts"],
+      "@oge-ui/gantt-engine/export-excel": [
+        "./packages/gantt-engine/src/export-excel.ts"
+      ],
+      "@oge-ui/gantt-engine/export-image": [
+        "./packages/gantt-engine/src/export-image.ts"
+      ],
+      "@oge-ui/gantt-engine/export-pdf": [
+        "./packages/gantt-engine/src/export-pdf.ts"
+      ],
       "@oge-ui/gantt/export-excel": [
         "./packages/gantt/export-excel/src/index.ts"
       ],
@@ -71,6 +81,16 @@
         "./packages/react/charts/src/export-image.ts"
       ],
       "@oge-ui/react-forms": ["./packages/react/forms/src/index.ts"],
+      "@oge-ui/react-gantt": ["./packages/react/gantt/src/index.ts"],
+      "@oge-ui/react-gantt/export-excel": [
+        "./packages/react/gantt/src/export-excel.ts"
+      ],
+      "@oge-ui/react-gantt/export-image": [
+        "./packages/react/gantt/src/export-image.ts"
+      ],
+      "@oge-ui/react-gantt/export-pdf": [
+        "./packages/react/gantt/src/export-pdf.ts"
+      ],
       "@oge-ui/react-grid": ["./packages/react/grid/src/index.ts"],
       "@oge-ui/react-grid/foundation": [
         "./packages/react/grid/src/foundation.ts"

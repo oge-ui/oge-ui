@@ -1,0 +1,673 @@
+# @oge-ui/react-gantt
+
+> React Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, auto-scheduling on work calendars, resources and workload, drag editing with Escape-cancel, snapshot undo/redo, built-in context menu and task dialog, Excel/PDF/PNG export — running the same @oge-ui/gantt-engine controller and stylesheet as the Angular Gantt package.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.13.1.
+Docs and live demos: https://ogeui.com/components/gantt
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/react-gantt
+```
+
+## Writing OGE React code
+
+Follow these rules and generated code compiles on the first try.
+
+1. **These are plain React components.** Import the component and render it:
+   `import { OgeButton } from '@oge-ui/react-buttons'`. There is no module, no
+   provider requirement and no `imports` array — that is the Angular package.
+2. **Import the stylesheet once, at your app entry.**
+   `import '@oge-ui/react-buttons/styles.css'`. Components ship no inline
+   styles; without this import they render unstyled.
+3. **Props are plain props, not signals.** Write `text="Save"`,
+   `severity="accent"`, `disabled`. Never call them (`text()`), and never use
+   `[prop]`/`[(prop)]` binding syntax — that is Angular template syntax.
+4. **Modes are string unions, never enums.** Write the literal:
+   `severity="danger"`, `stylingMode="outlined"`, `size="sm"`,
+   `selectionMode="single"`. There is no `OgeButtonSeverity.Danger`.
+5. **Events are `on*` callbacks taking the payload directly** —
+   `onClick={(event) => …}`, `onActionDone={(result) => …}`,
+   `onSelectionChange={(change) => …}`. Note this is the mirror image of the
+   Angular naming rule: there, outputs drop the `on` prefix; here React's
+   convention wins, and the payload is the argument rather than an event object.
+6. **Two-way state is the controlled/uncontrolled pair.** Pass `selectedKeys`
+   plus `onSelectionChange` to control it yourself, or `defaultSelectedKeys`
+   to let the component own it. Same for the button's `loading` /
+   `onLoadingChange`.
+7. **App-wide defaults and every user-facing string** come from a context
+   provider: `<OgeButtonsConfigProvider config={{ clickGuardMs: 300,
+   messages: { loading: 'Yükleniyor' } }}>`. That is how localization works;
+   there is no i18n dependency. Per-instance overrides use the `messages` prop.
+8. **Styling is CSS custom properties**, all prefixed `--oge-`, identical to
+   the Angular packages — the two render layers share one stylesheet. Never
+   target internal class names; override the token.
+9. **Slots are props that take nodes**, not children with directives:
+   `icon={<SaveIcon />}`. Free `children` render inside the button after the
+   label.
+10. **Server components:** every component is a client component
+    (`'use client'` is already in the package). Import them from a client
+    component, or mark your own file `'use client'`.
+
+### Theming
+
+```css
+:root {
+  --oge-accent: #4f46e5;   /* selection, focus, primary actions */
+  --oge-radius-lg: 10px;
+}
+```
+
+The theme stylesheets are shared with the Angular packages and ship in
+`@oge-ui/core` (installed with every package; add it directly under pnpm):
+`@oge-ui/core/themes/dark.css` (then `class="oge-theme-dark"` or
+`data-oge-theme="dark"` on `<html>` or any subtree; `"auto"` follows
+`prefers-color-scheme`), plus the `tailwind.css` and `bootstrap.css`
+bridges.
+
+## Common mistakes
+
+Predictable wrong guesses, and what to write instead.
+
+| Wrong | Right |
+| --- | --- |
+| `import { OgeButton } from '@oge-ui/buttons'` | `from '@oge-ui/react-buttons'` — the unprefixed package is Angular |
+| `imports: [OgeButton]` | nothing — just render `<OgeButton />` |
+| `[text]="label"` / `[(loading)]="busy"` | `text={label}` / `loading={busy} onLoadingChange={setBusy}` |
+| `(clicked)="save()"` | `onClick={save}` |
+| `onClick={(e) => e.cancel = true}` | there is no cancelable pre-event on the React buttons |
+| `severity={OgeButtonSeverity.Danger}` | `severity="danger"` |
+| forgetting the stylesheet | `import '@oge-ui/react-buttons/styles.css'` once at the app entry |
+| `<OgeButton icon="save" />` | `icon={<SaveIcon />}` — slots take nodes |
+| `::part` / overriding `.oge-button-native` | override a `--oge-*` token |
+| rendering it from a server component | mark the file `'use client'` |
+
+## API reference
+
+### <OgeGantt>
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tasks` | `readonly T[]` | `[]` | Task items — a plain array, copied into an internal working set; the prop is never mutated. Edits surface through the past-tense callbacks. A new array reference resets the working set and the undo history. |
+| `dependencies` | `readonly D[]` | `[]` | Dependency links between tasks; same working-set semantics as `tasks`. |
+| `keyExpr / parentKeyExpr / titleExpr / startExpr / endExpr / progressExpr / colorExpr` | `string \| ((item: T) => unknown)` | `'id' / 'parentId' / 'title' / 'start' / 'end' / 'progress' / 'color'` | Task field mapping: names (dotted paths reach nested objects) or getter functions. String dates parse as _local_ wall time and write back in the same storage shape. |
+| `baselineStartExpr / baselineEndExpr` | `string \| ((item: T) => unknown)` | `'baselineStart' / 'baselineEnd'` | Baseline plan fields — tasks with both render the original plan as a slim bar under the live bar. |
+| `dependencyKeyExpr / predecessorKeyExpr / successorKeyExpr / dependencyTypeExpr` | `string \| ((item: D) => unknown)` | `'id' / 'predecessorId' / 'successorId' / 'type'` | Dependency field mapping. Types are `'FS' \| 'SS' \| 'FF' \| 'SF'` (dx numeric codes 0–3 also parse); missing type means FS. |
+| `resources` | `readonly OgeGanttResource[]` | `[]` | Resource choices (`{ id, text, color?, calendar? }`): labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own `calendar` overrides `workCalendar` for its tasks (first assigned resource with a calendar wins). |
+| `resourceIdExpr` | `string \| ((item: T) => unknown)` | `'resourceId'` | The task's assigned resource field — a single id or an array of ids (multi-assignment). Write-back preserves the storage shape. |
+
+_Appearance & behavior_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `scaleType / defaultScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months'` | `'days'` | Timeline scale — calendar-true ticks (real month lengths, DST-safe). Controlled when `scaleType` is set (pair it with `onScaleTypeChange`); `defaultScaleType` seeds the uncontrolled state. The toolbar zoom and zoom-to-fit write it. |
+| `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday) for the weeks scale; `undefined` resolves from the locale. |
+| `columns` | `readonly OgeGanttColumn[]` | `title / start / end / duration` | Task-list columns: built-in fields (`title`, `start`, `end`, `duration`, `progress`) or any data field, with optional `header`, `widthPx` and `format`. |
+| `taskListWidth` | `number` | `360` | Width (px) of the task pane; the splitter between the panes drags it, and a new value re-applies. |
+| `taskTitlePosition` | `'inside' \| 'outside' \| 'none'` | `'inside'` | Where the task title renders relative to its bar. |
+| `showDependencies / showRowLines` | `boolean` | `true` | Dependency arrows / horizontal row guides. |
+| `showCriticalPath` | `boolean` | `false` | Outlines the zero-slack chain (backward-pass latest-finish relaxation over all four link types). |
+| `weekendsHighlighted / holidays` | `boolean / readonly Date[]` | `true / []` | Off-day shading on the days scale. |
+| `workCalendar` | `OgeGanttWorkCalendar \| null` | `null` | Work-time calendar (`{ workingDays?, holidays? }`, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in _working_ days. The `holidays` prop merges in; per-resource `calendar`s override it per task. |
+| `showResourceWorkload` | `boolean` | `false` | Renders the per-resource workload band under the chart: merged assignment segments per resource, overallocated stretches in the danger color. |
+| `stripLines` | `readonly OgeGanttStripLine[]` | `[]` | Vertical markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded range with it. |
+| `autoScheduling` | `boolean` | `false` | Forward-pass scheduling: moving a predecessor pushes its successors to satisfy FS/SS/FF/SF constraints (never pulls them earlier). |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the provider locale, then the browser locale. |
+| `messages` | `Partial<OgeGanttMessages>` | `{}` | Per-instance message overrides, merged over the provider config per top-level block. |
+| `selectedTaskKey / defaultSelectedTaskKey` | `RowKey \| null` | `null` | The selected task. Controlled when `selectedTaskKey` is set (pair it with `onSelectedTaskKeyChange`); `defaultSelectedTaskKey` seeds the uncontrolled state and is applied at mount. |
+| `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-gantt` host — give it a height (the body scrolls inside it). |
+
+_Editing gates_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `editingEnabled` | `boolean` | `true` | Master editing switch (dx `editing.enabled`). |
+| `allowTaskAdding / allowTaskUpdating / allowTaskDeleting / allowDependencyAdding / allowDependencyDeleting` | `boolean` | `true` | Per-capability editing gates. |
+| `readOnly` | `boolean` | `false` | **Display-only shorthand**: equivalent to `editingEnabled={false}`, hides every editing affordance. |
+
+_Render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderTask` | `(context: OgeGanttTaskRenderContext<T>) => ReactNode` | Replaces the bar's title content; context `{ task }` — the React form of `*ogeGanttTaskTemplate`. |
+| `renderTooltip` | `(context: OgeGanttTooltipRenderContext<T>) => ReactNode` | Replaces the hover tooltip's content (default: title, dates + duration, progress, resources); context `{ task }` — the React form of `*ogeGanttTooltipTemplate`. |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `insertTask(taskData) / updateTask(taskData, patch) / deleteTask(taskData)` | `void` | Programmatic CRUD through the same cancelable pipelines as interactive editing — one undo step each. |
+| `insertDependency(predecessorKey, successorKey, type?) / deleteDependency(dependencyData)` | `void` | Guarded link CRUD; inserting runs the same cycle check as interactive drawing. |
+| `undo() / redo()` | `void` | Snapshot history — every applied edit, drags included, is exactly one step (depth: config `undoLimit`). |
+| `zoomIn() / zoomOut() / zoomToFit()` | `void` | Steps the scale (hours ⇄ days ⇄ weeks ⇄ months) / picks the finest scale that fits the whole plan. Each reports through `onScaleTypeChange`. |
+| `scrollToDate(date)` | `void` | Scrolls the chart so `date` is in view. |
+| `expandAll() / collapseAll() / expandAllToLevel(level) / expandToTask(key)` | `void` | Tree expansion control; `expandToTask` also focuses and reveals the row. |
+| `showTaskDetailsDialog(taskData?)` | `void` | Opens the task dialog — edit form for the given task, prefilled create form without one. |
+| `indentTask(task) / outdentTask(task)` | `void` | Reparents through the guarded update pipeline: indent makes the task a child of its previous sibling, outdent lifts it to the grandparent. Also on the built-in context menu and **Alt+Shift+Left/Right** on the focused row. |
+| `focus()` | `void` | Focuses the task tree (roving row). |
+| `getExportData()` | `OgeGanttExportData<T>` | Snapshot for the exporters: every task in tree order (collapse ignored), the resolved columns with pane-identical formatting, the chart range and the critical-path keys. |
+
+_Export entry points (lazy, optional peers)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `exportGanttToExcel(handle, options?) / buildGanttExcelWorkbook(data, options?)` | `@oge-ui/react-gantt/export-excel` | Lazy Excel export (`exceljs` peer) from the Gantt's `ref` handle: the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. The builder is the same one the Angular entry re-exports. |
+| `exportGanttToPdf(handle, options?) / buildGanttPdfDocument(data, options?)` | `@oge-ui/react-gantt/export-pdf` | Lazy PDF export (`jspdf` peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. |
+| `exportGanttToPng(handle, options?) / buildGanttCanvas(data, options?)` | `@oge-ui/react-gantt/export-image` | Lazy PNG export with **no dependencies** — plain canvas drawing of the same chart. |
+
+#### Events
+
+_Editing (cancelable pipeline)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onTaskInserting / onTaskUpdating / onTaskDeleting` | `(event: OgeGanttTask*ingEvent<T>) => void` | Cancelable pre-events — set `event.cancel = true` to veto before the store changes. |
+| `onTaskInserted / onTaskUpdated / onTaskDeleted` | `(event: OgeGanttTask*edEvent<T>) => void` | Fired only for applied changes — persist from these. |
+| `onDependencyInserting / onDependencyDeleting` | `(event: OgeGanttDependency*ingEvent) => void` | Cancelable link pre-events; inserting carries `predecessorKey`, `successorKey` and `type`. |
+| `onDependencyInserted / onDependencyDeleted` | `(event: OgeGanttDependency*edEvent<D>) => void` | Applied link changes. |
+| `onTaskEditDialogShowing` | `(event: OgeGanttDialogShowingEvent<T>) => void` | Cancelable, before the task dialog opens; replace `formItems` (React form items, render props allowed) to customize the form. |
+
+_Interaction_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onTaskClick / onTaskDblClick / onTaskContextMenu` | `(event: OgeGanttTaskClickEvent<T>) => void` | Bar/row pointer events with the normalized task and the native `MouseEvent`. Right-click also opens the **built-in context menu** (labels in `messages.menu`). |
+| `onSelectionChanged` | `(event: OgeGanttSelectionChangedEvent<T>) => void` | Single-row selection changed (task or `null`). |
+| `onScaleTypeChange / onSelectedTaskKeyChange` | `(value: OgeGanttScaleType) / (key: RowKey \| null) => void` | The controlled halves of `scaleType` and `selectedTaskKey`. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGanttHandle<T, D>` | `interface` | The `ref` handle: every method listed above. |
+| `OgeGanttTask<T>` | `interface` | The normalized task — the payload of callbacks and render props: `key`, `parentKey`, `source` (the original item), `title`, `start`/`end`, `progress`, `color`, baseline dates, `isSummary`/`isMilestone` and `level`. |
+| `OgeGanttDependency<D>` | `interface` | The normalized link: `key`, `source`, `predecessorKey`, `successorKey`, `type`. |
+| `OgeGanttDependencyType` | `'FS' \| 'SS' \| 'FF' \| 'SF'` | Finish-to-start, start-to-start, finish-to-finish, start-to-finish. |
+| `OgeGanttScaleType` | `'hours' \| 'days' \| 'weeks' \| 'months'` | The timeline scale units. |
+| `OgeGanttColumn` | `interface` | A task-list column: `{ field, header?, widthPx?, format? }`. |
+| `OgeGanttStripLine` | `interface` | `{ start, end?, label?, color? }` — a chart marker line or range. |
+| `OgeGanttWorkCalendar` | `interface` | `{ workingDays?, holidays? }` — the work-time calendar (0 = Sunday; default working week Monday-Friday). |
+| `OgeGanttResource` | `interface` | `{ id, text, color?, calendar? }` — one assignable resource. |
+| `OgeGanttExportData<T> / OgeGanttExportColumn<T>` | `interface` | The exporter snapshot: `tasks`, `columns` (header + pane-identical `text()`), `rangeStart`/`rangeEnd`, `critical` keys and `resourceText()`. |
+| `OgeGanttTaskTitlePosition` | `'inside' \| 'outside' \| 'none'` | Task title placement relative to the bar. |
+| `OgeGanttTaskRenderContext<T> / OgeGanttTooltipRenderContext<T>` | `interface` | The render-prop contexts: `{ task: OgeGanttTask<T> }`. |
+
+### Configuration
+
+#### Properties
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `OgeGanttConfigProvider` | `<OgeGanttConfigProvider config>` | `—` | Configures every Gantt below it (`OgeGanttConfigInput`); shallow merge over the enclosing provider (or `OGE_DEFAULT_GANTT_CONFIG`) per top-level key — a partial `messages` replaces whole nested blocks. A new `config` object re-resolves, so switching the UI language at runtime is a state change. |
+| `useOgeGanttConfig()` | `OgeGanttConfig` | `—` | The resolved Gantt config for the current subtree. |
+| `messages` | `OgeGanttMessages` | `—` | Every user-facing string, aria labels included: `toolbar`, `menu`, `columns`, `dialog`, `grid` (aria templates with `{token}` placeholders) and `announcements` (live-region templates). Defaults: `OGE_DEFAULT_GANTT_MESSAGES` — single-sourced in `@oge-ui/gantt-engine`, identical to the Angular catalog. |
+| `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `locale` prop wins. |
+| `rowHeight` | `number` | `36` | Fixed row height in px — the invariant behind the row virtualization of both panes. |
+| `undoLimit` | `number` | `50` | Undo history depth. |
+
+## Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Getting started
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+
+const tasks = [
+  { id: 1, title: 'Release 1.0', start: new Date(2026, 7, 3), end: new Date(2026, 7, 21) },
+  {
+    id: 2,
+    parentId: 1,
+    title: 'Design',
+    start: new Date(2026, 7, 3),
+    end: new Date(2026, 7, 7),
+    progress: 100,
+  },
+  {
+    id: 3,
+    parentId: 1,
+    title: 'Implementation',
+    start: new Date(2026, 7, 7),
+    end: new Date(2026, 7, 17),
+    progress: 45,
+  },
+  {
+    id: 4,
+    parentId: 1,
+    title: 'Ship',
+    start: new Date(2026, 7, 21),
+    end: new Date(2026, 7, 21), // zero-length => milestone diamond
+  },
+];
+
+const links = [
+  { id: 'a', predecessorId: 2, successorId: 3 }, // FS is the default type
+  { id: 'b', predecessorId: 3, successorId: 4 },
+];
+
+export function ReleasePlan() {
+  return (
+    // One component, a working Gantt: task tree pane + timeline chart with
+    // summary brackets, milestone diamonds and dependency arrows. Drag a bar to
+    // move it (Escape cancels mid-drag), pull its edges to resize, drag the
+    // bottom knob to set progress, drag a link dot onto another bar to draw a
+    // dependency. Double-click opens the task dialog.
+    <OgeGantt tasks={tasks} dependencies={links} style={{ height: 480 }} />
+  );
+}
+```
+
+### Field mapping
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+
+const workItems = [
+  {
+    code: 'EPIC-1',
+    subject: 'Checkout revamp',
+    plan: { begin: '2026-08-03', finish: '2026-08-14' },
+  },
+  {
+    code: 'T-1',
+    parentCode: 'EPIC-1',
+    subject: 'Payment API',
+    plan: { begin: '2026-08-03', finish: '2026-08-07' },
+    done: 80,
+  },
+  {
+    code: 'T-2',
+    parentCode: 'EPIC-1',
+    subject: 'Wallet UI',
+    plan: { begin: '2026-08-07', finish: '2026-08-14' },
+    done: 20,
+  },
+];
+
+const relations = [{ relId: 1, fromCode: 'T-1', toCode: 'T-2' }];
+
+export function MappedPlan() {
+  return (
+    // Any item shape binds through the *Expr props — field names, dotted
+    // paths or getter functions — for tasks AND dependency links. String dates
+    // parse as local wall time and write back in the same storage shape after
+    // edits.
+    <OgeGantt
+      tasks={workItems}
+      dependencies={relations}
+      keyExpr="code"
+      parentKeyExpr="parentCode"
+      titleExpr="subject"
+      startExpr="plan.begin"
+      endExpr="plan.finish"
+      progressExpr="done"
+      dependencyKeyExpr="relId"
+      predecessorKeyExpr="fromCode"
+      successorKeyExpr="toCode"
+      style={{ height: 360 }}
+    />
+  );
+}
+```
+
+### Dependencies & critical path
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+
+const tasks = [
+  { id: 1, title: 'Foundation', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), progress: 100 },
+  { id: 2, title: 'Framing', start: new Date(2026, 7, 6), end: new Date(2026, 7, 12), progress: 60 },
+  { id: 3, title: 'Electrical', start: new Date(2026, 7, 12), end: new Date(2026, 7, 15) },
+  { id: 4, title: 'Landscaping', start: new Date(2026, 7, 6), end: new Date(2026, 7, 10) },
+  { id: 5, title: 'Inspection', start: new Date(2026, 7, 17), end: new Date(2026, 7, 18) },
+];
+
+const links = [
+  { id: 1, predecessorId: 1, successorId: 2 },
+  { id: 2, predecessorId: 2, successorId: 3 },
+  { id: 3, predecessorId: 3, successorId: 5 },
+  { id: 4, predecessorId: 4, successorId: 5 },
+];
+
+export function CriticalPlan() {
+  return (
+    // showCriticalPath outlines the tasks with zero slack; autoScheduling
+    // pushes successors forward whenever a predecessor moves (FS/SS/FF/SF
+    // respected). Drawing a link that would close a cycle is rejected and
+    // announced — try dragging a link dot backwards.
+    <OgeGantt
+      tasks={tasks}
+      dependencies={links}
+      showCriticalPath
+      autoScheduling
+      style={{ height: 420 }}
+    />
+  );
+}
+```
+
+### Baselines, strip lines & resources
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttStripLine } from '@oge-ui/react-gantt';
+
+const tasks = [
+  {
+    id: 1,
+    title: 'Data migration',
+    start: new Date(2026, 7, 4),
+    end: new Date(2026, 7, 11),
+    baselineStart: new Date(2026, 7, 3),
+    baselineEnd: new Date(2026, 7, 7),
+    progress: 70,
+    resourceId: 'ada',
+  },
+  {
+    id: 2,
+    title: 'Cutover rehearsal',
+    start: new Date(2026, 7, 11),
+    end: new Date(2026, 7, 14),
+    baselineStart: new Date(2026, 7, 10),
+    baselineEnd: new Date(2026, 7, 12),
+    resourceId: 'grace',
+  },
+];
+
+const stripLines: OgeGanttStripLine[] = [
+  { start: new Date(2026, 7, 18), label: 'Go-live', color: '#dc2626' },
+  {
+    start: new Date(2026, 7, 14),
+    end: new Date(2026, 7, 17),
+    label: 'Freeze',
+  },
+];
+
+const people = [
+  { id: 'ada', text: 'Ada', color: '#7c3aed' },
+  { id: 'grace', text: 'Grace', color: '#0891b2' },
+];
+
+const holidays = [new Date(2026, 7, 10)];
+
+export function BaselinePlan() {
+  return (
+    // Baseline bars render the original plan under the live bars;
+    // stripLines mark deadlines (a line) or freeze windows (a range) on the
+    // chart; resources label the bars. Weekends shade automatically and
+    // holidays add to the off-day shading.
+    <OgeGantt
+      tasks={tasks}
+      stripLines={stripLines}
+      resources={people}
+      holidays={holidays}
+      style={{ height: 380 }}
+    />
+  );
+}
+```
+
+### Editing pipeline
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttTaskDeletingEvent, OgeGanttTaskUpdatingEvent } from '@oge-ui/react-gantt';
+
+type DemoTask = Record<string, unknown>;
+
+const tasks: DemoTask[] = [
+  { id: 1, title: 'Audit (done — locked)', start: new Date(2026, 7, 3), end: new Date(2026, 7, 6), progress: 100 },
+  { id: 2, title: 'Remediation', start: new Date(2026, 7, 6), end: new Date(2026, 7, 13), progress: 30 },
+];
+
+const protectDone = (event: OgeGanttTaskUpdatingEvent<DemoTask>) => {
+  if ((event.oldData['progress'] as number) === 100) event.cancel = true;
+};
+
+const confirmDelete = (event: OgeGanttTaskDeletingEvent<DemoTask>) => {
+  event.cancel = !confirm('Delete this task?');
+};
+
+export function GuardedPlan() {
+  return (
+    // Every mutation runs a cancelable '-ing' callback before the store
+    // changes; the past-tense callback fires only for applied changes — persist
+    // from there. allow* props gate each capability; readOnly turns the whole
+    // widget display-only. This demo protects finished tasks and asks before
+    // deleting.
+    <OgeGantt
+      tasks={tasks}
+      allowDependencyAdding={false}
+      onTaskUpdating={protectDone}
+      onTaskDeleting={confirmDelete}
+      style={{ height: 360 }}
+    />
+  );
+}
+```
+
+### Toolbar, scales & undo/redo
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttScaleType } from '@oge-ui/react-gantt';
+
+const columns = [
+  { field: 'title' },
+  { field: 'progress' },
+  { field: 'owner', header: 'Owner' },
+];
+
+const tasks = [
+  { id: 1, title: 'Discovery', start: new Date(2026, 6, 6), end: new Date(2026, 6, 24), progress: 100, owner: 'Ada' },
+  { id: 2, title: 'Build', start: new Date(2026, 6, 27), end: new Date(2026, 8, 4), progress: 40, owner: 'Grace' },
+  { id: 3, title: 'Rollout', start: new Date(2026, 8, 7), end: new Date(2026, 8, 25), owner: 'Ada' },
+];
+
+export function ZoomablePlan() {
+  // scaleType is a controlled pair — the toolbar zoom writes it back
+  const [scale, setScale] = useState<OgeGanttScaleType>('weeks');
+  return (
+    // The toolbar adds tasks, zooms between hour/day/week/month scales
+    // (Ctrl+wheel on the chart works too), fits the whole plan,
+    // expands/collapses the tree and drives snapshot undo/redo — every edit,
+    // including drags, is one undo step. The task list is a virtualized
+    // treegrid: columns are configurable and the splitter between the panes
+    // drags.
+    <OgeGantt
+      tasks={tasks}
+      scaleType={scale}
+      onScaleTypeChange={setScale}
+      columns={columns}
+      taskListWidth={300}
+      style={{ height: 420 }}
+    />
+  );
+}
+```
+
+### Work calendar, teams & export
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeGantt } from '@oge-ui/react-gantt';
+import type { OgeGanttHandle, OgeGanttWorkCalendar } from '@oge-ui/react-gantt';
+
+type DemoTask = Record<string, unknown>;
+
+const calendar: OgeGanttWorkCalendar = {
+  workingDays: [1, 2, 3, 4], // four-day week
+  holidays: [new Date(2026, 7, 12)],
+};
+
+const people = [
+  { id: 'ada', text: 'Ada', color: '#7c3aed' },
+  {
+    id: 'grace',
+    text: 'Grace',
+    color: '#0891b2',
+    // per-resource calendar: overrides workCalendar for Grace's tasks
+    calendar: { workingDays: [1, 2, 3, 4, 5] },
+  },
+];
+
+const tasks: DemoTask[] = [
+  {
+    id: 1,
+    title: 'Prototype',
+    start: new Date(2026, 7, 3),
+    end: new Date(2026, 7, 6),
+    progress: 80,
+    resourceId: ['ada', 'grace'], // multi-assignment
+  },
+  {
+    id: 2,
+    title: 'Field test',
+    start: new Date(2026, 7, 6),
+    end: new Date(2026, 7, 11),
+    resourceId: 'grace',
+  },
+];
+
+const links: DemoTask[] = [{ id: 1, predecessorId: 1, successorId: 2 }];
+
+export function TeamPlan() {
+  const plan = useRef<OgeGanttHandle<DemoTask, DemoTask>>(null);
+
+  /** exceljs stays out of the initial bundle — loaded on first click. */
+  const exportExcel = async () => {
+    const { exportGanttToExcel } = await import('@oge-ui/react-gantt/export-excel');
+    if (plan.current) await exportGanttToExcel(plan.current, { filename: 'plan.xlsx' });
+  };
+
+  /** jspdf loads lazily the same way. */
+  const exportPdf = async () => {
+    const { exportGanttToPdf } = await import('@oge-ui/react-gantt/export-pdf');
+    if (plan.current) await exportGanttToPdf(plan.current, { filename: 'plan.pdf', title: 'Plan' });
+  };
+
+  /** PNG needs no third-party library at all — plain canvas drawing. */
+  const exportPng = async () => {
+    const { exportGanttToPng } = await import('@oge-ui/react-gantt/export-image');
+    if (plan.current) await exportGanttToPng(plan.current, { filename: 'plan.png' });
+  };
+  return (
+    <>
+      {/* workCalendar shades every off day (custom working week + holidays)
+          and makes auto-scheduling roll pushed starts onto working days,
+          preserving durations in working days. resourceId may hold an ARRAY of
+          ids — the dialog edits assignments with a tag editor and the bar label
+          joins the names. The export entry points load exceljs/jspdf lazily:
+          Excel writes the task tree as a typed worksheet, PDF draws the chart
+          as vector graphics. */}
+      <div className="mb-2 flex gap-2">
+        <button type="button" onClick={exportExcel}>Export Excel</button>
+        <button type="button" onClick={exportPdf}>Export PDF</button>
+        <button type="button" onClick={exportPng}>Export PNG</button>
+      </div>
+      <OgeGantt
+        ref={plan}
+        tasks={tasks}
+        dependencies={links}
+        resources={people}
+        workCalendar={calendar}
+        showResourceWorkload
+        autoScheduling
+        style={{ height: 400 }}
+      />
+    </>
+  );
+}
+```
+
+### Task template
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+
+const tasks = [
+  { id: 1, title: 'Usability study', start: new Date(2026, 7, 3), end: new Date(2026, 7, 12), progress: 55, color: '#0f766e' },
+  { id: 2, title: 'Findings report', start: new Date(2026, 7, 12), end: new Date(2026, 7, 17), progress: 10 },
+];
+
+export function TemplatedPlan() {
+  return (
+    // renderTask replaces the bar's title content; renderTooltip replaces the
+    // hover tooltip (default: title, dates + duration, progress, resources).
+    // Bar surface, gestures and keyboard semantics stay with the component.
+    <OgeGantt
+      tasks={tasks}
+      style={{ height: 300 }}
+      renderTask={({ task }) => (
+        <>
+          <strong>{task.title}</strong>
+          <span className="opacity-75"> · {task.progress}%</span>
+        </>
+      )}
+      renderTooltip={({ task }) => (
+        <>
+          <strong>{task.title}</strong>
+          <em>{task.progress}% complete</em>
+        </>
+      )}
+    />
+  );
+}
+```
+
+### Configuration & i18n
+
+```ts
+'use client';
+
+import { OgeGantt, OgeGanttConfigProvider } from '@oge-ui/react-gantt';
+
+const tasks = [
+  { id: 1, title: 'Planung', start: new Date(2026, 7, 3), end: new Date(2026, 7, 10), progress: 25 },
+];
+
+export function LocalizedPlan() {
+  return (
+    <>
+      {/* Every user-facing string, aria labels included, lives in
+          OgeGanttMessages — provide once with <OgeGanttConfigProvider> (a new
+          config object re-resolves, so switching the UI language is a state
+          change) or override per instance with messages. locale drives every
+          Intl date format; rowHeight and undoLimit are config-level too. */}
+      {/* App-wide, e.g. around the router:
+          config={{ locale: 'de', rowHeight: 32, messages: { toolbar: { ...germanToolbar } } }} */}
+      <OgeGanttConfigProvider config={{ locale: 'de' }}>
+        <OgeGantt tasks={tasks} locale="de" style={{ height: 300 }} />
+      </OgeGanttConfigProvider>
+    </>
+  );
+}
+```
+

@@ -733,6 +733,31 @@ const FAMILIES = [
       },
     },
   },
+  {
+    // commercial: both layers run OgeGanttCore from @oge-ui/gantt-engine
+    // (ADR 0003), so every member below is one engine method or input
+    family: 'gantt',
+    angularApiPage: 'apps/dev-app/src/app/pages/gantt/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-gantt/api.ts',
+    exceptions: {
+      pairs: {
+        // angular ↔ react (both already normalized): deliberate renames
+        provideogeganttconfig: 'ogeganttconfigprovider', // DI provider ↔ context provider
+      },
+      reactOnly: {
+        rendertask:
+          'Render prop replacing the `[ogeGanttTaskTemplate]` structural directive, which the Angular page documents in its types table rather than as a component input (TemplateRef ↔ render prop).',
+        rendertooltip:
+          'Render prop replacing the `[ogeGanttTooltipTemplate]` structural directive — same types-table split as `renderTask`.',
+        classname:
+          'React host styling idiom; an Angular host takes `class` natively and needs no input.',
+        style:
+          'React host styling idiom; an Angular host takes `style` natively and needs no input.',
+        useogeganttconfig:
+          'Hook reading the resolved config; the Angular counterpart is `inject(OGE_GANTT_CONFIG)`, documented inside the provider row rather than as a member.',
+      },
+    },
+  },
 ];
 
 /** `'<OgeButton>'` / `'OgeButton'` → `'ogebutton'`. Angle brackets go first —

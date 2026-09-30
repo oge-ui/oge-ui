@@ -1,5 +1,7 @@
-// Hand-compiled from packages/gantt/src/lib/** — keep in sync with the
-// source TSDoc.
+// Hand-compiled from packages/gantt/src/lib/** and the shared
+// packages/gantt-engine/src/lib/** — keep in sync with the source TSDoc and
+// with the React mirror in ../react-gantt/react-gantt-api-data.ts
+// (`docs-tools:parity` diffs the two).
 import type { ApiSections } from '../../shared/api-reference';
 
 export const OGE_GANTT_API: ApiSections = {
@@ -45,7 +47,7 @@ export const OGE_GANTT_API: ApiSections = {
         },
         {
           name: 'resources',
-          type: 'readonly { id, text, color?, calendar? }[]',
+          type: 'readonly OgeGanttResource[]',
           default: '[]',
           description:
             "Resource choices: labels next to the bars, the multi-assignment tag editor in the task dialog, the workload band rows — and a resource's own <code>calendar</code> overrides <code>workCalendar</code> for its tasks (first assigned resource with a calendar wins).",
@@ -377,6 +379,12 @@ export const OGE_GANTT_API: ApiSections = {
           type: 'interface',
           description:
             '<code>{ workingDays?, holidays? }</code> — the work-time calendar (0 = Sunday; default working week Monday-Friday).',
+        },
+        {
+          name: 'OgeGanttResource',
+          type: 'interface',
+          description:
+            '<code>{ id, text, color?, calendar? }</code> — one assignable resource (the <code>resources</code> item type).',
         },
         {
           name: 'OgeGanttExportData&lt;T&gt; / OgeGanttExportColumn&lt;T&gt;',

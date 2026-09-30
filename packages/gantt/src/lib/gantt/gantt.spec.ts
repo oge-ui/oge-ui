@@ -178,9 +178,7 @@ describe('<oge-gantt>', () => {
     expect(
       host.querySelectorAll('.oge-gantt-critical').length,
     ).toBeGreaterThanOrEqual(2);
-    expect(
-      host.querySelectorAll('.oge-gantt-arrow-critical').length,
-    ).toBe(2);
+    expect(host.querySelectorAll('.oge-gantt-arrow-critical').length).toBe(2);
   });
 
   it('insertDependency rejects cycles and undo reverts a commit', async () => {

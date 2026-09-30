@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   OgeGantt,
@@ -12,7 +17,12 @@ import {
 } from '@oge-ui/gantt';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
+import {
+  REACT_GANTT_OVERVIEW_SECTIONS,
+  ReactGanttOverviewDemos,
+} from '../react-gantt/overview';
 import {
   BASELINES_SNIPPET,
   CONFIG_SNIPPET,
@@ -48,6 +58,7 @@ type DemoTask = Record<string, unknown>;
     OgeGanttTaskTemplate,
     OgeGanttTooltipTemplate,
     PageToc,
+    ReactGanttOverviewDemos,
     RouterLink,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,195 +91,226 @@ type DemoTask = Record<string, unknown>;
         <strong>Ctrl+Arrow keyboard move/resize</strong> — and a polite live
         region announcing every change.
       </p>
-      <p>
-        <code>&#64;oge-ui/gantt</code> is a commercial package — free for
-        evaluation and development, with no watermark and no runtime license
-        checks. See
-        <a
-          routerLink="/license"
-          class="text-indigo-600 underline dark:text-indigo-400"
-          >licensing</a
-        >
-        for the terms.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          <code>&#64;oge-ui/react-gantt</code> runs the very same controller as
+          the Angular component — <code>OgeGanttCore</code> from the
+          framework-free <code>&#64;oge-ui/gantt-engine</code> — and loads the
+          same stylesheet: every input is a prop, every output an
+          <code>onX</code> callback, the public methods live on the
+          <code>ref</code> handle and the two templates are the
+          <code>renderTask</code> / <code>renderTooltip</code> render props. It
+          is a commercial package — free for evaluation and development, with no
+          watermark and no runtime license checks. See
+          <a
+            routerLink="/license"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >licensing</a
+          >
+          for the terms.
+        </p>
+      } @else {
+        <p>
+          <code>&#64;oge-ui/gantt</code> is a commercial package — free for
+          evaluation and development, with no watermark and no runtime license
+          checks. See
+          <a
+            routerLink="/license"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >licensing</a
+          >
+          for the terms.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <app-demo-card
-      [chips]="['task tree', 'milestones', 'drag & resize', 'Escape-cancel']"
-      heading="Getting started"
-      description="One element, a working Gantt. Drag a bar to move it (Escape cancels mid-drag), pull its edges to resize, drag the bottom knob to set progress, drag a link dot onto another bar to draw a dependency. Double-click a bar or row for the task dialog — or double-click / drag on <em>empty</em> chart space to create a task right there. Right-click opens the built-in menu (edit, new subtask, indent/outdent, delete); Alt+Shift+Left/Right reparents from the keyboard."
-      [code]="gettingStartedSnippet"
-      language="ts"
-    >
-      <oge-gantt
-        [tasks]="basicTasks"
-        [dependencies]="basicLinks"
-        style="height: 480px"
-      />
-    </app-demo-card>
+    @if (fw.isReact()) {
+      <app-react-gantt-overview-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['task tree', 'milestones', 'drag & resize', 'Escape-cancel']"
+        heading="Getting started"
+        description="One element, a working Gantt. Drag a bar to move it (Escape cancels mid-drag), pull its edges to resize, drag the bottom knob to set progress, drag a link dot onto another bar to draw a dependency. Double-click a bar or row for the task dialog — or double-click / drag on <em>empty</em> chart space to create a task right there. Right-click opens the built-in menu (edit, new subtask, indent/outdent, delete); Alt+Shift+Left/Right reparents from the keyboard."
+        [code]="gettingStartedSnippet"
+        language="ts"
+      >
+        <oge-gantt
+          [tasks]="basicTasks"
+          [dependencies]="basicLinks"
+          style="height: 480px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['keyExpr', 'dotted paths', 'string dates']"
-      heading="Field mapping"
-      description="Any item shape binds through the <code>*Expr</code> inputs — field names, dotted paths or getter functions — for tasks and dependency links alike. String dates parse as local wall time and write back in the same storage shape after edits."
-      [code]="fieldMappingSnippet"
-      language="ts"
-    >
-      <oge-gantt
-        [tasks]="mappedTasks"
-        [dependencies]="mappedLinks"
-        keyExpr="code"
-        parentKeyExpr="parentCode"
-        titleExpr="subject"
-        startExpr="plan.begin"
-        endExpr="plan.finish"
-        progressExpr="done"
-        dependencyKeyExpr="relId"
-        predecessorKeyExpr="fromCode"
-        successorKeyExpr="toCode"
-        style="height: 360px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['keyExpr', 'dotted paths', 'string dates']"
+        heading="Field mapping"
+        description="Any item shape binds through the <code>*Expr</code> inputs — field names, dotted paths or getter functions — for tasks and dependency links alike. String dates parse as local wall time and write back in the same storage shape after edits."
+        [code]="fieldMappingSnippet"
+        language="ts"
+      >
+        <oge-gantt
+          [tasks]="mappedTasks"
+          [dependencies]="mappedLinks"
+          keyExpr="code"
+          parentKeyExpr="parentCode"
+          titleExpr="subject"
+          startExpr="plan.begin"
+          endExpr="plan.finish"
+          progressExpr="done"
+          dependencyKeyExpr="relId"
+          predecessorKeyExpr="fromCode"
+          successorKeyExpr="toCode"
+          style="height: 360px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['showCriticalPath', 'autoScheduling', 'cycle rejection']"
-      heading="Dependencies & critical path"
-      description="<code>showCriticalPath</code> outlines the zero-slack chain; <code>autoScheduling</code> pushes successors forward whenever a predecessor moves, honoring FS/SS/FF/SF semantics. Drawing a link that would close a cycle is rejected and announced."
-      [code]="criticalPathSnippet"
-      language="ts"
-    >
-      <oge-gantt
-        [tasks]="criticalTasks"
-        [dependencies]="criticalLinks"
-        [showCriticalPath]="true"
-        [autoScheduling]="true"
-        style="height: 420px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['showCriticalPath', 'autoScheduling', 'cycle rejection']"
+        heading="Dependencies & critical path"
+        description="<code>showCriticalPath</code> outlines the zero-slack chain; <code>autoScheduling</code> pushes successors forward whenever a predecessor moves, honoring FS/SS/FF/SF semantics. Drawing a link that would close a cycle is rejected and announced."
+        [code]="criticalPathSnippet"
+        language="ts"
+      >
+        <oge-gantt
+          [tasks]="criticalTasks"
+          [dependencies]="criticalLinks"
+          [showCriticalPath]="true"
+          [autoScheduling]="true"
+          style="height: 420px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['baselines', 'stripLines', 'resources', 'holidays']"
-      heading="Baselines, strip lines & resources"
-      description="Baseline bars render the original plan under the live bars for slippage at a glance; <code>stripLines</code> mark deadlines (a line) or freeze windows (a range); <code>resources</code> label the bars; weekends shade automatically and <code>holidays</code> join the off-day shading."
-      [code]="baselinesSnippet"
-      language="ts"
-    >
-      <oge-gantt
-        [tasks]="baselineTasks"
-        [stripLines]="baselineStripLines"
-        [resources]="people"
-        [holidays]="holidays"
-        style="height: 380px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['baselines', 'stripLines', 'resources', 'holidays']"
+        heading="Baselines, strip lines & resources"
+        description="Baseline bars render the original plan under the live bars for slippage at a glance; <code>stripLines</code> mark deadlines (a line) or freeze windows (a range); <code>resources</code> label the bars; weekends shade automatically and <code>holidays</code> join the off-day shading."
+        [code]="baselinesSnippet"
+        language="ts"
+      >
+        <oge-gantt
+          [tasks]="baselineTasks"
+          [stripLines]="baselineStripLines"
+          [resources]="people"
+          [holidays]="holidays"
+          style="height: 380px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['taskUpdating', 'cancel', 'allow flags', 'readOnly']"
-      heading="Editing pipeline"
-      description="Every mutation runs a cancelable <code>-ing</code> event before the store changes; the past-tense event fires only for applied changes — persist from there. This demo locks finished tasks, asks before deleting, and disables dependency drawing."
-      [code]="editingSnippet"
-      language="ts"
-    >
-      <oge-gantt
-        [tasks]="editingTasks"
-        [allowDependencyAdding]="false"
-        (taskUpdating)="protectDone($event)"
-        (taskDeleting)="confirmDelete($event)"
-        style="height: 360px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['taskUpdating', 'cancel', 'allow flags', 'readOnly']"
+        heading="Editing pipeline"
+        description="Every mutation runs a cancelable <code>-ing</code> event before the store changes; the past-tense event fires only for applied changes — persist from there. This demo locks finished tasks, asks before deleting, and disables dependency drawing."
+        [code]="editingSnippet"
+        language="ts"
+      >
+        <oge-gantt
+          [tasks]="editingTasks"
+          [allowDependencyAdding]="false"
+          (taskUpdating)="protectDone($event)"
+          (taskDeleting)="confirmDelete($event)"
+          style="height: 360px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['scaleType', 'zoom to fit', 'undo/redo', 'columns']"
-      heading="Toolbar, scales & undo/redo"
-      description="The toolbar adds tasks, zooms between calendar-true hour/day/week/month scales (Ctrl+wheel on the chart works too), fits the whole plan, expands/collapses the tree and drives snapshot undo/redo — every edit, drags included, is one undo step. The task pane is a virtualized treegrid with configurable <code>columns</code> and a draggable splitter."
-      [code]="toolbarSnippet"
-      language="ts"
-    >
-      <oge-gantt
-        [tasks]="toolbarTasks"
-        [(scaleType)]="scale"
-        [columns]="toolbarColumns"
-        [taskListWidth]="300"
-        style="height: 420px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['scaleType', 'zoom to fit', 'undo/redo', 'columns']"
+        heading="Toolbar, scales & undo/redo"
+        description="The toolbar adds tasks, zooms between calendar-true hour/day/week/month scales (Ctrl+wheel on the chart works too), fits the whole plan, expands/collapses the tree and drives snapshot undo/redo — every edit, drags included, is one undo step. The task pane is a virtualized treegrid with configurable <code>columns</code> and a draggable splitter."
+        [code]="toolbarSnippet"
+        language="ts"
+      >
+        <oge-gantt
+          [tasks]="toolbarTasks"
+          [(scaleType)]="scale"
+          [columns]="toolbarColumns"
+          [taskListWidth]="300"
+          style="height: 420px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['workCalendar', 'multi-resource', 'export-excel', 'export-pdf']"
-      heading="Work calendar, teams & export"
-      description="<code>workCalendar</code> shades every off day (a four-day week here plus a holiday) and auto-scheduling rolls pushed starts onto working days, preserving working-day durations — a resource's own <code>calendar</code> overrides it per task. <code>resourceId</code> may hold an array of ids — the dialog edits assignments with a tag editor, bar labels join the names and <code>showResourceWorkload</code> renders the per-resource utilization band (overallocation in red). Three lazy export entry points: <code>export-excel</code> (exceljs, typed worksheet), <code>export-pdf</code> (jspdf, drawn vector chart) and <code>export-image</code> (dependency-free PNG)."
-      [code]="workExportSnippet"
-      language="ts"
-    >
-      <div class="mb-2 flex gap-2">
-        <button
-          type="button"
-          class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-          (click)="exportExcel(plan)"
-        >
-          Export Excel
-        </button>
-        <button
-          type="button"
-          class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-          (click)="exportPdf(plan)"
-        >
-          Export PDF
-        </button>
-        <button
-          type="button"
-          class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-          (click)="exportPng(plan)"
-        >
-          Export PNG
-        </button>
-      </div>
-      <oge-gantt
-        #plan
-        [tasks]="workTasks"
-        [dependencies]="workLinks"
-        [resources]="people"
-        [workCalendar]="workCalendarDemo"
-        [showResourceWorkload]="true"
-        [autoScheduling]="true"
-        style="height: 400px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="[
+          'workCalendar',
+          'multi-resource',
+          'export-excel',
+          'export-pdf',
+        ]"
+        heading="Work calendar, teams & export"
+        description="<code>workCalendar</code> shades every off day (a four-day week here plus a holiday) and auto-scheduling rolls pushed starts onto working days, preserving working-day durations — a resource's own <code>calendar</code> overrides it per task. <code>resourceId</code> may hold an array of ids — the dialog edits assignments with a tag editor, bar labels join the names and <code>showResourceWorkload</code> renders the per-resource utilization band (overallocation in red). Three lazy export entry points: <code>export-excel</code> (exceljs, typed worksheet), <code>export-pdf</code> (jspdf, drawn vector chart) and <code>export-image</code> (dependency-free PNG)."
+        [code]="workExportSnippet"
+        language="ts"
+      >
+        <div class="mb-2 flex gap-2">
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            (click)="exportExcel(plan)"
+          >
+            Export Excel
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            (click)="exportPdf(plan)"
+          >
+            Export PDF
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            (click)="exportPng(plan)"
+          >
+            Export PNG
+          </button>
+        </div>
+        <oge-gantt
+          #plan
+          [tasks]="workTasks"
+          [dependencies]="workLinks"
+          [resources]="people"
+          [workCalendar]="workCalendarDemo"
+          [showResourceWorkload]="true"
+          [autoScheduling]="true"
+          style="height: 400px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['*ogeGanttTaskTemplate']"
-      heading="Task template"
-      description="<code>*ogeGanttTaskTemplate</code> replaces the bar's title content and <code>*ogeGanttTooltipTemplate</code> the hover tooltip (default: title, dates + duration, progress, resources) — bar surface, gestures and keyboard semantics stay with the component."
-      [code]="templateSnippet"
-      language="ts"
-    >
-      <oge-gantt [tasks]="templateTasks" style="height: 300px">
-        <ng-template ogeGanttTaskTemplate let-task>
-          <strong>{{ task.title }}</strong>
-          <span class="opacity-75"> · {{ task.progress }}%</span>
-        </ng-template>
-        <ng-template ogeGanttTooltipTemplate let-task>
-          <strong>{{ task.title }}</strong>
-          <em>{{ task.progress }}% complete</em>
-        </ng-template>
-      </oge-gantt>
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['*ogeGanttTaskTemplate']"
+        heading="Task template"
+        description="<code>*ogeGanttTaskTemplate</code> replaces the bar's title content and <code>*ogeGanttTooltipTemplate</code> the hover tooltip (default: title, dates + duration, progress, resources) — bar surface, gestures and keyboard semantics stay with the component."
+        [code]="templateSnippet"
+        language="ts"
+      >
+        <oge-gantt [tasks]="templateTasks" style="height: 300px">
+          <ng-template ogeGanttTaskTemplate let-task>
+            <strong>{{ task.title }}</strong>
+            <span class="opacity-75"> · {{ task.progress }}%</span>
+          </ng-template>
+          <ng-template ogeGanttTooltipTemplate let-task>
+            <strong>{{ task.title }}</strong>
+            <em>{{ task.progress }}% complete</em>
+          </ng-template>
+        </oge-gantt>
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['provideOgeGanttConfig', 'messages', 'locale']"
-      heading="Configuration & i18n"
-      description="Every user-facing string, aria labels included, lives in <code>OgeGanttMessages</code> — provide once with <code>provideOgeGanttConfig()</code> or override per instance with <code>[messages]</code>. <code>locale</code> drives every <code>Intl</code> date format; <code>rowHeight</code> and <code>undoLimit</code> are config-level."
-      [code]="configSnippet"
-      language="ts"
-    >
-      <oge-gantt [tasks]="configTasks" locale="de" style="height: 300px" />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['provideOgeGanttConfig', 'messages', 'locale']"
+        heading="Configuration & i18n"
+        description="Every user-facing string, aria labels included, lives in <code>OgeGanttMessages</code> — provide once with <code>provideOgeGanttConfig()</code> or override per instance with <code>[messages]</code>. <code>locale</code> drives every <code>Intl</code> date format; <code>rowHeight</code> and <code>undoLimit</code> are config-level."
+        [code]="configSnippet"
+        language="ts"
+      >
+        <oge-gantt [tasks]="configTasks" locale="de" style="height: 300px" />
+      </app-demo-card>
+    }
   `,
 })
 export class GanttOverviewPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly reactSections = REACT_GANTT_OVERVIEW_SECTIONS;
   protected readonly gettingStartedSnippet = GETTING_STARTED_SNIPPET;
   protected readonly fieldMappingSnippet = FIELD_MAPPING_SNIPPET;
   protected readonly criticalPathSnippet = CRITICAL_PATH_SNIPPET;

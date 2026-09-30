@@ -1,0 +1,56 @@
+# @oge-ui/gantt-engine
+
+> Framework-free engine behind the Angular and React Gantt (ADR 0003): task-tree model and field mapping, calendar-true time scales, auto-scheduling, critical path, dependency routing, the OgeGanttCore controller, message catalogs and the Excel/PDF/PNG export builders. Installed automatically by @oge-ui/gantt and @oge-ui/react-gantt — you rarely import it directly.
+>
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+
+Part of OGE UI v0.13.1.
+Whole-suite reference: https://ogeui.com/llms-full.txt
+
+```sh
+npm i @oge-ui/gantt-engine
+```
+
+## Using this package
+
+This is a **framework-free engine package**: plain TypeScript with no Angular
+or React import, shared by a family's render layers. You almost never import it
+directly.
+
+1. **Install the render package instead.** The Angular package (`@oge-ui/<family>`)
+   and the React package (`@oge-ui/react-<family>`) depend on this engine and
+   re-export its public types under the same names — import types from the
+   render package you use, not from here.
+2. **Reach for it directly only to build outside a component**: the export
+   builders on its `/export-*` entry points (optional peers, e.g. `exceljs` /
+   `jspdf`), the pure kernel functions in a Node script or a test, or a third
+   render layer.
+3. **Its controller takes an `OgeReactivityAdapter`** (`cell` / `derived`,
+   from `@oge-ui/behavior`). The render packages supply one — signals in
+   Angular, a versioned store in React; a new layer supplies its own.
+4. **Licensing follows the family.** A commercial family's engine carries the
+   same commercial license as its render packages.
+
+## Entry points
+
+`@oge-ui/gantt-engine`
+
+- values: `GANTT_LIST_WIDTH_MAX`, `GANTT_LIST_WIDTH_MIN`, `GANTT_OVERSCAN_ROWS`, `GANTT_SCALE_HEAD_PX`, `GANTT_SCALE_ORDER`, `GANTT_TICK_WIDTH`, `OGE_DEFAULT_GANTT_CONFIG`, `OGE_DEFAULT_GANTT_MESSAGES`, `OgeGanttCore`, `addWorkingDays`, `autoScheduleForward`, `beginGanttGesture`, `buildGanttDependencies`, `buildGanttDialogItems`, `buildGanttScale`, `buildGanttTasks`, `buildResourceWorkload`, `chartPxToDate`, `criticalPathKeys`, `dateToPx`, `dependencyAnchors`, `dependencyPath`, `fitGanttScaleType`, `formatGanttMessage`, `ganttDataRange`, `ganttTaskPatch`, `ganttWindowRange`, `isWorkingDay`, `nextWorkingDay`, `normalizeResourceIds`, `proposeTaskMove`, `proposeTaskProgress`, `proposeTaskResize`, `pxToDate`, `resolveGanttConfig`, `resolveGanttFields`, `routeDependency`, `sameGanttRange`, `snapToUnit`, `stepGanttScale`, `widenGanttRange`, `workingDaysBetween`, `wouldCreateCycle`
+- types: `GanttArrow`, `GanttBar`, `GanttBarGestureKind`, `GanttCalendarInput`, `GanttContextMenuState`, `GanttDependency`, `GanttDependencyExprs`, `GanttDependencyType`, `GanttEditorModel`, `GanttEditorResult`, `GanttFieldExpr`, `GanttGestureCallbacks`, `GanttGestureHandle`, `GanttKeyLike`, `GanttMenuItemState`, `GanttMouseLike`, `GanttPoint`, `GanttPointerLike`, `GanttRange`, `GanttResolvedColumn`, `GanttScale`, `GanttScaleType`, `GanttScheduleChange`, `GanttStripRect`, `GanttTask`, `GanttTaskChange`, `GanttTaskExprs`, `GanttTaskProposal`, `GanttTick`, `GanttWorkCalendar`, `GanttWorkloadRow`, `GanttWorkloadSegment`, `OgeGanttAnnouncementMessages`, `OgeGanttColumn`, `OgeGanttColumnMessages`, `OgeGanttConfig`, `OgeGanttConfigInput`, `OgeGanttCoreEvents`, `OgeGanttCoreHost`, `OgeGanttCoreInputs`, `OgeGanttDependency`, `OgeGanttDependencyDeletedEvent`, `OgeGanttDependencyDeletingEvent`, `OgeGanttDependencyInsertedEvent`, `OgeGanttDependencyInsertingEvent`, `OgeGanttDependencyType`, `OgeGanttDialogMessages`, `OgeGanttDialogShowingEvent`, `OgeGanttExportColumn`, `OgeGanttExportData`, `OgeGanttGridMessages`, `OgeGanttMenuMessages`, `OgeGanttMessages`, `OgeGanttResource`, `OgeGanttScaleType`, `OgeGanttSelectionChangedEvent`, `OgeGanttStripLine`, `OgeGanttTask`, `OgeGanttTaskClickEvent`, `OgeGanttTaskDeletedEvent`, `OgeGanttTaskDeletingEvent`, `OgeGanttTaskInsertedEvent`, `OgeGanttTaskInsertingEvent`, `OgeGanttTaskTitlePosition`, `OgeGanttTaskUpdatedEvent`, `OgeGanttTaskUpdatingEvent`, `OgeGanttToolbarMessages`, `OgeGanttWorkCalendar`, `ResolvedGanttFields`
+
+`@oge-ui/gantt-engine/export-pdf`
+
+- values: `buildGanttPdfDocument`
+- types: `OgeGanttPdfExportOptions`
+
+`@oge-ui/gantt-engine/export-excel`
+
+- values: `buildGanttExcelWorkbook`
+- types: `OgeGanttExcelExportOptions`
+
+`@oge-ui/gantt-engine/export-image`
+
+- values: `buildGanttCanvas`, `ganttImageSize`
+- types: `OgeGanttImageExportOptions`
+
+

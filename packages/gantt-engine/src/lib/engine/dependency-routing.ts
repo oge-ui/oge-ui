@@ -52,7 +52,9 @@ export function routeDependency(
     points.push({ x: exitX, y: to.y });
   } else {
     // S route: step halfway between the rows, then over to the entry leg
-    const midY = from.y + (to.y > from.y ? 1 : -1) * Math.max(10, Math.abs(to.y - from.y) / 2);
+    const midY =
+      from.y +
+      (to.y > from.y ? 1 : -1) * Math.max(10, Math.abs(to.y - from.y) / 2);
     points.push({ x: exitX, y: midY });
     points.push({ x: entryX, y: midY });
   }

@@ -1,6 +1,7 @@
 // Public API of @oge-ui/gantt (commercial — see LICENSE).
-// Explicit named exports only (house rule): internal panes and the engine
-// stay unexported.
+// Explicit named exports only (house rule): internal panes stay unexported.
+// The engine is its own package, `@oge-ui/gantt-engine` (ADR 0003), shared
+// with the React Gantt; the types below are re-exported from it.
 
 export { OgeGantt } from './lib/gantt/gantt';
 export {
@@ -20,6 +21,7 @@ export {
   type OgeGanttDialogShowingEvent,
   type OgeGanttExportColumn,
   type OgeGanttExportData,
+  type OgeGanttResource,
   type OgeGanttScaleType,
   type OgeGanttSelectionChangedEvent,
   type OgeGanttStripLine,
