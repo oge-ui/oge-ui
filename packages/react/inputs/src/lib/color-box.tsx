@@ -11,6 +11,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
+import { withInputWidth } from './field-extras';
 import {
   OGE_DEFAULT_COLOR_PALETTE,
   formatColor,
@@ -618,7 +619,11 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
     );
 
     return (
-      <span ref={hostRef} className={hostClasses} style={style}>
+      <span
+        ref={hostRef}
+        className={hostClasses}
+        style={withInputWidth(style, props.width)}
+      >
         <OgeFieldChrome
           host={{
             msg: field.msg,

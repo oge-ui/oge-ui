@@ -1,12 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CustomDataSource } from '@oge-ui/core';
+import {
+  ArrayDataSource,
+  CursorDataSource,
+  CustomDataSource,
+} from '@oge-ui/core';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { OgeCard } from '@oge-ui/layout';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FakeEmployeeServer } from '../../shared/fake-server';
-import type { Employee } from '../../shared/demo-data';
-import { SNIPPET } from './remote-data-snippets';
+import { makeEmployees, type Employee } from '../../shared/demo-data';
+import { CURSOR_SNIPPET, SNIPPET } from './remote-data-snippets';
 
 @Component({
   selector: 'app-remote-data',
@@ -15,7 +19,12 @@ import { SNIPPET } from './remote-data-snippets';
   template: `
     <app-doc-header
       title="Remote Data"
-      [chips]="['CustomDataSource', 'LoadOptions', 'AbortSignal']"
+      [chips]="[
+        'CustomDataSource',
+        'CursorDataSource',
+        'LoadOptions',
+        'AbortSignal',
+      ]"
     >
       <p>
         Sorting, filtering, searching and paging are all delegated to a
@@ -73,6 +82,35 @@ import { SNIPPET } from './remote-data-snippets';
       </div>
     </app-demo-card>
 
+    <h3>Cursor-paginated endpoints</h3>
+    <p>
+      Many APIs page with a cursor (<code>?after=…</code> →
+      <code>{{ '{' }} items, nextCursor {{ '}' }}</code
+      >) and have no offset to jump to. <code>CursorDataSource</code> adapts one
+      to the grid: pair it with infinite scrolling and it walks the cursor chain
+      as you scroll, fetching each page once. The total stays open until the
+      last page arrives; a new sort, filter or search restarts from the first
+      page.
+    </p>
+    <app-demo-card
+      [chips]="['CursorDataSource', 'infinite scrolling']"
+      [code]="cursorSnippet"
+      language="ts"
+    >
+      <oge-grid
+        [data]="cursorSource"
+        keyField="id"
+        [scrolling]="{ mode: 'infinite' }"
+        [filterRow]="true"
+        style="height: 420px"
+      >
+        <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+        <oge-column field="firstName" caption="First Name" />
+        <oge-column field="department" caption="Department" />
+        <oge-column field="salary" caption="Salary" dataType="number" />
+      </oge-grid>
+    </app-demo-card>
+
     <h3>Notes</h3>
     <ul>
       <li>
@@ -100,10 +138,43 @@ import { SNIPPET } from './remote-data-snippets';
 export class RemoteDataPage {
   protected readonly server = inject(FakeEmployeeServer);
   protected readonly snippet = SNIPPET;
+  protected readonly cursorSnippet = CURSOR_SNIPPET;
 
   protected readonly source = new CustomDataSource<Employee>({
     key: 'id',
     load: (options) => this.server.load(options),
     distinct: (field, options) => this.server.distinct(field, options),
+  });
+
+  /**
+   * A simulated cursor endpoint (its own data, so the request log above stays
+   * the first demo's): the cursor is the next offset, opaque to the grid.
+   */
+  private readonly cursorBackend = new ArrayDataSource(
+    makeEmployees(5_000, 7),
+    {
+      key: 'id',
+    },
+  );
+  protected readonly cursorSource = new CursorDataSource<Employee, number>({
+    key: 'id',
+    pageSize: 40,
+    fetchPage: async ({ cursor, pageSize, ...query }) => {
+      const skip = cursor ?? 0;
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const page = await this.cursorBackend.load({
+        ...query,
+        skip,
+        take: pageSize,
+        requireTotalCount: true,
+      });
+      const items = page.data as readonly Employee[];
+      const next = skip + items.length;
+      return {
+        items,
+        nextCursor:
+          page.totalCount !== undefined && next < page.totalCount ? next : null,
+      };
+    },
   });
 }

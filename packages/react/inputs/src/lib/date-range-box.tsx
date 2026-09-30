@@ -11,6 +11,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
+import { withInputWidth } from './field-extras';
 import {
   isDayDisabled,
   parseDateText,
@@ -548,7 +549,11 @@ export const OgeDateRangeBox = forwardRef<
   );
 
   return (
-    <span ref={hostRef} className={hostClasses} style={style}>
+    <span
+      ref={hostRef}
+      className={hostClasses}
+      style={withInputWidth(style, props.width)}
+    >
       <OgeFieldChrome
         host={{
           msg: field.msg,

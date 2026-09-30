@@ -1,12 +1,25 @@
 import { Directive, contentChild, input, model } from '@angular/core';
 import type { ValidatorFn } from '@angular/forms';
-import type { FilterExpr, FilterOperator, SummaryType } from '@oge-ui/core';
-import type { OgeColumnLookup, OgeDataType } from '@oge-ui/grid/foundation';
+import type {
+  FilterExpr,
+  FilterOperator,
+  GroupInterval,
+  SummaryType,
+} from '@oge-ui/core';
+import type {
+  OgeColumnAlignment,
+  OgeColumnLookup,
+  OgeDataType,
+} from '@oge-ui/grid/foundation';
 import { OgeCellTemplate } from '../templates/cell-template';
 import { OgeEditTemplate } from '../templates/edit-template';
 import { OgeHeaderTemplate } from '../templates/header-template';
 
-export type { OgeColumnLookup, OgeDataType } from '@oge-ui/grid/foundation';
+export type {
+  OgeColumnAlignment,
+  OgeColumnLookup,
+  OgeDataType,
+} from '@oge-ui/grid/foundation';
 
 /**
  * Declarative column definition. Renders nothing itself — the grid collects
@@ -30,6 +43,12 @@ export class OgeColumn<T = unknown> {
   /** Number → px; string is used verbatim (e.g. `'2fr'`, `'150px'`). */
   readonly width = input<number | string>();
   readonly dataType = input<OgeDataType>('string');
+  /**
+   * Horizontal alignment of the cells, header and summaries (logical: `'end'`
+   * is the right edge in LTR). Unset, numbers align to the end, the rest to
+   * the start.
+   */
+  readonly alignment = input<OgeColumnAlignment>();
   /** Custom value formatter applied to the default (non-templated) cell text. */
   readonly format = input<(value: unknown) => string>();
   readonly visible = model(true);
@@ -53,6 +72,12 @@ export class OgeColumn<T = unknown> {
   readonly sortIndex = input<number>();
   /** Initial group level of this column (0 = first). */
   readonly groupIndex = input<number>();
+  /**
+   * Date bucket when grouping by this column: `'day'` (the default for
+   * `dataType="date"` — same-day rows share a group whatever their time),
+   * `'month'` or `'year'`. Sent to a server as `LoadOptions.group[].interval`.
+   */
+  readonly groupInterval = input<GroupInterval>();
   /** Responsive hiding: lower priorities hide first when the grid runs out of width. */
   readonly hidingPriority = input<number>();
   /** Pins the column to an edge (requires a numeric `width`). */

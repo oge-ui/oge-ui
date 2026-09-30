@@ -39,6 +39,7 @@ import type {
     '[class.oge-input-readonly]': 'readonly()',
     '[class.oge-input-empty]': 'isEmpty()',
     '[class.oge-input-fluid]': 'fluid()',
+    '[style.--oge-input-width]': 'widthCss()',
     '[class.oge-input-float-up]': 'floatUp()',
     '[class.oge-input-sm]': "size() === 'sm'",
     '[class.oge-input-lg]': "size() === 'lg'",
@@ -63,6 +64,17 @@ export abstract class OgeInputBase<T>
   readonly subscriptSizing = input<OgeInputSubscriptSizing>('fixed');
   /** Stretches the field to 100% width (default width: 240px via `--oge-input-width`). */
   readonly fluid = input(false);
+  /**
+   * This field's width — a number is px, a string any CSS length
+   * (`'12rem'`, `'30%'`). Sets `--oge-input-width` on this host only, so one
+   * toolbar date box can be narrow without touching every other field.
+   * `fluid` still wins.
+   */
+  readonly width = input<number | string | undefined>(undefined);
+  protected readonly widthCss = computed(() => {
+    const width = this.width();
+    return typeof width === 'number' ? `${width}px` : (width ?? null);
+  });
   readonly showClearButton = input(false);
   readonly showSuccessIcon = input<OgeInputShowSuccessIcon>(false);
   /** Selects the whole text when the input receives focus. */

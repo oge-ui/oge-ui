@@ -11,6 +11,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from 'react';
+import { withInputWidth } from './field-extras';
 import {
   OgeSelectListCore,
   type OgeVirtualScrollOptions,
@@ -611,7 +612,11 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
   );
 
   return (
-    <span ref={hostRef} className={hostClasses} style={style}>
+    <span
+      ref={hostRef}
+      className={hostClasses}
+      style={withInputWidth(style, props.width)}
+    >
       <OgeFieldChrome
         host={{
           msg: field.msg,

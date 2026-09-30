@@ -1,4 +1,4 @@
-import type { RowKey } from '@oge-ui/core';
+import type { RowKey, SortDescriptor } from '@oge-ui/core';
 import type { OgeDataType } from './grid-columns';
 
 /**
@@ -50,6 +50,12 @@ export interface OgeGroupingOptions {
    * fetches a group's children only when it is expanded.
    */
   autoExpandAll?: boolean;
+  /**
+   * Offers "Group by this column" / "Ungroup" in the header context menu
+   * without the drag-and-drop group panel. Default: on whenever `groupPanel`
+   * is — set `true` to group from the menu alone.
+   */
+  contextMenuEnabled?: boolean;
 }
 
 export interface OgeScrollingOptions {
@@ -75,6 +81,72 @@ export interface OgeSelectionChangedEvent {
   addedKeys: RowKey[];
   removedKeys: RowKey[];
 }
+
+/**
+ * Fires after the sort changed — a header click, the header menu, `clearSorting()`
+ * or a new `sorting` input — without the debounce of `stateChange`, so a caption
+ * or a server request can follow the click in the same frame. The initial sort
+ * is not a change.
+ */
+export interface OgeSortChangedEvent {
+  sort: readonly SortDescriptor[];
+  previousSort: readonly SortDescriptor[];
+}
+
+/** Fires after the page index or page size changed (the initial paging is not a change). */
+export interface OgePageChangedEvent {
+  pageIndex: number;
+  /** `null` while paging is off. */
+  pageSize: number | null;
+  previousPageIndex: number;
+  previousPageSize: number | null;
+}
+
+/** Which kind of row a toggle event is about. */
+export type OgeGridToggleKind = 'group' | 'detail';
+
+/**
+ * Fires before a group row or a master-detail row expands or collapses — from
+ * the pointer, the keyboard or `expandRow()` / `collapseRow()`. Set `cancel` to
+ * keep the row as it is. `expandAllGroups()` / `collapseAllGroups()` do not
+ * fire it per row.
+ */
+export interface OgeGridRowTogglingEvent<T = unknown> {
+  /** The group node key, or the data row's key for a detail row. */
+  key: RowKey;
+  kind: OgeGridToggleKind;
+  /** The data row of a detail toggle; `undefined` for a group. */
+  row: T | undefined;
+  cancel: boolean;
+}
+
+/** Fires after a group row or a master-detail row expanded or collapsed. */
+export interface OgeGridRowToggleEvent<T = unknown> {
+  key: RowKey;
+  kind: OgeGridToggleKind;
+  row: T | undefined;
+}
+
+/**
+ * Fires after keyboard/pointer focus moved to another cell. `rowIndex` is the
+ * position in the rendered (flattened) row list, `columnIndex` among the
+ * visible columns; `key`/`row`/`field` are `undefined` on group and other
+ * non-data rows.
+ */
+export interface OgeFocusedCellChangedEvent<T = unknown> {
+  rowIndex: number;
+  columnIndex: number;
+  key: RowKey | undefined;
+  row: T | undefined;
+  field: string | undefined;
+}
+
+/**
+ * How a context menu was asked for: a right-click / long-press (`'pointer'`) or
+ * the keyboard — the Menu key or Shift+F10 on a focused cell (`'keyboard'`,
+ * positioned at the cell rather than at a pointer).
+ */
+export type OgeContextMenuSource = 'pointer' | 'keyboard';
 
 /** Fires after the focused row changed. */
 export interface OgeFocusedRowChangedEvent<T = unknown> {

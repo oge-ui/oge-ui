@@ -101,13 +101,20 @@ export class OgeNumberBox
   readonly mode = input<OgeNumberBoxMode>('text');
 
   private readonly localeId = inject(LOCALE_ID);
+  /**
+   * Instance → `provideOgeInputsConfig({ locale })` → `LOCALE_ID`, like the
+   * date editors — an app that sets its locale through the config must not
+   * have "1.250,50" parsed as en-US.
+   */
+  private readonly effectiveLocale = computed(
+    () => this.locale() ?? this.config.locale ?? this.localeId,
+  );
   private readonly native = viewChild<ElementRef<HTMLInputElement>>('native');
 
   // Cached by content key — inline `[format]="{...}"` literals produce a new
   // reference every CD, and Intl.NumberFormat construction is expensive.
   private readonly formatterKey = computed(
-    () =>
-      `${this.locale() ?? this.localeId}|${JSON.stringify(this.format() ?? null)}`,
+    () => `${this.effectiveLocale()}|${JSON.stringify(this.format() ?? null)}`,
   );
   private cachedFormatter: {
     key: string;
@@ -119,10 +126,7 @@ export class OgeNumberBox
     if (this.cachedFormatter?.key !== key) {
       this.cachedFormatter = {
         key,
-        formatter: createNumberFormatter(
-          this.locale() ?? this.localeId,
-          this.format(),
-        ),
+        formatter: createNumberFormatter(this.effectiveLocale(), this.format()),
       };
     }
     return this.cachedFormatter.formatter;

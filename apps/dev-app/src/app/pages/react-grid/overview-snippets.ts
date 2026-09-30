@@ -53,19 +53,19 @@ const columns: OgeGridColumnProps<Employee>[] = [
   { field: 'hireDate', caption: 'Hire Date', dataType: 'date', width: 120 },
 ];`,
       body: `const grid = useRef<OgeGridHandle<Employee>>(null);`,
-      jsx: `<>
-  <OgeGrid
-    ref={grid}
-    data={employees}
-    keyField="id"
-    columns={columns}
-    paging={{ pageSize: 10 }}
-  />
-  {/* the handle mirrors the Angular component's public methods */}
-  <button type="button" onClick={() => grid.current?.exportCsv('employees.csv')}>
-    Export CSV
-  </button>
-</>`,
+      jsx: `<OgeGrid
+  ref={grid}
+  data={employees}
+  keyField="id"
+  columns={columns}
+  paging={{ pageSize: 10 }}
+  // the toolbar slot; the handle mirrors the Angular component's public methods
+  toolbarAfter={
+    <button type="button" onClick={() => grid.current?.exportCsv('employees.csv')}>
+      Export CSV
+    </button>
+  }
+/>`,
     }),
   },
 ];

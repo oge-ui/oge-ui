@@ -27,3 +27,18 @@ test('remote grid issues exactly one request per settled interaction', async ({
   await expect(log).toHaveCount(4);
   await expect(log.first()).toContainText('skip=12');
 });
+
+test('a cursor-paginated endpoint loads further pages as the grid scrolls', async ({
+  page,
+}) => {
+  await page.goto('/components/data-grid/remote-data');
+  const grid = page.locator('oge-grid').nth(1);
+  await expect(grid.locator('.oge-row').first()).toBeVisible();
+  const viewport = grid.locator('.oge-viewport');
+  const height = await viewport.evaluate((el) => el.scrollHeight);
+  // the first page is 40 rows; scrolling to the end walks the cursor chain on
+  await viewport.evaluate((el) => (el.scrollTop = el.scrollHeight));
+  await expect
+    .poll(() => viewport.evaluate((el) => el.scrollHeight))
+    .toBeGreaterThan(height);
+});

@@ -43,6 +43,7 @@ const columns: OgeGridColumnProps<Employee>[] = [
   keyField="id"
   columns={columns}
   groupPanel
+  columnChooser
   groupBy={['department']}
   style={{ height: 540 }}
 />`,

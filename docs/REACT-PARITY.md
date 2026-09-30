@@ -158,15 +158,12 @@ Anything not listed here is a defect.
   including the column table, which needed the gate to learn that
   `OgeColumn` and `OgeGridColumnProps` are the _same_ block under two names
   (`blockPairs`) rather than two blocks to except away.
-- **The grid toolbar slot (2026-08-23).** The Angular overview projects its
-  export buttons into the grid toolbar through the `ogeToolbar` attribute;
-  React's toolbar items land with slice D (`toolbarItems` render prop), so the
-  React quick start reaches `exportCsv()` through the `ref` handle from a
-  button beside the grid. Same demo, same data, one projection difference.
-- **The grouping page's column chooser (2026-08-23).** The Angular group-panel
-  demo also switches on `columnChooser`; the chooser is slice D, so the React
-  demo runs without it (the `columnChooser` chip is replaced by `grouping`).
-  Same data, same grouping, same summaries.
+- ~~**The grid toolbar slot and the grouping page's column chooser
+  (2026-08-23)**~~ — CLOSED 2026-09-30. React gained `toolbarBefore` /
+  `toolbarCenter` / `toolbarAfter` (the three `OgeToolbar` groups Angular's
+  `ogeToolbar="before|center|after"` projects into), so the React quick start
+  puts its export button in the toolbar like the Angular one, and the grouping
+  demo switches on `columnChooser` again.
 - **The tabs "Routed tabs" page (2026-08-13).** That page drives the selection
   from the Angular router's child routes — the demo _is_ an Angular-router
   integration, and React apps route with their own library. The React tabs

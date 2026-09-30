@@ -19,9 +19,9 @@ export const OGE_GRID_API: ApiSections = {
         },
         {
           name: 'columns',
-          type: 'readonly (string | OgeColumnDef)[] | undefined',
+          type: 'readonly (string | OgeColumnDef&lt;T&gt;)[] | undefined',
           description:
-            'Programmatic columns; used only when no declarative <code>&lt;oge-column&gt;</code> children exist. When both are absent, columns derive from the first row.',
+            'Programmatic columns: field names or <code>OgeColumnDef</code> objects carrying every <code>&lt;oge-column&gt;</code> option (templates as <code>TemplateRef</code>s). The way to share columns through a wrapper component — Angular content queries never see columns projected through another component. Used only when no declarative children exist; when both are absent, columns derive from the first row.',
         },
         {
           name: 'keyField',
@@ -152,7 +152,7 @@ export const OGE_GRID_API: ApiSections = {
           name: 'grouping',
           type: 'OgeGroupingOptions | undefined',
           description:
-            '<code>autoExpandAll: false</code> starts collapsed and enables deferred child loading.',
+            '<code>autoExpandAll: false</code> starts collapsed and enables deferred child loading; <code>contextMenuEnabled: true</code> offers group/ungroup in the header menu without the group panel.',
         },
       ],
     },
@@ -461,6 +461,23 @@ export const OGE_GRID_API: ApiSections = {
       ],
     },
     {
+      title: 'Columns & summaries',
+      entries: [
+        {
+          name: 'showColumnChooser(anchor?) / hideColumnChooser()',
+          type: 'void',
+          description:
+            "Opens the column chooser below <code>anchor</code> (e.g. a button in your own header bar, with <code>columnChooser</code> off so no toolbar row is drawn), else below its toolbar button or the grid's start edge / closes it.",
+        },
+        {
+          name: 'getTotalSummaryValue(field, type?)',
+          type: 'unknown',
+          description:
+            'Raw value of a <code>totalSummary</code> by field (and type, when a column has several); <code>undefined</code> when none is configured or data has not loaded.',
+        },
+      ],
+    },
+    {
       title: 'Loading, state & export',
       entries: [
         {
@@ -493,10 +510,10 @@ export const OGE_GRID_API: ApiSections = {
             'CSV of the current view. Cells a spreadsheet would evaluate as a formula (<code>=</code>, <code>+</code>, <code>-</code>, <code>@</code> or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a <code>-5</code> column stays numeric. Pass <code>formulaGuard: false</code> when the output is machine-read rather than opened in a spreadsheet.',
         },
         {
-          name: "exportCsv(filename = 'grid.csv'): Promise&lt;void&gt;",
+          name: "exportCsv(filename = 'grid.csv', options?): Promise&lt;void&gt;",
           type: 'Promise&lt;void&gt;',
           description:
-            'Downloads the current view as CSV; fires the cancelable <code>exporting</code> event first.',
+            'Downloads the current view as CSV; fires the cancelable <code>exporting</code> event first. <code>options</code> are <code>getCsv()</code>’s (<code>scope</code>, <code>customizeCell</code>, <code>separator</code>…); formula-leading cells are always neutralized.',
         },
       ],
     },
@@ -519,13 +536,13 @@ export const OGE_GRID_API: ApiSections = {
           name: 'rowContextMenu',
           type: 'OgeContextMenuEvent&lt;T&gt;',
           description:
-            'Row right-click; push into <code>items</code> to open the built-in menu.',
+            "Row right-click — and the Menu key / Shift+F10 in a focused cell; push into <code>items</code> to open the built-in menu. <code>source</code> is <code>'pointer'</code> or <code>'keyboard'</code> (then <code>clientX/Y</code> is the cell's start/bottom corner); <code>event</code> is the originating event.",
         },
         {
           name: 'headerContextMenu',
           type: 'OgeHeaderContextMenuEvent',
           description:
-            'Prebuilt, mutable header menu items (sort/group/pin/hide).',
+            'Prebuilt, mutable header menu items (sort/group/pin/hide); also opened by the Menu key / Shift+F10 on a focused header. Carries <code>source</code> and <code>event</code> like <code>rowContextMenu</code>.',
         },
         {
           name: 'rowReordered',
@@ -549,6 +566,47 @@ export const OGE_GRID_API: ApiSections = {
           type: 'OgeFocusedRowChangedEvent&lt;T&gt;',
           description:
             '<code>{ key, row }</code> after the focused row changed.',
+        },
+        {
+          name: 'focusedCellChanged',
+          type: 'OgeFocusedCellChangedEvent&lt;T&gt;',
+          description:
+            '<code>{ rowIndex, columnIndex, key, row, field }</code> after keyboard/pointer focus moved to another cell; <code>key</code>/<code>row</code> are <code>undefined</code> on group rows.',
+        },
+        {
+          name: 'sortChanged',
+          type: 'OgeSortChangedEvent',
+          description:
+            '<code>{ sort, previousSort }</code> as soon as the sort changed (header, menu, API) — no debounce, unlike <code>stateChange</code>. The initial sort is not a change.',
+        },
+        {
+          name: 'pageChanged',
+          type: 'OgePageChangedEvent',
+          description:
+            '<code>{ pageIndex, pageSize, previousPageIndex, previousPageSize }</code> after the page index or size changed.',
+        },
+        {
+          name: 'rowExpanding',
+          type: 'OgeGridRowTogglingEvent&lt;T&gt;',
+          description:
+            'Before a group or master-detail row expands (pointer, keyboard or <code>expandRow()</code>); <code>{ key, kind, row, cancel }</code> — set <code>cancel</code> to veto. Not fired per row by <code>expandAllGroups()</code>.',
+        },
+        {
+          name: 'rowExpanded',
+          type: 'OgeGridRowToggleEvent&lt;T&gt;',
+          description:
+            "<code>{ key, kind: 'group' | 'detail', row }</code> after the row expanded.",
+        },
+        {
+          name: 'rowCollapsing',
+          type: 'OgeGridRowTogglingEvent&lt;T&gt;',
+          description:
+            'Before a group or master-detail row collapses; cancelable.',
+        },
+        {
+          name: 'rowCollapsed',
+          type: 'OgeGridRowToggleEvent&lt;T&gt;',
+          description: 'After a group or master-detail row collapsed.',
         },
         {
           name: 'selectedKeysChange / focusedRowKeyChange / filterValueChange / selectionFilterChange',
@@ -670,7 +728,13 @@ export const OGE_COLUMN_API: ApiSections = {
           type: 'OgeDataType',
           default: "'string'",
           description:
-            "'string' | 'number' | 'date' | 'boolean' — drives editors, filters and alignment.",
+            "'string' | 'number' | 'date' | 'boolean' — drives editors, filters and the default alignment.",
+        },
+        {
+          name: 'alignment',
+          type: 'OgeColumnAlignment | undefined',
+          description:
+            "<code>'start' | 'center' | 'end'</code> for cells, header and summaries (logical — <code>'end'</code> is the right edge in LTR). Unset, numbers align to the end and everything else to the start.",
         },
         {
           name: 'width / minWidth',
@@ -726,6 +790,12 @@ export const OGE_COLUMN_API: ApiSections = {
           name: 'groupIndex',
           type: 'number | undefined',
           description: 'Initial grouping position.',
+        },
+        {
+          name: 'groupInterval',
+          type: "'day' | 'month' | 'year' | undefined",
+          description:
+            'Date bucket when grouping by this column — <code>\'day\'</code> by default for <code>dataType="date"</code>, so same-day rows share a group whatever their time. Sent as <code>LoadOptions.group[].interval</code>.',
         },
         {
           name: 'filterOperator',
@@ -826,8 +896,9 @@ export const OGE_COLUMN_API: ApiSections = {
         },
         {
           name: '[ogeToolbar]',
-          type: 'marker directive',
-          description: 'Projects custom controls into the grid toolbar.',
+          type: "marker directive — 'before' | 'center' | 'after'",
+          description:
+            'Projects custom controls into the grid toolbar. The static value picks the group: <code>ogeToolbar="before"</code> (start edge — filters, primary actions), <code>"center"</code>, or bare / <code>"after"</code> (next to the built-in tools).',
         },
       ],
     },
@@ -850,6 +921,18 @@ export const OGE_GRID_TYPES_API: ApiSections = {
           type: 'oge-pager — inputs: pageIndex, pageCount, totalCount (required), pageSize, pageSizes, showInfo, displayMode, messages; outputs: pageChange, pageSizeChange',
           description:
             "The grid's pager as a standalone component — reuse it under a list or a card grid so paging looks identical everywhere.",
+        },
+        {
+          name: 'ogeColumnFromDef(def)',
+          type: '(def: OgeColumnDef&lt;T&gt;) =&gt; OgeColumn&lt;T&gt;',
+          description:
+            'What <code>[columns]</code> runs on: turns a column definition into the signal surface of an <code>&lt;oge-column&gt;</code>. For a custom grid-like component that accepts the same <code>OgeColumnDef</code>s.',
+        },
+        {
+          name: 'OgeColumnDefCache',
+          type: 'class { resolve(defs): OgeColumn&lt;T&gt;[] }',
+          description:
+            'Keeps one column — and its visibility — per definition object across change detection; field-name strings are cached by name.',
         },
         {
           name: 'OgeFilterBuilderGroup',
@@ -923,9 +1006,9 @@ export const OGE_GRID_TYPES_API: ApiSections = {
         },
         {
           name: 'OgeGroupingOptions',
-          type: '{ autoExpandAll?: boolean }',
+          type: '{ autoExpandAll?: boolean; contextMenuEnabled?: boolean }',
           description:
-            '<code>false</code> starts collapsed and defers child loading.',
+            '<code>autoExpandAll: false</code> starts collapsed and defers child loading; <code>contextMenuEnabled</code> puts group/ungroup in the header menu without the group panel.',
         },
         {
           name: 'OgeEditingOptions',

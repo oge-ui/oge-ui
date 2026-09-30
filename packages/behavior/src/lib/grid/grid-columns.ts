@@ -11,6 +11,13 @@ import {
 export type OgeDataType = 'string' | 'number' | 'date' | 'boolean';
 
 /**
+ * Horizontal alignment of a column's cells, header and summaries — logical, so
+ * `'end'` is the right edge in LTR and the left edge in RTL. Unset, numbers
+ * align to the end and everything else to the start.
+ */
+export type OgeColumnAlignment = 'start' | 'center' | 'end';
+
+/**
  * Lookup configuration: cells store a raw value but display (and edit/filter
  * with) the text of the matching lookup item.
  */
@@ -53,6 +60,8 @@ export interface OgeGridColumnSpec<T = unknown, TSlot = unknown, S = unknown> {
   caption: string | undefined;
   width: number | string | undefined;
   dataType: OgeDataType;
+  /** `undefined` derives it from `dataType` (numbers → `'end'`). */
+  alignment: OgeColumnAlignment | undefined;
   format: ((value: unknown) => string) | undefined;
   visible: boolean;
   sortable: boolean;
@@ -90,6 +99,8 @@ export interface OgeGridResolvedColumn<
   field: string | undefined;
   caption: string;
   dataType: OgeDataType;
+  /** Resolved: the column's own value, or the `dataType` default. */
+  alignment: OgeColumnAlignment;
   width: number | string | undefined;
   minWidth: number | undefined;
   sortable: boolean;
@@ -110,6 +121,11 @@ export interface OgeGridResolvedColumn<
   headerTemplate: TSlot | undefined;
   editTemplate: TSlot | undefined;
   source: S | undefined;
+}
+
+/** Alignment a column gets when it sets none: numbers end, the rest start. */
+export function defaultAlignmentFor(dataType: OgeDataType): OgeColumnAlignment {
+  return dataType === 'number' ? 'end' : 'start';
 }
 
 /** Default filter-row operator per dataType. */
@@ -147,6 +163,25 @@ export function buildRowFilterExpr(
  * `Date` bounds (rows with date-only strings in UTC-negative zones may need
  * `calculateFilterExpression`).
  */
+/**
+ * Whole-day date range: `[startOfDay(from), nextDay(to))`, either end open
+ * when `null`; `null` when both are. Built for the filter row's range picker,
+ * so a row stamped 17:30 on the `to` day is still inside.
+ */
+export function dateRangeFilterExpr(
+  field: string,
+  from: Date | null,
+  to: Date | null,
+): FilterExpr | null {
+  const operands: FilterExpr[] = [];
+  if (from)
+    operands.push({ type: 'binary', field, op: 'ge', value: startOfDay(from) });
+  if (to)
+    operands.push({ type: 'binary', field, op: 'lt', value: nextDay(to) });
+  if (!operands.length) return null;
+  return operands.length === 1 ? operands[0] : { type: 'and', operands };
+}
+
 export function dateFilterExpr(
   field: string,
   op: FilterOperator,
@@ -353,6 +388,7 @@ export function resolveOgeGridColumns<T, TSlot, S>(
           field,
           caption: column.caption ?? (field ? humanize(field) : ''),
           dataType: column.dataType,
+          alignment: column.alignment ?? defaultAlignmentFor(column.dataType),
           width: widthOverrides.get(id) ?? column.width,
           minWidth: column.minWidth,
           sortable: column.sortable && field != null,
@@ -391,6 +427,7 @@ export function resolveOgeGridColumns<T, TSlot, S>(
       field,
       caption: caption ?? humanize(field),
       dataType: 'string' as const,
+      alignment: 'start' as const,
       width: widthOverrides.get(field),
       minWidth: undefined,
       sortable: true,

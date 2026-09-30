@@ -215,6 +215,7 @@ const OPERATOR_SYMBOLS: Partial<Record<FilterOperator, string>> = {
   notcontains: '!∗',
   startswith: 'a…',
   endswith: '…z',
+  between: '↔',
 };
 
 export function filterOperatorSymbol(operator: FilterOperator): string {
@@ -229,7 +230,9 @@ export function filterOperatorSymbol(operator: FilterOperator): string {
 export function filterRowOperatorChoices(
   dataType: OgeDataType,
 ): FilterOperator[] {
-  return operatorsFor(dataType).filter(
+  const choices = operatorsFor(dataType).filter(
     (op) => op !== 'isnull' && op !== 'isnotnull',
   );
+  // a date column's "between" swaps the filter cell to a date-range picker
+  return dataType === 'date' ? [...choices, 'between'] : choices;
 }

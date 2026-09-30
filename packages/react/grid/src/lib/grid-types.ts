@@ -5,11 +5,14 @@ import type {
   FilterExpr,
   FilterOperator,
   GridStateSnapshot,
+  GroupInterval,
   RowKey,
   SummaryType,
 } from '@oge-ui/core';
 import type {
+  OgeColumnAlignment,
   OgeColumnLookup,
+  OgeContextMenuSource,
   OgeDataErrorEvent,
   OgeEditingOptions,
   OgeEditingStartEvent,
@@ -18,8 +21,13 @@ import type {
   OgeExportOptions,
   OgeExportingEvent,
   OgeFilterRowOptions,
+  OgeFocusedCellChangedEvent,
   OgeFocusedRowChangedEvent,
   OgeGridMessages,
+  OgeGridRowToggleEvent,
+  OgeGridRowTogglingEvent,
+  OgePageChangedEvent,
+  OgeSortChangedEvent,
   OgeGridSelectionMode,
   OgeHeaderFilterOptions,
   OgeMenuItem,
@@ -131,6 +139,12 @@ export interface OgeGridColumnProps<T = unknown> {
   /** Number → px; string is used verbatim (e.g. `'2fr'`, `'150px'`). */
   width?: number | string;
   dataType?: OgeDataType;
+  /**
+   * Horizontal alignment of the cells, header and summaries (logical: `'end'`
+   * is the right edge in LTR). Unset, numbers align to the end, the rest to
+   * the start.
+   */
+  alignment?: OgeColumnAlignment;
   /** Custom value formatter applied to the default (non-rendered) cell text. */
   format?: (value: unknown) => string;
   visible?: boolean;
@@ -156,6 +170,12 @@ export interface OgeGridColumnProps<T = unknown> {
   sortIndex?: number;
   /** Initial group level of this column (0 = first). */
   groupIndex?: number;
+  /**
+   * Date bucket for grouping by this column: `'day'`, `'month'` or `'year'`.
+   * Date columns default to `'day'`, so two timestamps of one day share a
+   * group. Remote sources receive it as `LoadOptions.group[].interval`.
+   */
+  groupInterval?: GroupInterval;
   /** Responsive hiding: lower priorities hide first when the grid runs out of width. */
   hidingPriority?: number;
   /** Pins the column to an edge (requires a numeric `width`). */
@@ -221,9 +241,14 @@ export interface OgeCellClickEvent<T = unknown> {
 export interface OgeContextMenuEvent<T = unknown> {
   row: T;
   key: RowKey;
+  /** Where the menu opens: the pointer, or the focused cell's start/bottom corner. */
   clientX: number;
   clientY: number;
   items: OgeMenuItem[];
+  /** `'keyboard'` for the Menu key / Shift+F10 on a focused cell. */
+  source: OgeContextMenuSource;
+  /** The originating event — `preventDefault()` vetoes the native menu yourself. */
+  event: React.MouseEvent | React.KeyboardEvent;
 }
 
 /**
@@ -236,6 +261,8 @@ export interface OgeHeaderContextMenuEvent {
   clientX: number;
   clientY: number;
   items: OgeMenuItem[];
+  source: OgeContextMenuSource;
+  event: React.MouseEvent | React.KeyboardEvent;
 }
 
 /** What `renderNoData` receives. */
@@ -285,6 +312,16 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   headerFilter?: boolean | OgeHeaderFilterOptions;
   /** Toolbar button opening the show/hide (and reorder) column list. */
   columnChooser?: boolean;
+  /**
+   * Your own toolbar content, by group — the React form of Angular's
+   * `[ogeToolbar]="'before' | 'center' | 'after'"`. `toolbarBefore` sits at
+   * the start edge ahead of the group panel (filters, primary actions),
+   * `toolbarCenter` in the middle, `toolbarAfter` ahead of the built-in tools.
+   * Any of them makes the toolbar render.
+   */
+  toolbarBefore?: ReactNode;
+  toolbarCenter?: ReactNode;
+  toolbarAfter?: ReactNode;
   /** Filter summary bar above the grid, opening the visual filter builder. */
   filterPanel?: boolean;
   /**
@@ -410,6 +447,20 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   onSelectionChanged?: (event: OgeSelectionChangedEvent) => void;
   /** Fires after the focused row changed (`focusedRowEnabled` or key writes). */
   onFocusedRowChanged?: (event: OgeFocusedRowChangedEvent<T>) => void;
+  /** Fires after keyboard/pointer focus moved to another cell. */
+  onFocusedCellChanged?: (event: OgeFocusedCellChangedEvent<T>) => void;
+  /** Fires as soon as the sort changed — no debounce, unlike `onStateChange`. */
+  onSortChanged?: (event: OgeSortChangedEvent) => void;
+  /** Fires after the page index or page size changed. */
+  onPageChanged?: (event: OgePageChangedEvent) => void;
+  /** Fires before a group or master-detail row expands; set `cancel` to veto. */
+  onRowExpanding?: (event: OgeGridRowTogglingEvent<T>) => void;
+  /** Fires after a group or master-detail row expanded. */
+  onRowExpanded?: (event: OgeGridRowToggleEvent<T>) => void;
+  /** Fires before a group or master-detail row collapses; set `cancel` to veto. */
+  onRowCollapsing?: (event: OgeGridRowTogglingEvent<T>) => void;
+  /** Fires after a group or master-detail row collapsed. */
+  onRowCollapsed?: (event: OgeGridRowToggleEvent<T>) => void;
   /** Fires when a DataSource load fails. */
   onDataErrorOccurred?: (event: OgeDataErrorEvent) => void;
   /** Cancelable: fires before a row or cell editor opens. */
@@ -443,6 +494,19 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
 export interface OgeGridHandle<T extends object = Record<string, unknown>> {
   /** Re-runs the current load against the DataSource. */
   refresh(): void;
+  /**
+   * Opens the column chooser below `anchor` — e.g. a button in your own header
+   * bar, with `columnChooser` off. Without one it opens below the toolbar's
+   * chooser button, or the grid's edge.
+   */
+  showColumnChooser(anchor?: HTMLElement): void;
+  /** Closes the column chooser if it is open. */
+  hideColumnChooser(): void;
+  /**
+   * The raw value of a total summary by field (and type, when a column has
+   * several); `undefined` when none is configured or nothing has loaded.
+   */
+  getTotalSummaryValue(field: string, type?: SummaryType): unknown;
   /** Clears every filter: row filters and search. */
   clearFilters(): void;
   /** Clears the sort order. */
@@ -498,7 +562,10 @@ export interface OgeGridHandle<T extends object = Record<string, unknown>> {
   /** Builds CSV of the current view; `scope` narrows to the page or selection. */
   getCsv(options?: CsvOptions & OgeExportOptions<T>): Promise<string>;
   /** Downloads the current view as a CSV file. Fires the cancelable `onExporting` first. */
-  exportCsv(filename?: string): Promise<void>;
+  exportCsv(
+    filename?: string,
+    options?: CsvOptions & OgeExportOptions<T>,
+  ): Promise<void>;
   /** Copies the selected rows (with a header) — or the focused cell's text — as TSV. */
   copyToClipboard(): Promise<void>;
   /** Adds an empty draft row on top; requires `editing.allowAdding`. */

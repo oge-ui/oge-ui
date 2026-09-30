@@ -266,6 +266,21 @@ Sibling component packages (tabs, layout, …) grow the same shapes. The rule:
 - A **component-level template slot** queried with `contentChild(X, { descendants: false })` applies to
   `items`-mode entries only; a slot that is really container chrome (e.g. the accordion's toggle icon) may
   fall back for declarative children too — say which in the TSDoc.
+- **Keyboard context menus** on grid-like components use `@oge-ui/behavior`'s grid-context-menu helpers
+  (`isOgeContextMenuKey`, `ogeContextMenuKeyTarget`, `OgeContextMenuEcho`): handle the Menu key /
+  Shift+F10 in `keydown`, anchor at the focused cell (header cells carry `data-colid`, body rows
+  `data-rowindex`), and let every pointer handler call `echo.swallow(event)` first. Context-menu event
+  payloads carry `source` and the originating `event`.
+- **Declarative children + a programmatic twin.** Anything consumers declare as content children must also
+  be accepted as plain data (`[columns]="OgeColumnDef[]"` ↔ `<oge-column>`): content queries never see
+  children projected through a wrapper component's `<ng-content>`, so without the data form nobody can
+  wrap the component. Build the data form into the same signal surface the directive exposes
+  (`ogeColumnFromDef`) so there is one read path.
+- **Optional heavy dependencies go behind `@defer`.** A template branch that only some consumers reach
+  (the grid's form/popup editors → `@oge-ui/forms` and its tabs/upload/navigation cone) renders inside
+  `@defer (on immediate)` with a `@placeholder`, and the deferred symbol must not be referenced eagerly
+  anywhere else in the file. Measure with a CLI app, not by reading the FESM: esbuild splits at module
+  granularity, so a package needed both eagerly and lazily lands whole in the eager shared chunk.
 
 ## Component authoring rules
 

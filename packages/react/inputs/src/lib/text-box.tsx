@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
+import { withInputWidth } from './field-extras';
 import { graphemeCount } from '@oge-ui/behavior';
 import {
   OgeFieldChrome,
@@ -285,7 +286,7 @@ export const OgeTextBox = forwardRef<OgeTextBoxHandle, OgeTextBoxProps>(
     const extraAttrs = nativeInputAttrs(inputAttr);
 
     return (
-      <span className={hostClasses} style={style}>
+      <span className={hostClasses} style={withInputWidth(style, props.width)}>
         <OgeFieldChrome
           host={{
             msg: field.msg,

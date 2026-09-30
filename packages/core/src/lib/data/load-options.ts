@@ -5,9 +5,18 @@ export interface SortDescriptor {
   readonly dir: SortDirection;
 }
 
+/** Calendar bucket a date group key is truncated to (local time). */
+export type GroupInterval = 'day' | 'month' | 'year';
+
 export interface GroupDescriptor {
   readonly field: string;
   readonly dir: SortDirection;
+  /**
+   * Buckets date values by calendar day / month / year instead of by exact
+   * instant. Grids send `'day'` for date columns unless the column says
+   * otherwise; a server honouring it groups the same way.
+   */
+  readonly interval?: GroupInterval;
 }
 
 export type FilterOperator =

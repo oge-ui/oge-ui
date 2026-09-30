@@ -129,6 +129,7 @@ _Common — field chrome (all editors)_
 | `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
 | `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
 | `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
 | `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
 | `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
 | `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
@@ -214,6 +215,7 @@ _Common — field chrome (all editors)_
 | `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
 | `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
 | `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
 | `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
 | `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
 | `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
@@ -296,6 +298,7 @@ _Common — field chrome (all editors)_
 | `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
 | `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
 | `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
 | `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
 | `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
 | `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
@@ -397,6 +400,7 @@ _Common — field chrome (all editors)_
 | `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
 | `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
 | `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
 | `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
 | `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
 | `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
@@ -567,6 +571,7 @@ _Common — field chrome (all editors)_
 | `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
 | `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
 | `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
 | `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
 | `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
 | `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
@@ -669,6 +674,7 @@ _Common — field chrome (all editors)_
 | `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
 | `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
 | `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
 | `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
 | `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
 | `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
@@ -1208,6 +1214,7 @@ _Common — field chrome (all editors)_
 | `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
 | `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
 | `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
 | `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
 | `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
 | `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |
@@ -1318,6 +1325,7 @@ _Common — field chrome (all editors)_
 | `tooltip` | `string \| undefined` | `—` | Native `title` attribute of the input element. |
 | `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
 | `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string \| undefined` | `—` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
 | `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
 | `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
 | `id` | `string \| undefined` | `—` | Base for the generated element ids (input/label/hint/error/counter). |

@@ -6,6 +6,10 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   [ariaLabel]="msg().toolbar"
   [messages]="{ overflowMenu: msg().moreCommands }"
 >
+  <!-- placed items first: an element goes to the first slot whose selector
+       matches, so the bare [ogeToolbar] slot below only takes the rest -->
+  <ng-content select="[ogeToolbar=before]" ngProjectAs="[ogeToolbarBefore]" />
+  <ng-content select="[ogeToolbar=center]" ngProjectAs="[ogeToolbarCenter]" />
   @if (groupPanel()) {
   <div
     ogeToolbarBefore
@@ -130,7 +134,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   <button
     ogeToolbarAfter
     type="button"
-    class="oge-tool-btn"
+    class="oge-tool-btn oge-chooser-button"
     [attr.aria-label]="msg().columnChooser"
     (click)="toggleChooser($event)"
   >
@@ -278,6 +282,9 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       <div
         class="oge-header-cell"
         role="columnheader"
+        [attr.data-colid]="column.id"
+        [class.oge-align-center]="column.alignment === 'center'"
+        [class.oge-align-end]="column.alignment === 'end'"
         [class.oge-header-sortable]="column.sortable && sortMode() !== 'none'"
         [class.oge-pinned]="column.pinned !== false"
         [style.inset-inline-start.px]="pinnedLeftOf(column)"
@@ -429,7 +436,18 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           [label]="msg().filterPrefix + ' ' + column.caption"
           (inputChange)="onFilterInput(column, $event.text)"
         />
-        } @case ('date') {
+        } @case ('date') { @if (currentOperator(column) === 'between') {
+        <oge-date-range-box
+          class="oge-filter-input"
+          size="sm"
+          labelMode="hidden"
+          subscriptSizing="none"
+          [fluid]="true"
+          [showClearButton]="true"
+          [label]="msg().filterPrefix + ' ' + column.caption"
+          (valueChange)="onDateRangeFilter(column, $event)"
+        />
+        } @else {
         <oge-date-box
           class="oge-filter-input"
           size="sm"
@@ -440,7 +458,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           [label]="msg().filterPrefix + ' ' + column.caption"
           (valueCommitted)="onDateFilter(column, $event.value)"
         />
-        } @default {
+        } } @default {
         <oge-text-box
           class="oge-filter-input"
           size="sm"
@@ -480,6 +498,9 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
           [style.max-width.px]="hostWidth() || null"
         >
+          <!-- deferred: @oge-ui/forms (and its tabs/upload/navigation cone)
+               is fetched when a form editor first opens, not with the grid -->
+          @defer (on immediate) {
           <oge-form
             class="oge-edit-form-fields"
             [formGroup]="editFormGroup()!"
@@ -489,6 +510,9 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
             [subscriptSizing]="'dynamic'"
             (editorEnterKey)="onEditorEnter()"
           />
+          } @placeholder {
+          <div class="oge-edit-form-fields oge-edit-form-pending"></div>
+          }
           <div class="oge-edit-form-actions">
             <button
               type="button"
@@ -631,6 +655,8 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           class="oge-cell"
           role="gridcell"
           [class.oge-cell-number]="column.dataType === 'number'"
+          [class.oge-align-center]="column.alignment === 'center'"
+          [class.oge-align-end]="column.alignment === 'end'"
           [class.oge-pinned]="column.pinned !== false"
           [class.oge-cell-dirty]="isCellDirty(node, column)"
           [class.oge-cell-editing]="isCellEditorOpen(node, column)"
@@ -873,6 +899,8 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           class="oge-group-footer-cell"
           role="gridcell"
           [class.oge-cell-number]="column.dataType === 'number'"
+          [class.oge-align-center]="column.alignment === 'center'"
+          [class.oge-align-end]="column.alignment === 'end'"
           [class.oge-pinned]="column.pinned !== false"
           [style.inset-inline-start.px]="pinnedLeftOf(column)"
           [style.inset-inline-end.px]="pinnedRightOf(column)"
@@ -969,6 +997,8 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       class="oge-total-cell"
       role="gridcell"
       [class.oge-cell-number]="column.dataType === 'number'"
+      [class.oge-align-center]="column.alignment === 'center'"
+      [class.oge-align-end]="column.alignment === 'end'"
       [class.oge-pinned]="column.pinned !== false"
       [style.inset-inline-start.px]="pinnedLeftOf(column)"
       [style.inset-inline-end.px]="pinnedRightOf(column)"
@@ -1105,6 +1135,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   [width]="420"
   (closed)="cancelActiveEditor()"
 >
+  @defer (on immediate) {
   <oge-form
     class="oge-popup-fields"
     [formGroup]="editFormGroup()!"
@@ -1113,6 +1144,9 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     [renderFormElement]="false"
     [subscriptSizing]="'dynamic'"
   />
+  } @placeholder {
+  <div class="oge-popup-fields oge-edit-form-pending"></div>
+  }
   <ng-container *ogeModalFooter>
     <button
       type="button"

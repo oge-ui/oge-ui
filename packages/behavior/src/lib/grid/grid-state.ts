@@ -1,6 +1,7 @@
 import type {
   FilterExpr,
   GroupDescriptor,
+  GroupInterval,
   RowKey,
   SortDescriptor,
   SummaryDescriptor,
@@ -232,8 +233,19 @@ export class OgeGridGroupingState {
   readonly descriptors: () => readonly GroupDescriptor[];
   readonly groupSummary: () => readonly SummaryDescriptor[];
   readonly totalSummary: () => readonly SummaryDescriptor[];
+  /** Date bucket per field, synced from the columns (`groupInterval`). */
+  readonly intervals: () => Readonly<Record<string, GroupInterval>>;
+  /**
+   * The descriptors as `LoadOptions.group` carries them: each with its
+   * column's `interval`. The user-facing `descriptors` stay interval-free, so
+   * persisted state does not depend on column configuration.
+   */
+  readonly loadDescriptors: () => readonly GroupDescriptor[];
 
   private readonly _descriptors: OgeReactiveCell<readonly GroupDescriptor[]>;
+  private readonly _intervals: OgeReactiveCell<
+    Readonly<Record<string, GroupInterval>>
+  >;
   private readonly _groupSummary: OgeReactiveCell<readonly SummaryDescriptor[]>;
   private readonly _totalSummary: OgeReactiveCell<readonly SummaryDescriptor[]>;
 
@@ -244,6 +256,20 @@ export class OgeGridGroupingState {
     this.descriptors = () => this._descriptors();
     this.groupSummary = () => this._groupSummary();
     this.totalSummary = () => this._totalSummary();
+    this._intervals = rx.cell<Readonly<Record<string, GroupInterval>>>({});
+    this.intervals = () => this._intervals();
+    this.loadDescriptors = rx.derived(() => {
+      const intervals = this._intervals();
+      return this._descriptors().map((d) =>
+        intervals[d.field] ? { ...d, interval: intervals[d.field] } : d,
+      );
+    });
+  }
+
+  /** Synced from column definitions; guarded so effects do not loop. */
+  setIntervals(intervals: Readonly<Record<string, GroupInterval>>): void {
+    if (JSON.stringify(intervals) !== JSON.stringify(this._intervals()))
+      this._intervals.set(intervals);
   }
 
   groupBy(field: string): void {

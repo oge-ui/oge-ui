@@ -33,7 +33,19 @@ import {
   type SummaryDescriptor,
   type SummaryRowNode,
   type SummaryType,
+  type SortDescriptor,
 } from '@oge-ui/core';
+import {
+  OgeContextMenuEcho,
+  isOgeContextMenuKey,
+  ogeContextMenuKeyTarget,
+  dateRangeFilterExpr,
+  type OgeContextMenuSource,
+  type OgeGridRowTogglingEvent,
+  type OgeGridToggleKind,
+} from '@oge-ui/behavior';
+import { groupKeyFilter, type GroupInterval } from '@oge-ui/core';
+import { OgeDateRangeBox } from '@oge-ui/react-inputs';
 import {
   OGE_GRID_WINDOW_BLOCK_SIZE,
   OgeGridColumnLayoutCore,
@@ -349,6 +361,7 @@ function OgeGridInner<T extends object>(
         caption: column.caption,
         width: column.width,
         dataType: column.dataType ?? 'string',
+        alignment: column.alignment,
         format: column.format,
         // lazy: `hiddenOverrides` is declared below and read from a closure
         visible:
@@ -448,12 +461,13 @@ function OgeGridInner<T extends object>(
           key: entry.key,
           buildOptions: (rest) => {
             const groups = rest.group ?? [];
-            const pathFilters: FilterExpr[] = entry.path.map((value, i) => ({
-              type: 'binary',
-              field: groups[i]?.field ?? '',
-              op: 'eq',
-              value,
-            }));
+            const pathFilters: FilterExpr[] = entry.path.map((value, i) =>
+              groupKeyFilter(
+                groups[i]?.field ?? '',
+                value,
+                groups[i]?.interval,
+              ),
+            );
             const operands = [
               ...(rest.filter ? [rest.filter] : []),
               ...pathFilters,
@@ -732,7 +746,14 @@ function OgeGridInner<T extends object>(
       },
       snapshot: () => persistedSnapshot(),
       stateKey: () => latest.current.stateKey,
-      apply: (snapshot) => applyState(snapshot),
+      // a bound groupBy is controlled: the page decides the grouping, so a
+      // stored grouping from an earlier visit must not replace it
+      apply: (snapshot) =>
+        applyState(
+          latest.current.groupBy === undefined
+            ? snapshot
+            : { ...snapshot, group: undefined },
+        ),
       onChange: (snapshot) => latest.current.onStateChange?.(snapshot),
     });
 
@@ -1142,6 +1163,24 @@ function OgeGridInner<T extends object>(
     state.grouping.setSummaries(group, total);
   }, [state, summaryJson]);
 
+  // date columns group by calendar day unless they say otherwise
+  const intervalJson = JSON.stringify(
+    (normalizeColumns<T>(props.columns) ?? []).map((column) => [
+      column.field,
+      column.groupInterval ?? (column.dataType === 'date' ? 'day' : null),
+    ]),
+  );
+  useEffect(() => {
+    const intervals: Record<string, GroupInterval> = {};
+    for (const [field, interval] of JSON.parse(intervalJson) as [
+      string | undefined,
+      GroupInterval | null,
+    ][]) {
+      if (field && interval) intervals[field] = interval;
+    }
+    state.grouping.setIntervals(intervals);
+  }, [state, intervalJson]);
+
   // initial sort/group from the column props — applied only while untouched
   const initialJson = JSON.stringify(
     (normalizeColumns<T>(props.columns) ?? []).map((column) => ({
@@ -1266,6 +1305,65 @@ function OgeGridInner<T extends object>(
         focusedRowKey === null ? undefined : dataNodeByKey(focusedRowKey)?.data,
     });
   }, [focusedRowKey]);
+
+  // sort → onSortChanged, synchronous with the change (no stateChange debounce)
+  const sortNow = state.sort.descriptors();
+  const previousSort = useRef<readonly SortDescriptor[] | undefined>(undefined);
+  // the store is read live, not from this render: option effects that ran
+  // earlier in the same commit (initial sort orders, the paging prop) are then
+  // the baseline instead of a reported change
+  useEffect(() => {
+    const sort = state.sort.descriptors();
+    const previous = previousSort.current;
+    previousSort.current = sort;
+    if (previous === undefined || sameSort(previous, sort)) return;
+    latest.current.onSortChanged?.({ sort, previousSort: previous });
+  }, [sortNow]);
+
+  // paging → onPageChanged; the initial paging is not a change
+  const pageIndexNow = state.paging.pageIndex();
+  const pageSizeNow = state.paging.pageSize();
+  const previousPage = useRef<
+    { index: number; size: number | null } | undefined
+  >(undefined);
+  useEffect(() => {
+    const index = state.paging.pageIndex();
+    const size = state.paging.pageSize();
+    const previous = previousPage.current;
+    previousPage.current = { index, size };
+    if (
+      previous === undefined ||
+      (previous.index === index && previous.size === size)
+    )
+      return;
+    latest.current.onPageChanged?.({
+      pageIndex: index,
+      pageSize: size,
+      previousPageIndex: previous.index,
+      previousPageSize: previous.size,
+    });
+  }, [pageIndexNow, pageSizeNow]);
+
+  // focused cell → onFocusedCellChanged; clearing the focus is not reported
+  const focusedCellNow = model.keyboard.focusedCell();
+  const previousCell = useRef<{ row: number; col: number } | null>(null);
+  useEffect(() => {
+    const cell = focusedCellNow;
+    if (!cell) return;
+    const previous = previousCell.current;
+    previousCell.current = cell;
+    if (previous && previous.row === cell.row && previous.col === cell.col)
+      return;
+    const node = model.flatNodes()[cell.row];
+    const dataNode = node?.kind === 'data' ? node : undefined;
+    latest.current.onFocusedCellChanged?.({
+      rowIndex: cell.row,
+      columnIndex: cell.col,
+      key: dataNode?.key,
+      row: dataNode?.data,
+      field: model.resolvedColumns()[cell.col]?.field,
+    });
+  }, [focusedCellNow]);
 
   // load failures
   const error = data.error();
@@ -1486,8 +1584,36 @@ function OgeGridInner<T extends object>(
 
   function setRowExpansion(key: RowKey, expanded: boolean): void {
     if (isRowExpanded(key) === expanded) return;
-    if (model.collectGroupKeys().has(key)) state.expansion.toggleGroup(key);
+    requestToggle(model.collectGroupKeys().has(key) ? 'group' : 'detail', key);
+  }
+
+  /**
+   * Every single-row toggle — pointer, keyboard, `expandRow()`/`collapseRow()`
+   * — runs through here, so `onRowExpanding`/`onRowCollapsing` can veto it and
+   * the `-ed` callbacks report it.
+   */
+  function requestToggle(kind: OgeGridToggleKind, key: RowKey): void {
+    const expanding =
+      kind === 'group'
+        ? !isRowExpanded(key)
+        : !state.expansion.isDetailExpanded(key);
+    const row = kind === 'detail' ? dataNodeByKey(key)?.data : undefined;
+    const pending: OgeGridRowTogglingEvent<T> = {
+      key,
+      kind,
+      row,
+      cancel: false,
+    };
+    const current = latest.current;
+    (expanding ? current.onRowExpanding : current.onRowCollapsing)?.(pending);
+    if (pending.cancel) return;
+    if (kind === 'group') state.expansion.toggleGroup(key);
     else state.expansion.toggleDetail(key);
+    (expanding ? current.onRowExpanded : current.onRowCollapsed)?.({
+      key,
+      kind,
+      row,
+    });
   }
 
   function groupCaption(field: string): string {
@@ -1616,11 +1742,19 @@ function OgeGridInner<T extends object>(
     return buildCsv(rows, csvColumns, options);
   }
 
-  async function exportCsv(filename = 'grid.csv'): Promise<void> {
+  /**
+   * Downloads the CSV. `options` are `getCsv()`'s — `scope`, `customizeCell`,
+   * `separator`… — so a customized export still goes through `onExporting` and
+   * the built-in formula guard instead of a hand-rolled Blob.
+   */
+  async function exportCsv(
+    filename = 'grid.csv',
+    options?: CsvOptions & OgeExportOptions<T>,
+  ): Promise<void> {
     const event: OgeExportingEvent = { fileName: filename, cancel: false };
     latest.current.onExporting?.(event);
     if (event.cancel) return;
-    const csv = await getCsv();
+    const csv = await getCsv(options);
     if (typeof document === 'undefined') return;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1737,6 +1871,27 @@ function OgeGridInner<T extends object>(
   }
 
   useImperativeHandle(ref, (): OgeGridHandle<T> => ({
+    showColumnChooser: (anchor) => {
+      if (model.chooserOpen()) return;
+      openChooser(
+        anchor ??
+          hostRef.current?.querySelector<HTMLElement>('.oge-chooser-button') ??
+          null,
+      );
+    },
+    hideColumnChooser: () => {
+      if (model.chooserOpen()) chooserPanel.close();
+    },
+    getTotalSummaryValue: (field, type) => {
+      const values = data.result()?.summary;
+      if (!values) return undefined;
+      const index = state.grouping
+        .totalSummary()
+        .findIndex(
+          (d) => d.field === field && (type === undefined || d.type === type),
+        );
+      return index < 0 ? undefined : values[index];
+    },
     refresh: () => {
       model.deferredLoader.reset();
       data.reload();
@@ -2072,6 +2227,13 @@ function OgeGridInner<T extends object>(
       operatorPanel.close();
       return;
     }
+    if (
+      isOgeContextMenuKey(event) &&
+      state.editing.editCell() === null &&
+      state.editing.editRowKey() === null &&
+      openContextMenuFromKeyboard(event)
+    )
+      return;
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
       const mode = model.selectionMode();
       if (mode === 'multiple' || mode === 'checkbox') {
@@ -2149,6 +2311,19 @@ function OgeGridInner<T extends object>(
     );
   }
 
+  /** The filter row's range picker (`between` on a date column). */
+  function onDateRangeFilter(
+    column: ResolvedColumn<T>,
+    range: readonly [Date | null, Date | null] | null,
+  ): void {
+    const field = column.field;
+    if (!field) return;
+    state.filter.setRowFilter(
+      field,
+      dateRangeFilterExpr(field, range?.[0] ?? null, range?.[1] ?? null),
+    );
+  }
+
   function onDateFilter(column: ResolvedColumn<T>, value: unknown): void {
     const field = column.field;
     if (!field) return;
@@ -2196,6 +2371,8 @@ function OgeGridInner<T extends object>(
 
   // --- context menus ---
   const contextMenuPopupRef = useRef<HTMLDivElement>(null);
+  /** Swallows the native `contextmenu` that may follow a keyboard-opened menu. */
+  const contextMenuEcho = useRef(new OgeContextMenuEcho());
   /** Pointer-point positioning with viewport clamping. */
   const contextMenuPanel = useAnchoredPanel({
     anchor: () => hostRef.current,
@@ -2224,25 +2401,81 @@ function OgeGridInner<T extends object>(
     node: DataRowNode<T>,
     event: React.MouseEvent,
   ): void {
+    if (contextMenuEcho.current.swallow(event)) return;
+    openRowContextMenu(node, event.clientX, event.clientY, event, 'pointer');
+  }
+
+  function openRowContextMenu(
+    node: DataRowNode<T>,
+    x: number,
+    y: number,
+    event: React.MouseEvent | React.KeyboardEvent,
+    source: OgeContextMenuSource,
+  ): void {
     const handler = latest.current.onRowContextMenu;
     if (!handler) return;
     const items: OgeMenuItem[] = [];
     handler({
       row: node.data,
       key: node.key,
-      clientX: event.clientX,
-      clientY: event.clientY,
+      clientX: x,
+      clientY: y,
       items,
+      source,
+      event,
     });
     if (!items.length) return; // fall back to the native browser menu
     event.preventDefault();
-    openContextMenu(event.clientX, event.clientY, items);
+    openContextMenu(x, y, items);
+  }
+
+  /**
+   * The Menu key / Shift+F10 open the row or header menu at the focused cell
+   * (`@oge-ui/behavior`'s grid-context-menu). Returns whether it did.
+   */
+  function openContextMenuFromKeyboard(event: React.KeyboardEvent): boolean {
+    const target = ogeContextMenuKeyTarget(event.target);
+    if (!target) return false;
+    if (target.headerColumnId !== null) {
+      const column = model
+        .resolvedColumns()
+        .find((c) => c.id === target.headerColumnId);
+      if (!column?.field) return false;
+      contextMenuEcho.current.mark(event.timeStamp);
+      event.preventDefault();
+      openHeaderContextMenu(column, target.x, target.y, event, 'keyboard');
+      return true;
+    }
+    const node =
+      target.rowIndex === null ? undefined : model.flatNodes()[target.rowIndex];
+    if (node?.kind !== 'data') return false;
+    contextMenuEcho.current.mark(event.timeStamp);
+    event.preventDefault();
+    openRowContextMenu(node, target.x, target.y, event, 'keyboard');
+    return true;
   }
 
   /** Built-in header context menu: sort / group / pin / hide. */
   function onHeaderContextMenu(
     column: ResolvedColumn<T>,
     event: React.MouseEvent,
+  ): void {
+    if (contextMenuEcho.current.swallow(event)) return;
+    openHeaderContextMenu(
+      column,
+      event.clientX,
+      event.clientY,
+      event,
+      'pointer',
+    );
+  }
+
+  function openHeaderContextMenu(
+    column: ResolvedColumn<T>,
+    x: number,
+    y: number,
+    event: React.MouseEvent | React.KeyboardEvent,
+    source: OgeContextMenuSource,
   ): void {
     const field = column.field;
     if (!field) return;
@@ -2262,7 +2495,7 @@ function OgeGridInner<T extends object>(
         items.push({ text: msg.clearSort, action: () => state.sort.clear() });
       }
     }
-    if (groupPanel) {
+    if (groupPanel || latest.current.grouping?.contextMenuEnabled) {
       const isGrouped = state.grouping
         .descriptors()
         .some((descriptor) => descriptor.field === field);
@@ -2304,14 +2537,16 @@ function OgeGridInner<T extends object>(
     latest.current.onHeaderContextMenu?.({
       field,
       caption: column.caption,
-      clientX: event.clientX,
-      clientY: event.clientY,
+      clientX: x,
+      clientY: y,
       items,
+      source,
+      event,
     });
     if (!items.length) return;
     event.preventDefault();
     event.stopPropagation();
-    openContextMenu(event.clientX, event.clientY, items);
+    openContextMenu(x, y, items);
   }
 
   // --- column chooser ---
@@ -2330,7 +2565,11 @@ function OgeGridInner<T extends object>(
       chooserPanel.close();
       return;
     }
-    model.chooserAnchor.set(event.currentTarget as HTMLElement);
+    openChooser(event.currentTarget as HTMLElement);
+  }
+
+  function openChooser(anchor: HTMLElement | null): void {
+    model.chooserAnchor.set(anchor);
     model.chooserOpen.set(true);
     chooserPanel.open();
     chooserPanel.updatePosition();
@@ -2484,10 +2723,16 @@ function OgeGridInner<T extends object>(
     operatorPanel.close();
     const field = menu?.column.field;
     if (!menu || !field) return;
+    const previous = currentOperator(menu.column);
     const next = new Map(model.rowFilterOps());
     if (op) next.set(field, op);
     else next.delete(field);
     model.rowFilterOps.set(next);
+    // "between" swaps the editor; the old editor's value means nothing to it
+    if ((previous === 'between') !== (op === 'between')) {
+      state.filter.setRowFilter(field, null);
+      return;
+    }
     const raw = rowFilterRaw.current.get(field);
     if (raw) applyRowFilter(menu.column, raw);
   }
@@ -2680,13 +2925,20 @@ function OgeGridInner<T extends object>(
         );
         break;
       case 'date':
-        editor = (
-          <OgeDateBox
-            {...common}
-            showClearButton
-            onValueCommitted={(event) => onDateFilter(column, event.value)}
-          />
-        );
+        editor =
+          currentOperator(column) === 'between' ? (
+            <OgeDateRangeBox
+              {...common}
+              showClearButton
+              onValueChange={(range) => onDateRangeFilter(column, range)}
+            />
+          ) : (
+            <OgeDateBox
+              {...common}
+              showClearButton
+              onValueCommitted={(event) => onDateFilter(column, event.value)}
+            />
+          );
         break;
       default:
         editor = (
@@ -2742,7 +2994,10 @@ function OgeGridInner<T extends object>(
     groupPanel ||
     canAddRow ||
     batchPending ||
-    props.columnChooser === true;
+    props.columnChooser === true ||
+    props.toolbarBefore != null ||
+    props.toolbarCenter != null ||
+    props.toolbarAfter != null;
   const toolButton = (label: string, icon: ReactNode, onClick: () => void) => (
     <button
       type="button"
@@ -2832,6 +3087,7 @@ function OgeGridInner<T extends object>(
         aria-rowindex={rowIndex + 2}
         data-rowindex={rowIndex}
         style={{ height: rowHeightStyle, gridTemplateColumns }}
+        onContextMenu={(event) => onRowContextMenuOpen(node, event)}
         onClick={(event) => onRowClick(node, event)}
         onDoubleClick={(event) =>
           latest.current.onRowDblClick?.({
@@ -2896,7 +3152,7 @@ function OgeGridInner<T extends object>(
               aria-label={msg.toggleDetail}
               onClick={(event) => {
                 event.stopPropagation();
-                state.expansion.toggleDetail(node.key);
+                requestToggle('detail', node.key);
               }}
             >
               {chevron('m6 3.5 4.5 4.5L6 12.5')}
@@ -2922,6 +3178,8 @@ function OgeGridInner<T extends object>(
         {renderColumns.map((column) => {
           const cellClasses = ['oge-cell'];
           if (column.dataType === 'number') cellClasses.push('oge-cell-number');
+          if (column.alignment !== 'start')
+            cellClasses.push(`oge-align-${column.alignment}`);
           if (column.pinned !== false) cellClasses.push('oge-pinned');
           const cellEditorOpen = model.editing.isCellEditorOpen(node, column);
           if (model.editing.isCellDirty(node, column))
@@ -3174,11 +3432,11 @@ function OgeGridInner<T extends object>(
             aria-expanded={expanded}
             data-rowindex={rowIndex}
             style={{ height: fixedHeight, paddingLeft: 12 + node.level * 20 }}
-            onClick={() => state.expansion.toggleGroup(node.key)}
+            onClick={() => requestToggle('group', node.key)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                state.expansion.toggleGroup(node.key);
+                requestToggle('group', node.key);
               }
             }}
           >
@@ -3226,6 +3484,9 @@ function OgeGridInner<T extends object>(
                 className={[
                   'oge-group-footer-cell',
                   column.dataType === 'number' ? 'oge-cell-number' : '',
+                  column.alignment !== 'start'
+                    ? `oge-align-${column.alignment}`
+                    : '',
                   column.pinned !== false ? 'oge-pinned' : '',
                 ]
                   .filter(Boolean)
@@ -3313,43 +3574,50 @@ function OgeGridInner<T extends object>(
           stylingMode="flat"
           ariaLabel={msg.toolbar}
           messages={{ overflowMenu: msg.moreCommands }}
+          center={props.toolbarCenter}
           before={
-            groupPanel ? (
-              <div
-                className="oge-group-panel"
-                onDragOver={(event) => {
-                  if (event.dataTransfer.types.includes(COLUMN_DRAG_TYPE))
-                    event.preventDefault();
-                }}
-                onDrop={onGroupPanelDrop}
-              >
-                {groupDescriptors.length ? (
-                  groupDescriptors.map((descriptor) => (
-                    <span key={descriptor.field} className="oge-group-chip">
-                      {groupCaption(descriptor.field)}
-                      <button
-                        type="button"
-                        className="oge-group-chip-remove"
-                        aria-label={`${msg.ungroupPrefix} ${groupCaption(descriptor.field)}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          state.grouping.ungroup(descriptor.field);
-                        }}
-                      >
-                        {chevron('m4 4 8 8M12 4l-8 8', 10)}
-                      </button>
-                    </span>
-                  ))
-                ) : (
-                  <span className="oge-group-panel-hint">
-                    {msg.groupPanelHint}
-                  </span>
-                )}
-              </div>
+            groupPanel || props.toolbarBefore != null ? (
+              <>
+                {props.toolbarBefore}
+                {groupPanel ? (
+                  <div
+                    className="oge-group-panel"
+                    onDragOver={(event) => {
+                      if (event.dataTransfer.types.includes(COLUMN_DRAG_TYPE))
+                        event.preventDefault();
+                    }}
+                    onDrop={onGroupPanelDrop}
+                  >
+                    {groupDescriptors.length ? (
+                      groupDescriptors.map((descriptor) => (
+                        <span key={descriptor.field} className="oge-group-chip">
+                          {groupCaption(descriptor.field)}
+                          <button
+                            type="button"
+                            className="oge-group-chip-remove"
+                            aria-label={`${msg.ungroupPrefix} ${groupCaption(descriptor.field)}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              state.grouping.ungroup(descriptor.field);
+                            }}
+                          >
+                            {chevron('m4 4 8 8M12 4l-8 8', 10)}
+                          </button>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="oge-group-panel-hint">
+                        {msg.groupPanelHint}
+                      </span>
+                    )}
+                  </div>
+                ) : null}
+              </>
             ) : undefined
           }
           after={
             <>
+              {props.toolbarAfter}
               {canAddRow ? (
                 <button
                   type="button"
@@ -3392,7 +3660,7 @@ function OgeGridInner<T extends object>(
               {props.columnChooser ? (
                 <button
                   type="button"
-                  className="oge-tool-btn"
+                  className="oge-tool-btn oge-chooser-button"
                   aria-label={msg.columnChooserTitle}
                   onClick={toggleChooser}
                 >
@@ -3587,6 +3855,8 @@ function OgeGridInner<T extends object>(
               const headerClasses = ['oge-header-cell'];
               if (sortable) headerClasses.push('oge-header-sortable');
               if (column.pinned !== false) headerClasses.push('oge-pinned');
+              if (column.alignment !== 'start')
+                headerClasses.push(`oge-align-${column.alignment}`);
               if (headerDropTargetId === column.id)
                 headerClasses.push('oge-col-drop-target');
               return (
@@ -3594,6 +3864,7 @@ function OgeGridInner<T extends object>(
                   key={column.id}
                   className={headerClasses.join(' ')}
                   role="columnheader"
+                  data-colid={column.id}
                   style={pinnedStyle(column)}
                   onContextMenu={(event) => onHeaderContextMenu(column, event)}
                   aria-sort={ariaSortOf(column)}
@@ -3715,6 +3986,9 @@ function OgeGridInner<T extends object>(
                 className={[
                   'oge-total-cell',
                   column.dataType === 'number' ? 'oge-cell-number' : '',
+                  column.alignment !== 'start'
+                    ? `oge-align-${column.alignment}`
+                    : '',
                   column.pinned !== false ? 'oge-pinned' : '',
                 ]
                   .filter(Boolean)
@@ -4041,3 +4315,14 @@ export const OgeGrid = forwardRef(OgeGridInner) as <
 >(
   props: OgeGridProps<T> & { ref?: Ref<OgeGridHandle<T>> },
 ) => ReactElement;
+
+/** Same fields in the same order with the same directions. */
+function sameSort(
+  a: readonly SortDescriptor[],
+  b: readonly SortDescriptor[],
+): boolean {
+  return (
+    a.length === b.length &&
+    a.every((d, i) => d.field === b[i].field && d.dir === b[i].dir)
+  );
+}

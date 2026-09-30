@@ -149,48 +149,48 @@ detail rows (`hidingPriority` is the house solution) and the AI-column surface
 
 ### Methods (dxDataGrid → OgeGrid)
 
-| Reference method (group)                                                                 | OGE     | Notes                                                                                                |
-| ---------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| `refresh()`                                                                              | Done    | `refresh()`                                                                                          |
-| `byKey(key)` / `getVisibleRows()` / `keyOf(obj)`                                         | Done    | `getRowByKey(key)` (sync, loaded rows) / `getVisibleRows()` / `keyField` selector                    |
-| `addRow()` / `deleteRow()` / `undeleteRow()`                                             | Done    | `addRow()` + `initNewRow` prefill; `deleteRow(key)` — key-addressed, batch mode toggles (= undelete) |
-| `editRow()` / `editCell()`                                                               | Done    | `editRow(key)` (row/form/popup); cell editors are pointer/keyboard-driven, `editingStart` can veto   |
-| `saveEditData()` / `cancelEditData()` / `hasEditData()` / `closeEditCell()`              | Done    | `saveChanges()` / `discardChanges()` / `hasChanges()`; `discardChanges` also closes editors          |
-| `selectAll()` / `deselectAll()` / `clearSelection()`                                     | Done    | same names; `selectAll()` honors `selectAllMode` and deferred mode (filter expression, no keys)      |
-| `selectRows()` / `deselectRows()` / `getSelectedRowKeys()`                               | Done    | the `[(selectedKeys)]` model is the read/write surface                                               |
-| `getSelectedRowsData()` / `isRowSelected(key)`                                           | Done    | same names (loaded rows)                                                                             |
-| `filter()` / `clearFilter()` / `searchByText()`                                          | Done    | `[(filterValue)]` + `clearFilters()`; search via the search panel and the state snapshot             |
-| `clearSorting()` / `clearGrouping()`                                                     | Done    | `clearSorting()`; grouping via the `groupBy` input (`[]` clears)                                     |
-| `expandRow()` / `collapseRow()` / `isRowExpanded()`                                      | Done    | same names — group rows (group node key) and master-detail rows                                      |
-| `expandAll()` / `collapseAll()`                                                          | Done    | `expandAllGroups()` / `collapseAllGroups()` (all levels; no per-`groupIndex` variant)                |
-| `pageIndex()` / `pageSize()` / `pageCount()` / `totalCount()`                            | Done    | same getters + explicit `setPageIndex()` / `setPageSize()` setters (no overloaded getter/setter)     |
-| `navigateToRow(key)` / `focus()` / `isRowFocused()`                                      | Done    | `navigateToRow(key)`; focus state reads from `focusedRowKey()`                                       |
-| `beginCustomLoading()` / `endCustomLoading()`                                            | Done    | same names; message defaults to `messages.loading`                                                   |
-| `state()`                                                                                | Done    | `state()` / `applyState()` / `stateChange`                                                           |
-| Export (via `onExporting`)                                                               | Done    | `getExportData()` / `getCsv()` / `exportCsv()` + lazy Excel/PDF entries; `copyToClipboard()`         |
-| Column DOM/option access (`columnOption`, `cellValue`, `getCellElement`, `addColumn`, …) | —       | deliberate: columns are declarative signal inputs (`visible` is a model); no runtime option bag      |
-| `showColumnChooser()` / `hideColumnChooser()`                                            | Partial | `columnChooser` input renders the button; no imperative open — backlog                               |
-| `getTotalSummaryValue(name)`                                                             | Partial | totals render in the UI; no programmatic getter — backlog                                            |
+| Reference method (group)                                                                 | OGE  | Notes                                                                                                                                       |
+| ---------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `refresh()`                                                                              | Done | `refresh()`                                                                                                                                 |
+| `byKey(key)` / `getVisibleRows()` / `keyOf(obj)`                                         | Done | `getRowByKey(key)` (sync, loaded rows) / `getVisibleRows()` / `keyField` selector                                                           |
+| `addRow()` / `deleteRow()` / `undeleteRow()`                                             | Done | `addRow()` + `initNewRow` prefill; `deleteRow(key)` — key-addressed, batch mode toggles (= undelete)                                        |
+| `editRow()` / `editCell()`                                                               | Done | `editRow(key)` (row/form/popup); cell editors are pointer/keyboard-driven, `editingStart` can veto                                          |
+| `saveEditData()` / `cancelEditData()` / `hasEditData()` / `closeEditCell()`              | Done | `saveChanges()` / `discardChanges()` / `hasChanges()`; `discardChanges` also closes editors                                                 |
+| `selectAll()` / `deselectAll()` / `clearSelection()`                                     | Done | same names; `selectAll()` honors `selectAllMode` and deferred mode (filter expression, no keys)                                             |
+| `selectRows()` / `deselectRows()` / `getSelectedRowKeys()`                               | Done | the `[(selectedKeys)]` model is the read/write surface                                                                                      |
+| `getSelectedRowsData()` / `isRowSelected(key)`                                           | Done | same names (loaded rows)                                                                                                                    |
+| `filter()` / `clearFilter()` / `searchByText()`                                          | Done | `[(filterValue)]` + `clearFilters()`; search via the search panel and the state snapshot                                                    |
+| `clearSorting()` / `clearGrouping()`                                                     | Done | `clearSorting()`; grouping via the `groupBy` input (`[]` clears)                                                                            |
+| `expandRow()` / `collapseRow()` / `isRowExpanded()`                                      | Done | same names — group rows (group node key) and master-detail rows                                                                             |
+| `expandAll()` / `collapseAll()`                                                          | Done | `expandAllGroups()` / `collapseAllGroups()` (all levels; no per-`groupIndex` variant)                                                       |
+| `pageIndex()` / `pageSize()` / `pageCount()` / `totalCount()`                            | Done | same getters + explicit `setPageIndex()` / `setPageSize()` setters (no overloaded getter/setter)                                            |
+| `navigateToRow(key)` / `focus()` / `isRowFocused()`                                      | Done | `navigateToRow(key)`; focus state reads from `focusedRowKey()`                                                                              |
+| `beginCustomLoading()` / `endCustomLoading()`                                            | Done | same names; message defaults to `messages.loading`                                                                                          |
+| `state()`                                                                                | Done | `state()` / `applyState()` / `stateChange`                                                                                                  |
+| Export (via `onExporting`)                                                               | Done | `getExportData()` / `getCsv()` / `exportCsv()` + lazy Excel/PDF entries; `copyToClipboard()`                                                |
+| Column DOM/option access (`columnOption`, `cellValue`, `getCellElement`, `addColumn`, …) | —    | deliberate: columns are declarative signal inputs (`visible` is a model); no runtime option bag                                             |
+| `showColumnChooser()` / `hideColumnChooser()`                                            | Done | `showColumnChooser(anchor?)` / `hideColumnChooser()` — opens below any element, so a custom header bar can host it with `columnChooser` off |
+| `getTotalSummaryValue(name)`                                                             | Done | `getTotalSummaryValue(field, type?)` — the raw aggregate the total row formats                                                              |
 
 ### Events (dxDataGrid → OgeGrid)
 
-| Reference event                                                | OGE     | Notes                                                                                       |
-| -------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `rowClick` / `rowDblClick` / `cellClick` / `cellDblClick`      | Done    | same names, flat payloads with `row`/`key`/`field`/`value`/`event`                          |
-| `selectionChanged`                                             | Done    | `{ selectedKeys, addedKeys, removedKeys }` diffs                                            |
-| `focusedRowChanged` / `focusedRowChanging`                     | Done    | `focusedRowChanged { key, row }`; pre-event skipped — set the `focusedRowKey` model instead |
-| `editingStart`                                                 | Done    | cancelable, `{ key, row, field?, cancel }` (cell and row editors)                           |
-| `initNewRow`                                                   | Done    | `{ key, values }` prefill hook (tree-list adds `parentKey`)                                 |
-| `rowInserting/-ed`, `rowUpdating/-ed`, `rowRemoving/-ed`       | Done    | per-change around the DataSource write; `-ing` events cancelable                            |
-| `saving` / `saved`                                             | Done    | `savingChanges` (cancelable, whole batch) / `savedChanges` (applied changes)                |
-| `editCanceled` / `editCanceling`                               | Done    | `editCanceled`; the sync discard needs no pre-event                                         |
-| `exporting`                                                    | Done    | cancelable, mutable `fileName` (CSV path; Excel/PDF helpers call `getExportData` directly)  |
-| `dataErrorOccurred`                                            | Done    | `{ error }` — load failures and save failures                                               |
-| `contextMenuPreparing`                                         | Done    | `rowContextMenu` / `headerContextMenu` with prebuilt mutable `items`                        |
-| `contentReady`                                                 | Done    | post-render notification (not a jQuery lifecycle hook)                                      |
-| `rowExpanding/-ed`, `rowCollapsing/-ed` (groups/master-detail) | Partial | tree-list has all four (cancelable); grid group/detail toggles are not evented — backlog    |
-| `focusedCellChanged/-ing`                                      | Partial | keyboard model tracks the cell internally; not exposed as an output — backlog               |
-| `rowValidating`                                                | —       | deliberate: Angular validators run per `FormControl`                                        |
+| Reference event                                                | OGE  | Notes                                                                                                                             |
+| -------------------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `rowClick` / `rowDblClick` / `cellClick` / `cellDblClick`      | Done | same names, flat payloads with `row`/`key`/`field`/`value`/`event`                                                                |
+| `selectionChanged`                                             | Done | `{ selectedKeys, addedKeys, removedKeys }` diffs                                                                                  |
+| `focusedRowChanged` / `focusedRowChanging`                     | Done | `focusedRowChanged { key, row }`; pre-event skipped — set the `focusedRowKey` model instead                                       |
+| `editingStart`                                                 | Done | cancelable, `{ key, row, field?, cancel }` (cell and row editors)                                                                 |
+| `initNewRow`                                                   | Done | `{ key, values }` prefill hook (tree-list adds `parentKey`)                                                                       |
+| `rowInserting/-ed`, `rowUpdating/-ed`, `rowRemoving/-ed`       | Done | per-change around the DataSource write; `-ing` events cancelable                                                                  |
+| `saving` / `saved`                                             | Done | `savingChanges` (cancelable, whole batch) / `savedChanges` (applied changes)                                                      |
+| `editCanceled` / `editCanceling`                               | Done | `editCanceled`; the sync discard needs no pre-event                                                                               |
+| `exporting`                                                    | Done | cancelable, mutable `fileName` (CSV path; Excel/PDF helpers call `getExportData` directly)                                        |
+| `dataErrorOccurred`                                            | Done | `{ error }` — load failures and save failures                                                                                     |
+| `contextMenuPreparing`                                         | Done | `rowContextMenu` / `headerContextMenu` with prebuilt mutable `items`                                                              |
+| `contentReady`                                                 | Done | post-render notification (not a jQuery lifecycle hook)                                                                            |
+| `rowExpanding/-ed`, `rowCollapsing/-ed` (groups/master-detail) | Done | all four, `{ key, kind: 'group' \| 'detail', row }`; `-ing` cancelable; pointer, keyboard and `expandRow()`/`collapseRow()`       |
+| `focusedCellChanged/-ing`                                      | Done | `focusedCellChanged { rowIndex, columnIndex, key, row, field }`; pre-event skipped (focus moves are not vetoable in the APG grid) |
+| `rowValidating`                                                | —    | deliberate: Angular validators run per `FormControl`                                                                              |
 
 ### dxTreeList extras
 

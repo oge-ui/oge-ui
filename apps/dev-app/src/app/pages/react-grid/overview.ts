@@ -46,26 +46,22 @@ const COLUMNS: OgeGridColumnProps<Employee>[] = [
 
 function QuickStartDemo(): ReactNode {
   const grid = useRef<OgeGridHandle<Employee>>(null);
-  return createElement(
-    'div',
-    null,
-    createElement(OgeGrid<Employee>, {
-      ref: grid,
-      data: employees,
-      keyField: 'id',
-      columns: COLUMNS,
-      paging: { pageSize: 10 },
-    }),
-    createElement(
+  return createElement(OgeGrid<Employee>, {
+    ref: grid,
+    data: employees,
+    keyField: 'id',
+    columns: COLUMNS,
+    paging: { pageSize: 10 },
+    toolbarAfter: createElement(
       'button',
       {
         type: 'button',
-        className: 'oge-tool-btn oge-tool-text-btn mt-2',
+        className: 'oge-tool-btn oge-tool-text-btn',
         onClick: () => grid.current?.exportCsv('employees.csv'),
       },
       'Export CSV',
     ),
-  );
+  });
 }
 
 /**

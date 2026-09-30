@@ -25,11 +25,16 @@ export {
 } from '@oge-ui/behavior';
 export type {
   LookupItem,
+  OgeColumnAlignment,
   OgeColumnLookup,
   OgeDataType,
 } from '@oge-ui/behavior';
 
-import type { OgeColumnLookup, OgeDataType } from '@oge-ui/behavior';
+import type {
+  OgeColumnAlignment,
+  OgeColumnLookup,
+  OgeDataType,
+} from '@oge-ui/behavior';
 
 /** Angular's content slot: what a column's template directives hand over. */
 type NgTemplateSlot = TemplateRef<object>;
@@ -45,6 +50,7 @@ export interface ColumnSource<T = unknown> {
   readonly caption: () => string | undefined;
   readonly width: () => number | string | undefined;
   readonly dataType: () => OgeDataType;
+  readonly alignment: () => OgeColumnAlignment | undefined;
   readonly format: () => ((value: unknown) => string) | undefined;
   readonly visible: () => boolean;
   readonly sortable: () => boolean;
@@ -130,6 +136,7 @@ export class ColumnModel<
       caption: column.caption(),
       width: column.width(),
       dataType: column.dataType(),
+      alignment: column.alignment(),
       format: column.format(),
       visible: column.visible(),
       sortable: column.sortable(),

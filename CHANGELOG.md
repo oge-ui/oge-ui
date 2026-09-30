@@ -60,6 +60,83 @@ design notes. Every item below removes one of those workarounds.
   `--oge-font-mono`, `--oge-scrollbar-*` — each previously a literal fallback
   inside one component.
 
+### Added (grid)
+
+- **Keyboard context menus.** The Menu key and Shift+F10 on a focused body or
+  header cell open the row / header menu at the cell (start/bottom corner,
+  RTL-aware); the native `contextmenu` echo some browsers send afterwards is
+  swallowed, a real right-click never is. `OgeContextMenuEvent` and
+  `OgeHeaderContextMenuEvent` gain `source: 'pointer' | 'keyboard'` and the
+  originating `event`. Grid, tree list and React grid share one helper in
+  `@oge-ui/behavior`.
+- **Immediate change events:** `sortChanged` `{ sort, previousSort }` and
+  `pageChanged` fire in the same frame as the change — `stateChange` is
+  debounced, so a caption or a server request following it lagged the click.
+- **Evented expand/collapse** for group and master-detail rows:
+  `rowExpanding` / `rowCollapsing` (cancelable) and `rowExpanded` /
+  `rowCollapsed`, from pointer, keyboard and `expandRow()` / `collapseRow()`
+  alike. `focusedCellChanged` reports keyboard/pointer cell moves. Both close
+  ROADMAP rows that sat at "Partial".
+- **`alignment` on columns** (`'start' | 'center' | 'end'`, logical). The
+  `dataType="number"` default stays end-aligned; headers now follow their
+  cells, so a number column's caption sits over its figures.
+- **Programmatic columns carry every column option.** `[columns]` accepted
+  only `{ field, caption }`; `OgeColumnDef<T>` now mirrors `<oge-column>`
+  (types, widths, lookups, summaries, templates as `TemplateRef`s…). It is
+  the way to build a wrapper component around the grid — Angular's content
+  queries never see `<oge-column>`s projected through another component.
+  Tree list too.
+- **`showColumnChooser(anchor?)` / `hideColumnChooser()`** — open the chooser
+  from your own header bar with `columnChooser` off, so the grid draws no
+  second toolbar row. **`getTotalSummaryValue(field, type?)`**.
+- **Toolbar placement:** `ogeToolbar="before" | "center" | "after"` (bare =
+  after, as before) — filters and primary actions on the start edge.
+- **Grouping from the header menu without the group panel:**
+  `grouping: { contextMenuEnabled: true }`.
+- **Date-range filter** in the filter row: date columns offer a `between`
+  operator that swaps the cell to a date-range picker (whole days, either end
+  open).
+- **`exportCsv(fileName, options)`** takes `getCsv()`'s options
+  (`customizeCell`, `scope`…), so a customized export still fires `exporting`.
+- **`CursorDataSource`** (`@oge-ui/core`) adapts a cursor-paginated endpoint
+  (`?after=…` → `{ items, nextCursor }`) to the grid: pair it with infinite
+  scrolling; each page is fetched once per query and concurrent windows share
+  one walk.
+
+### Fixed (grid)
+
+- **Dates grouped by object identity**: two rows holding `new Date(…)` for the
+  same moment became two groups. Dates now bucket by value, and date columns
+  group by calendar day by default (`groupInterval: 'day' | 'month' |
+'year'`, sent to servers as `LoadOptions.group[].interval`; deferred groups
+  fetch their children with a matching date range).
+- **A stored `stateKey` grouping overrode a bound `[groupBy]`.** A bound
+  `groupBy` is controlled and now wins.
+- **"Box in a box" in the filter row**: `.oge-filter-input` gave the editor
+  components' hosts a second border and padding.
+- **Row right-click did nothing in the React grid** unless `renderRow` was
+  set — standard rows had no `onContextMenu` binding.
+
+### Changed (bundle size)
+
+- **The grid no longer ships `@oge-ui/forms` in your initial bundle.** Form
+  and popup editing render their `<oge-form>` inside `@defer`, so forms and
+  its tabs/upload/navigation cone load when a form editor first opens. Measured
+  on a minimal CLI app rendering one `<oge-grid>`: initial JS 1,080 KB →
+  913 KB, with a 184 KB lazy chunk.
+
+### Fixed (inputs)
+
+- **The number box ignored `provideOgeInputsConfig({ locale })`** and parsed
+  with `LOCALE_ID` (en-US unless set), so "1.250,50" became 1.2505 in an app
+  that set its locale through the config — the date editors already honoured
+  it.
+- New **`[width]`** on every text-style field (number = px, or any CSS length)
+  — `--oge-input-width` was global only.
+- Under Signal Forms `[formField]`, the schema's `maxLength()` already drives
+  the counter and the native `maxlength` — do not bind `[maxLength]` as well
+  (Angular rejects it, NG8022). Now covered by a test and documented.
+
 ## 0.13.1 — 2026-09-06
 
 Every package moves to 0.13.1 together. A patch release by version number, but

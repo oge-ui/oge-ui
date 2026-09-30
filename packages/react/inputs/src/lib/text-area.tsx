@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
+import { withInputWidth } from './field-extras';
 import { graphemeCount } from '@oge-ui/behavior';
 import { OgeFieldChrome, type OgeInputCounterState } from './field-chrome';
 import {
@@ -228,7 +229,7 @@ export const OgeTextArea = forwardRef<OgeTextAreaHandle, OgeTextAreaProps>(
         className={hostClasses}
         style={
           {
-            ...style,
+            ...withInputWidth(style, props.width),
             '--oge-ta-min-rows': effectiveMinRows,
             '--oge-ta-max-rows': maxRows,
           } as CSSProperties

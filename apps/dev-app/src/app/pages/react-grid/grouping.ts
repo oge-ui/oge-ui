@@ -95,6 +95,7 @@ function PanelDemo(): ReactNode {
     keyField: 'id',
     columns: PANEL_COLUMNS,
     groupPanel: true,
+    columnChooser: true,
     groupBy: ['department'],
     style: { height: 540 },
   });

@@ -123,7 +123,10 @@ export {
   ogeGridBandRow,
   resolveLookupItems,
   resolveOgeGridColumns,
+  defaultAlignmentFor,
+  dateRangeFilterExpr,
   type LookupItem,
+  type OgeColumnAlignment,
   type OgeColumnLookup,
   type OgeDataType,
   type OgeGridAdaptiveHidingInput,
@@ -133,6 +136,12 @@ export {
   type OgeGridColumnSpec,
   type OgeGridResolvedColumn,
 } from './lib/grid/grid-columns';
+export {
+  OgeContextMenuEcho,
+  isOgeContextMenuKey,
+  ogeContextMenuKeyTarget,
+  type OgeContextMenuKeyTarget,
+} from './lib/grid/grid-context-menu';
 export {
   OgeGridEditingCore,
   type OgeDataChange,
@@ -230,15 +239,22 @@ export type {
   OgeExportData,
   OgeExportOptions,
   OgeExportingEvent,
+  OgeContextMenuSource,
   OgeFilterRowOptions,
+  OgeFocusedCellChangedEvent,
   OgeFocusedRowChangedEvent,
+  OgeGridRowToggleEvent,
+  OgeGridRowTogglingEvent,
+  OgeGridToggleKind,
   OgeGroupingOptions,
   OgeHeaderFilterOptions,
+  OgePageChangedEvent,
   OgePagingOptions,
   OgeRowReorderedEvent,
   OgeScrollingOptions,
   OgeSearchPanelOptions,
   OgeSelectionChangedEvent,
+  OgeSortChangedEvent,
   OgeSortingOptions,
 } from './lib/grid/grid-options';
 export {

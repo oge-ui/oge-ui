@@ -78,7 +78,7 @@ export class OgeGridStateCore {
       const window = this.paging.window();
       const filter = this.filter.combinedExpr();
       const searchText = this.filter.searchText().trim();
-      const groups = this.grouping.descriptors();
+      const groups = this.grouping.loadDescriptors();
       const groupSummary = this.grouping.groupSummary();
       const totalSummary = this.grouping.totalSummary();
       return {

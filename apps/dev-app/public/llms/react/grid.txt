@@ -127,7 +127,7 @@ _Grouping_
 | --- | --- | --- | --- |
 | `groupPanel` | `boolean` | `false` | Shows the drop area for drag-and-drop row grouping; each group renders as a removable chip. |
 | `groupBy` | `readonly string[]` | `undefined` | Initial/programmatic grouping by field names (also drivable via the group panel). |
-| `grouping` | `OgeGroupingOptions` | `undefined` | `autoExpandAll: false` starts every group collapsed and enables deferred loading (`items: null` payloads fetched on expand). |
+| `grouping` | `OgeGroupingOptions` | `undefined` | `autoExpandAll: false` starts every group collapsed and enables deferred loading (`items: null` payloads fetched on expand); `contextMenuEnabled: true` offers group/ungroup in the header menu without the group panel. |
 
 _Selection & focus_
 
@@ -149,6 +149,7 @@ _Columns UX_
 | `columnResize` | `boolean` | `true` | Enables drag-resize handles on header edges. |
 | `columnReorder` | `boolean` | `true` | Enables drag-and-drop column reordering (headers dropped onto each other). |
 | `columnChooser` | `boolean` | `false` | Toolbar button opening the show/hide column list; with `columnReorder` its rows also drag to reorder. |
+| `toolbarBefore / toolbarCenter / toolbarAfter` | `ReactNode` | `undefined` | Your own toolbar content by group — the React form of Angular’s `[ogeToolbar]` placement: `toolbarBefore` at the start edge ahead of the group panel (filters, primary actions), `toolbarCenter` in the middle, `toolbarAfter` ahead of the built-in tools. Any of them makes the toolbar render. |
 
 _Editing & rows_
 
@@ -214,6 +215,13 @@ _Paging_
 | `pageSize(): number / setPageSize(size)` | `handle` | Reads or changes the page size; `0` turns paging off. |
 | `pageCount(): number` | `handle` | Number of pages; `1` when paging is off. |
 
+_Columns & summaries_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `showColumnChooser(anchor?) / hideColumnChooser()` | `handle` | Opens the column chooser below `anchor` — e.g. a button in your own header bar, with `columnChooser` off — or, without one, below its toolbar button (or the grid’s start edge) / closes it. |
+| `getTotalSummaryValue(field, type?)` | `handle` | Raw value of a `totalSummary` by field (and type, when a column has several); `undefined` when none is configured or data has not loaded. |
+
 _Loading, state & export_
 
 | Name | Type | Description |
@@ -223,7 +231,7 @@ _Loading, state & export_
 | `clearFilters() / clearSorting()` | `handle` | Clears every filter (row filters and search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows and column metadata of the current view (filter + search + sort applied) — the shared source for exporters. `scope` narrows to the page or selection. |
 | `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
-| `exportCsv(filename = 'grid.csv'): Promise<void>` | `handle` | Downloads the current view as a CSV file. Fires the cancelable `onExporting` first. |
+| `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `handle` | Downloads the current view as a CSV file. Fires the cancelable `onExporting` first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
 
 _Editing_
 
@@ -245,8 +253,8 @@ _Interaction_
 | `onRowClick / onRowDblClick` | `(event: OgeRowClickEvent<T>) => void` | A data row was clicked / double-clicked: `{ row, key, event }`. |
 | `onCellClick / onCellDblClick` | `(event: OgeCellClickEvent<T>) => void` | A data cell was clicked / double-clicked: `{ row, key, field, value, event }`. |
 | `onRowReordered` | `(event: OgeRowReorderedEvent<T>) => void` | After a dragged row was dropped: the moved key, the target key and the from/to view positions. |
-| `onRowContextMenu` | `(event: OgeContextMenuEvent<T>) => void` | Right-click on a data row. Push entries into `items` to open the gridâs own menu at the pointer; leave it empty and the browserâs native menu is left alone. |
-| `onHeaderContextMenu` | `(event: OgeHeaderContextMenuEvent) => void` | Right-click on a header, with the built-in items (sort / group / pin / hide) prebuilt — add, remove or reorder them before the menu opens. |
+| `onRowContextMenu` | `(event: OgeContextMenuEvent<T>) => void` | Right-click on a data row — and the Menu key / Shift+F10 in a focused cell. Push entries into `items` to open the grid’s own menu; leave it empty and the browser’s native menu is left alone. `source` is `'pointer'` or `'keyboard'` (then `clientX/Y` is the cell’s start/bottom corner); `event` is the originating React event. |
+| `onHeaderContextMenu` | `(event: OgeHeaderContextMenuEvent) => void` | Right-click on a header — or the Menu key / Shift+F10 on a focused header — with the built-in items (sort / group / pin / hide) prebuilt: add, remove or reorder them before the menu opens. Carries `source` and `event` like `onRowContextMenu`. |
 
 _Selection & focus_
 
@@ -254,6 +262,13 @@ _Selection & focus_
 | --- | --- | --- |
 | `onSelectionChanged` | `(event: OgeSelectionChangedEvent) => void` | After the selection changed, with `addedKeys` / `removedKeys` diffs. The initial state is not a change. |
 | `onFocusedRowChanged` | `(event: OgeFocusedRowChangedEvent<T>) => void` | After the focused row changed (`focusedRowEnabled` or key writes), with the row when it is loaded. |
+| `onFocusedCellChanged` | `(event: OgeFocusedCellChangedEvent<T>) => void` | `{ rowIndex, columnIndex, key, row, field }` after keyboard/pointer focus moved to another cell; `key`/`row` are `undefined` on group rows. |
+| `onSortChanged` | `(event: OgeSortChangedEvent) => void` | `{ sort, previousSort }` as soon as the sort changed (header, menu, handle) — no debounce, unlike `onStateChange`. The initial sort is not a change. |
+| `onPageChanged` | `(event: OgePageChangedEvent) => void` | `{ pageIndex, pageSize, previousPageIndex, previousPageSize }` after the page index or size changed. |
+| `onRowExpanding` | `(event: OgeGridRowTogglingEvent<T>) => void` | Before a group or master-detail row expands (pointer, keyboard or `expandRow()`); `{ key, kind, row, cancel }` — set `cancel` to veto. Not fired per row by `expandAllGroups()`. |
+| `onRowExpanded` | `(event: OgeGridRowToggleEvent<T>) => void` | `{ key, kind: 'group' \| 'detail', row }` after the row expanded. |
+| `onRowCollapsing` | `(event: OgeGridRowTogglingEvent<T>) => void` | Before a group or master-detail row collapses; cancelable. |
+| `onRowCollapsed` | `(event: OgeGridRowToggleEvent<T>) => void` | After a group or master-detail row collapsed. |
 | `onSelectedKeysChange / onFocusedRowKeyChange` | `(value) => void` | The controlled-pair callbacks of `selectedKeys` and `focusedRowKey`. |
 
 _Editing_
@@ -289,7 +304,8 @@ _Basics_
 | `field` | `string` | `undefined` | Dotted paths are supported, e.g. `"customer.name"`. |
 | `caption` | `string` | `humanized field` | Header text; derived from `field` when omitted. |
 | `width` | `number \| string` | `undefined` | Number → px; string is used verbatim (e.g. `'2fr'`, `'150px'`). |
-| `dataType` | `'string' \| 'number' \| 'date' \| 'boolean'` | `'string'` | Drives the default formatting, the filter-row editor and the operator set. |
+| `dataType` | `'string' \| 'number' \| 'date' \| 'boolean'` | `'string'` | Drives the default formatting, the filter-row editor, the operator set and the default alignment. |
+| `alignment` | `'start' \| 'center' \| 'end'` | `undefined` | Alignment of the cells, header and summaries (logical — `'end'` is the right edge in LTR). Unset, numbers align to the end and everything else to the start. |
 | `format` | `(value: unknown) => string` | `undefined` | Custom value formatter applied to the default (non-rendered) cell text and to exports. |
 | `visible` | `boolean` | `true` | Hides the column without removing it. |
 | `minWidth` | `number` | `config.columnMinWidth` | Track minimum in px for flexible-width columns. |
@@ -309,6 +325,7 @@ _Sort, filter & group_
 | `filterOperator` | `FilterOperator` | `by dataType` | Filter-row operator override (default: `contains` for text, `eq` for number/date). |
 | `calculateFilterExpression` | `(value, operator) => FilterExpr \| null` | `undefined` | Custom filter expression for filter-row input on this column. |
 | `groupIndex` | `number` | `undefined` | Initial group level of this column (0 = first). |
+| `groupInterval` | `'day' \| 'month' \| 'year'` | `undefined` | Date bucket when grouping by this column — `'day'` by default for `dataType: 'date'`, so same-day rows share a group whatever their time. Sent as `LoadOptions.group[].interval`. |
 
 _Summaries & editing_
 
@@ -349,7 +366,7 @@ _Option objects (boolean shorthands stay valid)_
 | `OgeSortingOptions` | `{ mode?: 'none' \| 'single' \| 'multi'; allowUnsorting?: boolean }` | The same object the Angular grid accepts. |
 | `OgePagingOptions` | `{ pageSize: number; pageSizes?: (number \| 'all')[]; showInfo?: boolean; displayMode?: 'full' \| 'compact' \| 'adaptive' }` | The same object the Angular grid accepts. |
 | `OgeScrollingOptions` | `{ mode?: 'standard' \| 'virtual' \| 'infinite'; remote?: boolean; columnRenderingMode?: 'standard' \| 'virtual' }` | The same object the Angular grid accepts. |
-| `OgeGroupingOptions` | `{ autoExpandAll?: boolean }` | The same object the Angular grid accepts. |
+| `OgeGroupingOptions` | `{ autoExpandAll?: boolean; contextMenuEnabled?: boolean }` | The same object the Angular grid accepts. |
 | `OgeFilterRowOptions / OgeSearchPanelOptions` | `{ visible?: boolean; debounce?: number } / { visible?: boolean; placeholder?: string; width?: number }` | The same objects the Angular grid accepts. |
 
 _Export_
@@ -881,6 +898,7 @@ export function GroupedEmployees() {
       keyField="id"
       columns={columns}
       groupPanel
+      columnChooser
       groupBy={['department']}
       style={{ height: 540 }}
     />
@@ -1098,19 +1116,19 @@ const columns: OgeGridColumnProps<Employee>[] = [
 export function EmployeesGrid() {
   const grid = useRef<OgeGridHandle<Employee>>(null);
   return (
-    <>
-      <OgeGrid
-        ref={grid}
-        data={employees}
-        keyField="id"
-        columns={columns}
-        paging={{ pageSize: 10 }}
-      />
-      {/* the handle mirrors the Angular component's public methods */}
-      <button type="button" onClick={() => grid.current?.exportCsv('employees.csv')}>
-        Export CSV
-      </button>
-    </>
+    <OgeGrid
+      ref={grid}
+      data={employees}
+      keyField="id"
+      columns={columns}
+      paging={{ pageSize: 10 }}
+      // the toolbar slot; the handle mirrors the Angular component's public methods
+      toolbarAfter={
+        <button type="button" onClick={() => grid.current?.exportCsv('employees.csv')}>
+          Export CSV
+        </button>
+      }
+    />
   );
 }
 ```

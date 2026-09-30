@@ -89,8 +89,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/grid`
 
-- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `operatorsFor`, `provideOgeGridConfig`
-- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellTemplateContext`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeContextMenuEvent`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePagingOptions`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortingOptions`, `OgeStateStorage`
+- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
+- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellTemplateContext`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagingOptions`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`
 
 `@oge-ui/grid/export-pdf`
 
@@ -99,8 +99,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/grid/foundation`
 
-- values: `CHECKBOX_WIDTH`, `COMMAND_WIDTH`, `ColumnLayoutModel`, `ColumnModel`, `DRAG_WIDTH`, `DeferredChildrenLoader`, `EXPANDER_WIDTH`, `EditingModel`, `KeyboardNavModel`, `OGE_STATE_STORAGE`, `OgeEditingSlice`, `RowVirtualizerModel`, `buildRowFilterExpr`, `createStatePersistence`, `dateFilterExpr`, `defaultOperatorFor`, `humanize`, `isDataSource`, `lookupTextOf`, `mapLookupItems`, `resolveLookupItems`
-- types: `ColumnDefLike`, `ColumnLayoutModelDeps`, `ColumnModelDeps`, `ColumnSource`, `DeferredBaseOptions`, `DeferredChildrenLoaderDeps`, `EditingModelDeps`, `KeyboardNavModelDeps`, `KeyboardNavTreeHooks`, `LookupItem`, `OgeColumnLookup`, `OgeDataChange`, `OgeDataType`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeStateStorage`, `PendingChildRequest`, `ResolvedColumn`, `RowVirtualizerModelDeps`, `RowVirtualizerWindowAdapter`, `StatePersistenceOptions`
+- values: `CHECKBOX_WIDTH`, `COMMAND_WIDTH`, `ColumnLayoutModel`, `ColumnModel`, `DRAG_WIDTH`, `DeferredChildrenLoader`, `EXPANDER_WIDTH`, `EditingModel`, `KeyboardNavModel`, `OGE_STATE_STORAGE`, `OgeContextMenuEcho`, `OgeEditingSlice`, `RowVirtualizerModel`, `buildRowFilterExpr`, `createStatePersistence`, `dateFilterExpr`, `defaultOperatorFor`, `humanize`, `isDataSource`, `isOgeContextMenuKey`, `lookupTextOf`, `mapLookupItems`, `ogeContextMenuKeyTarget`, `resolveLookupItems`
+- types: `ColumnDefLike`, `ColumnLayoutModelDeps`, `ColumnModelDeps`, `ColumnSource`, `DeferredBaseOptions`, `DeferredChildrenLoaderDeps`, `EditingModelDeps`, `KeyboardNavModelDeps`, `KeyboardNavTreeHooks`, `LookupItem`, `OgeColumnAlignment`, `OgeColumnLookup`, `OgeContextMenuKeyTarget`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataType`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeStateStorage`, `PendingChildRequest`, `ResolvedColumn`, `RowVirtualizerModelDeps`, `RowVirtualizerWindowAdapter`, `StatePersistenceOptions`
 
 `@oge-ui/grid/export-excel`
 
@@ -118,7 +118,7 @@ _Data & columns_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `data` | `readonly T[] \| DataSource<T>` | `[]` | Rows to render: a static array or any DataSource implementation (remote, OData…). |
-| `columns` | `readonly (string \| OgeColumnDef)[] \| undefined` | `—` | Programmatic columns; used only when no declarative `<oge-column>` children exist. When both are absent, columns derive from the first row. |
+| `columns` | `readonly (string \| OgeColumnDef<T>)[] \| undefined` | `—` | Programmatic columns: field names or `OgeColumnDef` objects carrying every `<oge-column>` option (templates as `TemplateRef`s). The way to share columns through a wrapper component — Angular content queries never see columns projected through another component. Used only when no declarative children exist; when both are absent, columns derive from the first row. |
 | `keyField` | `keyof T \| ((row: T) => RowKey) \| undefined` | `—` | Field (or selector) producing a stable row key; falls back to the row index. |
 
 _Sorting, filtering & search_
@@ -152,7 +152,7 @@ _Grouping_
 | --- | --- | --- | --- |
 | `groupPanel` | `boolean` | `false` | Drop area for drag-and-drop row grouping. |
 | `groupBy` | `readonly string[] \| undefined` | `—` | Initial/programmatic grouping by field names. |
-| `grouping` | `OgeGroupingOptions \| undefined` | `—` | `autoExpandAll: false` starts collapsed and enables deferred child loading. |
+| `grouping` | `OgeGroupingOptions \| undefined` | `—` | `autoExpandAll: false` starts collapsed and enables deferred child loading; `contextMenuEnabled: true` offers group/ungroup in the header menu without the group panel. |
 
 _Selection & focus_
 
@@ -245,6 +245,13 @@ _Paging_
 | `pageSize(): number / setPageSize(size)` | `number / void` | Page size getter / setter; `0` turns paging off. |
 | `pageCount(): number` | `Signal<number>` | Number of pages; `1` when paging is off. |
 
+_Columns & summaries_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `showColumnChooser(anchor?) / hideColumnChooser()` | `void` | Opens the column chooser below `anchor` (e.g. a button in your own header bar, with `columnChooser` off so no toolbar row is drawn), else below its toolbar button or the grid's start edge / closes it. |
+| `getTotalSummaryValue(field, type?)` | `unknown` | Raw value of a `totalSummary` by field (and type, when a column has several); `undefined` when none is configured or data has not loaded. |
+
 _Loading, state & export_
 
 | Name | Type | Description |
@@ -254,7 +261,7 @@ _Loading, state & export_
 | `clearFilters() / clearSorting()` | `void` | Clears every filter (row, header, builder, search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `Promise` | Rows + column metadata of the current view; `scope: 'all' \| 'page' \| 'selection'`. |
 | `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (`=`, `+`, `-`, `@` or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
-| `exportCsv(filename = 'grid.csv'): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. |
+| `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
 
 #### Events
 
@@ -264,8 +271,8 @@ _Interaction_
 | --- | --- | --- |
 | `rowClick / rowDblClick` | `OgeRowClickEvent<T>` | `{ row, key, event }`. |
 | `cellClick / cellDblClick` | `OgeCellClickEvent<T>` | `{ row, key, field, value, event }`. |
-| `rowContextMenu` | `OgeContextMenuEvent<T>` | Row right-click; push into `items` to open the built-in menu. |
-| `headerContextMenu` | `OgeHeaderContextMenuEvent` | Prebuilt, mutable header menu items (sort/group/pin/hide). |
+| `rowContextMenu` | `OgeContextMenuEvent<T>` | Row right-click — and the Menu key / Shift+F10 in a focused cell; push into `items` to open the built-in menu. `source` is `'pointer'` or `'keyboard'` (then `clientX/Y` is the cell's start/bottom corner); `event` is the originating event. |
+| `headerContextMenu` | `OgeHeaderContextMenuEvent` | Prebuilt, mutable header menu items (sort/group/pin/hide); also opened by the Menu key / Shift+F10 on a focused header. Carries `source` and `event` like `rowContextMenu`. |
 | `rowReordered` | `OgeRowReorderedEvent<T>` | A row was dropped in a new position (`rowDragging`). |
 
 _Selection & focus_
@@ -274,6 +281,13 @@ _Selection & focus_
 | --- | --- | --- |
 | `selectionChanged` | `OgeSelectionChangedEvent` | `{ selectedKeys, addedKeys, removedKeys }` after every selection change. |
 | `focusedRowChanged` | `OgeFocusedRowChangedEvent<T>` | `{ key, row }` after the focused row changed. |
+| `focusedCellChanged` | `OgeFocusedCellChangedEvent<T>` | `{ rowIndex, columnIndex, key, row, field }` after keyboard/pointer focus moved to another cell; `key`/`row` are `undefined` on group rows. |
+| `sortChanged` | `OgeSortChangedEvent` | `{ sort, previousSort }` as soon as the sort changed (header, menu, API) — no debounce, unlike `stateChange`. The initial sort is not a change. |
+| `pageChanged` | `OgePageChangedEvent` | `{ pageIndex, pageSize, previousPageIndex, previousPageSize }` after the page index or size changed. |
+| `rowExpanding` | `OgeGridRowTogglingEvent<T>` | Before a group or master-detail row expands (pointer, keyboard or `expandRow()`); `{ key, kind, row, cancel }` — set `cancel` to veto. Not fired per row by `expandAllGroups()`. |
+| `rowExpanded` | `OgeGridRowToggleEvent<T>` | `{ key, kind: 'group' \| 'detail', row }` after the row expanded. |
+| `rowCollapsing` | `OgeGridRowTogglingEvent<T>` | Before a group or master-detail row collapses; cancelable. |
+| `rowCollapsed` | `OgeGridRowToggleEvent<T>` | After a group or master-detail row collapsed. |
 | `selectedKeysChange / focusedRowKeyChange / filterValueChange / selectionFilterChange` | `model outputs` | Implicit outputs of the two-way models. |
 
 _Editing lifecycle_
@@ -314,7 +328,8 @@ _Basics_
 | --- | --- | --- | --- |
 | `field` | `string \| undefined` | `—` | Data field (dot paths supported via accessors). |
 | `caption` | `string \| undefined` | `—` | Header text; humanized from `field` when omitted. |
-| `dataType` | `OgeDataType` | `'string'` | 'string' \| 'number' \| 'date' \| 'boolean' — drives editors, filters and alignment. |
+| `dataType` | `OgeDataType` | `'string'` | 'string' \| 'number' \| 'date' \| 'boolean' — drives editors, filters and the default alignment. |
+| `alignment` | `OgeColumnAlignment \| undefined` | `—` | `'start' \| 'center' \| 'end'` for cells, header and summaries (logical — `'end'` is the right edge in LTR). Unset, numbers align to the end and everything else to the start. |
 | `width / minWidth` | `number \| string / number` | `—` | Track size; `minWidth` guards resizing. |
 | `visible` | `model<boolean>` | `true` | Two-way visibility (column chooser writes it). |
 | `format` | `(value: unknown) => string \| undefined` | `—` | Display formatter for cells, group rows, export. |
@@ -329,6 +344,7 @@ _Sort, filter & group_
 | `sortable / filterable` | `boolean` | `true` | Per-column opt-outs. |
 | `sortOrder / sortIndex` | `'asc' \| 'desc' / number` | `—` | Initial sort (stateKey/user wins). |
 | `groupIndex` | `number \| undefined` | `—` | Initial grouping position. |
+| `groupInterval` | `'day' \| 'month' \| 'year' \| undefined` | `—` | Date bucket when grouping by this column — `'day'` by default for `dataType="date"`, so same-day rows share a group whatever their time. Sent as `LoadOptions.group[].interval`. |
 | `filterOperator` | `FilterOperator \| undefined` | `—` | Initial operator of the filter-row cell. |
 | `calculateCellValue` | `(row: T) => unknown` | `—` | Calculated column value. |
 | `calculateSortValue` | `(row: T) => unknown` | `—` | Custom sort key. |
@@ -355,7 +371,7 @@ _Summaries & editing_
 | `*ogeDetailTemplate` | `OgeDetailTemplateContext<T>` | Master-detail content; `{ $implicit: row }`. |
 | `*ogeRowTemplate` | `OgeRowTemplateContext<T>` | Full-row replacement; `{ $implicit: row, index, key }`. |
 | `*ogeNoDataTemplate` | `TemplateRef` | Custom empty state. |
-| `[ogeToolbar]` | `marker directive` | Projects custom controls into the grid toolbar. |
+| `[ogeToolbar]` | `marker directive — 'before' \| 'center' \| 'after'` | Projects custom controls into the grid toolbar. The static value picks the group: `ogeToolbar="before"` (start edge — filters, primary actions), `"center"`, or bare / `"after"` (next to the built-in tools). |
 
 ### Grid types & configuration
 
@@ -367,6 +383,8 @@ _Standalone building blocks_
 | --- | --- | --- |
 | `OgeCellEditor` | `oge-cell-editor — inputs: control (required), dataType, lookupItems, label, surface, invalid, errorTitle; outputs: enterKey, escapeKey, tabKey` | The editor the grid renders in a cell: picks the `dataType`-matched `oge-*-box` from `@oge-ui/inputs` and binds it to a reactive `FormControl`. Usable on its own to get grid-identical editing in a form. |
 | `OgePager` | `oge-pager — inputs: pageIndex, pageCount, totalCount (required), pageSize, pageSizes, showInfo, displayMode, messages; outputs: pageChange, pageSizeChange` | The grid's pager as a standalone component — reuse it under a list or a card grid so paging looks identical everywhere. |
+| `ogeColumnFromDef(def)` | `(def: OgeColumnDef<T>) => OgeColumn<T>` | What `[columns]` runs on: turns a column definition into the signal surface of an `<oge-column>`. For a custom grid-like component that accepts the same `OgeColumnDef`s. |
+| `OgeColumnDefCache` | `class { resolve(defs): OgeColumn<T>[] }` | Keeps one column — and its visibility — per definition object across change detection; field-name strings are cached by name. |
 | `OgeFilterBuilderGroup` | `oge-filter-builder-group` | Recursive node of the filter builder (a group of conditions plus nested groups). Exported so a custom filter UI can reuse the same tree editor. |
 | `formatCellValue(value, dataType, format?)` | `(value: unknown, dataType: OgeDataType, format?: (value: unknown) => string) => string` | The exact formatting the grid applies to a cell. Use it to keep exports, tooltips or custom templates byte-identical with the rendered grid. |
 
@@ -388,7 +406,7 @@ _Option objects (boolean shorthands stay valid)_
 | `OgeHeaderFilterOptions` | `{ visible?: boolean; valueLimit?: number }` | Header filter. |
 | `OgeSearchPanelOptions` | `{ visible?: boolean; placeholder?: string; width?: number }` | Search panel. |
 | `OgeScrollingOptions` | `{ mode?: 'standard' \| 'virtual' \| 'infinite'; remote?: boolean; columnRenderingMode?: 'standard' \| 'virtual' }` | Scrolling engine. |
-| `OgeGroupingOptions` | `{ autoExpandAll?: boolean }` | `false` starts collapsed and defers child loading. |
+| `OgeGroupingOptions` | `{ autoExpandAll?: boolean; contextMenuEnabled?: boolean }` | `autoExpandAll: false` starts collapsed and defers child loading; `contextMenuEnabled` puts group/ungroup in the header menu without the group panel. |
 | `OgeEditingOptions` | `{ mode: OgeEditMode; allowUpdating?; allowAdding?; allowDeleting?; confirmDelete?; formItems?; formColCount? }` | Editing configuration; `OgeEditMode` = cell \| row \| batch \| popup \| form. |
 | `OgeCommandButton<T>` | `{ name?: 'edit' \| 'delete'; text?; onClick?(row, key); visible?(row) }` | Command column entries. |
 | `OgeColumnLookup` | `{ dataSource: readonly unknown[] \| ((row) => readonly unknown[]); valueExpr?; displayExpr? }` | Lookup source. |
@@ -1402,6 +1420,62 @@ export class TickerComponent {
     }, 600);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
   }
+}
+```
+
+### Cursor
+
+```ts
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import { HttpClient } from '@angular/common/http';
+import { CursorDataSource } from '@oge-ui/core';
+import { firstValueFrom } from 'rxjs';
+import type { CursorPage } from '@oge-ui/core';
+
+interface Account {
+  id: string;
+  email: string;
+  createdAt: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid
+      [data]="source"
+      keyField="id"
+      [scrolling]="{ mode: 'infinite' }"
+      style="height: 420px"
+    >
+      <oge-column field="email" />
+      <oge-column field="createdAt" dataType="date" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  private readonly http = inject(HttpClient);
+
+  // The endpoint pages with a cursor (`?after=…&limit=50` → { items, nextCursor }),
+  // not with an offset. The source walks the chain as the grid scrolls, fetches
+  // every page once per query and restarts from the first page when the sort,
+  // filter or search changes.
+  protected readonly source = new CursorDataSource<Account, string>({
+    key: 'id',
+    pageSize: 50,
+    fetchPage: ({ cursor, pageSize, sort, filter, searchText }) =>
+      firstValueFrom(
+        this.http.post<CursorPage<Account, string>>('/api/accounts/page', {
+          after: cursor,
+          limit: pageSize,
+          sort,
+          filter,
+          searchText,
+        }),
+      ),
+  });
 }
 ```
 

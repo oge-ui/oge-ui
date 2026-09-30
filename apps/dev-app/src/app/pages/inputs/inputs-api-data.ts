@@ -66,6 +66,12 @@ const COMMON_CHROME: ApiGroup = {
         'Stretches the field to 100% width (default 240px via <code>--oge-input-width</code>).',
     },
     {
+      name: 'width',
+      type: 'number | string | undefined',
+      description:
+        'This field’s width — a number is px, a string any CSS length. Sets <code>--oge-input-width</code> on this host only; <code>fluid</code> still wins.',
+    },
+    {
       name: 'showClearButton',
       type: 'boolean',
       default: 'false',

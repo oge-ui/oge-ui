@@ -63,7 +63,17 @@ export {
   type ColumnModelDeps,
   type ColumnSource,
   type LookupItem,
+  type OgeColumnAlignment,
   type OgeColumnLookup,
   type OgeDataType,
   type ResolvedColumn,
 } from './column-model';
+// Keyboard access to the row/header context menus — shared by every grid-like
+// component (the tree list reaches behavior through this entry point).
+export {
+  OgeContextMenuEcho,
+  isOgeContextMenuKey,
+  ogeContextMenuKeyTarget,
+  type OgeContextMenuKeyTarget,
+  type OgeContextMenuSource,
+} from '@oge-ui/behavior';

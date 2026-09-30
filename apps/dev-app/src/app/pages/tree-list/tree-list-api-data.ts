@@ -184,9 +184,9 @@ export const OGE_TREE_LIST_API: ApiSections = {
       entries: [
         {
           name: 'columns',
-          type: 'readonly (string | ColumnDefLike)[] | undefined',
+          type: 'readonly (string | OgeColumnDef&lt;T&gt;)[] | undefined',
           description:
-            'Programmatic columns (or declarative <code>&lt;oge-column&gt;</code>).',
+            'Programmatic columns — the grid’s <code>OgeColumnDef</code> with every <code>&lt;oge-column&gt;</code> option; used when no declarative columns exist (and the way to share columns through a wrapper component).',
         },
         {
           name: 'virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth',
@@ -372,7 +372,8 @@ export const OGE_TREE_LIST_API: ApiSections = {
         {
           name: 'rowContextMenu / headerContextMenu',
           type: 'context-menu events',
-          description: 'Mutable <code>items</code>.',
+          description:
+            'Mutable <code>items</code>; also opened by the Menu key / Shift+F10 on a focused cell or header (<code>source: &#39;keyboard&#39;</code>, anchored at the cell).',
         },
         {
           name: 'selectionChanged / focusedRowChanged',

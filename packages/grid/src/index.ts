@@ -25,6 +25,13 @@ export {
   type OgeRowRemovedEvent,
   type OgeSelectionChangedEvent,
   type OgeFocusedRowChangedEvent,
+  type OgeFocusedCellChangedEvent,
+  type OgeSortChangedEvent,
+  type OgePageChangedEvent,
+  type OgeGridRowTogglingEvent,
+  type OgeGridRowToggleEvent,
+  type OgeGridToggleKind,
+  type OgeContextMenuSource,
   type OgeExportingEvent,
   type OgeDataErrorEvent,
   type OgeScrollingOptions,
@@ -37,6 +44,7 @@ export {
   type OgeExportData,
   type OgeExportOptions,
 } from './lib/grid/grid';
+export { OgeColumnDefCache, ogeColumnFromDef } from './lib/columns/column-def';
 export {
   OgeEditTemplate,
   type OgeEditTemplateContext,
@@ -61,6 +69,7 @@ export { SelectionSlice } from './lib/state/selection-slice';
 export {
   OgeColumn,
   type OgeDataType,
+  type OgeColumnAlignment,
   type OgeColumnLookup,
 } from './lib/columns/column';
 export { OgeColumnGroup } from './lib/columns/column-group';
@@ -82,7 +91,10 @@ export {
   OgeRowTemplate,
   type OgeRowTemplateContext,
 } from './lib/templates/row-template';
-export { OgeGridToolbarItem } from './lib/templates/toolbar-item';
+export {
+  OgeGridToolbarItem,
+  type OgeGridToolbarPosition,
+} from './lib/templates/toolbar-item';
 export { OgePager } from './lib/pager/pager';
 export {
   OgeCellEditor,

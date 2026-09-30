@@ -37,9 +37,12 @@ import {
   type DataSource,
   type FilterExpr,
   type FilterOperator,
+  groupKeyFilter,
+  type GroupInterval,
   type GroupRowNode,
   type RowKey,
   type RowNode,
+  type SortDescriptor,
   type SummaryDescriptor,
   type SummaryRowNode,
   type SummaryType,
@@ -49,6 +52,12 @@ import {
   deferredToggleExpr,
   keyEqualsExpr,
   rowClickSelectionIntent,
+} from '@oge-ui/behavior';
+import {
+  OgeContextMenuEcho,
+  dateRangeFilterExpr,
+  isOgeContextMenuKey,
+  ogeContextMenuKeyTarget,
 } from '@oge-ui/behavior';
 import {
   effectiveFilterOperator,
@@ -100,6 +109,7 @@ import {
   createStatePersistence,
 } from '@oge-ui/grid/foundation';
 import { OgeColumn } from '../columns/column';
+import { OgeColumnDefCache, type OgeColumnDef } from '../columns/column-def';
 import { OgeColumnGroup } from '../columns/column-group';
 import { formatCellValue } from '../columns/value-format';
 import {
@@ -120,6 +130,7 @@ import {
 import {
   OgeCheckBox,
   OgeDateBox,
+  OgeDateRangeBox,
   OgeNumberBox,
   OgeSelectBox,
   OgeTextBox,
@@ -154,6 +165,7 @@ import type { OgeHeaderTemplateContext } from '../templates/header-template';
 // `@oge-ui/behavior` (the React grid accepts the very same types); re-exported
 // so `@oge-ui/grid` consumers are unaffected.
 export type {
+  OgeContextMenuSource,
   OgeDataErrorEvent,
   OgeExportCellArgs,
   OgeExportColumn,
@@ -161,7 +173,13 @@ export type {
   OgeExportOptions,
   OgeExportingEvent,
   OgeFilterRowOptions,
+  OgeFocusedCellChangedEvent,
   OgeFocusedRowChangedEvent,
+  OgeGridRowToggleEvent,
+  OgeGridRowTogglingEvent,
+  OgeGridToggleKind,
+  OgePageChangedEvent,
+  OgeSortChangedEvent,
   OgeGroupingOptions,
   OgeHeaderFilterOptions,
   OgePagingOptions,
@@ -172,13 +190,20 @@ export type {
   OgeSortingOptions,
 } from '@oge-ui/behavior';
 import type {
+  OgeContextMenuSource,
   OgeDataErrorEvent,
   OgeExportColumn,
   OgeExportData,
   OgeExportOptions,
   OgeExportingEvent,
   OgeFilterRowOptions,
+  OgeFocusedCellChangedEvent,
   OgeFocusedRowChangedEvent,
+  OgeGridRowToggleEvent,
+  OgeGridRowTogglingEvent,
+  OgeGridToggleKind,
+  OgePageChangedEvent,
+  OgeSortChangedEvent,
   OgeGroupingOptions,
   OgeHeaderFilterOptions,
   OgePagingOptions,
@@ -189,11 +214,18 @@ import type {
   OgeSortingOptions,
 } from '@oge-ui/behavior';
 
-/** Programmatic column definition (alternative to declarative `<oge-column>`). */
-export interface OgeColumnDef {
-  field: string;
-  caption?: string;
+/** Same fields in the same order with the same directions. */
+function sameSort(
+  a: readonly SortDescriptor[],
+  b: readonly SortDescriptor[],
+): boolean {
+  return (
+    a.length === b.length &&
+    a.every((d, i) => d.field === b[i].field && d.dir === b[i].dir)
+  );
 }
+
+export type { OgeColumnDef } from '../columns/column-def';
 
 export interface OgeRowClickEvent<T = unknown> {
   row: T;
@@ -224,13 +256,20 @@ export interface OgeCellClickEvent<T = unknown> {
 // the legacy grid-local `{ text, disabled?, action? }` interface was a strict
 // subset, so existing handlers keep working. Re-exported from the barrel.
 
-/** Emitted on row right-click; push into `items` to open the context menu. */
+/**
+ * Emitted on row right-click — and on the Menu key / Shift+F10 in a focused
+ * cell; push into `items` to open the built-in menu.
+ */
 export interface OgeContextMenuEvent<T = unknown> {
   row: T;
   key: RowKey;
+  /** Where the menu opens: the pointer, or the focused cell's start/bottom corner. */
   clientX: number;
   clientY: number;
   items: OgeMenuItem[];
+  source: OgeContextMenuSource;
+  /** The originating event — call `preventDefault()` to veto the native menu yourself. */
+  event: MouseEvent | KeyboardEvent;
 }
 
 /**
@@ -243,6 +282,8 @@ export interface OgeHeaderContextMenuEvent {
   clientX: number;
   clientY: number;
   items: OgeMenuItem[];
+  source: OgeContextMenuSource;
+  event: MouseEvent | KeyboardEvent;
 }
 
 // Save-flow types moved to the foundation entry with the editing model;
@@ -282,6 +323,7 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
     OgeForm,
     OgeCheckBox,
     OgeDateBox,
+    OgeDateRangeBox,
     OgeSelectBox,
     OgeTextBox,
     OgeNumberBox,
@@ -318,10 +360,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   readonly data = input<readonly T[] | DataSource<T>>([]);
 
   /**
-   * Programmatic columns; used only when no declarative `<oge-column>` children
-   * exist. When both are absent, columns are derived from the first row's keys.
+   * Programmatic columns — field names or full `OgeColumnDef` objects with
+   * every `<oge-column>` option (the way to share columns through a wrapper
+   * component). Used only when no declarative `<oge-column>` children exist;
+   * when both are absent, columns are derived from the first row's keys.
    */
-  readonly columns = input<readonly (string | OgeColumnDef)[] | undefined>(
+  readonly columns = input<readonly (string | OgeColumnDef<T>)[] | undefined>(
     undefined,
   );
 
@@ -535,6 +579,24 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Fires after the focused row changed (`focusedRowEnabled` or key writes). */
   readonly focusedRowChanged = output<OgeFocusedRowChangedEvent<T>>();
 
+  /** Fires after keyboard/pointer focus moved to another cell. */
+  readonly focusedCellChanged = output<OgeFocusedCellChangedEvent<T>>();
+
+  /** Fires as soon as the sort changed — no debounce, unlike `stateChange`. */
+  readonly sortChanged = output<OgeSortChangedEvent>();
+
+  /** Fires after the page index or page size changed. */
+  readonly pageChanged = output<OgePageChangedEvent>();
+
+  /** Fires before a group or master-detail row expands; set `cancel` to veto. */
+  readonly rowExpanding = output<OgeGridRowTogglingEvent<T>>();
+  /** Fires after a group or master-detail row expanded. */
+  readonly rowExpanded = output<OgeGridRowToggleEvent<T>>();
+  /** Fires before a group or master-detail row collapses; set `cancel` to veto. */
+  readonly rowCollapsing = output<OgeGridRowTogglingEvent<T>>();
+  /** Fires after a group or master-detail row collapsed. */
+  readonly rowCollapsed = output<OgeGridRowToggleEvent<T>>();
+
   /** Fires when a DataSource load or save fails. */
   readonly dataErrorOccurred = output<OgeDataErrorEvent>();
 
@@ -589,12 +651,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly viewportHeight = signal(400);
 
   protected readonly detailTemplate = contentChild(OgeDetailTemplate<T>);
-  protected readonly declaredColumns = contentChildren<OgeColumn<T>>(
-    OgeColumn,
-    {
-      descendants: true,
-    },
-  );
+  private readonly projectedColumns = contentChildren<OgeColumn<T>>(OgeColumn, {
+    descendants: true,
+  });
+  private readonly columnDefCache = new OgeColumnDefCache<T>();
+  /** Declarative `<oge-column>` children, else the programmatic `columns`. */
+  protected readonly declaredColumns = computed<readonly OgeColumn<T>[]>(() => {
+    const projected = this.projectedColumns();
+    return projected.length
+      ? projected
+      : this.columnDefCache.resolve(this.columns());
+  });
   protected readonly columnGroups =
     contentChildren<OgeColumnGroup<T>>(OgeColumnGroup);
 
@@ -770,6 +837,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       }
       this.store.grouping.setSummaries(group, total);
     });
+    // date columns group by calendar day unless they say otherwise
+    effect(() => {
+      const intervals: Record<string, GroupInterval> = {};
+      for (const column of this.declaredColumns()) {
+        const field = column.field();
+        if (!field) continue;
+        const interval =
+          column.groupInterval() ??
+          (column.dataType() === 'date' ? 'day' : undefined);
+        if (interval) intervals[field] = interval;
+      }
+      this.store.grouping.setIntervals(intervals);
+    });
     // selectedKeys model ⇄ selection slice (guarded both ways)
     effect(() => {
       const keys = this.selectedKeys();
@@ -823,6 +903,59 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.focusedRowChanged.emit({
         key,
         row: key === null ? undefined : untracked(() => this.getRowByKey(key)),
+      });
+    });
+    // sortChanged: synchronous with the change, unlike the debounced stateChange
+    let previousSort: readonly SortDescriptor[] | undefined;
+    effect(() => {
+      const sort = this.store.sort.descriptors();
+      const previous = previousSort;
+      previousSort = sort;
+      if (previous === undefined || sameSort(previous, sort)) return;
+      untracked(() => this.sortChanged.emit({ sort, previousSort: previous }));
+    });
+    // pageChanged; the initial paging is not a change
+    let previousPage: { index: number; size: number | null } | undefined;
+    effect(() => {
+      const page = {
+        index: this.store.paging.pageIndex(),
+        size: this.store.paging.pageSize(),
+      };
+      const previous = previousPage;
+      previousPage = page;
+      if (
+        previous === undefined ||
+        (previous.index === page.index && previous.size === page.size)
+      )
+        return;
+      untracked(() =>
+        this.pageChanged.emit({
+          pageIndex: page.index,
+          pageSize: page.size,
+          previousPageIndex: previous.index,
+          previousPageSize: previous.size,
+        }),
+      );
+    });
+    // focusedCellChanged; clearing the focus (null) is not reported
+    let previousCell: { row: number; col: number } | null = null;
+    effect(() => {
+      const cell = this.focusedCell();
+      if (!cell) return;
+      const previous = previousCell;
+      previousCell = cell;
+      if (previous && previous.row === cell.row && previous.col === cell.col)
+        return;
+      untracked(() => {
+        const node = this.flatNodes()[cell.row];
+        const data = node?.kind === 'data' ? node : undefined;
+        this.focusedCellChanged.emit({
+          rowIndex: cell.row,
+          columnIndex: cell.col,
+          key: data?.key,
+          row: data?.data,
+          field: this.resolvedColumns()[cell.col]?.field,
+        });
       });
     });
     // surface DataSource load failures (save failures route through the model)
@@ -897,7 +1030,14 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       prefix: 'oge-grid',
       storage: this.stateStorage,
       snapshot: this.persistedSnapshot,
-      apply: (snapshot) => this.applyState(snapshot),
+      // a bound [groupBy] is controlled: the page decides the grouping, so a
+      // stored grouping from an earlier visit must not replace it
+      apply: (snapshot) =>
+        this.applyState(
+          untracked(this.groupBy) === undefined
+            ? snapshot
+            : { ...snapshot, group: undefined },
+        ),
       // re-run the restore once the column directives registered
       beforeRestore: () => this.declaredColumns(),
       onChange: (snapshot) => this.stateChange.emit(snapshot),
@@ -1113,8 +1253,32 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   private setRowExpansion(key: RowKey, expanded: boolean): void {
     if (this.isRowExpanded(key) === expanded) return;
-    if (this.collectGroupKeys().has(key)) this.store.expansion.toggleGroup(key);
+    this.requestToggle(
+      this.collectGroupKeys().has(key) ? 'group' : 'detail',
+      key,
+    );
+  }
+
+  /**
+   * Every single-row toggle — pointer, keyboard, `expandRow()`/`collapseRow()`
+   * — runs through here, so `rowExpanding`/`rowCollapsing` can veto it and the
+   * `-ed` events report it.
+   */
+  private requestToggle(kind: OgeGridToggleKind, key: RowKey): void {
+    const expanding = !this.isRowExpanded(key);
+    const row =
+      kind === 'detail' ? untracked(() => this.getRowByKey(key)) : undefined;
+    const pending: OgeGridRowTogglingEvent<T> = {
+      key,
+      kind,
+      row,
+      cancel: false,
+    };
+    (expanding ? this.rowExpanding : this.rowCollapsing).emit(pending);
+    if (pending.cancel) return;
+    if (kind === 'group') this.store.expansion.toggleGroup(key);
     else this.store.expansion.toggleDetail(key);
+    (expanding ? this.rowExpanded : this.rowCollapsed).emit({ key, kind, row });
   }
 
   /** Message shown by `beginCustomLoading()`; `null` while inactive. */
@@ -1425,11 +1589,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * `exporting` event first (the Excel/PDF helper functions call
    * `getExportData` directly and do not).
    */
-  async exportCsv(filename = 'grid.csv'): Promise<void> {
+  /**
+   * Downloads the CSV. `options` are `getCsv()`'s — `scope`, `customizeCell`,
+   * `separator`… — so a customized export still goes through `exporting` and
+   * the built-in formula guard instead of a hand-rolled Blob.
+   */
+  async exportCsv(
+    filename = 'grid.csv',
+    options?: CsvOptions & OgeExportOptions<T>,
+  ): Promise<void> {
     const event: OgeExportingEvent = { fileName: filename, cancel: false };
     this.exporting.emit(event);
     if (event.cancel) return;
-    const csv = await this.getCsv();
+    const csv = await this.getCsv(options);
     if (typeof document === 'undefined') return;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1564,12 +1736,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       key: entry.key,
       buildOptions: (rest) => {
         const groups = rest.group ?? [];
-        const pathFilters: FilterExpr[] = entry.path.map((value, i) => ({
-          type: 'binary',
-          field: groups[i]?.field ?? '',
-          op: 'eq',
-          value,
-        }));
+        const pathFilters: FilterExpr[] = entry.path.map((value, i) =>
+          groupKeyFilter(groups[i]?.field ?? '', value, groups[i]?.interval),
+        );
         const operands = [
           ...(rest.filter ? [rest.filter] : []),
           ...pathFilters,
@@ -1792,7 +1961,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly columnModel = new ColumnModel<T, OgeColumn<T>>({
     declaredColumns: this.declaredColumns,
     bands: this.bandByColumn,
-    columnDefs: this.columns,
+    // programmatic defs arrive through declaredColumns; the resolver only
+    // derives columns from the first row when neither kind exists
+    columnDefs: () => undefined,
     firstDataRow: this.firstDataRow,
     widthOverrides: this.store.columns.widthOverrides,
     pinOverrides: this.store.columns.pinOverrides,
@@ -1965,6 +2136,19 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     );
   }
 
+  /** The filter row's range picker (`between` on a date column). */
+  protected onDateRangeFilter(
+    column: ResolvedColumn<T>,
+    range: readonly [Date | null, Date | null],
+  ): void {
+    const field = column.field;
+    if (!field) return;
+    this.store.filter.setRowFilter(
+      field,
+      dateRangeFilterExpr(field, range[0], range[1]),
+    );
+  }
+
   protected onEditorEnter(): void {
     const mode = this.editMode();
     if (mode === 'row' || mode === 'popup' || mode === 'form')
@@ -2059,13 +2243,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   protected toggleGroup(key: RowKey, event?: Event): void {
     event?.preventDefault();
-    this.store.expansion.toggleGroup(key);
+    this.requestToggle('group', key);
   }
 
   protected toggleDetail(key: RowKey, event?: Event): void {
     event?.stopPropagation();
     event?.preventDefault();
-    this.store.expansion.toggleDetail(key);
+    this.requestToggle('detail', key);
   }
 
   /** Total-summary text per column id; empty when no totals are configured. */
@@ -2094,6 +2278,21 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   protected readonly hasTotalRow = computed(
     () => this.totalSummaryByColumn().size > 0,
   );
+
+  /**
+   * The raw value of a total summary — what the total row formats — by field
+   * and, when a column carries several aggregates, by type. `undefined` when
+   * no such total is configured or the data has not loaded yet.
+   */
+  getTotalSummaryValue(field: string, type?: SummaryType): unknown {
+    const descriptors = untracked(this.store.grouping.totalSummary);
+    const values = untracked(this.adapter.result)?.summary;
+    if (!values) return undefined;
+    const index = descriptors.findIndex(
+      (d) => d.field === field && (type === undefined || d.type === type),
+    );
+    return index < 0 ? undefined : values[index];
+  }
 
   // --- selection -----------------------------------------------------------
 
@@ -2372,6 +2571,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       }
       return;
     }
+    if (
+      noEditorOpen &&
+      isOgeContextMenuKey(event) &&
+      this.openContextMenuFromKeyboard(event)
+    )
+      return;
     const cell = this.focusedCell();
     if (!cell) return;
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
@@ -2441,23 +2646,88 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     node: DataRowNode<T>,
     event: MouseEvent,
   ): void {
+    if (this.contextMenuEcho.swallow(event)) return;
+    this.openRowContextMenu(
+      node,
+      event.clientX,
+      event.clientY,
+      event,
+      'pointer',
+    );
+  }
+
+  private openRowContextMenu(
+    node: DataRowNode<T>,
+    x: number,
+    y: number,
+    event: MouseEvent | KeyboardEvent,
+    source: OgeContextMenuSource,
+  ): void {
     const items: OgeMenuItem[] = [];
     this.rowContextMenu.emit({
       row: node.data,
       key: node.key,
-      clientX: event.clientX,
-      clientY: event.clientY,
+      clientX: x,
+      clientY: y,
       items,
+      source,
+      event,
     });
     if (!items.length) return; // fall back to the native browser menu
     event.preventDefault();
-    this.openContextMenu(event.clientX, event.clientY, items);
+    this.openContextMenu(x, y, items);
+  }
+
+  /** Swallows the native `contextmenu` that may follow a keyboard-opened menu. */
+  private readonly contextMenuEcho = new OgeContextMenuEcho();
+
+  /**
+   * The Menu key / Shift+F10 open the row or header menu at the focused cell
+   * (see `@oge-ui/behavior`'s grid-context-menu). Returns whether it did.
+   */
+  private openContextMenuFromKeyboard(event: KeyboardEvent): boolean {
+    const target = ogeContextMenuKeyTarget(event.target);
+    if (!target) return false;
+    if (target.headerColumnId !== null) {
+      const column = this.resolvedColumns().find(
+        (c) => c.id === target.headerColumnId,
+      );
+      if (!column?.field) return false;
+      this.contextMenuEcho.mark(event.timeStamp);
+      event.preventDefault();
+      this.openHeaderContextMenu(column, target.x, target.y, event, 'keyboard');
+      return true;
+    }
+    const node =
+      target.rowIndex === null ? undefined : this.flatNodes()[target.rowIndex];
+    if (node?.kind !== 'data') return false;
+    this.contextMenuEcho.mark(event.timeStamp);
+    event.preventDefault();
+    this.openRowContextMenu(node, target.x, target.y, event, 'keyboard');
+    return true;
   }
 
   /** Built-in header context menu: sort / group / pin / hide. */
   protected onHeaderContextMenu(
     column: ResolvedColumn<T>,
     event: MouseEvent,
+  ): void {
+    if (this.contextMenuEcho.swallow(event)) return;
+    this.openHeaderContextMenu(
+      column,
+      event.clientX,
+      event.clientY,
+      event,
+      'pointer',
+    );
+  }
+
+  private openHeaderContextMenu(
+    column: ResolvedColumn<T>,
+    x: number,
+    y: number,
+    event: MouseEvent | KeyboardEvent,
+    source: OgeContextMenuSource,
   ): void {
     const field = column.field;
     if (!field) return;
@@ -2481,7 +2751,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         });
       }
     }
-    if (this.groupPanel()) {
+    if (this.groupPanel() || this.grouping()?.contextMenuEnabled) {
       const grouped = this.store.grouping
         .descriptors()
         .some((d) => d.field === field);
@@ -2526,14 +2796,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.headerContextMenu.emit({
       field,
       caption: column.caption,
-      clientX: event.clientX,
-      clientY: event.clientY,
+      clientX: x,
+      clientY: y,
       items,
+      source,
+      event,
     });
     if (!items.length) return;
     event.preventDefault();
     event.stopPropagation();
-    this.openContextMenu(event.clientX, event.clientY, items);
+    this.openContextMenu(x, y, items);
   }
 
   // --- editing -------------------------------------------------------------
@@ -3019,7 +3291,31 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       this.chooserPanel.close();
       return;
     }
-    this.chooserAnchor.set(event.currentTarget as HTMLElement);
+    this.openChooser(event.currentTarget as HTMLElement);
+  }
+
+  /**
+   * Opens the column chooser below `anchor` — e.g. a button in your own header
+   * bar, with `columnChooser` left off so the grid draws no toolbar row. Without
+   * an anchor it opens below the toolbar's chooser button, or the grid's edge.
+   */
+  showColumnChooser(anchor?: HTMLElement): void {
+    if (untracked(this.chooserOpen)) return;
+    const button =
+      anchor ??
+      this.hostRef.nativeElement.querySelector<HTMLElement>(
+        '.oge-chooser-button',
+      );
+    this.openChooser(button);
+  }
+
+  /** Closes the column chooser if it is open. */
+  hideColumnChooser(): void {
+    if (untracked(this.chooserOpen)) this.chooserPanel.close();
+  }
+
+  private openChooser(anchor: HTMLElement | null): void {
+    this.chooserAnchor.set(anchor);
     this.chooserOpen.set(true);
     this.chooserPanel.open();
     this.chooserPanel.updatePosition();
@@ -3239,10 +3535,16 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     this.operatorPanel.close('select');
     const field = menu?.column.field;
     if (!menu || !field) return;
+    const previous = this.currentOperator(menu.column);
     const next = new Map(this.rowFilterOps());
     if (op === null) next.delete(field);
     else next.set(field, op);
     this.rowFilterOps.set(next);
+    // "between" swaps the editor; the old editor's value means nothing to it
+    if ((previous === 'between') !== (op === 'between')) {
+      this.store.filter.setRowFilter(field, null);
+      return;
+    }
     // re-apply the current editor value with the new operator
     const raw = this.rowFilterRaw.get(field) ?? '';
     const effective = effectiveFilterOperator(menu.column, op ?? undefined);

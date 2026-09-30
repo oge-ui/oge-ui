@@ -65,6 +65,12 @@ import {
   type TreeListStateSnapshot,
 } from '@oge-ui/core';
 import {
+  OgeContextMenuEcho,
+  isOgeContextMenuKey,
+  ogeContextMenuKeyTarget,
+  type OgeContextMenuSource,
+} from '@oge-ui/grid/foundation';
+import {
   CHECKBOX_WIDTH,
   COMMAND_WIDTH,
   DRAG_WIDTH,
@@ -82,7 +88,6 @@ import {
   humanize,
   isDataSource,
   lookupTextOf,
-  type ColumnDefLike,
   type PendingChildRequest,
   type ResolvedColumn as FoundationResolvedColumn,
 } from '@oge-ui/grid/foundation';
@@ -94,7 +99,9 @@ import {
   OGE_GRID_CONFIG,
   OgeCellEditor,
   OgeColumn,
+  OgeColumnDefCache,
   OgeColumnGroup,
+  type OgeColumnDef,
   OgeFilterBuilderGroup,
   OgeGridToolbarItem,
   OgeNoDataTemplate,
@@ -332,8 +339,11 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    */
   readonly loadMode = input<'full' | 'lazy' | undefined>(undefined);
 
-  /** Programmatic column definitions (alternative to declarative `<oge-column>`). */
-  readonly columns = input<readonly (string | ColumnDefLike)[] | undefined>(
+  /**
+   * Programmatic columns — field names or full `OgeColumnDef` objects with
+   * every `<oge-column>` option; used only without declarative children.
+   */
+  readonly columns = input<readonly (string | OgeColumnDef<T>)[] | undefined>(
     undefined,
   );
 
@@ -528,12 +538,17 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
    */
   readonly stateChange = output<TreeListStateSnapshot>();
 
-  protected readonly declaredColumns = contentChildren<OgeColumn<T>>(
-    OgeColumn,
-    {
-      descendants: true,
-    },
-  );
+  private readonly projectedColumns = contentChildren<OgeColumn<T>>(OgeColumn, {
+    descendants: true,
+  });
+  private readonly columnDefCache = new OgeColumnDefCache<T>();
+  /** Declarative `<oge-column>` children, else the programmatic `columns`. */
+  protected readonly declaredColumns = computed<readonly OgeColumn<T>[]>(() => {
+    const projected = this.projectedColumns();
+    return projected.length
+      ? projected
+      : this.columnDefCache.resolve(this.columns());
+  });
   protected readonly columnGroups =
     contentChildren<OgeColumnGroup<T>>(OgeColumnGroup);
   protected readonly noDataTemplate = contentChild(OgeNoDataTemplate);
@@ -1196,7 +1211,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   private readonly columnModel = new ColumnModel<T, OgeColumn<T>>({
     declaredColumns: this.declaredColumns,
     bands: this.bandByColumn,
-    columnDefs: this.columns,
+    columnDefs: () => undefined,
     firstDataRow: this.firstDataRow,
     widthOverrides: this.store.columns.widthOverrides,
     pinOverrides: this.store.columns.pinOverrides,
@@ -2243,22 +2258,86 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     node: DataRowNode<T>,
     event: MouseEvent,
   ): void {
+    if (this.contextMenuEcho.swallow(event)) return;
+    this.openRowContextMenu(
+      node,
+      event.clientX,
+      event.clientY,
+      event,
+      'pointer',
+    );
+  }
+
+  private openRowContextMenu(
+    node: DataRowNode<T>,
+    x: number,
+    y: number,
+    event: MouseEvent | KeyboardEvent,
+    source: OgeContextMenuSource,
+  ): void {
     const items: OgeMenuItem[] = [];
     this.rowContextMenu.emit({
       row: node.data,
       key: node.key,
-      clientX: event.clientX,
-      clientY: event.clientY,
+      clientX: x,
+      clientY: y,
       items,
+      source,
+      event,
     });
     if (!items.length) return; // fall back to the native browser menu
     event.preventDefault();
-    this.openContextMenu(event.clientX, event.clientY, items);
+    this.openContextMenu(x, y, items);
+  }
+
+  /** Swallows the native `contextmenu` that may follow a keyboard-opened menu. */
+  private readonly contextMenuEcho = new OgeContextMenuEcho();
+
+  /** The Menu key / Shift+F10 open the row or header menu at the focused cell. */
+  private openContextMenuFromKeyboard(event: KeyboardEvent): boolean {
+    const target = ogeContextMenuKeyTarget(event.target);
+    if (!target) return false;
+    if (target.headerColumnId !== null) {
+      const column = this.resolvedColumns().find(
+        (c) => c.id === target.headerColumnId,
+      );
+      if (!column?.field) return false;
+      this.contextMenuEcho.mark(event.timeStamp);
+      event.preventDefault();
+      this.openHeaderContextMenu(column, target.x, target.y, event, 'keyboard');
+      return true;
+    }
+    const node =
+      target.rowIndex === null
+        ? undefined
+        : this.renderNodes()[target.rowIndex];
+    if (node?.kind !== 'data') return false;
+    this.contextMenuEcho.mark(event.timeStamp);
+    event.preventDefault();
+    this.openRowContextMenu(node, target.x, target.y, event, 'keyboard');
+    return true;
   }
 
   protected onHeaderContextMenu(
     column: ResolvedColumn<T>,
     event: MouseEvent,
+  ): void {
+    if (this.contextMenuEcho.swallow(event)) return;
+    this.openHeaderContextMenu(
+      column,
+      event.clientX,
+      event.clientY,
+      event,
+      'pointer',
+    );
+  }
+
+  private openHeaderContextMenu(
+    column: ResolvedColumn<T>,
+    x: number,
+    y: number,
+    event: MouseEvent | KeyboardEvent,
+    source: OgeContextMenuSource,
   ): void {
     const field = column.field;
     if (!field) return;
@@ -2311,14 +2390,16 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.headerContextMenu.emit({
       field,
       caption: column.caption,
-      clientX: event.clientX,
-      clientY: event.clientY,
+      clientX: x,
+      clientY: y,
       items,
+      source,
+      event,
     });
     if (!items.length) return;
     event.preventDefault();
     event.stopPropagation();
-    this.openContextMenu(event.clientX, event.clientY, items);
+    this.openContextMenu(x, y, items);
   }
 
   protected closePopups(): void {
@@ -2883,6 +2964,13 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   protected onTreeKeydown(event: KeyboardEvent): void {
+    if (
+      isOgeContextMenuKey(event) &&
+      this.store.editing.editCell() === null &&
+      this.store.editing.editRowKey() === null &&
+      this.openContextMenuFromKeyboard(event)
+    )
+      return;
     const cell = this.focusedCell();
     if (!cell) return;
     if (event.key === ' ') {

@@ -12,6 +12,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
+import { withInputWidth } from './field-extras';
 import {
   clampNumber,
   createNumberFormatter,
@@ -309,7 +310,7 @@ export const OgeNumberBox = forwardRef<OgeNumberBoxHandle, OgeNumberBoxProps>(
       .join(' ');
 
     return (
-      <span className={hostClasses} style={style}>
+      <span className={hostClasses} style={withInputWidth(style, props.width)}>
         <OgeFieldChrome
           host={{
             msg: field.msg,

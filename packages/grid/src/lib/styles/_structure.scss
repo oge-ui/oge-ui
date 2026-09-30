@@ -52,7 +52,7 @@
 
 // one calm focus treatment for every text input the chrome renders
 .oge-search-input,
-.oge-filter-input,
+input.oge-filter-input,
 .oge-hf-search,
 .oge-editor-input,
 .oge-fb-input {
@@ -473,9 +473,17 @@
   background: var(--oge-header-bg);
 }
 
+// The filter editors are OGE input components that draw their own field
+// chrome; the class only sizes the host. Border, padding and background are
+// for a bare <input> — applied to a component host they drew a second box
+// around the editor's own ("box in a box").
 .oge-filter-input {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+}
+
+input.oge-filter-input {
   padding: 4px 8px;
   border: 1px solid var(--oge-border-color);
   border-radius: var(--oge-radius);
@@ -517,8 +525,28 @@
 }
 
 .oge-cell-number {
-  text-align: end;
   font-variant-numeric: tabular-nums;
+}
+
+// Column alignment (`alignment` on a column; the resolver defaults numbers to
+// `end`). Logical, so `end` is the right edge in LTR and the left in RTL. The
+// header follows its cells: an end-aligned header lays out caption-first from
+// the end edge, so the sort arrow sits beside the caption and the header-filter
+// button (margin-inline-start: auto) moves to the start edge.
+.oge-align-center {
+  text-align: center;
+}
+
+.oge-align-end {
+  text-align: end;
+}
+
+.oge-header-cell.oge-align-center {
+  justify-content: center;
+}
+
+.oge-header-cell.oge-align-end {
+  flex-direction: row-reverse;
 }
 
 .oge-expander-cell,
@@ -728,10 +756,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   background: inherit;
-
-  &.oge-cell-number {
-    text-align: end;
-  }
 
   &.oge-pinned {
     position: sticky;

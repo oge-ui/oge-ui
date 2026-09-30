@@ -563,9 +563,15 @@ const FAMILIES = [
       },
       angularOnly: {
         ogegridtoolbaritem:
-          'Content-projection directive for the grid toolbar. React has no projection; the toolbar slot lands with the render-prop pass (recorded in docs/REACT-PARITY.md).',
+          'Content-projection directive for the grid toolbar (`ogeToolbar="before|center|after"`, a static attribute). React has no projection; the same three groups are the `toolbarBefore` / `toolbarCenter` / `toolbarAfter` slot props.',
       },
       reactOnly: {
+        toolbarbefore:
+          'Slot prop standing in for `[ogeToolbar]="before"` content projection (see `ogegridtoolbaritem`).',
+        toolbarcenter:
+          'Slot prop standing in for `[ogeToolbar]="center"` content projection (see `ogegridtoolbaritem`).',
+        toolbarafter:
+          'Slot prop standing in for bare / `[ogeToolbar]="after"` content projection (see `ogegridtoolbaritem`).',
         rendercell:
           'React form of the `*ogeCellTemplate` structural directive, documented in the Angular page’s companion-directives block rather than as a column input (ROADMAP exception: TemplateRef ↔ render prop).',
         renderheader:

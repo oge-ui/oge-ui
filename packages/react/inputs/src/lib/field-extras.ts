@@ -1,9 +1,10 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import type { OgeInputShowSuccessIcon } from '@oge-ui/behavior';
 
 /**
- * The three field-chrome extras every oge React *field* editor carries — the
+ * The field-chrome extras every oge React *field* editor carries — the
  * React face of the members the Angular `OgeInputBase` gives its subclasses
  * (text box, text area, number box, select box, tag box, autocomplete, date
  * box, date range box, color box). The toggle-style controls and the sliders
@@ -20,6 +21,25 @@ export interface OgeFieldExtrasProps {
    * {@link TEMPLATE_BOUND_ATTRS}.
    */
   inputAttr?: Record<string, string>;
+  /**
+   * This field's width — a number is px, a string any CSS length
+   * (`'12rem'`, `'30%'`). Sets `--oge-input-width` on this host only, so one
+   * toolbar date box can be narrow without touching every other field.
+   * `fluid` still wins.
+   */
+  width?: number | string;
+}
+
+/** The host style with `width` applied as `--oge-input-width`. */
+export function withInputWidth(
+  style: CSSProperties | undefined,
+  width: number | string | undefined,
+): CSSProperties | undefined {
+  if (width === undefined) return style;
+  return {
+    ...style,
+    '--oge-input-width': typeof width === 'number' ? `${width}px` : width,
+  } as CSSProperties;
 }
 
 /** Attributes owned by the components — `inputAttr` may not override them. */
