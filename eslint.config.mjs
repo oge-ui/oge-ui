@@ -342,6 +342,21 @@ export default [
               ],
             },
             {
+              // the React scheduler mirrors the Angular package's edges onto
+              // the React families: popup/modal (overlay), the calendar
+              // (inputs) and the appointment form (forms)
+              sourceTag: 'scope:react-scheduler',
+              onlyDependOnLibsWithTags: [
+                'scope:react-scheduler',
+                'scope:scheduler-engine',
+                'scope:react-forms',
+                'scope:react-inputs',
+                'scope:react-overlay',
+                'scope:behavior',
+                'scope:core',
+              ],
+            },
+            {
               sourceTag: 'scope:overlay',
               onlyDependOnLibsWithTags: [
                 'scope:overlay',
@@ -472,6 +487,7 @@ export default [
                 'scope:react-grid',
                 'scope:react-oge',
                 'scope:react-overlay',
+                'scope:react-scheduler',
                 'scope:behavior',
                 'scope:grid',
                 'scope:tree-list',

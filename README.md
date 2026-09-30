@@ -126,7 +126,7 @@ No modules, no forms boilerplate — `[(value)]` binds straight to a
 ## Packages
 
 All packages are MIT except `@oge-ui/pivot`, `@oge-ui/bpmn`,
-`@oge-ui/scheduler` (with `@oge-ui/scheduler-engine`), `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`, which are
+`@oge-ui/scheduler` (with `@oge-ui/scheduler-engine` and `@oge-ui/react-scheduler`), `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`, which are
 commercial (free for evaluation and development) — see [Licensing](#licensing).
 
 | Package                                                 | Description                                                                                                                                                                                                                                                                                                                                                                               | npm                                                           |
@@ -161,6 +161,7 @@ commercial (free for evaluation and development) — see [Licensing](#licensing)
 | [`@oge-ui/react-forms`](packages/react/forms)           | **React.** Form layout over the editors: nested `layout` array of items, groups and tabbed/accordion/wizard sections, responsive columns, declarative validation rules and the validation summary                                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/react-forms)      |
 | [`@oge-ui/react-upload`](packages/react/upload)         | **React.** File upload: drag & drop with directory and paste, restrictions with on-row reasons, previews, chunked resumable transfer, external drop zones and triggers — the same upload engine as the Angular package                                                                                                                                                                    | [npm](https://www.npmjs.com/package/@oge-ui/react-upload)     |
 | [`@oge-ui/react-grid`](packages/react/grid)             | **React.** Data grid on the shared grid engine: sorting, filter row + search, paging, row/column virtualization, windowed remote loading, selection, keyboard navigation, grouping with summaries and deferred groups, master-detail, row render props, row drag, pinned/resizable/reorderable columns, persistence, CSV — editing and header filters follow (see `docs/REACT-PARITY.md`) | [npm](https://www.npmjs.com/package/@oge-ui/react-grid)       |
+| [`@oge-ui/react-scheduler`](packages/react/scheduler)   | **React.** Scheduler (commercial): day/week/work-week/month/agenda/timeline/year views, drag & resize with Escape-cancel, recurrence with occurrence-vs-series editing, resources, reminders, popup + form editor — the same engine and stylesheet as the Angular package                                                                                                                 | [npm](https://www.npmjs.com/package/@oge-ui/react-scheduler)  |
 
 ## Theming
 
@@ -238,8 +239,8 @@ OGE UI is **open-core**:
   `@oge-ui/forms`, `@oge-ui/upload` and `@oge-ui/overlay` are [MIT-licensed](LICENSE). This is a commitment:
   these packages and every feature currently in them will remain MIT.
 - **Commercial — `@oge-ui/pivot`, `@oge-ui/bpmn`, `@oge-ui/scheduler`
-  (with its engine `@oge-ui/scheduler-engine`), `@oge-ui/gantt`,
-  `@oge-ui/kanban` and
+  (with its engine `@oge-ui/scheduler-engine` and its React layer
+  `@oge-ui/react-scheduler`), `@oge-ui/gantt`, `@oge-ui/kanban` and
   `@oge-ui/charts`.** The pivot grid,
   the BPMN editor, the scheduler, the Gantt, the Kanban and the Charts are
   source-available commercial software: free for evaluation,
@@ -248,6 +249,7 @@ OGE UI is **open-core**:
   [packages/bpmn/LICENSE](packages/bpmn/LICENSE),
   [packages/scheduler/LICENSE](packages/scheduler/LICENSE),
   [packages/scheduler-engine/LICENSE](packages/scheduler-engine/LICENSE),
+  [packages/react/scheduler/LICENSE](packages/react/scheduler/LICENSE),
   [packages/gantt/LICENSE](packages/gantt/LICENSE),
   [packages/kanban/LICENSE](packages/kanban/LICENSE),
   [packages/charts/LICENSE](packages/charts/LICENSE),

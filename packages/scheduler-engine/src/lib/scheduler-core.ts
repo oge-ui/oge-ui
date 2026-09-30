@@ -486,6 +486,11 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     );
   }
 
+  /** Switches the active view (the toolbar's view switcher). */
+  setView(view: OgeSchedulerView): void {
+    this.options.setCurrentView(view);
+  }
+
   /** Navigates to `date` in the day view ("+N more", year cells). */
   drillIntoDay(date: Date): void {
     this.setDate(date);
