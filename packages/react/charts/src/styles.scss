@@ -1,0 +1,6 @@
+// The React charts render the exact `.oge-chart-*` / `.oge-range-*` markup the
+// Angular package styles — so their stylesheet IS the Angular package's SCSS,
+// compiled here into this package's own `styles.css`. No second stylesheet,
+// no drift (ADR 0001). `chart.scss` is the family's only partial: the
+// cartesian, pie, polar and range-selector components all load it.
+@use '../../../charts/src/lib/chart/chart';

@@ -1,5 +1,5 @@
 import { Directive, TemplateRef, inject } from '@angular/core';
-import type { OgeChartPointEvent } from '../charts-types';
+import type { OgeChartPointEvent } from '@oge-ui/charts-engine';
 
 export interface OgeChartTooltipTemplateContext<T = unknown> {
   /** The hovered point(s) — one entry per series in shared mode. */

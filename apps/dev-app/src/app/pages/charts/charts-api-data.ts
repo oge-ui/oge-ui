@@ -313,7 +313,7 @@ export const OGE_POLAR_CHART_API: ApiSections = {
           type: "'point' | 'none' / readonly OgeChartPointRef[]",
           default: "'none' / []",
           description:
-            'Keyboard Enter (and clicks on markers/sectors) select; two-way (<code>[(selectedPoints)]</code>).',
+            'Keyboard Enter on the active point selects it (a second Enter clears it); hovering markers and sectors shows the tooltip. Two-way (<code>[(selectedPoints)]</code>).',
         },
         {
           name: 'legend / tooltipEnabled / palette / title / locale / messages',
@@ -433,6 +433,13 @@ export const OGE_PIE_CHART_API: ApiSections = {
             "<code>{ mode: 'topN' | 'smallValueThreshold', topCount?, threshold? }</code> — the tail folds into an &quot;Others&quot; slice (<code>othersLabel</code>).",
         },
         {
+          name: 'othersLabel',
+          type: 'string',
+          default: "'Others'",
+          description:
+            'Label (and <code>argument</code> of the event payload) of the grouped tail slice.',
+        },
+        {
           name: 'showLabels',
           type: 'boolean',
           default: 'true',
@@ -450,6 +457,18 @@ export const OGE_PIE_CHART_API: ApiSections = {
           name: 'legend / tooltipEnabled / palette / title / locale / messages',
           type: 'see OgeChart',
           description: 'Shared options with the cartesian chart.',
+        },
+      ],
+    },
+  ],
+  methods: [
+    {
+      entries: [
+        {
+          name: 'getSvgElement()',
+          type: 'SVGSVGElement',
+          description:
+            'The live SVG root — what the image exporters serialize.',
         },
       ],
     },

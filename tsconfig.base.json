@@ -33,6 +33,14 @@
       ],
       "@oge-ui/react-tree-list": ["./packages/react/tree-list/src/index.ts"],
       "@oge-ui/react-upload": ["./packages/react/upload/src/index.ts"],
+      "@oge-ui/react-charts": ["./packages/react/charts/src/index.ts"],
+      "@oge-ui/react-charts/export-image": [
+        "./packages/react/charts/src/export-image.ts"
+      ],
+      "@oge-ui/charts-engine": ["./packages/charts-engine/src/index.ts"],
+      "@oge-ui/charts-engine/export-image": [
+        "./packages/charts-engine/src/export-image.ts"
+      ],
       "@oge-ui/buttons": ["./packages/buttons/src/index.ts"],
       "@oge-ui/core": ["./packages/core/src/index.ts"],
       "@oge-ui/forms": ["./packages/forms/src/index.ts"],

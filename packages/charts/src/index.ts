@@ -1,5 +1,6 @@
 // Public API of @oge-ui/charts (commercial — see LICENSE).
-// Explicit named exports only (house rule): the engine stays unexported.
+// Explicit named exports only (house rule). The engine is its own package,
+// @oge-ui/charts-engine (ADR 0003); the public types come from it.
 
 export { OgeChart, OGE_CHART_PALETTE } from './lib/chart/chart';
 export { OgePieChart, type OgeChartPieSliceEvent } from './lib/chart/pie-chart';
@@ -32,7 +33,7 @@ export {
   type OgeChartStripLine,
   type OgeChartTooltipOptions,
   type OgeChartTooltipShowingEvent,
-} from './lib/charts-types';
+} from '@oge-ui/charts-engine';
 export {
   OGE_CHARTS_CONFIG,
   OGE_DEFAULT_CHARTS_CONFIG,

@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   ViewEncapsulation,
   afterNextRender,
@@ -15,46 +16,33 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { createFieldAccessor } from '@oge-ui/core';
 import {
-  buildPieSlices,
-  groupSmallValues,
-  layoutPieLabels,
-  type PieSlice,
-} from '../engine/pie-layout';
-import { sliceArcPath } from '../engine/pie-layout';
-import { numberFormat } from '../engine/tick-format';
+  buildPieScene,
+  mergeOgeChartsMessages,
+  observeChartSize,
+  pieAriaLabel,
+  pieLabelText,
+  pieSelectedAnnouncement,
+  pieTooltip,
+  pieValueText,
+  togglePieSlice,
+  type OgeChartLegendClickEvent,
+  type OgeChartLegendOptions,
+  type OgeChartPieSliceEvent,
+  type OgeChartSmallValuesGrouping,
+  type OgePieSliceVm,
+} from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
-import { OGE_CHART_PALETTE } from './chart';
 import {
   OgeChartLegendTemplate,
   OgeChartTooltipTemplate,
 } from './chart-templates';
-import type {
-  OgeChartLegendClickEvent,
-  OgeChartLegendOptions,
-  OgeChartSmallValuesGrouping,
-} from '../charts-types';
 
-/** A rendered slice — the payload of pie events and tooltips. */
-export interface OgeChartPieSliceEvent<T = unknown> {
-  readonly index: number;
-  readonly argument: unknown;
-  readonly value: number;
-  readonly fraction: number;
-  /** Merged sources for the synthetic "others" slice. */
-  readonly sources: readonly T[];
-  readonly grouped: boolean;
-}
+// The slice payload type lives in the engine (ADR 0003); re-exported so
+// `@oge-ui/charts` keeps its public API.
+export type { OgeChartPieSliceEvent };
 
-interface SliceVm<T> {
-  readonly slice: PieSlice;
-  readonly payload: OgeChartPieSliceEvent<T>;
-  readonly path: string;
-  readonly explodedPath: string;
-  readonly color: string;
-  readonly label: string;
-}
+type SliceVm<T> = OgePieSliceVm<T>;
 
 /**
  * `<oge-pie-chart>` — pie/doughnut on the shared kernel: slice geometry,
@@ -236,15 +224,9 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   private readonly svgEl =
     viewChild.required<ElementRef<SVGSVGElement>>('svgEl');
 
-  protected readonly msg = computed<OgeChartsMessages>(() => ({
-    ...this.config.messages,
-    ...this.messages(),
-    aria: { ...this.config.messages.aria, ...this.messages().aria },
-    announcements: {
-      ...this.config.messages.announcements,
-      ...this.messages().announcements,
-    },
-  }));
+  protected readonly msg = computed<OgeChartsMessages>(() =>
+    mergeOgeChartsMessages(this.config.messages, this.messages()),
+  );
   protected readonly effectiveLocale = computed(
     () => this.locale() ?? this.config.locale,
   );
@@ -256,29 +238,12 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   protected readonly announcement = signal('');
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
-      const wrap = this.plotWrapEl().nativeElement;
-      const measure = (): void => {
-        const rect = wrap.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          this.hostSize.set({
-            width: Math.round(rect.width),
-            height: Math.round(rect.height),
-          });
-        }
-      };
-      measure();
-      if (typeof ResizeObserver === 'undefined') return; // jsdom
-      let frame = false;
-      const observer = new ResizeObserver(() => {
-        if (frame) return;
-        frame = true;
-        requestAnimationFrame(() => {
-          frame = false;
-          measure();
-        });
-      });
-      observer.observe(wrap);
+      const stop = observeChartSize(this.plotWrapEl().nativeElement, (size) =>
+        this.hostSize.set(size),
+      );
+      destroyRef.onDestroy(stop);
     });
   }
 
@@ -289,118 +254,42 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
     () => this.legend().position ?? 'bottom',
   );
 
-  private readonly geometry = computed(() => {
-    const cx = this.width() / 2;
-    const cy = this.height() / 2;
-    const outerR = Math.max(
-      20,
-      Math.min(this.width(), this.height()) / 2 - (this.showLabels() ? 56 : 16),
-    );
-    const innerR =
-      this.type() === 'doughnut' ? outerR * this.innerRadius() : 0;
-    return { cx, cy, outerR, innerR };
-  });
+  /** The engine's view model (ADR 0003): slices, labels, geometry. */
+  private readonly scene = computed(() =>
+    buildPieScene<T>({
+      dataSource: this.dataSource(),
+      argumentField: this.argumentField(),
+      valueField: this.valueField(),
+      type: this.type(),
+      innerRadius: this.innerRadius(),
+      startAngle: this.startAngle(),
+      smallValuesGrouping: this.smallValuesGrouping(),
+      othersLabel: this.othersLabel(),
+      showLabels: this.showLabels(),
+      palette: this.palette(),
+      width: this.width(),
+      height: this.height(),
+    }),
+  );
 
-  protected readonly slices = computed<readonly SliceVm<T>[]>(() => {
-    const argOf =
-      typeof this.argumentField() === 'string'
-        ? createFieldAccessor<T>(this.argumentField() as string)
-        : (this.argumentField() as (item: T) => unknown);
-    const valueOf =
-      typeof this.valueField() === 'string'
-        ? createFieldAccessor<T>(this.valueField() as string)
-        : (this.valueField() as (item: T) => unknown);
-    const data = this.dataSource();
-    const values = data.map((item) => {
-      const raw = valueOf(item);
-      return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0;
-    });
-    const grouped = groupSmallValues(values, this.smallValuesGrouping());
-    const slices = buildPieSlices(grouped, this.startAngle());
-    const { cx, cy, outerR, innerR } = this.geometry();
-    const palette = this.palette() ?? OGE_CHART_PALETTE;
-    return slices
-      .filter((slice) => slice.fraction > 0)
-      .map((slice) => {
-        const entry = grouped[slice.index];
-        const sources = entry.sourceIndexes.map((index) => data[index]);
-        const label = entry.grouped
-          ? this.othersLabel()
-          : String(argOf(sources[0]) ?? '');
-        const mid = (slice.startAngle + slice.endAngle) / 2;
-        const explode = 8;
-        const dx = explode * Math.sin(mid);
-        const dy = -explode * Math.cos(mid);
-        return {
-          slice,
-          payload: {
-            index: slice.index,
-            argument: entry.grouped ? this.othersLabel() : argOf(sources[0]),
-            value: slice.value,
-            fraction: slice.fraction,
-            sources,
-            grouped: entry.grouped,
-          },
-          path: sliceArcPath(
-            cx,
-            cy,
-            outerR,
-            innerR,
-            slice.startAngle,
-            slice.endAngle,
-          ),
-          explodedPath: sliceArcPath(
-            cx + dx,
-            cy + dy,
-            outerR,
-            innerR,
-            slice.startAngle,
-            slice.endAngle,
-          ),
-          color: palette[slice.index % palette.length],
-          label,
-        };
-      });
-  });
-
-  protected readonly labels = computed(() => {
-    const { cx, cy, outerR } = this.geometry();
-    return layoutPieLabels(
-      this.slices().map((vm) => vm.slice),
-      cx,
-      cy,
-      outerR,
-    );
-  });
+  protected readonly slices = computed<readonly SliceVm<T>[]>(
+    () => this.scene().slices,
+  );
+  protected readonly labels = computed(() => this.scene().labels);
 
   protected labelTextOf(sliceIndex: number): string {
-    const vm = this.slices().find((entry) => entry.slice.index === sliceIndex);
-    return vm === undefined ? '' : vm.label;
+    return pieLabelText(this.scene(), sliceIndex);
   }
 
   protected valueTextOf(vm: SliceVm<T>): string {
-    const percent = new Intl.NumberFormat(this.effectiveLocale(), {
-      style: 'percent',
-      maximumFractionDigits: 1,
-    }).format(vm.slice.fraction);
-    return `${numberFormat(vm.slice.value, this.effectiveLocale())} (${percent})`;
+    return pieValueText(vm, this.effectiveLocale());
   }
 
-  protected readonly tooltipVm = computed(() => {
-    if (!this.tooltipEnabled()) return null;
-    const index = this.hoverIndex();
-    if (index === null) return null;
-    const vm = this.slices().find((entry) => entry.slice.index === index);
-    if (vm === undefined) return null;
-    const { cx, cy, outerR } = this.geometry();
-    const mid = (vm.slice.startAngle + vm.slice.endAngle) / 2;
-    return {
-      x: cx + (outerR / 2) * Math.sin(mid) + 12,
-      y: cy - (outerR / 2) * Math.cos(mid),
-      label: vm.label,
-      valueText: this.valueTextOf(vm),
-    };
-  });
+  protected readonly tooltipVm = computed(() =>
+    this.tooltipEnabled()
+      ? pieTooltip(this.scene(), this.hoverIndex(), this.effectiveLocale())
+      : null,
+  );
 
   protected isSelected(index: number): boolean {
     return this.selectedSlices().includes(index);
@@ -418,27 +307,19 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
     };
     this.legendClick.emit(event);
     if (event.cancel) return;
-    const current = untracked(this.selectedSlices);
     this.selectedSlices.set(
-      current.includes(index)
-        ? current.filter((entry) => entry !== index)
-        : [...current, index],
+      togglePieSlice(untracked(this.selectedSlices), index),
     );
   }
 
   protected onSliceClick(vm: SliceVm<T>, event: MouseEvent): void {
     void event;
     this.sliceClick.emit(vm.payload);
-    const current = untracked(this.selectedSlices);
     this.selectedSlices.set(
-      current.includes(vm.slice.index)
-        ? current.filter((entry) => entry !== vm.slice.index)
-        : [...current, vm.slice.index],
+      togglePieSlice(untracked(this.selectedSlices), vm.slice.index),
     );
     this.announcement.set(
-      this.msg()
-        .announcements.selected.replace('{series}', vm.label)
-        .replace('{argument}', this.valueTextOf(vm)),
+      pieSelectedAnnouncement(this.msg(), vm, this.effectiveLocale()),
     );
   }
 
@@ -448,8 +329,6 @@ export class OgePieChart<T extends object = Record<string, unknown>> {
   }
 
   protected readonly rootAriaLabel = computed(() =>
-    this.msg()
-      .aria.pieLabel.replace('{title}', this.title() || 'Data')
-      .replace('{count}', String(this.slices().length)),
+    pieAriaLabel(this.msg(), this.title(), this.slices().length),
   );
 }

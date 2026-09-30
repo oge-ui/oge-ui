@@ -60,6 +60,8 @@ const COVERAGE: Readonly<
     // commercial: @oge-ui/react-bpmn over @oge-ui/bpmn-engine (ADR 0003);
     // overview and api both branch
     bpmn: '*',
+    // the commercial charts family: overview and api both branch
+    charts: '*',
     // R6 complete: every feature page of the grid now branches. The
     // engine-level sub-pages that share this family — playground, sorting,
     // virtual-scroll, infinite-scroll, remote-data, live-updates — stay

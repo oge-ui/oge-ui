@@ -1,0 +1,283 @@
+/**
+ * The range selector's view model and window arithmetic — what
+ * `<oge-range-selector>` and `<OgeRangeSelector>` draw and how their drags,
+ * track clicks and handle keys move the window. Framework-free.
+ */
+import { toLocalDate } from '@oge-ui/core';
+import {
+  clampRange,
+  createLinearScale,
+  createTimeScale,
+  type ChartRange,
+  type ChartScale,
+  type ChartScaleKind,
+} from './scale';
+import { baselineAreaPath, linePath, type PathPoint } from './path-builder';
+import {
+  buildSeries,
+  type ChartSeries,
+  type ChartSeriesInput,
+} from './series-model';
+import { numberFormat, timeTickFormatter } from './tick-format';
+import { chartSeriesColor } from './cartesian-model';
+import type { OgeChartsMessages } from './charts-config';
+
+/** Height of the tick-label strip under the mini chart. */
+const H_SCALE = 18;
+
+/**
+ * `'time' | 'linear'`: explicit, or detected from the first argument (a
+ * `Date` or a date string → time; anything else → linear).
+ */
+export function detectRangeSelectorKind<T>(
+  dataSource: readonly T[],
+  series: readonly ChartSeriesInput<T>[],
+  explicit: 'time' | 'linear' | undefined,
+): ChartScaleKind {
+  if (explicit !== undefined) return explicit;
+  for (const item of dataSource) {
+    for (const seriesInput of series) {
+      const expr = seriesInput.argumentField;
+      if (expr === undefined) return 'linear';
+      const raw =
+        typeof expr === 'string'
+          ? (item as Record<string, unknown>)[expr]
+          : expr(item);
+      if (raw === undefined || raw === null) continue;
+      if (raw instanceof Date) return 'time';
+      if (typeof raw === 'string' && toLocalDate(raw) !== null) return 'time';
+      return 'linear';
+    }
+  }
+  return 'linear';
+}
+
+export interface OgeRangeSelectorDataInput<T> {
+  readonly dataSource: readonly T[];
+  readonly series: readonly ChartSeriesInput<T>[];
+  readonly scaleType?: 'time' | 'linear';
+}
+
+export interface OgeRangeSelectorData<T> {
+  readonly kind: ChartScaleKind;
+  readonly seriesList: readonly ChartSeries<T>[];
+  /** The full argument extent. */
+  readonly bounds: ChartRange;
+}
+
+export function buildRangeSelectorData<T>(
+  input: OgeRangeSelectorDataInput<T>,
+): OgeRangeSelectorData<T> {
+  const kind = detectRangeSelectorKind(
+    input.dataSource,
+    input.series,
+    input.scaleType,
+  );
+  const seriesList = input.series.map((entry, index) =>
+    buildSeries(input.dataSource, entry, index, kind, new Map()),
+  );
+  let min = Infinity;
+  let max = -Infinity;
+  for (const series of seriesList) {
+    for (const point of series.points) {
+      if (point.argNumeric === null) continue;
+      if (point.argNumeric < min) min = point.argNumeric;
+      if (point.argNumeric > max) max = point.argNumeric;
+    }
+  }
+  return {
+    kind,
+    seriesList,
+    bounds: min <= max ? { min, max } : { min: 0, max: 1 },
+  };
+}
+
+export interface OgeRangeSelectorSceneInput<T> {
+  readonly data: OgeRangeSelectorData<T>;
+  readonly palette?: readonly string[];
+  readonly width: number;
+  readonly height: number;
+  readonly locale?: string;
+}
+
+export interface OgeRangeSelectorSeriesVm {
+  readonly index: number;
+  readonly color: string;
+  readonly linePathD: string | null;
+  readonly areaPathD: string | null;
+}
+
+export interface OgeRangeSelectorScene<T> {
+  readonly data: OgeRangeSelectorData<T>;
+  readonly locale: string | undefined;
+  readonly width: number;
+  readonly height: number;
+  /** Height of the mini chart (the rest is the tick strip). */
+  readonly plotH: number;
+  readonly scale: ChartScale;
+  readonly backgroundSeries: readonly OgeRangeSelectorSeriesVm[];
+  readonly ticks: readonly { readonly px: number; readonly label: string }[];
+}
+
+export function buildRangeSelectorScene<T>(
+  input: OgeRangeSelectorSceneInput<T>,
+): OgeRangeSelectorScene<T> {
+  const { data, locale } = input;
+  const plotH = input.height - H_SCALE;
+  const options = {
+    min: data.bounds.min,
+    max: data.bounds.max,
+    rangePx: input.width,
+  };
+  const scale =
+    data.kind === 'time'
+      ? createTimeScale(options)
+      : createLinearScale(options);
+
+  let valueMin = Infinity;
+  let valueMax = -Infinity;
+  for (const series of data.seriesList) {
+    for (const point of series.points) {
+      if (point.value === null) continue;
+      if (point.value < valueMin) valueMin = point.value;
+      if (point.value > valueMax) valueMax = point.value;
+    }
+  }
+  const backgroundSeries: OgeRangeSelectorSeriesVm[] = [];
+  if (valueMin <= valueMax) {
+    const valueScale = createLinearScale({
+      min: Math.min(0, valueMin),
+      max: valueMax,
+      rangePx: plotH - 6,
+      inverted: true,
+    });
+    data.seriesList.forEach((series, index) => {
+      const points: PathPoint[] = series.points.map((point) => ({
+        x: point.argNumeric === null ? 0 : scale.toPx(point.argNumeric),
+        y:
+          point.argNumeric === null || point.value === null
+            ? null
+            : valueScale.toPx(point.value) + 3,
+      }));
+      const isArea = series.type === 'area' || series.type === 'splineArea';
+      backgroundSeries.push({
+        index,
+        color: chartSeriesColor(
+          series as ChartSeries<unknown>,
+          index,
+          input.palette,
+        ),
+        linePathD: linePath(points) || null,
+        areaPathD: isArea ? baselineAreaPath(points, plotH) || null : null,
+      });
+    });
+  }
+
+  const format =
+    data.kind === 'time'
+      ? timeTickFormatter(scale.tickUnit ?? 'day', locale)
+      : (value: number): string => numberFormat(value, locale);
+  const ticks = scale.ticks
+    .filter((_, index, all) => index % Math.ceil(all.length / 8) === 0)
+    .map((tick) => ({ px: scale.toPx(tick), label: format(tick) }));
+
+  return {
+    data,
+    locale,
+    width: input.width,
+    height: input.height,
+    plotH,
+    scale,
+    backgroundSeries,
+    ticks,
+  };
+}
+
+/** The window actually shown: `value` clamped into the bounds, or all of it. */
+export function rangeSelectorEffective<T>(
+  data: OgeRangeSelectorData<T>,
+  value: ChartRange | null,
+): ChartRange {
+  return value === null ? data.bounds : clampRange(value, data.bounds);
+}
+
+/** The window's pixel edges. */
+export function rangeSelectorWindowPx<T>(
+  scene: OgeRangeSelectorScene<T>,
+  effective: ChartRange,
+): { readonly start: number; readonly end: number } {
+  return {
+    start: scene.scale.toPx(effective.min),
+    end: scene.scale.toPx(effective.max),
+  };
+}
+
+/** A handle's value text: a medium date on time axes, a number otherwise. */
+export function rangeSelectorLabel(
+  kind: ChartScaleKind,
+  value: number,
+  locale: string | undefined,
+): string {
+  return kind === 'time'
+    ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
+        new Date(value),
+      )
+    : numberFormat(value, locale);
+}
+
+/** A window about to be committed: clamped into the bounds, at least 1% wide. */
+export function commitRangeSelection(
+  range: ChartRange,
+  bounds: ChartRange,
+): ChartRange {
+  return clampRange(range, bounds, (bounds.max - bounds.min) * 0.01);
+}
+
+/** A pixel drag distance in axis units. */
+export function rangeSelectorDeltaValue(
+  scale: ChartScale,
+  deltaX: number,
+): number {
+  return scale.fromPx(deltaX) - scale.fromPx(0);
+}
+
+/** Dragging one handle: that edge moves, never past the other. */
+export function rangeHandleDragRange(
+  side: 'start' | 'end',
+  startRange: ChartRange,
+  deltaValue: number,
+): ChartRange {
+  return side === 'start'
+    ? {
+        min: Math.min(startRange.min + deltaValue, startRange.max),
+        max: startRange.max,
+      }
+    : {
+        min: startRange.min,
+        max: Math.max(startRange.max + deltaValue, startRange.min),
+      };
+}
+
+/** Dragging the window: both edges move together. */
+export function rangeWindowDragRange(
+  startRange: ChartRange,
+  deltaValue: number,
+): ChartRange {
+  return { min: startRange.min + deltaValue, max: startRange.max + deltaValue };
+}
+
+/** A track click: the same-width window centered at the clicked value. */
+export function rangeCenteredAt(range: ChartRange, center: number): ChartRange {
+  const span = range.max - range.min;
+  return { min: center - span / 2, max: center + span / 2 };
+}
+
+/** The live-region text after a handle key moved the window. */
+export function rangeSelectorAnnouncement(
+  messages: OgeChartsMessages,
+  kind: ChartScaleKind,
+  effective: ChartRange,
+  locale: string | undefined,
+): string {
+  return `${messages.aria.rangeWindow}: ${rangeSelectorLabel(kind, effective.min, locale)} – ${rangeSelectorLabel(kind, effective.max, locale)}`;
+}

@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiReference } from '../../shared/api-reference';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
+import { ReactChartsApiSections } from '../react-charts/api';
 import {
   OGE_CHART_API,
   OGE_CHARTS_CONFIG_API,
@@ -19,9 +21,24 @@ const SECTIONS = [
   'Configuration',
 ] as const;
 
+/** TOC of the React view — must mirror `ReactChartsApiSections`' titles. */
+const SECTIONS_REACT = [
+  '<OgeChart>',
+  '<OgePieChart>',
+  '<OgePolarChart>',
+  '<OgeRangeSelector>',
+  'Configuration',
+] as const;
+
 @Component({
   selector: 'app-charts-api',
-  imports: [ApiReference, DocHeader, PageToc, RouterLink],
+  imports: [
+    ApiReference,
+    DocHeader,
+    PageToc,
+    ReactChartsApiSections,
+    RouterLink,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -30,43 +47,65 @@ const SECTIONS = [
       categoryLink="/components/charts"
       [chips]="['Properties', 'Methods', 'Events', 'Types']"
     >
-      <p>
-        Complete API reference for <code>&#64;oge-ui/charts</code>. The kernel —
-        1-2-5 nice-tick scales, calendar-true time ticks, stacking, bar
-        slotting, single-path builders, pie layout, zoom math and the O(log n)
-        hit-testing — is pure TypeScript inside the package; live demos are on
-        the
-        <a
-          routerLink="/components/charts"
-          class="text-indigo-600 underline dark:text-indigo-400"
-          >overview</a
-        >
-        page.
-      </p>
+      @if (fw.isReact()) {
+        <p>
+          Complete API reference for <code>&#64;oge-ui/react-charts</code>:
+          props, the <code>ref</code> handles, callbacks and render props. The
+          kernel — 1-2-5 nice-tick scales, calendar-true time ticks, stacking,
+          bar slotting, single-path builders, pie layout, zoom math and the
+          O(log n) hit-testing — is the framework-free
+          <code>&#64;oge-ui/charts-engine</code> both render layers run; live
+          demos are on the
+          <a
+            routerLink="/components/charts"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >overview</a
+          >
+          page.
+        </p>
+      } @else {
+        <p>
+          Complete API reference for <code>&#64;oge-ui/charts</code>. The kernel
+          — 1-2-5 nice-tick scales, calendar-true time ticks, stacking, bar
+          slotting, single-path builders, pie layout, zoom math and the O(log n)
+          hit-testing — is pure TypeScript inside the package; live demos are on
+          the
+          <a
+            routerLink="/components/charts"
+            class="text-indigo-600 underline dark:text-indigo-400"
+            >overview</a
+          >
+          page.
+        </p>
+      }
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? sectionsReact : sections" />
 
-    <app-api-reference
-      title="OgeChart"
-      selector="oge-chart"
-      [sections]="chartApi"
-    />
-    <app-api-reference
-      title="OgePieChart"
-      selector="oge-pie-chart"
-      [sections]="pieApi"
-    />
-    <app-api-reference
-      title="OgePolarChart"
-      selector="oge-polar-chart"
-      [sections]="polarApi"
-    />
-    <app-api-reference
-      title="OgeRangeSelector"
-      selector="oge-range-selector"
-      [sections]="rangeApi"
-    />
-    <app-api-reference title="Configuration" [sections]="configApi" />
+    @if (fw.isReact()) {
+      <app-react-charts-api />
+    } @else {
+      <app-api-reference
+        title="OgeChart"
+        selector="oge-chart"
+        [sections]="chartApi"
+      />
+      <app-api-reference
+        title="OgePieChart"
+        selector="oge-pie-chart"
+        [sections]="pieApi"
+      />
+      <app-api-reference
+        title="OgePolarChart"
+        selector="oge-polar-chart"
+        [sections]="polarApi"
+      />
+      <app-api-reference
+        title="OgeRangeSelector"
+        selector="oge-range-selector"
+        [sections]="rangeApi"
+      />
+      <app-api-reference title="Configuration" [sections]="configApi" />
+    }
 
     <h3>Notes</h3>
     <ul>
@@ -95,7 +134,9 @@ const SECTIONS = [
   `,
 })
 export class ChartsApiPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly chartApi = OGE_CHART_API;
   protected readonly pieApi = OGE_PIE_CHART_API;
   protected readonly polarApi = OGE_POLAR_CHART_API;

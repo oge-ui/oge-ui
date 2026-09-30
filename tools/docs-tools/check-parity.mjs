@@ -468,6 +468,29 @@ const FAMILIES = [
     },
   },
   {
+    // The commercial charts family (ADR 0003): both layers run
+    // @oge-ui/charts-engine, so every difference below is idiom, not behavior.
+    family: 'charts',
+    angularApiPage: 'apps/dev-app/src/app/pages/charts/api.ts',
+    reactApiPage: 'apps/dev-app/src/app/pages/react-charts/api.ts',
+    exceptions: {
+      pairs: {
+        // angular ↔ react (both already normalized): DI provider ↔ context provider
+        provideogechartsconfig: 'ogechartsconfigprovider',
+      },
+      reactOnly: {
+        classname:
+          'React host styling idiom; an Angular host takes `class` natively (and needs a height through `style`, which it also takes natively).',
+        style:
+          'React host styling idiom; an Angular host takes `style` natively — the docs size every chart with it.',
+        renderlegenditem:
+          'Render prop replacing the `*ogeChartLegendTemplate` structural directive, which the Angular page documents in the OgeChart types table (the pie and polar charts query the same directive).',
+        useogechartsconfig:
+          'Hook reading the resolved config; the Angular counterpart is `inject(OGE_CHARTS_CONFIG)`, not a documented member.',
+      },
+    },
+  },
+  {
     family: 'upload',
     angularApiPage: 'apps/dev-app/src/app/pages/upload/api.ts',
     reactApiPage: 'apps/dev-app/src/app/pages/react-upload/api.ts',

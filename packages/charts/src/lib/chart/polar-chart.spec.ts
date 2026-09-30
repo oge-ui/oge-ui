@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { OgePolarChart } from './polar-chart';
-import type { OgeChartSeriesInput } from '../charts-types';
+import type { OgeChartSeriesInput } from '@oge-ui/charts-engine';
 
 interface Row {
   skill: string;

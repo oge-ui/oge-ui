@@ -213,6 +213,19 @@ export const PACKAGES = [
     tier: 'commercial',
   },
   {
+    dir: 'charts-engine',
+    npm: '@oge-ui/charts-engine',
+    label: 'Charts engine',
+    summary:
+      'Framework-free charts engine shared by the Angular and React charts: scales, series normalization, stacking, path builders with LTTB downsampling, pie and radar geometry, the cartesian/pie/polar/range-selector view models, keyboard maps, the gesture machine, the message catalog and the image exporter. Installed automatically — you rarely import it directly.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+    // no render layer of its own (ADR 0003)
+    platform: 'agnostic',
+  },
+  {
     dir: 'gantt',
     npm: '@oge-ui/gantt',
     label: 'Gantt',
@@ -390,6 +403,19 @@ export const PACKAGES = [
     docsRoot: '/components/kanban',
     pageDirs: ['react-kanban'],
     apiPage: 'apps/dev-app/src/app/pages/react-kanban/api.ts',
+    tier: 'commercial',
+    platform: 'react',
+  },
+  {
+    dir: 'react/charts',
+    npm: '@oge-ui/react-charts',
+    label: 'Charts (React)',
+    summary:
+      'React charts on a dependency-free SVG kernel: sixteen cartesian series types (line/spline/step/area/stacked/bar/range/scatter/bubble/candlestick), pie and doughnut, radar/polar and a range selector — time and log axes, multiple value axes, strip lines, annotations, wheel/drag zoom and pan, crosshair, shared tooltips, an interactive legend, selection, keyboard point inspection and PNG/SVG export — running the same charts engine and stylesheet as the Angular charts package.',
+    // The React content renders inside the single Charts routes (ADR 0002).
+    docsRoot: '/components/charts',
+    pageDirs: ['react-charts'],
+    apiPage: 'apps/dev-app/src/app/pages/react-charts/api.ts',
     tier: 'commercial',
     platform: 'react',
   },

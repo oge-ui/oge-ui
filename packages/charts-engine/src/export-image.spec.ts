@@ -1,4 +1,4 @@
-import { serializeChartSvg } from './index';
+import { serializeChartSvg } from './export-image';
 
 function makeSvg(): SVGSVGElement {
   const svg = document.createElementNS(

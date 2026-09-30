@@ -1,12 +1,15 @@
-/** Public types of `@oge-ui/charts`. */
-import type { ChartRange, ChartScaleKind } from './engine/scale';
+/**
+ * Public types of the charts family — one set for both render layers
+ * (`@oge-ui/charts` and `@oge-ui/react-charts` re-export them).
+ */
+import type { ChartRange, ChartScaleKind } from './scale';
 import type {
   ChartPoint,
   ChartSeriesInput,
   ChartSeriesType,
-} from './engine/series-model';
-import type { PieSmallValuesGrouping } from './engine/pie-layout';
-import type { LabelOverlapMode } from './engine/tick-format';
+} from './series-model';
+import type { PieSmallValuesGrouping } from './pie-layout';
+import type { LabelOverlapMode } from './tick-format';
 
 /** Series types: `'line' | 'spline' | 'area' | … | 'candlestick'`. */
 export type OgeChartSeriesType = ChartSeriesType;
@@ -144,3 +147,38 @@ export interface OgeChartExportData<T = unknown> {
   readonly argumentRange: OgeChartRange;
   readonly argumentKind: OgeChartAxisType;
 }
+
+/** A rendered pie slice — the payload of pie events and tooltips. */
+export interface OgeChartPieSliceEvent<T = unknown> {
+  readonly index: number;
+  readonly argument: unknown;
+  readonly value: number;
+  readonly fraction: number;
+  /** Merged sources for the synthetic "others" slice. */
+  readonly sources: readonly T[];
+  readonly grouped: boolean;
+}
+
+/** A legend entry — what a custom legend item renders. */
+export interface OgeChartLegendItem {
+  readonly name: string;
+  readonly color: string;
+  readonly hidden: boolean;
+}
+
+/**
+ * Default palette — concrete hex values (not CSS vars) so exported images
+ * carry their colors; chosen to hold up on light and dark surfaces.
+ */
+export const OGE_CHART_PALETTE: readonly string[] = [
+  '#6366f1',
+  '#0ea5e9',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#14b8a6',
+  '#f97316',
+  '#ec4899',
+  '#84cc16',
+];
