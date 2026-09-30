@@ -61,6 +61,7 @@
       "react-forms",
       "react-upload",
       "react-grid",
+      "react-pivot",
       "react-oge",
       "grid",
       "tree-list",

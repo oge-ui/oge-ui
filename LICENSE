@@ -9,6 +9,10 @@ Portions of this repository are licensed as follows:
   engine) is licensed under the OGE UI Commercial License — see
   `packages/pivot-engine/LICENSE`. Same terms: source-available, free for
   evaluation and development, paid for production use.
+- Everything under `packages/react/pivot` (the pivot grid's React render
+  layer) is licensed under the OGE UI Commercial License — see
+  `packages/react/pivot/LICENSE`. Same terms: source-available, free for
+  evaluation and development, paid for production use.
 - Everything under `packages/bpmn` is licensed under the OGE UI Commercial
   License — see `packages/bpmn/LICENSE`. Same terms: source-available, free
   for evaluation and development, paid for production use.

@@ -125,7 +125,7 @@ No modules, no forms boilerplate — `[(value)]` binds straight to a
 
 ## Packages
 
-All packages are MIT except `@oge-ui/pivot` (and its `@oge-ui/pivot-engine`), `@oge-ui/bpmn`,
+All packages are MIT except `@oge-ui/pivot` (with `@oge-ui/pivot-engine` and `@oge-ui/react-pivot`), `@oge-ui/bpmn`,
 `@oge-ui/scheduler`, `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`, which are
 commercial (free for evaluation and development) — see [Licensing](#licensing).
 
@@ -161,6 +161,7 @@ commercial (free for evaluation and development) — see [Licensing](#licensing)
 | [`@oge-ui/react-forms`](packages/react/forms)           | **React.** Form layout over the editors: nested `layout` array of items, groups and tabbed/accordion/wizard sections, responsive columns, declarative validation rules and the validation summary                                                                                                                                                                                         | [npm](https://www.npmjs.com/package/@oge-ui/react-forms)      |
 | [`@oge-ui/react-upload`](packages/react/upload)         | **React.** File upload: drag & drop with directory and paste, restrictions with on-row reasons, previews, chunked resumable transfer, external drop zones and triggers — the same upload engine as the Angular package                                                                                                                                                                    | [npm](https://www.npmjs.com/package/@oge-ui/react-upload)     |
 | [`@oge-ui/react-grid`](packages/react/grid)             | **React.** Data grid on the shared grid engine: sorting, filter row + search, paging, row/column virtualization, windowed remote loading, selection, keyboard navigation, grouping with summaries and deferred groups, master-detail, row render props, row drag, pinned/resizable/reorderable columns, persistence, CSV — editing and header filters follow (see `docs/REACT-PARITY.md`) | [npm](https://www.npmjs.com/package/@oge-ui/react-grid)       |
+| [`@oge-ui/react-pivot`](packages/react/pivot)           | **React, commercial.** Pivot grid on the shared `@oge-ui/pivot-engine`: field panel, header/measure menus, value filters, field chooser, two-axis virtualization, persistence, CSV/Excel                                                                                                                                                                                                  | [npm](https://www.npmjs.com/package/@oge-ui/react-pivot)      |
 
 ## Theming
 
@@ -238,13 +239,14 @@ OGE UI is **open-core**:
   `@oge-ui/forms`, `@oge-ui/upload` and `@oge-ui/overlay` are [MIT-licensed](LICENSE). This is a commitment:
   these packages and every feature currently in them will remain MIT.
 - **Commercial — `@oge-ui/pivot` (with its framework-free
-  `@oge-ui/pivot-engine`), `@oge-ui/bpmn`, `@oge-ui/scheduler`,
+  `@oge-ui/pivot-engine` and its React layer `@oge-ui/react-pivot`), `@oge-ui/bpmn`, `@oge-ui/scheduler`,
   `@oge-ui/gantt`, `@oge-ui/kanban` and `@oge-ui/charts`.** The pivot grid,
   the BPMN editor, the scheduler, the Gantt, the Kanban and the Charts are
   source-available commercial software: free for evaluation,
   development and testing; production use requires a paid license
   ([packages/pivot/LICENSE](packages/pivot/LICENSE),
   [packages/pivot-engine/LICENSE](packages/pivot-engine/LICENSE),
+  [packages/react/pivot/LICENSE](packages/react/pivot/LICENSE),
   [packages/bpmn/LICENSE](packages/bpmn/LICENSE),
   [packages/scheduler/LICENSE](packages/scheduler/LICENSE),
   [packages/gantt/LICENSE](packages/gantt/LICENSE),
