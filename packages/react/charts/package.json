@@ -1,0 +1,56 @@
+{
+  "name": "@oge-ui/react-charts",
+  "version": "0.13.1",
+  "description": "React charts from the OGE UI suite on a dependency-free SVG kernel: sixteen cartesian series types (line, spline, step, area, stacked, bar, range, scatter, bubble, candlestick), pie and doughnut, radar/polar charts and a range selector — calendar-true time axes, log axes, multiple value axes, strip lines, annotations, wheel/drag zoom and pan, crosshair, shared tooltips, an interactive legend, selection, keyboard point inspection, a screen-reader data table and PNG/SVG export — running the same framework-free charts engine and the same stylesheet as the Angular charts package. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "react",
+    "charts",
+    "chart",
+    "line-chart",
+    "bar-chart",
+    "pie-chart",
+    "radar-chart",
+    "candlestick",
+    "svg",
+    "accessibility",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./export-image": {
+      "types": "./export-image.d.ts",
+      "import": "./export-image.js",
+      "require": "./export-image.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/charts-engine": "0.13.1"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/charts"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}
