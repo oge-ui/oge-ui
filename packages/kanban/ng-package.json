@@ -5,6 +5,7 @@
   "allowedNonPeerDependencies": [
     "@oge-ui/core",
     "@oge-ui/forms",
+    "@oge-ui/kanban-engine",
     "@oge-ui/overlay"
   ],
   "lib": {

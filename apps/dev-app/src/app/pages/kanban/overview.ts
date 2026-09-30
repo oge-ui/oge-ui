@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   OgeKanban,
@@ -9,6 +14,7 @@ import {
 } from '@oge-ui/kanban';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
 import { PageToc } from '../../shared/page-toc';
 import {
   CONFIG_SNIPPET,
@@ -20,6 +26,10 @@ import {
   TEMPLATE_SNIPPET,
   WIP_SNIPPET,
 } from './overview-snippets';
+import {
+  REACT_KANBAN_OVERVIEW_SECTIONS,
+  ReactKanbanOverviewDemos,
+} from '../react-kanban/overview';
 
 const SECTIONS = [
   'Getting started',
@@ -42,6 +52,7 @@ type DemoCardRow = Record<string, unknown>;
     OgeKanban,
     OgeKanbanCardTemplate,
     PageToc,
+    ReactKanbanOverviewDemos,
     RouterLink,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,24 +69,47 @@ type DemoCardRow = Record<string, unknown>;
         'virtualized',
       ]"
     >
+      @if (fw.isReact()) {
+        <p>
+          A task-board Kanban built on the framework-free
+          <code>&#64;oge-ui/kanban-engine</code> — the same engine, markup and
+          stylesheet as the Angular board: columns and swimlanes over a plain
+          card array with <code>*Expr</code> field mapping, per-column
+          virtualization over a fixed card height (10k cards stay smooth), WIP
+          limits with live drag previews, and a polished drag &amp; drop — 3px
+          threshold, live placeholder, lifted tilt, edge auto-scroll, mid-drag
+          Escape restore, exactly one commit through the cancelable
+          <code>onCardMoving</code> pipeline. A built-in edit dialog, context
+          menu and toolbar (search, collapse, add) come out of the box. No
+          WAI-ARIA APG kanban pattern exists, so the widget composes the listbox
+          pattern — labeled column listboxes with roving-tabindex option cards —
+          and adds <strong>Ctrl+Arrow keyboard card moving</strong> with polite
+          live-region announcements, which no reference library offers.
+        </p>
+      } @else {
+        <p>
+          A task-board Kanban built on a framework-free kernel: columns and
+          swimlanes over a plain card array with <code>*Expr</code> field
+          mapping, per-column virtualization over a fixed card height (10k cards
+          stay smooth), WIP limits with live drag previews, and a polished drag
+          &amp; drop — 3px threshold, live placeholder, lifted tilt, edge
+          auto-scroll, mid-drag Escape restore, exactly one commit through the
+          cancelable <code>cardMoving</code> pipeline. A built-in edit dialog,
+          context menu and toolbar (search, collapse, add) come out of the box.
+          No WAI-ARIA APG kanban pattern exists, so the widget composes the
+          listbox pattern — labeled column listboxes with roving-tabindex option
+          cards — and adds <strong>Ctrl+Arrow keyboard card moving</strong> with
+          polite live-region announcements, which no reference library offers.
+        </p>
+      }
       <p>
-        A task-board Kanban built on a framework-free kernel: columns and
-        swimlanes over a plain card array with <code>*Expr</code> field mapping,
-        per-column virtualization over a fixed card height (10k cards stay
-        smooth), WIP limits with live drag previews, and a polished drag &amp;
-        drop — 3px threshold, live placeholder, lifted tilt, edge auto-scroll,
-        mid-drag Escape restore, exactly one commit through the cancelable
-        <code>cardMoving</code> pipeline. A built-in edit dialog, context menu
-        and toolbar (search, collapse, add) come out of the box. No WAI-ARIA APG
-        kanban pattern exists, so the widget composes the listbox pattern —
-        labeled column listboxes with roving-tabindex option cards — and adds
-        <strong>Ctrl+Arrow keyboard card moving</strong> with polite live-region
-        announcements, which no reference library offers.
-      </p>
-      <p>
-        <code>&#64;oge-ui/kanban</code> is a commercial package — free for
-        evaluation and development, with no watermark and no runtime license
-        checks. See
+        @if (fw.isReact()) {
+          <code>&#64;oge-ui/react-kanban</code>
+        } @else {
+          <code>&#64;oge-ui/kanban</code>
+        }
+        is a commercial package — free for evaluation and development, with no
+        watermark and no runtime license checks. See
         <a
           routerLink="/license"
           class="text-indigo-600 underline dark:text-indigo-400"
@@ -84,177 +118,193 @@ type DemoCardRow = Record<string, unknown>;
         for the terms.
       </p>
     </app-doc-header>
-    <app-page-toc [sections]="sections" />
+    <app-page-toc [sections]="fw.isReact() ? reactSections : sections" />
 
-    <app-demo-card
-      [chips]="['field mapping', 'declared columns', 'search', 'context menu']"
-      heading="Getting started"
-      description="One element, a working board. Drag a card between columns (Escape cancels mid-drag), double-click a card to edit it, double-click empty column space to add one there, right-click for the built-in menu, and type in the toolbar to search. Columns declare titles, colors and WIP limits — or derive from the data."
-      [code]="gettingStartedSnippet"
-      language="ts"
-    >
-      <oge-kanban
-        [dataSource]="basicTasks"
-        keyExpr="id"
-        columnExpr="status"
-        titleExpr="title"
-        descriptionExpr="notes"
-        assigneeExpr="owner"
-        dueDateExpr="due"
-        priorityExpr="priority"
-        tagsExpr="labels"
-        [columns]="basicColumns"
-        [allowColumnAdding]="true"
-        style="height: 520px"
-      />
-    </app-demo-card>
-
-    <app-demo-card
-      [chips]="['swimlaneExpr', 'collapsible lanes']"
-      heading="Swimlanes"
-      description="<code>swimlaneExpr</code> turns the board into swimlane rows × columns. Lane headers collapse — <code>[(collapsedSwimlanes)]</code> and <code>[(collapsedColumns)]</code> are two-way — and every lane scrolls its cells independently."
-      [code]="swimlanesSnippet"
-      language="ts"
-    >
-      <oge-kanban
-        [dataSource]="laneTasks"
-        keyExpr="id"
-        columnExpr="status"
-        titleExpr="title"
-        swimlaneExpr="team"
-        [columns]="laneColumns"
-        style="height: 560px"
-      />
-    </app-demo-card>
-
-    <app-demo-card
-      [chips]="['wipLimit', 'danger badge', 'drag preview']"
-      heading="WIP limits"
-      description="<code>wipLimit</code> is a soft limit: the column badge shows count/limit, turns to the danger tone on overflow, and previews the target column's +1 while a drag hovers it. Limits count real data — search filtering never changes them."
-      [code]="wipSnippet"
-      language="ts"
-    >
-      <oge-kanban
-        [dataSource]="wipTasks"
-        keyExpr="id"
-        columnExpr="status"
-        titleExpr="title"
-        [columns]="wipColumns"
-        style="height: 420px"
-      />
-    </app-demo-card>
-
-    <app-demo-card
-      [chips]="['cardMoving', 'Escape restore', 'orderExpr', 'column reorder']"
-      heading="Drag &amp; drop pipeline"
-      description="Every move — drag, Ctrl+Arrow or <code>moveCard()</code> — runs the same cancelable pipeline: <code>cardMoving</code> (set <code>cancel</code> to veto) then <code>cardMoved</code>. Here nothing may leave <em>Done</em> — try it. <code>orderExpr</code> persists the in-column order back onto your items; column headers drag too."
-      [code]="dragDropSnippet"
-      language="ts"
-    >
-      <oge-kanban
-        [dataSource]="dragTasks"
-        keyExpr="id"
-        columnExpr="status"
-        titleExpr="title"
-        orderExpr="rank"
-        [allowColumnReordering]="true"
-        (cardMoving)="onDemoMoving($event)"
-        (cardMoved)="
-          dragLog.set('moved to ' + $event.toColumn + ' @ ' + $event.toIndex)
-        "
-        style="height: 420px"
-      />
-      <p class="mt-2 text-sm text-slate-500">{{ dragLog() }}</p>
-    </app-demo-card>
-
-    <app-demo-card
-      [chips]="['Ctrl+Arrow', 'live region', 'listbox pattern']"
-      heading="Keyboard moving &amp; a11y"
-      description="Arrows rove between cards and columns, Enter edits, Delete deletes — and <strong>Ctrl+Arrow moves the focused card</strong>, the exact keyboard twin of the drag, with a polite live-region announcement after every commit. Columns are labeled listboxes with their count and WIP in the accessible name."
-      [code]="keyboardSnippet"
-      language="ts"
-    >
-      <oge-kanban
-        [dataSource]="keyboardTasks"
-        keyExpr="id"
-        columnExpr="status"
-        titleExpr="title"
-        style="height: 420px"
-      />
-    </app-demo-card>
-
-    <app-demo-card
-      [chips]="['cardEditDialogShowing', 'formItems', 'cancelable CRUD']"
-      heading="Edit dialog &amp; events"
-      description="The built-in dialog (an <code>OgeForm</code>) covers the standard card fields; <code>cardEditDialogShowing</code> is both the veto and the customization point — <code>formItems</code> arrives pre-populated and may be mutated or replaced. This demo swaps the color field for a sprint picker."
-      [code]="dialogEventsSnippet"
-      language="ts"
-    >
-      <oge-kanban
-        [dataSource]="dialogTasks"
-        keyExpr="id"
-        columnExpr="status"
-        titleExpr="title"
-        descriptionExpr="notes"
-        (cardEditDialogShowing)="onDemoDialogShowing($event)"
-        style="height: 420px"
-      />
-    </app-demo-card>
-
-    <app-demo-card
-      [chips]="['*ogeKanbanCardTemplate', 'cardHeight']"
-      heading="Card template"
-      description="<code>*ogeKanbanCardTemplate</code> replaces the card body while drag, keyboard and ARIA stay on the component. Rich templates usually pair with a matching <code>cardHeight</code> — or opt out of virtualization entirely when heights must vary (documented exception)."
-      [code]="templateSnippet"
-      language="ts"
-    >
-      <oge-kanban
-        [dataSource]="deployments"
-        keyExpr="id"
-        columnExpr="stage"
-        titleExpr="service"
-        [cardHeight]="96"
-        style="height: 420px"
+    @if (fw.isReact()) {
+      <app-react-kanban-overview-demos />
+    } @else {
+      <app-demo-card
+        [chips]="[
+          'field mapping',
+          'declared columns',
+          'search',
+          'context menu',
+        ]"
+        heading="Getting started"
+        description="One element, a working board. Drag a card between columns (Escape cancels mid-drag), double-click a card to edit it, double-click empty column space to add one there, right-click for the built-in menu, and type in the toolbar to search. Columns declare titles, colors and WIP limits — or derive from the data."
+        [code]="gettingStartedSnippet"
+        language="ts"
       >
-        <ng-template ogeKanbanCardTemplate let-card>
-          <div
-            style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px"
-          >
-            <strong>{{ card.title }}</strong>
-            <code style="font-size: 11px">{{
-              sourceField(card, 'version')
-            }}</code>
-            <progress
-              [value]="healthOf(card)"
-              max="100"
-              style="width: 100%"
-            ></progress>
-          </div>
-        </ng-template>
-      </oge-kanban>
-    </app-demo-card>
+        <oge-kanban
+          [dataSource]="basicTasks"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          descriptionExpr="notes"
+          assigneeExpr="owner"
+          dueDateExpr="due"
+          priorityExpr="priority"
+          tagsExpr="labels"
+          [columns]="basicColumns"
+          [allowColumnAdding]="true"
+          style="height: 520px"
+        />
+      </app-demo-card>
 
-    <app-demo-card
-      [chips]="['provideOgeKanbanConfig', 'messages', 'locale']"
-      heading="Configuration &amp; i18n"
-      description="Every user-facing string — toolbar, menu, dialog, aria labels, live-region announcements — lives in <code>OgeKanbanMessages</code>: provide once, override per instance with <code>[messages]</code>. <code>locale</code> drives every Intl format (the due-date badges here render in German)."
-      [code]="configSnippet"
-      language="ts"
-    >
-      <oge-kanban
-        [dataSource]="germanTasks"
-        keyExpr="id"
-        columnExpr="status"
-        titleExpr="title"
-        dueDateExpr="due"
-        locale="de-DE"
-        style="height: 380px"
-      />
-    </app-demo-card>
+      <app-demo-card
+        [chips]="['swimlaneExpr', 'collapsible lanes']"
+        heading="Swimlanes"
+        description="<code>swimlaneExpr</code> turns the board into swimlane rows × columns. Lane headers collapse — <code>[(collapsedSwimlanes)]</code> and <code>[(collapsedColumns)]</code> are two-way — and every lane scrolls its cells independently."
+        [code]="swimlanesSnippet"
+        language="ts"
+      >
+        <oge-kanban
+          [dataSource]="laneTasks"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          swimlaneExpr="team"
+          [columns]="laneColumns"
+          style="height: 560px"
+        />
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['wipLimit', 'danger badge', 'drag preview']"
+        heading="WIP limits"
+        description="<code>wipLimit</code> is a soft limit: the column badge shows count/limit, turns to the danger tone on overflow, and previews the target column's +1 while a drag hovers it. Limits count real data — search filtering never changes them."
+        [code]="wipSnippet"
+        language="ts"
+      >
+        <oge-kanban
+          [dataSource]="wipTasks"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          [columns]="wipColumns"
+          style="height: 420px"
+        />
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="[
+          'cardMoving',
+          'Escape restore',
+          'orderExpr',
+          'column reorder',
+        ]"
+        heading="Drag &amp; drop pipeline"
+        description="Every move — drag, Ctrl+Arrow or <code>moveCard()</code> — runs the same cancelable pipeline: <code>cardMoving</code> (set <code>cancel</code> to veto) then <code>cardMoved</code>. Here nothing may leave <em>Done</em> — try it. <code>orderExpr</code> persists the in-column order back onto your items; column headers drag too."
+        [code]="dragDropSnippet"
+        language="ts"
+      >
+        <oge-kanban
+          [dataSource]="dragTasks"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          orderExpr="rank"
+          [allowColumnReordering]="true"
+          (cardMoving)="onDemoMoving($event)"
+          (cardMoved)="
+            dragLog.set('moved to ' + $event.toColumn + ' @ ' + $event.toIndex)
+          "
+          style="height: 420px"
+        />
+        <p class="mt-2 text-sm text-slate-500">{{ dragLog() }}</p>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['Ctrl+Arrow', 'live region', 'listbox pattern']"
+        heading="Keyboard moving &amp; a11y"
+        description="Arrows rove between cards and columns, Enter edits, Delete deletes — and <strong>Ctrl+Arrow moves the focused card</strong>, the exact keyboard twin of the drag, with a polite live-region announcement after every commit. Columns are labeled listboxes with their count and WIP in the accessible name."
+        [code]="keyboardSnippet"
+        language="ts"
+      >
+        <oge-kanban
+          [dataSource]="keyboardTasks"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          style="height: 420px"
+        />
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['cardEditDialogShowing', 'formItems', 'cancelable CRUD']"
+        heading="Edit dialog &amp; events"
+        description="The built-in dialog (an <code>OgeForm</code>) covers the standard card fields; <code>cardEditDialogShowing</code> is both the veto and the customization point — <code>formItems</code> arrives pre-populated and may be mutated or replaced. This demo swaps the color field for a sprint picker."
+        [code]="dialogEventsSnippet"
+        language="ts"
+      >
+        <oge-kanban
+          [dataSource]="dialogTasks"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          descriptionExpr="notes"
+          (cardEditDialogShowing)="onDemoDialogShowing($event)"
+          style="height: 420px"
+        />
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['*ogeKanbanCardTemplate', 'cardHeight']"
+        heading="Card template"
+        description="<code>*ogeKanbanCardTemplate</code> replaces the card body while drag, keyboard and ARIA stay on the component. Rich templates usually pair with a matching <code>cardHeight</code> — or opt out of virtualization entirely when heights must vary (documented exception)."
+        [code]="templateSnippet"
+        language="ts"
+      >
+        <oge-kanban
+          [dataSource]="deployments"
+          keyExpr="id"
+          columnExpr="stage"
+          titleExpr="service"
+          [cardHeight]="96"
+          style="height: 420px"
+        >
+          <ng-template ogeKanbanCardTemplate let-card>
+            <div
+              style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px"
+            >
+              <strong>{{ card.title }}</strong>
+              <code style="font-size: 11px">{{
+                sourceField(card, 'version')
+              }}</code>
+              <progress
+                [value]="healthOf(card)"
+                max="100"
+                style="width: 100%"
+              ></progress>
+            </div>
+          </ng-template>
+        </oge-kanban>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['provideOgeKanbanConfig', 'messages', 'locale']"
+        heading="Configuration &amp; i18n"
+        description="Every user-facing string — toolbar, menu, dialog, aria labels, live-region announcements — lives in <code>OgeKanbanMessages</code>: provide once, override per instance with <code>[messages]</code>. <code>locale</code> drives every Intl format (the due-date badges here render in German)."
+        [code]="configSnippet"
+        language="ts"
+      >
+        <oge-kanban
+          [dataSource]="germanTasks"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          dueDateExpr="due"
+          locale="de-DE"
+          style="height: 380px"
+        />
+      </app-demo-card>
+    }
   `,
 })
 export class KanbanOverviewPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly sections = SECTIONS;
+  protected readonly reactSections = REACT_KANBAN_OVERVIEW_SECTIONS;
 
   protected readonly gettingStartedSnippet = GETTING_STARTED_SNIPPET;
   protected readonly swimlanesSnippet = SWIMLANES_SNIPPET;

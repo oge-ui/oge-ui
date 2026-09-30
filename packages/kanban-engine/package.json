@@ -1,0 +1,34 @@
+{
+  "name": "@oge-ui/kanban-engine",
+  "version": "0.13.1",
+  "description": "Framework-free engine behind the OGE UI Kanban board, shared by its Angular and React render layers: card normalization and field write-back, swimlane grouping, search, drag hit-testing and edge auto-scroll math, per-column virtual windows, WIP arithmetic, keyboard navigation and move planning, the edit-dialog form model and the message catalog. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "kanban",
+    "kanban-board",
+    "headless",
+    "drag-and-drop",
+    "wip-limit",
+    "swimlanes",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@oge-ui/behavior": "0.13.1",
+    "@oge-ui/core": "0.13.1"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/kanban-engine"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

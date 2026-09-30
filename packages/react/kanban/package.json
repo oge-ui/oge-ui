@@ -1,0 +1,51 @@
+{
+  "name": "@oge-ui/react-kanban",
+  "version": "0.13.1",
+  "description": "React Kanban board from the OGE UI suite: columns and swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move events, a built-in edit dialog, context menu and toolbar — running the same engine and the same stylesheet as the Angular Kanban package. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "react",
+    "kanban",
+    "kanban-board",
+    "task-board",
+    "swimlanes",
+    "wip-limit",
+    "drag-and-drop",
+    "accessibility",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./styles.css": "./styles.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@oge-ui/kanban-engine": "0.13.1",
+    "@oge-ui/react-forms": "0.13.1",
+    "@oge-ui/react-overlay": "0.13.1"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/react/kanban"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

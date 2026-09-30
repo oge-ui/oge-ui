@@ -1,4 +1,6 @@
-// Explicit named exports only (house rule): the engine stays unexported.
+// Explicit named exports only (house rule). The engine is its own package,
+// `@oge-ui/kanban-engine` (ADR 0003); only the types and defaults a board
+// consumer needs are re-exported here.
 export {
   OGE_DEFAULT_KANBAN_CONFIG,
   OGE_DEFAULT_KANBAN_MESSAGES,

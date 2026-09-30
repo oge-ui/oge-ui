@@ -21,6 +21,7 @@ Version 0.13.1. Generated from the OGE UI source tree: the API tables and demo s
 - `@oge-ui/charts` — Charts
 - `@oge-ui/gantt` — Gantt
 - `@oge-ui/kanban` — Kanban
+- `@oge-ui/kanban-engine` — Kanban engine
 - `@oge-ui/scheduler` — Scheduler
 - `@oge-ui/core` — Core
 - `@oge-ui/react-buttons` — Buttons (React)
@@ -30,6 +31,7 @@ Version 0.13.1. Generated from the OGE UI source tree: the API tables and demo s
 - `@oge-ui/react-navigation` — Navigation (React)
 - `@oge-ui/react-forms` — Forms (React)
 - `@oge-ui/react-upload` — Upload (React)
+- `@oge-ui/react-kanban` — Kanban (React)
 - `@oge-ui/react-grid` — Data Grid (React)
 - `@oge-ui/react-overlay` — Overlay (React)
 - `@oge-ui/behavior` — Behavior
@@ -15894,6 +15896,19 @@ export class Demo {
 }
 ```
 
+## @oge-ui/kanban-engine
+
+Framework-free engine both Kanban render layers run: card normalization and write-back, swimlane grouping, search, drag hit-testing and auto-scroll, virtual windows, WIP arithmetic, keyboard and move machines, the edit-dialog model and the message catalog. Installed automatically with @oge-ui/kanban or @oge-ui/react-kanban.
+
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+
+### Entry points
+
+`@oge-ui/kanban-engine`
+
+- values: `KANBAN_CARD_GAP`, `KANBAN_COLLAPSED_TRACK`, `KANBAN_DEFAULT_CARD_HEIGHT`, `KANBAN_DEFAULT_CELL_HEIGHT`, `KANBAN_EMPTY_EDITOR_CHOICES`, `OGE_DEFAULT_KANBAN_CONFIG`, `OGE_DEFAULT_KANBAN_MESSAGES`, `applyMoveToItem`, `beginKanbanGesture`, `buildKanbanEditorChoices`, `buildKanbanEditorItems`, `buildKanbanItem`, `columnReorderIndex`, `commitKanbanMove`, `computeColumnWindow`, `deriveColumns`, `edgeScrollVelocity`, `filterCards`, `findKanbanCard`, `focusFirstKanbanMenuItem`, `focusKanbanCard`, `formatKanbanDue`, `formatKanbanMessage`, `groupBoard`, `hitTestCell`, `insertionIndexAt`, `isKanbanCardShifted`, `isKanbanLegalTarget`, `isKanbanMenuAvailable`, `isKanbanOverdue`, `kanbanAutoScrollStep`, `kanbanCardLabel`, `kanbanCardShortcuts`, `kanbanCellKey`, `kanbanCellLabel`, `kanbanCellWindow`, `kanbanColumnCounts`, `kanbanColumnOrderPreview`, `kanbanColumnTitle`, `kanbanColumnWip`, `kanbanCssEscape`, `kanbanDropIndex`, `kanbanEditorModelFrom`, `kanbanFocusableKeys`, `kanbanGridTemplate`, `kanbanHeaderCenters`, `kanbanInitials`, `kanbanKeyboardMove`, `kanbanMoveTargets`, `kanbanNavigationTarget`, `kanbanNewColumn`, `kanbanScrollIntoViewTop`, `kanbanToolbarAddColumn`, `measureKanbanCells`, `measureKanbanDragGeometry`, `mergeOgeKanbanMessages`, `newKanbanEditorModel`, `newKanbanItemBase`, `normalizeCard`, `normalizeCards`, `orderBetween`, `orderColumns`, `planKanbanMove`, `previewCount`, `renumberPatches`, `resolveKanbanColumns`, `resolveKanbanDragTarget`, `resolveKanbanFields`, `resolveOgeKanbanConfig`, `scrollKanbanCell`, `startKanbanFrameLoop`, `stepKanbanMenuFocus`, `toKanbanAccessor`, `toggleKanbanKey`, `wipState`, `withFieldValue`
+- types: `KanbanCapabilities`, `KanbanCard`, `KanbanCardPosition`, `KanbanCellRect`, `KanbanCellScroll`, `KanbanColumnDef`, `KanbanColumnGroup`, `KanbanColumnWindow`, `KanbanColumnsInput`, `KanbanColumnsResult`, `KanbanDragGeometry`, `KanbanDragOrigin`, `KanbanDragState`, `KanbanDragTarget`, `KanbanEditorChoices`, `KanbanEditorModel`, `KanbanEditorResult`, `KanbanFieldExpr`, `KanbanFieldExprs`, `KanbanFieldKey`, `KanbanGestureCallbacks`, `KanbanKeyboardMove`, `KanbanMappedFields`, `KanbanMoveCommit`, `KanbanMovePlan`, `KanbanMoveTarget`, `KanbanSwimlane`, `KanbanWipState`, `OgeKanbanAnnouncementMessages`, `OgeKanbanBoardMessages`, `OgeKanbanCard`, `OgeKanbanCardAddedEvent`, `OgeKanbanCardAddingEvent`, `OgeKanbanCardColorMode`, `OgeKanbanCardDeletedEvent`, `OgeKanbanCardDeletingEvent`, `OgeKanbanCardEvent`, `OgeKanbanCardMovedEvent`, `OgeKanbanCardMovingEvent`, `OgeKanbanCardUpdatedEvent`, `OgeKanbanCardUpdatingEvent`, `OgeKanbanColumn`, `OgeKanbanColumnAddedEvent`, `OgeKanbanColumnAddingEvent`, `OgeKanbanColumnReorderedEvent`, `OgeKanbanConfig`, `OgeKanbanConfigInput`, `OgeKanbanDialogMessages`, `OgeKanbanEditDialogShowingEventBase`, `OgeKanbanFieldExpr`, `OgeKanbanMenuMessages`, `OgeKanbanMessages`, `OgeKanbanToolbarMessages`, `RectLike`, `ResolvedKanbanFields`
+
 ## @oge-ui/scheduler
 
 Scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing.
@@ -26822,6 +26837,501 @@ export function CustomRows() {
         </>
       )}
     />
+  );
+}
+```
+
+## @oge-ui/react-kanban
+
+React Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move callbacks, built-in edit dialog, context menu and toolbar — running the same engine and stylesheet as the Angular Kanban package.
+
+**This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.**
+
+Docs: https://ogeui.com/components/kanban
+
+### <OgeKanban>
+
+#### Properties
+
+_Data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `dataSource` | `readonly T[]` | `[]` | Card items — a plain array, copied into an internal working set; the array is never mutated. A new array re-seeds the board. Edits surface through the past-tense callbacks. |
+| `keyExpr / columnExpr / titleExpr / descriptionExpr / colorExpr` | `string \| ((item: T) => unknown)` | `'id' / 'status' / 'title' / 'description' / 'color'` | Card field mapping: names (dotted paths reach nested objects) or getter functions. `columnExpr` holds the card's column key; a card with no resolvable column lands in the untitled column instead of being dropped. |
+| `orderExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Numeric in-column sort order. Unset, the array order is the board order and moves reorder the working set; set, moves write a midpoint order value back onto the item (sequential renumber of the cell when the midpoint has no room). |
+| `swimlaneExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Set = the board renders collapsible swimlane rows (first-seen data order); each lane holds every column. |
+| `tagsExpr / assigneeExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Tag chips and assignee avatars (initials). Both accept a single value _or_ an array — write-back preserves the storage shape. |
+| `dueDateExpr / priorityExpr` | `string \| ((item: T) => unknown) \| undefined` | `undefined` | Due-date badge (danger when overdue; formatted through `locale`) and the priority indicator (colored by value: `'low'` green, `'medium'`/`'normal'` amber, `'high'`/`'urgent'`/`'critical'` red). |
+| `searchExprs` | `readonly (string \| ((item: T) => unknown))[] \| undefined` | `undefined` | Extra fields the toolbar search matches, beyond the built-in title + description + tags + assignees haystack. Matching is fold-insensitive (accents, Turkish İ/i). |
+| `columns` | `readonly OgeKanbanColumn[] \| undefined` | `undefined` | Declared columns (`{ key, title?, color?, wipLimit?, minCount?, collapsed?, allowAdding?, allowDrag?, allowDrop?, transitionColumns? }`); unset = derived from the data's distinct column keys in first-seen order. Cards in undeclared columns stay in the data but leave the view. |
+
+_State (controlled / uncontrolled)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `collapsedColumns / collapsedSwimlanes` | `readonly string[]` | `uncontrolled, []` | Collapsed column keys (slim vertical pills) and collapsed swimlane keys. Controlled when provided; `defaultCollapsedColumns` / `defaultCollapsedSwimlanes` seed the uncontrolled state at mount. |
+| `columnOrder` | `readonly string[]` | `uncontrolled, []` | Persisted column key order (empty = declared order); written by header drags when `allowColumnReordering` is on. `defaultColumnOrder` seeds it uncontrolled. |
+| `selectedCardKey` | `unknown` | `uncontrolled, null` | The selected card's key — single selection. `defaultSelectedCardKey` seeds it uncontrolled. |
+| `onCollapsedColumnsChange / onCollapsedSwimlanesChange / onColumnOrderChange / onSelectedCardKeyChange` | `(value) => void` | `—` | The controlled halves of the four state props — Angular's `[(…)]` models are both halves at once. |
+
+_Behavior_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `virtualScrolling` | `boolean` | `true` | Per-column card windowing over a fixed `cardHeight` — 10k cards stay smooth. Rich variable-height render props may opt out (`false`), the documented exception. |
+| `cardHeight` | `number \| undefined` | `undefined (config: 112)` | Fixed card height in px; also drives the drag hit-testing and the keyboard scroll-into-view math. |
+| `showToolbar` | `boolean` | `true` | The built-in toolbar: primary add button, collapse/expand-all pill and the search box. |
+| `allowAdding / allowUpdating / allowDeleting / allowDragging / allowColumnReordering / allowColumnAdding` | `boolean` | `true / true / true / true / false / false` | Capability gates for the toolbar, dialog, menu, hover quick actions, keyboard shortcuts and drags. `allowColumnAdding` renders the "+ Add column" ghost column (inline composer → cancelable `onColumnAdding` → `onColumnAdded`). Per-column `allowAdding: false` overrides the board. |
+| `columnWidth` | `number` | `300` | Fixed column track width in px — headers stay legible and the board scrolls horizontally, Trello-style. |
+| `cardColorMode` | `'stripe' \| 'surface'` | `'stripe'` | How `colorExpr` renders: an accent bar on the card's edge, or the whole card surface tinted with the color. |
+| `dialogItems` | `readonly OgeFormItemDefinition[] \| undefined` | `undefined` | Replaces the edit dialog's default form wholesale (`<OgeForm>` items from `@oge-ui/react-forms`); `onCardEditDialogShowing` can still adjust per open. The default form only renders editors for fields the board actually maps. |
+| `readOnly` | `boolean` | `false` | One switch over every `allow*` capability; the context menu falls back to the browser's native menu. |
+| `messages / locale` | `Partial<OgeKanbanMessages> / string \| undefined` | `{} / undefined` | Per-instance overrides of the context config (`<OgeKanbanConfigProvider>`). Every user-facing string, aria labels and live-region templates included, lives in the messages interface; `locale` drives every Intl format. |
+
+_Render props_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `renderCard` | `(context: OgeKanbanCardRenderContext<T>) => ReactNode` | Replaces the card body (`{ card, column, swimlane }`, the card with its `source`). Drag, keyboard and ARIA stay on the board — the React face of `*ogeKanbanCardTemplate`. |
+| `renderColumnHeader` | `(context: OgeKanbanColumnHeaderRenderContext) => ReactNode` | Replaces the column header's title row (`{ column, count, wip }`); the add and collapse affordances stay — the React face of `*ogeKanbanColumnHeaderTemplate`. |
+| `className / style` | `string / CSSProperties` | Host styling, merged onto the `.oge-kanban` element (give the board a height, as with the Angular host). |
+
+#### Methods
+
+_Handle (ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addCard(item)` | `(item: T) => void` | Programmatic insert through the cancelable `onCardAdding` pipeline; the column and swimlane resolve from the item's own fields. |
+| `updateCard(original, updated)` | `(original: T, updated: T) => void` | Programmatic update through the cancelable `onCardUpdating` pipeline. |
+| `deleteCard(item)` | `(item: T) => void` | Programmatic delete through the cancelable `onCardDeleting` pipeline. |
+| `moveCard(key, toColumn, toIndex?, toSwimlane?)` | `(key: unknown, toColumn: string, toIndex?: number, toSwimlane?: string \| null) => void` | Moves a card (append when `toIndex` is omitted) through the cancelable `onCardMoving` pipeline — the same path the drag, the Ctrl+Arrow twin and the context menu commit through. |
+| `editCard(card) / openNewCard(column, swimlane)` | `(…) => void` | Opens the built-in dialog for an existing card / prefilled for a new card, through the `onCardEditDialogShowing` hook. |
+| `closeDialog()` | `() => void` | Closes the edit dialog without saving; fires `onCardEditDialogHidden`. |
+| `collapseAllColumns() / expandAllColumns()` | `() => void` | The toolbar buttons, callable from code. |
+
+#### Events
+
+_Callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onCardClick / onCardDblClick / onCardContextMenu` | `(event: OgeKanbanCardEvent<T>) => void` | Pointer interactions with a card (`{ card, event }`, the native `MouseEvent`). Double-click also opens the editor; right-click fires _before_ the built-in menu opens, so app handlers can coexist with it. |
+| `onCardAdding / onCardUpdating / onCardDeleting / onCardMoving` | `(event: Oge…Event<T>) => void (mutable cancel)` | Cancelable pre-events — set `event.cancel = true` to veto. `onCardMoving` carries `{ card, fromColumn, toColumn, fromIndex, toIndex, fromSwimlane, toSwimlane }` and guards drags, keyboard moves and programmatic moves alike. |
+| `onCardAdded / onCardUpdated / onCardDeleted / onCardMoved` | `(event: Oge…Event<T>) => void` | Past-tense callbacks fire only for applied changes and carry the data to persist (`onCardMoved`'s `card` is the _updated_ item, orderExpr write-back included). |
+| `onCardEditDialogShowing` | `(event: OgeKanbanEditDialogShowingEvent<T>) => void` | Cancelable + customization point before the dialog opens: `formItems` arrives pre-populated with the default `<OgeForm>` items and may be mutated or replaced (dx `onAppointmentFormOpening` parity). |
+| `onCardEditDialogHidden` | `() => void` | The edit dialog closed — saved, cancelled, deleted or `closeDialog()` (Syncfusion `dialogClose` parity). |
+| `onColumnReordered` | `(event: OgeKanbanColumnReorderedEvent) => void` | A header drag committed a new order: `{ column, fromIndex, toIndex, columnOrder }`. |
+| `onColumnAdding / onColumnAdded` | `(event: OgeKanbanColumnAddingEvent / OgeKanbanColumnAddedEvent) => void` | The "+ Add column" composer's cancelable pre-event and its past-tense commit. |
+
+#### Types
+
+_Render contexts_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeKanbanCardRenderContext<T>` | `interface` | `{ card, column, swimlane }` — what `renderCard` is handed (the context of Angular's `*ogeKanbanCardTemplate`, `$implicit` named `card`). |
+| `OgeKanbanColumnHeaderRenderContext` | `interface` | `{ column, count, wip }` — what `renderColumnHeader` is handed. An OGE extra — no reference library templates its headers. |
+
+_Configuration_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeKanbanConfigProvider` | `({ config?: OgeKanbanConfigInput, children }) => JSX` | The React counterpart of `provideOgeKanbanConfig()`: `messages` (merged block by block), `locale`, `cardHeight` for the subtree. Nested providers merge over the outer one, and a new `config` re-resolves the subtree — switching the UI language at runtime is a state change. |
+| `useOgeKanbanConfig` | `() => OgeKanbanConfig` | The resolved config for the current subtree (the counterpart of `inject(OGE_KANBAN_CONFIG)`). |
+| `OgeKanbanMessages` | `interface` | Every user-facing string: `toolbar`, `menu`, `dialog`, `board` (aria label templates with `{title}`/`{count}`/`{limit}` tokens) and `announcements` (live-region templates). Single-sourced in `@oge-ui/kanban-engine` with the Angular package. |
+| `OgeKanbanColumn` | `interface` | `{ key, title?, color?, wipLimit?, minCount?, collapsed?, allowAdding?, allowDrag?, allowDrop?, transitionColumns? }` — the declared column shape. `wipLimit`/`minCount` drive the danger/warning badges; `allowDrag`/`allowDrop`/`transitionColumns` gate interactive moves (programmatic `moveCard` is deliberately not gated). |
+| `OgeKanbanCard<T>` | `interface` | The normalized card handed to render props and callbacks: `key`, `source` (your item, unchanged), `column`, `title`, `description`, `color`, `order`, `swimlane`, `tags`, `assignees`, `dueDate`, `priority`. |
+
+### Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Getting started
+
+```ts
+'use client';
+
+import { OgeKanban } from '@oge-ui/react-kanban';
+
+const columns = [
+  { key: 'todo', title: 'To do', color: '#64748b' },
+  { key: 'doing', title: 'In progress', color: '#2563eb', wipLimit: 3 },
+  { key: 'review', title: 'Review', color: '#d97706' },
+  { key: 'done', title: 'Done', color: '#16a34a' },
+];
+
+const tasks = [
+  {
+    id: 1,
+    status: 'doing',
+    title: 'Checkout revamp',
+    notes: 'New payment flow behind the feature flag',
+    owner: 'Ada Lovelace',
+    due: new Date(2026, 7, 21),
+    priority: 'high',
+    labels: ['feature'],
+  },
+  {
+    id: 2,
+    status: 'todo',
+    title: 'Wallet UI polish',
+    owner: ['Grace Hopper', 'Alan Turing'],
+    priority: 'medium',
+    labels: ['design'],
+  },
+  { id: 3, status: 'todo', title: 'Upgrade CI runners', priority: 'low' },
+  {
+    id: 4,
+    status: 'review',
+    title: 'Fix login crash',
+    notes: 'Repro: expired refresh token',
+    owner: 'Ada Lovelace',
+    due: new Date(2026, 7, 5),
+    priority: 'high',
+    labels: ['bug'],
+  },
+  { id: 5, status: 'done', title: 'Q3 roadmap draft' },
+];
+
+export function TaskBoard() {
+  return (
+    <>
+      {/* One element, a working board. Any item shape binds through the
+          *Expr props — field names, dotted paths or getter functions. Columns can
+          be declared (with titles, colors and WIP limits) or derived from the data.
+          Drag a card between columns (Escape cancels mid-drag), double-click to
+          edit, right-click for the built-in menu, type in the toolbar to search,
+          and add a column at the board's end (allowColumnAdding). The edit
+          dialog only offers editors for fields the board maps. */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        descriptionExpr="notes"
+        assigneeExpr="owner"
+        dueDateExpr="due"
+        priorityExpr="priority"
+        tagsExpr="labels"
+        columns={columns}
+        allowColumnAdding
+        style={{ height: 520 }}
+      />
+    </>
+  );
+}
+```
+
+#### Swimlanes
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+
+const tasks = [
+  { id: 1, team: 'Platform', status: 'doing', title: 'Sharding rollout' },
+  { id: 2, team: 'Platform', status: 'todo', title: 'Postgres 18 upgrade' },
+  { id: 3, team: 'Mobile', status: 'todo', title: 'Push notification opt-in' },
+  { id: 4, team: 'Mobile', status: 'done', title: 'Biometric login' },
+  { id: 5, team: 'Web', status: 'doing', title: 'Design token migration' },
+];
+
+export function TeamBoard() {
+  const [collapsedLanes, setCollapsedLanes] = useState<readonly string[]>([]);
+  return (
+    <>
+      {/* swimlaneExpr turns the board into swimlane rows × columns. Lane
+          headers collapse (collapsedSwimlanes + onCollapsedSwimlanesChange is a
+          controlled pair, like collapsedColumns); every lane scrolls its column
+          cells independently. */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        swimlaneExpr="team"
+        columns={[
+          { key: 'todo', title: 'To do' },
+          { key: 'doing', title: 'In progress' },
+          { key: 'done', title: 'Done' },
+        ]}
+        collapsedSwimlanes={collapsedLanes}
+        onCollapsedSwimlanesChange={setCollapsedLanes}
+        style={{ height: 560 }}
+      />
+    </>
+  );
+}
+```
+
+#### WIP limits
+
+```ts
+'use client';
+
+import { OgeKanban } from '@oge-ui/react-kanban';
+
+const tasks = [
+  { id: 1, status: 'doing', title: 'Payments API' },
+  { id: 2, status: 'doing', title: 'Search relevance' },
+  { id: 3, status: 'doing', title: 'One too many — WIP exceeded' },
+  { id: 4, status: 'todo', title: 'Docs sweep' },
+  { id: 5, status: 'done', title: 'Login rate limits' },
+];
+
+export function WipBoard() {
+  return (
+    <>
+      {/* wipLimit is a soft limit: the column count badge shows count/limit,
+          turns to the danger tone on overflow, and previews the target column's
+          +1 while a drag hovers it. Limits count real data — search filtering
+          never changes them. */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        columns={[
+          { key: 'todo', title: 'To do' },
+          { key: 'doing', title: 'In progress', wipLimit: 2 },
+          { key: 'done', title: 'Done' },
+        ]}
+        style={{ height: 420 }}
+      />
+    </>
+  );
+}
+```
+
+#### Drag & drop pipeline
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanCardMovingEvent } from '@oge-ui/react-kanban';
+
+const tasks = [
+  { id: 1, status: 'todo', title: 'Refactor auth', rank: 0 },
+  { id: 2, status: 'todo', title: 'Ship dark mode', rank: 1 },
+  { id: 3, status: 'doing', title: 'Bundle size audit', rank: 0 },
+  { id: 4, status: 'done', title: 'This card is locked in', rank: 0 },
+];
+
+function onMoving(event: OgeKanbanCardMovingEvent): void {
+  // veto example: nothing may leave "done"
+  if (event.fromColumn === 'done') event.cancel = true;
+}
+
+export function GuardedBoard() {
+  const [log, setLog] = useState('drag a card');
+  return (
+    <>
+      {/* Every move — drag, Ctrl+Arrow or moveCard() — runs the same
+          cancelable pipeline: onCardMoving (set cancel = true to veto) then
+          onCardMoved with {card, fromColumn, toColumn, fromIndex, toIndex}.
+          Mid-drag Escape restores everything. orderExpr persists the in-column
+          order back onto your items; without it the array order is the board
+          order. Column headers drag too (allowColumnReordering). */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        orderExpr="rank"
+        allowColumnReordering
+        onCardMoving={onMoving}
+        onCardMoved={(e) => setLog(`moved: ${e.toColumn} @ ${e.toIndex}`)}
+        style={{ height: 420 }}
+      />
+      <p>{log}</p>
+    </>
+  );
+}
+```
+
+#### Keyboard moving & a11y
+
+```ts
+'use client';
+
+import { OgeKanban } from '@oge-ui/react-kanban';
+
+const tasks = [
+  { id: 1, status: 'todo', title: 'Tab to the board, then arrow around' },
+  { id: 2, status: 'todo', title: 'Ctrl+ArrowRight moves me' },
+  { id: 3, status: 'doing', title: 'Enter opens my dialog' },
+];
+
+export function KeyboardBoard() {
+  return (
+    <>
+      {/* Full keyboard board: arrows rove between cards and columns, Enter
+          edits, Delete deletes, and Ctrl+Arrow MOVES the focused card — the
+          exact keyboard twin of the drag, with a polite live-region
+          announcement ("… moved to …, position 2 of 3") after every commit.
+          Columns are labeled listboxes; cards are options. */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        style={{ height: 420 }}
+      />
+    </>
+  );
+}
+```
+
+#### Edit dialog & events
+
+```ts
+'use client';
+
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanEditDialogShowingEvent } from '@oge-ui/react-kanban';
+
+const tasks = [
+  { id: 1, status: 'todo', title: 'Double-click me', notes: 'Custom form field below' },
+  { id: 2, status: 'doing', title: 'Right-click me for the menu' },
+];
+
+function onDialogShowing(event: OgeKanbanEditDialogShowingEvent): void {
+  // drop the color field and add a sprint picker
+  event.formItems = [
+    ...event.formItems.filter((item) => item.field !== 'color'),
+    {
+      field: 'sprint',
+      label: 'Sprint',
+      editorType: 'selectBox',
+      editorOptions: { items: ['Sprint 41', 'Sprint 42', 'Sprint 43'] },
+    },
+  ];
+}
+
+export function DialogBoard() {
+  return (
+    <>
+      {/* The built-in dialog (an <OgeForm>) covers the standard fields;
+          onCardEditDialogShowing is both the veto and the customization point —
+          formItems arrives pre-populated and may be mutated or replaced. Saves
+          and deletes run the cancelable onCardUpdating / onCardDeleting
+          pipelines; new cards go through onCardAdding. */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        descriptionExpr="notes"
+        onCardEditDialogShowing={onDialogShowing}
+        style={{ height: 420 }}
+      />
+    </>
+  );
+}
+```
+
+#### Card template
+
+```ts
+'use client';
+
+import { OgeKanban } from '@oge-ui/react-kanban';
+import type { OgeKanbanCard } from '@oge-ui/react-kanban';
+
+const deployments = [
+  { id: 1, stage: 'staging', service: 'api-gateway', version: 'v2.14.0', health: 98 },
+  { id: 2, stage: 'staging', service: 'search', version: 'v1.9.2', health: 74 },
+  { id: 3, stage: 'production', service: 'billing', version: 'v3.1.1', health: 100 },
+];
+
+function field(card: OgeKanbanCard, name: string): string {
+  return String((card.source as Record<string, unknown>)[name] ?? '');
+}
+
+export function DeploymentBoard() {
+  return (
+    <>
+      {/* renderCard replaces the card body while drag, keyboard and ARIA stay
+          on the board. card.source is your original item (typed unknown —
+          narrow it in a helper). Rich templates usually pair with a matching
+          cardHeight, or opt out of virtualization entirely
+          (virtualScrolling={false}) when heights must vary. */}
+      <OgeKanban
+        dataSource={deployments}
+        keyExpr="id"
+        columnExpr="stage"
+        titleExpr="service"
+        cardHeight={96}
+        style={{ height: 420 }}
+        renderCard={({ card }) => (
+          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <strong>{card.title}</strong>
+            <code style={{ fontSize: 11 }}>{field(card, 'version')}</code>
+            <progress value={Number(field(card, 'health'))} max={100} style={{ width: '100%' }} />
+          </div>
+        )}
+      />
+    </>
+  );
+}
+```
+
+#### Configuration & i18n
+
+```ts
+'use client';
+
+import { OgeKanban } from '@oge-ui/react-kanban';
+
+// App-wide (wrap the tree once; a new config object re-resolves every
+// board below it, so switching the UI language is a state change):
+// <OgeKanbanConfigProvider
+//   config={{
+//     locale: 'de-DE',
+//     cardHeight: 104,
+//     messages: {
+//       toolbar: {
+//         label: 'Kanban-Werkzeugleiste',
+//         addCard: 'Neue Karte',
+//         collapseAll: 'Alle einklappen',
+//         expandAll: 'Alle ausklappen',
+//         searchLabel: 'Karten durchsuchen',
+//         searchPlaceholder: 'Suchen…',
+//         clearSearch: 'Suche löschen',
+//       },
+//     },
+//   }}
+// >
+
+const tasks = [
+  { id: 1, status: 'Offen', title: 'Angebot schreiben', due: new Date(2026, 7, 14) },
+  { id: 2, status: 'In Arbeit', title: 'Rechnung prüfen' },
+  { id: 3, status: 'Fertig', title: 'Kickoff-Termin' },
+];
+
+export function GermanBoard() {
+  return (
+    <>
+      {/* Every user-facing string — toolbar, menu, dialog, aria labels,
+          live-region announcements — lives in OgeKanbanMessages. Provide once
+          (OgeKanbanConfigProvider), override per instance with messages; locale
+          drives every Intl format (due-date badges). */}
+      <OgeKanban
+        dataSource={tasks}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        dueDateExpr="due"
+        locale="de-DE"
+        style={{ height: 380 }}
+      />
+    </>
   );
 }
 ```

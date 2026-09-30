@@ -17,36 +17,78 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import type { OgeFormItemData } from '@oge-ui/forms';
-import { OGE_KANBAN_CONFIG } from '../config';
 import {
-  deriveColumns,
-  filterCards,
-  groupBoard,
-  normalizeCards,
-  orderBetween,
-  orderColumns,
-  renumberPatches,
-  resolveKanbanFields,
-  toKanbanAccessor,
-  withFieldValue,
-  type KanbanCard,
-  type KanbanColumnDef,
-  type KanbanFieldExprs,
-  type KanbanSwimlane,
-} from '../engine/board-model';
-import {
+  KANBAN_CARD_GAP,
+  KANBAN_DEFAULT_CARD_HEIGHT,
+  beginKanbanGesture,
+  buildKanbanEditorChoices,
+  buildKanbanItem,
   columnReorderIndex,
-  edgeScrollVelocity,
-  hitTestCell,
-  insertionIndexAt,
-  type KanbanCellRect,
-} from '../engine/drag-math';
-import {
-  computeColumnWindow,
+  commitKanbanMove,
+  filterCards,
+  findKanbanCard,
+  focusFirstKanbanMenuItem,
+  focusKanbanCard,
+  formatKanbanDue,
+  formatKanbanMessage,
+  groupBoard,
+  isKanbanCardShifted,
+  isKanbanLegalTarget,
+  isKanbanMenuAvailable,
+  isKanbanOverdue,
+  kanbanAutoScrollStep,
+  kanbanCardLabel,
+  kanbanCardShortcuts,
+  kanbanCellKey,
+  kanbanCellLabel,
+  kanbanCellWindow,
+  kanbanColumnCounts,
+  kanbanColumnOrderPreview,
+  kanbanColumnTitle,
+  kanbanColumnWip,
+  kanbanDropIndex,
+  kanbanEditorModelFrom,
+  kanbanFocusableKeys,
+  kanbanGridTemplate,
+  kanbanHeaderCenters,
+  kanbanInitials,
+  kanbanKeyboardMove,
+  kanbanMoveTargets,
+  kanbanNavigationTarget,
+  kanbanNewColumn,
+  kanbanScrollIntoViewTop,
+  kanbanToolbarAddColumn,
+  measureKanbanCells,
+  measureKanbanDragGeometry,
+  mergeOgeKanbanMessages,
+  newKanbanEditorModel,
+  newKanbanItemBase,
+  normalizeCards,
+  planKanbanMove,
+  resolveKanbanColumns,
+  resolveKanbanDragTarget,
+  resolveKanbanFields,
+  scrollKanbanCell,
+  startKanbanFrameLoop,
+  stepKanbanMenuFocus,
+  toKanbanAccessor,
+  toggleKanbanKey,
+  type KanbanCard,
+  type KanbanCellScroll,
+  type KanbanColumnDef,
   type KanbanColumnWindow,
-} from '../engine/virtual-column';
-import { beginKanbanGesture } from './kanban-gesture';
-import { wipState, type KanbanWipState } from '../engine/wip';
+  type KanbanDragGeometry,
+  type KanbanDragState,
+  type KanbanDragTarget,
+  type KanbanEditorModel,
+  type KanbanEditorResult,
+  type KanbanFieldExprs,
+  type KanbanMappedFields,
+  type KanbanSwimlane,
+  type KanbanWipState,
+  type OgeKanbanMessages,
+} from '@oge-ui/kanban-engine';
+import { OGE_KANBAN_CONFIG } from '../config';
 import type {
   OgeKanbanCardAddedEvent,
   OgeKanbanCardAddingEvent,
@@ -64,29 +106,16 @@ import type {
   OgeKanbanEditDialogShowingEvent,
   OgeKanbanFieldExpr,
 } from '../kanban-types';
-import type { OgeKanbanMessages } from '../config';
-import {
-  OgeKanbanCardDialog,
-  type KanbanEditorModel,
-  type KanbanEditorResult,
-} from './kanban-card-dialog';
+import { OgeKanbanCardDialog } from './kanban-card-dialog';
 import {
   OgeKanbanCardTemplate,
   OgeKanbanColumnHeaderTemplate,
 } from './kanban-templates';
 
-/** Vertical gap between cards (must match the SCSS slot math). */
-const CARD_GAP = 8;
-
-/** Fallback cell viewport before the first measurement lands. */
-const DEFAULT_CELL_HEIGHT = 600;
-
-/** `CSS.escape` with a jsdom-safe fallback for attribute selectors. */
-function cssEscape(value: string): string {
-  return typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-    ? CSS.escape(value)
-    : value.replace(/["\\]/g, '\\$&');
-}
+// Every decision this component takes — the view model, the keyboard and
+// drag machines, the move pipeline, the editor model — lives in
+// `@oge-ui/kanban-engine`, shared with `@oge-ui/react-kanban` (ADR 0003).
+// What stays here is Angular: signals, the template and the DI config.
 
 interface KanbanMenuState {
   readonly x: number;
@@ -94,27 +123,6 @@ interface KanbanMenuState {
   readonly card: KanbanCard | null;
   readonly column: KanbanColumnDef | null;
   readonly swimlane: string | null;
-}
-
-interface KanbanDragState<T = unknown> {
-  readonly card: KanbanCard<T>;
-  readonly column: KanbanColumnDef;
-  readonly fromLane: string | null;
-  readonly fromIndex: number;
-  /** Card box size, so the lifted preview matches the original. */
-  readonly width: number;
-  readonly height: number;
-  /** Pointer offset within the card at grab time. */
-  readonly grabX: number;
-  readonly grabY: number;
-  /** Current pointer position (viewport). */
-  readonly x: number;
-  readonly y: number;
-  readonly target: {
-    readonly lane: string | null;
-    readonly column: string;
-    readonly index: number;
-  } | null;
 }
 
 /**
@@ -1047,10 +1055,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   // ---------------- derived state ----------------
 
   /** Merged messages: DI config overlaid by the `messages` input. */
-  protected readonly msg = computed<OgeKanbanMessages>(() => ({
-    ...this.config.messages,
-    ...this.messages(),
-  }));
+  protected readonly msg = computed<OgeKanbanMessages>(() =>
+    mergeOgeKanbanMessages(this.config, this.messages()),
+  );
 
   /** Per-instance locale, falling back to the DI config, then the browser. */
   protected readonly effectiveLocale = computed(
@@ -1058,7 +1065,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   );
 
   protected readonly cardHeightPx = computed(
-    () => this.cardHeight() ?? this.config.cardHeight ?? 112,
+    () =>
+      this.cardHeight() ?? this.config.cardHeight ?? KANBAN_DEFAULT_CARD_HEIGHT,
   );
 
   protected readonly canAdd = computed(
@@ -1079,11 +1087,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   protected cardShortcuts(): string | null {
-    const parts: string[] = [];
-    if (this.canUpdate()) parts.push('Enter');
-    if (this.canDelete()) parts.push('Delete');
-    if (this.canDrag()) parts.push('Control+ArrowLeft Control+ArrowRight');
-    return parts.length > 0 ? parts.join(' ') : null;
+    return kanbanCardShortcuts({
+      canUpdate: this.canUpdate(),
+      canDelete: this.canDelete(),
+      canDrag: this.canDrag(),
+    });
   }
 
   private readonly fields = computed(() => {
@@ -1102,6 +1110,15 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     };
     return resolveKanbanFields(exprs);
   });
+
+  /** Which optional `*Expr` inputs are configured (editor + write-back). */
+  private readonly mapped = computed<KanbanMappedFields>(() => ({
+    hasSwimlanes: this.hasSwimlanes(),
+    hasTags: this.tagsExpr() !== undefined,
+    hasAssignees: this.assigneeExpr() !== undefined,
+    hasDueDate: this.dueDateExpr() !== undefined,
+    hasPriority: this.priorityExpr() !== undefined,
+  }));
 
   /* ---------- data store ---------- */
 
@@ -1122,10 +1139,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       const pending = this.pendingFocusKey();
       if (pending !== null) {
         this.pendingFocusKey.set(null);
-        const el = this.hostEl.nativeElement.querySelector<HTMLElement>(
-          `.oge-kanban-card[data-key="${cssEscape(pending)}"]`,
-        );
-        el?.focus();
+        focusKanbanCard(this.hostEl.nativeElement, pending);
       }
     });
   }
@@ -1171,34 +1185,20 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
 
   protected readonly visibleColumns = computed<readonly KanbanColumnDef[]>(
     () => {
-      const declared = this.columns();
-      let base: KanbanColumnDef[];
-      if (declared !== undefined && declared.length > 0) {
-        base = [...declared];
-      } else {
-        const seen = new Map(
-          this.seenDerivedColumns().map((column) => [column.key, column]),
-        );
-        for (const column of deriveColumns(undefined, this.allCards())) {
-          if (!seen.has(column.key)) seen.set(column.key, column);
-        }
-        base = [...seen.values()];
-        // remember for the next data change (write outside the computed)
-        if (base.length !== this.seenDerivedColumns().length) {
-          queueMicrotask(() => this.seenDerivedColumns.set(base));
-        }
+      const { columns, nextSeenDerived } = resolveKanbanColumns({
+        declared: this.columns(),
+        seenDerived: this.seenDerivedColumns(),
+        cards: this.allCards(),
+        runtime: this.runtimeColumns(),
+        // a header drag previews its order live; the model commits on drop
+        preview: this.dragColumnOrder(),
+        columnOrder: this.columnOrder(),
+      });
+      // remember for the next data change (write outside the computed)
+      if (nextSeenDerived !== null) {
+        queueMicrotask(() => this.seenDerivedColumns.set(nextSeenDerived));
       }
-      const keys = new Set(base.map((column) => column.key));
-      for (const column of this.runtimeColumns()) {
-        if (!keys.has(column.key)) base.push(column);
-      }
-      // a header drag previews its order live; the model commits on drop
-      const preview = this.dragColumnOrder();
-      const order = this.columnOrder();
-      return orderColumns(
-        base,
-        preview ?? (order.length > 0 ? order : undefined),
-      );
+      return columns;
     },
   );
 
@@ -1225,16 +1225,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   protected commitAddColumn(): void {
-    const name = this.addColumnName().trim();
-    if (name === '') {
+    const column = kanbanNewColumn(this.addColumnName(), this.visibleColumns());
+    if (column === null) {
       this.cancelAddColumn();
       return;
     }
-    if (this.visibleColumns().some((column) => column.key === name)) {
-      this.cancelAddColumn();
-      return;
-    }
-    const column: KanbanColumnDef = { key: name, title: name };
     const event: OgeKanbanColumnAddingEvent = { column, cancel: false };
     this.columnAdding.emit(event);
     if (event.cancel) return;
@@ -1263,64 +1258,36 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   );
 
   /** Card counts per column across all lanes (unfiltered — WIP is a data fact). */
-  private readonly columnCounts = computed<ReadonlyMap<string, number>>(() => {
-    const counts = new Map<string, number>();
-    for (const card of this.allCards()) {
-      counts.set(card.column, (counts.get(card.column) ?? 0) + 1);
-    }
-    return counts;
-  });
+  private readonly columnCounts = computed(() =>
+    kanbanColumnCounts(this.allCards()),
+  );
 
   protected readonly totalCount = computed(() => this.allCards().length);
 
-  protected readonly gridTemplate = computed(() => {
-    const width = `${this.columnWidth()}px`;
-    const tracks = this.visibleColumns().map((column) =>
-      this.collapsedColumns().includes(column.key) ? '44px' : width,
-    );
-    // fixed tracks keep headers legible — the board scrolls horizontally
-    if (this.canAddColumn()) tracks.push(width);
-    return tracks.join(' ');
-  });
+  protected readonly gridTemplate = computed(() =>
+    kanbanGridTemplate(
+      this.visibleColumns(),
+      this.collapsedColumns(),
+      this.columnWidth(),
+      this.canAddColumn(),
+    ),
+  );
 
   // ---------------- virtualization ----------------
 
   /** Per-cell scroll state, keyed `lane column`. */
-  private readonly cellState = signal(
-    new Map<string, { top: number; height: number }>(),
-  );
-
-  private cellKey(lane: string | null, column: string): string {
-    return `${lane ?? ''} ${column}`;
-  }
+  private readonly cellState = signal(new Map<string, KanbanCellScroll>());
 
   protected windowFor(
     lane: string | null,
     column: string,
     count: number,
   ): KanbanColumnWindow {
-    if (!this.virtualScrolling()) {
-      const cardHeight = this.cardHeightPx();
-      return {
-        start: 0,
-        end: count,
-        offsetY: 0,
-        totalHeight: count * (cardHeight + CARD_GAP) - CARD_GAP,
-      };
-    }
-    const state = this.cellState().get(this.cellKey(lane, column));
-    // an unmeasured (or jsdom zero-height) cell windows over the fallback
-    // height instead of rendering everything
-    const height =
-      state !== undefined && state.height > 0
-        ? state.height
-        : DEFAULT_CELL_HEIGHT;
-    return computeColumnWindow(
-      state?.top ?? 0,
-      height,
+    return kanbanCellWindow(
+      this.cellState().get(kanbanCellKey(lane, column)),
       count,
       this.cardHeightPx(),
-      CARD_GAP,
+      this.virtualScrolling(),
     );
   }
 
@@ -1331,7 +1298,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   ): void {
     const el = event.target as HTMLElement;
     const next = new Map(this.cellState());
-    next.set(this.cellKey(lane, column), {
+    next.set(kanbanCellKey(lane, column), {
       top: el.scrollTop,
       height: el.clientHeight,
     });
@@ -1344,24 +1311,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       : new ResizeObserver(() => this.measureCells());
 
   private measureCells(): void {
-    const cells =
-      this.hostEl.nativeElement.querySelectorAll<HTMLElement>(
-        '.oge-kanban-cards',
-      );
-    const next = new Map(this.cellState());
-    let changed = false;
-    for (const el of Array.from(cells)) {
-      const key = this.cellKey(
-        el.dataset['lane'] === '' ? null : (el.dataset['lane'] ?? null),
-        el.dataset['col'] ?? '',
-      );
-      const prev = next.get(key);
-      if (prev?.height !== el.clientHeight) {
-        next.set(key, { top: el.scrollTop, height: el.clientHeight });
-        changed = true;
-      }
-    }
-    if (changed) this.cellState.set(next);
+    const next = measureKanbanCells(
+      this.hostEl.nativeElement,
+      this.cellState(),
+    );
+    if (next !== null) this.cellState.set(next);
   }
 
   // ---------------- collapse ----------------
@@ -1371,12 +1325,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   protected toggleColumn(key: string): void {
-    const collapsed = this.collapsedColumns();
-    this.collapsedColumns.set(
-      collapsed.includes(key)
-        ? collapsed.filter((entry) => entry !== key)
-        : [...collapsed, key],
-    );
+    this.collapsedColumns.set(toggleKanbanKey(this.collapsedColumns(), key));
   }
 
   /** Collapses every column (toolbar). */
@@ -1397,11 +1346,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
 
   protected toggleSwimlane(key: string | null): void {
     if (key === null) return;
-    const collapsed = this.collapsedSwimlanes();
     this.collapsedSwimlanes.set(
-      collapsed.includes(key)
-        ? collapsed.filter((entry) => entry !== key)
-        : [...collapsed, key],
+      toggleKanbanKey(this.collapsedSwimlanes(), key),
     );
   }
 
@@ -1418,7 +1364,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   // ---------------- labels ----------------
 
   protected columnTitle(column: KanbanColumnDef): string {
-    return column.title ?? column.key;
+    return kanbanColumnTitle(column);
   }
 
   protected columnCount(key: string): number {
@@ -1426,89 +1372,44 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   protected columnWip(column: KanbanColumnDef): KanbanWipState {
-    return wipState(
-      this.columnCount(column.key),
-      column.wipLimit,
-      column.minCount,
-    );
+    return kanbanColumnWip(column, this.columnCounts());
   }
 
-  /**
-   * Whether an interactive move (drag, keyboard, menu) may land a card from
-   * `fromKey` in `toKey`: the source must allow dragging out, the target
-   * must allow dropping in, and the source's `transitionColumns` (when set)
-   * must list the target. Programmatic `moveCard` is deliberately not
-   * gated — the app owns its own rules there.
-   */
+  /** See `isKanbanLegalTarget` — interactive moves only. */
   protected isLegalTarget(fromKey: string, toKey: string): boolean {
-    if (fromKey === toKey) return true;
-    const columns = this.visibleColumns();
-    const from = columns.find((entry) => entry.key === fromKey);
-    const to = columns.find((entry) => entry.key === toKey);
-    if (to === undefined || to.allowDrop === false) return false;
-    if (
-      from?.transitionColumns !== undefined &&
-      !from.transitionColumns.includes(toKey)
-    ) {
-      return false;
-    }
-    return true;
+    return isKanbanLegalTarget(this.visibleColumns(), fromKey, toKey);
   }
 
   protected cellLabel(column: KanbanColumnDef, count: number): string {
-    const wip = this.columnWip(column);
-    const board = this.msg().board;
-    return wip.limit !== null
-      ? this.format(board.columnLabelWip, {
-          title: this.columnTitle(column),
-          count: String(count),
-          limit: String(wip.limit),
-        })
-      : this.format(board.columnLabel, {
-          title: this.columnTitle(column),
-          count: String(count),
-        });
+    return kanbanCellLabel(
+      this.msg().board,
+      column,
+      count,
+      this.columnWip(column),
+    );
   }
 
   protected cardLabel(card: KanbanCard<T>): string {
-    const column = this.visibleColumns().find(
-      (entry) => entry.key === card.column,
-    );
-    return this.format(this.msg().board.cardLabel, {
-      title: card.title,
-      column: column !== undefined ? this.columnTitle(column) : card.column,
-    });
+    return kanbanCardLabel(this.msg().board, card, this.visibleColumns());
   }
 
   protected format(
     template: string,
     tokens: Readonly<Record<string, string>>,
   ): string {
-    let text = template;
-    for (const [token, value] of Object.entries(tokens)) {
-      text = text.replace(`{${token}}`, value);
-    }
-    return text;
+    return formatKanbanMessage(template, tokens);
   }
 
   protected initials(name: string): string {
-    const parts = name.trim().split(/\s+/);
-    const first = parts[0]?.[0] ?? '';
-    const last = parts.length > 1 ? (parts[parts.length - 1][0] ?? '') : '';
-    return (first + last).toUpperCase();
+    return kanbanInitials(name);
   }
 
   protected isOverdue(due: Date): boolean {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return due.getTime() < today.getTime();
+    return isKanbanOverdue(due);
   }
 
   protected formatDue(due: Date): string {
-    return new Intl.DateTimeFormat(this.effectiveLocale(), {
-      month: 'short',
-      day: 'numeric',
-    }).format(due);
+    return formatKanbanDue(due, this.effectiveLocale());
   }
 
   protected keyOf(card: KanbanCard<T>): string {
@@ -1520,24 +1421,10 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   private readonly focusedCardKey = signal<unknown>(null);
   private readonly pendingFocusKey = signal<string | null>(null);
 
-  /**
-   * One tab stop per column cell (each listbox is its own composite widget,
-   * per the APG); the focused card replaces its own cell's default stop.
-   * This is also what keeps every scrollable cell keyboard-reachable.
-   */
-  private readonly focusableKeys = computed<ReadonlySet<unknown>>(() => {
-    const keys = new Set<unknown>();
-    const focused = this.focusedCardKey();
-    for (const lane of this.lanes()) {
-      for (const cell of lane.columns) {
-        if (cell.cards.length === 0) continue;
-        const focusedHere =
-          focused !== null && cell.cards.some((card) => card.key === focused);
-        keys.add(focusedHere ? focused : cell.cards[0].key);
-      }
-    }
-    return keys;
-  });
+  /** One tab stop per column cell — see `kanbanFocusableKeys`. */
+  private readonly focusableKeys = computed(() =>
+    kanbanFocusableKeys(this.lanes(), this.focusedCardKey()),
+  );
 
   protected isCardFocusable(card: KanbanCard<T>): boolean {
     return this.focusableKeys().has(card.key);
@@ -1579,6 +1466,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     if (this.canAddTo(column)) this.openNewCard(column.key, lane);
   }
 
+  private readonly isCollapsedFn = (key: string): boolean =>
+    this.isColumnCollapsed(key);
+
   protected onCardKeydown(event: KeyboardEvent, card: KanbanCard<T>): void {
     if (event.ctrlKey && !event.metaKey && !event.altKey) {
       this.onCardCtrlArrow(event, card);
@@ -1599,36 +1489,14 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       }
       return;
     }
-    const position = this.findCard(card.key);
+    const position = findKanbanCard(this.lanes(), card.key);
     if (position === null) return;
-    const { laneIndex, columnIndex, cardIndex } = position;
-    const lanes = this.lanes();
-    const lane = lanes[laneIndex];
-    let target: KanbanCard<T> | undefined;
-    switch (event.key) {
-      case 'ArrowDown':
-        target = lane.columns[columnIndex].cards[cardIndex + 1];
-        break;
-      case 'ArrowUp':
-        target = lane.columns[columnIndex].cards[cardIndex - 1];
-        break;
-      case 'ArrowRight':
-        target = this.firstCardFrom(lane, columnIndex + 1, +1);
-        break;
-      case 'ArrowLeft':
-        target = this.firstCardFrom(lane, columnIndex - 1, -1);
-        break;
-      case 'Home':
-        target = lane.columns[columnIndex].cards[0];
-        break;
-      case 'End': {
-        const cards = lane.columns[columnIndex].cards;
-        target = cards[cards.length - 1];
-        break;
-      }
-      default:
-        return;
-    }
+    const target = kanbanNavigationTarget(
+      this.lanes(),
+      position,
+      event.key,
+      this.isCollapsedFn,
+    );
     if (target === undefined) return;
     event.preventDefault();
     this.focusCard(target);
@@ -1646,76 +1514,19 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       (entry) => entry.key === card.column,
     );
     if (sourceColumn?.allowDrag === false) return;
-    const position = this.findCard(card.key);
+    const position = findKanbanCard(this.lanes(), card.key);
     if (position === null) return;
-    const lane = this.lanes()[position.laneIndex];
-    const cellCards = lane.columns[position.columnIndex].cards;
-    switch (event.key) {
-      case 'ArrowUp':
-        if (position.cardIndex === 0) break;
-        event.preventDefault();
-        this.moveCard(card.key, card.column, position.cardIndex - 1);
-        break;
-      case 'ArrowDown':
-        if (position.cardIndex >= cellCards.length - 1) break;
-        event.preventDefault();
-        this.moveCard(card.key, card.column, position.cardIndex + 1);
-        break;
-      case 'ArrowLeft':
-      case 'ArrowRight': {
-        const step = event.key === 'ArrowRight' ? 1 : -1;
-        let columnIndex = position.columnIndex + step;
-        while (
-          columnIndex >= 0 &&
-          columnIndex < lane.columns.length &&
-          (this.isColumnCollapsed(lane.columns[columnIndex].column.key) ||
-            !this.isLegalTarget(
-              card.column,
-              lane.columns[columnIndex].column.key,
-            ))
-        ) {
-          columnIndex += step;
-        }
-        if (columnIndex < 0 || columnIndex >= lane.columns.length) break;
-        event.preventDefault();
-        const target = lane.columns[columnIndex];
-        this.moveCard(
-          card.key,
-          target.column.key,
-          Math.min(position.cardIndex, target.cards.length),
-        );
-        break;
-      }
-    }
-  }
-
-  private firstCardFrom(
-    lane: KanbanSwimlane<T>,
-    start: number,
-    step: 1 | -1,
-  ): KanbanCard<T> | undefined {
-    for (let i = start; i >= 0 && i < lane.columns.length; i += step) {
-      if (this.isColumnCollapsed(lane.columns[i].column.key)) continue;
-      const cards = lane.columns[i].cards;
-      if (cards.length > 0) return cards[0];
-    }
-    return undefined;
-  }
-
-  private findCard(
-    key: unknown,
-  ): { laneIndex: number; columnIndex: number; cardIndex: number } | null {
-    const lanes = this.lanes();
-    for (let laneIndex = 0; laneIndex < lanes.length; laneIndex++) {
-      const columns = lanes[laneIndex].columns;
-      for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
-        const cardIndex = columns[columnIndex].cards.findIndex(
-          (card) => card.key === key,
-        );
-        if (cardIndex >= 0) return { laneIndex, columnIndex, cardIndex };
-      }
-    }
-    return null;
+    const move = kanbanKeyboardMove(
+      this.lanes(),
+      this.visibleColumns(),
+      card,
+      position,
+      event.key,
+      this.isCollapsedFn,
+    );
+    if (move === null) return;
+    event.preventDefault();
+    this.moveCard(card.key, move.toColumn, move.toIndex);
   }
 
   private focusCard(card: KanbanCard<T>): void {
@@ -1728,26 +1539,22 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   /** Adjusts the cell's scrollTop so a virtualized target renders and shows. */
   private scrollCardIntoView(card: KanbanCard<T>): void {
     if (!this.virtualScrolling()) return;
-    const position = this.findCard(card.key);
+    const position = findKanbanCard(this.lanes(), card.key);
     if (position === null) return;
     const lane = this.lanes()[position.laneIndex];
-    const key = this.cellKey(lane.key, card.column);
+    const key = kanbanCellKey(lane.key, card.column);
     const state = this.cellState().get(key);
     if (state === undefined) return;
-    const slot = this.cardHeightPx() + CARD_GAP;
-    const cardTop = position.cardIndex * slot;
-    const cardBottom = cardTop + this.cardHeightPx();
-    let top = state.top;
-    if (cardTop < top) top = cardTop;
-    else if (cardBottom > top + state.height) top = cardBottom - state.height;
-    if (top !== state.top) {
+    const top = kanbanScrollIntoViewTop(
+      state,
+      position.cardIndex,
+      this.cardHeightPx(),
+    );
+    if (top !== null) {
       const next = new Map(this.cellState());
       next.set(key, { ...state, top });
       this.cellState.set(next);
-      const el = this.hostEl.nativeElement.querySelector<HTMLElement>(
-        `.oge-kanban-cards[data-lane="${cssEscape(lane.key ?? '')}"][data-col="${cssEscape(card.column)}"]`,
-      );
-      if (el !== null) el.scrollTop = top;
+      scrollKanbanCell(this.hostEl.nativeElement, lane.key, card.column, top);
     }
   }
 
@@ -1759,12 +1566,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   /** The header being dragged (styling hook). */
   protected readonly draggedColumnKey = signal<string | null>(null);
 
-  private dragCells: KanbanCellRect[] = [];
-  private dragCellEls: HTMLElement[] = [];
-  private dragBodyEl: HTMLElement | null = null;
-  private dragStartScrollLeft = 0;
-  private dragStartScrollTop = 0;
-  private dragRafId: number | null = null;
+  private dragGeometry: KanbanDragGeometry | null = null;
+  private stopFrameLoop: (() => void) | null = null;
 
   protected isDraggedCard(card: KanbanCard<T>): boolean {
     return this.drag()?.card.key === card.key;
@@ -1772,50 +1575,23 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
 
   /** The placeholder slot for a cell, or `null` when it is not the target. */
   protected dropIndexFor(lane: string | null, column: string): number | null {
-    const target = this.drag()?.target;
-    if (
-      target === null ||
-      target === undefined ||
-      target.lane !== lane ||
-      target.column !== column
-    ) {
-      return null;
-    }
-    return target.index;
+    return kanbanDropIndex(this.drag(), lane, column);
   }
 
-  /**
-   * Whether a rendered card slides down to open the placeholder gap. The
-   * comparison runs in "display" coordinates — the dragged card has left
-   * the flow, so cards after it in the same cell sit one slot earlier.
-   */
+  /** Whether a rendered card slides down to open the placeholder gap. */
   protected isShifted(
     lane: string | null,
     columnKey: string,
     absoluteIndex: number,
     card: KanbanCard<T>,
   ): boolean {
-    const state = this.drag();
-    const target = state?.target;
-    if (
-      state === null ||
-      target === null ||
-      target === undefined ||
-      target.lane !== lane ||
-      target.column !== columnKey ||
-      this.isDraggedCard(card)
-    ) {
-      return false;
-    }
-    let displayIndex = absoluteIndex;
-    if (
-      state.fromLane === lane &&
-      state.card.column === columnKey &&
-      state.fromIndex < absoluteIndex
-    ) {
-      displayIndex -= 1;
-    }
-    return displayIndex >= target.index;
+    return isKanbanCardShifted(
+      this.drag(),
+      lane,
+      columnKey,
+      absoluteIndex,
+      card,
+    );
   }
 
   protected onCardPointerDown(
@@ -1831,11 +1607,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     ) {
       return;
     }
-    const position = this.findCard(card.key);
+    const position = findKanbanCard(this.lanes(), card.key);
     if (position === null) return;
     const cardEl = event.currentTarget as HTMLElement;
     const rect = cardEl.getBoundingClientRect();
-    this.measureDragGeometry();
+    this.dragGeometry = measureKanbanDragGeometry(this.hostEl.nativeElement);
     this.selectedCardKey.set(card.key);
     this.focusedCardKey.set(card.key);
     // the gesture's preventDefault suppresses native focus-on-click
@@ -1878,8 +1654,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
           x: moveEvent.clientX,
           y: moveEvent.clientY,
           target:
-            this.resolveDragTarget(moveEvent.clientX, moveEvent.clientY) ??
-            current.target,
+            this.resolveDragTarget(
+              moveEvent.clientX,
+              moveEvent.clientY,
+              current,
+            ) ?? current.target,
         });
       },
       onFinish: (commit, cancelled) => {
@@ -1903,71 +1682,22 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     });
   }
 
-  /** Measures every droppable cell once at drag start (rects stay static). */
-  private measureDragGeometry(): void {
-    const host = this.hostEl.nativeElement;
-    this.dragBodyEl = host.querySelector<HTMLElement>('.oge-kanban-body');
-    this.dragStartScrollLeft = this.dragBodyEl?.scrollLeft ?? 0;
-    this.dragStartScrollTop = this.dragBodyEl?.scrollTop ?? 0;
-    this.dragCellEls = Array.from(
-      host.querySelectorAll<HTMLElement>('.oge-kanban-cards'),
-    );
-    this.dragCells = this.dragCellEls.map((el) => {
-      const rect = el.getBoundingClientRect();
-      const inner = el.querySelector<HTMLElement>('.oge-kanban-cards-inner');
-      const contentTop =
-        inner !== null
-          ? inner.getBoundingClientRect().top + el.scrollTop
-          : rect.top;
-      return {
-        swimlane:
-          el.dataset['lane'] === '' ? null : (el.dataset['lane'] ?? null),
-        column: el.dataset['col'] ?? '',
-        rect: {
-          left: rect.left,
-          top: rect.top,
-          right: rect.right,
-          bottom: rect.bottom,
-        },
-        contentTop,
-      };
-    });
-  }
-
   /** Pointer → (lane, column, insertion index), in start-frame coordinates. */
   private resolveDragTarget(
     clientX: number,
     clientY: number,
-    pending?: KanbanDragState<T>,
-  ): { lane: string | null; column: string; index: number } | null {
-    const state = pending ?? this.drag();
-    if (state === null) return null;
-    const scrollDX =
-      (this.dragBodyEl?.scrollLeft ?? 0) - this.dragStartScrollLeft;
-    const scrollDY =
-      (this.dragBodyEl?.scrollTop ?? 0) - this.dragStartScrollTop;
-    const x = clientX + scrollDX;
-    const y = clientY + scrollDY;
-    const cellIndex = hitTestCell(x, y, this.dragCells);
-    if (cellIndex < 0) return null;
-    const cell = this.dragCells[cellIndex];
-    if (!this.isLegalTarget(state.card.column, cell.column)) return null;
-    const el = this.dragCellEls[cellIndex];
-    const lane = this.lanes().find((entry) => entry.key === cell.swimlane);
-    const cards =
-      lane?.columns.find((entry) => entry.column.key === cell.column)?.cards ??
-      [];
-    const sameCell =
-      cell.swimlane === state.fromLane && cell.column === state.card.column;
-    const index = insertionIndexAt(
-      y,
-      cell,
-      el.scrollTop,
-      this.cardHeightPx() + CARD_GAP,
-      cards.length,
-      sameCell ? state.fromIndex : -1,
+    origin: KanbanDragState<T>,
+  ): KanbanDragTarget | null {
+    if (this.dragGeometry === null) return null;
+    return resolveKanbanDragTarget(
+      this.dragGeometry,
+      clientX,
+      clientY,
+      origin,
+      this.lanes(),
+      this.visibleColumns(),
+      this.cardHeightPx() + KANBAN_CARD_GAP,
     );
-    return { lane: cell.swimlane, column: cell.column, index };
   }
 
   /**
@@ -1977,55 +1707,20 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
    * the hit-test at the resting pointer position.
    */
   private startAutoScroll(): void {
-    if (typeof requestAnimationFrame !== 'function') return;
-    const tick = (): void => {
+    this.stopFrameLoop = startKanbanFrameLoop(() => {
       const state = this.drag();
-      if (state === null) {
-        this.dragRafId = null;
-        return;
-      }
-      let scrolled = false;
-      const body = this.dragBodyEl;
-      if (body !== null) {
-        const bodyRect = body.getBoundingClientRect();
-        const vx = edgeScrollVelocity(state.x, bodyRect.left, bodyRect.right);
-        if (vx !== 0) {
-          const before = body.scrollLeft;
-          body.scrollLeft += vx;
-          scrolled = scrolled || body.scrollLeft !== before;
-        }
-      }
-      const target = state.target;
-      if (target !== null) {
-        const cellIndex = this.dragCells.findIndex(
-          (cell) =>
-            cell.swimlane === target.lane && cell.column === target.column,
-        );
-        const el = this.dragCellEls[cellIndex];
-        if (el !== undefined) {
-          const rect = this.dragCells[cellIndex].rect;
-          const vy = edgeScrollVelocity(state.y, rect.top, rect.bottom);
-          if (vy !== 0) {
-            const before = el.scrollTop;
-            el.scrollTop += vy;
-            scrolled = scrolled || el.scrollTop !== before;
-          }
-        }
-      }
-      if (scrolled) {
-        const next = this.resolveDragTarget(state.x, state.y);
+      if (state === null || this.dragGeometry === null) return false;
+      if (kanbanAutoScrollStep(this.dragGeometry, state)) {
+        const next = this.resolveDragTarget(state.x, state.y, state);
         if (next !== null) this.drag.set({ ...state, target: next });
       }
-      this.dragRafId = requestAnimationFrame(tick);
-    };
-    this.dragRafId = requestAnimationFrame(tick);
+      return true;
+    });
   }
 
   private stopAutoScroll(): void {
-    if (this.dragRafId !== null && typeof cancelAnimationFrame === 'function') {
-      cancelAnimationFrame(this.dragRafId);
-    }
-    this.dragRafId = null;
+    this.stopFrameLoop?.();
+    this.stopFrameLoop = null;
   }
 
   /* ---------------- column reorder drag ---------------- */
@@ -2040,15 +1735,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     const columns = this.visibleColumns();
     const fromIndex = columns.findIndex((entry) => entry.key === column.key);
     if (fromIndex < 0) return;
-    const headers = Array.from(
-      this.hostEl.nativeElement.querySelectorAll<HTMLElement>(
-        '.oge-kanban-header-row > *',
-      ),
-    );
-    const centers = headers.map((el) => {
-      const rect = el.getBoundingClientRect();
-      return (rect.left + rect.right) / 2;
-    });
+    const centers = kanbanHeaderCenters(this.hostEl.nativeElement);
     const baseOrder = columns.map((entry) => entry.key);
     this.draggedColumnKey.set(column.key);
     beginKanbanGesture(event, {
@@ -2058,10 +1745,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
           centers,
           fromIndex,
         );
-        const next = [...baseOrder];
-        next.splice(fromIndex, 1);
-        next.splice(toIndex, 0, column.key);
-        this.dragColumnOrder.set(next);
+        this.dragColumnOrder.set(
+          kanbanColumnOrderPreview(baseOrder, fromIndex, toIndex, column.key),
+        );
       },
       onFinish: (commit, _cancelled) => {
         const preview = this.dragColumnOrder();
@@ -2109,10 +1795,10 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     column: KanbanColumnDef | null,
   ): void {
     // no available action → keep the native browser menu
-    const available =
-      card !== null
-        ? this.canUpdate() || this.canDelete()
-        : column !== null && (this.canAddTo(column) || true);
+    const available = isKanbanMenuAvailable(card !== null, column !== null, {
+      canUpdate: this.canUpdate(),
+      canDelete: this.canDelete(),
+    });
     if (!available) return;
     event.preventDefault();
     event.stopPropagation();
@@ -2124,11 +1810,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       column,
       swimlane: card?.swimlane ?? null,
     });
-    setTimeout(() => {
-      this.hostEl.nativeElement
-        .querySelector<HTMLElement>('.oge-kanban-menu-item:not(:disabled)')
-        ?.focus();
-    });
+    setTimeout(() => focusFirstKanbanMenuItem(this.hostEl.nativeElement));
   }
 
   protected closeMenu(): void {
@@ -2144,28 +1826,14 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     }
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
     event.preventDefault();
-    const items = Array.from(
-      this.hostEl.nativeElement.querySelectorAll<HTMLButtonElement>(
-        '.oge-kanban-menu-item:not(:disabled)',
-      ),
-    );
-    const index = items.indexOf(document.activeElement as HTMLButtonElement);
-    const next =
-      event.key === 'ArrowDown'
-        ? items[(index + 1) % items.length]
-        : items[(index - 1 + items.length) % items.length];
-    next?.focus();
+    stepKanbanMenuFocus(this.hostEl.nativeElement, event.key);
   }
 
   /** Move-to targets: every other legal visible column (a menu of real moves). */
   protected moveTargets(menu: KanbanMenuState): readonly KanbanColumnDef[] {
     const card = menu.card;
     if (card === null || !this.canUpdate()) return [];
-    return this.visibleColumns().filter(
-      (column) =>
-        column.key !== card.column &&
-        this.isLegalTarget(card.column, column.key),
-    );
+    return kanbanMoveTargets(this.visibleColumns(), card.column);
   }
 
   protected menuEdit(): void {
@@ -2209,114 +1877,31 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   /* ---------------- editor dialog ---------------- */
 
   /** Choice lists for the default form, built from the current board. */
-  protected readonly editorChoices = computed(() => {
-    const cards = this.allCards();
-    const distinct = (values: readonly string[]): readonly string[] =>
-      Array.from(new Set(values));
-    return {
-      columns: this.visibleColumns().map((column) => ({
-        value: column.key,
-        text: this.columnTitle(column),
-      })),
-      swimlanes: this.hasSwimlanes()
-        ? distinct(
-            cards
-              .map((card) => card.swimlane)
-              .filter((lane): lane is string => lane !== null),
-          )
-        : [],
-      tags: distinct(cards.flatMap((card) => [...card.tags])),
-      assignees: distinct(cards.flatMap((card) => [...card.assignees])),
-      priorities: distinct(
-        cards
-          .map((card) => card.priority)
-          .filter((priority): priority is string => priority !== null),
-      ),
-      hasSwimlanes: this.hasSwimlanes(),
-      hasTags: this.tagsExpr() !== undefined,
-      hasAssignees: this.assigneeExpr() !== undefined,
-      hasDueDate: this.dueDateExpr() !== undefined,
-      hasPriority: this.priorityExpr() !== undefined,
-      // description/color have default field names — writable unless the
-      // expr was replaced by a getter function (no write-back name)
-      hasDescription: this.fields().fieldNames.description !== null,
-      hasColor: this.fields().fieldNames.color !== null,
-    };
-  });
+  protected readonly editorChoices = computed(() =>
+    buildKanbanEditorChoices(
+      this.allCards(),
+      this.visibleColumns(),
+      this.fields(),
+      this.mapped(),
+    ),
+  );
 
   /** The source item being edited; `null` while creating. */
   private editedSource: T | null = null;
 
-  private editorModelFrom(card: KanbanCard<T>): KanbanEditorModel {
-    return {
-      title: card.title,
-      description: card.description ?? '',
-      column: card.column,
-      swimlane: card.swimlane,
-      color: card.color,
-      tags: [...card.tags],
-      assignees: [...card.assignees],
-      dueDate: card.dueDate,
-      priority: card.priority,
-    };
-  }
-
-  private newEditorModel(
-    column: string,
-    swimlane: string | null,
-  ): KanbanEditorModel {
-    return {
-      title: '',
-      description: '',
-      column,
-      swimlane,
-      color: undefined,
-      tags: [],
-      assignees: [],
-      dueDate: null,
-      priority: null,
-    };
-  }
-
   /** Session-unique keys for created cards whose data has no key yet. */
   private newKeyCounter = 0;
-
-  /**
-   * Writes the editor model onto `base` through the write-back field names.
-   * Function exprs have no field name — those fields are skipped.
-   */
-  private buildItem(model: KanbanEditorModel, base: T): T {
-    const names = this.fields().fieldNames;
-    let item = base;
-    const write = (name: string | null, value: unknown): void => {
-      if (name !== null) item = withFieldValue(item, name, value);
-    };
-    write(names.title, model.title);
-    write(names.description, model.description);
-    write(names.column, model.column);
-    if (this.hasSwimlanes()) write(names.swimlane, model.swimlane);
-    write(names.color, model.color);
-    if (this.tagsExpr() !== undefined) write(names.tags, model.tags);
-    if (this.assigneeExpr() !== undefined) {
-      write(names.assignee, model.assignees);
-    }
-    if (this.dueDateExpr() !== undefined) write(names.dueDate, model.dueDate);
-    if (this.priorityExpr() !== undefined) {
-      write(names.priority, model.priority);
-    }
-    return item;
-  }
 
   /** Opens the editor for `card` through the `cardEditDialogShowing` hook. */
   editCard(card: KanbanCard<T>): void {
     if (!this.canUpdate()) return;
-    this.openEditor(this.editorModelFrom(card), card.source, false);
+    this.openEditor(kanbanEditorModelFrom(card), card.source, false);
   }
 
   /** Opens the editor for a new card prefilled into `column` / `swimlane`. */
   openNewCard(column: string, swimlane: string | null): void {
     if (!this.canAdd()) return;
-    this.openEditor(this.newEditorModel(column, swimlane), null, true);
+    this.openEditor(newKanbanEditorModel(column, swimlane), null, true);
   }
 
   /** Closes the edit dialog without saving (Syncfusion `closeDialog` parity). */
@@ -2329,10 +1914,14 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   protected addFromToolbar(): void {
-    const first = this.visibleColumns().find(
-      (column) => this.canAddTo(column) && !this.isColumnCollapsed(column.key),
+    this.openNewCard(
+      kanbanToolbarAddColumn(
+        this.visibleColumns(),
+        (column) => this.canAddTo(column),
+        this.isCollapsedFn,
+      ),
+      null,
     );
-    this.openNewCard(first?.key ?? this.visibleColumns()[0]?.key ?? '', null);
   }
 
   private openEditor(
@@ -2357,17 +1946,23 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   protected onEditorSaved(result: KanbanEditorResult): void {
     this.cardEditDialogHidden.emit();
     if (result.isNew) {
-      const key = this.fields().fieldNames.key;
-      let base = {} as T;
-      if (key !== null) {
-        base = withFieldValue(base, key, `oge-card-${++this.newKeyCounter}`);
-      }
-      const item = this.buildItem(result.model, base);
+      const base = newKanbanItemBase<T>(this.fields(), ++this.newKeyCounter);
+      const item = buildKanbanItem(
+        result.model,
+        base,
+        this.fields(),
+        this.mapped(),
+      );
       this.insertItem(item, result.model.column, result.model.swimlane);
       return;
     }
     if (this.editedSource !== null) {
-      const updated = this.buildItem(result.model, this.editedSource);
+      const updated = buildKanbanItem(
+        result.model,
+        this.editedSource,
+        this.fields(),
+        this.mapped(),
+      );
       this.updateItem(this.editedSource, updated);
       this.editedSource = null;
     }
@@ -2462,57 +2057,45 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     toSwimlane?: string | null,
   ): void {
     if (!this.canUpdate() && !this.canDrag()) return;
-    const position = this.findCard(key);
-    if (position === null) return;
-    const lanes = this.lanes();
-    const lane = lanes[position.laneIndex];
-    const card = lane.columns[position.columnIndex].cards[position.cardIndex];
-    const targetLaneKey = toSwimlane !== undefined ? toSwimlane : lane.key;
-    const targetLane =
-      lanes.find((entry) => entry.key === targetLaneKey) ?? lane;
-    const targetCell = targetLane.columns.find(
-      (cell) => cell.column.key === toColumn,
+    const plan = planKanbanMove(
+      this.lanes(),
+      key,
+      toColumn,
+      toIndex,
+      toSwimlane,
     );
-    if (targetCell === undefined) return;
-    const sameCell =
-      card.column === toColumn && (card.swimlane ?? null) === targetLaneKey;
-    const cellCards = sameCell
-      ? targetCell.cards.filter((entry) => entry.key !== card.key)
-      : targetCell.cards;
-    const index = Math.max(
-      0,
-      Math.min(toIndex ?? cellCards.length, cellCards.length),
-    );
-    if (sameCell && index === position.cardIndex) {
-      return; // dropped exactly where it started
-    }
+    if (plan === null) return;
+    const { card } = plan;
     const event: OgeKanbanCardMovingEvent<T> = {
       card: card.source,
       fromColumn: card.column,
       toColumn,
-      fromIndex: position.cardIndex,
-      toIndex: index,
+      fromIndex: plan.fromIndex,
+      toIndex: plan.toIndex,
       fromSwimlane: card.swimlane,
-      toSwimlane: targetLaneKey,
+      toSwimlane: plan.toSwimlane,
       cancel: false,
     };
     this.cardMoving.emit(event);
     if (event.cancel) return;
-    const movedItem = this.commitMove(
-      card,
-      cellCards,
-      toColumn,
-      targetLaneKey,
-      index,
+    const { store, moved } = commitKanbanMove(
+      this.store(),
+      plan,
+      this.fields(),
+      {
+        hasSwimlanes: this.hasSwimlanes(),
+        hasOrder: this.orderExpr() !== undefined,
+      },
     );
+    this.store.set(store);
     this.cardMoved.emit({
-      card: movedItem,
+      card: moved,
       fromColumn: card.column,
       toColumn,
-      fromIndex: position.cardIndex,
-      toIndex: index,
+      fromIndex: plan.fromIndex,
+      toIndex: plan.toIndex,
       fromSwimlane: card.swimlane,
-      toSwimlane: targetLaneKey,
+      toSwimlane: plan.toSwimlane,
     });
     const column = this.visibleColumns().find(
       (entry) => entry.key === toColumn,
@@ -2520,79 +2103,10 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.announce(this.msg().announcements.cardMoved, {
       title: card.title,
       column: column !== undefined ? this.columnTitle(column) : toColumn,
-      position: String(index + 1),
-      count: String(cellCards.length + 1),
+      position: String(plan.toIndex + 1),
+      count: String(plan.cellCards.length + 1),
     });
     this.focusCard({ ...card, column: toColumn });
-  }
-
-  /**
-   * Applies a validated move to the store and returns the updated item
-   * (what `cardMoved` hands to hosts for persistence). With an `orderExpr`
-   * the moved item gets a midpoint order (sequential renumber of the cell
-   * when the midpoint has no room); without one the store array itself is
-   * reordered, because the array order is the board order.
-   */
-  private commitMove(
-    card: KanbanCard<T>,
-    cellCards: readonly KanbanCard<T>[],
-    toColumn: string,
-    toSwimlane: string | null,
-    index: number,
-  ): T {
-    const fields = this.fields();
-    const names = fields.fieldNames;
-    let moved = card.source;
-    if (names.column !== null) {
-      moved = withFieldValue(moved, names.column, toColumn);
-    }
-    if (this.hasSwimlanes() && names.swimlane !== null && toSwimlane !== null) {
-      moved = withFieldValue(moved, names.swimlane, toSwimlane);
-    }
-    if (this.orderExpr() !== undefined && names.order !== null) {
-      const prev = cellCards[index - 1];
-      const next = cellCards[index];
-      const order = orderBetween(
-        prev !== undefined ? (prev.order ?? prev.sourceIndex) : null,
-        next !== undefined ? (next.order ?? next.sourceIndex) : null,
-      );
-      if (order !== null) {
-        moved = withFieldValue(moved, names.order, order);
-        this.store.set(
-          this.store().map((entry) => (entry === card.source ? moved : entry)),
-        );
-      } else {
-        // no midpoint room: renumber the whole cell sequentially
-        const reordered = [...cellCards];
-        reordered.splice(index, 0, { ...card, source: moved });
-        const patchBySource = new Map<T, T>([[card.source, moved]]);
-        for (const [entry, orderValue] of renumberPatches(reordered)) {
-          const base = patchBySource.get(entry.source) ?? entry.source;
-          patchBySource.set(
-            entry.source,
-            withFieldValue(base, names.order, orderValue),
-          );
-        }
-        this.store.set(
-          this.store().map((entry) => patchBySource.get(entry) ?? entry),
-        );
-        moved = patchBySource.get(card.source) ?? moved;
-      }
-      return moved;
-    }
-    // array order is the board order: reorder the store itself
-    const store = this.store().filter((entry) => entry !== card.source);
-    const anchor = cellCards[index];
-    const anchorIndex =
-      anchor !== undefined
-        ? store.indexOf(anchor.source)
-        : cellCards.length > 0
-          ? store.indexOf(cellCards[cellCards.length - 1].source) + 1
-          : store.length;
-    const next = [...store];
-    next.splice(anchorIndex < 0 ? store.length : anchorIndex, 0, moved);
-    this.store.set(next);
-    return moved;
   }
 
   protected onEditorCancelled(): void {
@@ -2608,6 +2122,6 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     template: string,
     tokens: Readonly<Record<string, string>>,
   ): void {
-    this.announcement.set(this.format(template, tokens));
+    this.announcement.set(formatKanbanMessage(template, tokens));
   }
 }

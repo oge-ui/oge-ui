@@ -1,0 +1,45 @@
+export { OgeKanban } from './lib/kanban';
+export type {
+  OgeKanbanProps,
+  OgeKanbanHandle,
+  OgeKanbanCardRenderContext,
+  OgeKanbanColumnHeaderRenderContext,
+  OgeKanbanEditDialogShowingEvent,
+} from './lib/kanban-types';
+export {
+  OgeKanbanConfigProvider,
+  useOgeKanbanConfig,
+} from './lib/kanban-config';
+// The engine is shared with the Angular package via `@oge-ui/kanban-engine`;
+// its public types and defaults are re-exported so React consumers import
+// one package — the same surface the Angular barrel exposes.
+export {
+  OGE_DEFAULT_KANBAN_CONFIG,
+  OGE_DEFAULT_KANBAN_MESSAGES,
+  type KanbanEditorModel as OgeKanbanEditorModel,
+  type KanbanWipState as OgeKanbanWipState,
+  type OgeKanbanAnnouncementMessages,
+  type OgeKanbanBoardMessages,
+  type OgeKanbanCard,
+  type OgeKanbanCardAddedEvent,
+  type OgeKanbanCardAddingEvent,
+  type OgeKanbanCardColorMode,
+  type OgeKanbanCardDeletedEvent,
+  type OgeKanbanCardDeletingEvent,
+  type OgeKanbanCardEvent,
+  type OgeKanbanCardMovedEvent,
+  type OgeKanbanCardMovingEvent,
+  type OgeKanbanCardUpdatedEvent,
+  type OgeKanbanCardUpdatingEvent,
+  type OgeKanbanColumn,
+  type OgeKanbanColumnAddedEvent,
+  type OgeKanbanColumnAddingEvent,
+  type OgeKanbanColumnReorderedEvent,
+  type OgeKanbanConfig,
+  type OgeKanbanConfigInput,
+  type OgeKanbanDialogMessages,
+  type OgeKanbanFieldExpr,
+  type OgeKanbanMenuMessages,
+  type OgeKanbanMessages,
+  type OgeKanbanToolbarMessages,
+} from '@oge-ui/kanban-engine';

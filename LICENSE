@@ -24,6 +24,10 @@ Portions of this repository are licensed as follows:
   Commercial License — see `packages/kanban/LICENSE`. Same terms:
   source-available, free for evaluation and development, paid for
   production use.
+- Everything under `packages/kanban-engine` (the Kanban's framework-free
+  engine) and `packages/react/kanban` (its React render layer) is licensed
+  under the OGE UI Commercial License — see `packages/kanban-engine/LICENSE`
+  and `packages/react/kanban/LICENSE`. Same terms as `packages/kanban`.
 - Everything else is licensed under the MIT License, reproduced below, and
   will remain MIT-licensed.
 

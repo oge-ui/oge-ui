@@ -1,0 +1,6 @@
+// The React board renders the exact `.oge-kanban-*` markup the Angular
+// package styles — so its stylesheet IS the Angular package's SCSS, compiled
+// here into this package's own `styles.css`. No second stylesheet, no drift
+// (ADR 0001). The edit dialog's modal and form come from the overlay, forms
+// and inputs packages' own stylesheets, which the app imports alongside.
+@use '../../../kanban/src/lib/kanban/kanban';

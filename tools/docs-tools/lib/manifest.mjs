@@ -222,6 +222,17 @@ export const PACKAGES = [
     tier: 'commercial',
   },
   {
+    dir: 'kanban-engine',
+    npm: '@oge-ui/kanban-engine',
+    label: 'Kanban engine',
+    summary:
+      'Framework-free engine both Kanban render layers run: card normalization and write-back, swimlane grouping, search, drag hit-testing and auto-scroll, virtual windows, WIP arithmetic, keyboard and move machines, the edit-dialog model and the message catalog. Installed automatically with @oge-ui/kanban or @oge-ui/react-kanban.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+  },
+  {
     dir: 'scheduler',
     npm: '@oge-ui/scheduler',
     label: 'Scheduler',
@@ -354,6 +365,19 @@ export const PACKAGES = [
     pageDirs: ['react-upload'],
     apiPage: 'apps/dev-app/src/app/pages/react-upload/api.ts',
     tier: 'mit',
+    platform: 'react',
+  },
+  {
+    dir: 'react/kanban',
+    npm: '@oge-ui/react-kanban',
+    label: 'Kanban (React)',
+    summary:
+      'React Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move callbacks, built-in edit dialog, context menu and toolbar — running the same engine and stylesheet as the Angular Kanban package.',
+    // The React content renders inside the single Kanban routes (ADR 0002).
+    docsRoot: '/components/kanban',
+    pageDirs: ['react-kanban'],
+    apiPage: 'apps/dev-app/src/app/pages/react-kanban/api.ts',
+    tier: 'commercial',
     platform: 'react',
   },
   {
