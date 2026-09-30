@@ -27,6 +27,7 @@ export default [
             '@oge-ui/react-pivot',
             '@oge-ui/gantt',
             '@oge-ui/charts',
+            '@oge-ui/react-charts',
           ],
           depConstraints: [
             // ---------------------------------------------------------------
