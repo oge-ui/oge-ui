@@ -1,12 +1,15 @@
+// Hand-compiled from packages/react/tree-list/src/lib/** — keep in sync with
+// the source TSDoc.
+//
+// Mirrors `pages/tree-list/tree-list-api-data.ts` group for group, so the two
+// views read as one page across the switch. What differs is the idiom —
+// controlled props with `on…Change` callbacks instead of `model()`,
+// `on`-prefixed callbacks instead of outputs, a `ref` handle instead of public
+// methods, render props / slot props instead of structural directives and
+// content projection.
 import type { ApiSections } from '../../shared/api-reference';
 
-/**
- * Hand-compiled from packages/tree-list/src/lib/** — keep in sync with the
- * source TSDoc. Column definitions, templates and grid-shared options are
- * documented on the Data Grid API page; this page focuses on the tree surface.
- */
-
-export const OGE_TREE_LIST_API: ApiSections = {
+export const OGE_REACT_TREE_LIST_API: ApiSections = {
   properties: [
     {
       title: 'Tree data',
@@ -23,7 +26,7 @@ export const OGE_TREE_LIST_API: ApiSections = {
           type: 'string | ((row: T) =&gt; RowKey)',
           default: "'id'",
           description:
-            'Row key: field path or selector (grid uses <code>keyField</code>).',
+            'Row key: field path or selector (the grid uses <code>keyField</code>).',
         },
         {
           name: 'parentIdExpr',
@@ -46,18 +49,18 @@ export const OGE_TREE_LIST_API: ApiSections = {
         },
         {
           name: 'itemsExpr',
-          type: 'string | ((row: T) =&gt; readonly T[] | undefined) | undefined',
+          type: 'string | ((row: T) =&gt; readonly T[] | undefined)',
           description:
             'Nested payloads: rows carry children inline (plain arrays only; <code>parentIdExpr</code> ignored).',
         },
         {
           name: 'hasItemsExpr',
-          type: 'string | ((row: T) =&gt; boolean) | undefined',
+          type: 'string | ((row: T) =&gt; boolean)',
           description: 'Expandability hint for lazily loaded children.',
         },
         {
           name: 'loadMode',
-          type: "'full' | 'lazy' | undefined",
+          type: "'full' | 'lazy'",
           description:
             "<code>'lazy'</code> fetches children per expansion (<code>filter: [parentIdExpr,'=',key]</code>); defaults to lazy with DataSource + <code>hasItemsExpr</code>.",
         },
@@ -74,10 +77,11 @@ export const OGE_TREE_LIST_API: ApiSections = {
             'Expands every row initially; the toggled-set polarity follows.',
         },
         {
-          name: 'expandedRowKeys',
-          type: 'model&lt;readonly RowKey[]&gt;',
-          default: '[]',
-          description: 'Two-way binding of the expanded row keys.',
+          name: 'expandedRowKeys / defaultExpandedRowKeys',
+          type: 'readonly RowKey[]',
+          default: 'undefined',
+          description:
+            'The expanded row keys — controlled with <code>onExpandedRowKeysChange</code>, or seeded once with <code>defaultExpandedRowKeys</code>.',
         },
         {
           name: 'expandNodesOnFiltering',
@@ -94,9 +98,10 @@ export const OGE_TREE_LIST_API: ApiSections = {
         },
         {
           name: 'focusedRowKey',
-          type: 'model&lt;RowKey | null&gt;',
-          default: 'null',
-          description: "Two-way binding of the focused row's key.",
+          type: 'RowKey | null',
+          default: 'undefined',
+          description:
+            "The focused row's key — controlled when provided, with <code>onFocusedRowKeyChange</code>.",
         },
         {
           name: 'autoNavigateToFocusedRow',
@@ -112,15 +117,16 @@ export const OGE_TREE_LIST_API: ApiSections = {
       entries: [
         {
           name: 'selectionMode',
-          type: 'OgeSelectionMode',
+          type: 'OgeGridSelectionMode',
           default: "'none'",
           description: 'none | single | multiple | checkbox.',
         },
         {
-          name: 'selectedKeys',
-          type: 'model&lt;RowKey[]&gt;',
-          default: '[]',
-          description: 'Two-way binding of the selected row keys.',
+          name: 'selectedKeys / defaultSelectedKeys',
+          type: 'readonly RowKey[]',
+          default: 'undefined',
+          description:
+            'The selected row keys — controlled with <code>onSelectedKeysChange</code>, or seeded once with <code>defaultSelectedKeys</code>.',
         },
         {
           name: 'selectionRecursive',
@@ -154,14 +160,15 @@ export const OGE_TREE_LIST_API: ApiSections = {
             "Matches keep their ancestors; <code>'fullBranch'</code> also keeps all descendants.",
         },
         {
-          name: 'filterValue',
-          type: 'model&lt;FilterExpr | null&gt;',
-          default: 'null',
-          description: 'Two-way filter expression (builder).',
+          name: 'filterValue / defaultFilterValue',
+          type: 'FilterExpr | null',
+          default: 'undefined',
+          description:
+            'The filter expression (builder) — controlled with <code>onFilterValueChange</code>.',
         },
         {
           name: 'filterDebounce',
-          type: 'number | undefined',
+          type: 'number',
           description: 'Debounce for text filter inputs.',
         },
         {
@@ -184,15 +191,15 @@ export const OGE_TREE_LIST_API: ApiSections = {
       entries: [
         {
           name: 'columns',
-          type: 'readonly (string | OgeColumnDef&lt;T&gt;)[] | undefined',
+          type: 'readonly (string | OgeGridColumnProps&lt;T&gt;)[]',
           description:
-            'Programmatic columns — the grid’s <code>OgeColumnDef</code> with every <code>&lt;oge-column&gt;</code> option; used when no declarative columns exist (and the way to share columns through a wrapper component).',
+            'The columns — the React grid’s column props (<code>renderCell</code>, <code>renderHeader</code>, <code>renderEditor</code>, <code>bandCaption</code>, validators…), or a plain field name.',
         },
         {
           name: 'virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth',
           type: 'various',
           description:
-            'Virtualization knobs; <code>columnRenderingMode</code> is a top-level input here.',
+            'Virtualization knobs; <code>columnRenderingMode</code> is a top-level prop here.',
         },
         {
           name: 'columnResize / columnReorder / columnChooser',
@@ -203,12 +210,36 @@ export const OGE_TREE_LIST_API: ApiSections = {
           name: 'editing',
           type: 'false | OgeEditingOptions',
           default: 'false',
-          description: 'cell/row/batch/form/popup via the shared EditingModel.',
+          description: 'cell/row/batch/form/popup via the shared editing core.',
         },
         {
           name: 'commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey',
           type: 'various',
           description: 'Same semantics as the grid.',
+        },
+        {
+          name: 'stateStorage',
+          type: 'OgeStateStorage',
+          default: 'undefined',
+          description:
+            'Per-tree storage backend for <code>stateKey</code>; overrides <code>&lt;OgeGridStateStorageProvider&gt;</code>.',
+        },
+        {
+          name: 'renderNoData',
+          type: '(context: OgeGridNoDataContext) =&gt; ReactNode',
+          description:
+            'Renders the empty state — the React form of <code>*ogeNoDataTemplate</code>.',
+        },
+        {
+          name: 'toolbarBefore',
+          type: 'ReactNode',
+          description:
+            'Your own toolbar content at the start edge, ahead of the built-in tools — the React form of projected <code>[ogeToolbar]</code> items.',
+        },
+        {
+          name: 'className / style / ariaLabel',
+          type: 'string / CSSProperties / string',
+          description: 'Host styling and the accessible name of the treegrid.',
         },
       ],
     },
@@ -226,7 +257,7 @@ export const OGE_TREE_LIST_API: ApiSections = {
           name: 'expandRow(key) / collapseRow(key) / isRowExpanded(key)',
           type: 'void / boolean',
           description:
-            'Per-row expansion (imperative API bypasses the cancelable events).',
+            'Per-row expansion (the handle bypasses the cancelable callbacks).',
         },
         {
           name: 'focusRow(key) / navigateToRow(key)',
@@ -295,7 +326,7 @@ export const OGE_TREE_LIST_API: ApiSections = {
           name: 'addRow(parentKey?)',
           type: 'void',
           description:
-            'New unsaved row; parent pre-staged with a string <code>parentIdExpr</code>; <code>initNewRow</code> can prefill.',
+            'New unsaved row; parent pre-staged with a string <code>parentIdExpr</code>; <code>onInitNewRow</code> can prefill.',
         },
         {
           name: 'editRow(key) / deleteRow(key) / saveChanges() / discardChanges() / hasChanges()',
@@ -303,10 +334,10 @@ export const OGE_TREE_LIST_API: ApiSections = {
           description: 'Same semantics as the grid.',
         },
         {
-          name: 'pageIndex / setPageIndex(i) / pageSize() / setPageSize(n) / pageCount() / totalCount()',
-          type: 'signal / methods',
+          name: 'pageIndex() / setPageIndex(i) / pageSize() / setPageSize(n) / pageCount() / totalCount()',
+          type: 'methods',
           description:
-            '<code>pageIndex</code> is a writable signal; <code>totalCount()</code> spans all pages.',
+            '<code>pageIndex()</code> reads the page Angular exposes as a writable signal; <code>totalCount()</code> spans all pages.',
         },
         {
           name: 'beginCustomLoading(message?) / endCustomLoading()',
@@ -327,7 +358,7 @@ export const OGE_TREE_LIST_API: ApiSections = {
           name: 'getExportData() / getCsv() / exportCsv()',
           type: 'sync',
           description:
-            '<strong>Synchronous</strong> (grid: async); CSV indents the first column 2 spaces per level; Excel entry sets real outline levels.' +
+            '<strong>Synchronous</strong> (grid: async); CSV indents the first column 2 spaces per level; the Excel entry sets real outline levels. ' +
             'Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); <code>formulaGuard: false</code> opts out.',
         },
       ],
@@ -338,25 +369,25 @@ export const OGE_TREE_LIST_API: ApiSections = {
       title: 'Tree-specific',
       entries: [
         {
-          name: 'rowExpanding / rowCollapsing',
-          type: 'OgeTreeRowTogglingEvent&lt;T&gt;',
+          name: 'onRowExpanding / onRowCollapsing',
+          type: '(event: OgeTreeRowTogglingEvent&lt;T&gt;) =&gt; void',
           description:
-            'Cancelable — UI-driven toggles only (the imperative API stays silent).',
+            'Cancelable — UI-driven toggles only (the handle stays silent).',
         },
         {
-          name: 'rowExpanded / rowCollapsed',
-          type: 'OgeTreeRowToggleEvent&lt;T&gt;',
+          name: 'onRowExpanded / onRowCollapsed',
+          type: '(event: OgeTreeRowToggleEvent&lt;T&gt;) =&gt; void',
           description: '<code>{ key, row }</code> after a toggle.',
         },
         {
-          name: 'rowReparented',
-          type: 'OgeTreeRowReparentEvent&lt;T&gt;',
+          name: 'onRowReparented',
+          type: '(event: OgeTreeRowReparentEvent&lt;T&gt;) =&gt; void',
           description:
             "Drag &amp; drop: <code>{ key, row, fromParentKey, toParentKey, position: 'inside' | 'before' | 'after' }</code>.",
         },
         {
-          name: 'initNewRow',
-          type: 'OgeTreeInitNewRowEvent',
+          name: 'onInitNewRow',
+          type: '(event: OgeTreeInitNewRowEvent) =&gt; void',
           description: '<code>{ key, parentKey, values }</code> prefill hook.',
         },
       ],
@@ -365,38 +396,38 @@ export const OGE_TREE_LIST_API: ApiSections = {
       title: 'Shared with the grid',
       entries: [
         {
-          name: 'rowClick / rowDblClick / cellClick / cellDblClick',
+          name: 'onRowClick / onRowDblClick / onCellClick / onCellDblClick',
           type: 'OgeRowClickEvent / OgeCellClickEvent',
-          description: 'Flat payloads with the originating DOM event.',
+          description: 'Flat payloads with the originating React event.',
         },
         {
-          name: 'rowContextMenu / headerContextMenu',
-          type: 'context-menu events',
+          name: 'onRowContextMenu / onHeaderContextMenu',
+          type: 'context-menu callbacks',
           description:
             'Mutable <code>items</code>; also opened by the Menu key / Shift+F10 on a focused cell or header (<code>source: &#39;keyboard&#39;</code>, anchored at the cell).',
         },
         {
-          name: 'selectionChanged / focusedRowChanged',
-          type: 'diff / focus events',
+          name: 'onSelectionChanged / onFocusedRowChanged',
+          type: 'diff / focus callbacks',
           description: 'Same payloads as the grid.',
         },
         {
-          name: 'editingStart / rowInserting / rowInserted / rowUpdating / rowUpdated / rowRemoving / rowRemoved / savingChanges / savedChanges / editCanceled',
+          name: 'onEditingStart / onRowInserting / onRowInserted / onRowUpdating / onRowUpdated / onRowRemoving / onRowRemoved / onSavingChanges / onSavedChanges / onEditCanceled',
           type: 'editing lifecycle',
           description:
-            'Same shared EditingModel pipeline as the grid; <code>-ing</code> events cancelable.',
+            'Same shared editing pipeline as the grid; <code>-ing</code> callbacks are cancelable.',
         },
         {
-          name: 'expandedRowKeysChange / selectedKeysChange / focusedRowKeyChange / filterValueChange',
-          type: 'model change events',
+          name: 'onExpandedRowKeysChange / onSelectedKeysChange / onFocusedRowKeyChange / onFilterValueChange',
+          type: 'controlled-value callbacks',
           description:
-            'The change halves of the <code>[(expandedRowKeys)]</code>, <code>[(selectedKeys)]</code>, <code>[(focusedRowKey)]</code> and <code>[(filterValue)]</code> two-way bindings.',
+            'The change halves of the controlled <code>expandedRowKeys</code>, <code>selectedKeys</code>, <code>focusedRowKey</code> and <code>filterValue</code> props.',
         },
         {
-          name: 'exporting / dataErrorOccurred / contentReady / stateChange',
+          name: 'onExporting / onDataErrorOccurred / onContentReady / onStateChange',
           type: 'misc',
           description:
-            'Same semantics as the grid (<code>stateChange</code> carries a <code>TreeListStateSnapshot</code>).',
+            'Same semantics as the grid (<code>onStateChange</code> receives a <code>TreeListStateSnapshot</code>).',
         },
       ],
     },
@@ -404,6 +435,23 @@ export const OGE_TREE_LIST_API: ApiSections = {
   types: [
     {
       entries: [
+        {
+          name: 'OgeTreeListHandle&lt;T&gt;',
+          type: 'ref handle',
+          description:
+            'The methods above, reached through <code>useRef&lt;OgeTreeListHandle&lt;T&gt;&gt;()</code>.',
+        },
+        {
+          name: 'OgeTreeListProps&lt;T&gt;',
+          type: 'props',
+          description: 'Every prop and callback of this page.',
+        },
+        {
+          name: 'OgeTreeContextMenuEvent&lt;T&gt; / OgeTreeHeaderContextMenuEvent',
+          type: 'context-menu payloads',
+          description:
+            'Row / header menu payloads: <code>items</code> to push into, <code>source</code>, the originating <code>event</code>.',
+        },
         {
           name: 'OgeTreeDropPosition',
           type: "'inside' | 'before' | 'after'",
@@ -421,15 +469,16 @@ export const OGE_TREE_LIST_API: ApiSections = {
           description: 'Visible set under a filter.',
         },
         {
-          name: 'exportOgeTreeListToExcel(treeList, options?)',
-          type: '@oge-ui/tree-list/export-excel',
-          description: 'Lazy Excel export with native outline grouping.',
+          name: 'exportOgeTreeListToExcel(handle, options?)',
+          type: '@oge-ui/react-tree-list/export-excel',
+          description:
+            'Lazy Excel export with native outline grouping (optional <code>exceljs</code> peer).',
         },
         {
           name: 'Re-exports',
-          type: 'from @oge-ui/grid',
+          type: 'from @oge-ui/react-grid',
           description:
-            '<code>OgeColumn</code>, templates, config/messages and the shared event payload types are re-exported so tree-only consumers have a single import source.',
+            '<code>OgeGridColumnProps</code>, the render-prop contexts, <code>&lt;OgeGridConfigProvider&gt;</code> / <code>&lt;OgeGridStateStorageProvider&gt;</code> and the shared event payload types are re-exported so tree-only consumers have a single import source.',
         },
       ],
     },

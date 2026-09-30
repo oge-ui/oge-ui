@@ -31,6 +31,7 @@ Version 0.13.1. Generated from the OGE UI source tree: the API tables and demo s
 - `@oge-ui/react-forms` — Forms (React)
 - `@oge-ui/react-upload` — Upload (React)
 - `@oge-ui/react-grid` — Data Grid (React)
+- `@oge-ui/react-tree-list` — Tree List (React)
 - `@oge-ui/react-overlay` — Overlay (React)
 - `@oge-ui/behavior` — Behavior
 - `@oge-ui/react` — Umbrella package (React)
@@ -2306,7 +2307,8 @@ _Shared with the grid_
 | `rowClick / rowDblClick / cellClick / cellDblClick` | `OgeRowClickEvent / OgeCellClickEvent` | Flat payloads with the originating DOM event. |
 | `rowContextMenu / headerContextMenu` | `context-menu events` | Mutable `items`; also opened by the Menu key / Shift+F10 on a focused cell or header (`source: 'keyboard'`, anchored at the cell). |
 | `selectionChanged / focusedRowChanged` | `diff / focus events` | Same payloads as the grid. |
-| `editingStart / rowInserting‑ed / rowUpdating‑ed / rowRemoving‑ed / savingChanges / savedChanges / editCanceled` | `editing lifecycle` | Same shared EditingModel pipeline as the grid; `-ing` events cancelable. |
+| `editingStart / rowInserting / rowInserted / rowUpdating / rowUpdated / rowRemoving / rowRemoved / savingChanges / savedChanges / editCanceled` | `editing lifecycle` | Same shared EditingModel pipeline as the grid; `-ing` events cancelable. |
+| `expandedRowKeysChange / selectedKeysChange / focusedRowKeyChange / filterValueChange` | `model change events` | The change halves of the `[(expandedRowKeys)]`, `[(selectedKeys)]`, `[(focusedRowKey)]` and `[(filterValue)]` two-way bindings. |
 | `exporting / dataErrorOccurred / contentReady / stateChange` | `misc` | Same semantics as the grid (`stateChange` carries a `TreeListStateSnapshot`). |
 
 #### Types
@@ -28299,6 +28301,443 @@ export function DeferredSelection() {
 }
 ```
 
+## @oge-ui/react-tree-list
+
+React tree list: the data-grid feature set on hierarchical data — flat parentId or nested payloads, lazy per-expansion loading with remote match discovery, ancestor-preserving filtering, recursive tri-state selection, paging over visible rows, virtualization, editing in all five modes and drag & drop reparenting — running the same framework-free tree engine, state slices and stylesheet as the Angular tree-list package.
+
+Docs: https://ogeui.com/components/tree-list
+
+### <OgeTreeList>
+
+#### Properties
+
+_Tree data_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `data` | `readonly T[] \| DataSource<T>` | `[]` | Flat self-referencing rows: a static array or any DataSource. |
+| `keyExpr` | `string \| ((row: T) => RowKey)` | `'id'` | Row key: field path or selector (the grid uses `keyField`). |
+| `parentIdExpr` | `string \| ((row: T) => unknown)` | `'parentId'` | Parent reference: field path or selector. |
+| `rootValue` | `unknown` | `null` | Parent value marking root rows. |
+| `orphanPolicy` | `'discard' \| 'promoteToRoot'` | `'discard'` | Rows whose parent key is missing: drop or render as roots. |
+| `itemsExpr` | `string \| ((row: T) => readonly T[] \| undefined)` | `—` | Nested payloads: rows carry children inline (plain arrays only; `parentIdExpr` ignored). |
+| `hasItemsExpr` | `string \| ((row: T) => boolean)` | `—` | Expandability hint for lazily loaded children. |
+| `loadMode` | `'full' \| 'lazy'` | `—` | `'lazy'` fetches children per expansion (`filter: [parentIdExpr,'=',key]`); defaults to lazy with DataSource + `hasItemsExpr`. |
+
+_Expansion & focus_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `autoExpandAll` | `boolean` | `false` | Expands every row initially; the toggled-set polarity follows. |
+| `expandedRowKeys / defaultExpandedRowKeys` | `readonly RowKey[]` | `undefined` | The expanded row keys — controlled with `onExpandedRowKeysChange`, or seeded once with `defaultExpandedRowKeys`. |
+| `expandNodesOnFiltering` | `boolean` | `true` | Auto-expands ancestor chains of matches while a filter is active. |
+| `focusedRowEnabled` | `boolean` | `false` | Highlights and tracks a single focused row. |
+| `focusedRowKey` | `RowKey \| null` | `undefined` | The focused row's key — controlled when provided, with `onFocusedRowKeyChange`. |
+| `autoNavigateToFocusedRow` | `boolean` | `false` | A `focusedRowKey` change expands its ancestor path and scrolls (tree-only). |
+
+_Selection_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `selectionMode` | `OgeGridSelectionMode` | `'none'` | none \| single \| multiple \| checkbox. |
+| `selectedKeys / defaultSelectedKeys` | `readonly RowKey[]` | `undefined` | The selected row keys — controlled with `onSelectedKeysChange`, or seeded once with `defaultSelectedKeys`. |
+| `selectionRecursive` | `boolean` | `false` | Tri-state cascade to descendants and ancestors. |
+| `allowSelectAll` | `boolean` | `true` | Hides the header select-all checkbox when false. |
+
+_Filtering & paging_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `filterRow / headerFilter / searchPanel / filterPanel` | `boolean \| options` | `false` | Same options objects as the grid — all client-side over the loaded rows. |
+| `filterMode` | `TreeFilterMode` | `'withAncestors'` | Matches keep their ancestors; `'fullBranch'` also keeps all descendants. |
+| `filterValue / defaultFilterValue` | `FilterExpr \| null` | `undefined` | The filter expression (builder) — controlled with `onFilterValueChange`. |
+| `filterDebounce` | `number` | `—` | Debounce for text filter inputs. |
+| `paging` | `false \| OgePagingOptions` | `false` | Pages the visible (flattened) rows client-side; paging wins over `virtualScroll`. |
+| `sortable / sorting` | `boolean \| 'single' \| 'multi' / OgeSortingOptions` | `true` | Sibling-scoped, multi-column by default. |
+
+_Layout, editing & misc (grid-shared)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `columns` | `readonly (string \| OgeGridColumnProps<T>)[]` | `—` | The columns — the React grid’s column props (`renderCell`, `renderHeader`, `renderEditor`, `bandCaption`, validators…), or a plain field name. |
+| `virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth` | `various` | `—` | Virtualization knobs; `columnRenderingMode` is a top-level prop here. |
+| `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false). |
+| `editing` | `false \| OgeEditingOptions` | `false` | cell/row/batch/form/popup via the shared editing core. |
+| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid. |
+| `stateStorage` | `OgeStateStorage` | `undefined` | Per-tree storage backend for `stateKey`; overrides `<OgeGridStateStorageProvider>`. |
+| `renderNoData` | `(context: OgeGridNoDataContext) => ReactNode` | `—` | Renders the empty state — the React form of `*ogeNoDataTemplate`. |
+| `toolbarBefore` | `ReactNode` | `—` | Your own toolbar content at the start edge, ahead of the built-in tools — the React form of projected `[ogeToolbar]` items. |
+| `className / style / ariaLabel` | `string / CSSProperties / string` | `—` | Host styling and the accessible name of the treegrid. |
+
+#### Methods
+
+_Tree navigation & data_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `expandAll() / collapseAll()` | `void` | Polarity-aware over the expandable keys. |
+| `expandRow(key) / collapseRow(key) / isRowExpanded(key)` | `void / boolean` | Per-row expansion (the handle bypasses the cancelable callbacks). |
+| `focusRow(key) / navigateToRow(key)` | `void` | Expands the ancestor path, scrolls to the row and focuses its first cell. |
+| `scrollToRow(target: number \| RowKey)` | `void` | Scrolls a visible row into the viewport. |
+| `getNodeByKey(key): T \| undefined` | `T \| undefined` | The loaded row carrying `key`. |
+| `forEachNode(callback)` | `void` | Runs the callback for every loaded row with `(row, key, parentKey)`. |
+| `getVisibleRows(): readonly T[]` | `readonly T[]` | Data rows of the rendered page, in display order. |
+| `refresh(): void` | `void` | Re-runs the load and drops lazily fetched rows. |
+
+_Selection_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `getSelectedRowKeys(mode = 'all')` | `RowKey[]` | `'all' \| 'leavesOnly' \| 'excludeRecursive'` narrows recursive selections. |
+| `getSelectedRowsData(mode = 'all')` | `T[]` | Row data per the same modes. |
+| `selectAll() / deselectAll() / clearSelection() / isRowSelected(key)` | `void / boolean` | Recursive mode cascades select-all to descendants. |
+| `copyToClipboard(): Promise<void>` | `Promise<void>` | Selected rows as tab-separated values (with header). |
+
+_Editing, paging, state & export_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `addRow(parentKey?)` | `void` | New unsaved row; parent pre-staged with a string `parentIdExpr`; `onInitNewRow` can prefill. |
+| `editRow(key) / deleteRow(key) / saveChanges() / discardChanges() / hasChanges()` | `void / boolean` | Same semantics as the grid. |
+| `pageIndex() / setPageIndex(i) / pageSize() / setPageSize(n) / pageCount() / totalCount()` | `methods` | `pageIndex()` reads the page Angular exposes as a writable signal; `totalCount()` spans all pages. |
+| `beginCustomLoading(message?) / endCustomLoading()` | `void` | Load panel independent of data activity. |
+| `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. |
+| `clearFilters() / clearSorting()` | `void` | Reset the view. |
+| `getExportData() / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async); CSV indents the first column 2 spaces per level; the Excel entry sets real outline levels. Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
+
+#### Events
+
+_Tree-specific_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onRowExpanding / onRowCollapsing` | `(event: OgeTreeRowTogglingEvent<T>) => void` | Cancelable — UI-driven toggles only (the handle stays silent). |
+| `onRowExpanded / onRowCollapsed` | `(event: OgeTreeRowToggleEvent<T>) => void` | `{ key, row }` after a toggle. |
+| `onRowReparented` | `(event: OgeTreeRowReparentEvent<T>) => void` | Drag & drop: `{ key, row, fromParentKey, toParentKey, position: 'inside' \| 'before' \| 'after' }`. |
+| `onInitNewRow` | `(event: OgeTreeInitNewRowEvent) => void` | `{ key, parentKey, values }` prefill hook. |
+
+_Shared with the grid_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onRowClick / onRowDblClick / onCellClick / onCellDblClick` | `OgeRowClickEvent / OgeCellClickEvent` | Flat payloads with the originating React event. |
+| `onRowContextMenu / onHeaderContextMenu` | `context-menu callbacks` | Mutable `items`; also opened by the Menu key / Shift+F10 on a focused cell or header (`source: 'keyboard'`, anchored at the cell). |
+| `onSelectionChanged / onFocusedRowChanged` | `diff / focus callbacks` | Same payloads as the grid. |
+| `onEditingStart / onRowInserting / onRowInserted / onRowUpdating / onRowUpdated / onRowRemoving / onRowRemoved / onSavingChanges / onSavedChanges / onEditCanceled` | `editing lifecycle` | Same shared editing pipeline as the grid; `-ing` callbacks are cancelable. |
+| `onExpandedRowKeysChange / onSelectedKeysChange / onFocusedRowKeyChange / onFilterValueChange` | `controlled-value callbacks` | The change halves of the controlled `expandedRowKeys`, `selectedKeys`, `focusedRowKey` and `filterValue` props. |
+| `onExporting / onDataErrorOccurred / onContentReady / onStateChange` | `misc` | Same semantics as the grid (`onStateChange` receives a `TreeListStateSnapshot`). |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeTreeListHandle<T>` | `ref handle` | The methods above, reached through `useRef<OgeTreeListHandle<T>>()`. |
+| `OgeTreeListProps<T>` | `props` | Every prop and callback of this page. |
+| `OgeTreeContextMenuEvent<T> / OgeTreeHeaderContextMenuEvent` | `context-menu payloads` | Row / header menu payloads: `items` to push into, `source`, the originating `event`. |
+| `OgeTreeDropPosition` | `'inside' \| 'before' \| 'after'` | Reparent vs sibling ordering. |
+| `OgeTreeExportData<T>` | `OgeExportData<T> & { levels: readonly number[] }` | Zero-based depth per exported row (drives spreadsheet outline levels). |
+| `TreeFilterMode` | `'withAncestors' \| 'fullBranch'` | Visible set under a filter. |
+| `exportOgeTreeListToExcel(handle, options?)` | `@oge-ui/react-tree-list/export-excel` | Lazy Excel export with native outline grouping (optional `exceljs` peer). |
+| `Re-exports` | `from @oge-ui/react-grid` | `OgeGridColumnProps`, the render-prop contexts, `<OgeGridConfigProvider>` / `<OgeGridStateStorageProvider>` and the shared event payload types are re-exported so tree-only consumers have a single import source. |
+
+### Demos
+
+Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Reparenting
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+import type { OgeTreeRowReparentEvent } from '@oge-ui/react-tree-list';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function DraggableOrg() {
+  const onReparent = (event: OgeTreeRowReparentEvent<OrgNode>) => {
+    console.log(event.key, 'moved under', event.toParentKey);
+  };
+  return (
+    <OgeTreeList
+      data={org}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      rowDragging
+      onRowReparented={onReparent}
+      columns={[
+        { field: 'name', caption: 'Name' },
+        { field: 'title', caption: 'Title', width: 140 },
+        { field: 'office', caption: 'Office', width: 140 },
+      ]}
+    />
+  );
+}
+```
+
+#### Form mode, prefill, insert under a parent
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+import type { OgeTreeListHandle } from '@oge-ui/react-tree-list';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function EditableOrg() {
+  const tree = useRef<OgeTreeListHandle<OrgNode>>(null);
+  // tree.current?.addRow(parentKey) inserts under a chosen node
+  const addUnderFirstVp = () => {
+    const firstVp = org.find((row) => row.title === 'VP');
+    if (firstVp) tree.current?.addRow(firstVp.id);
+  };
+  return (
+    <>
+      <button type="button" onClick={addUnderFirstVp}>
+        Add under the first VP
+      </button>
+      <OgeTreeList
+        ref={tree}
+        data={org}
+        keyExpr="id"
+        parentIdExpr="parentId"
+        autoExpandAll
+        editing={{
+          mode: 'form',
+          allowUpdating: true,
+          allowAdding: true,
+          allowDeleting: true,
+          confirmDelete: false,
+          formColCount: 2,
+          formItems: ['name', 'title', { field: 'office', colSpan: 2 }],
+        }}
+        onInitNewRow={(event) => {
+          event.values['title'] = 'Engineer';
+        }}
+        columns={[
+          { field: 'name', caption: 'Name', required: true },
+          { field: 'title', caption: 'Title', width: 140 },
+          { field: 'office', caption: 'Office', width: 140 },
+        ]}
+      />
+    </>
+  );
+}
+```
+
+#### Ancestors preserved
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function FilteredOrg() {
+  return (
+    <OgeTreeList
+      data={org}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      filterRow
+      searchPanel
+      headerFilter
+      filterMode="withAncestors"
+      columns={[
+        { field: 'name', caption: 'Name' },
+        { field: 'office', caption: 'Office' },
+      ]}
+    />
+  );
+}
+```
+
+#### Children per expansion
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+import { CustomDataSource } from '@oge-ui/core';
+
+interface Node {
+  id: number;
+  parentId: number | null;
+  name: string;
+  hasReports: boolean;
+}
+
+/** The tree list asks for one level at a time: ['parentId', '=', key]. */
+function parentKeyOf(options: { filter?: unknown }): string {
+  const filter = options.filter as [string, string, unknown] | undefined;
+  return String(filter?.[2] ?? '');
+}
+
+// children are fetched per expansion:
+// load({ filter: ['parentId', '=', parentKey] })
+const source = new CustomDataSource<Node>({
+  key: 'id',
+  load: (options) =>
+    fetch(`/api/org?parent=${parentKeyOf(options)}`)
+      .then((response) => response.json())
+      .then((data: Node[]) => ({ data, totalCount: data.length })),
+});
+
+export function LazyOrg() {
+  return (
+    <OgeTreeList
+      data={source}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      hasItemsExpr="hasReports"
+      columns={[{ field: 'name' }]}
+    />
+  );
+}
+```
+
+#### Flat id/parentId data
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function OrgChart() {
+  return (
+    <OgeTreeList
+      data={org}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      columns={[
+        { field: 'name', caption: 'Name' },
+        { field: 'title', caption: 'Title', width: 140 },
+        { field: 'office', caption: 'Office', width: 140 },
+        { field: 'headcount', caption: 'Reports', dataType: 'number', width: 110 },
+      ]}
+    />
+  );
+}
+```
+
+#### Recursive tri-state selection
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+import type { RowKey } from '@oge-ui/core';
+
+interface OrgNode {
+  id: number;
+  parentId: number | null;
+  name: string;
+  title: string;
+  office: string;
+  headcount: number;
+}
+
+declare const org: OrgNode[];
+
+export function SelectableOrg() {
+  const [selectedKeys, setSelectedKeys] = useState<RowKey[]>([]);
+  return (
+    <OgeTreeList
+      data={org}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      selectionMode="checkbox"
+      selectionRecursive
+      selectedKeys={selectedKeys}
+      onSelectedKeysChange={setSelectedKeys}
+      columns={[
+        { field: 'name', caption: 'Name' },
+        { field: 'title', caption: 'Title', width: 140 },
+        { field: 'office', caption: 'Office', width: 140 },
+      ]}
+    />
+  );
+}
+```
+
+#### 100.000 nodes
+
+```ts
+'use client';
+
+import { OgeTreeList } from '@oge-ui/react-tree-list';
+
+// 100 branches × 999 rows = 100.000 nodes
+const rows = Array.from({ length: 100 }, (_, branch) => [
+  { id: branch * 1000, parentId: null, name: `Branch ${branch + 1}` },
+  ...Array.from({ length: 999 }, (_, leaf) => ({
+    id: branch * 1000 + leaf + 1,
+    parentId: branch * 1000,
+    name: `Node ${leaf + 1}`,
+  })),
+]).flat();
+
+export function BigTree() {
+  return (
+    <OgeTreeList
+      data={rows}
+      keyExpr="id"
+      parentIdExpr="parentId"
+      autoExpandAll
+      virtualScroll
+      style={{ height: 480 }}
+      columns={[{ field: 'name' }]}
+    />
+  );
+}
+```
+
 ## @oge-ui/react-overlay
 
 React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
@@ -29255,8 +29694,8 @@ Framework-free interaction and accessibility layer shared by every package: popu
 
 `@oge-ui/behavior`
 
-- values: `DragDepthCounter`, `OGE_BREADCRUMB_ELLIPSIS_FALLBACK`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_FORMS_CONFIG`, `OGE_DEFAULT_FORMS_MESSAGES`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_GRID_MESSAGES`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_DEFAULT_OVERLAY_TIMINGS`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_DEFAULT_TOAST_DEFAULTS`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DEFAULT_UPLOAD_CONFIG`, `OGE_DEFAULT_UPLOAD_MESSAGES`, `OGE_GRID_WINDOW_BLOCK_SIZE`, `OGE_MENUBAR_HOVER_DELAY`, `OGE_MODAL_MIN_RESIZE`, `OGE_PAGE_ELLIPSIS`, `OGE_PAGINATION_DEFAULT_COMPACT_BELOW`, `OGE_PAGINATION_DEFAULT_MAX_BUTTONS`, `OGE_SELECT_OPTION_HEIGHT`, `OGE_SLIDER_MAX_TICKS`, `OGE_SPLITTER_FULL_TRAVEL`, `OGE_SPLITTER_GRIP_SIDES`, `OGE_TAB_DRAG_THRESHOLD`, `OGE_TOAST_ANNOUNCE_DELAY_MS`, `OGE_TOAST_EXIT_MS`, `OGE_TOAST_POSITIONS`, `OGE_TOOLBAR_STOP_SELECTOR`, `OGE_TOOLTIP_PANEL_OPTIONS`, `OGE_TREE_DEFAULT_ITEM_HEIGHT`, `OGE_TREE_DRAG_HOVER_EXPAND_MS`, `OGE_TREE_DRAG_THRESHOLD`, `ObjectUrlRegistry`, `OgeAnchoredPanelCore`, `OgeButtonPress`, `OgeContextMenuEcho`, `OgeFileUploaderCore`, `OgeGridColumnLayoutCore`, `OgeGridColumnsState`, `OgeGridDataCore`, `OgeGridDeferredChildrenCore`, `OgeGridEditingCore`, `OgeGridEditingState`, `OgeGridExpansionState`, `OgeGridFilterState`, `OgeGridGroupingState`, `OgeGridKeyboardNavCore`, `OgeGridPagingState`, `OgeGridRowVirtualizerCore`, `OgeGridSelectionState`, `OgeGridSortState`, `OgeGridStateCore`, `OgeGridStatePersistenceCore`, `OgeInputCommit`, `OgeListVirtualizerCore`, `OgeMenuTypeAhead`, `OgeSelectListCore`, `OgeToastCore`, `OgeToastRef`, `OgeTooltipCore`, `UploadQueue`, `accordionAriaDisabled`, `accordionItemDescriptor`, `accordionNavIntent`, `accordionPageDirection`, `accordionTypeAheadStart`, `adaptiveHiddenColumnIds`, `addDays`, `addMonths`, `addYears`, `allHeaderValuesSelected`, `allRowsSelected`, `ancestorsOf`, `applyButtonGroupSelection`, `applyTabOrder`, `applyToolbarOverride`, `asyncValidationRules`, `breadcrumbDataDescriptors`, `breadcrumbMenuItems`, `buildRowFilterExpr`, `buildTreeViewIndex`, `buildTreeViewModel`, `buildTreeViewNodes`, `builderToExpr`, `buttonGroupNavIndex`, `buttonGroupRole`, `canCollapseAccordionPanel`, `canResizeSplitterAt`, `canSelectTab`, `captionize`, `chunkedLoaded`, `clampModalDrag`, `clampModalResize`, `clampNumber`, `clampPaginationIndex`, `clampValue`, `colorsEqual`, `constrainRangeValue`, `contrastForeground`, `createNumberFormatter`, `createTreeSearchPredicate`, `createTypeAheadBuffer`, `createXhrUploadAdapter`, `dataTransferHasFiles`, `dateFilterExpr`, `datePartOrder`, `dateRangeFilterExpr`, `decadeCells`, `defaultAlignmentFor`, `defaultOperatorFor`, `deferredToggleExpr`, `describeExpr`, `dropEffectFor`, `edgeEnabledIndex`, `effectiveFilterOperator`, `emptyValueForDataType`, `evaluateOgeValidationRules`, `exceedsTreeDragThreshold`, `expandedIdsAfterCollapse`, `expandedIdsAfterExpand`, `exprToBuilder`, `fileExtension`, `filterHeaderValues`, `filterOperatorSymbol`, `filterRowOperatorChoices`, `findMenubarItemPath`, `fitBreadcrumbDescriptors`, `fitToolbarDescriptors`, `fitToolbarItems`, `formColumnsCount`, `formColumnsCss`, `formatCellValue`, `formatColor`, `formatFileSize`, `formatPaginationMessage`, `formatPattern`, `formatUploadMessage`, `getTabbableElements`, `graphemeCount`, `groupHeaderValuesByYear`, `headerGroupState`, `headerValueText`, `headerYearLabel`, `hsvaToRgba`, `humanize`, `inertModalBackground`, `inferDataType`, `isAccordionTypeAheadKey`, `isBareEditor`, `isDataSource`, `isDayDisabled`, `isEmptyFormValue`, `isHeaderValueSelected`, `isMenubarCompact`, `isModalFocusOrphaned`, `isOgeContextMenuKey`, `isPreviewable`, `isSplitterPaneCollapsed`, `isSplitterPaneCollapsible`, `isStepReachable`, `isToolbarStopDisabled`, `isToolbarTextEntry`, `isTopOverlay`, `keyEqualsExpr`, `loadOptionsEqual`, `loadSplitterPanes`, `loadToolbarItems`, `lockBodyScroll`, `lookupTextOf`, `mapLookupItems`, `matchAccordionTitle`, `matchByPrefix`, `matchesAccept`, `menuEdgeIndex`, `menuEnabledIndexes`, `menuMoveIndex`, `menubarBarKeys`, `menubarClosedReason`, `menubarDataDescriptors`, `menubarEventBase`, `menubarItemDomId`, `menubarPanelItems`, `menubarPanelLabel`, `menubarPanelPlacement`, `menubarPopupCloseReason`, `menubarStopDisabled`, `mergeUploadMessages`, `messageForFieldError`, `modalCssSize`, `monthCells`, `monthMatrix`, `navigate`, `nextTreeExpansion`, `nextTreeSelection`, `normalizeSplitTracks`, `offsetByStep`, `ogeContextMenuKeyTarget`, `ogeGridBandRow`, `ogeLiveConfig`, `operatorsFor`, `orderByVisibleIndex`, `orderToolbarDescriptors`, `paginationHasNextPage`, `paginationInfoText`, `paginationIsCompact`, `paginationPageCount`, `parseColor`, `parseDateText`, `parseSplitterSize`, `pickEditorType`, `planChunks`, `planTreeViewKey`, `pruneHiddenMenubarItems`, `pushOverlay`, `ratioToValue`, `readClipboardFiles`, `readDataTransferFiles`, `readPath`, `readToolbarStyleMetrics`, `removeOverlay`, `reorderTabIds`, `resetGraphemeSegmenter`, `resetScrollLockForTests`, `resizeSplitAt`, `resolveAccordionIndex`, `resolveAutoRepeat`, `resolveClickGuard`, `resolveDisabled`, `resolveDisplay`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveGridConfig`, `resolveHoldToConfirm`, `resolveItem`, `resolveLookupItems`, `resolveMenubarCompact`, `resolveModalInitialFocus`, `resolveOgeAccordionConfig`, `resolveOgeBreadcrumbConfig`, `resolveOgeButtonsConfig`, `resolveOgeCardConfig`, `resolveOgeDrawerConfig`, `resolveOgeFormsConfig`, `resolveOgeGridColumns`, `resolveOgeInputsConfig`, `resolveOgeLoadIndicatorConfig`, `resolveOgeMenubarConfig`, `resolveOgePaginationConfig`, `resolveOgeProgressBarConfig`, `resolveOgeSkeletonConfig`, `resolveOgeSplitterConfig`, `resolveOgeStepperConfig`, `resolveOgeTabsConfig`, `resolveOgeToolbarConfig`, `resolveOgeTreeViewConfig`, `resolveOverlayConfig`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolvePopupPosition`, `resolveSelectedKeys`, `resolveSplitterIndex`, `resolveStepIndex`, `resolveTabIndex`, `resolveTreeDropPosition`, `resolveTreeItemHeight`, `resolveTreeSelectByClick`, `resolveUploadConfig`, `resolveValue`, `rgbaToHsva`, `roundSplitterValue`, `rowClickSelectionIntent`, `rowFilterExpr`, `runAsyncGuard`, `sameAccordionIds`, `sameAccordionKeys`, `sameDay`, `sameMonth`, `sameSplitterSizes`, `sanitizeResourceUrl`, `sanitizeUrl`, `shouldRenderAccordionPanel`, `sliderKeyboardTarget`, `sliderPercent`, `sliderTicks`, `sliderValueFromPointer`, `snapToStep`, `someRowsSelected`, `splitSeparatorRange`, `splitTrackPx`, `splitterBoundInTrackUnit`, `splitterBounds`, `splitterCollapseSideInDirection`, `splitterDragDelta`, `splitterFlexiblePx`, `splitterGridTemplate`, `splitterGripPath`, `splitterGripTitle`, `splitterKeyAction`, `splitterKeyShortcuts`, `splitterPaneDescriptor`, `splitterPaneOf`, `splitterSeparatorLabel`, `splitterSeparatorRanges`, `splitterSizesWithRestored`, `splitterTrackCss`, `splitterTracks`, `splitterTracksToSizes`, `startOfDay`, `startSliderDrag`, `startSplitterDrag`, `stepBlockReason`, `stepEnabledIndex`, `stepItemDescriptor`, `stepState`, `stepperArrowKeys`, `stepperKeyTarget`, `stepsCompleteBefore`, `tabItemDescriptor`, `toLocalDate`, `toggleAllHeaderValues`, `toggleHeaderGroup`, `toggleHeaderValue`, `toolbarCollapses`, `toolbarDataDescriptors`, `toolbarIconVisible`, `toolbarItemId`, `toolbarItemWidth`, `toolbarMenuItems`, `toolbarOverflowEvent`, `toolbarScrollState`, `toolbarTextVisible`, `tooltipDescribedByTarget`, `trackPointerGesture`, `trapTabKey`, `treeAccessor`, `treeAnchorIndex`, `treeAriaChecked`, `treeAriaSelected`, `treeCanDrop`, `treeCheckStates`, `treeChildrenLoadNeeded`, `treeEdgeIndex`, `treeEffectiveExpanded`, `treeExpandableKeys`, `treeFilterExpandedKeys`, `treeHasChildrenHint`, `treeLoadingAny`, `treeNodeDisabled`, `treeNodeIndent`, `treeParentIndex`, `treeRangeSelection`, `treeSearchAccessors`, `treeSelectAllState`, `treeSiblingExpansion`, `treeStepIndex`, `treeTypeAheadIndex`, `treeVisibleKeys`, `unlockBodyScroll`, `validateFile`, `validateSelection`, `validationSummaryTitle`, `valueToRatio`, `viewLabel`, `weekNumber`, `weekdayNames`, `withToolbarIndexes`, `writePath`, `yearCells`
-- types: `CalendarCell`, `CheckState`, `DateParseKind`, `LookupItem`, `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionDescriptorCore`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionLoadState`, `OgeAccordionMessages`, `OgeAccordionNavIntent`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionTogglePosition`, `OgeAnchoredPanelCoreOptions`, `OgeAsyncGuard`, `OgeAutoRepeatOptions`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbDescriptorCore`, `OgeBreadcrumbFitRequest`, `OgeBreadcrumbFitResult`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbMessages`, `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeButtonGroupSelectionChange`, `OgeButtonGroupSelectionMode`, `OgeButtonGuardTiming`, `OgeButtonHoldState`, `OgeButtonHoldTiming`, `OgeButtonIconPosition`, `OgeButtonPressOptions`, `OgeButtonRepeatTiming`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeCalendarCellClickEvent`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeClickGuardOptions`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeColorFormat`, `OgeColumnAlignment`, `OgeColumnLookup`, `OgeContextMenuKeyTarget`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeDeferredBaseOptions`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingCell`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFieldError`, `OgeFileUploaderCoreOptions`, `OgeFileUploaderEventName`, `OgeFileUploaderEvents`, `OgeFileUploaderProps`, `OgeFilterBuilderField`, `OgeFilterDescribeMessages`, `OgeFilterRowColumn`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeFormColCount`, `OgeFormDataType`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormGroupData`, `OgeFormItemDataBase`, `OgeFormLabelLocation`, `OgeFormScreenSize`, `OgeFormValidatedEvent`, `OgeFormatFileSizeOptions`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeGridAdaptiveHidingInput`, `OgeGridBandCell`, `OgeGridColumnDef`, `OgeGridColumnLayoutDeps`, `OgeGridColumnRange`, `OgeGridColumnResolveInput`, `OgeGridColumnSpec`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridDataCoreDeps`, `OgeGridDeferredChildrenDeps`, `OgeGridEditingCoreDeps`, `OgeGridEditorBridge`, `OgeGridEditorState`, `OgeGridFilterStateSnapshot`, `OgeGridFocusedCell`, `OgeGridKeyboardNavDeps`, `OgeGridKeyboardNavTreeHooks`, `OgeGridLayoutColumn`, `OgeGridMessages`, `OgeGridResolvedColumn`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridRowVirtualizerDeps`, `OgeGridRowWindowAdapter`, `OgeGridSelectAllState`, `OgeGridSelectionIntent`, `OgeGridSelectionMode`, `OgeGridSelectionModifiers`, `OgeGridStatePersistenceOptions`, `OgeGridToggleKind`, `OgeGroupingOptions`, `OgeGuardHandlers`, `OgeHeaderFilterMessages`, `OgeHeaderFilterOptions`, `OgeHeaderFilterSelection`, `OgeHeaderValueGroup`, `OgeHeaderValueTextOptions`, `OgeHoldToConfirmOptions`, `OgeHsva`, `OgeInputCommitOptions`, `OgeInputCounterMode`, `OgeInputErrorDisplay`, `OgeInputLabelMode`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeListVirtualizerDeps`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeMenuCloseReason`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenubarBarKeys`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarDescriptorCore`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarPanelSource`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalDragRequest`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalResizeRequest`, `OgeNumberFormatter`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgeOverlayTimings`, `OgePageChangedEvent`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePaginationCompactRequest`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgePagingOptions`, `OgePendingChildRequest`, `OgePinOverride`, `OgePopupAlign`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeRangeThumb`, `OgeReactiveCell`, `OgeReactivityAdapter`, `OgeRect`, `OgeResolvedChunkOptions`, `OgeResolvedFormItem`, `OgeResolvedPopupPosition`, `OgeResolvedRetryOptions`, `OgeResolvedToastOptions`, `OgeRgba`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectDisabledExpr`, `OgeSelectDisplayExpr`, `OgeSelectGroupExpr`, `OgeSelectImageExpr`, `OgeSelectItemsFn`, `OgeSelectListCoreDeps`, `OgeSelectListRow`, `OgeSelectSearchExpr`, `OgeSelectSearchMode`, `OgeSelectValueExpr`, `OgeSelectionChangedEvent`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSliderAxis`, `OgeSliderDragHandlers`, `OgeSliderScale`, `OgeSliderTrackRect`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterDataSourceLike`, `OgeSplitterDescriptorCore`, `OgeSplitterDragHandlers`, `OgeSplitterGripSide`, `OgeSplitterKeyAction`, `OgeSplitterKeyInput`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeSplitterView`, `OgeStateStorage`, `OgeStepBlockReason`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepDescriptorCore`, `OgeStepGuard`, `OgeStepReachRequest`, `OgeStepState`, `OgeStepperArrowKeys`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperKeyRequest`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabDescriptorCore`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastBaseOptions`, `OgeToastBasePatch`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastCoreOptions`, `OgeToastDefaults`, `OgeToastEntry`, `OgeToastPosition`, `OgeToastProgressStyle`, `OgeToastPromiseBaseOptions`, `OgeToastRegion`, `OgeToastSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDataSourceLike`, `OgeToolbarDescriptorCore`, `OgeToolbarDisplayDefaults`, `OgeToolbarDisplayMode`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitRequest`, `OgeToolbarFitResult`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemOverride`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContextCore`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarOverflowPolicy`, `OgeToolbarScrollState`, `OgeToolbarSize`, `OgeToolbarStyleMetrics`, `OgeToolbarStylingMode`, `OgeTooltipCoreOptions`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExpr`, `OgeTreeIndexInput`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeKeyAction`, `OgeTreeKeyInput`, `OgeTreeKeyPlan`, `OgeTreeLoadChildren`, `OgeTreeLoadState`, `OgeTreeNodesInput`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeViewModel`, `OgeTreeViewModelInput`, `OgeTreeViewNode`, `OgeTreeVirtualScrollOptions`, `OgeTypeAheadBuffer`, `OgeUploadAbortReason`, `OgeUploadAbortedEvent`, `OgeUploadActionsLayout`, `OgeUploadAdapter`, `OgeUploadAllUploadedEvent`, `OgeUploadAnnouncementMessages`, `OgeUploadButtonMessages`, `OgeUploadCallbacks`, `OgeUploadCancelableEvent`, `OgeUploadCandidate`, `OgeUploadChunk`, `OgeUploadChunkFailedEvent`, `OgeUploadChunkMetadata`, `OgeUploadChunkOptions`, `OgeUploadChunkUploadedEvent`, `OgeUploadChunkUploadingEvent`, `OgeUploadClearedEvent`, `OgeUploadClearingEvent`, `OgeUploadConfig`, `OgeUploadConfigInput`, `OgeUploadDisplayMode`, `OgeUploadDropEffect`, `OgeUploadDropZoneEvent`, `OgeUploadDropZoneMessages`, `OgeUploadErrorKind`, `OgeUploadFailedEvent`, `OgeUploadFieldError`, `OgeUploadFile`, `OgeUploadFileDownloadingEvent`, `OgeUploadFileError`, `OgeUploadFileListOptions`, `OgeUploadFileRejectedEvent`, `OgeUploadFileRemovedEvent`, `OgeUploadFileRemovingEvent`, `OgeUploadFileStatus`, `OgeUploadFilesDroppedEvent`, `OgeUploadFilesSelectedEvent`, `OgeUploadFilesSelectingEvent`, `OgeUploadHandle`, `OgeUploadListType`, `OgeUploadMessages`, `OgeUploadMessagesInput`, `OgeUploadMode`, `OgeUploadPart`, `OgeUploadPausedEvent`, `OgeUploadPausingEvent`, `OgeUploadPreloadedFile`, `OgeUploadPreviewHiddenEvent`, `OgeUploadPreviewShowingEvent`, `OgeUploadProgressEvent`, `OgeUploadQueueEvent`, `OgeUploadQueueOptions`, `OgeUploadRequest`, `OgeUploadRestrictions`, `OgeUploadResumedEvent`, `OgeUploadResumingEvent`, `OgeUploadRetryOptions`, `OgeUploadSelectionSource`, `OgeUploadStartedEvent`, `OgeUploadStatusMessages`, `OgeUploadTask`, `OgeUploadThumbnailFailedEvent`, `OgeUploadTimers`, `OgeUploadUploadedEvent`, `OgeUploadUploadingEvent`, `OgeUploadValidationMessages`, `OgeUploadValidationResult`, `OgeValidationContext`, `OgeValidationRule`, `OgeVirtualScrollOptions`, `RowKey`, `SearchHighlightSegment`, `TreeFilterMode`, `TreeIndex`, `WeekNumberRule`
+- values: `DragDepthCounter`, `OGE_BREADCRUMB_ELLIPSIS_FALLBACK`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_FORMS_CONFIG`, `OGE_DEFAULT_FORMS_MESSAGES`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_GRID_MESSAGES`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_DEFAULT_OVERLAY_TIMINGS`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_DEFAULT_TOAST_DEFAULTS`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DEFAULT_UPLOAD_CONFIG`, `OGE_DEFAULT_UPLOAD_MESSAGES`, `OGE_GRID_WINDOW_BLOCK_SIZE`, `OGE_MENUBAR_HOVER_DELAY`, `OGE_MODAL_MIN_RESIZE`, `OGE_PAGE_ELLIPSIS`, `OGE_PAGINATION_DEFAULT_COMPACT_BELOW`, `OGE_PAGINATION_DEFAULT_MAX_BUTTONS`, `OGE_SELECT_OPTION_HEIGHT`, `OGE_SLIDER_MAX_TICKS`, `OGE_SPLITTER_FULL_TRAVEL`, `OGE_SPLITTER_GRIP_SIDES`, `OGE_TAB_DRAG_THRESHOLD`, `OGE_TOAST_ANNOUNCE_DELAY_MS`, `OGE_TOAST_EXIT_MS`, `OGE_TOAST_POSITIONS`, `OGE_TOOLBAR_STOP_SELECTOR`, `OGE_TOOLTIP_PANEL_OPTIONS`, `OGE_TREE_DEFAULT_ITEM_HEIGHT`, `OGE_TREE_DRAG_HOVER_EXPAND_MS`, `OGE_TREE_DRAG_THRESHOLD`, `ObjectUrlRegistry`, `OgeAnchoredPanelCore`, `OgeButtonPress`, `OgeContextMenuEcho`, `OgeFileUploaderCore`, `OgeGridColumnLayoutCore`, `OgeGridColumnsState`, `OgeGridDataCore`, `OgeGridDeferredChildrenCore`, `OgeGridEditingCore`, `OgeGridEditingState`, `OgeGridExpansionState`, `OgeGridFilterState`, `OgeGridGroupingState`, `OgeGridKeyboardNavCore`, `OgeGridPagingState`, `OgeGridRowVirtualizerCore`, `OgeGridSelectionState`, `OgeGridSortState`, `OgeGridStateCore`, `OgeGridStatePersistenceCore`, `OgeInputCommit`, `OgeListVirtualizerCore`, `OgeMenuTypeAhead`, `OgeSelectListCore`, `OgeToastCore`, `OgeToastRef`, `OgeTooltipCore`, `OgeTreeListCore`, `UploadQueue`, `accordionAriaDisabled`, `accordionItemDescriptor`, `accordionNavIntent`, `accordionPageDirection`, `accordionTypeAheadStart`, `adaptiveHiddenColumnIds`, `addDays`, `addMonths`, `addYears`, `allHeaderValuesSelected`, `allRowsSelected`, `ancestorsOf`, `applyButtonGroupSelection`, `applyTabOrder`, `applyToolbarOverride`, `asyncValidationRules`, `breadcrumbDataDescriptors`, `breadcrumbMenuItems`, `buildRowFilterExpr`, `buildTreeViewIndex`, `buildTreeViewModel`, `buildTreeViewNodes`, `builderToExpr`, `buttonGroupNavIndex`, `buttonGroupRole`, `canCollapseAccordionPanel`, `canResizeSplitterAt`, `canSelectTab`, `captionize`, `chunkedLoaded`, `clampModalDrag`, `clampModalResize`, `clampNumber`, `clampPaginationIndex`, `clampValue`, `colorsEqual`, `constrainRangeValue`, `contrastForeground`, `createNumberFormatter`, `createTreeSearchPredicate`, `createTypeAheadBuffer`, `createXhrUploadAdapter`, `dataTransferHasFiles`, `dateFilterExpr`, `datePartOrder`, `dateRangeFilterExpr`, `decadeCells`, `defaultAlignmentFor`, `defaultOperatorFor`, `deferredToggleExpr`, `describeExpr`, `dropEffectFor`, `edgeEnabledIndex`, `effectiveFilterOperator`, `emptyValueForDataType`, `evaluateOgeValidationRules`, `exceedsTreeDragThreshold`, `expandedIdsAfterCollapse`, `expandedIdsAfterExpand`, `exprToBuilder`, `fileExtension`, `filterHeaderValues`, `filterOperatorSymbol`, `filterRowOperatorChoices`, `findMenubarItemPath`, `fitBreadcrumbDescriptors`, `fitToolbarDescriptors`, `fitToolbarItems`, `formColumnsCount`, `formColumnsCss`, `formatCellValue`, `formatColor`, `formatFileSize`, `formatPaginationMessage`, `formatPattern`, `formatUploadMessage`, `getTabbableElements`, `graphemeCount`, `groupHeaderValuesByYear`, `headerGroupState`, `headerValueText`, `headerYearLabel`, `hsvaToRgba`, `humanize`, `inertModalBackground`, `inferDataType`, `isAccordionTypeAheadKey`, `isBareEditor`, `isDataSource`, `isDayDisabled`, `isEmptyFormValue`, `isHeaderValueSelected`, `isMenubarCompact`, `isModalFocusOrphaned`, `isOgeContextMenuKey`, `isPreviewable`, `isSplitterPaneCollapsed`, `isSplitterPaneCollapsible`, `isStepReachable`, `isToolbarStopDisabled`, `isToolbarTextEntry`, `isTopOverlay`, `keyEqualsExpr`, `loadOptionsEqual`, `loadSplitterPanes`, `loadToolbarItems`, `lockBodyScroll`, `lookupTextOf`, `mapLookupItems`, `matchAccordionTitle`, `matchByPrefix`, `matchesAccept`, `menuEdgeIndex`, `menuEnabledIndexes`, `menuMoveIndex`, `menubarBarKeys`, `menubarClosedReason`, `menubarDataDescriptors`, `menubarEventBase`, `menubarItemDomId`, `menubarPanelItems`, `menubarPanelLabel`, `menubarPanelPlacement`, `menubarPopupCloseReason`, `menubarStopDisabled`, `mergeUploadMessages`, `messageForFieldError`, `modalCssSize`, `monthCells`, `monthMatrix`, `navigate`, `nextTreeExpansion`, `nextTreeSelection`, `normalizeSplitTracks`, `offsetByStep`, `ogeContextMenuKeyTarget`, `ogeGridBandRow`, `ogeLiveConfig`, `ogeTreeCsv`, `ogeTreeDataSource`, `ogeTreeDropPosition`, `ogeTreeHeaderValueGroups`, `ogeTreeHeaderValueText`, `operatorsFor`, `orderByVisibleIndex`, `orderToolbarDescriptors`, `paginationHasNextPage`, `paginationInfoText`, `paginationIsCompact`, `paginationPageCount`, `parseColor`, `parseDateText`, `parseSplitterSize`, `pickEditorType`, `planChunks`, `planTreeViewKey`, `pruneHiddenMenubarItems`, `pushOverlay`, `ratioToValue`, `readClipboardFiles`, `readDataTransferFiles`, `readPath`, `readToolbarStyleMetrics`, `removeOverlay`, `reorderTabIds`, `resetGraphemeSegmenter`, `resetScrollLockForTests`, `resizeSplitAt`, `resolveAccordionIndex`, `resolveAutoRepeat`, `resolveClickGuard`, `resolveDisabled`, `resolveDisplay`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveGridConfig`, `resolveHoldToConfirm`, `resolveItem`, `resolveLookupItems`, `resolveMenubarCompact`, `resolveModalInitialFocus`, `resolveOgeAccordionConfig`, `resolveOgeBreadcrumbConfig`, `resolveOgeButtonsConfig`, `resolveOgeCardConfig`, `resolveOgeDrawerConfig`, `resolveOgeFormsConfig`, `resolveOgeGridColumns`, `resolveOgeInputsConfig`, `resolveOgeLoadIndicatorConfig`, `resolveOgeMenubarConfig`, `resolveOgePaginationConfig`, `resolveOgeProgressBarConfig`, `resolveOgeSkeletonConfig`, `resolveOgeSplitterConfig`, `resolveOgeStepperConfig`, `resolveOgeTabsConfig`, `resolveOgeToolbarConfig`, `resolveOgeTreeViewConfig`, `resolveOverlayConfig`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolvePopupPosition`, `resolveSelectedKeys`, `resolveSplitterIndex`, `resolveStepIndex`, `resolveTabIndex`, `resolveTreeDropPosition`, `resolveTreeItemHeight`, `resolveTreeSelectByClick`, `resolveUploadConfig`, `resolveValue`, `rgbaToHsva`, `roundSplitterValue`, `rowClickSelectionIntent`, `rowFilterExpr`, `runAsyncGuard`, `sameAccordionIds`, `sameAccordionKeys`, `sameDay`, `sameMonth`, `sameSplitterSizes`, `sanitizeResourceUrl`, `sanitizeUrl`, `shouldRenderAccordionPanel`, `sliderKeyboardTarget`, `sliderPercent`, `sliderTicks`, `sliderValueFromPointer`, `snapToStep`, `someRowsSelected`, `splitSeparatorRange`, `splitTrackPx`, `splitterBoundInTrackUnit`, `splitterBounds`, `splitterCollapseSideInDirection`, `splitterDragDelta`, `splitterFlexiblePx`, `splitterGridTemplate`, `splitterGripPath`, `splitterGripTitle`, `splitterKeyAction`, `splitterKeyShortcuts`, `splitterPaneDescriptor`, `splitterPaneOf`, `splitterSeparatorLabel`, `splitterSeparatorRanges`, `splitterSizesWithRestored`, `splitterTrackCss`, `splitterTracks`, `splitterTracksToSizes`, `startOfDay`, `startSliderDrag`, `startSplitterDrag`, `stepBlockReason`, `stepEnabledIndex`, `stepItemDescriptor`, `stepState`, `stepperArrowKeys`, `stepperKeyTarget`, `stepsCompleteBefore`, `tabItemDescriptor`, `toLocalDate`, `toggleAllHeaderValues`, `toggleHeaderGroup`, `toggleHeaderValue`, `toolbarCollapses`, `toolbarDataDescriptors`, `toolbarIconVisible`, `toolbarItemId`, `toolbarItemWidth`, `toolbarMenuItems`, `toolbarOverflowEvent`, `toolbarScrollState`, `toolbarTextVisible`, `tooltipDescribedByTarget`, `trackPointerGesture`, `trapTabKey`, `treeAccessor`, `treeAnchorIndex`, `treeAriaChecked`, `treeAriaSelected`, `treeCanDrop`, `treeCheckStates`, `treeChildrenLoadNeeded`, `treeEdgeIndex`, `treeEffectiveExpanded`, `treeExpandableKeys`, `treeFilterExpandedKeys`, `treeHasChildrenHint`, `treeLoadingAny`, `treeNodeDisabled`, `treeNodeIndent`, `treeParentIndex`, `treeRangeSelection`, `treeSearchAccessors`, `treeSelectAllState`, `treeSiblingExpansion`, `treeStepIndex`, `treeTypeAheadIndex`, `treeVisibleKeys`, `unlockBodyScroll`, `validateFile`, `validateSelection`, `validationSummaryTitle`, `valueToRatio`, `viewLabel`, `weekNumber`, `weekdayNames`, `withToolbarIndexes`, `writePath`, `yearCells`
+- types: `CalendarCell`, `CheckState`, `DateParseKind`, `LookupItem`, `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionDescriptorCore`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionLoadState`, `OgeAccordionMessages`, `OgeAccordionNavIntent`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionTogglePosition`, `OgeAnchoredPanelCoreOptions`, `OgeAsyncGuard`, `OgeAutoRepeatOptions`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbDescriptorCore`, `OgeBreadcrumbFitRequest`, `OgeBreadcrumbFitResult`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbMessages`, `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeButtonGroupSelectionChange`, `OgeButtonGroupSelectionMode`, `OgeButtonGuardTiming`, `OgeButtonHoldState`, `OgeButtonHoldTiming`, `OgeButtonIconPosition`, `OgeButtonPressOptions`, `OgeButtonRepeatTiming`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeCalendarCellClickEvent`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeClickGuardOptions`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeColorFormat`, `OgeColumnAlignment`, `OgeColumnLookup`, `OgeContextMenuKeyTarget`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeDeferredBaseOptions`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingCell`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFieldError`, `OgeFileUploaderCoreOptions`, `OgeFileUploaderEventName`, `OgeFileUploaderEvents`, `OgeFileUploaderProps`, `OgeFilterBuilderField`, `OgeFilterDescribeMessages`, `OgeFilterRowColumn`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeFormColCount`, `OgeFormDataType`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormGroupData`, `OgeFormItemDataBase`, `OgeFormLabelLocation`, `OgeFormScreenSize`, `OgeFormValidatedEvent`, `OgeFormatFileSizeOptions`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeGridAdaptiveHidingInput`, `OgeGridBandCell`, `OgeGridColumnDef`, `OgeGridColumnLayoutDeps`, `OgeGridColumnRange`, `OgeGridColumnResolveInput`, `OgeGridColumnSpec`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridDataCoreDeps`, `OgeGridDeferredChildrenDeps`, `OgeGridEditingCoreDeps`, `OgeGridEditorBridge`, `OgeGridEditorState`, `OgeGridFilterStateSnapshot`, `OgeGridFocusedCell`, `OgeGridKeyboardNavDeps`, `OgeGridKeyboardNavTreeHooks`, `OgeGridLayoutColumn`, `OgeGridMessages`, `OgeGridResolvedColumn`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridRowVirtualizerDeps`, `OgeGridRowWindowAdapter`, `OgeGridSelectAllState`, `OgeGridSelectionIntent`, `OgeGridSelectionMode`, `OgeGridSelectionModifiers`, `OgeGridStatePersistenceOptions`, `OgeGridToggleKind`, `OgeGroupingOptions`, `OgeGuardHandlers`, `OgeHeaderFilterMessages`, `OgeHeaderFilterOptions`, `OgeHeaderFilterSelection`, `OgeHeaderValueGroup`, `OgeHeaderValueTextOptions`, `OgeHoldToConfirmOptions`, `OgeHsva`, `OgeInputCommitOptions`, `OgeInputCounterMode`, `OgeInputErrorDisplay`, `OgeInputLabelMode`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeListVirtualizerDeps`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeMenuCloseReason`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenubarBarKeys`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarDescriptorCore`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarPanelSource`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalDragRequest`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalResizeRequest`, `OgeNumberFormatter`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgeOverlayTimings`, `OgePageChangedEvent`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePaginationCompactRequest`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgePagingOptions`, `OgePendingChildRequest`, `OgePinOverride`, `OgePopupAlign`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeRangeThumb`, `OgeReactiveCell`, `OgeReactivityAdapter`, `OgeRect`, `OgeResolvedChunkOptions`, `OgeResolvedFormItem`, `OgeResolvedPopupPosition`, `OgeResolvedRetryOptions`, `OgeResolvedToastOptions`, `OgeRgba`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectDisabledExpr`, `OgeSelectDisplayExpr`, `OgeSelectGroupExpr`, `OgeSelectImageExpr`, `OgeSelectItemsFn`, `OgeSelectListCoreDeps`, `OgeSelectListRow`, `OgeSelectSearchExpr`, `OgeSelectSearchMode`, `OgeSelectValueExpr`, `OgeSelectionChangedEvent`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSliderAxis`, `OgeSliderDragHandlers`, `OgeSliderScale`, `OgeSliderTrackRect`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterDataSourceLike`, `OgeSplitterDescriptorCore`, `OgeSplitterDragHandlers`, `OgeSplitterGripSide`, `OgeSplitterKeyAction`, `OgeSplitterKeyInput`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeSplitterView`, `OgeStateStorage`, `OgeStepBlockReason`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepDescriptorCore`, `OgeStepGuard`, `OgeStepReachRequest`, `OgeStepState`, `OgeStepperArrowKeys`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperKeyRequest`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabDescriptorCore`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastBaseOptions`, `OgeToastBasePatch`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastCoreOptions`, `OgeToastDefaults`, `OgeToastEntry`, `OgeToastPosition`, `OgeToastProgressStyle`, `OgeToastPromiseBaseOptions`, `OgeToastRegion`, `OgeToastSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDataSourceLike`, `OgeToolbarDescriptorCore`, `OgeToolbarDisplayDefaults`, `OgeToolbarDisplayMode`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitRequest`, `OgeToolbarFitResult`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemOverride`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContextCore`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarOverflowPolicy`, `OgeToolbarScrollState`, `OgeToolbarSize`, `OgeToolbarStyleMetrics`, `OgeToolbarStylingMode`, `OgeTooltipCoreOptions`, `OgeTreeBooleanMessages`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExportData`, `OgeTreeExportSourceColumn`, `OgeTreeExpr`, `OgeTreeIndexInput`, `OgeTreeInitNewRowEvent`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeKeyAction`, `OgeTreeKeyInput`, `OgeTreeKeyPlan`, `OgeTreeListCoreDeps`, `OgeTreeListStateSlices`, `OgeTreeLoadChildren`, `OgeTreeLoadMode`, `OgeTreeLoadState`, `OgeTreeNodesInput`, `OgeTreeOrphanPolicy`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`, `OgeTreeSearchColumn`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeToggleNotifier`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeViewModel`, `OgeTreeViewModelInput`, `OgeTreeViewNode`, `OgeTreeVirtualScrollOptions`, `OgeTypeAheadBuffer`, `OgeUploadAbortReason`, `OgeUploadAbortedEvent`, `OgeUploadActionsLayout`, `OgeUploadAdapter`, `OgeUploadAllUploadedEvent`, `OgeUploadAnnouncementMessages`, `OgeUploadButtonMessages`, `OgeUploadCallbacks`, `OgeUploadCancelableEvent`, `OgeUploadCandidate`, `OgeUploadChunk`, `OgeUploadChunkFailedEvent`, `OgeUploadChunkMetadata`, `OgeUploadChunkOptions`, `OgeUploadChunkUploadedEvent`, `OgeUploadChunkUploadingEvent`, `OgeUploadClearedEvent`, `OgeUploadClearingEvent`, `OgeUploadConfig`, `OgeUploadConfigInput`, `OgeUploadDisplayMode`, `OgeUploadDropEffect`, `OgeUploadDropZoneEvent`, `OgeUploadDropZoneMessages`, `OgeUploadErrorKind`, `OgeUploadFailedEvent`, `OgeUploadFieldError`, `OgeUploadFile`, `OgeUploadFileDownloadingEvent`, `OgeUploadFileError`, `OgeUploadFileListOptions`, `OgeUploadFileRejectedEvent`, `OgeUploadFileRemovedEvent`, `OgeUploadFileRemovingEvent`, `OgeUploadFileStatus`, `OgeUploadFilesDroppedEvent`, `OgeUploadFilesSelectedEvent`, `OgeUploadFilesSelectingEvent`, `OgeUploadHandle`, `OgeUploadListType`, `OgeUploadMessages`, `OgeUploadMessagesInput`, `OgeUploadMode`, `OgeUploadPart`, `OgeUploadPausedEvent`, `OgeUploadPausingEvent`, `OgeUploadPreloadedFile`, `OgeUploadPreviewHiddenEvent`, `OgeUploadPreviewShowingEvent`, `OgeUploadProgressEvent`, `OgeUploadQueueEvent`, `OgeUploadQueueOptions`, `OgeUploadRequest`, `OgeUploadRestrictions`, `OgeUploadResumedEvent`, `OgeUploadResumingEvent`, `OgeUploadRetryOptions`, `OgeUploadSelectionSource`, `OgeUploadStartedEvent`, `OgeUploadStatusMessages`, `OgeUploadTask`, `OgeUploadThumbnailFailedEvent`, `OgeUploadTimers`, `OgeUploadUploadedEvent`, `OgeUploadUploadingEvent`, `OgeUploadValidationMessages`, `OgeUploadValidationResult`, `OgeValidationContext`, `OgeValidationRule`, `OgeVirtualScrollOptions`, `RowKey`, `SearchHighlightSegment`, `TreeFilterMode`, `TreeIndex`, `WeekNumberRule`
 
 `@oge-ui/behavior/export-pdf`
 
@@ -29265,8 +29704,8 @@ Framework-free interaction and accessibility layer shared by every package: popu
 
 `@oge-ui/behavior/export-excel`
 
-- values: `buildExcelWorkbook`
-- types: `OgeExcelExportOptions`
+- values: `buildExcelWorkbook`, `buildTreeExcelWorkbook`
+- types: `OgeExcelExportOptions`, `OgeTreeExcelExportOptions`
 
 ## @oge-ui/react
 

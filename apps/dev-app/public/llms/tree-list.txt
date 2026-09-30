@@ -214,7 +214,8 @@ _Shared with the grid_
 | `rowClick / rowDblClick / cellClick / cellDblClick` | `OgeRowClickEvent / OgeCellClickEvent` | Flat payloads with the originating DOM event. |
 | `rowContextMenu / headerContextMenu` | `context-menu events` | Mutable `items`; also opened by the Menu key / Shift+F10 on a focused cell or header (`source: 'keyboard'`, anchored at the cell). |
 | `selectionChanged / focusedRowChanged` | `diff / focus events` | Same payloads as the grid. |
-| `editingStart / rowInserting‑ed / rowUpdating‑ed / rowRemoving‑ed / savingChanges / savedChanges / editCanceled` | `editing lifecycle` | Same shared EditingModel pipeline as the grid; `-ing` events cancelable. |
+| `editingStart / rowInserting / rowInserted / rowUpdating / rowUpdated / rowRemoving / rowRemoved / savingChanges / savedChanges / editCanceled` | `editing lifecycle` | Same shared EditingModel pipeline as the grid; `-ing` events cancelable. |
+| `expandedRowKeysChange / selectedKeysChange / focusedRowKeyChange / filterValueChange` | `model change events` | The change halves of the `[(expandedRowKeys)]`, `[(selectedKeys)]`, `[(focusedRowKey)]` and `[(filterValue)]` two-way bindings. |
 | `exporting / dataErrorOccurred / contentReady / stateChange` | `misc` | Same semantics as the grid (`stateChange` carries a `TreeListStateSnapshot`). |
 
 #### Types

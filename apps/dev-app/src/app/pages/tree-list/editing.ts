@@ -1,18 +1,21 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  inject,
   signal,
   viewChild,
 } from '@angular/core';
 import { OgeColumn, OgeTreeList } from '@oge-ui/tree-list';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import { ReactTreeEditingDemos } from '../react-tree-list/editing';
 import { makeOrgTree, type OrgNode } from './tree-data';
 import { SNIPPET } from './editing-snippets';
 
 @Component({
   selector: 'app-tree-editing',
-  imports: [OgeTreeList, OgeColumn, DemoCard, DocHeader],
+  imports: [OgeTreeList, OgeColumn, DemoCard, DocHeader, ReactTreeEditingDemos],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -27,73 +30,78 @@ import { SNIPPET } from './editing-snippets';
       </p>
     </app-doc-header>
 
-    <app-demo-card
-      [chips]="['form mode', 'prefill', 'insert under parent']"
-      [code]="snippet"
-      language="ts"
-    >
-      <div class="mb-3 flex items-center gap-2">
-        <button
-          type="button"
-          class="rounded-md border border-gray-300 px-2 py-1 text-xs dark:border-gray-700"
-          (click)="addUnderFirstVp()"
-        >
-          Add under the first VP
-        </button>
-        <span class="text-xs text-gray-500 dark:text-gray-400">
-          new rows arrive pre-titled "Engineer"
-        </span>
-      </div>
-      <oge-tree-list
-        style="max-height: 480px"
-        #tree
-        [data]="org()"
-        keyExpr="id"
-        parentIdExpr="parentId"
-        [autoExpandAll]="true"
-        [editing]="{
-          mode: 'form',
-          allowUpdating: true,
-          allowAdding: true,
-          allowDeleting: true,
-          confirmDelete: false,
-          formColCount: 2,
-          formItems: ['name', 'title', { field: 'office', colSpan: 2 }],
-        }"
-        (initNewRow)="$event.values['title'] = 'Engineer'"
+    @if (fw.isReact()) {
+      <app-react-tree-editing-demos />
+    } @else {
+      <app-demo-card
+        [chips]="['form mode', 'prefill', 'insert under parent']"
+        [code]="snippet"
+        language="ts"
       >
-        <oge-column field="name" caption="Name" [required]="true" />
-        <oge-column field="title" caption="Title" [width]="140" />
-        <oge-column field="office" caption="Office" [width]="140" />
-      </oge-tree-list>
-    </app-demo-card>
+        <div class="mb-3 flex items-center gap-2">
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 px-2 py-1 text-xs dark:border-gray-700"
+            (click)="addUnderFirstVp()"
+          >
+            Add under the first VP
+          </button>
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+            new rows arrive pre-titled "Engineer"
+          </span>
+        </div>
+        <oge-tree-list
+          style="max-height: 480px"
+          #tree
+          [data]="org()"
+          keyExpr="id"
+          parentIdExpr="parentId"
+          [autoExpandAll]="true"
+          [editing]="{
+            mode: 'form',
+            allowUpdating: true,
+            allowAdding: true,
+            allowDeleting: true,
+            confirmDelete: false,
+            formColCount: 2,
+            formItems: ['name', 'title', { field: 'office', colSpan: 2 }],
+          }"
+          (initNewRow)="$event.values['title'] = 'Engineer'"
+        >
+          <oge-column field="name" caption="Name" [required]="true" />
+          <oge-column field="title" caption="Title" [width]="140" />
+          <oge-column field="office" caption="Office" [width]="140" />
+        </oge-tree-list>
+      </app-demo-card>
 
-    <h3>Notes</h3>
-    <ul>
-      <li>
-        <code>cell</code>, <code>row</code>, <code>batch</code>,
-        <code>form</code> and <code>popup</code> modes all ship; validation and
-        <code>*ogeEditTemplate</code> custom editors come from the shared column
-        definitions.
-      </li>
-      <li>
-        <code>formItems</code> selects, orders, relabels and spans the form
-        fields; <code>formColCount</code> fixes the layout columns.
-      </li>
-      <li>
-        <code>addRow(parentKey)</code> pre-stages the parent reference, so the
-        saved row lands under that node; <code>initNewRow</code> prefills any
-        other field.
-      </li>
-      <li>
-        Saves flow through the cancelable <code>savingChanges</code> event into
-        the DataSource; on lazy trees the affected levels re-fetch so the UI
-        always shows persisted values.
-      </li>
-    </ul>
+      <h3>Notes</h3>
+      <ul>
+        <li>
+          <code>cell</code>, <code>row</code>, <code>batch</code>,
+          <code>form</code> and <code>popup</code> modes all ship; validation
+          and <code>*ogeEditTemplate</code> custom editors come from the shared
+          column definitions.
+        </li>
+        <li>
+          <code>formItems</code> selects, orders, relabels and spans the form
+          fields; <code>formColCount</code> fixes the layout columns.
+        </li>
+        <li>
+          <code>addRow(parentKey)</code> pre-stages the parent reference, so the
+          saved row lands under that node; <code>initNewRow</code> prefills any
+          other field.
+        </li>
+        <li>
+          Saves flow through the cancelable <code>savingChanges</code> event
+          into the DataSource; on lazy trees the affected levels re-fetch so the
+          UI always shows persisted values.
+        </li>
+      </ul>
+    }
   `,
 })
 export class TreeEditingPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly org = signal(makeOrgTree(3, 2, 3));
   protected readonly snippet = SNIPPET;
   private readonly tree = viewChild<OgeTreeList<OrgNode>>('tree');
