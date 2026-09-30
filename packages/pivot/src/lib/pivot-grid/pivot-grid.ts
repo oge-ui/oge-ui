@@ -186,6 +186,7 @@ export class OgePivotGrid<T = unknown> {
   protected readonly visibleRowIndexes = this.core.visibleRowIndexes;
   protected readonly visibleColumnIndexes = this.core.visibleColumnIndexes;
   protected readonly visibleHeaderCells = this.core.visibleHeaderCells;
+  protected readonly visibleHeaderRows = this.core.visibleHeaderRows;
   protected readonly matrixTemplate = this.core.matrixTemplate;
   protected readonly rowLines = this.core.rowLines;
   protected readonly columnLines = this.core.columnLines;

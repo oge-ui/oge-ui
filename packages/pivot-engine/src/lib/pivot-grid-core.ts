@@ -40,6 +40,8 @@ import {
   pivotColumnWindow,
   pivotExpandablePaths,
   pivotHeaderCellsInWindow,
+  pivotHeaderRows,
+  type OgePivotHeaderRow,
   pivotMatrixKeyTarget,
   pivotMatrixTemplate,
   pivotResultFromPayload,
@@ -187,6 +189,8 @@ export class OgePivotGridCore<T = unknown> {
   readonly visibleRowIndexes: () => readonly number[];
   readonly visibleColumnIndexes: () => readonly number[];
   readonly visibleHeaderCells: () => readonly OgePivotHeaderCell[];
+  /** The visible header cells grouped into their `role="row"`s. */
+  readonly visibleHeaderRows: () => readonly OgePivotHeaderRow[];
   readonly matrixTemplate: () => OgePivotMatrixTemplate;
   readonly panelAreas: () => OgePivotPanelArea<PivotFieldConfig>[];
   readonly visibleFilterValues: () => readonly unknown[];
@@ -337,6 +341,9 @@ export class OgePivotGridCore<T = unknown> {
         this.columnWindow(),
       );
     });
+    this.visibleHeaderRows = rx.derived(() =>
+      pivotHeaderRows(this.visibleHeaderCells(), this.columnDepth()),
+    );
     this.matrixTemplate = rx.derived(() =>
       pivotMatrixTemplate(
         this.result(),

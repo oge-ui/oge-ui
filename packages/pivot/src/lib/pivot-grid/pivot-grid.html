@@ -72,55 +72,61 @@
     [style.grid-template-rows]="matrixTemplate().rows"
     [style.grid-template-columns]="matrixTemplate().columns"
   >
-    <!-- corner -->
+    <!-- column headers, one role="row" per header level -->
+    @for (headerRow of visibleHeaderRows(); track headerRow.rowIndex) {
     <div
-      class="oge-pivot-corner"
-      role="columnheader"
-      [style.grid-row]="'1 / ' + (columnDepth() + 1)"
-      [style.grid-column]="1"
-    ></div>
-
-    <!-- column headers -->
-    @for (cell of visibleHeaderCells(); track cell.path.join('|') +
-    (cell.isTotal ? ':t' : '') + (cell.isGrandTotal ? ':g' : '') +
-    cell.rowStart) {
-    <div
-      class="oge-pivot-col-header"
-      role="columnheader"
-      [class.oge-pivot-total]="cell.isTotal"
-      [class.oge-pivot-grand]="cell.isGrandTotal"
-      [class.oge-pivot-expandable]="cell.hasChildren"
-      [attr.aria-expanded]="cell.hasChildren ? cell.expanded : null"
-      [attr.aria-rowindex]="cell.rowStart"
-      [attr.aria-colindex]="cell.columnStart + 1"
-      [style.grid-row]="cell.rowStart + ' / ' + cell.rowEnd"
-      [style.grid-column]="cell.columnStart + 1 + ' / span ' + cell.span"
-      [attr.tabindex]="cell.hasChildren ? 0 : null"
-      (click)="toggleColumn(cell, $event)"
-      (keydown.enter)="toggleColumn(cell, $event)"
-      (keydown.space)="toggleColumn(cell, $event)"
-      (contextmenu)="onHeaderContextMenu('column', cell, $event)"
+      class="oge-pivot-row"
+      role="row"
+      [attr.aria-rowindex]="headerRow.rowIndex"
     >
-      @if (cell.hasChildren) {
-      <span
-        class="oge-pivot-arrow"
-        [class.oge-pivot-arrow-open]="cell.expanded"
-        aria-hidden="true"
+      @if (headerRow.rowIndex === 1) {
+      <div
+        class="oge-pivot-corner"
+        role="columnheader"
+        [style.grid-row]="'1 / ' + (columnDepth() + 1)"
+        [style.grid-column]="1"
+      ></div>
+      } @for (cell of headerRow.cells; track cell.path.join('|') + (cell.isTotal
+      ? ':t' : '') + (cell.isGrandTotal ? ':g' : '') + cell.rowStart) {
+      <div
+        class="oge-pivot-col-header"
+        role="columnheader"
+        [class.oge-pivot-total]="cell.isTotal"
+        [class.oge-pivot-grand]="cell.isGrandTotal"
+        [class.oge-pivot-expandable]="cell.hasChildren"
+        [attr.aria-expanded]="cell.hasChildren ? cell.expanded : null"
+        [attr.aria-rowindex]="cell.rowStart"
+        [attr.aria-colindex]="cell.columnStart + 1"
+        [style.grid-row]="cell.rowStart + ' / ' + cell.rowEnd"
+        [style.grid-column]="cell.columnStart + 1 + ' / span ' + cell.span"
+        [attr.tabindex]="cell.hasChildren ? 0 : null"
+        (click)="toggleColumn(cell, $event)"
+        (keydown.enter)="toggleColumn(cell, $event)"
+        (keydown.space)="toggleColumn(cell, $event)"
+        (contextmenu)="onHeaderContextMenu('column', cell, $event)"
       >
-        <svg
-          viewBox="0 0 16 16"
-          width="10"
-          height="10"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+        @if (cell.hasChildren) {
+        <span
+          class="oge-pivot-arrow"
+          [class.oge-pivot-arrow-open]="cell.expanded"
+          aria-hidden="true"
         >
-          <path d="m6 3.5 4.5 4.5L6 12.5" />
-        </svg>
-      </span>
-      } {{ cell.text }}
+          <svg
+            viewBox="0 0 16 16"
+            width="10"
+            height="10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m6 3.5 4.5 4.5L6 12.5" />
+          </svg>
+        </span>
+        } {{ cell.text }}
+      </div>
+      }
     </div>
     }
 
@@ -128,71 +134,78 @@
     @for (rowIndex of visibleRowIndexes(); track rowIndex) { @if
     (rowLines()[rowIndex]; as line) {
     <div
-      class="oge-pivot-row-header"
-      role="rowheader"
-      [class.oge-pivot-total]="line.isTotal"
-      [class.oge-pivot-grand]="line.isGrandTotal"
-      [class.oge-pivot-expandable]="line.hasChildren"
-      [attr.aria-expanded]="line.hasChildren ? line.expanded : null"
+      class="oge-pivot-row"
+      role="row"
       [attr.aria-rowindex]="columnDepth() + 1 + rowIndex"
-      [attr.aria-colindex]="1"
-      [style.grid-row]="columnDepth() + 1 + rowIndex"
-      [style.grid-column]="1"
-      [style.padding-inline-start.px]="12 + line.level * 18"
-      [attr.tabindex]="line.hasChildren ? 0 : null"
-      (click)="toggleRow(line, $event)"
-      (keydown.enter)="toggleRow(line, $event)"
-      (keydown.space)="toggleRow(line, $event)"
-      (contextmenu)="onHeaderContextMenu('row', line, $event)"
     >
-      @if (line.hasChildren) {
-      <span
-        class="oge-pivot-arrow"
-        [class.oge-pivot-arrow-open]="line.expanded"
-        aria-hidden="true"
+      <div
+        class="oge-pivot-row-header"
+        role="rowheader"
+        [class.oge-pivot-total]="line.isTotal"
+        [class.oge-pivot-grand]="line.isGrandTotal"
+        [class.oge-pivot-expandable]="line.hasChildren"
+        [attr.aria-expanded]="line.hasChildren ? line.expanded : null"
+        [attr.aria-rowindex]="columnDepth() + 1 + rowIndex"
+        [attr.aria-colindex]="1"
+        [style.grid-row]="columnDepth() + 1 + rowIndex"
+        [style.grid-column]="1"
+        [style.padding-inline-start.px]="12 + line.level * 18"
+        [attr.tabindex]="line.hasChildren ? 0 : null"
+        (click)="toggleRow(line, $event)"
+        (keydown.enter)="toggleRow(line, $event)"
+        (keydown.space)="toggleRow(line, $event)"
+        (contextmenu)="onHeaderContextMenu('row', line, $event)"
       >
-        <svg
-          viewBox="0 0 16 16"
-          width="10"
-          height="10"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+        @if (line.hasChildren) {
+        <span
+          class="oge-pivot-arrow"
+          [class.oge-pivot-arrow-open]="line.expanded"
+          aria-hidden="true"
         >
-          <path d="m6 3.5 4.5 4.5L6 12.5" />
-        </svg>
-      </span>
-      } {{ line.text }}
-    </div>
-    @for (columnIndex of visibleColumnIndexes(); track columnIndex) {
-    <div
-      class="oge-pivot-cell"
-      role="gridcell"
-      [class.oge-pivot-total]="line.isTotal || columnSlotIsTotal()[columnIndex]"
-      [class.oge-pivot-grand]="line.isGrandTotal || columnSlotIsGrand()[columnIndex]"
-      [attr.aria-rowindex]="columnDepth() + 1 + rowIndex"
-      [attr.aria-colindex]="columnIndex + 2"
-      [style.grid-row]="columnDepth() + 1 + rowIndex"
-      [style.grid-column]="columnIndex + 2"
-      [attr.data-cell]="rowIndex + '-' + columnIndex"
-      [attr.tabindex]="isCellTabbable(rowIndex, columnIndex) ? 0 : -1"
-      (focus)="onCellFocus(rowIndex, columnIndex)"
-      (keydown)="onMatrixKeydown($event)"
-      (click)="onCellClick(rowIndex, columnIndex, $event)"
-      (dblclick)="onCellClick(rowIndex, columnIndex, $event, true)"
-    >
-      @for (measure of measures(); track measure.id; let measureIndex = $index)
-      {
-      <span
-        class="oge-pivot-measure"
-        [class]="cellClass(rowIndex, columnIndex, measureIndex)"
-        >{{ cellText(rowIndex, columnIndex, measureIndex) }}</span
+          <svg
+            viewBox="0 0 16 16"
+            width="10"
+            height="10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m6 3.5 4.5 4.5L6 12.5" />
+          </svg>
+        </span>
+        } {{ line.text }}
+      </div>
+      @for (columnIndex of visibleColumnIndexes(); track columnIndex) {
+      <div
+        class="oge-pivot-cell"
+        role="gridcell"
+        [class.oge-pivot-total]="line.isTotal || columnSlotIsTotal()[columnIndex]"
+        [class.oge-pivot-grand]="line.isGrandTotal || columnSlotIsGrand()[columnIndex]"
+        [attr.aria-rowindex]="columnDepth() + 1 + rowIndex"
+        [attr.aria-colindex]="columnIndex + 2"
+        [style.grid-row]="columnDepth() + 1 + rowIndex"
+        [style.grid-column]="columnIndex + 2"
+        [attr.data-cell]="rowIndex + '-' + columnIndex"
+        [attr.tabindex]="isCellTabbable(rowIndex, columnIndex) ? 0 : -1"
+        (focus)="onCellFocus(rowIndex, columnIndex)"
+        (keydown)="onMatrixKeydown($event)"
+        (click)="onCellClick(rowIndex, columnIndex, $event)"
+        (dblclick)="onCellClick(rowIndex, columnIndex, $event, true)"
       >
+        @for (measure of measures(); track measure.id; let measureIndex =
+        $index) {
+        <span
+          class="oge-pivot-measure"
+          [class]="cellClass(rowIndex, columnIndex, measureIndex)"
+          >{{ cellText(rowIndex, columnIndex, measureIndex) }}</span
+        >
+        }
+      </div>
       }
     </div>
-    } } }
+    } }
   </div>
 </div>
 

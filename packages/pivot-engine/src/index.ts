@@ -60,6 +60,7 @@ export {
   pivotExpandablePaths,
   pivotHeaderCellKey,
   pivotHeaderCellsInWindow,
+  pivotHeaderRows,
   pivotLineOf,
   pivotMatrixKeyTarget,
   pivotMatrixTemplate,
@@ -68,4 +69,5 @@ export {
   pivotSlotFlags,
   pivotVirtualColumnWidth,
   pivotWindowIndexes,
+  type OgePivotHeaderRow,
 } from './lib/pivot-layout';

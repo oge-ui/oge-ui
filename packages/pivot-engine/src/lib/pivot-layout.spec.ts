@@ -13,6 +13,7 @@ import {
   pivotExpandablePaths,
   pivotHeaderCellKey,
   pivotHeaderCellsInWindow,
+  pivotHeaderRows,
   pivotMatrixKeyTarget,
   pivotMatrixTemplate,
   pivotResultFromPayload,
@@ -86,6 +87,20 @@ describe('axis projections', () => {
       rowEnd: 3,
     });
     expect(new Set(cells.map(pivotHeaderCellKey)).size).toBe(cells.length);
+  });
+
+  it('groups header cells into their ARIA rows', () => {
+    const depth = pivotAxisDepth(result.columnRoot);
+    const cells = pivotColumnHeaderCells(result.columnRoot, depth, MSG);
+    const rows = pivotHeaderRows(cells, depth);
+    expect(rows.map((r) => r.rowIndex)).toEqual([1, 2]);
+    expect(rows[0].cells.map((c) => c.text)).toEqual([
+      'Berlin',
+      'NYC',
+      'Paris',
+      'Grand Total',
+    ]);
+    expect(rows[0].cells.length + rows[1].cells.length).toBe(cells.length);
   });
 
   it('flags subtotal and grand-total slots', () => {

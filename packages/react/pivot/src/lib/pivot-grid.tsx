@@ -381,51 +381,63 @@ function OgePivotGridInner<T>(
             gridTemplateColumns: template.columns,
           }}
         >
-          {/* corner */}
-          <div
-            className="oge-pivot-corner"
-            role="columnheader"
-            style={{ gridRow: `1 / ${String(depth + 1)}`, gridColumn: 1 }}
-          ></div>
-
-          {/* column headers */}
-          {core.visibleHeaderCells().map((cell) => (
+          {/* column headers, one role="row" per header level */}
+          {core.visibleHeaderRows().map((headerRow) => (
             <div
-              key={pivotHeaderCellKey(cell)}
-              className={classes(
-                'oge-pivot-col-header',
-                cell.isTotal && 'oge-pivot-total',
-                cell.isGrandTotal && 'oge-pivot-grand',
-                cell.hasChildren && 'oge-pivot-expandable',
-              )}
-              role="columnheader"
-              aria-expanded={cell.hasChildren ? cell.expanded : undefined}
-              aria-rowindex={cell.rowStart}
-              aria-colindex={cell.columnStart + 1}
-              style={{
-                gridRow: `${String(cell.rowStart)} / ${String(cell.rowEnd)}`,
-                gridColumn: `${String(cell.columnStart + 1)} / span ${String(cell.span)}`,
-              }}
-              tabIndex={headerTabIndex(cell)}
-              onClick={(event) => toggle('column', cell, event)}
-              onKeyDown={(event) => onHeaderKeyDown('column', cell, event)}
-              onContextMenu={(event) =>
-                core.openHeaderMenu('column', cell, event)
-              }
+              key={`h${String(headerRow.rowIndex)}`}
+              className="oge-pivot-row"
+              role="row"
+              aria-rowindex={headerRow.rowIndex}
             >
-              {cell.hasChildren && (
-                <span
-                  className={
-                    cell.expanded
-                      ? 'oge-pivot-arrow oge-pivot-arrow-open'
-                      : 'oge-pivot-arrow'
+              {headerRow.rowIndex === 1 && (
+                <div
+                  className="oge-pivot-corner"
+                  role="columnheader"
+                  style={{
+                    gridRow: `1 / ${String(depth + 1)}`,
+                    gridColumn: 1,
+                  }}
+                ></div>
+              )}
+              {headerRow.cells.map((cell) => (
+                <div
+                  key={pivotHeaderCellKey(cell)}
+                  className={classes(
+                    'oge-pivot-col-header',
+                    cell.isTotal && 'oge-pivot-total',
+                    cell.isGrandTotal && 'oge-pivot-grand',
+                    cell.hasChildren && 'oge-pivot-expandable',
+                  )}
+                  role="columnheader"
+                  aria-expanded={cell.hasChildren ? cell.expanded : undefined}
+                  aria-rowindex={cell.rowStart}
+                  aria-colindex={cell.columnStart + 1}
+                  style={{
+                    gridRow: `${String(cell.rowStart)} / ${String(cell.rowEnd)}`,
+                    gridColumn: `${String(cell.columnStart + 1)} / span ${String(cell.span)}`,
+                  }}
+                  tabIndex={headerTabIndex(cell)}
+                  onClick={(event) => toggle('column', cell, event)}
+                  onKeyDown={(event) => onHeaderKeyDown('column', cell, event)}
+                  onContextMenu={(event) =>
+                    core.openHeaderMenu('column', cell, event)
                   }
-                  aria-hidden="true"
                 >
-                  {arrow}
-                </span>
-              )}{' '}
-              {cell.text}
+                  {cell.hasChildren && (
+                    <span
+                      className={
+                        cell.expanded
+                          ? 'oge-pivot-arrow oge-pivot-arrow-open'
+                          : 'oge-pivot-arrow'
+                      }
+                      aria-hidden="true"
+                    >
+                      {arrow}
+                    </span>
+                  )}{' '}
+                  {cell.text}
+                </div>
+              ))}
             </div>
           ))}
 
@@ -434,91 +446,99 @@ function OgePivotGridInner<T>(
             const line = rowLines[rowIndex];
             if (!line) return null;
             const ariaRow = depth + 1 + rowIndex;
-            return [
+            return (
               <div
                 key={`r${String(rowIndex)}`}
-                className={classes(
-                  'oge-pivot-row-header',
-                  line.isTotal && 'oge-pivot-total',
-                  line.isGrandTotal && 'oge-pivot-grand',
-                  line.hasChildren && 'oge-pivot-expandable',
-                )}
-                role="rowheader"
-                aria-expanded={line.hasChildren ? line.expanded : undefined}
+                className="oge-pivot-row"
+                role="row"
                 aria-rowindex={ariaRow}
-                aria-colindex={1}
-                style={{
-                  gridRow: ariaRow,
-                  gridColumn: 1,
-                  paddingInlineStart: `${String(12 + line.level * 18)}px`,
-                }}
-                tabIndex={headerTabIndex(line)}
-                onClick={(event) => toggle('row', line, event)}
-                onKeyDown={(event) => onHeaderKeyDown('row', line, event)}
-                onContextMenu={(event) =>
-                  core.openHeaderMenu('row', line, event)
-                }
               >
-                {line.hasChildren && (
-                  <span
-                    className={
-                      line.expanded
-                        ? 'oge-pivot-arrow oge-pivot-arrow-open'
-                        : 'oge-pivot-arrow'
-                    }
-                    aria-hidden="true"
-                  >
-                    {arrow}
-                  </span>
-                )}{' '}
-                {line.text}
-              </div>,
-              ...core.visibleColumnIndexes().map((columnIndex) => (
                 <div
-                  key={`c${String(rowIndex)}-${String(columnIndex)}`}
                   className={classes(
-                    'oge-pivot-cell',
-                    (line.isTotal || slotFlags.total[columnIndex]) &&
-                      'oge-pivot-total',
-                    (line.isGrandTotal || slotFlags.grand[columnIndex]) &&
-                      'oge-pivot-grand',
+                    'oge-pivot-row-header',
+                    line.isTotal && 'oge-pivot-total',
+                    line.isGrandTotal && 'oge-pivot-grand',
+                    line.hasChildren && 'oge-pivot-expandable',
                   )}
-                  role="gridcell"
+                  role="rowheader"
+                  aria-expanded={line.hasChildren ? line.expanded : undefined}
                   aria-rowindex={ariaRow}
-                  aria-colindex={columnIndex + 2}
-                  style={{ gridRow: ariaRow, gridColumn: columnIndex + 2 }}
-                  data-cell={`${String(rowIndex)}-${String(columnIndex)}`}
-                  tabIndex={core.isCellTabbable(rowIndex, columnIndex) ? 0 : -1}
-                  onFocus={() => core.focusCell(rowIndex, columnIndex)}
-                  onKeyDown={onMatrixKeyDown}
-                  onClick={(event) =>
-                    onCellClick(rowIndex, columnIndex, event, false)
-                  }
-                  onDoubleClick={(event) =>
-                    onCellClick(rowIndex, columnIndex, event, true)
+                  aria-colindex={1}
+                  style={{
+                    gridRow: ariaRow,
+                    gridColumn: 1,
+                    paddingInlineStart: `${String(12 + line.level * 18)}px`,
+                  }}
+                  tabIndex={headerTabIndex(line)}
+                  onClick={(event) => toggle('row', line, event)}
+                  onKeyDown={(event) => onHeaderKeyDown('row', line, event)}
+                  onContextMenu={(event) =>
+                    core.openHeaderMenu('row', line, event)
                   }
                 >
-                  {measures.map((measure, measureIndex) => {
-                    const prepared = core.preparedCell(
-                      rowIndex,
-                      columnIndex,
-                      measureIndex,
-                    );
-                    return (
-                      <span
-                        key={measure.id}
-                        className={classes(
-                          'oge-pivot-measure',
-                          prepared.cssClass,
-                        )}
-                      >
-                        {prepared.text}
-                      </span>
-                    );
-                  })}
+                  {line.hasChildren && (
+                    <span
+                      className={
+                        line.expanded
+                          ? 'oge-pivot-arrow oge-pivot-arrow-open'
+                          : 'oge-pivot-arrow'
+                      }
+                      aria-hidden="true"
+                    >
+                      {arrow}
+                    </span>
+                  )}{' '}
+                  {line.text}
                 </div>
-              )),
-            ];
+                {core.visibleColumnIndexes().map((columnIndex) => (
+                  <div
+                    key={`c${String(rowIndex)}-${String(columnIndex)}`}
+                    className={classes(
+                      'oge-pivot-cell',
+                      (line.isTotal || slotFlags.total[columnIndex]) &&
+                        'oge-pivot-total',
+                      (line.isGrandTotal || slotFlags.grand[columnIndex]) &&
+                        'oge-pivot-grand',
+                    )}
+                    role="gridcell"
+                    aria-rowindex={ariaRow}
+                    aria-colindex={columnIndex + 2}
+                    style={{ gridRow: ariaRow, gridColumn: columnIndex + 2 }}
+                    data-cell={`${String(rowIndex)}-${String(columnIndex)}`}
+                    tabIndex={
+                      core.isCellTabbable(rowIndex, columnIndex) ? 0 : -1
+                    }
+                    onFocus={() => core.focusCell(rowIndex, columnIndex)}
+                    onKeyDown={onMatrixKeyDown}
+                    onClick={(event) =>
+                      onCellClick(rowIndex, columnIndex, event, false)
+                    }
+                    onDoubleClick={(event) =>
+                      onCellClick(rowIndex, columnIndex, event, true)
+                    }
+                  >
+                    {measures.map((measure, measureIndex) => {
+                      const prepared = core.preparedCell(
+                        rowIndex,
+                        columnIndex,
+                        measureIndex,
+                      );
+                      return (
+                        <span
+                          key={measure.id}
+                          className={classes(
+                            'oge-pivot-measure',
+                            prepared.cssClass,
+                          )}
+                        >
+                          {prepared.text}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            );
           })}
         </div>
       </div>

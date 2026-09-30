@@ -119,6 +119,12 @@
   min-width: fit-content;
 }
 
+// The row wrappers carry the ARIA grid structure (grid > row > cell) and
+// generate no box, so every cell still places itself on the matrix grid.
+.oge-pivot-row {
+  display: contents;
+}
+
 .oge-pivot-corner,
 .oge-pivot-col-header {
   position: sticky;

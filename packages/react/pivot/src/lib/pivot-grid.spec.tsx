@@ -69,6 +69,15 @@ describe('<OgePivotGrid> — rendering (mirror of the Angular MVP spec)', () => 
     expect(grid?.getAttribute('role')).toBe('grid');
     expect(grid?.getAttribute('aria-rowcount')).toBe('4');
     expect(grid?.getAttribute('aria-colcount')).toBe('4');
+    // grid > row > cell: one header row plus one row per visible line
+    const rows = grid?.querySelectorAll(
+      ':scope > .oge-pivot-matrix > [role="row"]',
+    );
+    expect(rows).toHaveLength(4);
+    expect(
+      rows?.[1].querySelector('[role="rowheader"]')?.textContent?.trim(),
+    ).toBe('EU');
+    expect(rows?.[1].querySelectorAll('[role="gridcell"]')).toHaveLength(3);
   });
 
   it('expands a row: the parent line leads with subtotals, children follow', () => {

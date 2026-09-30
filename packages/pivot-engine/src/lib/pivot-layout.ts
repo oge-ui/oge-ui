@@ -145,6 +145,28 @@ export function pivotHeaderCellKey(cell: OgePivotHeaderCell): string {
   );
 }
 
+/** One `role="row"` of the column-header block and the cells it holds. */
+export interface OgePivotHeaderRow {
+  /** 1-based header row (= `aria-rowindex`). */
+  readonly rowIndex: number;
+  readonly cells: readonly OgePivotHeaderCell[];
+}
+
+/**
+ * Groups header cells into their header rows (1…depth), so the markup can
+ * give the ARIA grid its required `row` level; a cell belongs to the row it
+ * starts in, whatever it spans.
+ */
+export function pivotHeaderRows(
+  cells: readonly OgePivotHeaderCell[],
+  depth: number,
+): OgePivotHeaderRow[] {
+  return Array.from({ length: depth }, (_, i) => ({
+    rowIndex: i + 1,
+    cells: cells.filter((cell) => cell.rowStart === i + 1),
+  }));
+}
+
 /** Per column slot: is it a subtotal / the grand total. */
 export function pivotSlotFlags(
   root: readonly PivotAxisNode[],
