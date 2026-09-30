@@ -28,6 +28,7 @@ export default [
             '@oge-ui/gantt',
             '@oge-ui/charts',
             '@oge-ui/react-charts',
+            '@oge-ui/react-gantt',
           ],
           depConstraints: [
             // ---------------------------------------------------------------
