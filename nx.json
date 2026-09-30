@@ -68,6 +68,7 @@
       "bpmn",
       "charts",
       "scheduler",
+      "scheduler-engine",
       "gantt",
       "kanban",
       "buttons",

@@ -12,6 +12,10 @@ Portions of this repository are licensed as follows:
   Commercial License — see `packages/scheduler/LICENSE`. Same terms:
   source-available, free for evaluation and development, paid for
   production use.
+- Everything under `packages/scheduler-engine` (the scheduler's
+  framework-free engine, ADR 0003) is licensed under the OGE UI Commercial
+  License — see `packages/scheduler-engine/LICENSE`. Same terms as
+  `packages/scheduler`.
 - Everything under `packages/gantt` is licensed under the OGE UI
   Commercial License — see `packages/gantt/LICENSE`. Same terms:
   source-available, free for evaluation and development, paid for

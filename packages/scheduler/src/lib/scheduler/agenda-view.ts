@@ -6,16 +6,16 @@ import {
   input,
   output,
 } from '@angular/core';
-import { addDays, rangesOverlap, sameDay, startOfDay } from '@oge-ui/core';
-import type { SchedulerAppointment } from '../engine/scheduler-model';
+import { sameDay } from '@oge-ui/core';
+import {
+  agendaDayText,
+  agendaTimeText,
+  buildAgendaDays,
+  type AgendaDay,
+  type SchedulerAppointment,
+  type SchedulerChipEvent,
+} from '@oge-ui/scheduler-engine';
 import type { OgeSchedulerGridMessages } from '../config';
-import type { SchedulerChipEvent } from './day-week-view';
-
-/** One agenda day group. */
-interface AgendaDay<T> {
-  readonly day: Date;
-  readonly appointments: readonly SchedulerAppointment<T>[];
-}
 
 /**
  * Internal agenda (list) view: day-grouped appointment rows for
@@ -49,10 +49,7 @@ interface AgendaDay<T> {
               }}</span>
             </div>
             <ul class="oge-scheduler-agenda-items">
-              @for (
-                appointment of group.appointments;
-                track appointment.key
-              ) {
+              @for (appointment of group.appointments; track appointment.key) {
                 <li>
                   <button
                     type="button"
@@ -99,62 +96,29 @@ export class OgeSchedulerAgendaView<T = unknown> {
   readonly chipDblClicked = output<SchedulerChipEvent<T>>();
   readonly chipDeleteRequested = output<SchedulerAppointment<T>>();
 
-  protected readonly days = computed<readonly AgendaDay<T>[]>(() => {
-    const first = startOfDay(this.anchorDate());
-    const count = Math.max(1, this.agendaDuration());
-    const appointments = this.appointments();
-    const groups: AgendaDay<T>[] = [];
-    for (let index = 0; index < count; index++) {
-      const day = addDays(first, index);
-      const dayEnd = addDays(day, 1);
-      const matches = appointments
-        .filter(
-          (appointment) =>
-            rangesOverlap(
-              appointment.startDate,
-              appointment.endDate,
-              day,
-              dayEnd,
-            ) ||
-            (appointment.startDate.getTime() ===
-              appointment.endDate.getTime() &&
-              sameDay(appointment.startDate, day)),
-        )
-        .sort(
-          (a, b) =>
-            Number(b.displayAllDay) - Number(a.displayAllDay) ||
-            a.startDate.getTime() - b.startDate.getTime(),
-        );
-      if (matches.length > 0) groups.push({ day, appointments: matches });
-    }
-    return groups;
-  });
+  protected readonly days = computed<readonly AgendaDay<T>[]>(() =>
+    buildAgendaDays(
+      this.anchorDate(),
+      this.agendaDuration(),
+      this.appointments(),
+    ),
+  );
 
   protected isToday(day: Date): boolean {
     return sameDay(day, new Date());
   }
 
   protected dayText(day: Date): string {
-    return new Intl.DateTimeFormat(this.locale(), {
-      weekday: 'long',
-      month: 'long',
-      year: 'numeric',
-    }).format(day);
+    return agendaDayText(day, this.locale());
   }
 
-  protected timeText(
-    appointment: SchedulerAppointment<T>,
-    day: Date,
-  ): string {
-    if (appointment.displayAllDay) return this.messages().allDayLabel;
-    const format = new Intl.DateTimeFormat(this.locale(), {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-    const start = sameDay(appointment.startDate, day)
-      ? format.format(appointment.startDate)
-      : format.format(day);
-    return `${start} – ${format.format(appointment.endDate)}`;
+  protected timeText(appointment: SchedulerAppointment<T>, day: Date): string {
+    return agendaTimeText(
+      appointment,
+      day,
+      this.locale(),
+      this.messages().allDayLabel,
+    );
   }
 
   protected onClick(

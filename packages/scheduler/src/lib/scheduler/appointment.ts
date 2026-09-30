@@ -6,8 +6,11 @@ import {
   input,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { contrastForeground, parseColor } from '@oge-ui/core';
-import type { SchedulerAppointment } from '../engine/scheduler-model';
+import {
+  chipForeground,
+  chipTimeText,
+  type SchedulerAppointment,
+} from '@oge-ui/scheduler-engine';
 import type { OgeSchedulerView } from '../scheduler-types';
 import type { OgeAppointmentTemplate } from './scheduler-templates';
 
@@ -76,19 +79,11 @@ export class OgeSchedulerAppointmentChip<T = unknown> {
     () => this.appointment().color ?? null,
   );
 
-  protected readonly foreground = computed(() => {
-    const color = this.appointment().color;
-    if (color === undefined) return null;
-    const parsed = parseColor(color);
-    return parsed === null ? null : contrastForeground(parsed);
-  });
+  protected readonly foreground = computed(() =>
+    chipForeground(this.appointment().color),
+  );
 
-  protected readonly timeText = computed(() => {
-    const appointment = this.appointment();
-    const format = new Intl.DateTimeFormat(this.locale(), {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-    return `${format.format(appointment.startDate)} – ${format.format(appointment.endDate)}`;
-  });
+  protected readonly timeText = computed(() =>
+    chipTimeText(this.appointment(), this.locale()),
+  );
 }

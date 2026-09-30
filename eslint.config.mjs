@@ -320,10 +320,25 @@ export default [
               sourceTag: 'scope:scheduler',
               onlyDependOnLibsWithTags: [
                 'scope:scheduler',
+                // ADR 0003: the framework-free engine both render layers run
+                'scope:scheduler-engine',
+                'scope:behavior',
                 'scope:core',
                 'scope:overlay',
                 'scope:inputs',
                 'scope:forms',
+              ],
+            },
+            {
+              // ADR 0003: the scheduler's commercial engine — framework-free
+              // (the platform:agnostic rules above ban Angular/React), and
+              // like every commercial package it may take the MIT substrate,
+              // never the reverse
+              sourceTag: 'scope:scheduler-engine',
+              onlyDependOnLibsWithTags: [
+                'scope:scheduler-engine',
+                'scope:behavior',
+                'scope:core',
               ],
             },
             {
@@ -463,6 +478,7 @@ export default [
                 'scope:pivot',
                 'scope:bpmn',
                 'scope:scheduler',
+                'scope:scheduler-engine',
                 'scope:gantt',
                 'scope:kanban',
                 'scope:charts',

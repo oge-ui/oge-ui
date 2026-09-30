@@ -15,7 +15,10 @@ import {
   type OgePopupCloseReason,
   type OgeRect,
 } from '@oge-ui/overlay';
-import type { SchedulerAppointment } from '../engine/scheduler-model';
+import {
+  popupTimeText,
+  type SchedulerAppointment,
+} from '@oge-ui/scheduler-engine';
 import type { OgeSchedulerPopupMessages } from '../config';
 
 /**
@@ -32,8 +35,13 @@ import type { OgeSchedulerPopupMessages } from '../config';
   template: `
     @if (panel.isOpen()) {
       <oge-popup [panel]="panel">
-        <div class="oge-scheduler-popup" #panelEl role="dialog" aria-modal="false"
-          [attr.aria-label]="appointment()?.text">
+        <div
+          class="oge-scheduler-popup"
+          #panelEl
+          role="dialog"
+          aria-modal="false"
+          [attr.aria-label]="appointment()?.text"
+        >
           @if (appointment(); as appt) {
             <div class="oge-scheduler-popup-header">
               <span
@@ -76,7 +84,9 @@ import type { OgeSchedulerPopupMessages } from '../config';
                   stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path d="M8 14.5s4.5-4.1 4.5-7.5a4.5 4.5 0 1 0-9 0c0 3.4 4.5 7.5 4.5 7.5Z" />
+                  <path
+                    d="M8 14.5s4.5-4.1 4.5-7.5a4.5 4.5 0 1 0-9 0c0 3.4 4.5 7.5 4.5 7.5Z"
+                  />
                   <circle cx="8" cy="7" r="1.6" />
                 </svg>
                 <span>{{ appt.location }}</span>
@@ -139,12 +149,9 @@ export class OgeSchedulerAppointmentPopup<T = unknown> {
 
   protected readonly timeText = computed(() => {
     const appointment = this.appointment();
-    if (appointment === null) return '';
-    const format = new Intl.DateTimeFormat(this.locale(), {
-      dateStyle: 'medium',
-      timeStyle: appointment.allDay ? undefined : 'short',
-    });
-    return `${format.format(appointment.startDate)} – ${format.format(appointment.endDate)}`;
+    return appointment === null
+      ? ''
+      : popupTimeText(appointment, this.locale());
   });
 
   /** Opens the popup for `appointment`, anchored to the chip's screen rect. */

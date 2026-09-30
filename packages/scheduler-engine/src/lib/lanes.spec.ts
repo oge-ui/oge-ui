@@ -34,13 +34,19 @@ function item(
 
 describe('packLanes', () => {
   it('packs non-overlapping spans into one lane', () => {
-    const layout = packLanes([item(1, 0, 1), item(2, 2, 3), item(3, 4, 6)], null);
+    const layout = packLanes(
+      [item(1, 0, 1), item(2, 2, 3), item(3, 4, 6)],
+      null,
+    );
     expect(layout.laneCount).toBe(1);
     expect(layout.visible.every((entry) => entry.lane === 0)).toBe(true);
   });
 
   it('stacks overlapping spans into separate lanes', () => {
-    const layout = packLanes([item(1, 0, 3), item(2, 2, 5), item(3, 4, 6)], null);
+    const layout = packLanes(
+      [item(1, 0, 3), item(2, 2, 5), item(3, 4, 6)],
+      null,
+    );
     expect(layout.laneCount).toBe(2);
     expect(layout.visible.find((e) => e.appointment.key === 1)?.lane).toBe(0);
     expect(layout.visible.find((e) => e.appointment.key === 2)?.lane).toBe(1);
@@ -54,10 +60,7 @@ describe('packLanes', () => {
   });
 
   it('caps lanes and counts overflow for every covered day', () => {
-    const layout = packLanes(
-      [item(1, 0, 2), item(2, 0, 2), item(3, 1, 3)],
-      2,
-    );
+    const layout = packLanes([item(1, 0, 2), item(2, 0, 2), item(3, 1, 3)], 2);
     expect(layout.laneCount).toBe(2);
     expect(layout.visible).toHaveLength(2);
     expect(layout.overflowByDay.get(1)).toBe(1);
@@ -68,10 +71,7 @@ describe('packLanes', () => {
   });
 
   it('still fills free space in existing lanes when the cap is reached', () => {
-    const layout = packLanes(
-      [item(1, 0, 1), item(2, 0, 1), item(3, 3, 4)],
-      2,
-    );
+    const layout = packLanes([item(1, 0, 1), item(2, 0, 1), item(3, 3, 4)], 2);
     // item 3 fits into lane 0 after item 1 — the cap must not hide it
     expect(layout.visible).toHaveLength(3);
     expect(layout.visible.find((e) => e.appointment.key === 3)?.lane).toBe(0);

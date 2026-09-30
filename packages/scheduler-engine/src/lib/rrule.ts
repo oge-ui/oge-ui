@@ -229,10 +229,7 @@ export function serializeRecurrenceRule(rule: RecurrenceRule): string {
   if (rule.byDay !== undefined && rule.byDay.length > 0) {
     parts.push(
       `BYDAY=${rule.byDay
-        .map(
-          (entry) =>
-            `${entry.ordinal ?? ''}${WEEKDAY_CODES[entry.weekday]}`,
-        )
+        .map((entry) => `${entry.ordinal ?? ''}${WEEKDAY_CODES[entry.weekday]}`)
         .join(',')}`,
     );
   }

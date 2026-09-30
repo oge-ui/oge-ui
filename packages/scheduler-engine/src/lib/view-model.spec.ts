@@ -125,11 +125,7 @@ describe('view-model', () => {
 
   it('partitionAllDay splits on displayAllDay', () => {
     const a = appointment(1, new Date(2026, 7, 6), new Date(2026, 7, 7), true);
-    const b = appointment(
-      2,
-      new Date(2026, 7, 6, 9),
-      new Date(2026, 7, 6, 10),
-    );
+    const b = appointment(2, new Date(2026, 7, 6, 9), new Date(2026, 7, 6, 10));
     const { allDay, timed } = partitionAllDay([a, b]);
     expect(allDay).toEqual([a]);
     expect(timed).toEqual([b]);
@@ -201,10 +197,7 @@ describe('view-model', () => {
 
     it('keeps zero-length appointments as zero-length segments', () => {
       const at = new Date(2026, 7, 6, 9);
-      const segments = segmentTimedAppointments(
-        [appointment(1, at, at)],
-        grid,
-      );
+      const segments = segmentTimedAppointments([appointment(1, at, at)], grid);
       expect(segments).toHaveLength(1);
       expect(segments[0].startMinutes).toBe(540);
       expect(segments[0].endMinutes).toBe(540);

@@ -10,7 +10,13 @@ function expand(
 ): Date[] {
   const parsed = parseRecurrenceRule(rule);
   if (parsed === null) throw new Error(`bad rule ${rule}`);
-  return expandRecurrence(parsed, seriesStart, rangeStart, rangeEnd, exceptions);
+  return expandRecurrence(
+    parsed,
+    seriesStart,
+    rangeStart,
+    rangeEnd,
+    exceptions,
+  );
 }
 
 describe('rrule-expand', () => {
@@ -130,10 +136,7 @@ describe('rrule-expand', () => {
       new Date(2026, 0, 1),
       new Date(2028, 0, 1),
     );
-    expect(dates).toEqual([
-      new Date(2026, 2, 17, 9),
-      new Date(2027, 2, 17, 9),
-    ]);
+    expect(dates).toEqual([new Date(2026, 2, 17, 9), new Date(2027, 2, 17, 9)]);
   });
 
   it('skips exceptions (exact-minute and date-only stamps)', () => {

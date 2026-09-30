@@ -1,5 +1,5 @@
 import { Directive, TemplateRef, inject } from '@angular/core';
-import type { SchedulerAppointment } from '../engine/scheduler-model';
+import type { SchedulerAppointment } from '@oge-ui/scheduler-engine';
 import type { OgeSchedulerView } from '../scheduler-types';
 
 export interface OgeAppointmentTemplateContext<T = unknown> {
@@ -20,9 +20,7 @@ export interface OgeAppointmentTemplateContext<T = unknown> {
  */
 @Directive({ selector: '[ogeAppointmentTemplate]' })
 export class OgeAppointmentTemplate<T = unknown> {
-  readonly templateRef = inject(
-    TemplateRef<OgeAppointmentTemplateContext<T>>,
-  );
+  readonly templateRef = inject(TemplateRef<OgeAppointmentTemplateContext<T>>);
 
   static ngTemplateContextGuard<T>(
     _dir: OgeAppointmentTemplate<T>,

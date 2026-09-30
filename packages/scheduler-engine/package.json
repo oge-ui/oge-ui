@@ -1,0 +1,35 @@
+{
+  "name": "@oge-ui/scheduler-engine",
+  "version": "0.13.1",
+  "description": "Framework-free engine behind the OGE UI scheduler: view-model builders, transitive-overlap column layout, lane packing, an RFC 5545 RRULE-subset parser and expander, gesture math, keyboard maps, the editing/recurrence/CRUD core, default config and message catalogs — shared by @oge-ui/scheduler (Angular) and @oge-ui/react-scheduler. Source-available commercial license (free for evaluation and development).",
+  "keywords": [
+    "scheduler",
+    "calendar",
+    "event-calendar",
+    "rrule",
+    "recurrence",
+    "headless",
+    "framework-free",
+    "typescript"
+  ],
+  "author": "kaya2m",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./index.cjs.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@oge-ui/behavior": "0.13.1",
+    "@oge-ui/core": "0.13.1"
+  },
+  "homepage": "https://ogeui.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oge-ui/oge-ui.git",
+    "directory": "packages/scheduler-engine"
+  },
+  "bugs": "https://github.com/oge-ui/oge-ui/issues",
+  "license": "SEE LICENSE IN LICENSE"
+}

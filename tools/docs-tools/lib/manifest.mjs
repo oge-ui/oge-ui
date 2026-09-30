@@ -36,7 +36,9 @@ export const REPO_URL = 'https://github.com/oge-ui/oge-ui';
  * - `docsRoot` — route the docs live under; `null` for engine-only packages.
  * - `pageDirs` — folders under `pages/` whose demos belong to this package.
  * - `tier` — `'mit'` or `'commercial'`; drives the licence banner.
- * - `platform` — `'angular'` (default) or `'react'`. Selects which "Writing OGE
+ * - `platform` — `'angular'` (default), `'react'` or `'agnostic'` (a
+ *   framework-free engine such as `@oge-ui/scheduler-engine`, which carries
+ *   the default conventions). Selects which "Writing OGE
  *   code" rules and which "Common mistakes" table the package's `llms.txt`
  *   carries. Getting this wrong ships actively misleading instructions to every
  *   coding assistant, so it is explicit rather than inferred from the name.
@@ -231,6 +233,18 @@ export const PACKAGES = [
     pageDirs: ['scheduler'],
     apiPage: 'apps/dev-app/src/app/pages/scheduler/api.ts',
     tier: 'commercial',
+  },
+  {
+    dir: 'scheduler-engine',
+    npm: '@oge-ui/scheduler-engine',
+    label: 'Scheduler engine',
+    summary:
+      'Framework-free engine behind both scheduler render layers (ADR 0003): view-model builders, the transitive-overlap column layout, lane packing, the RFC 5545 RRULE-subset parser and expander, gesture math, keyboard maps, the editing/recurrence/CRUD core (`OgeSchedulerCore`), default config and message catalog. Installed automatically with `@oge-ui/scheduler` or `@oge-ui/react-scheduler` — you rarely import it directly.',
+    docsRoot: null,
+    pageDirs: [],
+    apiPage: null,
+    tier: 'commercial',
+    platform: 'agnostic',
   },
   {
     dir: 'core',
