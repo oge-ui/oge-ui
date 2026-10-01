@@ -21,13 +21,23 @@ export interface CsvOptions {
 }
 
 /**
- * Characters that make a spreadsheet read a text cell as a formula.
- *
- * `\t` and `\r` are in the list because Excel strips leading whitespace before
- * it decides, so `\t=cmd|…` is a formula to Excel and a plain string to a
- * naive check.
+ * Characters that make a spreadsheet read a text cell as a formula: `=`,
+ * `+`, `-`, `@` and their full-width forms (`＝` U+FF1D, `＋` U+FF0B,
+ * `－` U+FF0D, `＠` U+FF20), which East-Asian IMEs type and some
+ * spreadsheets normalize to the ASCII lead before evaluating.
  */
-const FORMULA_LEAD = /^[=+\-@\t\r]/;
+const FORMULA_LEAD = /^[=+\-@\uFF1D\uFF0B\uFF0D\uFF20]/;
+
+/**
+ * Leading whitespace a spreadsheet may skip before deciding a cell is a
+ * formula — so `\t=cmd|…` or `   =cmd` is a formula to Excel and a plain
+ * string to a naive first-character check. `\s` covers tab, CR/LF, NBSP and
+ * the ideographic space U+3000.
+ */
+const LEADING_SPACE = /^\s+/;
+
+/** A raw tab or carriage return as the very first character. */
+const CONTROL_LEAD = /^[\t\r]/;
 
 /** A cell that is just a number — `-5`, `+3.1`, `1e9` — and so not a formula. */
 const PLAIN_NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
@@ -49,7 +59,13 @@ const PLAIN_NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
  * is the wrong shape for this.
  */
 export function guardCsvFormula(text: string): string {
-  if (!FORMULA_LEAD.test(text) || PLAIN_NUMBER.test(text)) return text;
+  if (PLAIN_NUMBER.test(text)) return text;
+  if (
+    !CONTROL_LEAD.test(text) &&
+    !FORMULA_LEAD.test(text.replace(LEADING_SPACE, ''))
+  ) {
+    return text;
+  }
   return `'${text}`;
 }
 

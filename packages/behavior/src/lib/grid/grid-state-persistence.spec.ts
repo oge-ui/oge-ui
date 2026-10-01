@@ -3,6 +3,10 @@ import {
   OgeGridStatePersistenceCore,
   type OgeStateStorage,
 } from './grid-state-persistence';
+import {
+  sanitizeGridStateSnapshot,
+  type GridStateSnapshot,
+} from '@oge-ui/core';
 
 /**
  * The Angular seam owns *when* these methods are called; what the core owns —
@@ -157,5 +161,63 @@ describe('OgeGridStatePersistenceCore', () => {
     vi.advanceTimersByTime(1000);
     expect(onChange).not.toHaveBeenCalled();
     expect(entries.size).toBe(0);
+  });
+
+  describe('untrusted storage', () => {
+    const restoreText = (text: string) => {
+      const { storage } = createStorage({ 'oge-grid:k': text });
+      const apply = vi.fn();
+      const core = new OgeGridStatePersistenceCore<GridStateSnapshot>({
+        prefix: 'oge-grid',
+        storage,
+        snapshot: () => ({}),
+        stateKey: () => 'k',
+        sanitize: sanitizeGridStateSnapshot,
+        apply,
+      });
+      core.restore('k');
+      return apply;
+    };
+
+    it('ignores prototype-key payloads and never pollutes Object.prototype', () => {
+      for (const text of [
+        '{"__proto__":{"polluted":true}}',
+        '{"sort":[{"field":"a","dir":"asc","__proto__":{"polluted":true}}]}',
+        '{"constructor":{"prototype":{"polluted":true}}}',
+      ]) {
+        expect(restoreText(text)).not.toHaveBeenCalled();
+      }
+      expect(Object.prototype).not.toHaveProperty('polluted');
+    });
+
+    it('ignores non-object JSON and applies only the validated shape', () => {
+      for (const text of ['null', '42', '"x"', 'true', '[1,2]']) {
+        expect(restoreText(text)).not.toHaveBeenCalled();
+      }
+      const apply = restoreText(
+        '{"sort":[{"field":"a","dir":"asc"},{"field":2}],"evil":"x"}',
+      );
+      expect(apply).toHaveBeenCalledWith({
+        sort: [{ field: 'a', dir: 'asc' }],
+      });
+    });
+
+    it('fuzz: garbage text never throws out of restore()', () => {
+      const alphabet = '{}[]":,0123456789abc_-protoconstructor\\ \n';
+      let seed = 42;
+      const next = () => {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        return seed / 0x7fffffff;
+      };
+      for (let i = 0; i < 500; i++) {
+        const length = Math.floor(next() * 40);
+        let text = '';
+        for (let j = 0; j < length; j++) {
+          text += alphabet[Math.floor(next() * alphabet.length)];
+        }
+        expect(() => restoreText(text)).not.toThrow();
+      }
+      expect(Object.prototype).not.toHaveProperty('polluted');
+    });
   });
 });

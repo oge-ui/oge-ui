@@ -81,11 +81,15 @@ const SECTIONS_REACT = ['<OgeScheduler>', 'Configuration'] as const;
     <ul>
       <li>
         Dates are plain local <code>Date</code>s throughout (Intl-only house
-        rule — no date library, no adapter, no timezone database). RRULE
-        <code>UNTIL=…Z</code> stamps are therefore read as local wall time; the
-        supported RFC 5545 subset is FREQ DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL,
-        COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY, BYMONTH and WKST — anything else
-        rejects the whole rule rather than truncating it.
+        rule — no date library, no adapter, no timezone database). RRULE stamps
+        without a suffix are local wall time; <code>…Z</code> stamps are UTC and
+        convert to the matching local instant. The supported RFC 5545 subset is
+        FREQ DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL, COUNT ⊕ UNTIL, BYDAY,
+        BYMONTHDAY, BYMONTH, BYHOUR, BYMINUTE, BYSETPOS and WKST, plus
+        <code>DTSTART</code>/<code>RDATE</code>/<code>EXDATE</code> lines when
+        the rule field holds an iCalendar property block. <code>TZID</code>,
+        BYYEARDAY, BYWEEKNO, BYSECOND and EXRULE reject the whole rule rather
+        than truncating it.
       </li>
       <li>
         No WAI-ARIA APG scheduler pattern exists. The widget composes the

@@ -34,6 +34,7 @@ import {
   type SummaryRowNode,
   type SummaryType,
   type SortDescriptor,
+  sanitizeGridStateSnapshot,
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
@@ -737,8 +738,11 @@ function OgeGridInner<T extends object>(
     });
 
     function applyState(snapshot: GridStateSnapshot): void {
-      state.applySnapshot(snapshot);
-      hiddenOverrides.set(new Set(snapshot.columns?.hidden ?? []));
+      // public API fed from storage, URLs or the host: validate the shape first
+      const safe = sanitizeGridStateSnapshot(snapshot);
+      if (safe === null) return;
+      state.applySnapshot(safe);
+      hiddenOverrides.set(new Set(safe.columns?.hidden ?? []));
     }
 
     const persistence = new OgeGridStatePersistenceCore<GridStateSnapshot>({
@@ -748,6 +752,7 @@ function OgeGridInner<T extends object>(
       },
       snapshot: () => persistedSnapshot(),
       stateKey: () => latest.current.stateKey,
+      sanitize: sanitizeGridStateSnapshot,
       // a bound groupBy is controlled: the page decides the grouping, so a
       // stored grouping from an earlier visit must not replace it
       apply: (snapshot) =>

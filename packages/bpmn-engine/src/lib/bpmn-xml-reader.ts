@@ -1,3 +1,4 @@
+import { bpmnParserInput } from './trusted-types';
 import { placeMissingDi } from './auto-layout';
 import type {
   BpmnActivityMarker,
@@ -109,7 +110,11 @@ function isFlowChild(localName: string): boolean {
  */
 export function readBpmnXml(xml: string): BpmnImportResult {
   const warnings: BpmnImportWarning[] = [];
-  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  // Trusted Types: the XML document is inert and only read, never inserted
+  const doc = new DOMParser().parseFromString(
+    bpmnParserInput(xml),
+    'application/xml',
+  );
   const parseError = findParseError(doc);
   if (parseError !== null) {
     return { model: null, warnings, error: parseError };

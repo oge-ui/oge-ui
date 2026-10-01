@@ -529,7 +529,7 @@ export const OGE_REACT_GRID_API: ApiSections = {
           name: 'state(): GridStateSnapshot / applyState(snapshot)',
           type: 'handle',
           description:
-            'Reads or applies the persistable UI state: sort, filters, column layout, page size.',
+            'Reads or applies the persistable UI state: sort, filters, column layout, page size. <code>applyState</code> validates the snapshot first (<code>sanitize*StateSnapshot</code>): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown.',
         },
         {
           name: 'clearFilters() / clearSorting()',

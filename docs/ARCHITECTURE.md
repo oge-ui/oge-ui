@@ -158,6 +158,15 @@ consumers:
   `useLayoutEffect` (client components still server-render), and first-paint
   attribute parity where the DOM-order effect can be approximated (see the
   group's `initialTabIndex`).
+- **SSR-safe ids: React ids come from `useId()`.** Every DOM id a React
+  component renders (ARIA `aria-controls` / `aria-labelledby` targets, panel
+  and input ids) is derived from `useId()`, stripped to `[a-zA-Z0-9_-]` so it
+  is valid in a selector and in `url(#…)`. Never `performance.now()`,
+  `Math.random()`, `Date.now()` or a module-level counter: the server and the
+  client compute different values, so hydration mismatches and the ARIA
+  references point at nothing — and a counter shared across requests leaks
+  render order between users. Keys of internal maps that never reach the DOM
+  are exempt.
 - **Dev warnings in effects, off by default.** Warn from `useEffect`, never the
   render body; `isDevMode()` returns `false` when no `NODE_ENV` signal exists,
   so unshimmed production toolchains do not warn forever.
@@ -561,10 +570,28 @@ rules — change both together.
   gets this free from `DomSanitizer`; React does not, so `href={item.url}`
   written plain is an XSS sink in one layer and not the other. Treat it as
   part of parity: a React component with a `url`-shaped prop is not done
-  until the sanitizer is on it.
+  until the sanitizer is on it. `sanitizeUrl` is a scheme **allowlist**
+  (relative, `http(s)`, `mailto`, `tel`, `ftp`, `sms`; `allowedSchemes`
+  extends it, never to a script scheme) — do not add a denylist check beside it.
 - **Exports are neutralized, not just quoted.** Anything writing CSV or TSV
   goes through `escapeCsvCell` / `buildCsv`, which apply `guardCsvFormula` —
-  RFC 4180 quoting alone still lets Excel evaluate `=cmd|…!A1`.
+  RFC 4180 quoting alone still lets Excel evaluate `=cmd|…!A1`. The guard
+  reads the first non-whitespace character (ASCII and full-width leads); an
+  exporter that decorates a value (the tree list's indentation) guards the
+  value _before_ decorating it.
+- **Persisted / imported state is untrusted input.** Every `applyState()` and
+  `stateKey` restore goes through the `sanitize*StateSnapshot` validators
+  (`@oge-ui/core`): unknown keys dropped, prototype keys rejected at any depth,
+  types checked, never a throw. A new persistable snapshot ships with its
+  validator and a fuzz spec.
+- **Trusted Types: one named policy per engine, created lazily.** The only
+  sink is `DOMParser.parseFromString` in `@oge-ui/bpmn-engine`, behind the
+  `oge-ui#bpmn` policy (`trusted-types.ts`). A new sink reuses a documented
+  policy or adds one to `SECURITY.md` → "Trusted Types" in the same change.
+- **No raw control characters in source.** Write `\0`, `\u0000`, `\x1f` as
+  escapes; a literal NUL makes grep treat the file as binary and hides it from
+  every search. `node tools/docs-tools/check-control-chars.mjs` (run by
+  `docs-tools:lint`) fails on any byte below 0x20 other than tab, LF and CR.
 - **No `eval`, `new Function`, `document.write` or string-built DOM,** in
   library code or in the docs app. It also keeps `script-src 'self'` viable
   for consumers, which is a documented promise.

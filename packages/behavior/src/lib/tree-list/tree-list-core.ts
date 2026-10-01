@@ -2,6 +2,7 @@ import {
   ArrayDataSource,
   ancestorsOf,
   buildCsv,
+  guardCsvFormula,
   buildTreeIndex,
   computeTreeCheckStates,
   createFieldAccessor,
@@ -1275,8 +1276,9 @@ export class OgeTreeListCore<T> {
 
 /**
  * CSV of tree export data, the hierarchy expressed by indenting the first
- * column two spaces per level. Goes through `buildCsv`, so the formula guard
- * applies.
+ * column two spaces per level. The first-column VALUE is guarded before it is
+ * indented (`  '=cmd`, not `'  =cmd`), and every row still goes through
+ * `buildCsv`, so the formula guard applies to every cell either way.
  */
 export function ogeTreeCsv<T>(
   data: OgeTreeExportData<T>,
@@ -1292,7 +1294,9 @@ export function ogeTreeCsv<T>(
       const text = column.format
         ? column.format(value)
         : formatCellValue(value, column.dataType, undefined);
-      return '  '.repeat(levels[indexOf.get(row) ?? 0] ?? 0) + text;
+      const guarded =
+        options?.formulaGuard === false ? text : guardCsvFormula(text);
+      return '  '.repeat(levels[indexOf.get(row) ?? 0] ?? 0) + guarded;
     },
     format: columnIndex === 0 ? undefined : column.format,
   }));

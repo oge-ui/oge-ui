@@ -178,7 +178,7 @@ _Editing, paging, state & export_
 | `editRow(key) / deleteRow(key) / saveChanges() / discardChanges() / hasChanges()` | `void / boolean` | Same semantics as the grid. |
 | `pageIndex() / setPageIndex(i) / pageSize() / setPageSize(n) / pageCount() / totalCount()` | `methods` | `pageIndex()` reads the page Angular exposes as a writable signal; `totalCount()` spans all pages. |
 | `beginCustomLoading(message?) / endCustomLoading()` | `void` | Load panel independent of data activity. |
-| `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. |
+| `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `clearFilters() / clearSorting()` | `void` | Reset the view. |
 | `getExportData() / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async); CSV indents the first column 2 spaces per level; the Excel entry sets real outline levels. Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 

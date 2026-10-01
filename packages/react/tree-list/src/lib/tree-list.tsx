@@ -22,6 +22,7 @@ import {
   type RowKey,
   type RowNode,
   type TreeListStateSnapshot,
+  sanitizeTreeListStateSnapshot,
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
@@ -628,9 +629,12 @@ function OgeTreeListInner<T extends object>(
     });
 
     function applyState(snapshot: TreeListStateSnapshot): void {
-      state.applySnapshot(snapshot);
-      core.applyExpansionSnapshot(snapshot);
-      const hidden = new Set(snapshot.columns?.hidden ?? []);
+      // public API fed from storage, URLs or the host: validate the shape first
+      const safe = sanitizeTreeListStateSnapshot(snapshot);
+      if (safe === null) return;
+      state.applySnapshot(safe);
+      core.applyExpansionSnapshot(safe);
+      const hidden = new Set(safe.columns?.hidden ?? []);
       const next = new Map<string, boolean>();
       for (const column of declaredColumns() ?? []) {
         if (column.field) next.set(column.field, !hidden.has(column.field));
@@ -747,11 +751,11 @@ function OgeTreeListInner<T extends object>(
   const sortValueFields = (normalizeColumns<T>(props.columns) ?? [])
     .filter((column) => column.field && column.calculateSortValue)
     .map((column) => column.field as string)
-    .join(' ');
+    .join('\u0000');
   const sortValues = useMemo(() => {
     if (!sortValueFields) return undefined;
     const selectors: Record<string, (row: T) => unknown> = {};
-    for (const field of sortValueFields.split(' ')) {
+    for (const field of sortValueFields.split('\u0000')) {
       selectors[field] = (row) =>
         normalizeColumns<T>(latest.current.columns)
           ?.find((column) => column.field === field)
@@ -764,7 +768,7 @@ function OgeTreeListInner<T extends object>(
   // functions count by kind, not identity — an inline selector is a new
   // function every render and must not re-wire (and re-fetch) the tree
   const exprDep = (expr: unknown, fallback: string): string =>
-    typeof expr === 'function' ? ' fn' : String(expr ?? fallback);
+    typeof expr === 'function' ? '\u0000fn' : String(expr ?? fallback);
   const keyExprDep = exprDep(props.keyExpr, 'id');
   const parentIdExprDep = exprDep(props.parentIdExpr, 'parentId');
   const itemsExprDep = exprDep(props.itemsExpr, '');

@@ -124,7 +124,8 @@ export const OGE_REACT_PIVOT_GRID_API: ApiSections = {
         {
           name: 'state() / applyState(snapshot)',
           type: 'PivotGridStateSnapshot / void',
-          description: 'Field layout + expansion snapshot.',
+          description:
+            'Field layout + expansion snapshot. <code>applyState</code> validates the snapshot first (<code>sanitize*StateSnapshot</code>): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown.',
         },
         {
           name: 'getCsv(options?) / exportCsv(filename?)',

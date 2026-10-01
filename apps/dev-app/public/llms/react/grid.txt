@@ -227,7 +227,7 @@ _Loading, state & export_
 | Name | Type | Description |
 | --- | --- | --- |
 | `beginCustomLoading(message?) / endCustomLoading()` | `handle` | Shows the load panel with an optional custom message, independent of data-source activity. |
-| `state(): GridStateSnapshot / applyState(snapshot)` | `handle` | Reads or applies the persistable UI state: sort, filters, column layout, page size. |
+| `state(): GridStateSnapshot / applyState(snapshot)` | `handle` | Reads or applies the persistable UI state: sort, filters, column layout, page size. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `clearFilters() / clearSorting()` | `handle` | Clears every filter (row filters and search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows and column metadata of the current view (filter + search + sort applied) — the shared source for exporters. `scope` narrows to the page or selection. |
 | `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |

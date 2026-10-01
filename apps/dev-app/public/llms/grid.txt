@@ -260,10 +260,10 @@ _Loading, state & export_
 | Name | Type | Description |
 | --- | --- | --- |
 | `beginCustomLoading(message?) / endCustomLoading()` | `void` | Shows/hides the load panel with an optional message — independent of data activity. |
-| `state(): GridStateSnapshot / applyState(snapshot)` | `GridStateSnapshot / void` | Captures / applies the persistable UI state. |
+| `state(): GridStateSnapshot / applyState(snapshot)` | `GridStateSnapshot / void` | Captures / applies the persistable UI state. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `clearFilters() / clearSorting()` | `void` | Clears every filter (row, header, builder, search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `Promise` | Rows + column metadata of the current view; `scope: 'all' \| 'page' \| 'selection'`. |
-| `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (`=`, `+`, `-`, `@` or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
+| `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (first non-whitespace character `=`, `+`, `-`, `@` or a full-width `＝ ＋ － ＠`, or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
 | `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
 
 #### Events

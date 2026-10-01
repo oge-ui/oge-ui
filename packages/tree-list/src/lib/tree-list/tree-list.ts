@@ -49,6 +49,7 @@ import {
   type TreeListStateSnapshot,
   buildSearchHighlightSegments,
   foldText,
+  sanitizeTreeListStateSnapshot,
 } from '@oge-ui/core';
 import {
   OgeTreeListCore,
@@ -2316,10 +2317,13 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Applies a previously captured state snapshot (see `state()` / `stateChange`). */
   applyState(snapshot: TreeListStateSnapshot): void {
+    // public API fed from storage, URLs or the host: validate the shape first
+    const safe = sanitizeTreeListStateSnapshot(snapshot);
+    if (safe === null) return;
     untracked(() => {
-      this.store.applySnapshot(snapshot);
-      this.core.applyExpansionSnapshot(snapshot);
-      const hidden = new Set(snapshot.columns?.hidden ?? []);
+      this.store.applySnapshot(safe);
+      this.core.applyExpansionSnapshot(safe);
+      const hidden = new Set(safe.columns?.hidden ?? []);
       for (const column of this.declaredColumns()) {
         const field = column.field();
         if (field) column.visible.set(!hidden.has(field));

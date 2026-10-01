@@ -3,6 +3,11 @@
  * Pure and Intl-free: all stepping uses `@oge-ui/core`'s local wall-time
  * date math. COUNT is honored from the series start even when the queried
  * range lies far later, with a hard iteration cap as a runaway backstop.
+ *
+ * Per period the pipeline is RFC 5545 order: BY* day expansion → BYHOUR /
+ * BYMINUTE time expansion → BYSETPOS selection → DTSTART floor → UNTIL /
+ * COUNT. RDATE values join the set afterwards (they do not consume COUNT);
+ * EXDATE values (block lines and the exceptions argument) remove instances.
  */
 import { addDays, addMonths, sameDay, startOfWeek } from '@oge-ui/core';
 import type { RecurrenceRule } from './rrule';
@@ -27,6 +32,34 @@ function isException(date: Date, exceptions: readonly Date[]): boolean {
       ? sameDay(exception, date)
       : sameMinute(exception, date),
   );
+}
+
+/** Every `weekday` of a month (plain BYDAY in MONTHLY/YEARLY scope). */
+function allWeekdays(year: number, month: number, weekday: number): Date[] {
+  const days: Date[] = [];
+  const first = new Date(year, month, 1);
+  let day = 1 + ((weekday - first.getDay() + 7) % 7);
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  for (; day <= lastDay; day += 7) days.push(new Date(year, month, day));
+  return days;
+}
+
+/** BYDAY entries of one month: ordinal → that day; plain → every such day. */
+function monthByDay(
+  year: number,
+  month: number,
+  byDay: readonly { ordinal: number | null; weekday: number }[],
+): Date[] {
+  const days: Date[] = [];
+  for (const entry of byDay) {
+    if (entry.ordinal === null) {
+      days.push(...allWeekdays(year, month, entry.weekday));
+    } else {
+      const day = ordinalWeekday(year, month, entry.ordinal, entry.weekday);
+      if (day !== null) days.push(day);
+    }
+  }
+  return days;
 }
 
 /** Ordinal-BYDAY resolution: the `2TU` / `-1FR` day of a month, or null. */
@@ -95,12 +128,9 @@ function periodCandidates(
           );
       }
       if (rule.byDay !== undefined && rule.byDay.length > 0) {
-        return rule.byDay
-          .map((entry) =>
-            ordinalWeekday(year, month, entry.ordinal ?? 1, entry.weekday),
-          )
-          .filter((day): day is Date => day !== null)
-          .map((day) => withTime(day, seriesStart));
+        return monthByDay(year, month, rule.byDay).map((day) =>
+          withTime(day, seriesStart),
+        );
       }
       const lastDay = new Date(year, month + 1, 0).getDate();
       if (seriesStart.getDate() > lastDay) return []; // Jan 31 monthly skips Feb
@@ -117,14 +147,8 @@ function periodCandidates(
       const candidates: Date[] = [];
       for (const month of months) {
         if (rule.byDay !== undefined && rule.byDay.length > 0) {
-          for (const entry of rule.byDay) {
-            const day = ordinalWeekday(
-              year,
-              month,
-              entry.ordinal ?? 1,
-              entry.weekday,
-            );
-            if (day !== null) candidates.push(withTime(day, seriesStart));
+          for (const day of monthByDay(year, month, rule.byDay)) {
+            candidates.push(withTime(day, seriesStart));
           }
           continue;
         }
@@ -143,6 +167,48 @@ function periodCandidates(
       return candidates;
     }
   }
+}
+
+/** BYHOUR / BYMINUTE: each candidate day fans out to the listed times. */
+function expandTimes(rule: RecurrenceRule, days: readonly Date[]): Date[] {
+  if (rule.byHour === undefined && rule.byMinute === undefined) {
+    return [...days];
+  }
+  const result: Date[] = [];
+  for (const day of days) {
+    for (const hour of rule.byHour ?? [day.getHours()]) {
+      for (const minute of rule.byMinute ?? [day.getMinutes()]) {
+        result.push(
+          new Date(
+            day.getFullYear(),
+            day.getMonth(),
+            day.getDate(),
+            hour,
+            minute,
+            day.getSeconds(),
+          ),
+        );
+      }
+    }
+  }
+  return result;
+}
+
+/** Sorted, de-duplicated candidates, narrowed by BYSETPOS when present. */
+function selectSetPositions(rule: RecurrenceRule, dates: Date[]): Date[] {
+  const sorted = dates
+    .sort((a, b) => a.getTime() - b.getTime())
+    .filter(
+      (date, index, all) =>
+        index === 0 || date.getTime() !== all[index - 1].getTime(),
+    );
+  if (rule.bySetPos === undefined || rule.bySetPos.length === 0) return sorted;
+  const picked = new Set<Date>();
+  for (const position of rule.bySetPos) {
+    const index = position > 0 ? position - 1 : sorted.length + position;
+    if (index >= 0 && index < sorted.length) picked.add(sorted[index]);
+  }
+  return sorted.filter((date) => picked.has(date));
 }
 
 /** First moment a period can produce candidates in (loose lower bound). */
@@ -174,9 +240,10 @@ function nextPeriod(rule: RecurrenceRule, anchor: Date): Date {
 
 /**
  * Occurrence starts of a series inside the half-open `[rangeStart, rangeEnd)`
- * window, honoring INTERVAL, COUNT ⊕ UNTIL and the exception list. The
- * series start itself is always occurrence #1 (RFC: DTSTART is the first
- * instance) unless excluded.
+ * window, honoring INTERVAL, COUNT ⊕ UNTIL, BYSETPOS, RDATE and the
+ * exception list (plus the rule's own EXDATE values). The series start is
+ * occurrence #1 when the rule's BY* parts produce it (RFC: DTSTART is the
+ * first instance) unless excluded.
  */
 export function expandRecurrence(
   rule: RecurrenceRule,
@@ -185,15 +252,45 @@ export function expandRecurrence(
   rangeEnd: Date,
   exceptions: readonly Date[] = [],
 ): Date[] {
+  const excluded =
+    rule.exDates !== undefined && rule.exDates.length > 0
+      ? [...exceptions, ...rule.exDates]
+      : exceptions;
+  const result = expandRule(rule, seriesStart, rangeStart, rangeEnd, excluded);
+  if (rule.rDates === undefined || rule.rDates.length === 0) return result;
+  const seen = new Set(result.map((date) => date.getTime()));
+  for (const extra of rule.rDates) {
+    if (
+      extra.getTime() >= rangeStart.getTime() &&
+      extra.getTime() < rangeEnd.getTime() &&
+      !seen.has(extra.getTime()) &&
+      !isException(extra, excluded)
+    ) {
+      seen.add(extra.getTime());
+      result.push(new Date(extra.getTime()));
+    }
+  }
+  return result.sort((a, b) => a.getTime() - b.getTime());
+}
+
+/** The RRULE half of {@link expandRecurrence} (no RDATE merge). */
+function expandRule(
+  rule: RecurrenceRule,
+  seriesStart: Date,
+  rangeStart: Date,
+  rangeEnd: Date,
+  exceptions: readonly Date[],
+): Date[] {
   const result: Date[] = [];
   let counted = 0;
   let periodAnchor = seriesStart;
   let iterations = 0;
 
   while (iterations++ < MAX_OCCURRENCES) {
-    const candidates = periodCandidates(rule, periodAnchor, seriesStart)
-      .filter((candidate) => candidate.getTime() >= seriesStart.getTime())
-      .sort((a, b) => a.getTime() - b.getTime());
+    const candidates = selectSetPositions(
+      rule,
+      expandTimes(rule, periodCandidates(rule, periodAnchor, seriesStart)),
+    ).filter((candidate) => candidate.getTime() >= seriesStart.getTime());
 
     for (const candidate of candidates) {
       if (

@@ -20,6 +20,7 @@ import {
   type PivotResult,
   type PivotSummaryDisplayMode,
   type SummaryType,
+  sanitizePivotGridStateSnapshot,
 } from '@oge-ui/core';
 import {
   applyPivotFieldOverrides,
@@ -457,8 +458,14 @@ export class OgePivotGridCore<T = unknown> {
     return this.persistedSnapshot();
   }
 
-  /** Applies a previously captured state snapshot. */
-  applyState(snapshot: PivotGridStateSnapshot): void {
+  /**
+   * Applies a previously captured state snapshot. The input is validated
+   * first (`sanitizePivotGridStateSnapshot`): storage and hosts are
+   * untrusted, so a wrong shape or a prototype key is ignored, never thrown.
+   */
+  applyState(input: PivotGridStateSnapshot): void {
+    const snapshot = sanitizePivotGridStateSnapshot(input);
+    if (snapshot === null) return;
     const overrides = pivotOverridesFromSnapshot(snapshot);
     if (overrides) this.store.applyOverrides(overrides);
     this.store.setExpansion(

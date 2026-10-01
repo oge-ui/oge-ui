@@ -340,6 +340,36 @@ describe('OgeTreeListCore', () => {
     ]);
   });
 
+  it('guards the first-column value before indenting it', async () => {
+    const t = setup({ autoExpandAll: true });
+    await t.load();
+    const data = t.core.getExportData(
+      [
+        {
+          caption: 'Name',
+          field: 'name',
+          dataType: 'string',
+          accessor: (row) =>
+            row.parentId === null ? '=cmd|"/c calc"!A1' : '  @SUM(A1)',
+        },
+        {
+          caption: 'Second',
+          field: 'name',
+          dataType: 'string',
+          accessor: () => ' +1+1',
+        },
+      ],
+      { booleanTrue: 'Yes', booleanFalse: 'No' },
+    );
+    const lines = ogeTreeCsv(data, { bom: false }).split('\r\n');
+    // the value is neutralised, indentation stays in front of it
+    expect(lines[1]).toBe('"\'=cmd|""/c calc""!A1",\' +1+1');
+    expect(lines[2]).toBe("  '  @SUM(A1),' +1+1");
+    // opting out of the guard leaves both untouched
+    const raw = ogeTreeCsv(data, { bom: false, formulaGuard: false });
+    expect(raw.split('\r\n')[2]).toBe('    @SUM(A1), +1+1');
+  });
+
   it('lists distinct values over the loaded rows and groups dates by year', async () => {
     const t = setup();
     await t.load();

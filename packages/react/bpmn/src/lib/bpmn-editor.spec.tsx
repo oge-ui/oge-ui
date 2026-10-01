@@ -290,6 +290,22 @@ describe('<OgeBpmnEditor>', () => {
     expect(container.querySelector('.oge-bpmn-overlay')).toBeNull();
   });
 
+  it('hardens overlay links (rel) and drops role, like the Angular layer', async () => {
+    const { container, handle } = await imported();
+    act(() => {
+      handle().addOverlay({
+        elementId: 'Activity_approve',
+        html: '<a href="https://ogeui.com" target="_blank" rel="opener">d</a><span role="button">x</span>',
+        position: 'top-right',
+      });
+    });
+    const overlay = container.querySelector('.oge-bpmn-overlay') as HTMLElement;
+    expect(overlay.querySelector('a')?.getAttribute('rel')).toBe(
+      'noopener noreferrer',
+    );
+    expect(overlay.querySelector('[role]')).toBeNull();
+  });
+
   it('sanitizes a data-driven brand logo URL', () => {
     const { container } = setup({ brandLogoUrl: 'javascript:alert(1)' });
     const img = container.querySelector('.oge-bpmn-brand-img');

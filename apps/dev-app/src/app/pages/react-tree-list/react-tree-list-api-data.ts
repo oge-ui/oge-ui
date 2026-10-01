@@ -348,7 +348,8 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
         {
           name: 'state() / applyState(snapshot)',
           type: 'TreeListStateSnapshot / void',
-          description: 'Sort, filters, column layout and expansion.',
+          description:
+            'Sort, filters, column layout and expansion. <code>applyState</code> validates the snapshot first (<code>sanitize*StateSnapshot</code>): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown.',
         },
         {
           name: 'clearFilters() / clearSorting()',
