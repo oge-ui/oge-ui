@@ -179,7 +179,7 @@ export const OGE_REACT_KANBAN_API: ApiSections = {
           name: 'renderCard',
           type: '(context: OgeKanbanCardRenderContext&lt;T&gt;) =&gt; ReactNode',
           description:
-            'Replaces the card body (<code>{ card, column, swimlane }</code>, the card with its <code>source</code>). Drag, keyboard and ARIA stay on the board — the React face of <code>*ogeKanbanCardTemplate</code>.',
+            'Replaces the card body (<code>{ card, column, swimlane }</code>, the card with its <code>source</code>). Drag, keyboard and ARIA stay on the board — the React face of <code>*ogeKanbanCardTemplate</code>. Buttons, links and inputs it renders are real interactive content: Tab reaches them while the card is its column&#39;s tab stop, they never start a drag or feed the board&#39;s arrow keys, and Escape returns to the card.',
         },
         {
           name: 'renderColumnHeader',
@@ -331,6 +331,12 @@ export const OGE_REACT_KANBAN_API: ApiSections = {
           type: 'interface',
           description:
             'Every user-facing string: <code>toolbar</code>, <code>menu</code>, <code>dialog</code>, <code>board</code> (aria label templates with <code>{title}</code>/<code>{count}</code>/<code>{limit}</code> tokens) and <code>announcements</code> (live-region templates). Single-sourced in <code>@oge-ui/kanban-engine</code> with the Angular package.',
+        },
+        {
+          name: 'OgeKanbanBoardMessages',
+          type: 'interface',
+          description:
+            'The <code>board</code> block: <code>boardLabel</code>, <code>columnLabel</code> / <code>columnLabelWip</code> (the column list&#39;s name), <code>cardLabel</code> (<code>{title}</code>, <code>{column}</code>), <code>cardRoleDescription</code> (default <code>card</code> — every card&#39;s <code>aria-roledescription</code>), <code>editCardAction</code> / <code>deleteCardAction</code> (the quick-action buttons, <code>{title}</code>), <code>boardHint</code>, <code>wipExceeded</code>, <code>overdue</code>, the empty-state and add-card/column strings.',
         },
         {
           name: 'OgeKanbanColumn',

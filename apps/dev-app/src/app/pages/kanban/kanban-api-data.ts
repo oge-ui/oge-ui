@@ -264,7 +264,7 @@ export const OGE_KANBAN_API: ApiSections = {
           name: '*ogeKanbanCardTemplate',
           type: 'OgeKanbanCardTemplateContext&lt;T&gt;',
           description:
-            'Replaces the card body (<code>$implicit</code> card with its <code>source</code>, plus <code>column</code> and <code>swimlane</code>). Drag, keyboard and ARIA stay on the component.',
+            'Replaces the card body (<code>$implicit</code> card with its <code>source</code>, plus <code>column</code> and <code>swimlane</code>). Drag, keyboard and ARIA stay on the component. Buttons, links and inputs in the template are real interactive content: Tab reaches them while the card is its column&#39;s tab stop, they never start a drag or feed the board&#39;s arrow keys, and Escape returns to the card.',
         },
         {
           name: '*ogeKanbanColumnHeaderTemplate',
@@ -288,6 +288,12 @@ export const OGE_KANBAN_API: ApiSections = {
           type: 'interface',
           description:
             'Every user-facing string: <code>toolbar</code>, <code>menu</code>, <code>dialog</code>, <code>board</code> (aria label templates with <code>{title}</code>/<code>{count}</code>/<code>{limit}</code> tokens) and <code>announcements</code> (live-region templates).',
+        },
+        {
+          name: 'OgeKanbanBoardMessages',
+          type: 'interface',
+          description:
+            'The <code>board</code> block: <code>boardLabel</code>, <code>columnLabel</code> / <code>columnLabelWip</code> (the column list&#39;s name), <code>cardLabel</code> (<code>{title}</code>, <code>{column}</code>), <code>cardRoleDescription</code> (default <code>card</code> — every card&#39;s <code>aria-roledescription</code>), <code>editCardAction</code> / <code>deleteCardAction</code> (the quick-action buttons, <code>{title}</code>), <code>boardHint</code>, <code>wipExceeded</code>, <code>overdue</code>, the empty-state and add-card/column strings.',
         },
         {
           name: 'OgeKanbanColumn',

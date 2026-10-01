@@ -259,12 +259,13 @@ const sourceField = (card: OgeKanbanCard, field: string): string =>
   String((card.source as Row)[field] ?? '');
 
 function TemplateDemo(): ReactNode {
-  return createElement(OgeKanban<Row>, {
+  const [log, setLog] = useState('');
+  const board = createElement(OgeKanban<Row>, {
     dataSource: DEPLOYMENTS,
     keyExpr: 'id',
     columnExpr: 'stage',
     titleExpr: 'service',
-    cardHeight: 96,
+    cardHeight: 112,
     style: { height: 420 },
     renderCard: ({ card }) =>
       createElement(
@@ -275,6 +276,7 @@ function TemplateDemo(): ReactNode {
             display: 'flex',
             flexDirection: 'column',
             gap: 4,
+            flex: 1,
           },
         },
         createElement('strong', null, card.title),
@@ -288,8 +290,27 @@ function TemplateDemo(): ReactNode {
           max: 100,
           style: { width: '100%' },
         }),
+        createElement(
+          'button',
+          {
+            type: 'button',
+            className: 'demo-rollback',
+            onClick: () => setLog(`Rollback requested: ${card.title}`),
+          },
+          'Roll back',
+        ),
       ),
   });
+  return createElement(
+    'div',
+    null,
+    board,
+    createElement(
+      'p',
+      { className: 'mt-2 text-sm text-slate-500', 'aria-live': 'polite' },
+      log,
+    ),
+  );
 }
 
 function ConfigDemo(): ReactNode {
@@ -371,9 +392,9 @@ function ConfigDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
-      [chips]="['Ctrl+Arrow', 'live region', 'listbox pattern']"
+      [chips]="['Ctrl+Arrow', 'live region', 'roving list']"
       heading="Keyboard moving &amp; a11y"
-      description="Arrows rove between cards and columns, Enter edits, Delete deletes — and <strong>Ctrl+Arrow moves the focused card</strong>, the exact keyboard twin of the drag, with a polite live-region announcement after every commit. Columns are labeled listboxes with their count and WIP in the accessible name."
+      description="Arrows rove between cards and columns, Enter edits, Delete deletes — and <strong>Ctrl+Arrow moves the focused card</strong>, the exact keyboard twin of the drag, with a polite live-region announcement after every commit. Columns are labeled lists with their count and WIP in the accessible name, one Tab stop each; Tab from a card continues into its quick-action buttons and any controls a card template renders."
       [code]="demos[4].source"
       language="tsx"
     >
@@ -393,7 +414,7 @@ function ConfigDemo(): ReactNode {
     <app-demo-card
       [chips]="['renderCard', 'cardHeight']"
       heading="Card template"
-      description="<code>renderCard</code> replaces the card body while drag, keyboard and ARIA stay on the board. Rich templates usually pair with a matching <code>cardHeight</code> — or opt out of virtualization entirely when heights must vary (documented exception)."
+      description="<code>renderCard</code> replaces the card body while drag, keyboard and ARIA stay on the board. Controls it renders are real interactive content — Tab from a card reaches its <em>Roll back</em> button, which neither starts a drag nor steals the board&#39;s arrow keys (Escape returns to the card). Rich templates usually pair with a matching <code>cardHeight</code> — or opt out of virtualization entirely when heights must vary (documented exception)."
       [code]="demos[6].source"
       language="tsx"
     >
