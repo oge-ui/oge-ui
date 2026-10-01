@@ -732,8 +732,8 @@ const ORG: OrgNode[] = [
               >
             </a>
             <p class="mt-4 max-w-xs text-[13px] leading-relaxed text-[#8b93a5]">
-              Components built for serious data — a complete Angular suite and a
-              growing React one over the same framework-free engine. MIT
+              Components built for serious data — complete Angular and React
+              suites over one framework-free engine. The MIT core stays MIT
               forever.
             </p>
             <p class="mt-5 max-w-xs text-[12px] leading-relaxed text-[#555d6b]">
@@ -1908,6 +1908,28 @@ export class HomePage {
     '@oge-ui/layout',
     '@oge-ui/navigation',
     '@oge-ui/forms',
+    '@oge-ui/react',
+    '@oge-ui/react-grid',
+    '@oge-ui/react-tree-list',
+    '@oge-ui/react-inputs',
+    '@oge-ui/react-overlay',
+    '@oge-ui/react-forms',
+    '@oge-ui/react-tabs',
+    '@oge-ui/react-layout',
+    '@oge-ui/react-navigation',
+    '@oge-ui/react-upload',
+    '@oge-ui/react-pivot',
+    '@oge-ui/react-bpmn',
+    '@oge-ui/react-scheduler',
+    '@oge-ui/react-gantt',
+    '@oge-ui/react-kanban',
+    '@oge-ui/react-charts',
+    '@oge-ui/pivot-engine',
+    '@oge-ui/bpmn-engine',
+    '@oge-ui/scheduler-engine',
+    '@oge-ui/gantt-engine',
+    '@oge-ui/kanban-engine',
+    '@oge-ui/charts-engine',
   ];
 
   /**

@@ -4,7 +4,7 @@
  * Import it once, in global styles:
  *
  *   @import '@oge-ui/core/themes/dark.css';
- *   (also shipped as @oge-ui/grid/themes/dark.css for pre-0.14 imports)
+ *   (also shipped as @oge-ui/grid/themes/dark.css for pre-1.1 imports)
  *
  * Then choose a scope — the page, or any subtree:
  *

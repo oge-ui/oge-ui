@@ -5,8 +5,8 @@ guards no other button ships out of the box — running the **same** framework-f
 press machine and the same stylesheet as the Angular `@oge-ui/buttons` package.
 
 The OGE suite is one component engine with a native render layer per framework:
-nothing here wraps Angular, and the React layer is heading for full component
-and feature parity with the Angular suite, family by family.
+nothing here wraps Angular, and the React layer has full component and feature parity with
+the Angular suite (see the suite's `docs/REACT-PARITY.md`).
 
 ## Features
 

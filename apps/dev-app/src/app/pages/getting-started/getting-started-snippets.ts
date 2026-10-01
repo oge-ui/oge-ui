@@ -72,4 +72,12 @@ npm install @oge-ui/react-inputs   # text, number, select, date, color editors
 npm install @oge-ui/react-tabs     # tab strip and tab panel
 npm install @oge-ui/react-layout   # card, accordion, splitter, toolbar, loaders
 npm install @oge-ui/react-navigation # tree view, drawer, stepper, menubar, breadcrumb
-npm install @oge-ui/react-overlay  # anchored popups and menus`;
+npm install @oge-ui/react-overlay  # anchored popups and menus
+npm install @oge-ui/react-forms    # data-driven forms and validation summary
+npm install @oge-ui/react-upload   # file uploader, drop zone, trigger
+npm install @oge-ui/react-grid     # data grid and pager
+npm install @oge-ui/react-tree-list # hierarchical grid
+
+# commercial families (free for evaluation, not in the MIT umbrella)
+npm install @oge-ui/react-pivot @oge-ui/react-charts @oge-ui/react-scheduler
+npm install @oge-ui/react-gantt @oge-ui/react-kanban @oge-ui/react-bpmn`;

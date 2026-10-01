@@ -75,9 +75,10 @@ The same suite, as native React components over the same engine — one install,
 one stylesheet:
 
 ```sh
-npm install @oge-ui/react            # umbrella: every React family below
+npm install @oge-ui/react            # umbrella: every MIT React family
 npm install @oge-ui/react-grid       # or one family at a time …
 npm install @oge-ui/react-inputs
+npm install @oge-ui/react-scheduler  # commercial families install on their own
 ```
 
 ```tsx
@@ -85,8 +86,10 @@ import { OgeGrid, OgeTextBox } from '@oge-ui/react';
 import '@oge-ui/react/styles.css';
 ```
 
-The React layer is heading for full parity with the Angular suite, family by
-family; the current state and every recorded difference live in
+Since 1.1.1 the React layer is at full parity with the Angular suite: every
+family ships in both, on one shared engine, and the docs site switches every
+page between them. The few deliberate differences (router-driven demos, idiom
+mappings such as `TemplateRef` ↔ render props) are recorded in
 [`docs/REACT-PARITY.md`](docs/REACT-PARITY.md).
 
 ## Quick start

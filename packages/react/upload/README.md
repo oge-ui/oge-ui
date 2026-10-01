@@ -7,8 +7,8 @@ queue, drag/paste reading) and the same list machine as the Angular
 `@oge-ui/upload` package, and the same stylesheet.
 
 The OGE suite is one component engine with a native render layer per
-framework: nothing here wraps Angular, and the React layer is heading for full
-component and feature parity with the Angular suite, family by family.
+framework: nothing here wraps Angular, and the React layer has full component and feature parity with
+the Angular suite (see the suite's `docs/REACT-PARITY.md`).
 
 ## What ships
 

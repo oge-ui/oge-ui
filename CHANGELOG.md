@@ -5,11 +5,31 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
-## Unreleased
+## 1.1.1 — 2026-10-01
 
-Driven by what the first production consumer (an Angular admin console built on
-`@oge-ui/grid` + `@oge-ui/overlay`) had to work around, written down in its own
-design notes. Every item below removes one of those workarounds.
+Every package moves to 1.1.1 together — the first 1.x release. The version
+jump marks two things finishing at once:
+
+- **React and Angular are at full parity.** Every component family now ships
+  in both render layers — tree list, kanban, charts, scheduler, gantt, pivot
+  and BPMN joined React in this release — and every docs page branches between
+  them (the router-driven demos stay Angular-only, as recorded exceptions).
+  The commercial families run on new framework-free **`@oge-ui/<family>-engine`**
+  packages (ADR 0003), so both layers execute the same engine without moving
+  commercial code into the MIT `@oge-ui/behavior`.
+- **The gaps the first production consumers hit are closed.** Theming that
+  `:root` could not override, dark mode only reachable through the grid, a
+  grid that pulled the forms family into every bundle, no cursor paging, no
+  keyboard context menus, no wrapper-friendly columns, no runtime language
+  switch — each removes a workaround an app had to write.
+
+New packages: `@oge-ui/react-tree-list`, `@oge-ui/react-kanban`,
+`@oge-ui/react-charts`, `@oge-ui/react-scheduler`, `@oge-ui/react-gantt`,
+`@oge-ui/react-pivot`, `@oge-ui/react-bpmn` and the engines
+`@oge-ui/kanban-engine`, `@oge-ui/charts-engine`, `@oge-ui/scheduler-engine`,
+`@oge-ui/gantt-engine`, `@oge-ui/pivot-engine`, `@oge-ui/bpmn-engine`. No
+existing import path changed; the few behavior changes are listed under
+"Fixed" below.
 
 ### Added (React)
 

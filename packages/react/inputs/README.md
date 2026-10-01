@@ -7,9 +7,8 @@ running the **same** framework-free commit pipeline, messages and design
 tokens as the Angular `@oge-ui/inputs` package.
 
 The OGE suite is one component engine with a native render layer per
-framework: nothing here wraps Angular, and the React layer is heading for
-full component and feature parity with the Angular suite, family by family
-(see the suite's `ROADMAP-REACT.md`).
+framework: nothing here wraps Angular, and the React layer has full component and feature parity with
+the Angular suite (see the suite's `docs/REACT-PARITY.md`).
 
 ## What ships today
 

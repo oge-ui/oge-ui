@@ -8,7 +8,7 @@
 // consumer declaration of the same property wins — `:root { --oge-accent: … }`,
 // a theme scope on `<body>`, or a class on one subtree — whatever the
 // stylesheet order. Declaring the defaults on each component host (`.oge-button {
-// --oge-bg: … }`, the pre-0.14 layout) made the element's own declaration
+// --oge-bg: … }`, the pre-1.1 layout) made the element's own declaration
 // beat every inherited value, so a `:root` override silently lost and
 // consumers needed `html .oge-button` selectors to theme anything.
 //

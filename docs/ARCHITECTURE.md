@@ -462,7 +462,7 @@ smallest complete example):
   SCSS reads source, not dist — no Nx graph edge results (accepted limitation).
 - **Token defaults never live on a component host.** `core-tokens` hoists them (`@at-root`) to
   `:where(:root, .oge-theme-light, [data-oge-theme='light'], .oge-theme-auto, [data-oge-theme='auto'])`
-  — zero specificity, so any consumer declaration wins and tokens cascade into subtrees. (Before 0.14
+  — zero specificity, so any consumer declaration wins and tokens cascade into subtrees. (Before 1.1
   every host re-declared the whole set, so a `:root` override silently lost and consumers needed
   `html .oge-button` selectors.) A new shared token goes into `literal-tokens` (raw value) or
   `derived-tokens` (an expression over other tokens) — never into a component's host rule.
@@ -473,7 +473,7 @@ smallest complete example):
 - All styles are global `.oge-*` classes (ViewEncapsulation.None), BEM-ish dashes.
 - Themes: source in `packages/grid/src/lib/styles/themes/{dark,bootstrap,tailwind}.css`, shipped as
   **`@oge-ui/core/themes/*`** (core's rollup assets — every package installs core, React ones included)
-  and, for pre-0.14 imports, `@oge-ui/grid/themes/*`. They target **scopes, not component hosts**:
+  and, for pre-1.1 imports, `@oge-ui/grid/themes/*`. They target **scopes, not component hosts**:
   dark is `.oge-theme-dark, [data-oge-theme='dark']` plus the same block under
   `prefers-color-scheme: dark` for `.oge-theme-auto` / `[data-oge-theme='auto']`; the bridges target
   `:root` (bootstrap also `[data-bs-theme]`). A new component needs **no** theme-file entry. Every
