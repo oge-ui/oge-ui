@@ -440,6 +440,17 @@ smallest complete example):
 - Config/i18n: `InjectionToken` with factory default + `provideOge<X>Config()` shallow-merge provider —
   copy `packages/grid/src/lib/config.ts`. **Every user-facing string (incl. aria labels) lives in a
   messages interface.**
+  The root `eslint.config.mjs` enforces the narrowest slice of this mechanically: a capitalised
+  literal `aria-label` (`aria-label="Reorder"`, `[attr.aria-label]="'Reorder row'"`, or the JSX
+  forms) is a `no-restricted-syntax` error in library templates and TSX (specs and the dev-app,
+  whose demos show consumer code, are exempt). A glyph that carries meaning (the grid's `✓` / `✗`
+  boolean cells) is rendered `aria-hidden` with a visually hidden `.oge-sr-only` word from the
+  catalog beside it.
+- **Locale-derived calendar facts go through core's `date-utils.ts`**: `resolveFirstDayOfWeek` and
+  `resolveWeekendDays` (both `Intl.Locale#getWeekInfo()` / `weekInfo`, with Sunday-first and
+  Saturday + Sunday fallbacks). Never hardcode `day === 0 || day === 6` — expose a
+  `weekendDays` input defaulting to the locale (scheduler, Gantt). Specs stub `Intl.Locale` with a
+  constructible `function`, because host ICU week data differs between Node builds.
 - Template slots: structural directive per slot, selector `[oge<Slot>Template]`, exported context interface.
   When the same slot directive is legal both at component level and inside a child config component
   (e.g. `[ogeTabContentTemplate]` in `oge-tab-panel` vs inside an `<oge-tab>`), query the component-level
