@@ -19,9 +19,13 @@ describe('@oge-ui/kanban-engine barrel', () => {
     'filterCards',
     'findKanbanCard',
     'groupBoard',
+    'focusOwningKanbanCard',
+    'isKanbanCardContentTarget',
     'isKanbanCardShifted',
     'isKanbanLegalTarget',
     'kanbanAutoScrollStep',
+    'kanbanCardActionLabel',
+    'kanbanCardKeyRoute',
     'kanbanCellWindow',
     'kanbanFocusableKeys',
     'kanbanKeyboardMove',
@@ -36,6 +40,7 @@ describe('@oge-ui/kanban-engine barrel', () => {
     'resolveKanbanFields',
     'resolveOgeKanbanConfig',
     'startKanbanFrameLoop',
+    'syncKanbanCardTabStops',
     'toKanbanAccessor',
   ])('exports %s', (name) => {
     expect((engine as Record<string, unknown>)[name]).toBeDefined();

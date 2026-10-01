@@ -107,11 +107,82 @@ describe('<oge-kanban>', () => {
     expect(cell('todo').querySelectorAll('.oge-kanban-card')).toHaveLength(2);
   });
 
-  it('columns are labeled listboxes, cards are options', () => {
-    const listbox = cell('todo');
-    expect(listbox.getAttribute('role')).toBe('listbox');
-    expect(listbox.getAttribute('aria-label')).toContain('To do');
-    expect(cards()[0].getAttribute('role')).toBe('option');
+  it('columns are labeled lists of card items (not a listbox)', () => {
+    const list = cell('todo');
+    expect(list.getAttribute('role')).toBe('list');
+    expect(list.getAttribute('aria-label')).toContain('To do');
+    const card = cards()[0];
+    expect(card.parentElement?.getAttribute('role')).toBe('listitem');
+    expect(card.getAttribute('role')).toBe('group');
+    expect(card.getAttribute('aria-roledescription')).toBe('card');
+    expect(card.getAttribute('aria-label')).toBe('Design tokens, in To do');
+    expect(host.querySelector('[role="option"], [role="listbox"]')).toBeNull();
+  });
+
+  it('quick actions are labeled buttons, parked outside the column stop', () => {
+    const [first, second] = cards();
+    const edit = first.querySelector<HTMLButtonElement>(
+      'button.oge-kanban-card-action-edit',
+    );
+    expect(edit?.getAttribute('aria-label')).toBe('Edit Design tokens');
+    expect(
+      first
+        .querySelector('button.oge-kanban-card-action-delete')
+        ?.getAttribute('aria-label'),
+    ).toBe('Delete Design tokens');
+    expect(first.querySelector('[aria-hidden="true"] button')).toBeNull();
+    // the column's stop card keeps its buttons in the Tab sequence...
+    expect(first.tabIndex).toBe(0);
+    expect(edit?.hasAttribute('tabindex')).toBe(false);
+    // ...every other card's content waits at -1
+    expect(second.tabIndex).toBe(-1);
+    expect(
+      second
+        .querySelector('.oge-kanban-card-action-edit')
+        ?.getAttribute('tabindex'),
+    ).toBe('-1');
+  });
+
+  it('the stop moves with focus and takes the card content along', async () => {
+    const [first] = cards();
+    first.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }),
+    );
+    await settle(fixture);
+    const [nowFirst, nowSecond] = cards();
+    expect(nowSecond.tabIndex).toBe(0);
+    expect(
+      nowSecond
+        .querySelector('.oge-kanban-card-action-edit')
+        ?.hasAttribute('tabindex'),
+    ).toBe(false);
+    expect(
+      nowFirst
+        .querySelector('.oge-kanban-card-action-edit')
+        ?.getAttribute('tabindex'),
+    ).toBe('-1');
+  });
+
+  it('keys from a quick action stay with it; Escape returns to the card', async () => {
+    const [first] = cards();
+    const edit = first.querySelector<HTMLButtonElement>(
+      '.oge-kanban-card-action-edit',
+    ) as HTMLButtonElement;
+    edit.focus();
+    edit.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }),
+    );
+    await settle(fixture);
+    expect(document.activeElement).toBe(edit);
+    edit.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await settle(fixture);
+    expect(document.activeElement).toBe(cards()[0]);
   });
 
   it('a WIP limit overflow turns the count badge to danger', () => {
@@ -138,7 +209,8 @@ describe('<oge-kanban>', () => {
     cards()[0].click();
     await settle(fixture);
     expect(fixture.componentInstance.selected()).toBe(1);
-    expect(cards()[0].getAttribute('aria-selected')).toBe('true');
+    expect(cards()[0].getAttribute('aria-current')).toBe('true');
+    expect(cards()[1].hasAttribute('aria-current')).toBe(false);
   });
 
   it('collapsing a column renders the slim pill and hides its cards', async () => {
@@ -241,5 +313,74 @@ describe('<oge-kanban> card template', () => {
       '.custom-card',
     );
     expect(custom?.textContent).toBe('Custom @ todo');
+  });
+
+  it('interactive template content is reachable and keeps its own keys', async () => {
+    @Component({
+      imports: [OgeKanban, OgeKanbanCardTemplate],
+      template: `
+        <oge-kanban
+          [dataSource]="tasks"
+          [virtualScrolling]="false"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          (cardDblClick)="dblClicks = dblClicks + 1"
+        >
+          <ng-template ogeKanbanCardTemplate let-card>
+            <span>{{ card.title }}</span>
+            <button type="button" class="tpl-btn" (click)="pressed = card.key">
+              Open {{ card.title }}
+            </button>
+            <input class="tpl-input" aria-label="note" />
+          </ng-template>
+        </oge-kanban>
+      `,
+    })
+    class InteractiveHost {
+      readonly tasks: Task[] = [
+        { id: 1, status: 'todo', title: 'One' },
+        { id: 2, status: 'todo', title: 'Two' },
+      ];
+      pressed: unknown = null;
+      dblClicks = 0;
+    }
+    const fixture = TestBed.createComponent(InteractiveHost);
+    await settle(fixture);
+    const root = fixture.nativeElement as HTMLElement;
+    const cardEls = Array.from(
+      root.querySelectorAll<HTMLElement>('.oge-kanban-card'),
+    );
+    const [btn1, btn2] = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('.tpl-btn'),
+    );
+    expect(btn1.hasAttribute('tabindex')).toBe(false);
+    expect(btn2.getAttribute('tabindex')).toBe('-1');
+
+    btn1.click();
+    expect(fixture.componentInstance.pressed).toBe(1);
+
+    // a double click on a control does not open the card editor path
+    btn1.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(fixture.componentInstance.dblClicks).toBe(0);
+
+    // arrow keys inside the input move its caret, not the board's focus
+    const input = root.querySelector<HTMLInputElement>(
+      '.tpl-input',
+    ) as HTMLInputElement;
+    input.focus();
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await settle(fixture);
+    expect(document.activeElement).toBe(input);
+
+    // the card surface itself still double-clicks as before
+    cardEls[0].dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(fixture.componentInstance.dblClicks).toBe(1);
   });
 });

@@ -75,13 +75,25 @@ const SECTIONS_REACT = ['<OgeKanban>'] as const;
     <h3>Notes</h3>
     <ul>
       <li>
-        No WAI-ARIA APG kanban pattern exists. The widget composes the listbox
-        pattern: each column is a labeled <code>role="listbox"</code> (title,
-        count and WIP limit in the accessible name) holding roving-tabindex
-        <code>role="option"</code> cards — arrows rove within and across
-        columns, Enter edits, Delete deletes, and
-        <strong>Ctrl+Arrow moves the focused card</strong> as the exact keyboard
-        twin of the drag, announced through a polite live region.
+        No WAI-ARIA APG kanban pattern exists, and a listbox cannot hold
+        interactive content, so the board is a set of lists with a roving focus:
+        each column is a labeled <code>role="list"</code> (title, count and WIP
+        limit in the accessible name) of <code>role="listitem"</code>
+        wrappers, each holding a focusable card (<code>role="group"</code>,
+        <code>aria-roledescription="card"</code> from
+        <code>messages.board.cardRoleDescription</code>, the selected card
+        <code>aria-current</code>). One Tab stop per column.
+      </li>
+      <li>
+        Keyboard on a focused card: <kbd>Arrow</kbd> keys rove within and across
+        columns, <kbd>Enter</kbd> edits, <kbd>Delete</kbd> deletes,
+        <strong><kbd>Ctrl</kbd>+<kbd>Arrow</kbd> moves the card</strong> as the
+        exact keyboard twin of the drag (announced through a polite live
+        region), and <kbd>Tab</kbd> continues into the card&#39;s own content —
+        the edit / delete quick actions are real labeled buttons, and so is
+        whatever a custom card template renders. Keys typed there stay with that
+        control (<kbd>Ctrl</kbd>+<kbd>Arrow</kbd> in an input moves by word, not
+        the card); <kbd>Escape</kbd> returns to the card.
       </li>
       <li>
         Binding plain arrays never mutates them — edits land in an internal

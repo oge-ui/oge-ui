@@ -206,7 +206,8 @@ function onMoving(event: OgeKanbanCardMovingEvent): void {
       edits, Delete deletes, and Ctrl+Arrow MOVES the focused card — the
       exact keyboard twin of the drag, with a polite live-region
       announcement ("… moved to …, position 2 of 3") after every commit.
-      Columns are labeled listboxes; cards are options. */}
+      Columns are labeled lists of cards (one Tab stop each); Tab from a
+      card continues into its quick-action buttons. */}
   <OgeKanban
     dataSource={tasks}
     keyExpr="id"
@@ -261,6 +262,7 @@ function onDialogShowing(event: OgeKanbanEditDialogShowingEvent): void {
   {
     title: 'Card template',
     source: reactDemoSource({
+      react: ['useState'],
       use: { '@oge-ui/react-kanban': ['OgeKanban'] },
       types: { '@oge-ui/react-kanban': ['OgeKanbanCard'] },
       name: 'DeploymentBoard',
@@ -273,27 +275,34 @@ function onDialogShowing(event: OgeKanbanEditDialogShowingEvent): void {
 function field(card: OgeKanbanCard, name: string): string {
   return String((card.source as Record<string, unknown>)[name] ?? '');
 }`,
+      body: `const [log, setLog] = useState('');`,
       jsx: `<>
   {/* renderCard replaces the card body while drag, keyboard and ARIA stay
       on the board. card.source is your original item (typed unknown —
-      narrow it in a helper). Rich templates usually pair with a matching
-      cardHeight, or opt out of virtualization entirely
+      narrow it in a helper). Controls it renders are real interactive
+      content: Tab from the card reaches the button, it never starts a
+      drag, and Escape returns to the card. Rich templates usually pair
+      with a matching cardHeight, or opt out of virtualization entirely
       (virtualScrolling={false}) when heights must vary. */}
   <OgeKanban
     dataSource={deployments}
     keyExpr="id"
     columnExpr="stage"
     titleExpr="service"
-    cardHeight={96}
+    cardHeight={112}
     style={{ height: 420 }}
     renderCard={({ card }) => (
-      <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
         <strong>{card.title}</strong>
         <code style={{ fontSize: 11 }}>{field(card, 'version')}</code>
         <progress value={Number(field(card, 'health'))} max={100} style={{ width: '100%' }} />
+        <button type="button" onClick={() => setLog(\`Rollback requested: \${card.title}\`)}>
+          Roll back
+        </button>
       </div>
     )}
   />
+  <p aria-live="polite">{log}</p>
 </>`,
     }),
   },

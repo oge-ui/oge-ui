@@ -16,6 +16,7 @@ import {
   formatKanbanMessage,
   isKanbanCardShifted,
   isKanbanOverdue,
+  kanbanCardActionLabel,
   kanbanCardLabel,
   kanbanCardShortcuts,
   kanbanCellKey,
@@ -196,10 +197,20 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
               </span>
             )}
             {(view.canUpdate || view.canDelete) && (
-              <span className="oge-kanban-card-actions" aria-hidden="true">
+              <span className="oge-kanban-card-actions">
                 {view.canUpdate && (
-                  <span className="oge-kanban-card-action oge-kanban-card-action-edit">
-                    <svg viewBox="0 0 16 16" width="13" height="13">
+                  <button
+                    type="button"
+                    className="oge-kanban-card-action oge-kanban-card-action-edit"
+                    aria-label={kanbanCardActionLabel(msg.board, 'edit', card)}
+                    title={kanbanCardActionLabel(msg.board, 'edit', card)}
+                  >
+                    <svg
+                      viewBox="0 0 16 16"
+                      width="13"
+                      height="13"
+                      aria-hidden="true"
+                    >
                       <path
                         d="m11.3 2.7 2 2L6 12l-2.6.6L4 10z"
                         fill="none"
@@ -208,11 +219,25 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
                         strokeLinejoin="round"
                       />
                     </svg>
-                  </span>
+                  </button>
                 )}
                 {view.canDelete && (
-                  <span className="oge-kanban-card-action oge-kanban-card-action-delete">
-                    <svg viewBox="0 0 16 16" width="13" height="13">
+                  <button
+                    type="button"
+                    className="oge-kanban-card-action oge-kanban-card-action-delete"
+                    aria-label={kanbanCardActionLabel(
+                      msg.board,
+                      'delete',
+                      card,
+                    )}
+                    title={kanbanCardActionLabel(msg.board, 'delete', card)}
+                  >
+                    <svg
+                      viewBox="0 0 16 16"
+                      width="13"
+                      height="13"
+                      aria-hidden="true"
+                    >
                       <path
                         d="M3.5 5h9M6.5 5V3.8h3V5m-5 0 .5 7.4h6L11.5 5"
                         fill="none"
@@ -222,7 +247,7 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
                         strokeLinejoin="round"
                       />
                     </svg>
-                  </span>
+                  </button>
                 )}
               </span>
             )}
@@ -517,7 +542,7 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
                         >
                           <div
                             className="oge-kanban-cards"
-                            role="listbox"
+                            role="list"
                             aria-label={kanbanCellLabel(
                               msg.board,
                               cell.column,
@@ -531,7 +556,7 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
                             }
                           >
                             {count === 0 ? (
-                              // decorative: the listbox label already carries the zero count
+                              // decorative: the list label already carries the zero count
                               <div
                                 className="oge-kanban-cell-empty"
                                 aria-hidden="true"
@@ -607,50 +632,60 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
                                       return (
                                         <div
                                           key={String(card.key)}
-                                          className={className}
-                                          role="option"
-                                          tabIndex={
-                                            view.focusable.has(card.key)
-                                              ? 0
-                                              : -1
-                                          }
-                                          data-key={String(card.key)}
-                                          aria-selected={selected}
-                                          aria-keyshortcuts={
-                                            shortcuts ?? undefined
-                                          }
-                                          style={style}
-                                          aria-label={kanbanCardLabel(
-                                            msg.board,
-                                            card,
-                                            view.columns,
-                                          )}
-                                          onClick={(event) =>
-                                            ctl.onCardClick(card, event)
-                                          }
-                                          onDoubleClick={(event) =>
-                                            ctl.onCardDblClick(card, event)
-                                          }
-                                          onContextMenu={(event) =>
-                                            ctl.onCardContextMenu(card, event)
-                                          }
-                                          onKeyDown={(event) =>
-                                            ctl.onCardKeydown(event, card)
-                                          }
-                                          onPointerDown={(event) =>
-                                            ctl.onCardPointerDown(
-                                              event,
+                                          className="oge-kanban-card-item"
+                                          role="listitem"
+                                        >
+                                          <div
+                                            className={className}
+                                            role="group"
+                                            aria-roledescription={
+                                              msg.board.cardRoleDescription
+                                            }
+                                            tabIndex={
+                                              view.focusable.has(card.key)
+                                                ? 0
+                                                : -1
+                                            }
+                                            data-key={String(card.key)}
+                                            aria-current={
+                                              selected ? 'true' : undefined
+                                            }
+                                            aria-keyshortcuts={
+                                              shortcuts ?? undefined
+                                            }
+                                            style={style}
+                                            aria-label={kanbanCardLabel(
+                                              msg.board,
+                                              card,
+                                              view.columns,
+                                            )}
+                                            onClick={(event) =>
+                                              ctl.onCardClick(card, event)
+                                            }
+                                            onDoubleClick={(event) =>
+                                              ctl.onCardDblClick(card, event)
+                                            }
+                                            onContextMenu={(event) =>
+                                              ctl.onCardContextMenu(card, event)
+                                            }
+                                            onKeyDown={(event) =>
+                                              ctl.onCardKeydown(event, card)
+                                            }
+                                            onPointerDown={(event) =>
+                                              ctl.onCardPointerDown(
+                                                event,
+                                                card,
+                                                cell.column,
+                                                lane.key,
+                                              )
+                                            }
+                                          >
+                                            {cardBody(
                                               card,
                                               cell.column,
                                               lane.key,
-                                            )
-                                          }
-                                        >
-                                          {cardBody(
-                                            card,
-                                            cell.column,
-                                            lane.key,
-                                          )}
+                                            )}
+                                          </div>
                                         </div>
                                       );
                                     })}
@@ -696,6 +731,7 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
             transform: `translate3d(${drag.x - drag.grabX}px,${drag.y - drag.grabY}px,0)`,
           }}
           aria-hidden="true"
+          inert
         >
           <div
             className={

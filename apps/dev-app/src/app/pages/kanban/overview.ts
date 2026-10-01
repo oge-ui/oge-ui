@@ -81,9 +81,10 @@ type DemoCardRow = Record<string, unknown>;
           Escape restore, exactly one commit through the cancelable
           <code>onCardMoving</code> pipeline. A built-in edit dialog, context
           menu and toolbar (search, collapse, add) come out of the box. No
-          WAI-ARIA APG kanban pattern exists, so the widget composes the listbox
-          pattern — labeled column listboxes with roving-tabindex option cards —
-          and adds <strong>Ctrl+Arrow keyboard card moving</strong> with polite
+          WAI-ARIA APG kanban pattern exists, so the widget is a set of labeled
+          column lists with a roving focus over the cards — whose own buttons
+          and template controls stay Tab-reachable — and adds
+          <strong>Ctrl+Arrow keyboard card moving</strong> with polite
           live-region announcements, which no reference library offers.
         </p>
       } @else {
@@ -96,10 +97,11 @@ type DemoCardRow = Record<string, unknown>;
           auto-scroll, mid-drag Escape restore, exactly one commit through the
           cancelable <code>cardMoving</code> pipeline. A built-in edit dialog,
           context menu and toolbar (search, collapse, add) come out of the box.
-          No WAI-ARIA APG kanban pattern exists, so the widget composes the
-          listbox pattern — labeled column listboxes with roving-tabindex option
-          cards — and adds <strong>Ctrl+Arrow keyboard card moving</strong> with
-          polite live-region announcements, which no reference library offers.
+          No WAI-ARIA APG kanban pattern exists, so the widget is a set of
+          labeled column lists with a roving focus over the cards — whose own
+          buttons and template controls stay Tab-reachable — and adds
+          <strong>Ctrl+Arrow keyboard card moving</strong> with polite
+          live-region announcements, which no reference library offers.
         </p>
       }
       <p>
@@ -215,9 +217,9 @@ type DemoCardRow = Record<string, unknown>;
       </app-demo-card>
 
       <app-demo-card
-        [chips]="['Ctrl+Arrow', 'live region', 'listbox pattern']"
+        [chips]="['Ctrl+Arrow', 'live region', 'roving list']"
         heading="Keyboard moving &amp; a11y"
-        description="Arrows rove between cards and columns, Enter edits, Delete deletes — and <strong>Ctrl+Arrow moves the focused card</strong>, the exact keyboard twin of the drag, with a polite live-region announcement after every commit. Columns are labeled listboxes with their count and WIP in the accessible name."
+        description="Arrows rove between cards and columns, Enter edits, Delete deletes — and <strong>Ctrl+Arrow moves the focused card</strong>, the exact keyboard twin of the drag, with a polite live-region announcement after every commit. Columns are labeled lists with their count and WIP in the accessible name, one Tab stop each; Tab from a card continues into its quick-action buttons and any controls a card template renders."
         [code]="keyboardSnippet"
         language="ts"
       >
@@ -251,7 +253,7 @@ type DemoCardRow = Record<string, unknown>;
       <app-demo-card
         [chips]="['*ogeKanbanCardTemplate', 'cardHeight']"
         heading="Card template"
-        description="<code>*ogeKanbanCardTemplate</code> replaces the card body while drag, keyboard and ARIA stay on the component. Rich templates usually pair with a matching <code>cardHeight</code> — or opt out of virtualization entirely when heights must vary (documented exception)."
+        description="<code>*ogeKanbanCardTemplate</code> replaces the card body while drag, keyboard and ARIA stay on the component. Controls inside the template are real interactive content — Tab from a card reaches its <em>Roll back</em> button, which neither starts a drag nor steals the board&#39;s arrow keys (Escape returns to the card). Rich templates usually pair with a matching <code>cardHeight</code> — or opt out of virtualization entirely when heights must vary (documented exception)."
         [code]="templateSnippet"
         language="ts"
       >
@@ -260,12 +262,12 @@ type DemoCardRow = Record<string, unknown>;
           keyExpr="id"
           columnExpr="stage"
           titleExpr="service"
-          [cardHeight]="96"
+          [cardHeight]="112"
           style="height: 420px"
         >
           <ng-template ogeKanbanCardTemplate let-card>
             <div
-              style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px"
+              style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1"
             >
               <strong>{{ card.title }}</strong>
               <code style="font-size: 11px">{{
@@ -276,9 +278,19 @@ type DemoCardRow = Record<string, unknown>;
                 max="100"
                 style="width: 100%"
               ></progress>
+              <button
+                type="button"
+                class="demo-rollback"
+                (click)="rollbackLog.set('Rollback requested: ' + card.title)"
+              >
+                Roll back
+              </button>
             </div>
           </ng-template>
         </oge-kanban>
+        <p class="mt-2 text-sm text-slate-500" aria-live="polite">
+          {{ rollbackLog() }}
+        </p>
       </app-demo-card>
 
       <app-demo-card
@@ -389,6 +401,7 @@ export class KanbanOverviewPage {
   ];
 
   protected readonly dragLog = signal('drag a card');
+  protected readonly rollbackLog = signal('');
 
   protected readonly dragTasks: DemoCardRow[] = [
     { id: 1, status: 'todo', title: 'Refactor auth', rank: 0 },

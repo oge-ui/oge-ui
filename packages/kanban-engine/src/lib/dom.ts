@@ -231,6 +231,80 @@ export function focusKanbanCard(host: HTMLElement, key: string): void {
     ?.focus();
 }
 
+/**
+ * What counts as interactive content inside a card: the natively focusable
+ * elements plus anything a template made focusable with `tabindex`.
+ */
+const KANBAN_CARD_FOCUSABLE =
+  'a[href], area[href], button, input, select, textarea, summary, iframe, ' +
+  '[tabindex], [contenteditable]:not([contenteditable="false"])';
+
+/** Where a card's own roving `tabindex` is stashed while it is inactive. */
+const KANBAN_TABINDEX_STASH = 'data-oge-kanban-tabindex';
+
+/**
+ * Whether an event target is interactive content *inside* a card (a quick
+ * action, a link or control from a custom card template) rather than the
+ * card surface itself. Such targets keep their native pointer and keyboard
+ * behaviour: they never start a drag, never open the editor on double
+ * click and never feed the board's arrow-key navigation.
+ */
+export function isKanbanCardContentTarget(
+  target: EventTarget | null,
+  card: Element,
+): boolean {
+  const el = target as Element | null;
+  if (el === null || typeof el.closest !== 'function' || el === card) {
+    return false;
+  }
+  if (!card.contains(el)) return false;
+  const hit = el.closest(KANBAN_CARD_FOCUSABLE);
+  return hit !== null && hit !== card && card.contains(hit);
+}
+
+/**
+ * Keeps the Tab sequence at one stop per column: the interactive content of
+ * a card is tabbable only while that card is its cell's roving stop
+ * (`tabindex="0"`); inside every other card it is parked at `-1`, with the
+ * original value stashed and restored when the card becomes the stop.
+ * Run after every render — it is idempotent and touches only what changed.
+ */
+export function syncKanbanCardTabStops(host: HTMLElement): void {
+  const cards = host.querySelectorAll<HTMLElement>(
+    '.oge-kanban-cards .oge-kanban-card[data-key]',
+  );
+  for (const card of Array.from(cards)) {
+    const active = card.getAttribute('tabindex') === '0';
+    const content = card.querySelectorAll<HTMLElement>(KANBAN_CARD_FOCUSABLE);
+    for (const el of Array.from(content)) {
+      const stashed = el.getAttribute(KANBAN_TABINDEX_STASH);
+      if (active) {
+        if (stashed === null) continue;
+        if (stashed === '') el.removeAttribute('tabindex');
+        else el.setAttribute('tabindex', stashed);
+        el.removeAttribute(KANBAN_TABINDEX_STASH);
+      } else if (stashed === null) {
+        el.setAttribute(
+          KANBAN_TABINDEX_STASH,
+          el.getAttribute('tabindex') ?? '',
+        );
+        el.setAttribute('tabindex', '-1');
+      }
+    }
+  }
+}
+
+/**
+ * Focuses the card that owns `from` — Escape from a card's interactive
+ * content returns to the card, where the board's keys apply again.
+ */
+export function focusOwningKanbanCard(from: Element): boolean {
+  const card = from.closest<HTMLElement>('.oge-kanban-card[data-key]');
+  if (card === null) return false;
+  card.focus();
+  return true;
+}
+
 /** Writes a cell's scrollTop (keyboard scroll-into-view of a virtual card). */
 export function scrollKanbanCell(
   host: HTMLElement,
