@@ -72,3 +72,29 @@ future third render layer (Vue, web components) reuses the same packages.
 lockstep with the suite like every other package); a React user of a
 commercial family installs two packages (the render package pulls the engine
 in as a dependency, so it is one `npm install`).
+
+## Addendum (2026-10-01): how the commercial licence is enforced
+
+The 1.1 gap review asked whether the commercial packages should check a
+licence key, show a console notice or watermark unlicensed use, as Kendo UI
+and MUI X do. **Decision: no runtime check of any kind** — no key, no notice,
+no watermark, no network call. This restates the original open-core decision
+rather than changing it.
+
+- **Why:** the packages are source-available on public npm, so any check is
+  a few lines away from being patched out; it would cost honest customers
+  (CSP and offline builds, noisy consoles, failed builds when a key expires)
+  without stopping anyone else. A runtime check would also be the one place
+  where the MIT and commercial builds behave differently, which the parity
+  rules exist to prevent.
+- **How it is enforced instead:** an honour system backed by the licence
+  text. The `LICENSE` in every commercial package states that production use
+  requires a paid licence (section 2), and the README licensing section and
+  the `/license` page say the same. Compliance is a contractual matter
+  between the licensor and the licensee, not a property of the code. Any
+  future audit or seat terms belong in that `LICENSE` text, not in a runtime
+  check.
+- **Revisit when:** a measurable share of revenue is lost to unlicensed
+  production use. The cheapest step then is a non-blocking
+  `provideOgeLicense(key)` that only logs once in development builds — still
+  no watermark and nothing in production bundles.

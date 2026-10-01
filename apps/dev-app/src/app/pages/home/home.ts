@@ -836,6 +836,14 @@ const ORG: OrgNode[] = [
               </li>
               <li>
                 <a
+                  href="https://github.com/oge-ui/oge-ui/blob/main/PRIVACY.md"
+                  target="_blank"
+                  rel="noopener"
+                  >Privacy</a
+                >
+              </li>
+              <li>
+                <a
                   href="https://github.com/sponsors/kaya2m"
                   target="_blank"
                   rel="noopener"

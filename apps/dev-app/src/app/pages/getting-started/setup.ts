@@ -34,6 +34,7 @@ const SECTIONS_REACT = [
   'Requirements',
   'Install the packages',
   'Import the stylesheet',
+  'Optional dependencies',
   'Application providers',
   'Verify the setup',
 ] as const;
@@ -73,8 +74,8 @@ const SECTIONS_REACT = [
         </li>
       } @else {
         <li>
-          <strong>Angular 22 or newer</strong> — components use signal inputs,
-          the new control flow and Signal Forms interop.
+          <strong>Angular 22 or 23</strong> — components use signal inputs, the
+          new control flow and Signal Forms interop.
         </li>
         <li>
           <strong>Node.js 22.22+</strong> — the minimum the Angular CLI itself
@@ -91,13 +92,11 @@ const SECTIONS_REACT = [
     @if (fw.isReact()) {
       <p>
         The React layer is published one package per family, prefixed
-        <code>react-</code>, and is heading for full component and feature
-        parity with the Angular suite. The shared engines (<code
-          >&#64;oge-ui/behavior</code
-        >
-        for interaction and accessibility, <code>&#64;oge-ui/core</code> for
-        data processing) are declared as dependencies and install automatically
-        — they are the same packages the Angular components use.
+        <code>react-</code>, with full component and feature parity with the
+        Angular suite. The shared engines (<code>&#64;oge-ui/behavior</code> for
+        interaction and accessibility, <code>&#64;oge-ui/core</code> for data
+        processing) are declared as dependencies and install automatically —
+        they are the same packages the Angular components use.
       </p>
     } @else {
       <p>
@@ -159,28 +158,35 @@ const SECTIONS_REACT = [
       </p>
     }
 
-    @if (!fw.isReact()) {
-      <h2 id="optional-dependencies" class="scroll-mt-20">
-        Optional dependencies
-      </h2>
-      <p>
-        Export features live in secondary entry points so their libraries stay
-        out of your bundle until you use them. Install the peer only when you
-        import the matching entry:
-      </p>
-      <app-code-block [code]="optional" language="bash" />
-      <ul>
-        <li>
-          <code>&#64;oge-ui/grid/export-excel</code> and
-          <code>&#64;oge-ui/tree-list/export-excel</code> require
-          <code>exceljs</code>.
-        </li>
-        <li>
-          <code>&#64;oge-ui/grid/export-pdf</code> requires <code>jspdf</code>.
-        </li>
-        <li>CSV export is built in — no extra dependency.</li>
-      </ul>
-    }
+    <h2 id="optional-dependencies" class="scroll-mt-20">
+      Optional dependencies
+    </h2>
+    <p>
+      Export features live in secondary entry points so their libraries stay out
+      of your bundle until you use them. Install the peer only when you import
+      the matching entry:
+    </p>
+    <app-code-block [code]="optional" language="bash" />
+    <ul>
+      <li>
+        <code>&#64;oge-ui/{{ pfx() }}grid/export-excel</code>,
+        <code>&#64;oge-ui/{{ pfx() }}tree-list/export-excel</code>,
+        <code>&#64;oge-ui/{{ pfx() }}pivot/export-excel</code> and
+        <code>&#64;oge-ui/{{ pfx() }}gantt/export-excel</code> require
+        <code>exceljs</code>.
+      </li>
+      <li>
+        <code>&#64;oge-ui/{{ pfx() }}grid/export-pdf</code> requires
+        <code>jspdf</code> and <code>jspdf-autotable</code>;
+        <code>&#64;oge-ui/{{ pfx() }}gantt/export-pdf</code> requires
+        <code>jspdf</code>.
+      </li>
+      <li>
+        CSV export and the Gantt PNG export (<code
+          >&#64;oge-ui/{{ pfx() }}gantt/export-image</code
+        >) are built in — no extra dependency.
+      </li>
+    </ul>
 
     <h2 id="application-providers" class="scroll-mt-20">
       Application providers
@@ -234,10 +240,12 @@ const SECTIONS_REACT = [
 export class GettingStartedSetupPage {
   protected readonly fw = inject(FrameworkService);
 
+  /** `react-` on the React layer — the export entry names are otherwise identical. */
+  protected readonly pfx = computed(() => (this.fw.isReact() ? 'react-' : ''));
+
   /**
-   * The section list follows the framework: React has no `ng add` schematic and
-   * no secondary export entries yet, but it does have a stylesheet import the
-   * Angular layer does not need.
+   * The section list follows the framework: React has no `ng add` schematic,
+   * but it does have a stylesheet import the Angular layer does not need.
    */
   protected readonly sections = computed(() =>
     this.fw.isReact() ? SECTIONS_REACT : SECTIONS,

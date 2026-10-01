@@ -19,11 +19,11 @@ ng add @oge-ui/grid --theme=dark
 # without touching AGENTS.md
 ng add @oge-ui/inputs --skip-agents-file`;
 
-export const OPTIONAL = `# Excel export (grid + tree list secondary entries)
+export const OPTIONAL = `# Excel export (grid, tree list, pivot, gantt export-excel entries)
 npm install exceljs
 
-# PDF export (grid secondary entry)
-npm install jspdf`;
+# PDF export (grid export-pdf needs both; gantt export-pdf only jspdf)
+npm install jspdf jspdf-autotable`;
 
 export const PROVIDERS = `import { ApplicationConfig } from '@angular/core';
 import { provideOgeGridConfig } from '@oge-ui/grid';

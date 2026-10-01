@@ -233,3 +233,18 @@ Both halves already exist as machine-readable inputs:
 **Explicitly not decided here.** Vanilla-JS/custom-element packaging. Once the
 behaviour layer exists it is close to free, but it is a third priority and gets
 its own ADR.
+
+## Addendum (2026-10-01): third render layer and design kit — not in 1.2
+
+React reached parity in 1.1.1, so the next question is a third layer. **Web
+Components** (custom elements over `@oge-ui/behavior` and the engines) are the
+cheapest third target: one layer serves Vue, Svelte, plain JavaScript and
+server-rendered sites, and the behavior/engine split already holds every
+framework-free piece. **Vue** as a native layer comes after that, only if
+demand shows up that the custom elements cannot meet.
+
+Neither is in the 1.2 scope. 1.2 closes the professional gaps of the two
+existing layers first (accessibility, touch, i18n, SSR proof, release
+hygiene); a third layer built on top of those gaps would copy them. A **Figma
+design kit** is deferred for the same reason: it follows the DTCG token export
+that 1.2 introduces, so the kit and the code read one token source.

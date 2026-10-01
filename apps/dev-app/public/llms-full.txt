@@ -475,11 +475,11 @@ ng add @oge-ui/inputs --skip-agents-file
 ### Setup — Optional
 
 ```ts
-# Excel export (grid + tree list secondary entries)
+# Excel export (grid, tree list, pivot, gantt export-excel entries)
 npm install exceljs
 
-# PDF export (grid secondary entry)
-npm install jspdf
+# PDF export (grid export-pdf needs both; gantt export-pdf only jspdf)
+npm install jspdf jspdf-autotable
 ```
 
 ### Setup — Providers

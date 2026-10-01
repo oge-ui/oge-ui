@@ -17,7 +17,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@angular/core": "^22.0.0"
+    "@angular/core": ">=22.0.0 <24.0.0"
   },
   "dependencies": {
     "@oge-ui/behavior": "1.1.1",

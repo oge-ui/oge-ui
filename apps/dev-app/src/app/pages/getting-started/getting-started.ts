@@ -73,12 +73,11 @@ interface ComponentCard {
       </div>
       <p class="!mb-0 mt-4 text-[13px] text-gray-400 dark:text-gray-500">
         @if (fw.isReact()) {
-          Requires React 18 or 19. The React layer is heading for full component
-          and feature parity with the Angular suite and rolls out family by
-          family — the switch in the header greys out where a family has no
-          React package yet.
+          Requires React 18 or 19. The React layer matches the Angular suite
+          component for component and feature for feature, on the same engines
+          and stylesheets.
         } @else {
-          Requires Angular 22+.
+          Requires Angular 22 or 23.
         }
       </p>
     </div>

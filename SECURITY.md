@@ -2,8 +2,14 @@
 
 ## Supported versions
 
-Security fixes land on the latest minor release of the `0.x` line. Older
-versions do not receive patches — upgrade to the latest release.
+| Version | Status                                                        |
+| ------- | ------------------------------------------------------------- |
+| 1.x     | Supported — fixes land on the latest 1.x minor                |
+| 0.13.x  | Security fixes only, until **2027-04-01**; then end of life   |
+| < 0.13  | End of life — upgrade (migration notes are in `CHANGELOG.md`) |
+
+Fixes are released as a patch of the latest minor; we do not back-port to
+older minors of the same major.
 
 ## Reporting a vulnerability
 
@@ -14,9 +20,18 @@ Please **do not open a public issue** for security problems.
 - use GitHub's private reporting: **Security → Report a vulnerability** on
   the [oge-ui/oge-ui](https://github.com/oge-ui/oge-ui) repository.
 
-This is a small project; you will normally hear back within a few days. We
-ask for a reasonable window (up to 90 days) to ship a fix before public
-disclosure; credit is given in the release notes unless you prefer
+What happens next:
+
+1. **Acknowledgement within 3 working days**, with a tracking reference.
+2. **Triage within 10 working days**: we confirm (or explain why not), rate
+   it with CVSS 4.0 and open a private GitHub Security Advisory (GHSA), to
+   which you are invited as a collaborator.
+3. **Fix target**: critical/high within 30 days, moderate/low within 90.
+   The fix ships as a patch release; the GHSA is published with a CVE
+   requested through GitHub at the same time, and the release notes link it.
+
+We ask for a reasonable window (up to 90 days) before public disclosure;
+credit is given in the advisory and the release notes unless you prefer
 otherwise.
 
 ## How the suite handles untrusted data
