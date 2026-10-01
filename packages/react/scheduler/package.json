@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-scheduler",
-  "version": "0.13.1",
+  "version": "1.1.1",
   "description": "React scheduler / event calendar from the OGE UI suite: day, work-week, week, month, agenda, timeline and year views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, drag-to-create, recurrence with occurrence-vs-series editing, resource grouping, reminders, an anchored appointment popup and a form editor — running the same framework-free scheduler engine and the same stylesheet as the Angular @oge-ui/scheduler. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "react",
@@ -37,12 +37,12 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "0.13.1",
-    "@oge-ui/core": "0.13.1",
-    "@oge-ui/react-forms": "0.13.1",
-    "@oge-ui/react-inputs": "0.13.1",
-    "@oge-ui/react-overlay": "0.13.1",
-    "@oge-ui/scheduler-engine": "0.13.1"
+    "@oge-ui/behavior": "1.1.1",
+    "@oge-ui/core": "1.1.1",
+    "@oge-ui/react-forms": "1.1.1",
+    "@oge-ui/react-inputs": "1.1.1",
+    "@oge-ui/react-overlay": "1.1.1",
+    "@oge-ui/scheduler-engine": "1.1.1"
   },
   "homepage": "https://ogeui.com",
   "repository": {

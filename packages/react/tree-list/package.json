@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-tree-list",
-  "version": "0.13.1",
+  "version": "1.1.1",
   "description": "React tree list (hierarchical data grid) from the OGE UI suite: flat parentId or nested data, lazy per-expansion child loading with remote match discovery, ancestor-preserving filtering (filter row, header filter, search, filter builder), sibling-scoped sorting, recursive tri-state selection, paging over the visible rows, row and column virtualization, editing in all five modes, drag and drop reparenting, treegrid keyboard navigation, keyboard context menus, pinned/resizable/reorderable columns and bands, state persistence and CSV/Excel export — running the same framework-free tree engine, the same grid state slices and the same stylesheet as the Angular tree-list package.",
   "keywords": [
     "react",
@@ -42,13 +42,13 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "0.13.1",
-    "@oge-ui/core": "0.13.1",
-    "@oge-ui/react-forms": "0.13.1",
-    "@oge-ui/react-grid": "0.13.1",
-    "@oge-ui/react-inputs": "0.13.1",
-    "@oge-ui/react-layout": "0.13.1",
-    "@oge-ui/react-overlay": "0.13.1"
+    "@oge-ui/behavior": "1.1.1",
+    "@oge-ui/core": "1.1.1",
+    "@oge-ui/react-forms": "1.1.1",
+    "@oge-ui/react-grid": "1.1.1",
+    "@oge-ui/react-inputs": "1.1.1",
+    "@oge-ui/react-layout": "1.1.1",
+    "@oge-ui/react-overlay": "1.1.1"
   },
   "homepage": "https://ogeui.com",
   "repository": {

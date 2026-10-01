@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/pivot",
-  "version": "0.13.1",
+  "version": "1.1.1",
   "description": "Angular pivot grid for interactive data analysis: field panel, drill-down, virtualized axes, remote data and Excel export. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "angular",
@@ -20,10 +20,10 @@
     "@angular/core": "^22.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "0.13.1",
-    "@oge-ui/core": "0.13.1",
-    "@oge-ui/grid": "0.13.1",
-    "@oge-ui/pivot-engine": "0.13.1"
+    "@oge-ui/behavior": "1.1.1",
+    "@oge-ui/core": "1.1.1",
+    "@oge-ui/grid": "1.1.1",
+    "@oge-ui/pivot-engine": "1.1.1"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

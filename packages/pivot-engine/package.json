@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/pivot-engine",
-  "version": "0.13.1",
+  "version": "1.1.1",
   "description": "Framework-free pivot grid engine behind @oge-ui/pivot (Angular) and @oge-ui/react-pivot (React): field layout model, axis and header layout math, two-axis virtualization windows, the remote-store adapter, header and measure menus, value filters, the field chooser, keyboard navigation, persistence snapshots, the message catalog and the Excel workbook builder. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "pivot",
@@ -20,8 +20,8 @@
   "types": "./index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "@oge-ui/behavior": "0.13.1",
-    "@oge-ui/core": "0.13.1"
+    "@oge-ui/behavior": "1.1.1",
+    "@oge-ui/core": "1.1.1"
   },
   "exports": {
     ".": {
