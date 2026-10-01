@@ -3,6 +3,7 @@
 import {
   forwardRef,
   useEffect,
+  useId,
   useImperativeHandle,
   useRef,
   useState,
@@ -32,8 +33,6 @@ import {
   type OgeDrawerPosition,
 } from '@oge-ui/behavior';
 import { useOgeDrawerConfig } from './navigation-config';
-
-let nextDrawerId = 0;
 
 /** `number` → px, everything else verbatim. */
 function toCssSize(value: number | string | undefined): string | undefined {
@@ -206,9 +205,7 @@ export const OgeDrawer = forwardRef<OgeDrawerHandle, OgeDrawerProps>(
     const hostRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
 
-    const drawerIdRef = useRef<string>(undefined);
-    drawerIdRef.current ??= `oge-drawer-${nextDrawerId++}`;
-    const drawerId = drawerIdRef.current;
+    const drawerId = `oge-drawer-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
     // --- opened (controlled/uncontrolled) -----------------------------------
 

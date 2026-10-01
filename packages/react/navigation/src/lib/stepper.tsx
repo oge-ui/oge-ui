@@ -3,6 +3,7 @@
 import {
   forwardRef,
   useEffect,
+  useId,
   useImperativeHandle,
   useRef,
   useState,
@@ -30,8 +31,6 @@ import {
   type OgeStepperOrientation,
 } from '@oge-ui/behavior';
 import { useOgeStepperConfig } from './navigation-config';
-
-let nextStepperId = 0;
 
 // --- render-prop contexts ---------------------------------------------------
 
@@ -207,9 +206,7 @@ export const OgeStepper = forwardRef<OgeStepperHandle, OgeStepperProps>(
     const display = props.display ?? config.display ?? 'full';
     const linear = props.linear ?? config.linear ?? false;
 
-    const stepperIdRef = useRef<string>(undefined);
-    stepperIdRef.current ??= `oge-stepper-${nextStepperId++}`;
-    const stepperId = stepperIdRef.current;
+    const stepperId = `oge-stepper-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
     const listRef = useRef<HTMLOListElement>(null);
     const headerEls = useRef(new Map<string, HTMLButtonElement>());

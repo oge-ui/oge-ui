@@ -274,8 +274,6 @@ const DEFAULT_ICONS: Record<OgeUploadIconSlot, ReactNode> = {
   success: null,
 };
 
-let uidCounter = 0;
-
 /**
  * File uploader: a drop zone, a real file input, a list of what was chosen,
  * and the transfers that follow — the React render of the Angular
@@ -334,10 +332,7 @@ export const OgeFileUploader = forwardRef<
     [config.messages, props.messages],
   );
 
-  const reactId = useId();
-  const baseIdRef = useRef<string>(undefined);
-  baseIdRef.current ??= `oge-upload-${reactId.replace(/:/g, '')}-${(uidCounter += 1)}`;
-  const baseId = baseIdRef.current;
+  const baseId = `oge-upload-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
   const hostRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

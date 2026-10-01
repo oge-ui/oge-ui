@@ -155,7 +155,8 @@ describe('<OgeDrawer> — modality is derived from mode', () => {
     const { handle } = mount();
     // closed, but still in the DOM — this is why aria-controls stays valid
     expect(panel().id).toBe(handle().drawerId);
-    expect(panel().id).toMatch(/^oge-drawer-\d+$/);
+    // useId()-derived (SSR-safe), stripped to selector-safe characters
+    expect(panel().id).toMatch(/^oge-drawer-[a-zA-Z0-9_-]+$/);
   });
 
   it('marks a closed panel inert and aria-hidden', () => {

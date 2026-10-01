@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import {
   applyTabOrder,
   canSelectTab,
@@ -31,8 +31,8 @@ export function useOgeTabs(props: OgeTabsSharedProps) {
   const config = useOgeTabsConfig();
   const messages: OgeTabsMessages = { ...config.messages, ...props.messages };
 
-  const reactId = useRef<string>(undefined);
-  reactId.current ??= `oge-tabs-${Math.trunc(performance.now() * 1000) % 1e9}`;
+  // useId(): stable across server render and hydration, unique per instance.
+  const tabsId = `oge-tabs-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
   // --- descriptors ---------------------------------------------------------
 
@@ -238,7 +238,7 @@ export function useOgeTabs(props: OgeTabsSharedProps) {
   };
 
   return {
-    id: reactId.current,
+    id: tabsId,
     messages,
     descriptors,
     selectedIndex,
