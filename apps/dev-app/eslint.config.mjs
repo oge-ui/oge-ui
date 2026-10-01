@@ -26,4 +26,10 @@ export default [
       ],
     },
   },
+  {
+    // The demos show consumer code, where a literal aria-label is exactly
+    // right; the library-only literal-label guard does not apply here.
+    files: ['**/*.html', '**/*.tsx'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
 ];
