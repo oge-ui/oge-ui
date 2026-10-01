@@ -46,6 +46,7 @@ import {
   type SummaryDescriptor,
   type SummaryRowNode,
   type SummaryType,
+  sanitizeGridStateSnapshot,
 } from '@oge-ui/core';
 import {
   allRowsSelected,
@@ -1027,6 +1028,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       prefix: 'oge-grid',
       storage: this.stateStorage,
       snapshot: this.persistedSnapshot,
+      sanitize: sanitizeGridStateSnapshot,
       // a bound [groupBy] is controlled: the page decides the grouping, so a
       // stored grouping from an earlier visit must not replace it
       apply: (snapshot) =>
@@ -1127,9 +1129,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Applies a previously captured state snapshot (see `state()` / `stateChange`). */
   applyState(snapshot: GridStateSnapshot): void {
+    // public API fed from storage, URLs or the host: validate the shape first
+    const safe = sanitizeGridStateSnapshot(snapshot);
+    if (safe === null) return;
     untracked(() => {
-      this.store.applySnapshot(snapshot);
-      const hidden = new Set(snapshot.columns?.hidden ?? []);
+      this.store.applySnapshot(safe);
+      const hidden = new Set(safe.columns?.hidden ?? []);
       for (const column of this.declaredColumns()) {
         const field = column.field();
         if (field) column.visible.set(!hidden.has(field));

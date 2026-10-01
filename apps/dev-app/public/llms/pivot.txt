@@ -130,7 +130,7 @@ Predictable wrong guesses, and what to write instead.
 | `expandAll(area: 'row' \| 'column') / collapseAll(area)` | `void` | Axis-wide expansion; remote mode expands only what is loaded. |
 | `getFieldLayout(): readonly PivotFieldConfig[]` | `readonly PivotFieldConfig[]` | Declared fields merged with user overrides. |
 | `showFieldChooser(): void` | `void` | Opens the field-chooser dialog. |
-| `state() / applyState(snapshot)` | `PivotGridStateSnapshot / void` | Field layout + expansion snapshot. |
+| `state() / applyState(snapshot)` | `PivotGridStateSnapshot / void` | Field layout + expansion snapshot. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `getCsv(options?) / exportCsv(filename?)` | `string / void` | CSV of exactly what is on screen (multi-level headers flattened).Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 
 #### Events

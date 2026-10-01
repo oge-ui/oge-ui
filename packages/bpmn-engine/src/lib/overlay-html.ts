@@ -10,9 +10,13 @@
  * sanitizer applies: no `<script>`/`<style>`/`<iframe>`/SVG, no `on*`
  * handlers, no inline `style`. URL attributes are kept for the render layer
  * to pass through its URL sanitizer (`@oge-ui/behavior`'s `sanitizeUrl` /
- * `sanitizeResourceUrl` in React). The render layer then builds real
- * elements from the tree — text stays text.
+ * `sanitizeResourceUrl` in React). An `<a>` that keeps `target` always gets
+ * `rel="noopener noreferrer"`, so a new tab cannot reach back through
+ * `window.opener`; `role` is not kept, so badge markup cannot re-label itself
+ * as a control. The render layer then builds real elements from the tree —
+ * text stays text.
  */
+import { bpmnParserInput } from './trusted-types';
 
 /** A text run of sanitized overlay markup. */
 export interface BpmnOverlayTextNode {
@@ -80,7 +84,6 @@ const DROPPED_SUBTREES = new Set([
 const ALLOWED_ATTRIBUTES = new Set([
   'class',
   'title',
-  'role',
   'dir',
   'lang',
   'alt',
@@ -100,6 +103,22 @@ export const BPMN_OVERLAY_URL_ATTRIBUTES: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * The `rel` an overlay link with a `target` must carry: the host's own tokens
+ * plus `noopener` and `noreferrer`. Shared with the Angular layer, whose
+ * sanitizing `[innerHTML]` keeps `target` but does not add `rel`.
+ */
+export function bpmnOverlayLinkRel(rel: string | null | undefined): string {
+  const tokens = (rel ?? '')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((token) => token !== '' && token !== 'opener');
+  for (const required of ['noopener', 'noreferrer']) {
+    if (!tokens.includes(required)) tokens.push(required);
+  }
+  return tokens.join(' ');
+}
+
+/**
  * Parses overlay markup into a sanitized node tree. Returns an empty list
  * where no `DOMParser` exists (server rendering) — the overlay then renders
  * empty on the server and fills in on the client.
@@ -108,8 +127,10 @@ export function sanitizeBpmnOverlayHtml(html: string): BpmnOverlayNode[] {
   if (typeof DOMParser === 'undefined') {
     return [];
   }
+  // Trusted Types: the parsed document is inert and re-sanitised below, so
+  // the `oge-ui#bpmn` policy passes the markup through unchanged
   const doc = new DOMParser().parseFromString(
-    `<!doctype html><body>${html}</body>`,
+    bpmnParserInput(`<!doctype html><body>${html}</body>`),
     'text/html',
   );
   return walkChildren(doc.body);
@@ -148,6 +169,9 @@ function walkChildren(parent: Node): BpmnOverlayNode[] {
       ) {
         attributes[name] = attr.value;
       }
+    }
+    if (tag === 'a' && attributes['target'] !== undefined) {
+      attributes['rel'] = bpmnOverlayLinkRel(attributes['rel']);
     }
     out.push({
       kind: 'element',

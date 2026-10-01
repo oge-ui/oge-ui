@@ -505,6 +505,22 @@ describe('OgeBpmnEditor — v0.5 tools pack', () => {
     expect(handle).toContain('overlay-');
   });
 
+  it('hardens overlay links (rel) and drops role, like the React tree', async () => {
+    const { fixture, editor, canvas } = await render();
+    const id = await place(fixture, canvas, 'Task', 400, 300);
+    editor.addOverlay({
+      elementId: id,
+      html: '<a href="https://ogeui.com" target="_blank" rel="opener">d</a><span role="button">x</span>',
+      position: 'top-left',
+    });
+    await settle(fixture);
+    const badge = el(fixture).querySelector('.oge-bpmn-overlay') as HTMLElement;
+    expect(badge.querySelector('a')?.getAttribute('rel')).toBe(
+      'noopener noreferrer',
+    );
+    expect(badge.querySelector('[role]')).toBeNull();
+  });
+
   // ------------------------------------------------------- align & distribute
 
   it('aligns and distributes a multi-selection via the pad flyout', async () => {

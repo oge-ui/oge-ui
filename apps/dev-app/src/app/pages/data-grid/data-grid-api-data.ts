@@ -489,7 +489,8 @@ export const OGE_GRID_API: ApiSections = {
         {
           name: 'state(): GridStateSnapshot / applyState(snapshot)',
           type: 'GridStateSnapshot / void',
-          description: 'Captures / applies the persistable UI state.',
+          description:
+            'Captures / applies the persistable UI state. <code>applyState</code> validates the snapshot first (<code>sanitize*StateSnapshot</code>): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown.',
         },
         {
           name: 'clearFilters() / clearSorting()',
@@ -507,7 +508,7 @@ export const OGE_GRID_API: ApiSections = {
           name: 'getCsv(options?): Promise&lt;string&gt;',
           type: 'Promise&lt;string&gt;',
           description:
-            'CSV of the current view. Cells a spreadsheet would evaluate as a formula (<code>=</code>, <code>+</code>, <code>-</code>, <code>@</code> or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a <code>-5</code> column stays numeric. Pass <code>formulaGuard: false</code> when the output is machine-read rather than opened in a spreadsheet.',
+            'CSV of the current view. Cells a spreadsheet would evaluate as a formula (first non-whitespace character <code>=</code>, <code>+</code>, <code>-</code>, <code>@</code> or a full-width <code>＝ ＋ － ＠</code>, or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a <code>-5</code> column stays numeric. Pass <code>formulaGuard: false</code> when the output is machine-read rather than opened in a spreadsheet.',
         },
         {
           name: "exportCsv(filename = 'grid.csv', options?): Promise&lt;void&gt;",

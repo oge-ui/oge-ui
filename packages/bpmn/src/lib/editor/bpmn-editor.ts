@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   ViewEncapsulation,
+  afterRenderEffect,
   computed,
   effect,
   inject,
@@ -17,6 +18,7 @@ import {
 import {
   OGE_DEFAULT_BPMN_PALETTE_ITEMS,
   OgeBpmnEditorCore,
+  bpmnOverlayLinkRel,
   type BpmnDiagramJson,
   type BpmnImportResult,
   type BpmnPaletteItemType,
@@ -1498,6 +1500,23 @@ export class OgeBpmnEditor {
       if (untracked(this.zoom) !== v.zoom) {
         this.zoom.set(v.zoom);
       }
+    });
+    // Overlay badges: Angular's sanitizing [innerHTML] keeps `target` and
+    // `role`; apply the same two rules the engine's React tree applies — a
+    // targeted link always carries rel="noopener noreferrer", and badge
+    // markup cannot re-label itself with a role.
+    afterRenderEffect(() => {
+      this.core.overlayViews();
+      const host = this.hostRef.nativeElement;
+      host
+        .querySelectorAll<HTMLAnchorElement>('.oge-bpmn-overlay a[target]')
+        .forEach((link) => {
+          const rel = bpmnOverlayLinkRel(link.getAttribute('rel'));
+          if (link.getAttribute('rel') !== rel) link.setAttribute('rel', rel);
+        });
+      host
+        .querySelectorAll('.oge-bpmn-overlay [role]')
+        .forEach((element) => element.removeAttribute('role'));
     });
   }
 

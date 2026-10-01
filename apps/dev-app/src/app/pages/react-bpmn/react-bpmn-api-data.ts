@@ -37,7 +37,7 @@ function patchGroups(
 }
 
 const OVERLAY_SANITIZER =
-  'rendered without <code>dangerouslySetInnerHTML</code>: the engine parses it into an allow-listed node tree (the policy Angular&#39;s sanitizing <code>[innerHTML]</code> applies — no scripts, no <code>on*</code> handlers, no inline styles) and <code>href</code>/<code>src</code> go through <code>sanitizeUrl</code> / <code>sanitizeResourceUrl</code>';
+  'rendered without <code>dangerouslySetInnerHTML</code>: the engine parses it into an allow-listed node tree (the policy Angular&#39;s sanitizing <code>[innerHTML]</code> applies — no scripts, no <code>on*</code> handlers, no inline styles) and <code>href</code>/<code>src</code> go through <code>sanitizeUrl</code> / <code>sanitizeResourceUrl</code>; a link that keeps <code>target</code> always gets <code>rel="noopener noreferrer"</code> and <code>role</code> is dropped';
 
 export const OGE_REACT_BPMN_API: ApiSections = {
   properties: [

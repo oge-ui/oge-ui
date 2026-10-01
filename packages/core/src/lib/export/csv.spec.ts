@@ -58,6 +58,22 @@ describe('CSV formula injection guard', () => {
     expect(guardCsvFormula('\r=1+1')).toBe("'\r=1+1");
   });
 
+  it('guards on the first non-whitespace character', () => {
+    expect(guardCsvFormula('  =cmd')).toBe("'  =cmd");
+    expect(guardCsvFormula('\n@SUM(A1)')).toBe("'\n@SUM(A1)");
+    expect(guardCsvFormula('\u00A0+1+1')).toBe("'\u00A0+1+1");
+    expect(guardCsvFormula('\u3000-1+1')).toBe("'\u3000-1+1");
+    expect(guardCsvFormula('  plain text')).toBe('  plain text');
+  });
+
+  it('guards the full-width formula leads', () => {
+    for (const lead of ['\uFF1D', '\uFF0B', '\uFF0D', '\uFF20']) {
+      expect(guardCsvFormula(`${lead}cmd`)).toBe(`'${lead}cmd`);
+      expect(guardCsvFormula(` ${lead}1`)).toBe(`' ${lead}1`);
+    }
+    expect(cell('\uFF1DHYPERLINK("x")')).toBe('"\'\uFF1DHYPERLINK(""x"")"');
+  });
+
   it('leaves numbers and ordinary text alone', () => {
     for (const value of ['-5', '+3.14', '-.5', '1e9', 'Ankara', '', 'a=b']) {
       expect(guardCsvFormula(value)).toBe(value);

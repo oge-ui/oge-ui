@@ -1,3 +1,5 @@
+import { parseStateJson } from '@oge-ui/core';
+
 /**
  * Pluggable persistence backend for `stateKey` (default: localStorage).
  *
@@ -17,6 +19,12 @@ export interface OgeGridStatePersistenceOptions<S> {
   snapshot: () => S;
   /** The stateKey in force right now — guards a stale async restore. */
   stateKey: () => string | undefined;
+  /**
+   * Shape validator for the parsed JSON (e.g. `sanitizeGridStateSnapshot`).
+   * `null` skips the restore. Without one, any JSON object is applied as-is
+   * (prototype keys are always rejected before this runs).
+   */
+  sanitize?: (value: unknown) => S | null;
   apply(snapshot: S): void;
   /** Debounced change notification; the initial snapshot does not fire it. */
   onChange?: (snapshot: S) => void;
@@ -55,8 +63,16 @@ export class OgeGridStatePersistenceCore<S> {
     const raw = this.options.storage.get(`${this.options.prefix}:${key}`);
     const apply = (text: string | null): void => {
       if (!text) return;
+      // untrusted storage: invalid JSON, prototype keys or a wrong shape are
+      // ignored — never thrown, never merged into component state
+      const parsed = parseStateJson(text);
+      if (parsed === null || typeof parsed !== 'object') return;
+      const snapshot = this.options.sanitize
+        ? this.options.sanitize(parsed)
+        : (parsed as S);
+      if (snapshot === null) return;
       try {
-        this.options.apply(JSON.parse(text) as S);
+        this.options.apply(snapshot);
         // restored state becomes the new baseline — no save/onChange echo,
         // while the next real user change still reports against it
         this.lastJson = JSON.stringify(this.options.snapshot());

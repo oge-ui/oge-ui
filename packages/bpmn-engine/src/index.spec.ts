@@ -19,6 +19,8 @@ describe('@oge-ui/bpmn-engine barrel', () => {
     'buildBpmnPropertiesModel',
     'bpmnFieldKey',
     'sanitizeBpmnOverlayHtml',
+    'bpmnOverlayLinkRel',
+    'OGE_BPMN_TRUSTED_TYPES_POLICY',
     'readBpmnXml',
     'writeBpmnXml',
     'toBpmnJson',
