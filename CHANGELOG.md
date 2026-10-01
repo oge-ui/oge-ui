@@ -13,6 +13,14 @@ design notes. Every item below removes one of those workarounds.
 
 ### Added (React)
 
+- **Every data-grid docs page now has a React view.** The last six —
+  playground, sorting & paging, virtual scroll (rows, 200 virtualized columns,
+  measured row heights), infinite & remote virtual scroll over 1M rows,
+  remote data (`CustomDataSource` with its request log, `CursorDataSource`
+  under infinite scrolling) and live updates (`DataSource.changes` +
+  `highlightChanges`, `renderCell`) — branch to `@oge-ui/react-grid` on the
+  same routes, section for section, so the family's coverage is `'*'` and no
+  grid page shows the React coverage notice any more.
 - **`@oge-ui/react-scheduler` + `@oge-ui/scheduler-engine` (commercial,
   ADR 0003).** The scheduler's framework-free half now lives in its own
   commercial engine package — the former `engine/` folder plus the

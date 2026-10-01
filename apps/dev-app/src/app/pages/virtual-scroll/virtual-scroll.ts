@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import { ReactGridVirtualScrollDemos } from '../react-grid/virtual-scroll';
 import { makeEmployees } from '../../shared/demo-data';
 import {
   AUTO_HEIGHT_SNIPPET,
@@ -11,7 +13,13 @@ import {
 
 @Component({
   selector: 'app-virtual-scroll',
-  imports: [OgeGrid, OgeColumn, DemoCard, DocHeader],
+  imports: [
+    OgeGrid,
+    OgeColumn,
+    DemoCard,
+    DocHeader,
+    ReactGridVirtualScrollDemos,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -25,96 +33,101 @@ import {
       </p>
     </app-doc-header>
 
-    <app-demo-card [chips]="['100.000 rows']" [code]="snippet" language="ts">
-      <oge-grid
-        [data]="employees"
-        keyField="id"
-        [virtualScroll]="true"
-        style="height: 560px"
+    @if (fw.isReact()) {
+      <app-react-grid-virtual-scroll-demos />
+    } @else {
+      <app-demo-card [chips]="['100.000 rows']" [code]="snippet" language="ts">
+        <oge-grid
+          [data]="employees"
+          keyField="id"
+          [virtualScroll]="true"
+          style="height: 560px"
+        >
+          <oge-column field="id" caption="Id" [width]="90" dataType="number" />
+          <oge-column field="firstName" caption="First Name" />
+          <oge-column field="lastName" caption="Last Name" />
+          <oge-column field="department" caption="Department" />
+          <oge-column field="city" caption="City" />
+          <oge-column field="salary" caption="Salary" dataType="number" />
+        </oge-grid>
+      </app-demo-card>
+
+      <h3>How it works</h3>
+      <ul>
+        <li>
+          Row offsets live in a <strong>Fenwick (binary-indexed) tree</strong>:
+          finding the row at any scroll position and the total height are both
+          O(log n) — scrolling cost does not grow with list size.
+        </li>
+        <li>
+          Only the visible rows plus an <code>overscan</code> buffer (default 6)
+          exist in the DOM; a spacer element keeps the scrollbar honest.
+        </li>
+        <li>
+          Group and master-detail rows participate with their own heights
+          (<code>detailRowHeight</code>).
+        </li>
+        <li>
+          Keyboard navigation scrolls the focused row into view automatically,
+          even across 100k rows.
+        </li>
+      </ul>
+
+      <h3>Column virtualization</h3>
+      <p>
+        Wide grids get the same treatment horizontally:
+        <code>columnRenderingMode: 'virtual'</code> renders only the columns
+        near the horizontal viewport and stands spacer tracks in for the rest.
+        Scroll sideways below — the DOM holds a couple dozen of the 200 columns
+        at any time.
+      </p>
+
+      <app-demo-card
+        [chips]="['200 columns', '1.000 rows']"
+        [code]="columnSnippet"
+        language="ts"
       >
-        <oge-column field="id" caption="Id" [width]="90" dataType="number" />
-        <oge-column field="firstName" caption="First Name" />
-        <oge-column field="lastName" caption="Last Name" />
-        <oge-column field="department" caption="Department" />
-        <oge-column field="city" caption="City" />
-        <oge-column field="salary" caption="Salary" dataType="number" />
-      </oge-grid>
-    </app-demo-card>
+        <oge-grid
+          [data]="wideRows"
+          keyField="c0"
+          [columns]="wideColumns"
+          [scrolling]="{ mode: 'virtual', columnRenderingMode: 'virtual' }"
+          style="height: 420px"
+        />
+      </app-demo-card>
 
-    <h3>How it works</h3>
-    <ul>
-      <li>
-        Row offsets live in a <strong>Fenwick (binary-indexed) tree</strong>:
-        finding the row at any scroll position and the total height are both
-        O(log n) — scrolling cost does not grow with list size.
-      </li>
-      <li>
-        Only the visible rows plus an <code>overscan</code> buffer (default 6)
-        exist in the DOM; a spacer element keeps the scrollbar honest.
-      </li>
-      <li>
-        Group and master-detail rows participate with their own heights
-        (<code>detailRowHeight</code>).
-      </li>
-      <li>
-        Keyboard navigation scrolls the focused row into view automatically,
-        even across 100k rows.
-      </li>
-    </ul>
+      <h3>Variable row heights</h3>
+      <p>
+        With <code>autoRowHeight</code> the virtualizer stops assuming a fixed
+        row height: rendered rows are measured, measurements feed the offset
+        tree, and corrections above the viewport are compensated on
+        <code>scrollTop</code> in the same frame — no visible jump while
+        scrolling through wrapped content.
+      </p>
 
-    <h3>Column virtualization</h3>
-    <p>
-      Wide grids get the same treatment horizontally:
-      <code>columnRenderingMode: 'virtual'</code> renders only the columns near
-      the horizontal viewport and stands spacer tracks in for the rest. Scroll
-      sideways below — the DOM holds a couple dozen of the 200 columns at any
-      time.
-    </p>
-
-    <app-demo-card
-      [chips]="['200 columns', '1.000 rows']"
-      [code]="columnSnippet"
-      language="ts"
-    >
-      <oge-grid
-        [data]="wideRows"
-        keyField="c0"
-        [columns]="wideColumns"
-        [scrolling]="{ mode: 'virtual', columnRenderingMode: 'virtual' }"
-        style="height: 420px"
-      />
-    </app-demo-card>
-
-    <h3>Variable row heights</h3>
-    <p>
-      With <code>autoRowHeight</code> the virtualizer stops assuming a fixed row
-      height: rendered rows are measured, measurements feed the offset tree, and
-      corrections above the viewport are compensated on
-      <code>scrollTop</code> in the same frame — no visible jump while scrolling
-      through wrapped content.
-    </p>
-
-    <app-demo-card
-      [chips]="['5.000 rows', 'autoRowHeight', 'wordWrap']"
-      [code]="autoHeightSnippet"
-      language="ts"
-    >
-      <oge-grid
-        [data]="notes"
-        keyField="id"
-        [virtualScroll]="true"
-        [autoRowHeight]="true"
-        [wordWrap]="true"
-        style="height: 420px"
+      <app-demo-card
+        [chips]="['5.000 rows', 'autoRowHeight', 'wordWrap']"
+        [code]="autoHeightSnippet"
+        language="ts"
       >
-        <oge-column field="id" caption="Id" [width]="70" dataType="number" />
-        <oge-column field="title" caption="Title" [width]="180" />
-        <oge-column field="body" caption="Body" />
-      </oge-grid>
-    </app-demo-card>
+        <oge-grid
+          [data]="notes"
+          keyField="id"
+          [virtualScroll]="true"
+          [autoRowHeight]="true"
+          [wordWrap]="true"
+          style="height: 420px"
+        >
+          <oge-column field="id" caption="Id" [width]="70" dataType="number" />
+          <oge-column field="title" caption="Title" [width]="180" />
+          <oge-column field="body" caption="Body" />
+        </oge-grid>
+      </app-demo-card>
+    }
   `,
 })
 export class VirtualScrollPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly employees = makeEmployees(100_000);
   protected readonly snippet = SNIPPET;
   protected readonly columnSnippet = COLUMN_SNIPPET;

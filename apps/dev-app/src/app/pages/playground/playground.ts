@@ -14,7 +14,10 @@ import { OgeCard } from '@oge-ui/layout';
 import { CodeBlock } from '../../shared/code-block';
 import { DocHeader } from '../../shared/doc-header';
 import { Icon, type IconName } from '../../shared/icon';
+import { FrameworkService } from '../../shared/framework.service';
 import { makeEmployees } from '../../shared/demo-data';
+import { ReactGridPlayground } from '../react-grid/playground';
+import type { GridPlaygroundOptions } from '../react-grid/playground-snippets';
 
 interface Toggle {
   key: string;
@@ -29,7 +32,15 @@ interface Toggle {
  */
 @Component({
   selector: 'app-playground',
-  imports: [OgeGrid, OgeColumn, OgeCard, CodeBlock, Icon, DocHeader],
+  imports: [
+    OgeGrid,
+    OgeColumn,
+    OgeCard,
+    CodeBlock,
+    Icon,
+    DocHeader,
+    ReactGridPlayground,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header title="Playground" category="Data Grid">
@@ -192,48 +203,58 @@ interface Toggle {
       </oge-card>
 
       <div class="min-w-0">
-        <oge-grid
-          [data]="employees()"
-          keyField="id"
-          [virtualScroll]="virtualScroll()"
-          [paging]="paging() ? { pageSize: pageSize() } : false"
-          [filterRow]="filterRow()"
-          [headerFilter]="headerFilter()"
-          [searchPanel]="searchPanel()"
-          [sortable]="sortable() ? 'multi' : false"
-          [selectionMode]="selection() ? 'checkbox' : 'none'"
-          [groupPanel]="grouping()"
-          [groupBy]="grouping() ? ['department'] : []"
-          [columnChooser]="columnChooser()"
-          [rowAlternation]="rowAlternation()"
-          [focusedRowEnabled]="focusedRow()"
-          [rowDragging]="rowDragging()"
-          [rtlEnabled]="rtl() ? true : undefined"
-          [editing]="
-            editing()
-              ? {
-                  mode: 'batch',
-                  allowUpdating: true,
-                  allowAdding: true,
-                  allowDeleting: true,
-                }
-              : false
-          "
-          [style.height]="virtualScroll() ? '520px' : null"
-        >
-          <oge-column field="id" caption="Id" [width]="80" dataType="number" />
-          <oge-column field="firstName" caption="First Name" />
-          <oge-column field="lastName" caption="Last Name" />
-          <oge-column field="department" caption="Department" />
-          <oge-column field="city" caption="City" />
-          <oge-column field="salary" caption="Salary" dataType="number" />
-        </oge-grid>
-        <app-code-block [code]="snippet()" language="html" />
+        @if (fw.isReact()) {
+          <app-react-grid-playground [options]="reactOptions()" />
+        } @else {
+          <oge-grid
+            [data]="employees()"
+            keyField="id"
+            [virtualScroll]="virtualScroll()"
+            [paging]="paging() ? { pageSize: pageSize() } : false"
+            [filterRow]="filterRow()"
+            [headerFilter]="headerFilter()"
+            [searchPanel]="searchPanel()"
+            [sortable]="sortable() ? 'multi' : false"
+            [selectionMode]="selection() ? 'checkbox' : 'none'"
+            [groupPanel]="grouping()"
+            [groupBy]="grouping() ? ['department'] : []"
+            [columnChooser]="columnChooser()"
+            [rowAlternation]="rowAlternation()"
+            [focusedRowEnabled]="focusedRow()"
+            [rowDragging]="rowDragging()"
+            [rtlEnabled]="rtl() ? true : undefined"
+            [editing]="
+              editing()
+                ? {
+                    mode: 'batch',
+                    allowUpdating: true,
+                    allowAdding: true,
+                    allowDeleting: true,
+                  }
+                : false
+            "
+            [style.height]="virtualScroll() ? '520px' : null"
+          >
+            <oge-column
+              field="id"
+              caption="Id"
+              [width]="80"
+              dataType="number"
+            />
+            <oge-column field="firstName" caption="First Name" />
+            <oge-column field="lastName" caption="Last Name" />
+            <oge-column field="department" caption="Department" />
+            <oge-column field="city" caption="City" />
+            <oge-column field="salary" caption="Salary" dataType="number" />
+          </oge-grid>
+          <app-code-block [code]="snippet()" language="html" />
+        }
       </div>
     </div>
   `,
 })
 export class PlaygroundPage {
+  protected readonly fw = inject(FrameworkService);
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -352,6 +373,26 @@ export class PlaygroundPage {
   ];
 
   protected readonly employees = computed(() => makeEmployees(this.rowCount()));
+
+  /** The same switches, handed to the React view of the page. */
+  protected readonly reactOptions = computed<GridPlaygroundOptions>(() => ({
+    rowCount: this.rowCount(),
+    pageSize: this.pageSize(),
+    sortable: this.sortable(),
+    filterRow: this.filterRow(),
+    headerFilter: this.headerFilter(),
+    searchPanel: this.searchPanel(),
+    paging: this.paging(),
+    virtualScroll: this.virtualScroll(),
+    selection: this.selection(),
+    grouping: this.grouping(),
+    columnChooser: this.columnChooser(),
+    editing: this.editing(),
+    rowAlternation: this.rowAlternation(),
+    focusedRow: this.focusedRow(),
+    rowDragging: this.rowDragging(),
+    rtl: this.rtl(),
+  }));
 
   protected readonly snippet = computed(() => {
     const attrs = [`[data]="employees"`, `keyField="id"`];

@@ -70,24 +70,10 @@ const COVERAGE: Readonly<
     // commercial: @oge-ui/react-gantt on @oge-ui/gantt-engine (ADR 0003);
     // overview and api both branch
     gantt: '*',
-    // R6 complete: every feature page of the grid now branches. The
-    // engine-level sub-pages that share this family — playground, sorting,
-    // virtual-scroll, infinite-scroll, remote-data, live-updates — stay
-    // Angular-only and still show the shell notice, which is why this is a
-    // page list rather than `'*'`.
-    'data-grid': [
-      '',
-      'api',
-      'columns',
-      'filtering',
-      'selection',
-      'editing',
-      'persistence',
-      'context-menu',
-      'grouping',
-      'master-detail',
-      'rows',
-    ],
+    // R6 complete: every page of the grid branches — the feature pages and
+    // the engine-level ones (playground, sorting, virtual-scroll,
+    // infinite-scroll, remote-data, live-updates) alike.
+    'data-grid': '*',
     // R7: every tree-list page branches — overview, lazy-loading, filtering,
     // selection, virtual-scroll, drag-drop, editing and api
     'tree-list': '*',

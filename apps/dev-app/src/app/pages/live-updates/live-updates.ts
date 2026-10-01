@@ -9,6 +9,8 @@ import { ArrayDataSource } from '@oge-ui/core';
 import { OgeCellTemplate, OgeColumn, OgeGrid } from '@oge-ui/grid';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
+import { FrameworkService } from '../../shared/framework.service';
+import { ReactGridLiveUpdatesDemos } from '../react-grid/live-updates';
 import { SNIPPET } from './live-updates-snippets';
 
 interface Stock {
@@ -38,7 +40,14 @@ const SEED: Omit<Stock, 'change' | 'changePercent' | 'volume'>[] = [
 
 @Component({
   selector: 'app-live-updates',
-  imports: [OgeGrid, OgeColumn, OgeCellTemplate, DemoCard, DocHeader],
+  imports: [
+    OgeGrid,
+    OgeColumn,
+    OgeCellTemplate,
+    DemoCard,
+    DocHeader,
+    ReactGridLiveUpdatesDemos,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-doc-header
@@ -52,120 +61,129 @@ const SEED: Omit<Stock, 'change' | 'changePercent' | 'volume'>[] = [
         scroll position are untouched — and with
         <code>highlightChanges</code> every patched cell flashes briefly. Rising
         and falling prices are rendered by a typed
-        <code>*ogeCellTemplate</code>.
+        @if (fw.isReact()) {
+          <code>renderCell</code> column prop.
+        } @else {
+          <code>*ogeCellTemplate</code>.
+        }
       </p>
     </app-doc-header>
 
-    <app-demo-card
-      [chips]="[
-        'updates every 600ms',
-        updateCount() + ' pushed',
-        'highlightChanges',
-      ]"
-      [code]="snippet"
-      language="ts"
-    >
-      <oge-grid
-        [data]="stocks"
-        keyField="id"
-        [highlightChanges]="true"
-        [sortable]="'single'"
+    @if (fw.isReact()) {
+      <app-react-grid-live-updates-demos />
+    } @else {
+      <app-demo-card
+        [chips]="[
+          'updates every 600ms',
+          updateCount() + ' pushed',
+          'highlightChanges',
+        ]"
+        [code]="snippet"
+        language="ts"
       >
-        <oge-column field="symbol" caption="Symbol" [width]="110">
-          <span
-            *ogeCellTemplate="let value"
-            class="font-semibold tracking-wide"
-            >{{ value }}</span
-          >
-        </oge-column>
-        <oge-column field="name" caption="Company" />
-        <oge-column
-          field="price"
-          caption="Price"
-          dataType="number"
-          [format]="money"
+        <oge-grid
+          [data]="stocks"
+          keyField="id"
+          [highlightChanges]="true"
+          [sortable]="'single'"
         >
-          <span
-            *ogeCellTemplate="let value"
-            class="font-semibold tabular-nums"
-            >{{ money(value) }}</span
+          <oge-column field="symbol" caption="Symbol" [width]="110">
+            <span
+              *ogeCellTemplate="let value"
+              class="font-semibold tracking-wide"
+              >{{ value }}</span
+            >
+          </oge-column>
+          <oge-column field="name" caption="Company" />
+          <oge-column
+            field="price"
+            caption="Price"
+            dataType="number"
+            [format]="money"
           >
-        </oge-column>
-        <oge-column
-          field="change"
-          caption="Change"
-          dataType="number"
-          [width]="170"
-        >
-          <span
-            *ogeCellTemplate="let value; row as stock"
-            class="inline-flex items-center gap-1 font-medium tabular-nums"
-            [class]="
-              asNumber(value) >= 0
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-red-600 dark:text-red-400'
-            "
+            <span
+              *ogeCellTemplate="let value"
+              class="font-semibold tabular-nums"
+              >{{ money(value) }}</span
+            >
+          </oge-column>
+          <oge-column
+            field="change"
+            caption="Change"
+            dataType="number"
+            [width]="170"
           >
-            @if (asNumber(value) >= 0) {
-              <svg
-                viewBox="0 0 16 16"
-                width="12"
-                height="12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M8 13V3m0 0L4 7m4-4 4 4" />
-              </svg>
-            } @else {
-              <svg
-                viewBox="0 0 16 16"
-                width="12"
-                height="12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M8 3v10m0 0 4-4m-4 4-4-4" />
-              </svg>
-            }
-            {{ signed(asNumber(value)) }} ({{ signed(percentOf(stock)) }}%)
-          </span>
-        </oge-column>
-        <oge-column
-          field="volume"
-          caption="Volume"
-          dataType="number"
-          [format]="thousands"
-        />
-      </oge-grid>
-    </app-demo-card>
+            <span
+              *ogeCellTemplate="let value; row as stock"
+              class="inline-flex items-center gap-1 font-medium tabular-nums"
+              [class]="
+                asNumber(value) >= 0
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-red-600 dark:text-red-400'
+              "
+            >
+              @if (asNumber(value) >= 0) {
+                <svg
+                  viewBox="0 0 16 16"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8 13V3m0 0L4 7m4-4 4 4" />
+                </svg>
+              } @else {
+                <svg
+                  viewBox="0 0 16 16"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8 3v10m0 0 4-4m-4 4-4-4" />
+                </svg>
+              }
+              {{ signed(asNumber(value)) }} ({{ signed(percentOf(stock)) }}%)
+            </span>
+          </oge-column>
+          <oge-column
+            field="volume"
+            caption="Volume"
+            dataType="number"
+            [format]="thousands"
+          />
+        </oge-grid>
+      </app-demo-card>
 
-    <h3>Notes</h3>
-    <ul>
-      <li>
-        <code>highlightChanges</code> flashes exactly the patched cells —
-        consecutive updates to the same cell restart the animation. Tune the
-        color with the <code>--oge-update-flash-bg</code> token.
-      </li>
-      <li>
-        <code>insert</code> / <code>remove</code> pushes re-run the current load
-        so sorting, filtering and paging stay correct.
-      </li>
-      <li>
-        <code>ArrayDataSource.push()</code> feeds the stream directly; map a
-        WebSocket or SSE feed onto it for remote sources.
-      </li>
-    </ul>
+      <h3>Notes</h3>
+      <ul>
+        <li>
+          <code>highlightChanges</code> flashes exactly the patched cells —
+          consecutive updates to the same cell restart the animation. Tune the
+          color with the <code>--oge-update-flash-bg</code> token.
+        </li>
+        <li>
+          <code>insert</code> / <code>remove</code> pushes re-run the current
+          load so sorting, filtering and paging stay correct.
+        </li>
+        <li>
+          <code>ArrayDataSource.push()</code> feeds the stream directly; map a
+          WebSocket or SSE feed onto it for remote sources.
+        </li>
+      </ul>
+    }
   `,
 })
 export class LiveUpdatesPage {
+  protected readonly fw = inject(FrameworkService);
   protected readonly snippet = SNIPPET;
   protected readonly updateCount = signal(0);
 

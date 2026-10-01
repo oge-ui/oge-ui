@@ -141,6 +141,175 @@ test.describe('React data-grid docs', () => {
     await expect(popup.locator('.oge-hf-item').first()).toBeVisible();
   });
 
+  test('playground: the switches drive the React grid', async ({ page }) => {
+    await page.goto(`/components/data-grid/playground${REACT}`);
+    await expect(page.getByRole('status')).toHaveCount(0);
+    const grid = page.locator('app-react-host .oge-grid').first();
+    const code = page.locator('app-code-block').first();
+    await expect(grid.locator('.oge-row')).toHaveCount(15);
+    await expect(grid.locator('.oge-search-input')).toBeVisible();
+    await expect(code).toContainText('paging={{ pageSize: 15 }}');
+    // virtual scroll on, paging off: all 1.000 rows are reachable but only a
+    // window of them is in the DOM
+    await page.getByLabel('Virtual scroll', { exact: true }).check({
+      force: true,
+    });
+    await page.getByLabel('Paging', { exact: true }).uncheck({ force: true });
+    await expect(code).toContainText('virtualScroll');
+    await expect(code).not.toContainText('paging=');
+    await expect(grid.locator('.oge-pager')).toHaveCount(0);
+    await expect.poll(() => grid.locator('.oge-row').count()).toBeLessThan(60);
+  });
+
+  test('sorting page: multi-sort pages through 10k rows', async ({ page }) => {
+    await page.goto(`/components/data-grid/sorting${REACT}`);
+    await expect(page.getByRole('status')).toHaveCount(0);
+    const grid = page.locator('app-react-host .oge-grid').first();
+    await expect(grid.locator('.oge-row')).toHaveCount(15);
+    const header = grid.getByRole('columnheader', { name: 'Id' });
+    await header.click();
+    await header.click();
+    await expect(header).toHaveAttribute('aria-sort', 'descending');
+    const firstId = () =>
+      grid.locator('.oge-row').first().locator('.oge-cell').first();
+    await expect(firstId()).toHaveText('10000');
+    await grid.getByRole('button', { name: 'Next page' }).click();
+    await expect(firstId()).toHaveText('9985');
+  });
+
+  test('virtual-scroll page: rows and columns are windowed', async ({
+    page,
+  }) => {
+    await page.goto(`/components/data-grid/virtual-scroll${REACT}`);
+    await expect(page.getByRole('status')).toHaveCount(0);
+    const rows = page.locator('app-react-host .oge-grid').first();
+    await expect(rows.locator('.oge-row').first()).toBeVisible();
+    expect(await rows.locator('.oge-row').count()).toBeLessThan(40);
+    await rows
+      .locator('.oge-viewport')
+      .evaluate((el) => (el.scrollTop = el.scrollHeight));
+    await expect(
+      rows.locator('.oge-row').last().locator('.oge-cell').first(),
+    ).toHaveText('100000');
+
+    const wide = page.locator('app-react-host .oge-grid').nth(1);
+    const headers = wide.locator('.oge-header-cell:not(.oge-col-spacer)');
+    await expect(headers.first()).toHaveText('C0');
+    expect(await headers.count()).toBeLessThan(60);
+    await wide
+      .locator('.oge-viewport')
+      .evaluate((el) => (el.scrollLeft = 10_000));
+    await expect
+      .poll(async () => (await headers.first().textContent())?.trim())
+      .not.toBe('C0');
+
+    const notes = page.locator('app-react-host .oge-grid').nth(2);
+    await expect(notes.locator('.oge-row').first()).toBeVisible();
+    const heights = await notes
+      .locator('.oge-row')
+      .evaluateAll((list) =>
+        list.map((row) => (row as HTMLElement).offsetHeight),
+      );
+    expect(new Set(heights).size).toBeGreaterThan(1);
+  });
+
+  test('infinite-scroll page: sparse blocks over 1M rows', async ({ page }) => {
+    await page.goto(`/components/data-grid/infinite-scroll${REACT}`);
+    await expect(page.getByRole('status')).toHaveCount(0);
+    const grid = page.locator('app-react-host .oge-grid').first();
+    await expect(grid.locator('.oge-cell').first()).toHaveText('1');
+    await grid.locator('.oge-viewport').evaluate((el) => {
+      el.scrollTop = el.scrollHeight / 2;
+    });
+    await expect(grid.locator('.oge-filler-row')).toHaveCount(0, {
+      timeout: 10_000,
+    });
+    await expect
+      .poll(() =>
+        grid
+          .locator('.oge-row:not(.oge-filler-row) .oge-cell')
+          .first()
+          .evaluate((el) => Number(el.textContent)),
+      )
+      .toBeGreaterThan(400_000);
+  });
+
+  test('remote-data page: one request per interaction, cursor paging', async ({
+    page,
+  }) => {
+    await page.goto(`/components/data-grid/remote-data${REACT}`);
+    await expect(page.getByRole('status')).toHaveCount(0);
+    const log = page.locator('.request-log li');
+    const grid = page.locator('app-react-host .oge-grid').first();
+    await expect(grid.locator('.oge-row').first()).toBeVisible();
+    await expect(log).toHaveCount(1);
+    await grid
+      .locator('.oge-search-input')
+      .pressSequentially('ali', { delay: 50 });
+    await expect(log).toHaveCount(2);
+    await expect(log.first()).toContainText('search="ali"');
+    await grid.getByRole('button', { name: 'Next page' }).click();
+    await expect(log).toHaveCount(3);
+    await expect(log.first()).toContainText('skip=12');
+
+    const cursor = page.locator('app-react-host .oge-grid').nth(1);
+    await expect(cursor.locator('.oge-row').first()).toBeVisible();
+    const viewport = cursor.locator('.oge-viewport');
+    const height = await viewport.evaluate((el) => el.scrollHeight);
+    await viewport.evaluate((el) => (el.scrollTop = el.scrollHeight));
+    await expect
+      .poll(() => viewport.evaluate((el) => el.scrollHeight))
+      .toBeGreaterThan(height);
+  });
+
+  test('live-updates page: pushed patches flash in place', async ({ page }) => {
+    await page.goto(`/components/data-grid/live-updates${REACT}`);
+    await expect(page.getByRole('status')).toHaveCount(0);
+    const grid = page.locator('app-react-host .oge-grid').first();
+    await expect(grid.locator('.oge-row')).toHaveCount(12);
+    const prices = grid.locator('.oge-row .oge-cell:nth-child(3)');
+    const before = (await prices.allTextContents()).join('|');
+    await expect
+      .poll(async () => (await prices.allTextContents()).join('|'), {
+        timeout: 10_000,
+      })
+      .not.toBe(before);
+    await expect
+      .poll(
+        () => grid.locator('.oge-cell-flash-a, .oge-cell-flash-b').count(),
+        { timeout: 10_000 },
+      )
+      .toBeGreaterThan(0);
+    // updates only: the rows stay put, in the same order
+    await expect(
+      grid.locator('.oge-row').first().locator('.oge-cell').first(),
+    ).toHaveText('AAPL');
+  });
+
+  for (const path of [
+    '/components/data-grid/playground',
+    '/components/data-grid/sorting',
+    '/components/data-grid/virtual-scroll',
+    '/components/data-grid/infinite-scroll',
+    '/components/data-grid/remote-data',
+    '/components/data-grid/live-updates',
+  ]) {
+    test(`${path} in React has no axe violations`, async ({ page }) => {
+      // 100k / 1M-row pages: axe needs the slow budget
+      test.slow();
+      await page.goto(`${path}${REACT}`);
+      await expect(page.locator('h1').first()).toBeVisible();
+      await expect(page.getByRole('status')).toHaveCount(0);
+      await expect(
+        page.locator('app-react-host .oge-grid .oge-row').first(),
+      ).toBeVisible();
+      const results = await new AxeBuilder({ page })
+        .disableRules(['color-contrast', 'heading-order'])
+        .analyze();
+      expect(results.violations, `axe violations on ${path}`).toEqual([]);
+    });
+  }
+
   for (const path of [
     '/components/data-grid',
     '/components/data-grid/api',
