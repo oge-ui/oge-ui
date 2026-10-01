@@ -160,7 +160,8 @@ export const KEYBOARD_SNIPPET = demoSource({
      Enter edits, Delete deletes, and Ctrl+Arrow MOVES the focused card —
      the exact keyboard twin of the drag, with a polite live-region
      announcement ("… moved to …, position 2 of 3") after every commit.
-     Columns are labeled listboxes; cards are options. -->
+     Columns are labeled lists of cards (one Tab stop each); Tab from a
+     card continues into its quick-action buttons. -->
 <oge-kanban
   [dataSource]="tasks"
   keyExpr="id"
@@ -216,19 +217,21 @@ export const TEMPLATE_SNIPPET = demoSource({
   types: { '@oge-ui/kanban': ['OgeKanbanCard'] },
   template: `<!-- *ogeKanbanCardTemplate replaces the card body while drag,
      keyboard and ARIA stay on the component. card.source is your original
-     item (typed unknown — narrow it in a helper). Rich templates usually
-     pair with a matching cardHeight, or opt out of virtualization entirely
-     ([virtualScrolling]="false") when heights must vary. -->
+     item (typed unknown — narrow it in a helper). Controls in the template
+     are real interactive content: Tab from the card reaches the button, it
+     never starts a drag, and Escape returns to the card. Rich templates
+     usually pair with a matching cardHeight, or opt out of virtualization
+     entirely ([virtualScrolling]="false") when heights must vary. -->
 <oge-kanban
   [dataSource]="deployments"
   keyExpr="id"
   columnExpr="stage"
   titleExpr="service"
-  [cardHeight]="96"
+  [cardHeight]="112"
   style="height: 420px"
 >
   <ng-template ogeKanbanCardTemplate let-card>
-    <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px">
+    <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1">
       <strong>{{ card.title }}</strong>
       <code style="font-size: 11px">{{ field(card, 'version') }}</code>
       <progress
@@ -236,10 +239,16 @@ export const TEMPLATE_SNIPPET = demoSource({
         max="100"
         style="width: 100%"
       ></progress>
+      <button type="button" (click)="log.set('Rollback requested: ' + card.title)">
+        Roll back
+      </button>
     </div>
   </ng-template>
-</oge-kanban>`,
-  body: `protected field(card: OgeKanbanCard, name: string): string {
+</oge-kanban>
+<p aria-live="polite">{{ log() }}</p>`,
+  body: `protected readonly log = signal('');
+
+protected field(card: OgeKanbanCard, name: string): string {
   return String((card.source as Record<string, unknown>)[name] ?? '');
 }
 

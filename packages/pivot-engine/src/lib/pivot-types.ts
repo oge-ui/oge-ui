@@ -116,6 +116,8 @@ export interface OgePivotMenuState {
   readonly x: number;
   readonly y: number;
   readonly items: OgePivotMenuItem[];
+  /** Accessible name of the menu (the field menu names its field). */
+  readonly label?: string;
 }
 
 /** An open value-filter popup. */

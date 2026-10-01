@@ -39,6 +39,41 @@ export interface OgeGridMessages {
   reparentColumnHeader: string;
   /** Accessible name of a row's drag handle (tree-list reparenting). */
   reparentRow: string;
+  /**
+   * Accessible name of a column's resize separator; `{column}` is the
+   * caption. The separator is `role="separator"` with the width in px as its
+   * value.
+   */
+  resizeColumn: string;
+  /**
+   * Live announcement after a keyboard column resize (Alt+Arrow on a header);
+   * placeholders `{column}` `{width}`.
+   */
+  columnResized: string;
+  /**
+   * Live announcement after a keyboard column move (Ctrl+Shift+Arrow on a
+   * header, Ctrl+Arrow in the column chooser); placeholders `{column}`
+   * `{position}` `{total}`.
+   */
+  columnMoved: string;
+  /**
+   * Live announcement after a keyboard row move (Ctrl+ArrowUp/Down);
+   * placeholders `{position}` `{total}`.
+   */
+  rowMoved: string;
+  /**
+   * Live announcement after a keyboard tree-row move, indent or outdent
+   * (tree-list); placeholders `{level}` `{position}` `{total}` — position
+   * among the row's new siblings.
+   */
+  treeRowMoved: string;
+  /**
+   * Live announcement after a group-panel chip is reordered (Ctrl+Arrow);
+   * placeholders `{column}` `{position}` `{total}`.
+   */
+  groupMoved: string;
+  /** Live announcement after a grouping is removed from the keyboard; `{column}`. */
+  groupRemoved: string;
   /** Aria label of a collapsed tree row's expander (tree-list). */
   expandRow: string;
   /** Aria label of an expanded tree row's expander (tree-list). */
@@ -125,6 +160,13 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   reorderRow: 'Reorder row',
   reparentColumnHeader: 'Reparent',
   reparentRow: 'Reparent row',
+  resizeColumn: 'Resize {column}',
+  columnResized: '{column} width {width} pixels',
+  columnMoved: '{column} moved to position {position} of {total}',
+  rowMoved: 'Row moved to position {position} of {total}',
+  treeRowMoved: 'Row moved to level {level}, position {position} of {total}',
+  groupMoved: 'Grouping by {column} moved to position {position} of {total}',
+  groupRemoved: 'Grouping by {column} removed',
   expandRow: 'Expand row',
   collapseRow: 'Collapse row',
   previousPage: 'Previous page',

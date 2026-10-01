@@ -29,6 +29,11 @@ import {
   findKanbanCard,
   focusFirstKanbanMenuItem,
   focusKanbanCard,
+  focusOwningKanbanCard,
+  isKanbanCardContentTarget,
+  kanbanCardActionLabel,
+  kanbanCardKeyRoute,
+  syncKanbanCardTabStops,
   formatKanbanDue,
   formatKanbanMessage,
   groupBoard,
@@ -509,7 +514,7 @@ interface KanbanMenuState {
                     >
                       <div
                         class="oge-kanban-cards"
-                        role="listbox"
+                        role="list"
                         [attr.aria-label]="
                           cellLabel(cell.column, cell.cards.length)
                         "
@@ -520,7 +525,7 @@ interface KanbanMenuState {
                         "
                       >
                         @if (cell.cards.length === 0) {
-                          <!-- decorative: the listbox label already carries the zero count -->
+                          <!-- decorative: the list label already carries the zero count -->
                           <div class="oge-kanban-cell-empty" aria-hidden="true">
                             {{ msg().board.emptyColumn }}
                           </div>
@@ -562,62 +567,72 @@ interface KanbanMenuState {
                                 track card.key
                               ) {
                                 <div
-                                  class="oge-kanban-card"
-                                  role="option"
-                                  [tabindex]="isCardFocusable(card) ? 0 : -1"
-                                  [attr.data-key]="keyOf(card)"
-                                  [attr.aria-selected]="
-                                    selectedCardKey() === card.key
-                                  "
-                                  [attr.aria-keyshortcuts]="cardShortcuts()"
-                                  [class.oge-kanban-card-selected]="
-                                    selectedCardKey() === card.key
-                                  "
-                                  [class.oge-kanban-card-hidden]="
-                                    isDraggedCard(card)
-                                  "
-                                  [class.oge-kanban-card-shifted]="
-                                    isShifted(
-                                      lane.key,
-                                      cell.column.key,
-                                      win.start + $index,
-                                      card
-                                    )
-                                  "
-                                  [class.oge-kanban-card-tinted]="
-                                    cardColorMode() === 'surface' &&
-                                    !!card.color
-                                  "
-                                  [style.--oge-kanban-card-tint]="
-                                    card.color ?? null
-                                  "
-                                  [style.height.px]="
-                                    virtualScrolling() ? cardHeightPx() : null
-                                  "
-                                  [attr.aria-label]="cardLabel(card)"
-                                  (click)="onCardClick(card, $event)"
-                                  (dblclick)="onCardDblClick(card, $event)"
-                                  (contextmenu)="
-                                    onCardContextMenu(card, $event)
-                                  "
-                                  (keydown)="onCardKeydown($event, card)"
-                                  (pointerdown)="
-                                    onCardPointerDown(
-                                      $event,
-                                      card,
-                                      cell.column,
-                                      lane.key
-                                    )
-                                  "
+                                  class="oge-kanban-card-item"
+                                  role="listitem"
                                 >
-                                  <ng-container
-                                    [ngTemplateOutlet]="cardBody"
-                                    [ngTemplateOutletContext]="{
-                                      $implicit: card,
-                                      column: cell.column,
-                                      swimlane: lane.key,
-                                    }"
-                                  />
+                                  <div
+                                    class="oge-kanban-card"
+                                    role="group"
+                                    [attr.aria-roledescription]="
+                                      msg().board.cardRoleDescription
+                                    "
+                                    [tabindex]="isCardFocusable(card) ? 0 : -1"
+                                    [attr.data-key]="keyOf(card)"
+                                    [attr.aria-current]="
+                                      selectedCardKey() === card.key
+                                        ? 'true'
+                                        : null
+                                    "
+                                    [attr.aria-keyshortcuts]="cardShortcuts()"
+                                    [class.oge-kanban-card-selected]="
+                                      selectedCardKey() === card.key
+                                    "
+                                    [class.oge-kanban-card-hidden]="
+                                      isDraggedCard(card)
+                                    "
+                                    [class.oge-kanban-card-shifted]="
+                                      isShifted(
+                                        lane.key,
+                                        cell.column.key,
+                                        win.start + $index,
+                                        card
+                                      )
+                                    "
+                                    [class.oge-kanban-card-tinted]="
+                                      cardColorMode() === 'surface' &&
+                                      !!card.color
+                                    "
+                                    [style.--oge-kanban-card-tint]="
+                                      card.color ?? null
+                                    "
+                                    [style.height.px]="
+                                      virtualScrolling() ? cardHeightPx() : null
+                                    "
+                                    [attr.aria-label]="cardLabel(card)"
+                                    (click)="onCardClick(card, $event)"
+                                    (dblclick)="onCardDblClick(card, $event)"
+                                    (contextmenu)="
+                                      onCardContextMenu(card, $event)
+                                    "
+                                    (keydown)="onCardKeydown($event, card)"
+                                    (pointerdown)="
+                                      onCardPointerDown(
+                                        $event,
+                                        card,
+                                        cell.column,
+                                        lane.key
+                                      )
+                                    "
+                                  >
+                                    <ng-container
+                                      [ngTemplateOutlet]="cardBody"
+                                      [ngTemplateOutletContext]="{
+                                        $implicit: card,
+                                        column: cell.column,
+                                        swimlane: lane.key,
+                                      }"
+                                    />
+                                  </div>
                                 </div>
                               }
                             </div>
@@ -748,12 +763,20 @@ interface KanbanMenuState {
               </span>
             }
             @if (canUpdate() || canDelete()) {
-              <span class="oge-kanban-card-actions" aria-hidden="true">
+              <span class="oge-kanban-card-actions">
                 @if (canUpdate()) {
-                  <span
+                  <button
+                    type="button"
                     class="oge-kanban-card-action oge-kanban-card-action-edit"
+                    [attr.aria-label]="cardActionLabel('edit', card)"
+                    [attr.title]="cardActionLabel('edit', card)"
                   >
-                    <svg viewBox="0 0 16 16" width="13" height="13">
+                    <svg
+                      viewBox="0 0 16 16"
+                      width="13"
+                      height="13"
+                      aria-hidden="true"
+                    >
                       <path
                         d="m11.3 2.7 2 2L6 12l-2.6.6L4 10z"
                         fill="none"
@@ -762,13 +785,21 @@ interface KanbanMenuState {
                         stroke-linejoin="round"
                       />
                     </svg>
-                  </span>
+                  </button>
                 }
                 @if (canDelete()) {
-                  <span
+                  <button
+                    type="button"
                     class="oge-kanban-card-action oge-kanban-card-action-delete"
+                    [attr.aria-label]="cardActionLabel('delete', card)"
+                    [attr.title]="cardActionLabel('delete', card)"
                   >
-                    <svg viewBox="0 0 16 16" width="13" height="13">
+                    <svg
+                      viewBox="0 0 16 16"
+                      width="13"
+                      height="13"
+                      aria-hidden="true"
+                    >
                       <path
                         d="M3.5 5h9M6.5 5V3.8h3V5m-5 0 .5 7.4h6L11.5 5"
                         fill="none"
@@ -778,7 +809,7 @@ interface KanbanMenuState {
                         stroke-linejoin="round"
                       />
                     </svg>
-                  </span>
+                  </button>
                 }
               </span>
             }
@@ -796,6 +827,7 @@ interface KanbanMenuState {
           'translate3d(' + (d.x - d.grabX) + 'px,' + (d.y - d.grabY) + 'px,0)'
         "
         aria-hidden="true"
+        inert
       >
         <div
           class="oge-kanban-card oge-kanban-card-lifted"
@@ -1142,6 +1174,15 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
         focusKanbanCard(this.hostEl.nativeElement, pending);
       }
     });
+    // one Tab stop per column: card content is tabbable only in the stop
+    afterRenderEffect(() => {
+      this.focusableKeys();
+      this.cellState();
+      this.cardTemplate();
+      this.canUpdate();
+      this.canDelete();
+      syncKanbanCardTabStops(this.hostEl.nativeElement);
+    });
   }
 
   /** In-component search query (wired to the toolbar). */
@@ -1393,6 +1434,13 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     return kanbanCardLabel(this.msg().board, card, this.visibleColumns());
   }
 
+  protected cardActionLabel(
+    action: 'edit' | 'delete',
+    card: KanbanCard<T>,
+  ): string {
+    return kanbanCardActionLabel(this.msg().board, action, card);
+  }
+
   protected format(
     template: string,
     tokens: Readonly<Record<string, string>>,
@@ -1431,8 +1479,8 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   }
 
   protected onCardClick(card: KanbanCard<T>, event: MouseEvent): void {
-    // hover quick actions resolve from the aria-hidden spans (composite
-    // roles cannot host focusable children)
+    // the quick-action buttons resolve here, so a click and a keyboard
+    // activation (Enter/Space on the focused button) take one path
     const action = (event.target as HTMLElement).closest(
       '.oge-kanban-card-action',
     );
@@ -1450,6 +1498,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
 
   protected onCardDblClick(card: KanbanCard<T>, event: MouseEvent): void {
     event.stopPropagation();
+    if (
+      isKanbanCardContentTarget(event.target, event.currentTarget as Element)
+    ) {
+      return;
+    }
     this.cardDblClick.emit({ card, event });
     if (this.canUpdate()) this.editCard(card);
   }
@@ -1470,6 +1523,14 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     this.isColumnCollapsed(key);
 
   protected onCardKeydown(event: KeyboardEvent, card: KanbanCard<T>): void {
+    // keys typed into a card's own controls stay with those controls
+    const route = kanbanCardKeyRoute(event);
+    if (route === 'return') {
+      event.preventDefault();
+      focusOwningKanbanCard(event.target as Element);
+      return;
+    }
+    if (route === 'content') return;
     if (event.ctrlKey && !event.metaKey && !event.altKey) {
       this.onCardCtrlArrow(event, card);
       return;
@@ -1602,14 +1663,11 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
   ): void {
     if (!this.canDrag() || event.button !== 0) return;
     if (column.allowDrag === false) return;
-    if (
-      (event.target as HTMLElement).closest('.oge-kanban-card-action') !== null
-    ) {
-      return;
-    }
+    const cardEl = event.currentTarget as HTMLElement;
+    // quick actions and template controls keep their native press
+    if (isKanbanCardContentTarget(event.target, cardEl)) return;
     const position = findKanbanCard(this.lanes(), card.key);
     if (position === null) return;
-    const cardEl = event.currentTarget as HTMLElement;
     const rect = cardEl.getBoundingClientRect();
     this.dragGeometry = measureKanbanDragGeometry(this.hostEl.nativeElement);
     this.selectedCardKey.set(card.key);

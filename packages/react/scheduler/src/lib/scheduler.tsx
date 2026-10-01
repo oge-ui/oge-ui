@@ -309,6 +309,7 @@ function OgeSchedulerInner<T extends object>(
   const canUpdate = core.canUpdate();
   const canDelete = core.canDelete();
   const canDrag = core.canDrag();
+  const gridReadOnly = core.gridReadOnly();
   const scopePending = core.scopePending();
   const contextMenu = core.contextMenu();
   const showAddButton = props.showAddButton ?? true;
@@ -381,6 +382,7 @@ function OgeSchedulerInner<T extends object>(
             messages={msg.grid}
             periodLabel={periodTitle}
             allowDragging={canDrag}
+            readOnly={gridReadOnly}
             renderAppointment={renderAppointment}
             renderCell={renderCell}
             onMoreClick={(date) => core.drillIntoDay(date)}
@@ -416,6 +418,7 @@ function OgeSchedulerInner<T extends object>(
             allowDragging={canDrag}
             allowResizing={core.canResize()}
             allowAdding={canAdd}
+            readOnly={gridReadOnly}
             hiddenWeekDays={props.hiddenWeekDays}
             workHours={props.workHours ?? null}
             shadeUntilCurrentTime={props.shadeUntilCurrentTime ?? false}

@@ -20,11 +20,15 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     @for (descriptor of store.grouping.descriptors(); track descriptor.field) {
     <span class="oge-group-chip">
       {{ groupCaption(descriptor.field) }}
+      <!-- the chip's keyboard path: Ctrl+Arrow reorders the grouping, Delete removes it -->
       <button
         type="button"
         class="oge-group-chip-remove"
+        aria-keyshortcuts="Control+ArrowLeft Control+ArrowRight Delete"
+        [attr.data-group-field]="descriptor.field"
         [attr.aria-label]="msg().ungroupPrefix + ' ' + groupCaption(descriptor.field)"
         (click)="ungroup(descriptor.field, $event)"
+        (keydown)="onGroupChipKeydown(descriptor.field, $event)"
       >
         <svg
           viewBox="0 0 16 16"
@@ -290,9 +294,12 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         [style.inset-inline-start.px]="pinnedLeftOf(column)"
         [style.inset-inline-end.px]="pinnedRightOf(column)"
         [attr.aria-sort]="ariaSortOf(column)"
+        [attr.aria-keyshortcuts]="headerKeyShortcuts(column)"
+        [attr.aria-labelledby]="uid + '-h-' + column.absIndex"
         [attr.tabindex]="
             (column.sortable && sortMode() !== 'none') ||
-            (column.field && (groupPanel() || columnReorder()))
+            (column.field && (groupPanel() || columnReorder())) ||
+            columnResize()
               ? 0
               : null
           "
@@ -306,8 +313,9 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         (click)="onHeaderClick(column, $event)"
         (keydown.enter)="onHeaderClick(column, $event)"
         (keydown.space)="onHeaderClick(column, $event)"
+        (keydown)="onHeaderKeydown(column, $event)"
       >
-        <span class="oge-header-caption">
+        <span class="oge-header-caption" [id]="uid + '-h-' + column.absIndex">
           @if (column.headerTemplate) {
           <ng-container
             *ngTemplateOutlet="column.headerTemplate; context: headerContext(column)"
@@ -347,9 +355,20 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           </svg>
         </button>
         } @if (columnResize()) {
+        <!-- APG window splitter: focusable (tabindex -1, reached from the header
+             with the pointer or programmatically); Alt+Arrow on the header is the
+             primary keyboard path -->
         <span
           class="oge-resize-handle"
+          role="separator"
+          aria-orientation="vertical"
+          tabindex="-1"
+          [attr.aria-label]="resizeLabel(column)"
+          [attr.aria-valuenow]="separatorValue(column).now"
+          [attr.aria-valuemin]="separatorValue(column).min"
+          [attr.aria-valuemax]="separatorValue(column).max"
           (pointerdown)="onResizeStart(column, $event)"
+          (keydown)="onResizeHandleKeydown(column, $event)"
         ></span>
         }
       </div>
@@ -576,6 +595,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         [style.height.px]="virtualized() && !autoRowHeight() ? effRowHeight() : null"
         [style.grid-template-columns]="gridTemplateColumns()"
         [class.oge-drop-target]="dropTargetKey() === node.key"
+        [attr.aria-keyshortcuts]="rowDragging() ? 'Control+ArrowUp Control+ArrowDown' : null"
         (click)="onRowClick(node, $event)"
         (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
         (contextmenu)="onRowContextMenuOpen(node, $event)"
@@ -584,7 +604,8 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       >
         @if (rowDragging()) {
         <div class="oge-cell oge-drag-cell" role="gridcell">
-          <!-- the click handler only shields the row-click; dragging is pointer-driven -->
+          <!-- the click handler only shields the row-click; the pointer drags the
+               handle, the keyboard moves the focused row with Ctrl+ArrowUp/Down -->
           <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- keyboard access is provided by the roving-tabindex/listbox key handling on the container -->
           <span
             class="oge-drag-handle"
@@ -1018,6 +1039,14 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   </div>
   }
 </div>
+<!-- permanent live region: keyboard resize / reorder / row moves announce here -->
+<div
+  class="oge-sr-only oge-grid-announcer"
+  aria-live="polite"
+  aria-atomic="true"
+>
+  {{ liveMessage() }}
+</div>
 @if (customLoadingMessage() !== null || (loadPanel() && adapter.loading())) {
 <div class="oge-load-panel" role="status">
   <span class="oge-spinner" aria-hidden="true"></span>
@@ -1099,10 +1128,15 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   <div class="oge-chooser-popup">
     <div class="oge-chooser-title">{{ msg().columnChooserTitle }}</div>
     @for (entry of chooserEntries(); track entry.id) {
+    <!-- the keydown catches Ctrl+ArrowUp/Down bubbling from the focusable checkbox inside -->
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- the label wraps the focusable checkbox; its handler only sees keys bubbling from it -->
     <label
       class="oge-hf-item oge-chooser-item"
       [class.oge-chooser-drop-target]="chooserDropTargetId() === entry.id"
+      [attr.data-chooser-id]="entry.id"
+      [attr.aria-keyshortcuts]="columnReorder() ? 'Control+ArrowUp Control+ArrowDown' : null"
       [draggable]="columnReorder()"
+      (keydown)="onChooserKeydown(entry.id, $event)"
       (dragstart)="onChooserDragStart(entry.id, $any($event))"
       (dragover)="onChooserDragOver(entry.id, $any($event))"
       (dragend)="onChooserDragEnd()"

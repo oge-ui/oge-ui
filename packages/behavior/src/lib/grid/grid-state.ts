@@ -282,6 +282,21 @@ export class OgeGridGroupingState {
     if (next.length !== this._descriptors().length) this._descriptors.set(next);
   }
 
+  /**
+   * Moves the grouping on `field` one level towards the end (`1`) or the
+   * start (`-1`) of the group order. Returns its new index, or -1 when it is
+   * not grouped or already at that edge.
+   */
+  move(field: string, direction: 1 | -1): number {
+    const descriptors = [...this._descriptors()];
+    const from = descriptors.findIndex((d) => d.field === field);
+    const to = from + direction;
+    if (from < 0 || to < 0 || to >= descriptors.length) return -1;
+    [descriptors[from], descriptors[to]] = [descriptors[to], descriptors[from]];
+    this._descriptors.set(descriptors);
+    return to;
+  }
+
   toggleDirection(field: string): void {
     this._descriptors.set(
       this._descriptors().map((d) =>
@@ -406,17 +421,30 @@ export class OgeGridColumnsState {
     this._order.set(columnIds);
   }
 
-  /** Moves `sourceId` so it lands in front of `targetId` in the given base order. */
+  /**
+   * Moves `sourceId` so it lands in front of `targetId` (or right after it,
+   * with `position: 'after'`) in the given base order.
+   */
   reorder(
     baseOrder: readonly string[],
     sourceId: string,
     targetId: string,
+    position: 'before' | 'after' = 'before',
   ): void {
     if (sourceId === targetId) return;
-    const order = (this._order() ?? baseOrder).filter((id) => id !== sourceId);
+    const current = this._order() ?? baseOrder;
+    // ids the base knows but a stored order lacks (a column shown after the
+    // order was captured) join at their base position, so the move is exact
+    const known = new Set(current);
+    const merged = [...current, ...baseOrder.filter((id) => !known.has(id))];
+    const order = merged.filter((id) => id !== sourceId);
     const targetIndex = order.indexOf(targetId);
     if (targetIndex < 0) return;
-    order.splice(targetIndex, 0, sourceId);
+    order.splice(
+      position === 'after' ? targetIndex + 1 : targetIndex,
+      0,
+      sourceId,
+    );
     this._order.set(order);
   }
 

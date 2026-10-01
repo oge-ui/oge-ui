@@ -30,6 +30,8 @@ export interface OgeColumnDef<T = unknown> {
   caption?: string;
   width?: number | string;
   minWidth?: number;
+  /** Upper bound in px for user resizing (pointer drag and Alt+Arrow keys). */
+  maxWidth?: number;
   dataType?: OgeDataType;
   alignment?: OgeColumnAlignment;
   format?: (value: unknown) => string;
@@ -87,6 +89,7 @@ export function ogeColumnFromDef<T>(def: OgeColumnDef<T>): OgeColumn<T> {
     caption: value('caption'),
     width: value('width'),
     minWidth: value('minWidth'),
+    maxWidth: value('maxWidth'),
     dataType: withDefault('dataType', 'string'),
     alignment: value('alignment'),
     format: value('format'),

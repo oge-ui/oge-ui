@@ -38,6 +38,7 @@ import type {
   OgeGridSelectionState,
 } from '../grid/grid-state';
 import type { OgeGridKeyboardNavTreeHooks } from '../grid/grid-keyboard-nav';
+import type { OgeTreeRowKeyMove } from '../grid/grid-keyboard-moves';
 import type {
   OgeExportColumn,
   OgeExportData,
@@ -1125,6 +1126,90 @@ export class OgeTreeListCore<T> {
   isValidDropTarget(draggedKey: RowKey | null, targetKey: RowKey): boolean {
     if (draggedKey === null || draggedKey === targetKey) return false;
     return !ancestorsOf(this.treeIndex(), targetKey).includes(draggedKey);
+  }
+
+  /**
+   * The drop a keyboard move stands for, over the visible rows: `'up'` /
+   * `'down'` place the row before the previous / after the next sibling,
+   * `'indent'` reparents it inside the previous sibling, `'outdent'` places
+   * it right after its parent. Feeding the result to {@link applyDrop} runs
+   * the pointer drop path, so `rowReparented` fires identically. `null` at an
+   * edge (no such sibling / already a root).
+   */
+  keyboardMoveTarget(
+    key: RowKey,
+    move: OgeTreeRowKeyMove,
+  ): { targetKey: RowKey; position: OgeTreeDropPosition } | null {
+    const nodes = this.flatNodes();
+    const at = nodes.findIndex(
+      (node) => node.kind === 'data' && node.key === key,
+    );
+    if (at < 0) return null;
+    const self = nodes[at] as DataRowNode<T>;
+    const parentKey = self.parentKey ?? null;
+    const sibling = (direction: 1 | -1): DataRowNode<T> | null => {
+      for (let i = at + direction; i >= 0 && i < nodes.length; i += direction) {
+        const node = nodes[i];
+        if (node.kind !== 'data') continue;
+        if (node.level < self.level) return null; // reached the parent level
+        if (node.level === self.level && (node.parentKey ?? null) === parentKey)
+          return node;
+      }
+      return null;
+    };
+    let result: { targetKey: RowKey; position: OgeTreeDropPosition } | null =
+      null;
+    switch (move) {
+      case 'up': {
+        const previous = sibling(-1);
+        if (previous) result = { targetKey: previous.key, position: 'before' };
+        break;
+      }
+      case 'down': {
+        const next = sibling(1);
+        if (next) result = { targetKey: next.key, position: 'after' };
+        break;
+      }
+      case 'indent': {
+        const previous = sibling(-1);
+        if (previous) result = { targetKey: previous.key, position: 'inside' };
+        break;
+      }
+      case 'outdent':
+        if (parentKey !== null)
+          result = { targetKey: parentKey, position: 'after' };
+        break;
+    }
+    return result && this.isValidDropTarget(key, result.targetKey)
+      ? result
+      : null;
+  }
+
+  /**
+   * Where a row sits after a move, for the live announcement: its depth
+   * (1-based, as `aria-level`) and position among its visible siblings.
+   */
+  rowPlacement(
+    key: RowKey,
+  ): { level: number; position: number; total: number } | null {
+    const nodes = this.flatNodes();
+    const self = nodes.find(
+      (node): node is DataRowNode<T> =>
+        node.kind === 'data' && node.key === key,
+    );
+    if (!self) return null;
+    const parentKey = self.parentKey ?? null;
+    const siblings = nodes.filter(
+      (node): node is DataRowNode<T> =>
+        node.kind === 'data' &&
+        node.level === self.level &&
+        (node.parentKey ?? null) === parentKey,
+    );
+    return {
+      level: self.level + 1,
+      position: siblings.indexOf(self) + 1,
+      total: siblings.length,
+    };
   }
 
   /**

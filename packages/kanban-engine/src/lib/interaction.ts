@@ -416,3 +416,28 @@ export function isKanbanMenuAvailable(
 ): boolean {
   return hasCard ? caps.canUpdate || caps.canDelete : hasColumn;
 }
+
+/** The fields of a card keydown {@link kanbanCardKeyRoute} reads. */
+export interface KanbanCardKeyInput {
+  readonly key: string;
+  readonly target: EventTarget | null;
+  readonly currentTarget: EventTarget | null;
+  readonly defaultPrevented: boolean;
+}
+
+/**
+ * Who owns a keydown that reached a card: `'card'` when the card surface
+ * itself is focused (arrows rove, Ctrl+Arrow moves, Enter edits, Delete
+ * deletes); `'return'` for an unhandled Escape from interactive content
+ * inside the card (focus goes back to the card); `'content'` for every
+ * other key from inside — the control keeps it, so Ctrl+Arrow in a text
+ * field still moves by word instead of moving the card.
+ */
+export function kanbanCardKeyRoute(
+  event: KanbanCardKeyInput,
+): 'card' | 'content' | 'return' {
+  if (event.target === event.currentTarget) return 'card';
+  return event.key === 'Escape' && !event.defaultPrevented
+    ? 'return'
+    : 'content';
+}

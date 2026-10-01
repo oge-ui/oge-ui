@@ -187,7 +187,7 @@ export function formatKanbanMessage(
   return text;
 }
 
-/** A column listbox's accessible name (count, and WIP limit when set). */
+/** A column list's accessible name (count, and WIP limit when set). */
 export function kanbanCellLabel(
   messages: OgeKanbanBoardMessages,
   column: KanbanColumnDef,
@@ -206,7 +206,7 @@ export function kanbanCellLabel(
       });
 }
 
-/** A card option's accessible name (title + the column it sits in). */
+/** A card's accessible name (title + the column it sits in). */
 export function kanbanCardLabel<T>(
   messages: OgeKanbanBoardMessages,
   card: KanbanCard<T>,
@@ -217,6 +217,18 @@ export function kanbanCardLabel<T>(
     title: card.title,
     column: column !== undefined ? kanbanColumnTitle(column) : card.column,
   });
+}
+
+/** The accessible name of a card's edit / delete quick-action button. */
+export function kanbanCardActionLabel<T>(
+  messages: OgeKanbanBoardMessages,
+  action: 'edit' | 'delete',
+  card: KanbanCard<T>,
+): string {
+  return formatKanbanMessage(
+    action === 'edit' ? messages.editCardAction : messages.deleteCardAction,
+    { title: card.title },
+  );
 }
 
 /** Up to two initials for an assignee avatar. */
@@ -258,8 +270,8 @@ export function kanbanCardShortcuts(caps: KanbanCapabilities): string | null {
 }
 
 /**
- * One tab stop per column cell (each listbox is its own composite widget,
- * per the APG); the focused card replaces its own cell's default stop. This
+ * One tab stop per column cell (each column list keeps a roving focus of
+ * its own); the focused card replaces its own cell's default stop. This
  * is also what keeps every scrollable cell keyboard-reachable — and it is a
  * pure derivation, so the first paint already carries it.
  */

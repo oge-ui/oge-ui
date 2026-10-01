@@ -154,6 +154,8 @@ export interface OgeGridColumnProps<T = unknown> {
   filterOperator?: FilterOperator;
   /** Track minimum in px for flexible-width columns. */
   minWidth?: number;
+  /** Upper bound in px for user resizing (pointer drag and Alt+Arrow keys). */
+  maxWidth?: number;
   /** Maps stored values to display texts (cells and filters). */
   lookup?: OgeColumnLookup;
   /** Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). */

@@ -29,6 +29,8 @@
   zone.area) {
   <div
     class="oge-pivot-area"
+    role="group"
+    [attr.aria-label]="zone.label"
     [attr.data-area]="zone.area"
     (dragover)="onAreaDragOver($event)"
     (drop)="onAreaDrop(zone.area, $event)"
@@ -37,11 +39,17 @@
     @for (field of zone.fields; track field.id) {
     <span
       class="oge-pivot-field-chip"
+      role="button"
+      tabindex="0"
+      aria-haspopup="menu"
+      [attr.aria-keyshortcuts]="chipShortcuts"
+      [attr.data-field-id]="field.id"
       [class.oge-pivot-chip-filtered]="!!field.filterValues"
       draggable="true"
       (dragstart)="onFieldDragStart(field, $event)"
       (dragend)="onFieldDragEnd()"
-      (contextmenu)="zone.area === 'data' ? onMeasureContextMenu(field, $event) : null"
+      (contextmenu)="onFieldContextMenu(field, zone.area, $event)"
+      (keydown)="onChipKeydown(field, zone.area, $event)"
     >
       {{ field.caption }}
     </span>
@@ -99,10 +107,11 @@
         [attr.aria-colindex]="cell.columnStart + 1"
         [style.grid-row]="cell.rowStart + ' / ' + cell.rowEnd"
         [style.grid-column]="cell.columnStart + 1 + ' / span ' + cell.span"
-        [attr.tabindex]="cell.hasChildren ? 0 : null"
+        [attr.data-hpos]="columnHeaderPos(cell)"
+        [tabindex]="isColumnHeaderTabbable(cell) ? 0 : -1"
+        (focus)="onColumnHeaderFocus(cell)"
         (click)="toggleColumn(cell, $event)"
-        (keydown.enter)="toggleColumn(cell, $event)"
-        (keydown.space)="toggleColumn(cell, $event)"
+        (keydown)="onHeaderKeydown('column', cell, $event)"
         (contextmenu)="onHeaderContextMenu('column', cell, $event)"
       >
         @if (cell.hasChildren) {
@@ -150,10 +159,11 @@
         [style.grid-row]="columnDepth() + 1 + rowIndex"
         [style.grid-column]="1"
         [style.padding-inline-start.px]="12 + line.level * 18"
-        [attr.tabindex]="line.hasChildren ? 0 : null"
+        [attr.data-hpos]="rowHeaderPos(rowIndex)"
+        [tabindex]="isRowHeaderTabbable(rowIndex) ? 0 : -1"
+        (focus)="onRowHeaderFocus(rowIndex)"
         (click)="toggleRow(line, $event)"
-        (keydown.enter)="toggleRow(line, $event)"
-        (keydown.space)="toggleRow(line, $event)"
+        (keydown)="onHeaderKeydown('row', line, $event, rowIndex)"
         (contextmenu)="onHeaderContextMenu('row', line, $event)"
       >
         @if (line.hasChildren) {
@@ -188,9 +198,9 @@
         [style.grid-row]="columnDepth() + 1 + rowIndex"
         [style.grid-column]="columnIndex + 2"
         [attr.data-cell]="rowIndex + '-' + columnIndex"
-        [attr.tabindex]="isCellTabbable(rowIndex, columnIndex) ? 0 : -1"
+        [tabindex]="isCellTabbable(rowIndex, columnIndex) ? 0 : -1"
         (focus)="onCellFocus(rowIndex, columnIndex)"
-        (keydown)="onMatrixKeydown($event)"
+        (keydown)="onGridKeydown($event)"
         (click)="onCellClick(rowIndex, columnIndex, $event)"
         (dblclick)="onCellClick(rowIndex, columnIndex, $event, true)"
       >
@@ -209,17 +219,25 @@
   </div>
 </div>
 
+<div class="oge-pivot-live" aria-live="polite" aria-atomic="true">
+  {{ announcement() }}
+</div>
+
 @if (menu(); as contextMenu) {
 <div
   class="oge-context-menu"
   role="menu"
+  tabindex="-1"
+  [attr.aria-label]="contextMenu.label ?? null"
   [style.top.px]="contextMenu.y"
   [style.left.px]="contextMenu.x"
+  (keydown)="onMenuKeydown($event)"
 >
   @for (item of contextMenu.items; track $index) {
   <button
     type="button"
     role="menuitem"
+    tabindex="-1"
     class="oge-menu-item"
     [class.oge-menu-item-active]="item.active"
     [disabled]="item.disabled"
@@ -324,6 +342,8 @@
   <div class="oge-pivot-chooser-grid">
     <div
       class="oge-pivot-chooser-zone oge-pivot-chooser-all"
+      role="group"
+      [attr.aria-label]="msg().allFields"
       (dragover)="onAreaDragOver($event)"
       (drop)="onAreaDrop(null, $event)"
     >
@@ -331,10 +351,17 @@
       @for (field of chooserAllFields(); track field.id) {
       <span
         class="oge-pivot-field-chip"
+        role="button"
+        tabindex="0"
+        aria-haspopup="menu"
+        [attr.aria-keyshortcuts]="listChipShortcuts"
+        [attr.data-field-id]="field.id"
         [class.oge-pivot-chip-unused]="field.area === null || field.area === undefined"
         draggable="true"
         (dragstart)="onFieldDragStart(field, $event)"
         (dragend)="onFieldDragEnd()"
+        (contextmenu)="onFieldContextMenu(field, null, $event)"
+        (keydown)="onChipKeydown(field, null, $event)"
       >
         {{ field.caption }}
       </span>
@@ -343,6 +370,8 @@
     @for (zone of panelAreas(); track zone.area) {
     <div
       class="oge-pivot-chooser-zone"
+      role="group"
+      [attr.aria-label]="zone.label"
       [attr.data-area]="zone.area"
       (dragover)="onAreaDragOver($event)"
       (drop)="onAreaDrop(zone.area, $event)"
@@ -351,9 +380,16 @@
       @for (field of chooserAreaFields(zone.area); track field.id) {
       <span
         class="oge-pivot-field-chip"
+        role="button"
+        tabindex="0"
+        aria-haspopup="menu"
+        [attr.aria-keyshortcuts]="chipShortcuts"
+        [attr.data-field-id]="field.id"
         draggable="true"
         (dragstart)="onFieldDragStart(field, $event)"
         (dragend)="onFieldDragEnd()"
+        (contextmenu)="onFieldContextMenu(field, zone.area, $event)"
+        (keydown)="onChipKeydown(field, zone.area, $event)"
       >
         {{ field.caption }}
       </span>

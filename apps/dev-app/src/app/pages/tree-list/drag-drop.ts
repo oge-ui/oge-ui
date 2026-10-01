@@ -30,6 +30,14 @@ import { SNIPPET } from './drag-drop-snippets';
         its whole subtree) under a new parent. Dropping a row into its own
         descendants is rejected automatically.
       </p>
+      <p>
+        Every drag has a keyboard twin (WCAG 2.1.1 / 2.5.7): with a cell
+        focused, <kbd>Ctrl+↑</kbd>/<kbd>Ctrl+↓</kbd> move the row among its
+        siblings, <kbd>Ctrl+→</kbd> indents it under the previous sibling and
+        <kbd>Ctrl+←</kbd> outdents it to its parent's level. The move runs the
+        same drop path and fires the same reparent event, the focus stays on the
+        row, and a polite live region announces its new level and position.
+      </p>
     </app-doc-header>
 
     @if (fw.isReact()) {

@@ -439,6 +439,18 @@ input.oge-filter-input,
   &:hover {
     background: var(--oge-selected-bg);
   }
+
+  // focusable separator (APG window splitter): keyboard focus gets the ring
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    background: var(--oge-selected-bg);
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
 }
 
 .oge-header-filter-btn {

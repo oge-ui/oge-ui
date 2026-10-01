@@ -158,7 +158,7 @@ export const OGE_REACT_GRID_API: ApiSections = {
           type: 'boolean',
           default: 'false',
           description:
-            'Shows the drop area for drag-and-drop row grouping; each group renders as a removable chip.',
+            'Shows the drop area for drag-and-drop row grouping; each group renders as a removable chip. Keyboard: the header context menu (<kbd>Shift+F10</kbd>) offers <code>groupByColumn</code> / <code>ungroupColumn</code>; on a chip’s remove button <kbd>Ctrl+←/→</kbd> reorders the grouping and <kbd>Delete</kbd> removes it (<code>messages.groupMoved</code> / <code>groupRemoved</code>).',
         },
         {
           name: 'groupBy',
@@ -242,21 +242,22 @@ export const OGE_REACT_GRID_API: ApiSections = {
           name: 'columnResize',
           type: 'boolean',
           default: 'true',
-          description: 'Enables drag-resize handles on header edges.',
+          description:
+            'Enables drag-resize handles on header edges. Keyboard: <kbd>Alt+←/→</kbd> on a focused header resizes by 10px (<kbd>Shift</kbd> for 1px); the handle is a focusable <code>role="separator"</code> (<code>aria-valuenow/min/max</code> = width in px, named by <code>messages.resizeColumn</code>) taking <kbd>←/→</kbd>, <kbd>Home</kbd>/<kbd>End</kbd> (min / max) and <kbd>Enter</kbd>/<kbd>Esc</kbd> (back to the header). RTL-aware; clamped to <code>minWidth</code> / <code>maxWidth</code>.',
         },
         {
           name: 'columnReorder',
           type: 'boolean',
           default: 'true',
           description:
-            'Enables drag-and-drop column reordering (headers dropped onto each other).',
+            'Enables drag-and-drop column reordering (headers dropped onto each other). Keyboard: <kbd>Ctrl+Shift+←/→</kbd> on a focused header moves the column one step, never across a pinned group or out of its band (an unbanded column steps over a band as a whole), announced via <code>messages.columnMoved</code>.',
         },
         {
           name: 'columnChooser',
           type: 'boolean',
           default: 'false',
           description:
-            'Toolbar button opening the show/hide column list; with <code>columnReorder</code> its rows also drag to reorder.',
+            'Toolbar button opening the show/hide column list; with <code>columnReorder</code> its rows also drag to reorder. Keyboard: <kbd>Space</kbd> toggles an item; with <code>columnReorder</code>, <kbd>Ctrl+↑/↓</kbd> moves it. Hiding is also in the header context menu.',
         },
         {
           name: 'toolbarBefore / toolbarCenter / toolbarAfter',
@@ -296,7 +297,7 @@ export const OGE_REACT_GRID_API: ApiSections = {
           type: 'boolean',
           default: 'false',
           description:
-            'Drag-handle column for reordering rows. With plain-array data the array is mutated in place; DataSource consumers handle <code>onRowReordered</code> instead.',
+            'Drag-handle column for reordering rows. With plain-array data the array is mutated in place; DataSource consumers handle <code>onRowReordered</code> instead. Keyboard: <kbd>Ctrl+↑/↓</kbd> on a focused cell moves the row onto its neighbour through the same drop path (same event), announced via <code>messages.rowMoved</code>.',
         },
         {
           name: 'renderRow',
@@ -842,6 +843,13 @@ export const OGE_REACT_GRID_COLUMN_API: ApiSections = {
           description: 'Track minimum in px for flexible-width columns.',
         },
         {
+          name: 'maxWidth',
+          type: 'number | undefined',
+          default: 'undefined',
+          description:
+            'Upper bound in px for user resizing — pointer drag and the <kbd>Alt+←/→</kbd> / separator keys; also the separator’s <code>aria-valuemax</code>.',
+        },
+        {
           name: 'lookup',
           type: 'OgeColumnLookup',
           default: 'undefined',
@@ -1121,6 +1129,12 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
           type: 'string',
           description:
             'Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: <code>Reorder</code>, <code>Detail</code>, <code>Select all</code>, <code>Reorder row</code>. The tree list reads <code>reparentColumnHeader</code> / <code>reparentRow</code> (<code>Reparent</code>, <code>Reparent row</code>) for its reparenting handle.',
+        },
+        {
+          name: 'messages.resizeColumn / messages.columnResized / messages.columnMoved / messages.rowMoved / messages.treeRowMoved / messages.groupMoved / messages.groupRemoved',
+          type: 'string',
+          description:
+            'The keyboard alternatives to dragging (WCAG 2.1.1 / 2.5.7): the resize separator’s name (<code>Resize {column}</code>) and the polite live-region announcements after a keyboard resize (<code>{column} width {width} pixels</code>), column move (<code>{column} moved to position {position} of {total}</code>), row move (<code>Row moved to position {position} of {total}</code>), tree-row move (<code>Row moved to level {level}, position {position} of {total}</code>) and group-chip reorder / removal (<code>Grouping by {column} moved to position {position} of {total}</code>, <code>Grouping by {column} removed</code>).',
         },
         {
           name: 'messages.booleanTrueLabel / messages.booleanFalseLabel',

@@ -51,12 +51,18 @@ export interface OgeKanbanDialogMessages {
 export interface OgeKanbanBoardMessages {
   /** Accessible name of the whole board. */
   readonly boardLabel: string;
-  /** Column listbox aria label; `{title}`, `{count}`. */
+  /** Column list aria label; `{title}`, `{count}`. */
   readonly columnLabel: string;
-  /** Column listbox aria label with a WIP limit; `{title}`, `{count}`, `{limit}`. */
+  /** Column list aria label with a WIP limit; `{title}`, `{count}`, `{limit}`. */
   readonly columnLabelWip: string;
   /** Card aria label; `{title}`, `{column}`. */
   readonly cardLabel: string;
+  /** `aria-roledescription` of every card (what a screen reader calls it). */
+  readonly cardRoleDescription: string;
+  /** The card's edit quick-action button label; `{title}`. */
+  readonly editCardAction: string;
+  /** The card's delete quick-action button label; `{title}`. */
+  readonly deleteCardAction: string;
   /** Hint appended for keyboard users. */
   readonly boardHint: string;
   /** WIP badge title on overflow; `{count}`, `{limit}`. */
@@ -140,6 +146,9 @@ export const OGE_DEFAULT_KANBAN_MESSAGES: OgeKanbanMessages = {
     columnLabel: '{title}, {count} cards',
     columnLabelWip: '{title}, {count} of {limit} cards',
     cardLabel: '{title}, in {column}',
+    cardRoleDescription: 'card',
+    editCardAction: 'Edit {title}',
+    deleteCardAction: 'Delete {title}',
     boardHint: 'Press Escape then Tab to leave the board',
     wipExceeded: '{count} cards exceed the limit of {limit}',
     overdue: 'Overdue since {date}',
