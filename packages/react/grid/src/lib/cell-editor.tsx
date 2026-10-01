@@ -1,7 +1,17 @@
 'use client';
 
-import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
-import type { LookupItem, OgeDataType } from '@oge-ui/behavior';
+import {
+  useEffect,
+  useId,
+  useRef,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
+import {
+  syncOgeEditorErrorAria,
+  type LookupItem,
+  type OgeDataType,
+} from '@oge-ui/behavior';
 import {
   OgeCheckBox,
   OgeDateBox,
@@ -48,6 +58,12 @@ export interface OgeCellEditorProps {
  * blur events surface as callbacks — the grid binds them per surface — and
  * events an open dropdown already consumed (`defaultPrevented`) are not
  * re-emitted, so the second Escape closes the editor rather than the popup.
+ *
+ * While invalid with an error text, the editor renders that text in a
+ * visually hidden element (the host `title` shows it as a tooltip) and points
+ * the native control at it — `aria-invalid`, `aria-errormessage` and an
+ * `aria-describedby` entry — because the compact shape has no subscript for
+ * the input components' own error wiring to reference.
  */
 export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
   const {
@@ -61,6 +77,15 @@ export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
     autoFocus = false,
   } = props;
   const hostRef = useRef<HTMLDivElement>(null);
+  const errorId = `oge-cell-editor-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}-error`;
+  const errorMessage = invalid ? errorTitle || null : null;
+
+  // the inner editor's own render may replace its control — re-wire after
+  // every render (the helper only touches what changed)
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host) syncOgeEditorErrorAria(host, errorMessage ? errorId : null);
+  });
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -165,6 +190,11 @@ export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
       onKeyDown={onKeyDown}
       onBlur={onBlur}
     >
+      {errorMessage && (
+        <span className="oge-sr-only oge-cell-editor-error" id={errorId}>
+          {errorMessage}
+        </span>
+      )}
       {control}
     </div>
   );

@@ -82,6 +82,12 @@ export interface OgeRowRemovedEvent {
   key: RowKey;
 }
 
+/** An editor that blocked a commit (`validationFailed`). */
+export interface OgeGridInvalidEditor {
+  key: RowKey;
+  field: string;
+}
+
 /** What an open editor reports back — the one thing each layer owns itself. */
 export interface OgeGridEditorState {
   value: unknown;
@@ -138,6 +144,11 @@ export interface OgeGridEditingCoreDeps<T, TSlot = unknown, S = unknown> {
     editCanceled?(): void;
     /** A DataSource write failed while applying a save batch. */
     dataError?(error: unknown): void;
+    /**
+     * A commit was blocked because these editors are invalid (their errors
+     * were just revealed) — the hosts announce the first one.
+     */
+    validationFailed?(invalid: readonly OgeGridInvalidEditor[]): void;
   };
   /** Re-runs the current load after a save reached the DataSource. */
   reload(): void;
@@ -310,6 +321,9 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     if (!column || !editor) return;
     if (editor.invalid) {
       this.deps.editors.markTouched(cell.key, cell.field);
+      this.deps.events.validationFailed?.([
+        { key: cell.key, field: cell.field },
+      ]);
       return;
     }
     const node = this.dataNodeOf(cell.key);
@@ -412,7 +426,7 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     const data: Record<string, unknown> = this.deps.state.isAdded(rowKey)
       ? { ...this.deps.state.changes().get(rowKey) }
       : {};
-    let invalid = false;
+    const invalid: OgeGridInvalidEditor[] = [];
     for (const column of this.deps.columns()) {
       const field = column.field;
       if (!field || !column.editable) continue;
@@ -420,7 +434,7 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
       if (!editor) continue;
       if (editor.invalid) {
         this.deps.editors.markTouched(rowKey, field);
-        invalid = true;
+        invalid.push({ key: rowKey, field });
         continue;
       }
       const original = column.accessor(node.data);
@@ -429,7 +443,10 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
         data[field] = value;
       }
     }
-    if (invalid) return;
+    if (invalid.length) {
+      this.deps.events.validationFailed?.(invalid);
+      return;
+    }
     if (!Object.keys(data).length) {
       this.deps.state.stopEditor();
       return;

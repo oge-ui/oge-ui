@@ -49,6 +49,7 @@ import { groupKeyFilter, type GroupInterval } from '@oge-ui/core';
 import { OgeDateRangeBox } from '@oge-ui/react-inputs';
 import {
   OGE_GRID_WINDOW_BLOCK_SIZE,
+  OgeGridAnnouncements,
   OgeGridColumnLayoutCore,
   OgeGridDataCore,
   OgeGridDeferredChildrenCore,
@@ -98,6 +99,7 @@ import {
   type OgeExportOptions,
   type OgeExportingEvent,
   type OgeGridColumnSpec,
+  type OgeGridInvalidEditor,
   type OgeGridMessages,
   type OgeGridResolvedColumn,
   type OgeMenuItem,
@@ -122,6 +124,7 @@ import {
   OgeModal,
   OgePopup,
   useAnchoredPanel,
+  useOgeLiveAnnouncer,
 } from '@oge-ui/react-overlay';
 import { useOgeGridConfig, useOgeGridStateStorage } from './grid-config';
 import type {
@@ -221,6 +224,11 @@ function OgeGridInner<T extends object>(
   );
   const msgRef = useRef(msg);
   msgRef.current = msg;
+  const liveAnnouncer = useOgeLiveAnnouncer();
+  /** Filled in once the announcer exists; the editing core calls it later. */
+  const validationFailedRef = useRef<
+    (invalid: readonly OgeGridInvalidEditor[]) => void
+  >(() => undefined);
 
   // --- the model: every derived value, built once ---------------------------
   const model = useMemo(() => {
@@ -785,6 +793,7 @@ function OgeGridInner<T extends object>(
           rowRemoved: (event) => p().onRowRemoved?.(event),
           editCanceled: () => p().onEditCanceled?.(),
           dataError: (error) => data.error.set(error),
+          validationFailed: (invalid) => validationFailedRef.current(invalid),
         },
         reload: () => data.reload(),
       },
@@ -1097,6 +1106,50 @@ function OgeGridInner<T extends object>(
   // every render starts a new version: props may have changed
   model.rx.invalidate();
   const { state, data } = model;
+
+  // --- live announcements (shared rules: OgeGridAnnouncements) -------------
+  const announcer = useMemo(
+    () =>
+      new OgeGridAnnouncements({
+        announce: (message, options) =>
+          liveAnnouncer.announce(message, options),
+        messages: () => msgRef.current,
+        enabled: () =>
+          latest.current.announcements ?? configRef.current.announcements,
+        caption: (field) =>
+          model.columnsByField().get(field)?.caption ?? humanize(field),
+      }),
+    [model, liveAnnouncer],
+  );
+  validationFailedRef.current = (invalid) => {
+    const first = invalid[0];
+    if (!first) return;
+    const entry = model.editing
+      .activeEditors()
+      .get(`${String(first.key)}::${first.field}`);
+    announcer.validationFailed(
+      model.columnsByField().get(first.field)?.caption ?? humanize(first.field),
+      entry?.error ?? msgRef.current.invalidError,
+    );
+  };
+  // every render may carry a state change; the tracker diffs and stays quiet
+  // when nothing it speaks about moved
+  useEffect(() => {
+    const windowed = model.windowed();
+    announcer.observe({
+      sort: state.sort.descriptors(),
+      filterKey: JSON.stringify([
+        state.filter.combinedExpr(),
+        state.filter.searchText().trim(),
+      ]),
+      resultToken: windowed ? data.windowRows() : data.result(),
+      loading: windowed ? data.windowLoading() : data.loading(),
+      rowCount: model.totalCount(),
+      paging: state.paging.pageSize() != null,
+      pageIndex: state.paging.pageIndex(),
+      pageCount: model.pageCount(),
+    });
+  });
 
   // --- effects -----------------------------------------------------------
   const keyField = props.keyField;
@@ -1621,6 +1674,15 @@ function OgeGridInner<T extends object>(
       kind,
       row,
     });
+    if (kind === 'group') {
+      const group = model
+        .flatNodes()
+        .find(
+          (node): node is GroupRowNode =>
+            node.kind === 'group' && node.key === key,
+        );
+      if (group) announcer.groupToggled(groupValueText(group), expanding);
+    }
   }
 
   function groupCaption(field: string): string {
@@ -1820,21 +1882,26 @@ function OgeGridInner<T extends object>(
   }
 
   function selectAll(): void {
+    void runSelectAll();
+  }
+
+  /** `selectAll()`'s body; settles once the selection is in place. */
+  function runSelectAll(): Promise<void> {
     if (model.selectionDeferred()) {
       const field = model.deferredKeyFieldName();
-      if (!field) return;
+      if (!field) return Promise.resolve();
       // the selection *is* the current filter, so no keys are materialized
       const filter = state.loadOptions().filter;
       model.setSelectionFilter(
         filter ?? { type: 'binary', field, op: 'isnotnull' },
       );
-      return;
+      return Promise.resolve();
     }
     if ((latest.current.selectAllMode ?? 'allPages') === 'page') {
       state.selection.replace(model.dataKeys());
-      return;
+      return Promise.resolve();
     }
-    void getExportData().then(({ rows }) => {
+    return getExportData().then(({ rows }) => {
       const keyOf = model.keySelector();
       state.selection.replace(rows.map((row, index) => keyOf(row, index)));
     });
@@ -1849,8 +1916,20 @@ function OgeGridInner<T extends object>(
   }
 
   function toggleSelectAll(): void {
-    if (model.allSelected()) clearSelection();
-    else selectAll();
+    const announce = (): void =>
+      announcer.selectionCount(
+        model.selectionDeferred()
+          ? model.selectionFilter()
+            ? model.totalCount()
+            : 0
+          : state.selection.count(),
+      );
+    if (model.allSelected()) {
+      clearSelection();
+      announce();
+    } else {
+      void runSelectAll().then(announce);
+    }
   }
 
   /** Shared toolbar/imperative add-row path — stages `onInitNewRow` prefills. */

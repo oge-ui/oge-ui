@@ -144,12 +144,22 @@ export {
   type OgeContextMenuKeyTarget,
 } from './lib/grid/grid-context-menu';
 export {
+  OgeGridAnnouncements,
+  rowCountText,
+  sortChangeText,
+  type OgeGridAnnounceSink,
+  type OgeGridAnnouncementSnapshot,
+  type OgeGridAnnouncementsDeps,
+} from './lib/grid/grid-announcements';
+export { syncOgeEditorErrorAria } from './lib/grid/grid-editor-aria';
+export {
   OgeGridEditingCore,
   type OgeDataChange,
   type OgeEditingStartEvent,
   type OgeGridEditingCoreDeps,
   type OgeGridEditorBridge,
   type OgeGridEditorState,
+  type OgeGridInvalidEditor,
   type OgeRowInsertedEvent,
   type OgeRowInsertingEvent,
   type OgeRowRemovedEvent,
@@ -495,6 +505,16 @@ export {
   type OgeModalDragRequest,
   type OgeModalResizeRequest,
 } from './lib/overlay/modal-core';
+// --- live announcements ------------------------------------------------------
+export {
+  OgeLiveAnnouncerCore,
+  getOgeLiveAnnouncer,
+  OGE_LIVE_ANNOUNCER_ATTR,
+  OGE_LIVE_ANNOUNCER_CLASS,
+  type OgeLivePoliteness,
+  type OgeLiveAnnounceOptions,
+  type OgeLiveAnnouncerOptions,
+} from './lib/a11y/live-announcer';
 // --- upload ------------------------------------------------------------------
 export type {
   OgeUploadFileStatus,

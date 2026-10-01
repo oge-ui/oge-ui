@@ -98,6 +98,30 @@ export interface OgeGridMessages {
   groupSummaryPattern: string;
   /** Pattern for the total row; placeholders: {label} {value} */
   totalSummaryPattern: string;
+  /** Live announcement after an ascending sort; placeholder: {column}. */
+  sortAscendingAnnouncement: string;
+  /** Live announcement after a descending sort; placeholder: {column}. */
+  sortDescendingAnnouncement: string;
+  /** Live announcement after the sort was removed; placeholder: {column}. */
+  sortClearedAnnouncement: string;
+  /** Live result count after a filter or search change; placeholder: {count}. */
+  rowCountAnnouncement: string;
+  /** Singular form of `rowCountAnnouncement` (exactly one row); placeholder: {count}. */
+  rowCountOneAnnouncement: string;
+  /** Live announcement after a page change; placeholders: {n} {total}. */
+  pageAnnouncement: string;
+  /** Live announcement when a group row expands; placeholder: {value}. */
+  groupExpandedAnnouncement: string;
+  /** Live announcement when a group row collapses; placeholder: {value}. */
+  groupCollapsedAnnouncement: string;
+  /** Live announcement when a tree row expands (tree-list); placeholder: {value}. */
+  rowExpandedAnnouncement: string;
+  /** Live announcement when a tree row collapses (tree-list); placeholder: {value}. */
+  rowCollapsedAnnouncement: string;
+  /** Live announcement after select-all / clear-all; placeholder: {count}. */
+  selectionCountAnnouncement: string;
+  /** Assertive announcement when a save is blocked by an invalid editor; placeholders: {column} {error}. */
+  validationErrorAnnouncement: string;
 }
 
 export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
@@ -194,6 +218,18 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   },
   groupSummaryPattern: '{label} of {column}: {value}',
   totalSummaryPattern: '{label}: {value}',
+  sortAscendingAnnouncement: 'Sorted by {column}, ascending',
+  sortDescendingAnnouncement: 'Sorted by {column}, descending',
+  sortClearedAnnouncement: 'Sort cleared',
+  rowCountAnnouncement: '{count} rows',
+  rowCountOneAnnouncement: '{count} row',
+  pageAnnouncement: 'Page {n} of {total}',
+  groupExpandedAnnouncement: 'Group {value} expanded',
+  groupCollapsedAnnouncement: 'Group {value} collapsed',
+  rowExpandedAnnouncement: '{value} expanded',
+  rowCollapsedAnnouncement: '{value} collapsed',
+  selectionCountAnnouncement: '{count} rows selected',
+  validationErrorAnnouncement: '{column}: {error}',
 };
 
 /** Application-wide grid defaults, overridable per grid via the matching props. */
@@ -211,6 +247,11 @@ export interface OgeGridConfig {
   headerFilterValueLimit: number;
   /** Whether a third header click clears the sort. */
   allowUnsorting: boolean;
+  /**
+   * Whether sort, filter result, paging, group expansion, select-all and
+   * validation changes are spoken through the shared live announcer.
+   */
+  announcements: boolean;
   messages: OgeGridMessages;
 }
 
@@ -223,6 +264,7 @@ export const OGE_DEFAULT_GRID_CONFIG: OgeGridConfig = {
   pinnedDefaultWidth: 150,
   headerFilterValueLimit: 200,
   allowUnsorting: true,
+  announcements: true,
   messages: OGE_DEFAULT_GRID_MESSAGES,
 };
 

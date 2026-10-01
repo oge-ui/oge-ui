@@ -26,6 +26,7 @@ import {
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
+  OgeGridAnnouncements,
   OgeGridColumnLayoutCore,
   OgeGridDataCore,
   OgeGridKeyboardNavCore,
@@ -68,6 +69,7 @@ import {
   type OgeExportingEvent,
   type OgeFilterBuilderField,
   type OgeGridColumnSpec,
+  type OgeGridInvalidEditor,
   type OgeGridMessages,
   type OgeGridResolvedColumn,
   type OgeMenuItem,
@@ -91,6 +93,7 @@ import {
   OgeModal,
   OgePopup,
   useAnchoredPanel,
+  useOgeLiveAnnouncer,
 } from '@oge-ui/react-overlay';
 import {
   OgeCellEditor,
@@ -178,6 +181,11 @@ function OgeTreeListInner<T extends object>(
   );
   const msgRef = useRef(msg);
   msgRef.current = msg;
+  const liveAnnouncer = useOgeLiveAnnouncer();
+  /** Filled in once the announcer exists; the editing core calls it later. */
+  const validationFailedRef = useRef<
+    (invalid: readonly OgeGridInvalidEditor[]) => void
+  >(() => undefined);
 
   // --- the model: every derived value, built once ---------------------------
   const model = useMemo(() => {
@@ -425,6 +433,7 @@ function OgeTreeListInner<T extends object>(
           rowRemoved: (event) => p().onRowRemoved?.(event),
           editCanceled: () => p().onEditCanceled?.(),
           dataError: (error) => p().onDataErrorOccurred?.({ error }),
+          validationFailed: (invalid) => validationFailedRef.current(invalid),
         },
         // saved rows may live in the lazy child cache — drop it so the reload
         // re-fetches open levels and the UI shows the persisted values
@@ -732,15 +741,70 @@ function OgeTreeListInner<T extends object>(
   model.rx.invalidate();
   const { state, data, core } = model;
 
+  // --- live announcements (shared rules: OgeGridAnnouncements) -------------
+  const captionOf = (field: string): string =>
+    model.resolvedColumns().find((column) => column.field === field)?.caption ??
+    humanize(field);
+  const announcer = useMemo(
+    () =>
+      new OgeGridAnnouncements({
+        announce: (message, options) =>
+          liveAnnouncer.announce(message, options),
+        messages: () => msgRef.current,
+        enabled: () =>
+          latest.current.announcements ?? configRef.current.announcements,
+        caption: (field) =>
+          model.resolvedColumns().find((column) => column.field === field)
+            ?.caption ?? humanize(field),
+      }),
+    [model, liveAnnouncer],
+  );
+  validationFailedRef.current = (invalid) => {
+    const first = invalid[0];
+    if (!first) return;
+    const entry = model.editing
+      .activeEditors()
+      .get(`${String(first.key)}::${first.field}`);
+    announcer.validationFailed(
+      captionOf(first.field),
+      entry?.error ?? msgRef.current.invalidError,
+    );
+  };
+  // every render may carry a state change; the tracker diffs and stays quiet
+  // when nothing it speaks about moved
+  useEffect(() => {
+    announcer.observe({
+      sort: state.sort.descriptors(),
+      filterKey: JSON.stringify([
+        state.filter.combinedExpr(),
+        state.filter.searchText().trim(),
+      ]),
+      // the tree filters client-side: a new flat list is the new result
+      resultToken: core.flatNodes(),
+      loading: data.loading(),
+      rowCount: core.totalCount(),
+      paging: core.effPageSize() != null,
+      pageIndex: model.pageIndex(),
+      pageCount: core.pageCount(),
+    });
+  });
+
+  /** The row's name in announcements: its first column's display text. */
+  function rowLabel(node: DataRowNode<T>): string {
+    const column = model.resolvedColumns().find((candidate) => candidate.field);
+    return column ? cellDisplayText(node, column) : String(node.key);
+  }
+
   // --- expansion pipeline (keyboard + expander + API share it) ---------------
   function setRowExpanded(node: DataRowNode<T>, expand: boolean): void {
     // consumers may veto UI-driven toggles (the imperative API stays silent)
-    core.requestToggle(node, expand, {
+    const toggled = core.requestToggle(node, expand, {
       expanding: (event) => latest.current.onRowExpanding?.(event),
       collapsing: (event) => latest.current.onRowCollapsing?.(event),
       expanded: (event) => latest.current.onRowExpanded?.(event),
       collapsed: (event) => latest.current.onRowCollapsed?.(event),
     });
+    if (toggled) announcer.rowToggled(rowLabel(node), expand);
   }
   model.setToggleRow(setRowExpanded);
 
@@ -1136,6 +1200,7 @@ function OgeTreeListInner<T extends object>(
   function toggleSelectAll(): void {
     if (core.allSelected()) clearSelection();
     else core.selectAll();
+    announcer.selectionCount(state.selection.count());
   }
 
   useImperativeHandle(ref, (): OgeTreeListHandle<T> => ({

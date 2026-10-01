@@ -24,6 +24,9 @@ const ENTRY_POINTS = [
   'isTopOverlay',
   'lockBodyScroll',
   'OGE_DEFAULT_OVERLAY_TIMINGS',
+  // live announcements
+  'OgeLiveAnnouncerCore',
+  'getOgeLiveAnnouncer',
   // menu
   'menuMoveIndex',
   'OgeMenuTypeAhead',
@@ -89,6 +92,8 @@ const ENTRY_POINTS = [
   'resolveOgeGridColumns',
   'adaptiveHiddenColumnIds',
   'buildRowFilterExpr',
+  'OgeGridAnnouncements',
+  'syncOgeEditorErrorAria',
 ] as const;
 
 describe('the @oge-ui/behavior barrel', () => {
