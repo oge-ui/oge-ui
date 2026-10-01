@@ -22,6 +22,7 @@ import {
   type OgeToastPosition,
   type OgeToastPromiseBaseOptions,
 } from '@oge-ui/behavior';
+import { useOgeLiveAnnouncer } from './live-announcer';
 import { useOgeOverlayConfig } from './overlay-config';
 
 // The handle class is the engine's own, shared with the Angular service.
@@ -120,8 +121,8 @@ function inertRef<D>(): OgeToastRef<D> {
  *
  * Toasts render in body-appended fixed regions (`--oge-z-toast`, above
  * modals), never take focus, never join the Escape stack, and announce via
- * permanently-mounted hidden live regions (`error` asserts, the rest are
- * polite). Timers pause on hover, focus-within and while the tab is hidden,
+ * the document's shared live regions (`useOgeLiveAnnouncer` — `error`
+ * asserts, the rest are polite). Timers pause on hover, focus-within and while the tab is hidden,
  * and always resume with the remaining time. The engine itself — queue,
  * timers, coalescing, announcements — is `@oge-ui/behavior`'s
  * `OgeToastCore`, shared verbatim with the Angular service (ADR 0001).
@@ -132,8 +133,7 @@ export function OgeToastProvider({ children }: { children?: ReactNode }) {
   configRef.current = config;
 
   const [, setVersion] = useState(0);
-  const politeRef = useRef<HTMLDivElement>(null);
-  const assertiveRef = useRef<HTMLDivElement>(null);
+  const announcer = useOgeLiveAnnouncer();
 
   const coreRef = useRef<OgeToastCore<OgeToastOptions>>(undefined);
   coreRef.current ??= new OgeToastCore<OgeToastOptions>({
@@ -145,10 +145,12 @@ export function OgeToastProvider({ children }: { children?: ReactNode }) {
       coalesceDuplicates: configRef.current.toastCoalesceDuplicates,
     }),
     onChange: () => setVersion((v) => v + 1),
+    // The core already waits before it writes, so the shared announcer
+    // writes synchronously (`delay: 0`). Its clear step is not forwarded: the
+    // region is shared, and clearing it would cancel another component's
+    // pending message.
     announce: (mode, text) => {
-      const el =
-        mode === 'assertive' ? assertiveRef.current : politeRef.current;
-      if (el) el.textContent = text;
+      if (text) announcer.announce(text, { politeness: mode, delay: 0 });
     },
   });
   const core = coreRef.current;
@@ -356,18 +358,6 @@ export function OgeToastProvider({ children }: { children?: ReactNode }) {
           })}
         </div>
       ))}
-      <div
-        ref={politeRef}
-        className="oge-toast-announcer"
-        role="status"
-        aria-live="polite"
-      ></div>
-      <div
-        ref={assertiveRef}
-        className="oge-toast-announcer"
-        role="alert"
-        aria-live="assertive"
-      ></div>
     </>
   );
 

@@ -6,6 +6,7 @@
  * shared primitives next to this file.
  */
 
+import { OGE_LIVE_ANNOUNCER_ATTR } from '../a11y/live-announcer';
 import { getTabbableElements } from './focus-trap';
 
 // --- vocabulary -------------------------------------------------------------
@@ -105,15 +106,21 @@ export function isModalFocusOrphaned(panel: HTMLElement | null): boolean {
 /**
  * Marks siblings of every ancestor of `layer` `inert`, so assistive tech and
  * Tab can never reach the page behind the modal. Elements already inert are
- * skipped, keeping stacked modals' bookkeeping independent. Returns the
- * release function.
+ * skipped, keeping stacked modals' bookkeeping independent. The shared live
+ * regions (`OgeLiveAnnouncerCore`) are never inerted — inert content is not
+ * announced, and a dialog's own "saved" message must still be heard. Returns
+ * the release function.
  */
 export function inertModalBackground(layer: HTMLElement): () => void {
   const inerted: Element[] = [];
   let node: HTMLElement | null = layer;
   while (node?.parentElement && node !== document.body) {
     for (const sibling of Array.from(node.parentElement.children)) {
-      if (sibling !== node && !sibling.hasAttribute('inert')) {
+      if (
+        sibling !== node &&
+        !sibling.hasAttribute('inert') &&
+        !sibling.hasAttribute(OGE_LIVE_ANNOUNCER_ATTR)
+      ) {
         sibling.setAttribute('inert', '');
         inerted.push(sibling);
       }

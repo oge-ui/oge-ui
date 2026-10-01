@@ -31,7 +31,7 @@ import {
   sanitizeResourceUrl,
 } from '@oge-ui/behavior';
 import { OgeProgressBar } from '@oge-ui/react-layout';
-import { OgeModal } from '@oge-ui/react-overlay';
+import { OgeModal, useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
 import { useOgeUploadConfig, useOgeUploadTransport } from './upload-config';
 import {
   useUploadZoneRegistration,
@@ -434,6 +434,13 @@ export const OgeFileUploader = forwardRef<
     });
   }
   const core = coreRef.current;
+
+  // the machine's announcements go through the document's shared live region
+  const liveAnnouncer = useOgeLiveAnnouncer();
+  const announcement = core.announcement;
+  useEffect(() => {
+    liveAnnouncer.announce(announcement);
+  }, [liveAnnouncer, announcement]);
 
   // A controlled `value` written from the outside (a form reset) replaces
   // the list — the counterpart of the Angular `writeValue`. Loop-guarded by
@@ -885,10 +892,6 @@ export const OgeFileUploader = forwardRef<
               )}
             </div>
           )}
-
-      <div className="oge-upload-live" aria-live="polite" aria-atomic="true">
-        {core.announcement}
-      </div>
 
       {core.previewing && (
         <OgeModal

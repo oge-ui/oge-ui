@@ -21,7 +21,7 @@ import {
   type ValidationErrors,
 } from '@angular/forms';
 import { OgeProgressBar } from '@oge-ui/layout/progress-bar';
-import { OgeModal } from '@oge-ui/overlay';
+import { OgeLiveAnnouncer, OgeModal } from '@oge-ui/overlay';
 import {
   OgeFileUploaderCore,
   mergeUploadMessages,
@@ -462,10 +462,6 @@ let uidCounter = 0;
       </div>
     }
 
-    <div class="oge-upload-live" aria-live="polite" aria-atomic="true">
-      {{ announcement() }}
-    </div>
-
     @if (previewing(); as file) {
       <oge-modal
         class="oge-upload-lightbox"
@@ -626,6 +622,7 @@ let uidCounter = 0;
 export class OgeFileUploader implements ControlValueAccessor {
   private readonly config = inject(OGE_UPLOAD_CONFIG);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly liveAnnouncer = inject(OgeLiveAnnouncer);
   /**
    * Injected with `self`, and the accessor is assigned in the constructor
    * rather than provided through `NG_VALUE_ACCESSOR` — the house pattern, and
@@ -909,7 +906,8 @@ export class OgeFileUploader implements ControlValueAccessor {
   private readonly rows = signal<readonly OgeUploadFile[]>([]);
   protected readonly dragOver = signal(false);
   protected readonly activeUid = signal<string | null>(null);
-  protected readonly announcement = signal('');
+  /** The machine's latest announcement, spoken through the shared live region. */
+  private lastAnnouncement = '';
   /** The row whose lightbox is open, if any. */
   protected readonly previewing = signal<OgeUploadFile | null>(null);
   /** Bumps on every machine change so derived reads re-evaluate. */
@@ -919,7 +917,10 @@ export class OgeFileUploader implements ControlValueAccessor {
     this.rows.set(this.core.rows);
     this.dragOver.set(this.core.dragOver);
     this.activeUid.set(this.core.activeUid);
-    this.announcement.set(this.core.announcement);
+    if (this.core.announcement !== this.lastAnnouncement) {
+      this.lastAnnouncement = this.core.announcement;
+      this.liveAnnouncer.announce(this.core.announcement);
+    }
     this.previewing.set(this.core.previewing);
     this.version.update((v) => v + 1);
   }

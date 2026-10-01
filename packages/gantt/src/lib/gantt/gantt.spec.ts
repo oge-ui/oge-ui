@@ -187,9 +187,11 @@ describe('<oge-gantt>', () => {
     gantt.insertDependency('m', 'a'); // would close a→b→m→a
     await settle(fixture);
     expect(fixture.componentInstance.inserted.length).toBe(0);
-    expect(host.querySelector('.oge-gantt-live')?.textContent).toContain(
-      'cycle',
-    );
+    // announced through the document's shared live region
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(
+      document.querySelector('[data-oge-live-announcer="polite"]')?.textContent,
+    ).toContain('cycle');
 
     gantt.insertDependency('a', 'm', 'SS');
     await settle(fixture);

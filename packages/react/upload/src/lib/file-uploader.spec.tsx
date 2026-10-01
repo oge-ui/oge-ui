@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { StrictMode, useRef } from 'react';
 import type {
   OgeUploadAdapter,
@@ -78,7 +84,7 @@ describe('OgeFileUploader', () => {
     );
   });
 
-  it('lists picked files, reports the selection and the value', () => {
+  it('lists picked files, reports the selection and the value', async () => {
     const onFilesSelected = vi.fn();
     const onValueChange = vi.fn();
     render(
@@ -100,9 +106,12 @@ describe('OgeFileUploader', () => {
     expect(
       screen.getByRole('list', { name: 'Selected files (2)' }),
     ).toBeInTheDocument();
-    // the live region announced the addition
-    expect(document.querySelector('.oge-upload-live')?.textContent).toContain(
-      '2 files added',
+    // the shared live region announced the addition
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-oge-live-announcer="polite"]')
+          ?.textContent,
+      ).toContain('2 files added'),
     );
   });
 
