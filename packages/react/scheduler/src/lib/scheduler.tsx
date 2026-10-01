@@ -116,6 +116,7 @@ function OgeSchedulerInner<T extends object>(
       currentView: () => modelRef.current.view,
       views: () => p().views ?? DEFAULT_VIEWS,
       firstDayOfWeek: () => p().firstDayOfWeek,
+      weekendDays: () => p().weekendDays,
       dayStartHour: () => p().dayStartHour ?? 0,
       dayEndHour: () => p().dayEndHour ?? 24,
       cellDuration: () => p().cellDuration ?? 30,
@@ -295,6 +296,10 @@ function OgeSchedulerInner<T extends object>(
   const msg = core.msg();
   const locale = core.effectiveLocale();
   const firstDayOfWeek = core.resolvedFirstDayOfWeek();
+  const resolvedWeekendDays = core.resolvedWeekendDays();
+  // stable identity while the days are equal, so the views' memos hold
+  const weekendKey = resolvedWeekendDays.join(',');
+  const weekendDays = useMemo(() => resolvedWeekendDays, [weekendKey]);
   const activeView = core.activeView();
   const visible = core.visibleAppointments();
   const periodTitle = core.periodTitle();
@@ -348,6 +353,7 @@ function OgeSchedulerInner<T extends object>(
             anchorDate={currentDate}
             appointments={visible}
             firstDayOfWeek={firstDayOfWeek}
+            weekendDays={weekendDays}
             dayStartHour={activeView.dayStartHour}
             dayEndHour={activeView.dayEndHour}
             cellDuration={activeView.cellDuration}
@@ -369,6 +375,7 @@ function OgeSchedulerInner<T extends object>(
             anchorDate={currentDate}
             appointments={visible}
             firstDayOfWeek={firstDayOfWeek}
+            weekendDays={weekendDays}
             maxAppointmentsPerCell={props.maxAppointmentsPerCell ?? 'auto'}
             locale={locale}
             messages={msg.grid}
@@ -396,6 +403,7 @@ function OgeSchedulerInner<T extends object>(
             anchorDate={currentDate}
             appointments={visible}
             firstDayOfWeek={firstDayOfWeek}
+            weekendDays={weekendDays}
             dayStartHour={activeView.dayStartHour}
             dayEndHour={activeView.dayEndHour}
             cellDuration={activeView.cellDuration}

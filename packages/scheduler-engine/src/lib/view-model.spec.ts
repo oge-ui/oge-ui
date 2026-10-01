@@ -1,9 +1,11 @@
+import { isWeekendDay } from './day-week-vm';
 import type { SchedulerAppointment } from './scheduler-model';
 import {
   buildMonthGrid,
   buildTimeGrid,
   navigateDate,
   partitionAllDay,
+  resolveHiddenWeekDays,
   segmentTimedAppointments,
   viewRange,
 } from './view-model';
@@ -66,6 +68,38 @@ describe('view-model', () => {
       expect(grid.days[6]).toEqual(new Date(2026, 7, 9));
       expect(grid.slotStartMinutes).toHaveLength(24);
       expect(grid.rangeEnd).toEqual(new Date(2026, 7, 10));
+    });
+
+    it('drops the configured weekend from the workWeek view', () => {
+      const base = {
+        anchorDate: new Date(2026, 7, 6), // Thursday
+        view: 'workWeek' as const,
+        firstDayOfWeek: 0,
+        dayStartHour: 0,
+        dayEndHour: 24,
+        cellDuration: 60,
+      };
+      // default: Saturday + Sunday
+      expect(buildTimeGrid(base).days.map((day) => day.getDay())).toEqual([
+        1, 2, 3, 4, 5,
+      ]);
+      // a Friday + Saturday weekend (he-IL, ar-SA)
+      expect(
+        buildTimeGrid({ ...base, weekendDays: [5, 6] }).days.map((day) =>
+          day.getDay(),
+        ),
+      ).toEqual([0, 1, 2, 3, 4]);
+      expect(resolveHiddenWeekDays('workWeek', [3], [5, 6])).toEqual([5, 6, 3]);
+      expect(resolveHiddenWeekDays('week', undefined, [5, 6])).toEqual([]);
+    });
+
+    it('isWeekendDay follows the weekend it is given', () => {
+      const friday = new Date(2026, 7, 7);
+      const sunday = new Date(2026, 7, 9);
+      expect(isWeekendDay(friday)).toBe(false);
+      expect(isWeekendDay(sunday)).toBe(true);
+      expect(isWeekendDay(friday, [5, 6])).toBe(true);
+      expect(isWeekendDay(sunday, [5, 6])).toBe(false);
     });
 
     it('keeps 7 calendar days across a DST-length week', () => {

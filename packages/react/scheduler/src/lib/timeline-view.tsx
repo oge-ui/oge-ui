@@ -33,6 +33,8 @@ export interface TimelineViewProps<T> {
   readonly anchorDate: Date;
   readonly appointments: readonly SchedulerAppointment<T>[];
   readonly firstDayOfWeek: number;
+  /** Weekend days (0 = Sunday) the view shades — the scheduler's resolved list. */
+  readonly weekendDays: readonly number[];
   readonly dayStartHour: number;
   readonly dayEndHour: number;
   readonly cellDuration: number;
@@ -269,7 +271,7 @@ export function SchedulerTimelineView<T>(props: TimelineViewProps<T>) {
                   <div
                     key={day.getTime()}
                     className={
-                      isWeekendDay(day)
+                      isWeekendDay(day, props.weekendDays)
                         ? 'oge-scheduler-timeline-daycol oge-scheduler-cell-weekend'
                         : 'oge-scheduler-timeline-daycol'
                     }

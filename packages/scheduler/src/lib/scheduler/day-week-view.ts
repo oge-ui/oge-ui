@@ -351,6 +351,8 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly anchorDate = input.required<Date>();
   readonly appointments = input.required<readonly SchedulerAppointment<T>[]>();
   readonly firstDayOfWeek = input.required<number>();
+  /** Weekend days (0 = Sunday) the grid shades — the scheduler's resolved list. */
+  readonly weekendDays = input<readonly number[]>([0, 6]);
   readonly dayStartHour = input.required<number>();
   readonly dayEndHour = input.required<number>();
   readonly cellDuration = input.required<number>();
@@ -425,6 +427,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       dayEndHour: this.dayEndHour(),
       cellDuration: this.cellDuration(),
       hiddenWeekDays: this.hiddenWeekDays(),
+      weekendDays: this.weekendDays(),
     }),
   );
 
@@ -456,7 +459,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   }
 
   protected isWeekend(day: Date): boolean {
-    return isWeekendDay(day);
+    return isWeekendDay(day, this.weekendDays());
   }
 
   private readonly partitioned = computed(() =>

@@ -108,6 +108,7 @@ function OgeGanttInner<
           showDependencies: () => p().showDependencies ?? true,
           showCriticalPath: () => p().showCriticalPath ?? false,
           weekendsHighlighted: () => p().weekendsHighlighted ?? true,
+          weekendDays: () => p().weekendDays,
           holidays: () => p().holidays ?? NO_DATES,
           workCalendar: () => p().workCalendar ?? null,
           showResourceWorkload: () => p().showResourceWorkload ?? false,

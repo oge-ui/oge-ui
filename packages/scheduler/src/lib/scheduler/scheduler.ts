@@ -258,6 +258,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [anchorDate]="currentDate()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
+          [weekendDays]="resolvedWeekendDays()"
           [dayStartHour]="activeView().dayStartHour"
           [dayEndHour]="activeView().dayEndHour"
           [cellDuration]="activeView().cellDuration"
@@ -280,6 +281,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [anchorDate]="currentDate()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
+          [weekendDays]="resolvedWeekendDays()"
           [dayStartHour]="activeView().dayStartHour"
           [dayEndHour]="activeView().dayEndHour"
           [cellDuration]="activeView().cellDuration"
@@ -301,6 +303,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [anchorDate]="currentDate()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
+          [weekendDays]="resolvedWeekendDays()"
           [maxAppointmentsPerCell]="maxAppointmentsPerCell()"
           [locale]="effectiveLocale()"
           [messages]="msg().grid"
@@ -328,6 +331,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [anchorDate]="currentDate()"
           [appointments]="visibleAppointments()"
           [firstDayOfWeek]="resolvedFirstDayOfWeek()"
+          [weekendDays]="resolvedWeekendDays()"
           [dayStartHour]="activeView().dayStartHour"
           [dayEndHour]="activeView().dayEndHour"
           [cellDuration]="activeView().cellDuration"
@@ -514,6 +518,13 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
 
   /** First day of week (0 = Sunday); `undefined` resolves from the locale. */
   readonly firstDayOfWeek = input<number | undefined>(undefined);
+  /**
+   * Weekend days (0 = Sunday … 6 = Saturday) the views shade and the
+   * `workWeek` view drops; `undefined` resolves from the locale's
+   * `Intl.Locale` week data (Friday + Saturday in `he-IL`), falling back to
+   * Saturday + Sunday.
+   */
+  readonly weekendDays = input<readonly number[] | undefined>(undefined);
   readonly dayStartHour = input(0);
   readonly dayEndHour = input(24);
   /** Slot raster in minutes. */
@@ -682,6 +693,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected readonly minAppointmentMinutes = this.core.minAppointmentMinutes;
   protected readonly effectiveLocale = this.core.effectiveLocale;
   protected readonly resolvedFirstDayOfWeek = this.core.resolvedFirstDayOfWeek;
+  protected readonly resolvedWeekendDays = this.core.resolvedWeekendDays;
   protected readonly resolvedViews = this.core.resolvedViews;
   protected readonly activeView = this.core.activeView;
   protected readonly dayWeekView = this.core.dayWeekView;

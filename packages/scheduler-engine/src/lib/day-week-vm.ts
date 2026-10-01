@@ -112,10 +112,20 @@ export function isOffHoursCell(
   return minutes < workHours.start * 60 || minutes >= workHours.end * 60;
 }
 
-/** Saturday or Sunday. */
-export function isWeekendDay(day: Date): boolean {
-  return day.getDay() === 0 || day.getDay() === 6;
+/**
+ * Whether `day` falls on a weekend day (`0` = Sunday … `6` = Saturday).
+ * Pass the scheduler's resolved `weekendDays` (`OgeSchedulerCore`
+ * `resolvedWeekendDays`, locale-derived by default); omitted, it means
+ * Saturday and Sunday.
+ */
+export function isWeekendDay(
+  day: Date,
+  weekendDays: readonly number[] = DEFAULT_WEEKEND,
+): boolean {
+  return weekendDays.includes(day.getDay());
 }
+
+const DEFAULT_WEEKEND: readonly number[] = [0, 6];
 
 /**
  * Layouted timed segments annotated with their rendered column index.

@@ -57,6 +57,8 @@ export interface MonthViewProps<T> {
   readonly anchorDate: Date;
   readonly appointments: readonly SchedulerAppointment<T>[];
   readonly firstDayOfWeek: number;
+  /** Weekend days (0 = Sunday) the view shades — the scheduler's resolved list. */
+  readonly weekendDays: readonly number[];
   readonly maxAppointmentsPerCell: number | 'auto';
   readonly locale: string | undefined;
   readonly messages: OgeSchedulerGridMessages;
@@ -288,7 +290,8 @@ function MonthViewInner<T>(
                       !sameMonth(day, props.anchorDate) &&
                         'oge-scheduler-month-other',
                       sameDay(day, now) && 'oge-scheduler-day-today',
-                      isWeekendDay(day) && 'oge-scheduler-cell-weekend',
+                      isWeekendDay(day, props.weekendDays) &&
+                        'oge-scheduler-cell-weekend',
                       focused && 'oge-scheduler-cell-focused',
                       drop && 'oge-scheduler-drop-target',
                     ]

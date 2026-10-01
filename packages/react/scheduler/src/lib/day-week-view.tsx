@@ -81,6 +81,8 @@ export interface DayWeekViewProps<T> {
   readonly anchorDate: Date;
   readonly appointments: readonly SchedulerAppointment<T>[];
   readonly firstDayOfWeek: number;
+  /** Weekend days (0 = Sunday) the view shades — the scheduler's resolved list. */
+  readonly weekendDays: readonly number[];
   readonly dayStartHour: number;
   readonly dayEndHour: number;
   readonly cellDuration: number;
@@ -165,6 +167,7 @@ function DayWeekViewInner<T>(
         dayEndHour: props.dayEndHour,
         cellDuration: props.cellDuration,
         hiddenWeekDays: props.hiddenWeekDays,
+        weekendDays: props.weekendDays,
       }),
     [
       props.anchorDate,
@@ -174,6 +177,7 @@ function DayWeekViewInner<T>(
       props.dayEndHour,
       props.cellDuration,
       props.hiddenWeekDays,
+      props.weekendDays,
     ],
   );
   const snapMinutes = props.snapDuration ?? grid.cellDuration;
@@ -728,7 +732,8 @@ function DayWeekViewInner<T>(
                         'oge-scheduler-cell',
                         minutes % 60 === 0 && 'oge-scheduler-cell-hour',
                         sameDay(col.day, now) && 'oge-scheduler-day-today',
-                        isWeekendDay(col.day) && 'oge-scheduler-cell-weekend',
+                        isWeekendDay(col.day, props.weekendDays) &&
+                          'oge-scheduler-cell-weekend',
                         col.resIndex === 0 &&
                           col.colIndex !== 0 &&
                           'oge-scheduler-cell-daybreak',

@@ -37,16 +37,22 @@ export interface TimeGridConfig {
   readonly cellDuration: number;
   /** Weekdays (0 = Sunday) removed from week-shaped grids. */
   readonly hiddenWeekDays?: readonly number[];
+  /** The weekend `workWeek` drops (0 = Sunday); defaults to `[0, 6]`. */
+  readonly weekendDays?: readonly number[];
 }
 
-/** The weekdays a view hides: `workWeek` always drops the weekend. */
+/**
+ * The weekdays a view hides: `workWeek` always drops the weekend — the
+ * scheduler's resolved `weekendDays`, Saturday and Sunday when omitted.
+ */
 export function resolveHiddenWeekDays(
   view: SchedulerViewType,
   hiddenWeekDays: readonly number[] | undefined,
+  weekendDays: readonly number[] = [0, 6],
 ): readonly number[] {
   const hidden =
     view === 'workWeek'
-      ? [0, 6, ...(hiddenWeekDays ?? [])]
+      ? [...weekendDays, ...(hiddenWeekDays ?? [])]
       : (hiddenWeekDays ?? []);
   // a grid needs at least one visible day — ignore a config hiding all seven
   return new Set(hidden).size >= 7 ? [] : hidden;
@@ -75,7 +81,11 @@ export function buildTimeGrid(config: TimeGridConfig): TimeGridVm {
   const hidden = new Set(
     config.view === 'day'
       ? []
-      : resolveHiddenWeekDays(config.view, config.hiddenWeekDays),
+      : resolveHiddenWeekDays(
+          config.view,
+          config.hiddenWeekDays,
+          config.weekendDays,
+        ),
   );
   const days = Array.from({ length: dayCount }, (_, index) =>
     addDays(first, index),
