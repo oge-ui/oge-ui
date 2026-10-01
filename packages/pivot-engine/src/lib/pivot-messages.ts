@@ -53,6 +53,21 @@ export interface OgePivotMessages {
   exportCsv: string;
   exportExcel: string;
   loading: string;
+  /** Field-menu item moving a field to another area; `{0}` is the area label. */
+  moveToAreaPattern: string;
+  /** Field-menu item moving a field one place earlier in its area. */
+  moveFieldLeft: string;
+  /** Field-menu item moving a field one place later in its area. */
+  moveFieldRight: string;
+  /** Accessible name of the field menu; `{0}` is the field caption. */
+  fieldMenuLabelPattern: string;
+  /**
+   * Live announcement after a field move: `{0}` field, `{1}` area label,
+   * `{2}` 1-based position, `{3}` fields in the area.
+   */
+  fieldMovedPattern: string;
+  /** Live announcement after a field left the layout; `{0}` is the field. */
+  fieldRemovedPattern: string;
 }
 
 export const OGE_DEFAULT_PIVOT_MESSAGES: OgePivotMessages = {
@@ -106,6 +121,12 @@ export const OGE_DEFAULT_PIVOT_MESSAGES: OgePivotMessages = {
   exportCsv: 'Export CSV',
   exportExcel: 'Export Excel',
   loading: 'Loading…',
+  moveToAreaPattern: 'Move to {0}',
+  moveFieldLeft: 'Move left',
+  moveFieldRight: 'Move right',
+  fieldMenuLabelPattern: '{0} field actions',
+  fieldMovedPattern: '{0} moved to {1}, position {2} of {3}',
+  fieldRemovedPattern: '{0} removed from the layout',
 };
 
 /**

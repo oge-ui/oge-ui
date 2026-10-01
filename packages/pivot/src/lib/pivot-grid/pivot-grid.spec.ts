@@ -142,14 +142,13 @@ describe('OgePivotGrid (MVP)', () => {
     );
     await settle(fixture);
 
-    // city moved to columns as the outer level (collapsed roots)
+    // a drop appends: city joins the columns as the inner level
     expect(texts(el, '.oge-pivot-col-header')).toEqual([
-      'Berlin',
-      'NYC',
-      'Paris',
+      '2024',
+      '2025',
       'Grand Total',
     ]);
-    // expanding a city reveals the inner year level with a spanning parent
+    // expanding a year reveals the inner city level with a spanning parent
     (
       el.querySelector(
         '.oge-pivot-col-header.oge-pivot-expandable',
@@ -157,9 +156,9 @@ describe('OgePivotGrid (MVP)', () => {
     ).click();
     await settle(fixture);
     const headers = texts(el, '.oge-pivot-col-header');
-    expect(headers).toContain('2024');
-    const berlin = el.querySelector('.oge-pivot-col-header') as HTMLElement;
-    expect(berlin.style.gridColumn).toContain('span 3'); // itself + 2024 + 2025
+    expect(headers).toContain('Berlin');
+    const year2024 = el.querySelector('.oge-pivot-col-header') as HTMLElement;
+    expect(year2024.style.gridColumn).toContain('span 4'); // itself + Berlin + Paris + NYC
   });
 
   it('field panel collapses and expands', async () => {
