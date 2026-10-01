@@ -36,28 +36,28 @@ import { OgeSliderBase } from './slider-base';
   template: `
     <div class="oge-slider-body">
       @if (showButtons()) {
-      <button
-        type="button"
-        class="oge-slider-step-button"
-        [attr.aria-label]="msg().sliderDecrement"
-        [attr.title]="msg().sliderDecrement"
-        [disabled]="effectiveDisabled()"
-        tabindex="-1"
-        (pointerdown)="onStepPointerDown(-1, $event)"
-      >
-        <svg
-          viewBox="0 0 16 16"
-          width="12"
-          height="12"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          aria-hidden="true"
+        <button
+          type="button"
+          class="oge-slider-step-button"
+          [attr.aria-label]="msg().sliderDecrement"
+          [attr.title]="msg().sliderDecrement"
+          [disabled]="effectiveDisabled()"
+          tabindex="-1"
+          (pointerdown)="onStepPointerDown(-1, $event)"
         >
-          <path d="M3 8h10" />
-        </svg>
-      </button>
+          <svg
+            viewBox="0 0 16 16"
+            width="12"
+            height="12"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M3 8h10" />
+          </svg>
+        </button>
       }
       <div
         #track
@@ -66,35 +66,43 @@ import { OgeSliderBase } from './slider-base';
       >
         <div class="oge-slider-rail"></div>
         @if (showRange()) {
-        <div
-          class="oge-slider-fill"
-          [style.width.%]="orientation() === 'vertical' ? null : percent(value())"
-          [style.height.%]="orientation() === 'vertical' ? percent(value()) : null"
-        ></div>
-        } @if (showTicks()) { @for (tick of ticks(); track tick) {
-        <span
-          class="oge-slider-tick"
-          [class.oge-slider-tick-in-range]="tick <= value()"
-          [style.inset-inline-start.%]="
-            orientation() === 'vertical' ? null : percent(tick)
-          "
-          [style.inset-block-end.%]="
-            orientation() === 'vertical' ? percent(tick) : null
-          "
-        ></span>
-        @if (showTickLabels()) {
-        <span
-          class="oge-slider-tick-label"
-          aria-hidden="true"
-          [style.inset-inline-start.%]="
-            orientation() === 'vertical' ? null : percent(tick)
-          "
-          [style.inset-block-end.%]="
-            orientation() === 'vertical' ? percent(tick) : null
-          "
-          >{{ format(tick) }}</span
-        >
-        } } }
+          <div
+            class="oge-slider-fill"
+            [style.width.%]="
+              orientation() === 'vertical' ? null : percent(value())
+            "
+            [style.height.%]="
+              orientation() === 'vertical' ? percent(value()) : null
+            "
+          ></div>
+        }
+        @if (showTicks()) {
+          @for (tick of ticks(); track tick) {
+            <span
+              class="oge-slider-tick"
+              [class.oge-slider-tick-in-range]="tick <= value()"
+              [style.inset-inline-start.%]="
+                orientation() === 'vertical' ? null : percent(tick)
+              "
+              [style.inset-block-end.%]="
+                orientation() === 'vertical' ? percent(tick) : null
+              "
+            ></span>
+            @if (showTickLabels()) {
+              <span
+                class="oge-slider-tick-label"
+                aria-hidden="true"
+                [style.inset-inline-start.%]="
+                  orientation() === 'vertical' ? null : percent(tick)
+                "
+                [style.inset-block-end.%]="
+                  orientation() === 'vertical' ? percent(tick) : null
+                "
+                >{{ format(tick) }}</span
+              >
+            }
+          }
+        }
         <div
           #thumb
           class="oge-slider-thumb"
@@ -126,45 +134,46 @@ import { OgeSliderBase } from './slider-base';
           (pointerleave)="hovered.set(false)"
         >
           @if (bubbleVisible()) {
-          <output class="oge-slider-bubble" aria-hidden="true">{{
-            format(value())
-          }}</output>
+            <output class="oge-slider-bubble" aria-hidden="true">{{
+              format(value())
+            }}</output>
           }
         </div>
       </div>
       @if (showButtons()) {
-      <button
-        type="button"
-        class="oge-slider-step-button"
-        [attr.aria-label]="msg().sliderIncrement"
-        [attr.title]="msg().sliderIncrement"
-        [disabled]="effectiveDisabled()"
-        tabindex="-1"
-        (pointerdown)="onStepPointerDown(1, $event)"
-      >
-        <svg
-          viewBox="0 0 16 16"
-          width="12"
-          height="12"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          aria-hidden="true"
+        <button
+          type="button"
+          class="oge-slider-step-button"
+          [attr.aria-label]="msg().sliderIncrement"
+          [attr.title]="msg().sliderIncrement"
+          [disabled]="effectiveDisabled()"
+          tabindex="-1"
+          (pointerdown)="onStepPointerDown(1, $event)"
         >
-          <path d="M8 3v10M3 8h10" />
-        </svg>
-      </button>
+          <svg
+            viewBox="0 0 16 16"
+            width="12"
+            height="12"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+        </button>
       }
     </div>
     @if (showLabels()) {
-    <div class="oge-slider-labels" aria-hidden="true">
-      <span>{{ format(minValue()) }}</span>
-      <span>{{ format(maxValue()) }}</span>
-    </div>
-    } @if (name()) {
-    <!-- Plain-HTML form posts (the references' hidden-input contract). -->
-    <input type="hidden" [name]="name()" [value]="value()" />
+      <div class="oge-slider-labels" aria-hidden="true">
+        <span>{{ format(minValue()) }}</span>
+        <span>{{ format(maxValue()) }}</span>
+      </div>
+    }
+    @if (name()) {
+      <!-- Plain-HTML form posts (the references' hidden-input contract). -->
+      <input type="hidden" [name]="name()" [value]="value()" />
     }
   `,
   styleUrl: './slider.scss',

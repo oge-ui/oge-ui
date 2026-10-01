@@ -9,7 +9,4 @@ export {
   type OgeSkeletonConfig,
   type OgeSkeletonConfigInput,
 } from './config';
-export type {
-  OgeSkeletonAnimation,
-  OgeSkeletonShape,
-} from './skeleton-types';
+export type { OgeSkeletonAnimation, OgeSkeletonShape } from './skeleton-types';

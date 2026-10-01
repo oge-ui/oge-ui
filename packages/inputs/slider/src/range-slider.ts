@@ -43,51 +43,55 @@ type RangePair = readonly [number, number];
       >
         <div class="oge-slider-rail"></div>
         @if (showRange()) {
-        <div
-          class="oge-slider-fill"
-          [style.inset-inline-start.%]="
-            orientation() === 'vertical' ? null : percent(value()[0])
-          "
-          [style.width.%]="
-            orientation() === 'vertical'
-              ? null
-              : percent(value()[1]) - percent(value()[0])
-          "
-          [style.inset-block-end.%]="
-            orientation() === 'vertical' ? percent(value()[0]) : null
-          "
-          [style.height.%]="
-            orientation() === 'vertical'
-              ? percent(value()[1]) - percent(value()[0])
-              : null
-          "
-        ></div>
-        } @if (showTicks()) { @for (tick of ticks(); track tick) {
-        <span
-          class="oge-slider-tick"
-          [class.oge-slider-tick-in-range]="
-            tick >= value()[0] && tick <= value()[1]
-          "
-          [style.inset-inline-start.%]="
-            orientation() === 'vertical' ? null : percent(tick)
-          "
-          [style.inset-block-end.%]="
-            orientation() === 'vertical' ? percent(tick) : null
-          "
-        ></span>
-        @if (showTickLabels()) {
-        <span
-          class="oge-slider-tick-label"
-          aria-hidden="true"
-          [style.inset-inline-start.%]="
-            orientation() === 'vertical' ? null : percent(tick)
-          "
-          [style.inset-block-end.%]="
-            orientation() === 'vertical' ? percent(tick) : null
-          "
-          >{{ format(tick) }}</span
-        >
-        } } }
+          <div
+            class="oge-slider-fill"
+            [style.inset-inline-start.%]="
+              orientation() === 'vertical' ? null : percent(value()[0])
+            "
+            [style.width.%]="
+              orientation() === 'vertical'
+                ? null
+                : percent(value()[1]) - percent(value()[0])
+            "
+            [style.inset-block-end.%]="
+              orientation() === 'vertical' ? percent(value()[0]) : null
+            "
+            [style.height.%]="
+              orientation() === 'vertical'
+                ? percent(value()[1]) - percent(value()[0])
+                : null
+            "
+          ></div>
+        }
+        @if (showTicks()) {
+          @for (tick of ticks(); track tick) {
+            <span
+              class="oge-slider-tick"
+              [class.oge-slider-tick-in-range]="
+                tick >= value()[0] && tick <= value()[1]
+              "
+              [style.inset-inline-start.%]="
+                orientation() === 'vertical' ? null : percent(tick)
+              "
+              [style.inset-block-end.%]="
+                orientation() === 'vertical' ? percent(tick) : null
+              "
+            ></span>
+            @if (showTickLabels()) {
+              <span
+                class="oge-slider-tick-label"
+                aria-hidden="true"
+                [style.inset-inline-start.%]="
+                  orientation() === 'vertical' ? null : percent(tick)
+                "
+                [style.inset-block-end.%]="
+                  orientation() === 'vertical' ? percent(tick) : null
+                "
+                >{{ format(tick) }}</span
+              >
+            }
+          }
+        }
         <div
           #startThumb
           class="oge-slider-thumb"
@@ -118,9 +122,9 @@ type RangePair = readonly [number, number];
           (pointerleave)="hovered.set(false)"
         >
           @if (bubbleVisible()) {
-          <output class="oge-slider-bubble" aria-hidden="true">{{
-            format(value()[0])
-          }}</output>
+            <output class="oge-slider-bubble" aria-hidden="true">{{
+              format(value()[0])
+            }}</output>
           }
         </div>
         <div
@@ -153,23 +157,25 @@ type RangePair = readonly [number, number];
           (pointerleave)="hovered.set(false)"
         >
           @if (bubbleVisible()) {
-          <output class="oge-slider-bubble" aria-hidden="true">{{
-            format(value()[1])
-          }}</output>
+            <output class="oge-slider-bubble" aria-hidden="true">{{
+              format(value()[1])
+            }}</output>
           }
         </div>
       </div>
     </div>
     @if (showLabels()) {
-    <div class="oge-slider-labels" aria-hidden="true">
-      <span>{{ format(minValue()) }}</span>
-      <span>{{ format(maxValue()) }}</span>
-    </div>
-    } @if (startName()) {
-    <!-- Plain-HTML form posts — dx's startName/endName contract. -->
-    <input type="hidden" [name]="startName()" [value]="value()[0]" />
-    } @if (endName()) {
-    <input type="hidden" [name]="endName()" [value]="value()[1]" />
+      <div class="oge-slider-labels" aria-hidden="true">
+        <span>{{ format(minValue()) }}</span>
+        <span>{{ format(maxValue()) }}</span>
+      </div>
+    }
+    @if (startName()) {
+      <!-- Plain-HTML form posts — dx's startName/endName contract. -->
+      <input type="hidden" [name]="startName()" [value]="value()[0]" />
+    }
+    @if (endName()) {
+      <input type="hidden" [name]="endName()" [value]="value()[1]" />
     }
   `,
   styleUrl: './slider.scss',
@@ -213,7 +219,10 @@ export class OgeRangeSlider extends OgeSliderBase<RangePair> {
     return false;
   });
 
-  protected onThumbPointerDown(thumb: OgeRangeThumb, event: PointerEvent): void {
+  protected onThumbPointerDown(
+    thumb: OgeRangeThumb,
+    event: PointerEvent,
+  ): void {
     this.beginDrag(thumb, event);
   }
 

@@ -36,6 +36,15 @@ test('dragging the gradient surface commits a new value live', async ({
   await page.locator(`${BASIC} .oge-input-dropdown`).click();
   const surface = page.locator('.oge-color-surface');
   await expect(surface).toBeVisible();
+  // the panel opens with a transform animation: measure only once it has
+  // settled, or the drag lands on stale coordinates (flaky on CI)
+  await surface.evaluate((el) =>
+    Promise.all(
+      (el.closest('.oge-color-box-panel') ?? el)
+        .getAnimations({ subtree: true })
+        .map((a) => a.finished),
+    ),
+  );
   const box = (await surface.boundingBox())!;
   await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2);
   await page.mouse.down();
