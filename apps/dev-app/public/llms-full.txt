@@ -2,7 +2,7 @@
 
 > Signal-based Angular UI component suite for data-heavy applications: a virtualized Data Grid, Tree List, Pivot Grid, BPMN editor, form editors, buttons, overlay surfaces (modal and toast), tabs and layout containers. Angular 22+, standalone components only, zoneless, zero runtime dependencies. MIT licensed, except @oge-ui/pivot and @oge-ui/bpmn which are commercial.
 
-Version 0.13.1. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://ogeui.com renders. Index: https://ogeui.com/llms.txt
+Version 1.1.1. Generated from the OGE UI source tree: the API tables and demo sources below are the same ones https://ogeui.com renders. Index: https://ogeui.com/llms.txt
 
 ## Contents
 
@@ -252,6 +252,14 @@ npm install @oge-ui/react-tabs     # tab strip and tab panel
 npm install @oge-ui/react-layout   # card, accordion, splitter, toolbar, loaders
 npm install @oge-ui/react-navigation # tree view, drawer, stepper, menubar, breadcrumb
 npm install @oge-ui/react-overlay  # anchored popups and menus
+npm install @oge-ui/react-forms    # data-driven forms and validation summary
+npm install @oge-ui/react-upload   # file uploader, drop zone, trigger
+npm install @oge-ui/react-grid     # data grid and pager
+npm install @oge-ui/react-tree-list # hierarchical grid
+
+# commercial families (free for evaluation, not in the MIT umbrella)
+npm install @oge-ui/react-pivot @oge-ui/react-charts @oge-ui/react-scheduler
+npm install @oge-ui/react-gantt @oge-ui/react-kanban @oge-ui/react-bpmn
 ```
 
 ### Getting started — Quick start
