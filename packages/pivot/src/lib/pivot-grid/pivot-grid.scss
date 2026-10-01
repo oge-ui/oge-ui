@@ -101,6 +101,47 @@
   color: var(--oge-header-color);
   cursor: grab;
   user-select: none;
+  transition: box-shadow 120ms ease;
+}
+
+// --- keyboard focus -------------------------------------------------------------
+// The house strong ring on :focus-visible. The transparent outline keeps a
+// visible indicator in forced-colors mode, where box-shadow is dropped.
+
+.oge-pivot-field-chip:focus-visible,
+.oge-pivot-grid .oge-menu-item:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--oge-focus-ring);
+}
+
+// Matrix cells sit edge to edge inside a scroller with sticky neighbours, so
+// their ring is drawn inset — an outset one would be painted over.
+.oge-pivot-col-header:focus-visible,
+.oge-pivot-row-header:focus-visible,
+.oge-pivot-cell:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+}
+
+// Polite live region announcing keyboard field moves (visually hidden).
+.oge-pivot-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-pivot-field-chip {
+    transition: none;
+  }
 }
 
 // --- matrix ------------------------------------------------------------------

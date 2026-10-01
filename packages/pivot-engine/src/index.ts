@@ -6,12 +6,30 @@
 // to duplicate. No Angular or React import anywhere (lint-enforced).
 export {
   OgePivotGridCore,
+  type OgePivotChipKeyResult,
   type OgePivotGridCoreDeps,
   type OgePivotGridInputs,
+  type OgePivotGridKeyResult,
   type OgePivotMatrixKeyResult,
+  type OgePivotMenuKeyResult,
   type OgePivotRemoteRequest,
 } from './lib/pivot-grid-core';
+export {
+  OGE_PIVOT_PANEL_AREA_ORDER,
+  pivotChipKeyIntent,
+  pivotGridExtent,
+  pivotGridKeyTarget,
+  pivotHeaderCellAt,
+  pivotKeyboardPointer,
+  pivotMenuKeyTarget,
+  type OgePivotChipKeyIntent,
+  type OgePivotGridExtent,
+  type OgePivotGridNavContext,
+  type OgePivotGridPosition,
+  type OgePivotKeyLike,
+} from './lib/pivot-keyboard';
 export { OgePivotStateCore } from './lib/pivot-state-core';
+export { focusPivotChip, pivotIsMenuKey, pivotIsRtl } from './lib/pivot-dom';
 export {
   OGE_DEFAULT_PIVOT_MESSAGES,
   resolvePivotMessages,

@@ -41,7 +41,8 @@ import { makeOverviewSales, money } from './pivot-demo-data';
         column, value and filter areas, expand headers on both axes, and read
         sub / grand totals — all computed by the pure engine in
         <code>&#64;oge-ui/core</code>. Drag the field chips between areas to
-        re-pivot instantly.
+        re-pivot instantly — or, without a drag, open a chip's menu (Enter or
+        right-click) and pick an area, and reorder with Ctrl+Arrow keys.
       </p>
     </app-doc-header>
 

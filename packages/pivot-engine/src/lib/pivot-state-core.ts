@@ -91,6 +91,14 @@ export class OgePivotStateCore {
     this._fieldOverrides.set(next);
   }
 
+  /** Several field patches as one state change (a reorder renumbers an area). */
+  patchFields(patches: ReadonlyMap<string, Partial<PivotFieldConfig>>): void {
+    const next = new Map(this._fieldOverrides());
+    for (const [id, patch] of patches)
+      next.set(id, { ...next.get(id), ...patch });
+    this._fieldOverrides.set(next);
+  }
+
   toggleFieldPanel(): void {
     this._fieldPanelCollapsed.set(!this._fieldPanelCollapsed());
   }

@@ -192,12 +192,114 @@ export const OGE_REACT_PIVOT_GRID_API: ApiSections = {
         {
           name: 'OgePivotMenuItem',
           type: '{ text, disabled?, active?, action? }',
-          description: 'One item of the header / measure context menus.',
+          description: 'One item of the header / field context menus.',
         },
         {
           name: 'OGE_PIVOT_FIELD_DRAG_TYPE',
           type: "'application/x-oge-pivot-field'",
           description: 'DataTransfer type of field chips.',
+        },
+      ],
+    },
+    {
+      title: 'Keyboard (WAI-ARIA APG grid + field chips)',
+      entries: [
+        {
+          name: 'Tab',
+          type: 'grid',
+          description:
+            'The matrix is one APG grid with a single tab stop shared by column headers, row headers and value cells (the first value cell until something is focused).',
+        },
+        {
+          name: 'Arrow keys',
+          type: 'grid',
+          description:
+            'Move between headers and value cells; a spanning column header is one stop, and Down out of it keeps the column you came from. Left/Right are mirrored in RTL.',
+        },
+        {
+          name: 'Home / End · Ctrl+Home / Ctrl+End',
+          type: 'grid',
+          description:
+            'First / last cell of the row · first column header / last value cell of the grid.',
+        },
+        {
+          name: 'Enter / Space (header)',
+          type: 'grid',
+          description:
+            'Expands or collapses an expandable row or column header.',
+        },
+        {
+          name: 'Shift+F10 / ContextMenu (header)',
+          type: 'grid',
+          description:
+            'Opens the header menu (sort, sort by summary, filter, remove, expand/collapse all, field chooser) — the keyboard right-click.',
+        },
+        {
+          name: 'Enter / Space / Shift+F10 (field chip)',
+          type: 'field panel + chooser',
+          description:
+            'Every field chip is a focusable <code>role="button"</code> with <code>aria-haspopup="menu"</code>; these keys (and right-click) open its field menu: Move left / Move right, Move to Filters / Rows / Columns / Values, Remove field, and on a measure the summary-type and display-mode items. The single-pointer alternative to dragging (WCAG 2.5.7).',
+        },
+        {
+          name: 'Ctrl+Left / Ctrl+Right (field chip)',
+          type: 'field panel + chooser',
+          description:
+            'Reorders the field within its area (mirrored in RTL); the new position is announced in a polite live region.',
+        },
+        {
+          name: 'Ctrl+Up / Ctrl+Down (field chip)',
+          type: 'field panel + chooser',
+          description:
+            'Moves the field to the end of the previous / next area in panel order (Filters, Rows, Columns, Values).',
+        },
+        {
+          name: 'Delete (field chip)',
+          type: 'field panel + chooser',
+          description:
+            'Removes the field from the layout. In the chooser’s <code>onDemand</code> mode every move edits the draft until Apply.',
+        },
+        {
+          name: 'Up / Down / Home / End / Escape / Tab (menu)',
+          type: 'menu',
+          description:
+            'APG menu keys over the enabled items; Escape and Tab close it and return focus to the chip or header that opened it (a moved chip is re-focused in its new area).',
+        },
+      ],
+    },
+    {
+      title: 'Accessibility messages',
+      entries: [
+        {
+          name: 'moveToAreaPattern',
+          type: 'string',
+          default: "'Move to {0}'",
+          description: 'Field-menu item; <code>{0}</code> is the area label.',
+        },
+        {
+          name: 'moveFieldLeft / moveFieldRight',
+          type: 'string',
+          default: "'Move left' / 'Move right'",
+          description: 'Field-menu items reordering a field within its area.',
+        },
+        {
+          name: 'fieldMenuLabelPattern',
+          type: 'string',
+          default: "'{0} field actions'",
+          description:
+            'Accessible name of the field menu; <code>{0}</code> is the caption.',
+        },
+        {
+          name: 'fieldMovedPattern',
+          type: 'string',
+          default: "'{0} moved to {1}, position {2} of {3}'",
+          description:
+            'Live announcement after a move: field, area label, 1-based position, fields in the area.',
+        },
+        {
+          name: 'fieldRemovedPattern',
+          type: 'string',
+          default: "'{0} removed from the layout'",
+          description: 'Live announcement after a field left the layout.',
         },
       ],
     },
@@ -220,7 +322,7 @@ export const OGE_REACT_PIVOT_GRID_API: ApiSections = {
           name: 'OgePivotMessagesProvider',
           type: '({ messages, children }) =&gt; JSX.Element',
           description:
-            'Subtree-scoped overrides of <code>OgePivotMessages</code> (39 keys — areas, menus, chooser, export…); nested providers merge key by key, and a new <code>messages</code> object re-resolves the subtree. The counterpart of <code>provideOgePivotMessages()</code>.',
+            'Subtree-scoped overrides of <code>OgePivotMessages</code> (41 keys — areas, menus, chooser, export, field-move menu and announcements…); nested providers merge key by key, and a new <code>messages</code> object re-resolves the subtree. The counterpart of <code>provideOgePivotMessages()</code>.',
         },
         {
           name: 'useOgePivotMessages()',

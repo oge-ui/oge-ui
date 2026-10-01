@@ -16,7 +16,6 @@ import {
   type PivotFieldFns,
   type PivotGridStateSnapshot,
   type PivotLoadOptions,
-  type PivotPath,
   type PivotResult,
   type PivotSummaryDisplayMode,
   type SummaryType,
@@ -51,6 +50,17 @@ import {
   pivotVirtualColumnWidth,
   pivotWindowIndexes,
 } from './pivot-layout';
+import {
+  OGE_PIVOT_PANEL_AREA_ORDER,
+  pivotChipKeyIntent,
+  pivotGridExtent,
+  pivotGridKeyTarget,
+  pivotHeaderCellAt,
+  pivotMenuKeyTarget,
+  type OgePivotGridNavContext,
+  type OgePivotGridPosition,
+  type OgePivotKeyLike,
+} from './pivot-keyboard';
 import type { OgePivotMessages } from './pivot-messages';
 import { OgePivotStateCore } from './pivot-state-core';
 import {
@@ -115,6 +125,35 @@ export interface OgePivotMatrixKeyResult {
   readonly cell: OgePivotCellPosition;
 }
 
+/** Outcome of a keydown on the unified header + value grid. */
+export interface OgePivotGridKeyResult {
+  /** Focus changed — the host focuses {@link selector} once it rendered. */
+  readonly moved: boolean;
+  /** Selector of the element that now holds the tab stop. */
+  readonly selector: string;
+}
+
+/** Outcome of a handled key on a field chip. */
+export type OgePivotChipKeyResult =
+  /** The field menu opened — the host focuses its first item. */
+  | { readonly kind: 'menu' }
+  /**
+   * The field moved (or the move was a no-op at an edge) — the host
+   * re-focuses the chip of `fieldId` in `area`, or the panel when it left
+   * the layout (`area: null`).
+   */
+  | {
+      readonly kind: 'moved';
+      readonly fieldId: string;
+      readonly area: PivotArea | null;
+    };
+
+/** Outcome of a key on an open menu. */
+export type OgePivotMenuKeyResult =
+  | { readonly kind: 'focus'; readonly index: number }
+  /** The menu closed — the host returns focus to the element that opened it. */
+  | { readonly kind: 'close' };
+
 const SUMMARY_TYPES: readonly ('sum' | 'avg' | 'min' | 'max' | 'count')[] = [
   'sum',
   'avg',
@@ -147,6 +186,13 @@ export class OgePivotGridCore<T = unknown> {
   /** Measured viewport size (virtual mode reads it). */
   readonly viewportSize: OgeReactiveCell<{ width: number; height: number }>;
   readonly focusedCell: OgeReactiveCell<OgePivotCellPosition | null>;
+  /**
+   * The focused header (grid coordinates, see {@link OgePivotGridPosition});
+   * while set, it — not a value cell — owns the grid's single tab stop.
+   */
+  readonly focusedHeader: OgeReactiveCell<OgePivotGridPosition | null>;
+  /** Text of the polite live region (field moves). */
+  readonly announcement: OgeReactiveCell<string>;
   readonly menu: OgeReactiveCell<OgePivotMenuState | null>;
   readonly filterPopup: OgeReactiveCell<OgePivotFilterPopupState | null>;
   readonly filterSearch: OgeReactiveCell<string>;
@@ -219,6 +265,8 @@ export class OgePivotGridCore<T = unknown> {
     this.scrollPos = rx.cell({ top: 0, left: 0 });
     this.viewportSize = rx.cell({ width: 1200, height: 600 });
     this.focusedCell = rx.cell<OgePivotCellPosition | null>(null);
+    this.focusedHeader = rx.cell<OgePivotGridPosition | null>(null);
+    this.announcement = rx.cell('');
     this.menu = rx.cell<OgePivotMenuState | null>(null);
     this.filterPopup = rx.cell<OgePivotFilterPopupState | null>(null);
     this.filterSearch = rx.cell('');
@@ -604,8 +652,13 @@ export class OgePivotGridCore<T = unknown> {
 
   // --- keyboard navigation over the value matrix ----------------------------
 
-  /** Roving tabindex: the focused cell, or the first one before any focus. */
+  /**
+   * Roving tabindex over the whole grid (headers + values, one tab stop):
+   * the focused value cell, or the first one before any focus — unless a
+   * header holds the stop.
+   */
   isCellTabbable(row: number, col: number): boolean {
+    if (this.headerHoldsTabStop()) return false;
     const focused = this.focusedCell();
     if (focused) return focused.row === row && focused.col === col;
     return row === 0 && col === 0;
@@ -613,9 +666,136 @@ export class OgePivotGridCore<T = unknown> {
 
   /** A value cell received DOM focus. */
   focusCell(row: number, col: number): void {
+    if (this.focusedHeader()) this.focusedHeader.set(null);
     const current = this.focusedCell();
     if (current?.row !== row || current.col !== col)
       this.focusedCell.set({ row, col });
+  }
+
+  /** Whether a column-header cell holds the grid's tab stop. */
+  isColumnHeaderTabbable(cell: OgePivotHeaderCell): boolean {
+    const pos = this.focusedHeader();
+    if (!pos || !pivotGridExtent(pos, this.navContext())) {
+      // no value cells to carry the stop: the first header takes it
+      return (
+        !this.hasValueCells() && cell.rowStart === 1 && cell.columnStart === 1
+      );
+    }
+    return (
+      pos.row < this.columnDepth() &&
+      pivotHeaderCellAt([cell], pos.row, pos.col) === cell
+    );
+  }
+
+  /** Whether the row header of value row `rowIndex` holds the tab stop. */
+  isRowHeaderTabbable(rowIndex: number): boolean {
+    const pos = this.focusedHeader();
+    return !!pos && pos.col === 0 && pos.row === this.columnDepth() + rowIndex;
+  }
+
+  /** A column-header cell received DOM focus. */
+  focusColumnHeader(cell: OgePivotHeaderCell): void {
+    const pos = this.focusedHeader();
+    // keep the origin column inside a spanning header (Down lands under it)
+    if (
+      pos &&
+      pos.row < this.columnDepth() &&
+      pivotHeaderCellAt([cell], pos.row, pos.col) === cell
+    )
+      return;
+    this.focusedHeader.set({ row: cell.rowStart - 1, col: cell.columnStart });
+  }
+
+  /** The row header of value row `rowIndex` received DOM focus. */
+  focusRowHeader(rowIndex: number): void {
+    const row = this.columnDepth() + rowIndex;
+    const pos = this.focusedHeader();
+    if (pos?.row !== row || pos.col !== 0)
+      this.focusedHeader.set({ row, col: 0 });
+  }
+
+  /** `data-hpos` value of a column-header cell (its top-left grid position). */
+  columnHeaderPos(cell: OgePivotHeaderCell): string {
+    return `${String(cell.rowStart - 1)}-${String(cell.columnStart)}`;
+  }
+
+  /** `data-hpos` value of the row header of value row `rowIndex`. */
+  rowHeaderPos(rowIndex: number): string {
+    return `${String(this.columnDepth() + rowIndex)}-0`;
+  }
+
+  /**
+   * The APG grid keyboard over column headers, row headers and value cells
+   * as one composite (see `pivotGridKeyTarget`). `null` = not handled;
+   * otherwise the host prevents the default and, when `moved`, focuses
+   * `selector` inside the matrix.
+   */
+  gridKeydown(
+    event: OgePivotKeyLike,
+    rtl = false,
+  ): OgePivotGridKeyResult | null {
+    const ctx = this.navContext();
+    const pos = this.currentGridPosition(ctx);
+    if (!pos) return null;
+    const next = pivotGridKeyTarget(event, pos, ctx, rtl);
+    if (!next) return null;
+    const moved = next.row !== pos.row || next.col !== pos.col;
+    if (moved) {
+      if (next.row >= ctx.headerDepth && next.col >= 1) {
+        this.focusedHeader.set(null);
+        this.focusedCell.set({
+          row: next.row - ctx.headerDepth,
+          col: next.col - 1,
+        });
+      } else {
+        this.focusedHeader.set(next);
+      }
+    }
+    return { moved, selector: this.selectorOf(next, ctx) };
+  }
+
+  private hasValueCells(): boolean {
+    const result = this.result();
+    return result.rowLeafCount > 0 && result.columnLeafCount > 0;
+  }
+
+  /** A header holds the stop when one is focused and still exists. */
+  private headerHoldsTabStop(): boolean {
+    const pos = this.focusedHeader();
+    if (!pos) return !this.hasValueCells();
+    return pivotGridExtent(pos, this.navContext()) !== null;
+  }
+
+  private navContext(): OgePivotGridNavContext {
+    const result = this.result();
+    return {
+      headerDepth: this.columnDepth(),
+      rowCount: result.rowLeafCount,
+      columnCount: result.columnLeafCount,
+      headerCells: this.columnHeaderCells(),
+    };
+  }
+
+  private currentGridPosition(
+    ctx: OgePivotGridNavContext,
+  ): OgePivotGridPosition | null {
+    const header = this.focusedHeader();
+    if (header && pivotGridExtent(header, ctx)) return header;
+    const cell = this.focusedCell();
+    if (cell) return { row: ctx.headerDepth + cell.row, col: cell.col + 1 };
+    return null;
+  }
+
+  private selectorOf(
+    pos: OgePivotGridPosition,
+    ctx: OgePivotGridNavContext,
+  ): string {
+    if (pos.row >= ctx.headerDepth && pos.col >= 1)
+      return `[data-cell="${String(pos.row - ctx.headerDepth)}-${String(pos.col - 1)}"]`;
+    const extent = pivotGridExtent(pos, ctx);
+    const row = extent?.rowStart ?? pos.row;
+    const col = extent?.colStart ?? pos.col;
+    return `[data-hpos="${String(row)}-${String(col)}"]`;
   }
 
   /**
@@ -664,18 +844,149 @@ export class OgePivotGridCore<T = unknown> {
 
   /** Moves a field to the end of an area (chooser draft aware). */
   placeField(id: string, area: PivotArea | null): void {
-    const count = this.chooserFields().filter(
-      (field) => field.area === area,
-    ).length;
+    this.moveFieldTo(id, area);
+  }
+
+  /**
+   * Moves a field to `index` within `area` (default: the end) — the one path
+   * drag & drop, the field menu and the chip keyboard share. Both affected
+   * areas are renumbered `0…n-1`, so the order is exactly what was asked for
+   * whatever `areaIndex` values the declaration carried. Chooser-draft
+   * aware; a live move emits `fieldLayoutChange`; every move announces the
+   * field's new position through {@link announcement}.
+   */
+  moveFieldTo(id: string, area: PivotArea | null, index = Infinity): void {
+    const fields = this.chooserFields();
+    const moving = fields.find((field) => field.id === id);
+    if (!moving) return;
+    const from = moving.area ?? null;
+    const order = pivotAreaFields(fields, area)
+      .filter((field) => field.id !== id)
+      .map((field) => field.id);
+    const at = Math.max(0, Math.min(order.length, index));
+    order.splice(at, 0, id);
+    const patches = new Map<string, Partial<PivotFieldConfig>>();
+    if (from !== area) {
+      pivotAreaFields(fields, from)
+        .filter((field) => field.id !== id)
+        .forEach((field, i) => patches.set(field.id, { areaIndex: i }));
+    }
+    order.forEach((fieldId, i) => patches.set(fieldId, { areaIndex: i }));
+    patches.set(id, { area, areaIndex: at });
+
     const draft = this.chooserDraft();
     if (draft) {
       const next = new Map(draft);
-      next.set(id, { ...next.get(id), area, areaIndex: count });
+      for (const [fieldId, patch] of patches)
+        next.set(fieldId, { ...next.get(fieldId), ...patch });
       this.chooserDraft.set(next);
-      return;
+    } else {
+      this.store.patchFields(patches);
+      this.deps.fieldLayoutChange?.(this.resolvedFields());
     }
-    this.store.moveField(id, area, count);
-    this.deps.fieldLayoutChange?.(this.resolvedFields());
+    this.announceMove(
+      moving.caption ?? moving.dataField,
+      area,
+      at,
+      order.length,
+    );
+  }
+
+  /** Moves a field one place earlier (`-1`) or later (`1`) in its area. */
+  moveFieldBy(id: string, delta: -1 | 1): boolean {
+    const fields = this.chooserFields();
+    const area = fields.find((f) => f.id === id)?.area ?? null;
+    if (area === null) return false;
+    const order = pivotAreaFields(fields, area);
+    const target = order.findIndex((f) => f.id === id) + delta;
+    if (target < 0 || target >= order.length) return false;
+    this.moveFieldTo(id, area, target);
+    return true;
+  }
+
+  /**
+   * Moves a field to the end of the previous (`-1`) or next (`1`) area in
+   * the panel's visual order: filters, rows, columns, values.
+   */
+  moveFieldToAdjacentArea(id: string, delta: -1 | 1): boolean {
+    const area = this.chooserFields().find((f) => f.id === id)?.area ?? null;
+    if (area === null) return false;
+    const order = OGE_PIVOT_PANEL_AREA_ORDER;
+    const target = order[order.indexOf(area) + delta];
+    if (!target) return false;
+    this.moveFieldTo(id, target);
+    return true;
+  }
+
+  /**
+   * A key on a field chip (`zone` = the area it is shown in, `null` for the
+   * chooser's "All fields" list): opens the field menu at `at`, reorders,
+   * changes area or removes — see `pivotChipKeyIntent`. `null` = not
+   * handled (the key goes on).
+   */
+  fieldChipKeydown(
+    field: PivotFieldConfig,
+    zone: PivotArea | null,
+    event: OgePivotKeyLike & {
+      preventDefault(): void;
+      stopPropagation(): void;
+    },
+    at: { readonly x: number; readonly y: number },
+    rtl = false,
+  ): OgePivotChipKeyResult | null {
+    const intent = pivotChipKeyIntent(event, zone !== null, rtl);
+    if (!intent) return null;
+    event.preventDefault();
+    event.stopPropagation();
+    switch (intent.kind) {
+      case 'menu':
+        this.openFieldMenu(field, zone, at);
+        return { kind: 'menu' };
+      case 'reorder':
+        this.moveFieldBy(field.id, intent.delta);
+        break;
+      case 'area':
+        this.moveFieldToAdjacentArea(field.id, intent.delta);
+        break;
+      case 'remove':
+        this.moveFieldTo(field.id, null);
+        break;
+    }
+    const now = this.chooserFields().find((f) => f.id === field.id);
+    return { kind: 'moved', fieldId: field.id, area: now?.area ?? null };
+  }
+
+  private areaLabel(area: PivotArea): string {
+    const messages = this.inputs.messages();
+    switch (area) {
+      case 'row':
+        return messages.rowArea;
+      case 'column':
+        return messages.columnArea;
+      case 'filter':
+        return messages.filterArea;
+      default:
+        return messages.dataArea;
+    }
+  }
+
+  private announceMove(
+    caption: string,
+    area: PivotArea | null,
+    index: number,
+    count: number,
+  ): void {
+    const messages = this.inputs.messages();
+    this.announcement.set(
+      area === null
+        ? messages.fieldRemovedPattern.replace('{0}', caption)
+        : fillPattern(messages.fieldMovedPattern, [
+            caption,
+            this.areaLabel(area),
+            String(index + 1),
+            String(count),
+          ]),
+    );
   }
 
   // --- menus ------------------------------------------------------------------
@@ -698,10 +1009,17 @@ export class OgePivotGridCore<T = unknown> {
     this.closePopups();
   }
 
-  runMenuItem(item: OgePivotMenuItem): void {
-    if (item.disabled) return;
+  /**
+   * Runs a menu item. Returns whether keyboard focus should go back to the
+   * element that opened the menu — `false` when the item opened the value
+   * filter or changed whether the chooser is open (`openerInChooser`: the
+   * menu was opened from inside it), which then owns the focus.
+   */
+  runMenuItem(item: OgePivotMenuItem, openerInChooser = false): boolean {
+    if (item.disabled) return false;
     this.menu.set(null);
     item.action?.();
+    return !this.filterPopup() && this.chooserOpen() === openerInChooser;
   }
 
   private axisFieldAt(
@@ -808,6 +1126,100 @@ export class OgePivotGridCore<T = unknown> {
   openMeasureMenu(field: PivotFieldConfig, pointer: OgePivotPointer): void {
     pointer.preventDefault();
     pointer.stopPropagation();
+    this.menu.set({
+      x: pointer.clientX,
+      y: pointer.clientY,
+      items: this.measureMenuItems(field),
+    });
+  }
+
+  /**
+   * The field menu of a chip — the keyboard and single-pointer alternative
+   * to dragging it: move left/right within the area, move to each other
+   * area, remove; a measure chip appends its summary-type and display-mode
+   * items. `zone` is the area the chip is shown in (`null` = the chooser's
+   * "All fields" list). Opened by right-click or the chip keyboard.
+   */
+  openFieldMenu(
+    field: PivotFieldConfig,
+    zone: PivotArea | null,
+    at: { readonly x: number; readonly y: number },
+  ): void {
+    const messages = this.inputs.messages();
+    const fields = this.chooserFields();
+    const current = fields.find((f) => f.id === field.id) ?? field;
+    const area = current.area ?? null;
+    const items: OgePivotMenuItem[] = [];
+    if (area !== null && zone !== null) {
+      const order = pivotAreaFields(fields, area);
+      const index = order.findIndex((f) => f.id === field.id);
+      items.push(
+        {
+          text: messages.moveFieldLeft,
+          disabled: index <= 0,
+          action: () => this.moveFieldBy(field.id, -1),
+        },
+        {
+          text: messages.moveFieldRight,
+          disabled: index < 0 || index >= order.length - 1,
+          action: () => this.moveFieldBy(field.id, 1),
+        },
+      );
+    }
+    for (const target of OGE_PIVOT_PANEL_AREA_ORDER) {
+      if (target === area) continue;
+      items.push({
+        text: messages.moveToAreaPattern.replace('{0}', this.areaLabel(target)),
+        action: () => this.moveFieldTo(field.id, target),
+      });
+    }
+    if (area !== null)
+      items.push({
+        text: messages.removeField,
+        action: () => this.moveFieldTo(field.id, null),
+      });
+    // summary settings apply live — not in the chooser's draft
+    if (area === 'data' && zone !== null && !this.chooserOpen())
+      items.push(...this.measureMenuItems(current));
+    this.menu.set({
+      x: at.x,
+      y: at.y,
+      items,
+      label: messages.fieldMenuLabelPattern.replace(
+        '{0}',
+        current.caption ?? current.dataField,
+      ),
+    });
+  }
+
+  /** Right-click on a field chip: the field menu at the pointer. */
+  openFieldContextMenu(
+    field: PivotFieldConfig,
+    zone: PivotArea | null,
+    pointer: OgePivotPointer,
+  ): void {
+    pointer.preventDefault();
+    pointer.stopPropagation();
+    this.openFieldMenu(field, zone, { x: pointer.clientX, y: pointer.clientY });
+  }
+
+  /**
+   * A key on the open menu's item `index` (APG menu: Down/Up wrap over the
+   * enabled items, Home/End, Escape/Tab close). `null` = not handled.
+   */
+  menuKeydown(key: string, index: number): OgePivotMenuKeyResult | null {
+    const menu = this.menu();
+    if (!menu) return null;
+    const target = pivotMenuKeyTarget(key, index, menu.items);
+    if (target === null) return null;
+    if (target === 'close') {
+      this.menu.set(null);
+      return { kind: 'close' };
+    }
+    return { kind: 'focus', index: target };
+  }
+
+  private measureMenuItems(field: PivotFieldConfig): OgePivotMenuItem[] {
     const messages = this.inputs.messages();
     const items: OgePivotMenuItem[] = [];
     for (const type of SUMMARY_TYPES) {
@@ -829,7 +1241,7 @@ export class OgePivotGridCore<T = unknown> {
           this.store.patchField(field.id, { summaryDisplayMode: mode }),
       });
     }
-    this.menu.set({ x: pointer.clientX, y: pointer.clientY, items });
+    return items;
   }
 
   // --- field value filter popup ---------------------------------------------
@@ -943,6 +1355,12 @@ export class OgePivotGridCore<T = unknown> {
   chooserAreaFields(area: PivotArea): readonly PivotFieldConfig[] {
     return pivotAreaFields(this.chooserFields(), area);
   }
+}
+
+function fillPattern(pattern: string, values: readonly string[]): string {
+  return pattern.replace(/\{(\d)\}/g, (match, index: string) =>
+    Number(index) < values.length ? values[Number(index)] : match,
+  );
 }
 
 function valueAt(row: unknown, path: string): unknown {
