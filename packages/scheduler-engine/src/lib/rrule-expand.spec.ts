@@ -96,12 +96,10 @@ describe('rrule-expand', () => {
       new Date(2026, 0, 1),
       new Date(2026, 3, 1),
     );
-    // Jan: 31 (twice deduped? no — 31 and last are both Jan 31 → two stamps same minute)
+    // Jan: 31 and "last" are both Jan 31 — the recurrence SET holds it once
     expect(dates.map((d) => `${d.getMonth()}-${d.getDate()}`)).toEqual([
       '0-31',
-      '0-31',
       '1-28',
-      '2-31',
       '2-31',
     ]);
   });
@@ -162,6 +160,112 @@ describe('rrule-expand', () => {
     const second = appendException(first, new Date(2026, 7, 12, 9, 30));
     expect(second).toBe('20260805T093000,20260812T093000');
     expect(parseRecurrenceException(second)).toHaveLength(2);
+  });
+
+  it('ends at a Z-suffixed UNTIL read as UTC', () => {
+    const until = new Date(Date.UTC(2026, 7, 5, 12, 0, 0));
+    const dates = expand(
+      'FREQ=DAILY;UNTIL=20260805T120000Z',
+      start,
+      new Date(2026, 7, 1),
+      new Date(2026, 7, 31),
+    );
+    expect(dates.length).toBeGreaterThan(0);
+    expect(dates.every((d) => d.getTime() <= until.getTime())).toBe(true);
+    const next = new Date(dates[dates.length - 1]);
+    next.setDate(next.getDate() + 1);
+    expect(next.getTime()).toBeGreaterThan(until.getTime());
+  });
+
+  it('expands plain MONTHLY BYDAY to every such weekday', () => {
+    const dates = expand(
+      'FREQ=MONTHLY;BYDAY=MO',
+      start, // Mon Aug 3
+      new Date(2026, 7, 1),
+      new Date(2026, 8, 1),
+    );
+    expect(dates.map((d) => d.getDate())).toEqual([3, 10, 17, 24, 31]);
+  });
+
+  it('BYSETPOS picks positions within each period (last workday of month)', () => {
+    const dates = expand(
+      'FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1',
+      new Date(2026, 6, 31, 9), // Fri Jul 31 2026
+      new Date(2026, 6, 1),
+      new Date(2026, 9, 1),
+    );
+    expect(dates).toEqual([
+      new Date(2026, 6, 31, 9),
+      new Date(2026, 7, 31, 9), // Mon Aug 31
+      new Date(2026, 8, 30, 9), // Wed Sep 30
+    ]);
+    const firstAndThird = expand(
+      'FREQ=MONTHLY;BYDAY=TU;BYSETPOS=1,3',
+      new Date(2026, 7, 4, 9), // Tue Aug 4
+      new Date(2026, 7, 1),
+      new Date(2026, 8, 1),
+    );
+    expect(firstAndThird.map((d) => d.getDate())).toEqual([4, 18]);
+  });
+
+  it('BYHOUR / BYMINUTE fan each day out to the listed times', () => {
+    const dates = expand(
+      'FREQ=DAILY;BYHOUR=9,14;BYMINUTE=0,30;COUNT=6',
+      new Date(2026, 7, 3, 9, 0),
+      new Date(2026, 7, 1),
+      new Date(2026, 7, 31),
+    );
+    expect(dates).toEqual([
+      new Date(2026, 7, 3, 9, 0),
+      new Date(2026, 7, 3, 9, 30),
+      new Date(2026, 7, 3, 14, 0),
+      new Date(2026, 7, 3, 14, 30),
+      new Date(2026, 7, 4, 9, 0),
+      new Date(2026, 7, 4, 9, 30),
+    ]);
+    const lastSlot = expand(
+      'FREQ=WEEKLY;BYDAY=MO;BYHOUR=8,12,16;BYSETPOS=-1',
+      new Date(2026, 7, 3, 8),
+      new Date(2026, 7, 1),
+      new Date(2026, 7, 15),
+    );
+    expect(lastSlot).toEqual([
+      new Date(2026, 7, 3, 16),
+      new Date(2026, 7, 10, 16),
+    ]);
+  });
+
+  it('merges RDATE values and removes EXDATE lines', () => {
+    const dates = expand(
+      [
+        'RRULE:FREQ=WEEKLY;BYDAY=MO',
+        'RDATE:20260805T093000,20260803T093000',
+        'EXDATE:20260810T093000',
+      ].join('\n'),
+      start,
+      new Date(2026, 7, 1),
+      new Date(2026, 7, 20),
+      parseRecurrenceException('20260817'),
+    );
+    // Aug 3 (rule + duplicate RDATE once), Aug 5 (RDATE); 10 and 17 excluded
+    expect(dates).toEqual([
+      new Date(2026, 7, 3, 9, 30),
+      new Date(2026, 7, 5, 9, 30),
+    ]);
+  });
+
+  it('RDATE does not consume COUNT and respects the window', () => {
+    const dates = expand(
+      'FREQ=DAILY;COUNT=2\r\nRDATE:20260901T093000,20260720T093000',
+      start,
+      new Date(2026, 7, 1),
+      new Date(2026, 8, 30),
+    );
+    expect(dates).toEqual([
+      new Date(2026, 7, 3, 9, 30),
+      new Date(2026, 7, 4, 9, 30),
+      new Date(2026, 8, 1, 9, 30),
+    ]);
   });
 
   it('caps runaway series', () => {
