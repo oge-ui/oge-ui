@@ -560,9 +560,16 @@ rules — change both together.
 - **Client-side validation is UX.** Upload extension/size rules, form
   validators and grid edit rules exist for feedback; nothing in the suite
   claims to be a server-side control, and the docs must not imply it.
-- **`npm audit` is a build gate** (`audit` job, moderate and above). Nothing
-  in this workspace is shipped to consumers, so an advisory always has an
-  upgrade as its fix — never an exception list.
+- **`npm audit` is a build gate** (`audit` job, moderate and above) — never an
+  exception list. The fix is an upgrade; when the advisory sits in a
+  dependency a tool **pins exactly** (nx pins `axios`/`smol-toml`, verdaccio
+  pins `js-yaml`), it is a targeted `overrides` entry in the root
+  `package.json`, scoped by major (`"brace-expansion@^5": "^5.0.12"`) so other
+  majors in the tree keep their own line. After changing either, regenerate the
+  lockfile from a clean directory (`npm install --package-lock-only` beside a
+  copy of `package.json`) — an in-place `npm install` keeps stale nested
+  entries and `npm ci` then fails on CI. Consumer-facing peers (Angular,
+  React, jspdf/exceljs) get their **peer floor** raised as well.
 
 ## Testing
 
@@ -746,8 +753,9 @@ and Search Console reported the whole site as "redirected / discovered – not i
 - **Security headers live in `vercel.json`** — CSP, HSTS, `frame-ancestors`, Permissions-Policy,
   COOP/CORP — and `/.well-known/security.txt` (RFC 9116) points at `SECURITY.md`. A static host
   cannot mint a per-request nonce, so the CSP admits the one inline snippet the build emits
-  (Angular's deferred-stylesheet `onload="this.media='all'"`) **by hash**, with `'unsafe-hashes'`,
-  rather than opening `script-src` with `'unsafe-inline'`. That hash is tied to a string Angular
+  (Angular's deferred-stylesheet loader — an inline `<script>` swapping `data-beasties-media` into
+  `media` since Angular 22.2) **by hash**, rather than opening `script-src` with `'unsafe-inline'`.
+  (`'unsafe-hashes'` is only needed if the build goes back to an `onload=` handler attribute.) That hash is tied to a string Angular
   generates, so `docs-tools:csp-check` (CI, after `dev-app:build`) re-derives it from the built HTML
   and fails when the policy stops covering it — otherwise an Angular upgrade would silently ship an
   unstyled site. New inline script? Hash it and add it there, or move it into a bundled file.

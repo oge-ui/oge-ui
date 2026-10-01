@@ -108,7 +108,14 @@ const DEFAULT_TITLES: Record<string, string> = {
         </button>
       </div>
       <!-- editor body -->
-      <div class="code-body flex overflow-x-auto">
+      <!-- focusable so a keyboard user can scroll long lines (axe
+           scrollable-region-focusable) -->
+      <div
+        class="code-body flex overflow-x-auto"
+        tabindex="0"
+        role="region"
+        [attr.aria-label]="(title() ?? language()) + ' code'"
+      >
         <div
           class="line-numbers select-none py-4 pl-4 pr-3 text-right"
           aria-hidden="true"

@@ -166,7 +166,10 @@ test.describe('React scheduler docs', () => {
   for (const route of ['/components/scheduler', '/components/scheduler/api']) {
     test(`${route} is axe-clean in the React view`, async ({ page }) => {
       await page.goto(`${route}${REACT}`);
-      await page.waitForLoadState('networkidle');
+      await expect(page.locator('h1').first()).toBeVisible();
+      if (route === '/components/scheduler') {
+        await expect(page.locator('.oge-scheduler').first()).toBeVisible();
+      }
       // heading-order (h1 → demo-card h3) is the site-wide demo-card pattern,
       // identical in the Angular views — not something the React layer adds.
       const results = await new AxeBuilder({ page })

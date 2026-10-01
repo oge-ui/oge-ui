@@ -14,7 +14,26 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
-  reporter: process.env['CI'] ? 'dot' : 'list',
+  // A test that only passes on retry is a bug, not a pass: CI fails on it
+  // (the retries stay so the report shows *which* attempt failed and why).
+  failOnFlakyTests: !!process.env['CI'],
+  // CI keeps the HTML report + JUnit as job artifacts (ci.yml → e2e).
+  reporter: process.env['CI']
+    ? [
+        ['dot'],
+        [
+          'junit',
+          { outputFile: path.join(import.meta.dirname, 'test-results.xml') },
+        ],
+        [
+          'html',
+          {
+            open: 'never',
+            outputFolder: path.join(import.meta.dirname, 'playwright-report'),
+          },
+        ],
+      ]
+    : 'list',
   use: {
     baseURL,
     trace: 'on-first-retry',

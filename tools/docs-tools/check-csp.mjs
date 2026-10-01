@@ -5,8 +5,10 @@
  * The docs site is served from a static host, so its CSP lives in
  * `vercel.json` as a fixed string — it cannot mint a per-request nonce. The
  * only inline script the build produces is Angular's deferred-stylesheet
- * handler (`<link media="print" onload="this.media='all'">`), and the policy
- * admits exactly that one by hash rather than opening the door with
+ * loader (since Angular 22.2 an inline `<script>` that swaps
+ * `data-beasties-media` into `media`; before that an `onload` handler
+ * attribute, which also needed `'unsafe-hashes'`), and the policy admits
+ * exactly that one by hash rather than opening the door with
  * `'unsafe-inline'`.
  *
  * That is a good trade only while it stays true. If an Angular upgrade

@@ -11,47 +11,101 @@ permissions:
   actions: read
   contents: read
 
+# Actions are pinned to commit SHAs (a moved tag cannot change what runs);
+# Dependabot's github-actions ecosystem keeps the pins and comments current.
+
 jobs:
-  main:
+  # Static gates + every unit/build target the change can reach. `npm ci`
+  # doubles as the lockfile-integrity check: it fails when package.json and
+  # package-lock.json disagree, which is what broke Vercel and CI on 1.1.1.
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: 'npm'
 
       - run: npm ci
-      - run: npx playwright install --with-deps
+      # base = the last commit on main whose CI succeeded, so `affected` never
+      # skips work a red run left unverified
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
-      - run: npx nx format:check --base="remotes/origin/main"
+      - run: npx nx format:check
       # the committed llms.txt / sitemap artifacts must match their generator
       - run: npx nx run docs-tools:llms-check
       - run: npx nx run docs-tools:parity
-      - run: npx nx run-many -t lint test build typecheck e2e
+      - run: npx nx affected -t lint test build typecheck --exclude=dev-app-e2e
       # the ng-add bundle only ships if it builds — release runs this too
       - run: npx nx run oge-schematics:schematics
       # the site's CSP is a fixed string on a static host, so it has to be
-      # checked against what the build actually emits (runs after the build)
+      # checked against what the build actually emits
+      - run: npx nx run dev-app:build
       - run: npx nx run docs-tools:csp-check
 
-  # A dependency advisory is a build failure, not a dashboard item: every
-  # vulnerable package in this workspace is a build-time one, so the fix is
-  # always an upgrade and never a consumer-facing caveat. Runs beside `main`
-  # so an advisory published overnight does not hold up an unrelated PR's
-  # test signal.
-  audit:
+  # The docs site is the integration surface of every package, so e2e always
+  # runs in full (not `affected`), sharded to keep the wall clock short.
+  e2e:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
-      - uses: actions/checkout@v5
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           filter: tree:0
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx nx run dev-app-e2e:e2e -- --shard=${{ matrix.shard }}/3
+
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-${{ matrix.shard }}
+          path: |
+            apps/dev-app-e2e/playwright-report
+            apps/dev-app-e2e/test-results.xml
+            apps/dev-app-e2e/test-output
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # A dependency advisory is a build failure, not a dashboard item. The fix is
+  # an upgrade or a targeted `overrides` entry in package.json (see
+  # docs/ARCHITECTURE.md → "Security rules"). Runs beside the other jobs so an
+  # advisory published overnight does not hold up an unrelated PR's test
+  # signal.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          filter: tree:0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: 'npm'
