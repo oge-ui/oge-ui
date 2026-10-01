@@ -166,7 +166,7 @@ export const OGE_REACT_SCHEDULER_API: ApiSections = {
           type: 'boolean',
           default: 'false',
           description:
-            '<strong>Display-only shorthand</strong>: overrides every <code>allow*</code> flag at once and hides the editing affordances.',
+            '<strong>Display-only shorthand</strong>: overrides every <code>allow*</code> flag at once and hides the editing affordances. The day/week and month grids then carry <code>aria-readonly="true"</code> (also when every <code>allow*</code> flag is off).',
         },
         {
           name: 'snapDuration',

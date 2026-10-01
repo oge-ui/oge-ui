@@ -6,7 +6,9 @@ import {
   buildGutterSlots,
   cellDateAt,
   chipTabIndexOf,
+  dayWeekCellSelected,
   dayWeekChipOrder,
+  dayWeekColumnHeaderText,
   dayWeekDragMove,
   dayWeekPreviewBox,
   dayWeekSelectionBox,
@@ -17,6 +19,7 @@ import {
   nowLineFraction,
   schedulerCellAriaLabel,
   schedulerGridAriaLabel,
+  schedulerGridReadOnly,
 } from './day-week-vm';
 import {
   agendaTimeText,
@@ -28,7 +31,9 @@ import {
 } from './list-vm';
 import {
   buildMonthWeekLayouts,
+  monthCellSelected,
   monthChipOrder,
+  monthColumnHeaderText,
   monthDropCell,
   monthMaxLanes,
   monthOriginIndex,
@@ -202,6 +207,50 @@ describe('day/week view model', () => {
     ).toMatch(/Monday, August 3, 2026, 9:00\sAM, Ada/);
     expect(buildGutterSlots(grid, 'en-US')).toHaveLength(10);
     expect(escapeAttr('a"b\\c')).toBe('a\\"b\\\\c');
+  });
+});
+
+describe('grid semantics (column headers, selection, read-only)', () => {
+  it('names time-grid column headers by full date and resource', () => {
+    const [col] = buildDayWeekColumns([new Date(2026, 7, 3)], null);
+    expect(dayWeekColumnHeaderText(col, 'en-US')).toBe(
+      'Monday, August 3, 2026',
+    );
+    const [grouped] = buildDayWeekColumns(
+      [new Date(2026, 7, 3)],
+      [{ id: 'a', text: 'Ada' }],
+    );
+    expect(dayWeekColumnHeaderText(grouped, 'en-US')).toBe(
+      'Monday, August 3, 2026, Ada',
+    );
+    expect(monthColumnHeaderText(new Date(2026, 7, 3), 'en-US')).toBe('Monday');
+  });
+
+  it('selects the focused cell, or the live drag range when one exists', () => {
+    const focused = { day: 1, slot: 2 };
+    expect(dayWeekCellSelected(1, 2, 600, focused, null)).toBe(true);
+    expect(dayWeekCellSelected(0, 2, 600, focused, null)).toBe(false);
+    const range = { dayIndex: 0, startMinutes: 540, endMinutes: 600 };
+    expect(dayWeekCellSelected(0, 0, 540, focused, range)).toBe(true);
+    expect(dayWeekCellSelected(0, 1, 570, focused, range)).toBe(true);
+    expect(dayWeekCellSelected(0, 2, 600, focused, range)).toBe(false);
+    // the focused cell is not selected while a range is live
+    expect(dayWeekCellSelected(1, 2, 600, focused, range)).toBe(false);
+    expect(monthCellSelected(1, 3, { week: 1, day: 3 })).toBe(true);
+    expect(monthCellSelected(1, 4, { week: 1, day: 3 })).toBe(false);
+  });
+
+  it('is read-only only when every write path is off', () => {
+    const off = {
+      canAdd: false,
+      canUpdate: false,
+      canDelete: false,
+      canDrag: false,
+      canResize: false,
+    };
+    expect(schedulerGridReadOnly(off)).toBe(true);
+    expect(schedulerGridReadOnly({ ...off, canAdd: true })).toBe(false);
+    expect(schedulerGridReadOnly({ ...off, canDrag: true })).toBe(false);
   });
 });
 

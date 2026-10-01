@@ -93,11 +93,16 @@ const SECTIONS_REACT = ['<OgeScheduler>', 'Configuration'] as const;
       </li>
       <li>
         No WAI-ARIA APG scheduler pattern exists. The widget composes the
-        calendar-grid pattern: the view body is a <code>role="grid"</code>
-        with one roving-tabindex cell (arrows, Home/End, Enter/Space creates),
-        and the appointment chips form a second tab stop of
-        <code>role="button"</code> elements — Left/Right cycles chronologically,
-        Enter opens the popup, Delete deletes, and
+        calendar-grid pattern: the view body is a <code>role="grid"</code> whose
+        first row holds <code>role="columnheader"</code> cells (the full date,
+        plus the resource when grouped; weekday names in the month view), and
+        one roving-tabindex cell (arrows, Home/End, Enter/Space creates) that is
+        also the <code>aria-selected</code> cell — selection follows focus, and
+        a live drag-to-create range selects the slots it covers. A read-only
+        scheduler sets <code>aria-readonly</code> on the grid. The appointment
+        chips form a second tab stop of <code>role="button"</code> elements —
+        Left/Right cycles chronologically, Enter opens the popup, Delete
+        deletes, and
         <strong>Ctrl+Arrow moves / Ctrl+Shift+Up/Down resizes</strong> as the
         keyboard equivalent of drag, announced through a polite live region.
       </li>

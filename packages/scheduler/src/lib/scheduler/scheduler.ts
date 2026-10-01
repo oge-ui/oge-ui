@@ -319,6 +319,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           (chipActivated)="onChipActivated($event)"
           (chipDeleteRequested)="onDeleteRequested($event)"
           [allowDragging]="canDrag()"
+          [readOnly]="gridReadOnly()"
           (moveCommitted)="onMoveCommitted($event)"
           (gestureCancelled)="onGestureCancelled()"
           (chipContextMenu)="onChipContextMenu($event)"
@@ -354,6 +355,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [allowDragging]="canDrag()"
           [allowResizing]="canResize()"
           [allowAdding]="canAdd()"
+          [readOnly]="gridReadOnly()"
           [hiddenWeekDays]="hiddenWeekDays()"
           [workHours]="workHours()"
           [shadeUntilCurrentTime]="shadeUntilCurrentTime()"
@@ -690,6 +692,7 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   protected readonly canDelete = this.core.canDelete;
   protected readonly canDrag = this.core.canDrag;
   protected readonly canResize = this.core.canResize;
+  protected readonly gridReadOnly = this.core.gridReadOnly;
   protected readonly minAppointmentMinutes = this.core.minAppointmentMinutes;
   protected readonly effectiveLocale = this.core.effectiveLocale;
   protected readonly resolvedFirstDayOfWeek = this.core.resolvedFirstDayOfWeek;

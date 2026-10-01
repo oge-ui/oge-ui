@@ -89,6 +89,26 @@ export function monthOriginIndex<T>(
   );
 }
 
+/**
+ * The accessible name of a month-grid `role="columnheader"`: the long
+ * weekday name (the visual header shows the short one).
+ */
+export function monthColumnHeaderText(
+  day: Date,
+  locale: string | undefined,
+): string {
+  return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(day);
+}
+
+/** Whether a month cell is selected (`aria-selected`) — the roving current day. */
+export function monthCellSelected(
+  weekIndex: number,
+  dayIndex: number,
+  focused: { readonly week: number; readonly day: number },
+): boolean {
+  return focused.week === weekIndex && focused.day === dayIndex;
+}
+
 /** A month (or all-day) cell's accessible name. */
 export function schedulerDayCellAriaLabel(
   messages: OgeSchedulerGridMessages,

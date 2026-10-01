@@ -365,6 +365,7 @@
   border-block-start: 1px solid var(--oge-scheduler-grid-line);
 }
 
+.oge-scheduler-sr-header-row + .oge-scheduler-row .oge-scheduler-cell,
 .oge-scheduler-row:first-child .oge-scheduler-cell {
   border-block-start: none;
 }
@@ -893,7 +894,25 @@
   gap: 8px;
 }
 
-/* ---------- live region ---------- */
+/* ---------- live region + grid column headers for assistive tech ---------- */
+
+/* The visual date/weekday headers sit outside the scrolling grid and are
+   aria-hidden; this first grid row carries the columnheader names. It is
+   absolutely positioned, so it takes no flex/grid track. */
+.oge-scheduler-sr-header-row {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: flex;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
 
 .oge-scheduler-live {
   position: absolute;
