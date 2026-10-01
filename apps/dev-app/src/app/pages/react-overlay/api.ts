@@ -3,6 +3,7 @@ import { ApiReference } from '../../shared/api-reference';
 import {
   OGE_REACT_ANCHORED_PANEL_API,
   OGE_REACT_CONTEXT_MENU_API,
+  OGE_REACT_LIVE_ANNOUNCER_API,
   OGE_REACT_MENU_LIST_API,
   OGE_REACT_MODAL_API,
   OGE_REACT_MODAL_SERVICE_API,
@@ -42,6 +43,10 @@ import {
       title="OgeToastService (useOgeToasts)"
       [sections]="toastApi"
     />
+    <app-api-reference
+      title="OgeLiveAnnouncer (useOgeLiveAnnouncer)"
+      [sections]="liveAnnouncerApi"
+    />
     <app-api-reference title="&lt;OgeTooltip&gt;" [sections]="tooltipApi" />
     <app-api-reference
       title="&lt;OgeContextMenu&gt;"
@@ -62,6 +67,7 @@ export class ReactOverlayApiSections {
   protected readonly modalApi = OGE_REACT_MODAL_API;
   protected readonly modalServiceApi = OGE_REACT_MODAL_SERVICE_API;
   protected readonly toastApi = OGE_REACT_TOAST_API;
+  protected readonly liveAnnouncerApi = OGE_REACT_LIVE_ANNOUNCER_API;
   protected readonly tooltipApi = OGE_REACT_TOOLTIP_API;
   protected readonly contextMenuApi = OGE_REACT_CONTEXT_MENU_API;
   protected readonly menuListApi = OGE_REACT_MENU_LIST_API;
