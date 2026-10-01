@@ -243,6 +243,11 @@ describe('OgeSchedulerCore', () => {
     expect(core.store()).toHaveLength(1);
     expect(core.canAdd()).toBe(false);
     expect(core.canDrag()).toBe(false);
+    expect(core.gridReadOnly()).toBe(true);
+  });
+
+  it('gridReadOnly stays false while any write path is open', () => {
+    expect(setup().core.gridReadOnly()).toBe(false);
   });
 
   it('writes through a DataSource and reloads', async () => {

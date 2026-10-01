@@ -35,6 +35,7 @@ import {
   type SchedulerEditorResult,
 } from './editor';
 import type { AppointmentProposal } from './gesture-math';
+import { schedulerGridReadOnly } from './day-week-vm';
 import { appendException } from './rrule-expand';
 import {
   appointmentPatch,
@@ -248,6 +249,8 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   readonly canDelete: () => boolean;
   readonly canDrag: () => boolean;
   readonly canResize: () => boolean;
+  /** `aria-readonly` of the view grids — nothing can be created or changed. */
+  readonly gridReadOnly: () => boolean;
   readonly fields: () => ResolvedSchedulerFields<T>;
   /** The resource that colors uncolored appointments, if any. */
   readonly colorResource: () => OgeSchedulerResource | null;
@@ -316,6 +319,15 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     );
     this.canResize = rx.derived(
       () => inputs.allowResizing() && !inputs.readOnly(),
+    );
+    this.gridReadOnly = rx.derived(() =>
+      schedulerGridReadOnly({
+        canAdd: this.canAdd(),
+        canUpdate: this.canUpdate(),
+        canDelete: this.canDelete(),
+        canDrag: this.canDrag(),
+        canResize: this.canResize(),
+      }),
     );
     this.fields = rx.derived(() =>
       resolveSchedulerFields<T>({
