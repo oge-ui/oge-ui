@@ -54,6 +54,8 @@
       >
     </nav>
     <div class="flex items-center gap-2 max-md:ml-auto">
+      <!-- docs version: this site is the latest release; archives are their own sites -->
+      <app-version-menu class="max-sm:hidden" />
       @if (!isHome()) {
       <!--
         Framework lives in the header, beside the theme: it is a site-wide

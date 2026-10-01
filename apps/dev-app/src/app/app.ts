@@ -23,6 +23,7 @@ import { FrameworkSwitch } from './shared/framework-switch';
 import { FrameworkService } from './shared/framework.service';
 import { Icon, type IconName } from './shared/icon';
 import { SITE_VERSION } from './shared/site-version';
+import { VersionMenu } from './shared/version-menu';
 import { SeoService } from './shared/seo.service';
 import { ThemeService, type GridTheme } from './shared/theme.service';
 
@@ -67,6 +68,7 @@ const COMPONENTS_GROUP = 'Components';
     FrameworkLogo,
     ThemeLogo,
     OgeSelectBox,
+    VersionMenu,
   ],
   selector: 'app-root',
   templateUrl: './app.html',

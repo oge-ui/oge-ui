@@ -752,6 +752,27 @@ and Search Console reported the whole site as "redirected / discovered – not i
   and fails when the policy stops covering it — otherwise an Angular upgrade would silently ship an
   unstyled site. New inline script? Hash it and add it there, or move it into a bundled file.
 
+### Versioned docs
+
+The site on `main` is always the **latest** release (`SITE_VERSION`). An older line stays readable
+as a **frozen deployment**: a `docs/v<major>.<minor>` branch cut from that line's last release tag
+and served by Vercel on its own subdomain (`v0-13.ogeui.com` ← `docs/v0.13`). It is the site exactly
+as it shipped — never a re-render of today's code with old API data.
+
+Archiving a version, once per line:
+
+1. `git worktree add ../oge-docs-vX.Y -b docs/vX.Y <last tag of that line>`; on the branch only:
+   `noindex` (`<meta name="robots">` in `index.html` **and** an `X-Robots-Tag` header in
+   `vercel.json`, so the archive never competes with latest in search), a sticky banner in
+   `app.html` linking to the latest site, and whatever deploy fixes the old tree needs to build
+   (lockfile, `vercel.json` route syntax). Commit, push the branch.
+2. Vercel → Project → Domains: add `vX-Y.ogeui.com` and assign it to the `docs/vX.Y` branch.
+3. On `main`, add `{ label: 'X.Y', origin: 'https://vX-Y.ogeui.com' }` to `ARCHIVED_DOCS`
+   (`shared/docs-versions.ts`, newest first). The header's `app-version-menu` lists it and opens
+   the same path on that origin.
+
+Archive branches take no feature work; only a fix that keeps the old site building is allowed.
+
 ## `ng add` (`tools/oge-schematics`)
 
 Every publishable package ships an `ng add` schematic. One implementation lives in
