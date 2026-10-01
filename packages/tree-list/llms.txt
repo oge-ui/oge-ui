@@ -158,7 +158,7 @@ _Layout, editing & misc (grid-shared)_
 | `virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth` | `various` | `—` | Virtualization knobs; `columnRenderingMode` is a top-level input here. |
 | `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false). |
 | `editing` | `false \| OgeEditingOptions` | `false` | cell/row/batch/form/popup via the shared EditingModel. |
-| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid. |
+| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid; `messages` is the grid’s `OgeGridMessages` catalog — the reparenting handle reads `reparentColumnHeader` / `reparentRow`, boolean cells announce `booleanTrueLabel` / `booleanFalseLabel`. |
 
 #### Methods
 

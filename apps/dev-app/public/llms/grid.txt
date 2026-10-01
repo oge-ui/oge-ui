@@ -430,6 +430,8 @@ _Configuration_
 | `provideOgeGridConfig(config)` | `Provider` | App/component-scoped defaults; deep-merges `messages`. |
 | `OgeGridConfig` | `{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; messages }` | Defaults shown inline. |
 | `OgeGridMessages` | `60+ string keys` | Every user-facing string, incl. aria labels, filter operators, summary patterns — see `OGE_DEFAULT_MESSAGES` in the source. |
+| `messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow` | `string` | Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: `Reorder`, `Detail`, `Select all`, `Reorder row`. The tree list reads `reparentColumnHeader` / `reparentRow` (`Reparent`, `Reparent row`) for its reparenting handle. |
+| `messages.booleanTrueLabel / messages.booleanFalseLabel` | `string` | Screen-reader text of a default-rendered boolean cell (`Yes` / `No`). The visible `booleanTrue` / `booleanFalse` glyph (`✓` / `✗`, also the CSV text) is rendered `aria-hidden`; the label is rendered visually hidden beside it. Columns with a custom `format`, a lookup or a cell template render their own text. Localizing `booleanTrue` / `booleanFalse` to words? Set the labels too — they are announced, the glyph text is not. |
 | `OGE_STATE_STORAGE / OgeStateStorage` | `InjectionToken` | Pluggable sync/async persistence backend for `stateKey`. |
 
 _Filter builder_

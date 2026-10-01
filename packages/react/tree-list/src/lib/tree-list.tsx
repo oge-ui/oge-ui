@@ -34,6 +34,7 @@ import {
   OgeTreeListCore,
   adaptiveHiddenColumnIds,
   allHeaderValuesSelected,
+  booleanCellLabel,
   builderToExpr,
   dateFilterExpr,
   describeExpr,
@@ -54,6 +55,7 @@ import {
   ogeTreeHeaderValueGroups,
   ogeTreeHeaderValueText,
   operatorsFor,
+  resizedColumnWidth,
   resolveOgeGridColumns,
   rowClickSelectionIntent,
   rowFilterExpr,
@@ -1223,9 +1225,13 @@ function OgeTreeListInner<T extends object>(
         ? column.width
         : configRef.current.pinnedDefaultWidth);
     const startX = event.clientX;
+    const rtl = model.rtl();
     const onMove = (move: PointerEvent): void => {
       suppressHeaderClick.current = true;
-      state.columns.setWidth(column.id, startWidth + (move.clientX - startX));
+      state.columns.setWidth(
+        column.id,
+        resizedColumnWidth(startWidth, startX, move.clientX, rtl),
+      );
     };
     const onUp = (): void => {
       window.removeEventListener('pointermove', onMove);
@@ -2223,6 +2229,19 @@ function OgeTreeListInner<T extends object>(
       });
     }
     const text = cellDisplayText(node, column);
+    const booleanLabel =
+      column.dataType === 'boolean'
+        ? booleanCellLabel(column.accessor(node.data), column, msg)
+        : null;
+    if (booleanLabel !== null) {
+      // the glyph is decoration; the word is what a screen reader announces
+      return (
+        <span className="oge-tree-cell-text">
+          <span aria-hidden="true">{text}</span>
+          <span className="oge-sr-only">{booleanLabel}</span>
+        </span>
+      );
+    }
     const runs = searchQuery
       ? buildSearchHighlightSegments(text, searchQuery)
       : null;
@@ -2326,7 +2345,7 @@ function OgeTreeListInner<T extends object>(
             <span
               className="oge-drag-handle"
               draggable
-              aria-label="Reparent row"
+              aria-label={msg.reparentRow}
               onDragStart={(event) => {
                 draggedRowKey.current = node.key;
                 event.dataTransfer.setData('text/plain', String(node.key));
@@ -2740,14 +2759,14 @@ function OgeTreeListInner<T extends object>(
               <div
                 className="oge-header-cell oge-drag-cell"
                 role="columnheader"
-                aria-label="Reparent"
+                aria-label={msg.reparentColumnHeader}
               />
             ) : null}
             {hasCheckboxColumn ? (
               <div
                 className="oge-header-cell oge-checkbox-cell"
                 role="columnheader"
-                aria-label="Select all"
+                aria-label={msg.selectAllColumnHeader}
               >
                 {props.allowSelectAll !== false ? (
                   <OgeCheckBox

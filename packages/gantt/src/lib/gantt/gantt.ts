@@ -830,6 +830,13 @@ export class OgeGantt<
   readonly showRowLines = input(true);
   readonly showCriticalPath = input(false);
   readonly weekendsHighlighted = input(true);
+  /**
+   * Weekend days (0 = Sunday … 6 = Saturday) `weekendsHighlighted` shades;
+   * `undefined` resolves from the locale's `Intl.Locale` week data (Friday +
+   * Saturday in `he-IL`), falling back to Saturday + Sunday. A `workCalendar`
+   * takes precedence.
+   */
+  readonly weekendDays = input<readonly number[] | undefined>(undefined);
   readonly holidays = input<readonly Date[]>([]);
   /**
    * Work-time calendar: working weekdays + holidays. Shades off days and
@@ -923,6 +930,7 @@ export class OgeGantt<
         showDependencies: () => this.showDependencies(),
         showCriticalPath: () => this.showCriticalPath(),
         weekendsHighlighted: () => this.weekendsHighlighted(),
+        weekendDays: () => this.weekendDays(),
         holidays: () => this.holidays(),
         workCalendar: () => this.workCalendar(),
         showResourceWorkload: () => this.showResourceWorkload(),

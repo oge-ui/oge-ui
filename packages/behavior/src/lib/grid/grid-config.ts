@@ -27,6 +27,18 @@ export interface OgeGridMessages {
   selectAllRows: string;
   selectRow: string;
   toggleDetail: string;
+  /** Accessible name of the row-drag handle column's header cell. */
+  reorderColumnHeader: string;
+  /** Accessible name of the master-detail expander column's header cell. */
+  detailColumnHeader: string;
+  /** Accessible name of the selection checkbox column's header cell. */
+  selectAllColumnHeader: string;
+  /** Accessible name of a row's drag handle (grid row reordering). */
+  reorderRow: string;
+  /** Accessible name of the drag handle column's header cell (tree-list reparenting). */
+  reparentColumnHeader: string;
+  /** Accessible name of a row's drag handle (tree-list reparenting). */
+  reparentRow: string;
   /** Aria label of a collapsed tree row's expander (tree-list). */
   expandRow: string;
   /** Aria label of an expanded tree row's expander (tree-list). */
@@ -37,8 +49,17 @@ export interface OgeGridMessages {
   pageSizeLabel: string;
   allRows: string;
   confirmDelete: string;
+  /** Visible text of a `true` boolean cell (also the CSV / filter-list text). */
   booleanTrue: string;
+  /** Visible text of a `false` boolean cell (also the CSV / filter-list text). */
   booleanFalse: string;
+  /**
+   * Screen-reader text of a `true` boolean cell — the visible `booleanTrue`
+   * glyph is rendered `aria-hidden`, this is rendered visually hidden.
+   */
+  booleanTrueLabel: string;
+  /** Screen-reader text of a `false` boolean cell (see `booleanTrueLabel`). */
+  booleanFalseLabel: string;
   editRow: string;
   deleteRow: string;
   undeleteRow: string;
@@ -98,6 +119,12 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   selectAllRows: 'Select all rows',
   selectRow: 'Select row',
   toggleDetail: 'Toggle detail',
+  reorderColumnHeader: 'Reorder',
+  detailColumnHeader: 'Detail',
+  selectAllColumnHeader: 'Select all',
+  reorderRow: 'Reorder row',
+  reparentColumnHeader: 'Reparent',
+  reparentRow: 'Reparent row',
   expandRow: 'Expand row',
   collapseRow: 'Collapse row',
   previousPage: 'Previous page',
@@ -108,6 +135,8 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   confirmDelete: 'Delete this row?',
   booleanTrue: '✓',
   booleanFalse: '✗',
+  booleanTrueLabel: 'Yes',
+  booleanFalseLabel: 'No',
   editRow: 'Edit',
   deleteRow: 'Delete',
   undeleteRow: 'Undo delete',

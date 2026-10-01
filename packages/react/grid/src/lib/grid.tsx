@@ -63,7 +63,9 @@ import {
   filterRowOperatorChoices,
   allHeaderValuesSelected as everyHeaderValueSelected,
   filterHeaderValues,
+  booleanCellLabel,
   formatCellValue,
+  resizedColumnWidth,
   formatPattern,
   groupHeaderValuesByYear,
   headerGroupState,
@@ -1999,9 +2001,13 @@ function OgeGridInner<T extends object>(
         ? column.width
         : configRef.current.pinnedDefaultWidth);
     const startX = event.clientX;
+    const rtl = model.rtl();
     const onMove = (move: PointerEvent): void => {
       suppressHeaderClick.current = true;
-      state.columns.setWidth(column.id, startWidth + (move.clientX - startX));
+      state.columns.setWidth(
+        column.id,
+        resizedColumnWidth(startWidth, startX, move.clientX, rtl),
+      );
     };
     const onUp = (): void => {
       window.removeEventListener('pointermove', onMove);
@@ -2830,6 +2836,28 @@ function OgeGridInner<T extends object>(
     return formatCellValue(value, column.dataType, undefined);
   };
 
+  /** Cell content: a boolean cell's glyph is aria-hidden, its word sr-only. */
+  const cellContent = (
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): React.ReactNode => {
+    const label =
+      column.dataType === 'boolean'
+        ? booleanCellLabel(
+            model.editing.displayValue(node, column),
+            column,
+            msg,
+          )
+        : null;
+    if (label === null) return cellText(node, column);
+    return (
+      <>
+        <span aria-hidden="true">{cellText(node, column)}</span>
+        <span className="oge-sr-only">{label}</span>
+      </>
+    );
+  };
+
   const booleanFilterItems = [
     { value: '', text: msg.selectAllValues },
     { value: 'true', text: msg.booleanTrue },
@@ -3113,7 +3141,7 @@ function OgeGridInner<T extends object>(
             <span
               className="oge-drag-handle"
               draggable
-              aria-label="Reorder row"
+              aria-label={msg.reorderRow}
               onDragStart={(event) => {
                 draggedRowKey.current = node.key;
                 event.dataTransfer.setData('text/plain', String(node.key));
@@ -3217,7 +3245,7 @@ function OgeGridInner<T extends object>(
                       key: node.key,
                       column: column.source as OgeGridColumnProps<T>,
                     })
-                  : cellText(node, column)}
+                  : cellContent(node, column)}
             </div>
           );
         })}
@@ -3825,21 +3853,21 @@ function OgeGridInner<T extends object>(
               <div
                 className="oge-header-cell oge-drag-cell"
                 role="columnheader"
-                aria-label="Reorder"
+                aria-label={msg.reorderColumnHeader}
               />
             ) : null}
             {hasExpander ? (
               <div
                 className="oge-header-cell oge-expander-cell"
                 role="columnheader"
-                aria-label="Detail"
+                aria-label={msg.detailColumnHeader}
               />
             ) : null}
             {hasCheckboxColumn ? (
               <div
                 className="oge-header-cell oge-checkbox-cell"
                 role="columnheader"
-                aria-label="Select all"
+                aria-label={msg.selectAllColumnHeader}
               >
                 <OgeCheckBox
                   value={model.someSelected() ? null : model.allSelected()}

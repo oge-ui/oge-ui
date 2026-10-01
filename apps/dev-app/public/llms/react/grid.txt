@@ -385,6 +385,8 @@ _Configuration_
 | `<OgeGridConfigProvider config>` | `OgeGridConfigInput` | App- or subtree-wide defaults and messages — the counterpart of `provideOgeGridConfig()`; read with `useOgeGridConfig()`. |
 | `<OgeGridStateStorageProvider storage>` | `OgeStateStorage` | Where `stateKey` persistence writes — the counterpart of the `OGE_STATE_STORAGE` token; read with `useOgeGridStateStorage()`. `OGE_LOCAL_STATE_STORAGE` is the default. |
 | `OgeGridMessages / OGE_DEFAULT_GRID_MESSAGES` | `interface / const` | Every user-facing string, single-sourced in `@oge-ui/behavior` with the Angular grid. |
+| `messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow` | `string` | Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: `Reorder`, `Detail`, `Select all`, `Reorder row`. The tree list reads `reparentColumnHeader` / `reparentRow` (`Reparent`, `Reparent row`) for its reparenting handle. |
+| `messages.booleanTrueLabel / messages.booleanFalseLabel` | `string` | Screen-reader text of a default-rendered boolean cell (`Yes` / `No`). The visible `booleanTrue` / `booleanFalse` glyph (`✓` / `✗`, also the CSV text) is rendered `aria-hidden`; the label is rendered visually hidden beside it. Columns with a custom `format`, a lookup or a cell template render their own text. Localizing `booleanTrue` / `booleanFalse` to words? Set the labels too — they are announced, the glyph text is not. |
 
 ## Demos
 

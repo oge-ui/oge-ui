@@ -208,7 +208,8 @@ export const OGE_TREE_LIST_API: ApiSections = {
         {
           name: 'commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey',
           type: 'various',
-          description: 'Same semantics as the grid.',
+          description:
+            'Same semantics as the grid; <code>messages</code> is the grid’s <code>OgeGridMessages</code> catalog — the reparenting handle reads <code>reparentColumnHeader</code> / <code>reparentRow</code>, boolean cells announce <code>booleanTrueLabel</code> / <code>booleanFalseLabel</code>.',
         },
       ],
     },

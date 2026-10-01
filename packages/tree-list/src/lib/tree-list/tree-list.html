@@ -158,13 +158,13 @@ store.editing.hasPending())) {
       <div
         class="oge-header-cell oge-drag-cell"
         role="columnheader"
-        aria-label="Reparent"
+        [attr.aria-label]="msg().reparentColumnHeader"
       ></div>
       } @if (hasCheckboxColumn()) {
       <div
         class="oge-header-cell oge-checkbox-cell"
         role="columnheader"
-        aria-label="Select all"
+        [attr.aria-label]="msg().selectAllColumnHeader"
       >
         @if (allowSelectAll()) {
         <oge-check-box
@@ -457,7 +457,7 @@ store.editing.hasPending())) {
           <span
             class="oge-drag-handle"
             draggable="true"
-            [attr.aria-label]="'Reparent row'"
+            [attr.aria-label]="msg().reparentRow"
             (dragstart)="onRowDragStart(node, $event)"
             (dragend)="onRowDragEnd()"
             (click)="$event.stopPropagation()"
@@ -573,6 +573,11 @@ store.editing.hasPending())) {
           <ng-container
             *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
           />
+          } @else if (booleanLabelOf(node, column); as booleanLabel) {
+          <span class="oge-tree-cell-text"
+            ><span aria-hidden="true">{{ cellDisplayText(node, column) }}</span
+            ><span class="oge-sr-only">{{ booleanLabel }}</span></span
+          >
           } @else if (searchHighlightRuns(node, column); as runs) {
           <!-- prettier-ignore -->
           <span class="oge-tree-cell-text">@for (run of runs; track $index) {@if (run.match) {<mark class="oge-highlight">{{ run.text }}</mark>} @else {{{ run.text }}}}</span>

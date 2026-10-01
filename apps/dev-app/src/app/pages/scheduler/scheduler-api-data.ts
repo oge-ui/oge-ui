@@ -102,6 +102,12 @@ export const OGE_SCHEDULER_API: ApiSections = {
             'First day of week (0 = Sunday); <code>undefined</code> resolves from the locale via <code>Intl.Locale.weekInfo</code>.',
         },
         {
+          name: 'weekendDays',
+          type: 'readonly number[] | undefined',
+          description:
+            'Weekend days (0 = Sunday … 6 = Saturday) the day/week, month and timeline views shade and the <code>workWeek</code> view drops. <code>undefined</code> resolves from the locale via <code>Intl.Locale#getWeekInfo()</code> (Friday + Saturday in <code>he-IL</code>), falling back to Saturday + Sunday.',
+        },
+        {
           name: 'hiddenWeekDays',
           type: 'readonly number[] | undefined',
           description:

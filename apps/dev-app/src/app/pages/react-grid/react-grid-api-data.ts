@@ -1116,6 +1116,18 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
           description:
             'Every user-facing string, single-sourced in <code>@oge-ui/behavior</code> with the Angular grid.',
         },
+        {
+          name: 'messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow',
+          type: 'string',
+          description:
+            'Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: <code>Reorder</code>, <code>Detail</code>, <code>Select all</code>, <code>Reorder row</code>. The tree list reads <code>reparentColumnHeader</code> / <code>reparentRow</code> (<code>Reparent</code>, <code>Reparent row</code>) for its reparenting handle.',
+        },
+        {
+          name: 'messages.booleanTrueLabel / messages.booleanFalseLabel',
+          type: 'string',
+          description:
+            'Screen-reader text of a default-rendered boolean cell (<code>Yes</code> / <code>No</code>). The visible <code>booleanTrue</code> / <code>booleanFalse</code> glyph (<code>✓</code> / <code>✗</code>, also the CSV text) is rendered <code>aria-hidden</code>; the label is rendered visually hidden beside it. Columns with a custom <code>format</code>, a lookup or a cell template render their own text. Localizing <code>booleanTrue</code> / <code>booleanFalse</code> to words? Set the labels too — they are announced, the glyph text is not.',
+        },
       ],
     },
   ],

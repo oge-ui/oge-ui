@@ -113,6 +113,43 @@ export function resolveFirstDayOfWeek(
   return 0;
 }
 
+/** The weekend every engine without `Intl.Locale` week data falls back to. */
+const DEFAULT_WEEKEND_DAYS: readonly number[] = Object.freeze([0, 6]);
+
+/**
+ * Resolves the weekend days (`0` = Sunday … `6` = Saturday) when unspecified:
+ * an explicit list wins (normalized, deduplicated, sorted); otherwise the
+ * locale's `Intl.Locale#getWeekInfo()` / `weekInfo` decides — Friday and
+ * Saturday in `he-IL`, Friday alone in `fa-IR` — and engines
+ * without week data fall back to Saturday and Sunday.
+ */
+export function resolveWeekendDays(
+  explicit: readonly number[] | undefined,
+  locale: string | undefined,
+): readonly number[] {
+  if (explicit !== undefined) return normalizeWeekdays(explicit);
+  try {
+    const info = new Intl.Locale(locale ?? navigator.language) as unknown as {
+      weekInfo?: { weekend?: readonly number[] };
+      getWeekInfo?: () => { weekend?: readonly number[] };
+    };
+    const weekInfo = info.getWeekInfo?.() ?? info.weekInfo;
+    // Intl weekInfo uses 1–7 (Mon–Sun); our API uses 0–6 (Sun–Sat)
+    if (Array.isArray(weekInfo?.weekend))
+      return normalizeWeekdays(weekInfo.weekend);
+  } catch {
+    // older engines: fall through to Saturday + Sunday
+  }
+  return DEFAULT_WEEKEND_DAYS;
+}
+
+function normalizeWeekdays(days: readonly number[]): readonly number[] {
+  const set = new Set<number>();
+  for (const day of days)
+    if (Number.isInteger(day)) set.add(((day % 7) + 7) % 7);
+  return [...set].sort((a, b) => a - b);
+}
+
 export function sameDay(a: Date | null, b: Date | null): boolean {
   if (a === null || b === null) return a === b;
   return (

@@ -22,6 +22,7 @@ import {
   contrastForeground,
   parseColor,
   resolveFirstDayOfWeek,
+  resolveWeekendDays,
   sameDay,
   startOfDay,
   type RowKey,
@@ -220,6 +221,8 @@ export interface OgeGanttCoreInputs<T, D> {
   showDependencies(): boolean;
   showCriticalPath(): boolean;
   weekendsHighlighted(): boolean;
+  /** Weekend days (0 = Sunday) to shade; `undefined` resolves from the locale. */
+  weekendDays(): readonly number[] | undefined;
   holidays(): readonly Date[];
   workCalendar(): GanttWorkCalendar | null;
   showResourceWorkload(): boolean;
@@ -337,6 +340,11 @@ export class OgeGanttCore<
   readonly effectiveLocale: () => string | undefined;
   readonly effectiveEditing: () => boolean;
   readonly resolvedFirstDayOfWeek: () => number;
+  /**
+   * The weekend the timeline shades (0 = Sunday): the `weekendDays` input,
+   * else the locale's `Intl.Locale` week data, else Saturday and Sunday.
+   */
+  readonly resolvedWeekendDays: () => readonly number[];
   private readonly fields: () => ResolvedGanttFields<T>;
   /** The visible task rows (tree order, roll-ups applied). */
   readonly visibleTasks: () => readonly GanttTask<T>[];
@@ -424,6 +432,9 @@ export class OgeGanttCore<
     );
     this.resolvedFirstDayOfWeek = rx.derived(() =>
       resolveFirstDayOfWeek(inputs.firstDayOfWeek(), this.effectiveLocale()),
+    );
+    this.resolvedWeekendDays = rx.derived(() =>
+      resolveWeekendDays(inputs.weekendDays(), this.effectiveLocale()),
     );
     this.canUndo = rx.derived(() => this.undoStack().length > 0);
     this.canRedo = rx.derived(() => this.redoStack().length > 0);
@@ -598,11 +609,12 @@ export class OgeGanttCore<
       if (scale.type === 'weeks' || scale.type === 'months') return [];
       const calendar = this.effectiveWorkCalendar();
       const holidays = inputs.holidays();
+      const weekendDays = inputs.weekendsHighlighted()
+        ? this.resolvedWeekendDays()
+        : [];
       return scale.ticks.filter((tick) => {
         if (calendar !== null) return !isWorkingDay(tick.date, calendar);
-        const day = tick.date.getDay();
-        const weekend =
-          inputs.weekendsHighlighted() && (day === 0 || day === 6);
+        const weekend = weekendDays.includes(tick.date.getDay());
         return (
           weekend || holidays.some((holiday) => sameDay(holiday, tick.date))
         );

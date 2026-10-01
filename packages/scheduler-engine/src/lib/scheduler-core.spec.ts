@@ -80,6 +80,7 @@ function setup(
     currentView: () => view,
     views: () => ['day', 'week', 'month'],
     firstDayOfWeek: () => 1,
+    weekendDays: () => undefined,
     dayStartHour: () => 8,
     dayEndHour: () => 18,
     cellDuration: () => 30,
@@ -462,5 +463,33 @@ describe('OgeSchedulerCore', () => {
     });
     expect(popups).toHaveLength(2);
     expect(names()).toEqual(['appointmentClick']);
+  });
+
+  it('resolves weekendDays from the input, else the locale week data', () => {
+    expect(
+      setup({ weekendDays: () => [5, 6] }).core.resolvedWeekendDays(),
+    ).toEqual([5, 6]);
+    const real = Intl.Locale;
+    // a constructible stub: the host's ICU week data is not portable
+    const FakeLocale = function (tag: string) {
+      return {
+        tag,
+        getWeekInfo: () => ({ weekend: tag === 'he-IL' ? [5, 6] : [6, 7] }),
+      };
+    };
+    const spy = vi
+      .spyOn(Intl, 'Locale')
+      .mockImplementation(FakeLocale as unknown as typeof Intl.Locale);
+    try {
+      expect(
+        setup({ locale: () => 'he-IL' }).core.resolvedWeekendDays(),
+      ).toEqual([5, 6]);
+      expect(
+        setup({ locale: () => 'en-US' }).core.resolvedWeekendDays(),
+      ).toEqual([0, 6]);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(Intl.Locale).toBe(real);
   });
 });

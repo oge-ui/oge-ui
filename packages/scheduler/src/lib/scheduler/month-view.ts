@@ -94,7 +94,7 @@ import type {
                 [class.oge-scheduler-month-other]="!isCurrentMonth(day)"
                 [class.oge-scheduler-day-today]="isToday(day)"
                 [class.oge-scheduler-cell-weekend]="
-                  day.getDay() === 0 || day.getDay() === 6
+                  weekendDays().includes(day.getDay())
                 "
                 [class.oge-scheduler-cell-focused]="
                   isFocusedCell(weekIndex, dayIndex)
@@ -210,6 +210,8 @@ export class OgeSchedulerMonthView<T = unknown> {
   readonly anchorDate = input.required<Date>();
   readonly appointments = input.required<readonly SchedulerAppointment<T>[]>();
   readonly firstDayOfWeek = input.required<number>();
+  /** Weekend days (0 = Sunday) the grid shades — the scheduler's resolved list. */
+  readonly weekendDays = input<readonly number[]>([0, 6]);
   readonly maxAppointmentsPerCell = input.required<number | 'auto'>();
   readonly locale = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerGridMessages>();

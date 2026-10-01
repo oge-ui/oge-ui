@@ -117,6 +117,12 @@ export const OGE_GANTT_API: ApiSections = {
           description: 'Off-day shading on the days scale.',
         },
         {
+          name: 'weekendDays',
+          type: 'readonly number[] | undefined',
+          description:
+            'Weekend days (0 = Sunday … 6 = Saturday) <code>weekendsHighlighted</code> shades. <code>undefined</code> resolves from the locale via <code>Intl.Locale#getWeekInfo()</code> (Friday + Saturday in <code>he-IL</code>), falling back to Saturday + Sunday. A <code>workCalendar</code> takes precedence.',
+        },
+        {
           name: 'workCalendar',
           type: 'OgeGanttWorkCalendar | null',
           default: 'null',

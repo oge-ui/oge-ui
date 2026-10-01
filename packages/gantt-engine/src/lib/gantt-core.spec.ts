@@ -126,6 +126,7 @@ function setup(
     showDependencies: true,
     showCriticalPath: false,
     weekendsHighlighted: true,
+    weekendDays: undefined,
     holidays: [],
     workCalendar: null,
     showResourceWorkload: false,
@@ -225,6 +226,35 @@ const key = (
 describe('OgeGanttCore', () => {
   afterEach(() => {
     document.body.innerHTML = '';
+  });
+
+  it('shades the resolved weekend days — explicit, locale-derived or Sat/Sun', () => {
+    const shadedDays = (h: Harness): number[] =>
+      [
+        ...new Set(h.core.shadedTicks().map((tick) => tick.date.getDay())),
+      ].sort();
+    expect(shadedDays(setup())).toEqual([0, 6]);
+    expect(shadedDays(setup({ weekendDays: [5, 6] }))).toEqual([5, 6]);
+    expect(
+      shadedDays(setup({ weekendDays: [5, 6], weekendsHighlighted: false })),
+    ).toEqual([]);
+    // locale default, with the host's ICU week data stubbed out
+    const FakeLocale = function (tag: string) {
+      return {
+        tag,
+        getWeekInfo: () => ({ weekend: tag === 'ar-SA' ? [5, 6] : [6, 7] }),
+      };
+    };
+    const spy = vi
+      .spyOn(Intl, 'Locale')
+      .mockImplementation(FakeLocale as unknown as typeof Intl.Locale);
+    try {
+      const harness = setup({ locale: 'ar-SA' });
+      expect(harness.core.resolvedWeekendDays()).toEqual([5, 6]);
+      expect(shadedDays(harness)).toEqual([5, 6]);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('seeds the working set from the inputs at construction (first paint)', () => {

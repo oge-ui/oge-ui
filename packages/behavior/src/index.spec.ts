@@ -77,6 +77,8 @@ const ENTRY_POINTS = [
   'OgeGridSelectionState',
   'OgeGridEditingCore',
   'formatCellValue',
+  'booleanCellLabel',
+  'resizedColumnWidth',
   'builderToExpr',
   'operatorsFor',
   'rowFilterExpr',
