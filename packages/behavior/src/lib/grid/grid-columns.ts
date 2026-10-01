@@ -68,6 +68,8 @@ export interface OgeGridColumnSpec<T = unknown, TSlot = unknown, S = unknown> {
   filterable: boolean;
   filterOperator: FilterOperator | undefined;
   minWidth: number | undefined;
+  /** Upper bound in px for user resizing (pointer and keyboard). */
+  maxWidth?: number | undefined;
   lookup: OgeColumnLookup | undefined;
   calculateCellValue: ((row: T) => unknown) | undefined;
   calculateFilterExpression:
@@ -103,6 +105,8 @@ export interface OgeGridResolvedColumn<
   alignment: OgeColumnAlignment;
   width: number | string | undefined;
   minWidth: number | undefined;
+  /** Upper bound in px for user resizing; `undefined` when unbounded. */
+  maxWidth?: number | undefined;
   sortable: boolean;
   filterable: boolean;
   filterOperator: FilterOperator | undefined;
@@ -391,6 +395,7 @@ export function resolveOgeGridColumns<T, TSlot, S>(
           alignment: column.alignment ?? defaultAlignmentFor(column.dataType),
           width: widthOverrides.get(id) ?? column.width,
           minWidth: column.minWidth,
+          maxWidth: column.maxWidth,
           sortable: column.sortable && field != null,
           filterable: column.filterable && field != null,
           filterOperator: column.filterOperator,

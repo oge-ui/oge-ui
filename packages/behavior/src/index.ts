@@ -221,6 +221,32 @@ export {
   type OgeGridKeyboardNavDeps,
   type OgeGridKeyboardNavTreeHooks,
 } from './lib/grid/grid-keyboard-nav';
+export {
+  OGE_COLUMN_RESIZE_FINE_STEP,
+  OGE_COLUMN_RESIZE_FLOOR,
+  OGE_COLUMN_RESIZE_STEP,
+  clampColumnWidth,
+  ogeAdjacentDataRow,
+  ogeChooserMoveDirection,
+  ogeColumnMoveTarget,
+  ogeColumnSeparatorKeyCommand,
+  ogeColumnWidthBounds,
+  ogeGridHeaderKeyCommand,
+  ogeGridHeaderKeyShortcuts,
+  ogeGroupChipKeyCommand,
+  ogeListMoveTarget,
+  ogeRowMoveDirection,
+  ogeSeparatorTargetWidth,
+  ogeTreeRowKeyMove,
+  type OgeColumnMoveTarget,
+  type OgeColumnSeparatorKeyCommand,
+  type OgeColumnWidthBounds,
+  type OgeGridHeaderKeyCommand,
+  type OgeGroupChipKeyCommand,
+  type OgeKeyInput,
+  type OgeMovableColumn,
+  type OgeTreeRowKeyMove,
+} from './lib/grid/grid-keyboard-moves';
 export { OgeGridStateCore, loadOptionsEqual } from './lib/grid/grid-state-core';
 export {
   OGE_GRID_WINDOW_BLOCK_SIZE,

@@ -260,6 +260,51 @@ describe('OgeTreeListCore', () => {
     expect(ogeTreeDropPosition(19, null)).toBe('inside');
   });
 
+  it('maps keyboard moves onto the drop path (siblings, indent, outdent)', async () => {
+    const rows = ROWS.map((row) => ({ ...row }));
+    const t = setup({ data: rows, autoExpandAll: true });
+    await t.load();
+    // Root A > (Child A1 > Grand A1a), Child A2 ; Root B
+    expect(t.core.keyboardMoveTarget(4, 'up')).toEqual({
+      targetKey: 2,
+      position: 'before',
+    });
+    expect(t.core.keyboardMoveTarget(2, 'down')).toEqual({
+      targetKey: 4,
+      position: 'after',
+    });
+    expect(t.core.keyboardMoveTarget(1, 'down')).toEqual({
+      targetKey: 5,
+      position: 'after',
+    });
+    expect(t.core.keyboardMoveTarget(2, 'up')).toBeNull();
+    expect(t.core.keyboardMoveTarget(4, 'down')).toBeNull();
+    expect(t.core.keyboardMoveTarget(4, 'indent')).toEqual({
+      targetKey: 2,
+      position: 'inside',
+    });
+    expect(t.core.keyboardMoveTarget(2, 'indent')).toBeNull();
+    expect(t.core.keyboardMoveTarget(3, 'outdent')).toEqual({
+      targetKey: 2,
+      position: 'after',
+    });
+    expect(t.core.keyboardMoveTarget(1, 'outdent')).toBeNull();
+    expect(t.core.keyboardMoveTarget(99, 'up')).toBeNull();
+    expect(t.core.rowPlacement(4)).toEqual({ level: 2, position: 2, total: 2 });
+
+    // the target runs the same applyDrop the pointer uses
+    const target = t.core.keyboardMoveTarget(3, 'outdent');
+    if (!target) throw new Error('expected a target');
+    const event = t.core.applyDrop(
+      3,
+      target.targetKey,
+      target.position,
+      () => undefined,
+    );
+    expect(event).toMatchObject({ key: 3, fromParentKey: 2, toParentKey: 1 });
+    expect(rows.find((row) => row.id === 3)?.parentId).toBe(1);
+  });
+
   it('loads lazy children per expansion and discovers remote matches', async () => {
     const all: Node[] = ROWS.map((row) => ({
       ...row,

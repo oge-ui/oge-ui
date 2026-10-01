@@ -57,6 +57,7 @@ export interface ColumnSource<T = unknown> {
   readonly filterable: () => boolean;
   readonly filterOperator: () => FilterOperator | undefined;
   readonly minWidth: () => number | undefined;
+  readonly maxWidth?: () => number | undefined;
   readonly lookup: () => OgeColumnLookup | undefined;
   readonly calculateCellValue: () => ((row: T) => unknown) | undefined;
   readonly calculateFilterExpression: () =>
@@ -143,6 +144,7 @@ export class ColumnModel<
       filterable: column.filterable(),
       filterOperator: column.filterOperator(),
       minWidth: column.minWidth(),
+      maxWidth: column.maxWidth?.(),
       lookup: column.lookup(),
       calculateCellValue: column.calculateCellValue(),
       calculateFilterExpression: column.calculateFilterExpression(),

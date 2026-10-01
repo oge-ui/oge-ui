@@ -413,6 +413,20 @@ smallest complete example):
   makes windowed rendering possible at all. `packages/navigation`'s tree renders one `role="treeitem"` per
   visible node with no nested `role="group"`, which is why it can virtualize; core's `flattenTreeData`
   already emits `level`/`posInSet`/`setSize` for exactly this.
+- **Every drag has a keyboard and single-pointer twin (WCAG 2.1.1 / 2.5.7)** that runs the _same_
+  commit path and fires the _same_ event as the pointer drop, announces the result in a permanent
+  polite live region (`.oge-sr-only` + `aria-live`, text from the messages catalog) and keeps the
+  focus on the moved item. The decisions are shared, not re-derived per layer: the grid family's
+  scheme lives in `@oge-ui/behavior`'s `grid-keyboard-moves.ts` (header `Alt+←/→` resize — 10px,
+  `Shift` 1px — and `Ctrl+Shift+←/→` move; `Ctrl+↑/↓` row move; tree `Ctrl+→/←` indent/outdent;
+  group chips `Ctrl+←/→` + `Delete`; chooser `Ctrl+↑/↓`), horizontal keys are visual and mirror
+  in RTL through `resizedColumnWidth`'s direction rule. Advertise the keys with
+  `aria-keyshortcuts`. A resize handle is a focusable `role="separator"` (`tabindex="-1"`,
+  `aria-valuenow/min/max` in px, APG window-splitter keys).
+- **A header that contains named controls is labelled by its caption** (`aria-labelledby` → the
+  caption span, ids from a per-instance prefix — `useId()` in React): name-from-content would
+  otherwise fold the separator's and filter button's labels into the column name
+  (`City Resize City Filter values`).
 - An expanded panel the user may not collapse gets **`aria-disabled="true"`, never the `disabled`
   attribute** — it has to stay focusable (APG accordion).
 - Generics where rows are involved: `OgeGrid<T extends object = Record<string, unknown>>`.
