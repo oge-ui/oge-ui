@@ -29,11 +29,12 @@
         },
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
         { "key": "Cross-Origin-Resource-Policy", "value": "same-origin" },
-        { "key": "X-DNS-Prefetch-Control", "value": "off" }
+        { "key": "X-DNS-Prefetch-Control", "value": "off" },
+        { "key": "X-Robots-Tag", "value": "noindex, follow" }
       ]
     },
     {
-      "source": "/(llms.txt|llms-full.txt|llms/(.*))",
+      "source": "/llms(.*)",
       "headers": [
         { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
         { "key": "Access-Control-Allow-Origin", "value": "*" },
