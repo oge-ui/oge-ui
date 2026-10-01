@@ -428,8 +428,9 @@ input.oge-filter-input,
 
 .oge-resize-handle {
   position: absolute;
-  top: 0;
-  right: -3px;
+  inset-block-start: 0;
+  // Logical, so the handle stays on the column's trailing edge in RTL.
+  inset-inline-end: -3px;
   width: 7px;
   height: 100%;
   cursor: col-resize;
@@ -1190,4 +1191,19 @@ input.oge-filter-input {
 // both chrome and .oge-menu-item styling are owned by @oge-ui/overlay.
 .oge-context-menu .oge-menu-list {
   min-width: 168px;
+}
+
+// Visually hidden text a cell carries for screen readers (the boolean
+// cells' word beside their aria-hidden ✓ / ✗ glyph).
+.oge-grid .oge-sr-only,
+.oge-tree-list .oge-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

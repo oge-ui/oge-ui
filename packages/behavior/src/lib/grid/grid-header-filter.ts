@@ -35,6 +35,33 @@ export function formatCellValue(
   }
 }
 
+/** Strings a default-rendered boolean cell is announced with. */
+export interface OgeBooleanCellMessages {
+  booleanTrueLabel: string;
+  booleanFalseLabel: string;
+}
+
+/**
+ * Screen-reader text of a default-rendered boolean cell, or `null` when the
+ * cell is not one (another data type, a blank value, or a column whose text
+ * comes from a custom `format` / lookup). Both render layers draw the visible
+ * glyph `aria-hidden` and this text visually hidden beside it, so a `✓` / `✗`
+ * cell is announced as a word instead of a symbol name — or not at all.
+ */
+export function booleanCellLabel(
+  value: unknown,
+  column: {
+    readonly dataType: OgeDataType;
+    readonly format?: ((value: unknown) => string) | undefined;
+    readonly lookupItems?: readonly LookupItem[] | undefined;
+  },
+  messages: OgeBooleanCellMessages,
+): string | null {
+  if (column.dataType !== 'boolean' || value == null) return null;
+  if (column.format || column.lookupItems) return null;
+  return value ? messages.booleanTrueLabel : messages.booleanFalseLabel;
+}
+
 /** Strings the header filter needs from the host's message table. */
 export interface OgeHeaderFilterMessages {
   /** Label for `null` / `''` values. */

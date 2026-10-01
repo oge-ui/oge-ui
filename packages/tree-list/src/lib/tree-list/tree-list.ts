@@ -57,11 +57,13 @@ import {
   filterOperatorSymbol,
   filterRowOperatorChoices,
   headerGroupState,
+  booleanCellLabel,
   isHeaderValueSelected,
   ogeTreeCsv,
   ogeTreeDropPosition,
   ogeTreeHeaderValueGroups,
   ogeTreeHeaderValueText,
+  resizedColumnWidth,
   rowClickSelectionIntent,
   rowFilterExpr,
   toggleAllHeaderValues,
@@ -1392,11 +1394,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         ? column.width
         : this.config.pinnedDefaultWidth);
     const startX = event.clientX;
+    const rtl = this.rtl();
     const onMove = (move: PointerEvent): void => {
       this.suppressHeaderClick = true;
       this.store.columns.setWidth(
         column.id,
-        startWidth + (move.clientX - startX),
+        resizedColumnWidth(startWidth, startX, move.clientX, rtl),
       );
     };
     const onUp = (): void => {
@@ -1790,6 +1793,18 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       return value ? this.msg().booleanTrue : this.msg().booleanFalse;
     }
     return formatCellValue(value, column.dataType, undefined);
+  }
+
+  /**
+   * Screen-reader text of a default-rendered boolean cell (its `✓` / `✗`
+   * glyph is drawn `aria-hidden`), or `null` for every other cell.
+   */
+  protected booleanLabelOf(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): string | null {
+    if (column.dataType !== 'boolean') return null;
+    return booleanCellLabel(column.accessor(node.data), column, this.msg());
   }
 
   // --- row drag reparenting -------------------------------------------------

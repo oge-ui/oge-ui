@@ -252,19 +252,19 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       <div
         class="oge-header-cell oge-drag-cell"
         role="columnheader"
-        aria-label="Reorder"
+        [attr.aria-label]="msg().reorderColumnHeader"
       ></div>
       } @if (hasExpander()) {
       <div
         class="oge-header-cell oge-expander-cell"
         role="columnheader"
-        aria-label="Detail"
+        [attr.aria-label]="msg().detailColumnHeader"
       ></div>
       } @if (hasCheckboxColumn()) {
       <div
         class="oge-header-cell oge-checkbox-cell"
         role="columnheader"
-        aria-label="Select all"
+        [attr.aria-label]="msg().selectAllColumnHeader"
       >
         <oge-check-box
           [value]="someSelected() ? null : allSelected()"
@@ -589,7 +589,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           <span
             class="oge-drag-handle"
             draggable="true"
-            [attr.aria-label]="'Reorder row'"
+            [attr.aria-label]="msg().reorderRow"
             (dragstart)="onRowDragStart(node, $event)"
             (dragend)="onRowDragEnd()"
             (click)="$event.stopPropagation()"
@@ -697,6 +697,9 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           <ng-container
             *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
           />
+          } @else if (booleanLabelOf(node, column); as booleanLabel) {
+          <span aria-hidden="true">{{ cellDisplayText(node, column) }}</span
+          ><span class="oge-sr-only">{{ booleanLabel }}</span>
           } @else if (searchHighlightRuns(node, column); as runs) {
           <!-- prettier-ignore -->
           <span>@for (run of runs; track $index) {@if (run.match) {<mark class="oge-highlight">{{ run.text }}</mark>} @else {{{ run.text }}}}</span>

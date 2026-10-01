@@ -51,6 +51,7 @@ import {
   allRowsSelected,
   deferredToggleExpr,
   keyEqualsExpr,
+  resizedColumnWidth,
   rowClickSelectionIntent,
 } from '@oge-ui/behavior';
 import {
@@ -67,6 +68,7 @@ import {
 } from '@oge-ui/behavior';
 import {
   allHeaderValuesSelected,
+  booleanCellLabel,
   filterHeaderValues,
   groupHeaderValuesByYear,
   headerGroupState,
@@ -2104,6 +2106,22 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return formatCellValue(value, column.dataType, undefined);
   }
 
+  /**
+   * Screen-reader text of a default-rendered boolean cell (its `✓` / `✗`
+   * glyph is drawn `aria-hidden`), or `null` for every other cell.
+   */
+  protected booleanLabelOf(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): string | null {
+    if (column.dataType !== 'boolean' || column.lookup) return null;
+    return booleanCellLabel(
+      this.displayValue(node, column),
+      column,
+      this.msg(),
+    );
+  }
+
   /** Filter-row lookup editor: applies an exact-match filter on the raw value. */
   protected onLookupFilter(column: ResolvedColumn<T>, value: unknown): void {
     const field = column.field;
@@ -3248,11 +3266,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         ? column.width
         : this.config.pinnedDefaultWidth);
     const startX = event.clientX;
+    const rtl = this.rtl();
     const onMove = (move: PointerEvent): void => {
       this.suppressHeaderClick = true;
       this.store.columns.setWidth(
         column.id,
-        startWidth + (move.clientX - startX),
+        resizedColumnWidth(startWidth, startX, move.clientX, rtl),
       );
     };
     const onUp = (): void => {

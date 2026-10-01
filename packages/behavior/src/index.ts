@@ -84,6 +84,7 @@ export type { OgeReactiveCell, OgeReactivityAdapter } from './lib/reactivity';
 // --- grid ---
 export {
   OgeGridColumnLayoutCore,
+  resizedColumnWidth,
   type OgeGridColumnLayoutDeps,
   type OgeGridColumnRange,
   type OgeGridLayoutColumn,
@@ -160,6 +161,7 @@ export {
 } from './lib/grid/grid-editing-core';
 export {
   allHeaderValuesSelected,
+  booleanCellLabel,
   filterHeaderValues,
   formatCellValue,
   groupHeaderValuesByYear,
@@ -170,6 +172,7 @@ export {
   toggleAllHeaderValues,
   toggleHeaderGroup,
   toggleHeaderValue,
+  type OgeBooleanCellMessages,
   type OgeHeaderFilterMessages,
   type OgeHeaderFilterSelection,
   type OgeHeaderValueGroup,

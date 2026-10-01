@@ -140,8 +140,17 @@ describe('OgeGrid (declarative columns)', () => {
 
   it('formats boolean cells with the default formatter', async () => {
     const { el } = await render();
-    expect(rowCellTexts(el, 0)[2]).toBe('✓');
-    expect(rowCellTexts(el, 1)[2]).toBe('✗');
+    const cell = (row: number): Element =>
+      el.querySelectorAll('.oge-row')[row].querySelectorAll('.oge-cell')[2];
+    // the glyph is decoration; the word beside it is what is announced
+    expect(cell(0).querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      '✓',
+    );
+    expect(cell(0).querySelector('.oge-sr-only')?.textContent).toBe('Yes');
+    expect(cell(1).querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      '✗',
+    );
+    expect(cell(1).querySelector('.oge-sr-only')?.textContent).toBe('No');
   });
 
   it('reacts to visibility changes', async () => {
