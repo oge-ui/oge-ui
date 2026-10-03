@@ -11,12 +11,24 @@ import {
   type OgeReactiveCell,
   type OgeReactivityAdapter,
 } from '@oge-ui/behavior';
+
 import type { DataRowNode, DataSource, RowKey, RowNode } from '@oge-ui/core';
 import type { OgeGridColumnProps, OgeGridValidator } from './grid-types';
 
 /** `key::field` — the draft map's key. */
 const draftKey = (key: RowKey, field: string): string =>
   `${String(key)}::${field}`;
+
+/**
+ * Rules seen returning a promise: the sync pass (run on every render) skips
+ * them, so a server check runs once per typed value, not once per render.
+ */
+const asyncRules = /* @__PURE__ */ new WeakSet<object>();
+/** Rules seen returning a plain message — never re-run by the async pass. */
+const syncRules = /* @__PURE__ */ new WeakSet<object>();
+
+const isPromise = (value: unknown): value is Promise<string | null> =>
+  !!value && typeof value === 'object' && 'then' in value;
 
 /** One open editor: its current value and whatever rejects it. */
 export interface OgeGridEditorEntry {
@@ -25,6 +37,16 @@ export interface OgeGridEditorEntry {
   error: string | null;
   /** Whether the user has left the editor once — gates showing `error`. */
   touched: boolean;
+  /** An async rule is still checking this value (`aria-busy`). */
+  pending: boolean;
+}
+
+/** One async check of a draft value: its outcome once settled. */
+interface AsyncCheck {
+  value: unknown;
+  pending: boolean;
+  error: string | null;
+  settled: Promise<void>;
 }
 
 /**
@@ -86,6 +108,8 @@ export class OgeGridEditingModel<T, TSlot> extends OgeGridEditingCore<
   readonly activeEditors: () => ReadonlyMap<string, OgeGridEditorEntry>;
   /** Identity of the current edit session — the drafts are scoped to it. */
   private readonly session: () => string;
+  /** Async rule results per `key::field` — the latest checked value wins. */
+  private readonly asyncChecks: OgeReactiveCell<ReadonlyMap<string, AsyncCheck>>;
 
   constructor(
     private readonly react: OgeGridEditingModelDeps<T, TSlot>,
@@ -115,6 +139,7 @@ export class OgeGridEditingModel<T, TSlot> extends OgeGridEditingCore<
     );
 
     this.drafts = rx.cell<DraftState>(EMPTY_DRAFTS);
+    this.asyncChecks = rx.cell<ReadonlyMap<string, AsyncCheck>>(new Map());
 
     this.session = rx.derived(() => {
       const cell = react.state.editCell();
@@ -145,10 +170,15 @@ export class OgeGridEditingModel<T, TSlot> extends OgeGridEditingCore<
         const value = live.values.has(id)
           ? live.values.get(id)
           : this.displayValue(node, column);
+        const sync = this.validate(value, node.data, column);
+        // an async rule's verdict counts only for the value it checked
+        const check = this.asyncChecks().get(id);
+        const current = check && Object.is(check.value, value) ? check : null;
         map.set(id, {
           value,
-          error: this.validate(value, node.data, column),
+          error: sync ?? (current && !current.pending ? current.error : null),
           touched: live.touched.has(id),
+          pending: sync === null && !!current?.pending,
         });
       }
       return map;
@@ -157,9 +187,22 @@ export class OgeGridEditingModel<T, TSlot> extends OgeGridEditingCore<
     editors.editorState = (key, field) => this.editorStateOf(key, field);
     editors.markTouched = (key, field) => this.markTouchedAt(key, field);
     editors.rowValues = (key) => this.rowValuesOf(key);
+    editors.whenValidated = (key, field) => {
+      const check = this.asyncChecks().get(draftKey(key, field));
+      return check?.pending ? check.settled : Promise.resolve();
+    };
+    editors.validateValue = async (_key, field, value, row) => {
+      const column = react.columns().find((c) => c.field === field);
+      if (!column) return true;
+      if (this.validate(value, row as T, column) !== null) return false;
+      return (await this.validateAsync(value, row as T, column)) === null;
+    };
   }
 
-  /** First failing rule's message, or `null` when the value is accepted. */
+  /**
+   * First failing sync rule's message, or `null` when the sync rules accept
+   * the value. A rule returning a promise is async — see `validateAsync`.
+   */
   private validate(
     value: unknown,
     row: T,
@@ -174,10 +217,69 @@ export class OgeGridEditingModel<T, TSlot> extends OgeGridEditingCore<
       return this.react.requiredMessage();
     }
     for (const rule of spec.validators ?? []) {
+      if (asyncRules.has(rule)) continue;
       const message = (rule as OgeGridValidator<T>)(value, row);
+      if (isPromise(message)) {
+        asyncRules.add(rule);
+        continue;
+      }
+      syncRules.add(rule);
       if (message) return message;
     }
     return null;
+  }
+
+  /** The async rules' first failing message (sync results are skipped). */
+  private async validateAsync(
+    value: unknown,
+    row: T,
+    column: OgeGridResolvedColumn<T, TSlot, OgeGridColumnProps<T>>,
+  ): Promise<string | null> {
+    const pending = (column.source?.validators ?? [])
+      .map((rule) => (rule as OgeGridValidator<T>)(value, row))
+      .filter(isPromise);
+    for (const message of await Promise.all(pending)) {
+      if (message) return message;
+    }
+    return null;
+  }
+
+  /** Starts the async rules for a new draft value, if the column has any. */
+  private checkAsync(key: RowKey, field: string, value: unknown): void {
+    const column = this.react.columns().find((c) => c.field === field);
+    const node = this.dataNodeOf(key);
+    if (!column || !node) return;
+    const rules = column.source?.validators ?? [];
+    if (!rules.length) return;
+    const id = draftKey(key, field);
+    const promises: Promise<string | null>[] = [];
+    for (const rule of rules) {
+      // known-sync rules already ran in the render pass
+      if (syncRules.has(rule)) continue;
+      const result = (rule as OgeGridValidator<T>)(value, node.data);
+      if (isPromise(result)) {
+        asyncRules.add(rule);
+        promises.push(result);
+      } else syncRules.add(rule);
+    }
+    if (!promises.length) return;
+    let done!: () => void;
+    const settled = new Promise<void>((resolve) => (done = resolve));
+    const next = new Map(this.asyncChecks());
+    next.set(id, { value, pending: true, error: null, settled });
+    this.asyncChecks.set(next);
+    void Promise.all(promises)
+      .then((messages) => messages.find((message) => !!message) ?? null)
+      .catch(() => this.react.requiredMessage())
+      .then((error) => {
+        const current = this.asyncChecks().get(id);
+        if (current?.settled === settled) {
+          const map = new Map(this.asyncChecks());
+          map.set(id, { value, pending: false, error, settled });
+          this.asyncChecks.set(map);
+        }
+        done();
+      });
   }
 
   private editorStateOf(
@@ -186,7 +288,11 @@ export class OgeGridEditingModel<T, TSlot> extends OgeGridEditingCore<
   ): OgeGridEditorState | undefined {
     const entry = this.activeEditors().get(draftKey(key, field));
     return entry
-      ? { value: entry.value, invalid: entry.error !== null }
+      ? {
+          value: entry.value,
+          invalid: entry.error !== null,
+          pending: entry.pending,
+        }
       : undefined;
   }
 
@@ -232,6 +338,7 @@ export class OgeGridEditingModel<T, TSlot> extends OgeGridEditingCore<
     const values = new Map(live.values);
     values.set(draftKey(key, field), value);
     this.drafts.set({ session, values, touched: live.touched });
+    this.checkAsync(key, field, value);
   }
 
   /** Marks an editor touched, revealing its error. */

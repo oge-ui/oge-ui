@@ -48,6 +48,20 @@ import type {
   OgeSelectionChangedEvent,
   OgeSortingOptions,
   OgeStateStorage,
+  OgeCellPreparedEvent,
+  OgeClassValue,
+  OgeConditionalFormat,
+  OgeGridCellRange,
+  OgeGridCellSpan,
+  OgeGridColumnInfo,
+  OgePagerInfoContext,
+  OgeRangeSelectionChangedEvent,
+  OgeRangeSelectionOptions,
+  OgeRowDragEndEvent,
+  OgeRowDragOverEvent,
+  OgeRowDragStartEvent,
+  OgeRowDropEvent,
+  OgeRowPreparedEvent,
 } from '@oge-ui/behavior';
 
 /** What a cell render prop receives — the React form of `*ogeCellTemplate`'s context. */
@@ -86,12 +100,14 @@ export interface OgeGridDetailRenderContext<T = unknown> {
  *
  * A message rather than a boolean, and a plain function rather than Angular's
  * `ValidatorFn`: React has no forms engine to carry an error map, so the rule
- * that rejects a value is also the thing that says why.
+ * that rejects a value is also the thing that says why. A rule may return a
+ * promise (a server uniqueness check): the editor is `aria-busy` while it
+ * runs, a commit waits for it, and pastes / fills await it too.
  */
 export type OgeGridValidator<T = unknown> = (
   value: unknown,
   row: T,
-) => string | null;
+) => string | null | Promise<string | null>;
 
 /** What an editor render prop receives — the React form of `*ogeEditTemplate`. */
 export interface OgeGridEditorRenderContext<T = unknown> {
@@ -207,8 +223,19 @@ export interface OgeGridColumnProps<T = unknown> {
   editable?: boolean;
   /** Rejects an empty value while editing. */
   required?: boolean;
-  /** Extra cell rules, first failing message wins. */
+  /** Extra cell rules, first failing message wins (sync or async). */
   validators?: readonly OgeGridValidator<T>[];
+  /**
+   * Declarative conditional formatting: rules (`{ when, class | style }`),
+   * data bars, colour scales and icon sets — token classes and CSS custom
+   * properties only, so themes and forced colours keep working.
+   */
+  conditionalFormats?: readonly OgeConditionalFormat<T>[];
+  /**
+   * Merges vertically adjacent cells with equal values into one cell
+   * (`aria-rowspan`). Not applied while the grid is virtualized.
+   */
+  mergeCells?: boolean;
   /** Renders the cell's editor — the React form of `*ogeEditTemplate`. */
   renderEditor?: (context: OgeGridEditorRenderContext<T>) => ReactNode;
   /** Renders the cell content — the React form of `*ogeCellTemplate`. */
@@ -372,8 +399,74 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   stateKey?: string;
   /** Per-grid storage backend; overrides `OgeGridStateStorageProvider`. */
   stateStorage?: OgeStateStorage;
-  /** Row selection: none | single | multiple (ctrl/shift) | checkbox column. */
+  /**
+   * Selection: none | single | multiple (ctrl/shift) | checkbox column |
+   * `cell` — rectangular cell ranges with TSV copy / paste and the fill handle.
+   */
   selectionMode?: OgeGridSelectionMode;
+  /** Options of cell range selection (`selectionMode: 'cell'`). */
+  rangeSelection?: OgeRangeSelectionOptions;
+  /** The selected cell ranges — controlled when provided. */
+  selectedRanges?: readonly OgeGridCellRange[];
+  /** Uncontrolled initial cell ranges. */
+  defaultSelectedRanges?: readonly OgeGridCellRange[];
+  onSelectedRangesChange?: (ranges: readonly OgeGridCellRange[]) => void;
+  /** Fires after the selected cell ranges changed, with their sizes. */
+  onRangeSelectionChanged?: (event: OgeRangeSelectionChangedEvent) => void;
+  /** Classes for a data row: string, array or `{ class: condition }` record. */
+  rowClass?: (row: T, key: RowKey) => OgeClassValue;
+  /** Classes for a data cell, per row and column. */
+  cellClass?: (row: T, column: OgeGridColumnInfo) => OgeClassValue;
+  /**
+   * Fires for every data row element that renders a row for the first time —
+   * the imperative escape hatch for decoration the hooks cannot express.
+   */
+  onRowPrepared?: (event: OgeRowPreparedEvent<T>) => void;
+  /** Fires for every data cell of a prepared row. */
+  onCellPrepared?: (event: OgeCellPreparedEvent<T>) => void;
+  /**
+   * Rows pinned above the scrolling body: data objects, or keys of loaded rows
+   * (which then leave the body). Display rows — not editable, not selectable,
+   * not part of the arrow-key navigation; virtual scrolling compatible.
+   */
+  pinnedTopRows?: readonly (T | RowKey)[];
+  /** Rows pinned below the body, above the total row. */
+  pinnedBottomRows?: readonly (T | RowKey)[];
+  /**
+   * Keeps the group rows enclosing the first visible row under the header
+   * while scrolling — a visual aid; clicking one scrolls to it.
+   */
+  stickyGroupRows?: boolean;
+  /**
+   * Row / column spans per cell. Spans never cross group rows; the owner cell
+   * gets `aria-rowspan` / `aria-colspan` and the keyboard steps over the
+   * covered area. Ignored while virtualized; row spans assume uniform heights.
+   */
+  cellSpan?: (
+    row: T,
+    column: OgeGridColumnInfo,
+  ) => OgeGridCellSpan | null | undefined;
+  /** Sizes every column to its content once the first result set rendered. */
+  columnAutoWidth?: boolean;
+  /** Shows truncated cell text in a tooltip on hover and on keyboard focus. */
+  cellHintEnabled?: boolean;
+  /**
+   * Grids (and other components) sharing a group name accept each other's
+   * dragged rows; the target grid's `onRowDrop` carries the source row.
+   */
+  rowDragGroup?: string;
+  /** A drop on the middle of a row means "inside" it. */
+  allowDropInsideRow?: boolean;
+  /** Cancelable: a row drag is about to start. */
+  onRowDragStart?: (event: OgeRowDragStartEvent<T>) => void;
+  /** Cancelable: a dragged row of the group hovers this grid. */
+  onRowDragOver?: (event: OgeRowDragOverEvent) => void;
+  /** A row was dropped on this grid — its own (reorder) or another component's. */
+  onRowDrop?: (event: OgeRowDropEvent) => void;
+  /** The source side of a drag ended. */
+  onRowDragEnd?: (event: OgeRowDragEndEvent<T>) => void;
+  /** Renders the pager's info text instead of `{count} rows`. */
+  renderPagerInfo?: (context: OgePagerInfoContext) => ReactNode;
   /** Selected row keys — controlled when provided. */
   selectedKeys?: readonly RowKey[];
   /** Uncontrolled initial selection. */
@@ -443,6 +536,8 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   renderDetail?: (context: OgeGridDetailRenderContext<T>) => ReactNode;
   className?: string;
   style?: CSSProperties;
+  /** Host element id — also the component id row-drag events report. */
+  id?: string;
   /** Accessible name of the grid. */
   ariaLabel?: string;
 
@@ -598,4 +693,29 @@ export interface OgeGridHandle<T extends object = Record<string, unknown>> {
   discardChanges(): void;
   /** Whether any change is waiting to be saved. */
   hasChanges(): boolean;
+  /** Selects a rectangular cell range (`add` keeps the existing ones). */
+  selectRange(range: OgeGridCellRange, add?: boolean): void;
+  /** Clears every cell range. */
+  clearRangeSelection(): void;
+  /** The selected cells' values as a rows × columns matrix. */
+  getSelectedRangeData(): unknown[][];
+  /**
+   * Pastes a TSV block into the editable cells from the focused cell — one
+   * undoable batch through the regular edit events. Resolves with the cells written.
+   */
+  pasteText(text: string): Promise<number>;
+  /** Ctrl+D: copies the range's first row into its other rows. */
+  fillDown(): Promise<number>;
+  /** Ctrl+R: copies the range's first column into its other columns. */
+  fillRight(): Promise<number>;
+  /** Reverts the last edit, paste or fill (Ctrl+Z). */
+  undo(): Promise<void>;
+  /** Re-applies the last undone step (Ctrl+Y). */
+  redo(): Promise<void>;
+  canUndo(): boolean;
+  canRedo(): boolean;
+  /** Sizes a column to its header and rendered cells. */
+  autoFitColumn(field: string): void;
+  /** `autoFitColumn()` for every visible column. */
+  autoFitColumns(): void;
 }

@@ -36,6 +36,13 @@ export interface OgeCellEditorProps {
   invalid?: boolean;
   /** Error text mirrored into the host `title` (cell surface). */
   errorTitle?: string | null;
+  /**
+   * An async validator is running: the host is `aria-busy` and a visually
+   * hidden `pendingLabel` says so; commits wait for the result.
+   */
+  pending?: boolean;
+  /** Status text while `pending`. */
+  pendingLabel?: string;
   /** Takes DOM focus on mount — the cell surface opens focused. */
   autoFocus?: boolean;
   /** Enter that was not consumed by an open dropdown. */
@@ -75,6 +82,8 @@ export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
     invalid = false,
     errorTitle,
     autoFocus = false,
+    pending = false,
+    pendingLabel = '',
   } = props;
   const hostRef = useRef<HTMLDivElement>(null);
   const errorId = `oge-cell-editor-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}-error`;
@@ -163,9 +172,11 @@ export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
         );
         break;
       case 'date':
+      case 'datetime':
         control = (
           <OgeDateBox
             {...shared}
+            type={dataType === 'datetime' ? 'datetime' : 'date'}
             value={value instanceof Date ? value : null}
             onValueChange={onValueChange}
           />
@@ -185,11 +196,17 @@ export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
   return (
     <div
       ref={hostRef}
-      className={`oge-editor oge-cell-editor${invalid ? ' oge-editor-invalid' : ''}`}
+      className={`oge-editor oge-cell-editor${invalid ? ' oge-editor-invalid' : ''}${pending ? ' oge-editor-pending' : ''}`}
+      aria-busy={pending || undefined}
       title={errorTitle || undefined}
       onKeyDown={onKeyDown}
       onBlur={onBlur}
     >
+      {pending && pendingLabel ? (
+        <span className="oge-sr-only oge-cell-editor-pending">
+          {pendingLabel}
+        </span>
+      ) : null}
       {errorMessage && (
         <span className="oge-sr-only oge-cell-editor-error" id={errorId}>
           {errorMessage}
