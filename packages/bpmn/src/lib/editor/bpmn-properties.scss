@@ -55,7 +55,7 @@
     box-shadow 120ms ease;
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     border-color: var(--oge-accent);
     box-shadow: 0 0 0 3px var(--oge-focus-ring);
   }
@@ -76,8 +76,7 @@
     accent-color: var(--oge-accent);
 
     &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px var(--oge-focus-ring);
+      @include tokens.focus-ring;
       border-radius: 2px;
     }
   }
@@ -102,8 +101,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -117,7 +115,7 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     border-color: var(--oge-accent);
     box-shadow: 0 0 0 3px var(--oge-focus-ring);
   }
@@ -139,8 +137,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -184,8 +181,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 

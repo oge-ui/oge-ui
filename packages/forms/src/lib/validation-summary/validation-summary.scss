@@ -42,13 +42,11 @@
   transition: box-shadow 120ms ease;
 
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -57,5 +55,11 @@
 
   &::after {
     content: ' — ';
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-validation-summary-link {
+    transition: none;
   }
 }

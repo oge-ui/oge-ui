@@ -201,3 +201,62 @@
     background: var(--oge-scrollbar-track);
   }
 }
+
+/// The house keyboard focus ring, built to survive forced colors (Windows
+/// High Contrast): forced-colors mode drops `box-shadow`, but repaints a
+/// transparent outline in a system colour — so the outline is the ring there
+/// and invisible everywhere else (normal mode looks exactly like the plain
+/// `box-shadow` ring). Use it instead of `outline: none` on every
+/// `:focus`/`:focus-visible` rule.
+///   $inset — draw inside the box (cells, rows, tabs clipped by overflow);
+///   $color — ring colour (the soft `--oge-accent-soft` ring for pointer focus);
+///   $width — ring spread.
+@mixin focus-ring($inset: false, $color: var(--oge-focus-ring), $width: 3px) {
+  outline: 2px solid transparent;
+  @if $inset {
+    outline-offset: -2px;
+    box-shadow: inset 0 0 0 $width $color;
+  } @else {
+    outline-offset: 2px;
+    box-shadow: 0 0 0 $width $color;
+  }
+}
+
+/// Windows High Contrast / forced colors. Inside, use system colour keywords
+/// only (Canvas, CanvasText, Highlight, HighlightText, ButtonFace,
+/// ButtonText, GrayText, LinkText) — tokens are overridden by the OS palette.
+/// State must never be carried by a background colour alone there.
+@mixin forced-colors {
+  @media (forced-colors: active) {
+    @content;
+  }
+}
+
+/// `prefers-reduced-motion: reduce` — drop transitions/animations that move
+/// or fade things (opacity/colour feedback may stay, kept instant).
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+/// Grows a small control's pointer target without changing what it draws:
+/// a transparent `::before` centred on the element makes the hit area at
+/// least `$min` square (WCAG 2.5.8 — 24px) and `$coarse` square on touch
+/// (`pointer: coarse` — 44px). The element must be positioned
+/// (relative/absolute) and must not use `::before` for anything else.
+@mixin hit-area($min: 24px, $coarse: 44px) {
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline: min(0px, calc((100% - #{$min}) / 2));
+    inset-block: min(0px, calc((100% - #{$min}) / 2));
+  }
+
+  @media (pointer: coarse) {
+    &::before {
+      inset-inline: min(0px, calc((100% - #{$coarse}) / 2));
+      inset-block: min(0px, calc((100% - #{$coarse}) / 2));
+    }
+  }
+}

@@ -6,7 +6,7 @@ export interface NgAddOptions {
    * Optional theme stylesheet. `none` (the default) adds nothing: component
    * styles ship inside the components and the light theme is built in.
    */
-  readonly theme?: 'none' | 'dark' | 'tailwind' | 'bootstrap';
+  readonly theme?: 'none' | 'dark' | 'high-contrast' | 'tailwind' | 'bootstrap';
   /** Skip writing the OGE usage block into `AGENTS.md`. */
   readonly skipAgentsFile?: boolean;
 }

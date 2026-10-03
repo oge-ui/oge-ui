@@ -471,11 +471,13 @@ smallest complete example):
   literal only misleads (and, when the name is misspelt, silently wins — `themes.spec.ts` style checks
   exist because `--oge-text-muted`, `--oge-border` and `--oge-muted-text-color` once did exactly that).
 - All styles are global `.oge-*` classes (ViewEncapsulation.None), BEM-ish dashes.
-- Themes: source in `packages/grid/src/lib/styles/themes/{dark,bootstrap,tailwind}.css`, shipped as
+- Themes: source in `packages/grid/src/lib/styles/themes/{dark,high-contrast,bootstrap,tailwind}.css`, shipped as
   **`@oge-ui/core/themes/*`** (core's rollup assets — every package installs core, React ones included)
   and, for pre-1.1 imports, `@oge-ui/grid/themes/*`. They target **scopes, not component hosts**:
   dark is `.oge-theme-dark, [data-oge-theme='dark']` plus the same block under
-  `prefers-color-scheme: dark` for `.oge-theme-auto` / `[data-oge-theme='auto']`; the bridges target
+  `prefers-color-scheme: dark` for `.oge-theme-auto` / `[data-oge-theme='auto']`; high-contrast is
+  `.oge-theme-high-contrast, [data-oge-theme='high-contrast']` (its spec also checks AAA text / 3:1 UI
+  contrast and a solid `--oge-focus-ring`); the bridges target
   `:root` (bootstrap also `[data-bs-theme]`). A new component needs **no** theme-file entry. Every
   scoped block must re-declare each derived token so a themed subtree re-resolves it —
   `packages/grid/src/lib/styles/themes.spec.ts` enforces that, the zero-specificity emission, and the
@@ -484,9 +486,30 @@ smallest complete example):
   `tokens.scrollbar` mixin, or `scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track)`),
   never `--oge-border-color` — a border-coloured thumb is invisible on a mouse desktop.
 - Focus convention: two rings. Pointer/programmatic focus gets the soft ring
-  (`box-shadow: 0 0 0 3px var(--oge-accent-soft)`); keyboard `:focus-visible` gets the strong ring
-  (`outline: none; box-shadow: 0 0 0 3px var(--oge-focus-ring)`) — see `field-chrome.scss`.
+  (`@include tokens.focus-ring($color: var(--oge-accent-soft))`); keyboard `:focus-visible` gets the
+  strong ring (`@include tokens.focus-ring`; `($inset: true)` inside clipped cells/rows/tabs). The
+  mixin is `outline: 2px solid transparent; outline-offset; box-shadow: 0 0 0 3px var(--oge-focus-ring)`:
+  forced colors (Windows High Contrast) drop `box-shadow` but repaint the transparent outline, so the
+  ring survives there and is invisible everywhere else. **Never write `outline: none` / `outline: 0`** —
+  a rule that hides the UA ring uses `outline: 2px solid transparent` on `:focus`/`:focus-visible`, never
+  on the base state (under forced colors a base-state transparent outline is drawn all the time).
   Transitions `120ms ease`. RTL via logical properties (no `rtlEnabled` machinery in new code).
+- **Forced colors.** Every stylesheet with state (selected, checked, active, focused, disabled,
+  progress, chart/gantt marks) ends with an `@include tokens.forced-colors { … }` block using system
+  colours only — `Highlight`/`HighlightText` for selection, `CanvasText` for frames and marks,
+  `ButtonText`/`ButtonFace` for buttons, `GrayText` for disabled, `LinkText` for links. Forced colors
+  replace backgrounds and drop shadows, so a state carried by a tint or a box-shadow ring needs a real
+  border/outline/position cue there (switch: thumb position + filled track; kanban card: a border).
+  `forced-color-adjust: none` only where colour itself is the meaning (chart series ↔ legend), and
+  then with a `CanvasText` edge.
+- **Reduced motion.** Every stylesheet that transitions or animates has an
+  `@include tokens.reduced-motion { … }` (or `@media (prefers-reduced-motion: reduce)`) block. Script
+  motion asks `prefersReducedMotion()` / `motionScrollBehavior()` from `@oge-ui/behavior` (SSR-safe) —
+  never a literal `behavior: 'smooth'`.
+- **Target size.** A pointer target under 24×24 (WCAG 2.5.8) gets `@include tokens.hit-area` (a
+  transparent `::before`: 24px, 44px under `pointer: coarse`) with its visual size unchanged. Inside an
+  `overflow: hidden` parent grow the hit area inward instead (the grid column resize handle). Hover-only
+  affordances also show on `:focus-within`, on the selected item and under `@media (hover: none)`.
 - Icons are inline SVG with `aria-hidden="true"` — there is no icon font or icon package.
 
 ## Component completeness standard
@@ -524,8 +547,8 @@ menubar's `shortcut` + `aria-keyshortcuts`) are fair game — bold them as
 component's SCSS is expected to look contemporary out of the box — token-driven
 (never raw values): consistent radii (`--oge-radius`/`-lg`), soft state layers
 (`--oge-row-hover-bg`, `--oge-accent-soft`) instead of hard color swaps, the
-house focus ring (`outline: none; box-shadow: 0 0 0 3px var(--oge-focus-ring)`
-on `:focus-visible`), 120ms ease micro-transitions suppressed under
+house focus ring (`@include tokens.focus-ring` on `:focus-visible` — it survives forced colors),
+an `@include tokens.forced-colors` block for every state, 120ms ease micro-transitions suppressed under
 `prefers-reduced-motion`, logical properties for RTL, and open/selected states
 that read at a glance (accent tint + indicator, not just a border). "Works but
 looks like a prototype" does not pass review.
@@ -579,7 +602,10 @@ rules — change both together.
   (`detectChanges → whenStable → detectChanges`); assert on rendered DOM by `.oge-*` class.
   `globals: true` (no vitest imports needed).
 - E2e: `apps/dev-app-e2e/src/*.spec.ts` against `http://localhost:4200`; a11y via `AxeBuilder`
-  (`a11y.spec.ts`), `color-contrast` rule disabled.
+  (`a11y.spec.ts`), `color-contrast` rule disabled — except `high-contrast.spec.ts`, which scans the
+  grid under the high-contrast theme with it on. `forced-colors.spec.ts` / `reduced-motion.spec.ts`
+  use `page.emulateMedia({ forcedColors | reducedMotion })` to guard the focus ring, system-colour
+  selection and zeroed transitions.
 - **Vitest workers are capped, on purpose.** Nx runs projects concurrently
   (`parallel: 3` in `nx.json`) and each vitest would otherwise size its own pool to the whole
   machine — 3 × cores threads on cores cores. That oversubscription is what used to make heavy
@@ -789,7 +815,7 @@ the package name through `define`. Packages therefore carry **no schematic sourc
 `"schematics": "./schematics/collection.json"` in `package.json`; `collection.json`, `schema.json`
 and the CJS bundle are written straight into `dist/packages/<pkg>/schematics/`.
 
-What it does: registers an optional theme stylesheet (`--theme=dark|tailwind|bootstrap`, inserted
+What it does: registers an optional theme stylesheet (`--theme=dark|high-contrast|tailwind|bootstrap`, inserted
 **first** in `styles` so the app's own stylesheet still wins), and writes an OGE usage block into the
 consumer's `AGENTS.md` between `<!-- oge-ui:start -->` markers — regenerated from the OGE packages in
 their `package.json`, opt out with `--skip-agents-file`. Nothing throws: a workspace it cannot read

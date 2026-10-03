@@ -43,6 +43,18 @@ export const DARK_HTML = `<!-- whole application: a class or the attribute form 
   <aside class="oge-theme-light">…</aside>
 </section>`;
 
+export const HIGH_CONTRAST = `/* An author-side high-contrast palette: text >= 7:1, borders and focus
+   rings >= 3:1, a solid focus ring. Import once, then pick a scope. */
+@import '@oge-ui/core/themes/high-contrast.css';`;
+
+export const HIGH_CONTRAST_HTML = `<html class="oge-theme-high-contrast">
+<html data-oge-theme="high-contrast">
+
+<!-- or one region only -->
+<section class="oge-theme-high-contrast">
+  <oge-grid [data]="rows" />
+</section>`;
+
 export const COLORS = `<!-- Semantic severities cover most cases… -->
 <oge-button text="Save" severity="success" />
 <oge-button text="Delete" severity="danger" stylingMode="outlined" />

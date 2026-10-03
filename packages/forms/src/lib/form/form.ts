@@ -36,6 +36,7 @@ import {
   type OgeInputStylingMode,
   type OgeInputSubscriptSizing,
 } from '@oge-ui/inputs/field';
+import { motionScrollBehavior } from '@oge-ui/behavior';
 import { OGE_FORMS_CONFIG, type OgeFormsMessages } from '../config';
 import { OgeValidationSummary } from '../validation-summary/validation-summary';
 import { OgeFormField } from './form-field';
@@ -938,7 +939,10 @@ export class OgeForm<T extends object = Record<string, unknown>> {
     if (!target) return false;
     target.focus();
     if (this.scrollToFirstInvalid()) {
-      target.element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      target.element.scrollIntoView({
+        block: 'nearest',
+        behavior: motionScrollBehavior(),
+      });
     }
     return true;
   }

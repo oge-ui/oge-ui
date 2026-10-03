@@ -62,15 +62,13 @@
   flex: none;
   overflow: auto;
   background: var(--oge-header-bg);
-  outline: none;
   transition:
     inline-size var(--oge-drawer-duration) var(--oge-drawer-easing),
     block-size var(--oge-drawer-duration) var(--oge-drawer-easing),
     translate var(--oge-drawer-duration) var(--oge-drawer-easing);
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -131,13 +129,11 @@
   }
 
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   &:disabled {

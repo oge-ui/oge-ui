@@ -1,6 +1,6 @@
 import { DOCUMENT, Injectable, effect, inject, signal } from '@angular/core';
 
-export type GridTheme = 'default' | 'tailwind' | 'bootstrap';
+export type GridTheme = 'default' | 'high-contrast' | 'tailwind' | 'bootstrap';
 export type DocsMode = 'light' | 'dark';
 
 const STORAGE_KEY = 'oge-docs-grid-theme';
@@ -30,6 +30,9 @@ function writeStored(key: string, value: string): void {
 /**
  * Switches the grid bridge theme at runtime by swapping a stylesheet link —
  * exactly what a consuming app does at build time with a static import.
+ * `high-contrast` is a scoped theme like dark: besides its stylesheet it needs
+ * the `oge-theme-high-contrast` class on <html>, and it takes precedence over
+ * the docs dark mode for the components (the docs chrome stays dark).
  */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -52,6 +55,10 @@ export class ThemeService {
     effect(() => {
       const theme = this.theme();
       writeStored(STORAGE_KEY, theme);
+      this.document.documentElement.classList.toggle(
+        'oge-theme-high-contrast',
+        theme === 'high-contrast',
+      );
       const existing = this.document.getElementById(LINK_ID);
       if (theme === 'default') {
         existing?.remove();
@@ -69,7 +76,10 @@ export class ThemeService {
       writeStored(MODE_STORAGE_KEY, this.mode());
       const root = this.document.documentElement;
       root.classList.toggle('dark', dark);
-      root.classList.toggle('oge-theme-dark', dark);
+      root.classList.toggle(
+        'oge-theme-dark',
+        dark && this.theme() !== 'high-contrast',
+      );
       if (dark && !this.document.getElementById(DARK_LINK_ID)) {
         const link = this.document.createElement('link');
         link.id = DARK_LINK_ID;

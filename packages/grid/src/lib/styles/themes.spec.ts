@@ -109,8 +109,13 @@ describe('design tokens', () => {
 describe('theme files', () => {
   const files = readdirSync(themesDir).filter((f) => f.endsWith('.css'));
 
-  it('ships the three themes', () => {
-    expect(files.sort()).toEqual(['bootstrap.css', 'dark.css', 'tailwind.css']);
+  it('ships the four themes', () => {
+    expect(files.sort()).toEqual([
+      'bootstrap.css',
+      'dark.css',
+      'high-contrast.css',
+      'tailwind.css',
+    ]);
   });
 
   for (const file of files) {
@@ -145,6 +150,87 @@ describe('theme files', () => {
     expect([...declarations(rules[1].body)]).toEqual([
       ...declarations(rules[0].body),
     ]);
+  });
+});
+
+/** WCAG relative-luminance contrast ratio of two `#rrggbb` colours. */
+function contrast(a: string, b: string): number {
+  const lum = (hex: string): number => {
+    const n = parseInt(hex.slice(1), 16);
+    const [r, g, bl] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+describe('high-contrast.css', () => {
+  const rules = ruleBodies(
+    readFileSync(join(themesDir, 'high-contrast.css'), 'utf8'),
+  );
+  const tokens = declarations(rules[0]?.body ?? '');
+  const t = (name: string): string => {
+    const value = tokens.get(name);
+    expect(value, name).toMatch(/^#[0-9a-f]{6}$/i);
+    return value as string;
+  };
+
+  it('is one scope block: class and attribute form', () => {
+    expect(rules.map((r) => r.selector.replace(/\s+/g, ' '))).toEqual([
+      ".oge-theme-high-contrast, [data-oge-theme='high-contrast']",
+    ]);
+  });
+
+  it('keeps text at AAA contrast (>= 7:1) on every surface it sits on', () => {
+    const text: [string, string][] = [
+      ['--oge-text-color', '--oge-bg'],
+      ['--oge-text-color', '--oge-header-bg'],
+      ['--oge-text-color', '--oge-row-hover-bg'],
+      ['--oge-text-color', '--oge-selected-bg'],
+      ['--oge-text-color', '--oge-popup-bg'],
+      ['--oge-header-color', '--oge-header-bg'],
+      ['--oge-muted-color', '--oge-bg'],
+      ['--oge-muted-color', '--oge-header-bg'],
+      ['--oge-muted-color', '--oge-row-hover-bg'],
+      ['--oge-accent', '--oge-bg'],
+      ['--oge-accent', '--oge-header-bg'],
+      ['--oge-accent', '--oge-selected-bg'],
+      ['--oge-severity-contrast', '--oge-accent'],
+      ['--oge-severity-contrast', '--oge-success'],
+      ['--oge-severity-contrast', '--oge-warning'],
+      ['--oge-severity-contrast', '--oge-danger'],
+      ['--oge-success', '--oge-bg'],
+      ['--oge-warning', '--oge-bg'],
+      ['--oge-danger', '--oge-bg'],
+      ['--oge-badge-color', '--oge-badge-bg'],
+      ['--oge-tooltip-color', '--oge-tooltip-bg'],
+      ['--oge-gantt-bar-fg', '--oge-accent'],
+      ['--oge-scheduler-chip-fg', '--oge-accent'],
+      ['--oge-kanban-avatar-fg', '--oge-kanban-avatar-bg'],
+    ];
+    for (const [fg, bg] of text) {
+      expect(contrast(t(fg), t(bg)), `${fg} on ${bg}`).toBeGreaterThanOrEqual(
+        7,
+      );
+    }
+  });
+
+  it('keeps borders and other UI parts at >= 3:1', () => {
+    for (const ui of [
+      '--oge-border-color',
+      '--oge-accent',
+      '--oge-scrollbar-thumb',
+      '--oge-gantt-arrow-color',
+      '--oge-gantt-milestone-bg',
+      '--oge-gantt-summary-bg',
+    ]) {
+      expect(contrast(t(ui), t('--oge-bg')), ui).toBeGreaterThanOrEqual(3);
+    }
+    // a solid focus ring: the 40%-tint default would fall under 3:1
+    expect(tokens.get('--oge-focus-ring')).toBe('var(--oge-accent)');
   });
 });
 

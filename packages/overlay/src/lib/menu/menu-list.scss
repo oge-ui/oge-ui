@@ -7,7 +7,12 @@
   padding: 4px;
   max-height: 320px;
   overflow-y: auto;
-  outline: none;
+
+  // the active item carries the visible cue (aria-activedescendant)
+  &:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+  }
 }
 
 .oge-menu-item {
@@ -115,4 +120,35 @@
   margin: 4px;
   border: 0;
   border-top: 1px solid var(--oge-border-color);
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-menu-item-active:not(:disabled):not(.oge-menu-item-disabled) {
+    background: Highlight;
+    color: HighlightText;
+
+    .oge-menu-item-shortcut,
+    .oge-menu-item-icon,
+    .oge-menu-item-caret {
+      color: inherit;
+    }
+  }
+
+  .oge-menu-item:disabled,
+  .oge-menu-item.oge-menu-item-disabled {
+    color: GrayText;
+  }
+
+  .oge-menu-separator {
+    background: CanvasText;
+    border-color: CanvasText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-menu-item {
+    transition: none;
+  }
 }

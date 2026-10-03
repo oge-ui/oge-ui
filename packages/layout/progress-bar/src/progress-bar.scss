@@ -129,3 +129,33 @@
     animation-duration: 2400ms;
   }
 }
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-progress-bar-track {
+    outline: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .oge-progress-bar-fill,
+  .oge-progress-bar-chunk-filled,
+  .oge-progress-bar-success .oge-progress-bar-fill,
+  .oge-progress-bar-warning .oge-progress-bar-fill,
+  .oge-progress-bar-danger .oge-progress-bar-fill {
+    background: Highlight;
+  }
+
+  .oge-progress-bar-buffer {
+    background: GrayText;
+  }
+
+  .oge-progress-bar-chunk {
+    outline: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .oge-progress-bar-track:has(.oge-progress-bar-chunk) {
+    outline: none;
+  }
+}

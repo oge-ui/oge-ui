@@ -478,6 +478,9 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
               @for (bar of core.windowBars(); track bar.task.key) {
                 <div
                   class="oge-gantt-bar-box"
+                  [class.oge-gantt-bar-box-selected]="
+                    bar.task.key === selectedTaskKey()
+                  "
                   [style.top.px]="bar.index * core.rowHeight()"
                   [style.height.px]="core.rowHeight()"
                 >

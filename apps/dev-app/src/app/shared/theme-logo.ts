@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 /** Theme identities the docs offer — the grid theme values, verbatim. */
-export type ThemeLogoName = 'default' | 'tailwind' | 'bootstrap';
+export type ThemeLogoName =
+  'default' | 'high-contrast' | 'tailwind' | 'bootstrap';
 
 /**
  * The mark of the CSS library a theme bridges to, drawn inline — Tailwind's
@@ -14,6 +15,25 @@ export type ThemeLogoName = 'default' | 'tailwind' | 'bootstrap';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @switch (name()) {
+      @case ('high-contrast') {
+        <!-- a half-filled disc: the usual contrast glyph -->
+        <svg
+          [attr.width]="size()"
+          [attr.height]="size()"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="9"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          />
+          <path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" />
+        </svg>
+      }
       @case ('tailwind') {
         <svg
           [attr.width]="size()"

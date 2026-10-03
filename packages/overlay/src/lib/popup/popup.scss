@@ -57,3 +57,11 @@
     transition: none;
   }
 }
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-popup {
+    border-color: CanvasText;
+  }
+}

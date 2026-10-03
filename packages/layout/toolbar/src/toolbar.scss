@@ -232,13 +232,11 @@
   // Two rings, per the house focus convention: soft for pointer/programmatic
   // focus, strong for keyboard.
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   &:disabled {

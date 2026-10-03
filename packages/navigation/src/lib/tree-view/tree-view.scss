@@ -43,8 +43,7 @@
   font: inherit;
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -97,13 +96,11 @@
   }
 
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -216,8 +213,7 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -262,5 +258,41 @@
 
   .oge-tree-view-spinner {
     animation: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-tree-view-item-selected {
+    background: Highlight;
+    color: HighlightText;
+
+    .oge-tree-view-icon {
+      color: inherit;
+    }
+  }
+
+  .oge-tree-view-item-disabled {
+    color: GrayText;
+  }
+
+  .oge-tree-view-check {
+    border-color: CanvasText;
+    background: Canvas;
+
+    &[data-state='checked'],
+    &[data-state='indeterminate'] {
+      border-color: Highlight;
+      background: Highlight;
+    }
+
+    &[data-state='checked']::after {
+      border-color: HighlightText;
+    }
+
+    &[data-state='indeterminate']::after {
+      background: HighlightText;
+    }
   }
 }

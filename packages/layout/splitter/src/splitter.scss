@@ -87,14 +87,12 @@
 
   // Pointer/programmatic focus gets the soft ring…
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 
   // …keyboard focus the strong one.
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
     z-index: 2;
   }
 }

@@ -87,6 +87,9 @@ const ENTRY_POINTS = [
   'resolveOgeGridColumns',
   'adaptiveHiddenColumnIds',
   'buildRowFilterExpr',
+  // a11y
+  'prefersReducedMotion',
+  'motionScrollBehavior',
 ] as const;
 
 describe('the @oge-ui/behavior barrel', () => {

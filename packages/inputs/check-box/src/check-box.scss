@@ -72,8 +72,7 @@
 }
 
 .oge-check-box-input:focus-visible + .oge-check-box-icon {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--oge-accent-soft);
+  @include tokens.focus-ring($color: var(--oge-accent-soft));
 }
 
 .oge-check-box-text:empty {
@@ -104,6 +103,40 @@
     svg {
       width: 13px;
       height: 13px;
+    }
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-check-box-icon {
+    border-color: CanvasText;
+    background: Canvas;
+    color: Canvas;
+  }
+
+  .oge-check-box-checked .oge-check-box-icon,
+  .oge-check-box-indeterminate .oge-check-box-icon {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-check-box-input:focus-visible + .oge-check-box-icon {
+    outline-color: CanvasText;
+  }
+
+  .oge-check-box.oge-disabled {
+    color: GrayText;
+
+    .oge-check-box-icon {
+      border-color: GrayText;
+    }
+
+    &.oge-check-box-checked .oge-check-box-icon,
+    &.oge-check-box-indeterminate .oge-check-box-icon {
+      background: GrayText;
     }
   }
 }

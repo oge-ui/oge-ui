@@ -89,7 +89,7 @@
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     border-color: var(--oge-accent);
     box-shadow: 0 0 0 3px var(--oge-focus-ring);
   }
@@ -329,5 +329,31 @@
 
   .oge-button-spinner {
     animation-duration: 1.6s;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  // every mode keeps a visible frame: contained fills vanish under forced
+  // colors, the border is what is left of the button
+  .oge-button-native,
+  .oge-button-colored:not(.oge-button-outlined):not(.oge-button-text-mode)
+    .oge-button-native {
+    border-color: ButtonText;
+    color: ButtonText;
+
+    &:focus-visible {
+      border-color: Highlight;
+    }
+
+    &:disabled {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+
+  .oge-button-hold-bar {
+    background: Highlight;
   }
 }

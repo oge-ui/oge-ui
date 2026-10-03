@@ -35,7 +35,7 @@
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
 
     .oge-radio-dot {
       box-shadow: 0 0 0 3px var(--oge-accent-soft);
@@ -103,5 +103,42 @@
   .oge-radio-dot {
     width: 18px;
     height: 18px;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-radio-dot {
+    border-color: CanvasText;
+    background: Canvas;
+
+    &::after {
+      background: Highlight;
+    }
+  }
+
+  // the dot itself is the state; the ring turns Highlight too
+  .oge-radio-checked .oge-radio-dot {
+    border-color: Highlight;
+  }
+
+  .oge-radio:disabled {
+    color: GrayText;
+
+    .oge-radio-dot {
+      border-color: GrayText;
+
+      &::after {
+        background: GrayText;
+      }
+    }
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-radio-dot,
+  .oge-radio-dot::after {
+    transition: none;
   }
 }

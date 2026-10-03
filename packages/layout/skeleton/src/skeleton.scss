@@ -101,3 +101,18 @@
     animation: none;
   }
 }
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-skeleton,
+  .oge-skeleton-line,
+  .oge-skeleton-pulse,
+  .oge-skeleton-static {
+    background: GrayText;
+  }
+
+  .oge-skeleton-multi {
+    background: none;
+  }
+}

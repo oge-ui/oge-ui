@@ -16,7 +16,7 @@ import {
   viewChildren,
 } from '@angular/core';
 import { edgeEnabledIndex, stepEnabledIndex } from '@oge-ui/core';
-import { OGE_TAB_DRAG_THRESHOLD } from '@oge-ui/behavior';
+import { OGE_TAB_DRAG_THRESHOLD, motionScrollBehavior } from '@oge-ui/behavior';
 import {
   OgeAnchoredPanel,
   OgeMenuList,
@@ -532,14 +532,14 @@ export class OgeTabStrip {
       (vertical ? el.clientHeight : el.clientWidth) * 0.75 * direction;
     if (vertical) {
       if (typeof el.scrollBy === 'function') {
-        el.scrollBy({ top: amount, behavior: 'smooth' });
+        el.scrollBy({ top: amount, behavior: motionScrollBehavior() });
       } else {
         el.scrollTop += amount;
       }
     } else {
       const left = rtl ? -amount : amount;
       if (typeof el.scrollBy === 'function') {
-        el.scrollBy({ left, behavior: 'smooth' });
+        el.scrollBy({ left, behavior: motionScrollBehavior() });
       } else {
         el.scrollLeft += left;
       }

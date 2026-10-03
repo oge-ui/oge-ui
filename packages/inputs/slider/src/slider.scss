@@ -125,7 +125,6 @@
   border-radius: 50%;
   background: var(--oge-bg);
   cursor: grab;
-  outline: none;
   // Discrete moves (keys, track clicks, buttons) glide; dragging is instant.
   transition:
     box-shadow 120ms ease,
@@ -145,7 +144,7 @@
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   .oge-slider-dragging & {
@@ -258,8 +257,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   &:disabled {
@@ -310,5 +308,43 @@
 
   .oge-slider-bubble {
     animation: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-slider-rail {
+    background: CanvasText;
+  }
+
+  .oge-slider-fill,
+  .oge-slider-tick.oge-slider-tick-in-range {
+    background: Highlight;
+  }
+
+  .oge-slider-tick {
+    background: CanvasText;
+  }
+
+  .oge-slider-thumb {
+    border-color: Highlight;
+    background: Canvas;
+  }
+
+  .oge-slider-step-button {
+    border-color: ButtonText;
+    color: ButtonText;
+  }
+
+  .oge-disabled {
+    .oge-slider-fill,
+    .oge-slider-rail {
+      background: GrayText;
+    }
+
+    .oge-slider-thumb {
+      border-color: GrayText;
+    }
   }
 }

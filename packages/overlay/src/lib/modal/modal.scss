@@ -63,7 +63,7 @@
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     box-shadow:
       var(--oge-shadow-popup),
       0 0 0 3px var(--oge-accent-soft);
@@ -133,8 +133,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 }
 
@@ -216,5 +215,20 @@
 
   .oge-modal-spinner {
     animation: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-modal {
+    border: 1px solid CanvasText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-modal-close,
+  .oge-modal-maximize {
+    transition: none;
   }
 }

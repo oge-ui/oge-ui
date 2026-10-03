@@ -73,8 +73,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -162,8 +161,7 @@
   transition: background-color 120ms ease;
 
   &:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring($inset: true);
   }
 }
 
@@ -561,6 +559,8 @@
   cursor: ew-resize;
   opacity: 0;
   touch-action: none;
+  // above the link dots: their grown hit areas overlap the bar edge
+  z-index: 1;
 }
 
 .oge-gantt-handle-start {
@@ -607,10 +607,45 @@
   inset-inline-end: -14px;
 }
 
+/* hit areas: the visible grips stay small, a transparent ::before grows the
+   target to 24×24 (WCAG 2.5.8) and to 44×44 on coarse pointers */
+.oge-gantt-handle,
+.oge-gantt-progress-knob,
+.oge-gantt-link-dot {
+  @include tokens.hit-area;
+}
+
+/* the progress knob hangs off the bar's bottom edge: its target grows
+   downward so the bar body stays a move target */
+.oge-gantt-progress-knob::before {
+  inset-block: -3px -12px;
+}
+
+@media (pointer: coarse) {
+  .oge-gantt-progress-knob::before {
+    inset-block: -3px -32px;
+  }
+}
+
+/* shown on hover, on the selected task, and always where there is no hover */
 .oge-gantt-bar:hover .oge-gantt-handle,
 .oge-gantt-bar:hover .oge-gantt-progress-knob,
-.oge-gantt-bar:hover .oge-gantt-link-dot {
+.oge-gantt-bar:hover .oge-gantt-link-dot,
+.oge-gantt-bar-box:focus-within .oge-gantt-handle,
+.oge-gantt-bar-box:focus-within .oge-gantt-progress-knob,
+.oge-gantt-bar-box:focus-within .oge-gantt-link-dot,
+.oge-gantt-bar-box-selected .oge-gantt-handle,
+.oge-gantt-bar-box-selected .oge-gantt-progress-knob,
+.oge-gantt-bar-box-selected .oge-gantt-link-dot {
   opacity: 1;
+}
+
+@media (hover: none) {
+  .oge-gantt-handle,
+  .oge-gantt-progress-knob,
+  .oge-gantt-link-dot {
+    opacity: 1;
+  }
 }
 
 /* ---------- drag tip ---------- */
@@ -775,7 +810,7 @@
 
   &:hover:not(:disabled),
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     background: var(--oge-row-hover-bg);
   }
 
@@ -831,5 +866,85 @@
 
   .oge-gantt * {
     transition: none !important;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-gantt-row-selected {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-gantt-lane.oge-gantt-row-selected {
+    background: none;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  // bars: task colours are inline styles the OS palette replaces with
+  // Canvas — the frame and the progress fill are what remain readable
+  .oge-gantt-bar {
+    border: 1px solid CanvasText;
+    color: CanvasText !important;
+  }
+
+  .oge-gantt-progress {
+    background: Highlight;
+  }
+
+  .oge-gantt-summary,
+  .oge-gantt-milestone {
+    background-color: CanvasText !important;
+  }
+
+  .oge-gantt-baseline {
+    background: GrayText;
+  }
+
+  .oge-gantt-critical {
+    outline: 2px dashed CanvasText;
+  }
+
+  .oge-gantt-progress-knob,
+  .oge-gantt-link-dot {
+    border-color: Highlight;
+    background: Canvas;
+  }
+
+  .oge-gantt-arrow {
+    stroke: CanvasText;
+
+    &:hover {
+      stroke: Highlight;
+    }
+  }
+
+  .oge-gantt-arrow-selected {
+    stroke: Highlight;
+  }
+
+  // critical paths: thicker, not just red
+  .oge-gantt-arrow-critical {
+    stroke: CanvasText;
+    stroke-width: 3;
+  }
+
+  .oge-gantt-arrow-preview {
+    stroke: Highlight;
+  }
+
+  .oge-gantt-arrow-invalid {
+    stroke: GrayText;
+  }
+
+  .oge-gantt-today {
+    background: Highlight;
+  }
+
+  .oge-gantt-drag-tip,
+  .oge-gantt-tooltip {
+    border: 1px solid CanvasText;
   }
 }

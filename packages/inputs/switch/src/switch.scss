@@ -21,7 +21,7 @@
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
 
     .oge-switch-track {
       box-shadow: 0 0 0 3px var(--oge-accent-soft);
@@ -168,5 +168,65 @@
 
   .oge-switch-text {
     font-size: 11px;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  // state is the thumb position + a filled track, never colour alone
+  .oge-switch-track {
+    border-color: CanvasText;
+    background: Canvas;
+  }
+
+  .oge-switch-thumb {
+    background: CanvasText;
+  }
+
+  .oge-switch-text {
+    color: CanvasText;
+  }
+
+  .oge-switch-on {
+    .oge-switch-track {
+      border-color: Highlight;
+      background: Highlight;
+    }
+
+    .oge-switch-thumb {
+      background: HighlightText;
+    }
+
+    .oge-switch-text {
+      color: HighlightText;
+    }
+  }
+
+  .oge-switch-invalid .oge-switch-track {
+    border-style: dashed;
+  }
+
+  .oge-switch.oge-disabled {
+    .oge-switch-track {
+      border-color: GrayText;
+      background: Canvas;
+    }
+
+    .oge-switch-thumb {
+      background: GrayText;
+    }
+
+    .oge-switch-text {
+      color: GrayText;
+    }
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-switch-track,
+  .oge-switch-thumb,
+  .oge-switch-text {
+    transition: none;
   }
 }
