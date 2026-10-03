@@ -7,6 +7,7 @@ import {
   useReducer,
   useRef,
   useState,
+  type ChangeEvent,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
@@ -14,6 +15,8 @@ import {
 import { withInputWidth } from './field-extras';
 import {
   OgeSelectListCore,
+  adaptiveListViewportHeight,
+  type OgeAdaptiveMode,
   type OgeVirtualScrollOptions,
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
@@ -42,6 +45,7 @@ import {
 } from './field-extras';
 import { useOgeField, type OgeControlProps } from './use-field';
 import { useOgeInputsConfig } from './inputs-config';
+import { SheetSearch, sheetFocusAttr, useAdaptivePopup } from './adaptive';
 
 /** Payload of `onSelectionChange` — fires whenever the resolved item changes. */
 export interface OgeSelectBoxSelectionChangedEvent<TItem> {
@@ -110,6 +114,15 @@ export interface OgeSelectBoxProps<TItem = unknown>
   dropdownWidth?: number | 'anchor';
   /** Scrollable list height cap; `undefined` = the CSS default (320px). */
   dropdownMaxHeight?: number;
+  /**
+   * `'auto'` presents the list as a modal bottom sheet (title, close button,
+   * a search field when `searchEnabled`) on viewports narrower than
+   * `adaptiveBreakpoint`; `'none'` always anchors it. `undefined` = provider
+   * default (`'none'`).
+   */
+  adaptiveMode?: OgeAdaptiveMode;
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` applies; `undefined` = provider (600). */
+  adaptiveBreakpoint?: number;
   /**
    * Windowed rendering for large lists: `true` or `{ itemHeight, overscan }`.
    * Rows get a fixed size-matched height; `groupBy` is ignored while active.
@@ -234,10 +247,14 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
 
   // --- virtual window (fixed-height rows over the shared core model) --------
 
+  const adaptive = useAdaptivePopup(props, 'sheet');
+
   const virtual = useListVirtualizer({
     virtualScroll,
     size: props.size ?? 'md',
-    dropdownMaxHeight,
+    dropdownMaxHeight: adaptive.active
+      ? adaptiveListViewportHeight()
+      : dropdownMaxHeight,
     itemCount: () => listRef.current?.visibleItems().length ?? 0,
     listEl: listElRef,
   });
@@ -530,6 +547,16 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     }
   };
 
+  const onSearchInput = (event: ChangeEvent<HTMLInputElement>): void => {
+    if (!searchEnabled) return;
+    const text = event.target.value;
+    userNavigated.current = false;
+    list.setSearch(text);
+    props.onInputChange?.({ text, event: event.nativeEvent });
+    props.onSearchChange?.({ text });
+    if (!openedRef.current) open();
+  };
+
   const onKeyDown = (event: ReactKeyboardEvent): void => {
     if (field.effectiveDisabled || readonly) return;
     const isOpen = openedRef.current;
@@ -582,7 +609,8 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
         return;
       }
       case 'Tab': {
-        if (isOpen) close();
+        // the adaptive sheet traps Tab; only the anchored popup closes
+        if (isOpen && !adaptive.active) close();
         return;
       }
       case 'Home':
@@ -816,15 +844,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
           aria-describedby={describedBy}
           aria-invalid={field.showError ? true : undefined}
           aria-required={props.required ? true : undefined}
-          onChange={(event) => {
-            if (!searchEnabled) return;
-            const text = event.target.value;
-            userNavigated.current = false;
-            list.setSearch(text);
-            props.onInputChange?.({ text, event: event.nativeEvent });
-            props.onSearchChange?.({ text });
-            if (!openedRef.current) open();
-          }}
+          onChange={onSearchInput}
           onClick={() => {
             if (field.effectiveDisabled || readonly) return;
             if (!openedRef.current) {
@@ -841,6 +861,8 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
             field.handleFocus(event);
           }}
           onBlur={(event) => {
+            // the adaptive sheet taking focus is not the user leaving
+            if (openedRef.current && adaptive.active) return;
             // custom values commit on blur; otherwise uncommitted search
             // text reverts to the selected display text
             if (
@@ -858,9 +880,38 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
         />
       </OgeFieldChrome>
       {opened && (
-        <OgePopup panel={panel} ref={popupRef}>
+        <OgePopup
+          panel={panel}
+          ref={popupRef}
+          adaptive={adaptive.presentation}
+          adaptiveTitle={label || field.msg.adaptiveTitle}
+          closeLabel={field.msg.adaptiveClose}
+          sheetHeader={
+            adaptive.active && searchEnabled ? (
+              <SheetSearch
+                listboxId={list.listboxId}
+                activeDescendant={list.activeDescendant()}
+                value={list.searchText() ?? ''}
+                label={field.msg.adaptiveSearch}
+                placeholder={field.msg.adaptiveSearch}
+                onChange={onSearchInput}
+                onKeyDown={onKeyDown}
+              />
+            ) : undefined
+          }
+        >
           <div
             ref={listElRef}
+            {...(adaptive.active && !searchEnabled
+              ? {
+                  ...sheetFocusAttr,
+                  tabIndex: 0,
+                  'aria-activedescendant': list.activeDescendant() ?? undefined,
+                  onKeyDown: (event: ReactKeyboardEvent) => {
+                    if (event.target === event.currentTarget) onKeyDown(event);
+                  },
+                }
+              : {})}
             className={[
               'oge-select-list',
               wrapItemText && !virtual.active && 'oge-select-wrap',
@@ -870,7 +921,9 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
               .join(' ')}
             role="listbox"
             id={list.listboxId}
-            style={{ maxHeight: dropdownMaxHeight }}
+            style={{
+              maxHeight: adaptive.active ? undefined : dropdownMaxHeight,
+            }}
             aria-labelledby={
               labelMode !== 'hidden' && label ? field.ids.labelId : undefined
             }

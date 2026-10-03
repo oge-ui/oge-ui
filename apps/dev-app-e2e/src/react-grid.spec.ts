@@ -330,6 +330,16 @@ test.describe('React data-grid docs', () => {
       await page.goto(`${path}${REACT}`);
       await expect(page.locator('h1').first()).toBeVisible();
       await expect(page.getByRole('status')).toHaveCount(0);
+      // React grids fill their rows in an effect: give every demo grid a
+      // moment to leave its transient "No data" body (an empty rowgroup
+      // fails aria-required-children) — a page that is empty on purpose
+      // simply proceeds after the wait
+      const transientEmpty = page.locator(
+        'app-react-host .oge-rows:has(> .oge-no-data)',
+      );
+      for (let i = 0; i < 25 && (await transientEmpty.count()) > 0; i++) {
+        await page.waitForTimeout(200);
+      }
       // empty-table-header: the leading utility column headers (row drag,
       // master-detail expander) carry an aria-label and no visible text —
       // the same markup the Angular grid renders; a WCAG best-practice flag,

@@ -186,6 +186,7 @@ _Columns UX_
 | `columnResize` | `boolean` | `true` | Drag-resize handles on header edges. Keyboard: Alt+←/→ on a focused header resizes by 10px (Shift for 1px); the handle is a focusable `role="separator"` (`aria-valuenow/min/max` = width in px, named by `messages.resizeColumn`) taking ←/→, Home/End (min / max) and Enter/Esc (back to the header). RTL-aware; clamped to `minWidth` / `maxWidth`. |
 | `columnReorder` | `boolean` | `true` | Drag-and-drop column reordering. Keyboard: Ctrl+Shift+←/→ on a focused header moves the column one step, never across a pinned group or out of its band (an unbanded column steps over a band as a whole), announced via `messages.columnMoved`. |
 | `columnMinWidth` | `number \| undefined` | `—` | Track minimum for columns without an explicit width. |
+| `columnHidingMode` | `'hide' \| 'detail' \| undefined` | `config: 'detail'` | What happens to columns responsive hiding (`hidingPriority`) takes out on a narrow grid: `'detail'` gives every row a toggle (a real button with `aria-expanded` / `aria-controls`, labelled by `toggleAdaptiveDetail`) that reveals the hidden columns' caption / value pairs on a second line of the row, rendered like the cells — format, lookups, boolean words and cell templates; `'hide'` drops them with no way back. The hiding pass counts the toggle's 32px track once a column is hidden. |
 
 _Appearance & misc_
 
@@ -339,7 +340,7 @@ _Basics_
 | `visible` | `model<boolean>` | `true` | Two-way visibility (column chooser writes it). |
 | `format` | `(value: unknown) => string \| undefined` | `—` | Display formatter for cells, group rows, export. |
 | `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge. |
-| `hidingPriority` | `number \| undefined` | `—` | Adaptive hiding order when width runs out (higher survives longer). |
+| `hidingPriority` | `number \| undefined` | `—` | Adaptive hiding order when width runs out (higher survives longer); the hidden values stay reachable through the row toggle unless `columnHidingMode` is `'hide'`. |
 | `lookup` | `OgeColumnLookup \| undefined` | `—` | Display + dropdown editor from a value list; cascading via function dataSource. |
 
 _Sort, filter & group_
@@ -430,7 +431,7 @@ _Configuration_
 | Name | Type | Description |
 | --- | --- | --- |
 | `provideOgeGridConfig(config)` | `Provider` | App/component-scoped defaults; deep-merges `messages`. |
-| `OgeGridConfig` | `{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; announcements: true; messages }` | Defaults shown inline. |
+| `OgeGridConfig` | `{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; columnHidingMode: 'detail'; announcements: true; messages }` | Defaults shown inline. |
 | `OgeGridMessages` | `60+ string keys` | Every user-facing string, incl. aria labels, filter operators, summary patterns — see `OGE_DEFAULT_MESSAGES` in the source. |
 | `messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow` | `string` | Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: `Reorder`, `Detail`, `Select all`, `Reorder row`. The tree list reads `reparentColumnHeader` / `reparentRow` (`Reparent`, `Reparent row`) for its reparenting handle. |
 | `messages.resizeColumn / messages.columnResized / messages.columnMoved / messages.rowMoved / messages.treeRowMoved / messages.groupMoved / messages.groupRemoved` | `string` | The keyboard alternatives to dragging (WCAG 2.1.1 / 2.5.7): the resize separator’s name (`Resize {column}`) and the polite live-region announcements after a keyboard resize (`{column} width {width} pixels`), column move (`{column} moved to position {position} of {total}`), row move (`Row moved to position {position} of {total}`), tree-row move (`Row moved to level {level}, position {position} of {total}`) and group-chip reorder / removal (`Grouping by {column} moved to position {position} of {total}`, `Grouping by {column} removed`). |
@@ -448,6 +449,48 @@ _Filter builder_
 ## Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+### Adaptive
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- a narrow grid: columns with a hidingPriority leave the row, and each
+         row's + toggle reveals their caption / value pairs (columnHidingMode
+         'detail' is the default — 'hide' drops the data instead) -->
+    <div style="max-width: 420px">
+      <oge-grid [data]="employees" keyField="id" columnHidingMode="detail">
+        <oge-column field="firstName" caption="First Name" [width]="140" />
+        <oge-column field="lastName" caption="Last Name" [width]="140" [hidingPriority]="3" />
+        <oge-column field="department" caption="Department" [width]="140" [hidingPriority]="2" />
+        <oge-column field="city" caption="City" [width]="120" [hidingPriority]="1" />
+        <oge-column field="salary" caption="Salary" dataType="number" [width]="120"
+                    [format]="money" [hidingPriority]="0" />
+      </oge-grid>
+    </div>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly money = (value: unknown): string =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+      Number(value),
+    );
+}
+```
 
 ### Columns
 

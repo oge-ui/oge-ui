@@ -5,6 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import {
+  OgeDateBox,
   OgeSelectBox,
   OgeTagBox,
   type OgeSelectBoxCustomItemEvent,
@@ -18,6 +19,7 @@ import {
 } from '../react-inputs/select-box';
 import { PageToc } from '../../shared/page-toc';
 import {
+  ADAPTIVE_SNIPPET,
   BASIC_SNIPPET,
   CHROME_SNIPPET,
   GROUP_SNIPPET,
@@ -35,6 +37,7 @@ const SECTIONS = [
   'Tag Box — multi-select',
   'Item states & templates',
   'Field chrome',
+  'Mobile / adaptive',
   'Keyboard & accessibility',
 ] as const;
 
@@ -53,6 +56,7 @@ interface DemoPlan {
 @Component({
   selector: 'app-inputs-select-box',
   imports: [
+    OgeDateBox,
     OgeSelectBox,
     OgeTagBox,
     DemoCard,
@@ -256,6 +260,35 @@ interface DemoPlan {
           />
         </div>
       </app-demo-card>
+
+      <app-demo-card
+        heading="Mobile / adaptive"
+        description="With <code>adaptiveMode=&quot;auto&quot;</code> a viewport narrower than <code>adaptiveBreakpoint</code> (600px) turns the drop-down into a modal bottom sheet — titled with the label, a close button, a search field at the top, 44px rows, safe-area insets, focus trap and swipe-down dismiss — and the date picker into a full-screen dialog. Narrow the window (or open the page on a phone) to try it; the default <code>'none'</code> keeps existing apps anchored."
+        [chips]="['adaptiveMode', 'adaptiveBreakpoint']"
+        [code]="adaptiveSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6" data-demo="adaptive">
+          <oge-select-box
+            label="City"
+            adaptiveMode="auto"
+            [items]="cities"
+            [searchEnabled]="true"
+            [(value)]="adaptiveCity"
+          />
+          <oge-tag-box
+            label="Skills"
+            adaptiveMode="auto"
+            [items]="skills"
+            [(value)]="adaptiveSkills"
+          />
+          <oge-date-box
+            label="Due date"
+            adaptiveMode="auto"
+            [(value)]="adaptiveDue"
+          />
+        </div>
+      </app-demo-card>
     }
 
     <h3 id="keyboard-accessibility" class="scroll-mt-20">
@@ -298,6 +331,10 @@ export class InputsSelectBoxPage {
   protected readonly lazySnippet = LAZY_SNIPPET;
   protected readonly statesSnippet = STATES_SNIPPET;
   protected readonly chromeSnippet = CHROME_SNIPPET;
+  protected readonly adaptiveSnippet = ADAPTIVE_SNIPPET;
+  protected readonly adaptiveCity = signal<unknown>(null);
+  protected readonly adaptiveSkills = signal<readonly unknown[]>([]);
+  protected readonly adaptiveDue = signal<Date | null>(null);
 
   protected readonly cities = ['Ankara', 'Berlin', 'Lisbon', 'Oslo', 'Tokyo'];
   protected readonly countries = [

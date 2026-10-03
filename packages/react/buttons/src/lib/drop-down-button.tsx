@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import type {
+  OgeAdaptiveMode,
   OgeButtonSeverity,
   OgeButtonSize,
   OgeButtonStylingMode,
@@ -25,6 +26,7 @@ import {
   OgeMenuList,
   OgePopup,
   useAnchoredPanel,
+  useOgeAdaptivePresentation,
   useOgeOverlayConfig,
   type OgeMenuCloseRequestEvent,
   type OgeMenuListHandle,
@@ -74,6 +76,14 @@ type ItemsState =
 export interface OgeDropDownButtonProps {
   /** Label of the (main) trigger button. */
   text?: string;
+  /**
+   * `'auto'` opens the menu as a modal bottom sheet (title, close button,
+   * touch-sized rows) on viewports narrower than `adaptiveBreakpoint`;
+   * `'none'` always anchors it. `undefined` = provider default (`'none'`).
+   */
+  adaptiveMode?: OgeAdaptiveMode;
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` applies; `undefined` = provider (600). */
+  adaptiveBreakpoint?: number;
   hint?: string;
   disabled?: boolean;
   stylingMode?: OgeButtonStylingMode;
@@ -205,6 +215,11 @@ export const OgeDropDownButton = forwardRef<
   const config = useOgeButtonsConfig();
   const overlayConfig = useOgeOverlayConfig();
   const msg: OgeButtonsMessages = { ...config.messages, ...messages };
+  const presentation = useOgeAdaptivePresentation(
+    props.adaptiveMode ?? config.adaptiveMode,
+    props.adaptiveBreakpoint ?? config.adaptiveBreakpoint,
+    'sheet',
+  );
 
   const hostRef = useRef<HTMLSpanElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -513,7 +528,13 @@ export const OgeDropDownButton = forwardRef<
         </OgeButton>
       )}
       {opened && (
-        <OgePopup panel={panel} ref={popupRef}>
+        <OgePopup
+          panel={panel}
+          ref={popupRef}
+          adaptive={presentation}
+          adaptiveTitle={mainText || hint || msg.adaptiveTitle}
+          closeLabel={msg.adaptiveClose}
+        >
           {renderContent ? (
             renderContent(() => panelRef.current.close('select'))
           ) : itemsStatus === 'loading' ? (

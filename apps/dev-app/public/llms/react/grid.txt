@@ -147,6 +147,7 @@ _Columns UX_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `columnMinWidth` | `number` | `config.columnMinWidth (120)` | Track minimum for columns without an explicit width. |
+| `columnHidingMode` | `'hide' \| 'detail' \| undefined` | `config: 'detail'` | What happens to columns responsive hiding (`hidingPriority`) takes out on a narrow grid: `'detail'` gives every row a toggle (a real button with `aria-expanded` / `aria-controls`, labelled by `toggleAdaptiveDetail`) that reveals the hidden columns' caption / value pairs on a second line of the row, rendered like the cells — format, lookups, boolean words and `renderCell`; `'hide'` drops them with no way back. The hiding pass counts the toggle's 32px track once a column is hidden. |
 | `columnResize` | `boolean` | `true` | Enables drag-resize handles on header edges. Keyboard: Alt+←/→ on a focused header resizes by 10px (Shift for 1px); the handle is a focusable `role="separator"` (`aria-valuenow/min/max` = width in px, named by `messages.resizeColumn`) taking ←/→, Home/End (min / max) and Enter/Esc (back to the header). RTL-aware; clamped to `minWidth` / `maxWidth`. |
 | `columnReorder` | `boolean` | `true` | Enables drag-and-drop column reordering (headers dropped onto each other). Keyboard: Ctrl+Shift+←/→ on a focused header moves the column one step, never across a pinned group or out of its band (an unbanded column steps over a band as a whole), announced via `messages.columnMoved`. |
 | `columnChooser` | `boolean` | `false` | Toolbar button opening the show/hide column list; with `columnReorder` its rows also drag to reorder. Keyboard: Space toggles an item; with `columnReorder`, Ctrl+↑/↓ moves it. Hiding is also in the header context menu. |
@@ -313,7 +314,7 @@ _Basics_
 | `maxWidth` | `number \| undefined` | `undefined` | Upper bound in px for user resizing — pointer drag and the Alt+←/→ / separator keys; also the separator’s `aria-valuemax`. |
 | `lookup` | `OgeColumnLookup` | `undefined` | Maps stored values to display texts (cells, filters, exports): `{ dataSource, valueExpr, displayExpr }`. |
 | `calculateCellValue` | `(row: T) => unknown` | `undefined` | Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). |
-| `hidingPriority` | `number` | `undefined` | Responsive hiding: lower priorities hide first when the grid runs out of width. |
+| `hidingPriority` | `number` | `undefined` | Responsive hiding: lower priorities hide first when the grid runs out of width; the hidden values stay reachable through the row toggle unless `columnHidingMode` is `'hide'`. |
 | `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge (requires a numeric `width`). |
 
 _Sort, filter & group_
@@ -515,6 +516,62 @@ export function CalculatedColumns() {
       filterRow
       paging={{ pageSize: 8 }}
     />
+  );
+}
+```
+
+### Mobile / adaptive
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const departments = [
+  { code: 'Engineering', label: 'Mühendislik' },
+  { code: 'Sales', label: 'Satış' },
+  { code: 'HR', label: 'İnsan Kaynakları' },
+  { code: 'Finance', label: 'Finans' },
+  { code: 'Support', label: 'Destek' },
+];
+
+const money = (value: unknown): string =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+    Number(value),
+  );
+
+// hidden columns stay reachable through each row's + toggle
+// (columnHidingMode 'detail' is the default; 'hide' drops the data)
+const columns = [
+  { field: 'firstName', caption: 'First Name', width: 140 },
+  { field: 'lastName', caption: 'Last Name', width: 140, hidingPriority: 3 },
+  { field: 'department', caption: 'Department', width: 140, hidingPriority: 2 },
+  { field: 'city', caption: 'City', width: 120, hidingPriority: 1 },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const, width: 120, format: money, hidingPriority: 0 },
+];
+
+export function AdaptiveGrid() {
+  return (
+    <div style={{ maxWidth: 420 }}>
+      <OgeGrid
+        data={employees}
+        keyField="id"
+        columns={columns}
+        columnHidingMode="detail"
+        paging={{ pageSize: 5 }}
+      />
+    </div>
   );
 }
 ```

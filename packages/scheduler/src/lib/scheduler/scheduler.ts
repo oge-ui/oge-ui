@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   ViewEncapsulation,
+  afterNextRender,
   contentChild,
   effect,
   inject,
@@ -18,8 +19,10 @@ import type { OgeFormItemData } from '@oge-ui/forms';
 import { OgeCalendar } from '@oge-ui/inputs/calendar';
 import { OgeAnchoredPanel, OgePopup } from '@oge-ui/overlay';
 import {
+  OgeSchedulerAdaptiveViewController,
   OgeSchedulerCore,
   scrollOffsetForTime,
+  type OgeSchedulerAdaptiveView,
   type SchedulerCellEvent,
   type SchedulerChipEvent,
   type SchedulerEditorResult,
@@ -518,6 +521,16 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     readonly (OgeSchedulerView | OgeSchedulerViewOptions)[]
   >(['day', 'week', 'month']);
 
+  /**
+   * Switches the visible view to agenda when the scheduler's **own** width
+   * (a `ResizeObserver`, not the window) drops below 600px, and back to the
+   * previous view when it grows again — `true`, or
+   * `{ breakpoint, view }`. Off (`false`) by default. The switch writes
+   * `currentView` like a user pick, on crossings only, so the switcher keeps
+   * working at any width.
+   */
+  readonly adaptiveView = input<OgeSchedulerAdaptiveView>(false);
+
   /** First day of week (0 = Sunday); `undefined` resolves from the locale. */
   readonly firstDayOfWeek = input<number | undefined>(undefined);
   /**
@@ -732,6 +745,22 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
       30_000,
     );
     this.destroyRef.onDestroy(() => clearInterval(reminderTimer));
+    // adaptive view: the host's own width drives the agenda switch
+    const adaptive = new OgeSchedulerAdaptiveViewController({
+      adaptiveView: () => untracked(this.adaptiveView),
+      currentView: () => untracked(this.currentView),
+      setCurrentView: (view) => this.currentView.set(view),
+    });
+    afterNextRender(() => {
+      const host = this.hostEl.nativeElement;
+      adaptive.update(host.clientWidth);
+      if (typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(() =>
+        adaptive.update(host.clientWidth),
+      );
+      observer.observe(host);
+      this.destroyRef.onDestroy(() => observer.disconnect());
+    });
   }
 
   /* ---------- navigation ---------- */

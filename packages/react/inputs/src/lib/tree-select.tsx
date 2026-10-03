@@ -40,6 +40,7 @@ import {
   type OgeFieldExtrasProps,
 } from './field-extras';
 import { useOgeField, type OgeControlProps } from './use-field';
+import { SheetDone, useAdaptivePopup, type OgeAdaptiveProps } from './adaptive';
 
 /** How many nodes the tree select may commit. */
 export type OgeTreeSelectSelectionMode = 'single' | 'multiple';
@@ -67,7 +68,7 @@ export interface OgeTreeSelectHandle {
 export interface OgeTreeSelectProps<
   TItem extends object = Record<string, unknown>,
 >
-  extends OgeControlProps<unknown>, OgeFieldExtrasProps {
+  extends OgeAdaptiveProps, OgeControlProps<unknown>, OgeFieldExtrasProps {
   /** Nodes to display — a flat parent-referencing list or nested children. */
   items?: readonly TItem[];
   /** Field holding a node's stable key. */
@@ -256,6 +257,7 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
   const treeId = `oge-tree-select-${reactId}-tree`;
 
   const multiple = selectionMode === 'multiple';
+  const adaptive = useAdaptivePopup(props, 'sheet');
   const field = useOgeField<unknown>({
     props,
     emptyValue: multiple ? EMPTY_KEYS : null,
@@ -572,10 +574,26 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
         />
       </OgeFieldChrome>
       {opened && (
-        <OgePopup panel={panel} ref={popupRef}>
+        <OgePopup
+          panel={panel}
+          ref={popupRef}
+          adaptive={adaptive.presentation}
+          adaptiveTitle={label || field.msg.adaptiveTitle}
+          closeLabel={field.msg.adaptiveClose}
+          sheetFooter={
+            adaptive.active && multiple ? (
+              <SheetDone
+                label={field.msg.adaptiveDone}
+                onClick={() => close()}
+              />
+            ) : undefined
+          }
+        >
           <div
             className="oge-tree-select-panel"
-            style={{ maxBlockSize: dropdownMaxHeight }}
+            style={{
+              maxBlockSize: adaptive.active ? undefined : dropdownMaxHeight,
+            }}
           >
             <OgeTreeView<TItem>
               ref={treeRef}
@@ -603,7 +621,9 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
               height={
                 virtualScroll === false
                   ? undefined
-                  : `${dropdownMaxHeight - 8}px`
+                  : adaptive.active
+                    ? '60dvh'
+                    : `${dropdownMaxHeight - 8}px`
               }
               ariaLabel={label || undefined}
               expandedKeys={expandedKeys}

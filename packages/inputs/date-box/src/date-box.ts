@@ -17,6 +17,8 @@ import { sameDay, startOfDay, toLocalDate } from '@oge-ui/core';
 import {
   OGE_OVERLAY_CONFIG,
   OgePopup,
+  ogeAdaptivePresentation,
+  type OgeAdaptiveMode,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
 import { OgeCalendar } from '@oge-ui/inputs/calendar';
@@ -109,11 +111,19 @@ interface TimeSlot {
       <ng-content select="[ogeInputSuffix]" ngProjectAs="[ogeInputSuffix]" />
     </oge-field-chrome>
     @if (opened()) {
-      <oge-popup [panel]="panel">
+      <oge-popup
+        [panel]="panel"
+        [adaptive]="presentation()"
+        [adaptiveTitle]="label() || msg().calendarLabel"
+        [closeLabel]="msg().adaptiveClose"
+      >
+        <!-- adaptive: the full-screen surface around it is the dialog -->
         <div
           class="oge-date-box-panel"
-          role="dialog"
-          [attr.aria-label]="label() || msg().calendarLabel"
+          [attr.role]="adaptiveActive() ? null : 'dialog'"
+          [attr.aria-label]="
+            adaptiveActive() ? null : label() || msg().calendarLabel
+          "
         >
           <div class="oge-date-box-pickers">
             @if (type() !== 'time') {
@@ -275,6 +285,24 @@ export class OgeDateBox
   );
   /** Picker visibility — two-way. */
   readonly opened = model(false);
+  /**
+   * `'auto'` presents the picker as a modal full-screen dialog (title, close
+   * button, touch-sized calendar) on viewports narrower than
+   * `adaptiveBreakpoint`; `'none'` always anchors it. `undefined` = config
+   * default (`'none'`).
+   */
+  readonly adaptiveMode = input<OgeAdaptiveMode | undefined>(undefined);
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` applies; `undefined` = config (600). */
+  readonly adaptiveBreakpoint = input<number | undefined>(undefined);
+  /** Current presentation: anchored, or the adaptive full-screen dialog. */
+  protected readonly presentation = ogeAdaptivePresentation(
+    () => this.adaptiveMode() ?? this.config.adaptiveMode,
+    () => this.adaptiveBreakpoint() ?? this.config.adaptiveBreakpoint,
+    'fullscreen',
+  );
+  protected readonly adaptiveActive = computed(
+    () => this.presentation() !== 'popup',
+  );
 
   readonly dropDownOpened = output<void>();
   readonly dropDownClosed = output<void>();
@@ -630,6 +658,8 @@ export class OgeDateBox
     // focus moving into the picker dialog is not a real blur
     const related = event.relatedTarget as Node | null;
     if (related && this.hostEl.nativeElement.contains(related)) return;
+    // nor is the adaptive dialog taking focus (the field goes inert)
+    if (this.opened() && this.adaptiveActive()) return;
     super.handleBlur(event);
   }
 

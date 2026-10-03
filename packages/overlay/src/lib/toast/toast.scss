@@ -14,7 +14,10 @@
   gap: var(--oge-toast-gap, 8px);
   width: min(var(--oge-toast-width, 360px), calc(100vw - 32px));
   /* edge distance and inter-toast spacing are themable without new tokens */
-  padding: var(--oge-toast-offset, 16px);
+  padding: max(var(--oge-toast-offset, 16px), env(safe-area-inset-top, 0px))
+    max(var(--oge-toast-offset, 16px), env(safe-area-inset-right, 0px))
+    max(var(--oge-toast-offset, 16px), env(safe-area-inset-bottom, 0px))
+    max(var(--oge-toast-offset, 16px), env(safe-area-inset-left, 0px));
   /* the region never blocks the page — only toasts themselves are clickable */
   pointer-events: none;
 

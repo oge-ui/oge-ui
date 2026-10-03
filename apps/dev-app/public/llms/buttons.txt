@@ -242,6 +242,7 @@ _Drop-down panel_
 | `opened` | `model<boolean>` | `false` | Panel visibility — two-way. |
 | `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred panel placement (flips/clamps automatically). |
 | `dropdownWidth` | `number \| 'anchor' \| undefined` | `—` | Fixed pixels or `'anchor'` to match the button width. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` opens the menu as a modal bottom sheet (title from `text` / `hint`, close button, 44px rows, focus trap, Escape / backdrop / swipe dismiss) on viewports narrower than `adaptiveBreakpoint` px; `'none'` keeps the anchored menu. App-wide defaults come from `provideOgeButtonsConfig()`. |
 | `rememberLastAction` | `boolean` | `false` | Split mode: the last clicked item becomes the main button's label + action. |
 | `itemTemplate` | `TemplateRef<OgeMenuItemTemplateContext> \| undefined` | `—` | Custom rendering for menu items — see `OgeMenuList`. |
 
@@ -294,6 +295,8 @@ _OgeButtonsConfig_
 | `holdToConfirmMs` | `number` | `800` | Default hold duration for `holdToConfirm: true`. |
 | `autoRepeatDelayMs` | `number` | `400` | Delay before `autoRepeat` starts repeating. |
 | `autoRepeatIntervalMs` | `number` | `80` | Interval between repeated clicks. |
+| `adaptiveMode` | `'auto' \| 'none'` | `'none'` | Default `adaptiveMode` of the drop-down button. |
+| `adaptiveBreakpoint` | `number` | `600` | Viewport width (px) below which `'auto'` opens the menu as a bottom sheet. |
 | `messages` | `OgeButtonsMessages` | `—` | User-facing strings (see below). |
 
 _OgeButtonsMessages_
@@ -306,6 +309,8 @@ _OgeButtonsMessages_
 | `dropDownNoItems` | `string` | `'No items'` | Status row when a drop-down has no items. |
 | `dropDownLoadError` | `string` | `'Could not load items'` | Status row when async items failed to load. |
 | `dropDownToggle` | `string` | `'Open menu'` | Aria label of the split drop-down's chevron toggle. |
+| `adaptiveClose` | `string` | `'Close'` | Aria label of the adaptive menu sheet's close button. |
+| `adaptiveTitle` | `string` | `'Actions'` | Sheet title when the button has no `text` or `hint`. |
 
 ## Demos
 

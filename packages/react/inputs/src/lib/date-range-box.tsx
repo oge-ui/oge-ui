@@ -36,6 +36,7 @@ import {
   type OgeFieldExtrasProps,
 } from './field-extras';
 import { useOgeField, type OgeControlProps } from './use-field';
+import { SheetDone, useAdaptivePopup, type OgeAdaptiveProps } from './adaptive';
 import { useOgeInputsConfig } from './inputs-config';
 
 /** Imperative handle, mirroring the Angular component's public methods. */
@@ -49,7 +50,10 @@ export interface OgeDateRangeBoxHandle {
 }
 
 export interface OgeDateRangeBoxProps
-  extends OgeControlProps<OgeCalendarRange>, OgeFieldExtrasProps {
+  extends
+    OgeAdaptiveProps,
+    OgeControlProps<OgeCalendarRange>,
+    OgeFieldExtrasProps {
   /**
    * `'datetime'` adds start/end time lists to the picker (commits via OK) and
    * parses/renders times on both sides.
@@ -161,6 +165,9 @@ export const OgeDateRangeBox = forwardRef<
     return (date: Date) => format.format(date);
   })();
 
+  const adaptive = useAdaptivePopup(props, 'fullscreen');
+  const adaptiveRef = useRef(adaptive.active);
+  adaptiveRef.current = adaptive.active;
   const field = useOgeField<OgeCalendarRange>({
     props,
     emptyValue: [null, null],
@@ -407,7 +414,8 @@ export const OgeDateRangeBox = forwardRef<
         ? [mergeSideTime(picked[0], 0), mergeSideTime(picked[1], 1)]
         : picked;
     setPickerRange(merged);
-    if (latest.current.type === 'datetime') return; // commits via the OK footer
+    // datetime commits via the OK footer, the adaptive dialog via Done
+    if (latest.current.type === 'datetime' || adaptiveRef.current) return;
     const [start, end] = merged;
     if (start && end) {
       setStartText(null);
@@ -458,6 +466,8 @@ export const OgeDateRangeBox = forwardRef<
     // focus moving between the two inputs or into the picker is not a blur
     const related = event.relatedTarget as Node | null;
     if (related && hostRef.current?.contains(related)) return;
+    // nor is the adaptive dialog taking focus (the fields go inert)
+    if (openedRef.current && adaptive.active) return;
     commitTypedText();
     if (openedRef.current) close();
     field.handleBlur(event);
@@ -596,16 +606,30 @@ export const OgeDateRangeBox = forwardRef<
         </span>
       </OgeFieldChrome>
       {opened && (
-        <OgePopup panel={panel} ref={popupRef}>
+        <OgePopup
+          panel={panel}
+          ref={popupRef}
+          adaptive={adaptive.presentation}
+          adaptiveTitle={label || field.msg.calendarLabel}
+          closeLabel={field.msg.adaptiveClose}
+          sheetFooter={
+            adaptive.active && type !== 'datetime' ? (
+              <SheetDone label={field.msg.adaptiveDone} onClick={applyDraft} />
+            ) : undefined
+          }
+        >
+          {/* adaptive: the full-screen surface around it is the dialog */}
           <div
             className="oge-date-box-panel"
-            role="dialog"
-            aria-label={label || field.msg.calendarLabel}
+            role={adaptive.active ? undefined : 'dialog'}
+            aria-label={
+              adaptive.active ? undefined : label || field.msg.calendarLabel
+            }
           >
             <OgeCalendar
               className="oge-date-box-calendar"
               selectionMode="range"
-              viewsCount={2}
+              viewsCount={adaptive.active ? 1 : 2}
               range={draftRange}
               onRangeChange={onRangePick}
               min={min}

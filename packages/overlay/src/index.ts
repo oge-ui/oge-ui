@@ -20,6 +20,14 @@ export {
   type OgePopupCloseReason,
 } from './lib/panel/anchored-panel';
 export { OgePopup } from './lib/popup/popup';
+export {
+  ogeAdaptiveViewport,
+  ogeAdaptivePresentation,
+  OGE_DEFAULT_ADAPTIVE_BREAKPOINT,
+  type OgeAdaptiveConfig,
+  type OgeAdaptiveMode,
+  type OgeAdaptivePresentation,
+} from './lib/popup/adaptive';
 // Primitives a modal surface implemented in another package needs. They are
 // public so that surface can join *this* Escape stack and reuse *this* focus
 // trap rather than growing a second, competing copy of either — which is also

@@ -251,6 +251,25 @@ export const OGE_ANCHORED_PANEL_API: ApiSections = {
 };
 
 export const OGE_POPUP_API: ApiSections = {
+  methods: [
+    {
+      title: 'Adaptive presentation helpers',
+      entries: [
+        {
+          name: 'ogeAdaptivePresentation(mode, breakpoint, kind?): Signal<OgeAdaptivePresentation>',
+          type: 'Signal<OgeAdaptivePresentation>',
+          description:
+            "Injection-context helper every popup editor uses: <code>'popup'</code> unless <code>mode()</code> is <code>'auto'</code> and the viewport is narrower than <code>breakpoint()</code>, then <code>kind</code> (<code>'sheet'</code> default). Bind it to <code>&lt;oge-popup [adaptive]&gt;</code> in your own popup.",
+        },
+        {
+          name: 'ogeAdaptiveViewport(breakpoint): Signal<boolean>',
+          type: 'Signal<boolean>',
+          description:
+            'Whether the viewport is narrower than <code>breakpoint()</code> — follows <code>matchMedia</code> crossings, <code>false</code> during SSR.',
+        },
+      ],
+    },
+  ],
   properties: [
     {
       entries: [
@@ -259,6 +278,33 @@ export const OGE_POPUP_API: ApiSections = {
           type: 'OgeAnchoredPanel (required)',
           description:
             'The anchored-panel model driving id, position and visibility.',
+        },
+        {
+          name: 'adaptive',
+          type: "'popup' | 'sheet' | 'fullscreen'",
+          default: "'popup'",
+          description:
+            'Presentation: anchored, a modal full-width bottom sheet, or a full-screen dialog — <code>role="dialog"</code> + <code>aria-modal</code>, titled, with a close button; the shared <code>OgeAdaptiveSheetCore</code> (<code>&#64;oge-ui/behavior</code>) locks scroll, inerts the background, traps Tab, moves focus in (an element marked <code>data-oge-sheet-focus</code> first), restores it, follows <code>visualViewport</code> above the on-screen keyboard and dismisses on a backdrop tap or a swipe down the handle. Popup editors resolve it from their <code>adaptiveMode</code>.',
+        },
+        {
+          name: 'adaptiveTitle',
+          type: 'string',
+          default: "''",
+          description:
+            'Dialog title while adaptive (editors pass their field label).',
+        },
+        {
+          name: 'closeLabel',
+          type: 'string',
+          default: "''",
+          description:
+            "Aria label of the adaptive close button, from the owner's messages catalog.",
+        },
+        {
+          name: '[ogePopupSheetHeader] / [ogePopupSheetFooter]',
+          type: 'content attribute',
+          description:
+            'Projected under the adaptive title (a search field) and pinned at the bottom (a Done action); render them only while adaptive.',
         },
       ],
     },

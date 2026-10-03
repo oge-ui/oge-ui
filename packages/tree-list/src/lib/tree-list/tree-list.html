@@ -134,6 +134,8 @@ store.editing.hasPending())) {
     >
       @if (rowDragging()) {
       <div class="oge-band-cell" role="columnheader"></div>
+      } @if (hasAdaptiveToggle()) {
+      <div class="oge-band-cell" role="columnheader"></div>
       } @if (hasCheckboxColumn()) {
       <div class="oge-band-cell" role="columnheader"></div>
       } @for (band of bands; track $index) {
@@ -160,6 +162,15 @@ store.editing.hasPending())) {
         role="columnheader"
         [attr.aria-label]="msg().reparentColumnHeader"
       ></div>
+      } @if (hasAdaptiveToggle()) {
+      <div
+        class="oge-header-cell oge-expander-cell"
+        role="columnheader"
+        [attr.aria-label]="msg().detailColumnHeader"
+      >
+        <!-- text content too: axe's empty-table-header wants a visible-to-AT name -->
+        <span class="oge-sr-only">{{ msg().detailColumnHeader }}</span>
+      </div>
       } @if (hasCheckboxColumn()) {
       <div
         class="oge-header-cell oge-checkbox-cell"
@@ -283,6 +294,8 @@ store.editing.hasPending())) {
       [style.grid-template-columns]="gridTemplateColumns()"
     >
       @if (rowDragging()) {
+      <div class="oge-filter-cell" role="gridcell"></div>
+      } @if (hasAdaptiveToggle()) {
       <div class="oge-filter-cell" role="gridcell"></div>
       } @if (hasCheckboxColumn()) {
       <div class="oge-filter-cell" role="gridcell"></div>
@@ -444,7 +457,7 @@ store.editing.hasPending())) {
         [attr.aria-expanded]="node.hasChildren ? node.expanded : null"
         [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
         [attr.data-rowindex]="viewStart() + nodeIndex"
-        [style.height.px]="virtualized() ? effRowHeight() : null"
+        [style.height.px]="virtualized() && !isAdaptiveExpanded(node.key) ? effRowHeight() : null"
         [style.grid-template-columns]="gridTemplateColumns()"
         [class.oge-drop-target]="
           dropTarget()?.key === node.key && dropTarget()?.position === 'inside'
@@ -490,6 +503,32 @@ store.editing.hasPending())) {
               <circle cx="10.5" cy="12" r="1.2" />
             </svg>
           </span>
+        </div>
+        } @if (hasAdaptiveToggle()) {
+        <div class="oge-cell oge-expander-cell" role="gridcell">
+          <button
+            type="button"
+            class="oge-expander-btn oge-adaptive-toggle"
+            [class.oge-expanded]="isAdaptiveExpanded(node.key)"
+            [attr.aria-expanded]="isAdaptiveExpanded(node.key)"
+            [attr.aria-controls]="isAdaptiveExpanded(node.key) ? adaptiveDetailId(node.key) : null"
+            [attr.aria-label]="msg().toggleAdaptiveDetail"
+            [attr.title]="msg().toggleAdaptiveDetail"
+            (click)="toggleAdaptiveDetail(node.key, $event)"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M8 3.5v9M3.5 8h9" />
+            </svg>
+          </button>
         </div>
         } @if (hasCheckboxColumn()) {
         <div class="oge-cell oge-checkbox-cell" role="gridcell">
@@ -717,6 +756,37 @@ store.editing.hasPending())) {
           </button>
           } } } } }
         </div>
+        } @if (hasAdaptiveToggle() && isAdaptiveExpanded(node.key)) {
+        <!-- the hidden columns' caption / value pairs, spanning the row on a
+             second grid line; rendered like the cells they stand in for -->
+        <div
+          class="oge-adaptive-detail"
+          role="gridcell"
+          [id]="adaptiveDetailId(node.key)"
+          [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
+        >
+          <dl class="oge-adaptive-detail-list">
+            @for (column of adaptiveHiddenColumns(); track column.id) {
+            <div class="oge-adaptive-detail-item">
+              <dt class="oge-adaptive-detail-caption">{{ column.caption }}</dt>
+              <dd
+                class="oge-adaptive-detail-value"
+                [class.oge-cell-number]="column.dataType === 'number'"
+              >
+                @if (column.cellTemplate) {
+                <ng-container
+                  *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
+                />
+                } @else if (booleanLabelOf(node, column); as booleanLabel) {
+                <span aria-hidden="true"
+                  >{{ cellDisplayText(node, column) }}</span
+                ><span class="oge-sr-only">{{ booleanLabel }}</span>
+                } @else { {{ cellDisplayText(node, column) }} }
+              </dd>
+            </div>
+            }
+          </dl>
+        </div>
         }
       </div>
       } } @case ('filler') {
@@ -728,6 +798,8 @@ store.editing.hasPending())) {
         [style.grid-template-columns]="gridTemplateColumns()"
       >
         @if (rowDragging()) {
+        <div class="oge-cell" role="gridcell" aria-hidden="true"></div>
+        } @if (hasAdaptiveToggle()) {
         <div class="oge-cell" role="gridcell" aria-hidden="true"></div>
         } @if (hasCheckboxColumn()) {
         <div class="oge-cell" role="gridcell" aria-hidden="true"></div>

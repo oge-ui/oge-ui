@@ -104,6 +104,37 @@
   border-block-start: 1px solid var(--oge-border-color);
 }
 
+// Safe areas: a drawer that reaches a screen edge on a notched / rounded device
+// (with `viewport-fit=cover`) keeps its content out of the cut-outs and the home
+// indicator. `env()` is 0 everywhere else, so a drawer inside a container pays
+// nothing. Only the edges the panel lies against are padded.
+.oge-drawer[data-position='start'] .oge-drawer-panel,
+.oge-drawer[data-position='end'] .oge-drawer-panel {
+  padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
+}
+.oge-drawer[data-position='start'] .oge-drawer-panel {
+  padding-inline-start: env(safe-area-inset-left, 0px);
+
+  &:dir(rtl) {
+    padding-inline-start: env(safe-area-inset-right, 0px);
+  }
+}
+.oge-drawer[data-position='end'] .oge-drawer-panel {
+  padding-inline-end: env(safe-area-inset-right, 0px);
+
+  &:dir(rtl) {
+    padding-inline-end: env(safe-area-inset-left, 0px);
+  }
+}
+.oge-drawer[data-position='top'] .oge-drawer-panel {
+  padding-block-start: env(safe-area-inset-top, 0px);
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+}
+.oge-drawer[data-position='bottom'] .oge-drawer-panel {
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+}
+
 // The close affordance sits in the panel's trailing top corner, out of the
 // content's flow so projected markup starts at the top edge as usual.
 .oge-drawer-close {

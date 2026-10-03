@@ -608,6 +608,70 @@ smallest complete example):
   `overflow: hidden` parent grow the hit area inward instead (the grid column resize handle). Hover-only
   affordances also show on `:focus-within`, on the selected item and under `@media (hover: none)`.
 - Icons are inline SVG with `aria-hidden="true"` — there is no icon font or icon package.
+- **Viewport units: never a bare `vh` limit.** On mobile `100vh` is the _largest_ viewport (toolbar
+  collapsed), so a `max-height: calc(100vh - …)` dialog runs under the browser chrome and the
+  on-screen keyboard. Write the `vh` line as the old-engine fallback and follow it with `dvh` (tracks
+  the chrome — modal-like limits) or `svh` (stable — content that must not resize while the toolbar
+  slides, e.g. the upload lightbox): `max-height: calc(100vh - 64px); max-height: calc(100dvh - 64px);`.
+  Widths may keep `vw` (nothing resizes the viewport horizontally).
+- **Safe areas.** Surfaces pinned to a screen edge pad with `env(safe-area-inset-*)` — as a floor,
+  `max(<gutter>, env(safe-area-inset-top, 0px))`, so the normal gutter is unchanged where the inset
+  is 0 (it always is unless the app opts into `viewport-fit=cover`). Done for the modal layer
+  (incl. full-screen), toast regions, drawer panels (only the edges they touch, `:dir(rtl)`-aware)
+  and the adaptive sheet's home-indicator edge.
+- **No iOS focus zoom.** Text inputs reach 16px under `@media (pointer: coarse)` only
+  (`font-size: max(16px, 1em)` on `.oge-input-native`; the sheet search field likewise), so mouse
+  desktops keep the token-driven density.
+- **Anchored panels follow the visual viewport.** `OgeAnchoredPanelCore` positions against
+  `ogeVisibleViewport()` (`visualViewport` offset + size, translated back to layout coordinates for
+  `position: fixed`), listens to `visualViewport` `resize`/`scroll` (the keyboard and pinch zoom fire
+  no window `resize` on iOS) and writes `--oge-popup-available-height` — the room left on the
+  resolved side — which `.oge-popup` caps its `max-height` with (`overflow-y: auto`). SSR-safe: no
+  `window`, no listeners. A custom property the stylesheets read and only script writes must be
+  set with a literal `setProperty('--oge-x', …)` — `themes.spec.ts` scans for that spelling.
+
+### Adaptive (mobile) mode convention
+
+Every popup-based editor — select box, tag box, autocomplete, tree select, date box, date range
+box, color box and the drop-down button — takes `adaptiveMode: 'auto' | 'none'` and
+`adaptiveBreakpoint` (px) in both layers, with family-wide defaults in the config
+(`provideOgeInputsConfig` / `provideOgeButtonsConfig`, the React providers):
+
+- **Default `'none'`, breakpoint 600.** A minor release must not turn existing apps' drop-downs into
+  sheets; apps opt in per editor or globally (`adaptiveMode: 'auto'` in the config), the Kendo
+  `adaptiveMode` precedent.
+- **One presentation primitive.** `oge-popup` / `<OgePopup>` take `adaptive: 'popup' | 'sheet' |
+'fullscreen'`, `adaptiveTitle` (the field label) and `closeLabel` (from the owner's messages);
+  lists use `'sheet'` (full-width bottom sheet), calendars `'fullscreen'`. The surface is a titled
+  `role="dialog"` + `aria-modal` with a close button; editors project a search field
+  (`[ogePopupSheetHeader]` / `sheetHeader`) and a Done action (`[ogePopupSheetFooter]` /
+  `sheetFooter`) — Done where picks do not close the popup (tag box, multi tree select, date
+  range, which then waits for Done instead of closing on the second pick).
+- **The modal half is `@oge-ui/behavior`'s `OgeAdaptiveSheetCore`**: focus moves in _before_ the
+  background goes inert (inerting a focused field blurs it with no related target), the shared
+  ref-counted scroll lock, `inertModalBackground`, a Tab trap, initial focus on
+  `[data-oge-sheet-focus]`, focus restore to the element focused before, `visualViewport` tracking
+  (`--oge-sheet-viewport-top/-height`, so the sheet rides above the keyboard) and swipe-down on the
+  handle. Escape stays with the anchored panel's overlay stack; backdrop and close button call
+  `panel.close('escape')`.
+- **Editors' focus contract while adaptive:** the field's blur is ignored while the sheet is open
+  (focus is in the sheet, the field is inert), Tab never closes (the sheet traps it), and
+  `activedescendant` lists move DOM focus into the sheet's search field or, when not searchable,
+  the `tabindex="0"` listbox itself. No history entries are pushed (routers own history).
+- The viewport query is `matchMedia` (`ogeAdaptiveViewport()` / `useOgeAdaptiveViewport()`), false on
+  the server and in React's first client render — the hydrated markup is always the anchored one.
+  This is the one place a _window_ width is right: a bottom sheet is about the screen, not the
+  editor's container.
+- **Grid family: data hidden by width stays reachable.** `columnHidingMode: 'detail'` (default;
+  `'hide'` is the old drop) gives each row a toggle in the expander track that reveals the hidden
+  columns' caption / value pairs on a second grid line of the same `.oge-row`, rendered through the
+  cell path (format, lookups, boolean words, cell templates / `renderCell`). The hiding pass counts
+  the toggle's width only once something is hidden (`detailToggleWidth`), which keeps the
+  computation acyclic. The scheduler's `adaptiveView` and the BPMN/pivot chrome key off their
+  **own** width (ResizeObserver / container queries), never the window. Do not put
+  `container-type` on a host that has `position: fixed` descendants (menus, popups): size
+  containment makes it their containing block — the pivot field areas wrap intrinsically
+  (`repeat(auto-fit, minmax(min(100%, 150px), 1fr))`) for that reason.
 
 ## Component completeness standard
 

@@ -68,6 +68,7 @@ import {
   ogeRowMoveDirection,
   ogeSeparatorTargetWidth,
   type OgeColumnWidthBounds,
+  type OgeGridColumnHidingMode,
 } from '@oge-ui/behavior';
 import {
   OgeContextMenuEcho,
@@ -459,6 +460,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Track minimum for columns without an explicit width. */
   readonly columnMinWidth = input<number | undefined>(undefined);
+
+  /**
+   * What happens to columns responsive hiding (`hidingPriority`) takes out on
+   * a narrow grid: `'detail'` gives every row an expand button revealing the
+   * hidden columns' caption / value pairs (formatted like the cells, cell
+   * templates included); `'hide'` drops them. `undefined` = config default
+   * (`'detail'`).
+   */
+  readonly columnHidingMode = input<OgeGridColumnHidingMode | undefined>(
+    undefined,
+  );
 
   /** Per-column filter editors below the header. */
   readonly filterRow = input<boolean | OgeFilterRowOptions>(false);
@@ -1988,9 +2000,55 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     },
   );
 
-  /** True when a leading expander column is rendered (master-detail active). */
-  protected readonly hasExpander = computed(
+  /** Master-detail toggle in the expander column. */
+  protected readonly hasDetailToggle = computed(
     () => this.detailTemplate() !== undefined,
+  );
+
+  private readonly effColumnHidingMode = computed(
+    () => this.columnHidingMode() ?? this.config.columnHidingMode,
+  );
+
+  /**
+   * Whether an adaptive-detail toggle can appear — decided from the
+   * declarations alone, so the hiding pass can count the toggle's width
+   * without depending on its own result (that would be a cycle).
+   */
+  private readonly adaptiveDetailPossible = computed(
+    () =>
+      this.effColumnHidingMode() === 'detail' &&
+      this.declaredColumns().some(
+        (column) => column.visible() && column.hidingPriority() !== undefined,
+      ),
+  );
+
+  /** The columns hidden by width, rendered in each row's adaptive detail. */
+  protected readonly adaptiveHiddenColumns = computed(() =>
+    this.effColumnHidingMode() === 'detail'
+      ? this.columnModel.adaptiveHiddenColumns()
+      : [],
+  );
+
+  /** Adaptive-detail toggle in the expander column (some column is hidden). */
+  protected readonly hasAdaptiveToggle = computed(
+    () => this.adaptiveHiddenColumns().length > 0,
+  );
+
+  /** True when a leading expander column is rendered (master-detail or adaptive detail). */
+  protected readonly hasExpander = computed(
+    () => this.hasDetailToggle() || this.hasAdaptiveToggle(),
+  );
+
+  /** One expander track wide per toggle it holds. */
+  private readonly expanderWidth = computed(
+    () =>
+      ((this.hasDetailToggle() ? 1 : 0) + (this.hasAdaptiveToggle() ? 1 : 0)) *
+      EXPANDER_WIDTH,
+  );
+
+  /** Keys of the rows whose adaptive detail is open. */
+  private readonly adaptiveExpandedKeys = signal<ReadonlySet<RowKey>>(
+    new Set(),
   );
 
   protected readonly hasCheckboxColumn = computed(
@@ -2008,7 +2066,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly leadingWidth = computed(
     () =>
       (this.rowDragging() ? DRAG_WIDTH : 0) +
-      (this.hasExpander() ? EXPANDER_WIDTH : 0) +
+      this.expanderWidth() +
       (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
   );
 
@@ -2019,7 +2077,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   /** Leading width counted against adaptive hiding (drag handle excluded). */
   private readonly adaptiveLeadingWidth = computed(
     () =>
-      (this.hasExpander() ? EXPANDER_WIDTH : 0) +
+      (this.hasDetailToggle() ? EXPANDER_WIDTH : 0) +
       (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
   );
 
@@ -2036,6 +2094,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     hostWidth: this.hostWidth,
     defaultMinWidth: this.effColumnMinWidth,
     adaptiveLeadingWidth: this.adaptiveLeadingWidth,
+    detailToggleWidth: computed(() =>
+      this.adaptiveDetailPossible() ? EXPANDER_WIDTH : 0,
+    ),
   });
 
   protected readonly resolvedColumns = this.columnModel.resolvedColumns;
@@ -2059,7 +2120,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   private readonly leadingTracks = computed<readonly string[]>(() => {
     const leading: string[] = [];
     if (this.rowDragging()) leading.push(`${DRAG_WIDTH}px`);
-    if (this.hasExpander()) leading.push(`${EXPANDER_WIDTH}px`);
+    if (this.hasExpander()) leading.push(`${this.expanderWidth()}px`);
     if (this.hasCheckboxColumn()) leading.push(`${CHECKBOX_WIDTH}px`);
     return leading;
   });
@@ -2331,6 +2392,26 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     event?.stopPropagation();
     event?.preventDefault();
     this.requestToggle('detail', key);
+  }
+
+  /** Whether the row's adaptive detail (the hidden columns) is open. */
+  protected isAdaptiveExpanded(key: RowKey): boolean {
+    return this.adaptiveExpandedKeys().has(key);
+  }
+
+  /** DOM id of a row's adaptive detail — the toggle's `aria-controls`. */
+  protected adaptiveDetailId(key: RowKey): string {
+    return `${this.uid}-ad-${String(key).replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  }
+
+  /** Opens or closes a row's adaptive detail (`columnHidingMode: 'detail'`). */
+  protected toggleAdaptiveDetail(key: RowKey, event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    const next = new Set(this.adaptiveExpandedKeys());
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    this.adaptiveExpandedKeys.set(next);
   }
 
   /** Total-summary text per column id; empty when no totals are configured. */

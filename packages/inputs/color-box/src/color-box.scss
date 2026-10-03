@@ -42,6 +42,15 @@
   inline-size: 264px;
 }
 
+// adaptive sheet: the picker takes the sheet's width (capped so the 2D
+// surface stays a comfortable square on a tablet held upright)
+.oge-popup-adaptive .oge-color-box-panel {
+  inline-size: auto;
+  max-inline-size: 480px;
+  margin-inline: auto;
+  padding: 16px;
+}
+
 // --- 2D saturation/brightness surface ---------------------------------------
 
 .oge-color-surface {

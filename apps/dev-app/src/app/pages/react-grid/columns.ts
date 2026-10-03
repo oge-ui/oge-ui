@@ -97,6 +97,31 @@ const CALC_COLUMNS: OgeGridColumnProps<Employee>[] = [
   },
 ];
 
+const money = (value: unknown): string =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+    Number(value),
+  );
+
+const ADAPTIVE_COLUMNS: OgeGridColumnProps<Employee>[] = [
+  { field: 'firstName', caption: 'First Name', width: 140 },
+  { field: 'lastName', caption: 'Last Name', width: 140, hidingPriority: 3 },
+  {
+    field: 'department',
+    caption: 'Department',
+    width: 140,
+    hidingPriority: 2,
+  },
+  { field: 'city', caption: 'City', width: 120, hidingPriority: 1 },
+  {
+    field: 'salary',
+    caption: 'Salary',
+    dataType: 'number',
+    width: 120,
+    format: money,
+    hidingPriority: 0,
+  },
+];
+
 const RTL_COLUMNS: OgeGridColumnProps<Employee>[] = [
   { field: 'id', caption: 'No', width: 70, dataType: 'number', pinned: 'left' },
   { field: 'firstName', caption: 'Ad' },
@@ -131,6 +156,26 @@ const RTL_COLUMNS: OgeGridColumnProps<Employee>[] = [
       <app-react-host [render]="banded" />
     </app-demo-card>
 
+    <h3 id="mobile-adaptive">Mobile / adaptive</h3>
+    <p>
+      Responsive hiding never makes data unreachable: once a column with a
+      <code>hidingPriority</code> leaves a narrow grid, every row gets a
+      <code>+</code> toggle (a real button with <code>aria-expanded</code>) that
+      shows the hidden columns' caption / value pairs, rendered like the cells
+      (<code>format</code>, <code>renderCell</code>).
+      <code>columnHidingMode="hide"</code> restores the drop-only behavior.
+    </p>
+
+    <app-demo-card
+      [chips]="['columnHidingMode', 'hidingPriority', 'adaptive detail']"
+      [code]="demos[2].source"
+      language="tsx"
+    >
+      <div class="max-w-[420px]" data-demo="adaptive-grid">
+        <app-react-host [render]="adaptive" />
+      </div>
+    </app-demo-card>
+
     <h3>Custom sort keys & filter expressions</h3>
     <p>
       <code>calculateSortValue</code> replaces the value a column sorts by —
@@ -158,7 +203,7 @@ const RTL_COLUMNS: OgeGridColumnProps<Employee>[] = [
 
     <app-demo-card
       [chips]="['rtlEnabled', 'pinned']"
-      [code]="demos[2].source"
+      [code]="demos[3].source"
       language="tsx"
     >
       <app-react-host [render]="rtl" />
@@ -212,6 +257,15 @@ export class ReactGridColumnsDemos {
       columns: CALC_COLUMNS,
       filterRow: true,
       paging: { pageSize: 8 },
+    });
+
+  protected readonly adaptive = (): ReactNode =>
+    createElement(OgeGrid<Employee>, {
+      data: employees,
+      keyField: 'id',
+      columns: ADAPTIVE_COLUMNS,
+      columnHidingMode: 'detail',
+      paging: { pageSize: 5 },
     });
 
   protected readonly rtl = (): ReactNode =>

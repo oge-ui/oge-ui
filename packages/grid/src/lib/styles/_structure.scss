@@ -729,6 +729,66 @@ input.oge-filter-input {
   padding: 12px 16px;
 }
 
+// --- adaptive detail (columnHidingMode: 'detail') --------------------------
+// The toggle shares the expander track; open, the hidden columns' caption /
+// value pairs span the row on a second grid line of the same `.oge-row`.
+
+.oge-adaptive-toggle {
+  // a plus that turns into a close cross — not the chevron's quarter turn
+  &.oge-expanded,
+  [dir='rtl'] &.oge-expanded {
+    transform: rotate(45deg);
+  }
+}
+
+.oge-adaptive-detail {
+  grid-column: 1 / -1;
+  position: sticky;
+  inset-inline-start: 0;
+  max-inline-size: 100%;
+  padding: 4px var(--oge-cell-padding-x) 10px;
+  border-top: 1px dashed var(--oge-border-color);
+  background: var(--oge-detail-bg);
+  // the pairs stack on a narrow detail — its own width, not the window's
+  container-type: inline-size;
+}
+
+.oge-adaptive-detail-list {
+  display: grid;
+  grid-template-columns: minmax(max-content, 40%) minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 2px;
+  margin: 0;
+}
+
+.oge-adaptive-detail-item {
+  display: contents;
+}
+
+.oge-adaptive-detail-caption {
+  padding-block: 4px;
+  color: var(--oge-header-color);
+  font-weight: 600;
+}
+
+.oge-adaptive-detail-value {
+  min-width: 0;
+  margin: 0;
+  padding-block: 4px;
+  overflow-wrap: anywhere;
+}
+
+// very narrow: stack caption over value
+@container (max-width: 360px) {
+  .oge-adaptive-detail-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .oge-adaptive-detail-value {
+    padding-block-start: 0;
+  }
+}
+
 // --- pinned columns --------------------------------------------------------
 
 .oge-pinned {
@@ -964,7 +1024,10 @@ input.oge-filter-input {
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(420px, calc(100vw - 32px));
+  /* vh first for older engines; dvh tracks the mobile browser chrome and the
+     on-screen keyboard, so the popup never extends underneath them */
   max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
   overflow: auto;
   padding: 18px;
   border: 1px solid var(--oge-border-color);

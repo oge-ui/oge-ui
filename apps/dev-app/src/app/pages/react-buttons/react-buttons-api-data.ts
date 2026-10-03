@@ -451,6 +451,13 @@ export const OGE_REACT_DROP_DOWN_BUTTON_API: ApiSections = {
             'Panel width: fixed pixels or <code>anchor</code> to match the button width.',
         },
         {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "provider: 'none' / 600",
+          description:
+            "<code>'auto'</code> opens the menu as a modal bottom sheet (title from <code>text</code> / <code>hint</code>, close button, 44px rows, focus trap, Escape / backdrop / swipe dismiss) on viewports narrower than <code>adaptiveBreakpoint</code> px; <code>'none'</code> keeps the anchored menu. App-wide defaults come from <code>&lt;OgeButtonsConfigProvider&gt;</code>.",
+        },
+        {
           name: 'renderItem',
           type: '(item: OgeMenuItem, index: number) =&gt; ReactNode',
           description:

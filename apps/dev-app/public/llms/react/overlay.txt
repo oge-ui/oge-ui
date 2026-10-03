@@ -392,11 +392,24 @@ _Handle methods_
 
 #### Properties
 
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `panel` | `OgeAnchoredPanelHandle (required)` | `—` | The anchored-panel handle driving id, position and visibility. |
+| `children` | `ReactNode` | `—` | Projected content. |
+| `className / style` | `string / CSSProperties` | `—` | Merged onto the popup element. |
+| `adaptive` | `'popup' \| 'sheet' \| 'fullscreen'` | `'popup'` | Presentation: anchored, a modal full-width bottom sheet, or a full-screen dialog — `role="dialog"` + `aria-modal`, titled, with a close button; the shared `OgeAdaptiveSheetCore` (`@oge-ui/behavior`) locks scroll, inerts the background, traps Tab, moves focus in (an element marked `data-oge-sheet-focus` first), restores it, follows `visualViewport` above the on-screen keyboard and dismisses on a backdrop tap or a swipe down the handle. Popup editors resolve it from their `adaptiveMode`. |
+| `adaptiveTitle` | `string` | `''` | Dialog title while adaptive (editors pass their field label). |
+| `closeLabel` | `string` | `''` | Aria label of the adaptive close button, from the owner's messages catalog. |
+| `sheetHeader / sheetFooter` | `ReactNode` | `—` | Rendered under the adaptive title (a search field) and pinned at the bottom (a Done action); ignored while anchored. |
+
+#### Methods
+
+_Adaptive presentation helpers_
+
 | Name | Type | Description |
 | --- | --- | --- |
-| `panel` | `OgeAnchoredPanelHandle (required)` | The anchored-panel handle driving id, position and visibility. |
-| `children` | `ReactNode` | Projected content. |
-| `className / style` | `string / CSSProperties` | Merged onto the popup element. |
+| `useOgeAdaptivePresentation(mode, breakpoint, kind?): OgeAdaptivePresentation` | `OgeAdaptivePresentation` | The hook every popup editor uses: `'popup'` unless `mode` is `'auto'` and the viewport is narrower than `breakpoint`, then `kind` (`'sheet'` default). Pass it to `<OgePopup adaptive>` in your own popup. |
+| `useOgeAdaptiveViewport(breakpoint): boolean` | `boolean` | Whether the viewport is narrower than `breakpoint` — follows `matchMedia` crossings; `false` on the server and the first client render, so hydration matches. |
 
 #### Types
 

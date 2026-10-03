@@ -23,7 +23,10 @@
 .oge-pivot-field-panel {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  // four areas side by side when there is room, two or one on a narrow
+  // pivot — intrinsic, so no container (whose layout containment would
+  // capture the pivot's position: fixed menus) is needed on the host
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
   gap: 8px;
   padding: 10px 40px 10px 12px;
   border-bottom: 1px solid var(--oge-border-color);
@@ -328,6 +331,22 @@
 
 .oge-pivot-chooser {
   width: min(680px, calc(100vw - 32px));
+  // the zones lay out from the dialog's own width (it holds no fixed
+  // descendants, so the containment is safe here)
+  container: oge-pivot-chooser / inline-size;
+}
+
+@container oge-pivot-chooser (max-width: 520px) {
+  .oge-pivot-chooser-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+  }
+
+  .oge-pivot-chooser-all {
+    grid-row: auto;
+    grid-column: 1 / -1;
+    max-height: 160px;
+  }
 }
 
 .oge-pivot-chooser-grid {

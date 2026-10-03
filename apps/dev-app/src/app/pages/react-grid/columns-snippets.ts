@@ -103,6 +103,38 @@ const columns = [
     }),
   },
   {
+    title: 'Mobile / adaptive',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-grid': ['OgeGrid'] },
+      name: 'AdaptiveGrid',
+      before: `${EMPLOYEE}
+
+const money = (value: unknown): string =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+    Number(value),
+  );
+
+// hidden columns stay reachable through each row's + toggle
+// (columnHidingMode 'detail' is the default; 'hide' drops the data)
+const columns = [
+  { field: 'firstName', caption: 'First Name', width: 140 },
+  { field: 'lastName', caption: 'Last Name', width: 140, hidingPriority: 3 },
+  { field: 'department', caption: 'Department', width: 140, hidingPriority: 2 },
+  { field: 'city', caption: 'City', width: 120, hidingPriority: 1 },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const, width: 120, format: money, hidingPriority: 0 },
+];`,
+      jsx: `<div style={{ maxWidth: 420 }}>
+  <OgeGrid
+    data={employees}
+    keyField="id"
+    columns={columns}
+    columnHidingMode="detail"
+    paging={{ pageSize: 5 }}
+  />
+</div>`,
+    }),
+  },
+  {
     title: 'Right-to-left',
     source: reactDemoSource({
       use: { '@oge-ui/react-grid': ['OgeGrid'] },

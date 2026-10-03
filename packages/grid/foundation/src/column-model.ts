@@ -3,6 +3,7 @@ import type { ValidatorFn } from '@angular/forms';
 import {
   adaptiveHiddenColumnIds,
   ogeGridBandRow,
+  resolveOgeGridAdaptiveHiddenColumns,
   resolveOgeGridColumns,
   type OgeGridColumnDef,
   type OgeGridColumnSpec,
@@ -105,6 +106,8 @@ export interface ColumnModelDeps<T, S extends ColumnSource<T>> {
   defaultMinWidth: () => number;
   /** Width of the leading utility cells counted against adaptive hiding. */
   adaptiveLeadingWidth: () => number;
+  /** Adaptive-detail toggle width, counted once a column is hidden. */
+  detailToggleWidth?: () => number;
 }
 
 /**
@@ -180,6 +183,7 @@ export class ColumnModel<
       hostWidth: this.deps.hostWidth(),
       defaultMinWidth: this.deps.defaultMinWidth(),
       leadingWidth: this.deps.adaptiveLeadingWidth(),
+      detailToggleWidth: this.deps.detailToggleWidth?.() ?? 0,
     }),
   );
 
@@ -189,6 +193,22 @@ export class ColumnModel<
       // getters, so these are read only when nothing is declared — reading
       // them eagerly would make the columns depend on the data, which
       // (through the search over visible columns) depends on the columns
+      columnDefs: () => this.deps.columnDefs(),
+      firstDataRow: () => this.deps.firstDataRow(),
+      widthOverrides: this.deps.widthOverrides(),
+      pinOverrides: this.deps.pinOverrides(),
+      order: this.deps.order(),
+      adaptiveHiddenIds: this.adaptiveHiddenIds(),
+    }),
+  );
+
+  /**
+   * The columns responsive hiding took out, resolved like the visible ones —
+   * what the adaptive detail (`columnHidingMode: 'detail'`) renders.
+   */
+  readonly adaptiveHiddenColumns = computed<ResolvedColumn<T, S>[]>(() =>
+    resolveOgeGridAdaptiveHiddenColumns({
+      specs: this.specs(),
       columnDefs: () => this.deps.columnDefs(),
       firstDataRow: () => this.deps.firstDataRow(),
       widthOverrides: this.deps.widthOverrides(),

@@ -217,3 +217,64 @@ export function resolvePopupPosition(
       finalAlign === 'center' ? finalSide : `${finalSide}-${finalAlign}`,
   };
 }
+
+/**
+ * The part of the layout viewport the user can actually see, in layout-
+ * viewport (`position: fixed`) coordinates. With the on-screen keyboard up or
+ * a pinch zoom the visual viewport is smaller than `innerWidth`/`innerHeight`
+ * and offset inside it; without `visualViewport` (older engines, jsdom) it is
+ * the window. SSR-safe: a zero rect without a `window`.
+ */
+export function ogeVisibleViewport(): OgeRect {
+  if (typeof window === 'undefined') {
+    return { top: 0, left: 0, width: 0, height: 0 };
+  }
+  const visual = window.visualViewport;
+  if (!visual || !(visual.width > 0) || !(visual.height > 0)) {
+    return {
+      top: 0,
+      left: 0,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+  return {
+    top: visual.offsetTop,
+    left: visual.offsetLeft,
+    width: visual.width,
+    height: visual.height,
+  };
+}
+
+export interface OgePopupAvailableHeightRequest {
+  /** Anchor rect, in the same coordinates as `viewport`. */
+  anchor: OgeRect;
+  viewport: { width: number; height: number };
+  /** The placement actually used (after flipping). */
+  placement: OgePopupPlacement;
+  offset?: number;
+  viewportPadding?: number;
+}
+
+/**
+ * Height left for a panel on its resolved side of the anchor: below or above
+ * it for vertical placements, the whole padded viewport for horizontal ones.
+ * Never negative.
+ */
+export function popupAvailableHeight(
+  req: OgePopupAvailableHeightRequest,
+): number {
+  const offset = req.offset ?? 4;
+  const padding = req.viewportPadding ?? 8;
+  const side = req.placement.split('-')[0] as OgePopupSide;
+  const { anchor, viewport } = req;
+  let space: number;
+  if (side === 'bottom') {
+    space = viewport.height - (anchor.top + anchor.height) - offset - padding;
+  } else if (side === 'top') {
+    space = anchor.top - offset - padding;
+  } else {
+    space = viewport.height - 2 * padding;
+  }
+  return Math.max(0, space);
+}

@@ -19,6 +19,11 @@
   font-size: var(--oge-font-size);
   box-shadow: var(--oge-shadow-popup);
   overflow: hidden;
+  /* the anchored panel writes the room left beside the anchor inside the
+     visible viewport, so a popup shrinks above the on-screen keyboard
+     instead of running underneath it; it then scrolls */
+  max-height: max(120px, var(--oge-popup-available-height, 100dvh));
+  overflow-y: auto;
 
   /* entrance: fades/scales in from the anchored edge once measured */
   transform: scale(0.97);
@@ -58,10 +63,205 @@
   }
 }
 
+// --- adaptive presentation (bottom sheet / full-screen dialog) -------------
+// Anchored, the wrappers are layout-neutral; adaptive, the popup element is
+// the full-viewport backdrop layer and `.oge-popup-sheet` the surface. The
+// layer follows the *visual* viewport (`--oge-sheet-viewport-*`, written by
+// OgeAdaptiveSheetCore), so the sheet rides above the on-screen keyboard.
+.oge-popup-sheet,
+.oge-popup-sheet-body {
+  display: contents;
+}
+
+.oge-popup.oge-popup-adaptive {
+  /* `!important` beats the inline width the anchored panel may have written
+     for anchor matching before the presentation switched */
+  inset-inline: 0 !important;
+  top: var(--oge-sheet-viewport-top, 0px) !important;
+  width: auto !important;
+  height: var(--oge-sheet-viewport-height, 100dvh);
+  max-height: none;
+  z-index: var(--oge-z-modal, 1100);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  background: var(--oge-modal-backdrop-bg);
+  box-shadow: none;
+  transform: none;
+  /* a coarse pointer gets the touch-sized text and targets */
+  font-size: max(16px, var(--oge-font-size));
+  opacity: 1;
+  animation: oge-popup-backdrop-in 160ms ease-out;
+
+  > .oge-popup-sheet {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: 85%;
+    overflow: hidden;
+    border: 1px solid var(--oge-border-color);
+    border-block-end: none;
+    border-start-start-radius: var(--oge-radius-lg);
+    border-start-end-radius: var(--oge-radius-lg);
+    background: var(--oge-popup-bg);
+    color: var(--oge-text-color);
+    box-shadow: var(--oge-shadow-popup);
+    /* the home indicator and the landscape notches */
+    padding-block-end: env(safe-area-inset-bottom, 0px);
+    padding-inline: env(safe-area-inset-left, 0px)
+      env(safe-area-inset-right, 0px);
+    animation: oge-popup-sheet-in 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .oge-popup-sheet-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    @include tokens.scrollbar;
+  }
+}
+
+.oge-popup.oge-popup-adaptive-fullscreen > .oge-popup-sheet {
+  flex: 1 1 auto;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+  padding-block-start: env(safe-area-inset-top, 0px);
+}
+
+.oge-popup-sheet-header {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 8px 10px 16px;
+  border-block-end: 1px solid var(--oge-border-color);
+}
+
+.oge-popup-adaptive-fullscreen .oge-popup-sheet-header {
+  padding-block-start: 10px;
+}
+
+.oge-popup-sheet-handle {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 18px;
+  cursor: grab;
+  touch-action: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 7px;
+    inset-inline-start: 50%;
+    width: 36px;
+    height: 4px;
+    margin-inline-start: -18px;
+    border-radius: 999px;
+    background: var(--oge-border-color);
+  }
+}
+
+.oge-popup-sheet-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 1.0625em;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oge-popup-sheet-close {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: var(--oge-input-muted);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+/* the search field / Done bar editors project into the sheet */
+.oge-popup-sheet-search {
+  flex: none;
+  padding: 10px 16px;
+  border-block-end: 1px solid var(--oge-border-color);
+}
+
+.oge-popup-sheet-footer {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px;
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+@keyframes oge-popup-backdrop-in {
+  from {
+    background-color: transparent;
+  }
+}
+
+@keyframes oge-popup-sheet-in {
+  from {
+    translate: 0 24px;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-popup.oge-popup-adaptive,
+  .oge-popup.oge-popup-adaptive > .oge-popup-sheet {
+    animation: none;
+  }
+
+  .oge-popup-sheet-close {
+    transition: none;
+  }
+}
+
 // --- forced colors (Windows High Contrast) ---------------------------------
 // System colours only; state never rides on a background colour alone.
 @include tokens.forced-colors {
   .oge-popup {
     border-color: CanvasText;
+  }
+
+  .oge-popup.oge-popup-adaptive > .oge-popup-sheet {
+    border: 1px solid CanvasText;
+  }
+
+  .oge-popup-sheet-handle::after {
+    background: CanvasText;
+  }
+
+  .oge-popup-sheet-close {
+    color: ButtonText;
   }
 }

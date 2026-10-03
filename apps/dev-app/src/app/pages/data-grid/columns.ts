@@ -6,7 +6,7 @@ import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { ReactGridColumnsDemos } from '../react-grid/columns';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
-import { SNIPPET } from './columns-snippets';
+import { ADAPTIVE_SNIPPET, SNIPPET } from './columns-snippets';
 
 const DEPARTMENTS = [
   { code: 'Engineering', label: 'Mühendislik' },
@@ -97,6 +97,59 @@ const DEPARTMENTS = [
           />
           <oge-column field="city" caption="City" [hidingPriority]="0" />
         </oge-grid>
+      </app-demo-card>
+
+      <h3 id="mobile-adaptive">Mobile / adaptive</h3>
+      <p>
+        Responsive hiding never makes data unreachable: once a column with a
+        <code>hidingPriority</code> leaves a narrow grid, every row gets a
+        <code>+</code> toggle (a real button with <code>aria-expanded</code>)
+        that shows the hidden columns' caption / value pairs, formatted like the
+        cells. <code>columnHidingMode="hide"</code> restores the old drop-only
+        behavior.
+      </p>
+
+      <app-demo-card
+        [chips]="['columnHidingMode', 'hidingPriority', 'adaptive detail']"
+        [code]="adaptiveSnippet"
+        language="ts"
+      >
+        <div class="max-w-[420px]" data-demo="adaptive-grid">
+          <oge-grid
+            [data]="employees"
+            keyField="id"
+            columnHidingMode="detail"
+            [paging]="{ pageSize: 5 }"
+          >
+            <oge-column field="firstName" caption="First Name" [width]="140" />
+            <oge-column
+              field="lastName"
+              caption="Last Name"
+              [width]="140"
+              [hidingPriority]="3"
+            />
+            <oge-column
+              field="department"
+              caption="Department"
+              [width]="140"
+              [hidingPriority]="2"
+            />
+            <oge-column
+              field="city"
+              caption="City"
+              [width]="120"
+              [hidingPriority]="1"
+            />
+            <oge-column
+              field="salary"
+              caption="Salary"
+              dataType="number"
+              [width]="120"
+              [format]="money"
+              [hidingPriority]="0"
+            />
+          </oge-grid>
+        </div>
       </app-demo-card>
 
       <h3>Custom sort keys & filter expressions</h3>
@@ -203,6 +256,12 @@ export class ColumnsPage {
   protected readonly employees = makeEmployees(200, 3);
   protected readonly departments = DEPARTMENTS;
   protected readonly snippet = SNIPPET;
+  protected readonly adaptiveSnippet = ADAPTIVE_SNIPPET;
+  protected readonly money = (value: unknown): string =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(Number(value));
   protected readonly yearly = (row: Employee) => row.salary * 12;
   protected readonly rtlSnippet = `<oge-grid [data]="employees" keyField="id" [rtlEnabled]="true">
   <oge-column field="id" caption="No" [width]="70" dataType="number" pinned="left" />

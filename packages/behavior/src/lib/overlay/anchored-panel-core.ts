@@ -1,5 +1,7 @@
 import { isTopOverlay, pushOverlay, removeOverlay } from './overlay-stack';
 import {
+  ogeVisibleViewport,
+  popupAvailableHeight,
   resolvePopupPosition,
   type OgePopupPlacement,
   type OgeRect,
@@ -65,6 +67,14 @@ export interface OgeAnchoredPanelCoreOptions {
 }
 
 let nextPanelId = 0;
+
+/**
+ * Custom property the machine writes on the panel: the height left on the
+ * resolved side of the anchor inside the visible viewport (`.oge-popup` caps
+ * its `max-height` with it).
+ */
+export const OGE_POPUP_AVAILABLE_HEIGHT_VAR = '--oge-popup-available-height';
+const AVAILABLE_HEIGHT_VAR = OGE_POPUP_AVAILABLE_HEIGHT_VAR;
 
 /** Frames to wait for the owner to render the panel element after `open()`. */
 const MAX_MEASURE_RETRIES = 60;
@@ -240,20 +250,49 @@ export class OgeAnchoredPanelCore {
     } else if (panelEl.style.width) {
       panelEl.style.width = '';
     }
-    const position = resolvePopupPosition({
-      anchor: {
-        top: anchorRect.top,
-        left: anchorRect.left,
-        width: anchorRect.width,
-        height: anchorRect.height,
-      },
+    // Position against the *visible* viewport: with the on-screen keyboard up
+    // or a pinch zoom, the layout viewport (`innerHeight`, what `fixed`
+    // resolves against) is larger than what the user sees. Anchor and result
+    // are translated in and out of visual-viewport coordinates.
+    const visible = ogeVisibleViewport();
+    const offset = this.options.offset?.();
+    const viewportPadding = this.options.viewportPadding?.();
+    const anchor: OgeRect = {
+      top: anchorRect.top - visible.top,
+      left: anchorRect.left - visible.left,
+      width: anchorRect.width,
+      height: anchorRect.height,
+    };
+    const viewport = { width: visible.width, height: visible.height };
+    const resolved = resolvePopupPosition({
+      anchor,
       panel: { width: panelEl.offsetWidth, height: panelEl.offsetHeight },
-      viewport: { width: window.innerWidth, height: window.innerHeight },
+      viewport,
       placement: this.options.placement?.() ?? 'bottom-start',
-      offset: this.options.offset?.(),
-      viewportPadding: this.options.viewportPadding?.(),
+      offset,
+      viewportPadding,
       rtl: getComputedStyle(anchorEl).direction === 'rtl',
     });
+    // The room left on the chosen side, as a custom property the popup
+    // surface caps itself with — a list shrinks above the keyboard instead
+    // of running underneath it.
+    const available = `${Math.floor(
+      popupAvailableHeight({
+        anchor,
+        viewport,
+        placement: resolved.placement,
+        offset,
+        viewportPadding,
+      }),
+    )}px`;
+    if (panelEl.style.getPropertyValue(AVAILABLE_HEIGHT_VAR) !== available) {
+      panelEl.style.setProperty('--oge-popup-available-height', available);
+    }
+    const position: OgeResolvedPopupPosition = {
+      ...resolved,
+      top: resolved.top + visible.top,
+      left: resolved.left + visible.left,
+    };
     this.setPosition(
       resolvedWidth !== undefined
         ? { ...position, width: resolvedWidth }
@@ -305,6 +344,11 @@ export class OgeAnchoredPanelCore {
       passive: true,
     });
     window.addEventListener('resize', this.onReposition, { passive: true });
+    // The on-screen keyboard and pinch zoom resize / pan only the visual
+    // viewport — no window `resize` fires on iOS for either.
+    const visual = window.visualViewport;
+    visual?.addEventListener('resize', this.onReposition, { passive: true });
+    visual?.addEventListener('scroll', this.onReposition, { passive: true });
   }
 
   private removeListeners(): void {
@@ -314,5 +358,8 @@ export class OgeAnchoredPanelCore {
     document.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('scroll', this.onReposition, true);
     window.removeEventListener('resize', this.onReposition);
+    const visual = window.visualViewport;
+    visual?.removeEventListener('resize', this.onReposition);
+    visual?.removeEventListener('scroll', this.onReposition);
   }
 }

@@ -32,6 +32,14 @@ const ENTRY_POINTS = [
   'ogeEdgeScrollVelocity',
   'createDragGhost',
   'ogeElementAtPoint',
+  'ogeVisibleViewport',
+  'popupAvailableHeight',
+  // adaptive
+  'OgeAdaptiveSheetCore',
+  'resolveAdaptivePresentation',
+  'watchAdaptiveViewport',
+  'matchesAdaptiveViewport',
+  'OGE_DEFAULT_ADAPTIVE_CONFIG',
   // live announcements
   'OgeLiveAnnouncerCore',
   'getOgeLiveAnnouncer',

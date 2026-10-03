@@ -694,6 +694,20 @@ export const OGE_INPUTS_CONFIG_API: ApiSections = {
           description: 'How long the copy button shows "copied".',
         },
         {
+          name: 'adaptiveMode',
+          type: "'auto' | 'none'",
+          default: "'none'",
+          description:
+            "Default <code>adaptiveMode</code> of every popup editor (select box, tag box, autocomplete, tree select, date / date range / color box). <code>'none'</code> keeps existing apps' anchored drop-downs; switch the whole family with <code>'auto'</code>.",
+        },
+        {
+          name: 'adaptiveBreakpoint',
+          type: 'number',
+          default: '600',
+          description:
+            "Viewport width (px) below which <code>'auto'</code> presents popups as bottom sheets / full-screen dialogs.",
+        },
+        {
           name: 'messages',
           type: 'OgeInputsMessages',
           description: 'User-facing strings (see below).',
@@ -928,6 +942,12 @@ export const OGE_SELECT_BOX_API: ApiSections = {
           type: 'number | undefined',
           description:
             'Scrollable list height cap; <code>undefined</code> = the CSS default (320px).',
+        },
+        {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "config: 'none' / 600",
+          description: `<code>'auto'</code> presents the popup as a full-width bottom sheet (with a search field at the top when <code>searchEnabled</code>) on viewports narrower than <code>adaptiveBreakpoint</code> px — a titled <code>role="dialog"</code> surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. <code>'none'</code> keeps the anchored drop-down. App-wide defaults come from <code>provideOgeInputsConfig()</code>.`,
         },
         {
           name: 'wrapItemText',
@@ -1391,6 +1411,12 @@ export const OGE_DATE_BOX_API: ApiSections = {
             'Preferred popup side/alignment; flips when it would clip.',
         },
         {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "config: 'none' / 600",
+          description: `<code>'auto'</code> presents the popup as a full-screen dialog with 44px day cells on viewports narrower than <code>adaptiveBreakpoint</code> px — a titled <code>role="dialog"</code> surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. <code>'none'</code> keeps the anchored drop-down. App-wide defaults come from <code>provideOgeInputsConfig()</code>.`,
+        },
+        {
           name: 'showDropDownButton',
           type: 'boolean',
           default: 'true',
@@ -1498,6 +1524,12 @@ export const OGE_DATE_BOX_API: ApiSections = {
           name: 'min / max / disabledDates / firstDayOfWeek / showWeekNumbers / locale / displayFormat / openOnFieldClick / acceptCustomValue',
           type: 'as OgeDateBox',
           description: 'Shared configuration surface.',
+        },
+        {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "config: 'none' / 600",
+          description: `<code>'auto'</code> presents the popup as a full-screen dialog showing one month, where picking both ends waits for an explicit Done that applies the range on viewports narrower than <code>adaptiveBreakpoint</code> px — a titled <code>role="dialog"</code> surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. <code>'none'</code> keeps the anchored drop-down. App-wide defaults come from <code>provideOgeInputsConfig()</code>.`,
         },
       ],
     },
@@ -1625,6 +1657,12 @@ export const OGE_AUTOCOMPLETE_API: ApiSections = {
           name: 'loading / dropdownPlacement / dropdownWidth / dropdownMaxHeight / wrapItemText / useItemTextAsTitle',
           type: 'shared with OgeSelectBox',
           description: 'Popup configuration and list rendering.',
+        },
+        {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "config: 'none' / 600",
+          description: `<code>'auto'</code> presents the popup as a full-width bottom sheet with its own text field at the top on viewports narrower than <code>adaptiveBreakpoint</code> px — a titled <code>role="dialog"</code> surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. <code>'none'</code> keeps the anchored drop-down. App-wide defaults come from <code>provideOgeInputsConfig()</code>.`,
         },
         {
           name: 'virtualScroll',
@@ -1760,6 +1798,12 @@ export const OGE_TAG_BOX_API: ApiSections = {
           name: 'opened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick',
           type: 'shared with OgeSelectBox',
           description: 'Popup configuration and two-way visibility.',
+        },
+        {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "config: 'none' / 600",
+          description: `<code>'auto'</code> presents the popup as a full-width bottom sheet (search field when <code>searchEnabled</code>, picks keep it open, a Done action closes it) on viewports narrower than <code>adaptiveBreakpoint</code> px — a titled <code>role="dialog"</code> surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. <code>'none'</code> keeps the anchored drop-down. App-wide defaults come from <code>provideOgeInputsConfig()</code>.`,
         },
         {
           name: 'virtualScroll',
@@ -1935,6 +1979,12 @@ export const OGE_TREE_SELECT_API: ApiSections = {
           type: "OgePopupPlacement | number | 'anchor'",
           description:
             "Popup geometry. Width defaults to <code>'anchor'</code> (matches the field), max height to 320px.",
+        },
+        {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "config: 'none' / 600",
+          description: `<code>'auto'</code> presents the popup as a full-width bottom sheet (a Done action in <code>'multiple'</code> mode) on viewports narrower than <code>adaptiveBreakpoint</code> px — a titled <code>role="dialog"</code> surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. <code>'none'</code> keeps the anchored drop-down. App-wide defaults come from <code>provideOgeInputsConfig()</code>.`,
         },
         {
           name: 'openOnFieldClick',
@@ -2222,6 +2272,12 @@ export const OGE_COLOR_BOX_API: ApiSections = {
           default: "'bottom-start'",
           description:
             'Preferred popup side/alignment; flips when it would clip.',
+        },
+        {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "config: 'none' / 600",
+          description: `<code>'auto'</code> presents the popup as a full-width bottom sheet on viewports narrower than <code>adaptiveBreakpoint</code> px — a titled <code>role="dialog"</code> surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. <code>'none'</code> keeps the anchored drop-down. App-wide defaults come from <code>provideOgeInputsConfig()</code>.`,
         },
         {
           name: 'showDropDownButton',

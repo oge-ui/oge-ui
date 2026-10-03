@@ -15,6 +15,8 @@ import { startOfDay, toLocalDate } from '@oge-ui/core';
 import {
   OGE_OVERLAY_CONFIG,
   OgePopup,
+  ogeAdaptivePresentation,
+  type OgeAdaptiveMode,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
 import { OgeCalendar } from '@oge-ui/inputs/calendar';
@@ -102,16 +104,35 @@ import { parseDateText } from './date-parse';
       <ng-content select="[ogeInputSuffix]" ngProjectAs="[ogeInputSuffix]" />
     </oge-field-chrome>
     @if (opened()) {
-      <oge-popup [panel]="panel">
+      <oge-popup
+        [panel]="panel"
+        [adaptive]="presentation()"
+        [adaptiveTitle]="label() || msg().calendarLabel"
+        [closeLabel]="msg().adaptiveClose"
+      >
+        @if (adaptiveActive() && type() !== 'datetime') {
+          <div ogePopupSheetFooter class="oge-popup-sheet-footer">
+            <button
+              type="button"
+              class="oge-sheet-done"
+              (click)="applyDraft($event)"
+            >
+              {{ msg().adaptiveDone }}
+            </button>
+          </div>
+        }
+        <!-- adaptive: the full-screen surface around it is the dialog -->
         <div
           class="oge-date-box-panel"
-          role="dialog"
-          [attr.aria-label]="label() || msg().calendarLabel"
+          [attr.role]="adaptiveActive() ? null : 'dialog'"
+          [attr.aria-label]="
+            adaptiveActive() ? null : label() || msg().calendarLabel
+          "
         >
           <oge-calendar
             class="oge-date-box-calendar"
             selectionMode="range"
-            [viewsCount]="2"
+            [viewsCount]="adaptiveActive() ? 1 : 2"
             [range]="draftRange()"
             [min]="min()"
             [max]="max()"
@@ -223,6 +244,24 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
   );
   /** Picker visibility — two-way. */
   readonly opened = model(false);
+  /**
+   * `'auto'` presents the picker as a modal full-screen dialog (title, close
+   * button, one month, an explicit Done action) on viewports narrower than
+   * `adaptiveBreakpoint`; `'none'` always anchors it. `undefined` = config
+   * default (`'none'`).
+   */
+  readonly adaptiveMode = input<OgeAdaptiveMode | undefined>(undefined);
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` applies; `undefined` = config (600). */
+  readonly adaptiveBreakpoint = input<number | undefined>(undefined);
+  /** Current presentation: anchored, or the adaptive full-screen dialog. */
+  protected readonly presentation = ogeAdaptivePresentation(
+    () => this.adaptiveMode() ?? this.config.adaptiveMode,
+    () => this.adaptiveBreakpoint() ?? this.config.adaptiveBreakpoint,
+    'fullscreen',
+  );
+  protected readonly adaptiveActive = computed(
+    () => this.presentation() !== 'popup',
+  );
 
   readonly dropDownOpened = output<void>();
   readonly dropDownClosed = output<void>();
@@ -425,7 +464,8 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
         ? [this.mergeSideTime(range[0], 0), this.mergeSideTime(range[1], 1)]
         : range;
     this.pickerRange.set(merged);
-    if (this.type() === 'datetime') return; // commits via the OK footer
+    // datetime commits via the OK footer, the adaptive dialog via Done
+    if (this.type() === 'datetime' || this.adaptiveActive()) return;
     const [start, end] = merged;
     if (start && end) {
       this.startText.set(null);
@@ -488,6 +528,8 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
     // focus moving between the two inputs or into the picker is not a blur
     const related = event.relatedTarget as Node | null;
     if (related && this.hostEl.nativeElement.contains(related)) return;
+    // nor is the adaptive dialog taking focus (the fields go inert)
+    if (this.opened() && this.adaptiveActive()) return;
     super.handleBlur(event);
   }
 

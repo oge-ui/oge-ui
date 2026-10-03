@@ -14,10 +14,29 @@
 }
 
 .oge-bpmn-body {
+  position: relative;
   display: flex;
   flex-direction: row;
   flex: 1;
   min-block-size: 0;
+  // the chrome lays out from the editor's own width (an editor in a dialog,
+  // a split pane or on a phone), never the window's. The body — not the host
+  // — is the container: it stretches in the host's column, so inline-size
+  // containment never collapses an editor placed in a shrink-to-fit parent.
+  container: oge-bpmn-body / inline-size;
+}
+
+// Narrow editor: the properties panel floats over the canvas edge instead of
+// squeezing the canvas to nothing.
+@container oge-bpmn-body (max-width: 640px) {
+  .oge-bpmn-properties {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 3;
+    inline-size: min(280px, 85cqi);
+    box-shadow: var(--oge-shadow-popup);
+  }
 }
 
 // Maximized fallback (native fullscreen handles its own sizing).
@@ -83,7 +102,8 @@
 
 .oge-bpmn-header-name {
   min-inline-size: 0;
-  inline-size: 220px;
+  // shrinks with a narrow header so the tool buttons keep their room
+  inline-size: min(220px, 32%);
   padding: 5px 8px;
   border: 1px solid transparent;
   border-radius: var(--oge-radius);

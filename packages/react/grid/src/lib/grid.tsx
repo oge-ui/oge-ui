@@ -97,6 +97,7 @@ import {
   keyEqualsExpr,
   lookupTextOf,
   ogeGridBandRow,
+  resolveOgeGridAdaptiveHiddenColumns,
   resolveOgeGridColumns,
   rowClickSelectionIntent,
   rowFilterExpr,
@@ -357,7 +358,38 @@ function OgeGridInner<T extends object>(
     });
     const selectionMode = rx.derived(() => p().selectionMode ?? 'none');
     const hasCheckboxColumn = rx.derived(() => selectionMode() === 'checkbox');
-    const hasExpander = rx.derived(() => p().renderDetail !== undefined);
+    /** Master-detail toggle in the expander column. */
+    const hasDetailToggle = rx.derived(() => p().renderDetail !== undefined);
+    const effColumnHidingMode = rx.derived(
+      () => p().columnHidingMode ?? cfg().columnHidingMode,
+    );
+    /**
+     * Whether an adaptive-detail toggle can appear — from the declarations
+     * alone, so the hiding pass can count its width without a cycle.
+     */
+    const adaptiveDetailPossible = rx.derived(
+      () =>
+        effColumnHidingMode() === 'detail' &&
+        columnSpecs().some(
+          (column) => column.visible && column.hidingPriority !== undefined,
+        ),
+    );
+    /** Adaptive-detail toggle in the expander column (some column is hidden). */
+    const hasAdaptiveToggle = rx.derived(
+      () => adaptiveHiddenColumns().length > 0,
+    );
+    /** A leading expander column: master-detail and/or adaptive detail. */
+    const hasExpander = rx.derived(
+      () => hasDetailToggle() || hasAdaptiveToggle(),
+    );
+    /** One expander track wide per toggle it holds. */
+    const expanderWidth = rx.derived(
+      () =>
+        ((hasDetailToggle() ? 1 : 0) + (hasAdaptiveToggle() ? 1 : 0)) *
+        EXPANDER_WIDTH,
+    );
+    /** Keys of the rows whose adaptive detail is open. */
+    const adaptiveExpanded = rx.cell<ReadonlySet<RowKey>>(new Set());
     const rowDragging = rx.derived(() => p().rowDragging ?? false);
     const groupPanel = rx.derived(() => p().groupPanel ?? false);
     const columnReorder = rx.derived(() => p().columnReorder !== false);
@@ -373,19 +405,19 @@ function OgeGridInner<T extends object>(
     const leadingWidth = rx.derived(
       () =>
         (rowDragging() ? DRAG_WIDTH : 0) +
-        (hasExpander() ? EXPANDER_WIDTH : 0) +
+        expanderWidth() +
         (hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
     );
     /** Leading width counted against adaptive hiding (drag handle excluded). */
     const adaptiveLeadingWidth = rx.derived(
       () =>
-        (hasExpander() ? EXPANDER_WIDTH : 0) +
+        (hasDetailToggle() ? EXPANDER_WIDTH : 0) +
         (hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
     );
     const leadingTracks = rx.derived<readonly string[]>(() => {
       const leading: string[] = [];
       if (rowDragging()) leading.push(`${DRAG_WIDTH}px`);
-      if (hasExpander()) leading.push(`${EXPANDER_WIDTH}px`);
+      if (hasExpander()) leading.push(`${expanderWidth()}px`);
       if (hasCheckboxColumn()) leading.push(`${CHECKBOX_WIDTH}px`);
       return leading;
     });
@@ -565,7 +597,7 @@ function OgeGridInner<T extends object>(
           ? { collapsedGroupKeys: toggledGroups }
           : { expandedGroupKeys: toggledGroups }),
         deferredChildren: deferredLoader.children(),
-        expandedDetailKeys: hasExpander()
+        expandedDetailKeys: hasDetailToggle()
           ? state.expansion.expandedDetails()
           : undefined,
         groupFooters: groupFooterFields().size > 0,
@@ -617,6 +649,7 @@ function OgeGridInner<T extends object>(
         hostWidth: hostWidth(),
         defaultMinWidth: effColumnMinWidth(),
         leadingWidth: adaptiveLeadingWidth(),
+        detailToggleWidth: adaptiveDetailPossible() ? EXPANDER_WIDTH : 0,
       }),
     );
 
@@ -630,6 +663,25 @@ function OgeGridInner<T extends object>(
         order: state.columns.order(),
         adaptiveHiddenIds: adaptiveHiddenIds(),
       }),
+    );
+
+    /** The columns hidden by width, rendered in each row's adaptive detail. */
+    const adaptiveHiddenColumns = rx.derived<ResolvedColumn<T>[]>(() =>
+      effColumnHidingMode() === 'detail'
+        ? resolveOgeGridAdaptiveHiddenColumns<
+            T,
+            Slot<T>,
+            OgeGridColumnProps<T>
+          >({
+            specs: columnSpecs(),
+            columnDefs: () => undefined,
+            firstDataRow,
+            widthOverrides: state.columns.widthOverrides(),
+            pinOverrides: state.columns.pinOverrides(),
+            order: state.columns.order(),
+            adaptiveHiddenIds: adaptiveHiddenIds(),
+          })
+        : [],
     );
 
     /** Adjacent columns sharing a `bandCaption` merge into one spanning cell. */
@@ -1078,6 +1130,10 @@ function OgeGridInner<T extends object>(
       selectionMode,
       hasCheckboxColumn,
       hasExpander,
+      hasDetailToggle,
+      hasAdaptiveToggle,
+      adaptiveHiddenColumns,
+      adaptiveExpanded,
       rowDragging,
       groupPanel,
       columnReorder,
@@ -3261,7 +3317,7 @@ function OgeGridInner<T extends object>(
   const headerDropTargetId = model.headerDropTargetId();
   const dropTargetKey = model.dropTargetKey();
   /** Rows expand/collapse when grouped or with master-detail → `treegrid`, else `grid`. */
-  const gridRole = grouped || hasExpander ? 'treegrid' : 'grid';
+  const gridRole = grouped || model.hasDetailToggle() ? 'treegrid' : 'grid';
   const colSpan = resolvedColumns.length + leadingCellCount;
 
   const pinnedStyle = (column: ResolvedColumn<T>): React.CSSProperties => ({
@@ -3496,8 +3552,10 @@ function OgeGridInner<T extends object>(
 
   const renderDataRow = (node: DataRowNode<T>, rowIndex: number): ReactNode => {
     const rowSelected = selectionMode !== 'none' && isRowSelected(node.key);
+    const adaptiveOpen =
+      model.hasAdaptiveToggle() && model.adaptiveExpanded().has(node.key);
     const rowHeightStyle =
-      virtualized && !autoRowHeight ? effRowHeight : undefined;
+      virtualized && !autoRowHeight && !adaptiveOpen ? effRowHeight : undefined;
     // `form` mode replaces the whole row with the edit form
     if (model.editing.isFormRow(node.key)) {
       return (
@@ -3558,7 +3616,7 @@ function OgeGridInner<T extends object>(
       rowClasses.push('oge-row-focused');
     if (rowSelected) rowClasses.push('oge-row-selected');
     if (dropTargetKey === node.key) rowClasses.push('oge-drop-target');
-    const detailExpanded = hasExpander
+    const detailExpanded = model.hasDetailToggle()
       ? state.expansion.isDetailExpanded(node.key)
       : false;
     return (
@@ -3611,22 +3669,27 @@ function OgeGridInner<T extends object>(
         ) : null}
         {hasExpander ? (
           <div className="oge-cell oge-expander-cell" role="gridcell">
-            <button
-              type="button"
-              className={
-                detailExpanded
-                  ? 'oge-expander-btn oge-expanded'
-                  : 'oge-expander-btn'
-              }
-              aria-expanded={detailExpanded}
-              aria-label={msg.toggleDetail}
-              onClick={(event) => {
-                event.stopPropagation();
-                requestToggle('detail', node.key);
-              }}
-            >
-              {chevron('m6 3.5 4.5 4.5L6 12.5')}
-            </button>
+            {model.hasDetailToggle() ? (
+              <button
+                type="button"
+                className={
+                  detailExpanded
+                    ? 'oge-expander-btn oge-expanded'
+                    : 'oge-expander-btn'
+                }
+                aria-expanded={detailExpanded}
+                aria-label={msg.toggleDetail}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  requestToggle('detail', node.key);
+                }}
+              >
+                {chevron('m6 3.5 4.5 4.5L6 12.5')}
+              </button>
+            ) : null}
+            {model.hasAdaptiveToggle()
+              ? renderAdaptiveToggle(node.key, adaptiveOpen)
+              : null}
           </div>
         ) : null}
         {hasCheckboxColumn ? (
@@ -3693,9 +3756,93 @@ function OgeGridInner<T extends object>(
         })}
         {spacer('right', 'oge-cell')}
         {hasCommandColumn ? renderCommandCell(node) : null}
+        {adaptiveOpen ? renderAdaptiveDetail(node) : null}
       </div>
     );
   };
+
+  /** DOM id of a row's adaptive detail — the toggle's `aria-controls`. */
+  const adaptiveDetailId = (key: RowKey): string =>
+    `${uid}-ad-${String(key).replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+
+  /** The row's adaptive-detail toggle (`columnHidingMode: 'detail'`). */
+  function renderAdaptiveToggle(key: RowKey, open: boolean): ReactNode {
+    return (
+      <button
+        type="button"
+        className={
+          open
+            ? 'oge-expander-btn oge-adaptive-toggle oge-expanded'
+            : 'oge-expander-btn oge-adaptive-toggle'
+        }
+        aria-expanded={open}
+        aria-controls={open ? adaptiveDetailId(key) : undefined}
+        aria-label={msg.toggleAdaptiveDetail}
+        title={msg.toggleAdaptiveDetail}
+        onClick={(event) => {
+          event.stopPropagation();
+          const next = new Set(model.adaptiveExpanded());
+          if (next.has(key)) next.delete(key);
+          else next.add(key);
+          model.adaptiveExpanded.set(next);
+        }}
+      >
+        <svg
+          viewBox="0 0 16 16"
+          width="12"
+          height="12"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <path d="M8 3.5v9M3.5 8h9" />
+        </svg>
+      </button>
+    );
+  }
+
+  /**
+   * The hidden columns' caption / value pairs, spanning the row on a second
+   * grid line — rendered like the cells they stand in for (`renderCell`
+   * included).
+   */
+  function renderAdaptiveDetail(node: DataRowNode<T>): ReactNode {
+    return (
+      <div
+        className="oge-adaptive-detail"
+        role="gridcell"
+        id={adaptiveDetailId(node.key)}
+        aria-colspan={resolvedColumns.length + leadingCellCount}
+      >
+        <dl className="oge-adaptive-detail-list">
+          {model.adaptiveHiddenColumns().map((column) => (
+            <div key={column.id} className="oge-adaptive-detail-item">
+              <dt className="oge-adaptive-detail-caption">{column.caption}</dt>
+              <dd
+                className={
+                  column.dataType === 'number'
+                    ? 'oge-adaptive-detail-value oge-cell-number'
+                    : 'oge-adaptive-detail-value'
+                }
+              >
+                {column.cellTemplate
+                  ? column.cellTemplate({
+                      value: column.accessor(node.data),
+                      row: node.data,
+                      rowIndex: node.sourceIndex,
+                      key: node.key,
+                      column: column.source as OgeGridColumnProps<T>,
+                    })
+                  : cellContent(node, column)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    );
+  }
 
   /**
    * The edit form shared by the `form` and `popup` modes.
@@ -4318,7 +4465,10 @@ function OgeGridInner<T extends object>(
                 className="oge-header-cell oge-expander-cell"
                 role="columnheader"
                 aria-label={msg.detailColumnHeader}
-              />
+              >
+                {/* text content too: axe's empty-table-header wants it */}
+                <span className="oge-sr-only">{msg.detailColumnHeader}</span>
+              </div>
             ) : null}
             {hasCheckboxColumn ? (
               <div

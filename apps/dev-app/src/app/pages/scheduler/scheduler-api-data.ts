@@ -90,6 +90,13 @@ export const OGE_SCHEDULER_API: ApiSections = {
             'View-switcher entries; option objects override <code>name</code>, <code>dayStartHour</code>, <code>dayEndHour</code> and <code>cellDuration</code> per view.',
         },
         {
+          name: 'adaptiveView',
+          type: 'boolean | { breakpoint?: number; view?: OgeSchedulerView }',
+          default: 'false',
+          description:
+            "Switches the visible view to <code>view</code> (agenda) when the scheduler's <strong>own</strong> width — a <code>ResizeObserver</code>, never the window — drops below <code>breakpoint</code> (600px), and back to the previous view when it grows again. The switch writes <code>currentView</code> like a user pick, on crossings only, so the switcher keeps working at any width and a view picked while narrow wins.",
+        },
+        {
           name: 'min / max',
           type: 'Date | undefined',
           description:
