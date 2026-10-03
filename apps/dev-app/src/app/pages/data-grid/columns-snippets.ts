@@ -1,5 +1,27 @@
 import { demoSource } from '../../shared/demo-source';
 
+export const ADAPTIVE_SNIPPET = demoSource({
+  use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid'] },
+  dataset: 'employees',
+  template: `<!-- a narrow grid: columns with a hidingPriority leave the row, and each
+     row's + toggle reveals their caption / value pairs (columnHidingMode
+     'detail' is the default — 'hide' drops the data instead) -->
+<div style="max-width: 420px">
+  <oge-grid [data]="employees" keyField="id" columnHidingMode="detail">
+    <oge-column field="firstName" caption="First Name" [width]="140" />
+    <oge-column field="lastName" caption="Last Name" [width]="140" [hidingPriority]="3" />
+    <oge-column field="department" caption="Department" [width]="140" [hidingPriority]="2" />
+    <oge-column field="city" caption="City" [width]="120" [hidingPriority]="1" />
+    <oge-column field="salary" caption="Salary" dataType="number" [width]="120"
+                [format]="money" [hidingPriority]="0" />
+  </oge-grid>
+</div>`,
+  body: `protected readonly money = (value: unknown): string =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+    Number(value),
+  );`,
+});
+
 export const SNIPPET = demoSource({
   use: { '@oge-ui/grid': ['OgeColumn', 'OgeColumnGroup', 'OgeGrid'] },
   dataset: 'employees',

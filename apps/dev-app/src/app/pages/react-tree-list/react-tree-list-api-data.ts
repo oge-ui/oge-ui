@@ -209,6 +209,13 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
             'Virtualization knobs; <code>columnRenderingMode</code> is a top-level prop here.',
         },
         {
+          name: 'columnHidingMode',
+          type: "'hide' | 'detail' | undefined",
+          default: "config: 'detail'",
+          description:
+            "What happens to columns responsive hiding (<code>hidingPriority</code>) takes out on a narrow grid: <code>'detail'</code> gives every row a toggle (a real button with <code>aria-expanded</code> / <code>aria-controls</code>, labelled by <code>toggleAdaptiveDetail</code>) that reveals the hidden columns' caption / value pairs on a second line of the row, rendered like the cells — format, lookups, boolean words and <code>renderCell</code>; <code>'hide'</code> drops them with no way back. The hiding pass counts the toggle's 32px track once a column is hidden.",
+        },
+        {
           name: 'columnResize / columnReorder / columnChooser',
           type: 'boolean',
           description:

@@ -574,6 +574,12 @@ const FAMILIES = [
         contextmenuclosed: 'closed',
         onclosed: 'closed', // hook option, not a callback prop: the gate strips `on`
         provideogeoverlayconfig: 'ogeoverlayconfigprovider', // DI provider ↔ context provider
+        // adaptive popup: content-projection attributes ↔ slot props, and the
+        // injection-context helpers ↔ hooks
+        ogepopupsheetheader: 'sheetheader',
+        ogepopupsheetfooter: 'sheetfooter',
+        ogeadaptivepresentation: 'useogeadaptivepresentation',
+        ogeadaptiveviewport: 'useogeadaptiveviewport',
       },
       angularOnly: {
         destroy:

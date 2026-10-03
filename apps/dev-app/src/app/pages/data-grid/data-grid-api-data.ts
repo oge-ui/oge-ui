@@ -267,6 +267,13 @@ export const OGE_GRID_API: ApiSections = {
           type: 'number | undefined',
           description: 'Track minimum for columns without an explicit width.',
         },
+        {
+          name: 'columnHidingMode',
+          type: "'hide' | 'detail' | undefined",
+          default: "config: 'detail'",
+          description:
+            "What happens to columns responsive hiding (<code>hidingPriority</code>) takes out on a narrow grid: <code>'detail'</code> gives every row a toggle (a real button with <code>aria-expanded</code> / <code>aria-controls</code>, labelled by <code>toggleAdaptiveDetail</code>) that reveals the hidden columns' caption / value pairs on a second line of the row, rendered like the cells — format, lookups, boolean words and cell templates; <code>'hide'</code> drops them with no way back. The hiding pass counts the toggle's 32px track once a column is hidden.",
+        },
       ],
     },
     {
@@ -781,7 +788,7 @@ export const OGE_COLUMN_API: ApiSections = {
           name: 'hidingPriority',
           type: 'number | undefined',
           description:
-            'Adaptive hiding order when width runs out (higher survives longer).',
+            'Adaptive hiding order when width runs out (higher survives longer); the hidden values stay reachable through the row toggle unless <code>columnHidingMode</code> is <code>&#39;hide&#39;</code>.',
         },
         {
           name: 'lookup',
@@ -1085,7 +1092,7 @@ export const OGE_GRID_TYPES_API: ApiSections = {
         },
         {
           name: 'OgeGridConfig',
-          type: '{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; announcements: true; messages }',
+          type: "{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; columnHidingMode: 'detail'; announcements: true; messages }",
           description: 'Defaults shown inline.',
         },
         {

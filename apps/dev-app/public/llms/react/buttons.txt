@@ -216,6 +216,7 @@ _Menu &amp; panel_
 | `items` | `readonly OgeMenuItem[] \| OgeDropDownItemsFn` | `—` | Menu items — an array, or a function invoked lazily on first open (cached until its reference changes; loading/empty/error rows render while it settles). |
 | `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred panel placement; flips near viewport edges. |
 | `dropdownWidth` | `number \| 'anchor'` | `—` | Panel width: fixed pixels or `anchor` to match the button width. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `provider: 'none' / 600` | `'auto'` opens the menu as a modal bottom sheet (title from `text` / `hint`, close button, 44px rows, focus trap, Escape / backdrop / swipe dismiss) on viewports narrower than `adaptiveBreakpoint` px; `'none'` keeps the anchored menu. App-wide defaults come from `<OgeButtonsConfigProvider>`. |
 | `renderItem` | `(item: OgeMenuItem, index: number) => ReactNode` | `—` | Custom rendering for menu items (icons, badges…) — the React counterpart of the Angular item template. |
 | `renderContent` | `(close: () => void) => ReactNode` | `—` | Replaces the menu entirely with arbitrary panel content — the counterpart of `*ogeDropDownContent`. `close()` shuts the panel and restores focus. |
 | `opened / defaultOpened` | `boolean` | `—` | Panel visibility — controlled with `opened` + `onOpenedChange`, or uncontrolled starting from `defaultOpened`. |

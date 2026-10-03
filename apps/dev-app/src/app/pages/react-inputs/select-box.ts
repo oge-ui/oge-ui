@@ -4,7 +4,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { createElement, useState, type ReactNode } from 'react';
-import { OgeSelectBox, OgeTagBox } from '@oge-ui/react-inputs';
+import { OgeDateBox, OgeSelectBox, OgeTagBox } from '@oge-ui/react-inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { INPUTS_SELECT_BOX_DEMOS } from './select-box-snippets';
@@ -21,6 +21,7 @@ export const REACT_INPUTS_SELECT_BOX_SECTIONS = [
   'Tag Box — multi-select',
   'Item states & templates',
   'Field chrome',
+  'Mobile / adaptive',
   'Keyboard & accessibility',
 ] as const;
 
@@ -237,6 +238,40 @@ function ChromeDemo(): ReactNode {
   );
 }
 
+function AdaptiveDemo(): ReactNode {
+  const [city, setCity] = useState<unknown>(null);
+  const [skills, setSkills] = useState<readonly unknown[]>([]);
+  const [due, setDue] = useState<Date | null>(null);
+  return createElement(
+    'div',
+    { className: 'demo-row demo-row-start', 'data-demo': 'adaptive' },
+    createElement(OgeSelectBox, {
+      key: 'city',
+      label: 'City',
+      adaptiveMode: 'auto',
+      items: CITIES,
+      searchEnabled: true,
+      value: city,
+      onValueChange: setCity,
+    }),
+    createElement(OgeTagBox, {
+      key: 'skills',
+      label: 'Skills',
+      adaptiveMode: 'auto',
+      items: SKILLS,
+      value: skills,
+      onValueChange: setSkills,
+    }),
+    createElement(OgeDateBox, {
+      key: 'due',
+      label: 'Due date',
+      adaptiveMode: 'auto',
+      value: due,
+      onValueChange: setDue,
+    }),
+  );
+}
+
 /**
  * The React half of the select box page — the same seven demo sections as the
  * Angular page, with the same example content, rendered as real React trees
@@ -326,6 +361,16 @@ function ChromeDemo(): ReactNode {
     >
       <app-react-host [render]="chrome" />
     </app-demo-card>
+
+    <app-demo-card
+      heading="Mobile / adaptive"
+      description="With <code>adaptiveMode=&quot;auto&quot;</code> a viewport narrower than <code>adaptiveBreakpoint</code> (600px) turns the drop-down into a modal bottom sheet — titled with the label, a close button, a search field at the top, 44px rows, safe-area insets, focus trap and swipe-down dismiss — and the date picker into a full-screen dialog. <code>&amp;lt;OgeInputsConfigProvider&amp;gt;</code> with <code>adaptiveMode: 'auto'</code> switches the whole family."
+      [chips]="['adaptiveMode', 'adaptiveBreakpoint']"
+      [code]="demos[7].source"
+      language="tsx"
+    >
+      <app-react-host [render]="adaptive" />
+    </app-demo-card>
   `,
 })
 export class ReactInputsSelectBoxDemos {
@@ -338,4 +383,5 @@ export class ReactInputsSelectBoxDemos {
   protected readonly tagBox = () => createElement(TagBoxDemo);
   protected readonly states = () => createElement(StatesDemo);
   protected readonly chrome = () => createElement(ChromeDemo);
+  protected readonly adaptive = () => createElement(AdaptiveDemo);
 }

@@ -531,6 +531,13 @@ export const OGE_DROP_DOWN_BUTTON_API: ApiSections = {
             "Fixed pixels or <code>'anchor'</code> to match the button width.",
         },
         {
+          name: 'adaptiveMode / adaptiveBreakpoint',
+          type: "'auto' | 'none' / number",
+          default: "config: 'none' / 600",
+          description:
+            "<code>'auto'</code> opens the menu as a modal bottom sheet (title from <code>text</code> / <code>hint</code>, close button, 44px rows, focus trap, Escape / backdrop / swipe dismiss) on viewports narrower than <code>adaptiveBreakpoint</code> px; <code>'none'</code> keeps the anchored menu. App-wide defaults come from <code>provideOgeButtonsConfig()</code>.",
+        },
+        {
           name: 'rememberLastAction',
           type: 'boolean',
           default: 'false',
@@ -699,6 +706,20 @@ export const OGE_BUTTONS_CONFIG_API: ApiSections = {
           description: 'Interval between repeated clicks.',
         },
         {
+          name: 'adaptiveMode',
+          type: "'auto' | 'none'",
+          default: "'none'",
+          description:
+            'Default <code>adaptiveMode</code> of the drop-down button.',
+        },
+        {
+          name: 'adaptiveBreakpoint',
+          type: 'number',
+          default: '600',
+          description:
+            "Viewport width (px) below which <code>'auto'</code> opens the menu as a bottom sheet.",
+        },
+        {
           name: 'messages',
           type: 'OgeButtonsMessages',
           description: 'User-facing strings (see below).',
@@ -744,6 +765,19 @@ export const OGE_BUTTONS_CONFIG_API: ApiSections = {
           type: 'string',
           default: "'Open menu'",
           description: "Aria label of the split drop-down's chevron toggle.",
+        },
+        {
+          name: 'adaptiveClose',
+          type: 'string',
+          default: "'Close'",
+          description: "Aria label of the adaptive menu sheet's close button.",
+        },
+        {
+          name: 'adaptiveTitle',
+          type: 'string',
+          default: "'Actions'",
+          description:
+            'Sheet title when the button has no <code>text</code> or <code>hint</code>.',
         },
       ],
     },

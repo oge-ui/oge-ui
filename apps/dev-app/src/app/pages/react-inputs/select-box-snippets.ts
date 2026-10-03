@@ -225,4 +225,44 @@ const [teamIds, setTeamIds] = useState<readonly unknown[]>([]);`,
 </div>`,
     }),
   },
+  {
+    title: 'Mobile / adaptive',
+    description:
+      "adaptiveMode='auto' turns the drop-down into a modal bottom sheet (title, close button, search field, 44px rows) and the date picker into a full-screen dialog below adaptiveBreakpoint (600px). <OgeInputsConfigProvider config={{ adaptiveMode: 'auto' }}> switches the whole family.",
+    source: reactDemoSource({
+      react: ['useState'],
+      use: {
+        '@oge-ui/react-inputs': ['OgeSelectBox', 'OgeTagBox', 'OgeDateBox'],
+      },
+      before: `const cities = ['Ankara', 'Berlin', 'Lisbon', 'Oslo', 'Tokyo'];
+const skills = ['Angular', 'Signals', 'Nx', 'Vitest', 'SCSS'];`,
+      name: 'SelectBoxAdaptiveDemo',
+      body: `const [city, setCity] = useState<unknown>(null);
+const [skillIds, setSkillIds] = useState<readonly unknown[]>([]);
+const [due, setDue] = useState<Date | null>(null);`,
+      jsx: `<div className="demo-row">
+  <OgeSelectBox
+    label="City"
+    adaptiveMode="auto"
+    items={cities}
+    searchEnabled
+    value={city}
+    onValueChange={setCity}
+  />
+  <OgeTagBox
+    label="Skills"
+    adaptiveMode="auto"
+    items={skills}
+    value={skillIds}
+    onValueChange={setSkillIds}
+  />
+  <OgeDateBox
+    label="Due date"
+    adaptiveMode="auto"
+    value={due}
+    onValueChange={setDue}
+  />
+</div>`,
+    }),
+  },
 ];

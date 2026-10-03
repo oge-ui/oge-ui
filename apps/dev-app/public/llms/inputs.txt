@@ -384,6 +384,7 @@ _OgeSelectBox_
 | `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred popup side/alignment (flips when cramped). |
 | `dropdownWidth` | `number \| 'anchor'` | `'anchor'` | Popup width: fixed pixels or `'anchor'` to match the field box. |
 | `dropdownMaxHeight` | `number \| undefined` | `—` | Scrollable list height cap; `undefined` = the CSS default (320px). |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet (with a search field at the top when `searchEnabled`) on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 | `wrapItemText` | `boolean` | `false` | Wraps long option text instead of ellipsizing it. |
 | `useItemTextAsTitle` | `boolean` | `false` | Mirrors each option's display text into its `title` attribute. |
 | `itemTemplate` | `TemplateRef<OgeSelectItemTemplateContext>` | `—` | Custom option row rendering; context: `$implicit`, `index`, `selected`, `active`. |
@@ -521,6 +522,7 @@ _Popup_
 | `loadChildren` | `(parent: TItem, key: RowKey) => Promise<readonly TItem[]>` | `—` | Lazy children, fetched on first expand. |
 | `virtualScroll` | `boolean \| { itemHeight: number }` | `false` | Windowed rendering inside the popup for very large trees. |
 | `dropdownPlacement / dropdownWidth / dropdownMaxHeight` | `OgePopupPlacement \| number \| 'anchor'` | `—` | Popup geometry. Width defaults to `'anchor'` (matches the field), max height to 320px. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet (a Done action in `'multiple'` mode) on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 | `openOnFieldClick` | `boolean` | `true` | Opens on a click anywhere in the field, not only on the chevron. |
 
 #### Methods
@@ -561,6 +563,7 @@ _OgeTagBox_
 | `hideSelectedItems` | `boolean` | `false` | Hides already-selected items from the popup list. |
 | `maxDisplayedTags` | `number \| undefined` | `—` | Caps the rendered chips; the rest collapse into a `+N` chip. |
 | `opened / dropdownPlacement / dropdownWidth / dropdownMaxHeight / showDropDownButton / openOnFieldClick` | `shared with OgeSelectBox` | `—` | Popup configuration and two-way visibility. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet (search field when `searchEnabled`, picks keep it open, a Done action closes it) on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 | `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
 
 _Common — field chrome (all editors)_
@@ -662,6 +665,7 @@ _OgeAutocomplete_
 | `showDropDownButton` | `boolean` | `false` | Renders the chevron toggle in the field rail (off by default — reference parity). |
 | `openOnFieldClick` | `boolean` | `false` | Clicking the field opens the suggestion list. |
 | `loading / dropdownPlacement / dropdownWidth / dropdownMaxHeight / wrapItemText / useItemTextAsTitle` | `shared with OgeSelectBox` | `—` | Popup configuration and list rendering. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet with its own text field at the top on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 | `virtualScroll` | `boolean \| OgeVirtualScrollOptions` | `false` | Windowed rendering for large lists — same contract as the select box. |
 | `opened` | `model<boolean>` | `false` | Popup visibility — two-way. |
 | `selectedItem` | `Signal<TItem \| null>` | `—` | Read-only: the last picked suggestion; `null` once the text diverges from it. |
@@ -1184,6 +1188,7 @@ _OgeDateBox_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred popup side/alignment; flips when it would clip. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-screen dialog with 44px day cells on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 | `showDropDownButton` | `boolean` | `true` | Renders the rail button that toggles the picker; the field click and the keyboard still open it when hidden. |
 | `value` | `model<Date \| null>` | `null` | Always a local `Date` — serialization is the app's concern (no `dateSerializationFormat`). CVA writes accept ISO-like strings and epoch numbers leniently. |
 | `type` | `'date' \| 'time' \| 'datetime'` | `'date'` | Picker: calendar, interval time list, or both (no dx `pickerType`). The rail icon follows the type. |
@@ -1205,6 +1210,7 @@ _OgeDateRangeBox_
 | `type` | `'date' \| 'datetime'` | `'date'` | `'datetime'` adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times. |
 | `interval` | `number` | `30` | Time list step in minutes (`type: 'datetime'`). |
 | `min / max / disabledDates / firstDayOfWeek / showWeekNumbers / locale / displayFormat / openOnFieldClick / acceptCustomValue` | `as OgeDateBox` | `—` | Shared configuration surface. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-screen dialog showing one month, where picking both ends waits for an explicit Done that applies the range on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 
 _Common — field chrome (all editors)_
 
@@ -1302,6 +1308,7 @@ _OgeColorBox_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `dropdownPlacement` | `OgePopupPlacement` | `'bottom-start'` | Preferred popup side/alignment; flips when it would clip. |
+| `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `config: 'none' / 600` | `'auto'` presents the popup as a full-width bottom sheet on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from `provideOgeInputsConfig()`. |
 | `showDropDownButton` | `boolean` | `true` | Renders the rail button that toggles the picker; the field click and the keyboard still open it when hidden. |
 | `value` | `model<string \| null>` | `null` | The committed color as a CSS string, normalized to `format` on user commits. Programmatic writes keep any parseable CSS color verbatim (never reformatted); unparseable writes land as `null`. |
 | `format` | `'hex' \| 'rgb' \| 'rgba' \| 'hsl'` | `'hex'` | Committed string shape (hex — the DevExtreme default; Kendo defaults to rgba). Translucent colors widen to carry alpha: `#rrggbbaa` / `rgba()` / `hsla()`. |
@@ -1465,6 +1472,8 @@ _OgeInputsConfig_
 | `spinRepeatDelayMs` | `number` | `400` | Delay before spin buttons start repeating. |
 | `spinRepeatIntervalMs` | `number` | `80` | Interval between spin repeats. |
 | `copiedResetMs` | `number` | `2000` | How long the copy button shows "copied". |
+| `adaptiveMode` | `'auto' \| 'none'` | `'none'` | Default `adaptiveMode` of every popup editor (select box, tag box, autocomplete, tree select, date / date range / color box). `'none'` keeps existing apps' anchored drop-downs; switch the whole family with `'auto'`. |
+| `adaptiveBreakpoint` | `number` | `600` | Viewport width (px) below which `'auto'` presents popups as bottom sheets / full-screen dialogs. |
 | `messages` | `OgeInputsMessages` | `—` | User-facing strings (see below). |
 
 _OgeInputsMessages_
@@ -2118,6 +2127,46 @@ import { OgeTextBox } from '@oge-ui/inputs';
   `,
 })
 export class Demo {}
+```
+
+### Adaptive
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeSelectBox, OgeTagBox, OgeDateBox } from '@oge-ui/inputs';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeSelectBox, OgeTagBox, OgeDateBox],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- below 600px wide: bottom sheets / a full-screen calendar -->
+    <oge-select-box
+      label="City"
+      adaptiveMode="auto"
+      [items]="cities"
+      [searchEnabled]="true"
+      [(value)]="city"
+    />
+    <oge-tag-box
+      label="Skills"
+      adaptiveMode="auto"
+      [items]="skills"
+      [(value)]="skillIds"
+    />
+    <oge-date-box label="Due date" adaptiveMode="auto" [(value)]="due" />
+  `,
+})
+export class Demo {
+  protected readonly cities = ['Ankara', 'Berlin', 'Lisbon', 'Oslo', 'Tokyo'];
+  protected readonly skills = ['Angular', 'Signals', 'Nx', 'Vitest', 'SCSS'];
+  protected readonly city = signal<unknown>(null);
+  protected readonly skillIds = signal<readonly unknown[]>([]);
+  protected readonly due = signal<Date | null>(null);
+
+  // or for the whole app:
+  // providers: [provideOgeInputsConfig({ adaptiveMode: 'auto' })]
+}
 ```
 
 ### Basic

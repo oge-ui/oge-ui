@@ -142,6 +142,33 @@ export const STATES_SNIPPET = demoSource({
 protected readonly planId = signal<unknown>('free');`,
 });
 
+export const ADAPTIVE_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeSelectBox', 'OgeTagBox', 'OgeDateBox'] },
+  template: `<!-- below 600px wide: bottom sheets / a full-screen calendar -->
+<oge-select-box
+  label="City"
+  adaptiveMode="auto"
+  [items]="cities"
+  [searchEnabled]="true"
+  [(value)]="city"
+/>
+<oge-tag-box
+  label="Skills"
+  adaptiveMode="auto"
+  [items]="skills"
+  [(value)]="skillIds"
+/>
+<oge-date-box label="Due date" adaptiveMode="auto" [(value)]="due" />`,
+  body: `protected readonly cities = ['Ankara', 'Berlin', 'Lisbon', 'Oslo', 'Tokyo'];
+protected readonly skills = ['Angular', 'Signals', 'Nx', 'Vitest', 'SCSS'];
+protected readonly city = signal<unknown>(null);
+protected readonly skillIds = signal<readonly unknown[]>([]);
+protected readonly due = signal<Date | null>(null);
+
+// or for the whole app:
+// providers: [provideOgeInputsConfig({ adaptiveMode: 'auto' })]`,
+});
+
 export const CHROME_SNIPPET = demoSource({
   use: { '@oge-ui/inputs': ['OgeSelectBox'] },
   template: `<oge-select-box

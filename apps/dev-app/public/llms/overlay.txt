@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/overlay`
 
-- values: `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
-- types: `OgeAnchoredPanelOptions`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopupAlign`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`
+- values: `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `ogeAdaptivePresentation`, `ogeAdaptiveViewport`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
+- types: `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAnchoredPanelOptions`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopupAlign`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`
 
 ## API reference
 
@@ -382,9 +382,22 @@ _OgeAnchoredPanelOptions (constructor)_
 
 #### Properties
 
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `panel` | `OgeAnchoredPanel (required)` | `—` | The anchored-panel model driving id, position and visibility. |
+| `adaptive` | `'popup' \| 'sheet' \| 'fullscreen'` | `'popup'` | Presentation: anchored, a modal full-width bottom sheet, or a full-screen dialog — `role="dialog"` + `aria-modal`, titled, with a close button; the shared `OgeAdaptiveSheetCore` (`@oge-ui/behavior`) locks scroll, inerts the background, traps Tab, moves focus in (an element marked `data-oge-sheet-focus` first), restores it, follows `visualViewport` above the on-screen keyboard and dismisses on a backdrop tap or a swipe down the handle. Popup editors resolve it from their `adaptiveMode`. |
+| `adaptiveTitle` | `string` | `''` | Dialog title while adaptive (editors pass their field label). |
+| `closeLabel` | `string` | `''` | Aria label of the adaptive close button, from the owner's messages catalog. |
+| `[ogePopupSheetHeader] / [ogePopupSheetFooter]` | `content attribute` | `—` | Projected under the adaptive title (a search field) and pinned at the bottom (a Done action); render them only while adaptive. |
+
+#### Methods
+
+_Adaptive presentation helpers_
+
 | Name | Type | Description |
 | --- | --- | --- |
-| `panel` | `OgeAnchoredPanel (required)` | The anchored-panel model driving id, position and visibility. |
+| `ogeAdaptivePresentation(mode, breakpoint, kind?): Signal<OgeAdaptivePresentation>` | `Signal<OgeAdaptivePresentation>` | Injection-context helper every popup editor uses: `'popup'` unless `mode()` is `'auto'` and the viewport is narrower than `breakpoint()`, then `kind` (`'sheet'` default). Bind it to `<oge-popup [adaptive]>` in your own popup. |
+| `ogeAdaptiveViewport(breakpoint): Signal<boolean>` | `Signal<boolean>` | Whether the viewport is narrower than `breakpoint()` — follows `matchMedia` crossings, `false` during SSR. |
 
 #### Types
 
