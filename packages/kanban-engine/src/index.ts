@@ -36,7 +36,11 @@ export {
   type KanbanColumnWindow,
 } from './lib/virtual-column';
 export { previewCount, wipState, type KanbanWipState } from './lib/wip';
-export { beginKanbanGesture, type KanbanGestureCallbacks } from './lib/gesture';
+export {
+  beginKanbanGesture,
+  prepareKanbanTouchDrag,
+  type KanbanGestureCallbacks,
+} from './lib/gesture';
 export {
   OGE_DEFAULT_KANBAN_CONFIG,
   OGE_DEFAULT_KANBAN_MESSAGES,

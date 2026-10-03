@@ -122,6 +122,46 @@ describe('<OgeKanban> drag gesture wiring', () => {
     expect(root.querySelector('.oge-kanban-drag-preview')).toBeNull();
   });
 
+  function touch(type: string, x: number, y: number): PointerEvent {
+    const event = pointer(type, { button: 0, clientX: x, clientY: y });
+    Object.defineProperty(event, 'pointerType', { value: 'touch' });
+    return event;
+  }
+
+  it('touch: a swipe before the long press scrolls instead of lifting the card', () => {
+    const { root, cards, moved } = setup();
+    act(() => {
+      cards()[0].dispatchEvent(touch('pointerdown', 10, 10));
+    });
+    act(() => {
+      document.dispatchEvent(touch('pointermove', 10, 60));
+    });
+    expect(root.querySelector('.oge-kanban-drag-preview')).toBeNull();
+    pointerUp();
+    expect(moved).toHaveLength(0);
+  });
+
+  it('touch: a long press (~300 ms) arms the drag', async () => {
+    const { root, cards, moved } = setup();
+    act(() => {
+      cards()[0].dispatchEvent(touch('pointerdown', 10, 10));
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 340));
+    });
+    act(() => {
+      document.dispatchEvent(touch('pointermove', 40, 40));
+    });
+    expect(root.querySelector('.oge-kanban-drag-preview')).not.toBeNull();
+    act(() => {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }),
+      );
+    });
+    expect(root.querySelector('.oge-kanban-drag-preview')).toBeNull();
+    expect(moved).toHaveLength(0);
+  });
+
   it('mid-drag Escape restores everything and announces the cancel', () => {
     const { root, cards, titlesIn, moved } = setup();
     pointerDown(cards()[0], 10, 10);

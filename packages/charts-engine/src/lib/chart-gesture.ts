@@ -3,6 +3,15 @@
  * state, pointer capture as a progressive enhancement, document listeners
  * incl. a capture-phase Escape, a single `finish(cancelled)` and a 3px
  * movement threshold so a plain click never commits a drag.
+ *
+ * Deliberately a local twin of `@oge-ui/behavior`'s `beginPointerGesture`,
+ * not a wrapper: `charts-engine` depends on `core` only (its published
+ * dependency set is part of the "dependency-free engine" stance, like
+ * `bpmn-engine`'s), and zoom/pan never needs the shared machine's long press
+ * or drop hit-testing — the chart surfaces declare their `touch-action` in
+ * `chart.scss` (the plot pans vertically, the range selector not). Keep the
+ * two in step when the cancel rules change (docs/ARCHITECTURE.md → shared
+ * gestures).
  */
 export interface ChartGestureCallbacks {
   onMove(deltaX: number, deltaY: number, event: PointerEvent): void;

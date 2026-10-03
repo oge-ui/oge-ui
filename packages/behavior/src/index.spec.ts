@@ -24,6 +24,14 @@ const ENTRY_POINTS = [
   'isTopOverlay',
   'lockBodyScroll',
   'OGE_DEFAULT_OVERLAY_TIMINGS',
+  // gestures
+  'beginPointerGesture',
+  'prepareTouchDrag',
+  'beginPointerDragDrop',
+  'createAutoScroller',
+  'ogeEdgeScrollVelocity',
+  'createDragGhost',
+  'ogeElementAtPoint',
   // live announcements
   'OgeLiveAnnouncerCore',
   'getOgeLiveAnnouncer',

@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   ViewEncapsulation,
+  afterNextRender,
   afterRenderEffect,
   computed,
   contentChild,
@@ -21,6 +22,7 @@ import {
   KANBAN_CARD_GAP,
   KANBAN_DEFAULT_CARD_HEIGHT,
   beginKanbanGesture,
+  prepareKanbanTouchDrag,
   buildKanbanEditorChoices,
   buildKanbanItem,
   columnReorderIndex,
@@ -1164,6 +1166,9 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     effect(() => {
       this.store.set([...this.dataSource()]);
     });
+    // the browser decides about panning at touchstart: arm the touch guard
+    // before the first long-press card drag
+    afterNextRender(() => prepareKanbanTouchDrag(this.hostEl.nativeElement));
     afterRenderEffect(() => {
       this.lanes(); // re-measure when the board reshapes
       this.measureCells();

@@ -27,6 +27,7 @@ import {
   kanbanDropIndex,
   kanbanGridTemplate,
   kanbanInitials,
+  prepareKanbanTouchDrag,
   type KanbanCard,
   type KanbanColumnDef,
 } from '@oge-ui/kanban-engine';
@@ -85,6 +86,9 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
         ? null
         : new ResizeObserver(() => ctl.measureCells());
     if (hostRef.current !== null) observer?.observe(hostRef.current);
+    // the browser decides about panning at touchstart: arm the touch guard
+    // before the first long-press card drag
+    prepareKanbanTouchDrag(hostRef.current);
     return () => {
       observer?.disconnect();
       ctl.teardown();

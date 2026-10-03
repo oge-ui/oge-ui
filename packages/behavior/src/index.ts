@@ -1132,6 +1132,32 @@ export {
 } from './lib/security/sanitize-url';
 export { prefersReducedMotion, motionScrollBehavior } from './lib/a11y/motion';
 
+// pointer gestures + pointer drag & drop (no HTML5 DnD in packages/)
+export {
+  OGE_GESTURE_THRESHOLD,
+  OGE_LONG_PRESS_DELAY,
+  beginPointerGesture,
+  prepareTouchDrag,
+  type OgePointerGestureHandle,
+  type OgePointerGestureInput,
+  type OgePointerGestureOptions,
+} from './lib/gesture/pointer-gesture';
+export {
+  OGE_AUTO_SCROLL_EDGE,
+  OGE_AUTO_SCROLL_MAX_SPEED,
+  createAutoScroller,
+  ogeEdgeScrollVelocity,
+  type OgeAutoScrollOptions,
+  type OgeAutoScroller,
+} from './lib/gesture/auto-scroll';
+export {
+  beginPointerDragDrop,
+  createDragGhost,
+  ogeElementAtPoint,
+  type OgeDragGhost,
+  type OgePointerDragDropOptions,
+} from './lib/gesture/pointer-drag-drop';
+
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for
 // packages that depend on behavior but not on core
 export { ogeLiveConfig } from '@oge-ui/core';

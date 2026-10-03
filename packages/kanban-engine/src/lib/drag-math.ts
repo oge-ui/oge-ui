@@ -85,28 +85,10 @@ export function insertionIndexAt(
 
 /**
  * Signed auto-scroll velocity (px per frame) for a pointer at `pos` inside
- * `[min, max]`: 0 outside the `edge` bands, ramping quadratically to
- * ±`maxSpeed` at the boundary. Quadratic, so the ramp feels gentle until
- * the pointer is truly at the edge.
+ * `[min, max]` — the suite-wide edge ramp from `@oge-ui/behavior`
+ * (`ogeEdgeScrollVelocity`), kept under the board's historical name.
  */
-export function edgeScrollVelocity(
-  pos: number,
-  min: number,
-  max: number,
-  edge = 48,
-  maxSpeed = 24,
-): number {
-  if (max - min <= 2 * edge) return 0;
-  if (pos < min + edge) {
-    const t = Math.min(1, Math.max(0, (min + edge - pos) / edge));
-    return -maxSpeed * t * t;
-  }
-  if (pos > max - edge) {
-    const t = Math.min(1, Math.max(0, (pos - (max - edge)) / edge));
-    return maxSpeed * t * t;
-  }
-  return 0;
-}
+export { ogeEdgeScrollVelocity as edgeScrollVelocity } from '@oge-ui/behavior';
 
 /**
  * Target index for dropping a dragged column at pointer `x`, given the
