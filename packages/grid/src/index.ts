@@ -40,9 +40,14 @@ export {
   type OgeCommandButton,
   type OgeRowReorderedEvent,
   type OgeExportCellArgs,
+  type OgeExportCellStyle,
+  type OgeExportCellStyleArgs,
   type OgeExportColumn,
   type OgeExportData,
+  type OgeExportItem,
   type OgeExportOptions,
+  type OgeExportRowKind,
+  type OgeExportSummaryCell,
 } from './lib/grid/grid';
 export { OgeColumnDefCache, ogeColumnFromDef } from './lib/columns/column-def';
 export {

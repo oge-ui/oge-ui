@@ -64,6 +64,8 @@ import {
   resolveOgeGridColumns,
   clampColumnWidth,
   formatPattern,
+  ogeColumnSummaryText,
+  ogeSummaryText,
   ogeChooserMoveDirection,
   ogeColumnMoveTarget,
   ogeColumnSeparatorKeyCommand,
@@ -91,6 +93,7 @@ import {
   type OgeSearchPanelOptions,
   type OgeTreeDropPosition,
   type OgeTreeExportData,
+  type OgeTreeExportOptions,
   type OgeTreeInitNewRowEvent,
 } from '@oge-ui/behavior';
 import {
@@ -448,6 +451,23 @@ function OgeTreeListInner<T extends object>(
       }),
     );
 
+    /**
+     * The columns an export writes: every visible one (responsive hiding does
+     * not count) and, with `includeHidden`, the hidden ones too.
+     */
+    const exportColumnSources = (includeHidden: boolean): ResolvedColumn<T>[] =>
+      resolveOgeGridColumns<T, Slot<T>, OgeGridColumnProps<T>>({
+        specs: includeHidden
+          ? columnSpecs().map((spec) => ({ ...spec, visible: true }))
+          : columnSpecs(),
+        columnDefs: () => undefined,
+        firstDataRow: () => data.result()?.data[0] as T | undefined,
+        widthOverrides: state.columns.widthOverrides(),
+        pinOverrides: state.columns.pinOverrides(),
+        order: state.columns.order(),
+        adaptiveHiddenIds: new Set<string>(),
+      });
+
     // --- the tree model (shared with the Angular tree list) ---
     const core = new OgeTreeListCore<T>(
       {
@@ -469,6 +489,8 @@ function OgeTreeListInner<T extends object>(
         result: data.result,
         pageIndex,
         onError: (err) => data.error.set(err),
+        summary: () => p().summary,
+        remoteFiltering: () => p().remoteOperations?.filtering === true,
       },
       rx,
     );
@@ -689,7 +711,11 @@ function OgeTreeListInner<T extends object>(
     const headerValues = rx.derived<readonly unknown[]>(() => {
       const column = headerFilterColumn();
       if (!column) return [];
-      return core.distinctValues(column.accessor, effHeaderFilterLimit());
+      return core.distinctValues(
+        column.accessor,
+        effHeaderFilterLimit(),
+        column.field,
+      );
     });
 
     // --- persistence ---
@@ -788,6 +814,7 @@ function OgeTreeListInner<T extends object>(
       leadingWidth,
       declaredColumns,
       resolvedColumns,
+      exportColumnSources,
       bandRow,
       colVirtualized,
       layout,
@@ -1235,8 +1262,24 @@ function OgeTreeListInner<T extends object>(
     }
   }
 
-  function getExportData(): OgeTreeExportData<T> {
-    return core.getExportData(model.resolvedColumns(), msgRef.current);
+  function getExportData(
+    options: OgeTreeExportOptions = {},
+  ): OgeTreeExportData<T> {
+    const messages = msgRef.current;
+    const columns = model
+      .exportColumnSources(options.visibleColumnsOnly === false)
+      .filter((column) => column.field);
+    return core.getExportData(columns, messages, {
+      summaries: options.summaries,
+      selectedRowsOnly: options.selectedRowsOnly,
+      summaryText: (summary) =>
+        ogeSummaryText(
+          summary,
+          columns.find((column) => column.field === summary.field),
+          messages,
+        ),
+      summaryLabel: (type) => messages.summaryLabels[type],
+    });
   }
 
   function addRow(parentKey?: RowKey): void {
@@ -2019,6 +2062,7 @@ function OgeTreeListInner<T extends object>(
     model.headerFilterSearch.set('');
     model.headerFilterAnchor.set(event.currentTarget as HTMLElement);
     model.headerFilterField.set(column.field);
+    core.requestDistinctValues(column.field);
     headerFilterPanel.open();
     headerFilterPanel.updatePosition();
   }
@@ -2673,6 +2717,50 @@ function OgeTreeListInner<T extends object>(
     return <span className="oge-tree-cell-text">{text}</span>;
   };
 
+  /** `summary.recursiveItems`: a parent's aggregate beside its own value. */
+  const renderNodeSummary = (
+    key: RowKey,
+    column: ResolvedColumn<T>,
+  ): ReactNode => {
+    const values = core.recursiveSummaries().get(key);
+    const text = values ? ogeColumnSummaryText(values, column, msg) : '';
+    return text ? <span className="oge-tree-node-summary">{text}</span> : null;
+  };
+
+  /** `summary.totalItems`: the footer row under the body. */
+  const renderTotalRow = (): ReactNode => {
+    const values = core.totalSummaries();
+    if (!values.length) return null;
+    const blank = <div className="oge-total-cell" role="gridcell" />;
+    return (
+      <div className="oge-total-row" role="row" style={{ gridTemplateColumns }}>
+        {rowDragging ? blank : null}
+        {hasAdaptiveToggle ? blank : null}
+        {hasCheckboxColumn ? blank : null}
+        {spacer('left', 'oge-total-cell')}
+        {renderColumns.map((column) => {
+          const classes = ['oge-total-cell'];
+          if (column.dataType === 'number') classes.push('oge-cell-number');
+          if (column.alignment === 'center') classes.push('oge-align-center');
+          if (column.alignment === 'end') classes.push('oge-align-end');
+          if (column.pinned !== false) classes.push('oge-pinned');
+          return (
+            <div
+              key={column.id}
+              className={classes.join(' ')}
+              role="gridcell"
+              style={pinnedStyle(column)}
+            >
+              {ogeColumnSummaryText(values, column, msg)}
+            </div>
+          );
+        })}
+        {spacer('right', 'oge-total-cell')}
+        {hasCommandColumn ? blank : null}
+      </div>
+    );
+  };
+
   const renderDataRow = (node: DataRowNode<T>, rowIndex: number): ReactNode => {
     if (model.editing.isFormRow(node.key)) {
       return (
@@ -2880,6 +2968,7 @@ function OgeTreeListInner<T extends object>(
                 </>
               ) : null}
               {renderCellContent(node, column)}
+              {node.hasChildren ? renderNodeSummary(node.key, column) : null}
             </div>
           );
         })}
@@ -3193,7 +3282,9 @@ function OgeTreeListInner<T extends object>(
         className="oge-viewport"
         role="treegrid"
         aria-label={props.ariaLabel}
-        aria-rowcount={core.renderedRowCount() + 1}
+        aria-rowcount={
+          core.renderedRowCount() + 1 + (core.totalSummaries().length ? 1 : 0)
+        }
         aria-colcount={colSpanAll}
         aria-multiselectable={
           selectionMode === 'multiple' || selectionMode === 'checkbox'
@@ -3459,6 +3550,7 @@ function OgeTreeListInner<T extends object>(
             {viewNodes.length === 0 ? noData() : viewNodes.map(renderNode)}
           </div>
         </div>
+        {renderTotalRow()}
       </div>
       {pagingOptions ? (
         <OgePager

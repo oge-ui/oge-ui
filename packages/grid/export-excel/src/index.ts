@@ -24,7 +24,7 @@ export async function exportGridToExcel<T extends object>(
   options: OgeExcelExportOptions<T> = {},
 ): Promise<void> {
   const workbook = buildExcelWorkbook(
-    await grid.getExportData({ scope: options.scope }),
+    await grid.getExportData(options),
     options,
   );
   if (typeof document === 'undefined') return;

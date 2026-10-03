@@ -77,6 +77,13 @@ import {
   ogeContextMenuKeyTarget,
 } from '@oge-ui/behavior';
 import {
+  ogeExportColumnsOf,
+  ogeExportScope,
+  ogeGridExportItems,
+  ogeGridExportLoadOptions,
+  type OgeExportColumnSource,
+} from '@oge-ui/behavior';
+import {
   effectiveFilterOperator,
   filterOperatorSymbol,
   filterRowOperatorChoices,
@@ -193,9 +200,14 @@ export type {
   OgeContextMenuSource,
   OgeDataErrorEvent,
   OgeExportCellArgs,
+  OgeExportCellStyle,
+  OgeExportCellStyleArgs,
   OgeExportColumn,
   OgeExportData,
+  OgeExportItem,
   OgeExportOptions,
+  OgeExportRowKind,
+  OgeExportSummaryCell,
   OgeExportingEvent,
   OgeFilterRowOptions,
   OgeFocusedCellChangedEvent,
@@ -1535,26 +1547,24 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   // --- export ---------------------------------------------------------------
 
   /**
-   * Rows and column metadata of the current view (filter + search + sort
-   * applied) — the shared source for CSV/Excel exporters. By default paging
-   * is ignored (the full filtered set is exported); pass
-   * `{ scope: 'page' | 'selection' }` to narrow it.
+   * Rows, column metadata and the structured lines (group rows, group
+   * footers, totals) of the current view (filter + search + sort applied) —
+   * the shared source for the CSV/Excel/PDF exporters. By default paging is
+   * ignored (the full filtered set is exported); pass
+   * `{ scope: 'page' | 'selection' }` (or `selectedRowsOnly`) to narrow it,
+   * `visibleColumnsOnly: false` to add hidden columns, and `groups` /
+   * `summaries: false` for a flat export.
    */
   async getExportData(
     options: OgeExportOptions<T> = {},
   ): Promise<OgeExportData<T>> {
-    const scope = options.scope ?? 'all';
+    const scope = ogeExportScope(options);
     const source = untracked(this.adapter.source);
     const load = untracked(this.store.loadOptions);
     const result = source
-      ? await source.load({
-          ...(load.sort?.length ? { sort: load.sort } : {}),
-          ...(load.filter ? { filter: load.filter } : {}),
-          ...(load.searchText ? { searchText: load.searchText } : {}),
-          ...(scope === 'page' && load.take != null
-            ? { skip: load.skip ?? 0, take: load.take }
-            : {}),
-        })
+      ? await source.load(
+          ogeGridExportLoadOptions(load, scope, options.groups !== false),
+        )
       : { data: [] };
     let rows = result.data as readonly T[];
     if (scope === 'selection') {
@@ -1568,29 +1578,43 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         rows = rows.filter((row, index) => selected.has(keyOf(row, index)));
       }
     }
-    return { rows, columns: this.exportColumns() };
+    const messages = untracked(this.msg);
+    const columns = ogeExportColumnsOf(
+      untracked(() =>
+        this.columnModel.exportColumns(options.visibleColumnsOnly === false),
+      ) as OgeExportColumnSource<T>[],
+      messages,
+    );
+    // group fields need not be exported columns: look them up over all
+    const everyColumn = ogeExportColumnsOf(
+      untracked(() =>
+        this.columnModel.exportColumns(true),
+      ) as OgeExportColumnSource<T>[],
+      messages,
+    );
+    const items = ogeGridExportItems<T>({
+      rows,
+      loadOptions: load,
+      fieldInfo: (field) =>
+        everyColumn.find((column) => column.field === field),
+      groupFooterFields: untracked(this.groupFooterFields),
+      customSummaries: untracked(this.customSummarySelectors),
+      // a source that summarizes itself sent the totals with the view
+      ...(source?.capabilities.summary
+        ? { totalValues: untracked(this.adapter.result)?.summary }
+        : {}),
+      messages,
+      options,
+    });
+    return { rows, columns, ...(items ? { items } : {}) };
   }
 
-  /** Field columns with display formatting resolved (lookup text, booleans). */
+  /** Visible field columns with display formatting resolved (lookup text, booleans). */
   private exportColumns(): OgeExportColumn<T>[] {
-    const messages = untracked(this.msg);
-    return untracked(this.resolvedColumns)
-      .filter((column) => column.field)
-      .map((column) => ({
-        caption: column.caption,
-        field: column.field,
-        dataType: column.dataType,
-        accessor: column.accessor as (row: T) => unknown,
-        format:
-          column.format ??
-          (column.lookupItems
-            ? (value: unknown) =>
-                lookupTextOf(column.lookupItems as LookupItem[], value)
-            : column.dataType === 'boolean'
-              ? (value: unknown) =>
-                  value ? messages.booleanTrue : messages.booleanFalse
-              : undefined),
-      }));
+    return ogeExportColumnsOf(
+      untracked(this.resolvedColumns) as OgeExportColumnSource<T>[],
+      untracked(this.msg),
+    );
   }
 
   /**

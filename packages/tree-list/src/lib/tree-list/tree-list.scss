@@ -48,6 +48,25 @@
   white-space: nowrap;
 }
 
+// summary.recursiveItems: a parent's aggregate beside its own value
+.oge-tree-node-summary {
+  flex: none;
+  margin-inline-start: 8px;
+  padding: 0 6px;
+  border-radius: var(--oge-radius);
+  background: var(--oge-accent-soft);
+  color: var(--oge-text-color);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@include tokens.forced-colors {
+  .oge-tree-node-summary {
+    border: 1px solid CanvasText;
+  }
+}
+
 // sibling-ordering drop indicators (inside-drop reuses .oge-drop-target)
 .oge-row.oge-drop-before {
   box-shadow: inset 0 2px 0 0 var(--oge-accent);

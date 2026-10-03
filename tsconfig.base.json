@@ -107,6 +107,12 @@
       "@oge-ui/react-scheduler": ["./packages/react/scheduler/src/index.ts"],
       "@oge-ui/react-tabs": ["./packages/react/tabs/src/index.ts"],
       "@oge-ui/react-tree-list": ["./packages/react/tree-list/src/index.ts"],
+      "@oge-ui/react-tree-list/export-excel": [
+        "./packages/react/tree-list/src/export-excel.ts"
+      ],
+      "@oge-ui/react-tree-list/export-pdf": [
+        "./packages/react/tree-list/src/export-pdf.ts"
+      ],
       "@oge-ui/react-upload": ["./packages/react/upload/src/index.ts"],
       "@oge-ui/scheduler": ["./packages/scheduler/src/index.ts"],
       "@oge-ui/scheduler-engine": ["./packages/scheduler-engine/src/index.ts"],
@@ -114,6 +120,9 @@
       "@oge-ui/tree-list": ["./packages/tree-list/src/index.ts"],
       "@oge-ui/tree-list/export-excel": [
         "./packages/tree-list/export-excel/src/index.ts"
+      ],
+      "@oge-ui/tree-list/export-pdf": [
+        "./packages/tree-list/export-pdf/src/index.ts"
       ],
       "@oge-ui/upload": ["./packages/upload/src/index.ts"],
       "oge-ui": ["./packages/ui/src/index.ts"]

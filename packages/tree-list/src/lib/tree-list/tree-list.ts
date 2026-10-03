@@ -63,6 +63,8 @@ import {
   booleanCellLabel,
   isHeaderValueSelected,
   ogeTreeCsv,
+  ogeColumnSummaryText,
+  ogeSummaryText,
   ogeTreeDropPosition,
   ogeTreeHeaderValueGroups,
   ogeTreeHeaderValueText,
@@ -86,6 +88,10 @@ import {
   toggleHeaderValue,
   type OgeTreeDropPosition,
   type OgeTreeExportData,
+  type OgeTreeListRemoteOperations,
+  type OgeTreeExportOptions,
+  type OgeTreeListSummary,
+  type OgeTreeSummaryItem,
   type OgeTreeInitNewRowEvent,
   type OgeTreeRowReparentEvent,
   type OgeTreeRowToggleEvent,
@@ -187,6 +193,10 @@ type ResolvedColumn<T = unknown> = FoundationResolvedColumn<T, OgeColumn<T>>;
 export type {
   OgeTreeDropPosition,
   OgeTreeExportData,
+  OgeTreeListRemoteOperations,
+  OgeTreeExportOptions,
+  OgeTreeListSummary,
+  OgeTreeSummaryItem,
   OgeTreeInitNewRowEvent,
   OgeTreeRowReparentEvent,
   OgeTreeRowToggleEvent,
@@ -341,6 +351,23 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Excel-style distinct-value filter popups on the column headers. */
   readonly headerFilter = input<boolean | OgeHeaderFilterOptions>(false);
+
+  /**
+   * Aggregates: `totalItems` render in a footer row over every
+   * filter-visible row; `recursiveItems` show each parent's aggregate of its
+   * visible descendants beside its own value. Both are included in exports.
+   */
+  readonly summary = input<OgeTreeListSummary<T> | undefined>(undefined);
+
+  /**
+   * Operations the data source performs itself. `filtering: true` (full load
+   * mode) sends the filter, search text and header-filter value requests to
+   * the source, which answers with the matching rows **plus all their
+   * ancestors** — see `ogeTreeDataSource` for the contract.
+   */
+  readonly remoteOperations = input<OgeTreeListRemoteOperations | undefined>(
+    undefined,
+  );
 
   /**
    * Pages the visible (flattened) rows client-side. Paging and
@@ -657,6 +684,8 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       result: this.adapter.result,
       pageIndex: cellOf(this.pageIndex),
       onError: (err) => this.adapter.error.set(err),
+      summary: this.summary,
+      remoteFiltering: () => this.remoteOperations()?.filtering === true,
     },
     SIGNAL_ADAPTER,
   );
@@ -1308,6 +1337,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     this.headerFilterSearch.set('');
     this.headerFilterAnchor.set(event.currentTarget as HTMLElement);
     this.headerFilterField.set(column.field);
+    this.core.requestDistinctValues(column.field);
     this.headerFilterPanel.open();
     this.headerFilterPanel.updatePosition();
   }
@@ -1323,6 +1353,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return this.core.distinctValues(
       column.accessor,
       this.effHeaderFilterLimit(),
+      column.field,
     );
   });
 
@@ -2913,13 +2944,60 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   /**
-   * Rows, column metadata and depth levels of the currently visible tree
-   * (expansion + filter applied) — the shared source for exporters.
+   * Rows, column metadata, depth levels and summary lines of the currently
+   * visible tree (expansion + filter applied) — the shared source for the
+   * CSV / Excel / PDF exporters. `visibleColumnsOnly: false` adds hidden
+   * columns, `selectedRowsOnly` narrows to the selection, `summaries: false`
+   * drops the total / per-parent summary lines.
    */
-  getExportData(): OgeTreeExportData<T> {
-    return untracked(() =>
-      this.core.getExportData(this.resolvedColumns(), this.msg()),
-    );
+  getExportData(options: OgeTreeExportOptions = {}): OgeTreeExportData<T> {
+    return untracked(() => {
+      const messages = this.msg();
+      const columns = this.columnModel
+        .exportColumns(options.visibleColumnsOnly === false)
+        .filter((column) => column.field);
+      return this.core.getExportData(columns, messages, {
+        summaries: options.summaries,
+        selectedRowsOnly: options.selectedRowsOnly,
+        summaryText: (summary) =>
+          ogeSummaryText(
+            summary,
+            columns.find((column) => column.field === summary.field),
+            messages,
+          ),
+        summaryLabel: (type) => messages.summaryLabels[type],
+      });
+    });
+  }
+
+  // --- summaries -------------------------------------------------------------
+
+  /** Footer (total) text per column id; empty without `summary.totalItems`. */
+  protected readonly totalSummaryByColumn = computed<
+    ReadonlyMap<string, string>
+  >(() => {
+    const values = this.core.totalSummaries();
+    const out = new Map<string, string>();
+    if (!values.length) return out;
+    const messages = this.msg();
+    for (const column of this.resolvedColumns()) {
+      const text = ogeColumnSummaryText(values, column, messages);
+      if (text) out.set(column.id, text);
+    }
+    return out;
+  });
+
+  protected readonly hasTotalRow = computed(
+    () => this.core.totalSummaries().length > 0,
+  );
+
+  /** A parent row's recursive aggregate under one column, or `''`. */
+  protected recursiveSummaryText(
+    key: RowKey,
+    column: ResolvedColumn<T>,
+  ): string {
+    const values = this.core.recursiveSummaries().get(key);
+    return values ? ogeColumnSummaryText(values, column, this.msg()) : '';
   }
 
   /**

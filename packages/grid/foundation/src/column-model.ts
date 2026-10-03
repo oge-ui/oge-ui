@@ -218,6 +218,27 @@ export class ColumnModel<
     }),
   );
 
+  /**
+   * The columns an export writes, in display order: every visible column —
+   * including the ones only the responsive width pass took out — and, with
+   * `includeHidden`, the `visible: false` / chooser-hidden ones as well.
+   * Read untracked; exports are one-shot.
+   */
+  exportColumns(includeHidden: boolean): ResolvedColumn<T, S>[] {
+    const specs = includeHidden
+      ? this.specs().map((spec) => ({ ...spec, visible: true }))
+      : this.specs();
+    return resolveOgeGridColumns({
+      specs,
+      columnDefs: () => this.deps.columnDefs(),
+      firstDataRow: () => this.deps.firstDataRow(),
+      widthOverrides: this.deps.widthOverrides(),
+      pinOverrides: this.deps.pinOverrides(),
+      order: this.deps.order(),
+      adaptiveHiddenIds: new Set<string>(),
+    });
+  }
+
   /** Band header cells (caption + span) for the current column order. */
   readonly bandRow = computed<
     { caption: string | null; span: number }[] | null
