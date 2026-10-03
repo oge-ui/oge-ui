@@ -63,3 +63,50 @@ describe('groupKeyFilter', () => {
     });
   });
 });
+
+describe('hour / week / quarter and numeric intervals', () => {
+  it('truncates dates to the hour, the week start and the quarter', async () => {
+    const { resolveFirstDayOfWeek, startOfWeek } = await import(
+      '../util/date-utils'
+    );
+    const at = new Date(2026, 4, 14, 17, 45);
+    expect(groupKeyOf(at, 'hour')).toEqual(new Date(2026, 4, 14, 17));
+    expect(groupKeyOf(at, 'quarter')).toEqual(new Date(2026, 3, 1));
+    expect(groupKeyOf(at, 'week')).toEqual(
+      startOfWeek(at, resolveFirstDayOfWeek(undefined, undefined)),
+    );
+  });
+
+  it('buckets numbers by width and filters the half-open range', async () => {
+    const { groupKeyFilter } = await import('./group-rows');
+    expect(groupKeyOf(149, 50)).toBe(100);
+    expect(groupKeyOf(-1, 50)).toBe(-50);
+    expect(groupKeyOf('x', 50)).toBe('x');
+    expect(groupKeyFilter('n', 100, 50)).toEqual({
+      type: 'and',
+      operands: [
+        { type: 'binary', field: 'n', op: 'ge', value: 100 },
+        { type: 'binary', field: 'n', op: 'lt', value: 150 },
+      ],
+    });
+    expect(groupKeyFilter('d', new Date(2026, 3, 1), 'quarter')).toEqual({
+      type: 'and',
+      operands: [
+        { type: 'binary', field: 'd', op: 'ge', value: new Date(2026, 3, 1) },
+        { type: 'binary', field: 'd', op: 'lt', value: new Date(2026, 6, 1) },
+      ],
+    });
+  });
+
+  it('groups rows into numeric buckets', () => {
+    const groups = groupRows(
+      [{ n: 5 }, { n: 12 }, { n: 18 }, { n: 31 }],
+      [{ field: 'n', dir: 'asc', interval: 10 }],
+    );
+    expect(groups.map((g) => [g.key, g.count])).toEqual([
+      [0, 1],
+      [10, 2],
+      [30, 1],
+    ]);
+  });
+});

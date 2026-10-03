@@ -17,6 +17,16 @@ function formatDate(value: Date): string {
   return dateFormatter.format(value);
 }
 
+let dateTimeFormatter: Intl.DateTimeFormat | undefined;
+
+function formatDateTime(value: Date): string {
+  dateTimeFormatter ??= new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+  return dateTimeFormatter.format(value);
+}
+
 /** Default cell text when no cell slot and no custom `format` is given. */
 export function formatCellValue(
   value: unknown,
@@ -30,6 +40,8 @@ export function formatCellValue(
       return value ? '✓' : '✗';
     case 'date':
       return value instanceof Date ? formatDate(value) : String(value);
+    case 'datetime':
+      return value instanceof Date ? formatDateTime(value) : String(value);
     default:
       return String(value);
   }
@@ -85,8 +97,8 @@ export function headerValueText(
 ): string {
   if (value == null || value === '') return options.messages.blankValue;
   if (options.lookupItems) return lookupTextOf(options.lookupItems, value);
-  if (options.dataType === 'date')
-    return formatCellValue(value, 'date', options.format);
+  if (options.dataType === 'date' || options.dataType === 'datetime')
+    return formatCellValue(value, options.dataType, options.format);
   if (options.dataType === 'boolean') {
     return value ? options.messages.booleanTrue : options.messages.booleanFalse;
   }

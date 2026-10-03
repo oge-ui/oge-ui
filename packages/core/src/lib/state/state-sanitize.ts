@@ -1,8 +1,9 @@
-import type {
-  FilterExpr,
-  FilterOperator,
-  GroupDescriptor,
-  SortDescriptor,
+import {
+  isGroupInterval,
+  type FilterExpr,
+  type FilterOperator,
+  type GroupDescriptor,
+  type SortDescriptor,
 } from '../data/load-options';
 import type { RowKey } from '../rows/row-node';
 import type { GridStateSnapshot } from './grid-state-snapshot';
@@ -200,9 +201,7 @@ function sanitizeGroup(item: unknown): GroupDescriptor | undefined {
   const sort = sanitizeSort(item);
   if (sort === undefined) return undefined;
   const interval = (item as Plain)['interval'];
-  return interval === 'day' || interval === 'month' || interval === 'year'
-    ? { ...sort, interval }
-    : sort;
+  return isGroupInterval(interval) ? { ...sort, interval } : sort;
 }
 
 /** `[string, X]` tuples, X validated by `pick`. */

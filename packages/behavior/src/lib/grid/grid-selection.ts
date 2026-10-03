@@ -1,7 +1,17 @@
 import type { FilterExpr, RowKey } from '@oge-ui/core';
 
-/** How a grid row responds to selection gestures. */
-export type OgeGridSelectionMode = 'none' | 'single' | 'multiple' | 'checkbox';
+/**
+ * How a grid responds to selection gestures: row selection (`single`,
+ * `multiple` with Ctrl/Shift, `checkbox` column) or `cell` — rectangular
+ * cell ranges (click, Shift+click, drag, Shift+Arrow, Ctrl+click for more
+ * ranges) with TSV copy / paste and the fill handle.
+ */
+export type OgeGridSelectionMode =
+  | 'none'
+  | 'single'
+  | 'multiple'
+  | 'checkbox'
+  | 'cell';
 
 /** What a click on a row should do to the selection. */
 export type OgeGridSelectionIntent = 'none' | 'selectOnly' | 'toggle' | 'range';
@@ -22,7 +32,7 @@ export function rowClickSelectionIntent(
   mode: OgeGridSelectionMode,
   event: OgeGridSelectionModifiers,
 ): OgeGridSelectionIntent {
-  if (mode === 'none') return 'none';
+  if (mode === 'none' || mode === 'cell') return 'none';
   if (mode === 'single') return 'selectOnly';
   if (event.shiftKey) return 'range';
   if (event.ctrlKey || event.metaKey || mode === 'checkbox') return 'toggle';

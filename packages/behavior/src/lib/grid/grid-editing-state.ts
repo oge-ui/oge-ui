@@ -121,6 +121,18 @@ export class OgeGridEditingState {
     this._changes.set(next);
   }
 
+  /** Drops one staged field (an undo back to the stored value). */
+  clearChange(key: RowKey, field: string): void {
+    const change = this._changes().get(key);
+    if (!change || !(field in change)) return;
+    const next = new Map(this._changes());
+    const rest = { ...change };
+    delete rest[field];
+    if (Object.keys(rest).length) next.set(key, rest);
+    else next.delete(key);
+    this._changes.set(next);
+  }
+
   changeFor(key: RowKey, field: string): unknown {
     const change = this._changes().get(key);
     return change && field in change ? change[field] : undefined;

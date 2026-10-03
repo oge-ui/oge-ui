@@ -163,6 +163,47 @@ export interface OgeGridMessages {
   selectionCountAnnouncement: string;
   /** Assertive announcement when a save is blocked by an invalid editor; placeholders: {column} {error}. */
   validationErrorAnnouncement: string;
+  /**
+   * Live announcement after a cell range grew past one cell
+   * (`selectionMode: 'cell'`); placeholders: {rows} {columns} {cells}.
+   */
+  rangeSelectedAnnouncement: string;
+  /** Live announcement after a paste wrote cells; placeholder: {count}. */
+  cellsPastedAnnouncement: string;
+  /** Live announcement after a fill (handle drag, Ctrl+D / Ctrl+R) wrote cells; placeholder: {count}. */
+  cellsFilledAnnouncement: string;
+  /** Live announcement after Ctrl+Z reverted cells; placeholder: {count}. */
+  undoAnnouncement: string;
+  /** Live announcement after Ctrl+Y re-applied cells; placeholder: {count}. */
+  redoAnnouncement: string;
+  /** Tooltip of the range's fill handle (the drag affordance at its corner). */
+  fillHandle: string;
+  /** Visually hidden text of an editor whose async validation is running. */
+  validationPending: string;
+  /** Header context-menu item that sizes the column to its content. */
+  autoFitColumn: string;
+  /** Heading of the header filter's condition section. */
+  filterByCondition: string;
+  /** Heading of the header filter's value list (`headerFilter.mode: 'both'`). */
+  filterByValues: string;
+  /** Accessible name of the first condition's operator / value pair. */
+  firstCondition: string;
+  /** Accessible name of the second condition's operator / value pair. */
+  secondCondition: string;
+  /** Pager button: first page. */
+  firstPage: string;
+  /** Pager button: last page. */
+  lastPage: string;
+  /** Label of the pager's go-to-page input. */
+  goToPage: string;
+  /** Text after the go-to-page input; placeholder: {count}. */
+  pageOfCount: string;
+  /** Group caption of a `groupInterval: 'week'` bucket; placeholder: {date}. */
+  groupWeekPattern: string;
+  /** Group caption of a `groupInterval: 'quarter'` bucket; placeholders: {quarter} {year}. */
+  groupQuarterPattern: string;
+  /** Group caption of a numeric `groupInterval` bucket; placeholders: {from} {to}. */
+  groupRangePattern: string;
 }
 
 export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
@@ -279,6 +320,25 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   rowCollapsedAnnouncement: '{value} collapsed',
   selectionCountAnnouncement: '{count} rows selected',
   validationErrorAnnouncement: '{column}: {error}',
+  rangeSelectedAnnouncement: '{rows} by {columns} cells selected',
+  cellsPastedAnnouncement: '{count} cells pasted',
+  cellsFilledAnnouncement: '{count} cells filled',
+  undoAnnouncement: 'Undo: {count} cells restored',
+  redoAnnouncement: 'Redo: {count} cells changed',
+  fillHandle: 'Drag to fill',
+  validationPending: 'Checking…',
+  autoFitColumn: 'Size to fit',
+  filterByCondition: 'Filter by condition',
+  filterByValues: 'Filter by values',
+  firstCondition: 'First condition',
+  secondCondition: 'Second condition',
+  firstPage: 'First page',
+  lastPage: 'Last page',
+  goToPage: 'Page',
+  pageOfCount: 'of {count}',
+  groupWeekPattern: 'Week of {date}',
+  groupQuarterPattern: 'Q{quarter} {year}',
+  groupRangePattern: '{from} – {to}',
 };
 
 /** Application-wide grid defaults, overridable per grid via the matching props. */

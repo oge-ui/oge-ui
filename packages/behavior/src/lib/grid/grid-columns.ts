@@ -8,7 +8,17 @@ import {
   type ValueAccessor,
 } from '@oge-ui/core';
 
-export type OgeDataType = 'string' | 'number' | 'date' | 'boolean';
+/**
+ * A column's value type. `'datetime'` is a `'date'` that keeps its time of
+ * day: cells format date + time, editors pick both, the filter row and the
+ * header filter still work by calendar day.
+ */
+export type OgeDataType = 'string' | 'number' | 'date' | 'datetime' | 'boolean';
+
+/** Whether a data type holds dates (`'date'` or `'datetime'`). */
+export function isOgeDateType(dataType: OgeDataType): boolean {
+  return dataType === 'date' || dataType === 'datetime';
+}
 
 /**
  * Horizontal alignment of a column's cells, header and summaries — logical, so
