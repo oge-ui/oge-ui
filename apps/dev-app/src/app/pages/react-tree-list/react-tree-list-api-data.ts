@@ -172,6 +172,13 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
           description: 'Debounce for text filter inputs.',
         },
         {
+          name: 'announcements',
+          type: 'boolean',
+          default: 'config.announcements (true)',
+          description:
+            'Speaks sort, filter/search result count (debounced, once the new result arrived), page, row expansion, select-all and blocked-save validation changes through the shared <code>useOgeLiveAnnouncer</code> regions — texts from the <code>*Announcement</code> messages. <code>false</code> opts out.',
+        },
+        {
           name: 'paging',
           type: 'false | OgePagingOptions',
           default: 'false',
@@ -204,7 +211,8 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
         {
           name: 'columnResize / columnReorder / columnChooser',
           type: 'boolean',
-          description: 'Column UX (defaults: true/true/false).',
+          description:
+            'Column UX (defaults: true/true/false), with the grid’s keyboard paths: <kbd>Alt+←/→</kbd> resizes the focused header’s column (10px, <kbd>Shift</kbd> 1px) and its handle is a focusable <code>role="separator"</code>; <kbd>Ctrl+Shift+←/→</kbd> moves it; <kbd>Ctrl+↑/↓</kbd> moves a column-chooser item. Columns take the grid’s <code>maxWidth</code>.',
         },
         {
           name: 'editing',
@@ -215,7 +223,8 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
         {
           name: 'commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey',
           type: 'various',
-          description: 'Same semantics as the grid.',
+          description:
+            'Same semantics as the grid; <code>messages</code> is the grid’s <code>OgeGridMessages</code> catalog — the reparenting handle reads <code>reparentColumnHeader</code> / <code>reparentRow</code>, boolean cells announce <code>booleanTrueLabel</code> / <code>booleanFalseLabel</code>. <code>rowDragging</code> keyboard: <kbd>Ctrl+↑/↓</kbd> on a focused cell moves the row among its siblings, <kbd>Ctrl+→</kbd> indents it under the previous sibling, <kbd>Ctrl+←</kbd> outdents it after its parent (logical in RTL) — the same drop path and reparent event as a handle drag, announced via <code>messages.treeRowMoved</code>.',
         },
         {
           name: 'stateStorage',
@@ -347,7 +356,8 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
         {
           name: 'state() / applyState(snapshot)',
           type: 'TreeListStateSnapshot / void',
-          description: 'Sort, filters, column layout and expansion.',
+          description:
+            'Sort, filters, column layout and expansion. <code>applyState</code> validates the snapshot first (<code>sanitize*StateSnapshot</code>): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown.',
         },
         {
           name: 'clearFilters() / clearSorting()',

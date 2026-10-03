@@ -323,7 +323,7 @@ export const OGE_BPMN_API: ApiSections = {
           name: 'OgeBpmnOverlay',
           type: "{ elementId: string; html: string; position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center'; offset?: Point }",
           description:
-            'A programmatic HTML badge attached to a diagram element (process-monitoring overlays), registered via <code>addOverlay()</code>. <code>position</code> picks which corner (or the center) of the element&#39;s bounds the badge anchors to; <code>offset</code> is extra diagram-unit displacement applied before the screen transform. <code>html</code> is bound through Angular&#39;s sanitizing <code>[innerHTML]</code> — script tags and inline event handlers are stripped.',
+            'A programmatic HTML badge attached to a diagram element (process-monitoring overlays), registered via <code>addOverlay()</code>. <code>position</code> picks which corner (or the center) of the element&#39;s bounds the badge anchors to; <code>offset</code> is extra diagram-unit displacement applied before the screen transform. <code>html</code> is bound through Angular&#39;s sanitizing <code>[innerHTML]</code> — script tags and inline event handlers are stripped; a link that keeps <code>target</code> always gets <code>rel="noopener noreferrer"</code> and <code>role</code> is dropped, matching the React layer.',
         },
         {
           name: 'OgeBpmnPaletteItem',

@@ -15,6 +15,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import type { OgeFormItemData } from '@oge-ui/forms';
+import { OgeLiveAnnouncer } from '@oge-ui/overlay';
 import type { RowKey } from '@oge-ui/core';
 import {
   OgeGanttCore,
@@ -777,9 +778,6 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
         }
       </div>
     }
-    <div class="oge-gantt-live" aria-live="polite">
-      {{ core.announcement() }}
-    </div>
   `,
 })
 export class OgeGantt<
@@ -787,6 +785,7 @@ export class OgeGantt<
   D extends object = Record<string, unknown>,
 > {
   private readonly config = inject(OGE_GANTT_CONFIG);
+  private readonly liveAnnouncer = inject(OgeLiveAnnouncer);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /* ---------------- data inputs ---------------- */
@@ -833,6 +832,13 @@ export class OgeGantt<
   readonly showRowLines = input(true);
   readonly showCriticalPath = input(false);
   readonly weekendsHighlighted = input(true);
+  /**
+   * Weekend days (0 = Sunday … 6 = Saturday) `weekendsHighlighted` shades;
+   * `undefined` resolves from the locale's `Intl.Locale` week data (Friday +
+   * Saturday in `he-IL`), falling back to Saturday + Sunday. A `workCalendar`
+   * takes precedence.
+   */
+  readonly weekendDays = input<readonly number[] | undefined>(undefined);
   readonly holidays = input<readonly Date[]>([]);
   /**
    * Work-time calendar: working weekdays + holidays. Shades off days and
@@ -926,6 +932,7 @@ export class OgeGantt<
         showDependencies: () => this.showDependencies(),
         showCriticalPath: () => this.showCriticalPath(),
         weekendsHighlighted: () => this.weekendsHighlighted(),
+        weekendDays: () => this.weekendDays(),
         holidays: () => this.holidays(),
         workCalendar: () => this.workCalendar(),
         showResourceWorkload: () => this.showResourceWorkload(),
@@ -957,6 +964,11 @@ export class OgeGantt<
 
   constructor() {
     effect(() => this.core.syncRenderedRange());
+    // the core's announcements go through the document's shared live region
+    effect(() => {
+      const text = this.core.announcement();
+      untracked(() => this.liveAnnouncer.announce(text));
+    });
     effect(() => {
       const tasks = this.tasks();
       untracked(() => this.core.resetTasks(tasks));

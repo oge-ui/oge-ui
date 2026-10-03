@@ -177,9 +177,12 @@ export {
   nowLineFraction,
   originDayIndex,
   resourceIndexOf,
+  dayWeekCellSelected,
+  dayWeekColumnHeaderText,
   schedulerCellAriaLabel,
   schedulerChipAriaLabel,
   schedulerGridAriaLabel,
+  schedulerGridReadOnly,
   segmentKey,
   weekdayShortText,
   type AllDayBar,
@@ -191,7 +194,9 @@ export {
 } from './lib/day-week-vm';
 export {
   buildMonthWeekLayouts,
+  monthCellSelected,
   monthChipOrder,
+  monthColumnHeaderText,
   monthDropCell,
   monthMaxLanes,
   monthOriginIndex,

@@ -112,10 +112,20 @@ export function isOffHoursCell(
   return minutes < workHours.start * 60 || minutes >= workHours.end * 60;
 }
 
-/** Saturday or Sunday. */
-export function isWeekendDay(day: Date): boolean {
-  return day.getDay() === 0 || day.getDay() === 6;
+/**
+ * Whether `day` falls on a weekend day (`0` = Sunday … `6` = Saturday).
+ * Pass the scheduler's resolved `weekendDays` (`OgeSchedulerCore`
+ * `resolvedWeekendDays`, locale-derived by default); omitted, it means
+ * Saturday and Sunday.
+ */
+export function isWeekendDay(
+  day: Date,
+  weekendDays: readonly number[] = DEFAULT_WEEKEND,
+): boolean {
+  return weekendDays.includes(day.getDay());
 }
+
+const DEFAULT_WEEKEND: readonly number[] = [0, 6];
 
 /**
  * Layouted timed segments annotated with their rendered column index.
@@ -406,6 +416,64 @@ export function chipWidthPercent<T>(
 /** Stable identity of one rendered segment (an appointment × day). */
 export function segmentKey<T>(segment: LayoutedSegment<T>): string {
   return `${String(segment.appointment.key)}:${segment.dayIndex}`;
+}
+
+/**
+ * The accessible name of a time-grid `role="columnheader"`: the full date,
+ * plus the resource when the columns are grouped. The visual header stays
+ * `aria-hidden` (it sits outside the scrolling grid); these names ride in a
+ * visually hidden first row inside the grid.
+ */
+export function dayWeekColumnHeaderText(
+  column: DayWeekColumn,
+  locale: string | undefined,
+): string {
+  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(
+    column.day,
+  );
+  return column.resourceText ? `${date}, ${column.resourceText}` : date;
+}
+
+/**
+ * Whether a time-grid cell is selected (`aria-selected`): while a
+ * drag-to-create range is live, the cells it covers in its column;
+ * otherwise the roving current cell — selection follows focus.
+ */
+export function dayWeekCellSelected(
+  colIndex: number,
+  slotIndex: number,
+  slotStartMinutes: number,
+  focused: { readonly day: number; readonly slot: number },
+  selection: DayWeekSelection | null,
+): boolean {
+  if (selection !== null) {
+    return (
+      colIndex === selection.dayIndex &&
+      slotStartMinutes >= selection.startMinutes &&
+      slotStartMinutes < selection.endMinutes
+    );
+  }
+  return focused.day === colIndex && focused.slot === slotIndex;
+}
+
+/**
+ * `aria-readonly` for the scheduler's grids: true when no cell can create,
+ * change or remove an appointment (`readOnly`, or every `allow*` off).
+ */
+export function schedulerGridReadOnly(flags: {
+  readonly canAdd: boolean;
+  readonly canUpdate: boolean;
+  readonly canDelete: boolean;
+  readonly canDrag: boolean;
+  readonly canResize: boolean;
+}): boolean {
+  return (
+    !flags.canAdd &&
+    !flags.canUpdate &&
+    !flags.canDelete &&
+    !flags.canDrag &&
+    !flags.canResize
+  );
 }
 
 /** Short weekday name for a column header. */

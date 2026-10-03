@@ -20,6 +20,7 @@ import {
   clampDate,
   nextDay,
   resolveFirstDayOfWeek,
+  resolveWeekendDays,
   startOfDay,
   type DataSource,
   type RowKey,
@@ -34,6 +35,7 @@ import {
   type SchedulerEditorResult,
 } from './editor';
 import type { AppointmentProposal } from './gesture-math';
+import { schedulerGridReadOnly } from './day-week-vm';
 import { appendException } from './rrule-expand';
 import {
   appointmentPatch,
@@ -103,6 +105,8 @@ export interface OgeSchedulerCoreInputs<T> {
   currentView(): OgeSchedulerView;
   views(): readonly (OgeSchedulerView | OgeSchedulerViewOptions)[];
   firstDayOfWeek(): number | undefined;
+  /** Weekend days (0 = Sunday); `undefined` resolves from the locale. */
+  weekendDays(): readonly number[] | undefined;
   dayStartHour(): number;
   dayEndHour(): number;
   cellDuration(): number;
@@ -231,6 +235,12 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   /** Per-instance locale, falling back to the config, then the browser. */
   readonly effectiveLocale: () => string | undefined;
   readonly resolvedFirstDayOfWeek: () => number;
+  /**
+   * The weekend the views shade and `workWeek` drops (0 = Sunday): the
+   * `weekendDays` input, else the locale's `Intl.Locale` week data, else
+   * Saturday and Sunday.
+   */
+  readonly resolvedWeekendDays: () => readonly number[];
   readonly resolvedViews: () => readonly ResolvedSchedulerView[];
   readonly activeView: () => ResolvedSchedulerView;
   readonly dayWeekView: () => 'day' | 'week' | 'workWeek';
@@ -239,6 +249,8 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
   readonly canDelete: () => boolean;
   readonly canDrag: () => boolean;
   readonly canResize: () => boolean;
+  /** `aria-readonly` of the view grids — nothing can be created or changed. */
+  readonly gridReadOnly: () => boolean;
   readonly fields: () => ResolvedSchedulerFields<T>;
   /** The resource that colors uncolored appointments, if any. */
   readonly colorResource: () => OgeSchedulerResource | null;
@@ -272,6 +284,9 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     this.resolvedFirstDayOfWeek = rx.derived(() =>
       resolveFirstDayOfWeek(inputs.firstDayOfWeek(), this.effectiveLocale()),
     );
+    this.resolvedWeekendDays = rx.derived(() =>
+      resolveWeekendDays(inputs.weekendDays(), this.effectiveLocale()),
+    );
     this.resolvedViews = rx.derived(() =>
       resolveSchedulerViews(inputs.views(), this.msg().toolbar, {
         dayStartHour: inputs.dayStartHour(),
@@ -304,6 +319,15 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     );
     this.canResize = rx.derived(
       () => inputs.allowResizing() && !inputs.readOnly(),
+    );
+    this.gridReadOnly = rx.derived(() =>
+      schedulerGridReadOnly({
+        canAdd: this.canAdd(),
+        canUpdate: this.canUpdate(),
+        canDelete: this.canDelete(),
+        canDrag: this.canDrag(),
+        canResize: this.canResize(),
+      }),
     );
     this.fields = rx.derived(() =>
       resolveSchedulerFields<T>({

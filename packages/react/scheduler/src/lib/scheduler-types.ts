@@ -97,6 +97,13 @@ export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
   views?: readonly (OgeSchedulerView | OgeSchedulerViewOptions)[];
   /** First day of week (0 = Sunday); `undefined` resolves from the locale. */
   firstDayOfWeek?: number;
+  /**
+   * Weekend days (0 = Sunday … 6 = Saturday) the views shade and the
+   * `workWeek` view drops; `undefined` resolves from the locale's
+   * `Intl.Locale` week data (Friday + Saturday in `he-IL`), falling back to
+   * Saturday + Sunday.
+   */
+  weekendDays?: readonly number[];
   dayStartHour?: number;
   dayEndHour?: number;
   /** Slot raster in minutes. */

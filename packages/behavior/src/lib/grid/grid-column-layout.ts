@@ -187,3 +187,19 @@ export class OgeGridColumnLayoutCore<
     return this.pinnedOffsets().get(column.id)?.right ?? null;
   }
 }
+
+/**
+ * Width of a column being resized by a pointer drag. The handle sits on the
+ * column's inline-end edge, which is its physical left in a right-to-left
+ * grid — there, dragging towards smaller `clientX` widens the column, so the
+ * pointer delta is negated.
+ */
+export function resizedColumnWidth(
+  startWidth: number,
+  startX: number,
+  clientX: number,
+  rtl: boolean,
+): number {
+  const delta = clientX - startX;
+  return startWidth + (rtl ? -delta : delta);
+}

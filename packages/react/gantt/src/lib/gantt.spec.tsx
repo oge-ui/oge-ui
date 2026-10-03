@@ -221,7 +221,7 @@ describe('<OgeGantt>', () => {
     );
   });
 
-  it('insertDependency rejects cycles; undo / redo revert and re-apply', () => {
+  it('insertDependency rejects cycles; undo / redo revert and re-apply', async () => {
     const handle = createRef<OgeGanttHandle<Task, Link>>();
     const inserted: OgeGanttDependencyInsertedEvent<Link>[] = [];
     render(
@@ -232,8 +232,12 @@ describe('<OgeGantt>', () => {
     );
     act(() => handle.current?.insertDependency('m', 'a'));
     expect(inserted).toHaveLength(0);
-    expect(document.querySelector('.oge-gantt-live')?.textContent).toContain(
-      'cycle',
+    // announced through the document's shared live region
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-oge-live-announcer="polite"]')
+          ?.textContent,
+      ).toContain('cycle'),
     );
     act(() => handle.current?.insertDependency('a', 'm', 'SS'));
     expect(inserted).toHaveLength(1);

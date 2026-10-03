@@ -29,6 +29,10 @@ import {
 } from '@oge-ui/grid/foundation';
 import {
   OgePivotGridCore,
+  focusPivotChip,
+  pivotIsMenuKey as isMenuKey,
+  pivotIsRtl as isRtl,
+  pivotKeyboardPointer,
   type OgePivotAxisLine,
   type OgePivotCellClickEvent,
   type OgePivotCellPrepared,
@@ -194,6 +198,12 @@ export class OgePivotGrid<T = unknown> {
   protected readonly columnHeaderCells = this.core.columnHeaderCells;
   protected readonly measures = this.core.measures;
   protected readonly focusedCell = this.core.focusedCell;
+  protected readonly announcement = this.core.announcement;
+  /** `aria-keyshortcuts` of a chip placed in an area. */
+  protected readonly chipShortcuts =
+    'Enter Shift+F10 Control+ArrowLeft Control+ArrowRight Control+ArrowUp Control+ArrowDown Delete';
+  /** `aria-keyshortcuts` of a chip in the chooser's All Fields list. */
+  protected readonly listChipShortcuts = 'Enter Shift+F10';
   protected readonly panelAreas = this.core.panelAreas;
   protected readonly menu = this.core.menu;
   protected readonly filterPopup = this.core.filterPopup;
@@ -351,24 +361,82 @@ export class OgePivotGrid<T = unknown> {
     return this.core.isCellTabbable(row, col);
   }
 
+  protected isColumnHeaderTabbable(cell: OgePivotHeaderCell): boolean {
+    return this.core.isColumnHeaderTabbable(cell);
+  }
+
+  protected isRowHeaderTabbable(rowIndex: number): boolean {
+    return this.core.isRowHeaderTabbable(rowIndex);
+  }
+
+  protected columnHeaderPos(cell: OgePivotHeaderCell): string {
+    return this.core.columnHeaderPos(cell);
+  }
+
+  protected rowHeaderPos(rowIndex: number): string {
+    return this.core.rowHeaderPos(rowIndex);
+  }
+
   protected onCellFocus(row: number, col: number): void {
     this.core.focusCell(row, col);
   }
 
-  protected onMatrixKeydown(event: KeyboardEvent): void {
-    const outcome = this.core.matrixKeydown(event.key);
+  protected onColumnHeaderFocus(cell: OgePivotHeaderCell): void {
+    this.core.focusColumnHeader(cell);
+  }
+
+  protected onRowHeaderFocus(rowIndex: number): void {
+    this.core.focusRowHeader(rowIndex);
+  }
+
+  /** Arrow / Home / End over headers and value cells — one APG grid. */
+  protected onGridKeydown(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    const outcome = this.core.gridKeydown(event, isRtl(target));
     if (!outcome) return;
     event.preventDefault();
     if (!outcome.moved) return;
-    const { row, col } = outcome.cell;
-    // move DOM focus to the newly tabbable cell
-    setTimeout(() => {
-      const host = (event.target as HTMLElement).closest('.oge-pivot-matrix');
-      const next = host?.querySelector<HTMLElement>(
-        `[data-cell="${String(row)}-${String(col)}"]`,
+    const matrix = target.closest('.oge-pivot-matrix');
+    // move DOM focus to the newly tabbable element once it rendered
+    setTimeout(() =>
+      matrix?.querySelector<HTMLElement>(outcome.selector)?.focus(),
+    );
+  }
+
+  /** Header keys: Enter/Space toggle, Shift+F10 / menu key open its menu, arrows navigate. */
+  protected onHeaderKeydown(
+    axis: 'row' | 'column',
+    line: OgePivotAxisLine,
+    event: KeyboardEvent,
+    rowIndex?: number,
+  ): void {
+    const target = event.currentTarget as HTMLElement;
+    if (event.key === 'Enter' || event.key === ' ') {
+      if (axis === 'row') this.toggleRow(line, event);
+      else this.toggleColumn(line as OgePivotHeaderCell, event);
+      // the toggled header can re-render: keep focus on it
+      const pos =
+        axis === 'row' && rowIndex !== undefined
+          ? this.core.rowHeaderPos(rowIndex)
+          : this.core.columnHeaderPos(line as OgePivotHeaderCell);
+      const matrix = target.closest('.oge-pivot-matrix');
+      setTimeout(() => {
+        if (target.isConnected) return;
+        matrix?.querySelector<HTMLElement>(`[data-hpos="${pos}"]`)?.focus();
+      });
+      return;
+    }
+    if (isMenuKey(event)) {
+      this.menuOpener = target;
+      this.core.openHeaderMenu(
+        axis,
+        line,
+        pivotKeyboardPointer(event, target.getBoundingClientRect()),
       );
-      next?.focus();
-    });
+      this.focusMenuItem(0, true);
+      return;
+    }
+    this.onGridKeydown(event);
   }
 
   protected onFieldDragStart(field: PivotFieldConfig, event: DragEvent): void {
@@ -388,7 +456,120 @@ export class OgePivotGrid<T = unknown> {
   }
 
   protected closePopups(): void {
+    const hadMenu = !!this.core.menu();
     this.core.closePopups();
+    if (hadMenu) this.restoreMenuFocus();
+  }
+
+  /** Field-chip keys: menu, Ctrl+Arrow reorder / area change, Delete. */
+  protected onChipKeydown(
+    field: PivotFieldConfig,
+    zone: PivotArea | null,
+    event: KeyboardEvent,
+  ): void {
+    const chip = event.currentTarget as HTMLElement;
+    const rect = chip.getBoundingClientRect();
+    const outcome = this.core.fieldChipKeydown(
+      field,
+      zone,
+      event,
+      { x: rect.left, y: rect.bottom },
+      isRtl(chip),
+    );
+    if (!outcome) return;
+    const inChooser = !!chip.closest('.oge-pivot-chooser');
+    if (outcome.kind === 'menu') {
+      this.menuOpener = chip;
+      this.menuOpenerChooser = inChooser;
+      this.focusMenuItem(0, true);
+      return;
+    }
+    setTimeout(() =>
+      this.focusChip(outcome.fieldId, outcome.area, inChooser, zone),
+    );
+  }
+
+  /** Right-click on a field chip: the field menu (move / remove / summary). */
+  protected onFieldContextMenu(
+    field: PivotFieldConfig,
+    zone: PivotArea | null,
+    event: MouseEvent,
+  ): void {
+    const chip = event.currentTarget as HTMLElement | null;
+    this.menuOpener = chip;
+    this.menuOpenerChooser = !!chip?.closest('.oge-pivot-chooser');
+    this.core.openFieldContextMenu(field, zone, event);
+  }
+
+  /** APG menu keys on the open context menu. */
+  protected onMenuKeydown(event: KeyboardEvent): void {
+    const items = this.menuButtons();
+    const index = items.indexOf(event.target as HTMLButtonElement);
+    const outcome = this.core.menuKeydown(event.key, index);
+    if (!outcome) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (outcome.kind === 'close') this.restoreMenuFocus();
+    else items[outcome.index]?.focus();
+  }
+
+  private menuOpener: HTMLElement | null = null;
+  private menuOpenerChooser = false;
+  private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  private menuButtons(): HTMLButtonElement[] {
+    return Array.from(
+      this.hostRef.nativeElement.querySelectorAll<HTMLButtonElement>(
+        '.oge-context-menu .oge-menu-item',
+      ),
+    );
+  }
+
+  /** Focuses a menu item once the menu rendered (`firstEnabled`: skip disabled). */
+  private focusMenuItem(index: number, firstEnabled = false): void {
+    setTimeout(() => {
+      const items = this.menuButtons();
+      const target = firstEnabled
+        ? items.find((item) => !item.disabled)
+        : items[index];
+      target?.focus();
+    });
+  }
+
+  /** After the menu closed: back to its opener, or to the chip it moved. */
+  private restoreMenuFocus(): void {
+    const opener = this.menuOpener;
+    const inChooser = this.menuOpenerChooser;
+    this.menuOpener = null;
+    if (!opener) return;
+    setTimeout(() => {
+      if (opener.isConnected) {
+        opener.focus();
+        return;
+      }
+      const id = opener.dataset['fieldId'];
+      if (id === undefined) return;
+      const area =
+        this.core.chooserFields().find((field) => field.id === id)?.area ??
+        null;
+      this.focusChip(id, area, inChooser, null);
+    });
+  }
+
+  /** Re-focuses a field's chip after a keyboard move (DOM-only concern). */
+  private focusChip(
+    fieldId: string,
+    area: PivotArea | null,
+    inChooser: boolean,
+    formerZone: PivotArea | null,
+  ): void {
+    focusPivotChip(
+      this.hostRef.nativeElement,
+      fieldId,
+      area,
+      inChooser,
+      formerZone,
+    );
   }
 
   /** Outside clicks close the menu/popup; clicks inside them (or menu actions
@@ -398,7 +579,9 @@ export class OgePivotGrid<T = unknown> {
   }
 
   protected runMenuItem(item: OgePivotMenuItem): void {
-    this.core.runMenuItem(item);
+    if (this.core.runMenuItem(item, this.menuOpenerChooser))
+      this.restoreMenuFocus();
+    else this.menuOpener = null;
   }
 
   /** Right-click on an axis header: sort / sortBySummary / filter / layout items. */
@@ -407,15 +590,9 @@ export class OgePivotGrid<T = unknown> {
     line: OgePivotAxisLine,
     event: MouseEvent,
   ): void {
+    this.menuOpener = event.currentTarget as HTMLElement | null;
+    this.menuOpenerChooser = false;
     this.core.openHeaderMenu(axis, line, event);
-  }
-
-  /** Right-click on a measure chip: summary type + display mode. */
-  protected onMeasureContextMenu(
-    field: PivotFieldConfig,
-    event: MouseEvent,
-  ): void {
-    this.core.openMeasureMenu(field, event);
   }
 
   protected filterValueText(value: unknown): string {

@@ -129,6 +129,7 @@ _Filtering & paging_
 | `filterMode` | `TreeFilterMode` | `'withAncestors'` | Matches keep their ancestors; `'fullBranch'` also keeps all descendants. |
 | `filterValue / defaultFilterValue` | `FilterExpr \| null` | `undefined` | The filter expression (builder) — controlled with `onFilterValueChange`. |
 | `filterDebounce` | `number` | `—` | Debounce for text filter inputs. |
+| `announcements` | `boolean` | `config.announcements (true)` | Speaks sort, filter/search result count (debounced, once the new result arrived), page, row expansion, select-all and blocked-save validation changes through the shared `useOgeLiveAnnouncer` regions — texts from the `*Announcement` messages. `false` opts out. |
 | `paging` | `false \| OgePagingOptions` | `false` | Pages the visible (flattened) rows client-side; paging wins over `virtualScroll`. |
 | `sortable / sorting` | `boolean \| 'single' \| 'multi' / OgeSortingOptions` | `true` | Sibling-scoped, multi-column by default. |
 
@@ -138,9 +139,9 @@ _Layout, editing & misc (grid-shared)_
 | --- | --- | --- | --- |
 | `columns` | `readonly (string \| OgeGridColumnProps<T>)[]` | `—` | The columns — the React grid’s column props (`renderCell`, `renderHeader`, `renderEditor`, `bandCaption`, validators…), or a plain field name. |
 | `virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth` | `various` | `—` | Virtualization knobs; `columnRenderingMode` is a top-level prop here. |
-| `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false). |
+| `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false), with the grid’s keyboard paths: Alt+←/→ resizes the focused header’s column (10px, Shift 1px) and its handle is a focusable `role="separator"`; Ctrl+Shift+←/→ moves it; Ctrl+↑/↓ moves a column-chooser item. Columns take the grid’s `maxWidth`. |
 | `editing` | `false \| OgeEditingOptions` | `false` | cell/row/batch/form/popup via the shared editing core. |
-| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid. |
+| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid; `messages` is the grid’s `OgeGridMessages` catalog — the reparenting handle reads `reparentColumnHeader` / `reparentRow`, boolean cells announce `booleanTrueLabel` / `booleanFalseLabel`. `rowDragging` keyboard: Ctrl+↑/↓ on a focused cell moves the row among its siblings, Ctrl+→ indents it under the previous sibling, Ctrl+← outdents it after its parent (logical in RTL) — the same drop path and reparent event as a handle drag, announced via `messages.treeRowMoved`. |
 | `stateStorage` | `OgeStateStorage` | `undefined` | Per-tree storage backend for `stateKey`; overrides `<OgeGridStateStorageProvider>`. |
 | `renderNoData` | `(context: OgeGridNoDataContext) => ReactNode` | `—` | Renders the empty state — the React form of `*ogeNoDataTemplate`. |
 | `toolbarBefore` | `ReactNode` | `—` | Your own toolbar content at the start edge, ahead of the built-in tools — the React form of projected `[ogeToolbar]` items. |
@@ -178,7 +179,7 @@ _Editing, paging, state & export_
 | `editRow(key) / deleteRow(key) / saveChanges() / discardChanges() / hasChanges()` | `void / boolean` | Same semantics as the grid. |
 | `pageIndex() / setPageIndex(i) / pageSize() / setPageSize(n) / pageCount() / totalCount()` | `methods` | `pageIndex()` reads the page Angular exposes as a writable signal; `totalCount()` spans all pages. |
 | `beginCustomLoading(message?) / endCustomLoading()` | `void` | Load panel independent of data activity. |
-| `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. |
+| `state() / applyState(snapshot)` | `TreeListStateSnapshot / void` | Sort, filters, column layout and expansion. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `clearFilters() / clearSorting()` | `void` | Reset the view. |
 | `getExportData() / getCsv() / exportCsv()` | `sync` | **Synchronous** (grid: async); CSV indents the first column 2 spaces per level; the Excel entry sets real outline levels. Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 

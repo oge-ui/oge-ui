@@ -87,13 +87,18 @@ describe('<OgeKanban>', () => {
     expect(host?.style.getPropertyValue('--oge-kanban-slot')).toBe('120px');
   });
 
-  it('columns are labeled listboxes, cards are options with one tab stop per cell', () => {
+  it('columns are labeled lists of cards with one tab stop per cell', () => {
     const { container } = render(<Board />);
-    const listbox = q(container, '.oge-kanban-cards');
-    expect(listbox?.getAttribute('role')).toBe('listbox');
-    expect(listbox?.getAttribute('aria-label')).toBe('To do, 2 of 1 cards');
+    const list = q(container, '.oge-kanban-cards');
+    expect(list?.getAttribute('role')).toBe('list');
+    expect(list?.getAttribute('aria-label')).toBe('To do, 2 of 1 cards');
     const cards = qa(container, '.oge-kanban-card');
-    expect(cards[0].getAttribute('role')).toBe('option');
+    expect(cards[0].parentElement?.getAttribute('role')).toBe('listitem');
+    expect(cards[0].getAttribute('role')).toBe('group');
+    expect(cards[0].getAttribute('aria-roledescription')).toBe('card');
+    expect(
+      container.querySelector('[role="option"], [role="listbox"]'),
+    ).toBeNull();
     expect(cards[0].getAttribute('aria-label')).toBe('Design tokens, in To do');
     // first paint already carries the roving stops (derived, not an effect)
     expect(cards.map((card) => card.tabIndex)).toEqual([0, -1, 0, 0]);
@@ -144,7 +149,7 @@ describe('<OgeKanban>', () => {
     fireEvent.click(qa(container, '.oge-kanban-card')[1]);
     expect(changes).toEqual([2]);
     const card = qa(container, '.oge-kanban-card')[1];
-    expect(card.getAttribute('aria-selected')).toBe('true');
+    expect(card.getAttribute('aria-current')).toBe('true');
     expect(card.classList.contains('oge-kanban-card-selected')).toBe(true);
   });
 
@@ -298,5 +303,80 @@ describe('<OgeKanban>', () => {
     ]);
     // the remounted board still measures and focuses after the move
     expect(document.activeElement?.textContent).toContain('Design tokens');
+  });
+});
+
+describe('<OgeKanban> card content', () => {
+  it('quick actions are labeled buttons, parked outside the column stop', () => {
+    const { container } = render(<Board />);
+    const [first, second] = qa(container, '.oge-kanban-card');
+    const edit = first.querySelector('button.oge-kanban-card-action-edit');
+    expect(edit?.getAttribute('aria-label')).toBe('Edit Design tokens');
+    expect(
+      first
+        .querySelector('button.oge-kanban-card-action-delete')
+        ?.getAttribute('aria-label'),
+    ).toBe('Delete Design tokens');
+    expect(edit?.hasAttribute('tabindex')).toBe(false);
+    expect(
+      second
+        .querySelector('.oge-kanban-card-action-edit')
+        ?.getAttribute('tabindex'),
+    ).toBe('-1');
+  });
+
+  it('keys from a quick action stay with it; Escape returns to the card', () => {
+    const { container } = render(<Board />);
+    const first = qa(container, '.oge-kanban-card')[0];
+    const edit = first.querySelector<HTMLButtonElement>(
+      '.oge-kanban-card-action-edit',
+    ) as HTMLButtonElement;
+    act(() => edit.focus());
+    fireEvent.keyDown(edit, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(edit);
+    fireEvent.keyDown(edit, { key: 'Escape' });
+    expect(document.activeElement).toBe(first);
+  });
+
+  it('interactive renderCard content keeps its own pointer and keys', () => {
+    const pressed: unknown[] = [];
+    const dblClicks: unknown[] = [];
+    const { container } = render(
+      <OgeKanban<Task>
+        dataSource={[
+          { id: 1, status: 'todo', title: 'One' },
+          { id: 2, status: 'todo', title: 'Two' },
+        ]}
+        virtualScrolling={false}
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        onCardDblClick={(event) => dblClicks.push(event.card.key)}
+        renderCard={({ card }) => (
+          <>
+            <span>{card.title}</span>
+            <button
+              type="button"
+              className="tpl-btn"
+              onClick={() => pressed.push(card.key)}
+            >
+              Open
+            </button>
+            <input className="tpl-input" aria-label="note" />
+          </>
+        )}
+      />,
+    );
+    const [btn1, btn2] = qa(container, '.tpl-btn');
+    expect(btn1.hasAttribute('tabindex')).toBe(false);
+    expect(btn2.getAttribute('tabindex')).toBe('-1');
+    fireEvent.click(btn1);
+    expect(pressed).toEqual([1]);
+    fireEvent.doubleClick(btn1);
+    expect(dblClicks).toEqual([]);
+    const input = q(container, '.tpl-input') as HTMLInputElement;
+    act(() => input.focus());
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(input);
   });
 });

@@ -52,6 +52,8 @@ describe('OgeGrid configuration', () => {
             search: 'Ara…',
             booleanTrue: 'Evet',
             booleanFalse: 'Hayır',
+            booleanTrueLabel: 'Evet',
+            booleanFalseLabel: 'Hayır',
             rowsSuffix: 'satır',
           },
         }),
@@ -67,7 +69,11 @@ describe('OgeGrid configuration', () => {
       '2 satır',
     );
     const cells = el.querySelectorAll('.oge-row .oge-cell');
-    expect(cells[1]?.textContent?.trim()).toBe('Evet');
+    // visible text aria-hidden, the localized label visually hidden beside it
+    expect(cells[1]?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      'Evet',
+    );
+    expect(cells[1]?.querySelector('.oge-sr-only')?.textContent).toBe('Evet');
   });
 
   it('shows the page-size selector and switches sizes', async () => {

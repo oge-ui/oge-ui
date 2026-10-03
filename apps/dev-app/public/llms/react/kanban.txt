@@ -130,7 +130,7 @@ _Render props_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `renderCard` | `(context: OgeKanbanCardRenderContext<T>) => ReactNode` | Replaces the card body (`{ card, column, swimlane }`, the card with its `source`). Drag, keyboard and ARIA stay on the board — the React face of `*ogeKanbanCardTemplate`. |
+| `renderCard` | `(context: OgeKanbanCardRenderContext<T>) => ReactNode` | Replaces the card body (`{ card, column, swimlane }`, the card with its `source`). Drag, keyboard and ARIA stay on the board — the React face of `*ogeKanbanCardTemplate`. Buttons, links and inputs it renders are real interactive content: Tab reaches them while the card is its column's tab stop, they never start a drag or feed the board's arrow keys, and Escape returns to the card. |
 | `renderColumnHeader` | `(context: OgeKanbanColumnHeaderRenderContext) => ReactNode` | Replaces the column header's title row (`{ column, count, wip }`); the add and collapse affordances stay — the React face of `*ogeKanbanColumnHeaderTemplate`. |
 | `className / style` | `string / CSSProperties` | Host styling, merged onto the `.oge-kanban` element (give the board a height, as with the Angular host). |
 
@@ -178,6 +178,7 @@ _Configuration_
 | `OgeKanbanConfigProvider` | `({ config?: OgeKanbanConfigInput, children }) => JSX` | The React counterpart of `provideOgeKanbanConfig()`: `messages` (merged block by block), `locale`, `cardHeight` for the subtree. Nested providers merge over the outer one, and a new `config` re-resolves the subtree — switching the UI language at runtime is a state change. |
 | `useOgeKanbanConfig` | `() => OgeKanbanConfig` | The resolved config for the current subtree (the counterpart of `inject(OGE_KANBAN_CONFIG)`). |
 | `OgeKanbanMessages` | `interface` | Every user-facing string: `toolbar`, `menu`, `dialog`, `board` (aria label templates with `{title}`/`{count}`/`{limit}` tokens) and `announcements` (live-region templates). Single-sourced in `@oge-ui/kanban-engine` with the Angular package. |
+| `OgeKanbanBoardMessages` | `interface` | The `board` block: `boardLabel`, `columnLabel` / `columnLabelWip` (the column list's name), `cardLabel` (`{title}`, `{column}`), `cardRoleDescription` (default `card` — every card's `aria-roledescription`), `editCardAction` / `deleteCardAction` (the quick-action buttons, `{title}`), `boardHint`, `wipExceeded`, `overdue`, the empty-state and add-card/column strings. |
 | `OgeKanbanColumn` | `interface` | `{ key, title?, color?, wipLimit?, minCount?, collapsed?, allowAdding?, allowDrag?, allowDrop?, transitionColumns? }` — the declared column shape. `wipLimit`/`minCount` drive the danger/warning badges; `allowDrag`/`allowDrop`/`transitionColumns` gate interactive moves (programmatic `moveCard` is deliberately not gated). |
 | `OgeKanbanCard<T>` | `interface` | The normalized card handed to render props and callbacks: `key`, `source` (your item, unchanged), `column`, `title`, `description`, `color`, `order`, `swimlane`, `tags`, `assignees`, `dueDate`, `priority`. |
 
@@ -412,7 +413,8 @@ export function KeyboardBoard() {
           edits, Delete deletes, and Ctrl+Arrow MOVES the focused card — the
           exact keyboard twin of the drag, with a polite live-region
           announcement ("… moved to …, position 2 of 3") after every commit.
-          Columns are labeled listboxes; cards are options. */}
+          Columns are labeled lists of cards (one Tab stop each); Tab from a
+          card continues into its quick-action buttons. */}
       <OgeKanban
         dataSource={tasks}
         keyExpr="id"
@@ -478,6 +480,7 @@ export function DialogBoard() {
 ```ts
 'use client';
 
+import { useState } from 'react';
 import { OgeKanban } from '@oge-ui/react-kanban';
 import type { OgeKanbanCard } from '@oge-ui/react-kanban';
 
@@ -492,28 +495,35 @@ function field(card: OgeKanbanCard, name: string): string {
 }
 
 export function DeploymentBoard() {
+  const [log, setLog] = useState('');
   return (
     <>
       {/* renderCard replaces the card body while drag, keyboard and ARIA stay
           on the board. card.source is your original item (typed unknown —
-          narrow it in a helper). Rich templates usually pair with a matching
-          cardHeight, or opt out of virtualization entirely
+          narrow it in a helper). Controls it renders are real interactive
+          content: Tab from the card reaches the button, it never starts a
+          drag, and Escape returns to the card. Rich templates usually pair
+          with a matching cardHeight, or opt out of virtualization entirely
           (virtualScrolling={false}) when heights must vary. */}
       <OgeKanban
         dataSource={deployments}
         keyExpr="id"
         columnExpr="stage"
         titleExpr="service"
-        cardHeight={96}
+        cardHeight={112}
         style={{ height: 420 }}
         renderCard={({ card }) => (
-          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
             <strong>{card.title}</strong>
             <code style={{ fontSize: 11 }}>{field(card, 'version')}</code>
             <progress value={Number(field(card, 'health'))} max={100} style={{ width: '100%' }} />
+            <button type="button" onClick={() => setLog(`Rollback requested: ${card.title}`)}>
+              Roll back
+            </button>
           </div>
         )}
       />
+      <p aria-live="polite">{log}</p>
     </>
   );
 }

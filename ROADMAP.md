@@ -501,10 +501,11 @@ keyboard) and polite live-region announcements.
   (equal-width clusters; FullCalendar-style right-expansion deferred), lane
   packing shared by the all-day strip and month rows, gesture math, and an
   RFC 5545 RRULE-subset parser (FREQ DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL,
-  COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY, BYMONTH, WKST — unsupported parts reject
-  the whole rule, never truncate).
+  COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY, BYMONTH, BYHOUR, BYMINUTE, BYSETPOS, WKST,
+  plus DTSTART/RDATE/EXDATE block lines — unsupported parts reject the whole
+  rule, never truncate).
 - **Intl-only local dates** (house rule): no date library, no adapter, no TZ
-  database — `UNTIL=…Z` reads as local wall time, documented honestly.
+  database — `…Z` stamps are UTC converted to local; `TZID=` is rejected.
 
 | Feature (references)                                                       | Reference | Status  | Notes                                                                                                                                                                |
 | -------------------------------------------------------------------------- | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

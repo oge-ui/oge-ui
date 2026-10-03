@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { OgeButton } from '@oge-ui/buttons';
 import {
+  OgeLiveAnnouncer,
   OgeToastService,
   type OgeToastPosition,
   type OgeToastSeverity,
@@ -20,6 +21,7 @@ import {
 } from '../react-overlay/toast';
 import {
   ACTION_SNIPPET,
+  ANNOUNCER_SNIPPET,
   BASIC_SNIPPET,
   COALESCE_SNIPPET,
   POSITION_SNIPPET,
@@ -32,6 +34,7 @@ const SECTIONS = [
   'Sticky, action & undo',
   'Promise toasts',
   'Coalescing & progress',
+  'Live announcements without a toast',
 ] as const;
 
 @Component({
@@ -55,20 +58,20 @@ const SECTIONS = [
           <code>&lt;OgeToastProvider&gt;</code> — shows stacked, auto-dismissing
           notifications in body-appended regions above every other surface,
           including open modals. Toasts never steal focus and never join the
-          Escape stack; screen readers hear them through permanent hidden live
-          regions (errors assert, the rest stay polite). Timers pause on hover,
-          focus and while the tab is hidden, always resuming with the remaining
-          time — the same engine as the Angular service.
+          Escape stack; screen readers hear them through the document’s shared
+          live regions (errors assert, the rest stay polite). Timers pause on
+          hover, focus and while the tab is hidden, always resuming with the
+          remaining time — the same engine as the Angular service.
         </p>
       } @else {
         <p>
           <code>OgeToastService</code> shows stacked, auto-dismissing
           notifications in body-appended regions above every other surface —
           including open modals. Toasts never steal focus and never join the
-          Escape stack; screen readers hear them through permanent hidden live
-          regions (errors assert, the rest stay polite). Timers pause on hover,
-          focus and while the tab is hidden, always resuming with the remaining
-          time.
+          Escape stack; screen readers hear them through the document’s shared
+          live regions (errors assert, the rest stay polite). Timers pause on
+          hover, focus and while the tab is hidden, always resuming with the
+          remaining time.
         </p>
       }
     </app-doc-header>
@@ -174,6 +177,23 @@ const SECTIONS = [
           />
         </div>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['OgeLiveAnnouncer', 'polite / assertive', 'debounced']"
+        heading="Live announcements without a toast"
+        description="Toasts, the grid, the tree list, the Gantt and the uploader all speak through <code>OgeLiveAnnouncer</code> — one polite and one assertive visually hidden region per document, created on first use. Inject it for your own status messages: identical messages within a second are dropped, a newer one inside the write delay wins, and the region clears after a few seconds so a repeat is heard again. A no-op on the server."
+        [code]="announcerSnippet"
+        language="ts"
+      >
+        <div class="flex items-center gap-4">
+          <oge-button
+            text="Archive 3 items"
+            stylingMode="outlined"
+            (clicked)="announce()"
+          />
+          <span class="text-sm opacity-70">{{ announced() }}</span>
+        </div>
+      </app-demo-card>
     }
 
     <h3>Notes</h3>
@@ -241,6 +261,13 @@ export class OverlayToastPage {
     'bottom-end',
   ];
   protected readonly undoState = signal('—');
+  private readonly announcer = inject(OgeLiveAnnouncer);
+  protected readonly announced = signal('');
+
+  protected announce(): void {
+    this.announcer.announce('3 items archived');
+    this.announced.set('Announced: “3 items archived”');
+  }
 
   protected showSeverity(severity: OgeToastSeverity): void {
     const messages: Record<OgeToastSeverity, string> = {
@@ -310,4 +337,5 @@ export class OverlayToastPage {
   protected readonly actionSnippet = ACTION_SNIPPET;
   protected readonly promiseSnippet = PROMISE_SNIPPET;
   protected readonly coalesceSnippet = COALESCE_SNIPPET;
+  protected readonly announcerSnippet = ANNOUNCER_SNIPPET;
 }

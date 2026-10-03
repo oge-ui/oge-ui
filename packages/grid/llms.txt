@@ -136,6 +136,7 @@ _Sorting, filtering & search_
 | `filterPanel` | `boolean` | `false` | Filter panel bar with the filter-builder entry point. |
 | `filterValue` | `model<FilterExpr \| null>` | `null` | Two-way binding of the builder/programmatic filter expression. |
 | `filterDebounce` | `number \| undefined` | `—` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
+| `announcements` | `boolean \| undefined` | `config.announcements (true)` | Speaks sort, filter/search result count (debounced, once the new result arrived), page, group expansion, select-all and blocked-save validation changes through the shared `OgeLiveAnnouncer` regions — texts from the `*Announcement` messages. `false` opts out. |
 
 _Paging & scrolling_
 
@@ -153,7 +154,7 @@ _Grouping_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `groupPanel` | `boolean` | `false` | Drop area for drag-and-drop row grouping. |
+| `groupPanel` | `boolean` | `false` | Drop area for drag-and-drop row grouping. Keyboard: the header context menu (Shift+F10) offers `groupByColumn` / `ungroupColumn`; on a chip’s remove button Ctrl+←/→ reorders the grouping and Delete removes it (`messages.groupMoved` / `groupRemoved`). |
 | `groupBy` | `readonly string[] \| undefined` | `—` | Initial/programmatic grouping by field names. |
 | `grouping` | `OgeGroupingOptions \| undefined` | `—` | `autoExpandAll: false` starts collapsed and enables deferred child loading; `contextMenuEnabled: true` offers group/ungroup in the header menu without the group panel. |
 
@@ -173,17 +174,17 @@ _Editing & rows_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `editing` | `false \| OgeEditingOptions` | `false` | Enables editing: `{ mode: 'cell' \| 'row' \| 'batch' \| 'popup' \| 'form', allow… }`. |
+| `editing` | `false \| OgeEditingOptions` | `false` | Enables editing: `{ mode: 'cell' \| 'row' \| 'batch' \| 'popup' \| 'form', allow… }`. An invalid cell editor sets `aria-invalid` on its control and points `aria-errormessage` / `aria-describedby` at a rendered, visually hidden error text (also the cell’s tooltip); the `form`/`popup` fields wire the same through `<oge-form>`. |
 | `commandButtons` | `readonly OgeCommandButton<T>[] \| undefined` | `—` | Customizes the trailing command column: built-in 'edit'/'delete' plus custom buttons with per-row `visible`. |
-| `rowDragging` | `boolean` | `false` | Drag-handle column for reordering rows. Arrays mutate in place; DataSources handle `rowReordered`. |
+| `rowDragging` | `boolean` | `false` | Drag-handle column for reordering rows. Arrays mutate in place; DataSources handle `rowReordered`. Keyboard: Ctrl+↑/↓ on a focused cell moves the row onto its neighbour through the same drop path (same event), announced via `messages.rowMoved`. |
 
 _Columns UX_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `columnChooser` | `boolean` | `false` | Column visibility chooser button. |
-| `columnResize` | `boolean` | `true` | Drag-resize handles on header edges. |
-| `columnReorder` | `boolean` | `true` | Drag-and-drop column reordering. |
+| `columnChooser` | `boolean` | `false` | Column visibility chooser button. Keyboard: Space toggles an item; with `columnReorder`, Ctrl+↑/↓ moves it. Hiding is also in the header context menu. |
+| `columnResize` | `boolean` | `true` | Drag-resize handles on header edges. Keyboard: Alt+←/→ on a focused header resizes by 10px (Shift for 1px); the handle is a focusable `role="separator"` (`aria-valuenow/min/max` = width in px, named by `messages.resizeColumn`) taking ←/→, Home/End (min / max) and Enter/Esc (back to the header). RTL-aware; clamped to `minWidth` / `maxWidth`. |
+| `columnReorder` | `boolean` | `true` | Drag-and-drop column reordering. Keyboard: Ctrl+Shift+←/→ on a focused header moves the column one step, never across a pinned group or out of its band (an unbanded column steps over a band as a whole), announced via `messages.columnMoved`. |
 | `columnMinWidth` | `number \| undefined` | `—` | Track minimum for columns without an explicit width. |
 
 _Appearance & misc_
@@ -260,10 +261,10 @@ _Loading, state & export_
 | Name | Type | Description |
 | --- | --- | --- |
 | `beginCustomLoading(message?) / endCustomLoading()` | `void` | Shows/hides the load panel with an optional message — independent of data activity. |
-| `state(): GridStateSnapshot / applyState(snapshot)` | `GridStateSnapshot / void` | Captures / applies the persistable UI state. |
+| `state(): GridStateSnapshot / applyState(snapshot)` | `GridStateSnapshot / void` | Captures / applies the persistable UI state. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `clearFilters() / clearSorting()` | `void` | Clears every filter (row, header, builder, search) / the sort order. |
 | `getExportData(options?): Promise<OgeExportData<T>>` | `Promise` | Rows + column metadata of the current view; `scope: 'all' \| 'page' \| 'selection'`. |
-| `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (`=`, `+`, `-`, `@` or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
+| `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (first non-whitespace character `=`, `+`, `-`, `@` or a full-width `＝ ＋ － ＠`, or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
 | `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
 
 #### Events
@@ -334,6 +335,7 @@ _Basics_
 | `dataType` | `OgeDataType` | `'string'` | 'string' \| 'number' \| 'date' \| 'boolean' — drives editors, filters and the default alignment. |
 | `alignment` | `OgeColumnAlignment \| undefined` | `—` | `'start' \| 'center' \| 'end'` for cells, header and summaries (logical — `'end'` is the right edge in LTR). Unset, numbers align to the end and everything else to the start. |
 | `width / minWidth` | `number \| string / number` | `—` | Track size; `minWidth` guards resizing. |
+| `maxWidth` | `number \| undefined` | `undefined` | Upper bound in px for user resizing — pointer drag and the Alt+←/→ / separator keys; also the separator’s `aria-valuemax`. |
 | `visible` | `model<boolean>` | `true` | Two-way visibility (column chooser writes it). |
 | `format` | `(value: unknown) => string \| undefined` | `—` | Display formatter for cells, group rows, export. |
 | `pinned` | `false \| 'left' \| 'right'` | `false` | Pins the column to an edge. |
@@ -428,8 +430,12 @@ _Configuration_
 | Name | Type | Description |
 | --- | --- | --- |
 | `provideOgeGridConfig(config)` | `Provider` | App/component-scoped defaults; deep-merges `messages`. |
-| `OgeGridConfig` | `{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; messages }` | Defaults shown inline. |
+| `OgeGridConfig` | `{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; announcements: true; messages }` | Defaults shown inline. |
 | `OgeGridMessages` | `60+ string keys` | Every user-facing string, incl. aria labels, filter operators, summary patterns — see `OGE_DEFAULT_MESSAGES` in the source. |
+| `messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow` | `string` | Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: `Reorder`, `Detail`, `Select all`, `Reorder row`. The tree list reads `reparentColumnHeader` / `reparentRow` (`Reparent`, `Reparent row`) for its reparenting handle. |
+| `messages.resizeColumn / messages.columnResized / messages.columnMoved / messages.rowMoved / messages.treeRowMoved / messages.groupMoved / messages.groupRemoved` | `string` | The keyboard alternatives to dragging (WCAG 2.1.1 / 2.5.7): the resize separator’s name (`Resize {column}`) and the polite live-region announcements after a keyboard resize (`{column} width {width} pixels`), column move (`{column} moved to position {position} of {total}`), row move (`Row moved to position {position} of {total}`), tree-row move (`Row moved to level {level}, position {position} of {total}`) and group-chip reorder / removal (`Grouping by {column} moved to position {position} of {total}`, `Grouping by {column} removed`). |
+| `messages.booleanTrueLabel / messages.booleanFalseLabel` | `string` | Screen-reader text of a default-rendered boolean cell (`Yes` / `No`). The visible `booleanTrue` / `booleanFalse` glyph (`✓` / `✗`, also the CSV text) is rendered `aria-hidden`; the label is rendered visually hidden beside it. Columns with a custom `format`, a lookup or a cell template render their own text. Localizing `booleanTrue` / `booleanFalse` to words? Set the labels too — they are announced, the glyph text is not. |
+| `messages.sortAscendingAnnouncement / messages.sortDescendingAnnouncement / messages.sortClearedAnnouncement / messages.rowCountAnnouncement / messages.rowCountOneAnnouncement / messages.pageAnnouncement / messages.groupExpandedAnnouncement / messages.groupCollapsedAnnouncement / messages.rowExpandedAnnouncement / messages.rowCollapsedAnnouncement / messages.selectionCountAnnouncement / messages.validationErrorAnnouncement` | `string` | Live-announcement patterns, `{placeholder}`-interpolated. Defaults: `Sorted by {column}, ascending` / `descending`, `Sort cleared`, `{count} rows` / `{count} row`, `Page {n} of {total}`, `Group {value} expanded` / `collapsed`, `{value} expanded` / `collapsed` (tree list), `{count} rows selected` and `{column}: {error}` (spoken assertively when a save is blocked by an invalid editor). |
 | `OGE_STATE_STORAGE / OgeStateStorage` | `InjectionToken` | Pluggable sync/async persistence backend for `stateKey`. |
 
 _Filter builder_

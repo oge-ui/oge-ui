@@ -20,7 +20,9 @@ import {
   chipTabIndexOf,
   escapeAttr,
   monthCellKey,
+  monthCellSelected,
   monthChipOrder,
+  monthColumnHeaderText,
   monthDropCell,
   monthMaxLanes,
   monthOriginIndex,
@@ -59,9 +61,10 @@ import type {
   imports: [NgTemplateOutlet, OgeSchedulerAppointmentChip],
   host: { class: 'oge-scheduler-view oge-scheduler-month' },
   template: `
-    <div class="oge-scheduler-month-weekdays" role="presentation">
+    <!-- visual headers; the grid's own columnheader row carries the names -->
+    <div class="oge-scheduler-month-weekdays" aria-hidden="true">
       @for (day of grid().weeks[0]; track day.getTime()) {
-        <div class="oge-scheduler-month-weekday" aria-hidden="true">
+        <div class="oge-scheduler-month-weekday">
           {{ weekdayText(day) }}
         </div>
       }
@@ -75,8 +78,16 @@ import type {
         class="oge-scheduler-month-grid"
         role="grid"
         [attr.aria-label]="gridAriaLabel()"
+        [attr.aria-readonly]="readOnly() ? 'true' : null"
         (keydown)="onGridKeydown($event)"
       >
+        <div class="oge-scheduler-sr-header-row" role="row">
+          @for (day of grid().weeks[0]; track day.getTime()) {
+            <div class="oge-scheduler-sr-header" role="columnheader">
+              {{ columnHeaderText(day) }}
+            </div>
+          }
+        </div>
         @for (
           week of grid().weeks;
           track week[0].getTime();
@@ -94,7 +105,7 @@ import type {
                 [class.oge-scheduler-month-other]="!isCurrentMonth(day)"
                 [class.oge-scheduler-day-today]="isToday(day)"
                 [class.oge-scheduler-cell-weekend]="
-                  day.getDay() === 0 || day.getDay() === 6
+                  weekendDays().includes(day.getDay())
                 "
                 [class.oge-scheduler-cell-focused]="
                   isFocusedCell(weekIndex, dayIndex)
@@ -103,6 +114,7 @@ import type {
                   isDropTarget(weekIndex, dayIndex)
                 "
                 [tabindex]="isFocusedCell(weekIndex, dayIndex) ? 0 : -1"
+                [attr.aria-selected]="isSelectedCell(weekIndex, dayIndex)"
                 [attr.data-focus-target]="
                   isFocusedCell(weekIndex, dayIndex) ? '' : null
                 "
@@ -210,11 +222,15 @@ export class OgeSchedulerMonthView<T = unknown> {
   readonly anchorDate = input.required<Date>();
   readonly appointments = input.required<readonly SchedulerAppointment<T>[]>();
   readonly firstDayOfWeek = input.required<number>();
+  /** Weekend days (0 = Sunday) the grid shades — the scheduler's resolved list. */
+  readonly weekendDays = input<readonly number[]>([0, 6]);
   readonly maxAppointmentsPerCell = input.required<number | 'auto'>();
   readonly locale = input<string | undefined>(undefined);
   readonly messages = input.required<OgeSchedulerGridMessages>();
   readonly periodLabel = input('');
   readonly allowDragging = input(true);
+  /** `aria-readonly` on the grid — the scheduler cannot change anything. */
+  readonly readOnly = input(false);
   readonly appointmentTemplate = input<OgeAppointmentTemplate<T> | null>(null);
   readonly cellTemplate = input<OgeSchedulerCellTemplate | null>(null);
 
@@ -285,6 +301,15 @@ export class OgeSchedulerMonthView<T = unknown> {
   protected isFocusedCell(weekIndex: number, dayIndex: number): boolean {
     const focused = this.focusedCell();
     return focused.week === weekIndex && focused.day === dayIndex;
+  }
+
+  /** `aria-selected`: the roving current day. */
+  protected isSelectedCell(weekIndex: number, dayIndex: number): boolean {
+    return monthCellSelected(weekIndex, dayIndex, this.focusedCell());
+  }
+
+  protected columnHeaderText(day: Date): string {
+    return monthColumnHeaderText(day, this.locale());
   }
 
   protected chipTabIndex(appointment: SchedulerAppointment<T>): number {

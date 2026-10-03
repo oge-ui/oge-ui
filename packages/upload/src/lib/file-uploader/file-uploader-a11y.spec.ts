@@ -2,6 +2,11 @@ import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { OgeFileUploader } from './file-uploader';
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/** Announcements go through the document's shared polite live region. */
+const sharedLive = () =>
+  document.querySelector('[data-oge-live-announcer="polite"]');
+
 const settle = async (fixture: ComponentFixture<unknown>) => {
   fixture.detectChanges();
   await fixture.whenStable();
@@ -164,29 +169,31 @@ describe('OgeFileUploader — accessibility', () => {
     expect(action?.getAttribute('aria-label')).toBe('Remove: report.pdf');
   });
 
-  it('announces additions and removals in a polite live region', async () => {
-    const { fixture, uploader, element } = setup();
-    const live = element.querySelector('.oge-upload-live');
-    expect(live?.getAttribute('aria-live')).toBe('polite');
-    expect(live?.getAttribute('aria-atomic')).toBe('true');
+  it('announces additions and removals through the shared polite live region', async () => {
+    const { fixture, uploader } = setup();
 
     await addFiles(fixture, uploader, ['a.txt']);
+    await wait(150);
+    const live = sharedLive();
+    expect(live?.getAttribute('aria-live')).toBe('polite');
+    expect(live?.getAttribute('aria-atomic')).toBe('true');
     expect(live?.textContent?.trim()).toBe('a.txt added');
 
     uploader.removeFile(uploader.files()[0].uid);
     await settle(fixture);
-    expect(live?.textContent?.trim()).toBe('a.txt removed');
+    await wait(150);
+    expect(sharedLive()?.textContent?.trim()).toBe('a.txt removed');
   });
 
   it('announces a rejection with its reason, not just a failure', async () => {
-    const { fixture, uploader, element } = setup();
+    const { fixture, uploader } = setup();
     fixture.componentInstance.maxFileSize.set(0);
     await settle(fixture);
 
     await addFiles(fixture, uploader, ['a.txt']);
+    await wait(150);
 
-    const announcement =
-      element.querySelector('.oge-upload-live')?.textContent ?? '';
+    const announcement = sharedLive()?.textContent ?? '';
     expect(announcement).toContain('a.txt was rejected');
     expect(announcement).toContain('too large');
   });

@@ -4,10 +4,12 @@ import {
   Fragment,
   forwardRef,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useReducer,
   useRef,
+  useState,
   type ForwardedRef,
   type ReactElement,
   type ReactNode,
@@ -22,9 +24,11 @@ import {
   type RowKey,
   type RowNode,
   type TreeListStateSnapshot,
+  sanitizeTreeListStateSnapshot,
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
+  OgeGridAnnouncements,
   OgeGridColumnLayoutCore,
   OgeGridDataCore,
   OgeGridKeyboardNavCore,
@@ -34,6 +38,7 @@ import {
   OgeTreeListCore,
   adaptiveHiddenColumnIds,
   allHeaderValuesSelected,
+  booleanCellLabel,
   builderToExpr,
   dateFilterExpr,
   describeExpr,
@@ -54,7 +59,19 @@ import {
   ogeTreeHeaderValueGroups,
   ogeTreeHeaderValueText,
   operatorsFor,
+  resizedColumnWidth,
   resolveOgeGridColumns,
+  clampColumnWidth,
+  formatPattern,
+  ogeChooserMoveDirection,
+  ogeColumnMoveTarget,
+  ogeColumnSeparatorKeyCommand,
+  ogeColumnWidthBounds,
+  ogeGridHeaderKeyCommand,
+  ogeGridHeaderKeyShortcuts,
+  ogeListMoveTarget,
+  ogeSeparatorTargetWidth,
+  ogeTreeRowKeyMove,
   rowClickSelectionIntent,
   rowFilterExpr,
   toggleAllHeaderValues,
@@ -65,6 +82,7 @@ import {
   type OgeExportingEvent,
   type OgeFilterBuilderField,
   type OgeGridColumnSpec,
+  type OgeGridInvalidEditor,
   type OgeGridMessages,
   type OgeGridResolvedColumn,
   type OgeMenuItem,
@@ -88,6 +106,7 @@ import {
   OgeModal,
   OgePopup,
   useAnchoredPanel,
+  useOgeLiveAnnouncer,
 } from '@oge-ui/react-overlay';
 import {
   OgeCellEditor,
@@ -167,6 +186,9 @@ function OgeTreeListInner<T extends object>(
   const contextStorageRef = useRef(contextStorage);
   contextStorageRef.current = contextStorage;
   const hostRef = useRef<HTMLDivElement>(null);
+  // a header is labelled by its caption alone (aria-labelledby), not by the
+  // resize separator / filter button inside it; useId keeps it SSR-safe
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const viewportRef = useRef<HTMLDivElement>(null);
 
   const msg = useMemo<OgeGridMessages>(
@@ -175,6 +197,11 @@ function OgeTreeListInner<T extends object>(
   );
   const msgRef = useRef(msg);
   msgRef.current = msg;
+  const liveAnnouncer = useOgeLiveAnnouncer();
+  /** Filled in once the announcer exists; the editing core calls it later. */
+  const validationFailedRef = useRef<
+    (invalid: readonly OgeGridInvalidEditor[]) => void
+  >(() => undefined);
 
   // --- the model: every derived value, built once ---------------------------
   const model = useMemo(() => {
@@ -325,6 +352,7 @@ function OgeTreeListInner<T extends object>(
         filterable: column.filterable !== false,
         filterOperator: column.filterOperator,
         minWidth: column.minWidth,
+        maxWidth: column.maxWidth,
         lookup: column.lookup,
         calculateCellValue: column.calculateCellValue,
         calculateFilterExpression: column.calculateFilterExpression,
@@ -422,6 +450,7 @@ function OgeTreeListInner<T extends object>(
           rowRemoved: (event) => p().onRowRemoved?.(event),
           editCanceled: () => p().onEditCanceled?.(),
           dataError: (error) => p().onDataErrorOccurred?.({ error }),
+          validationFailed: (invalid) => validationFailedRef.current(invalid),
         },
         // saved rows may live in the lazy child cache — drop it so the reload
         // re-fetches open levels and the UI shows the persisted values
@@ -626,9 +655,12 @@ function OgeTreeListInner<T extends object>(
     });
 
     function applyState(snapshot: TreeListStateSnapshot): void {
-      state.applySnapshot(snapshot);
-      core.applyExpansionSnapshot(snapshot);
-      const hidden = new Set(snapshot.columns?.hidden ?? []);
+      // public API fed from storage, URLs or the host: validate the shape first
+      const safe = sanitizeTreeListStateSnapshot(snapshot);
+      if (safe === null) return;
+      state.applySnapshot(safe);
+      core.applyExpansionSnapshot(safe);
+      const hidden = new Set(safe.columns?.hidden ?? []);
       const next = new Map<string, boolean>();
       for (const column of declaredColumns() ?? []) {
         if (column.field) next.set(column.field, !hidden.has(column.field));
@@ -726,15 +758,70 @@ function OgeTreeListInner<T extends object>(
   model.rx.invalidate();
   const { state, data, core } = model;
 
+  // --- live announcements (shared rules: OgeGridAnnouncements) -------------
+  const captionOf = (field: string): string =>
+    model.resolvedColumns().find((column) => column.field === field)?.caption ??
+    humanize(field);
+  const announcer = useMemo(
+    () =>
+      new OgeGridAnnouncements({
+        announce: (message, options) =>
+          liveAnnouncer.announce(message, options),
+        messages: () => msgRef.current,
+        enabled: () =>
+          latest.current.announcements ?? configRef.current.announcements,
+        caption: (field) =>
+          model.resolvedColumns().find((column) => column.field === field)
+            ?.caption ?? humanize(field),
+      }),
+    [model, liveAnnouncer],
+  );
+  validationFailedRef.current = (invalid) => {
+    const first = invalid[0];
+    if (!first) return;
+    const entry = model.editing
+      .activeEditors()
+      .get(`${String(first.key)}::${first.field}`);
+    announcer.validationFailed(
+      captionOf(first.field),
+      entry?.error ?? msgRef.current.invalidError,
+    );
+  };
+  // every render may carry a state change; the tracker diffs and stays quiet
+  // when nothing it speaks about moved
+  useEffect(() => {
+    announcer.observe({
+      sort: state.sort.descriptors(),
+      filterKey: JSON.stringify([
+        state.filter.combinedExpr(),
+        state.filter.searchText().trim(),
+      ]),
+      // the tree filters client-side: a new flat list is the new result
+      resultToken: core.flatNodes(),
+      loading: data.loading(),
+      rowCount: core.totalCount(),
+      paging: core.effPageSize() != null,
+      pageIndex: model.pageIndex(),
+      pageCount: core.pageCount(),
+    });
+  });
+
+  /** The row's name in announcements: its first column's display text. */
+  function rowLabel(node: DataRowNode<T>): string {
+    const column = model.resolvedColumns().find((candidate) => candidate.field);
+    return column ? cellDisplayText(node, column) : String(node.key);
+  }
+
   // --- expansion pipeline (keyboard + expander + API share it) ---------------
   function setRowExpanded(node: DataRowNode<T>, expand: boolean): void {
     // consumers may veto UI-driven toggles (the imperative API stays silent)
-    core.requestToggle(node, expand, {
+    const toggled = core.requestToggle(node, expand, {
       expanding: (event) => latest.current.onRowExpanding?.(event),
       collapsing: (event) => latest.current.onRowCollapsing?.(event),
       expanded: (event) => latest.current.onRowExpanded?.(event),
       collapsed: (event) => latest.current.onRowCollapsed?.(event),
     });
+    if (toggled) announcer.rowToggled(rowLabel(node), expand);
   }
   model.setToggleRow(setRowExpanded);
 
@@ -745,11 +832,11 @@ function OgeTreeListInner<T extends object>(
   const sortValueFields = (normalizeColumns<T>(props.columns) ?? [])
     .filter((column) => column.field && column.calculateSortValue)
     .map((column) => column.field as string)
-    .join(' ');
+    .join('\u0000');
   const sortValues = useMemo(() => {
     if (!sortValueFields) return undefined;
     const selectors: Record<string, (row: T) => unknown> = {};
-    for (const field of sortValueFields.split(' ')) {
+    for (const field of sortValueFields.split('\u0000')) {
       selectors[field] = (row) =>
         normalizeColumns<T>(latest.current.columns)
           ?.find((column) => column.field === field)
@@ -762,7 +849,7 @@ function OgeTreeListInner<T extends object>(
   // functions count by kind, not identity — an inline selector is a new
   // function every render and must not re-wire (and re-fetch) the tree
   const exprDep = (expr: unknown, fallback: string): string =>
-    typeof expr === 'function' ? ' fn' : String(expr ?? fallback);
+    typeof expr === 'function' ? '\u0000fn' : String(expr ?? fallback);
   const keyExprDep = exprDep(props.keyExpr, 'id');
   const parentIdExprDep = exprDep(props.parentIdExpr, 'parentId');
   const itemsExprDep = exprDep(props.itemsExpr, '');
@@ -967,6 +1054,29 @@ function OgeTreeListInner<T extends object>(
     )?.focus();
   }, [editorSession]);
 
+  // a keyboard-moved row keeps the focus once the rows re-render, and the
+  // live region says where it landed
+  const renderNodesNow = core.renderNodes();
+  useEffect(() => {
+    const pending = pendingFocusRow.current;
+    if (!pending || renderNodesNow === pending.nodes) return;
+    const row = renderNodesNow.findIndex(
+      (node) => node.kind === 'data' && node.key === pending.key,
+    );
+    if (row < 0) return;
+    pendingFocusRow.current = null;
+    model.keyboard.focusedCell.set({ row, col: pending.col });
+    const placement = core.rowPlacement(pending.key);
+    if (placement)
+      announce(
+        formatPattern(msg.treeRowMoved, {
+          level: String(placement.level),
+          position: String(placement.position),
+          total: String(placement.total),
+        }),
+      );
+  });
+
   // focus follows the keyboard-navigation cell — unless an editor is open
   const focusedCell = model.keyboard.focusedCell();
   const editorOpen = editCell !== null || editRowKey !== null;
@@ -1130,6 +1240,7 @@ function OgeTreeListInner<T extends object>(
   function toggleSelectAll(): void {
     if (core.allSelected()) clearSelection();
     else core.selectAll();
+    announcer.selectionCount(state.selection.count());
   }
 
   useImperativeHandle(ref, (): OgeTreeListHandle<T> => ({
@@ -1223,9 +1334,21 @@ function OgeTreeListInner<T extends object>(
         ? column.width
         : configRef.current.pinnedDefaultWidth);
     const startX = event.clientX;
+    const rtl = model.rtl();
+    const bounds = ogeColumnWidthBounds(
+      column.minWidth,
+      column.maxWidth,
+      Number.POSITIVE_INFINITY,
+    );
     const onMove = (move: PointerEvent): void => {
       suppressHeaderClick.current = true;
-      state.columns.setWidth(column.id, startWidth + (move.clientX - startX));
+      state.columns.setWidth(
+        column.id,
+        clampColumnWidth(
+          resizedColumnWidth(startWidth, startX, move.clientX, rtl),
+          bounds,
+        ),
+      );
     };
     const onUp = (): void => {
       window.removeEventListener('pointermove', onMove);
@@ -1311,6 +1434,196 @@ function OgeTreeListInner<T extends object>(
       data.reload(),
     );
     if (moved) latest.current.onRowReparented?.(moved);
+  }
+
+  // --- keyboard alternatives to the drag gestures (WCAG 2.1.1 / 2.5.7) ---
+  const [liveMessage, setLiveMessage] = useState('');
+  /** Announces `text`; a toggled no-break space re-announces a repeat. */
+  function announce(text: string): void {
+    setLiveMessage((previous) => (previous === text ? `${text}\u00A0` : text));
+  }
+
+  /** Row the focus follows once a keyboard move re-renders the rows. */
+  const pendingFocusRow = useRef<{
+    key: RowKey;
+    col: number;
+    nodes: readonly unknown[];
+  } | null>(null);
+
+  /**
+   * Ctrl+ArrowUp/Down move the focused row among its siblings, Ctrl+Right
+   * indents, Ctrl+Left outdents — through the same `applyDrop` and the same
+   * `onRowReparented` as a handle drag. Returns whether the key was one.
+   */
+  function moveRowByKeyboard(
+    node: DataRowNode<T>,
+    event: React.KeyboardEvent,
+    col: number,
+  ): boolean {
+    const move = ogeTreeRowKeyMove(event, model.rtl());
+    if (move === null) return false;
+    event.preventDefault();
+    const target = core.keyboardMoveTarget(node.key, move);
+    if (!target) return true;
+    const nodes = core.renderNodes();
+    const moved = core.applyDrop(
+      node.key,
+      target.targetKey,
+      target.position,
+      () => data.reload(),
+    );
+    if (!moved) return true;
+    latest.current.onRowReparented?.(moved);
+    pendingFocusRow.current = { key: node.key, col, nodes };
+    return true;
+  }
+
+  function headerKeyShortcuts(column: ResolvedColumn<T>): string | undefined {
+    return (
+      ogeGridHeaderKeyShortcuts({
+        resize: props.columnResize !== false,
+        move: column.field !== undefined && model.columnReorder(),
+      }) ?? undefined
+    );
+  }
+
+  function widthBounds(column: ResolvedColumn<T>, now = 0) {
+    return ogeColumnWidthBounds(
+      column.minWidth,
+      column.maxWidth,
+      Math.max(model.hostWidth(), now),
+    );
+  }
+
+  /** The separator's `aria-valuenow/min/max`: the column width in px. */
+  function separatorValue(column: ResolvedColumn<T>): {
+    now: number;
+    min: number;
+    max: number;
+  } {
+    const now = Math.round(
+      model.layout.colWidths()[column.absIndex] ??
+        configRef.current.columnMinWidth,
+    );
+    const bounds = widthBounds(column, now);
+    return { now: clampColumnWidth(now, bounds), ...bounds };
+  }
+
+  function headerCellOf(id: string): HTMLElement | null {
+    return (
+      Array.from(
+        hostRef.current?.querySelectorAll<HTMLElement>(
+          '.oge-header-row > .oge-header-cell[data-colid]',
+        ) ?? [],
+      ).find((cell) => cell.dataset['colid'] === id) ?? null
+    );
+  }
+
+  function resizeColumnTo(
+    column: ResolvedColumn<T>,
+    width: number,
+    shouldAnnounce: boolean,
+  ): void {
+    const next = clampColumnWidth(width, widthBounds(column, width));
+    state.columns.setWidth(column.id, next);
+    if (shouldAnnounce)
+      announce(
+        formatPattern(msg.columnResized, {
+          column: column.caption,
+          width: String(next),
+        }),
+      );
+  }
+
+  /** Alt+Arrow resizes, Ctrl+Shift+Arrow moves the focused header's column. */
+  function onHeaderKeydown(
+    column: ResolvedColumn<T>,
+    event: React.KeyboardEvent<HTMLElement>,
+  ): void {
+    if (event.target !== event.currentTarget) return;
+    const command = ogeGridHeaderKeyCommand(event, model.rtl());
+    if (!command) return;
+    if (command.kind === 'resize') {
+      if (props.columnResize === false) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const current =
+        event.currentTarget.offsetWidth || separatorValue(column).now;
+      resizeColumnTo(column, current + command.delta, true);
+      return;
+    }
+    if (!model.columnReorder() || column.field === undefined) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const columns = model.resolvedColumns();
+    const target = ogeColumnMoveTarget(columns, column.id, command.direction);
+    if (!target) return;
+    state.columns.reorder(
+      columns.map((c) => c.id),
+      column.id,
+      target.anchorId,
+      target.position,
+    );
+    announce(
+      formatPattern(msg.columnMoved, {
+        column: column.caption,
+        position: String(target.toIndex + 1),
+        total: String(columns.length),
+      }),
+    );
+    setTimeout(() => headerCellOf(column.id)?.focus());
+  }
+
+  /** APG window-splitter keys on the focused resize separator. */
+  function onResizeHandleKeydown(
+    column: ResolvedColumn<T>,
+    event: React.KeyboardEvent<HTMLElement>,
+  ): void {
+    const command = ogeColumnSeparatorKeyCommand(event, model.rtl());
+    if (!command) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const cell = event.currentTarget.closest<HTMLElement>('.oge-header-cell');
+    if (command.kind === 'exit') {
+      cell?.focus();
+      return;
+    }
+    const current = cell?.offsetWidth || separatorValue(column).now;
+    const width = ogeSeparatorTargetWidth(
+      command,
+      current,
+      widthBounds(column, current),
+    );
+    if (width !== null) resizeColumnTo(column, width, false);
+  }
+
+  /** Ctrl+ArrowUp/Down on a column-chooser item moves that column. */
+  function onChooserKeydown(
+    id: string,
+    event: React.KeyboardEvent<HTMLElement>,
+  ): void {
+    const direction = ogeChooserMoveDirection(event);
+    if (direction === null || !model.columnReorder()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const entries = model.chooserEntries();
+    const ids = entries.map((entry) => entry.id);
+    const target = ogeListMoveTarget(ids, id, direction);
+    if (!target) return;
+    state.columns.reorder(ids, id, target.anchorId, target.position);
+    announce(
+      formatPattern(msg.columnMoved, {
+        column: entries.find((entry) => entry.id === id)?.caption ?? id,
+        position: String(target.toIndex + 1),
+        total: String(ids.length),
+      }),
+    );
+    setTimeout(() => {
+      const item = Array.from(
+        document.querySelectorAll<HTMLElement>('.oge-chooser-item'),
+      ).find((element) => element.dataset['chooserId'] === id);
+      item?.querySelector<HTMLElement>('input')?.focus();
+    });
   }
 
   // --- selection ---
@@ -1441,6 +1754,16 @@ function OgeTreeListInner<T extends object>(
         else core.toggleSelection(node.key);
       }
       return;
+    }
+    if (
+      latest.current.rowDragging &&
+      state.editing.editCell() === null &&
+      state.editing.editRowKey() === null &&
+      (event.target as HTMLElement).closest?.('[data-cell]')
+    ) {
+      const node = core.renderNodes()[cell.row];
+      if (node?.kind === 'data' && moveRowByKeyboard(node, event, cell.col))
+        return;
     }
     if (model.keyboard.handleKey(event.nativeEvent)) event.preventDefault();
   }
@@ -2223,6 +2546,19 @@ function OgeTreeListInner<T extends object>(
       });
     }
     const text = cellDisplayText(node, column);
+    const booleanLabel =
+      column.dataType === 'boolean'
+        ? booleanCellLabel(column.accessor(node.data), column, msg)
+        : null;
+    if (booleanLabel !== null) {
+      // the glyph is decoration; the word is what a screen reader announces
+      return (
+        <span className="oge-tree-cell-text">
+          <span aria-hidden="true">{text}</span>
+          <span className="oge-sr-only">{booleanLabel}</span>
+        </span>
+      );
+    }
     const runs = searchQuery
       ? buildSearchHighlightSegments(text, searchQuery)
       : null;
@@ -2306,6 +2642,11 @@ function OgeTreeListInner<T extends object>(
           height: virtualized ? effRowHeight : undefined,
           gridTemplateColumns,
         }}
+        aria-keyshortcuts={
+          rowDragging
+            ? 'Control+ArrowUp Control+ArrowDown Control+ArrowLeft Control+ArrowRight'
+            : undefined
+        }
         onClick={(event) => onRowClick(node, event)}
         onDoubleClick={(event) =>
           latest.current.onRowDblClick?.({
@@ -2326,7 +2667,7 @@ function OgeTreeListInner<T extends object>(
             <span
               className="oge-drag-handle"
               draggable
-              aria-label="Reparent row"
+              aria-label={msg.reparentRow}
               onDragStart={(event) => {
                 draggedRowKey.current = node.key;
                 event.dataTransfer.setData('text/plain', String(node.key));
@@ -2740,14 +3081,14 @@ function OgeTreeListInner<T extends object>(
               <div
                 className="oge-header-cell oge-drag-cell"
                 role="columnheader"
-                aria-label="Reparent"
+                aria-label={msg.reparentColumnHeader}
               />
             ) : null}
             {hasCheckboxColumn ? (
               <div
                 className="oge-header-cell oge-checkbox-cell"
                 role="columnheader"
-                aria-label="Select all"
+                aria-label={msg.selectAllColumnHeader}
               >
                 {props.allowSelectAll !== false ? (
                   <OgeCheckBox
@@ -2788,7 +3129,13 @@ function OgeTreeListInner<T extends object>(
                         ? 'none'
                         : undefined
                   }
-                  tabIndex={sortable || reorderable ? 0 : undefined}
+                  aria-keyshortcuts={headerKeyShortcuts(column)}
+                  aria-labelledby={`${uid}-h-${column.absIndex}`}
+                  tabIndex={
+                    sortable || reorderable || props.columnResize !== false
+                      ? 0
+                      : undefined
+                  }
                   draggable={reorderable || undefined}
                   onDragStart={(event) => onHeaderDragStart(column, event)}
                   onDragOver={(event) => onHeaderDragOver(column, event)}
@@ -2799,9 +3146,13 @@ function OgeTreeListInner<T extends object>(
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ')
                       onHeaderClick(column, event);
+                    else onHeaderKeydown(column, event);
                   }}
                 >
-                  <span className="oge-header-caption">
+                  <span
+                    className="oge-header-caption"
+                    id={`${uid}-h-${column.absIndex}`}
+                  >
                     {column.source?.renderHeader
                       ? column.source.renderHeader({
                           column: column.source,
@@ -2858,9 +3209,23 @@ function OgeTreeListInner<T extends object>(
                     </button>
                   ) : null}
                   {props.columnResize !== false ? (
+                    // APG window splitter: focusable (tabIndex -1); Alt+Arrow on
+                    // the header is the primary keyboard path
                     <span
                       className="oge-resize-handle"
+                      role="separator"
+                      aria-orientation="vertical"
+                      tabIndex={-1}
+                      aria-label={formatPattern(msg.resizeColumn, {
+                        column: column.caption,
+                      })}
+                      aria-valuenow={separatorValue(column).now}
+                      aria-valuemin={separatorValue(column).min}
+                      aria-valuemax={separatorValue(column).max}
                       onPointerDown={(event) => onResizeStart(column, event)}
+                      onKeyDown={(event) =>
+                        onResizeHandleKeydown(column, event)
+                      }
                     />
                   ) : null}
                 </div>
@@ -2932,6 +3297,14 @@ function OgeTreeListInner<T extends object>(
           onPageSizeChange={(size) => core.setPageSize(size)}
         />
       ) : null}
+      {/* permanent live region: keyboard resize / reorder / row moves */}
+      <div
+        className="oge-sr-only oge-grid-announcer"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {liveMessage}
+      </div>
       {customLoading !== null || (props.loadPanel && loading) ? (
         <div className="oge-load-panel" role="status">
           <span className="oge-spinner" aria-hidden="true" />
@@ -3072,6 +3445,13 @@ function OgeTreeListInner<T extends object>(
                     ? 'oge-hf-item oge-chooser-item oge-chooser-drop-target'
                     : 'oge-hf-item oge-chooser-item'
                 }
+                data-chooser-id={entry.id}
+                aria-keyshortcuts={
+                  columnReorder
+                    ? 'Control+ArrowUp Control+ArrowDown'
+                    : undefined
+                }
+                onKeyDown={(event) => onChooserKeydown(entry.id, event)}
                 draggable={columnReorder}
                 onDragStart={(event) => {
                   chooserDragId.current = entry.id;

@@ -84,6 +84,13 @@ export const OGE_GRID_API: ApiSections = {
           description:
             'Debounce for text filter inputs, in ms. Set to <code>0</code> in tests.',
         },
+        {
+          name: 'announcements',
+          type: 'boolean | undefined',
+          default: 'config.announcements (true)',
+          description:
+            'Speaks sort, filter/search result count (debounced, once the new result arrived), page, group expansion, select-all and blocked-save validation changes through the shared <code>OgeLiveAnnouncer</code> regions — texts from the <code>*Announcement</code> messages. <code>false</code> opts out.',
+        },
       ],
     },
     {
@@ -141,7 +148,8 @@ export const OGE_GRID_API: ApiSections = {
           name: 'groupPanel',
           type: 'boolean',
           default: 'false',
-          description: 'Drop area for drag-and-drop row grouping.',
+          description:
+            'Drop area for drag-and-drop row grouping. Keyboard: the header context menu (<kbd>Shift+F10</kbd>) offers <code>groupByColumn</code> / <code>ungroupColumn</code>; on a chip’s remove button <kbd>Ctrl+←/→</kbd> reorders the grouping and <kbd>Delete</kbd> removes it (<code>messages.groupMoved</code> / <code>groupRemoved</code>).',
         },
         {
           name: 'groupBy',
@@ -213,7 +221,7 @@ export const OGE_GRID_API: ApiSections = {
           type: 'false | OgeEditingOptions',
           default: 'false',
           description:
-            "Enables editing: <code>{ mode: 'cell' | 'row' | 'batch' | 'popup' | 'form', allow… }</code>.",
+            "Enables editing: <code>{ mode: 'cell' | 'row' | 'batch' | 'popup' | 'form', allow… }</code>. An invalid cell editor sets <code>aria-invalid</code> on its control and points <code>aria-errormessage</code> / <code>aria-describedby</code> at a rendered, visually hidden error text (also the cell’s tooltip); the <code>form</code>/<code>popup</code> fields wire the same through <code>&lt;oge-form&gt;</code>.",
         },
         {
           name: 'commandButtons',
@@ -226,7 +234,7 @@ export const OGE_GRID_API: ApiSections = {
           type: 'boolean',
           default: 'false',
           description:
-            'Drag-handle column for reordering rows. Arrays mutate in place; DataSources handle <code>rowReordered</code>.',
+            'Drag-handle column for reordering rows. Arrays mutate in place; DataSources handle <code>rowReordered</code>. Keyboard: <kbd>Ctrl+↑/↓</kbd> on a focused cell moves the row onto its neighbour through the same drop path (same event), announced via <code>messages.rowMoved</code>.',
         },
       ],
     },
@@ -237,19 +245,22 @@ export const OGE_GRID_API: ApiSections = {
           name: 'columnChooser',
           type: 'boolean',
           default: 'false',
-          description: 'Column visibility chooser button.',
+          description:
+            'Column visibility chooser button. Keyboard: <kbd>Space</kbd> toggles an item; with <code>columnReorder</code>, <kbd>Ctrl+↑/↓</kbd> moves it. Hiding is also in the header context menu.',
         },
         {
           name: 'columnResize',
           type: 'boolean',
           default: 'true',
-          description: 'Drag-resize handles on header edges.',
+          description:
+            'Drag-resize handles on header edges. Keyboard: <kbd>Alt+←/→</kbd> on a focused header resizes by 10px (<kbd>Shift</kbd> for 1px); the handle is a focusable <code>role="separator"</code> (<code>aria-valuenow/min/max</code> = width in px, named by <code>messages.resizeColumn</code>) taking <kbd>←/→</kbd>, <kbd>Home</kbd>/<kbd>End</kbd> (min / max) and <kbd>Enter</kbd>/<kbd>Esc</kbd> (back to the header). RTL-aware; clamped to <code>minWidth</code> / <code>maxWidth</code>.',
         },
         {
           name: 'columnReorder',
           type: 'boolean',
           default: 'true',
-          description: 'Drag-and-drop column reordering.',
+          description:
+            'Drag-and-drop column reordering. Keyboard: <kbd>Ctrl+Shift+←/→</kbd> on a focused header moves the column one step, never across a pinned group or out of its band (an unbanded column steps over a band as a whole), announced via <code>messages.columnMoved</code>.',
         },
         {
           name: 'columnMinWidth',
@@ -489,7 +500,8 @@ export const OGE_GRID_API: ApiSections = {
         {
           name: 'state(): GridStateSnapshot / applyState(snapshot)',
           type: 'GridStateSnapshot / void',
-          description: 'Captures / applies the persistable UI state.',
+          description:
+            'Captures / applies the persistable UI state. <code>applyState</code> validates the snapshot first (<code>sanitize*StateSnapshot</code>): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown.',
         },
         {
           name: 'clearFilters() / clearSorting()',
@@ -507,7 +519,7 @@ export const OGE_GRID_API: ApiSections = {
           name: 'getCsv(options?): Promise&lt;string&gt;',
           type: 'Promise&lt;string&gt;',
           description:
-            'CSV of the current view. Cells a spreadsheet would evaluate as a formula (<code>=</code>, <code>+</code>, <code>-</code>, <code>@</code> or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a <code>-5</code> column stays numeric. Pass <code>formulaGuard: false</code> when the output is machine-read rather than opened in a spreadsheet.',
+            'CSV of the current view. Cells a spreadsheet would evaluate as a formula (first non-whitespace character <code>=</code>, <code>+</code>, <code>-</code>, <code>@</code> or a full-width <code>＝ ＋ － ＠</code>, or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a <code>-5</code> column stays numeric. Pass <code>formulaGuard: false</code> when the output is machine-read rather than opened in a spreadsheet.',
         },
         {
           name: "exportCsv(filename = 'grid.csv', options?): Promise&lt;void&gt;",
@@ -740,6 +752,13 @@ export const OGE_COLUMN_API: ApiSections = {
           name: 'width / minWidth',
           type: 'number | string / number',
           description: 'Track size; <code>minWidth</code> guards resizing.',
+        },
+        {
+          name: 'maxWidth',
+          type: 'number | undefined',
+          default: 'undefined',
+          description:
+            'Upper bound in px for user resizing — pointer drag and the <kbd>Alt+←/→</kbd> / separator keys; also the separator’s <code>aria-valuemax</code>.',
         },
         {
           name: 'visible',
@@ -1066,7 +1085,7 @@ export const OGE_GRID_TYPES_API: ApiSections = {
         },
         {
           name: 'OgeGridConfig',
-          type: '{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; messages }',
+          type: '{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; announcements: true; messages }',
           description: 'Defaults shown inline.',
         },
         {
@@ -1074,6 +1093,30 @@ export const OGE_GRID_TYPES_API: ApiSections = {
           type: '60+ string keys',
           description:
             'Every user-facing string, incl. aria labels, filter operators, summary patterns — see <code>OGE_DEFAULT_MESSAGES</code> in the source.',
+        },
+        {
+          name: 'messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow',
+          type: 'string',
+          description:
+            'Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: <code>Reorder</code>, <code>Detail</code>, <code>Select all</code>, <code>Reorder row</code>. The tree list reads <code>reparentColumnHeader</code> / <code>reparentRow</code> (<code>Reparent</code>, <code>Reparent row</code>) for its reparenting handle.',
+        },
+        {
+          name: 'messages.resizeColumn / messages.columnResized / messages.columnMoved / messages.rowMoved / messages.treeRowMoved / messages.groupMoved / messages.groupRemoved',
+          type: 'string',
+          description:
+            'The keyboard alternatives to dragging (WCAG 2.1.1 / 2.5.7): the resize separator’s name (<code>Resize {column}</code>) and the polite live-region announcements after a keyboard resize (<code>{column} width {width} pixels</code>), column move (<code>{column} moved to position {position} of {total}</code>), row move (<code>Row moved to position {position} of {total}</code>), tree-row move (<code>Row moved to level {level}, position {position} of {total}</code>) and group-chip reorder / removal (<code>Grouping by {column} moved to position {position} of {total}</code>, <code>Grouping by {column} removed</code>).',
+        },
+        {
+          name: 'messages.booleanTrueLabel / messages.booleanFalseLabel',
+          type: 'string',
+          description:
+            'Screen-reader text of a default-rendered boolean cell (<code>Yes</code> / <code>No</code>). The visible <code>booleanTrue</code> / <code>booleanFalse</code> glyph (<code>✓</code> / <code>✗</code>, also the CSV text) is rendered <code>aria-hidden</code>; the label is rendered visually hidden beside it. Columns with a custom <code>format</code>, a lookup or a cell template render their own text. Localizing <code>booleanTrue</code> / <code>booleanFalse</code> to words? Set the labels too — they are announced, the glyph text is not.',
+        },
+        {
+          name: 'messages.sortAscendingAnnouncement / messages.sortDescendingAnnouncement / messages.sortClearedAnnouncement / messages.rowCountAnnouncement / messages.rowCountOneAnnouncement / messages.pageAnnouncement / messages.groupExpandedAnnouncement / messages.groupCollapsedAnnouncement / messages.rowExpandedAnnouncement / messages.rowCollapsedAnnouncement / messages.selectionCountAnnouncement / messages.validationErrorAnnouncement',
+          type: 'string',
+          description:
+            'Live-announcement patterns, <code>{placeholder}</code>-interpolated. Defaults: <code>Sorted by {column}, ascending</code> / <code>descending</code>, <code>Sort cleared</code>, <code>{count} rows</code> / <code>{count} row</code>, <code>Page {n} of {total}</code>, <code>Group {value} expanded</code> / <code>collapsed</code>, <code>{value} expanded</code> / <code>collapsed</code> (tree list), <code>{count} rows selected</code> and <code>{column}: {error}</code> (spoken assertively when a save is blocked by an invalid editor).',
         },
         {
           name: 'OGE_STATE_STORAGE / OgeStateStorage',

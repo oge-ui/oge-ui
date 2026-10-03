@@ -8,6 +8,7 @@ import {
   nextDay,
   rangesOverlap,
   resolveFirstDayOfWeek,
+  resolveWeekendDays,
   sameDay,
   sameMonth,
   serializeLikeOriginal,
@@ -152,6 +153,64 @@ describe('date-utils', () => {
     const resolved = resolveFirstDayOfWeek(undefined, 'en-US');
     expect(resolved).toBeGreaterThanOrEqual(0);
     expect(resolved).toBeLessThanOrEqual(6);
+  });
+
+  describe('resolveWeekendDays', () => {
+    const RealLocale = Intl.Locale;
+
+    /** Stubs Intl.Locale so the spec does not depend on the host's ICU data. */
+    function stubWeekInfo(
+      table: Record<string, number[]>,
+      shape: 'method' | 'getter' | 'none' = 'method',
+    ): void {
+      class FakeLocale {
+        constructor(readonly tag: string) {}
+        getWeekInfo?: () => { weekend: number[] };
+        weekInfo?: { weekend: number[] };
+      }
+      const Fake = function (tag: string) {
+        const locale = new FakeLocale(tag);
+        const weekend = table[tag] ?? [6, 7];
+        if (shape === 'method') locale.getWeekInfo = () => ({ weekend });
+        if (shape === 'getter') locale.weekInfo = { weekend };
+        return locale;
+      };
+      vi.spyOn(Intl, 'Locale').mockImplementation(
+        Fake as unknown as typeof Intl.Locale,
+      );
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      expect(Intl.Locale).toBe(RealLocale);
+    });
+
+    it('prefers an explicit list, normalized, deduplicated and sorted', () => {
+      expect(resolveWeekendDays([6, 0], 'en-US')).toEqual([0, 6]);
+      expect(resolveWeekendDays([7, -1, 5, 5], 'en-US')).toEqual([0, 5, 6]);
+      expect(resolveWeekendDays([], 'en-US')).toEqual([]);
+    });
+
+    it('maps Intl weekInfo (1 = Monday … 7 = Sunday) onto 0 = Sunday', () => {
+      stubWeekInfo({ 'en-US': [6, 7], 'he-IL': [5, 6], 'ar-SA': [5, 6] });
+      expect(resolveWeekendDays(undefined, 'en-US')).toEqual([0, 6]);
+      expect(resolveWeekendDays(undefined, 'he-IL')).toEqual([5, 6]);
+      expect(resolveWeekendDays(undefined, 'ar-SA')).toEqual([5, 6]);
+    });
+
+    it('reads the older weekInfo getter shape too', () => {
+      stubWeekInfo({ 'fa-IR': [5] }, 'getter');
+      expect(resolveWeekendDays(undefined, 'fa-IR')).toEqual([5]);
+    });
+
+    it('falls back to Saturday and Sunday without week data', () => {
+      stubWeekInfo({}, 'none');
+      expect(resolveWeekendDays(undefined, 'he-IL')).toEqual([0, 6]);
+    });
+
+    it('falls back when the locale tag is invalid', () => {
+      expect(resolveWeekendDays(undefined, '!!')).toEqual([0, 6]);
+    });
   });
 
   it('toLocalDate parses date strings as LOCAL midnight, never UTC', () => {

@@ -594,7 +594,7 @@ export const OGE_REACT_TOAST_API: ApiSections = {
           name: '&lt;OgeToastProvider&gt;',
           type: 'component',
           description:
-            'Hosts the toast regions and the live-region announcers; mount once near the app root. The React counterpart of the root-provided Angular service.',
+            'Hosts the toast regions (announcements go through the shared <code>useOgeLiveAnnouncer</code> regions); mount once near the app root. The React counterpart of the root-provided Angular service.',
         },
         {
           name: 'OgeToastSeverity',
@@ -626,6 +626,57 @@ export const OGE_REACT_TOAST_API: ApiSections = {
           type: 'toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates',
           description:
             'Defaults via <code>&lt;OgeOverlayConfigProvider&gt;</code>; strings via <code>messages.toastClose/toastRegionLabel/toastCountBadge</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_LIVE_ANNOUNCER_API: ApiSections = {
+  methods: [
+    {
+      title: 'OgeLiveAnnouncerHandle',
+      entries: [
+        {
+          name: 'announce(message: string, options?: OgeLiveAnnounceOptions | OgeLivePoliteness): void',
+          type: 'void',
+          description:
+            'Speaks <code>message</code> through the polite (default) or assertive region. Written after <code>delay</code> ms (default 100) — a newer message to the same region inside that window supersedes it (debounce); the identical message inside a second is dropped; the region clears after <code>clearAfter</code> ms (default 5000) so a repeat is announced again. Empty text and the server are no-ops.',
+        },
+        {
+          name: 'clear(politeness?: OgeLivePoliteness): void',
+          type: 'void',
+          description:
+            'Empties one region (or both) and drops anything still pending.',
+        },
+      ],
+    },
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'useOgeLiveAnnouncer(): OgeLiveAnnouncerHandle',
+          type: 'hook',
+          description:
+            'Stable handle from <code>@oge-ui/react-overlay</code>; needs no provider. The document is resolved per call, never during render, so the hook is SSR-safe — call <code>announce</code> from handlers or effects.',
+        },
+        {
+          name: 'OgeLivePoliteness',
+          type: "'polite' | 'assertive'",
+          description: 'Which of the two shared regions speaks.',
+        },
+        {
+          name: 'OgeLiveAnnounceOptions',
+          type: '{ politeness?: OgeLivePoliteness; delay?: number; clearAfter?: number }',
+          description:
+            '<code>delay: 0</code> writes synchronously — for a caller that already cleared and waited itself (the toast engine).',
+        },
+        {
+          name: 'OgeLiveAnnouncerCore / getOgeLiveAnnouncer(doc?)',
+          type: '@oge-ui/behavior',
+          description:
+            'The framework-free engine both layers wrap: one polite and one assertive visually hidden <code>aria-live</code> region per document (<code>.oge-live-announcer[data-oge-live-announcer]</code>, no role, created on the first announcement, never inerted by a modal’s <code>inertBackground</code>). Every OGE announcement — grid, tree list, toast, Gantt, uploader — goes through it; components never render their own live regions.',
         },
       ],
     },

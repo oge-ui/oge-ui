@@ -84,6 +84,7 @@ export type { OgeReactiveCell, OgeReactivityAdapter } from './lib/reactivity';
 // --- grid ---
 export {
   OgeGridColumnLayoutCore,
+  resizedColumnWidth,
   type OgeGridColumnLayoutDeps,
   type OgeGridColumnRange,
   type OgeGridLayoutColumn,
@@ -143,12 +144,22 @@ export {
   type OgeContextMenuKeyTarget,
 } from './lib/grid/grid-context-menu';
 export {
+  OgeGridAnnouncements,
+  rowCountText,
+  sortChangeText,
+  type OgeGridAnnounceSink,
+  type OgeGridAnnouncementSnapshot,
+  type OgeGridAnnouncementsDeps,
+} from './lib/grid/grid-announcements';
+export { syncOgeEditorErrorAria } from './lib/grid/grid-editor-aria';
+export {
   OgeGridEditingCore,
   type OgeDataChange,
   type OgeEditingStartEvent,
   type OgeGridEditingCoreDeps,
   type OgeGridEditorBridge,
   type OgeGridEditorState,
+  type OgeGridInvalidEditor,
   type OgeRowInsertedEvent,
   type OgeRowInsertingEvent,
   type OgeRowRemovedEvent,
@@ -160,6 +171,7 @@ export {
 } from './lib/grid/grid-editing-core';
 export {
   allHeaderValuesSelected,
+  booleanCellLabel,
   filterHeaderValues,
   formatCellValue,
   groupHeaderValuesByYear,
@@ -170,6 +182,7 @@ export {
   toggleAllHeaderValues,
   toggleHeaderGroup,
   toggleHeaderValue,
+  type OgeBooleanCellMessages,
   type OgeHeaderFilterMessages,
   type OgeHeaderFilterSelection,
   type OgeHeaderValueGroup,
@@ -218,6 +231,32 @@ export {
   type OgeGridKeyboardNavDeps,
   type OgeGridKeyboardNavTreeHooks,
 } from './lib/grid/grid-keyboard-nav';
+export {
+  OGE_COLUMN_RESIZE_FINE_STEP,
+  OGE_COLUMN_RESIZE_FLOOR,
+  OGE_COLUMN_RESIZE_STEP,
+  clampColumnWidth,
+  ogeAdjacentDataRow,
+  ogeChooserMoveDirection,
+  ogeColumnMoveTarget,
+  ogeColumnSeparatorKeyCommand,
+  ogeColumnWidthBounds,
+  ogeGridHeaderKeyCommand,
+  ogeGridHeaderKeyShortcuts,
+  ogeGroupChipKeyCommand,
+  ogeListMoveTarget,
+  ogeRowMoveDirection,
+  ogeSeparatorTargetWidth,
+  ogeTreeRowKeyMove,
+  type OgeColumnMoveTarget,
+  type OgeColumnSeparatorKeyCommand,
+  type OgeColumnWidthBounds,
+  type OgeGridHeaderKeyCommand,
+  type OgeGroupChipKeyCommand,
+  type OgeKeyInput,
+  type OgeMovableColumn,
+  type OgeTreeRowKeyMove,
+} from './lib/grid/grid-keyboard-moves';
 export { OgeGridStateCore, loadOptionsEqual } from './lib/grid/grid-state-core';
 export {
   OGE_GRID_WINDOW_BLOCK_SIZE,
@@ -492,6 +531,16 @@ export {
   type OgeModalDragRequest,
   type OgeModalResizeRequest,
 } from './lib/overlay/modal-core';
+// --- live announcements ------------------------------------------------------
+export {
+  OgeLiveAnnouncerCore,
+  getOgeLiveAnnouncer,
+  OGE_LIVE_ANNOUNCER_ATTR,
+  OGE_LIVE_ANNOUNCER_CLASS,
+  type OgeLivePoliteness,
+  type OgeLiveAnnounceOptions,
+  type OgeLiveAnnouncerOptions,
+} from './lib/a11y/live-announcer';
 // --- upload ------------------------------------------------------------------
 export type {
   OgeUploadFileStatus,
@@ -1076,7 +1125,11 @@ export type {
   OgeValidationContext,
   OgeValidationRule,
 } from './lib/forms/form-types';
-export { sanitizeUrl, sanitizeResourceUrl } from './lib/security/sanitize-url';
+export {
+  sanitizeUrl,
+  sanitizeResourceUrl,
+  type OgeSanitizeUrlOptions,
+} from './lib/security/sanitize-url';
 export { prefersReducedMotion, motionScrollBehavior } from './lib/a11y/motion';
 
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for

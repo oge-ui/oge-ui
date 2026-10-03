@@ -46,12 +46,28 @@ import {
   type SummaryDescriptor,
   type SummaryRowNode,
   type SummaryType,
+  sanitizeGridStateSnapshot,
 } from '@oge-ui/core';
 import {
+  OgeGridAnnouncements,
   allRowsSelected,
   deferredToggleExpr,
   keyEqualsExpr,
+  resizedColumnWidth,
   rowClickSelectionIntent,
+  clampColumnWidth,
+  ogeAdjacentDataRow,
+  ogeChooserMoveDirection,
+  ogeColumnMoveTarget,
+  ogeColumnSeparatorKeyCommand,
+  ogeColumnWidthBounds,
+  ogeGridHeaderKeyCommand,
+  ogeGridHeaderKeyShortcuts,
+  ogeGroupChipKeyCommand,
+  ogeListMoveTarget,
+  ogeRowMoveDirection,
+  ogeSeparatorTargetWidth,
+  type OgeColumnWidthBounds,
 } from '@oge-ui/behavior';
 import {
   OgeContextMenuEcho,
@@ -67,6 +83,7 @@ import {
 } from '@oge-ui/behavior';
 import {
   allHeaderValuesSelected,
+  booleanCellLabel,
   filterHeaderValues,
   groupHeaderValuesByYear,
   headerGroupState,
@@ -134,6 +151,7 @@ import { OgeSelectBox } from '@oge-ui/inputs/select-box';
 import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import {
   OgeAnchoredPanel,
+  OgeLiveAnnouncer,
   OgeMenuList,
   OgeModal,
   OgeModalFooter,
@@ -309,6 +327,8 @@ type ResolvedColumn<T = unknown> = FoundationResolvedColumn<T, OgeColumn<T>>;
 
 const COLUMN_DRAG_TYPE = 'application/x-oge-column';
 
+let nextUid = 0;
+
 @Component({
   selector: 'oge-grid',
   imports: [
@@ -348,6 +368,12 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
   },
 })
 export class OgeGrid<T extends object = Record<string, unknown>> {
+  /**
+   * Instance id prefix: a header is labelled by its caption alone
+   * (`aria-labelledby`), not by the separator / filter button inside it.
+   */
+  protected readonly uid = `oge-grid-${nextUid++}`;
+
   protected readonly store = inject(GridStateStore);
   protected readonly adapter: GridDataAdapter<T> = inject(GridDataAdapter);
   private readonly config = inject(OGE_GRID_CONFIG);
@@ -975,6 +1001,20 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         target?.focus();
       });
     });
+    // a keyboard-moved row keeps the focus once the rows re-render
+    effect(() => {
+      const pending = this.pendingFocusRow();
+      const nodes = this.flatNodes();
+      if (!pending || nodes === pending.nodes) return;
+      const row = nodes.findIndex(
+        (node) => node.kind === 'data' && node.key === pending.key,
+      );
+      if (row < 0) return;
+      untracked(() => {
+        this.pendingFocusRow.set(null);
+        this.focusedCell.set({ row, col: pending.col });
+      });
+    });
     // focus follows the keyboard-navigation cell — unless an editor is open
     // (the editor-focus effect above owns the focus then)
     effect(() => {
@@ -1027,6 +1067,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       prefix: 'oge-grid',
       storage: this.stateStorage,
       snapshot: this.persistedSnapshot,
+      sanitize: sanitizeGridStateSnapshot,
       // a bound [groupBy] is controlled: the page decides the grouping, so a
       // stored grouping from an earlier visit must not replace it
       apply: (snapshot) =>
@@ -1127,9 +1168,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Applies a previously captured state snapshot (see `state()` / `stateChange`). */
   applyState(snapshot: GridStateSnapshot): void {
+    // public API fed from storage, URLs or the host: validate the shape first
+    const safe = sanitizeGridStateSnapshot(snapshot);
+    if (safe === null) return;
     untracked(() => {
-      this.store.applySnapshot(snapshot);
-      const hidden = new Set(snapshot.columns?.hidden ?? []);
+      this.store.applySnapshot(safe);
+      const hidden = new Set(safe.columns?.hidden ?? []);
       for (const column of this.declaredColumns()) {
         const field = column.field();
         if (field) column.visible.set(!hidden.has(field));
@@ -1276,6 +1320,18 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (kind === 'group') this.store.expansion.toggleGroup(key);
     else this.store.expansion.toggleDetail(key);
     (expanding ? this.rowExpanded : this.rowCollapsed).emit({ key, kind, row });
+    if (kind === 'group') {
+      const group = untracked(this.flatNodes).find(
+        (node): node is GroupRowNode =>
+          node.kind === 'group' && node.key === key,
+      );
+      if (group) {
+        this.announcer.groupToggled(
+          untracked(() => this.groupValueText(group)),
+          expanding,
+        );
+      }
+    }
   }
 
   /** Message shown by `beginCustomLoading()`; `null` while inactive. */
@@ -1362,20 +1418,25 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * keys are materialized.
    */
   selectAll(): void {
+    void this.runSelectAll();
+  }
+
+  /** `selectAll()`'s body; settles once the selection is in place. */
+  private runSelectAll(): Promise<void> {
     if (untracked(this.selectionDeferred)) {
       const field = untracked(this.deferredKeyFieldName);
-      if (!field) return;
+      if (!field) return Promise.resolve();
       const filter = untracked(this.store.loadOptions).filter;
       this.selectionFilter.set(
         filter ?? { type: 'binary', field, op: 'isnotnull' },
       );
-      return;
+      return Promise.resolve();
     }
     if (untracked(this.selectAllMode) === 'page') {
       this.store.selection.replace(untracked(this.dataKeys));
-      return;
+      return Promise.resolve();
     }
-    void this.selectAllPages();
+    return this.selectAllPages();
   }
 
   /** Clears the selection (deferred mode: resets `selectionFilter`). */
@@ -2104,6 +2165,22 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     return formatCellValue(value, column.dataType, undefined);
   }
 
+  /**
+   * Screen-reader text of a default-rendered boolean cell (its `✓` / `✗`
+   * glyph is drawn `aria-hidden`), or `null` for every other cell.
+   */
+  protected booleanLabelOf(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): string | null {
+    if (column.dataType !== 'boolean' || column.lookup) return null;
+    return booleanCellLabel(
+      this.displayValue(node, column),
+      column,
+      this.msg(),
+    );
+  }
+
   /** Filter-row lookup editor: applies an exact-match filter on the raw value. */
   protected onLookupFilter(column: ResolvedColumn<T>, value: unknown): void {
     const field = column.field;
@@ -2438,13 +2515,50 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (fromKey === null || fromKey === target.key) return;
     event.preventDefault();
     event.stopPropagation();
+    this.commitRowMove(fromKey, target.key);
+  }
+
+  /** Row the focus follows once a keyboard move re-renders the rows. */
+  private readonly pendingFocusRow = signal<{
+    key: RowKey;
+    col: number;
+    nodes: readonly RowNode<T>[];
+  } | null>(null);
+
+  /**
+   * Ctrl+ArrowUp/Down on a focused row: the keyboard twin of a handle drag
+   * onto the neighbouring data row — same drop path, same `rowReordered`.
+   */
+  private moveRowByKeyboard(row: number, direction: 1 | -1, col: number): void {
+    const nodes = untracked(this.flatNodes);
+    const node = nodes[row];
+    const targetIndex = ogeAdjacentDataRow(nodes, row, direction);
+    if (node?.kind !== 'data' || targetIndex < 0) return;
+    const target = nodes[targetIndex] as DataRowNode<T>;
+    const moved = this.commitRowMove(node.key, target.key);
+    if (!moved) return;
+    this.pendingFocusRow.set({ key: node.key, col, nodes });
+    this.announce(
+      formatPattern(this.msg().rowMoved, {
+        position: String(moved.toIndex + 1),
+        total: String(moved.total),
+      }),
+    );
+  }
+
+  /** Moves `fromKey` onto `targetKey`'s position and emits `rowReordered`. */
+  private commitRowMove(
+    fromKey: RowKey,
+    targetKey: RowKey,
+  ): { toIndex: number; total: number } | null {
+    const target = { key: targetKey };
     const nodes = untracked(this.flatNodes);
     const dataNodes = nodes.filter(
       (node): node is DataRowNode<T> => node.kind === 'data',
     );
     const fromIndex = dataNodes.findIndex((node) => node.key === fromKey);
     const toIndex = dataNodes.findIndex((node) => node.key === target.key);
-    if (fromIndex < 0 || toIndex < 0) return;
+    if (fromIndex < 0 || toIndex < 0) return null;
     const moved = dataNodes[fromIndex].data;
     // plain-array data: move in place so the new order survives a reload
     const data = untracked(this.data);
@@ -2469,6 +2583,229 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       toIndex,
       row: moved,
     });
+    return { toIndex, total: dataNodes.length };
+  }
+
+  // --- keyboard alternatives to the drag gestures (WCAG 2.1.1 / 2.5.7) --------
+
+  /** Text of the permanent polite live region. */
+  protected readonly liveMessage = signal('');
+
+  /** Announces `text`, re-announcing an identical message too. */
+  private announce(text: string): void {
+    // a no-break space toggles so a repeated message is still a DOM change
+    this.liveMessage.set(
+      untracked(this.liveMessage) === text ? `${text}\u00A0` : text,
+    );
+  }
+
+  protected headerKeyShortcuts(column: ResolvedColumn<T>): string | null {
+    return ogeGridHeaderKeyShortcuts({
+      resize: this.columnResize(),
+      move: !!column.field && this.columnReorder(),
+    });
+  }
+
+  protected resizeLabel(column: ResolvedColumn<T>): string {
+    return formatPattern(this.msg().resizeColumn, { column: column.caption });
+  }
+
+  private widthBounds(
+    column: ResolvedColumn<T>,
+    now = 0,
+  ): OgeColumnWidthBounds {
+    return ogeColumnWidthBounds(
+      column.minWidth,
+      column.maxWidth,
+      Math.max(this.hostWidth(), now),
+    );
+  }
+
+  /** The separator's `aria-valuenow/min/max`: the column width in px. */
+  protected separatorValue(column: ResolvedColumn<T>): {
+    now: number;
+    min: number;
+    max: number;
+  } {
+    const now = Math.round(
+      this.layoutModel.colWidths()[column.absIndex] ??
+        this.config.columnMinWidth,
+    );
+    const bounds = this.widthBounds(column, now);
+    return { now: clampColumnWidth(now, bounds), ...bounds };
+  }
+
+  private headerCellOf(id: string): HTMLElement | null {
+    return (
+      Array.from(
+        this.hostRef.nativeElement.querySelectorAll<HTMLElement>(
+          '.oge-header-row > .oge-header-cell[data-colid]',
+        ),
+      ).find((cell) => cell.dataset['colid'] === id) ?? null
+    );
+  }
+
+  /** Sets a column's width from the keyboard, clamped to its bounds. */
+  private resizeColumnTo(
+    column: ResolvedColumn<T>,
+    width: number,
+    announce: boolean,
+  ): void {
+    const next = clampColumnWidth(width, this.widthBounds(column, width));
+    this.store.columns.setWidth(column.id, next);
+    if (announce) {
+      this.announce(
+        formatPattern(this.msg().columnResized, {
+          column: column.caption,
+          width: String(next),
+        }),
+      );
+    }
+  }
+
+  /** Alt+Arrow resizes, Ctrl+Shift+Arrow moves the focused header's column. */
+  protected onHeaderKeydown(
+    column: ResolvedColumn<T>,
+    event: KeyboardEvent,
+  ): void {
+    if (event.target !== event.currentTarget) return;
+    const command = ogeGridHeaderKeyCommand(event, this.rtl());
+    if (!command) return;
+    if (command.kind === 'resize') {
+      if (!this.columnResize()) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const cell = event.currentTarget as HTMLElement;
+      const current = cell.offsetWidth || this.separatorValue(column).now;
+      this.resizeColumnTo(column, current + command.delta, true);
+      return;
+    }
+    if (!this.columnReorder() || !column.field) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.moveColumnByKeyboard(column, command.direction);
+  }
+
+  private moveColumnByKeyboard(
+    column: ResolvedColumn<T>,
+    direction: 1 | -1,
+  ): void {
+    const columns = this.resolvedColumns();
+    const target = ogeColumnMoveTarget(columns, column.id, direction);
+    if (!target) return;
+    this.store.columns.reorder(
+      columns.map((c) => c.id),
+      column.id,
+      target.anchorId,
+      target.position,
+    );
+    this.announce(
+      formatPattern(this.msg().columnMoved, {
+        column: column.caption,
+        position: String(target.toIndex + 1),
+        total: String(columns.length),
+      }),
+    );
+    // the header re-renders in its new slot: keep the focus on it
+    setTimeout(() => this.headerCellOf(column.id)?.focus());
+  }
+
+  /** APG window-splitter keys on the focused resize separator. */
+  protected onResizeHandleKeydown(
+    column: ResolvedColumn<T>,
+    event: KeyboardEvent,
+  ): void {
+    const command = ogeColumnSeparatorKeyCommand(event, this.rtl());
+    if (!command) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (command.kind === 'exit') {
+      (event.currentTarget as HTMLElement)
+        .closest<HTMLElement>('.oge-header-cell')
+        ?.focus();
+      return;
+    }
+    const cell = (event.currentTarget as HTMLElement).closest<HTMLElement>(
+      '.oge-header-cell',
+    );
+    const current = cell?.offsetWidth || this.separatorValue(column).now;
+    const width = ogeSeparatorTargetWidth(
+      command,
+      current,
+      this.widthBounds(column, current),
+    );
+    if (width !== null) this.resizeColumnTo(column, width, false);
+  }
+
+  /** Ctrl+Arrow reorders the grouping, Delete / Backspace removes it. */
+  protected onGroupChipKeydown(field: string, event: KeyboardEvent): void {
+    const command = ogeGroupChipKeyCommand(event, this.rtl());
+    if (!command) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const caption = this.groupCaption(field);
+    const fields = this.store.grouping.descriptors().map((d) => d.field);
+    if (command.kind === 'remove') {
+      const at = fields.indexOf(field);
+      const neighbour = fields[at + 1] ?? fields[at - 1];
+      this.store.grouping.ungroup(field);
+      this.announce(
+        formatPattern(this.msg().groupRemoved, { column: caption }),
+      );
+      // focus the neighbouring chip, or the column's header when none is left
+      setTimeout(() => {
+        const chip =
+          neighbour === undefined ? null : this.groupChipButtonOf(neighbour);
+        (chip ?? this.headerCellOf(field))?.focus();
+      });
+      return;
+    }
+    const index = this.store.grouping.move(field, command.direction);
+    if (index < 0) return;
+    this.announce(
+      formatPattern(this.msg().groupMoved, {
+        column: caption,
+        position: String(index + 1),
+        total: String(fields.length),
+      }),
+    );
+    setTimeout(() => this.groupChipButtonOf(field)?.focus());
+  }
+
+  private groupChipButtonOf(field: string): HTMLElement | null {
+    return (
+      Array.from(
+        this.hostRef.nativeElement.querySelectorAll<HTMLElement>(
+          '.oge-group-chip-remove',
+        ),
+      ).find((button) => button.dataset['groupField'] === field) ?? null
+    );
+  }
+
+  /** Ctrl+ArrowUp/Down on a column-chooser item moves that column. */
+  protected onChooserKeydown(id: string, event: KeyboardEvent): void {
+    const direction = ogeChooserMoveDirection(event);
+    if (direction === null || !this.columnReorder()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const entries = this.chooserEntries();
+    const ids = entries.map((entry) => entry.id);
+    const target = ogeListMoveTarget(ids, id, direction);
+    if (!target) return;
+    this.store.columns.reorder(ids, id, target.anchorId, target.position);
+    this.announce(
+      formatPattern(this.msg().columnMoved, {
+        column: entries.find((entry) => entry.id === id)?.caption ?? id,
+        position: String(target.toIndex + 1),
+        total: String(ids.length),
+      }),
+    );
+    setTimeout(() => {
+      const item = Array.from(
+        document.querySelectorAll<HTMLElement>('.oge-chooser-item'),
+      ).find((element) => element.dataset['chooserId'] === id);
+      item?.querySelector<HTMLElement>('input, [tabindex="0"]')?.focus();
+    });
   }
 
   protected onCheckboxToggle(node: DataRowNode<T>, event: Event): void {
@@ -2482,8 +2819,20 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Select-all works on the current filtered set; scope via `selectAllMode`. */
   protected toggleSelectAll(): void {
-    if (untracked(this.allSelected)) this.clearSelection();
-    else this.selectAll();
+    const announce = (): void =>
+      this.announcer.selectionCount(
+        untracked(this.selectionDeferred)
+          ? untracked(this.selectionFilter)
+            ? untracked(this.totalCount)
+            : 0
+          : untracked(this.store.selection.count),
+      );
+    if (untracked(this.allSelected)) {
+      this.clearSelection();
+      announce();
+    } else {
+      void this.runSelectAll().then(announce);
+    }
   }
 
   /** Loads the full filtered set (paging ignored) and selects every key. */
@@ -2518,6 +2867,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   protected onCellFocus(row: number, col: number): void {
+    // any focus move of its own supersedes a pending keyboard row move
+    const pending = untracked(this.pendingFocusRow);
+    const current = untracked(this.focusedCell);
+    if (pending && (current?.row !== row || current.col !== col))
+      this.pendingFocusRow.set(null);
     this.keyboard.onCellFocus(row, col);
   }
 
@@ -2593,6 +2947,17 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           this.store.selection.selectOnly(node.key);
         } else this.store.selection.toggle(node.key);
       }
+      return;
+    }
+    const rowMove = ogeRowMoveDirection(event);
+    if (
+      rowMove !== null &&
+      noEditorOpen &&
+      this.rowDragging() &&
+      (event.target as HTMLElement | null)?.closest?.('[data-cell]')
+    ) {
+      event.preventDefault();
+      this.moveRowByKeyboard(cell.row, rowMove, cell.col);
       return;
     }
     if (this.keyboard.handleKey(event)) event.preventDefault();
@@ -2827,9 +3192,65 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       rowRemoved: (event) => this.rowRemoved.emit(event),
       editCanceled: () => this.editCanceled.emit(),
       dataError: (error) => this.dataErrorOccurred.emit({ error }),
+      validationFailed: (invalid) => this.announceInvalidEditor(invalid),
     },
     reload: () => this.adapter.reload(),
   });
+
+  // --- live announcements --------------------------------------------------
+
+  /**
+   * Speaks sort, filter/search result count, page, group expansion,
+   * select-all and blocked-save validation changes through the shared
+   * `OgeLiveAnnouncer` (texts from `messages`). `undefined` falls back to the
+   * config's `announcements` (default `true`).
+   */
+  readonly announcements = input<boolean | undefined>(undefined);
+
+  private readonly liveAnnouncer = inject(OgeLiveAnnouncer);
+
+  /** The shared announcement rules (`@oge-ui/behavior`). */
+  private readonly announcer = new OgeGridAnnouncements({
+    announce: (message, options) =>
+      this.liveAnnouncer.announce(message, options),
+    messages: () => untracked(this.msg),
+    enabled: () => untracked(this.announcements) ?? this.config.announcements,
+    caption: (field) => untracked(() => this.groupCaption(field)),
+  });
+
+  private readonly announcementEffect = effect(() => {
+    const windowed = this.windowed();
+    const snapshot = {
+      sort: this.store.sort.descriptors(),
+      filterKey: JSON.stringify([
+        this.store.filter.combinedExpr(),
+        this.store.filter.searchText().trim(),
+      ]),
+      resultToken: windowed ? this.adapter.windowRows() : this.adapter.result(),
+      loading: windowed ? this.adapter.windowLoading() : this.adapter.loading(),
+      rowCount: this.totalCount(),
+      paging: this.store.paging.pageSize() != null,
+      pageIndex: this.store.paging.pageIndex(),
+      pageCount: this.pageCount(),
+    };
+    untracked(() => this.announcer.observe(snapshot));
+  });
+
+  /** Announces the first editor that blocked a commit, with its error text. */
+  private announceInvalidEditor(
+    invalid: readonly { key: RowKey; field: string }[],
+  ): void {
+    const first = invalid[0];
+    if (!first) return;
+    const control = untracked(this.activeControls).get(
+      `${String(first.key)}::${first.field}`,
+    );
+    const error = control ? this.editorErrorText(control) : null;
+    this.announcer.validationFailed(
+      untracked(() => this.groupCaption(first.field)),
+      error ?? untracked(this.msg).invalidError,
+    );
+  }
 
   protected readonly editingOptions = this.editingModel.editingOptions;
   protected readonly editMode = this.editingModel.editMode;
@@ -3248,11 +3669,20 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         ? column.width
         : this.config.pinnedDefaultWidth);
     const startX = event.clientX;
+    const rtl = this.rtl();
+    const bounds = ogeColumnWidthBounds(
+      column.minWidth,
+      column.maxWidth,
+      Number.POSITIVE_INFINITY,
+    );
     const onMove = (move: PointerEvent): void => {
       this.suppressHeaderClick = true;
       this.store.columns.setWidth(
         column.id,
-        startWidth + (move.clientX - startX),
+        clampColumnWidth(
+          resizedColumnWidth(startWidth, startX, move.clientX, rtl),
+          bounds,
+        ),
       );
     };
     const onUp = (): void => {

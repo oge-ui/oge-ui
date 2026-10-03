@@ -7,6 +7,7 @@ import { OgeSelectBox } from '@oge-ui/inputs/select-box';
 import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import {
   OgeAnchoredPanel,
+  OgeLiveAnnouncer,
   OgeMenuList,
   OgeModal,
   OgeModalFooter,
@@ -49,21 +50,37 @@ import {
   type TreeListStateSnapshot,
   buildSearchHighlightSegments,
   foldText,
+  sanitizeTreeListStateSnapshot,
 } from '@oge-ui/core';
 import {
+  OgeGridAnnouncements,
   OgeTreeListCore,
   allHeaderValuesSelected,
   effectiveFilterOperator,
   filterOperatorSymbol,
   filterRowOperatorChoices,
   headerGroupState,
+  booleanCellLabel,
   isHeaderValueSelected,
   ogeTreeCsv,
   ogeTreeDropPosition,
   ogeTreeHeaderValueGroups,
   ogeTreeHeaderValueText,
+  resizedColumnWidth,
   rowClickSelectionIntent,
   rowFilterExpr,
+  clampColumnWidth,
+  formatPattern,
+  ogeChooserMoveDirection,
+  ogeColumnMoveTarget,
+  ogeColumnSeparatorKeyCommand,
+  ogeColumnWidthBounds,
+  ogeGridHeaderKeyCommand,
+  ogeGridHeaderKeyShortcuts,
+  ogeListMoveTarget,
+  ogeSeparatorTargetWidth,
+  ogeTreeRowKeyMove,
+  type OgeColumnWidthBounds,
   toggleAllHeaderValues,
   toggleHeaderGroup,
   toggleHeaderValue,
@@ -168,6 +185,8 @@ export type {
 
 const COLUMN_DRAG_TYPE = 'application/x-oge-column';
 
+let nextUid = 0;
+
 /**
  * Hierarchical data grid over flat self-referencing data (`id`/`parentId`).
  * Shares the column model, state slices, data adapter, virtualization,
@@ -218,6 +237,12 @@ const COLUMN_DRAG_TYPE = 'application/x-oge-column';
   },
 })
 export class OgeTreeList<T extends object = Record<string, unknown>> {
+  /**
+   * Instance id prefix: a header is labelled by its caption alone
+   * (`aria-labelledby`), not by the separator / filter button inside it.
+   */
+  protected readonly uid = `oge-tree-list-${nextUid++}`;
+
   protected readonly store = inject(GridStateStore);
   protected readonly adapter: GridDataAdapter<T> = inject(GridDataAdapter);
   private readonly config = inject(OGE_GRID_CONFIG);
@@ -822,6 +847,11 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   }
 
   protected onCellFocus(row: number, col: number): void {
+    // any focus move of its own supersedes a pending keyboard row move
+    const pending = untracked(this.pendingFocusRow);
+    const current = untracked(this.focusedCell);
+    if (pending && (current?.row !== row || current.col !== col))
+      this.pendingFocusRow.set(null);
     this.keyboard.onCellFocus(row, col);
   }
 
@@ -884,6 +914,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected toggleSelectAll(): void {
     if (untracked(this.allSelected)) this.clearSelection();
     else this.selectAll();
+    this.announcer.selectionCount(untracked(this.store.selection.count));
   }
 
   /**
@@ -1392,11 +1423,20 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         ? column.width
         : this.config.pinnedDefaultWidth);
     const startX = event.clientX;
+    const rtl = this.rtl();
+    const bounds = ogeColumnWidthBounds(
+      column.minWidth,
+      column.maxWidth,
+      Number.POSITIVE_INFINITY,
+    );
     const onMove = (move: PointerEvent): void => {
       this.suppressHeaderClick = true;
       this.store.columns.setWidth(
         column.id,
-        startWidth + (move.clientX - startX),
+        clampColumnWidth(
+          resizedColumnWidth(startWidth, startX, move.clientX, rtl),
+          bounds,
+        ),
       );
     };
     const onUp = (): void => {
@@ -1792,6 +1832,18 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return formatCellValue(value, column.dataType, undefined);
   }
 
+  /**
+   * Screen-reader text of a default-rendered boolean cell (its `✓` / `✗`
+   * glyph is drawn `aria-hidden`), or `null` for every other cell.
+   */
+  protected booleanLabelOf(
+    node: DataRowNode<T>,
+    column: ResolvedColumn<T>,
+  ): string | null {
+    if (column.dataType !== 'boolean') return null;
+    return booleanCellLabel(column.accessor(node.data), column, this.msg());
+  }
+
   // --- row drag reparenting -------------------------------------------------
 
   private draggedRowKey: RowKey | null = null;
@@ -1852,6 +1904,209 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     if (moved) this.rowReparented.emit(moved);
   }
 
+  // --- keyboard alternatives to the drag gestures (WCAG 2.1.1 / 2.5.7) --------
+
+  /** Text of the permanent polite live region. */
+  protected readonly liveMessage = signal('');
+
+  /** Announces `text`, re-announcing an identical message too. */
+  private announce(text: string): void {
+    // a no-break space toggles so a repeated message is still a DOM change
+    this.liveMessage.set(
+      untracked(this.liveMessage) === text ? `${text}\u00A0` : text,
+    );
+  }
+
+  /** Row the focus follows once a keyboard move re-renders the rows. */
+  private readonly pendingFocusRow = signal<{
+    key: RowKey;
+    col: number;
+    nodes: readonly RowNode<T>[];
+  } | null>(null);
+
+  /**
+   * Ctrl+ArrowUp/Down move the focused row among its siblings, Ctrl+Right
+   * indents it under the previous sibling, Ctrl+Left outdents it — the
+   * keyboard twin of a handle drag, through the same `applyDrop` and the same
+   * `rowReparented`. Returns whether the key was one of those.
+   */
+  private moveRowByKeyboard(
+    node: DataRowNode<T>,
+    event: KeyboardEvent,
+    col: number,
+  ): boolean {
+    const move = ogeTreeRowKeyMove(event, this.rtl());
+    if (move === null) return false;
+    event.preventDefault();
+    const target = untracked(() =>
+      this.core.keyboardMoveTarget(node.key, move),
+    );
+    if (!target) return true;
+    const nodes = untracked(this.renderNodes);
+    const moved = untracked(() =>
+      this.core.applyDrop(node.key, target.targetKey, target.position, () =>
+        this.adapter.reload(),
+      ),
+    );
+    if (!moved) return true;
+    this.rowReparented.emit(moved);
+    this.pendingFocusRow.set({ key: node.key, col, nodes });
+    return true;
+  }
+
+  protected headerKeyShortcuts(column: ResolvedColumn<T>): string | null {
+    return ogeGridHeaderKeyShortcuts({
+      resize: this.columnResize(),
+      move: !!column.field && this.columnReorder(),
+    });
+  }
+
+  protected resizeLabel(column: ResolvedColumn<T>): string {
+    return formatPattern(this.msg().resizeColumn, { column: column.caption });
+  }
+
+  private widthBounds(
+    column: ResolvedColumn<T>,
+    now = 0,
+  ): OgeColumnWidthBounds {
+    return ogeColumnWidthBounds(
+      column.minWidth,
+      column.maxWidth,
+      Math.max(this.hostWidth(), now),
+    );
+  }
+
+  /** The separator's `aria-valuenow/min/max`: the column width in px. */
+  protected separatorValue(column: ResolvedColumn<T>): {
+    now: number;
+    min: number;
+    max: number;
+  } {
+    const now = Math.round(
+      this.layoutModel.colWidths()[column.absIndex] ??
+        this.config.columnMinWidth,
+    );
+    const bounds = this.widthBounds(column, now);
+    return { now: clampColumnWidth(now, bounds), ...bounds };
+  }
+
+  private headerCellOf(id: string): HTMLElement | null {
+    return (
+      Array.from(
+        this.hostRef.nativeElement.querySelectorAll<HTMLElement>(
+          '.oge-header-row > .oge-header-cell[data-colid]',
+        ),
+      ).find((cell) => cell.dataset['colid'] === id) ?? null
+    );
+  }
+
+  private resizeColumnTo(
+    column: ResolvedColumn<T>,
+    width: number,
+    announce: boolean,
+  ): void {
+    const next = clampColumnWidth(width, this.widthBounds(column, width));
+    this.store.columns.setWidth(column.id, next);
+    if (announce) {
+      this.announce(
+        formatPattern(this.msg().columnResized, {
+          column: column.caption,
+          width: String(next),
+        }),
+      );
+    }
+  }
+
+  /** Alt+Arrow resizes, Ctrl+Shift+Arrow moves the focused header's column. */
+  protected onHeaderKeydown(
+    column: ResolvedColumn<T>,
+    event: KeyboardEvent,
+  ): void {
+    if (event.target !== event.currentTarget) return;
+    const command = ogeGridHeaderKeyCommand(event, this.rtl());
+    if (!command) return;
+    if (command.kind === 'resize') {
+      if (!this.columnResize()) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const cell = event.currentTarget as HTMLElement;
+      const current = cell.offsetWidth || this.separatorValue(column).now;
+      this.resizeColumnTo(column, current + command.delta, true);
+      return;
+    }
+    if (!this.columnReorder() || !column.field) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const columns = this.resolvedColumns();
+    const target = ogeColumnMoveTarget(columns, column.id, command.direction);
+    if (!target) return;
+    this.store.columns.reorder(
+      columns.map((c) => c.id),
+      column.id,
+      target.anchorId,
+      target.position,
+    );
+    this.announce(
+      formatPattern(this.msg().columnMoved, {
+        column: column.caption,
+        position: String(target.toIndex + 1),
+        total: String(columns.length),
+      }),
+    );
+    setTimeout(() => this.headerCellOf(column.id)?.focus());
+  }
+
+  /** APG window-splitter keys on the focused resize separator. */
+  protected onResizeHandleKeydown(
+    column: ResolvedColumn<T>,
+    event: KeyboardEvent,
+  ): void {
+    const command = ogeColumnSeparatorKeyCommand(event, this.rtl());
+    if (!command) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const cell = (event.currentTarget as HTMLElement).closest<HTMLElement>(
+      '.oge-header-cell',
+    );
+    if (command.kind === 'exit') {
+      cell?.focus();
+      return;
+    }
+    const current = cell?.offsetWidth || this.separatorValue(column).now;
+    const width = ogeSeparatorTargetWidth(
+      command,
+      current,
+      this.widthBounds(column, current),
+    );
+    if (width !== null) this.resizeColumnTo(column, width, false);
+  }
+
+  /** Ctrl+ArrowUp/Down on a column-chooser item moves that column. */
+  protected onChooserKeydown(id: string, event: KeyboardEvent): void {
+    const direction = ogeChooserMoveDirection(event);
+    if (direction === null || !this.columnReorder()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const entries = this.chooserEntries();
+    const ids = entries.map((entry) => entry.id);
+    const target = ogeListMoveTarget(ids, id, direction);
+    if (!target) return;
+    this.store.columns.reorder(ids, id, target.anchorId, target.position);
+    this.announce(
+      formatPattern(this.msg().columnMoved, {
+        column: entries.find((entry) => entry.id === id)?.caption ?? id,
+        position: String(target.toIndex + 1),
+        total: String(ids.length),
+      }),
+    );
+    setTimeout(() => {
+      const item = Array.from(
+        document.querySelectorAll<HTMLElement>('.oge-chooser-item'),
+      ).find((element) => element.dataset['chooserId'] === id);
+      item?.querySelector<HTMLElement>('input')?.focus();
+    });
+  }
+
   // --- editing ---------------------------------------------------------------
 
   private readonly editingModel = new EditingModel<T, OgeColumn<T>>({
@@ -1873,6 +2128,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       rowRemoved: (event) => this.rowRemoved.emit(event),
       editCanceled: () => this.editCanceled.emit(),
       dataError: (error) => this.dataErrorOccurred.emit({ error }),
+      validationFailed: (invalid) => this.announceInvalidEditor(invalid),
     },
     // saved rows may live in the lazy child cache — drop it so the reload
     // re-fetches open levels and the UI shows the persisted values
@@ -2228,11 +2484,79 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return untracked(() => this.core.getVisibleRows());
   }
 
+  // --- live announcements --------------------------------------------------
+
+  /**
+   * Speaks sort, filter/search result count, page, row expansion,
+   * select-all and blocked-save validation changes through the shared
+   * `OgeLiveAnnouncer` (texts from `messages`). `undefined` falls back to the
+   * grid config's `announcements` (default `true`).
+   */
+  readonly announcements = input<boolean | undefined>(undefined);
+
+  private readonly liveAnnouncer = inject(OgeLiveAnnouncer);
+
+  /** The grid family's shared announcement rules (`@oge-ui/behavior`). */
+  private readonly announcer = new OgeGridAnnouncements({
+    announce: (message, options) =>
+      this.liveAnnouncer.announce(message, options),
+    messages: () => untracked(this.msg),
+    enabled: () => untracked(this.announcements) ?? this.config.announcements,
+    caption: (field) => untracked(() => this.captionOf(field)),
+  });
+
+  private readonly announcementEffect = effect(() => {
+    const snapshot = {
+      sort: this.store.sort.descriptors(),
+      filterKey: JSON.stringify([
+        this.store.filter.combinedExpr(),
+        this.store.filter.searchText().trim(),
+      ]),
+      // the tree filters client-side: a new flat list is the new result
+      resultToken: this.flatNodes(),
+      loading: this.adapter.loading(),
+      rowCount: this.totalCount(),
+      paging: this.effPageSize() != null,
+      pageIndex: this.pageIndex(),
+      pageCount: this.pageCount(),
+    };
+    untracked(() => this.announcer.observe(snapshot));
+  });
+
+  private captionOf(field: string): string {
+    const column = this.resolvedColumns().find(
+      (candidate) => candidate.field === field,
+    );
+    return column?.caption ?? humanize(field);
+  }
+
+  /** The row's name in announcements: its first column's display text. */
+  private rowLabel(node: DataRowNode<T>): string {
+    const column = this.resolvedColumns().find((candidate) => candidate.field);
+    return column ? this.cellDisplayText(node, column) : String(node.key);
+  }
+
+  /** Announces the first editor that blocked a commit, with its error text. */
+  private announceInvalidEditor(
+    invalid: readonly { key: RowKey; field: string }[],
+  ): void {
+    const first = invalid[0];
+    if (!first) return;
+    const control = untracked(this.editingModel.activeControls).get(
+      `${String(first.key)}::${first.field}`,
+    );
+    const error = control ? this.editorErrorText(control) : null;
+    this.announcer.validationFailed(
+      untracked(() => this.captionOf(first.field)),
+      error ?? untracked(this.msg).invalidError,
+    );
+  }
+
   // --- expansion actions ----------------------------------------------------
 
   private setRowExpanded(node: DataRowNode<T>, expand: boolean): void {
     // consumers may veto UI-driven toggles (imperative API stays silent)
-    untracked(() =>
+    const toggled = untracked(() =>
       this.core.requestToggle(node, expand, {
         expanding: (event) => this.rowExpanding.emit(event),
         collapsing: (event) => this.rowCollapsing.emit(event),
@@ -2240,6 +2564,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         collapsed: (event) => this.rowCollapsed.emit(event),
       }),
     );
+    if (toggled) {
+      this.announcer.rowToggled(
+        untracked(() => this.rowLabel(node)),
+        expand,
+      );
+    }
   }
 
   protected onExpanderClick(node: DataRowNode<T>, event: Event): void {
@@ -2275,6 +2605,19 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       }
       return;
     }
+    if (
+      this.rowDragging() &&
+      this.store.editing.editCell() === null &&
+      this.store.editing.editRowKey() === null &&
+      (event.target as HTMLElement | null)?.closest?.('[data-cell]')
+    ) {
+      const node = this.renderNodes()[cell.row];
+      if (
+        node?.kind === 'data' &&
+        this.moveRowByKeyboard(node, event, cell.col)
+      )
+        return;
+    }
     if (this.keyboard.handleKey(event)) event.preventDefault();
   }
 
@@ -2301,10 +2644,13 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   /** Applies a previously captured state snapshot (see `state()` / `stateChange`). */
   applyState(snapshot: TreeListStateSnapshot): void {
+    // public API fed from storage, URLs or the host: validate the shape first
+    const safe = sanitizeTreeListStateSnapshot(snapshot);
+    if (safe === null) return;
     untracked(() => {
-      this.store.applySnapshot(snapshot);
-      this.core.applyExpansionSnapshot(snapshot);
-      const hidden = new Set(snapshot.columns?.hidden ?? []);
+      this.store.applySnapshot(safe);
+      this.core.applyExpansionSnapshot(safe);
+      const hidden = new Set(safe.columns?.hidden ?? []);
       for (const column of this.declaredColumns()) {
         const field = column.field();
         if (field) column.visible.set(!hidden.has(field));
@@ -2693,6 +3039,31 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
           editor?.querySelector<HTMLElement>('input, select, textarea') ??
           editor;
         target?.focus();
+      });
+    });
+    // a keyboard-moved row keeps the focus once the rows re-render, and the
+    // live region says where it landed
+    effect(() => {
+      const pending = this.pendingFocusRow();
+      const nodes = this.renderNodes();
+      if (!pending || nodes === pending.nodes) return;
+      const row = nodes.findIndex(
+        (node) => node.kind === 'data' && node.key === pending.key,
+      );
+      if (row < 0) return;
+      untracked(() => {
+        this.pendingFocusRow.set(null);
+        this.focusedCell.set({ row, col: pending.col });
+        const placement = this.core.rowPlacement(pending.key);
+        if (placement) {
+          this.announce(
+            formatPattern(this.msg().treeRowMoved, {
+              level: String(placement.level),
+              position: String(placement.position),
+              total: String(placement.total),
+            }),
+          );
+        }
       });
     });
     // focus follows the keyboard-navigation cell — unless an editor is open

@@ -158,13 +158,13 @@ store.editing.hasPending())) {
       <div
         class="oge-header-cell oge-drag-cell"
         role="columnheader"
-        aria-label="Reparent"
+        [attr.aria-label]="msg().reparentColumnHeader"
       ></div>
       } @if (hasCheckboxColumn()) {
       <div
         class="oge-header-cell oge-checkbox-cell"
         role="columnheader"
-        aria-label="Select all"
+        [attr.aria-label]="msg().selectAllColumnHeader"
       >
         @if (allowSelectAll()) {
         <oge-check-box
@@ -192,9 +192,12 @@ store.editing.hasPending())) {
         [style.inset-inline-start.px]="pinnedLeftOf(column)"
         [style.inset-inline-end.px]="pinnedRightOf(column)"
         [attr.aria-sort]="ariaSortOf(column)"
+        [attr.aria-keyshortcuts]="headerKeyShortcuts(column)"
+        [attr.aria-labelledby]="uid + '-h-' + column.absIndex"
         [attr.tabindex]="
           (column.sortable && sortMode() !== 'none') ||
-          (column.field && columnReorder())
+          (column.field && columnReorder()) ||
+          columnResize()
             ? 0
             : null
         "
@@ -208,8 +211,9 @@ store.editing.hasPending())) {
         (click)="onHeaderClick(column, $event)"
         (keydown.enter)="onHeaderClick(column, $event)"
         (keydown.space)="onHeaderClick(column, $event)"
+        (keydown)="onHeaderKeydown(column, $event)"
       >
-        <span class="oge-header-caption">
+        <span class="oge-header-caption" [id]="uid + '-h-' + column.absIndex">
           @if (column.headerTemplate) {
           <ng-container
             *ngTemplateOutlet="column.headerTemplate; context: headerContext(column)"
@@ -249,9 +253,20 @@ store.editing.hasPending())) {
           </svg>
         </button>
         } @if (columnResize()) {
+        <!-- APG window splitter: focusable (tabindex -1, reached from the header
+             with the pointer or programmatically); Alt+Arrow on the header is the
+             primary keyboard path -->
         <span
           class="oge-resize-handle"
+          role="separator"
+          aria-orientation="vertical"
+          tabindex="-1"
+          [attr.aria-label]="resizeLabel(column)"
+          [attr.aria-valuenow]="separatorValue(column).now"
+          [attr.aria-valuemin]="separatorValue(column).min"
+          [attr.aria-valuemax]="separatorValue(column).max"
           (pointerdown)="onResizeStart(column, $event)"
+          (keydown)="onResizeHandleKeydown(column, $event)"
         ></span>
         }
       </div>
@@ -444,6 +459,11 @@ store.editing.hasPending())) {
         [class.oge-drop-after]="
           dropTarget()?.key === node.key && dropTarget()?.position === 'after'
         "
+        [attr.aria-keyshortcuts]="
+          rowDragging()
+            ? 'Control+ArrowUp Control+ArrowDown Control+ArrowLeft Control+ArrowRight'
+            : null
+        "
         (click)="onRowClick(node, $event)"
         (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
         (contextmenu)="onRowContextMenuOpen(node, $event)"
@@ -452,12 +472,13 @@ store.editing.hasPending())) {
       >
         @if (rowDragging()) {
         <div class="oge-cell oge-drag-cell" role="gridcell">
-          <!-- the click handler only shields the row-click; dragging is pointer-driven -->
+          <!-- the click handler only shields the row-click; the pointer drags the
+               handle, the keyboard moves the focused row with Ctrl+Arrow keys -->
           <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- keyboard access is provided by the roving-tabindex/listbox key handling on the container -->
           <span
             class="oge-drag-handle"
             draggable="true"
-            [attr.aria-label]="'Reparent row'"
+            [attr.aria-label]="msg().reparentRow"
             (dragstart)="onRowDragStart(node, $event)"
             (dragend)="onRowDragEnd()"
             (click)="$event.stopPropagation()"
@@ -573,6 +594,11 @@ store.editing.hasPending())) {
           <ng-container
             *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
           />
+          } @else if (booleanLabelOf(node, column); as booleanLabel) {
+          <span class="oge-tree-cell-text"
+            ><span aria-hidden="true">{{ cellDisplayText(node, column) }}</span
+            ><span class="oge-sr-only">{{ booleanLabel }}</span></span
+          >
           } @else if (searchHighlightRuns(node, column); as runs) {
           <!-- prettier-ignore -->
           <span class="oge-tree-cell-text">@for (run of runs; track $index) {@if (run.match) {<mark class="oge-highlight">{{ run.text }}</mark>} @else {{{ run.text }}}}</span>
@@ -756,7 +782,16 @@ store.editing.hasPending())) {
   (pageChange)="pageIndex.set($event)"
   (pageSizeChange)="onPageSizeChange($event)"
 />
-} @if (customLoadingMessage() !== null || (loadPanel() && adapter.loading())) {
+}
+<!-- permanent live region: keyboard resize / reorder / row moves announce here -->
+<div
+  class="oge-sr-only oge-grid-announcer"
+  aria-live="polite"
+  aria-atomic="true"
+>
+  {{ liveMessage() }}
+</div>
+@if (customLoadingMessage() !== null || (loadPanel() && adapter.loading())) {
 <div class="oge-load-panel" role="status">
   <span class="oge-spinner" aria-hidden="true"></span>
   {{ customLoadingMessage() ?? msg().loading }}
@@ -859,10 +894,15 @@ store.editing.hasPending())) {
   <div class="oge-chooser-popup">
     <div class="oge-chooser-title">{{ msg().columnChooserTitle }}</div>
     @for (entry of chooserEntries(); track entry.id) {
+    <!-- the keydown catches Ctrl+ArrowUp/Down bubbling from the focusable checkbox inside -->
+    <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- the label wraps the focusable checkbox; its handler only sees keys bubbling from it -->
     <label
       class="oge-hf-item oge-chooser-item"
       [class.oge-chooser-drop-target]="chooserDropTargetId() === entry.id"
+      [attr.data-chooser-id]="entry.id"
+      [attr.aria-keyshortcuts]="columnReorder() ? 'Control+ArrowUp Control+ArrowDown' : null"
       [draggable]="columnReorder()"
+      (keydown)="onChooserKeydown(entry.id, $event)"
       (dragstart)="onChooserDragStart(entry.id, $any($event))"
       (dragover)="onChooserDragOver(entry.id, $any($event))"
       (dragend)="onChooserDragEnd()"

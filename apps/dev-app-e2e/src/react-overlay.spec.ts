@@ -108,10 +108,10 @@ test.describe('React overlay docs', () => {
     const toast = page.locator('.oge-toast-region-bottom-end .oge-toast');
     await expect(toast.first()).toBeVisible();
     await expect(toast.first()).toContainText('Changes saved');
-    // Each demo hosts its own provider (and announcer); the one that spoke
-    // is the one carrying the text.
+    // Every provider speaks through the document's one shared polite
+    // region (OgeLiveAnnouncerCore), however many demos host a provider.
     await expect(
-      page.locator('.oge-toast-announcer[aria-live="polite"]', {
+      page.locator('.oge-live-announcer[aria-live="polite"]', {
         hasText: 'Changes saved',
       }),
     ).toHaveCount(1);

@@ -15,11 +15,21 @@ import {
   type Ref,
 } from 'react';
 import { OgeGridStatePersistenceCore } from '@oge-ui/behavior';
-import type { PivotFieldConfig, PivotGridStateSnapshot } from '@oge-ui/core';
+import type {
+  PivotArea,
+  PivotFieldConfig,
+  PivotGridStateSnapshot,
+} from '@oge-ui/core';
 import {
   OgePivotGridCore,
+  focusPivotChip,
   pivotHeaderCellKey,
+  pivotIsMenuKey,
+  pivotIsRtl,
+  pivotKeyboardPointer,
   type OgePivotAxisLine,
+  type OgePivotHeaderCell,
+  type OgePivotMenuItem,
   type OgePivotFieldDef,
   type OgePivotMessages,
 } from '@oge-ui/pivot-engine';
@@ -47,9 +57,11 @@ const arrow = (
   </svg>
 );
 
-/** The tabindex of an expandable header; others are not in the Tab order. */
-const headerTabIndex = (line: OgePivotAxisLine) =>
-  line.hasChildren ? 0 : undefined;
+/** `aria-keyshortcuts` of a chip placed in an area. */
+const CHIP_SHORTCUTS =
+  'Enter Shift+F10 Control+ArrowLeft Control+ArrowRight Control+ArrowUp Control+ArrowDown Delete';
+/** `aria-keyshortcuts` of a chip in the chooser's All Fields list. */
+const LIST_CHIP_SHORTCUTS = 'Enter Shift+F10';
 
 function OgePivotGridInner<T>(
   props: OgePivotGridProps<T>,
@@ -132,6 +144,11 @@ function OgePivotGridInner<T>(
   model.input.messages.set(messages);
 
   const viewportRef = useRef<HTMLDivElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
+  // the element that opened the context menu, for focus return (DOM-only)
+  const menuOpener = useRef<{ el: HTMLElement; inChooser: boolean } | null>(
+    null,
+  );
 
   // --- lifecycle ------------------------------------------------------------
   // StrictMode runs cleanup → remount on the same instance: revive on mount
@@ -206,30 +223,136 @@ function OgePivotGridInner<T>(
     else core.toggleColumn(line);
   };
 
-  const onHeaderKeyDown = (
-    axis: 'row' | 'column',
-    line: OgePivotAxisLine,
-    event: ReactKeyboardEvent,
-  ): void => {
-    if (event.key === 'Enter' || event.key === ' ') toggle(axis, line, event);
-  };
-
-  const onMatrixKeyDown = (event: ReactKeyboardEvent<HTMLElement>): void => {
-    const outcome = core.matrixKeydown(event.key);
+  // --- keyboard: one APG grid over headers + values ------------------------
+  const onGridKeyDown = (event: ReactKeyboardEvent<HTMLElement>): void => {
+    const target = event.currentTarget;
+    const outcome = core.gridKeydown(event, pivotIsRtl(target));
     if (!outcome) return;
     event.preventDefault();
     if (!outcome.moved) return;
-    const { row, col } = outcome.cell;
-    const target = event.currentTarget;
-    // move DOM focus to the newly tabbable cell once it rendered
+    const matrix = target.closest('.oge-pivot-matrix');
+    // move DOM focus to the newly tabbable element once it rendered
+    setTimeout(() =>
+      matrix?.querySelector<HTMLElement>(outcome.selector)?.focus(),
+    );
+  };
+
+  const focusMenuItem = (): void => {
     setTimeout(() => {
-      const host = target.closest('.oge-pivot-matrix');
-      host
-        ?.querySelector<HTMLElement>(
-          `[data-cell="${String(row)}-${String(col)}"]`,
+      hostRef.current
+        ?.querySelector<HTMLButtonElement>(
+          '.oge-context-menu .oge-menu-item:not(:disabled)',
         )
         ?.focus();
     });
+  };
+
+  /** After the menu closed: back to its opener, or to the chip it moved. */
+  const restoreMenuFocus = (): void => {
+    const opener = menuOpener.current;
+    menuOpener.current = null;
+    if (!opener) return;
+    setTimeout(() => {
+      if (opener.el.isConnected) {
+        opener.el.focus();
+        return;
+      }
+      const id = opener.el.dataset['fieldId'];
+      const host = hostRef.current;
+      if (id === undefined || !host) return;
+      const area =
+        core.chooserFields().find((field) => field.id === id)?.area ?? null;
+      focusPivotChip(host, id, area, opener.inChooser, null);
+    });
+  };
+
+  const onHeaderKeyDown = (
+    axis: 'row' | 'column',
+    line: OgePivotAxisLine,
+    event: ReactKeyboardEvent<HTMLElement>,
+  ): void => {
+    const target = event.currentTarget;
+    if (event.key === 'Enter' || event.key === ' ') {
+      toggle(axis, line, event);
+      return;
+    }
+    if (pivotIsMenuKey(event)) {
+      menuOpener.current = { el: target, inChooser: false };
+      core.openHeaderMenu(
+        axis,
+        line,
+        pivotKeyboardPointer(event, target.getBoundingClientRect()),
+      );
+      focusMenuItem();
+      return;
+    }
+    onGridKeyDown(event);
+  };
+
+  // --- keyboard: field chips -------------------------------------------------
+  const onChipKeyDown =
+    (field: PivotFieldConfig, zone: PivotArea | null) =>
+    (event: ReactKeyboardEvent<HTMLElement>): void => {
+      const chip = event.currentTarget;
+      const rect = chip.getBoundingClientRect();
+      const outcome = core.fieldChipKeydown(
+        field,
+        zone,
+        event,
+        { x: rect.left, y: rect.bottom },
+        pivotIsRtl(chip),
+      );
+      if (!outcome) return;
+      const inChooser = !!chip.closest('.oge-pivot-chooser');
+      if (outcome.kind === 'menu') {
+        menuOpener.current = { el: chip, inChooser };
+        focusMenuItem();
+        return;
+      }
+      setTimeout(() => {
+        const host = hostRef.current;
+        if (host)
+          focusPivotChip(host, outcome.fieldId, outcome.area, inChooser, zone);
+      });
+    };
+
+  const onChipContextMenu =
+    (field: PivotFieldConfig, zone: PivotArea | null) =>
+    (event: ReactMouseEvent<HTMLElement>): void => {
+      const chip = event.currentTarget;
+      menuOpener.current = {
+        el: chip,
+        inChooser: !!chip.closest('.oge-pivot-chooser'),
+      };
+      core.openFieldContextMenu(field, zone, event);
+    };
+
+  const onHeaderContextMenu = (
+    axis: 'row' | 'column',
+    line: OgePivotAxisLine,
+    event: ReactMouseEvent<HTMLElement>,
+  ): void => {
+    menuOpener.current = { el: event.currentTarget, inChooser: false };
+    core.openHeaderMenu(axis, line, event);
+  };
+
+  const runMenuItem = (item: OgePivotMenuItem): void => {
+    const opener = menuOpener.current;
+    if (core.runMenuItem(item, opener?.inChooser ?? false)) restoreMenuFocus();
+    else menuOpener.current = null;
+  };
+
+  const onMenuKeyDown = (event: ReactKeyboardEvent<HTMLElement>): void => {
+    const items = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>('.oge-menu-item'),
+    );
+    const index = items.indexOf(event.target as HTMLButtonElement);
+    const outcome = core.menuKeydown(event.key, index);
+    if (!outcome) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (outcome.kind === 'close') restoreMenuFocus();
+    else items[outcome.index]?.focus();
   };
 
   const onCellClick = (
@@ -247,6 +370,9 @@ function OgePivotGridInner<T>(
     if (dbl) latest.current.onCellDblClick?.(payload);
     else latest.current.onCellClick?.(payload);
   };
+
+  const focusColumnHeader = (cell: OgePivotHeaderCell): void =>
+    core.focusColumnHeader(cell);
 
   const dragStart = (field: PivotFieldConfig) => (event: ReactDragEvent) =>
     core.fieldDragStart(field, event);
@@ -272,12 +398,16 @@ function OgePivotGridInner<T>(
 
   return (
     <div
+      ref={hostRef}
       className={
         props.className ? `oge-pivot-grid ${props.className}` : 'oge-pivot-grid'
       }
       style={props.style}
       onKeyDown={(event) => {
-        if (event.key === 'Escape') core.closePopups();
+        if (event.key !== 'Escape') return;
+        const hadMenu = !!core.menu();
+        core.closePopups();
+        if (hadMenu) restoreMenuFocus();
       }}
     >
       {fieldPanel && (
@@ -317,6 +447,8 @@ function OgePivotGridInner<T>(
               <div
                 key={zone.area}
                 className="oge-pivot-area"
+                role="group"
+                aria-label={zone.label}
                 data-area={zone.area}
                 onDragOver={dragOver}
                 onDrop={drop(zone.area)}
@@ -331,14 +463,16 @@ function OgePivotGridInner<T>(
                           ? 'oge-pivot-field-chip oge-pivot-chip-filtered'
                           : 'oge-pivot-field-chip'
                       }
+                      role="button"
+                      tabIndex={0}
+                      aria-haspopup="menu"
+                      aria-keyshortcuts={CHIP_SHORTCUTS}
+                      data-field-id={field.id}
                       draggable="true"
                       onDragStart={dragStart(field)}
                       onDragEnd={dragEnd}
-                      onContextMenu={
-                        zone.area === 'data'
-                          ? (event) => core.openMeasureMenu(field, event)
-                          : undefined
-                      }
+                      onContextMenu={onChipContextMenu(field, zone.area)}
+                      onKeyDown={onChipKeyDown(field, zone.area)}
                     >
                       {field.caption}
                     </span>
@@ -416,11 +550,13 @@ function OgePivotGridInner<T>(
                     gridRow: `${String(cell.rowStart)} / ${String(cell.rowEnd)}`,
                     gridColumn: `${String(cell.columnStart + 1)} / span ${String(cell.span)}`,
                   }}
-                  tabIndex={headerTabIndex(cell)}
+                  data-hpos={core.columnHeaderPos(cell)}
+                  tabIndex={core.isColumnHeaderTabbable(cell) ? 0 : -1}
+                  onFocus={() => focusColumnHeader(cell)}
                   onClick={(event) => toggle('column', cell, event)}
                   onKeyDown={(event) => onHeaderKeyDown('column', cell, event)}
                   onContextMenu={(event) =>
-                    core.openHeaderMenu('column', cell, event)
+                    onHeaderContextMenu('column', cell, event)
                   }
                 >
                   {cell.hasChildren && (
@@ -469,11 +605,13 @@ function OgePivotGridInner<T>(
                     gridColumn: 1,
                     paddingInlineStart: `${String(12 + line.level * 18)}px`,
                   }}
-                  tabIndex={headerTabIndex(line)}
+                  data-hpos={core.rowHeaderPos(rowIndex)}
+                  tabIndex={core.isRowHeaderTabbable(rowIndex) ? 0 : -1}
+                  onFocus={() => core.focusRowHeader(rowIndex)}
                   onClick={(event) => toggle('row', line, event)}
                   onKeyDown={(event) => onHeaderKeyDown('row', line, event)}
                   onContextMenu={(event) =>
-                    core.openHeaderMenu('row', line, event)
+                    onHeaderContextMenu('row', line, event)
                   }
                 >
                   {line.hasChildren && (
@@ -509,7 +647,7 @@ function OgePivotGridInner<T>(
                       core.isCellTabbable(rowIndex, columnIndex) ? 0 : -1
                     }
                     onFocus={() => core.focusCell(rowIndex, columnIndex)}
-                    onKeyDown={onMatrixKeyDown}
+                    onKeyDown={onGridKeyDown}
                     onClick={(event) =>
                       onCellClick(rowIndex, columnIndex, event, false)
                     }
@@ -543,24 +681,32 @@ function OgePivotGridInner<T>(
         </div>
       </div>
 
+      <div className="oge-pivot-live" aria-live="polite" aria-atomic="true">
+        {core.announcement()}
+      </div>
+
       {menu && (
         <div
           className="oge-context-menu"
           role="menu"
+          tabIndex={-1}
+          aria-label={menu.label}
           style={{ top: `${String(menu.y)}px`, left: `${String(menu.x)}px` }}
+          onKeyDown={onMenuKeyDown}
         >
           {menu.items.map((item, index) => (
             <button
               key={index}
               type="button"
               role="menuitem"
+              tabIndex={-1}
               className={
                 item.active
                   ? 'oge-menu-item oge-menu-item-active'
                   : 'oge-menu-item'
               }
               disabled={item.disabled}
-              onClick={() => core.runMenuItem(item)}
+              onClick={() => runMenuItem(item)}
             >
               {item.text}
             </button>
@@ -663,6 +809,8 @@ function OgePivotGridInner<T>(
             <div className="oge-pivot-chooser-grid">
               <div
                 className="oge-pivot-chooser-zone oge-pivot-chooser-all"
+                role="group"
+                aria-label={msg.allFields}
                 onDragOver={dragOver}
                 onDrop={drop(null)}
               >
@@ -675,9 +823,16 @@ function OgePivotGridInner<T>(
                         ? 'oge-pivot-field-chip oge-pivot-chip-unused'
                         : 'oge-pivot-field-chip'
                     }
+                    role="button"
+                    tabIndex={0}
+                    aria-haspopup="menu"
+                    aria-keyshortcuts={LIST_CHIP_SHORTCUTS}
+                    data-field-id={field.id}
                     draggable="true"
                     onDragStart={dragStart(field)}
                     onDragEnd={dragEnd}
+                    onContextMenu={onChipContextMenu(field, null)}
+                    onKeyDown={onChipKeyDown(field, null)}
                   >
                     {field.caption}
                   </span>
@@ -687,6 +842,8 @@ function OgePivotGridInner<T>(
                 <div
                   key={zone.area}
                   className="oge-pivot-chooser-zone"
+                  role="group"
+                  aria-label={zone.label}
                   data-area={zone.area}
                   onDragOver={dragOver}
                   onDrop={drop(zone.area)}
@@ -696,9 +853,16 @@ function OgePivotGridInner<T>(
                     <span
                       key={field.id}
                       className="oge-pivot-field-chip"
+                      role="button"
+                      tabIndex={0}
+                      aria-haspopup="menu"
+                      aria-keyshortcuts={CHIP_SHORTCUTS}
+                      data-field-id={field.id}
                       draggable="true"
                       onDragStart={dragStart(field)}
                       onDragEnd={dragEnd}
+                      onContextMenu={onChipContextMenu(field, zone.area)}
+                      onKeyDown={onChipKeyDown(field, zone.area)}
                     >
                       {field.caption}
                     </span>

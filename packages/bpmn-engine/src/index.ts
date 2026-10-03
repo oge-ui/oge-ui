@@ -268,8 +268,10 @@ export {
 export {
   BPMN_OVERLAY_ALLOWED_TAGS,
   BPMN_OVERLAY_URL_ATTRIBUTES,
+  bpmnOverlayLinkRel,
   sanitizeBpmnOverlayHtml,
   type BpmnOverlayElementNode,
   type BpmnOverlayNode,
   type BpmnOverlayTextNode,
 } from './lib/overlay-html';
+export { OGE_BPMN_TRUSTED_TYPES_POLICY } from './lib/trusted-types';

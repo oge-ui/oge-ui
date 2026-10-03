@@ -18,6 +18,10 @@ import {
   findKanbanCard,
   focusFirstKanbanMenuItem,
   focusKanbanCard,
+  focusOwningKanbanCard,
+  isKanbanCardContentTarget,
+  kanbanCardKeyRoute,
+  syncKanbanCardTabStops,
   formatKanbanMessage,
   groupBoard,
   isKanbanLegalTarget,
@@ -478,6 +482,8 @@ export class KanbanController<T extends object> {
       this.st.pendingFocusKey = null;
       focusKanbanCard(this.host, pending);
     }
+    // one Tab stop per column: card content is tabbable only in the stop
+    if (this.host !== null) syncKanbanCardTabStops(this.host);
   }
 
   measureCells = (): void => {
@@ -599,8 +605,8 @@ export class KanbanController<T extends object> {
   // ---------------- pointer & keyboard on cards ----------------
 
   onCardClick(card: KanbanCard<T>, event: ReactMouseEvent<HTMLElement>): void {
-    // hover quick actions resolve from the aria-hidden spans (composite
-    // roles cannot host focusable children)
+    // the quick-action buttons resolve here, so a click and a keyboard
+    // activation (Enter/Space on the focused button) take one path
     const action = (event.target as HTMLElement).closest(
       '.oge-kanban-card-action',
     );
@@ -621,6 +627,7 @@ export class KanbanController<T extends object> {
     event: ReactMouseEvent<HTMLElement>,
   ): void {
     event.stopPropagation();
+    if (isKanbanCardContentTarget(event.target, event.currentTarget)) return;
     this.props.onCardDblClick?.({ card, event: event.nativeEvent });
     if (this.view().canUpdate) this.editCard(card);
   }
@@ -641,6 +648,14 @@ export class KanbanController<T extends object> {
     event: ReactKeyboardEvent<HTMLElement>,
     card: KanbanCard<T>,
   ): void {
+    // keys typed into a card's own controls stay with those controls
+    const route = kanbanCardKeyRoute(event);
+    if (route === 'return') {
+      event.preventDefault();
+      focusOwningKanbanCard(event.target as Element);
+      return;
+    }
+    if (route === 'content') return;
     const view = this.view();
     if (event.ctrlKey && !event.metaKey && !event.altKey) {
       this.onCardCtrlArrow(event, card, view);
@@ -743,14 +758,11 @@ export class KanbanController<T extends object> {
     const view = this.view();
     if (!view.canDrag || event.button !== 0) return;
     if (column.allowDrag === false) return;
-    if (
-      (event.target as HTMLElement).closest('.oge-kanban-card-action') !== null
-    ) {
-      return;
-    }
+    const cardEl = event.currentTarget;
+    // quick actions and template controls keep their native press
+    if (isKanbanCardContentTarget(event.target, cardEl)) return;
     const position = findKanbanCard(view.lanes, card.key);
     if (position === null || this.host === null) return;
-    const cardEl = event.currentTarget;
     const rect = cardEl.getBoundingClientRect();
     this.dragGeometry = measureKanbanDragGeometry(this.host);
     this.setSelectedCardKey(card.key);

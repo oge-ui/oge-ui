@@ -72,8 +72,9 @@ including every aria label, live in `OgeSchedulerMessages`
 (`provideOgeSchedulerConfig`).
 
 **Dates** are Intl-only local wall time (house rule: no date library, no
-DateAdapter, no TZ database) — RRULE `UNTIL=…Z` stamps are therefore read
-as local wall time; that limit is documented rather than half-supported.
+DateAdapter, no TZ database) — RRULE `…Z` stamps are UTC and convert to the
+matching local instant, while `TZID=` parameters reject the rule; that limit
+is documented rather than half-supported.
 
 Docs: [ogeui.com/components/scheduler](https://ogeui.com/components/scheduler)
 · AI reference: [`llms.txt`](llms.txt)

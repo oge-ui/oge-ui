@@ -67,12 +67,17 @@ describe('OgeToastProvider / useOgeToasts', () => {
       toasts.info('Synced');
     });
     advance(100);
-    expect(screen.getByRole('status')).toHaveTextContent('Synced');
+    // the document's shared live regions (OgeLiveAnnouncerCore)
+    expect(
+      document.querySelector('[data-oge-live-announcer="polite"]'),
+    ).toHaveTextContent('Synced');
     act(() => {
       toasts.error('Failed', { title: 'Save' });
     });
     advance(100);
-    expect(screen.getByRole('alert')).toHaveTextContent('Save. Failed');
+    expect(
+      document.querySelector('[data-oge-live-announcer="assertive"]'),
+    ).toHaveTextContent('Save. Failed');
   });
 
   it('hover pauses and resumes with the remaining time', () => {

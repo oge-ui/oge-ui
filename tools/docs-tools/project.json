@@ -19,6 +19,14 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "control-chars": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "node tools/docs-tools/check-control-chars.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "csp-check": {
       "executor": "nx:run-commands",
       "options": {
@@ -42,6 +50,9 @@
         "cwd": "{workspaceRoot}"
       },
       "dependsOn": ["react-buttons:build"]
+    },
+    "lint": {
+      "dependsOn": ["control-chars"]
     }
   }
 }

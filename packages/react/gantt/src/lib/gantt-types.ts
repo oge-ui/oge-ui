@@ -93,6 +93,13 @@ export interface OgeGanttProps<
   showRowLines?: boolean;
   showCriticalPath?: boolean;
   weekendsHighlighted?: boolean;
+  /**
+   * Weekend days (0 = Sunday … 6 = Saturday) `weekendsHighlighted` shades;
+   * `undefined` resolves from the locale's `Intl.Locale` week data (Friday +
+   * Saturday in `he-IL`), falling back to Saturday + Sunday. A `workCalendar`
+   * takes precedence.
+   */
+  weekendDays?: readonly number[];
   holidays?: readonly Date[];
   workCalendar?: OgeGanttWorkCalendar | null;
   showResourceWorkload?: boolean;

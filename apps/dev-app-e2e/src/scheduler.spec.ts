@@ -214,6 +214,46 @@ test.describe('scheduler', () => {
     ).toBeFocused();
   });
 
+  test('grid semantics: columnheaders, aria-selected, aria-readonly', async ({
+    page,
+  }) => {
+    await openBasic(page);
+    const host = scheduler(page);
+    const grid = host.locator('[role="grid"]');
+    // the first grid row carries the column headers (the visual header row
+    // outside the scrolling grid is aria-hidden)
+    const headerRow = grid.locator('> [role="row"]').first();
+    await expect(headerRow.getByRole('columnheader')).toHaveCount(7);
+    await expect(headerRow.getByRole('columnheader').first()).toHaveText(
+      /\w+day, \w+ \d+, \d{4}/,
+    );
+    await expect(host.locator('.oge-scheduler-header-row')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
+    // an editable scheduler is not read-only
+    await expect(grid).not.toHaveAttribute('aria-readonly', /.*/);
+    // selection follows the roving cell
+    const selected = grid.locator('[role="gridcell"][aria-selected="true"]');
+    await expect(selected).toHaveCount(1);
+    await expect(selected).toHaveAttribute('tabindex', '0');
+    await grid.locator('[role="gridcell"][tabindex="0"]').focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(selected).toHaveCount(1);
+    await expect(selected).toBeFocused();
+
+    await host.getByRole('button', { name: 'Month' }).click();
+    const month = host.locator('.oge-scheduler-month-grid[role="grid"]');
+    const weekdays = month.locator('> [role="row"]').first();
+    await expect(weekdays.getByRole('columnheader')).toHaveCount(7);
+    await expect(weekdays.getByRole('columnheader').first()).toHaveText(
+      /^\s*\w+day\s*$/,
+    );
+    await expect(
+      month.locator('[role="gridcell"][aria-selected="true"]'),
+    ).toHaveCount(1);
+  });
+
   test('planner ergonomics: workWeek hides the weekend, off-hours shade', async ({
     page,
   }) => {

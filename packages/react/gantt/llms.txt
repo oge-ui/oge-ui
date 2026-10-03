@@ -114,6 +114,7 @@ _Appearance & behavior_
 | `showDependencies / showRowLines` | `boolean` | `true` | Dependency arrows / horizontal row guides. |
 | `showCriticalPath` | `boolean` | `false` | Outlines the zero-slack chain (backward-pass latest-finish relaxation over all four link types). |
 | `weekendsHighlighted / holidays` | `boolean / readonly Date[]` | `true / []` | Off-day shading on the days scale. |
+| `weekendDays` | `readonly number[] \| undefined` | `—` | Weekend days (0 = Sunday … 6 = Saturday) `weekendsHighlighted` shades. `undefined` resolves from the locale via `Intl.Locale#getWeekInfo()` (Friday + Saturday in `he-IL`), falling back to Saturday + Sunday. A `workCalendar` takes precedence. |
 | `workCalendar` | `OgeGanttWorkCalendar \| null` | `null` | Work-time calendar (`{ workingDays?, holidays? }`, 0 = Sunday): shades every off day and makes auto-scheduling roll pushed starts onto working days, preserving durations in _working_ days. The `holidays` prop merges in; per-resource `calendar`s override it per task. |
 | `showResourceWorkload` | `boolean` | `false` | Renders the per-resource workload band under the chart: merged assignment segments per resource, overallocated stretches in the danger color. |
 | `stripLines` | `readonly OgeGanttStripLine[]` | `[]` | Vertical markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded range with it. |

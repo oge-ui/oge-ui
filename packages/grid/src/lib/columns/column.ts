@@ -58,6 +58,8 @@ export class OgeColumn<T = unknown> {
   readonly filterOperator = input<FilterOperator>();
   /** Track minimum in px for flexible-width columns. */
   readonly minWidth = input<number>();
+  /** Upper bound in px for user resizing (pointer drag and Alt+Arrow keys). */
+  readonly maxWidth = input<number>();
   /** Maps stored values to display texts (cells, filters, editors). */
   readonly lookup = input<OgeColumnLookup>();
   /** Computes the cell value from the row (display-only columns; disables sort/filter unless `field` is set). */

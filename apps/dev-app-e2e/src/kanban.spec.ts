@@ -10,6 +10,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 const BASIC = 'app-demo-card:has(#getting-started)';
 const WIP = 'app-demo-card:has(#wip-limits)';
 const KEYBOARD = 'app-demo-card:has(#keyboard-moving-a11y)';
+const TEMPLATE = 'app-demo-card:has(#card-template)';
 
 function board(page: Page, scope = BASIC): Locator {
   return page.locator(`${scope} oge-kanban`);
@@ -40,10 +41,13 @@ test.describe('kanban', () => {
     await expect(host.locator('.oge-kanban-avatar').first()).toBeVisible();
     await expect(host.locator('.oge-kanban-due').first()).toBeVisible();
     await expect(host.locator('.oge-kanban-priority').first()).toBeVisible();
-    // columns are labeled listboxes
-    const listbox = host.locator('.oge-kanban-cards[data-col="todo"]');
-    await expect(listbox).toHaveAttribute('role', 'listbox');
-    await expect(listbox).toHaveAttribute('aria-label', /To do/);
+    // columns are labeled lists of cards
+    const list = host.locator('.oge-kanban-cards[data-col="todo"]');
+    await expect(list).toHaveAttribute('role', 'list');
+    await expect(list).toHaveAttribute('aria-label', /To do/);
+    await expect(host.locator('[role="option"], [role="listbox"]')).toHaveCount(
+      0,
+    );
   });
 
   test('drag moves a card across columns; mid-drag Escape restores', async ({
@@ -137,6 +141,73 @@ test.describe('kanban', () => {
     await expect(host.locator('.oge-kanban-live')).toHaveText(
       /moved to doing, position \d of \d/,
     );
+  });
+
+  test('Tab from a focused card reaches its quick-action buttons', async ({
+    page,
+  }) => {
+    await page.goto(`/components/kanban`);
+    const host = board(page, KEYBOARD);
+    await host.scrollIntoViewIfNeeded();
+    const card = cardsIn(host, 'todo').first();
+    await card.click();
+    await expect(card).toBeFocused();
+    await expect(card).toHaveAttribute('role', 'group');
+    await expect(card).toHaveAttribute('aria-roledescription', 'card');
+    await expect(card.locator('xpath=..')).toHaveAttribute('role', 'listitem');
+    const edit = card.locator('button.oge-kanban-card-action-edit');
+    const del = card.locator('button.oge-kanban-card-action-delete');
+    await page.keyboard.press('Tab');
+    await expect(edit).toBeFocused();
+    await expect(edit).toHaveAttribute('aria-label', /^Edit /);
+    await expect(edit).toBeVisible();
+    await page.keyboard.press('Tab');
+    await expect(del).toBeFocused();
+    // Escape from the card's content lands back on the card
+    await page.keyboard.press('Escape');
+    await expect(card).toBeFocused();
+    // the quick action is a real button: Enter on it opens the editor
+    await page.keyboard.press('Tab');
+    await expect(edit).toBeFocused();
+    await page.keyboard.press('Enter');
+    const modal = page.locator('.oge-modal');
+    await expect(modal).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(modal).toHaveCount(0);
+  });
+
+  test('Tab reaches controls inside a custom card template', async ({
+    page,
+  }) => {
+    await page.goto(`/components/kanban`);
+    const host = board(page, TEMPLATE);
+    await host.scrollIntoViewIfNeeded();
+    const first = cardsIn(host, 'staging').first();
+    await first.click({ position: { x: 12, y: 12 } });
+    await expect(first).toBeFocused();
+    const rollback = first.getByRole('button', { name: 'Roll back' });
+    await page.keyboard.press('Tab');
+    await expect(rollback).toBeFocused();
+    // arrows typed on the control stay with it (no roving)
+    await page.keyboard.press('ArrowDown');
+    await expect(rollback).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(
+      page.locator(`${TEMPLATE} [aria-live="polite"]`).last(),
+    ).toHaveText(/Rollback requested: api-gateway/);
+    // one Tab stop per column: the next card's control is not in the sequence
+    await page.keyboard.press('Tab');
+    const inSecondCard = await page.evaluate(
+      () =>
+        document.activeElement
+          ?.closest('.oge-kanban-card')
+          ?.getAttribute('data-key') ?? null,
+    );
+    expect(inSecondCard).not.toBe('2');
+    // Escape from the control returns to its card
+    await rollback.focus();
+    await page.keyboard.press('Escape');
+    await expect(first).toBeFocused();
   });
 
   test('double-click opens the edit dialog; saving renames the card', async ({

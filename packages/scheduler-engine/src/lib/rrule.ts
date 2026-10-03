@@ -2,18 +2,29 @@
  * RFC 5545 RRULE parsing/serialization — the documented OGE subset.
  *
  * Supported: FREQ=DAILY|WEEKLY|MONTHLY|YEARLY, INTERVAL, COUNT xor UNTIL
- * (DATE and DATE-TIME forms; a trailing `Z` is accepted and interpreted as
- * LOCAL wall time — the suite is Intl-only with no TZ database, documented
- * honestly), BYDAY (plain weekdays for WEEKLY; ordinal −1..4 prefixes for
- * MONTHLY/YEARLY), BYMONTHDAY (1..31 and −1 = last day), BYMONTH (1..12),
- * WKST.
+ * (DATE and DATE-TIME forms), BYDAY (plain weekdays for every frequency —
+ * "every such weekday of the period" for MONTHLY/YEARLY; ordinal −1..4
+ * prefixes for MONTHLY/YEARLY), BYMONTHDAY (1..31 and −1 = last day),
+ * BYMONTH (1..12), BYHOUR (0..23), BYMINUTE (0..59), BYSETPOS (±1..366,
+ * applied to each period's candidate set), WKST.
  *
- * Excluded (parse returns `null`): BYSETPOS, BYYEARDAY, BYWEEKNO,
- * BYHOUR/BYMINUTE/BYSECOND, RDATE/EXRULE, true-UTC/TZID semantics, multiple
- * RRULE lines, SECONDLY/MINUTELY/HOURLY frequencies.
+ * Date-times: a value WITHOUT a trailing `Z` is floating local wall time; a
+ * value WITH `Z` is UTC and is converted to the matching local `Date`
+ * instant (so `UNTIL=20261231T140000Z` ends at 14:00 UTC, whatever the
+ * viewer's zone). DATE-only values are local days.
  *
- * The v0.2 expansion engine (`rrule-expand.ts`) will consume this model:
- * `expandRecurrence(appointment, rule, rangeStart, rangeEnd): Date[]`.
+ * Multi-line content: besides a bare RRULE value, the rule text may be an
+ * iCalendar property block — one `RRULE:` line plus optional `DTSTART:`,
+ * `RDATE:` and `EXDATE:` lines (CRLF or LF, RFC line folding honored,
+ * `VALUE=DATE`/`VALUE=DATE-TIME` parameters accepted). RDATE adds extra
+ * occurrences, EXDATE removes them (merged with the appointment's own
+ * recurrence-exception field). DTSTART is validated and kept on the model,
+ * but the appointment's start date remains the series start.
+ *
+ * Still excluded (parse returns `null`): BYYEARDAY, BYWEEKNO, BYSECOND,
+ * EXRULE, `TZID=` parameters (no TZ database — the suite is Intl-only),
+ * multiple RRULE lines, RDATE `VALUE=PERIOD`, and the
+ * SECONDLY/MINUTELY/HOURLY frequencies.
  */
 
 /** Supported recurrence frequencies (string union, house rule). */
@@ -32,13 +43,25 @@ export interface RecurrenceRule {
   readonly freq: RecurrenceFrequency;
   readonly interval: number;
   readonly count?: number;
-  /** Local wall time, inclusive. */
+  /** Inclusive end, as a local `Date` (a `Z` value is converted from UTC). */
   readonly until?: Date;
   readonly byDay?: readonly RecurrenceByDay[];
   readonly byMonthDay?: readonly number[];
   readonly byMonth?: readonly number[];
+  /** BYHOUR: `0`–`23`; each candidate day is expanded to these hours. */
+  readonly byHour?: readonly number[];
+  /** BYMINUTE: `0`–`59`; each candidate hour is expanded to these minutes. */
+  readonly byMinute?: readonly number[];
+  /** BYSETPOS: 1-based positions (negative = from the end) within each period. */
+  readonly bySetPos?: readonly number[];
   /** WKST as `0`–`6` (Sunday-first); RFC default is Monday (`1`). */
   readonly weekStart: number;
+  /** DTSTART line of a property block (informational; the appointment start wins). */
+  readonly dtStart?: Date;
+  /** RDATE values: extra occurrence starts added to the set. */
+  readonly rDates?: readonly Date[];
+  /** EXDATE values from the property block: occurrences removed from the set. */
+  readonly exDates?: readonly Date[];
 }
 
 const WEEKDAYS: Readonly<Record<string, number>> = {
@@ -52,23 +75,36 @@ const WEEKDAYS: Readonly<Record<string, number>> = {
 };
 const WEEKDAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'] as const;
 
-function parseUntil(value: string): Date | null {
-  const match = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})Z?)?$/.exec(
-    value,
-  );
+const STAMP = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z?))?$/;
+
+/**
+ * Parses one DATE / DATE-TIME stamp. `Z` → UTC converted to the local
+ * instant; no `Z` → floating local wall time. `dateOnlyEnd` fills a DATE
+ * value with 23:59:59 (inclusive UNTIL) instead of midnight.
+ */
+function parseStamp(value: string, dateOnlyEnd: boolean): Date | null {
+  const match = STAMP.exec(value.trim().toUpperCase());
   if (!match) return null;
-  const [, y, m, d, hh, mm, ss] = match;
+  const [, y, m, d, hh, mm, ss, z] = match;
+  const year = Number(y);
   const month = Number(m);
   const day = Number(d);
   if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-  return new Date(
-    Number(y),
-    month - 1,
-    day,
-    Number(hh ?? 23),
-    Number(mm ?? 59),
-    Number(ss ?? 59),
-  );
+  if (hh === undefined) {
+    return dateOnlyEnd
+      ? new Date(year, month - 1, day, 23, 59, 59)
+      : new Date(year, month - 1, day);
+  }
+  const hours = Number(hh);
+  const minutes = Number(mm);
+  const seconds = Number(ss);
+  if (hours > 23 || minutes > 59 || seconds > 60) return null;
+  if (z === 'Z') {
+    return new Date(
+      Date.UTC(year, month - 1, day, hours, minutes, Math.min(seconds, 59)),
+    );
+  }
+  return new Date(year, month - 1, day, hours, minutes, Math.min(seconds, 59));
 }
 
 function parseByDay(value: string): RecurrenceByDay[] | null {
@@ -103,14 +139,20 @@ function parseIntList(
   return entries.length > 0 ? entries : null;
 }
 
-/**
- * Parses an RRULE string (with or without the `RRULE:` prefix) into the OGE
- * subset model. Returns `null` on ANY invalid or unsupported part — a rule
- * is either fully understood or rejected, never silently truncated.
- */
-export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
-  const body = rule.trim().replace(/^RRULE:/i, '');
-  if (body === '' || body.includes('\n')) return null;
+function parseSetPos(value: string): number[] | null {
+  const entries: number[] = [];
+  for (const part of value.split(',')) {
+    if (!/^[+-]?\d+$/.test(part)) return null;
+    const num = Number(part);
+    if (num === 0 || num < -366 || num > 366) return null;
+    entries.push(num);
+  }
+  return entries.length > 0 ? entries : null;
+}
+
+/** The RRULE value (`FREQ=…;…`) → model, or null. */
+function parseRuleValue(body: string): RecurrenceRule | null {
+  if (body === '') return null;
 
   let freq: RecurrenceFrequency | null = null;
   let interval = 1;
@@ -119,6 +161,9 @@ export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
   let byDay: RecurrenceByDay[] | undefined;
   let byMonthDay: number[] | undefined;
   let byMonth: number[] | undefined;
+  let byHour: number[] | undefined;
+  let byMinute: number[] | undefined;
+  let bySetPos: number[] | undefined;
   let weekStart = 1;
 
   for (const pair of body.split(';')) {
@@ -153,7 +198,7 @@ export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
         break;
       }
       case 'UNTIL': {
-        const parsed = parseUntil(value);
+        const parsed = parseStamp(value, true);
         if (parsed === null) return null;
         until = parsed;
         break;
@@ -176,6 +221,24 @@ export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
         byMonth = parsed;
         break;
       }
+      case 'BYHOUR': {
+        const parsed = parseIntList(value, 0, 23, false);
+        if (parsed === null) return null;
+        byHour = parsed;
+        break;
+      }
+      case 'BYMINUTE': {
+        const parsed = parseIntList(value, 0, 59, false);
+        if (parsed === null) return null;
+        byMinute = parsed;
+        break;
+      }
+      case 'BYSETPOS': {
+        const parsed = parseSetPos(value);
+        if (parsed === null) return null;
+        bySetPos = parsed;
+        break;
+      }
       case 'WKST': {
         const day = WEEKDAYS[value];
         if (day === undefined) return null;
@@ -183,7 +246,7 @@ export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
         break;
       }
       default:
-        // unsupported part (BYSETPOS, BYHOUR, …) → whole rule rejected
+        // unsupported part (BYYEARDAY, BYSECOND, …) → whole rule rejected
         return null;
     }
   }
@@ -207,24 +270,129 @@ export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
     ...(byDay !== undefined ? { byDay } : {}),
     ...(byMonthDay !== undefined ? { byMonthDay } : {}),
     ...(byMonth !== undefined ? { byMonth } : {}),
+    ...(byHour !== undefined ? { byHour } : {}),
+    ...(byMinute !== undefined ? { byMinute } : {}),
+    ...(bySetPos !== undefined ? { bySetPos } : {}),
     weekStart,
   };
 }
 
-/** Serializes a rule model back into RRULE text (no `RRULE:` prefix). */
+/**
+ * Parses a DTSTART/RDATE/EXDATE property value with its parameters.
+ * Only `VALUE=DATE` / `VALUE=DATE-TIME` are understood; anything else
+ * (`TZID=…`, `VALUE=PERIOD`) rejects the block.
+ */
+function parseDateList(params: string, value: string): Date[] | null {
+  for (const param of params.split(';')) {
+    if (param === '') continue;
+    const upper = param.toUpperCase();
+    if (upper !== 'VALUE=DATE' && upper !== 'VALUE=DATE-TIME') return null;
+  }
+  const dates: Date[] = [];
+  for (const part of value.split(',')) {
+    const parsed = parseStamp(part, false);
+    if (parsed === null) return null;
+    dates.push(parsed);
+  }
+  return dates.length > 0 ? dates : null;
+}
+
+/** Unfolds RFC 5545 content lines (CRLF/LF; a leading space/tab continues). */
+function contentLines(text: string): string[] {
+  const lines: string[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    if ((raw.startsWith(' ') || raw.startsWith('\t')) && lines.length > 0) {
+      lines[lines.length - 1] += raw.slice(1);
+    } else if (raw.trim() !== '') {
+      lines.push(raw.trim());
+    }
+  }
+  return lines;
+}
+
+/**
+ * Parses an RRULE string (with or without the `RRULE:` prefix), or an
+ * iCalendar property block (RRULE + optional DTSTART/RDATE/EXDATE lines),
+ * into the OGE subset model. Returns `null` on ANY invalid or unsupported
+ * part — a rule is either fully understood or rejected, never silently
+ * truncated.
+ */
+export function parseRecurrenceRule(rule: string): RecurrenceRule | null {
+  const lines = contentLines(rule);
+  if (lines.length === 0) return null;
+
+  let ruleValue: string | null = null;
+  let dtStart: Date | undefined;
+  const rDates: Date[] = [];
+  const exDates: Date[] = [];
+
+  for (const line of lines) {
+    const named = /^([A-Za-z-]+)((?:;[^:]*)?):(.*)$/.exec(line);
+    const name = named?.[1].toUpperCase();
+    if (
+      named === null ||
+      (name !== 'RRULE' &&
+        name !== 'DTSTART' &&
+        name !== 'RDATE' &&
+        name !== 'EXDATE')
+    ) {
+      // a bare `FREQ=…` value line is the RRULE itself
+      if (ruleValue !== null || line.includes(':')) return null;
+      ruleValue = line;
+      continue;
+    }
+    const params = named[2].replace(/^;/, '');
+    const value = named[3];
+    if (name === 'RRULE') {
+      if (ruleValue !== null || params !== '') return null;
+      ruleValue = value;
+      continue;
+    }
+    const dates = parseDateList(params, value);
+    if (dates === null) return null;
+    if (name === 'DTSTART') {
+      if (dtStart !== undefined || dates.length !== 1) return null;
+      dtStart = dates[0];
+    } else if (name === 'RDATE') {
+      rDates.push(...dates);
+    } else {
+      exDates.push(...dates);
+    }
+  }
+
+  if (ruleValue === null) return null;
+  const parsed = parseRuleValue(ruleValue);
+  if (parsed === null) return null;
+  return {
+    ...parsed,
+    ...(dtStart !== undefined ? { dtStart } : {}),
+    ...(rDates.length > 0 ? { rDates } : {}),
+    ...(exDates.length > 0 ? { exDates } : {}),
+  };
+}
+
+function formatStamp(date: Date): string {
+  const y = String(date.getFullYear()).padStart(4, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${y}${m}${d}T${hh}${mm}${ss}`;
+}
+
+/**
+ * Serializes a rule model back into RRULE text (no `RRULE:` prefix). Rules
+ * carrying DTSTART/RDATE/EXDATE values serialize as a property block: the
+ * RRULE value on the first line, then one `DTSTART:` / `RDATE:` / `EXDATE:`
+ * line each (local floating stamps).
+ */
 export function serializeRecurrenceRule(rule: RecurrenceRule): string {
   const parts = [`FREQ=${rule.freq.toUpperCase()}`];
   if (rule.interval !== 1) parts.push(`INTERVAL=${rule.interval}`);
   if (rule.count !== undefined) parts.push(`COUNT=${rule.count}`);
   if (rule.until !== undefined) {
-    const u = rule.until;
-    const y = String(u.getFullYear()).padStart(4, '0');
-    const m = String(u.getMonth() + 1).padStart(2, '0');
-    const d = String(u.getDate()).padStart(2, '0');
-    const hh = String(u.getHours()).padStart(2, '0');
-    const mm = String(u.getMinutes()).padStart(2, '0');
-    const ss = String(u.getSeconds()).padStart(2, '0');
-    parts.push(`UNTIL=${y}${m}${d}T${hh}${mm}${ss}`);
+    parts.push(`UNTIL=${formatStamp(rule.until)}`);
   }
   if (rule.byDay !== undefined && rule.byDay.length > 0) {
     parts.push(
@@ -239,35 +407,42 @@ export function serializeRecurrenceRule(rule: RecurrenceRule): string {
   if (rule.byMonth !== undefined && rule.byMonth.length > 0) {
     parts.push(`BYMONTH=${rule.byMonth.join(',')}`);
   }
+  if (rule.byHour !== undefined && rule.byHour.length > 0) {
+    parts.push(`BYHOUR=${rule.byHour.join(',')}`);
+  }
+  if (rule.byMinute !== undefined && rule.byMinute.length > 0) {
+    parts.push(`BYMINUTE=${rule.byMinute.join(',')}`);
+  }
+  if (rule.bySetPos !== undefined && rule.bySetPos.length > 0) {
+    parts.push(`BYSETPOS=${rule.bySetPos.join(',')}`);
+  }
   if (rule.weekStart !== 1) {
     parts.push(`WKST=${WEEKDAY_CODES[rule.weekStart]}`);
   }
-  return parts.join(';');
+  const lines = [parts.join(';')];
+  if (rule.dtStart !== undefined) {
+    lines.push(`DTSTART:${formatStamp(rule.dtStart)}`);
+  }
+  if (rule.rDates !== undefined && rule.rDates.length > 0) {
+    lines.push(`RDATE:${rule.rDates.map(formatStamp).join(',')}`);
+  }
+  if (rule.exDates !== undefined && rule.exDates.length > 0) {
+    lines.push(`EXDATE:${rule.exDates.map(formatStamp).join(',')}`);
+  }
+  return lines.join('\n');
 }
 
 /**
- * Parses a recurrence-exception value: comma-separated `yyyyMMddTHHmmss`
- * stamps (trailing `Z` accepted, read as local wall time). Invalid entries
+ * Parses a recurrence-exception value: comma-separated `yyyyMMdd` or
+ * `yyyyMMddTHHmmss` stamps. A trailing `Z` marks UTC and is converted to the
+ * local instant; without it the stamp is local wall time. Invalid entries
  * are skipped rather than failing the list.
  */
 export function parseRecurrenceException(value: string): Date[] {
   const dates: Date[] = [];
   for (const part of value.split(',')) {
-    const match = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})Z?)?$/.exec(
-      part.trim(),
-    );
-    if (!match) continue;
-    const [, y, m, d, hh, mm, ss] = match;
-    dates.push(
-      new Date(
-        Number(y),
-        Number(m) - 1,
-        Number(d),
-        Number(hh ?? 0),
-        Number(mm ?? 0),
-        Number(ss ?? 0),
-      ),
-    );
+    const parsed = parseStamp(part, false);
+    if (parsed !== null) dates.push(parsed);
   }
   return dates;
 }

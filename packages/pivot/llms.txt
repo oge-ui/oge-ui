@@ -130,7 +130,7 @@ Predictable wrong guesses, and what to write instead.
 | `expandAll(area: 'row' \| 'column') / collapseAll(area)` | `void` | Axis-wide expansion; remote mode expands only what is loaded. |
 | `getFieldLayout(): readonly PivotFieldConfig[]` | `readonly PivotFieldConfig[]` | Declared fields merged with user overrides. |
 | `showFieldChooser(): void` | `void` | Opens the field-chooser dialog. |
-| `state() / applyState(snapshot)` | `PivotGridStateSnapshot / void` | Field layout + expansion snapshot. |
+| `state() / applyState(snapshot)` | `PivotGridStateSnapshot / void` | Field layout + expansion snapshot. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `getCsv(options?) / exportCsv(filename?)` | `string / void` | CSV of exactly what is on screen (multi-level headers flattened).Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 
 #### Events
@@ -152,14 +152,39 @@ _Cell & axis types_
 | `OgePivotHeaderCell` | `OgePivotAxisLine & { rowStart, rowEnd, columnStart, span }` | Header cell with 1-based matrix coordinates. |
 | `OgePivotFieldDef` | `{ dataField; id?, caption?, area?, … every <oge-pivot-field> input }` | Element type of `fields` — one declared field as data, with the directive’s defaults. |
 | `OgePivotFieldChooserOptions` | `{ applyChangesMode?: 'instantly' \| 'onDemand' }` | Field-chooser behavior; `'onDemand'` edits a draft that applies on Apply. |
-| `OgePivotMenuItem` | `{ text, disabled?, active?, action? }` | One item of the header / measure context menus. |
+| `OgePivotMenuItem` | `{ text, disabled?, active?, action? }` | One item of the header / field context menus. |
 | `OGE_PIVOT_FIELD_DRAG_TYPE` | `'application/x-oge-pivot-field'` | DataTransfer type of field chips. |
+
+_Keyboard (WAI-ARIA APG grid + field chips)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `Tab` | `grid` | The matrix is one APG grid with a single tab stop shared by column headers, row headers and value cells (the first value cell until something is focused). |
+| `Arrow keys` | `grid` | Move between headers and value cells; a spanning column header is one stop, and Down out of it keeps the column you came from. Left/Right are mirrored in RTL. |
+| `Home / End · Ctrl+Home / Ctrl+End` | `grid` | First / last cell of the row · first column header / last value cell of the grid. |
+| `Enter / Space (header)` | `grid` | Expands or collapses an expandable row or column header. |
+| `Shift+F10 / ContextMenu (header)` | `grid` | Opens the header menu (sort, sort by summary, filter, remove, expand/collapse all, field chooser) — the keyboard right-click. |
+| `Enter / Space / Shift+F10 (field chip)` | `field panel + chooser` | Every field chip is a focusable `role="button"` with `aria-haspopup="menu"`; these keys (and right-click) open its field menu: Move left / Move right, Move to Filters / Rows / Columns / Values, Remove field, and on a measure the summary-type and display-mode items. The single-pointer alternative to dragging (WCAG 2.5.7). |
+| `Ctrl+Left / Ctrl+Right (field chip)` | `field panel + chooser` | Reorders the field within its area (mirrored in RTL); the new position is announced in a polite live region. |
+| `Ctrl+Up / Ctrl+Down (field chip)` | `field panel + chooser` | Moves the field to the end of the previous / next area in panel order (Filters, Rows, Columns, Values). |
+| `Delete (field chip)` | `field panel + chooser` | Removes the field from the layout. In the chooser’s `onDemand` mode every move edits the draft until Apply. |
+| `Up / Down / Home / End / Escape / Tab (menu)` | `menu` | APG menu keys over the enabled items; Escape and Tab close it and return focus to the chip or header that opened it (a moved chip is re-focused in its new area). |
+
+_Accessibility messages_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `moveToAreaPattern` | `string` | `'Move to {0}'` | Field-menu item; `{0}` is the area label. |
+| `moveFieldLeft / moveFieldRight` | `string` | `'Move left' / 'Move right'` | Field-menu items reordering a field within its area. |
+| `fieldMenuLabelPattern` | `string` | `'{0} field actions'` | Accessible name of the field menu; `{0}` is the caption. |
+| `fieldMovedPattern` | `string` | `'{0} moved to {1}, position {2} of {3}'` | Live announcement after a move: field, area label, 1-based position, fields in the area. |
+| `fieldRemovedPattern` | `string` | `'{0} removed from the layout'` | Live announcement after a field left the layout. |
 
 _Configuration & engine_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `provideOgePivotMessages(messages)` | `Provider` | App-scoped overrides of `OgePivotMessages` (39 keys — areas, menus, chooser, export…). |
+| `provideOgePivotMessages(messages)` | `Provider` | App-scoped overrides of `OgePivotMessages` (41 keys — areas, menus, chooser, export, field-move menu and announcements…). |
 | `PivotFieldConfig / PivotResult / PivotLoadOptions / OgePivotStore…` | `from @oge-ui/core` | The serializable engine contract lives in `@oge-ui/core`, not in this package. |
 | `exportPivotToExcel(grid, options?)` | `@oge-ui/pivot/export-excel` | Lazy Excel export with merged multi-level headers; `buildPivotWorkbook(result)` for custom pipelines. |
 

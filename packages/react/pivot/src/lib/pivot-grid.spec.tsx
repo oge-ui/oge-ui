@@ -84,7 +84,7 @@ describe('<OgePivotGrid> — rendering (mirror of the Angular MVP spec)', () => 
     const { container } = render(<OgePivotGrid data={SALES} fields={FIELDS} />);
     const eu = container.querySelector('.oge-pivot-row-header') as HTMLElement;
     expect(eu.getAttribute('aria-expanded')).toBe('false');
-    expect(eu.tabIndex).toBe(0);
+    expect(eu.tabIndex).toBe(-1); // the grid keeps one tab stop, on the first value cell
     fireEvent.click(eu);
     expect(rowHeaders(container)).toEqual([
       'EU',
@@ -123,10 +123,10 @@ describe('<OgePivotGrid> — rendering (mirror of the Angular MVP spec)', () => 
     fireEvent.dragOver(columns);
     fireEvent.drop(columns);
     expect(onFieldLayoutChange).toHaveBeenCalledTimes(1);
+    // a drop appends: city joins the columns as the inner level
     expect(texts(container, '.oge-pivot-col-header')).toEqual([
-      'Berlin',
-      'NYC',
-      'Paris',
+      '2024',
+      '2025',
       'Grand Total',
     ]);
     fireEvent.click(
@@ -134,11 +134,11 @@ describe('<OgePivotGrid> — rendering (mirror of the Angular MVP spec)', () => 
         '.oge-pivot-col-header.oge-pivot-expandable',
       ) as HTMLElement,
     );
-    expect(texts(container, '.oge-pivot-col-header')).toContain('2024');
-    const berlin = container.querySelector(
+    expect(texts(container, '.oge-pivot-col-header')).toContain('Berlin');
+    const year2024 = container.querySelector(
       '.oge-pivot-col-header',
     ) as HTMLElement;
-    expect(berlin.style.gridColumn).toContain('span 3');
+    expect(year2024.style.gridColumn).toContain('span 4'); // itself + Berlin + Paris + NYC
   });
 
   it('field panel collapses and expands', () => {

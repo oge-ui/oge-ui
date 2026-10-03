@@ -29,7 +29,9 @@ import {
   chipTabIndexOf,
   chipWidthPercent,
   dayWeekCellDate,
+  dayWeekCellSelected,
   dayWeekChipOrder,
+  dayWeekColumnHeaderText,
   dayWeekDragMove,
   dayWeekGroupItems,
   dayWeekPreviewBox,
@@ -81,6 +83,8 @@ export interface DayWeekViewProps<T> {
   readonly anchorDate: Date;
   readonly appointments: readonly SchedulerAppointment<T>[];
   readonly firstDayOfWeek: number;
+  /** Weekend days (0 = Sunday) the view shades — the scheduler's resolved list. */
+  readonly weekendDays: readonly number[];
   readonly dayStartHour: number;
   readonly dayEndHour: number;
   readonly cellDuration: number;
@@ -93,6 +97,8 @@ export interface DayWeekViewProps<T> {
   readonly allowDragging: boolean;
   readonly allowResizing: boolean;
   readonly allowAdding: boolean;
+  /** `aria-readonly` on the grid — the scheduler cannot change anything. */
+  readonly readOnly: boolean;
   readonly hiddenWeekDays: readonly number[] | undefined;
   readonly workHours: OgeSchedulerWorkHours | null;
   readonly shadeUntilCurrentTime: boolean;
@@ -165,6 +171,7 @@ function DayWeekViewInner<T>(
         dayEndHour: props.dayEndHour,
         cellDuration: props.cellDuration,
         hiddenWeekDays: props.hiddenWeekDays,
+        weekendDays: props.weekendDays,
       }),
     [
       props.anchorDate,
@@ -174,6 +181,7 @@ function DayWeekViewInner<T>(
       props.dayEndHour,
       props.cellDuration,
       props.hiddenWeekDays,
+      props.weekendDays,
     ],
   );
   const snapMinutes = props.snapDuration ?? grid.cellDuration;
@@ -576,14 +584,11 @@ function DayWeekViewInner<T>(
       className="oge-scheduler-view oge-scheduler-day-week"
       style={hostStyle}
     >
-      <div className="oge-scheduler-header-row" role="presentation">
-        <div className="oge-scheduler-gutter-spacer" role="presentation" />
+      {/* visual headers; the grid's own columnheader row carries the names */}
+      <div className="oge-scheduler-header-row" aria-hidden="true">
+        <div className="oge-scheduler-gutter-spacer" />
         {grid.days.map((day) => (
-          <div
-            key={day.getTime()}
-            className="oge-scheduler-date-header"
-            role="presentation"
-          >
+          <div key={day.getTime()} className="oge-scheduler-date-header">
             {renderDateHeader ? (
               renderDateHeader({ date: day, view })
             ) : (
@@ -607,8 +612,8 @@ function DayWeekViewInner<T>(
       </div>
 
       {groupItems && (
-        <div className="oge-scheduler-resource-row" role="presentation">
-          <div className="oge-scheduler-gutter-spacer" role="presentation" />
+        <div className="oge-scheduler-resource-row" aria-hidden="true">
+          <div className="oge-scheduler-gutter-spacer" />
           {columns.map((col) => (
             <div key={col.colIndex} className="oge-scheduler-resource-head">
               {col.resourceText}
@@ -715,7 +720,19 @@ function DayWeekViewInner<T>(
             className="oge-scheduler-grid"
             role="grid"
             aria-label={schedulerGridAriaLabel(messages, props.periodLabel)}
+            aria-readonly={props.readOnly ? true : undefined}
           >
+            <div className="oge-scheduler-sr-header-row" role="row">
+              {columns.map((col) => (
+                <div
+                  key={col.colIndex}
+                  className="oge-scheduler-sr-header"
+                  role="columnheader"
+                >
+                  {dayWeekColumnHeaderText(col, locale)}
+                </div>
+              ))}
+            </div>
             {grid.slotStartMinutes.map((minutes, slotIndex) => (
               <div key={minutes} className="oge-scheduler-row" role="row">
                 {columns.map((col) => {
@@ -728,7 +745,8 @@ function DayWeekViewInner<T>(
                         'oge-scheduler-cell',
                         minutes % 60 === 0 && 'oge-scheduler-cell-hour',
                         sameDay(col.day, now) && 'oge-scheduler-day-today',
-                        isWeekendDay(col.day) && 'oge-scheduler-cell-weekend',
+                        isWeekendDay(col.day, props.weekendDays) &&
+                          'oge-scheduler-cell-weekend',
                         col.resIndex === 0 &&
                           col.colIndex !== 0 &&
                           'oge-scheduler-cell-daybreak',
@@ -740,6 +758,13 @@ function DayWeekViewInner<T>(
                         .join(' ')}
                       role="gridcell"
                       tabIndex={focused ? 0 : -1}
+                      aria-selected={dayWeekCellSelected(
+                        col.colIndex,
+                        slotIndex,
+                        minutes,
+                        focusedCell,
+                        selection,
+                      )}
                       data-focus-target={focused ? '' : undefined}
                       aria-label={schedulerCellAriaLabel(
                         messages,

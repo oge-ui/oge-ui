@@ -81,19 +81,28 @@ const SECTIONS_REACT = ['<OgeScheduler>', 'Configuration'] as const;
     <ul>
       <li>
         Dates are plain local <code>Date</code>s throughout (Intl-only house
-        rule — no date library, no adapter, no timezone database). RRULE
-        <code>UNTIL=…Z</code> stamps are therefore read as local wall time; the
-        supported RFC 5545 subset is FREQ DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL,
-        COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY, BYMONTH and WKST — anything else
-        rejects the whole rule rather than truncating it.
+        rule — no date library, no adapter, no timezone database). RRULE stamps
+        without a suffix are local wall time; <code>…Z</code> stamps are UTC and
+        convert to the matching local instant. The supported RFC 5545 subset is
+        FREQ DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL, COUNT ⊕ UNTIL, BYDAY,
+        BYMONTHDAY, BYMONTH, BYHOUR, BYMINUTE, BYSETPOS and WKST, plus
+        <code>DTSTART</code>/<code>RDATE</code>/<code>EXDATE</code> lines when
+        the rule field holds an iCalendar property block. <code>TZID</code>,
+        BYYEARDAY, BYWEEKNO, BYSECOND and EXRULE reject the whole rule rather
+        than truncating it.
       </li>
       <li>
         No WAI-ARIA APG scheduler pattern exists. The widget composes the
-        calendar-grid pattern: the view body is a <code>role="grid"</code>
-        with one roving-tabindex cell (arrows, Home/End, Enter/Space creates),
-        and the appointment chips form a second tab stop of
-        <code>role="button"</code> elements — Left/Right cycles chronologically,
-        Enter opens the popup, Delete deletes, and
+        calendar-grid pattern: the view body is a <code>role="grid"</code> whose
+        first row holds <code>role="columnheader"</code> cells (the full date,
+        plus the resource when grouped; weekday names in the month view), and
+        one roving-tabindex cell (arrows, Home/End, Enter/Space creates) that is
+        also the <code>aria-selected</code> cell — selection follows focus, and
+        a live drag-to-create range selects the slots it covers. A read-only
+        scheduler sets <code>aria-readonly</code> on the grid. The appointment
+        chips form a second tab stop of <code>role="button"</code> elements —
+        Left/Right cycles chronologically, Enter opens the popup, Delete
+        deletes, and
         <strong>Ctrl+Arrow moves / Ctrl+Shift+Up/Down resizes</strong> as the
         keyboard equivalent of drag, announced through a polite live region.
       </li>

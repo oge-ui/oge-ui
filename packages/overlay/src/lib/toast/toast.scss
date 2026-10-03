@@ -272,16 +272,6 @@
   }
 }
 
-/* visually-hidden live regions; permanently mounted so announcements land */
-.oge-toast-announcer {
-  position: fixed;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .oge-toast,
   .oge-toast-cell {

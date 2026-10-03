@@ -24,7 +24,9 @@ import {
   escapeAttr,
   isWeekendDay,
   monthCellKey,
+  monthCellSelected,
   monthChipOrder,
+  monthColumnHeaderText,
   monthDropCell,
   monthMaxLanes,
   monthOriginIndex,
@@ -57,11 +59,15 @@ export interface MonthViewProps<T> {
   readonly anchorDate: Date;
   readonly appointments: readonly SchedulerAppointment<T>[];
   readonly firstDayOfWeek: number;
+  /** Weekend days (0 = Sunday) the view shades — the scheduler's resolved list. */
+  readonly weekendDays: readonly number[];
   readonly maxAppointmentsPerCell: number | 'auto';
   readonly locale: string | undefined;
   readonly messages: OgeSchedulerGridMessages;
   readonly periodLabel: string;
   readonly allowDragging: boolean;
+  /** `aria-readonly` on the grid — the scheduler cannot change anything. */
+  readonly readOnly: boolean;
   readonly renderAppointment:
     ((context: OgeAppointmentRenderContext<T>) => ReactNode) | undefined;
   readonly renderCell:
@@ -245,13 +251,10 @@ function MonthViewInner<T>(
 
   return (
     <div ref={hostRef} className="oge-scheduler-view oge-scheduler-month">
-      <div className="oge-scheduler-month-weekdays" role="presentation">
+      {/* visual headers; the grid's own columnheader row carries the names */}
+      <div className="oge-scheduler-month-weekdays" aria-hidden="true">
         {grid.weeks[0].map((day) => (
-          <div
-            key={day.getTime()}
-            className="oge-scheduler-month-weekday"
-            aria-hidden="true"
-          >
+          <div key={day.getTime()} className="oge-scheduler-month-weekday">
             {weekdayShortText(day, locale)}
           </div>
         ))}
@@ -264,7 +267,19 @@ function MonthViewInner<T>(
           className="oge-scheduler-month-grid"
           role="grid"
           aria-label={schedulerGridAriaLabel(messages, props.periodLabel)}
+          aria-readonly={props.readOnly ? true : undefined}
         >
+          <div className="oge-scheduler-sr-header-row" role="row">
+            {grid.weeks[0].map((day) => (
+              <div
+                key={day.getTime()}
+                className="oge-scheduler-sr-header"
+                role="columnheader"
+              >
+                {monthColumnHeaderText(day, locale)}
+              </div>
+            ))}
+          </div>
           {grid.weeks.map((week, weekIndex) => (
             <div
               key={week[0].getTime()}
@@ -288,7 +303,8 @@ function MonthViewInner<T>(
                       !sameMonth(day, props.anchorDate) &&
                         'oge-scheduler-month-other',
                       sameDay(day, now) && 'oge-scheduler-day-today',
-                      isWeekendDay(day) && 'oge-scheduler-cell-weekend',
+                      isWeekendDay(day, props.weekendDays) &&
+                        'oge-scheduler-cell-weekend',
                       focused && 'oge-scheduler-cell-focused',
                       drop && 'oge-scheduler-drop-target',
                     ]
@@ -296,6 +312,11 @@ function MonthViewInner<T>(
                       .join(' ')}
                     role="gridcell"
                     tabIndex={focused ? 0 : -1}
+                    aria-selected={monthCellSelected(
+                      weekIndex,
+                      dayIndex,
+                      focusedCell,
+                    )}
                     data-focus-target={focused ? '' : undefined}
                     aria-label={schedulerDayCellAriaLabel(
                       messages,

@@ -680,6 +680,61 @@ export default [
     },
   },
   {
+    // House i18n rule (docs/ARCHITECTURE.md, "Public API language"): every
+    // user-facing string, aria labels included, lives in a messages
+    // interface. A literal English accessible name in a template or in JSX
+    // cannot be translated, so it is a lint error. Narrow on purpose — a
+    // capitalised literal on `aria-label` only — so it never fires on data,
+    // class names or test fixtures. The dev-app opts out: its demos show
+    // consumer code, where a literal label is exactly right.
+    files: ['**/*.html'],
+    // inline templates of spec hosts arrive as `<file>.spec.ts/<n>.html`
+    ignores: ['**/*.spec.ts/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "TextAttribute[name='aria-label'][value=/^[A-Z][a-z]/]",
+          message:
+            'Literal English aria-label: move the string into the family messages interface and bind it.',
+        },
+        {
+          selector:
+            "BoundAttribute[name='aria-label'] LiteralPrimitive[value=/^[A-Z][a-z]/]",
+          message:
+            'Literal English aria-label: move the string into the family messages interface and bind it.',
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.tsx', '**/*.jsx'],
+    ignores: ['**/*.spec.tsx', '**/*.test.tsx', '**/*.test-utils.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "JSXAttribute[name.name='aria-label'] > Literal[value=/^[A-Z][a-z]/]",
+          message:
+            'Literal English aria-label: move the string into the family messages interface and bind it.',
+        },
+        {
+          selector:
+            "JSXAttribute[name.name='aria-label'] > JSXExpressionContainer > Literal[value=/^[A-Z][a-z]/]",
+          message:
+            'Literal English aria-label: move the string into the family messages interface and bind it.',
+        },
+        {
+          selector:
+            "JSXAttribute[name.name='aria-label'] > JSXExpressionContainer > TemplateLiteral[expressions.length=0] > TemplateElement[value.raw=/^[A-Z][a-z]/]",
+          message:
+            'Literal English aria-label: move the string into the family messages interface and bind it.',
+        },
+      ],
+    },
+  },
+  {
     // The `ng add` schematics are platform:agnostic like the rest of the
     // substrate, and the code they ship honours that. Their tests cannot:
     // @angular-devkit's `SchematicTestRunner.callRule` returns an Observable,

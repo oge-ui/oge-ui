@@ -26,7 +26,9 @@ import {
   chipTabIndexOf,
   chipWidthPercent,
   dayWeekCellDate,
+  dayWeekCellSelected,
   dayWeekChipOrder,
+  dayWeekColumnHeaderText,
   dayWeekDragMove,
   dayWeekGroupItems,
   dayWeekPreviewBox,
@@ -50,6 +52,7 @@ import {
   weekdayShortText,
   type AllDayBar,
   type AppointmentProposal,
+  type DayWeekColumn,
   type DayWeekSegment,
   type DayWeekSelection,
   type LaneLayout,
@@ -92,10 +95,11 @@ import type {
     '[style.--oge-scheduler-col-count]': 'colCount()',
   },
   template: `
-    <div class="oge-scheduler-header-row" role="presentation">
-      <div class="oge-scheduler-gutter-spacer" role="presentation"></div>
+    <!-- visual headers; the grid's own columnheader row carries the names -->
+    <div class="oge-scheduler-header-row" aria-hidden="true">
+      <div class="oge-scheduler-gutter-spacer"></div>
       @for (day of grid().days; track day.getTime()) {
-        <div class="oge-scheduler-date-header" role="presentation">
+        <div class="oge-scheduler-date-header">
           @if (dateHeaderTemplate(); as tpl) {
             <ng-container
               [ngTemplateOutlet]="tpl.templateRef"
@@ -116,8 +120,8 @@ import type {
     </div>
 
     @if (groupItems(); as items) {
-      <div class="oge-scheduler-resource-row" role="presentation">
-        <div class="oge-scheduler-gutter-spacer" role="presentation"></div>
+      <div class="oge-scheduler-resource-row" aria-hidden="true">
+        <div class="oge-scheduler-gutter-spacer"></div>
         @for (col of columns(); track col.colIndex) {
           <div class="oge-scheduler-resource-head">{{ col.resourceText }}</div>
         }
@@ -193,8 +197,16 @@ import type {
           class="oge-scheduler-grid"
           role="grid"
           [attr.aria-label]="gridAriaLabel()"
+          [attr.aria-readonly]="readOnly() ? 'true' : null"
           (keydown)="onGridKeydown($event)"
         >
+          <div class="oge-scheduler-sr-header-row" role="row">
+            @for (col of columns(); track col.colIndex) {
+              <div class="oge-scheduler-sr-header" role="columnheader">
+                {{ columnHeaderText(col) }}
+              </div>
+            }
+          </div>
           @for (
             minutes of grid().slotStartMinutes;
             track minutes;
@@ -218,6 +230,9 @@ import type {
                     isFocusedCell(col.colIndex, slotIndex)
                   "
                   [tabindex]="isFocusedCell(col.colIndex, slotIndex) ? 0 : -1"
+                  [attr.aria-selected]="
+                    isSelectedCell(col.colIndex, slotIndex, minutes)
+                  "
                   [attr.data-focus-target]="
                     isFocusedCell(col.colIndex, slotIndex) ? '' : null
                   "
@@ -351,6 +366,8 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly anchorDate = input.required<Date>();
   readonly appointments = input.required<readonly SchedulerAppointment<T>[]>();
   readonly firstDayOfWeek = input.required<number>();
+  /** Weekend days (0 = Sunday) the grid shades — the scheduler's resolved list. */
+  readonly weekendDays = input<readonly number[]>([0, 6]);
   readonly dayStartHour = input.required<number>();
   readonly dayEndHour = input.required<number>();
   readonly cellDuration = input.required<number>();
@@ -363,6 +380,8 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly allowDragging = input(true);
   readonly allowResizing = input(true);
   readonly allowAdding = input(true);
+  /** `aria-readonly` on the grid — the scheduler cannot change anything. */
+  readonly readOnly = input(false);
   /** Weekdays (0 = Sunday) hidden from week-shaped grids. */
   readonly hiddenWeekDays = input<readonly number[] | undefined>(undefined);
   /** Emphasized working hours; cells outside get the off-hours shading. */
@@ -425,6 +444,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       dayEndHour: this.dayEndHour(),
       cellDuration: this.cellDuration(),
       hiddenWeekDays: this.hiddenWeekDays(),
+      weekendDays: this.weekendDays(),
     }),
   );
 
@@ -456,7 +476,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   }
 
   protected isWeekend(day: Date): boolean {
-    return isWeekendDay(day);
+    return isWeekendDay(day, this.weekendDays());
   }
 
   private readonly partitioned = computed(() =>
@@ -506,6 +526,25 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   protected isFocusedCell(dayIndex: number, slotIndex: number): boolean {
     const focused = this.focusedCell();
     return focused.day === dayIndex && focused.slot === slotIndex;
+  }
+
+  /** `aria-selected`: the live drag range, else the roving current cell. */
+  protected isSelectedCell(
+    colIndex: number,
+    slotIndex: number,
+    minutes: number,
+  ): boolean {
+    return dayWeekCellSelected(
+      colIndex,
+      slotIndex,
+      minutes,
+      this.focusedCell(),
+      this.selection(),
+    );
+  }
+
+  protected columnHeaderText(column: DayWeekColumn): string {
+    return dayWeekColumnHeaderText(column, this.locale());
   }
 
   protected chipTabIndex(appointment: SchedulerAppointment<T>): number {

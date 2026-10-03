@@ -748,7 +748,8 @@
   }
 }
 
-/* hover quick actions (aria-hidden spans; clicks resolve in the card handler) */
+/* quick actions: real buttons (Tab-reachable while the card is its column's
+   stop); clicks and Enter/Space resolve in the card handler */
 .oge-kanban-card-actions {
   display: inline-flex;
   gap: 2px;
@@ -779,9 +780,21 @@
   justify-content: center;
   width: 22px;
   height: 22px;
+  padding: 0;
+  border: 0;
   border-radius: var(--oge-radius);
+  background: transparent;
   color: var(--oge-muted-color);
+  font: inherit;
   cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+    color: var(--oge-text-color);
+  }
 
   &:hover {
     background: color-mix(in srgb, var(--oge-border-color) 50%, transparent);
@@ -987,6 +1000,7 @@
   .oge-kanban-search-input,
   .oge-kanban-add-card,
   .oge-kanban-card-actions,
+  .oge-kanban-card-action,
   .oge-kanban-menu-item {
     transition: none;
   }

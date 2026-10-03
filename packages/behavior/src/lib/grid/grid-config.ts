@@ -27,6 +27,53 @@ export interface OgeGridMessages {
   selectAllRows: string;
   selectRow: string;
   toggleDetail: string;
+  /** Accessible name of the row-drag handle column's header cell. */
+  reorderColumnHeader: string;
+  /** Accessible name of the master-detail expander column's header cell. */
+  detailColumnHeader: string;
+  /** Accessible name of the selection checkbox column's header cell. */
+  selectAllColumnHeader: string;
+  /** Accessible name of a row's drag handle (grid row reordering). */
+  reorderRow: string;
+  /** Accessible name of the drag handle column's header cell (tree-list reparenting). */
+  reparentColumnHeader: string;
+  /** Accessible name of a row's drag handle (tree-list reparenting). */
+  reparentRow: string;
+  /**
+   * Accessible name of a column's resize separator; `{column}` is the
+   * caption. The separator is `role="separator"` with the width in px as its
+   * value.
+   */
+  resizeColumn: string;
+  /**
+   * Live announcement after a keyboard column resize (Alt+Arrow on a header);
+   * placeholders `{column}` `{width}`.
+   */
+  columnResized: string;
+  /**
+   * Live announcement after a keyboard column move (Ctrl+Shift+Arrow on a
+   * header, Ctrl+Arrow in the column chooser); placeholders `{column}`
+   * `{position}` `{total}`.
+   */
+  columnMoved: string;
+  /**
+   * Live announcement after a keyboard row move (Ctrl+ArrowUp/Down);
+   * placeholders `{position}` `{total}`.
+   */
+  rowMoved: string;
+  /**
+   * Live announcement after a keyboard tree-row move, indent or outdent
+   * (tree-list); placeholders `{level}` `{position}` `{total}` — position
+   * among the row's new siblings.
+   */
+  treeRowMoved: string;
+  /**
+   * Live announcement after a group-panel chip is reordered (Ctrl+Arrow);
+   * placeholders `{column}` `{position}` `{total}`.
+   */
+  groupMoved: string;
+  /** Live announcement after a grouping is removed from the keyboard; `{column}`. */
+  groupRemoved: string;
   /** Aria label of a collapsed tree row's expander (tree-list). */
   expandRow: string;
   /** Aria label of an expanded tree row's expander (tree-list). */
@@ -37,8 +84,17 @@ export interface OgeGridMessages {
   pageSizeLabel: string;
   allRows: string;
   confirmDelete: string;
+  /** Visible text of a `true` boolean cell (also the CSV / filter-list text). */
   booleanTrue: string;
+  /** Visible text of a `false` boolean cell (also the CSV / filter-list text). */
   booleanFalse: string;
+  /**
+   * Screen-reader text of a `true` boolean cell — the visible `booleanTrue`
+   * glyph is rendered `aria-hidden`, this is rendered visually hidden.
+   */
+  booleanTrueLabel: string;
+  /** Screen-reader text of a `false` boolean cell (see `booleanTrueLabel`). */
+  booleanFalseLabel: string;
   editRow: string;
   deleteRow: string;
   undeleteRow: string;
@@ -77,6 +133,30 @@ export interface OgeGridMessages {
   groupSummaryPattern: string;
   /** Pattern for the total row; placeholders: {label} {value} */
   totalSummaryPattern: string;
+  /** Live announcement after an ascending sort; placeholder: {column}. */
+  sortAscendingAnnouncement: string;
+  /** Live announcement after a descending sort; placeholder: {column}. */
+  sortDescendingAnnouncement: string;
+  /** Live announcement after the sort was removed; placeholder: {column}. */
+  sortClearedAnnouncement: string;
+  /** Live result count after a filter or search change; placeholder: {count}. */
+  rowCountAnnouncement: string;
+  /** Singular form of `rowCountAnnouncement` (exactly one row); placeholder: {count}. */
+  rowCountOneAnnouncement: string;
+  /** Live announcement after a page change; placeholders: {n} {total}. */
+  pageAnnouncement: string;
+  /** Live announcement when a group row expands; placeholder: {value}. */
+  groupExpandedAnnouncement: string;
+  /** Live announcement when a group row collapses; placeholder: {value}. */
+  groupCollapsedAnnouncement: string;
+  /** Live announcement when a tree row expands (tree-list); placeholder: {value}. */
+  rowExpandedAnnouncement: string;
+  /** Live announcement when a tree row collapses (tree-list); placeholder: {value}. */
+  rowCollapsedAnnouncement: string;
+  /** Live announcement after select-all / clear-all; placeholder: {count}. */
+  selectionCountAnnouncement: string;
+  /** Assertive announcement when a save is blocked by an invalid editor; placeholders: {column} {error}. */
+  validationErrorAnnouncement: string;
 }
 
 export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
@@ -98,6 +178,19 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   selectAllRows: 'Select all rows',
   selectRow: 'Select row',
   toggleDetail: 'Toggle detail',
+  reorderColumnHeader: 'Reorder',
+  detailColumnHeader: 'Detail',
+  selectAllColumnHeader: 'Select all',
+  reorderRow: 'Reorder row',
+  reparentColumnHeader: 'Reparent',
+  reparentRow: 'Reparent row',
+  resizeColumn: 'Resize {column}',
+  columnResized: '{column} width {width} pixels',
+  columnMoved: '{column} moved to position {position} of {total}',
+  rowMoved: 'Row moved to position {position} of {total}',
+  treeRowMoved: 'Row moved to level {level}, position {position} of {total}',
+  groupMoved: 'Grouping by {column} moved to position {position} of {total}',
+  groupRemoved: 'Grouping by {column} removed',
   expandRow: 'Expand row',
   collapseRow: 'Collapse row',
   previousPage: 'Previous page',
@@ -108,6 +201,8 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   confirmDelete: 'Delete this row?',
   booleanTrue: '✓',
   booleanFalse: '✗',
+  booleanTrueLabel: 'Yes',
+  booleanFalseLabel: 'No',
   editRow: 'Edit',
   deleteRow: 'Delete',
   undeleteRow: 'Undo delete',
@@ -165,6 +260,18 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   },
   groupSummaryPattern: '{label} of {column}: {value}',
   totalSummaryPattern: '{label}: {value}',
+  sortAscendingAnnouncement: 'Sorted by {column}, ascending',
+  sortDescendingAnnouncement: 'Sorted by {column}, descending',
+  sortClearedAnnouncement: 'Sort cleared',
+  rowCountAnnouncement: '{count} rows',
+  rowCountOneAnnouncement: '{count} row',
+  pageAnnouncement: 'Page {n} of {total}',
+  groupExpandedAnnouncement: 'Group {value} expanded',
+  groupCollapsedAnnouncement: 'Group {value} collapsed',
+  rowExpandedAnnouncement: '{value} expanded',
+  rowCollapsedAnnouncement: '{value} collapsed',
+  selectionCountAnnouncement: '{count} rows selected',
+  validationErrorAnnouncement: '{column}: {error}',
 };
 
 /** Application-wide grid defaults, overridable per grid via the matching props. */
@@ -182,6 +289,11 @@ export interface OgeGridConfig {
   headerFilterValueLimit: number;
   /** Whether a third header click clears the sort. */
   allowUnsorting: boolean;
+  /**
+   * Whether sort, filter result, paging, group expansion, select-all and
+   * validation changes are spoken through the shared live announcer.
+   */
+  announcements: boolean;
   messages: OgeGridMessages;
 }
 
@@ -194,6 +306,7 @@ export const OGE_DEFAULT_GRID_CONFIG: OgeGridConfig = {
   pinnedDefaultWidth: 150,
   headerFilterValueLimit: 200,
   allowUnsorting: true,
+  announcements: true,
   messages: OGE_DEFAULT_GRID_MESSAGES,
 };
 

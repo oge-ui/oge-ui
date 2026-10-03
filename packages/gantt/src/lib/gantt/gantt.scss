@@ -846,17 +846,6 @@
   flex: 1;
 }
 
-.oge-gantt-live {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .oge-gantt-bar,
   .oge-gantt-milestone,

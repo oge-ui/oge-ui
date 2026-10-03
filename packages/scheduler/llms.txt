@@ -125,6 +125,7 @@ _Date & views_
 | `views` | `readonly (OgeSchedulerView \| OgeSchedulerViewOptions)[]` | `['day', 'week', 'month']` | View-switcher entries; option objects override `name`, `dayStartHour`, `dayEndHour` and `cellDuration` per view. |
 | `min / max` | `Date \| undefined` | `—` | Navigable date bounds: navigation buttons disable at the edges and every date write clamps. |
 | `firstDayOfWeek` | `number \| undefined` | `—` | First day of week (0 = Sunday); `undefined` resolves from the locale via `Intl.Locale.weekInfo`. |
+| `weekendDays` | `readonly number[] \| undefined` | `—` | Weekend days (0 = Sunday … 6 = Saturday) the day/week, month and timeline views shade and the `workWeek` view drops. `undefined` resolves from the locale via `Intl.Locale#getWeekInfo()` (Friday + Saturday in `he-IL`), falling back to Saturday + Sunday. |
 | `hiddenWeekDays` | `readonly number[] \| undefined` | `—` | Weekdays removed from the week views; the `workWeek` view always drops the weekend on top. |
 | `dayStartHour / dayEndHour / cellDuration` | `number` | `0 / 24 / 30` | Visible hour window and slot raster (minutes) of the time grids. |
 | `agendaDuration` | `number` | `7` | Days the agenda view lists from the anchor date. |
@@ -135,7 +136,7 @@ _Behavior_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `allowAdding / allowUpdating / allowDeleting / allowDragging / allowResizing` | `boolean` | `true` | Per-capability editing gates. |
-| `readOnly` | `boolean` | `false` | **Display-only shorthand**: overrides every `allow*` flag at once and hides the editing affordances. |
+| `readOnly` | `boolean` | `false` | **Display-only shorthand**: overrides every `allow*` flag at once and hides the editing affordances. The day/week and month grids then carry `aria-readonly="true"` (also when every `allow*` flag is off). |
 | `snapDuration` | `number \| undefined` | `—` | Drag/resize snap raster in minutes; defaults to `cellDuration`. |
 | `workHours` | `OgeSchedulerWorkHours \| null` | `null` | Working-hours emphasis: cells outside `{ start, end, days? }` get the off-hours shading. |
 | `showAddButton` | `boolean` | `true` | Shows the toolbar "new appointment" button (Outlook parity) — creation without double-click; hidden while `readOnly` or `allowAdding=false`. |

@@ -16,6 +16,8 @@ export interface StatePersistenceOptions<S> {
   storage: OgeStateStorage;
   /** Current persistable snapshot (drives the debounced save). */
   snapshot: Signal<S>;
+  /** Shape validator for restored JSON; `null` skips the restore. */
+  sanitize?: (value: unknown) => S | null;
   apply(snapshot: S): void;
   /**
    * Extra reactive reads registered before restoring — e.g. content-projected
@@ -47,6 +49,7 @@ export function createStatePersistence<S>(
     storage: options.storage,
     snapshot: () => untracked(options.snapshot),
     stateKey: () => untracked(options.stateKey),
+    sanitize: options.sanitize,
     apply: options.apply,
     onChange: options.onChange,
   });

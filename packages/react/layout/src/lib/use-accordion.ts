@@ -268,7 +268,7 @@ export function useOgeAccordion(props: OgeAccordionBehaviorProps) {
     });
 
   /** Stable identity of the rendered stack — the effects' dependency. */
-  const signature = descriptors.map((d) => d.id).join(' ');
+  const signature = descriptors.map((d) => d.id).join('\u0000');
 
   // --- expanded state ------------------------------------------------------
 
@@ -575,7 +575,7 @@ export function useOgeAccordion(props: OgeAccordionBehaviorProps) {
   const lastEmittedIndex = useRef(-1);
 
   const controlledKeys = props.expandedKeys;
-  const keysSignature = controlledKeys?.join(' ');
+  const keysSignature = controlledKeys?.join('\u0000');
   const controlledIndex = props.selectedIndex;
 
   // Seed the initial expansion once per panel — `expanded: true` on an item,

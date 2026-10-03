@@ -93,3 +93,17 @@ protected report(): void {
   this.toasts.info('With progress', { progressBar: true, displayTime: 6000 });
 }`,
 });
+
+export const ANNOUNCER_SNIPPET = demoSource({
+  use: { '@oge-ui/buttons': ['OgeButton'] },
+  helpers: { '@oge-ui/overlay': ['OgeLiveAnnouncer'] },
+  template: `<oge-button text="Archive 3 items" (clicked)="archive()" />`,
+  body: `private readonly announcer = inject(OgeLiveAnnouncer);
+
+// no toast, no markup: the document's one shared polite region speaks
+protected archive(): void {
+  this.announcer.announce('3 items archived');
+  // errors interrupt: the assertive region
+  // this.announcer.announce('Archive failed', 'assertive');
+}`,
+});

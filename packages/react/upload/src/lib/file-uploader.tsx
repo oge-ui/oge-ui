@@ -31,7 +31,7 @@ import {
   sanitizeResourceUrl,
 } from '@oge-ui/behavior';
 import { OgeProgressBar } from '@oge-ui/react-layout';
-import { OgeModal } from '@oge-ui/react-overlay';
+import { OgeModal, useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
 import { useOgeUploadConfig, useOgeUploadTransport } from './upload-config';
 import {
   useUploadZoneRegistration,
@@ -274,8 +274,6 @@ const DEFAULT_ICONS: Record<OgeUploadIconSlot, ReactNode> = {
   success: null,
 };
 
-let uidCounter = 0;
-
 /**
  * File uploader: a drop zone, a real file input, a list of what was chosen,
  * and the transfers that follow — the React render of the Angular
@@ -334,10 +332,7 @@ export const OgeFileUploader = forwardRef<
     [config.messages, props.messages],
   );
 
-  const reactId = useId();
-  const baseIdRef = useRef<string>(undefined);
-  baseIdRef.current ??= `oge-upload-${reactId.replace(/:/g, '')}-${(uidCounter += 1)}`;
-  const baseId = baseIdRef.current;
+  const baseId = `oge-upload-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
   const hostRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -439,6 +434,13 @@ export const OgeFileUploader = forwardRef<
     });
   }
   const core = coreRef.current;
+
+  // the machine's announcements go through the document's shared live region
+  const liveAnnouncer = useOgeLiveAnnouncer();
+  const announcement = core.announcement;
+  useEffect(() => {
+    liveAnnouncer.announce(announcement);
+  }, [liveAnnouncer, announcement]);
 
   // A controlled `value` written from the outside (a form reset) replaces
   // the list — the counterpart of the Angular `writeValue`. Loop-guarded by
@@ -890,10 +892,6 @@ export const OgeFileUploader = forwardRef<
               )}
             </div>
           )}
-
-      <div className="oge-upload-live" aria-live="polite" aria-atomic="true">
-        {core.announcement}
-      </div>
 
       {core.previewing && (
         <OgeModal

@@ -20,6 +20,16 @@ describe('@oge-ui/pivot-engine barrel', () => {
       'pivotColumnHeaderCells',
       'pivotHeaderCellKey',
       'pivotMatrixKeyTarget',
+      'pivotGridKeyTarget',
+      'pivotGridExtent',
+      'pivotHeaderCellAt',
+      'pivotMenuKeyTarget',
+      'pivotChipKeyIntent',
+      'pivotKeyboardPointer',
+      'OGE_PIVOT_PANEL_AREA_ORDER',
+      'focusPivotChip',
+      'pivotIsMenuKey',
+      'pivotIsRtl',
     ];
     for (const name of expected) {
       expect(engine).toHaveProperty(name);
