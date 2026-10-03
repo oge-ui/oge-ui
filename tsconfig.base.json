@@ -70,9 +70,13 @@
       "@oge-ui/pivot-engine/export-excel": [
         "./packages/pivot-engine/src/export-excel.ts"
       ],
+      "@oge-ui/pivot-engine/export-pdf": [
+        "./packages/pivot-engine/src/export-pdf.ts"
+      ],
       "@oge-ui/pivot/export-excel": [
         "./packages/pivot/export-excel/src/index.ts"
       ],
+      "@oge-ui/pivot/export-pdf": ["./packages/pivot/export-pdf/src/index.ts"],
       "@oge-ui/react": ["./packages/react/oge/src/index.ts"],
       "@oge-ui/react-bpmn": ["./packages/react/bpmn/src/index.ts"],
       "@oge-ui/react-buttons": ["./packages/react/buttons/src/index.ts"],
@@ -103,6 +107,9 @@
       "@oge-ui/react-pivot": ["./packages/react/pivot/src/index.ts"],
       "@oge-ui/react-pivot/export-excel": [
         "./packages/react/pivot/src/export-excel.ts"
+      ],
+      "@oge-ui/react-pivot/export-pdf": [
+        "./packages/react/pivot/src/export-pdf.ts"
       ],
       "@oge-ui/react-scheduler": ["./packages/react/scheduler/src/index.ts"],
       "@oge-ui/react-tabs": ["./packages/react/tabs/src/index.ts"],

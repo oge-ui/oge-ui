@@ -8,6 +8,11 @@ import type {
   SortDirection,
   SummaryType,
 } from '@oge-ui/core';
+import type {
+  OgePivotLabelFilter,
+  OgePivotTopNFilter,
+  OgePivotValueFilter,
+} from './pivot-filters';
 
 /**
  * `DataTransfer` type the field chips carried while HTML5-dragged.
@@ -56,6 +61,12 @@ export interface OgePivotFieldDef<T = unknown> {
     value: unknown;
     valueText: string;
   }) => string;
+  /** Row/column fields: keep the members whose label matches. */
+  readonly labelFilter?: OgePivotLabelFilter;
+  /** Row/column fields: keep the members whose measure total passes. */
+  readonly valueFilter?: OgePivotValueFilter;
+  /** Row/column fields: keep the top (or bottom) N members by a measure. */
+  readonly topN?: OgePivotTopNFilter;
 }
 
 /** Field-chooser dialog behavior. */
@@ -106,6 +117,13 @@ export interface OgePivotCellPrepared {
   text: string;
   /** Extra CSS class for conditional appearance. */
   cssClass?: string;
+}
+
+/** What a value-cell template / `renderCell` receives: the prepared cell + its position. */
+export interface OgePivotCellTemplateContext extends OgePivotCellPrepared {
+  readonly rowIndex: number;
+  readonly columnIndex: number;
+  readonly measureIndex: number;
 }
 
 /** One item of the pivot's own lightweight menus. */

@@ -29,6 +29,35 @@ export {
   type OgePivotKeyLike,
 } from './lib/pivot-keyboard';
 export { OgePivotStateCore } from './lib/pivot-state-core';
+export {
+  applyPivotCalculatedFields,
+  pivotCalculatedMeasureOf,
+  pivotSlotsOf,
+  type OgePivotCalculatedCell,
+  type OgePivotCalculatedField,
+} from './lib/pivot-calculated';
+export {
+  applyPivotMemberFilters,
+  pivotLabelMatches,
+  pivotValueMatches,
+  type OgePivotLabelFilter,
+  type OgePivotLabelFilterOperator,
+  type OgePivotMemberFilters,
+  type OgePivotTopNFilter,
+  type OgePivotValueFilter,
+  type OgePivotValueFilterOperator,
+} from './lib/pivot-filters';
+export {
+  toChartSeries,
+  type OgePivotChartData,
+  type OgePivotChartOptions,
+  type OgePivotChartPoint,
+  type OgePivotChartSeries,
+} from './lib/pivot-chart';
+export {
+  pivotRowHeaderSegments,
+  type OgePivotRowHeaderLayout,
+} from './lib/pivot-row-header';
 export { focusPivotChip, pivotIsMenuKey, pivotIsRtl } from './lib/pivot-dom';
 export {
   OGE_DEFAULT_PIVOT_MESSAGES,
@@ -41,6 +70,7 @@ export {
   type OgePivotCellClickEvent,
   type OgePivotCellPosition,
   type OgePivotCellPrepared,
+  type OgePivotCellTemplateContext,
   type OgePivotDragLike,
   type OgePivotFieldDropTarget,
   type OgePivotFieldPointerInput,
