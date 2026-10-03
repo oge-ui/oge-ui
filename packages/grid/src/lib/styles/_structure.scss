@@ -79,6 +79,15 @@ input.oge-filter-input,
   border: 1px dashed var(--oge-border-color);
   border-radius: var(--oge-radius);
   flex-wrap: wrap;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+// a dragged header is over the panel: dropping groups by that column
+.oge-group-panel-drop-active {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent-soft);
 }
 
 .oge-group-panel-hint {
@@ -98,6 +107,21 @@ input.oge-filter-input,
   font-size: 12px;
   font-weight: 600;
   color: var(--oge-header-color);
+  position: relative;
+  cursor: grab;
+  user-select: none;
+}
+
+// insert indicator while reordering chips: the dragged grouping lands here
+.oge-group-chip-drop-target::before {
+  content: '';
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: -5px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--oge-accent);
+  pointer-events: none;
 }
 
 .oge-group-chip-remove {
@@ -437,6 +461,8 @@ input.oge-filter-input,
   height: 100%;
   cursor: col-resize;
   z-index: 2;
+  // a touch on the separator resizes; it never pans the grid
+  touch-action: none;
 
   &:hover {
     background: var(--oge-selected-bg);
@@ -1043,6 +1069,9 @@ input.oge-filter-input {
   padding: 2px;
   color: var(--oge-muted-color);
   cursor: grab;
+  user-select: none;
+  // the handle drags at once under touch; the rest of the row still scrolls
+  touch-action: none;
 
   &:active {
     cursor: grabbing;
@@ -1293,6 +1322,21 @@ input.oge-filter-input {
     background: Highlight;
   }
 
+  .oge-col-drop-target::before,
+  .oge-chooser-drop-target::before,
+  .oge-group-chip-drop-target::before {
+    background: Highlight;
+  }
+
+  .oge-drop-target .oge-cell {
+    border-block-start: 2px solid Highlight;
+  }
+
+  .oge-group-panel-drop-active {
+    border-style: solid;
+    border-color: Highlight;
+  }
+
   .oge-header-filter-active {
     color: Highlight;
   }
@@ -1314,6 +1358,7 @@ input.oge-filter-input {
 
 @include tokens.reduced-motion {
   .oge-tool-btn,
+  .oge-group-panel,
   .oge-fb-input,
   .oge-search-input,
   .oge-hf-search,

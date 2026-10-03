@@ -257,6 +257,16 @@ export {
   type OgeMovableColumn,
   type OgeTreeRowKeyMove,
 } from './lib/grid/grid-keyboard-moves';
+export {
+  OGE_GRID_HOST_SELECTOR,
+  isOgeDragExcludedTarget,
+  ogeMoveGroupingTo,
+  ogeOwnedClosest,
+  resolveOgeAttributeTarget,
+  resolveOgeHeaderDropTarget,
+  resolveOgeRowDropIndex,
+  type OgeGridHeaderDropTarget,
+} from './lib/grid/grid-pointer-drag';
 export { OgeGridStateCore, loadOptionsEqual } from './lib/grid/grid-state-core';
 export {
   OGE_GRID_WINDOW_BLOCK_SIZE,
