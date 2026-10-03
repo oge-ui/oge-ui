@@ -167,7 +167,10 @@ store.editing.hasPending())) {
         class="oge-header-cell oge-expander-cell"
         role="columnheader"
         [attr.aria-label]="msg().detailColumnHeader"
-      ></div>
+      >
+        <!-- text content too: axe's empty-table-header wants a visible-to-AT name -->
+        <span class="oge-sr-only">{{ msg().detailColumnHeader }}</span>
+      </div>
       } @if (hasCheckboxColumn()) {
       <div
         class="oge-header-cell oge-checkbox-cell"

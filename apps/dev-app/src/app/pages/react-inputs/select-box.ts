@@ -285,7 +285,11 @@ function AdaptiveDemo(): ReactNode {
   // The React editors carry the class names but no styles of their own —
   // the docs pull the same SCSS the package build compiles.
   encapsulation: ViewEncapsulation.None,
-  styleUrl: '../../../../../../packages/react/inputs/src/styles.scss',
+  // the popup surface (and its adaptive sheet) is react-overlay's stylesheet
+  styleUrls: [
+    '../../../../../../packages/react/inputs/src/styles.scss',
+    '../../../../../../packages/react/overlay/src/styles.scss',
+  ],
   template: `
     <app-demo-card
       heading="Basic usage"

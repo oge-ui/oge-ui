@@ -4388,7 +4388,10 @@ function OgeGridInner<T extends object>(
                 className="oge-header-cell oge-expander-cell"
                 role="columnheader"
                 aria-label={msg.detailColumnHeader}
-              />
+              >
+                {/* text content too: axe's empty-table-header wants it */}
+                <span className="oge-sr-only">{msg.detailColumnHeader}</span>
+              </div>
             ) : null}
             {hasCheckboxColumn ? (
               <div
