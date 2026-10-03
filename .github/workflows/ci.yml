@@ -111,4 +111,6 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      # moderate and above fail; only an advisory with no patched release may
+      # sit in audit-allowlist.json, with a reason and an expiry date
+      - run: node tools/audit-check.mjs

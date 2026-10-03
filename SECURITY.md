@@ -139,7 +139,9 @@ consumers: the published packages declare Angular, React and the optional
 export libraries as **peers**, and bundle nothing. A `npm audit` finding
 against the repo is therefore a build-time issue for us, not an exposure for
 you — CI fails the build on any advisory at moderate or above so it stays
-that way.
+that way. The one exception is an advisory with no patched release yet: it
+is listed in `audit-allowlist.json` with its reason and an expiry date a few
+weeks out, after which the build fails again until it is fixed.
 
 `exceljs`, `jspdf` and `jspdf-autotable` are optional peers loaded only by the
 `@oge-ui/*/export-excel` and `export-pdf` entry points. Advisories in those

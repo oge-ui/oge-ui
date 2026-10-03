@@ -661,8 +661,11 @@ rules — change both together.
 - **Client-side validation is UX.** Upload extension/size rules, form
   validators and grid edit rules exist for feedback; nothing in the suite
   claims to be a server-side control, and the docs must not imply it.
-- **`npm audit` is a build gate** (`audit` job, moderate and above) — never an
-  exception list. The fix is an upgrade; when the advisory sits in a
+- **`npm audit` is a build gate** (`audit` job → `tools/audit-check.mjs`, moderate and above). The
+  only exception is an advisory with **no patched release yet**: it goes into `audit-allowlist.json`
+  with the reason it cannot reach consumers and an `expires` date a few weeks out, after which the gate
+  fails again and someone re-checks upstream (an entry that no longer matches is flagged for
+  deletion). Everything else is fixed, never listed. The fix is an upgrade; when the advisory sits in a
   dependency a tool **pins exactly** (nx pins `axios`/`smol-toml`, verdaccio
   pins `js-yaml`), it is a targeted `overrides` entry in the root
   `package.json`, scoped by major (`"brace-expansion@^5": "^5.0.12"`) so other

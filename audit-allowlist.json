@@ -1,0 +1,19 @@
+{
+  "$comment": "Advisories with NO patched release yet. Each entry: why it cannot reach consumers, and an expiry within weeks. tools/audit-check.mjs (CI audit job) enforces it.",
+  "advisories": [
+    {
+      "id": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "reason": "No release above 3.0.3 exists. Reached only through build tooling (nx, verdaccio → micromatch); it expands glob patterns written in this repo, never user input, and nothing ships to consumers.",
+      "added": "2026-10-03",
+      "expires": "2026-10-31"
+    },
+    {
+      "id": "GHSA-ch52-4w7c-c8xp",
+      "package": "http-cache-semantics",
+      "reason": "No release above 4.2.0 exists. Reached only through verdaccio (got → cacheable-request), the local test registry, which serves one developer; no shared cache, nothing ships to consumers.",
+      "added": "2026-10-03",
+      "expires": "2026-10-31"
+    }
+  ]
+}
