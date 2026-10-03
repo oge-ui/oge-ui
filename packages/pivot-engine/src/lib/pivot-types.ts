@@ -9,7 +9,12 @@ import type {
   SummaryType,
 } from '@oge-ui/core';
 
-/** `DataTransfer` type the field chips carry while dragged. */
+/**
+ * `DataTransfer` type the field chips carried while HTML5-dragged.
+ * @deprecated Field chips move with a pointer drag since 1.2 (touch
+ * included) and no longer put anything on a `DataTransfer`; kept so existing
+ * imports compile.
+ */
 export const OGE_PIVOT_FIELD_DRAG_TYPE = 'application/x-oge-pivot-field';
 
 /**
@@ -165,10 +170,34 @@ export interface OgePivotPointer {
 }
 
 /**
- * The drag facts the field panel needs — satisfied by `DragEvent`, and by a
- * plain `Event` in environments without one (jsdom).
+ * The drag facts the field panel needed under HTML5 drag and drop.
+ * @deprecated Field chips use {@link OgePivotFieldPointerInput} since 1.2.
  */
 export interface OgePivotDragLike {
   readonly dataTransfer?: DataTransfer | null;
   preventDefault(): void;
+}
+
+/**
+ * The `pointerdown` facts a field-chip drag reads — satisfied by the native
+ * `PointerEvent` and by React's synthetic one.
+ */
+export interface OgePivotFieldPointerInput {
+  readonly button: number;
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly pointerId: number;
+  readonly pointerType?: string;
+  readonly target: EventTarget | null;
+  preventDefault(): void;
+}
+
+/**
+ * Where a dragged field chip would land: an area (`null` = the chooser's
+ * "all fields" list) and the chip it is inserted in front of (`null` = the
+ * end of the area).
+ */
+export interface OgePivotFieldDropTarget {
+  readonly area: PivotArea | null;
+  readonly beforeId: string | null;
 }

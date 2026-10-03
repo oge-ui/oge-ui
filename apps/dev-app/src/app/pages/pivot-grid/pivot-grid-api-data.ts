@@ -45,7 +45,8 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
           name: 'fieldPanel',
           type: 'boolean',
           default: 'true',
-          description: 'Collapsible drag &amp; drop field panel.',
+          description:
+            'Collapsible drag &amp; drop field panel. Chips move with a pointer drag (mouse, pen, touch after a ~300 ms long press); dropping on a chip inserts in front of it, Escape cancels.',
         },
         {
           name: 'fieldChooser',
@@ -181,7 +182,20 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
         {
           name: 'OGE_PIVOT_FIELD_DRAG_TYPE',
           type: "'application/x-oge-pivot-field'",
-          description: 'DataTransfer type of field chips.',
+          description:
+            'Deprecated — field chips no longer use HTML5 drag and drop (pointer drag, touch included); kept so existing imports compile.',
+        },
+        {
+          name: 'OgePivotFieldDropTarget',
+          type: '{ area: PivotArea | null, beforeId: string | null }',
+          description:
+            'Where a dragged field chip would land: the area (<code>null</code> = the chooser list) and the chip it is inserted in front of (<code>null</code> = the end).',
+        },
+        {
+          name: 'OgePivotFieldPointerInput',
+          type: '{ button, clientX, clientY, pointerId, pointerType?, target, preventDefault() }',
+          description:
+            'The <code>pointerdown</code> facts the engine core reads to start a chip drag — the native or the React synthetic event.',
         },
       ],
     },

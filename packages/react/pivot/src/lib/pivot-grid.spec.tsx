@@ -20,6 +20,33 @@ interface Sale {
   amount: number;
 }
 
+/** Pointer events as jsdom builds them; the move's target is the hit. */
+function pointer(
+  type: string,
+  target: Element,
+  x: number,
+  pointerType = 'mouse',
+): void {
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    clientX: x,
+    clientY: 5,
+  });
+  Object.defineProperty(event, 'pointerId', { value: 1 });
+  Object.defineProperty(event, 'pointerType', { value: pointerType });
+  act(() => {
+    target.dispatchEvent(event);
+  });
+}
+
+/** The click a drag ends with is swallowed until the next task. */
+const afterDropClick = () =>
+  act(async () => {
+    await new Promise((resolve) => setTimeout(resolve));
+  });
+
 // the same rows the Angular pivot-grid.spec.ts renders
 const SALES: Sale[] = [
   { region: 'EU', city: 'Berlin', year: 2024, amount: 100 },
@@ -104,7 +131,56 @@ describe('<OgePivotGrid> — rendering (mirror of the Angular MVP spec)', () => 
     expect(rowHeaders(container)).toEqual(['EU', 'US', 'Grand Total']);
   });
 
-  it('moves a field between areas via drag & drop and spans parents', () => {
+  it('touch chips need a long press; Escape cancels a chip drag', async () => {
+    const onFieldLayoutChange = vi.fn();
+    const { container } = render(
+      <StrictMode>
+        <OgePivotGrid
+          data={SALES}
+          fields={FIELDS}
+          onFieldLayoutChange={onFieldLayoutChange}
+        />
+      </StrictMode>,
+    );
+    const chip = (caption: string) =>
+      Array.from(container.querySelectorAll('.oge-pivot-field-chip')).find(
+        (el) => el.textContent?.trim() === caption,
+      ) as HTMLElement;
+    const columns = container.querySelector(
+      '.oge-pivot-area[data-area="column"]',
+    ) as HTMLElement;
+    // a swipe before the hold is a scroll
+    pointer('pointerdown', chip('City'), 0, 'touch');
+    pointer('pointermove', columns, 60, 'touch');
+    pointer('pointerup', columns, 60, 'touch');
+    expect(onFieldLayoutChange).not.toHaveBeenCalled();
+    // Escape mid-drag
+    pointer('pointerdown', chip('City'), 0);
+    pointer('pointermove', columns, 60);
+    act(() => {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+    });
+    pointer('pointerup', columns, 60);
+    expect(onFieldLayoutChange).not.toHaveBeenCalled();
+    expect(container.querySelector('.oge-pivot-area-drop-active')).toBeNull();
+    // a held touch drags; dropping on a chip inserts in front of it
+    pointer('pointerdown', chip('City'), 0, 'touch');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 340));
+    });
+    pointer('pointermove', chip('Region'), 60, 'touch');
+    expect(chip('Region')).toHaveClass('oge-pivot-chip-drop-target');
+    pointer('pointerup', chip('Region'), 60, 'touch');
+    expect(onFieldLayoutChange).toHaveBeenCalledTimes(1);
+    const rows = Array.from(
+      container.querySelectorAll('.oge-pivot-area[data-area="row"] .oge-pivot-field-chip'),
+    ).map((el) => el.textContent?.trim());
+    expect(rows).toEqual(['City', 'Region']);
+  });
+
+  it('moves a field between areas via drag & drop and spans parents', async () => {
     const onFieldLayoutChange = vi.fn();
     const { container } = render(
       <OgePivotGrid
@@ -116,12 +192,16 @@ describe('<OgePivotGrid> — rendering (mirror of the Angular MVP spec)', () => 
     const city = Array.from(
       container.querySelectorAll('.oge-pivot-field-chip'),
     ).find((chip) => chip.textContent?.trim() === 'City') as HTMLElement;
-    fireEvent.dragStart(city);
     const columns = container.querySelector(
       '.oge-pivot-area[data-area="column"]',
     ) as HTMLElement;
-    fireEvent.dragOver(columns);
-    fireEvent.drop(columns);
+    expect(container.querySelector('[draggable]')).toBeNull();
+    pointer('pointerdown', city, 0);
+    pointer('pointermove', columns, 60);
+    expect(columns).toHaveClass('oge-pivot-area-drop-active');
+    pointer('pointerup', columns, 60);
+    expect(columns).not.toHaveClass('oge-pivot-area-drop-active');
+    await afterDropClick();
     expect(onFieldLayoutChange).toHaveBeenCalledTimes(1);
     // a drop appends: city joins the columns as the inner level
     expect(texts(container, '.oge-pivot-col-header')).toEqual([
@@ -362,7 +442,7 @@ describe('<OgePivotGrid> — menus, filters, chooser (mirror of pivot-chooser.sp
     ).toBe('2');
   });
 
-  it('field chooser onDemand only applies the draft on Apply', () => {
+  it('field chooser onDemand only applies the draft on Apply', async () => {
     const ref = createRef<OgePivotGridHandle<Sale>>();
     const { container } = render(
       <OgePivotGrid
@@ -381,10 +461,11 @@ describe('<OgePivotGrid> — menus, filters, chooser (mirror of pivot-chooser.sp
     const city = Array.from(
       chooser.querySelectorAll('[data-area="row"] .oge-pivot-field-chip'),
     ).find((c) => c.textContent?.trim() === 'City') as HTMLElement;
-    fireEvent.dragStart(city);
     const all = chooser.querySelector('.oge-pivot-chooser-all') as HTMLElement;
-    fireEvent.dragOver(all);
-    fireEvent.drop(all);
+    pointer('pointerdown', city, 0);
+    pointer('pointermove', all, 60);
+    pointer('pointerup', all, 60);
+    await afterDropClick();
     expect(rowHeaders(container)).toEqual(['EU', 'US', 'Grand Total']);
     expect(
       ref.current?.getFieldLayout().find((f) => f.id === 'city')?.area,

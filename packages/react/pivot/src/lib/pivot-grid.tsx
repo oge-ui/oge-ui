@@ -7,7 +7,7 @@ import {
   useMemo,
   useReducer,
   useRef,
-  type DragEvent as ReactDragEvent,
+  type PointerEvent as ReactPointerEvent,
   type ForwardedRef,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -374,13 +374,26 @@ function OgePivotGridInner<T>(
   const focusColumnHeader = (cell: OgePivotHeaderCell): void =>
     core.focusColumnHeader(cell);
 
-  const dragStart = (field: PivotFieldConfig) => (event: ReactDragEvent) =>
-    core.fieldDragStart(field, event);
-  const dragEnd = () => core.fieldDragEnd();
-  const dragOver = (event: ReactDragEvent) => core.areaDragOver(event);
-  const drop =
-    (area: PivotFieldConfig['area'] | null) => (event: ReactDragEvent) =>
-      core.areaDrop(area ?? null, event);
+  // field chips move with a pointer drag (long press under touch); the core
+  // owns the hit-testing, the indicator state and the drop (`moveFieldTo`)
+  const fieldPointerDown =
+    (field: PivotFieldConfig) => (event: ReactPointerEvent<HTMLElement>) =>
+      core.fieldPointerDown(field, event, event.currentTarget);
+  const dropTarget = core.fieldDropTarget();
+  const zoneClass = (base: string, area: PivotFieldConfig['area'] | null) =>
+    dropTarget !== null && dropTarget.area === (area ?? null)
+      ? `${base} oge-pivot-area-drop-active`
+      : base;
+  const chipClass = (
+    base: string,
+    area: PivotFieldConfig['area'] | null,
+    id: string,
+  ) =>
+    dropTarget !== null &&
+    dropTarget.area === (area ?? null) &&
+    dropTarget.beforeId === id
+      ? `${base} oge-pivot-chip-drop-target`
+      : base;
 
   // --- render ---------------------------------------------------------------
   const msg = messages;
@@ -446,31 +459,29 @@ function OgePivotGridInner<T>(
             core.panelAreas().map((zone) => (
               <div
                 key={zone.area}
-                className="oge-pivot-area"
+                className={zoneClass('oge-pivot-area', zone.area)}
                 role="group"
                 aria-label={zone.label}
                 data-area={zone.area}
-                onDragOver={dragOver}
-                onDrop={drop(zone.area)}
               >
                 <span className="oge-pivot-area-label">{zone.label}</span>
                 {zone.fields.length ? (
                   zone.fields.map((field) => (
                     <span
                       key={field.id}
-                      className={
+                      className={chipClass(
                         field.filterValues
                           ? 'oge-pivot-field-chip oge-pivot-chip-filtered'
-                          : 'oge-pivot-field-chip'
-                      }
+                          : 'oge-pivot-field-chip',
+                        zone.area,
+                        field.id,
+                      )}
                       role="button"
                       tabIndex={0}
                       aria-haspopup="menu"
                       aria-keyshortcuts={CHIP_SHORTCUTS}
                       data-field-id={field.id}
-                      draggable="true"
-                      onDragStart={dragStart(field)}
-                      onDragEnd={dragEnd}
+                      onPointerDown={fieldPointerDown(field)}
                       onContextMenu={onChipContextMenu(field, zone.area)}
                       onKeyDown={onChipKeyDown(field, zone.area)}
                     >
@@ -808,29 +819,30 @@ function OgePivotGridInner<T>(
             />
             <div className="oge-pivot-chooser-grid">
               <div
-                className="oge-pivot-chooser-zone oge-pivot-chooser-all"
+                className={zoneClass(
+                  'oge-pivot-chooser-zone oge-pivot-chooser-all',
+                  null,
+                )}
                 role="group"
                 aria-label={msg.allFields}
-                onDragOver={dragOver}
-                onDrop={drop(null)}
               >
                 <span className="oge-pivot-area-label">{msg.allFields}</span>
                 {core.chooserAllFields().map((field) => (
                   <span
                     key={field.id}
-                    className={
+                    className={chipClass(
                       field.area === null || field.area === undefined
                         ? 'oge-pivot-field-chip oge-pivot-chip-unused'
-                        : 'oge-pivot-field-chip'
-                    }
+                        : 'oge-pivot-field-chip',
+                      null,
+                      field.id,
+                    )}
                     role="button"
                     tabIndex={0}
                     aria-haspopup="menu"
                     aria-keyshortcuts={LIST_CHIP_SHORTCUTS}
                     data-field-id={field.id}
-                    draggable="true"
-                    onDragStart={dragStart(field)}
-                    onDragEnd={dragEnd}
+                    onPointerDown={fieldPointerDown(field)}
                     onContextMenu={onChipContextMenu(field, null)}
                     onKeyDown={onChipKeyDown(field, null)}
                   >
@@ -841,26 +853,26 @@ function OgePivotGridInner<T>(
               {core.panelAreas().map((zone) => (
                 <div
                   key={zone.area}
-                  className="oge-pivot-chooser-zone"
+                  className={zoneClass('oge-pivot-chooser-zone', zone.area)}
                   role="group"
                   aria-label={zone.label}
                   data-area={zone.area}
-                  onDragOver={dragOver}
-                  onDrop={drop(zone.area)}
                 >
                   <span className="oge-pivot-area-label">{zone.label}</span>
                   {core.chooserAreaFields(zone.area).map((field) => (
                     <span
                       key={field.id}
-                      className="oge-pivot-field-chip"
+                      className={chipClass(
+                        'oge-pivot-field-chip',
+                        zone.area,
+                        field.id,
+                      )}
                       role="button"
                       tabIndex={0}
                       aria-haspopup="menu"
                       aria-keyshortcuts={CHIP_SHORTCUTS}
                       data-field-id={field.id}
-                      draggable="true"
-                      onDragStart={dragStart(field)}
-                      onDragEnd={dragEnd}
+                      onPointerDown={fieldPointerDown(field)}
                       onContextMenu={onChipContextMenu(field, zone.area)}
                       onKeyDown={onChipKeyDown(field, zone.area)}
                     >

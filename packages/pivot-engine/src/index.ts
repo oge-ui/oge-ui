@@ -42,6 +42,8 @@ export {
   type OgePivotCellPosition,
   type OgePivotCellPrepared,
   type OgePivotDragLike,
+  type OgePivotFieldDropTarget,
+  type OgePivotFieldPointerInput,
   type OgePivotFieldChooserOptions,
   type OgePivotFieldDef,
   type OgePivotFilterPopupState,

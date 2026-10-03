@@ -1,5 +1,8 @@
 import {
+  beginPointerDragDrop,
   formatCellValue,
+  isOgeDragExcludedTarget,
+  ogeOwnedClosest,
   type OgeReactiveCell,
   type OgeReactivityAdapter,
 } from '@oge-ui/behavior';
@@ -64,14 +67,14 @@ import {
 import type { OgePivotMessages } from './pivot-messages';
 import { OgePivotStateCore } from './pivot-state-core';
 import {
-  OGE_PIVOT_FIELD_DRAG_TYPE,
   type OgePivotAxisLine,
   type OgePivotCellClickEvent,
   type OgePivotCellPosition,
   type OgePivotCellPrepared,
-  type OgePivotDragLike,
   type OgePivotFieldChooserOptions,
   type OgePivotFieldDef,
+  type OgePivotFieldDropTarget,
+  type OgePivotFieldPointerInput,
   type OgePivotFilterPopupState,
   type OgePivotHeaderCell,
   type OgePivotMatrixTemplate,
@@ -194,6 +197,8 @@ export class OgePivotGridCore<T = unknown> {
   /** Text of the polite live region (field moves). */
   readonly announcement: OgeReactiveCell<string>;
   readonly menu: OgeReactiveCell<OgePivotMenuState | null>;
+  /** Where the field chip being dragged would land (drop indicator). */
+  readonly fieldDropTarget: OgeReactiveCell<OgePivotFieldDropTarget | null>;
   readonly filterPopup: OgeReactiveCell<OgePivotFilterPopupState | null>;
   readonly filterSearch: OgeReactiveCell<string>;
   readonly chooserOpen: OgeReactiveCell<boolean>;
@@ -247,7 +252,6 @@ export class OgePivotGridCore<T = unknown> {
 
   private readonly inputs: OgePivotGridInputs<T>;
   private remoteAbort: AbortController | null = null;
-  private draggedFieldId: string | null = null;
   private lastRemoteKey: string | null = null;
   private lastRemoteStore: OgePivotStore<T> | null = null;
 
@@ -268,6 +272,7 @@ export class OgePivotGridCore<T = unknown> {
     this.focusedHeader = rx.cell<OgePivotGridPosition | null>(null);
     this.announcement = rx.cell('');
     this.menu = rx.cell<OgePivotMenuState | null>(null);
+    this.fieldDropTarget = rx.cell<OgePivotFieldDropTarget | null>(null);
     this.filterPopup = rx.cell<OgePivotFilterPopupState | null>(null);
     this.filterSearch = rx.cell('');
     this.chooserOpen = rx.cell(false);
@@ -820,26 +825,61 @@ export class OgePivotGridCore<T = unknown> {
 
   // --- field panel drag & drop ----------------------------------------------
 
-  fieldDragStart(field: PivotFieldConfig, event: OgePivotDragLike): void {
-    this.draggedFieldId = field.id;
-    event.dataTransfer?.setData(OGE_PIVOT_FIELD_DRAG_TYPE, field.id);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  /**
+   * Starts a pointer drag of a field chip (`pointerdown` on `chip`; touch
+   * needs a long press, so swiping the panel still scrolls it). The drop
+   * target is the area zone under the pointer — and the chip there, which
+   * the field is inserted in front of — inside the chip's own panel or
+   * chooser; a drop calls {@link moveFieldTo}, the path the chip keyboard and
+   * the field menu use. Escape, blur and `pointercancel` cancel.
+   */
+  fieldPointerDown(
+    field: PivotFieldConfig,
+    event: OgePivotFieldPointerInput,
+    chip: Element,
+  ): void {
+    if (event.button !== 0 || isOgeDragExcludedTarget(event.target, chip))
+      return;
+    const container =
+      chip.closest('.oge-pivot-chooser-grid') ??
+      chip.closest('.oge-pivot-field-panel');
+    beginPointerDragDrop<OgePivotFieldDropTarget>(event, {
+      source: chip,
+      resolve: (hit) => this.fieldDropTargetAt(hit, container),
+      onOver: (target) => {
+        const current = this.fieldDropTarget();
+        if (
+          current?.area !== target?.area ||
+          current?.beforeId !== target?.beforeId
+        )
+          this.fieldDropTarget.set(target);
+      },
+      onDrop: (target) => {
+        const order = pivotAreaFields(this.chooserFields(), target.area)
+          .filter((entry) => entry.id !== field.id)
+          .map((entry) => entry.id);
+        const at =
+          target.beforeId === null ? -1 : order.indexOf(target.beforeId);
+        this.moveFieldTo(field.id, target.area, at < 0 ? Infinity : at);
+      },
+      onEnd: () => this.fieldDropTarget.set(null),
+    });
   }
 
-  areaDragOver(event: OgePivotDragLike): void {
-    if (this.draggedFieldId) event.preventDefault();
-  }
-
-  areaDrop(area: PivotArea | null, event: OgePivotDragLike): void {
-    const id = this.draggedFieldId;
-    this.draggedFieldId = null;
-    if (!id) return;
-    event.preventDefault();
-    this.placeField(id, area);
-  }
-
-  fieldDragEnd(): void {
-    this.draggedFieldId = null;
+  /** The area zone (and the chip in it) under `hit`, inside `container`. */
+  private fieldDropTargetAt(
+    hit: Element | null,
+    container: Element | null,
+  ): OgePivotFieldDropTarget | null {
+    const zone = ogeOwnedClosest(
+      hit,
+      '.oge-pivot-area[data-area], .oge-pivot-chooser-zone',
+      container,
+    );
+    if (!zone) return null;
+    const area = (zone.dataset['area'] as PivotArea | undefined) ?? null;
+    const chip = ogeOwnedClosest(hit, '.oge-pivot-field-chip[data-field-id]', zone);
+    return { area, beforeId: chip?.dataset['fieldId'] ?? null };
   }
 
   /** Moves a field to the end of an area (chooser draft aware). */

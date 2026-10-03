@@ -32,8 +32,7 @@
     role="group"
     [attr.aria-label]="zone.label"
     [attr.data-area]="zone.area"
-    (dragover)="onAreaDragOver($event)"
-    (drop)="onAreaDrop(zone.area, $event)"
+    [class.oge-pivot-area-drop-active]="isDropZone(zone.area)"
   >
     <span class="oge-pivot-area-label">{{ zone.label }}</span>
     @for (field of zone.fields; track field.id) {
@@ -45,9 +44,8 @@
       [attr.aria-keyshortcuts]="chipShortcuts"
       [attr.data-field-id]="field.id"
       [class.oge-pivot-chip-filtered]="!!field.filterValues"
-      draggable="true"
-      (dragstart)="onFieldDragStart(field, $event)"
-      (dragend)="onFieldDragEnd()"
+      [class.oge-pivot-chip-drop-target]="isDropChip(zone.area, field.id)"
+      (pointerdown)="onFieldPointerDown(field, $event)"
       (contextmenu)="onFieldContextMenu(field, zone.area, $event)"
       (keydown)="onChipKeydown(field, zone.area, $event)"
     >
@@ -344,8 +342,7 @@
       class="oge-pivot-chooser-zone oge-pivot-chooser-all"
       role="group"
       [attr.aria-label]="msg().allFields"
-      (dragover)="onAreaDragOver($event)"
-      (drop)="onAreaDrop(null, $event)"
+      [class.oge-pivot-area-drop-active]="isDropZone(null)"
     >
       <span class="oge-pivot-area-label">{{ msg().allFields }}</span>
       @for (field of chooserAllFields(); track field.id) {
@@ -357,9 +354,8 @@
         [attr.aria-keyshortcuts]="listChipShortcuts"
         [attr.data-field-id]="field.id"
         [class.oge-pivot-chip-unused]="field.area === null || field.area === undefined"
-        draggable="true"
-        (dragstart)="onFieldDragStart(field, $event)"
-        (dragend)="onFieldDragEnd()"
+        [class.oge-pivot-chip-drop-target]="isDropChip(null, field.id)"
+        (pointerdown)="onFieldPointerDown(field, $event)"
         (contextmenu)="onFieldContextMenu(field, null, $event)"
         (keydown)="onChipKeydown(field, null, $event)"
       >
@@ -373,8 +369,7 @@
       role="group"
       [attr.aria-label]="zone.label"
       [attr.data-area]="zone.area"
-      (dragover)="onAreaDragOver($event)"
-      (drop)="onAreaDrop(zone.area, $event)"
+      [class.oge-pivot-area-drop-active]="isDropZone(zone.area)"
     >
       <span class="oge-pivot-area-label">{{ zone.label }}</span>
       @for (field of chooserAreaFields(zone.area); track field.id) {
@@ -385,9 +380,8 @@
         aria-haspopup="menu"
         [attr.aria-keyshortcuts]="chipShortcuts"
         [attr.data-field-id]="field.id"
-        draggable="true"
-        (dragstart)="onFieldDragStart(field, $event)"
-        (dragend)="onFieldDragEnd()"
+        [class.oge-pivot-chip-drop-target]="isDropChip(zone.area, field.id)"
+        (pointerdown)="onFieldPointerDown(field, $event)"
         (contextmenu)="onFieldContextMenu(field, zone.area, $event)"
         (keydown)="onChipKeydown(field, zone.area, $event)"
       >

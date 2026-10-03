@@ -439,20 +439,28 @@ export class OgePivotGrid<T = unknown> {
     this.onGridKeydown(event);
   }
 
-  protected onFieldDragStart(field: PivotFieldConfig, event: DragEvent): void {
-    this.core.fieldDragStart(field, event);
+  /** Pointer drag of a field chip (long press under touch) — see the core. */
+  protected onFieldPointerDown(
+    field: PivotFieldConfig,
+    event: PointerEvent,
+  ): void {
+    this.core.fieldPointerDown(
+      field,
+      event,
+      event.currentTarget as HTMLElement,
+    );
   }
 
-  protected onAreaDragOver(event: DragEvent): void {
-    this.core.areaDragOver(event);
+  /** The area zone a dragged chip would land in. */
+  protected isDropZone(area: PivotArea | null): boolean {
+    const target = this.core.fieldDropTarget();
+    return target !== null && target.area === area;
   }
 
-  protected onAreaDrop(area: PivotArea | null, event: DragEvent): void {
-    this.core.areaDrop(area, event);
-  }
-
-  protected onFieldDragEnd(): void {
-    this.core.fieldDragEnd();
+  /** The chip a dragged chip would be inserted in front of. */
+  protected isDropChip(area: PivotArea | null, id: string): boolean {
+    const target = this.core.fieldDropTarget();
+    return target !== null && target.area === area && target.beforeId === id;
   }
 
   protected closePopups(): void {
