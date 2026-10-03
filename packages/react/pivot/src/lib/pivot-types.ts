@@ -102,7 +102,9 @@ export interface OgePivotGridHandle<T = unknown> {
    * `<OgeChart>`: rows × measures, following the expand state; pass
    * `argumentIndexes` to chart a selection.
    */
-  getChartData(options?: OgePivotChartOptions): OgePivotChartData;
+  getChartData<TType extends string = 'bar'>(
+    options?: OgePivotChartOptions<TType>,
+  ): OgePivotChartData<TType>;
   /** A value cell exactly as rendered: text after formats, display modes and `customizeCell`. */
   getPreparedCell(
     rowIndex: number,

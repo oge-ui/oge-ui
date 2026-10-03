@@ -186,6 +186,18 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
             'Pages the visible (flattened) rows client-side; paging wins over <code>virtualScroll</code>.',
         },
         {
+          name: 'summary',
+          type: 'OgeTreeListSummary&lt;T&gt; | undefined',
+          description:
+            'Aggregates (<code>sum</code> / <code>avg</code> / <code>min</code> / <code>max</code> / <code>count</code> / <code>custom</code>). <code>totalItems</code> render in a footer row over every row the filter leaves visible, at every level (collapsed branches included); <code>recursiveItems</code> show each parent its visible descendants’ aggregate beside its own value. Both are part of the Excel / PDF exports (total row, per-parent footer lines).',
+        },
+        {
+          name: 'remoteOperations',
+          type: 'OgeTreeListRemoteOperations | undefined',
+          description:
+            '<code>{ filtering: true }</code> (full load mode) sends the filter row, header filter, builder filter and search text to the data source and asks <code>source.distinct(field, { filter })</code> for header-filter values. <strong>Server contract:</strong> answer with every matching row <em>plus all of its ancestors</em>, flat, in the unfiltered shape; the tree renders the answer as-is (no client re-filtering) and opens the branches leading to the matches. Lazy trees keep their own remote match discovery.',
+        },
+        {
           name: 'sortable / sorting',
           type: "boolean | 'single' | 'multi' / OgeSortingOptions",
           default: 'true',
@@ -372,10 +384,10 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
           description: 'Reset the view.',
         },
         {
-          name: 'getExportData() / getCsv() / exportCsv()',
+          name: 'getExportData(options?) / getCsv() / exportCsv()',
           type: 'sync',
           description:
-            '<strong>Synchronous</strong> (grid: async); CSV indents the first column 2 spaces per level; the Excel entry sets real outline levels. ' +
+            '<strong>Synchronous</strong> (grid: async). <code>getExportData</code> takes <code>OgeTreeExportOptions</code> (<code>visibleColumnsOnly</code>, <code>selectedRowsOnly</code>, <code>summaries</code>) and returns rows, levels and the summary lines; CSV indents the first column 2 spaces per level; the Excel entry sets real outline levels. ' +
             'Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); <code>formulaGuard: false</code> opts out.',
         },
       ],
@@ -489,7 +501,37 @@ export const OGE_REACT_TREE_LIST_API: ApiSections = {
           name: 'exportOgeTreeListToExcel(handle, options?)',
           type: '@oge-ui/react-tree-list/export-excel',
           description:
-            'Lazy Excel export with native outline grouping (optional <code>exceljs</code> peer).',
+            'Lazy Excel export with native outline grouping, the total row and per-parent summary rows (values or <code>SUBTOTAL</code> formulas), grid widths, freeze panes and the grid exporters’ styles (optional <code>exceljs</code> peer).',
+        },
+        {
+          name: 'OgeTreeListSummary&lt;T&gt; / OgeTreeSummaryItem',
+          type: '{ totalItems?; recursiveItems?; calculateCustomSummary? } / { field; type; name?; showInColumn? }',
+          description:
+            'The <code>summary</code> input: items aggregate <code>field</code> with a <code>SummaryType</code>; <code>custom</code> runs <code>calculateCustomSummary[name ?? field](rows, field)</code>; <code>showInColumn</code> moves the value under another column.',
+        },
+        {
+          name: 'OgeTreeListRemoteOperations',
+          type: '{ filtering?: boolean }',
+          description:
+            'What the tree hands to its data source (see <code>remoteOperations</code> for the server contract).',
+        },
+        {
+          name: 'OgeTreeExportOptions',
+          type: '{ visibleColumnsOnly?; selectedRowsOnly?; summaries? }',
+          description:
+            'What <code>getExportData()</code> and both export entries include.',
+        },
+        {
+          name: 'exportOgeTreeListToPdf(handle, options?)',
+          type: '@oge-ui/react-tree-list/export-pdf',
+          description:
+            'Lazy PDF export (optional <code>jspdf</code> + <code>jspdf-autotable</code> peers): hierarchy as first-column indentation, the header repeated on every page, total and per-parent summary rows, grid widths fitted to the page, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code>, <code>pageNumbers</code>. <code>buildTreePdfDocument(data, options)</code> for custom pipelines.',
+        },
+        {
+          name: 'OgeTreeExcelExportOptions&lt;T&gt; / OgeTreePdfExportOptions&lt;T&gt;',
+          type: 'interfaces',
+          description:
+            'The tree download helpers’ options — the grid exporters’ options (styles, formats, freeze panes, <code>summaryFormulas</code>, page chrome) minus grouping.',
         },
         {
           name: 'Re-exports',

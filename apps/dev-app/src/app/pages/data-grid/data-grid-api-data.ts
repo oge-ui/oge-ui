@@ -520,7 +520,7 @@ export const OGE_GRID_API: ApiSections = {
           name: 'getExportData(options?): Promise&lt;OgeExportData&lt;T&gt;&gt;',
           type: 'Promise',
           description:
-            "Rows + column metadata of the current view; <code>scope: 'all' | 'page' | 'selection'</code>.",
+            "Rows, column metadata (width, alignment, pin side, band) and the structured lines — group rows, group footers, the total row (<code>items</code>) — of the current view. <code>scope: 'all' | 'page' | 'selection'</code> (or <code>selectedRowsOnly</code>), <code>visibleColumnsOnly: false</code> adds hidden columns, <code>groups</code> / <code>summaries: false</code> export flat.",
         },
         {
           name: 'getCsv(options?): Promise&lt;string&gt;',
@@ -1059,25 +1059,45 @@ export const OGE_GRID_TYPES_API: ApiSections = {
       entries: [
         {
           name: 'OgeExportOptions&lt;T&gt;',
-          type: "{ scope?: 'all' | 'page' | 'selection'; customizeCell?(args) }",
-          description: 'Shared by CSV/Excel/PDF.',
+          type: '{ scope?; selectedRowsOnly?; visibleColumnsOnly?; groups?; summaries?; customizeCell?(args); cellStyle?(args) }',
+          description:
+            'Shared by CSV/Excel/PDF. <code>customizeCell</code> rewrites a data cell (return a value) and restyles it (mutate <code>style</code>); <code>cellStyle</code> is the value-level styling seam for every cell — header, group and summary lines included — so conditional formatting exports the same way it renders.',
         },
         {
           name: 'OgeExportData&lt;T&gt; / OgeExportColumn&lt;T&gt; / OgeExportCellArgs&lt;T&gt;',
           type: 'interfaces',
-          description: 'Rows + resolved column metadata handed to exporters.',
+          description:
+            'Rows + resolved column metadata handed to exporters; <code>items</code> carries the group / footer / total lines when the view is grouped or summarized.',
+        },
+        {
+          name: 'OgeExportItem&lt;T&gt; / OgeExportSummaryCell / OgeExportRowKind',
+          type: "{ kind: 'data' | 'group' | 'groupFooter' | 'total'; … }",
+          description:
+            'One exported line: a data row at its group depth, a group header (text, value, count, header summaries), a group footer or the total row with typed summary values.',
+        },
+        {
+          name: 'OgeExportCellStyle / OgeExportCellStyleArgs&lt;T&gt;',
+          type: '{ bold?, italic?, underline?, color?, background?, fontSize?, alignment?, verticalAlignment?, wrap?, border?, numFmt? }',
+          description:
+            'Cell style both file builders apply (colours as <code>#rrggbb</code>; <code>numFmt</code> is Excel-only).',
         },
         {
           name: 'exportGridToExcel(grid, options?)',
           type: '@oge-ui/grid/export-excel',
           description:
-            'Lazy Excel export (exceljs peer); <code>buildExcelWorkbook(data)</code> for custom pipelines.',
+            'Lazy Excel export (exceljs peer): merged band headers, frozen header rows + left-pinned columns (<code>freezeHeader</code>, <code>freezeColumns</code>), grid or auto column widths (<code>columnWidths</code>), number/date formats (<code>numberFormat</code>, <code>dateFormat</code>, <code>columnFormats</code>), group rows with collapsible outline levels (<code>outline</code>), group-footer and total rows as values or <code>SUBTOTAL</code> formulas (<code>summaryFormulas</code>), <code>headerStyle</code> / <code>groupStyle</code> / <code>summaryStyle</code>, auto-filter. <code>buildExcelWorkbook(data, options)</code> for custom pipelines.',
         },
         {
           name: 'exportGridToPdf(grid, options?)',
           type: '@oge-ui/grid/export-pdf',
           description:
-            'Lazy PDF export (jspdf peer); <code>buildPdfDocument(data)</code> for custom pipelines.',
+            'Lazy PDF export (jspdf peer): the header block repeated on every page (<code>repeatHeader</code>), group and summary rows, grid widths fitted to the page (<code>fitToWidth</code>), <code>orientation</code>, <code>pageFormat</code>, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code> callbacks and <code>pageNumbers</code>. <code>buildPdfDocument(data, options)</code> for custom pipelines.',
+        },
+        {
+          name: 'OgeExcelExportOptions&lt;T&gt; / OgePdfExportOptions&lt;T&gt; / OgePdfPageInfo',
+          type: 'interfaces',
+          description:
+            'The two download helpers’ options (each extends <code>OgeExportOptions</code>) and what a PDF page callback is told (<code>pageNumber</code>, <code>pageCount</code>).',
         },
       ],
     },

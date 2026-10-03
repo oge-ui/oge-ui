@@ -96,6 +96,12 @@
         "./packages/react/gantt/src/export-pdf.ts"
       ],
       "@oge-ui/react-grid": ["./packages/react/grid/src/index.ts"],
+      "@oge-ui/react-grid/export-excel": [
+        "./packages/react/grid/src/export-excel.ts"
+      ],
+      "@oge-ui/react-grid/export-pdf": [
+        "./packages/react/grid/src/export-pdf.ts"
+      ],
       "@oge-ui/react-grid/foundation": [
         "./packages/react/grid/src/foundation.ts"
       ],

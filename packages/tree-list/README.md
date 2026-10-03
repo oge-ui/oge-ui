@@ -31,8 +31,13 @@ model, theming, virtualization, keyboard navigation and data layer.
 - Drag & drop: reparent by dropping onto a row, or reorder among siblings by
   dropping before/after (with drop indicators)
 - State persistence (`stateKey`) for sort, filters, column layout and expansion
+- Summaries: `summary.totalItems` in a footer row, `summary.recursiveItems`
+  as per-parent aggregates (sum / avg / min / max / count / custom)
+- Remote filtering (`remoteOperations.filtering`): filter, search and
+  header-filter values served by the data source (matches + ancestors)
 - CSV export with first-column indentation; Excel export
   (`@oge-ui/tree-list/export-excel`, lazy) with native spreadsheet outlining
+  and summary rows; PDF export (`@oge-ui/tree-list/export-pdf`, lazy)
 
 ## Install
 

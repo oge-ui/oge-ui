@@ -5,7 +5,7 @@ import type { PivotAxisNode, PivotPath, PivotResult } from '@oge-ui/core';
  * `@oge-ui/charts`: this returns a `dataSource` + `series` pair whose shape
  * is what `<oge-chart>` / `<OgeChart>` take, and the app wires the two.
  */
-export interface OgePivotChartOptions {
+export interface OgePivotChartOptions<TType extends string = string> {
   /** The pivot axis whose lines become the chart's arguments. Default `'row'`. */
   argumentAxis?: 'row' | 'column';
   /** Measure ids to chart, in this order. Default: every measure. */
@@ -22,7 +22,7 @@ export interface OgePivotChartOptions {
   /** Only these series-axis lines (matrix indexes). Default: all of them. */
   seriesIndexes?: readonly number[];
   /** The series `type` every series gets. Default `'bar'`. */
-  type?: string;
+  type?: TType;
   /** Joins a path into a label (`Europe / France`). Default `' / '`. */
   pathSeparator?: string;
   /** Label of grand-total lines. Default `Grand Total`. */
@@ -37,8 +37,8 @@ export interface OgePivotChartPoint {
 }
 
 /** One chart series — assignable to the charts' series input. */
-export interface OgePivotChartSeries {
-  readonly type: string;
+export interface OgePivotChartSeries<TType extends string = string> {
+  readonly type: TType;
   readonly name: string;
   readonly argumentField: 'argument';
   readonly valueField: string;
@@ -49,9 +49,9 @@ export interface OgePivotChartSeries {
 }
 
 /** `dataSource` + `series` for a chart — see {@link toChartSeries}. */
-export interface OgePivotChartData {
+export interface OgePivotChartData<TType extends string = string> {
   readonly dataSource: OgePivotChartPoint[];
-  readonly series: OgePivotChartSeries[];
+  readonly series: OgePivotChartSeries<TType>[];
 }
 
 interface Line {
@@ -118,10 +118,10 @@ function chartLines(
  * // <oge-chart [dataSource]="chart.dataSource" [series]="chart.series" />
  * ```
  */
-export function toChartSeries(
+export function toChartSeries<TType extends string = 'bar'>(
   result: PivotResult,
-  options: OgePivotChartOptions = {},
-): OgePivotChartData {
+  options: OgePivotChartOptions<TType> = {},
+): OgePivotChartData<TType> {
   const separator = options.pathSeparator ?? ' / ';
   const grandText = options.grandTotalText ?? 'Grand Total';
   const byRows = (options.argumentAxis ?? 'row') === 'row';
@@ -145,8 +145,8 @@ export function toChartSeries(
       : result.measures.map((_, index) => index)
   ).filter((index) => index >= 0);
   const several = measureIndexes.length > 1;
-  const type = options.type ?? 'bar';
-  const series: OgePivotChartSeries[] = [];
+  const type = (options.type ?? 'bar') as TType;
+  const series: OgePivotChartSeries<TType>[] = [];
   const cells: { line: Line; measure: number; field: string }[] = [];
   for (const line of seriesLines) {
     for (const m of measureIndexes) {

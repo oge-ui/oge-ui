@@ -556,7 +556,7 @@ export const OGE_REACT_GRID_API: ApiSections = {
           name: 'getExportData(options?): Promise&lt;OgeExportData&lt;T&gt;&gt;',
           type: 'handle',
           description:
-            'Rows and column metadata of the current view (filter + search + sort applied) — the shared source for exporters. <code>scope</code> narrows to the page or selection.',
+            "Rows, column metadata (width, alignment, pin side, band) and the structured lines — group rows, group footers, the total row (<code>items</code>) — of the current view (filter + search + sort applied). <code>scope: 'all' | 'page' | 'selection'</code> (or <code>selectedRowsOnly</code>), <code>visibleColumnsOnly: false</code> adds hidden columns, <code>groups</code> / <code>summaries: false</code> export flat.",
         },
         {
           name: 'getCsv(options?): Promise&lt;string&gt;',
@@ -1095,25 +1095,45 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
       entries: [
         {
           name: 'OgeExportOptions&lt;T&gt;',
-          type: "{ scope?: 'all' | 'page' | 'selection'; customizeCell?: (cell: OgeExportCellArgs&lt;T&gt;) =&gt; unknown }",
-          description: 'Narrows and rewrites what the exporters emit.',
+          type: '{ scope?; selectedRowsOnly?; visibleColumnsOnly?; groups?; summaries?; customizeCell?: (cell: OgeExportCellArgs&lt;T&gt;) =&gt; unknown; cellStyle?(args) }',
+          description:
+            'Narrows, rewrites and styles what the exporters emit. <code>customizeCell</code> rewrites a data cell (return a value) and restyles it (mutate <code>style</code>); <code>cellStyle</code> styles every cell — header, group and summary lines included — so conditional formatting exports the way it renders.',
         },
         {
-          name: 'OgeExportData&lt;T&gt; / OgeExportColumn&lt;T&gt;',
-          type: '{ rows, columns } / { caption, field, dataType, accessor, format? }',
-          description: 'What <code>getExportData()</code> resolves to.',
+          name: 'OgeExportData&lt;T&gt; / OgeExportColumn&lt;T&gt; / OgeExportCellArgs&lt;T&gt;',
+          type: '{ rows, columns, items? } / { caption, field, dataType, accessor, format?, width?, alignment?, pinned?, bandCaption? }',
+          description:
+            'What <code>getExportData()</code> resolves to; <code>items</code> carries the group / footer / total lines when the view is grouped or summarized.',
+        },
+        {
+          name: 'OgeExportItem&lt;T&gt; / OgeExportSummaryCell / OgeExportRowKind',
+          type: "{ kind: 'data' | 'group' | 'groupFooter' | 'total'; … }",
+          description:
+            'One exported line: a data row at its group depth, a group header (text, value, count, header summaries), a group footer or the total row with typed summary values.',
+        },
+        {
+          name: 'OgeExportCellStyle / OgeExportCellStyleArgs&lt;T&gt;',
+          type: '{ bold?, italic?, underline?, color?, background?, fontSize?, alignment?, verticalAlignment?, wrap?, border?, numFmt? }',
+          description:
+            'Cell style both file builders apply (colours as <code>#rrggbb</code>; <code>numFmt</code> is Excel-only).',
         },
         {
           name: 'exportGridToExcel(grid, options?)',
           type: '@oge-ui/react-grid/export-excel',
           description:
-            'Downloads the current view as <code>.xlsx</code>. Takes the grid’s handle where the Angular signature takes the component. <code>exceljs</code> is an optional peer, imported only by this entry point; <code>buildExcelWorkbook</code> is exported alongside for a workbook you assemble yourself — the same builder the Angular package calls.',
+            'Downloads the current view as <code>.xlsx</code>: merged band headers, frozen header rows + left-pinned columns (<code>freezeHeader</code>, <code>freezeColumns</code>), grid or auto column widths (<code>columnWidths</code>), number/date formats (<code>numberFormat</code>, <code>dateFormat</code>, <code>columnFormats</code>), group rows with collapsible outline levels, group-footer and total rows as values or <code>SUBTOTAL</code> formulas (<code>summaryFormulas</code>), header/group/summary styles, auto-filter. Takes the grid’s handle where the Angular signature takes the component. <code>exceljs</code> is an optional peer, imported only by this entry point; <code>buildExcelWorkbook</code> is exported alongside — the same builder the Angular package calls.',
         },
         {
           name: 'exportGridToPdf(grid, options?)',
           type: '@oge-ui/react-grid/export-pdf',
           description:
-            'Downloads the current view as <code>.pdf</code> (<code>title</code>, <code>orientation</code>, <code>pageFormat</code>). <code>jspdf</code> and <code>jspdf-autotable</code> are optional peers; <code>buildPdfDocument</code> is exported alongside.',
+            'Downloads the current view as <code>.pdf</code>: the header block repeated per page, group and summary rows, grid widths fitted to the page (<code>fitToWidth</code>), <code>title</code>, <code>orientation</code>, <code>pageFormat</code>, <code>pageHeader</code> / <code>pageFooter</code> callbacks and <code>pageNumbers</code>. <code>jspdf</code> and <code>jspdf-autotable</code> are optional peers; <code>buildPdfDocument</code> is exported alongside.',
+        },
+        {
+          name: 'OgeExcelExportOptions&lt;T&gt; / OgePdfExportOptions&lt;T&gt; / OgePdfPageInfo',
+          type: 'interfaces',
+          description:
+            'The two download helpers’ options (each extends <code>OgeExportOptions</code>) and what a PDF page callback is told (<code>pageNumber</code>, <code>pageCount</code>).',
         },
       ],
     },

@@ -736,6 +736,12 @@ const FAMILIES = [
           'React host styling idiom; an Angular host takes `class` natively and needs no input.',
         style:
           'React host styling idiom; an Angular host takes `style` natively and needs no input.',
+        rendercell:
+          'Render prop replacing the `*ogePivotCellTemplate` structural directive, which the Angular page documents in its types table (TemplateRef ↔ render prop).',
+        renderrowheader:
+          'Render prop replacing the `*ogePivotRowHeaderTemplate` structural directive (same types-table split).',
+        rendercolumnheader:
+          'Render prop replacing the `*ogePivotColumnHeaderTemplate` structural directive (same types-table split).',
       },
     },
   },

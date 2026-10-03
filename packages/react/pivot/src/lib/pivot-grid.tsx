@@ -223,7 +223,7 @@ function OgePivotGridInner<T>(
     ref,
     (): OgePivotGridHandle<T> => ({
       getResult: () => core.getResult(),
-      getChartData: (options) => core.getChartData(options),
+      getChartData: (options) => core.getChartData(options) as never,
       getPreparedCell: (rowIndex, columnIndex, measureIndex) =>
         core.preparedCell(rowIndex, columnIndex, measureIndex),
       getRowFieldCaptions: () => core.rowFieldCaptions(),

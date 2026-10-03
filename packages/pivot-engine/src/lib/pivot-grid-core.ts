@@ -732,8 +732,10 @@ export class OgePivotGridCore<T = unknown> {
    * The current view as chart data (see `toChartSeries`): rows × measures,
    * following the expand state; pass `argumentIndexes` for a selection.
    */
-  getChartData(options: OgePivotChartOptions = {}): OgePivotChartData {
-    return toChartSeries(this.result(), {
+  getChartData<TType extends string = 'bar'>(
+    options: OgePivotChartOptions<TType> = {},
+  ): OgePivotChartData<TType> {
+    return toChartSeries<TType>(this.result(), {
       grandTotalText: this.inputs.messages().grandTotal,
       ...options,
     });

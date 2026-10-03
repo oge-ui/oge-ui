@@ -332,8 +332,10 @@ export class OgePivotGrid<T = unknown> {
    * `argumentIndexes` to chart a selection. The pivot does not depend on
    * the charts package; the app binds the two.
    */
-  getChartData(options?: OgePivotChartOptions): OgePivotChartData {
-    return untracked(() => this.core.getChartData(options));
+  getChartData<TType extends string = 'bar'>(
+    options?: OgePivotChartOptions<TType>,
+  ): OgePivotChartData<TType> {
+    return untracked(() => this.core.getChartData<TType>(options));
   }
 
   /** A value cell exactly as rendered: text after formats, display modes and `customizeCell`. */
