@@ -137,6 +137,13 @@ export interface OgeTreeListProps<T extends object = Record<string, unknown>> {
   filterMode?: TreeFilterMode;
   /** Debounce for text filter inputs, in ms. Set to 0 in tests. */
   filterDebounce?: number;
+  /**
+   * Speaks sort, filter/search result count, page, row expansion,
+   * select-all and blocked-save validation changes through the shared live
+   * announcer (`useOgeLiveAnnouncer`, texts from `messages`). `undefined`
+   * falls back to the grid config's `announcements` (default `true`).
+   */
+  announcements?: boolean;
   /** Auto-expands the ancestor chains of matches while a filter is active. Default true. */
   expandNodesOnFiltering?: boolean;
   /** Shows the filter panel bar with the filter-builder entry point. */

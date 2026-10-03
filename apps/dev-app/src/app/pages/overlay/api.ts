@@ -8,6 +8,7 @@ import { ReactOverlayApiSections } from '../react-overlay/api';
 import {
   OGE_ANCHORED_PANEL_API,
   OGE_CONTEXT_MENU_API,
+  OGE_LIVE_ANNOUNCER_API,
   OGE_MENU_LIST_API,
   OGE_MODAL_API,
   OGE_MODAL_SERVICE_API,
@@ -23,6 +24,7 @@ const SECTIONS = [
   'OgeModal',
   'OgeModalService',
   'OgeToastService',
+  'OgeLiveAnnouncer',
   'OgeTooltip',
   'OgeContextMenu',
   'OgeMenuList',
@@ -38,6 +40,7 @@ const SECTIONS_REACT = [
   '<OgeModal>',
   'OgeModalService (useOgeModals)',
   'OgeToastService (useOgeToasts)',
+  'OgeLiveAnnouncer (useOgeLiveAnnouncer)',
   '<OgeTooltip>',
   '<OgeContextMenu>',
   '<OgeMenuList>',
@@ -68,7 +71,8 @@ const SECTIONS_REACT = [
         <p>
           Complete API reference for <code>&#64;oge-ui/react-overlay</code>: the
           modal, toast, tooltip, context menu and menu list components, the
-          <code>useAnchoredPanel</code> hook, the popup chrome, the pure
+          <code>useAnchoredPanel</code> and
+          <code>useOgeLiveAnnouncer</code> hooks, the popup chrome, the pure
           placement function, the config provider and the shared primitives.
           Services become providers + hooks, structural directives become render
           props, public methods live on <code>ref</code> handles — see the
@@ -106,6 +110,10 @@ const SECTIONS_REACT = [
       />
       <app-api-reference title="OgeModalService" [sections]="modalServiceApi" />
       <app-api-reference title="OgeToastService" [sections]="toastApi" />
+      <app-api-reference
+        title="OgeLiveAnnouncer"
+        [sections]="liveAnnouncerApi"
+      />
       <app-api-reference
         title="OgeTooltip"
         selector="[ogeTooltip]"
@@ -163,6 +171,7 @@ export class OverlayApiPage {
   protected readonly modalApi = OGE_MODAL_API;
   protected readonly modalServiceApi = OGE_MODAL_SERVICE_API;
   protected readonly toastApi = OGE_TOAST_API;
+  protected readonly liveAnnouncerApi = OGE_LIVE_ANNOUNCER_API;
   protected readonly tooltipApi = OGE_TOOLTIP_API;
   protected readonly contextMenuApi = OGE_CONTEXT_MENU_API;
   protected readonly menuListApi = OGE_MENU_LIST_API;

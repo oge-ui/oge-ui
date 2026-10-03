@@ -24,6 +24,7 @@ import {
   type OgeGanttStripLine,
 } from '@oge-ui/gantt-engine';
 import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
+import { useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
 import { useOgeGanttConfig } from './gantt-config';
 import { GanttTaskDialog, type GanttDialogState } from './gantt-task-dialog';
 import type {
@@ -203,6 +204,13 @@ function OgeGanttInner<
   useIsomorphicLayoutEffect(() => {
     core.syncRenderedRange();
   });
+
+  // the core's announcements go through the document's shared live region
+  const liveAnnouncer = useOgeLiveAnnouncer();
+  const announcement = core.announcement();
+  useEffect(() => {
+    liveAnnouncer.announce(announcement);
+  }, [liveAnnouncer, announcement]);
 
   // StrictMode-safe lifetime: cleanup tears gestures/timers down, the mount
   // side revives the same instance (docs/ARCHITECTURE.md)
@@ -1123,9 +1131,6 @@ function OgeGanttInner<
           </div>
         </>
       ) : null}
-      <div className="oge-gantt-live" aria-live="polite">
-        {core.announcement()}
-      </div>
     </div>
   );
 }

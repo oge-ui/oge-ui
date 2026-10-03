@@ -130,4 +130,23 @@ const report = () => {
       jsx: `<OgeButton text="Import" onClick={report} />`,
     }),
   },
+  {
+    title: 'Live announcements without a toast',
+    source: reactDemoSource({
+      use: {
+        '@oge-ui/react-buttons': ['OgeButton'],
+        '@oge-ui/react-overlay': ['useOgeLiveAnnouncer'],
+      },
+      name: 'ArchiveButton',
+      body: `// no provider, no markup: the document's one shared polite region speaks
+const announcer = useOgeLiveAnnouncer();
+
+const archive = () => {
+  announcer.announce('3 items archived');
+  // errors interrupt: the assertive region
+  // announcer.announce('Archive failed', 'assertive');
+};`,
+      jsx: `<OgeButton text="Archive 3 items" onClick={archive} />`,
+    }),
+  },
 ];

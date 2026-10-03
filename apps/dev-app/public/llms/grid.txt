@@ -136,6 +136,7 @@ _Sorting, filtering & search_
 | `filterPanel` | `boolean` | `false` | Filter panel bar with the filter-builder entry point. |
 | `filterValue` | `model<FilterExpr \| null>` | `null` | Two-way binding of the builder/programmatic filter expression. |
 | `filterDebounce` | `number \| undefined` | `—` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
+| `announcements` | `boolean \| undefined` | `config.announcements (true)` | Speaks sort, filter/search result count (debounced, once the new result arrived), page, group expansion, select-all and blocked-save validation changes through the shared `OgeLiveAnnouncer` regions — texts from the `*Announcement` messages. `false` opts out. |
 
 _Paging & scrolling_
 
@@ -173,7 +174,7 @@ _Editing & rows_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `editing` | `false \| OgeEditingOptions` | `false` | Enables editing: `{ mode: 'cell' \| 'row' \| 'batch' \| 'popup' \| 'form', allow… }`. |
+| `editing` | `false \| OgeEditingOptions` | `false` | Enables editing: `{ mode: 'cell' \| 'row' \| 'batch' \| 'popup' \| 'form', allow… }`. An invalid cell editor sets `aria-invalid` on its control and points `aria-errormessage` / `aria-describedby` at a rendered, visually hidden error text (also the cell’s tooltip); the `form`/`popup` fields wire the same through `<oge-form>`. |
 | `commandButtons` | `readonly OgeCommandButton<T>[] \| undefined` | `—` | Customizes the trailing command column: built-in 'edit'/'delete' plus custom buttons with per-row `visible`. |
 | `rowDragging` | `boolean` | `false` | Drag-handle column for reordering rows. Arrays mutate in place; DataSources handle `rowReordered`. |
 
@@ -428,10 +429,11 @@ _Configuration_
 | Name | Type | Description |
 | --- | --- | --- |
 | `provideOgeGridConfig(config)` | `Provider` | App/component-scoped defaults; deep-merges `messages`. |
-| `OgeGridConfig` | `{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; messages }` | Defaults shown inline. |
+| `OgeGridConfig` | `{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; announcements: true; messages }` | Defaults shown inline. |
 | `OgeGridMessages` | `60+ string keys` | Every user-facing string, incl. aria labels, filter operators, summary patterns — see `OGE_DEFAULT_MESSAGES` in the source. |
 | `messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow` | `string` | Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: `Reorder`, `Detail`, `Select all`, `Reorder row`. The tree list reads `reparentColumnHeader` / `reparentRow` (`Reparent`, `Reparent row`) for its reparenting handle. |
 | `messages.booleanTrueLabel / messages.booleanFalseLabel` | `string` | Screen-reader text of a default-rendered boolean cell (`Yes` / `No`). The visible `booleanTrue` / `booleanFalse` glyph (`✓` / `✗`, also the CSV text) is rendered `aria-hidden`; the label is rendered visually hidden beside it. Columns with a custom `format`, a lookup or a cell template render their own text. Localizing `booleanTrue` / `booleanFalse` to words? Set the labels too — they are announced, the glyph text is not. |
+| `messages.sortAscendingAnnouncement / messages.sortDescendingAnnouncement / messages.sortClearedAnnouncement / messages.rowCountAnnouncement / messages.rowCountOneAnnouncement / messages.pageAnnouncement / messages.groupExpandedAnnouncement / messages.groupCollapsedAnnouncement / messages.rowExpandedAnnouncement / messages.rowCollapsedAnnouncement / messages.selectionCountAnnouncement / messages.validationErrorAnnouncement` | `string` | Live-announcement patterns, `{placeholder}`-interpolated. Defaults: `Sorted by {column}, ascending` / `descending`, `Sort cleared`, `{count} rows` / `{count} row`, `Page {n} of {total}`, `Group {value} expanded` / `collapsed`, `{value} expanded` / `collapsed` (tree list), `{count} rows selected` and `{column}: {error}` (spoken assertively when a save is blocked by an invalid editor). |
 | `OGE_STATE_STORAGE / OgeStateStorage` | `InjectionToken` | Pluggable sync/async persistence backend for `stateKey`. |
 
 _Filter builder_

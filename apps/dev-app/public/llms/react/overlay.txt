@@ -235,13 +235,33 @@ _OgeToastRef_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `<OgeToastProvider>` | `component` | Hosts the toast regions and the live-region announcers; mount once near the app root. The React counterpart of the root-provided Angular service. |
+| `<OgeToastProvider>` | `component` | Hosts the toast regions (announcements go through the shared `useOgeLiveAnnouncer` regions); mount once near the app root. The React counterpart of the root-provided Angular service. |
 | `OgeToastSeverity` | `'info' \| 'success' \| 'warning' \| 'error'` | Toast severity. |
 | `OgeToastPosition` | `'top-start' \| 'top-center' \| 'top-end' \| 'bottom-start' \| 'bottom-center' \| 'bottom-end'` | Logical, RTL-aware region positions. |
 | `OgeToastCloseReason` | `'timeout' \| 'closeButton' \| 'click' \| 'action' \| 'api' \| 'clear'` | Why a toast closed. |
 | `OgeToastAction<D>` | `{ text: string; handler?: (event: OgeToastActionEvent<D>) => void }` | Inline action button. |
 | `OgeToastSlotContext<D>` | `{ close: () => void; data?: D }` | Argument of `renderContent`. |
 | `Config keys` | `toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates` | Defaults via `<OgeOverlayConfigProvider>`; strings via `messages.toastClose/toastRegionLabel/toastCountBadge`. |
+
+### OgeLiveAnnouncer (useOgeLiveAnnouncer)
+
+#### Methods
+
+_OgeLiveAnnouncerHandle_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `announce(message: string, options?: OgeLiveAnnounceOptions \| OgeLivePoliteness): void` | `void` | Speaks `message` through the polite (default) or assertive region. Written after `delay` ms (default 100) — a newer message to the same region inside that window supersedes it (debounce); the identical message inside a second is dropped; the region clears after `clearAfter` ms (default 5000) so a repeat is announced again. Empty text and the server are no-ops. |
+| `clear(politeness?: OgeLivePoliteness): void` | `void` | Empties one region (or both) and drops anything still pending. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `useOgeLiveAnnouncer(): OgeLiveAnnouncerHandle` | `hook` | Stable handle from `@oge-ui/react-overlay`; needs no provider. The document is resolved per call, never during render, so the hook is SSR-safe — call `announce` from handlers or effects. |
+| `OgeLivePoliteness` | `'polite' \| 'assertive'` | Which of the two shared regions speaks. |
+| `OgeLiveAnnounceOptions` | `{ politeness?: OgeLivePoliteness; delay?: number; clearAfter?: number }` | `delay: 0` writes synchronously — for a caller that already cleared and waited itself (the toast engine). |
+| `OgeLiveAnnouncerCore / getOgeLiveAnnouncer(doc?)` | `@oge-ui/behavior` | The framework-free engine both layers wrap: one polite and one assertive visually hidden `aria-live` region per document (`.oge-live-announcer[data-oge-live-announcer]`, no role, created on the first announcement, never inerted by a modal’s `inertBackground`). Every OGE announcement — grid, tree list, toast, Gantt, uploader — goes through it; components never render their own live regions. |
 
 ### <OgeTooltip>
 
@@ -914,6 +934,29 @@ export function ImportButton() {
   };
   return (
     <OgeButton text="Import" onClick={report} />
+  );
+}
+```
+
+### Live announcements without a toast
+
+```ts
+'use client';
+
+import { OgeButton } from '@oge-ui/react-buttons';
+import { useOgeLiveAnnouncer } from '@oge-ui/react-overlay';
+
+export function ArchiveButton() {
+  // no provider, no markup: the document's one shared polite region speaks
+  const announcer = useOgeLiveAnnouncer();
+
+  const archive = () => {
+    announcer.announce('3 items archived');
+    // errors interrupt: the assertive region
+    // announcer.announce('Archive failed', 'assertive');
+  };
+  return (
+    <OgeButton text="Archive 3 items" onClick={archive} />
   );
 }
 ```

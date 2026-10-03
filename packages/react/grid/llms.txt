@@ -108,6 +108,7 @@ _Sorting, filtering & search_
 | `filterValue / defaultFilterValue` | `FilterExpr \| null` | `null` | The filter-builder expression — controlled with `onFilterValueChange`. Combines with the filter row, the header filters and the search panel. |
 | `searchPanel` | `boolean \| OgeSearchPanelOptions` | `false` | Global search box above the grid. |
 | `filterDebounce` | `number` | `config.filterDebounce (300)` | Debounce for text filter inputs, in ms. Set to `0` in tests. |
+| `announcements` | `boolean` | `config.announcements (true)` | Speaks sort, filter/search result count (debounced, once the new result arrived), page, group expansion, select-all and blocked-save validation changes through the shared `useOgeLiveAnnouncer` regions — texts from the `*Announcement` messages. `false` opts out. |
 
 _Paging & scrolling_
 
@@ -155,7 +156,7 @@ _Editing & rows_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `editing` | `false \| OgeEditingOptions` | `false` | Enables editing: `{ mode: 'cell' \| 'row' \| 'batch' \| 'popup' \| 'form', allowUpdating, allowAdding, allowDeleting, confirmDelete, formItems, formColCount }`. `form` replaces the row with an inline `<OgeForm>`; `popup` opens the same form in a modal. |
+| `editing` | `false \| OgeEditingOptions` | `false` | Enables editing: `{ mode: 'cell' \| 'row' \| 'batch' \| 'popup' \| 'form', allowUpdating, allowAdding, allowDeleting, confirmDelete, formItems, formColCount }`. `form` replaces the row with an inline `<OgeForm>`; `popup` opens the same form in a modal. An invalid cell editor sets `aria-invalid` on its control and points `aria-errormessage` / `aria-describedby` at a rendered, visually hidden error text (also the cell’s tooltip); the `form`/`popup` fields wire the same through `<OgeForm>`. |
 | `commandButtons` | `readonly OgeCommandButton<T>[]` | `undefined` | Customizes the trailing command column: reorder or mix the built-in `'edit'` / `'delete'` buttons with your own. Omitted, the column shows the built-ins the `editing` permissions allow. |
 | `highlightChanges` | `boolean` | `false` | Briefly flashes cells whose value changed under a live-updating source; consecutive updates to one cell restart the animation. |
 | `rowDragging` | `boolean` | `false` | Drag-handle column for reordering rows. With plain-array data the array is mutated in place; DataSource consumers handle `onRowReordered` instead. |
@@ -387,6 +388,7 @@ _Configuration_
 | `OgeGridMessages / OGE_DEFAULT_GRID_MESSAGES` | `interface / const` | Every user-facing string, single-sourced in `@oge-ui/behavior` with the Angular grid. |
 | `messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow` | `string` | Accessible names of the row-drag, master-detail and selection header cells and of a row’s drag handle. Defaults: `Reorder`, `Detail`, `Select all`, `Reorder row`. The tree list reads `reparentColumnHeader` / `reparentRow` (`Reparent`, `Reparent row`) for its reparenting handle. |
 | `messages.booleanTrueLabel / messages.booleanFalseLabel` | `string` | Screen-reader text of a default-rendered boolean cell (`Yes` / `No`). The visible `booleanTrue` / `booleanFalse` glyph (`✓` / `✗`, also the CSV text) is rendered `aria-hidden`; the label is rendered visually hidden beside it. Columns with a custom `format`, a lookup or a cell template render their own text. Localizing `booleanTrue` / `booleanFalse` to words? Set the labels too — they are announced, the glyph text is not. |
+| `messages.sortAscendingAnnouncement / messages.sortDescendingAnnouncement / messages.sortClearedAnnouncement / messages.rowCountAnnouncement / messages.rowCountOneAnnouncement / messages.pageAnnouncement / messages.groupExpandedAnnouncement / messages.groupCollapsedAnnouncement / messages.rowExpandedAnnouncement / messages.rowCollapsedAnnouncement / messages.selectionCountAnnouncement / messages.validationErrorAnnouncement` | `string` | Live-announcement patterns, `{placeholder}`-interpolated. Defaults: `Sorted by {column}, ascending` / `descending`, `Sort cleared`, `{count} rows` / `{count} row`, `Page {n} of {total}`, `Group {value} expanded` / `collapsed`, `{value} expanded` / `collapsed` (tree list), `{count} rows selected` and `{column}: {error}` (spoken assertively when a save is blocked by an invalid editor). |
 
 ## Demos
 

@@ -84,6 +84,13 @@ export const OGE_GRID_API: ApiSections = {
           description:
             'Debounce for text filter inputs, in ms. Set to <code>0</code> in tests.',
         },
+        {
+          name: 'announcements',
+          type: 'boolean | undefined',
+          default: 'config.announcements (true)',
+          description:
+            'Speaks sort, filter/search result count (debounced, once the new result arrived), page, group expansion, select-all and blocked-save validation changes through the shared <code>OgeLiveAnnouncer</code> regions — texts from the <code>*Announcement</code> messages. <code>false</code> opts out.',
+        },
       ],
     },
     {
@@ -214,7 +221,7 @@ export const OGE_GRID_API: ApiSections = {
           type: 'false | OgeEditingOptions',
           default: 'false',
           description:
-            "Enables editing: <code>{ mode: 'cell' | 'row' | 'batch' | 'popup' | 'form', allow… }</code>.",
+            "Enables editing: <code>{ mode: 'cell' | 'row' | 'batch' | 'popup' | 'form', allow… }</code>. An invalid cell editor sets <code>aria-invalid</code> on its control and points <code>aria-errormessage</code> / <code>aria-describedby</code> at a rendered, visually hidden error text (also the cell’s tooltip); the <code>form</code>/<code>popup</code> fields wire the same through <code>&lt;oge-form&gt;</code>.",
         },
         {
           name: 'commandButtons',
@@ -1078,7 +1085,7 @@ export const OGE_GRID_TYPES_API: ApiSections = {
         },
         {
           name: 'OgeGridConfig',
-          type: '{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; messages }',
+          type: '{ rowHeight: 36; detailRowHeight: 200; filterDebounce: 300; overscan: 6; columnMinWidth: 120; pinnedDefaultWidth: 150; headerFilterValueLimit: 200; allowUnsorting: true; announcements: true; messages }',
           description: 'Defaults shown inline.',
         },
         {
@@ -1104,6 +1111,12 @@ export const OGE_GRID_TYPES_API: ApiSections = {
           type: 'string',
           description:
             'Screen-reader text of a default-rendered boolean cell (<code>Yes</code> / <code>No</code>). The visible <code>booleanTrue</code> / <code>booleanFalse</code> glyph (<code>✓</code> / <code>✗</code>, also the CSV text) is rendered <code>aria-hidden</code>; the label is rendered visually hidden beside it. Columns with a custom <code>format</code>, a lookup or a cell template render their own text. Localizing <code>booleanTrue</code> / <code>booleanFalse</code> to words? Set the labels too — they are announced, the glyph text is not.',
+        },
+        {
+          name: 'messages.sortAscendingAnnouncement / messages.sortDescendingAnnouncement / messages.sortClearedAnnouncement / messages.rowCountAnnouncement / messages.rowCountOneAnnouncement / messages.pageAnnouncement / messages.groupExpandedAnnouncement / messages.groupCollapsedAnnouncement / messages.rowExpandedAnnouncement / messages.rowCollapsedAnnouncement / messages.selectionCountAnnouncement / messages.validationErrorAnnouncement',
+          type: 'string',
+          description:
+            'Live-announcement patterns, <code>{placeholder}</code>-interpolated. Defaults: <code>Sorted by {column}, ascending</code> / <code>descending</code>, <code>Sort cleared</code>, <code>{count} rows</code> / <code>{count} row</code>, <code>Page {n} of {total}</code>, <code>Group {value} expanded</code> / <code>collapsed</code>, <code>{value} expanded</code> / <code>collapsed</code> (tree list), <code>{count} rows selected</code> and <code>{column}: {error}</code> (spoken assertively when a save is blocked by an invalid editor).',
         },
         {
           name: 'OGE_STATE_STORAGE / OgeStateStorage',

@@ -7,6 +7,7 @@ import { createElement, useState, type ReactNode } from 'react';
 import { OgeButton } from '@oge-ui/react-buttons';
 import {
   OgeToastProvider,
+  useOgeLiveAnnouncer,
   useOgeToasts,
   type OgeToastPosition,
   type OgeToastSeverity,
@@ -16,7 +17,7 @@ import { ReactHost } from '../../shared/react-host';
 import { OVERLAY_TOAST_DEMOS } from './toast-snippets';
 
 /**
- * TOC of the React view — the same five sections as the Angular toast page
+ * TOC of the React view — the same six sections as the Angular toast page
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_OVERLAY_TOAST_SECTIONS = [
@@ -25,6 +26,7 @@ export const REACT_OVERLAY_TOAST_SECTIONS = [
   'Sticky, action & undo',
   'Promise toasts',
   'Coalescing & progress',
+  'Live announcements without a toast',
 ] as const;
 
 const SEVERITIES: OgeToastSeverity[] = ['success', 'info', 'warning', 'error'];
@@ -184,8 +186,29 @@ function CoalesceDemo(): ReactNode {
   );
 }
 
+function AnnouncerDemo(): ReactNode {
+  const announcer = useOgeLiveAnnouncer();
+  const [announced, setAnnounced] = useState('');
+  return row(
+    createElement(OgeButton, {
+      key: 'archive',
+      text: 'Archive 3 items',
+      stylingMode: 'outlined',
+      onClick: () => {
+        announcer.announce('3 items archived');
+        setAnnounced('Announced: “3 items archived”');
+      },
+    }),
+    createElement(
+      'span',
+      { key: 'state', className: 'text-sm opacity-70' },
+      announced,
+    ),
+  );
+}
+
 /**
- * The React half of the toast page — the same five demo sections as the
+ * The React half of the toast page — the same six demo sections as the
  * Angular page, with the same example content, rendered as real React trees
  * inside `/components/overlay/toast` when the reader has chosen React
  * (ADR 0002).
@@ -249,6 +272,16 @@ function CoalesceDemo(): ReactNode {
     >
       <app-react-host [render]="coalesce" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['useOgeLiveAnnouncer', 'polite / assertive', 'debounced']"
+      heading="Live announcements without a toast"
+      description="Toasts, the grid, the tree list, the Gantt and the uploader all speak through <code>useOgeLiveAnnouncer()</code> — one polite and one assertive visually hidden region per document, created on first use, no provider needed. Use it for your own status messages: identical messages within a second are dropped, a newer one inside the write delay wins, and the region clears after a few seconds so a repeat is heard again. SSR-safe — call it from handlers or effects."
+      [code]="demos[5].source"
+      language="tsx"
+    >
+      <app-react-host [render]="announcer" />
+    </app-demo-card>
   `,
 })
 export class ReactOverlayToastDemos {
@@ -258,4 +291,5 @@ export class ReactOverlayToastDemos {
   protected readonly undo = () => withProvider(UndoDemo);
   protected readonly promise = () => withProvider(PromiseDemo);
   protected readonly coalesce = () => withProvider(CoalesceDemo);
+  protected readonly announcer = () => createElement(AnnouncerDemo);
 }

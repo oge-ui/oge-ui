@@ -7,6 +7,7 @@ import { OgeSelectBox } from '@oge-ui/inputs/select-box';
 import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import {
   OgeAnchoredPanel,
+  OgeLiveAnnouncer,
   OgeMenuList,
   OgeModal,
   OgeModalFooter,
@@ -52,6 +53,7 @@ import {
   sanitizeTreeListStateSnapshot,
 } from '@oge-ui/core';
 import {
+  OgeGridAnnouncements,
   OgeTreeListCore,
   allHeaderValuesSelected,
   effectiveFilterOperator,
@@ -912,6 +914,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   protected toggleSelectAll(): void {
     if (untracked(this.allSelected)) this.clearSelection();
     else this.selectAll();
+    this.announcer.selectionCount(untracked(this.store.selection.count));
   }
 
   /**
@@ -2125,6 +2128,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       rowRemoved: (event) => this.rowRemoved.emit(event),
       editCanceled: () => this.editCanceled.emit(),
       dataError: (error) => this.dataErrorOccurred.emit({ error }),
+      validationFailed: (invalid) => this.announceInvalidEditor(invalid),
     },
     // saved rows may live in the lazy child cache — drop it so the reload
     // re-fetches open levels and the UI shows the persisted values
@@ -2480,11 +2484,79 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     return untracked(() => this.core.getVisibleRows());
   }
 
+  // --- live announcements --------------------------------------------------
+
+  /**
+   * Speaks sort, filter/search result count, page, row expansion,
+   * select-all and blocked-save validation changes through the shared
+   * `OgeLiveAnnouncer` (texts from `messages`). `undefined` falls back to the
+   * grid config's `announcements` (default `true`).
+   */
+  readonly announcements = input<boolean | undefined>(undefined);
+
+  private readonly liveAnnouncer = inject(OgeLiveAnnouncer);
+
+  /** The grid family's shared announcement rules (`@oge-ui/behavior`). */
+  private readonly announcer = new OgeGridAnnouncements({
+    announce: (message, options) =>
+      this.liveAnnouncer.announce(message, options),
+    messages: () => untracked(this.msg),
+    enabled: () => untracked(this.announcements) ?? this.config.announcements,
+    caption: (field) => untracked(() => this.captionOf(field)),
+  });
+
+  private readonly announcementEffect = effect(() => {
+    const snapshot = {
+      sort: this.store.sort.descriptors(),
+      filterKey: JSON.stringify([
+        this.store.filter.combinedExpr(),
+        this.store.filter.searchText().trim(),
+      ]),
+      // the tree filters client-side: a new flat list is the new result
+      resultToken: this.flatNodes(),
+      loading: this.adapter.loading(),
+      rowCount: this.totalCount(),
+      paging: this.effPageSize() != null,
+      pageIndex: this.pageIndex(),
+      pageCount: this.pageCount(),
+    };
+    untracked(() => this.announcer.observe(snapshot));
+  });
+
+  private captionOf(field: string): string {
+    const column = this.resolvedColumns().find(
+      (candidate) => candidate.field === field,
+    );
+    return column?.caption ?? humanize(field);
+  }
+
+  /** The row's name in announcements: its first column's display text. */
+  private rowLabel(node: DataRowNode<T>): string {
+    const column = this.resolvedColumns().find((candidate) => candidate.field);
+    return column ? this.cellDisplayText(node, column) : String(node.key);
+  }
+
+  /** Announces the first editor that blocked a commit, with its error text. */
+  private announceInvalidEditor(
+    invalid: readonly { key: RowKey; field: string }[],
+  ): void {
+    const first = invalid[0];
+    if (!first) return;
+    const control = untracked(this.editingModel.activeControls).get(
+      `${String(first.key)}::${first.field}`,
+    );
+    const error = control ? this.editorErrorText(control) : null;
+    this.announcer.validationFailed(
+      untracked(() => this.captionOf(first.field)),
+      error ?? untracked(this.msg).invalidError,
+    );
+  }
+
   // --- expansion actions ----------------------------------------------------
 
   private setRowExpanded(node: DataRowNode<T>, expand: boolean): void {
     // consumers may veto UI-driven toggles (imperative API stays silent)
-    untracked(() =>
+    const toggled = untracked(() =>
       this.core.requestToggle(node, expand, {
         expanding: (event) => this.rowExpanding.emit(event),
         collapsing: (event) => this.rowCollapsing.emit(event),
@@ -2492,6 +2564,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         collapsed: (event) => this.rowCollapsed.emit(event),
       }),
     );
+    if (toggled) {
+      this.announcer.rowToggled(
+        untracked(() => this.rowLabel(node)),
+        expand,
+      );
+    }
   }
 
   protected onExpanderClick(node: DataRowNode<T>, event: Event): void {

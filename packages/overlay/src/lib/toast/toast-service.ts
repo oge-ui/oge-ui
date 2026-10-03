@@ -23,6 +23,7 @@ import {
   type OgeToastRegion,
 } from '@oge-ui/behavior';
 import { OGE_OVERLAY_CONFIG } from '../config';
+import { OgeLiveAnnouncer } from '../live-announcer/live-announcer';
 import type {
   OgeToastAction,
   OgeToastCloseReason,
@@ -41,8 +42,8 @@ export type ToastEntry = OgeToastEntry<OgeToastOptions>;
 
 /**
  * Internal host rendered once into `document.body`: one fixed region per
- * used position plus the two permanently-mounted live-region announcers.
- * Not exported from the package barrel.
+ * used position. Announcements go through the shared `OgeLiveAnnouncer`
+ * regions, not markup of this host. Not exported from the package barrel.
  */
 @Component({
   selector: 'oge-toast-host',
@@ -228,18 +229,6 @@ export type ToastEntry = OgeToastEntry<OgeToastOptions>;
         }
       </div>
     }
-    <div
-      class="oge-toast-announcer"
-      role="status"
-      aria-live="polite"
-      #polite
-    ></div>
-    <div
-      class="oge-toast-announcer"
-      role="alert"
-      aria-live="assertive"
-      #assertive
-    ></div>
   `,
 })
 export class OgeToastHost {
@@ -355,8 +344,8 @@ export class OgeToastHost {
  *
  * Toasts render in body-appended fixed regions (`--oge-z-toast`, above
  * modals), never take focus, never join the Escape stack, and announce via
- * permanently-mounted hidden live regions (`error` asserts, the rest are
- * polite). Timers pause on hover, focus-within and while the tab is hidden,
+ * the document's shared live regions (`OgeLiveAnnouncer` — `error` asserts,
+ * the rest are polite). Timers pause on hover, focus-within and while the tab is hidden,
  * and always resume with the remaining time.
  *
  * The engine itself — queue, timers, coalescing, announcements — is
@@ -369,6 +358,7 @@ export class OgeToastService {
   private readonly appRef = inject(ApplicationRef);
   private readonly envInjector = inject(EnvironmentInjector);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly announcer = inject(OgeLiveAnnouncer);
 
   private readonly core = new OgeToastCore<OgeToastOptions>({
     defaults: () => ({
@@ -379,9 +369,12 @@ export class OgeToastService {
       coalesceDuplicates: this.config.toastCoalesceDuplicates,
     }),
     onChange: () => this._version.update((v) => v + 1),
+    // The core already waits before it writes, so the shared announcer
+    // writes synchronously (`delay: 0`). Its clear step is not forwarded: the
+    // region is shared, and clearing it would cancel another component's
+    // pending message.
     announce: (mode, text) => {
-      const el = mode === 'assertive' ? this.assertiveEl : this.politeEl;
-      if (el) el.textContent = text;
+      if (text) this.announcer.announce(text, { politeness: mode, delay: 0 });
     },
   });
 
@@ -391,8 +384,6 @@ export class OgeToastService {
   readonly version = this._version.asReadonly();
 
   private hostRef: ComponentRef<OgeToastHost> | null = null;
-  private politeEl: HTMLElement | null = null;
-  private assertiveEl: HTMLElement | null = null;
 
   /** Shows a toast; a bare string becomes an info toast. */
   show<D = unknown>(toast: string | OgeToastOptions<D>): OgeToastRef<D> {
@@ -496,8 +487,6 @@ export class OgeToastService {
     document.body.appendChild(hostElement);
     this.appRef.attachView(hostRef.hostView);
     this.hostRef = hostRef;
-    this.politeEl = hostElement.querySelector('[aria-live="polite"]');
-    this.assertiveEl = hostElement.querySelector('[aria-live="assertive"]');
     this.destroyRef.onDestroy(() => {
       this.core.destroy();
       // When this fires because the app itself is being destroyed, the view

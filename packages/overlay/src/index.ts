@@ -66,6 +66,11 @@ export {
   type OgeModalPlacement,
   type OgeModalSlotContext,
 } from './lib/modal/modal-types';
+export { OgeLiveAnnouncer } from './lib/live-announcer/live-announcer';
+export {
+  type OgeLivePoliteness,
+  type OgeLiveAnnounceOptions,
+} from '@oge-ui/behavior';
 export { OgeToastService, OgeToastRef } from './lib/toast/toast-service';
 export {
   type OgeToastSeverity,

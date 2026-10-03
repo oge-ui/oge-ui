@@ -49,6 +49,7 @@ import {
   sanitizeGridStateSnapshot,
 } from '@oge-ui/core';
 import {
+  OgeGridAnnouncements,
   allRowsSelected,
   deferredToggleExpr,
   keyEqualsExpr,
@@ -150,6 +151,7 @@ import { OgeSelectBox } from '@oge-ui/inputs/select-box';
 import { OgeTextBox } from '@oge-ui/inputs/text-box';
 import {
   OgeAnchoredPanel,
+  OgeLiveAnnouncer,
   OgeMenuList,
   OgeModal,
   OgeModalFooter,
@@ -1318,6 +1320,18 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (kind === 'group') this.store.expansion.toggleGroup(key);
     else this.store.expansion.toggleDetail(key);
     (expanding ? this.rowExpanded : this.rowCollapsed).emit({ key, kind, row });
+    if (kind === 'group') {
+      const group = untracked(this.flatNodes).find(
+        (node): node is GroupRowNode =>
+          node.kind === 'group' && node.key === key,
+      );
+      if (group) {
+        this.announcer.groupToggled(
+          untracked(() => this.groupValueText(group)),
+          expanding,
+        );
+      }
+    }
   }
 
   /** Message shown by `beginCustomLoading()`; `null` while inactive. */
@@ -1404,20 +1418,25 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * keys are materialized.
    */
   selectAll(): void {
+    void this.runSelectAll();
+  }
+
+  /** `selectAll()`'s body; settles once the selection is in place. */
+  private runSelectAll(): Promise<void> {
     if (untracked(this.selectionDeferred)) {
       const field = untracked(this.deferredKeyFieldName);
-      if (!field) return;
+      if (!field) return Promise.resolve();
       const filter = untracked(this.store.loadOptions).filter;
       this.selectionFilter.set(
         filter ?? { type: 'binary', field, op: 'isnotnull' },
       );
-      return;
+      return Promise.resolve();
     }
     if (untracked(this.selectAllMode) === 'page') {
       this.store.selection.replace(untracked(this.dataKeys));
-      return;
+      return Promise.resolve();
     }
-    void this.selectAllPages();
+    return this.selectAllPages();
   }
 
   /** Clears the selection (deferred mode: resets `selectionFilter`). */
@@ -2800,8 +2819,20 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Select-all works on the current filtered set; scope via `selectAllMode`. */
   protected toggleSelectAll(): void {
-    if (untracked(this.allSelected)) this.clearSelection();
-    else this.selectAll();
+    const announce = (): void =>
+      this.announcer.selectionCount(
+        untracked(this.selectionDeferred)
+          ? untracked(this.selectionFilter)
+            ? untracked(this.totalCount)
+            : 0
+          : untracked(this.store.selection.count),
+      );
+    if (untracked(this.allSelected)) {
+      this.clearSelection();
+      announce();
+    } else {
+      void this.runSelectAll().then(announce);
+    }
   }
 
   /** Loads the full filtered set (paging ignored) and selects every key. */
@@ -3161,9 +3192,65 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       rowRemoved: (event) => this.rowRemoved.emit(event),
       editCanceled: () => this.editCanceled.emit(),
       dataError: (error) => this.dataErrorOccurred.emit({ error }),
+      validationFailed: (invalid) => this.announceInvalidEditor(invalid),
     },
     reload: () => this.adapter.reload(),
   });
+
+  // --- live announcements --------------------------------------------------
+
+  /**
+   * Speaks sort, filter/search result count, page, group expansion,
+   * select-all and blocked-save validation changes through the shared
+   * `OgeLiveAnnouncer` (texts from `messages`). `undefined` falls back to the
+   * config's `announcements` (default `true`).
+   */
+  readonly announcements = input<boolean | undefined>(undefined);
+
+  private readonly liveAnnouncer = inject(OgeLiveAnnouncer);
+
+  /** The shared announcement rules (`@oge-ui/behavior`). */
+  private readonly announcer = new OgeGridAnnouncements({
+    announce: (message, options) =>
+      this.liveAnnouncer.announce(message, options),
+    messages: () => untracked(this.msg),
+    enabled: () => untracked(this.announcements) ?? this.config.announcements,
+    caption: (field) => untracked(() => this.groupCaption(field)),
+  });
+
+  private readonly announcementEffect = effect(() => {
+    const windowed = this.windowed();
+    const snapshot = {
+      sort: this.store.sort.descriptors(),
+      filterKey: JSON.stringify([
+        this.store.filter.combinedExpr(),
+        this.store.filter.searchText().trim(),
+      ]),
+      resultToken: windowed ? this.adapter.windowRows() : this.adapter.result(),
+      loading: windowed ? this.adapter.windowLoading() : this.adapter.loading(),
+      rowCount: this.totalCount(),
+      paging: this.store.paging.pageSize() != null,
+      pageIndex: this.store.paging.pageIndex(),
+      pageCount: this.pageCount(),
+    };
+    untracked(() => this.announcer.observe(snapshot));
+  });
+
+  /** Announces the first editor that blocked a commit, with its error text. */
+  private announceInvalidEditor(
+    invalid: readonly { key: RowKey; field: string }[],
+  ): void {
+    const first = invalid[0];
+    if (!first) return;
+    const control = untracked(this.activeControls).get(
+      `${String(first.key)}::${first.field}`,
+    );
+    const error = control ? this.editorErrorText(control) : null;
+    this.announcer.validationFailed(
+      untracked(() => this.groupCaption(first.field)),
+      error ?? untracked(this.msg).invalidError,
+    );
+  }
 
   protected readonly editingOptions = this.editingModel.editingOptions;
   protected readonly editMode = this.editingModel.editMode;

@@ -165,6 +165,13 @@ export const OGE_TREE_LIST_API: ApiSections = {
           description: 'Debounce for text filter inputs.',
         },
         {
+          name: 'announcements',
+          type: 'boolean | undefined',
+          default: 'config.announcements (true)',
+          description:
+            'Speaks sort, filter/search result count (debounced, once the new result arrived), page, row expansion, select-all and blocked-save validation changes through the shared <code>OgeLiveAnnouncer</code> regions — texts from the <code>*Announcement</code> messages. <code>false</code> opts out.',
+        },
+        {
           name: 'paging',
           type: 'false | OgePagingOptions',
           default: 'false',

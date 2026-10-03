@@ -45,6 +45,10 @@ export {
   type OgeToastSlotContext,
 } from './lib/toast';
 export {
+  useOgeLiveAnnouncer,
+  type OgeLiveAnnouncerHandle,
+} from './lib/live-announcer';
+export {
   OgeOverlayConfigProvider,
   useOgeOverlayConfig,
   type OgeOverlayConfig,
@@ -74,4 +78,6 @@ export type {
   OgeToastAction,
   OgeToastActionEvent,
   OgeToastClosedEvent,
+  OgeLivePoliteness,
+  OgeLiveAnnounceOptions,
 } from '@oge-ui/behavior';

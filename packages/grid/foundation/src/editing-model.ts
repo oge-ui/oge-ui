@@ -5,6 +5,7 @@ import {
   OgeGridEditingCore,
   type OgeGridEditorBridge,
   type OgeGridEditorState,
+  type OgeGridInvalidEditor,
 } from '@oge-ui/behavior';
 import type { ColumnSource, ResolvedColumn } from './column-model';
 import type { OgeEditingSlice, OgeEditingOptions } from './editing-slice';
@@ -70,6 +71,8 @@ export interface EditingModelDeps<
     editCanceled?(): void;
     /** A DataSource write failed while applying a save batch. */
     dataError?(error: unknown): void;
+    /** A commit was blocked by these invalid editors (errors just revealed). */
+    validationFailed?(invalid: readonly OgeGridInvalidEditor[]): void;
   };
   /** Re-runs the current load after a save reached the DataSource. */
   reload(): void;

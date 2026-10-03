@@ -340,6 +340,13 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   searchPanel?: boolean | OgeSearchPanelOptions;
   /** Debounce for text filter inputs, in ms. Set to 0 in tests. */
   filterDebounce?: number;
+  /**
+   * Speaks sort, filter/search result count, page, group expansion,
+   * select-all and blocked-save validation changes through the shared live
+   * announcer (`useOgeLiveAnnouncer`, texts from `messages`). `undefined`
+   * falls back to the config's `announcements` (default `true`).
+   */
+  announcements?: boolean;
   /** Shows the drop area for drag-and-drop row grouping. */
   groupPanel?: boolean;
   /** Initial/programmatic grouping by field names (also drivable via the group panel). */

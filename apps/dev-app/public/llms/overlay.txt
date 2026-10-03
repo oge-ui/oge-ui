@@ -92,8 +92,8 @@ Predictable wrong guesses, and what to write instead.
 
 `@oge-ui/overlay`
 
-- values: `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
-- types: `OgeAnchoredPanelOptions`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopupAlign`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`
+- values: `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_MODAL_DATA`, `OGE_OVERLAY_CONFIG`, `OgeAnchoredPanel`, `OgeContextMenu`, `OgeLiveAnnouncer`, `OgeMenuList`, `OgeModal`, `OgeModalFooter`, `OgeModalHeaderActions`, `OgeModalRef`, `OgeModalService`, `OgeModalTitle`, `OgePopup`, `OgeToastRef`, `OgeToastService`, `OgeTooltip`, `getTabbableElements`, `isTopOverlay`, `lockBodyScroll`, `provideOgeOverlayConfig`, `pushOverlay`, `removeOverlay`, `resolvePopupPosition`, `trapTabKey`, `unlockBodyScroll`
+- types: `OgeAnchoredPanelOptions`, `OgeLiveAnnounceOptions`, `OgeLivePoliteness`, `OgeMenuCloseRequestEvent`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenuItemTemplateContext`, `OgeMenuListItemClickEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalOpenConfig`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalSlotContext`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgePopupAlign`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeRect`, `OgeResolvedPopupPosition`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastOptions`, `OgeToastPosition`, `OgeToastPromiseOptions`, `OgeToastSeverity`, `OgeToastSlotContext`, `OgeToastUpdate`
 
 ## API reference
 
@@ -242,6 +242,26 @@ _OgeToastRef_
 | `OgeToastAction<D>` | `{ text: string; handler?: (event: OgeToastActionEvent<D>) => void }` | Inline action button. |
 | `OgeToastSlotContext<D>` | `{ $implicit: () => void; data?: D }` | Context of a `template` toast body. |
 | `Config keys` | `toastPosition · toastDisplayTime · toastMaxVisible · toastProgressBar · toastCoalesceDuplicates` | Defaults via `provideOgeOverlayConfig()`; strings via `messages.toastClose/toastRegionLabel/toastCountBadge`. |
+
+### OgeLiveAnnouncer
+
+#### Methods
+
+_OgeLiveAnnouncer_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `announce(message: string, options?: OgeLiveAnnounceOptions \| OgeLivePoliteness): void` | `void` | Speaks `message` through the polite (default) or assertive region. Written after `delay` ms (default 100) — a newer message to the same region inside that window supersedes it (debounce); the identical message inside a second is dropped; the region clears after `clearAfter` ms (default 5000) so a repeat is announced again. Empty text and the server are no-ops. |
+| `clear(politeness?: OgeLivePoliteness): void` | `void` | Empties one region (or both) and drops anything still pending. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `inject(OgeLiveAnnouncer)` | `Injectable({ providedIn: 'root' })` | Service in `@oge-ui/overlay` — the lowest Angular package the grid, tree list, Gantt, uploader and toast share. A no-op on the server platform. |
+| `OgeLivePoliteness` | `'polite' \| 'assertive'` | Which of the two shared regions speaks. |
+| `OgeLiveAnnounceOptions` | `{ politeness?: OgeLivePoliteness; delay?: number; clearAfter?: number }` | `delay: 0` writes synchronously — for a caller that already cleared and waited itself (the toast engine). |
+| `OgeLiveAnnouncerCore / getOgeLiveAnnouncer(doc?)` | `@oge-ui/behavior` | The framework-free engine both layers wrap: one polite and one assertive visually hidden `aria-live` region per document (`.oge-live-announcer[data-oge-live-announcer]`, no role, created on the first announcement, never inerted by a modal’s `inertBackground`). Every OGE announcement — grid, tree list, toast, Gantt, uploader — goes through it; components never render their own live regions. |
 
 ### OgeTooltip — `<[ogeTooltip]>`
 
@@ -796,6 +816,33 @@ export class Demo {
 
   private restore(): void {
     console.log('restored');
+  }
+}
+```
+
+### Announcer
+
+```ts
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { OgeButton } from '@oge-ui/buttons';
+import { OgeLiveAnnouncer } from '@oge-ui/overlay';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-button text="Archive 3 items" (clicked)="archive()" />
+  `,
+})
+export class Demo {
+  private readonly announcer = inject(OgeLiveAnnouncer);
+
+  // no toast, no markup: the document's one shared polite region speaks
+  protected archive(): void {
+    this.announcer.announce('3 items archived');
+    // errors interrupt: the assertive region
+    // this.announcer.announce('Archive failed', 'assertive');
   }
 }
 ```

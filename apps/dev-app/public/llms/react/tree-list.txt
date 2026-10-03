@@ -129,6 +129,7 @@ _Filtering & paging_
 | `filterMode` | `TreeFilterMode` | `'withAncestors'` | Matches keep their ancestors; `'fullBranch'` also keeps all descendants. |
 | `filterValue / defaultFilterValue` | `FilterExpr \| null` | `undefined` | The filter expression (builder) — controlled with `onFilterValueChange`. |
 | `filterDebounce` | `number` | `—` | Debounce for text filter inputs. |
+| `announcements` | `boolean` | `config.announcements (true)` | Speaks sort, filter/search result count (debounced, once the new result arrived), page, row expansion, select-all and blocked-save validation changes through the shared `useOgeLiveAnnouncer` regions — texts from the `*Announcement` messages. `false` opts out. |
 | `paging` | `false \| OgePagingOptions` | `false` | Pages the visible (flattened) rows client-side; paging wins over `virtualScroll`. |
 | `sortable / sorting` | `boolean \| 'single' \| 'multi' / OgeSortingOptions` | `true` | Sibling-scoped, multi-column by default. |
 
