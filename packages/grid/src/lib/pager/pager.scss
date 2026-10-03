@@ -1,3 +1,5 @@
+@use '../styles/tokens';
+
 // The pager's stylesheet, shared verbatim by the React grid's `styles.scss`
 // (ADR 0001: one stylesheet per family, compiled by both render layers).
 .oge-pager {
@@ -75,6 +77,55 @@
   margin-inline-start: auto;
   color: var(--oge-muted-color);
   font-size: 12px;
+}
+
+.oge-pager-btn:focus-visible {
+  @include tokens.focus-ring;
+}
+
+.oge-pager-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--oge-muted-color);
+}
+
+.oge-pager-input-field {
+  width: 3.5em;
+  padding: 2px 6px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-pager-current {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .oge-pager-btn:disabled {
+    color: GrayText;
+  }
+
+  .oge-pager-input-field {
+    border-color: CanvasText;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

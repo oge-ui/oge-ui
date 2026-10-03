@@ -15,18 +15,32 @@ export const OGE_AUTO_FIT_SLACK = 2;
  * `overflow: hidden`, so their scroll width is the natural content width
  * plus padding), plus a little slack. Only *rendered* cells count — a
  * virtualized grid fits to the visible window, like Excel's double-click.
- * Returns `null` when nothing could be measured (jsdom, a hidden grid).
+ * `caption` is the header's own clipping caption element, whose hidden
+ * overflow is added to the header's width. Returns `null` when nothing
+ * could be measured (jsdom, a hidden grid).
  */
 export function ogeMeasureAutoWidth(
   header: Element | null,
   cells: Iterable<Element>,
+  caption: Element | null = null,
 ): number | null {
   let widest = 0;
-  const measure = (element: Element): void => {
-    const width = (element as HTMLElement).scrollWidth ?? 0;
+  const measure = (element: Element, extra = 0): void => {
+    const width = ((element as HTMLElement).scrollWidth ?? 0) + extra;
     if (width > widest) widest = width;
   };
-  if (header) measure(header);
+  // a header caption clips itself (ellipsis inside the flex row), so the
+  // header's own scroll width misses what the caption hides
+  if (header) {
+    const hidden = caption
+      ? Math.max(
+          0,
+          ((caption as HTMLElement).scrollWidth ?? 0) -
+            ((caption as HTMLElement).clientWidth ?? 0),
+        )
+      : 0;
+    measure(header, hidden);
+  }
   for (const cell of cells) measure(cell);
   return widest > 0 ? Math.ceil(widest) + OGE_AUTO_FIT_SLACK : null;
 }

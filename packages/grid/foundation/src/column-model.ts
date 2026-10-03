@@ -1,5 +1,5 @@
 import { computed, type TemplateRef } from '@angular/core';
-import type { ValidatorFn } from '@angular/forms';
+import type { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
 import {
   adaptiveHiddenColumnIds,
   ogeGridBandRow,
@@ -71,6 +71,8 @@ export interface ColumnSource<T = unknown> {
   readonly required: () => boolean;
   /** Extra Angular validators applied to the editor control. */
   readonly validators: () => readonly ValidatorFn[] | undefined;
+  /** Async Angular validators applied to the editor control. */
+  readonly asyncValidators?: () => readonly AsyncValidatorFn[] | undefined;
   readonly cellTemplate: () => { templateRef: NgTemplateSlot } | undefined;
   readonly headerTemplate: () => { templateRef: NgTemplateSlot } | undefined;
   readonly editTemplate: () => { templateRef: NgTemplateSlot } | undefined;

@@ -1,5 +1,7 @@
 @use '../styles/tokens';
 @use '../styles/structure';
+// the overflow hint (cellHintEnabled) is the overlay tooltip's bubble
+@use '../../../../overlay/src/lib/tooltip/tooltip';
 
 .oge-grid {
   @include tokens.core-tokens;

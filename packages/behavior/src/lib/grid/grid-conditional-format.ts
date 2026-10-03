@@ -3,6 +3,7 @@ import {
   type FilterOperator,
   type RowNode,
 } from '@oge-ui/core';
+import type { OgeDataType } from './grid-columns';
 
 /**
  * Row / cell styling hooks and declarative conditional formatting, shared by
@@ -36,6 +37,15 @@ export function ogeClassList(value: OgeClassValue): string[] {
   return Object.entries(value)
     .filter(([, on]) => !!on)
     .map(([name]) => name);
+}
+
+/** What `cellClass` / `cellSpan` callbacks learn about a column. */
+export interface OgeGridColumnInfo {
+  readonly field: string | undefined;
+  readonly caption: string;
+  readonly dataType: OgeDataType;
+  /** Visible column index. */
+  readonly index: number;
 }
 
 /** A token tone a formatting rule paints with. */
@@ -145,8 +155,8 @@ const EMPTY_FORMAT: OgeConditionalCellFormat = Object.freeze({
 }) as OgeConditionalCellFormat;
 
 /** Whether a format needs the column's value range (bars, scales, icons). */
-export function ogeFormatsNeedRange(
-  formats: readonly OgeConditionalFormat[] | undefined,
+export function ogeFormatsNeedRange<T>(
+  formats: readonly OgeConditionalFormat<T>[] | undefined,
 ): boolean {
   return !!formats?.some((format) => 'type' in format);
 }

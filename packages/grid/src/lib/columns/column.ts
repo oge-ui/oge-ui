@@ -1,5 +1,5 @@
 import { Directive, contentChild, input, model } from '@angular/core';
-import type { ValidatorFn } from '@angular/forms';
+import type { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
 import type {
   FilterExpr,
   FilterOperator,
@@ -11,6 +11,7 @@ import type {
   OgeColumnLookup,
   OgeDataType,
 } from '@oge-ui/grid/foundation';
+import type { OgeConditionalFormat } from '@oge-ui/behavior';
 import { OgeCellTemplate } from '../templates/cell-template';
 import { OgeEditTemplate } from '../templates/edit-template';
 import { OgeHeaderTemplate } from '../templates/header-template';
@@ -75,9 +76,12 @@ export class OgeColumn<T = unknown> {
   /** Initial group level of this column (0 = first). */
   readonly groupIndex = input<number>();
   /**
-   * Date bucket when grouping by this column: `'day'` (the default for
-   * `dataType="date"` — same-day rows share a group whatever their time),
-   * `'month'` or `'year'`. Sent to a server as `LoadOptions.group[].interval`.
+   * Bucket when grouping by this column: for dates `'hour'`, `'day'` (the
+   * default for `dataType="date"` / `"datetime"` — same-day rows share a
+   * group whatever their time), `'week'` (locale's first day of week),
+   * `'month'`, `'quarter'` or `'year'`; for numbers a positive bucket width
+   * (`[groupInterval]="100"` groups 0–99, 100–199, …). Sent to a server as
+   * `LoadOptions.group[].interval`.
    */
   readonly groupInterval = input<GroupInterval>();
   /** Responsive hiding: lower priorities hide first when the grid runs out of width. */
@@ -104,6 +108,23 @@ export class OgeColumn<T = unknown> {
   readonly required = input(false);
   /** Extra Angular validators applied to the editor control. */
   readonly validators = input<readonly ValidatorFn[]>();
+  /**
+   * Async Angular validators (e.g. a server uniqueness check). While one runs
+   * the editor is `aria-busy` and a commit waits for the result; a failure
+   * shows like a sync error. Pastes and fills run them too.
+   */
+  readonly asyncValidators = input<readonly AsyncValidatorFn[]>();
+  /**
+   * Declarative conditional formatting: rules (`{ when, class | style }`),
+   * data bars, colour scales and icon sets — token classes and CSS custom
+   * properties only, so themes and forced colours keep working.
+   */
+  readonly conditionalFormats = input<readonly OgeConditionalFormat<T>[]>();
+  /**
+   * Merges vertically adjacent cells with equal values into one cell
+   * (`aria-rowspan`). Not applied while the grid is virtualized.
+   */
+  readonly mergeCells = input(false);
 
   readonly cellTemplate = contentChild(OgeCellTemplate<T>);
   readonly headerTemplate = contentChild(OgeHeaderTemplate<T>);

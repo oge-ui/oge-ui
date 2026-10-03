@@ -57,11 +57,18 @@ export type OgeCellEditorSurface = 'cell' | 'form' | 'popup';
   host: {
     class: 'oge-editor oge-cell-editor',
     '[class.oge-editor-invalid]': 'invalid()',
+    '[class.oge-editor-pending]': 'pending()',
+    '[attr.aria-busy]': 'pending() ? true : null',
     '[attr.title]': 'errorTitle() || null',
     '(keydown)': 'onKeydown($event)',
     '(focusout)': 'onFocusOut($event)',
   },
   template: `
+    @if (pending() && pendingLabel()) {
+      <span class="oge-sr-only oge-cell-editor-pending">{{
+        pendingLabel()
+      }}</span>
+    }
     @if (errorMessage(); as message) {
       <span class="oge-sr-only oge-cell-editor-error" [id]="errorId">{{
         message
@@ -111,6 +118,18 @@ export type OgeCellEditorSurface = 'cell' | 'form' | 'popup';
             [formControl]="control()"
           />
         }
+        @case ('datetime') {
+          <oge-date-box
+            type="datetime"
+            size="sm"
+            labelMode="hidden"
+            subscriptSizing="none"
+            [fluid]="true"
+            [label]="label()"
+            [invalid]="invalid()"
+            [formControl]="control()"
+          />
+        }
         @default {
           <oge-text-box
             size="sm"
@@ -141,6 +160,13 @@ export class OgeCellEditor {
   readonly invalid = input(false);
   /** Error text mirrored into the host `title` (cell surface). */
   readonly errorTitle = input<string | null>(null);
+  /**
+   * An async validator is running: the host is `aria-busy` and a visually
+   * hidden status (`pendingLabel`) says so; commits wait for the result.
+   */
+  readonly pending = input(false);
+  /** Status text while `pending` (the grid passes `messages.validationPending`). */
+  readonly pendingLabel = input('');
 
   /** Id of the rendered error element — deterministic per instance (SSR-safe). */
   protected readonly errorId = `oge-cell-editor-${nextCellEditorUid++}-error`;

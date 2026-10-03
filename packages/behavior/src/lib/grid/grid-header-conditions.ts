@@ -228,13 +228,12 @@ export interface OgeHeaderDateNode {
 }
 
 let monthFormatter: Intl.DateTimeFormat | undefined;
-let dayFormatter: Intl.DateTimeFormat | undefined;
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 
 /**
  * Groups a date column's distinct values into year → month → day nodes, in
- * value order (the distinct list already arrives sorted). Values that are not
+ * value order (a day is labelled by `dayLabel`, default the value's text) (the distinct list already arrives sorted). Values that are not
  * dates — blanks included — become top-level leaves under their own label.
  * The search keeps a node whose label matches (with its whole subtree) or
  * whose descendants match; empty nodes disappear.
@@ -244,9 +243,10 @@ export function groupHeaderValuesByDate(
   search: string,
   blankValue: string,
   textOf: (value: unknown) => string,
+  dayLabel: (date: Date, value: unknown) => string = (_date, value) =>
+    textOf(value),
 ): readonly OgeHeaderDateNode[] {
   monthFormatter ??= new Intl.DateTimeFormat(undefined, { month: 'long' });
-  dayFormatter ??= new Intl.DateTimeFormat(undefined, { day: 'numeric' });
   interface Draft {
     key: string;
     label: string;
@@ -293,7 +293,7 @@ export function groupHeaderValuesByDate(
     const day = child(
       month.children,
       `${y}-${pad(m)}-${pad(date.getDate())}`,
-      dayFormatter.format(date),
+      dayLabel(date, value),
       2,
     );
     year.values.push(value);

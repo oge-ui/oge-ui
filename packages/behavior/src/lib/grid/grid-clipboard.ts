@@ -326,7 +326,7 @@ export function parseLocaleNumber(
   text: string,
   locale?: string,
 ): number | null {
-  const compact = text.replace(/[\s  ]/g, '');
+  const compact = text.replace(/[\s\u00A0\u202F]/g, '');
   if (/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(compact))
     return Number(compact);
   const { group, decimal } = separatorsOf(locale);
@@ -338,6 +338,25 @@ export function parseLocaleNumber(
     .replace(/^\((.*)\)$/, '-$1');
   if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(normalized)) return null;
   return Number(normalized);
+}
+
+/**
+ * Whether a fill / copy value fits a column of `dataType` — a fill across
+ * columns never writes a text into a number column. `null` fits everywhere.
+ */
+export function ogeValueFits(value: unknown, dataType: OgeDataType): boolean {
+  if (value == null) return true;
+  switch (dataType) {
+    case 'number':
+      return typeof value === 'number';
+    case 'date':
+    case 'datetime':
+      return value instanceof Date || typeof value === 'string';
+    case 'boolean':
+      return typeof value === 'boolean';
+    default:
+      return true;
+  }
 }
 
 // --- fill -------------------------------------------------------------------
