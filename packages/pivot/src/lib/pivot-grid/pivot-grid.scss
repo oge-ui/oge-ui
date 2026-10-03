@@ -73,6 +73,15 @@
   padding: 4px 8px;
   border: 1px dashed var(--oge-border-color);
   border-radius: var(--oge-radius);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+// a dragged field chip is over this area (panel or chooser zone)
+.oge-pivot-area-drop-active {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent-soft);
 }
 
 .oge-pivot-area-label {
@@ -101,7 +110,20 @@
   color: var(--oge-header-color);
   cursor: grab;
   user-select: none;
+  position: relative;
   transition: box-shadow 120ms ease;
+}
+
+// insert indicator: the dragged field lands in front of this chip
+.oge-pivot-chip-drop-target::before {
+  content: '';
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: -5px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--oge-accent);
+  pointer-events: none;
 }
 
 // --- keyboard focus -------------------------------------------------------------
@@ -325,6 +347,9 @@
   padding: 8px;
   border: 1px dashed var(--oge-border-color);
   border-radius: var(--oge-radius);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .oge-pivot-chooser-all {
@@ -414,6 +439,15 @@
   .oge-pivot-grid .oge-menu-item:disabled {
     color: GrayText;
   }
+
+  .oge-pivot-area-drop-active {
+    border-style: solid;
+    border-color: Highlight;
+  }
+
+  .oge-pivot-chip-drop-target::before {
+    background: Highlight;
+  }
 }
 
 @include tokens.reduced-motion {
@@ -422,6 +456,8 @@
   .oge-pivot-row-header,
   .oge-pivot-arrow,
   .oge-pivot-cell,
+  .oge-pivot-area,
+  .oge-pivot-chooser-zone,
   .oge-pivot-grid .oge-menu-item {
     transition: none;
   }

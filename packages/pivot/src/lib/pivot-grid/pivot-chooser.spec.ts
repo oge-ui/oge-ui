@@ -170,16 +170,25 @@ describe('OgePivotGrid P2: menus, filters, chooser', () => {
     const cityChip = Array.from(
       chooser.querySelectorAll('[data-area="row"] .oge-pivot-field-chip'),
     ).find((c) => c.textContent?.trim() === 'City');
-    cityChip?.dispatchEvent(new Event('dragstart', { bubbles: true }));
+    const pointer = (type: string, target: Element, x: number): void => {
+      const event = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        clientX: x,
+        clientY: 5,
+      });
+      Object.defineProperty(event, 'pointerId', { value: 1 });
+      target.dispatchEvent(event);
+    };
     const allZone = chooser.querySelector(
       '.oge-pivot-chooser-all',
     ) as HTMLElement;
-    allZone.dispatchEvent(
-      new Event('dragover', { bubbles: true, cancelable: true }),
-    );
-    allZone.dispatchEvent(
-      new Event('drop', { bubbles: true, cancelable: true }),
-    );
+    pointer('pointerdown', cityChip as Element, 0);
+    pointer('pointermove', allZone, 60);
+    pointer('pointerup', allZone, 60);
+    // the click a drag ends with is swallowed until the next task
+    await new Promise((resolve) => setTimeout(resolve));
     await settle(fixture);
 
     // live pivot unchanged until Apply

@@ -21,6 +21,27 @@ import {
   type Node,
 } from './tree-list.test-utils';
 
+/** Pointer events as jsdom builds them; the move's target is the hit. */
+function pointer(
+  type: string,
+  target: Element,
+  clientY: number,
+  pointerType = 'mouse',
+): void {
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    clientX: 5,
+    clientY,
+  });
+  Object.defineProperty(event, 'pointerId', { value: 1 });
+  Object.defineProperty(event, 'pointerType', { value: pointerType });
+  act(() => {
+    target.dispatchEvent(event);
+  });
+}
+
 /** Fake server serving one level per request, like the docs' lazy demo. */
 function lazySource(log: string[]): DataSource<Node> {
   const all = makeRows().map((row) => ({
@@ -87,21 +108,11 @@ describe('OgeTreeList features', () => {
     const handle = rowByName('Root B').querySelector(
       '.oge-drag-handle',
     ) as HTMLElement;
-    const transfer = {
-      data: {} as Record<string, string>,
-      setData(type: string, value: string) {
-        this.data[type] = value;
-      },
-      getData(type: string) {
-        return this.data[type];
-      },
-      types: ['text/plain'],
-      effectAllowed: 'move',
-    };
-    fireEvent.dragStart(handle, { dataTransfer: transfer });
+    pointer('pointerdown', handle, 200);
     const target = rowByName('Child A2');
-    fireEvent.dragOver(target, { dataTransfer: transfer });
-    fireEvent.drop(target, { dataTransfer: transfer });
+    pointer('pointermove', target, 20);
+    expect(target).toHaveClass('oge-drop-target');
+    pointer('pointerup', target, 20);
     await waitFor(() => expect(moves).toHaveLength(1));
     expect(moves[0]).toMatchObject({
       key: 5,
@@ -114,12 +125,80 @@ describe('OgeTreeList features', () => {
       expect(rowByName('Root B')).toHaveAttribute('aria-level', '3'),
     );
     // a row can never be dropped into its own subtree
-    fireEvent.dragStart(
+    pointer(
+      'pointerdown',
       rowByName('Root A').querySelector('.oge-drag-handle') as HTMLElement,
-      { dataTransfer: transfer },
+      10,
     );
-    fireEvent.drop(rowByName('Grand A1a'), { dataTransfer: transfer });
+    pointer('pointermove', rowByName('Grand A1a'), 60);
+    expect(rowByName('Grand A1a')).not.toHaveClass('oge-drop-target');
+    pointer('pointerup', rowByName('Grand A1a'), 60);
     expect(moves).toHaveLength(1);
+  });
+
+  it('pointer drags: touch on a handle at once, header reorder, Escape cancel', async () => {
+    const data = makeRows();
+    const moves: unknown[] = [];
+    const { container } = render(
+      <OgeTreeList
+        data={data}
+        columns={COLUMNS}
+        autoExpandAll
+        rowDragging
+        columnReorder
+        onRowReparented={(event) => moves.push(event)}
+      />,
+    );
+    await settled();
+    // touch: the handle is touch-action: none, so no long press is needed
+    pointer(
+      'pointerdown',
+      rowByName('Root B').querySelector('.oge-drag-handle') as HTMLElement,
+      200,
+      'touch',
+    );
+    pointer('pointermove', rowByName('Child A2'), 20, 'touch');
+    pointer('pointerup', rowByName('Child A2'), 20, 'touch');
+    await waitFor(() => expect(moves).toHaveLength(1));
+
+    // Escape mid-drag: nothing moves
+    pointer(
+      'pointerdown',
+      rowByName('Child A1').querySelector('.oge-drag-handle') as HTMLElement,
+      50,
+    );
+    pointer('pointermove', rowByName('Root B'), 120);
+    act(() => {
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    pointer('pointerup', rowByName('Root B'), 120);
+    expect(moves).toHaveLength(1);
+    expect(container.querySelector('.oge-drop-target')).toBeNull();
+
+    const headers = () =>
+      Array.from(
+        container.querySelectorAll<HTMLElement>(
+          '.oge-header-row > .oge-header-cell[data-colid]',
+        ),
+      );
+    const before = headers().map((cell) => cell.dataset['colid']);
+    pointer('pointerdown', headers()[1], 200);
+    pointer('pointermove', headers()[0], 230);
+    expect(headers()[0]).toHaveClass('oge-col-drop-target');
+    pointer('pointerup', headers()[0], 230);
+    await waitFor(() =>
+      expect(headers().map((cell) => cell.dataset['colid'])).toEqual([
+        before[1],
+        before[0],
+        ...before.slice(2),
+      ]),
+    );
   });
 
   it('pages the flattened rows with the pager', async () => {

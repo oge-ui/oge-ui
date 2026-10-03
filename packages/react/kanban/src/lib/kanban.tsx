@@ -27,6 +27,7 @@ import {
   kanbanDropIndex,
   kanbanGridTemplate,
   kanbanInitials,
+  prepareKanbanTouchDrag,
   type KanbanCard,
   type KanbanColumnDef,
 } from '@oge-ui/kanban-engine';
@@ -85,6 +86,9 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
         ? null
         : new ResizeObserver(() => ctl.measureCells());
     if (hostRef.current !== null) observer?.observe(hostRef.current);
+    // the browser decides about panning at touchstart: arm the touch guard
+    // before the first long-press card drag
+    prepareKanbanTouchDrag(hostRef.current);
     return () => {
       observer?.disconnect();
       ctl.teardown();
@@ -429,7 +433,7 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
                     column={column}
                     count={columnCount(column.key)}
                     dragging={st.draggedColumnKey === column.key}
-                    draggable={allowColumnReordering && !readOnly}
+                    reorderable={allowColumnReordering && !readOnly}
                     renderColumnHeader={props.renderColumnHeader}
                   />
                 ),
@@ -911,7 +915,7 @@ function ColumnHeader<T extends object>({
   column,
   count,
   dragging,
-  draggable,
+  reorderable,
   renderColumnHeader,
 }: {
   ctl: KanbanController<T>;
@@ -919,7 +923,7 @@ function ColumnHeader<T extends object>({
   column: KanbanColumnDef;
   count: number;
   dragging: boolean;
-  draggable: boolean;
+  reorderable: boolean;
   renderColumnHeader: OgeKanbanProps<T>['renderColumnHeader'];
 }) {
   const msg = view.msg;
@@ -929,7 +933,7 @@ function ColumnHeader<T extends object>({
     'oge-kanban-column-header',
     wip.exceeded ? 'oge-kanban-wip-exceeded' : '',
     dragging ? 'oge-kanban-column-header-dragging' : '',
-    draggable ? 'oge-kanban-column-header-draggable' : '',
+    reorderable ? 'oge-kanban-column-header-draggable' : '',
   ]
     .filter(Boolean)
     .join(' ');

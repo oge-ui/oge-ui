@@ -128,19 +128,32 @@ describe('OgePivotGrid (MVP)', () => {
     );
     expect(cityChip).toBeTruthy();
 
-    // jsdom has no DragEvent; the handlers rely on internal drag state and
-    // only optionally touch dataTransfer, so plain events suffice
-    cityChip?.dispatchEvent(new Event('dragstart', { bubbles: true }));
+    // a pointer drag (jsdom: no elementFromPoint, so the move's target is
+    // the hit) onto the column area's empty space
+    const pointer = (type: string, target: Element, x: number): void => {
+      const event = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        clientX: x,
+        clientY: 5,
+      });
+      Object.defineProperty(event, 'pointerId', { value: 1 });
+      target.dispatchEvent(event);
+    };
     const columnArea = el.querySelector(
       '.oge-pivot-area[data-area="column"]',
     ) as HTMLElement;
-    columnArea.dispatchEvent(
-      new Event('dragover', { bubbles: true, cancelable: true }),
-    );
-    columnArea.dispatchEvent(
-      new Event('drop', { bubbles: true, cancelable: true }),
-    );
+    pointer('pointerdown', cityChip as Element, 0);
+    pointer('pointermove', columnArea, 60);
+    fixture.detectChanges();
+    expect(columnArea.classList).toContain('oge-pivot-area-drop-active');
+    expect(el.querySelector('[draggable]')).toBeNull();
+    pointer('pointerup', columnArea, 60);
+    // the click a drag ends with is swallowed until the next task
+    await new Promise((resolve) => setTimeout(resolve));
     await settle(fixture);
+    expect(columnArea.classList).not.toContain('oge-pivot-area-drop-active');
 
     // a drop appends: city joins the columns as the inner level
     expect(texts(el, '.oge-pivot-col-header')).toEqual([

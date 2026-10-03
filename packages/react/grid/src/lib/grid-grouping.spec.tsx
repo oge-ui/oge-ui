@@ -18,6 +18,28 @@ interface Person {
   age: number;
 }
 
+/** Pointer events as jsdom builds them; the move's target is the hit. */
+function pointer(
+  type: string,
+  target: Element,
+  x: number,
+  y: number,
+  pointerType = 'mouse',
+): void {
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    clientX: x,
+    clientY: y,
+  });
+  Object.defineProperty(event, 'pointerId', { value: 1 });
+  Object.defineProperty(event, 'pointerType', { value: pointerType });
+  act(() => {
+    target.dispatchEvent(event);
+  });
+}
+
 const people: Person[] = [
   { id: 1, name: 'Ada', city: 'London', age: 36 },
   { id: 2, name: 'Grace', city: 'New York', age: 85 },
@@ -79,19 +101,14 @@ describe('OgeGrid grouping, master-detail and row render props', () => {
       screen.getByText('Drag a column header here to group'),
     ).toBeInTheDocument();
     const header = screen.getByRole('columnheader', { name: 'City' });
-    expect(header).toHaveAttribute('draggable', 'true');
-    const store = new Map<string, string>();
-    const dataTransfer = {
-      types: ['application/x-oge-column'],
-      setData: (type: string, value: string) => store.set(type, value),
-      getData: (type: string) => store.get(type) ?? '',
-      effectAllowed: 'move',
-    };
-    fireEvent.dragStart(header, { dataTransfer });
+    expect(header).not.toHaveAttribute('draggable');
     const panel = document.querySelector('.oge-group-panel') as HTMLElement;
-    fireEvent.dragOver(panel, { dataTransfer });
-    fireEvent.drop(panel, { dataTransfer });
+    pointer('pointerdown', header, 100, 40);
+    pointer('pointermove', panel, 100, 5);
+    expect(panel).toHaveClass('oge-group-panel-drop-active');
+    pointer('pointerup', panel, 100, 5);
     await waitFor(() => expect(groupRows()).toHaveLength(3));
+    expect(panel).not.toHaveClass('oge-group-panel-drop-active');
   });
 
   it('renders group summaries, footer summaries and the total row', async () => {
@@ -235,10 +252,10 @@ describe('OgeGrid grouping, master-detail and row render props', () => {
     );
     await waitFor(() => expect(dataRows()).toHaveLength(4));
     const handles = document.querySelectorAll('.oge-drag-handle');
-    const dataTransfer = { setData: vi.fn(), effectAllowed: 'move' };
-    fireEvent.dragStart(handles[0], { dataTransfer });
-    fireEvent.dragOver(dataRows()[2], { dataTransfer });
-    fireEvent.drop(dataRows()[2], { dataTransfer });
+    pointer('pointerdown', handles[0], 5, 10);
+    pointer('pointermove', dataRows()[2], 5, 90);
+    expect(dataRows()[2]).toHaveClass('oge-drop-target');
+    pointer('pointerup', dataRows()[2], 5, 90);
     expect(onRowReordered).toHaveBeenCalledWith(
       expect.objectContaining({
         key: 1,

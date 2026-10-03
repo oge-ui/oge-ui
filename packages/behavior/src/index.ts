@@ -257,6 +257,16 @@ export {
   type OgeMovableColumn,
   type OgeTreeRowKeyMove,
 } from './lib/grid/grid-keyboard-moves';
+export {
+  OGE_GRID_HOST_SELECTOR,
+  isOgeDragExcludedTarget,
+  ogeMoveGroupingTo,
+  ogeOwnedClosest,
+  resolveOgeAttributeTarget,
+  resolveOgeHeaderDropTarget,
+  resolveOgeRowDropIndex,
+  type OgeGridHeaderDropTarget,
+} from './lib/grid/grid-pointer-drag';
 export { OgeGridStateCore, loadOptionsEqual } from './lib/grid/grid-state-core';
 export {
   OGE_GRID_WINDOW_BLOCK_SIZE,
@@ -1131,6 +1141,32 @@ export {
   type OgeSanitizeUrlOptions,
 } from './lib/security/sanitize-url';
 export { prefersReducedMotion, motionScrollBehavior } from './lib/a11y/motion';
+
+// pointer gestures + pointer drag & drop (no HTML5 DnD in packages/)
+export {
+  OGE_GESTURE_THRESHOLD,
+  OGE_LONG_PRESS_DELAY,
+  beginPointerGesture,
+  prepareTouchDrag,
+  type OgePointerGestureHandle,
+  type OgePointerGestureInput,
+  type OgePointerGestureOptions,
+} from './lib/gesture/pointer-gesture';
+export {
+  OGE_AUTO_SCROLL_EDGE,
+  OGE_AUTO_SCROLL_MAX_SPEED,
+  createAutoScroller,
+  ogeEdgeScrollVelocity,
+  type OgeAutoScrollOptions,
+  type OgeAutoScroller,
+} from './lib/gesture/auto-scroll';
+export {
+  beginPointerDragDrop,
+  createDragGhost,
+  ogeElementAtPoint,
+  type OgeDragGhost,
+  type OgePointerDragDropOptions,
+} from './lib/gesture/pointer-drag-drop';
 
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for
 // packages that depend on behavior but not on core

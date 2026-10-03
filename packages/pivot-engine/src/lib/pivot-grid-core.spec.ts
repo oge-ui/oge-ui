@@ -62,13 +62,73 @@ const pointer = (x = 10, y = 20): OgePivotPointer => ({
   stopPropagation: () => undefined,
 });
 
-const drag = () => ({
-  dataTransfer: null,
-  defaultPrevented: false,
-  preventDefault() {
-    this.defaultPrevented = true;
-  },
-});
+/**
+ * The field panel's markup, as both render layers emit it: area zones with
+ * `data-area`, chips with `data-field-id`.
+ */
+function fieldPanel(core: OgePivotGridCore<Sale>): HTMLElement {
+  const panel = document.createElement('div');
+  panel.className = 'oge-pivot-field-panel';
+  for (const zone of core.panelAreas()) {
+    const area = document.createElement('div');
+    area.className = 'oge-pivot-area';
+    area.dataset['area'] = zone.area;
+    for (const field of zone.fields) {
+      const chip = document.createElement('span');
+      chip.className = 'oge-pivot-field-chip';
+      chip.dataset['fieldId'] = field.id;
+      chip.textContent = field.caption ?? field.id;
+      area.appendChild(chip);
+    }
+    panel.appendChild(area);
+  }
+  document.body.appendChild(panel);
+  return panel;
+}
+
+/** A jsdom pointer event (no PointerEvent constructor); the target is the hit. */
+function pointerEvent(
+  type: string,
+  target: EventTarget,
+  x: number,
+  pointerType = 'mouse',
+): MouseEvent {
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    clientX: x,
+    clientY: 5,
+  });
+  Object.defineProperty(event, 'pointerId', { value: 1 });
+  Object.defineProperty(event, 'pointerType', { value: pointerType });
+  target.dispatchEvent(event);
+  return event;
+}
+
+function dragChip(
+  core: OgePivotGridCore<Sale>,
+  panel: HTMLElement,
+  id: string,
+  over: Element,
+  pointerType = 'mouse',
+): void {
+  const chip = panel.querySelector(`[data-field-id="${id}"]`) as HTMLElement;
+  const field = core.resolvedFields().find((f) => f.id === id);
+  if (!field) throw new Error(`${id} missing`);
+  const down = new MouseEvent('pointerdown', {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    clientX: 0,
+    clientY: 5,
+  });
+  Object.defineProperty(down, 'pointerId', { value: 1 });
+  Object.defineProperty(down, 'pointerType', { value: pointerType });
+  Object.defineProperty(down, 'target', { value: chip });
+  core.fieldPointerDown(field, down as unknown as PointerEvent, chip);
+  pointerEvent('pointermove', over, 40, pointerType);
+}
 
 const rowTexts = (core: OgePivotGridCore<Sale>) =>
   core.rowLines().map((line) => line.text);
@@ -194,21 +254,76 @@ describe('OgePivotGridCore — field panel, menus, filters, chooser', () => {
   it('drags a field to another area and reports the layout', () => {
     const changes: (readonly PivotFieldConfig[])[] = [];
     const core = makeCore({}, (fields) => changes.push(fields));
-    const city = core.resolvedFields().find((f) => f.id === 'city');
-    if (!city) throw new Error('city missing');
-    core.fieldDragStart(city, drag());
-    const over = drag();
-    core.areaDragOver(over);
-    expect(over.defaultPrevented).toBe(true);
-    core.areaDrop('column', drag());
+    const panel = fieldPanel(core);
+    const column = panel.querySelector('[data-area="column"]') as HTMLElement;
+    dragChip(core, panel, 'city', column);
+    expect(core.fieldDropTarget()).toEqual({ area: 'column', beforeId: null });
+    pointerEvent('pointerup', column, 40);
+    expect(core.fieldDropTarget()).toBeNull();
     expect(core.getFieldLayout().find((f) => f.id === 'city')?.area).toBe(
       'column',
     );
     expect(changes).toHaveLength(1);
-    // no drag in progress → dragover is not accepted
-    const idle = drag();
-    core.areaDragOver(idle);
-    expect(idle.defaultPrevented).toBe(false);
+    expect(core.announcement()).not.toBe('');
+    panel.remove();
+  });
+
+  it('inserts a dropped field in front of the chip under the pointer', () => {
+    const core = makeCore();
+    const panel = fieldPanel(core);
+    const region = panel.querySelector(
+      '[data-field-id="region"]',
+    ) as HTMLElement;
+    dragChip(core, panel, 'year', region);
+    expect(core.fieldDropTarget()).toEqual({ area: 'row', beforeId: 'region' });
+    pointerEvent('pointerup', region, 40);
+    const rows = core
+      .getFieldLayout()
+      .filter((f) => f.area === 'row')
+      .sort((a, b) => (a.areaIndex ?? 0) - (b.areaIndex ?? 0))
+      .map((f) => f.id);
+    expect(rows).toEqual(['year', 'region', 'city']);
+    panel.remove();
+  });
+
+  it('a pointer drop and the chip keyboard reach the same layout', () => {
+    const pointerCore = makeCore();
+    const panel = fieldPanel(pointerCore);
+    const region = panel.querySelector(
+      '[data-field-id="region"]',
+    ) as HTMLElement;
+    dragChip(pointerCore, panel, 'city', region);
+    pointerEvent('pointerup', region, 40);
+    panel.remove();
+    const keyboardCore = makeCore();
+    keyboardCore.moveFieldBy('city', -1);
+    expect(pointerCore.getFieldLayout()).toEqual(keyboardCore.getFieldLayout());
+  });
+
+  it('Escape cancels a chip drag, and a touch swipe never starts one', () => {
+    const changes: (readonly PivotFieldConfig[])[] = [];
+    const core = makeCore({}, (fields) => changes.push(fields));
+    const panel = fieldPanel(core);
+    const column = panel.querySelector('[data-area="column"]') as HTMLElement;
+    dragChip(core, panel, 'city', column);
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    pointerEvent('pointerup', column, 40);
+    expect(core.fieldDropTarget()).toBeNull();
+    expect(changes).toHaveLength(0);
+
+    dragChip(core, panel, 'city', column, 'touch'); // no long press: a scroll
+    pointerEvent('pointerup', column, 40, 'touch');
+    expect(changes).toHaveLength(0);
+    expect(core.getFieldLayout().find((f) => f.id === 'city')?.area).toBe(
+      'row',
+    );
+    panel.remove();
   });
 
   it('builds the header menu and sorts through it', () => {

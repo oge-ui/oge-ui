@@ -27,15 +27,23 @@ function rowOf(el: HTMLElement, title: string): HTMLElement | undefined {
   );
 }
 
-function dragEvent(type: string): DragEvent {
-  const event = new Event(type, {
+/** Pointer events as jsdom builds them; the move's target is the hit. */
+function pointer(
+  type: string,
+  target: EventTarget | null | undefined,
+  y = 0,
+  pointerType = 'mouse',
+): void {
+  const event = new MouseEvent(type, {
     bubbles: true,
     cancelable: true,
-  }) as DragEvent;
-  Object.defineProperty(event, 'dataTransfer', {
-    value: { setData: () => undefined, effectAllowed: 'move' },
+    button: 0,
+    clientX: 5,
+    clientY: y,
   });
-  return event;
+  Object.defineProperty(event, 'pointerId', { value: 1 });
+  Object.defineProperty(event, 'pointerType', { value: pointerType });
+  target?.dispatchEvent(event);
 }
 
 @Component({
@@ -74,14 +82,18 @@ describe('OgeTreeList drag reparenting', () => {
     el: HTMLElement,
     from: string,
     to: string,
+    pointerType = 'mouse',
   ): Promise<void> {
-    rowOf(el, from)
-      ?.querySelector('.oge-drag-handle')
-      ?.dispatchEvent(dragEvent('dragstart'));
+    pointer(
+      'pointerdown',
+      rowOf(el, from)?.querySelector('.oge-drag-handle'),
+      100,
+      pointerType,
+    );
     await settle(fixture);
     const target = rowOf(el, to);
-    target?.dispatchEvent(dragEvent('dragover'));
-    target?.dispatchEvent(dragEvent('drop'));
+    pointer('pointermove', target, 10, pointerType);
+    pointer('pointerup', target, 10, pointerType);
     // the in-place mutation triggers an async reload before the tree re-renders
     await settle(fixture);
     await new Promise((resolve) => setTimeout(resolve));
@@ -110,5 +122,35 @@ describe('OgeTreeList drag reparenting', () => {
     await drag(fixture, el, 'Root A', 'Child A1');
     expect(host.events).toEqual([]);
     expect(host.data[0].parentId).toBeNull();
+  });
+
+  it('a touch on the handle drags at once', async () => {
+    const { fixture, host, el } = await render();
+    await drag(fixture, el, 'Root B', 'Child A1', 'touch');
+    expect(host.data[2].parentId).toBe(2);
+    expect(host.events).toHaveLength(1);
+  });
+
+  it('shows the inside indicator while hovering and Escape cancels', async () => {
+    const { fixture, host, el } = await render();
+    pointer(
+      'pointerdown',
+      rowOf(el, 'Root B')?.querySelector('.oge-drag-handle'),
+      100,
+    );
+    pointer('pointermove', rowOf(el, 'Child A1'), 10);
+    fixture.detectChanges();
+    expect(rowOf(el, 'Child A1')?.classList).toContain('oge-drop-target');
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    pointer('pointerup', rowOf(el, 'Child A1'), 10);
+    await settle(fixture);
+    expect(host.events).toEqual([]);
+    expect(el.querySelector('.oge-drop-target')).toBeNull();
   });
 });

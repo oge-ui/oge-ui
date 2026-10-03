@@ -1,69 +1,46 @@
 /**
- * The shared pointer-gesture machine (the bpmn five-part pattern): closure
- * state, pointer capture as a progressive enhancement, document listeners
- * incl. a capture-phase Escape, a single `finish(cancelled)` and a 3px
- * movement threshold so a plain click never commits a drag.
+ * The board's pointer gesture: `@oge-ui/behavior`'s shared
+ * `beginPointerGesture` (3px threshold, pointer capture, document listeners
+ * incl. a capture-phase Escape, blur cancel, a single `finish`) with the
+ * board's defaults — the `pointerdown` is prevented (a native selection drag
+ * would auto-scroll the board under the gesture) and touch pointers start
+ * after the house long press, so swiping a column still scrolls it.
  */
+import {
+  OGE_LONG_PRESS_DELAY,
+  prepareTouchDrag,
+  beginPointerGesture,
+  type OgePointerGestureHandle,
+  type OgePointerGestureInput,
+} from '@oge-ui/behavior';
+
 export interface KanbanGestureCallbacks {
   onMove(deltaX: number, deltaY: number, event: PointerEvent): void;
   onFinish(commit: boolean, cancelled: boolean): void;
+  /** A touch long press armed the drag (lift feedback). */
+  onLongPress?(): void;
 }
 
-const MOVE_THRESHOLD = 3;
+/** Touch hold (ms) before a card or column header lifts. */
+export const KANBAN_LONG_PRESS = OGE_LONG_PRESS_DELAY;
 
 export function beginKanbanGesture(
-  event: PointerEvent,
+  event: OgePointerGestureInput,
   callbacks: KanbanGestureCallbacks,
-): void {
-  // A native selection drag would auto-scroll the board under the gesture.
-  event.preventDefault();
-  const startX = event.clientX;
-  const startY = event.clientY;
-  let moved = false;
-  let finished = false;
+): OgePointerGestureHandle {
+  return beginPointerGesture(event, {
+    onMove: callbacks.onMove,
+    onFinish: callbacks.onFinish,
+    onLongPress: callbacks.onLongPress,
+    longPress: KANBAN_LONG_PRESS,
+  });
+}
 
-  const target = event.target as HTMLElement;
-  try {
-    target.setPointerCapture(event.pointerId);
-  } catch {
-    // jsdom / detached elements — capture is a progressive enhancement
-  }
-
-  const onPointerMove = (moveEvent: PointerEvent): void => {
-    const deltaX = moveEvent.clientX - startX;
-    const deltaY = moveEvent.clientY - startY;
-    if (!moved && Math.hypot(deltaX, deltaY) <= MOVE_THRESHOLD) return;
-    moved = true;
-    callbacks.onMove(deltaX, deltaY, moveEvent);
-  };
-  const onPointerUp = (): void => finish(false);
-  const onPointerCancel = (): void => finish(true);
-  const onKeyDown = (keyEvent: KeyboardEvent): void => {
-    if (keyEvent.key !== 'Escape') return;
-    keyEvent.preventDefault();
-    keyEvent.stopPropagation();
-    finish(true);
-  };
-  const onBlur = (): void => finish(true);
-
-  function cleanup(): void {
-    document.removeEventListener('pointermove', onPointerMove);
-    document.removeEventListener('pointerup', onPointerUp);
-    document.removeEventListener('pointercancel', onPointerCancel);
-    document.removeEventListener('keydown', onKeyDown, true);
-    window.removeEventListener('blur', onBlur);
-  }
-
-  function finish(cancelled: boolean): void {
-    if (finished) return;
-    finished = true;
-    cleanup();
-    callbacks.onFinish(!cancelled && moved, cancelled);
-  }
-
-  document.addEventListener('pointermove', onPointerMove);
-  document.addEventListener('pointerup', onPointerUp);
-  document.addEventListener('pointercancel', onPointerCancel);
-  document.addEventListener('keydown', onKeyDown, true);
-  window.addEventListener('blur', onBlur);
+/**
+ * Installs the document's touch-drag guard for a board (idempotent, SSR-safe):
+ * call once on mount so the very first long-press drag can stop the page
+ * from panning — the browser decides at `touchstart`, before any gesture runs.
+ */
+export function prepareKanbanTouchDrag(host: Element | null): void {
+  prepareTouchDrag(host?.ownerDocument ?? undefined);
 }

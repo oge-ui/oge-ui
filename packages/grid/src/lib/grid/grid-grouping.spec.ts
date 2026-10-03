@@ -347,9 +347,24 @@ describe('OgeGrid column operations', () => {
     const items = el.querySelectorAll('.oge-chooser-item');
     expect(items.length).toBe(4);
 
-    // drag City in front of Region
-    items[2].dispatchEvent(new Event('dragstart', { bubbles: true }));
-    items[1].dispatchEvent(new Event('drop', { bubbles: true }));
+    // drag City in front of Region (pointer events; jsdom has no
+    // elementFromPoint, so the move's target is the hit)
+    const pointer = (type: string, target: Element, y: number): void => {
+      const event = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        clientX: 5,
+        clientY: y,
+      });
+      Object.defineProperty(event, 'pointerId', { value: 1 });
+      target.dispatchEvent(event);
+    };
+    pointer('pointerdown', items[2], 60);
+    pointer('pointermove', items[1], 30);
+    fixture.detectChanges();
+    expect(items[1].classList).toContain('oge-chooser-drop-target');
+    pointer('pointerup', items[1], 30);
     await settle(fixture);
 
     const captions = Array.from(el.querySelectorAll('.oge-header-caption')).map(

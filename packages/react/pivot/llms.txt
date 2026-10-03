@@ -97,7 +97,7 @@ Predictable wrong guesses, and what to write instead.
 | `virtualScrolling` | `boolean` | `false` | Two-axis fixed-track windowing. |
 | `showRowTotals / showColumnTotals` | `boolean` | `true` | Sub-total lines per axis. |
 | `showRowGrandTotals / showColumnGrandTotals` | `boolean` | `true` | Grand-total lines per axis. |
-| `fieldPanel` | `boolean` | `true` | Collapsible drag & drop field panel. |
+| `fieldPanel` | `boolean` | `true` | Collapsible drag & drop field panel. Chips move with a pointer drag (mouse, pen, touch after a ~300 ms long press); dropping on a chip inserts in front of it, Escape cancels. |
 | `fieldChooser` | `OgePivotFieldChooserOptions` | `{}` | Field-chooser dialog behavior. |
 | `customizeCell` | `(cell: OgePivotCellPrepared) => void` | `—` | Appearance hook: mutate `text` / `cssClass` per cell (the reference `cellPrepared` equivalent). |
 | `stateKey` | `string \| undefined` | `—` | Persists the field layout + expansion through the nearest `<OgeGridStateStorageProvider>` (localStorage without one). |
@@ -139,7 +139,9 @@ _Cell & axis types_
 | `OgePivotHeaderCell` | `OgePivotAxisLine & { rowStart, rowEnd, columnStart, span }` | Header cell with 1-based matrix coordinates. |
 | `OgePivotFieldChooserOptions` | `{ applyChangesMode?: 'instantly' \| 'onDemand' }` | Field-chooser behavior; `'onDemand'` edits a draft that applies on Apply. |
 | `OgePivotMenuItem` | `{ text, disabled?, active?, action? }` | One item of the header / field context menus. |
-| `OGE_PIVOT_FIELD_DRAG_TYPE` | `'application/x-oge-pivot-field'` | DataTransfer type of field chips. |
+| `OGE_PIVOT_FIELD_DRAG_TYPE` | `'application/x-oge-pivot-field'` | Deprecated — field chips no longer use HTML5 drag and drop (pointer drag, touch included); kept so existing imports compile. |
+| `OgePivotFieldDropTarget` | `{ area: PivotArea \| null, beforeId: string \| null }` | Where a dragged field chip would land: the area (`null` = the chooser list) and the chip it is inserted in front of (`null` = the end). |
+| `OgePivotFieldPointerInput` | `{ button, clientX, clientY, pointerId, pointerType?, target, preventDefault() }` | The `pointerdown` facts the engine core reads to start a chip drag — the native or the React synthetic event. |
 
 _Keyboard (WAI-ARIA APG grid + field chips)_
 
