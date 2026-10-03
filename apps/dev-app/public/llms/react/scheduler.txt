@@ -125,7 +125,7 @@ _Behavior_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `allowAdding / allowUpdating / allowDeleting / allowDragging / allowResizing` | `boolean` | `true` | Per-capability editing gates. |
-| `readOnly` | `boolean` | `false` | **Display-only shorthand**: overrides every `allow*` flag at once and hides the editing affordances. |
+| `readOnly` | `boolean` | `false` | **Display-only shorthand**: overrides every `allow*` flag at once and hides the editing affordances. The day/week and month grids then carry `aria-readonly="true"` (also when every `allow*` flag is off). |
 | `snapDuration` | `number \| undefined` | `—` | Drag/resize snap raster in minutes; defaults to `cellDuration`. |
 | `workHours` | `OgeSchedulerWorkHours \| null` | `null` | Working-hours emphasis: cells outside `{ start, end, days? }` get the off-hours shading. |
 | `showAddButton` | `boolean` | `true` | Shows the toolbar "new appointment" button (Outlook parity) — creation without double-click; hidden while `readOnly` or `allowAdding={false}`. |

@@ -172,7 +172,7 @@ _Templates_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `*ogeKanbanCardTemplate` | `OgeKanbanCardTemplateContext<T>` | Replaces the card body (`$implicit` card with its `source`, plus `column` and `swimlane`). Drag, keyboard and ARIA stay on the component. |
+| `*ogeKanbanCardTemplate` | `OgeKanbanCardTemplateContext<T>` | Replaces the card body (`$implicit` card with its `source`, plus `column` and `swimlane`). Drag, keyboard and ARIA stay on the component. Buttons, links and inputs in the template are real interactive content: Tab reaches them while the card is its column's tab stop, they never start a drag or feed the board's arrow keys, and Escape returns to the card. |
 | `*ogeKanbanColumnHeaderTemplate` | `OgeKanbanColumnHeaderTemplateContext` | Replaces the column header's title row (`$implicit` column, `count`, `wip`); the collapse affordance stays. An OGE extra — no reference library templates its headers. |
 
 _Configuration_
@@ -181,6 +181,7 @@ _Configuration_
 | --- | --- | --- |
 | `provideOgeKanbanConfig(config)` | `(config: OgeKanbanConfigInput) => Provider` | DI-level configuration: `messages` (shallow-merged per top-level block), `locale`, `cardHeight`. |
 | `OgeKanbanMessages` | `interface` | Every user-facing string: `toolbar`, `menu`, `dialog`, `board` (aria label templates with `{title}`/`{count}`/`{limit}` tokens) and `announcements` (live-region templates). |
+| `OgeKanbanBoardMessages` | `interface` | The `board` block: `boardLabel`, `columnLabel` / `columnLabelWip` (the column list's name), `cardLabel` (`{title}`, `{column}`), `cardRoleDescription` (default `card` — every card's `aria-roledescription`), `editCardAction` / `deleteCardAction` (the quick-action buttons, `{title}`), `boardHint`, `wipExceeded`, `overdue`, the empty-state and add-card/column strings. |
 | `OgeKanbanColumn` | `interface` | `{ key, title?, color?, wipLimit?, minCount?, collapsed?, allowAdding?, allowDrag?, allowDrop?, transitionColumns? }` — the declared column shape. `wipLimit`/`minCount` drive the danger/warning badges; `allowDrag`/`allowDrop`/`transitionColumns` gate interactive moves (programmatic `moveCard` is deliberately not gated). |
 | `OgeKanbanCard<T>` | `interface` | The normalized card handed to templates and events: `key`, `source` (your item, unchanged), `column`, `title`, `description`, `color`, `order`, `swimlane`, `tags`, `assignees`, `dueDate`, `priority`. |
 
@@ -430,7 +431,8 @@ import { OgeKanban } from '@oge-ui/kanban';
          Enter edits, Delete deletes, and Ctrl+Arrow MOVES the focused card —
          the exact keyboard twin of the drag, with a polite live-region
          announcement ("… moved to …, position 2 of 3") after every commit.
-         Columns are labeled listboxes; cards are options. -->
+         Columns are labeled lists of cards (one Tab stop each); Tab from a
+         card continues into its quick-action buttons. -->
     <oge-kanban
       [dataSource]="tasks"
       keyExpr="id"
@@ -492,7 +494,7 @@ export class Demo {
 ### Template
 
 ```ts
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { OgeKanban, OgeKanbanCardTemplate } from '@oge-ui/kanban';
 import type { OgeKanbanCard } from '@oge-ui/kanban';
 
@@ -503,19 +505,21 @@ import type { OgeKanbanCard } from '@oge-ui/kanban';
   template: `
     <!-- *ogeKanbanCardTemplate replaces the card body while drag,
          keyboard and ARIA stay on the component. card.source is your original
-         item (typed unknown — narrow it in a helper). Rich templates usually
-         pair with a matching cardHeight, or opt out of virtualization entirely
-         ([virtualScrolling]="false") when heights must vary. -->
+         item (typed unknown — narrow it in a helper). Controls in the template
+         are real interactive content: Tab from the card reaches the button, it
+         never starts a drag, and Escape returns to the card. Rich templates
+         usually pair with a matching cardHeight, or opt out of virtualization
+         entirely ([virtualScrolling]="false") when heights must vary. -->
     <oge-kanban
       [dataSource]="deployments"
       keyExpr="id"
       columnExpr="stage"
       titleExpr="service"
-      [cardHeight]="96"
+      [cardHeight]="112"
       style="height: 420px"
     >
       <ng-template ogeKanbanCardTemplate let-card>
-        <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px">
+        <div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1">
           <strong>{{ card.title }}</strong>
           <code style="font-size: 11px">{{ field(card, 'version') }}</code>
           <progress
@@ -523,12 +527,18 @@ import type { OgeKanbanCard } from '@oge-ui/kanban';
             max="100"
             style="width: 100%"
           ></progress>
+          <button type="button" (click)="log.set('Rollback requested: ' + card.title)">
+            Roll back
+          </button>
         </div>
       </ng-template>
     </oge-kanban>
+    <p aria-live="polite">{{ log() }}</p>
   `,
 })
 export class Demo {
+  protected readonly log = signal('');
+
   protected field(card: OgeKanbanCard, name: string): string {
     return String((card.source as Record<string, unknown>)[name] ?? '');
   }

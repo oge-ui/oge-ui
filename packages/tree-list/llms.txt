@@ -157,9 +157,9 @@ _Layout, editing & misc (grid-shared)_
 | --- | --- | --- | --- |
 | `columns` | `readonly (string \| OgeColumnDef<T>)[] \| undefined` | `—` | Programmatic columns — the grid’s `OgeColumnDef` with every `<oge-column>` option; used when no declarative columns exist (and the way to share columns through a wrapper component). |
 | `virtualScroll / columnRenderingMode / rowHeight / overscan / columnMinWidth` | `various` | `—` | Virtualization knobs; `columnRenderingMode` is a top-level input here. |
-| `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false). |
+| `columnResize / columnReorder / columnChooser` | `boolean` | `—` | Column UX (defaults: true/true/false), with the grid’s keyboard paths: Alt+←/→ resizes the focused header’s column (10px, Shift 1px) and its handle is a focusable `role="separator"`; Ctrl+Shift+←/→ moves it; Ctrl+↑/↓ moves a column-chooser item. Columns take the grid’s `maxWidth`. |
 | `editing` | `false \| OgeEditingOptions` | `false` | cell/row/batch/form/popup via the shared EditingModel. |
-| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid; `messages` is the grid’s `OgeGridMessages` catalog — the reparenting handle reads `reparentColumnHeader` / `reparentRow`, boolean cells announce `booleanTrueLabel` / `booleanFalseLabel`. |
+| `commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey` | `various` | `—` | Same semantics as the grid; `messages` is the grid’s `OgeGridMessages` catalog — the reparenting handle reads `reparentColumnHeader` / `reparentRow`, boolean cells announce `booleanTrueLabel` / `booleanFalseLabel`. `rowDragging` keyboard: Ctrl+↑/↓ on a focused cell moves the row among its siblings, Ctrl+→ indents it under the previous sibling, Ctrl+← outdents it after its parent (logical in RTL) — the same drop path and reparent event as a handle drag, announced via `messages.treeRowMoved`. |
 
 #### Methods
 
