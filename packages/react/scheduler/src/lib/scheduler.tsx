@@ -16,6 +16,7 @@ import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
 import { OgeCalendar } from '@oge-ui/react-inputs';
 import { OgePopup, useAnchoredPanel } from '@oge-ui/react-overlay';
 import {
+  OgeSchedulerAdaptiveViewController,
   OgeSchedulerCore,
   buildSchedulerEditorItems,
   scrollOffsetForTime,
@@ -136,6 +137,19 @@ function OgeSchedulerInner<T extends object>(
       max: () => p().max,
       dateNavigatorText: () => p().dateNavigatorText,
     };
+    /** Writes the two-way `currentView` (core pipelines + adaptive switch). */
+    const writeView = (view: OgeSchedulerView): void => {
+      modelRef.current = { ...modelRef.current, view };
+      rx.invalidate();
+      if (p().currentView === undefined) setInnerView(view);
+      p().onCurrentViewChange?.(view);
+    };
+    // adaptive view: the host's own width drives the agenda switch
+    const adaptive = new OgeSchedulerAdaptiveViewController({
+      adaptiveView: () => p().adaptiveView,
+      currentView: () => modelRef.current.view,
+      setCurrentView: writeView,
+    });
     const core: OgeSchedulerCore<T, OgeFormItemDefinition> =
       new OgeSchedulerCore<T, OgeFormItemDefinition>({
         rx,
@@ -147,12 +161,7 @@ function OgeSchedulerInner<T extends object>(
           if (p().currentDate === undefined) setInnerDate(date);
           p().onCurrentDateChange?.(date);
         },
-        setCurrentView: (view) => {
-          modelRef.current = { ...modelRef.current, view };
-          rx.invalidate();
-          if (p().currentView === undefined) setInnerView(view);
-          p().onCurrentViewChange?.(view);
-        },
+        setCurrentView: (view) => writeView(view),
         events: {
           appointmentAdding: (event) => p().onAppointmentAdding?.(event),
           appointmentAdded: (event) => p().onAppointmentAdded?.(event),
@@ -208,7 +217,7 @@ function OgeSchedulerInner<T extends object>(
     // its first frame already shows the appointments — seed the store now
     // rather than in an effect that runs after the paint
     core.bindSource(inputs.dataSource());
-    return { rx, core };
+    return { rx, core, adaptive };
   }, []);
 
   // every render starts a new version: props may have changed
@@ -227,6 +236,20 @@ function OgeSchedulerInner<T extends object>(
   useIsomorphicLayoutEffect(() => {
     core.bindSource(props.dataSource ?? null);
   }, [core, props.dataSource]);
+
+  // adaptive view: observe the scheduler's own width (never the window)
+  const adaptiveView = model.adaptive;
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    adaptiveView.update(host.clientWidth);
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() =>
+      adaptiveView.update(host.clientWidth),
+    );
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [adaptiveView]);
 
   // reminder ticker: reminderTriggered once per occurrence (24h look-ahead)
   useEffect(() => {

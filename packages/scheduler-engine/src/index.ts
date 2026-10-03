@@ -80,6 +80,14 @@ export {
   type TimeGridConfig,
   type TimeGridVm,
 } from './lib/view-model';
+export {
+  OGE_SCHEDULER_ADAPTIVE_BREAKPOINT,
+  OgeSchedulerAdaptiveViewController,
+  resolveSchedulerAdaptiveView,
+  type OgeSchedulerAdaptiveView,
+  type OgeSchedulerAdaptiveViewControllerOptions,
+  type OgeSchedulerAdaptiveViewOptions,
+} from './lib/adaptive-view';
 export { layoutDayColumn, type LayoutedSegment } from './lib/layout';
 export {
   packLanes,

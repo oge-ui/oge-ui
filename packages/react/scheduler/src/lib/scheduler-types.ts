@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { DataSource } from '@oge-ui/core';
 import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
 import type {
+  OgeSchedulerAdaptiveView,
   OgeSchedulerAppointment,
   OgeSchedulerAppointmentAddedEvent,
   OgeSchedulerAppointmentAddingEvent,
@@ -95,6 +96,14 @@ export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
 
   /** The views offered by the switcher, optionally with per-view overrides. */
   views?: readonly (OgeSchedulerView | OgeSchedulerViewOptions)[];
+  /**
+   * Switches the visible view to agenda when the scheduler's **own** width
+   * (a `ResizeObserver`, not the window) drops below 600px, and back to the
+   * previous view when it grows again — `true`, or `{ breakpoint, view }`.
+   * Off (`false`) by default. The switch writes `currentView` like a user
+   * pick, on crossings only, so the switcher keeps working at any width.
+   */
+  adaptiveView?: OgeSchedulerAdaptiveView;
   /** First day of week (0 = Sunday); `undefined` resolves from the locale. */
   firstDayOfWeek?: number;
   /**
