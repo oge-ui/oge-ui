@@ -70,8 +70,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -125,8 +124,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -356,8 +354,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring($inset: true);
   }
 }
 
@@ -397,8 +394,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
     border-radius: var(--oge-radius);
   }
 }
@@ -429,8 +425,14 @@
 }
 
 .oge-scheduler-chip-box:hover .oge-scheduler-resize-handle,
-.oge-scheduler-chip-box:focus-visible .oge-scheduler-resize-handle {
+.oge-scheduler-chip-box:focus-within .oge-scheduler-resize-handle {
   opacity: 1;
+}
+
+@media (hover: none) {
+  .oge-scheduler-resize-handle {
+    opacity: 1;
+  }
 }
 
 .oge-scheduler-day-today {
@@ -583,6 +585,37 @@
 
 .oge-scheduler-resize-end {
   inset-block-end: 0;
+}
+
+/* the 6px grip grows to a 24px hit area centred on the chip edge (WCAG
+   2.5.8), 44px on coarse pointers; the visible bar keeps its size */
+.oge-scheduler-resize-handle::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  block-size: 24px;
+}
+
+.oge-scheduler-resize-start::before {
+  inset-block-start: -9px;
+}
+
+.oge-scheduler-resize-end::before {
+  inset-block-end: -9px;
+}
+
+@media (pointer: coarse) {
+  .oge-scheduler-resize-handle::before {
+    block-size: 44px;
+  }
+
+  .oge-scheduler-resize-start::before {
+    inset-block-start: -19px;
+  }
+
+  .oge-scheduler-resize-end::before {
+    inset-block-end: -19px;
+  }
 }
 
 .oge-scheduler-chip-box,
@@ -750,8 +783,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -1002,8 +1034,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -1160,8 +1191,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -1215,8 +1245,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -1308,7 +1337,7 @@
 
   &:hover:not(:disabled),
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     background: var(--oge-row-hover-bg);
   }
 
@@ -1329,5 +1358,38 @@
   .oge-scheduler-chip,
   .oge-scheduler-menu-item {
     transition: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  // chip fills are inline/app colours the OS palette replaces — a frame
+  // keeps each appointment's extent readable
+  .oge-scheduler-chip {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+  }
+
+  .oge-scheduler-chip-stop:focus-visible .oge-scheduler-chip {
+    border-color: Highlight;
+  }
+
+  .oge-scheduler-chip-disabled .oge-scheduler-chip {
+    border-color: GrayText;
+    color: GrayText;
+  }
+
+  .oge-scheduler-resize-handle::after {
+    background: CanvasText;
+  }
+
+  .oge-scheduler-day-today {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .oge-scheduler-drag-preview {
+    border-color: Highlight;
   }
 }

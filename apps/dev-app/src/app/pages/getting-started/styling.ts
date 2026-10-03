@@ -7,6 +7,8 @@ import {
   COLORS,
   DARK,
   DARK_HTML,
+  HIGH_CONTRAST,
+  HIGH_CONTRAST_HTML,
   SCOPED,
   TOKENS,
 } from './styling-snippets';
@@ -16,6 +18,7 @@ const SECTIONS = [
   'Scoped overrides',
   'Bridge themes',
   'Dark mode',
+  'High contrast & motion',
   'Component colors',
 ] as const;
 
@@ -28,7 +31,13 @@ const SECTIONS = [
       title="Style the app"
       category="Getting Started"
       categoryLink="/getting-started"
-      [chips]="['--oge-* tokens', 'bridge themes', 'dark mode', 'color']"
+      [chips]="[
+        '--oge-* tokens',
+        'bridge themes',
+        'dark mode',
+        'high contrast',
+        'color',
+      ]"
     >
       <p>
         Components never hardcode visual values — everything renders through
@@ -101,6 +110,32 @@ const SECTIONS = [
     <app-code-block [code]="dark" language="css" />
     <app-code-block [code]="darkHtml" language="html" />
 
+    <h2 id="high-contrast-motion" class="scroll-mt-20">
+      High contrast &amp; motion
+    </h2>
+    <p>
+      The <strong>high-contrast theme</strong> is a scoped token remap like dark
+      mode, behind <code>.oge-theme-high-contrast</code> (or
+      <code>data-oge-theme="high-contrast"</code>): black text on white, a deep
+      accent, borders instead of soft shadows and a solid focus ring — body text
+      at 7:1 or more, borders and rings at 3:1 or more.
+    </p>
+    <app-code-block [code]="highContrast" language="css" />
+    <app-code-block [code]="highContrastHtml" language="html" />
+    <p>
+      Whatever theme is loaded, the components also follow the operating system.
+      Under <strong>Windows High Contrast</strong> (<code
+        >forced-colors: active</code
+      >) selection, focus, checked and disabled states switch to the system
+      colours (<code>Highlight</code>, <code>CanvasText</code>,
+      <code>GrayText</code>…), state never rides on a background colour alone,
+      and the keyboard focus ring stays visible. Under
+      <code>prefers-reduced-motion: reduce</code> transitions, animations and
+      smooth scrolling are switched off. Small grips — resize handles, gantt
+      link dots, close buttons — keep a pointer target of at least
+      24&times;24px, and 44px on touch screens. There is nothing to configure.
+    </p>
+
     <h2 id="component-colors" class="scroll-mt-20">Component colors</h2>
     <p>
       For per-instance color, buttons accept a semantic
@@ -117,5 +152,7 @@ export class GettingStartedStylingPage {
   protected readonly bridge = BRIDGE;
   protected readonly dark = DARK;
   protected readonly darkHtml = DARK_HTML;
+  protected readonly highContrast = HIGH_CONTRAST;
+  protected readonly highContrastHtml = HIGH_CONTRAST_HTML;
   protected readonly colors = COLORS;
 }

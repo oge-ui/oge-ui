@@ -18,6 +18,7 @@ import {
   formColumnsCount,
   formColumnsCss,
   messageForFieldError,
+  motionScrollBehavior,
   orderByVisibleIndex,
   readPath,
   resolveItem,
@@ -577,7 +578,10 @@ function OgeFormInner<T extends object = Record<string, unknown>>(
         scrollToFirstInvalid &&
         typeof element?.scrollIntoView === 'function'
       ) {
-        element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        element.scrollIntoView({
+          block: 'nearest',
+          behavior: motionScrollBehavior(),
+        });
       }
       return true;
     },

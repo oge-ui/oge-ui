@@ -1130,6 +1130,7 @@ export {
   sanitizeResourceUrl,
   type OgeSanitizeUrlOptions,
 } from './lib/security/sanitize-url';
+export { prefersReducedMotion, motionScrollBehavior } from './lib/a11y/motion';
 
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for
 // packages that depend on behavior but not on core

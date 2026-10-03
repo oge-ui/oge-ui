@@ -13,9 +13,9 @@
     },
     "theme": {
       "type": "string",
-      "enum": ["none", "dark", "tailwind", "bootstrap"],
+      "enum": ["none", "dark", "high-contrast", "tailwind", "bootstrap"],
       "default": "none",
-      "description": "Optional theme stylesheet to register. The default look needs nothing — component styles ship inside the components. 'dark' adds the dark theme (activate with class=\"oge-theme-dark\", data-oge-theme=\"dark\", or 'auto' to follow the OS); 'tailwind' and 'bootstrap' bridge the --oge-* tokens onto an existing design system. The stylesheets ship in @oge-ui/core, which is added as a direct dependency when missing."
+      "description": "Optional theme stylesheet to register. The default look needs nothing — component styles ship inside the components. 'dark' adds the dark theme (activate with class=\"oge-theme-dark\", data-oge-theme=\"dark\", or 'auto' to follow the OS); 'high-contrast' adds the high-contrast theme (activate with class=\"oge-theme-high-contrast\" or data-oge-theme=\"high-contrast\"); 'tailwind' and 'bootstrap' bridge the --oge-* tokens onto an existing design system. The stylesheets ship in @oge-ui/core, which is added as a direct dependency when missing."
     },
     "skipAgentsFile": {
       "type": "boolean",

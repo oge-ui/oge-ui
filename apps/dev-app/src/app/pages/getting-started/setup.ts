@@ -137,9 +137,9 @@ const SECTIONS_REACT = [
       <app-code-block [code]="ngAdd" language="bash" />
       <ul>
         <li>
-          <code>--theme</code> — <code>dark</code>, <code>tailwind</code> or
-          <code>bootstrap</code>. Omit it for the default light theme, which is
-          built into the components.
+          <code>--theme</code> — <code>dark</code>, <code>high-contrast</code>,
+          <code>tailwind</code> or <code>bootstrap</code>. Omit it for the
+          default light theme, which is built into the components.
         </li>
         <li>
           <code>--skip-agents-file</code> — leave <code>AGENTS.md</code> alone.

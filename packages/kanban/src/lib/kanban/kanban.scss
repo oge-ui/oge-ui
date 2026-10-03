@@ -78,8 +78,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -140,7 +139,7 @@
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     border-color: var(--oge-accent);
     box-shadow: 0 0 0 3px var(--oge-accent-soft);
   }
@@ -166,8 +165,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -298,8 +296,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -331,8 +328,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -353,8 +349,7 @@
   font-size: 13px;
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 }
 
@@ -393,8 +388,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -434,8 +428,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -466,8 +459,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
     border-radius: var(--oge-radius);
   }
 }
@@ -556,8 +548,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -592,14 +583,14 @@
   }
 
   &:focus {
-    outline: none;
+    outline: 2px solid transparent;
     box-shadow:
       var(--oge-kanban-card-shadow),
       0 0 0 3px var(--oge-accent-soft);
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     box-shadow:
       var(--oge-kanban-card-shadow),
       0 0 0 3px var(--oge-focus-ring);
@@ -768,11 +759,22 @@
 
 .oge-kanban-card:hover .oge-kanban-card-actions,
 .oge-kanban-card:focus-visible .oge-kanban-card-actions,
-.oge-kanban-card:focus-within .oge-kanban-card-actions {
+.oge-kanban-card:focus-within .oge-kanban-card-actions,
+.oge-kanban-card-selected .oge-kanban-card-actions {
   opacity: 1;
 }
 
+// no hover on touch: the quick actions are always there
+@media (hover: none) {
+  .oge-kanban-card-actions {
+    opacity: 1;
+  }
+}
+
 .oge-kanban-card-action {
+  @include tokens.hit-area;
+
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -790,9 +792,7 @@
     color 120ms ease;
 
   &:focus-visible {
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
     color: var(--oge-text-color);
   }
 
@@ -904,7 +904,7 @@
   &:hover:not(:disabled),
   &:focus-visible {
     background: var(--oge-row-hover-bg);
-    outline: none;
+    outline: 2px solid transparent;
   }
 
   &:disabled {
@@ -1002,6 +1002,49 @@
   .oge-kanban-card-actions,
   .oge-kanban-card-action,
   .oge-kanban-menu-item {
+    transition: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-kanban-column-header,
+  .oge-kanban-column-collapsed {
+    border: 1px solid CanvasText;
+  }
+
+  // the ring is a box-shadow — forced colors draw a real border instead
+  .oge-kanban-card {
+    border: 1px solid CanvasText;
+  }
+
+  .oge-kanban-card-selected {
+    border-color: Highlight;
+    outline: 2px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .oge-kanban-card-stripe {
+    background: CanvasText !important;
+  }
+
+  .oge-kanban-card-action {
+    color: ButtonText;
+
+    &:hover {
+      color: Highlight;
+    }
+  }
+
+  .oge-kanban-placeholder {
+    border: 2px dashed Highlight;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-kanban-add-column,
+  .oge-kanban-card-shifted {
     transition: none;
   }
 }

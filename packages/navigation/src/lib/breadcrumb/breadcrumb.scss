@@ -87,8 +87,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -148,8 +147,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 

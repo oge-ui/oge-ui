@@ -57,7 +57,7 @@
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     opacity: 1;
     box-shadow: 0 0 0 3px var(--oge-focus-ring);
   }
@@ -100,7 +100,7 @@
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     border-color: var(--oge-accent);
     background: var(--oge-bg);
     box-shadow: 0 0 0 3px var(--oge-focus-ring);
@@ -154,8 +154,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   &:disabled {
@@ -201,7 +200,7 @@
   }
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     background: var(--oge-focus-ring);
   }
 }
@@ -258,8 +257,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   &:disabled {
@@ -328,8 +326,7 @@
   }
 
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 
   &:focus:not(:focus-visible) {
@@ -337,8 +334,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   &:disabled {
@@ -363,10 +359,9 @@
   position: relative;
   flex: 1;
   min-inline-size: 0;
-  outline: none;
 
   &:focus-visible {
-    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring($inset: true);
   }
 }
 
@@ -692,8 +687,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -760,8 +754,7 @@
   box-shadow: var(--oge-shadow-card);
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 }
 
@@ -864,7 +857,7 @@
   z-index: 3;
 
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
   }
 }
 
@@ -1019,5 +1012,15 @@
 
   .oge-bpmn-call-activity {
     stroke-width: 3;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-bpmn-brand-link,
+  .oge-bpmn-header-btn,
+  .oge-bpmn-header-name,
+  .oge-bpmn-resizer,
+  .oge-bpmn-tool-btn {
+    transition: none;
   }
 }

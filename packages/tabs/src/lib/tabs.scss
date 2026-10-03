@@ -143,7 +143,6 @@
   cursor: pointer;
   user-select: none;
   position: relative;
-  outline: none;
   transition:
     color 120ms ease,
     background-color 120ms ease,
@@ -157,11 +156,11 @@
 
   // Pointer/programmatic focus: soft ring. Keyboard focus: strong ring.
   &:focus {
-    box-shadow: inset 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($inset: true, $color: var(--oge-accent-soft));
   }
 
   &:focus-visible {
-    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring($inset: true);
   }
 
   &.oge-tab-selected {
@@ -336,11 +335,14 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  outline: none;
   transition: background-color 120ms ease;
 
   &:hover {
     background: var(--oge-accent-25);
+  }
+
+  &:focus-visible {
+    outline: 2px solid transparent;
   }
 }
 
@@ -385,7 +387,6 @@
   background: transparent;
   color: var(--oge-muted-color);
   cursor: pointer;
-  outline: none;
   transition:
     color 120ms ease,
     background-color 120ms ease,
@@ -397,11 +398,11 @@
   }
 
   &:focus {
-    box-shadow: inset 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($inset: true, $color: var(--oge-accent-soft));
   }
 
   &:focus-visible {
-    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring($inset: true);
   }
 
   &:disabled {
@@ -494,10 +495,9 @@
 
 .oge-tab-panel-body {
   padding: 12px 2px;
-  outline: none;
 
   &:focus-visible {
-    box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring($inset: true);
     border-radius: var(--oge-radius);
   }
 }
@@ -505,4 +505,56 @@
 .oge-tab-panel-start .oge-tab-panel-body,
 .oge-tab-panel-end .oge-tab-panel-body {
   padding: 2px 12px;
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-tab {
+    color: ButtonText;
+
+    &.oge-tab-selected {
+      color: Highlight;
+      border-block-end-color: Highlight;
+    }
+
+    &.oge-tab-disabled {
+      color: GrayText;
+    }
+
+    &.oge-tab-drop-target::before {
+      background: Highlight;
+    }
+  }
+
+  .oge-tabs-vertical .oge-tab.oge-tab-selected,
+  .oge-tab-panel-start .oge-tab.oge-tab-selected {
+    border-inline-end-color: Highlight;
+  }
+
+  .oge-tab-panel-end .oge-tab.oge-tab-selected {
+    border-inline-start-color: Highlight;
+  }
+
+  .oge-tab-strip-ink-content .oge-tab.oge-tab-selected::after {
+    background: Highlight;
+  }
+
+  // secondary (pill) strips have no ink — the selected pill gets a frame
+  .oge-tab-strip-secondary .oge-tab.oge-tab-selected {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .oge-tab-strip-nav:disabled,
+  .oge-tab-strip-menu-btn:disabled {
+    color: GrayText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-tab-strip-nav,
+  .oge-tab-strip-menu-btn {
+    transition: none;
+  }
 }

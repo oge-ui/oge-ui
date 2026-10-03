@@ -110,9 +110,7 @@
 
 .oge-pivot-field-chip:focus-visible,
 .oge-pivot-grid .oge-menu-item:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  @include tokens.focus-ring;
 }
 
 // Matrix cells sit edge to edge inside a scroller with sticky neighbours, so
@@ -120,9 +118,7 @@
 .oge-pivot-col-header:focus-visible,
 .oge-pivot-row-header:focus-visible,
 .oge-pivot-cell:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: -2px;
-  box-shadow: inset 0 0 0 3px var(--oge-focus-ring);
+  @include tokens.focus-ring($inset: true);
 }
 
 // Polite live region announcing keyboard field moves (visually hidden).
@@ -388,4 +384,45 @@
 .oge-pivot-grid .oge-menu-item-active {
   font-weight: 600;
   color: var(--oge-accent);
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-pivot-cell,
+  .oge-pivot-row-header,
+  .oge-pivot-col-header {
+    border-color: CanvasText;
+  }
+
+  .oge-pivot-expandable:hover,
+  .oge-pivot-cell:hover {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .oge-pivot-grid [tabindex]:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .oge-pivot-grid .oge-menu-item-active {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-pivot-grid .oge-menu-item:disabled {
+    color: GrayText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-pivot-panel-toggle,
+  .oge-pivot-col-header,
+  .oge-pivot-row-header,
+  .oge-pivot-arrow,
+  .oge-pivot-cell,
+  .oge-pivot-grid .oge-menu-item {
+    transition: none;
+  }
 }

@@ -23,6 +23,7 @@ import {
   type OgeTabsOrientation,
   type OgeTabsSize,
   type OgeTabsStylingMode,
+  motionScrollBehavior,
 } from '@oge-ui/behavior';
 import {
   OgeMenuList,
@@ -406,14 +407,14 @@ export function OgeTabStrip(props: OgeTabStripProps) {
       (vertical ? el.clientHeight : el.clientWidth) * 0.75 * direction;
     if (vertical) {
       if (typeof el.scrollBy === 'function') {
-        el.scrollBy({ top: amount, behavior: 'smooth' });
+        el.scrollBy({ top: amount, behavior: motionScrollBehavior() });
       } else {
         el.scrollTop += amount;
       }
     } else {
       const left = isRtl() ? -amount : amount;
       if (typeof el.scrollBy === 'function') {
-        el.scrollBy({ left, behavior: 'smooth' });
+        el.scrollBy({ left, behavior: motionScrollBehavior() });
       } else {
         el.scrollLeft += left;
       }

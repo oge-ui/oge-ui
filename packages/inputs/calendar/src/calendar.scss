@@ -52,8 +52,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 }
 
@@ -66,7 +65,11 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  outline: none;
+
+  // the active cell carries the visible cue; forced colors outline the grid
+  &:focus-visible {
+    outline: 2px solid transparent;
+  }
 }
 
 .oge-calendar-views {
@@ -141,8 +144,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 }
 
@@ -186,4 +188,39 @@
 
 .oge-calendar-invalid {
   border-color: var(--oge-danger);
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-calendar-cell-today {
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
+  }
+
+  .oge-calendar-cell-selected,
+  .oge-calendar-cell-selected:hover:not(:disabled) {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-calendar-cell-in-range,
+  .oge-calendar-cell-in-range:hover:not(:disabled) {
+    outline: 1px dashed Highlight;
+    outline-offset: -1px;
+  }
+
+  .oge-calendar-cell:disabled,
+  .oge-calendar-cell-other {
+    color: GrayText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-calendar-nav,
+  .oge-calendar-view-label,
+  .oge-calendar-today-btn,
+  .oge-calendar-cell {
+    transition: none;
+  }
 }

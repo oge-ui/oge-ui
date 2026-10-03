@@ -59,8 +59,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   &:disabled,
@@ -194,8 +193,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+    @include tokens.focus-ring;
   }
 
   &:disabled {
@@ -213,5 +211,21 @@
   .oge-menubar-item-caret svg,
   .oge-menubar-hamburger {
     transition: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-menubar-item-active:not(:disabled) {
+    color: Highlight;
+
+    &::after {
+      background: Highlight;
+    }
+  }
+
+  .oge-menubar-item:disabled {
+    color: GrayText;
   }
 }

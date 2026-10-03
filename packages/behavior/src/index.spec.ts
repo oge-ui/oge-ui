@@ -100,6 +100,9 @@ const ENTRY_POINTS = [
   'buildRowFilterExpr',
   'OgeGridAnnouncements',
   'syncOgeEditorErrorAria',
+  // a11y
+  'prefersReducedMotion',
+  'motionScrollBehavior',
 ] as const;
 
 describe('the @oge-ui/behavior barrel', () => {

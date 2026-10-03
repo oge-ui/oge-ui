@@ -76,3 +76,9 @@
   color: var(--oge-muted-color);
   font-size: 12px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .oge-pager-btn {
+    transition: none;
+  }
+}

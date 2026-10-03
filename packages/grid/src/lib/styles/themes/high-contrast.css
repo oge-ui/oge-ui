@@ -1,0 +1,108 @@
+/**
+ * High-contrast theme for the OGE suite — Angular and React packages alike.
+ *
+ * An author-side high-contrast palette (WCAG AAA-ish: body text ≥ 7:1,
+ * borders, focus rings and other UI parts ≥ 3:1 against their surface) for
+ * users who want stronger contrast without switching the whole OS to
+ * Windows High Contrast. Under OS forced colors the components follow the
+ * system palette instead, whatever theme is loaded.
+ *
+ * Import it once, in global styles:
+ *
+ *   @import '@oge-ui/core/themes/high-contrast.css';
+ *   (also shipped as @oge-ui/grid/themes/high-contrast.css)
+ *
+ * Then choose a scope — the page, or any subtree:
+ *
+ *   <html class="oge-theme-high-contrast">
+ *   <html data-oge-theme="high-contrast">
+ *
+ * Like the dark theme, the rules target the scope element, not component
+ * hosts: tokens inherit, so popups portalled to <body> under a themed
+ * <html> pick them up and a new component needs no entry here.
+ */
+.oge-theme-high-contrast,
+[data-oge-theme='high-contrast'] {
+  color-scheme: light;
+  --oge-bg: #ffffff;
+  --oge-text-color: #000000;
+  --oge-border-color: #1a1a1a;
+  --oge-header-bg: #f2f2f2;
+  --oge-header-color: #000000;
+  --oge-row-hover-bg: #e8e8e8;
+  --oge-selected-bg: #cfe0ff;
+  --oge-row-alt-bg: #f5f5f5;
+  --oge-muted-color: #404040;
+  --oge-group-bg: #ededed;
+  --oge-detail-bg: #f7f7f7;
+  --oge-popup-bg: #ffffff;
+  --oge-accent: #0037b3;
+  --oge-shadow-popup: 0 0 0 1px #000000, 0 8px 24px -8px rgba(0, 0, 0, 0.35);
+  --oge-success: #00611a;
+  --oge-success-soft: rgba(0, 97, 26, 0.12);
+  --oge-warning: #7a4100;
+  --oge-warning-soft: rgba(122, 65, 0, 0.12);
+  --oge-danger: #b3000c;
+  --oge-danger-soft: rgba(179, 0, 12, 0.1);
+  --oge-severity-contrast: #ffffff;
+  --oge-badge-bg: #b3000c;
+  --oge-badge-color: #ffffff;
+  --oge-shadow-btn: 0 0 0 1px #000000;
+  --oge-shadow-btn-hover: 0 0 0 2px #000000;
+  --oge-shadow-card: 0 0 0 1px #000000;
+  --oge-skeleton-color: #bfbfbf;
+  --oge-switch-thumb: #ffffff;
+  --oge-scrollbar-thumb: #404040;
+  --oge-scrollbar-thumb-hover: #000000;
+  --oge-scrollbar-track: #f2f2f2;
+  --oge-modal-backdrop-bg: rgb(0 0 0 / 0.6);
+  --oge-tooltip-bg: #000000;
+  --oge-tooltip-color: #ffffff;
+  --oge-scheduler-chip-fg: #ffffff;
+  --oge-scheduler-now-color: #b3000c;
+  --oge-gantt-bar-fg: #ffffff;
+  --oge-gantt-summary-bg: #333333;
+  --oge-gantt-milestone-bg: #5b00b3;
+  --oge-gantt-baseline-bg: #595959;
+  --oge-gantt-offday-bg: #f0f0f0;
+  --oge-gantt-today-color: #b3000c;
+  --oge-gantt-arrow-color: #000000;
+  --oge-kanban-column-bg: #f2f2f2;
+  --oge-kanban-card-ring: #000000;
+  --oge-kanban-card-shadow: 0 0 0 1px #000000;
+  --oge-kanban-card-shadow-hover: 0 0 0 2px #000000;
+  --oge-kanban-card-shadow-drag:
+    0 0 0 2px #000000, 0 12px 28px -6px rgba(0, 0, 0, 0.4);
+  --oge-kanban-tag-bg: #e0e0e0;
+  --oge-kanban-avatar-bg: #333333;
+  --oge-kanban-avatar-fg: #ffffff;
+  --oge-chart-grid-line: #8c8c8c;
+  --oge-chart-crosshair: #000000;
+  --oge-chart-strip-bg: rgba(0, 0, 0, 0.08);
+  --oge-chart-zoom-bg: rgba(0, 55, 179, 0.16);
+  --oge-chart-candle-up: #00611a;
+  --oge-chart-candle-down: #b3000c;
+  /* derived tokens, re-resolved inside this scope (keep in sync with
+     derived-tokens in _tokens.scss). The focus ring is the solid accent
+     here — a 40% tint would fall under 3:1. */
+  --oge-accent-soft: color-mix(in srgb, var(--oge-accent) 10%, transparent);
+  --oge-accent-25: color-mix(in srgb, var(--oge-accent) 25%, transparent);
+  --oge-focus-ring: var(--oge-accent);
+  --oge-row-focused-bg: color-mix(in srgb, var(--oge-accent) 12%, transparent);
+  --oge-update-flash-bg: color-mix(in srgb, var(--oge-accent) 24%, transparent);
+  --oge-input-muted: var(--oge-muted-color);
+  --oge-input-filled-bg: var(--oge-header-bg);
+  --oge-scheduler-chip-bg: var(--oge-accent);
+  --oge-scheduler-grid-line: var(--oge-border-color);
+  --oge-scheduler-allday-bg: var(--oge-header-bg);
+  --oge-scheduler-hour-fg: var(--oge-muted-color);
+  --oge-gantt-bar-bg: var(--oge-accent);
+  --oge-gantt-grid-line: var(--oge-border-color);
+  --oge-kanban-card-bg: var(--oge-bg);
+  --oge-kanban-card-fg: var(--oge-text-color);
+  --oge-kanban-placeholder-border: var(--oge-accent);
+  --oge-kanban-placeholder-bg: var(--oge-accent-soft);
+  --oge-kanban-lane-border: var(--oge-border-color);
+  --oge-chart-axis-line: var(--oge-text-color);
+  --oge-chart-axis-fg: var(--oge-muted-color);
+}

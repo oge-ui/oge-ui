@@ -16,6 +16,10 @@
   transition:
     background-color 120ms ease,
     border-color 120ms ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 @mixin selection-glyph-on {

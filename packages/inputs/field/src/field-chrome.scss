@@ -185,10 +185,16 @@
   min-width: 0;
   padding-block: 6px;
   border: 0;
-  outline: none;
   background: none;
   color: inherit;
   font: inherit;
+
+  // the container ring is the cue; the transparent outline paints only under
+  // forced colors, where that box-shadow ring is dropped
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid transparent;
+  }
 
   &::placeholder {
     color: var(--oge-input-muted);
@@ -303,8 +309,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--oge-focus-ring);
+    @include tokens.focus-ring($width: 2px);
   }
 }
 
@@ -485,9 +490,14 @@
   padding: 4px;
   max-height: 320px;
   overflow-y: auto;
-  outline: none;
   scrollbar-width: thin;
   scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
+
+  // the active option carries the visible cue (aria-activedescendant)
+  &:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+  }
 }
 
 .oge-select-option {
@@ -699,4 +709,66 @@
   border-radius: var(--oge-radius);
   background: var(--oge-popup-bg);
   box-shadow: var(--oge-shadow-popup);
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-input-container {
+    border-color: CanvasText;
+  }
+
+  .oge-input-focused .oge-input-container {
+    border-color: Highlight;
+  }
+
+  .oge-input-invalid .oge-input-container {
+    border-style: dashed;
+  }
+
+  .oge-disabled .oge-input-container,
+  .oge-disabled .oge-input-label,
+  .oge-disabled .oge-input-native {
+    border-color: GrayText;
+    color: GrayText;
+  }
+
+  .oge-select-option-active:not(.oge-disabled) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .oge-select-option-selected:not(.oge-disabled) {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-select-option.oge-disabled {
+    color: GrayText;
+  }
+
+  .oge-select-mark {
+    color: inherit;
+    text-decoration: underline;
+  }
+
+  .oge-tag-checkbox {
+    border-color: CanvasText;
+    background: Canvas;
+    color: Canvas;
+  }
+
+  .oge-tag-checkbox-on {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-input-dropdown svg,
+  .oge-tag-remove,
+  .oge-select-option {
+    transition: none;
+  }
 }

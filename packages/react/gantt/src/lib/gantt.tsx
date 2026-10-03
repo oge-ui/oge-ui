@@ -751,7 +751,11 @@ function OgeGanttInner<
                   return (
                     <div
                       key={String(task.key)}
-                      className="oge-gantt-bar-box"
+                      className={
+                        task.key === selectedTaskKey
+                          ? 'oge-gantt-bar-box oge-gantt-bar-box-selected'
+                          : 'oge-gantt-bar-box'
+                      }
                       style={{ top: bar.index * rowHeight, height: rowHeight }}
                     >
                       {bar.baselineLeftPx !== null ? (

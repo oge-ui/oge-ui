@@ -78,3 +78,18 @@
     background: color-mix(in srgb, var(--oge-btn-main) 72%, #000 28%);
   }
 }
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-button-group .oge-button-selected .oge-button-native,
+  .oge-button-group
+    .oge-button-selected.oge-button-colored:not(.oge-button-outlined):not(
+      .oge-button-text-mode
+    )
+    .oge-button-native {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}

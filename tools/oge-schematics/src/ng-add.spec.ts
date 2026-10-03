@@ -189,6 +189,18 @@ describe('ng-add → theme stylesheet', () => {
     ]);
   });
 
+  it('registers the high-contrast theme from @oge-ui/core', async () => {
+    const tree = await run(
+      addThemeStyle('@oge-ui/grid', { theme: 'high-contrast' }, V),
+      workspaceTree({ '/angular.json': ANGULAR_JSON }),
+    );
+
+    expect(readStyles(tree)).toEqual([
+      'node_modules/@oge-ui/core/themes/high-contrast.css',
+      'src/styles.css',
+    ]);
+  });
+
   it('does not duplicate an already registered theme', async () => {
     const once = await run(
       addThemeStyle('@oge-ui/grid', { theme: 'dark' }, V),

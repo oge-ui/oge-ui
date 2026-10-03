@@ -1,3 +1,5 @@
+@use 'tokens';
+
 // Shared structural chrome for grid-like oge components (grid, tree-list).
 // Selectors are global (ViewEncapsulation.None hosts); both components
 // @use this file, so either one standalone emits the full rule set.
@@ -62,7 +64,7 @@ input.oge-filter-input,
 
   &:focus,
   &:focus-visible {
-    outline: none;
+    outline: 2px solid transparent;
     border-color: var(--oge-accent);
     box-shadow: 0 0 0 3px var(--oge-accent-soft);
   }
@@ -440,20 +442,38 @@ input.oge-filter-input,
     background: var(--oge-selected-bg);
   }
 
+  // The header cell clips everything past its edge, so the 24px hit area
+  // (WCAG 2.5.8; 44px on coarse pointers) grows inward from the column
+  // boundary instead of around the 7px grip — what it draws is unchanged.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    right: 3px;
+    width: 24px;
+  }
+
+  @media (pointer: coarse) {
+    &::before {
+      width: 44px;
+    }
+  }
+
   // focusable separator (APG window splitter): keyboard focus gets the ring
   &:focus {
-    outline: none;
+    outline: 2px solid transparent;
   }
 
   &:focus-visible {
-    outline: 2px solid transparent;
-    outline-offset: 2px;
+    @include tokens.focus-ring;
     background: var(--oge-selected-bg);
-    box-shadow: 0 0 0 3px var(--oge-focus-ring);
   }
 }
 
 .oge-header-filter-btn {
+  // stays clickable above the resize handle's inward hit area
+  position: relative;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   margin-inline-start: auto;
@@ -807,7 +827,14 @@ input.oge-filter-input {
   font-size: 13px;
   background: var(--oge-popup-bg);
   color: inherit;
-  outline: none;
+
+  // the accent border is the focus cue; the transparent outline only
+  // paints under forced colors (where the border colour is overridden)
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+  }
 }
 
 .oge-editor-invalid {
@@ -1218,4 +1245,85 @@ input.oge-filter-input {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-header-cell,
+  .oge-cell {
+    border-color: CanvasText;
+  }
+
+  .oge-row-selected,
+  .oge-row-selected .oge-cell,
+  .oge-row-selected:hover .oge-cell {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-row-selected .oge-cell * {
+    color: inherit;
+  }
+
+  // focused row (focusedRowEnabled): an outline, not a tint
+  .oge-row-focused {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .oge-cell:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .oge-row-selected .oge-cell:focus-visible {
+    outline-color: HighlightText;
+  }
+
+  .oge-cell-editing,
+  .oge-editor-input {
+    border-color: Highlight;
+  }
+
+  .oge-editor-invalid {
+    border-style: dashed;
+  }
+
+  .oge-resize-handle:hover {
+    background: Highlight;
+  }
+
+  .oge-header-filter-active {
+    color: Highlight;
+  }
+
+  .oge-tool-btn {
+    border-color: ButtonText;
+    color: ButtonText;
+
+    &:disabled {
+      border-color: GrayText;
+      color: GrayText;
+    }
+  }
+
+  .oge-grid-skeleton {
+    background: GrayText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-tool-btn,
+  .oge-fb-input,
+  .oge-search-input,
+  .oge-hf-search,
+  input.oge-filter-input,
+  .oge-header-cell,
+  .oge-cell,
+  .oge-expander-btn,
+  .oge-group-arrow,
+  .oge-editor-input,
+  .oge-loading .oge-viewport {
+    transition: none;
+  }
 }

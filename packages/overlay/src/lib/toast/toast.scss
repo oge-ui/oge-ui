@@ -206,12 +206,14 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 }
 
 .oge-toast-close {
+  @include tokens.hit-area;
+
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -231,8 +233,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 }
 
@@ -271,16 +272,6 @@
   }
 }
 
-/* visually-hidden live regions; permanently mounted so announcements land */
-.oge-toast-announcer {
-  position: fixed;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .oge-toast,
   .oge-toast-cell {
@@ -289,5 +280,20 @@
 
   .oge-toast-spinner {
     animation: none;
+  }
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-toast {
+    border: 1px solid CanvasText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-toast-action,
+  .oge-toast-close {
+    transition: none;
   }
 }

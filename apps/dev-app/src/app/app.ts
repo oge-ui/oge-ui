@@ -686,6 +686,7 @@ export class App {
   protected readonly themeService = inject(ThemeService);
   protected readonly themes: { value: GridTheme; label: string }[] = [
     { value: 'default', label: 'Default' },
+    { value: 'high-contrast', label: 'High contrast' },
     { value: 'tailwind', label: 'Tailwind' },
     { value: 'bootstrap', label: 'Bootstrap' },
   ];

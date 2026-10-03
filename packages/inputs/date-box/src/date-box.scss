@@ -118,8 +118,7 @@
   }
 
   &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--oge-accent-soft);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
   }
 }
 
@@ -160,4 +159,20 @@
   border-color: var(--oge-accent);
   color: var(--oge-accent);
   font-weight: 600;
+}
+
+// --- forced colors (Windows High Contrast) ---------------------------------
+// System colours only; state never rides on a background colour alone.
+@include tokens.forced-colors {
+  .oge-date-box-time-selected,
+  .oge-date-box-time-selected:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-date-box-time {
+    transition: none;
+  }
 }
