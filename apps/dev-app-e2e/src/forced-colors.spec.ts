@@ -81,12 +81,14 @@ test('data grid: the focused cell keeps a visible ring, selection paints Highlig
       .locator('.oge-cell')
       .last()
       .evaluate((el) => getComputedStyle(el).backgroundColor);
-  const selectedBg = await background(selected);
+  // the cell background transitions into the selected state: poll until it
+  // settles instead of reading one frame right after the click
+  const highlight = await systemColor(page, 'Highlight');
+  await expect.poll(() => background(selected)).toBe(highlight);
   const plainBg = await background(
     grid.locator('.oge-row:not(.oge-row-selected)').nth(3),
   );
-  expect(selectedBg).toBe(await systemColor(page, 'Highlight'));
-  expect(selectedBg).not.toBe(plainBg);
+  expect(highlight).not.toBe(plainBg);
 });
 
 test('select box: the input keeps a visible keyboard ring', async ({
