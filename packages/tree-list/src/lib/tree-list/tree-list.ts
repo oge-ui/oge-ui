@@ -90,6 +90,7 @@ import {
   type OgeTreeRowReparentEvent,
   type OgeTreeRowToggleEvent,
   type OgeTreeRowTogglingEvent,
+  type OgeGridColumnHidingMode,
 } from '@oge-ui/behavior';
 import {
   OgeContextMenuEcho,
@@ -101,6 +102,7 @@ import {
   CHECKBOX_WIDTH,
   COMMAND_WIDTH,
   DRAG_WIDTH,
+  EXPANDER_WIDTH,
   ColumnLayoutModel,
   EditingModel,
   ColumnModel,
@@ -366,6 +368,16 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   readonly rowHeight = input<number | undefined>(undefined);
   readonly overscan = input<number | undefined>(undefined);
   readonly columnMinWidth = input<number | undefined>(undefined);
+
+  /**
+   * What happens to columns responsive hiding (`hidingPriority`) takes out on
+   * a narrow tree list: `'detail'` gives every row an expand button revealing
+   * the hidden columns' caption / value pairs; `'hide'` drops them.
+   * `undefined` = the grid config default (`'detail'`).
+   */
+  readonly columnHidingMode = input<OgeGridColumnHidingMode | undefined>(
+    undefined,
+  );
 
   /** Enables drag-resize handles on header edges. */
   readonly columnResize = input(true);
@@ -718,14 +730,53 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     () => this.selectionMode() === 'checkbox',
   );
 
+  private readonly effColumnHidingMode = computed(
+    () => this.columnHidingMode() ?? this.config.columnHidingMode,
+  );
+
+  /** Whether an adaptive-detail toggle can appear (declarations only — no cycle). */
+  private readonly adaptiveDetailPossible = computed(
+    () =>
+      this.effColumnHidingMode() === 'detail' &&
+      this.declaredColumns().some(
+        (column) => column.visible() && column.hidingPriority() !== undefined,
+      ),
+  );
+
+  /** The columns hidden by width, rendered in each row's adaptive detail. */
+  protected readonly adaptiveHiddenColumns = computed(() =>
+    this.effColumnHidingMode() === 'detail'
+      ? this.columnModel.adaptiveHiddenColumns()
+      : [],
+  );
+
+  /** A leading adaptive-detail toggle column is rendered. */
+  protected readonly hasAdaptiveToggle = computed(
+    () => this.adaptiveHiddenColumns().length > 0,
+  );
+
+  private readonly adaptiveExpandedKeys = signal<ReadonlySet<RowKey>>(
+    new Set(),
+  );
+
   protected readonly leadingCellCount = computed(
-    () => (this.rowDragging() ? 1 : 0) + (this.hasCheckboxColumn() ? 1 : 0),
+    () =>
+      (this.rowDragging() ? 1 : 0) +
+      (this.hasAdaptiveToggle() ? 1 : 0) +
+      (this.hasCheckboxColumn() ? 1 : 0),
+  );
+
+  /** Leading width the hiding pass counts (the adaptive toggle comes on top). */
+  private readonly hidingLeadingWidth = computed(
+    () =>
+      (this.rowDragging() ? DRAG_WIDTH : 0) +
+      (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
   );
 
   private readonly leadingWidth = computed(
     () =>
-      (this.rowDragging() ? DRAG_WIDTH : 0) +
-      (this.hasCheckboxColumn() ? CHECKBOX_WIDTH : 0),
+      this.hidingLeadingWidth() +
+      (this.hasAdaptiveToggle() ? EXPANDER_WIDTH : 0),
   );
 
   protected readonly firstDataRow: () => T | undefined = this.core.firstDataRow;
@@ -740,7 +791,10 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     order: this.store.columns.order,
     hostWidth: this.hostWidth,
     defaultMinWidth: this.effColumnMinWidth,
-    adaptiveLeadingWidth: this.leadingWidth,
+    adaptiveLeadingWidth: this.hidingLeadingWidth,
+    detailToggleWidth: computed(() =>
+      this.adaptiveDetailPossible() ? EXPANDER_WIDTH : 0,
+    ),
   });
 
   protected readonly resolvedColumns = this.columnModel.resolvedColumns;
@@ -765,6 +819,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     leadingTracks: computed(() => {
       const tracks: string[] = [];
       if (this.rowDragging()) tracks.push(`${DRAG_WIDTH}px`);
+      if (this.hasAdaptiveToggle()) tracks.push(`${EXPANDER_WIDTH}px`);
       if (this.hasCheckboxColumn()) tracks.push(`${CHECKBOX_WIDTH}px`);
       return tracks;
     }),
@@ -909,6 +964,26 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   protected onCheckboxToggle(node: DataRowNode<T>): void {
     this.toggleSelection(node.key);
+  }
+
+  /** Whether the row's adaptive detail (the hidden columns) is open. */
+  protected isAdaptiveExpanded(key: RowKey): boolean {
+    return this.adaptiveExpandedKeys().has(key);
+  }
+
+  /** DOM id of a row's adaptive detail — the toggle's `aria-controls`. */
+  protected adaptiveDetailId(key: RowKey): string {
+    return `${this.uid}-ad-${String(key).replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  }
+
+  /** Opens or closes a row's adaptive detail (`columnHidingMode: 'detail'`). */
+  protected toggleAdaptiveDetail(key: RowKey, event?: Event): void {
+    event?.stopPropagation();
+    event?.preventDefault();
+    const next = new Set(this.adaptiveExpandedKeys());
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    this.adaptiveExpandedKeys.set(next);
   }
 
   protected toggleSelectAll(): void {

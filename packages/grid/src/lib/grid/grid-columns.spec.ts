@@ -232,7 +232,12 @@ describe('OgeGrid banded + calculated + initial sort', () => {
 @Component({
   imports: [OgeGrid, OgeColumn],
   template: `
-    <oge-grid [data]="data" keyField="id" [wordWrap]="true">
+    <oge-grid
+      [data]="data"
+      keyField="id"
+      [wordWrap]="true"
+      columnHidingMode="hide"
+    >
       <oge-column field="id" dataType="number" [width]="100" />
       <oge-column field="phone" [width]="200" />
       <oge-column field="email" [width]="200" [hidingPriority]="0" />

@@ -124,6 +124,8 @@ export {
   ogeGridBandRow,
   resolveLookupItems,
   resolveOgeGridColumns,
+  resolveOgeGridAdaptiveHiddenColumns,
+  type OgeGridColumnHidingMode,
   defaultAlignmentFor,
   dateRangeFilterExpr,
   type LookupItem,

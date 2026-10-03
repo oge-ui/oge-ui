@@ -10,6 +10,7 @@ import type {
   SummaryType,
 } from '@oge-ui/core';
 import type {
+  OgeGridColumnHidingMode,
   OgeColumnAlignment,
   OgeColumnLookup,
   OgeContextMenuSource,
@@ -308,6 +309,14 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   overscan?: number;
   /** Track minimum for columns without an explicit width. */
   columnMinWidth?: number;
+  /**
+   * What happens to columns responsive hiding (`hidingPriority`) takes out on
+   * a narrow grid: `'detail'` gives every row an expand button revealing the
+   * hidden columns' caption / value pairs (formatted like the cells,
+   * `renderCell` included); `'hide'` drops them. `undefined` = provider
+   * default (`'detail'`).
+   */
+  columnHidingMode?: OgeGridColumnHidingMode;
   /** Per-column filter editors below the header. */
   filterRow?: boolean | OgeFilterRowOptions;
   /** Excel-style distinct-value filter button in the headers. */

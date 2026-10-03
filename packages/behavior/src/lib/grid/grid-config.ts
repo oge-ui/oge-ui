@@ -1,4 +1,5 @@
 import type { FilterOperator, SummaryType } from '@oge-ui/core';
+import type { OgeGridColumnHidingMode } from './grid-columns';
 
 /**
  * Every user-facing string of the grid family — the one catalog both render
@@ -27,6 +28,11 @@ export interface OgeGridMessages {
   selectAllRows: string;
   selectRow: string;
   toggleDetail: string;
+  /**
+   * Aria label / title of a row's adaptive-detail toggle — the button that
+   * reveals the columns responsive hiding took out (`columnHidingMode: 'detail'`).
+   */
+  toggleAdaptiveDetail: string;
   /** Accessible name of the row-drag handle column's header cell. */
   reorderColumnHeader: string;
   /** Accessible name of the master-detail expander column's header cell. */
@@ -178,6 +184,7 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   selectAllRows: 'Select all rows',
   selectRow: 'Select row',
   toggleDetail: 'Toggle detail',
+  toggleAdaptiveDetail: 'Show hidden columns',
   reorderColumnHeader: 'Reorder',
   detailColumnHeader: 'Detail',
   selectAllColumnHeader: 'Select all',
@@ -290,6 +297,12 @@ export interface OgeGridConfig {
   /** Whether a third header click clears the sort. */
   allowUnsorting: boolean;
   /**
+   * Default `columnHidingMode`: `'detail'` keeps the data of columns hidden
+   * by `hidingPriority` reachable through a per-row expand button;
+   * `'hide'` drops it.
+   */
+  columnHidingMode: OgeGridColumnHidingMode;
+  /**
    * Whether sort, filter result, paging, group expansion, select-all and
    * validation changes are spoken through the shared live announcer.
    */
@@ -306,6 +319,7 @@ export const OGE_DEFAULT_GRID_CONFIG: OgeGridConfig = {
   pinnedDefaultWidth: 150,
   headerFilterValueLimit: 200,
   allowUnsorting: true,
+  columnHidingMode: 'detail',
   announcements: true,
   messages: OGE_DEFAULT_GRID_MESSAGES,
 };

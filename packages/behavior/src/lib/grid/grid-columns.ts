@@ -310,6 +310,12 @@ export interface OgeGridAdaptiveHidingInput {
   defaultMinWidth: number;
   /** Width of the leading utility cells counted against the available width. */
   leadingWidth: number;
+  /**
+   * Width of the adaptive-detail toggle track (`columnHidingMode: 'detail'`),
+   * counted only once a column is hidden — the toggle exists only then.
+   * Default `0`.
+   */
+  detailToggleWidth?: number;
 }
 
 /**
@@ -335,8 +341,9 @@ export function adaptiveHiddenColumnIds(
   const candidates = declared
     .filter((column) => column.hidingPriority !== undefined)
     .sort((a, b) => (a.hidingPriority ?? 0) - (b.hidingPriority ?? 0));
+  const toggle = input.detailToggleWidth ?? 0;
   for (const column of candidates) {
-    if (total <= hostWidth) break;
+    if (total + (hidden.size ? toggle : 0) <= hostWidth) break;
     if (!column.field) continue;
     hidden.add(column.field);
     total -= widthOf(column);
@@ -472,6 +479,32 @@ export function resolveOgeGridColumns<T, TSlot, S>(
     ...column,
     absIndex: index,
   }));
+}
+
+/**
+ * What happens to the data of a column responsive hiding (`hidingPriority`)
+ * took out: `'detail'` gives every row an expand button revealing the hidden
+ * columns' caption / value pairs (the adaptive detail), `'hide'` drops them
+ * with no way back in.
+ */
+export type OgeGridColumnHidingMode = 'hide' | 'detail';
+
+const NO_HIDDEN_IDS: ReadonlySet<string> = new Set();
+
+/**
+ * The columns {@link adaptiveHiddenColumnIds} took out, resolved exactly like
+ * the visible ones (accessor, caption, format, cell slot), in the user's
+ * column order — what the adaptive detail renders. Empty when nothing is
+ * hidden, without resolving anything.
+ */
+export function resolveOgeGridAdaptiveHiddenColumns<T, TSlot, S>(
+  input: OgeGridColumnResolveInput<T, TSlot, S>,
+): OgeGridResolvedColumn<T, TSlot, S>[] {
+  const hidden = input.adaptiveHiddenIds;
+  if (!hidden.size) return [];
+  return resolveOgeGridColumns({ ...input, adaptiveHiddenIds: NO_HIDDEN_IDS })
+    .filter((column) => hidden.has(column.id))
+    .map((column, index) => ({ ...column, absIndex: index }));
 }
 
 /** One cell of the band (column-group) header row. */

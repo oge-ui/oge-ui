@@ -8,6 +8,7 @@ import type {
   TreeListStateSnapshot,
 } from '@oge-ui/core';
 import type {
+  OgeGridColumnHidingMode,
   OgeContextMenuSource,
   OgeDataErrorEvent,
   OgeEditingOptions,
@@ -180,6 +181,13 @@ export interface OgeTreeListProps<T extends object = Record<string, unknown>> {
   rowHeight?: number;
   overscan?: number;
   columnMinWidth?: number;
+  /**
+   * What happens to columns responsive hiding (`hidingPriority`) takes out:
+   * `'detail'` gives every row an expand button revealing the hidden
+   * columns' caption / value pairs; `'hide'` drops them. `undefined` = the
+   * grid provider default (`'detail'`).
+   */
+  columnHidingMode?: OgeGridColumnHidingMode;
   /** Enables drag-resize handles on header edges. Default true. */
   columnResize?: boolean;
   /** Enables drag-and-drop column reordering (headers and chooser rows). Default true. */

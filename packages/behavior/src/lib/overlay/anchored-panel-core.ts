@@ -286,7 +286,7 @@ export class OgeAnchoredPanelCore {
       }),
     )}px`;
     if (panelEl.style.getPropertyValue(AVAILABLE_HEIGHT_VAR) !== available) {
-      panelEl.style.setProperty(AVAILABLE_HEIGHT_VAR, available);
+      panelEl.style.setProperty('--oge-popup-available-height', available);
     }
     const position: OgeResolvedPopupPosition = {
       ...resolved,

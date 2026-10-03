@@ -592,7 +592,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         [attr.aria-selected]="ariaSelectedOf(node)"
         [attr.aria-rowindex]="viewStart() + nodeIndex + 2"
         [attr.data-rowindex]="viewStart() + nodeIndex"
-        [style.height.px]="virtualized() && !autoRowHeight() ? effRowHeight() : null"
+        [style.height.px]="virtualized() && !autoRowHeight() && !isAdaptiveExpanded(node.key) ? effRowHeight() : null"
         [style.grid-template-columns]="gridTemplateColumns()"
         [class.oge-drop-target]="dropTargetKey() === node.key"
         [attr.aria-keyshortcuts]="rowDragging() ? 'Control+ArrowUp Control+ArrowDown' : null"
@@ -633,6 +633,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         </div>
         } @if (hasExpander()) {
         <div class="oge-cell oge-expander-cell" role="gridcell">
+          @if (hasDetailToggle()) {
           <button
             type="button"
             class="oge-expander-btn"
@@ -654,6 +655,31 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
               <path d="m6 3.5 4.5 4.5L6 12.5" />
             </svg>
           </button>
+          } @if (hasAdaptiveToggle()) {
+          <button
+            type="button"
+            class="oge-expander-btn oge-adaptive-toggle"
+            [class.oge-expanded]="isAdaptiveExpanded(node.key)"
+            [attr.aria-expanded]="isAdaptiveExpanded(node.key)"
+            [attr.aria-controls]="isAdaptiveExpanded(node.key) ? adaptiveDetailId(node.key) : null"
+            [attr.aria-label]="msg().toggleAdaptiveDetail"
+            [attr.title]="msg().toggleAdaptiveDetail"
+            (click)="toggleAdaptiveDetail(node.key, $event)"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M8 3.5v9M3.5 8h9" class="oge-adaptive-toggle-plus" />
+            </svg>
+          </button>
+          }
         </div>
         } @if (hasCheckboxColumn()) {
         <div class="oge-cell oge-checkbox-cell" role="gridcell">
@@ -842,6 +868,37 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
             {{ btn.text }}
           </button>
           } } } } }
+        </div>
+        } @if (hasAdaptiveToggle() && isAdaptiveExpanded(node.key)) {
+        <!-- the hidden columns' caption / value pairs, spanning the row on a
+             second grid line; rendered like the cells they stand in for -->
+        <div
+          class="oge-adaptive-detail"
+          role="gridcell"
+          [id]="adaptiveDetailId(node.key)"
+          [attr.aria-colspan]="resolvedColumns().length + leadingCellCount()"
+        >
+          <dl class="oge-adaptive-detail-list">
+            @for (column of adaptiveHiddenColumns(); track column.id) {
+            <div class="oge-adaptive-detail-item">
+              <dt class="oge-adaptive-detail-caption">{{ column.caption }}</dt>
+              <dd
+                class="oge-adaptive-detail-value"
+                [class.oge-cell-number]="column.dataType === 'number'"
+              >
+                @if (column.cellTemplate) {
+                <ng-container
+                  *ngTemplateOutlet="column.cellTemplate; context: cellContext(node.data, node.sourceIndex, column)"
+                />
+                } @else if (booleanLabelOf(node, column); as booleanLabel) {
+                <span aria-hidden="true"
+                  >{{ cellDisplayText(node, column) }}</span
+                ><span class="oge-sr-only">{{ booleanLabel }}</span>
+                } @else { {{ cellDisplayText(node, column) }} }
+              </dd>
+            </div>
+            }
+          </dl>
         </div>
         }
       </div>
