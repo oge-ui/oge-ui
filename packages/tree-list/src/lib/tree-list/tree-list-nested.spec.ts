@@ -78,16 +78,21 @@ describe('OgeTreeList nested payloads (itemsExpr)', () => {
   });
 });
 
-function dragEvent(type: string, clientY = 0): DragEvent {
-  const event = new Event(type, {
+/** Pointer events as jsdom builds them; the move's target is the hit. */
+function pointer(
+  type: string,
+  target: EventTarget | null | undefined,
+  clientY = 0,
+): void {
+  const event = new MouseEvent(type, {
     bubbles: true,
     cancelable: true,
-  }) as DragEvent;
-  Object.defineProperty(event, 'dataTransfer', {
-    value: { setData: () => undefined, effectAllowed: 'move' },
+    button: 0,
+    clientX: 5,
+    clientY,
   });
-  Object.defineProperty(event, 'clientY', { value: clientY });
-  return event;
+  Object.defineProperty(event, 'pointerId', { value: 1 });
+  target?.dispatchEvent(event);
 }
 
 @Component({
@@ -123,19 +128,23 @@ describe('OgeTreeList sibling ordering (before/after drops)', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(rowTitles(el)).toEqual(['Root A', 'Child A1', 'Child A2', 'Root B']);
 
-    rowOf(el, 'Child A2')
-      ?.querySelector('.oge-drag-handle')
-      ?.dispatchEvent(dragEvent('dragstart'));
+    pointer(
+      'pointerdown',
+      rowOf(el, 'Child A2')?.querySelector('.oge-drag-handle'),
+      200,
+    );
     await settle(fixture);
     const target = rowOf(el, 'Child A1');
-    // jsdom rects are 0-height → dropPositionOf falls back to 'inside';
+    // jsdom rects are 0-height → the drop position falls back to 'inside';
     // stub a rect so the top-quarter math is exercised for real
     if (target) {
       target.getBoundingClientRect = () =>
         ({ top: 100, height: 36, bottom: 136 }) as DOMRect;
     }
-    target?.dispatchEvent(dragEvent('dragover', 102)); // top quarter
-    target?.dispatchEvent(dragEvent('drop', 102));
+    pointer('pointermove', target, 102); // top quarter
+    fixture.detectChanges();
+    expect(target?.classList).toContain('oge-drop-before');
+    pointer('pointerup', target, 102);
     await settle(fixture);
     await new Promise((resolve) => setTimeout(resolve));
     await settle(fixture);

@@ -41,26 +41,17 @@ function rowOf(el: HTMLElement, text: string): HTMLElement | undefined {
   );
 }
 
-class DataTransferStub {
-  private readonly data = new Map<string, string>();
-  effectAllowed = 'move';
-  readonly types: string[] = [];
-  setData(type: string, value: string): void {
-    this.data.set(type, value);
-    this.types.push(type);
-  }
-  getData(type: string): string {
-    return this.data.get(type) ?? '';
-  }
-}
-
-function dragEvent(type: string, transfer: DataTransferStub): DragEvent {
-  const event = new Event(type, {
+/** Pointer events as jsdom builds them; the move's target is the hit. */
+function pointer(type: string, target: EventTarget, x: number): void {
+  const event = new MouseEvent(type, {
     bubbles: true,
     cancelable: true,
-  }) as DragEvent;
-  Object.defineProperty(event, 'dataTransfer', { value: transfer });
-  return event;
+    button: 0,
+    clientX: x,
+    clientY: 5,
+  });
+  Object.defineProperty(event, 'pointerId', { value: 1 });
+  target.dispatchEvent(event);
 }
 
 @Component({
@@ -251,10 +242,11 @@ describe('OgeTreeList parity features', () => {
     const headers = Array.from(
       el.querySelectorAll<HTMLElement>('.oge-header-cell'),
     );
-    const transfer = new DataTransferStub();
-    headers[1].dispatchEvent(dragEvent('dragstart', transfer)); // Office
-    headers[0].dispatchEvent(dragEvent('dragover', transfer));
-    headers[0].dispatchEvent(dragEvent('drop', transfer)); // before Title
+    pointer('pointerdown', headers[1], 200); // Office
+    pointer('pointermove', headers[0], 20);
+    fixture.detectChanges();
+    expect(headers[0].classList).toContain('oge-col-drop-target');
+    pointer('pointerup', headers[0], 20); // before Title
     await settle(fixture);
     const captions = Array.from(el.querySelectorAll('.oge-header-caption')).map(
       (cell) => cell.textContent?.trim(),

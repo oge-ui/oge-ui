@@ -202,11 +202,7 @@ store.editing.hasPending())) {
             : null
         "
         [class.oge-col-drop-target]="headerDropTargetId() === column.id"
-        [attr.draggable]="column.field && columnReorder() ? true : null"
-        (dragstart)="onHeaderDragStart(column, $event)"
-        (dragover)="onHeaderDragOver(column, $event)"
-        (dragend)="onHeaderDragEnd()"
-        (drop)="onHeaderDrop(column, $event)"
+        (pointerdown)="onHeaderPointerDown(column, $event)"
         (contextmenu)="onHeaderContextMenu(column, $event)"
         (click)="onHeaderClick(column, $event)"
         (keydown.enter)="onHeaderClick(column, $event)"
@@ -467,8 +463,6 @@ store.editing.hasPending())) {
         (click)="onRowClick(node, $event)"
         (dblclick)="rowDblClick.emit({ row: node.data, key: node.key, event: $event })"
         (contextmenu)="onRowContextMenuOpen(node, $event)"
-        (dragover)="rowDragging() && onRowDragOver(node, $event)"
-        (drop)="rowDragging() && onRowDrop(node, $event)"
       >
         @if (rowDragging()) {
         <div class="oge-cell oge-drag-cell" role="gridcell">
@@ -477,10 +471,8 @@ store.editing.hasPending())) {
           <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- keyboard access is provided by the roving-tabindex/listbox key handling on the container -->
           <span
             class="oge-drag-handle"
-            draggable="true"
             [attr.aria-label]="msg().reparentRow"
-            (dragstart)="onRowDragStart(node, $event)"
-            (dragend)="onRowDragEnd()"
+            (pointerdown)="onRowHandlePointerDown(node, $event)"
             (click)="$event.stopPropagation()"
           >
             <svg
@@ -901,12 +893,8 @@ store.editing.hasPending())) {
       [class.oge-chooser-drop-target]="chooserDropTargetId() === entry.id"
       [attr.data-chooser-id]="entry.id"
       [attr.aria-keyshortcuts]="columnReorder() ? 'Control+ArrowUp Control+ArrowDown' : null"
-      [draggable]="columnReorder()"
       (keydown)="onChooserKeydown(entry.id, $event)"
-      (dragstart)="onChooserDragStart(entry.id, $any($event))"
-      (dragover)="onChooserDragOver(entry.id, $any($event))"
-      (dragend)="onChooserDragEnd()"
-      (drop)="onChooserDrop(entry.id, $any($event))"
+      (pointerdown)="onChooserPointerDown(entry.id, $event)"
     >
       @if (columnReorder()) {
       <span class="oge-chooser-grip" aria-hidden="true">

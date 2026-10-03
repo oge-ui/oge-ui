@@ -92,6 +92,14 @@ import {
   type OgeTreeRowTogglingEvent,
 } from '@oge-ui/behavior';
 import {
+  beginPointerDragDrop,
+  isOgeDragExcludedTarget,
+  resolveOgeAttributeTarget,
+  resolveOgeHeaderDropTarget,
+  resolveOgeRowDropIndex,
+  type OgeGridHeaderDropTarget,
+} from '@oge-ui/behavior';
+import {
   OgeContextMenuEcho,
   isOgeContextMenuKey,
   ogeContextMenuKeyTarget,
@@ -182,8 +190,6 @@ export type {
   OgeTreeRowToggleEvent,
   OgeTreeRowTogglingEvent,
 };
-
-const COLUMN_DRAG_TYPE = 'application/x-oge-column';
 
 let nextUid = 0;
 
@@ -1453,45 +1459,39 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Header the dragged column would be inserted in front of (drop indicator). */
   protected readonly headerDropTargetId = signal<string | null>(null);
 
-  protected onHeaderDragStart(
+  /**
+   * Pointer drag of a header onto another (long press under touch) —
+   * `columns.reorder`, the command Ctrl+Shift+Arrow runs.
+   */
+  protected onHeaderPointerDown(
     column: ResolvedColumn<T>,
-    event: DragEvent,
+    event: PointerEvent,
   ): void {
-    if (!column.field || !this.columnReorder()) {
-      event.preventDefault();
-      return;
-    }
-    if (event.dataTransfer) {
-      event.dataTransfer.setData(COLUMN_DRAG_TYPE, column.id);
-      event.dataTransfer.effectAllowed = 'move';
-    }
-  }
-
-  protected onHeaderDragOver(
-    column: ResolvedColumn<T>,
-    event: DragEvent,
-  ): void {
-    if (!event.dataTransfer?.types.includes(COLUMN_DRAG_TYPE)) return;
-    event.preventDefault();
-    if (this.columnReorder() && this.headerDropTargetId() !== column.id) {
-      this.headerDropTargetId.set(column.id);
-    }
-  }
-
-  protected onHeaderDragEnd(): void {
-    this.headerDropTargetId.set(null);
-  }
-
-  protected onHeaderDrop(target: ResolvedColumn<T>, event: DragEvent): void {
-    this.headerDropTargetId.set(null);
-    const sourceId = event.dataTransfer?.getData(COLUMN_DRAG_TYPE);
-    if (!sourceId || !this.columnReorder() || sourceId === target.id) return;
-    event.preventDefault();
-    this.store.columns.reorder(
-      this.resolvedColumns().map((c) => c.id),
-      sourceId,
-      target.id,
-    );
+    if (event.button !== 0 || !column.field || !this.columnReorder()) return;
+    const cell = event.currentTarget as HTMLElement;
+    if (isOgeDragExcludedTarget(event.target, cell)) return;
+    const host = this.hostRef.nativeElement;
+    beginPointerDragDrop<OgeGridHeaderDropTarget>(event, {
+      source: cell,
+      autoScroll: this.viewportRef()?.nativeElement ?? null,
+      autoScrollOptions: { axis: 'x' },
+      resolve: (hit) =>
+        resolveOgeHeaderDropTarget(hit, host, { reorder: true, group: false }),
+      onOver: (target) => {
+        const id =
+          target?.kind === 'column' && target.id !== column.id ? target.id : null;
+        if (this.headerDropTargetId() !== id) this.headerDropTargetId.set(id);
+      },
+      onDrop: (target) => {
+        if (target.kind !== 'column' || target.id === column.id) return;
+        this.store.columns.reorder(
+          this.resolvedColumns().map((c) => c.id),
+          column.id,
+          target.id,
+        );
+      },
+      onEnd: () => this.headerDropTargetId.set(null),
+    });
   }
 
   protected readonly chooserOpen = signal(false);
@@ -1566,38 +1566,34 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     entry.column?.visible.set(!entry.column.visible());
   }
 
-  private chooserDragId: string | null = null;
   /** Chooser row the dragged column would be inserted in front of. */
   protected readonly chooserDropTargetId = signal<string | null>(null);
 
-  protected onChooserDragStart(id: string, event: DragEvent): void {
-    this.chooserDragId = id;
-    event.dataTransfer?.setData('text/plain', id);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-  }
-
-  protected onChooserDragOver(id: string, event: DragEvent): void {
-    if (!this.chooserDragId) return;
-    event.preventDefault();
-    if (this.chooserDropTargetId() !== id) this.chooserDropTargetId.set(id);
-  }
-
-  protected onChooserDragEnd(): void {
-    this.chooserDragId = null;
-    this.chooserDropTargetId.set(null);
-  }
-
-  /** Reorders columns by dropping one chooser row onto another. */
-  protected onChooserDrop(targetId: string, event: DragEvent): void {
-    const sourceId = this.chooserDragId;
-    this.onChooserDragEnd();
-    if (!sourceId || sourceId === targetId || !this.columnReorder()) return;
-    event.preventDefault();
-    this.store.columns.reorder(
-      this.chooserEntries().map((entry) => entry.id),
-      sourceId,
-      targetId,
-    );
+  /**
+   * Reorders columns by dragging one chooser row onto another (long press
+   * under touch) — `columns.reorder`, as Ctrl+ArrowUp/Down on the row runs.
+   */
+  protected onChooserPointerDown(id: string, event: PointerEvent): void {
+    if (event.button !== 0 || !this.columnReorder()) return;
+    const row = event.currentTarget as HTMLElement;
+    const list = row.closest('.oge-chooser-popup');
+    beginPointerDragDrop<string>(event, {
+      source: row,
+      resolve: (hit) => resolveOgeAttributeTarget(hit, list, 'data-chooser-id'),
+      onOver: (target) => {
+        const next = target === id ? null : target;
+        if (this.chooserDropTargetId() !== next) this.chooserDropTargetId.set(next);
+      },
+      onDrop: (targetId) => {
+        if (targetId === id || !this.columnReorder()) return;
+        this.store.columns.reorder(
+          this.chooserEntries().map((entry) => entry.id),
+          id,
+          targetId,
+        );
+      },
+      onEnd: () => this.chooserDropTargetId.set(null),
+    });
   }
 
   protected readonly contextMenu = signal<{
@@ -1846,62 +1842,65 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
 
   // --- row drag reparenting -------------------------------------------------
 
-  private draggedRowKey: RowKey | null = null;
   /** Row + relative position currently hovered as a valid drop target. */
   protected readonly dropTarget = signal<{
     key: RowKey;
     position: OgeTreeDropPosition;
   } | null>(null);
 
-  protected onRowDragStart(node: DataRowNode<T>, event: DragEvent): void {
-    this.draggedRowKey = node.key;
-    event.dataTransfer?.setData('text/plain', String(node.key));
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-  }
-
-  private isValidDropTarget(targetKey: RowKey): boolean {
-    return untracked(() =>
-      this.core.isValidDropTarget(this.draggedRowKey, targetKey),
-    );
-  }
-
-  /** Top/bottom quarter of a row = order before/after; middle = reparent inside. */
-  private dropPositionOf(event: DragEvent): OgeTreeDropPosition {
-    const row = (event.currentTarget ?? event.target) as HTMLElement | null;
-    return ogeTreeDropPosition(event.clientY, row?.getBoundingClientRect?.());
-  }
-
-  protected onRowDragOver(node: DataRowNode<T>, event: DragEvent): void {
-    if (!this.isValidDropTarget(node.key)) return;
-    event.preventDefault();
-    const position = this.dropPositionOf(event);
-    const current = this.dropTarget();
-    if (current?.key !== node.key || current.position !== position) {
-      this.dropTarget.set({ key: node.key, position });
-    }
-  }
-
-  protected onRowDragEnd(): void {
-    this.draggedRowKey = null;
-    this.dropTarget.set(null);
-  }
-
-  protected onRowDrop(target: DataRowNode<T>, event: DragEvent): void {
-    const draggedKey = this.draggedRowKey;
-    const position = this.dropTarget()?.position ?? this.dropPositionOf(event);
-    const valid = draggedKey !== null && this.isValidDropTarget(target.key);
-    this.onRowDragEnd();
-    if (!valid || draggedKey === null) return;
-    event.preventDefault();
-    // plain arrays with a writable top-level parent field are moved in place;
-    // dotted paths, nested payloads and DataSources are the consumer's job
-    // (handle rowReparented)
-    const moved = untracked(() =>
-      this.core.applyDrop(draggedKey, target.key, position, () =>
-        this.adapter.reload(),
-      ),
-    );
-    if (moved) this.rowReparented.emit(moved);
+  /**
+   * Pointer drag on a row's handle (touch drags at once — the handle is
+   * `touch-action: none`). The top/bottom quarter of the row under the
+   * pointer orders before/after it, the middle reparents inside; the drop
+   * runs `applyDrop`, the same path as the Ctrl+Arrow keys.
+   */
+  protected onRowHandlePointerDown(
+    node: DataRowNode<T>,
+    event: PointerEvent,
+  ): void {
+    if (event.button !== 0) return;
+    const handle = event.currentTarget as HTMLElement;
+    const host = this.hostRef.nativeElement;
+    const draggedKey = node.key;
+    beginPointerDragDrop<{ key: RowKey; position: OgeTreeDropPosition }>(event, {
+      source: handle,
+      ghost: handle.closest('.oge-row'),
+      longPress: 0,
+      autoScroll: this.viewportRef()?.nativeElement ?? null,
+      autoScrollOptions: { axis: 'y' },
+      resolve: (hit, moveEvent) => {
+        const index = resolveOgeRowDropIndex(hit, host);
+        const target = index === null ? undefined : untracked(this.renderNodes)[index];
+        if (target?.kind !== 'data') return null;
+        if (!untracked(() => this.core.isValidDropTarget(draggedKey, target.key)))
+          return null;
+        const row = hit?.closest('.oge-row');
+        return {
+          key: target.key,
+          position: ogeTreeDropPosition(
+            moveEvent.clientY,
+            row?.getBoundingClientRect?.(),
+          ),
+        };
+      },
+      onOver: (target) => {
+        const current = this.dropTarget();
+        if (current?.key !== target?.key || current?.position !== target?.position)
+          this.dropTarget.set(target);
+      },
+      onDrop: (target) => {
+        // plain arrays with a writable top-level parent field are moved in
+        // place; dotted paths, nested payloads and DataSources are the
+        // consumer's job (handle rowReparented)
+        const moved = untracked(() =>
+          this.core.applyDrop(draggedKey, target.key, target.position, () =>
+            this.adapter.reload(),
+          ),
+        );
+        if (moved) this.rowReparented.emit(moved);
+      },
+      onEnd: () => this.dropTarget.set(null),
+    });
   }
 
   // --- keyboard alternatives to the drag gestures (WCAG 2.1.1 / 2.5.7) --------
