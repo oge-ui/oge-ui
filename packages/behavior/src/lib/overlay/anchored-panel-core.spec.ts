@@ -131,6 +131,48 @@ describe('positioning', () => {
     h.core.destroy();
   });
 
+  it('writes the room left on the resolved side as a custom property', async () => {
+    const h = harness({ placement: () => 'bottom-start', offset: () => 4 });
+    h.core.open();
+    await frame();
+    // 768 viewport − (100 + 30) anchor bottom − 4 offset − 8 padding
+    expect(h.panel.style.getPropertyValue('--oge-popup-available-height')).toBe(
+      '626px',
+    );
+    h.core.destroy();
+  });
+
+  it('positions against the visual viewport and follows it (keyboard, pinch zoom)', async () => {
+    const visual = Object.assign(new EventTarget(), {
+      width: 1024,
+      height: 300,
+      offsetTop: 20,
+      offsetLeft: 0,
+    });
+    vi.stubGlobal('visualViewport', visual);
+    try {
+      const h = harness({ placement: () => 'bottom-start', offset: () => 4 });
+      h.core.open();
+      await frame();
+      // anchor at layout y=100 is y=80 in the visual viewport; the result is
+      // translated back into layout coordinates
+      expect(h.core.position()).toMatchObject({ top: 134, left: 50 });
+      // 300 visible − (80 + 30) − 4 − 8
+      expect(
+        h.panel.style.getPropertyValue('--oge-popup-available-height'),
+      ).toBe('178px');
+      visual.height = 150; // the keyboard slides up
+      visual.dispatchEvent(new Event('resize'));
+      await frame();
+      await frame();
+      // no room below any more → flips above the anchor
+      expect(h.core.position()?.placement).toBe('top-start');
+      h.core.destroy();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('matches the anchor width when asked, and reports it', async () => {
     const h = harness({ width: () => 'anchor' });
     h.core.open();

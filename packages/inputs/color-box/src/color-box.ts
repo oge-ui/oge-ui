@@ -24,6 +24,8 @@ import {
 import {
   OGE_OVERLAY_CONFIG,
   OgePopup,
+  ogeAdaptivePresentation,
+  type OgeAdaptiveMode,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
 import { OgeFieldChrome } from '@oge-ui/inputs/field';
@@ -127,11 +129,19 @@ const DEFAULT_HSVA: OgeHsva = { h: 0, s: 0, v: 0, a: 1 };
       <ng-content select="[ogeInputSuffix]" ngProjectAs="[ogeInputSuffix]" />
     </oge-field-chrome>
     @if (opened()) {
-      <oge-popup [panel]="panel">
+      <oge-popup
+        [panel]="panel"
+        [adaptive]="presentation()"
+        [adaptiveTitle]="label() || msg().colorPickerLabel"
+        [closeLabel]="msg().adaptiveClose"
+      >
+        <!-- adaptive: the sheet surface around it is the dialog -->
         <div
           class="oge-color-box-panel"
-          role="dialog"
-          [attr.aria-label]="label() || msg().colorPickerLabel"
+          [attr.role]="adaptiveActive() ? null : 'dialog'"
+          [attr.aria-label]="
+            adaptiveActive() ? null : label() || msg().colorPickerLabel
+          "
         >
           @if (view() !== 'palette') {
             <oge-color-surface
@@ -355,6 +365,23 @@ export class OgeColorBox
   readonly dropdownPlacement = input<OgePopupPlacement>('bottom-start');
   /** Picker visibility — two-way. */
   readonly opened = model(false);
+  /**
+   * `'auto'` presents the picker as a modal bottom sheet (title, close
+   * button) on viewports narrower than `adaptiveBreakpoint`; `'none'` always
+   * anchors it. `undefined` = config default (`'none'`).
+   */
+  readonly adaptiveMode = input<OgeAdaptiveMode | undefined>(undefined);
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` applies; `undefined` = config (600). */
+  readonly adaptiveBreakpoint = input<number | undefined>(undefined);
+  /** Current presentation: anchored, or the adaptive bottom sheet. */
+  protected readonly presentation = ogeAdaptivePresentation(
+    () => this.adaptiveMode() ?? this.config.adaptiveMode,
+    () => this.adaptiveBreakpoint() ?? this.config.adaptiveBreakpoint,
+    'sheet',
+  );
+  protected readonly adaptiveActive = computed(
+    () => this.presentation() !== 'popup',
+  );
 
   readonly dropDownOpened = output<void>();
   readonly dropDownClosed = output<void>();
@@ -706,6 +733,8 @@ export class OgeColorBox
     // focus moving into the picker dialog is not a real blur
     const related = event.relatedTarget as Node | null;
     if (related && this.hostEl.nativeElement.contains(related)) return;
+    // nor is the adaptive sheet taking focus (the field goes inert)
+    if (this.opened() && this.adaptiveActive()) return;
     super.handleBlur(event);
   }
 

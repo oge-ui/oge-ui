@@ -1,3 +1,8 @@
+import {
+  OGE_DEFAULT_ADAPTIVE_CONFIG,
+  type OgeAdaptiveMode,
+} from '../overlay/adaptive';
+
 /**
  * Every user-facing string and behavioral default of the input editors,
  * shared by both render layers (ADR 0001). The Angular
@@ -127,6 +132,14 @@ export interface OgeInputsMessages {
   alphaInputLabel: string;
   /** Aria label / title of the color box's eyedropper button. */
   eyedropperButton: string;
+  /** Aria label of the adaptive sheet / full-screen dialog's close (✕) button. */
+  adaptiveClose: string;
+  /** Confirm action of the adaptive tag box and date range box (closes the sheet). */
+  adaptiveDone: string;
+  /** Placeholder and aria label of the adaptive sheet's search field. */
+  adaptiveSearch: string;
+  /** Dialog title of an adaptive popup whose editor has no label. */
+  adaptiveTitle: string;
 }
 
 export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
@@ -192,6 +205,10 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   blueInputLabel: 'Blue',
   alphaInputLabel: 'Opacity percent',
   eyedropperButton: 'Pick color from screen',
+  adaptiveClose: 'Close',
+  adaptiveDone: 'Done',
+  adaptiveSearch: 'Search',
+  adaptiveTitle: 'Select',
 };
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */
@@ -209,6 +226,15 @@ export interface OgeInputsConfig {
   copiedResetMs: number;
   /** Select box: delay before typed search text filters the list. */
   searchTimeoutMs: number;
+  /**
+   * Default `adaptiveMode` of every popup editor (select box, tag box,
+   * autocomplete, tree select, date / date range / color box). `'none'`
+   * keeps the anchored drop-down everywhere; `'auto'` presents it as a bottom
+   * sheet or full-screen dialog below `adaptiveBreakpoint`.
+   */
+  adaptiveMode: OgeAdaptiveMode;
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` goes adaptive. */
+  adaptiveBreakpoint: number;
   messages: OgeInputsMessages;
 }
 
@@ -217,6 +243,8 @@ export const OGE_DEFAULT_INPUTS_CONFIG: OgeInputsConfig = {
   spinRepeatIntervalMs: 80,
   copiedResetMs: 2000,
   searchTimeoutMs: 250,
+  adaptiveMode: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveMode,
+  adaptiveBreakpoint: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveBreakpoint,
   messages: OGE_DEFAULT_INPUTS_MESSAGES,
 };
 

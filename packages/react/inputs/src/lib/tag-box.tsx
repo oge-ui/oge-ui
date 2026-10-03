@@ -7,6 +7,7 @@ import {
   useReducer,
   useRef,
   useState,
+  type ChangeEvent,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
@@ -14,6 +15,7 @@ import {
 import { withInputWidth } from './field-extras';
 import {
   OgeSelectListCore,
+  adaptiveListViewportHeight,
   type OgeVirtualScrollOptions,
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
@@ -38,6 +40,13 @@ import {
 import { createBumpAdapter } from './rx-adapter';
 import { useListVirtualizer } from './use-list-virtualizer';
 import { useOgeField, type OgeControlProps } from './use-field';
+import {
+  SheetDone,
+  SheetSearch,
+  sheetFocusAttr,
+  useAdaptivePopup,
+  type OgeAdaptiveProps,
+} from './adaptive';
 
 /** Payload of `onSelectionChange` — the added/removed item delta per commit. */
 export interface OgeTagBoxSelectionChangedEvent<TItem> {
@@ -63,7 +72,10 @@ export interface OgeTagBoxHandle {
 }
 
 export interface OgeTagBoxProps<TItem = unknown>
-  extends OgeControlProps<readonly unknown[]>, OgeFieldExtrasProps {
+  extends
+    OgeAdaptiveProps,
+    OgeControlProps<readonly unknown[]>,
+    OgeFieldExtrasProps {
   /** The selectable items. */
   items?: readonly TItem[];
   displayExpr?: OgeSelectDisplayExpr<TItem>;
@@ -193,10 +205,14 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
 
   const isSelectedRef = useRef<(item: TItem) => boolean>(() => false);
 
+  const adaptive = useAdaptivePopup(props, 'sheet');
+
   const virtual = useListVirtualizer({
     virtualScroll,
     size: props.size ?? 'md',
-    dropdownMaxHeight,
+    dropdownMaxHeight: adaptive.active
+      ? adaptiveListViewportHeight()
+      : dropdownMaxHeight,
     itemCount: () => listRef.current?.visibleItems().length ?? 0,
     listEl: listElRef,
   });
@@ -344,7 +360,8 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
     );
     // picking stays open (multi-select); clear the search for the next pick
     list.resetSearch();
-    nativeRef.current?.focus();
+    // in the adaptive sheet focus stays on the sheet's own search / list
+    if (!adaptive.active) nativeRef.current?.focus();
   };
 
   const removeAt = (valueIndex: number, event: Event): void => {
@@ -416,10 +433,19 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
         return;
       }
       case 'Tab': {
-        if (isOpen) close();
+        // the adaptive sheet traps Tab; only the anchored popup closes
+        if (isOpen && !adaptive.active) close();
         return;
       }
     }
+  };
+
+  const onSearchInput = (event: ChangeEvent<HTMLInputElement>): void => {
+    if (!searchEnabled) return;
+    const text = event.target.value;
+    list.setSearch(text);
+    props.onInputChange?.({ text, event: event.nativeEvent });
+    if (!openedRef.current) open();
   };
 
   useImperativeHandle(ref, () => ({
@@ -659,13 +685,7 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
             aria-describedby={describedBy}
             aria-invalid={field.showError ? true : undefined}
             aria-required={props.required ? true : undefined}
-            onChange={(event) => {
-              if (!searchEnabled) return;
-              const text = event.target.value;
-              list.setSearch(text);
-              props.onInputChange?.({ text, event: event.nativeEvent });
-              if (!openedRef.current) open();
-            }}
+            onChange={onSearchInput}
             onClick={() => {
               if (field.effectiveDisabled || readonly) return;
               if (!openedRef.current && openOnFieldClick) open();
@@ -676,6 +696,8 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
               field.handleFocus(event);
             }}
             onBlur={(event) => {
+              // the adaptive sheet taking focus is not the user leaving
+              if (openedRef.current && adaptive.active) return;
               list.resetSearch();
               if (openedRef.current) close();
               field.handleBlur(event);
@@ -684,9 +706,46 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
         </div>
       </OgeFieldChrome>
       {opened && (
-        <OgePopup panel={panel} ref={popupRef}>
+        <OgePopup
+          panel={panel}
+          ref={popupRef}
+          adaptive={adaptive.presentation}
+          adaptiveTitle={label || field.msg.adaptiveTitle}
+          closeLabel={field.msg.adaptiveClose}
+          sheetHeader={
+            adaptive.active && searchEnabled ? (
+              <SheetSearch
+                listboxId={list.listboxId}
+                activeDescendant={list.activeDescendant()}
+                value={list.searchText() ?? ''}
+                label={field.msg.adaptiveSearch}
+                placeholder={field.msg.adaptiveSearch}
+                onChange={onSearchInput}
+                onKeyDown={onKeyDown}
+              />
+            ) : undefined
+          }
+          sheetFooter={
+            adaptive.active ? (
+              <SheetDone
+                label={field.msg.adaptiveDone}
+                onClick={() => close()}
+              />
+            ) : undefined
+          }
+        >
           <div
             ref={listElRef}
+            {...(adaptive.active && !searchEnabled
+              ? {
+                  ...sheetFocusAttr,
+                  tabIndex: 0,
+                  'aria-activedescendant': list.activeDescendant() ?? undefined,
+                  onKeyDown: (event: ReactKeyboardEvent) => {
+                    if (event.target === event.currentTarget) onKeyDown(event);
+                  },
+                }
+              : {})}
             className={[
               'oge-select-list',
               virtual.active && 'oge-select-list-virtual',
@@ -696,7 +755,9 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
             role="listbox"
             aria-multiselectable="true"
             id={list.listboxId}
-            style={{ maxHeight: dropdownMaxHeight }}
+            style={{
+              maxHeight: adaptive.active ? undefined : dropdownMaxHeight,
+            }}
             aria-labelledby={
               labelMode !== 'hidden' && label ? field.ids.labelId : undefined
             }

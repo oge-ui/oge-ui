@@ -6,6 +6,41 @@
   padding: 4px;
 }
 
+// --- adaptive full-screen dialog ---------------------------------------------
+// The picker is centred in the dialog body and the day grid grows to 44px
+// touch targets; the time lists stretch to the remaining height.
+.oge-popup-adaptive .oge-date-box-panel {
+  flex: 1 1 auto;
+  align-items: center;
+  min-height: 0;
+  padding: 12px 8px;
+}
+
+.oge-popup-adaptive .oge-date-box-pickers {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.oge-popup-adaptive .oge-calendar-cell,
+.oge-popup-adaptive .oge-calendar-weekday,
+.oge-popup-adaptive .oge-calendar-weeknum {
+  width: 44px;
+}
+
+.oge-popup-adaptive .oge-calendar-cell {
+  height: 44px;
+}
+
+.oge-popup-adaptive .oge-calendar-cell-wide {
+  width: 88px;
+  height: 52px;
+}
+
+.oge-popup-adaptive .oge-date-box-time {
+  min-height: 44px;
+}
+
 // --- date range box field ---------------------------------------------------
 
 .oge-date-range-strip {

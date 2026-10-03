@@ -16,9 +16,12 @@ import {
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
+import { adaptiveListViewportHeight } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
   OgePopup,
+  ogeAdaptivePresentation,
+  type OgeAdaptiveMode,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
 import { OgeFieldChrome } from '@oge-ui/inputs/field';
@@ -125,7 +128,33 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
       <ng-content select="[ogeInputSuffix]" ngProjectAs="[ogeInputSuffix]" />
     </oge-field-chrome>
     @if (opened()) {
-      <oge-popup [panel]="panel">
+      <oge-popup
+        [panel]="panel"
+        [adaptive]="presentation()"
+        [adaptiveTitle]="label() || msg().adaptiveTitle"
+        [closeLabel]="msg().adaptiveClose"
+      >
+        @if (adaptiveActive() && searchEnabled()) {
+          <div ogePopupSheetHeader class="oge-popup-sheet-search">
+            <input
+              class="oge-sheet-search-input"
+              type="search"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded="true"
+              autocomplete="off"
+              data-oge-sheet-focus
+              [attr.aria-controls]="listboxId"
+              [attr.aria-activedescendant]="activeDescendant()"
+              [attr.aria-label]="msg().adaptiveSearch"
+              [placeholder]="msg().adaptiveSearch"
+              [value]="sheetSearchText()"
+              (input)="onNativeInput($event)"
+              (keydown)="onKeydown($event)"
+            />
+          </div>
+        }
+        <!-- eslint-disable-next-line @angular-eslint/template/interactive-supports-focus -- focusable (tabindex 0) only in the adaptive sheet, where it owns the keyboard via aria-activedescendant -->
         <div
           #listEl
           class="oge-select-list"
@@ -133,7 +162,17 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
           [class.oge-select-list-virtual]="virtualActive()"
           role="listbox"
           [id]="listboxId"
-          [style.maxHeight.px]="dropdownMaxHeight() ?? null"
+          [style.maxHeight.px]="
+            adaptiveActive() ? null : (dropdownMaxHeight() ?? null)
+          "
+          [attr.tabindex]="adaptiveActive() && !searchEnabled() ? 0 : null"
+          [attr.data-oge-sheet-focus]="
+            adaptiveActive() && !searchEnabled() ? '' : null
+          "
+          [attr.aria-activedescendant]="
+            adaptiveActive() && !searchEnabled() ? activeDescendant() : null
+          "
+          (keydown)="onSheetListKeydown($event)"
           [attr.aria-labelledby]="
             labelMode() !== 'hidden' && label() ? labelId : null
           "
@@ -364,6 +403,15 @@ export class OgeSelectBox<TItem = unknown>
   readonly virtualScroll = input<boolean | OgeVirtualScrollOptions>(false);
   /** Popup visibility — two-way. */
   readonly opened = model(false);
+  /**
+   * `'auto'` presents the list as a modal bottom sheet (title, close button,
+   * a search field when `searchEnabled`) on viewports narrower than
+   * `adaptiveBreakpoint`; `'none'` always anchors it. `undefined` = config
+   * default (`'none'`).
+   */
+  readonly adaptiveMode = input<OgeAdaptiveMode | undefined>(undefined);
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` applies; `undefined` = config (600). */
+  readonly adaptiveBreakpoint = input<number | undefined>(undefined);
 
   /** Fires whenever the resolved selected item changes (user or programmatic). */
   readonly selectionChanged =
@@ -398,6 +446,16 @@ export class OgeSelectBox<TItem = unknown>
     () => this.virtualOptions() !== null,
   );
 
+  /** Current presentation: anchored, or the adaptive bottom sheet. */
+  protected readonly presentation = ogeAdaptivePresentation(
+    () => this.adaptiveMode() ?? this.config.adaptiveMode,
+    () => this.adaptiveBreakpoint() ?? this.config.adaptiveBreakpoint,
+    'sheet',
+  );
+  protected readonly adaptiveActive = computed(
+    () => this.presentation() !== 'popup',
+  );
+
   /** Fixed-height window model driving the virtualized list body. */
   private readonly virtualizer = new ListVirtualizerModel({
     itemCount: () => this.list.visibleItems().length,
@@ -405,7 +463,10 @@ export class OgeSelectBox<TItem = unknown>
       this.virtualOptions()?.itemHeight ??
       OGE_SELECT_OPTION_HEIGHT[this.size()],
     overscan: () => this.virtualOptions()?.overscan ?? 4,
-    viewportHeight: () => this.dropdownMaxHeight() ?? DEFAULT_LIST_MAX_HEIGHT,
+    viewportHeight: () =>
+      this.adaptiveActive()
+        ? adaptiveListViewportHeight()
+        : (this.dropdownMaxHeight() ?? DEFAULT_LIST_MAX_HEIGHT),
     scrollContainer: () => this.listEl()?.nativeElement ?? null,
   });
 
@@ -514,6 +575,11 @@ export class OgeSelectBox<TItem = unknown>
 
   protected readonly inputText = computed(
     () => this.list.searchText() ?? this.displayText(),
+  );
+
+  /** The adaptive sheet's search field starts empty, not with the selection. */
+  protected readonly sheetSearchText = computed(
+    () => this.list.searchText() ?? '',
   );
 
   protected readonly visibleItems = this.list.visibleItems;
@@ -711,7 +777,8 @@ export class OgeSelectBox<TItem = unknown>
         return;
       }
       case 'Tab': {
-        if (open) this.close();
+        // the adaptive sheet traps Tab; only the anchored popup closes
+        if (open && !this.adaptiveActive()) this.close();
         return;
       }
       case 'Home':
@@ -757,6 +824,22 @@ export class OgeSelectBox<TItem = unknown>
         }
       }
     }
+  }
+
+  /** Keyboard of the non-searchable adaptive listbox (it holds DOM focus). */
+  protected onSheetListKeydown(event: KeyboardEvent): void {
+    if (!this.adaptiveActive() || this.searchEnabled()) return;
+    if (event.target !== event.currentTarget) return;
+    this.onKeydown(event);
+  }
+
+  /**
+   * While the adaptive sheet is open, focus lives inside it — the field's
+   * blur is the sheet taking focus, not the user leaving the editor.
+   */
+  protected override handleBlur(event: FocusEvent): void {
+    if (this.opened() && this.adaptiveActive()) return;
+    super.handleBlur(event);
   }
 
   // --- expression resolution (template-visible) ------------------------------

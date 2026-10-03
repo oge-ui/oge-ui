@@ -45,6 +45,7 @@ import {
   type OgeFieldExtrasProps,
 } from './field-extras';
 import { useOgeField, type OgeControlProps } from './use-field';
+import { useAdaptivePopup, type OgeAdaptiveProps } from './adaptive';
 
 /** The empty-field draft — opaque black, the DevExtreme precedent. */
 const DEFAULT_HSVA: OgeHsva = { h: 0, s: 0, v: 0, a: 1 };
@@ -60,7 +61,10 @@ export interface OgeColorBoxHandle {
 }
 
 export interface OgeColorBoxProps
-  extends OgeControlProps<string | null>, OgeFieldExtrasProps {
+  extends
+    OgeAdaptiveProps,
+    OgeControlProps<string | null>,
+    OgeFieldExtrasProps {
   /** Committed string shape; translucent colors widen to carry alpha. */
   format?: OgeColorFormat;
   /** Which picker surfaces the popup renders. */
@@ -166,6 +170,7 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
     const nativeRef = useRef<HTMLInputElement>(null);
     const popupRef = useRef<HTMLDivElement>(null);
 
+    const adaptive = useAdaptivePopup(props, 'sheet');
     const field = useOgeField<string | null>({
       props,
       emptyValue: null,
@@ -525,6 +530,8 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
       // focus moving into the picker dialog is not a real blur
       const related = event.relatedTarget as Node | null;
       if (related && hostRef.current?.contains(related)) return;
+      // nor is the adaptive sheet taking focus (the field goes inert)
+      if (openedRef.current && adaptive.active) return;
       commitTypedText();
       if (openedRef.current) close();
       field.handleBlur(event);
@@ -715,11 +722,22 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
           />
         </OgeFieldChrome>
         {opened && (
-          <OgePopup panel={panel} ref={popupRef}>
+          <OgePopup
+            panel={panel}
+            ref={popupRef}
+            adaptive={adaptive.presentation}
+            adaptiveTitle={label || field.msg.colorPickerLabel}
+            closeLabel={field.msg.adaptiveClose}
+          >
+            {/* adaptive: the sheet surface around it is the dialog */}
             <div
               className="oge-color-box-panel"
-              role="dialog"
-              aria-label={label || field.msg.colorPickerLabel}
+              role={adaptive.active ? undefined : 'dialog'}
+              aria-label={
+                adaptive.active
+                  ? undefined
+                  : label || field.msg.colorPickerLabel
+              }
             >
               {view !== 'palette' && (
                 <>

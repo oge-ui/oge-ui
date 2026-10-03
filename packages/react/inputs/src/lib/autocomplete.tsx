@@ -7,6 +7,7 @@ import {
   useReducer,
   useRef,
   useState,
+  type ChangeEvent,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
@@ -14,6 +15,7 @@ import {
 import { withInputWidth } from './field-extras';
 import {
   OgeSelectListCore,
+  adaptiveListViewportHeight,
   type OgeVirtualScrollOptions,
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
@@ -40,6 +42,11 @@ import {
   type OgeFieldExtrasProps,
 } from './field-extras';
 import { useOgeField, type OgeControlProps } from './use-field';
+import {
+  SheetSearch,
+  useAdaptivePopup,
+  type OgeAdaptiveProps,
+} from './adaptive';
 import { useOgeInputsConfig } from './inputs-config';
 
 /** Payload of `onSelectionChange` — the picked suggestion (or `null`). */
@@ -66,7 +73,7 @@ export interface OgeAutocompleteHandle {
 }
 
 export interface OgeAutocompleteProps<TItem = unknown>
-  extends OgeControlProps<string>, OgeFieldExtrasProps {
+  extends OgeAdaptiveProps, OgeControlProps<string>, OgeFieldExtrasProps {
   /** Suggestion source: an array, or a function invoked lazily on open. */
   items?: readonly TItem[] | OgeSelectItemsFn<TItem>;
   displayExpr?: OgeSelectDisplayExpr<TItem>;
@@ -212,10 +219,14 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
     latest.current.props.onOpenedChange?.(next);
   };
 
+  const adaptive = useAdaptivePopup(props, 'sheet');
+
   const virtual = useListVirtualizer({
     virtualScroll,
     size: props.size ?? 'md',
-    dropdownMaxHeight,
+    dropdownMaxHeight: adaptive.active
+      ? adaptiveListViewportHeight()
+      : dropdownMaxHeight,
     itemCount: () => listRef.current?.visibleItems().length ?? 0,
     listEl: listElRef,
   });
@@ -407,6 +418,20 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
 
   // --- keyboard --------------------------------------------------------------
 
+  const onTextInput = (event: ChangeEvent<HTMLInputElement>): void => {
+    const text = event.target.value;
+    list.setSearch(text);
+    props.onInputChange?.({ text, event: event.nativeEvent });
+    props.onSearchChange?.({ text });
+    // typing below the threshold closes the list — but never the adaptive
+    // sheet, whose own field the user is typing into
+    if (text.trim().length >= minSearchLength) {
+      if (!openedRef.current) open();
+    } else if (openedRef.current && !adaptive.active) {
+      close();
+    }
+  };
+
   const onKeyDown = (event: ReactKeyboardEvent): void => {
     if (field.effectiveDisabled || readonly) return;
     const isOpen = openedRef.current;
@@ -449,7 +474,8 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
         return;
       }
       case 'Tab': {
-        if (isOpen) close();
+        // the adaptive sheet traps Tab; only the anchored popup closes
+        if (isOpen && !adaptive.active) close();
         return;
       }
       case 'PageDown':
@@ -677,17 +703,7 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
           aria-describedby={describedBy}
           aria-invalid={field.showError ? true : undefined}
           aria-required={props.required ? true : undefined}
-          onChange={(event) => {
-            const text = event.target.value;
-            list.setSearch(text);
-            props.onInputChange?.({ text, event: event.nativeEvent });
-            props.onSearchChange?.({ text });
-            if (text.trim().length >= minSearchLength) {
-              if (!openedRef.current) open();
-            } else if (openedRef.current) {
-              close();
-            }
-          }}
+          onChange={onTextInput}
           onClick={() => {
             if (field.effectiveDisabled || readonly) return;
             if (!openedRef.current && openOnFieldClick) open();
@@ -698,6 +714,8 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
             field.handleFocus(event);
           }}
           onBlur={(event) => {
+            // the adaptive sheet taking focus is not the user leaving
+            if (openedRef.current && adaptive.active) return;
             commitTypedText(event.nativeEvent);
             if (openedRef.current) close();
             field.handleBlur(event);
@@ -705,7 +723,26 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
         />
       </OgeFieldChrome>
       {opened && (
-        <OgePopup panel={panel} ref={popupRef}>
+        <OgePopup
+          panel={panel}
+          ref={popupRef}
+          adaptive={adaptive.presentation}
+          adaptiveTitle={label || field.msg.adaptiveTitle}
+          closeLabel={field.msg.adaptiveClose}
+          sheetHeader={
+            adaptive.active ? (
+              <SheetSearch
+                listboxId={list.listboxId}
+                activeDescendant={list.activeDescendant()}
+                value={inputText}
+                label={label || field.msg.adaptiveSearch}
+                placeholder={placeholderText || field.msg.adaptiveSearch}
+                onChange={onTextInput}
+                onKeyDown={onKeyDown}
+              />
+            ) : undefined
+          }
+        >
           <div
             ref={listElRef}
             className={[
@@ -717,7 +754,9 @@ export const OgeAutocomplete = forwardRef(function OgeAutocompleteRender<TItem>(
               .join(' ')}
             role="listbox"
             id={list.listboxId}
-            style={{ maxHeight: dropdownMaxHeight }}
+            style={{
+              maxHeight: adaptive.active ? undefined : dropdownMaxHeight,
+            }}
             aria-labelledby={
               labelMode !== 'hidden' && label ? field.ids.labelId : undefined
             }

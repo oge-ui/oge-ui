@@ -24,6 +24,14 @@ const ENTRY_POINTS = [
   'isTopOverlay',
   'lockBodyScroll',
   'OGE_DEFAULT_OVERLAY_TIMINGS',
+  'ogeVisibleViewport',
+  'popupAvailableHeight',
+  // adaptive
+  'OgeAdaptiveSheetCore',
+  'resolveAdaptivePresentation',
+  'watchAdaptiveViewport',
+  'matchesAdaptiveViewport',
+  'OGE_DEFAULT_ADAPTIVE_CONFIG',
   // live announcements
   'OgeLiveAnnouncerCore',
   'getOgeLiveAnnouncer',

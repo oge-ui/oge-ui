@@ -5,6 +5,10 @@ export {
 } from './lib/use-anchored-panel';
 export { OgePopup, type OgePopupProps } from './lib/popup';
 export {
+  useOgeAdaptiveViewport,
+  useOgeAdaptivePresentation,
+} from './lib/use-adaptive';
+export {
   OgeMenuList,
   type OgeMenuListProps,
   type OgeMenuListHandle,
@@ -80,4 +84,7 @@ export type {
   OgeToastClosedEvent,
   OgeLivePoliteness,
   OgeLiveAnnounceOptions,
+  OgeAdaptiveConfig,
+  OgeAdaptiveMode,
+  OgeAdaptivePresentation,
 } from '@oge-ui/behavior';

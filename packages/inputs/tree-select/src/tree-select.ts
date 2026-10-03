@@ -28,6 +28,8 @@ import {
 import {
   OGE_OVERLAY_CONFIG,
   OgePopup,
+  ogeAdaptivePresentation,
+  type OgeAdaptiveMode,
   type OgePopupPlacement,
 } from '@oge-ui/overlay';
 import { OgeFieldChrome } from '@oge-ui/inputs/field';
@@ -109,10 +111,24 @@ let nextTreeSelectId = 0;
       <ng-content select="[ogeInputSuffix]" ngProjectAs="[ogeInputSuffix]" />
     </oge-field-chrome>
     @if (opened()) {
-      <oge-popup [panel]="panel">
+      <oge-popup
+        [panel]="panel"
+        [adaptive]="presentation()"
+        [adaptiveTitle]="label() || msg().adaptiveTitle"
+        [closeLabel]="msg().adaptiveClose"
+      >
+        @if (adaptiveActive() && selectionMode() === 'multiple') {
+          <div ogePopupSheetFooter class="oge-popup-sheet-footer">
+            <button type="button" class="oge-sheet-done" (click)="close()">
+              {{ msg().adaptiveDone }}
+            </button>
+          </div>
+        }
         <div
           class="oge-tree-select-panel"
-          [style.max-block-size.px]="dropdownMaxHeight()"
+          [style.max-block-size.px]="
+            adaptiveActive() ? null : dropdownMaxHeight()
+          "
         >
           <oge-tree-view
             #tree
@@ -229,6 +245,15 @@ export class OgeTreeSelect<TItem extends object = Record<string, unknown>>
   readonly dropdownMaxHeight = input(320);
   /** Opens the popup when the field itself is clicked, not just the chevron. */
   readonly openOnFieldClick = input(true);
+  /**
+   * `'auto'` presents the tree as a modal bottom sheet (title, close button,
+   * a Done action in `multiple` mode) on viewports narrower than
+   * `adaptiveBreakpoint`; `'none'` always anchors it. `undefined` = config
+   * default (`'none'`).
+   */
+  readonly adaptiveMode = input<OgeAdaptiveMode | undefined>(undefined);
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` applies; `undefined` = config (600). */
+  readonly adaptiveBreakpoint = input<number | undefined>(undefined);
 
   /** Emitted after the committed selection changed. */
   readonly selectionChanged = output<OgeTreeSelectSelectionChangedEvent>();
@@ -288,10 +313,22 @@ export class OgeTreeSelect<TItem extends object = Record<string, unknown>>
     return keys.map((key) => labels.get(key) ?? String(key)).join(', ');
   });
 
+  /** Current presentation: anchored, or the adaptive bottom sheet. */
+  protected readonly presentation = ogeAdaptivePresentation(
+    () => this.adaptiveMode() ?? this.config.adaptiveMode,
+    () => this.adaptiveBreakpoint() ?? this.config.adaptiveBreakpoint,
+    'sheet',
+  );
+  protected readonly adaptiveActive = computed(
+    () => this.presentation() !== 'popup',
+  );
+
   protected readonly treeHeight = computed(() =>
     this.virtualScroll() === false
       ? undefined
-      : `${this.dropdownMaxHeight() - 8}px`,
+      : this.adaptiveActive()
+        ? '60dvh'
+        : `${this.dropdownMaxHeight() - 8}px`,
   );
 
   private readonly panelController = new SelectPanelController({

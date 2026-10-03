@@ -189,6 +189,13 @@
   color: inherit;
   font: inherit;
 
+  // iOS Safari zooms the whole page when a focused control's text is under
+  // 16px. Touch-first devices get at least 16px; mouse desktops keep the
+  // density they had (`1em` is the inherited, token-driven size).
+  @media (pointer: coarse) {
+    font-size: max(16px, 1em);
+  }
+
   // the container ring is the cue; the transparent outline paints only under
   // forced colors, where that box-shadow ring is dropped
   &:focus,
@@ -605,6 +612,115 @@
 
 .oge-input-lg .oge-select-list-virtual .oge-select-option {
   height: 40px;
+}
+
+// --- adaptive presentation (bottom sheet / full-screen dialog) --------------
+// The popup surface itself is overlay's `.oge-popup-adaptive`; these rules
+// only re-size the editor content for a finger: the list fills the sheet,
+// rows reach the 44px touch target and text is 16px (no iOS focus zoom).
+
+.oge-popup-adaptive .oge-select-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  padding: 4px 8px 8px;
+  overscroll-behavior: contain;
+}
+
+.oge-popup-adaptive .oge-select-option,
+.oge-popup-adaptive .oge-select-status {
+  font-size: inherit;
+}
+
+.oge-popup-adaptive
+  .oge-select-list:not(.oge-select-list-virtual)
+  .oge-select-option {
+  min-height: 44px;
+}
+
+.oge-popup-adaptive .oge-tree-select-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px 8px 8px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.oge-sheet-search-input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-popup-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: max(16px, 1em);
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &::placeholder {
+    color: var(--oge-input-muted);
+    opacity: 1;
+  }
+
+  &:focus {
+    border-color: var(--oge-accent);
+    @include tokens.focus-ring($color: var(--oge-accent-soft));
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+
+  &::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+.oge-sheet-done {
+  min-height: 44px;
+  min-width: 96px;
+  padding: 8px 18px;
+  border: 1px solid var(--oge-accent);
+  border-radius: var(--oge-radius);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-accent-25);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+@include tokens.reduced-motion {
+  .oge-sheet-search-input,
+  .oge-sheet-done {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-sheet-search-input {
+    border-color: CanvasText;
+  }
+
+  .oge-sheet-done {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
 }
 // --- tag box ----------------------------------------------------------------
 

@@ -7,6 +7,11 @@
  * here is what stops the two from drifting to different `clickGuardMs` values.
  */
 
+import {
+  OGE_DEFAULT_ADAPTIVE_CONFIG,
+  type OgeAdaptiveMode,
+} from '../overlay/adaptive';
+
 /** Every user-facing string in the buttons family. */
 export interface OgeButtonsMessages {
   /** Screen-reader text announced while a button is busy (`loading` / pending `action`). */
@@ -21,6 +26,10 @@ export interface OgeButtonsMessages {
   dropDownLoadError: string;
   /** Aria label of the split drop-down's chevron toggle. */
   dropDownToggle: string;
+  /** Aria label of the adaptive menu sheet's close (✕) button. */
+  adaptiveClose: string;
+  /** Title of the adaptive menu sheet when the button has no text or hint. */
+  adaptiveTitle: string;
 }
 
 export const OGE_DEFAULT_BUTTONS_MESSAGES: OgeButtonsMessages = {
@@ -30,6 +39,8 @@ export const OGE_DEFAULT_BUTTONS_MESSAGES: OgeButtonsMessages = {
   dropDownNoItems: 'No items',
   dropDownLoadError: 'Could not load items',
   dropDownToggle: 'Open menu',
+  adaptiveClose: 'Close',
+  adaptiveTitle: 'Actions',
 };
 
 /** Application-wide defaults, overridable per button via the matching inputs. */
@@ -42,6 +53,13 @@ export interface OgeButtonsConfig {
   autoRepeatDelayMs: number;
   /** Interval between repeated clicks while `autoRepeat` is held. */
   autoRepeatIntervalMs: number;
+  /**
+   * Default `adaptiveMode` of the drop-down button: `'auto'` opens its menu
+   * as a bottom sheet below `adaptiveBreakpoint`, `'none'` always anchors it.
+   */
+  adaptiveMode: OgeAdaptiveMode;
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` goes adaptive. */
+  adaptiveBreakpoint: number;
   messages: OgeButtonsMessages;
 }
 
@@ -50,6 +68,8 @@ export const OGE_DEFAULT_BUTTONS_CONFIG: OgeButtonsConfig = {
   holdToConfirmMs: 800,
   autoRepeatDelayMs: 400,
   autoRepeatIntervalMs: 80,
+  adaptiveMode: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveMode,
+  adaptiveBreakpoint: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveBreakpoint,
   messages: OGE_DEFAULT_BUTTONS_MESSAGES,
 };
 

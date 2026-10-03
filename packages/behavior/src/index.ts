@@ -480,10 +480,30 @@ export {
 } from './lib/overlay/overlay-timings';
 export {
   OgeAnchoredPanelCore,
+  OGE_POPUP_AVAILABLE_HEIGHT_VAR,
   type OgeAnchoredPanelCoreOptions,
   type OgePopupCloseReason,
 } from './lib/overlay/anchored-panel-core';
 export {
+  OGE_DEFAULT_ADAPTIVE_BREAKPOINT,
+  OGE_DEFAULT_ADAPTIVE_CONFIG,
+  OGE_SHEET_FOCUS_ATTR,
+  OGE_SHEET_SWIPE_DISMISS,
+  OgeAdaptiveSheetCore,
+  adaptiveListViewportHeight,
+  adaptiveMediaQuery,
+  matchesAdaptiveViewport,
+  resolveAdaptivePresentation,
+  watchAdaptiveViewport,
+  type OgeAdaptiveConfig,
+  type OgeAdaptiveMode,
+  type OgeAdaptivePresentation,
+  type OgeAdaptiveSheetCoreOptions,
+} from './lib/overlay/adaptive';
+export {
+  ogeVisibleViewport,
+  popupAvailableHeight,
+  type OgePopupAvailableHeightRequest,
   resolvePopupPosition,
   type OgePopupSide,
   type OgePopupAlign,

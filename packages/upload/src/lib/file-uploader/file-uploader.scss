@@ -418,7 +418,10 @@
 .oge-upload-lightbox-image {
   display: block;
   max-width: 100%;
+  /* svh: the small viewport stays put while the mobile toolbar slides, so the
+     image does not resize mid-scroll (vh is the older-engine fallback) */
   max-height: 70vh;
+  max-height: 70svh;
   margin: 0 auto;
   object-fit: contain;
   border-radius: var(--oge-radius);

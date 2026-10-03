@@ -22,6 +22,8 @@ import {
   OgeAnchoredPanel,
   OgeMenuList,
   OgePopup,
+  ogeAdaptivePresentation,
+  type OgeAdaptiveMode,
   type OgeMenuCloseRequestEvent,
   type OgeMenuItem,
   type OgeMenuItemTemplateContext,
@@ -163,7 +165,12 @@ type ItemsState =
       </oge-button>
     }
     @if (opened()) {
-      <oge-popup [panel]="panel">
+      <oge-popup
+        [panel]="panel"
+        [adaptive]="presentation()"
+        [adaptiveTitle]="mainText() || hint() || msg().adaptiveTitle"
+        [closeLabel]="msg().adaptiveClose"
+      >
         @if (contentTemplate(); as content) {
           <ng-container
             *ngTemplateOutlet="content.templateRef; context: contentContext"
@@ -258,6 +265,20 @@ export class OgeDropDownButton {
   >(undefined);
   /** Panel visibility — two-way. */
   readonly opened = model(false);
+  /**
+   * `'auto'` opens the menu as a modal bottom sheet (title, close button,
+   * touch-sized rows) on viewports narrower than `adaptiveBreakpoint`;
+   * `'none'` always anchors it. `undefined` = config default (`'none'`).
+   */
+  readonly adaptiveMode = input<OgeAdaptiveMode | undefined>(undefined);
+  /** Viewport width (px) below which `adaptiveMode: 'auto'` applies; `undefined` = config (600). */
+  readonly adaptiveBreakpoint = input<number | undefined>(undefined);
+  /** Current presentation: anchored, or the adaptive bottom sheet. */
+  protected readonly presentation = ogeAdaptivePresentation(
+    () => this.adaptiveMode() ?? this.config.adaptiveMode,
+    () => this.adaptiveBreakpoint() ?? this.config.adaptiveBreakpoint,
+    'sheet',
+  );
   /** Per-instance overrides of user-facing strings. */
   readonly messages = input<Partial<OgeButtonsMessages> | undefined>(undefined);
 

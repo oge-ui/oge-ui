@@ -39,6 +39,7 @@ import {
   type OgeFieldExtrasProps,
 } from './field-extras';
 import { useOgeField, type OgeControlProps } from './use-field';
+import { useAdaptivePopup, type OgeAdaptiveProps } from './adaptive';
 import { useOgeInputsConfig } from './inputs-config';
 
 interface TimeSlot {
@@ -57,7 +58,7 @@ export interface OgeDateBoxHandle {
 }
 
 export interface OgeDateBoxProps
-  extends OgeControlProps<Date | null>, OgeFieldExtrasProps {
+  extends OgeAdaptiveProps, OgeControlProps<Date | null>, OgeFieldExtrasProps {
   type?: OgeDateBoxType;
   /** Display text — `Intl.DateTimeFormatOptions` or a formatter; `undefined` = per-type default. */
   displayFormat?: OgeDateBoxDisplayFormat;
@@ -186,6 +187,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       return (date: Date) => format.format(date);
     })();
 
+    const adaptive = useAdaptivePopup(props, 'fullscreen');
     const field = useOgeField<Date | null>({
       props,
       emptyValue: null,
@@ -537,6 +539,8 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       // focus moving into the picker dialog is not a real blur
       const related = event.relatedTarget as Node | null;
       if (related && hostRef.current?.contains(related)) return;
+      // nor is the adaptive dialog taking focus (the field goes inert)
+      if (openedRef.current && adaptive.active) return;
       commitTypedText();
       if (openedRef.current) close();
       field.handleBlur(event);
@@ -711,11 +715,20 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
           />
         </OgeFieldChrome>
         {opened && (
-          <OgePopup panel={panel} ref={popupRef}>
+          <OgePopup
+            panel={panel}
+            ref={popupRef}
+            adaptive={adaptive.presentation}
+            adaptiveTitle={label || field.msg.calendarLabel}
+            closeLabel={field.msg.adaptiveClose}
+          >
+            {/* adaptive: the full-screen surface around it is the dialog */}
             <div
               className="oge-date-box-panel"
-              role="dialog"
-              aria-label={label || field.msg.calendarLabel}
+              role={adaptive.active ? undefined : 'dialog'}
+              aria-label={
+                adaptive.active ? undefined : label || field.msg.calendarLabel
+              }
             >
               <div className="oge-date-box-pickers">
                 {type !== 'time' && (

@@ -938,7 +938,10 @@ input.oge-filter-input {
   left: 50%;
   transform: translate(-50%, -50%);
   width: min(420px, calc(100vw - 32px));
+  /* vh first for older engines; dvh tracks the mobile browser chrome and the
+     on-screen keyboard, so the popup never extends underneath them */
   max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
   overflow: auto;
   padding: 18px;
   border: 1px solid var(--oge-border-color);
