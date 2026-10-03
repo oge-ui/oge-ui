@@ -25,7 +25,14 @@ describe('createAutoScroller', () => {
   function container(): HTMLElement {
     const el = document.createElement('div');
     el.getBoundingClientRect = () =>
-      ({ left: 0, top: 0, right: 400, bottom: 300, width: 400, height: 300 }) as DOMRect;
+      ({
+        left: 0,
+        top: 0,
+        right: 400,
+        bottom: 300,
+        width: 400,
+        height: 300,
+      }) as DOMRect;
     let left = 100;
     let top = 100;
     Object.defineProperty(el, 'scrollLeft', {
@@ -41,7 +48,9 @@ describe('createAutoScroller', () => {
 
   it('scrolls toward the edge every frame while the pointer rests there', () => {
     const raf: FrameRequestCallback[] = [];
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => raf.push(cb));
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+      raf.push(cb),
+    );
     vi.stubGlobal('cancelAnimationFrame', () => raf.splice(0));
     const el = container();
     const onScroll = vi.fn();
@@ -62,7 +71,9 @@ describe('createAutoScroller', () => {
 
   it('does not start in the neutral zone and stops when the pointer leaves the band', () => {
     const raf: FrameRequestCallback[] = [];
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => raf.push(cb));
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+      raf.push(cb),
+    );
     const el = container();
     const scroller = createAutoScroller(el, { axis: 'x' });
     scroller.update(200, 150);
@@ -79,7 +90,9 @@ describe('createAutoScroller', () => {
 
   it('skips onScroll when the container is already at its limit', () => {
     const raf: FrameRequestCallback[] = [];
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => raf.push(cb));
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+      raf.push(cb),
+    );
     const el = container();
     el.scrollTop = 0;
     const onScroll = vi.fn();

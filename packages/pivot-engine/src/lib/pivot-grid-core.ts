@@ -878,7 +878,11 @@ export class OgePivotGridCore<T = unknown> {
     );
     if (!zone) return null;
     const area = (zone.dataset['area'] as PivotArea | undefined) ?? null;
-    const chip = ogeOwnedClosest(hit, '.oge-pivot-field-chip[data-field-id]', zone);
+    const chip = ogeOwnedClosest(
+      hit,
+      '.oge-pivot-field-chip[data-field-id]',
+      zone,
+    );
     return { area, beforeId: chip?.dataset['fieldId'] ?? null };
   }
 

@@ -18,7 +18,8 @@ function pointer(
     cancelable: true,
   }) as unknown as PointerEvent;
   Object.defineProperty(event, 'pointerId', { value: 1 });
-  if (pointerType) Object.defineProperty(event, 'pointerType', { value: pointerType });
+  if (pointerType)
+    Object.defineProperty(event, 'pointerType', { value: pointerType });
   return event;
 }
 
@@ -44,7 +45,9 @@ function begin(
   const drops: string[] = [];
   const ends: { dropped: boolean; cancelled: boolean }[] = [];
   const handle = beginPointerDragDrop<string>(down, {
-    resolve: (hit) => (hit?.closest('[data-key]') as HTMLElement | null)?.dataset['key'] ?? null,
+    resolve: (hit) =>
+      (hit?.closest('[data-key]') as HTMLElement | null)?.dataset['key'] ??
+      null,
     onOver: (target) => over.push(target),
     onDrop: (target) => drops.push(target),
     onEnd: (result) => ends.push(result),
@@ -77,7 +80,10 @@ describe('beginPointerDragDrop', () => {
   it('prefers document.elementFromPoint when the environment has it', () => {
     const { items } = fixture();
     const spy = vi.fn(() => items[2]);
-    Object.defineProperty(document, 'elementFromPoint', { value: spy, configurable: true });
+    Object.defineProperty(document, 'elementFromPoint', {
+      value: spy,
+      configurable: true,
+    });
     try {
       const { drops } = begin(items[0]);
       moveOn(items[0], 10, 70); // captured: the move targets the source
@@ -104,7 +110,11 @@ describe('beginPointerDragDrop', () => {
     moveOn(items[1], 10, 40);
     expect(document.querySelector('.oge-drag-ghost')).not.toBeNull();
     document.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
     );
     expect(drops).toEqual([]);
     expect(ends).toEqual([{ dropped: false, cancelled: true }]);
@@ -154,7 +164,9 @@ describe('beginPointerDragDrop', () => {
 
   it('re-hit-tests after an auto-scroll frame', () => {
     const raf: FrameRequestCallback[] = [];
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => raf.push(cb));
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) =>
+      raf.push(cb),
+    );
     vi.stubGlobal('cancelAnimationFrame', () => raf.splice(0));
     const { items } = fixture();
     const scroller = document.createElement('div');

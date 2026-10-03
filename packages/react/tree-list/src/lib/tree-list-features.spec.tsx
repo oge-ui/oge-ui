@@ -170,7 +170,11 @@ describe('OgeTreeList features', () => {
     pointer('pointermove', rowByName('Root B'), 120);
     act(() => {
       document.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        }),
       );
     });
     pointer('pointerup', rowByName('Root B'), 120);

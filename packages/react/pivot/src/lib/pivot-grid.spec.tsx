@@ -159,7 +159,11 @@ describe('<OgePivotGrid> — rendering (mirror of the Angular MVP spec)', () => 
     pointer('pointermove', columns, 60);
     act(() => {
       document.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        }),
       );
     });
     pointer('pointerup', columns, 60);
@@ -175,7 +179,9 @@ describe('<OgePivotGrid> — rendering (mirror of the Angular MVP spec)', () => 
     pointer('pointerup', chip('Region'), 60, 'touch');
     expect(onFieldLayoutChange).toHaveBeenCalledTimes(1);
     const rows = Array.from(
-      container.querySelectorAll('.oge-pivot-area[data-area="row"] .oge-pivot-field-chip'),
+      container.querySelectorAll(
+        '.oge-pivot-area[data-area="row"] .oge-pivot-field-chip',
+      ),
     ).map((el) => el.textContent?.trim());
     expect(rows).toEqual(['City', 'Region']);
   });

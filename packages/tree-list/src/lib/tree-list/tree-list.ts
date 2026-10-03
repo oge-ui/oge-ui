@@ -1479,7 +1479,9 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
         resolveOgeHeaderDropTarget(hit, host, { reorder: true, group: false }),
       onOver: (target) => {
         const id =
-          target?.kind === 'column' && target.id !== column.id ? target.id : null;
+          target?.kind === 'column' && target.id !== column.id
+            ? target.id
+            : null;
         if (this.headerDropTargetId() !== id) this.headerDropTargetId.set(id);
       },
       onDrop: (target) => {
@@ -1582,7 +1584,8 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       resolve: (hit) => resolveOgeAttributeTarget(hit, list, 'data-chooser-id'),
       onOver: (target) => {
         const next = target === id ? null : target;
-        if (this.chooserDropTargetId() !== next) this.chooserDropTargetId.set(next);
+        if (this.chooserDropTargetId() !== next)
+          this.chooserDropTargetId.set(next);
       },
       onDrop: (targetId) => {
         if (targetId === id || !this.columnReorder()) return;
@@ -1862,45 +1865,56 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     const handle = event.currentTarget as HTMLElement;
     const host = this.hostRef.nativeElement;
     const draggedKey = node.key;
-    beginPointerDragDrop<{ key: RowKey; position: OgeTreeDropPosition }>(event, {
-      source: handle,
-      ghost: handle.closest('.oge-row'),
-      longPress: 0,
-      autoScroll: this.viewportRef()?.nativeElement ?? null,
-      autoScrollOptions: { axis: 'y' },
-      resolve: (hit, moveEvent) => {
-        const index = resolveOgeRowDropIndex(hit, host);
-        const target = index === null ? undefined : untracked(this.renderNodes)[index];
-        if (target?.kind !== 'data') return null;
-        if (!untracked(() => this.core.isValidDropTarget(draggedKey, target.key)))
-          return null;
-        const row = hit?.closest('.oge-row');
-        return {
-          key: target.key,
-          position: ogeTreeDropPosition(
-            moveEvent.clientY,
-            row?.getBoundingClientRect?.(),
-          ),
-        };
+    beginPointerDragDrop<{ key: RowKey; position: OgeTreeDropPosition }>(
+      event,
+      {
+        source: handle,
+        ghost: handle.closest('.oge-row'),
+        longPress: 0,
+        autoScroll: this.viewportRef()?.nativeElement ?? null,
+        autoScrollOptions: { axis: 'y' },
+        resolve: (hit, moveEvent) => {
+          const index = resolveOgeRowDropIndex(hit, host);
+          const target =
+            index === null ? undefined : untracked(this.renderNodes)[index];
+          if (target?.kind !== 'data') return null;
+          if (
+            !untracked(() =>
+              this.core.isValidDropTarget(draggedKey, target.key),
+            )
+          )
+            return null;
+          const row = hit?.closest('.oge-row');
+          return {
+            key: target.key,
+            position: ogeTreeDropPosition(
+              moveEvent.clientY,
+              row?.getBoundingClientRect?.(),
+            ),
+          };
+        },
+        onOver: (target) => {
+          const current = this.dropTarget();
+          if (
+            current?.key !== target?.key ||
+            current?.position !== target?.position
+          )
+            this.dropTarget.set(target);
+        },
+        onDrop: (target) => {
+          // plain arrays with a writable top-level parent field are moved in
+          // place; dotted paths, nested payloads and DataSources are the
+          // consumer's job (handle rowReparented)
+          const moved = untracked(() =>
+            this.core.applyDrop(draggedKey, target.key, target.position, () =>
+              this.adapter.reload(),
+            ),
+          );
+          if (moved) this.rowReparented.emit(moved);
+        },
+        onEnd: () => this.dropTarget.set(null),
       },
-      onOver: (target) => {
-        const current = this.dropTarget();
-        if (current?.key !== target?.key || current?.position !== target?.position)
-          this.dropTarget.set(target);
-      },
-      onDrop: (target) => {
-        // plain arrays with a writable top-level parent field are moved in
-        // place; dotted paths, nested payloads and DataSources are the
-        // consumer's job (handle rowReparented)
-        const moved = untracked(() =>
-          this.core.applyDrop(draggedKey, target.key, target.position, () =>
-            this.adapter.reload(),
-          ),
-        );
-        if (moved) this.rowReparented.emit(moved);
-      },
-      onEnd: () => this.dropTarget.set(null),
-    });
+    );
   }
 
   // --- keyboard alternatives to the drag gestures (WCAG 2.1.1 / 2.5.7) --------

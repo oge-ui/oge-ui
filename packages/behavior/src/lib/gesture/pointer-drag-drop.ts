@@ -185,7 +185,8 @@ export function beginPointerDragDrop<TTarget>(
       if (!started) {
         started = true;
         options.onStart?.();
-        if (ghostSource) ghost = createDragGhost(ghostSource, event.clientX, event.clientY);
+        if (ghostSource)
+          ghost = createDragGhost(ghostSource, event.clientX, event.clientY);
         if (options.autoScroll)
           scroller = createAutoScroller(options.autoScroll, {
             ...options.autoScrollOptions,

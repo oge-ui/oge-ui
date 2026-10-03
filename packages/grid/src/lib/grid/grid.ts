@@ -2518,7 +2518,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       autoScrollOptions: { axis: 'y' },
       resolve: (hit) => {
         const index = resolveOgeRowDropIndex(hit, host);
-        const target = index === null ? undefined : untracked(this.flatNodes)[index];
+        const target =
+          index === null ? undefined : untracked(this.flatNodes)[index];
         return target?.kind === 'data' ? target : null;
       },
       onOver: (target) => {
@@ -3626,10 +3627,13 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       source: cell,
       autoScroll: this.viewportRef()?.nativeElement ?? null,
       autoScrollOptions: { axis: 'x' },
-      resolve: (hit) => resolveOgeHeaderDropTarget(hit, host, { reorder, group }),
+      resolve: (hit) =>
+        resolveOgeHeaderDropTarget(hit, host, { reorder, group }),
       onOver: (target) => {
         const id =
-          target?.kind === 'column' && target.id !== column.id ? target.id : null;
+          target?.kind === 'column' && target.id !== column.id
+            ? target.id
+            : null;
         if (this.headerDropTargetId() !== id) this.headerDropTargetId.set(id);
         this.groupPanelDropActive.set(target?.kind === 'group');
       },
@@ -3666,7 +3670,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     const panel = chip.closest('.oge-group-panel');
     beginPointerDragDrop<string>(event, {
       source: chip,
-      resolve: (hit) => resolveOgeAttributeTarget(hit, panel, 'data-group-chip'),
+      resolve: (hit) =>
+        resolveOgeAttributeTarget(hit, panel, 'data-group-chip'),
       onOver: (target) =>
         this.groupChipDropTarget.set(target === field ? null : target),
       onDrop: (target) => {
@@ -3855,7 +3860,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       resolve: (hit) => resolveOgeAttributeTarget(hit, list, 'data-chooser-id'),
       onOver: (target) => {
         const next = target === id ? null : target;
-        if (this.chooserDropTargetId() !== next) this.chooserDropTargetId.set(next);
+        if (this.chooserDropTargetId() !== next)
+          this.chooserDropTargetId.set(next);
       },
       onDrop: (targetId) => {
         if (targetId === id || !this.columnReorder()) return;

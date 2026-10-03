@@ -271,7 +271,9 @@ describe('OgePivotGridCore — field panel, menus, filters, chooser', () => {
   it('inserts a dropped field in front of the chip under the pointer', () => {
     const core = makeCore();
     const panel = fieldPanel(core);
-    const region = panel.querySelector('[data-field-id="region"]') as HTMLElement;
+    const region = panel.querySelector(
+      '[data-field-id="region"]',
+    ) as HTMLElement;
     dragChip(core, panel, 'year', region);
     expect(core.fieldDropTarget()).toEqual({ area: 'row', beforeId: 'region' });
     pointerEvent('pointerup', region, 40);
@@ -287,7 +289,9 @@ describe('OgePivotGridCore — field panel, menus, filters, chooser', () => {
   it('a pointer drop and the chip keyboard reach the same layout', () => {
     const pointerCore = makeCore();
     const panel = fieldPanel(pointerCore);
-    const region = panel.querySelector('[data-field-id="region"]') as HTMLElement;
+    const region = panel.querySelector(
+      '[data-field-id="region"]',
+    ) as HTMLElement;
     dragChip(pointerCore, panel, 'city', region);
     pointerEvent('pointerup', region, 40);
     panel.remove();
@@ -303,7 +307,11 @@ describe('OgePivotGridCore — field panel, menus, filters, chooser', () => {
     const column = panel.querySelector('[data-area="column"]') as HTMLElement;
     dragChip(core, panel, 'city', column);
     document.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
     );
     pointerEvent('pointerup', column, 40);
     expect(core.fieldDropTarget()).toBeNull();
@@ -312,7 +320,9 @@ describe('OgePivotGridCore — field panel, menus, filters, chooser', () => {
     dragChip(core, panel, 'city', column, 'touch'); // no long press: a scroll
     pointerEvent('pointerup', column, 40, 'touch');
     expect(changes).toHaveLength(0);
-    expect(core.getFieldLayout().find((f) => f.id === 'city')?.area).toBe('row');
+    expect(core.getFieldLayout().find((f) => f.id === 'city')?.area).toBe(
+      'row',
+    );
     panel.remove();
   });
 

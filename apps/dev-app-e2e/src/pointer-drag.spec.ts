@@ -45,7 +45,8 @@ async function touchDrag(
   const fire = (type: string, point: Point) =>
     page.evaluate(
       ({ type, point }) => {
-        const target = document.elementFromPoint(point.x, point.y) ?? document.body;
+        const target =
+          document.elementFromPoint(point.x, point.y) ?? document.body;
         target.dispatchEvent(
           new PointerEvent(type, {
             bubbles: true,
@@ -96,13 +97,19 @@ async function firstGrid(page: Page, url: string): Promise<Locator> {
 
 for (const fw of FRAMEWORKS) {
   test.describe(`${fw.name} pointer drag`, () => {
-    test('column reorder: mouse drag of a header onto another', async ({ page }) => {
+    test('column reorder: mouse drag of a header onto another', async ({
+      page,
+    }) => {
       const grid = await firstGrid(page, `/components/data-grid${fw.query}`);
       const before = await colIds(grid);
       expect(await grid.locator('[draggable="true"]').count()).toBe(0);
       const source = headerCells(grid).nth(1);
       const target = headerCells(grid).nth(3);
-      await mouseDrag(page, await center(source, -10), await center(target, -10));
+      await mouseDrag(
+        page,
+        await center(source, -10),
+        await center(target, -10),
+      );
       await expect
         .poll(() => colIds(grid))
         .toEqual([before[0], before[2], before[1], ...before.slice(3)]);
@@ -128,20 +135,27 @@ for (const fw of FRAMEWORKS) {
     test('group by: drag a header into the group panel (mouse and touch)', async ({
       page,
     }) => {
-      const grid = await firstGrid(page, `/components/data-grid/grouping${fw.query}`);
+      const grid = await firstGrid(
+        page,
+        `/components/data-grid/grouping${fw.query}`,
+      );
       const chips = grid.locator('.oge-group-chip');
       const start = await chips.count();
       const panel = grid.locator('.oge-group-panel');
       await mouseDrag(
         page,
-        await center(grid.locator('.oge-header-row > .oge-header-cell[data-colid="city"]')),
+        await center(
+          grid.locator('.oge-header-row > .oge-header-cell[data-colid="city"]'),
+        ),
         await center(panel),
       );
       await expect(chips).toHaveCount(start + 1);
       await expect(chips.last()).toContainText('City');
       // touch: long press a second header into the panel
       const header = headerCells(grid).filter({ hasNotText: 'City' }).last();
-      const caption = (await header.locator('.oge-header-caption').innerText()).trim();
+      const caption = (
+        await header.locator('.oge-header-caption').innerText()
+      ).trim();
       await touchDrag(page, await center(header), await center(panel));
       await expect(chips).toHaveCount(start + 2);
       await expect(chips.last()).toContainText(caption);
@@ -159,14 +173,18 @@ for (const fw of FRAMEWORKS) {
       const rows = grid.locator('.oge-row');
       await expect(rows.first()).toBeVisible({ timeout: 30_000 });
       const textAt = async (index: number) =>
-        (await rows.nth(index).locator('[data-cell]').first().innerText()).trim();
+        (
+          await rows.nth(index).locator('[data-cell]').first().innerText()
+        ).trim();
       const first = await textAt(0);
       await mouseDrag(
         page,
         await center(rows.nth(0).locator('.oge-drag-handle')),
         await center(rows.nth(2), 0, 4),
       );
-      await expect(rows.nth(2).locator('[data-cell]').first()).toHaveText(first);
+      await expect(rows.nth(2).locator('[data-cell]').first()).toHaveText(
+        first,
+      );
       await expect(card).toContainText('→ index 2');
       await expect(grid.locator('.oge-drop-target')).toHaveCount(0);
 
@@ -182,7 +200,9 @@ for (const fw of FRAMEWORKS) {
         await center(rows.nth(0), 0, 4),
         0,
       );
-      await expect(rows.nth(0).locator('[data-cell]').first()).toHaveText(second);
+      await expect(rows.nth(0).locator('[data-cell]').first()).toHaveText(
+        second,
+      );
     });
 
     test('row drag: Escape mid-drag cancels', async ({ page }) => {
@@ -193,7 +213,9 @@ for (const fw of FRAMEWORKS) {
         .first();
       const rows = card.locator('.oge-grid .oge-row');
       await expect(rows.first()).toBeVisible({ timeout: 30_000 });
-      const first = (await rows.nth(0).locator('[data-cell]').first().innerText()).trim();
+      const first = (
+        await rows.nth(0).locator('[data-cell]').first().innerText()
+      ).trim();
       const from = await center(rows.nth(0).locator('.oge-drag-handle'));
       const to = await center(rows.nth(2), 0, 4);
       await page.mouse.move(from.x, from.y);
@@ -203,7 +225,9 @@ for (const fw of FRAMEWORKS) {
       await expect(page.locator('.oge-drag-ghost')).toHaveCount(1);
       await page.keyboard.press('Escape');
       await page.mouse.up();
-      await expect(rows.nth(0).locator('[data-cell]').first()).toHaveText(first);
+      await expect(rows.nth(0).locator('[data-cell]').first()).toHaveText(
+        first,
+      );
       await expect(card.locator('.oge-drop-target')).toHaveCount(0);
       await expect(page.locator('.oge-drag-ghost')).toHaveCount(0);
     });
@@ -225,11 +249,18 @@ for (const fw of FRAMEWORKS) {
         timeout: 30_000,
       });
       expect(await panel.locator('[draggable="true"]').count()).toBe(0);
-      const area = (name: string) => panel.locator(`.oge-pivot-area[data-area="${name}"]`);
+      const area = (name: string) =>
+        panel.locator(`.oge-pivot-area[data-area="${name}"]`);
       const rowChip = area('row').locator('.oge-pivot-field-chip').last();
       const caption = (await rowChip.innerText()).trim();
-      const columnCount = await area('column').locator('.oge-pivot-field-chip').count();
-      await mouseDrag(page, await center(rowChip), await center(area('column'), 40));
+      const columnCount = await area('column')
+        .locator('.oge-pivot-field-chip')
+        .count();
+      await mouseDrag(
+        page,
+        await center(rowChip),
+        await center(area('column'), 40),
+      );
       await expect(area('column').locator('.oge-pivot-field-chip')).toHaveCount(
         columnCount + 1,
       );
@@ -239,7 +270,9 @@ for (const fw of FRAMEWORKS) {
       // touch: a long press carries it back to the rows
       await touchDrag(
         page,
-        await center(area('column').locator('.oge-pivot-field-chip', { hasText: caption })),
+        await center(
+          area('column').locator('.oge-pivot-field-chip', { hasText: caption }),
+        ),
         await center(area('row'), 40),
       );
       await expect(
@@ -254,11 +287,17 @@ for (const fw of FRAMEWORKS) {
       page,
     }) => {
       await page.goto(`/components/kanban${fw.query}`);
-      const host = page.locator('app-demo-card:has(#getting-started) .oge-kanban');
+      const host = page.locator(
+        'app-demo-card:has(#getting-started) .oge-kanban',
+      );
       await host.scrollIntoViewIfNeeded();
-      const card = host.locator('.oge-kanban-cards[data-col="todo"] .oge-kanban-card').first();
+      const card = host
+        .locator('.oge-kanban-cards[data-col="todo"] .oge-kanban-card')
+        .first();
       await expect(card).toBeVisible({ timeout: 30_000 });
-      const title = (await card.locator('.oge-kanban-card-title').innerText()).trim();
+      const title = (
+        await card.locator('.oge-kanban-card-title').innerText()
+      ).trim();
       const doing = host.locator('.oge-kanban-cards[data-col="doing"]');
       const box = (await card.boundingBox())!;
       const target = (await doing.boundingBox())!;
@@ -292,11 +331,17 @@ test.describe('real touch input (CDP)', () => {
       page,
     }) => {
       await page.goto(`/components/kanban${fw.query}`);
-      const host = page.locator('app-demo-card:has(#getting-started) .oge-kanban');
+      const host = page.locator(
+        'app-demo-card:has(#getting-started) .oge-kanban',
+      );
       await host.scrollIntoViewIfNeeded();
-      const card = host.locator('.oge-kanban-cards[data-col="todo"] .oge-kanban-card').first();
+      const card = host
+        .locator('.oge-kanban-cards[data-col="todo"] .oge-kanban-card')
+        .first();
       await expect(card).toBeVisible({ timeout: 30_000 });
-      const title = (await card.locator('.oge-kanban-card-title').innerText()).trim();
+      const title = (
+        await card.locator('.oge-kanban-card-title').innerText()
+      ).trim();
       const doing = host.locator('.oge-kanban-cards[data-col="doing"]');
       const box = (await card.boundingBox())!;
       const target = (await doing.boundingBox())!;

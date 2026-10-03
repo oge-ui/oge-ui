@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { StrictMode, createRef } from 'react';
 import { OgeGrid } from './grid';
 import type { OgeGridHandle, OgeRowReorderedEvent } from './grid-types';
@@ -113,7 +119,11 @@ describe('<OgeGrid> pointer drags (no HTML5 drag and drop)', () => {
     pointer('pointermove', header(container, 'name'), 20, 10);
     act(() => {
       document.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        }),
       );
     });
     pointer('pointerup', header(container, 'name'), 20, 10);
@@ -154,13 +164,18 @@ describe('<OgeGrid> pointer drags (no HTML5 drag and drop)', () => {
       }),
     );
     const chip = (field: string) =>
-      container.querySelector(`.oge-group-chip[data-group-chip="${field}"]`) as HTMLElement;
+      container.querySelector(
+        `.oge-group-chip[data-group-chip="${field}"]`,
+      ) as HTMLElement;
     await waitFor(() => expect(chip('age')).not.toBeNull());
     pointer('pointerdown', chip('age'), 120, 5);
     pointer('pointermove', chip('city'), 20, 5);
     expect(chip('city')).toHaveClass('oge-group-chip-drop-target');
     pointer('pointerup', chip('city'), 20, 5);
-    expect(ref.current?.state().group?.map((d) => d.field)).toEqual(['age', 'city']);
+    expect(ref.current?.state().group?.map((d) => d.field)).toEqual([
+      'age',
+      'city',
+    ]);
   });
 
   it('a row-handle drop and Ctrl+ArrowUp emit the identical event', async () => {
@@ -169,11 +184,17 @@ describe('<OgeGrid> pointer drags (no HTML5 drag and drop)', () => {
     pointer('pointerdown', handles[1], 5, 50, 'touch'); // handles drag at once
     pointer('pointermove', dataRows()[0], 5, 10, 'touch');
     pointer('pointerup', dataRows()[0], 5, 10, 'touch');
-    expect(pointerRun.rows.map((row) => row.name)).toEqual(['Grace', 'Ada', 'Erin']);
+    expect(pointerRun.rows.map((row) => row.name)).toEqual([
+      'Grace',
+      'Ada',
+      'Erin',
+    ]);
     pointerRun.unmount();
 
     const keyboardRun = await renderGrid({ rowDragging: true });
-    const cell = keyboardRun.container.querySelector('[data-cell="1-0"]') as HTMLElement;
+    const cell = keyboardRun.container.querySelector(
+      '[data-cell="1-0"]',
+    ) as HTMLElement;
     act(() => cell.focus());
     fireEvent.focus(cell);
     fireEvent.keyDown(cell, { key: 'ArrowUp', ctrlKey: true });
@@ -185,9 +206,9 @@ describe('<OgeGrid> pointer drags (no HTML5 drag and drop)', () => {
     const { container } = await renderGrid({ columnChooser: true });
     fireEvent.click(container.querySelector('.oge-chooser-button')!);
     const item = (id: string) =>
-      Array.from(document.querySelectorAll<HTMLElement>('.oge-chooser-item')).find(
-        (element) => element.dataset['chooserId'] === id,
-      )!;
+      Array.from(
+        document.querySelectorAll<HTMLElement>('.oge-chooser-item'),
+      ).find((element) => element.dataset['chooserId'] === id)!;
     await waitFor(() => expect(item('age')).toBeDefined());
     pointer('pointerdown', item('age'), 5, 60);
     pointer('pointermove', item('name'), 5, 10);

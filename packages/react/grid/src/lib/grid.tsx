@@ -2182,10 +2182,13 @@ function OgeGridInner<T extends object>(
       source: cell,
       autoScroll: viewportRef.current,
       autoScrollOptions: { axis: 'x' },
-      resolve: (hit) => resolveOgeHeaderDropTarget(hit, host, { reorder, group }),
+      resolve: (hit) =>
+        resolveOgeHeaderDropTarget(hit, host, { reorder, group }),
       onOver: (target) => {
         const id =
-          target?.kind === 'column' && target.id !== column.id ? target.id : null;
+          target?.kind === 'column' && target.id !== column.id
+            ? target.id
+            : null;
         if (model.headerDropTargetId() !== id) model.headerDropTargetId.set(id);
         model.groupPanelDropActive.set(target?.kind === 'group');
       },
@@ -2219,7 +2222,8 @@ function OgeGridInner<T extends object>(
     const panel = chip.closest('.oge-group-panel');
     beginPointerDragDrop<string>(event, {
       source: chip,
-      resolve: (hit) => resolveOgeAttributeTarget(hit, panel, 'data-group-chip'),
+      resolve: (hit) =>
+        resolveOgeAttributeTarget(hit, panel, 'data-group-chip'),
       onOver: (target) =>
         model.groupChipDropTarget.set(target === field ? null : target),
       onDrop: (target) => {

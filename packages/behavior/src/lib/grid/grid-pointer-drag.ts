@@ -51,8 +51,7 @@ export function isOgeDragExcludedTarget(
 
 /** What a dragged header can be dropped on. */
 export type OgeGridHeaderDropTarget =
-  | { readonly kind: 'column'; readonly id: string }
-  | { readonly kind: 'group' };
+  { readonly kind: 'column'; readonly id: string } | { readonly kind: 'group' };
 
 /**
  * The header-drag target under the pointer: another header cell (column

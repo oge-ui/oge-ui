@@ -133,12 +133,20 @@ describe('OgeTreeList drag reparenting', () => {
 
   it('shows the inside indicator while hovering and Escape cancels', async () => {
     const { fixture, host, el } = await render();
-    pointer('pointerdown', rowOf(el, 'Root B')?.querySelector('.oge-drag-handle'), 100);
+    pointer(
+      'pointerdown',
+      rowOf(el, 'Root B')?.querySelector('.oge-drag-handle'),
+      100,
+    );
     pointer('pointermove', rowOf(el, 'Child A1'), 10);
     fixture.detectChanges();
     expect(rowOf(el, 'Child A1')?.classList).toContain('oge-drop-target');
     document.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
     );
     pointer('pointerup', rowOf(el, 'Child A1'), 10);
     await settle(fixture);

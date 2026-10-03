@@ -43,7 +43,9 @@ function start(
 }
 
 const move = (x: number, y: number, pointerType?: string, pointerId = 1) =>
-  document.dispatchEvent(pointer('pointermove', x, y, { pointerType, pointerId }));
+  document.dispatchEvent(
+    pointer('pointermove', x, y, { pointerType, pointerId }),
+  );
 const up = (x: number, y: number, pointerType?: string) =>
   document.dispatchEvent(pointer('pointerup', x, y, { pointerType }));
 
@@ -159,7 +161,10 @@ describe('beginPointerGesture', () => {
     it('drags only after the hold elapses', () => {
       vi.useFakeTimers();
       const onLongPress = vi.fn();
-      const { moves, finishes } = start({ longPress: 300, onLongPress }, 'touch');
+      const { moves, finishes } = start(
+        { longPress: 300, onLongPress },
+        'touch',
+      );
       vi.advanceTimersByTime(299);
       expect(onLongPress).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
@@ -223,7 +228,10 @@ describe('beginPointerGesture', () => {
       vi.useFakeTimers();
       prepareTouchDrag();
       const touchMove = () => {
-        const event = new Event('touchmove', { bubbles: true, cancelable: true });
+        const event = new Event('touchmove', {
+          bubbles: true,
+          cancelable: true,
+        });
         document.body.dispatchEvent(event);
         return event.defaultPrevented;
       };
@@ -238,7 +246,10 @@ describe('beginPointerGesture', () => {
 
     it('prevents the platform context menu of a touch hold', () => {
       start({ longPress: 300 }, 'touch');
-      const menu = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      const menu = new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+      });
       document.body.dispatchEvent(menu);
       expect(menu.defaultPrevented).toBe(true);
     });

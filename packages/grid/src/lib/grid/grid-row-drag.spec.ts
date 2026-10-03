@@ -46,7 +46,11 @@ function pointer(
 
 function escape(): void {
   document.dispatchEvent(
-    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    }),
   );
 }
 
@@ -78,7 +82,9 @@ describe('OgeGrid row drag reordering (pointer)', () => {
     // drag row 3 (Erin) onto row 1 (Ada)
     const handles = el.querySelectorAll('.oge-drag-handle');
     pointer('pointerdown', handles[2], 5, 90);
-    const target = el.querySelectorAll('.oge-row')[0].querySelector('.oge-cell:last-child')!;
+    const target = el
+      .querySelectorAll('.oge-row')[0]
+      .querySelector('.oge-cell:last-child')!;
     pointer('pointermove', target, 5, 10);
     fixture.detectChanges();
     expect(el.querySelectorAll('.oge-drop-target').length).toBe(1);
@@ -128,12 +134,18 @@ describe('OgeGrid row drag reordering (pointer)', () => {
     const pointerRun = await render();
     const handles = pointerRun.el.querySelectorAll('.oge-drag-handle');
     pointer('pointerdown', handles[1], 5, 50);
-    pointer('pointermove', pointerRun.el.querySelectorAll('.oge-row')[0], 5, 10);
+    pointer(
+      'pointermove',
+      pointerRun.el.querySelectorAll('.oge-row')[0],
+      5,
+      10,
+    );
     pointer('pointerup', pointerRun.el.querySelectorAll('.oge-row')[0], 5, 10);
     await settle(pointerRun.fixture);
 
     const keyboardRun = await render();
-    const cell = keyboardRun.el.querySelectorAll<HTMLElement>('.oge-row')[1]
+    const cell = keyboardRun.el
+      .querySelectorAll<HTMLElement>('.oge-row')[1]
       .querySelector<HTMLElement>('.oge-cell:not(.oge-drag-cell)')!;
     cell.focus();
     cell.dispatchEvent(
@@ -181,13 +193,17 @@ describe('OgeGrid header drag (pointer)', () => {
     await settle(fixture);
     const el = fixture.nativeElement as HTMLElement;
     const header = (id: string) =>
-      el.querySelector<HTMLElement>(`.oge-header-row > .oge-header-cell[data-colid="${id}"]`)!;
+      el.querySelector<HTMLElement>(
+        `.oge-header-row > .oge-header-cell[data-colid="${id}"]`,
+      )!;
     const captions = () =>
-      Array.from(el.querySelectorAll('.oge-header-row .oge-header-caption')).map((h) =>
-        h.textContent?.trim(),
-      );
+      Array.from(
+        el.querySelectorAll('.oge-header-row .oge-header-caption'),
+      ).map((h) => h.textContent?.trim());
     const chips = () =>
-      Array.from(el.querySelectorAll('.oge-group-chip')).map((c) => c.textContent?.trim());
+      Array.from(el.querySelectorAll('.oge-group-chip')).map((c) =>
+        c.textContent?.trim(),
+      );
     return { fixture, el, header, captions, chips };
   }
 
@@ -260,7 +276,9 @@ describe('OgeGrid header drag (pointer)', () => {
 
   it('a press on the chip remove button never starts a chip drag', async () => {
     const { fixture, el, chips } = await render(['region', 'city']);
-    const remove = el.querySelectorAll<HTMLElement>('.oge-group-chip-remove')[1];
+    const remove = el.querySelectorAll<HTMLElement>(
+      '.oge-group-chip-remove',
+    )[1];
     pointer('pointerdown', remove, 120, 5);
     pointer('pointermove', el.querySelectorAll('.oge-group-chip')[0], 20, 5);
     pointer('pointerup', el.querySelectorAll('.oge-group-chip')[0], 20, 5);
