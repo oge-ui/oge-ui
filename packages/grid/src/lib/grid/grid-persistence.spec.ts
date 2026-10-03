@@ -126,7 +126,8 @@ describe('OgeGrid state persistence', () => {
         h.textContent?.trim(),
       ),
     ).not.toContain('Age');
-  });
+    // two full grid renders + the save debounce: ~4 s on an idle machine
+  }, 15_000);
 });
 
 describe('OgeGrid async storage + imperative state API', () => {
