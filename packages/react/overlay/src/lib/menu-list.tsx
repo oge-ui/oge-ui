@@ -21,6 +21,7 @@ import {
   type OgeMenuCloseReason,
   type OgeMenuItem,
   sanitizeUrl,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { useOgeOverlayConfig } from './overlay-config';
 import { OgePopup } from './popup';
@@ -338,9 +339,7 @@ export const OgeMenuList: ForwardRefExoticComponent<
         latest.current.onCloseRequest?.({ reason: 'escape', event: native });
         return;
       }
-      const rtl =
-        hostRef.current !== null &&
-        getComputedStyle(hostRef.current).direction === 'rtl';
+      const rtl = hostRef.current !== null && ogeIsRtl(hostRef.current);
       if (key === (rtl ? 'ArrowLeft' : 'ArrowRight')) {
         const index = activeIndex;
         const item = items[index];

@@ -1431,6 +1431,13 @@ export {
   type OgeSanitizeUrlOptions,
 } from './lib/security/sanitize-url';
 export { prefersReducedMotion, motionScrollBehavior } from './lib/a11y/motion';
+export {
+  ogeIsRtl,
+  ogeResolveDirection,
+  observeDirection,
+  type OgeDirection,
+  type OgeDirectionInput,
+} from './lib/a11y/direction';
 
 // pointer gestures + pointer drag & drop (no HTML5 DnD in packages/)
 export {

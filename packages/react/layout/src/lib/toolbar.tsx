@@ -449,6 +449,7 @@ export const OgeToolbar = forwardRef<OgeToolbarHandle, OgeToolbarProps>(
       const metrics = readToolbarStyleMetrics(
         getComputedStyle(host),
         state.current.vertical,
+        host,
       );
       rtlRef.current = metrics.rtl;
       paddingRef.current = metrics.padding;

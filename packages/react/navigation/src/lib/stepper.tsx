@@ -29,6 +29,7 @@ import {
   type OgeStepperFinishEvent,
   type OgeStepperMessages,
   type OgeStepperOrientation,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { useOgeStepperConfig } from './navigation-config';
 
@@ -392,10 +393,7 @@ export const OgeStepper = forwardRef<OgeStepperHandle, OgeStepperProps>(
       if (!keyboardNavigation || disabled) return;
       const ds = descriptors;
       const first = headerEls.current.get(ds[0]?.id ?? '');
-      const rtl =
-        orientation !== 'vertical' &&
-        !!first &&
-        getComputedStyle(first).direction === 'rtl';
+      const rtl = orientation !== 'vertical' && !!first && ogeIsRtl(first);
       const active = listRef.current?.ownerDocument.activeElement;
       const focused = ds.findIndex(
         (d) => headerEls.current.get(d.id) === active,

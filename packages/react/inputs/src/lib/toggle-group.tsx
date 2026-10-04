@@ -22,6 +22,7 @@ import {
   type OgeSelectDisplayExpr,
   type OgeSelectValueExpr,
   type OgeToggleGroupSelectionMode,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { useOgeField, type OgeControlProps } from './use-field';
 
@@ -171,9 +172,7 @@ export const OgeToggleGroup = forwardRef(function OgeToggleGroupRender<TItem>(
       .map((item, index) => ({ item, index }))
       .filter(({ item }) => !isItemDisabled(item))
       .map(({ index }) => index);
-    const rtl =
-      hostRef.current !== null &&
-      getComputedStyle(hostRef.current).direction === 'rtl';
+    const rtl = hostRef.current !== null && ogeIsRtl(hostRef.current);
     // the wrap-around / RTL arithmetic is the button group's, from `behavior`
     const position = buttonGroupNavIndex(
       event.key,

@@ -46,6 +46,7 @@ import {
   type OgeMenubarSubmenuOpeningEvent,
   type OgeMenuItem,
   sanitizeUrl,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import {
   OgeMenuList,
@@ -250,9 +251,7 @@ export const OgeMenubar = forwardRef<OgeMenubarHandle, OgeMenubarProps>(
       );
     })();
 
-    const isRtl = (): boolean =>
-      !!hostRef.current &&
-      getComputedStyle(hostRef.current).direction === 'rtl';
+    const isRtl = (): boolean => !!hostRef.current && ogeIsRtl(hostRef.current);
 
     // --- the anchored panel --------------------------------------------------
 

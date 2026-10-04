@@ -30,6 +30,7 @@ import type {
   OgeRadioGroupItemClickEvent,
   OgeRadioGroupLayout,
 } from './radio-group-types';
+import { ogeIsRtl } from '@oge-ui/behavior';
 
 /**
  * Radio group over a flat item array — WAI-ARIA radiogroup with roving
@@ -213,8 +214,7 @@ export class OgeRadioGroup<TItem = unknown>
       } else if (key === 'ArrowUp') {
         forward = false;
       } else {
-        const rtl =
-          getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
+        const rtl = ogeIsRtl(this.hostEl.nativeElement);
         forward = (key === 'ArrowRight') !== rtl;
       }
       const position = enabledIndices.indexOf(this.focusTargetIndex());

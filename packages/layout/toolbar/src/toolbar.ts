@@ -1185,6 +1185,7 @@ export class OgeToolbar {
     const metrics = readToolbarStyleMetrics(
       getComputedStyle(this.host.nativeElement),
       this.orientation() === 'vertical',
+      this.host.nativeElement,
     );
     this.rtl = metrics.rtl;
     this.paddingSize = metrics.padding;

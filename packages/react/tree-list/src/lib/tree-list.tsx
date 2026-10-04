@@ -95,6 +95,8 @@ import {
   type OgeTreeExportData,
   type OgeTreeExportOptions,
   type OgeTreeInitNewRowEvent,
+  ogeIsRtl,
+  observeDirection,
 } from '@oge-ui/behavior';
 import {
   beginPointerDragDrop,
@@ -1076,14 +1078,20 @@ function OgeTreeListInner<T extends object>(
     if (!viewport || !host) return;
     model.viewportHeight.set(viewport.clientHeight || 400);
     model.hostWidth.set(viewport.clientWidth);
-    model.detectedRtl.set(getComputedStyle(host).direction === 'rtl');
-    if (typeof ResizeObserver === 'undefined') return;
+    model.detectedRtl.set(ogeIsRtl(host));
+    const stopDirection = observeDirection(host, (direction) =>
+      model.detectedRtl.set(direction === 'rtl'),
+    );
+    if (typeof ResizeObserver === 'undefined') return stopDirection;
     const observer = new ResizeObserver(() => {
       model.viewportHeight.set(viewport.clientHeight);
       model.hostWidth.set(viewport.clientWidth);
     });
     observer.observe(viewport);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      stopDirection();
+    };
   }, [model]);
 
   // state persistence

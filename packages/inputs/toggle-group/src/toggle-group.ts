@@ -26,6 +26,7 @@ import {
   type OgeSelectDisplayExpr,
   type OgeSelectValueExpr,
   type OgeToggleGroupSelectionMode,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { OgeControlBase } from '@oge-ui/inputs/field';
 
@@ -288,7 +289,7 @@ export class OgeToggleGroup<TItem = unknown>
       .map((item, index) => ({ item, index }))
       .filter(({ item }) => !this.isItemDisabled(item))
       .map(({ index }) => index);
-    const rtl = getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
+    const rtl = ogeIsRtl(this.hostEl.nativeElement);
     // the wrap-around / RTL arithmetic is the button group's, from `behavior`
     const position = buttonGroupNavIndex(
       event.key,

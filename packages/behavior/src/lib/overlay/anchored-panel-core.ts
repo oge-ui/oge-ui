@@ -1,3 +1,4 @@
+import { ogeIsRtl } from '../a11y/direction';
 import { isTopOverlay, pushOverlay, removeOverlay } from './overlay-stack';
 import {
   ogeVisibleViewport,
@@ -278,7 +279,7 @@ export class OgeAnchoredPanelCore {
       placement: this.options.placement?.() ?? 'bottom-start',
       offset,
       viewportPadding,
-      rtl: getComputedStyle(anchorEl).direction === 'rtl',
+      rtl: ogeIsRtl(anchorEl),
     });
     // The room left on the chosen side, as a custom property the popup
     // surface caps itself with — a list shrinks above the keyboard instead

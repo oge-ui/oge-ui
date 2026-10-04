@@ -10,6 +10,8 @@
  * and swallow the native echo that may follow.
  */
 
+import { ogeIsRtl } from '../a11y/direction';
+
 /** The Menu key, or Shift+F10. */
 export function isOgeContextMenuKey(event: {
   readonly key: string;
@@ -42,12 +44,7 @@ export function ogeContextMenuKeyTarget(
   const anchor = header ?? target.closest('[role="gridcell"]');
   if (!anchor) return null;
   const rect = anchor.getBoundingClientRect();
-  const view = anchor.ownerDocument.defaultView;
-  // computed direction catches CSS-only RTL; the nearest `dir` attribute
-  // covers engines that do not resolve inherited `direction` (jsdom)
-  const rtl =
-    view?.getComputedStyle(anchor).direction === 'rtl' ||
-    anchor.closest('[dir]')?.getAttribute('dir') === 'rtl';
+  const rtl = ogeIsRtl(anchor);
   const point = { x: rtl ? rect.right : rect.left, y: rect.bottom };
   if (header) {
     const id = header.getAttribute('data-colid');

@@ -19,6 +19,7 @@ import {
   OgeMenuTypeAhead,
   menuEdgeIndex,
   menuMoveIndex,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { OGE_OVERLAY_CONFIG } from '../config';
 import {
@@ -413,7 +414,7 @@ export class OgeMenuList {
       this.closeRequest.emit({ reason: 'escape', event });
       return;
     }
-    const rtl = getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    const rtl = ogeIsRtl(this.host.nativeElement);
     if (key === (rtl ? 'ArrowLeft' : 'ArrowRight')) {
       const index = this.activeIndex();
       const item = this.items()[index];

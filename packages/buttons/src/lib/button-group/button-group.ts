@@ -17,6 +17,7 @@ import {
   applyButtonGroupSelection,
   buttonGroupNavIndex,
   buttonGroupRole,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { OgeButton } from '../button/button';
 import {
@@ -205,7 +206,7 @@ export class OgeButtonGroup implements OgeButtonGroupContext {
     const enabled = this.allButtons().filter((b) => !b.isDisabled());
     const current = this.focusTarget();
     const index = current ? enabled.indexOf(current) : -1;
-    const rtl = getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    const rtl = ogeIsRtl(this.host.nativeElement);
     // The wrap-around/RTL arithmetic lives in `behavior`, shared verbatim
     // with the React group; -1 means "not a navigation key" (or no targets).
     const nextIndex = buttonGroupNavIndex(

@@ -24,6 +24,7 @@ import {
   type OgeHsva,
   type OgeInputsMessages,
   type OgeRgba,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 
 /** A 2D saturation/brightness change from the gradient surface. */
@@ -73,8 +74,7 @@ export function ColorSurface(props: ColorSurfaceProps) {
   const gestureCleanup = useRef<(() => void) | null>(null);
   useEffect(() => () => gestureCleanup.current?.(), []);
 
-  const isRtl = (): boolean =>
-    !!hostRef.current && getComputedStyle(hostRef.current).direction === 'rtl';
+  const isRtl = (): boolean => !!hostRef.current && ogeIsRtl(hostRef.current);
 
   const atPointer = (
     event: { clientX: number; clientY: number },
@@ -232,8 +232,7 @@ export function ColorSlider(props: ColorSliderProps) {
   const max = props.kind === 'hue' ? 360 : 100;
   const percent = valueToRatio(props.value, 0, max) * 100;
 
-  const isRtl = (): boolean =>
-    !!hostRef.current && getComputedStyle(hostRef.current).direction === 'rtl';
+  const isRtl = (): boolean => !!hostRef.current && ogeIsRtl(hostRef.current);
 
   const maxOf = (): number => (latest.current.kind === 'hue' ? 360 : 100);
 
@@ -438,9 +437,7 @@ export function ColorPalette(props: ColorPaletteProps) {
       event.key === 'End';
     if (!isNavKey) return;
     event.preventDefault();
-    const rtl =
-      !!hostRef.current &&
-      getComputedStyle(hostRef.current).direction === 'rtl';
+    const rtl = !!hostRef.current && ogeIsRtl(hostRef.current);
     // the APG grid key map is shared with the Angular grid (`behavior`)
     const next = colorPaletteNavIndex(
       event.key,

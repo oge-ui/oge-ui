@@ -16,6 +16,7 @@ import {
   sliderValueFromPointer,
   startSliderDrag,
   type OgeSliderScale,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { OgeControlBase } from '@oge-ui/inputs/field';
 import type {
@@ -140,7 +141,7 @@ export abstract class OgeSliderBase<T> extends OgeControlBase<T> {
   // --- pointer machinery -----------------------------------------------------
 
   protected isRtl(): boolean {
-    return getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
+    return ogeIsRtl(this.hostEl.nativeElement);
   }
 
   /**
