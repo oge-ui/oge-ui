@@ -1,0 +1,74 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The check box glyphs are `oge-check-box`'s own rules; this sheet lays the
+// group out and draws its label / subscript.
+
+.oge-check-box-group {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-check-box-group-label {
+  color: var(--oge-text-color);
+  font-weight: 600;
+}
+
+.oge-check-box-group-required {
+  margin-inline-start: 2px;
+  color: var(--oge-danger);
+}
+
+.oge-check-box-group-select-all {
+  padding-block-end: 8px;
+  border-block-end: 1px solid var(--oge-border-color);
+}
+
+.oge-check-box-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oge-check-box-group-horizontal .oge-check-box-group-items {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.oge-check-box-group-columns .oge-check-box-group-items {
+  display: grid;
+  grid-template-columns: repeat(
+    var(--oge-check-box-group-columns, 2),
+    minmax(0, 1fr)
+  );
+  gap: 8px 16px;
+}
+
+.oge-check-box-group-invalid .oge-check-box-icon {
+  border-color: var(--oge-danger);
+}
+
+.oge-check-box-group-subscript {
+  color: var(--oge-muted-color);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-check-box-group-error {
+  color: var(--oge-danger);
+}
+
+@include tokens.forced-colors {
+  .oge-check-box-group-invalid .oge-check-box-icon {
+    border-color: CanvasText;
+    border-width: 2px;
+  }
+
+  .oge-check-box-group-error {
+    color: CanvasText;
+  }
+}

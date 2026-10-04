@@ -16,6 +16,9 @@ import { withInputWidth } from './field-extras';
 import {
   clampNumber,
   createNumberFormatter,
+  createNumberTypingGrouper,
+  formatNumberWhileTyping,
+  numberWheelDirection,
   offsetByStep,
 } from '@oge-ui/behavior';
 import { OgeFieldChrome, type OgeInputSpinState } from './field-chrome';
@@ -51,6 +54,19 @@ export interface OgeNumberBoxProps
   locale?: string;
   /** Native `type` attr; keyboards vary by device. `inputmode` stays decimal. */
   mode?: OgeNumberBoxMode;
+  /**
+   * Groups thousands live while typing (locale separators, caret kept in
+   * place). `false` (default) shows the raw number while focused; `format`
+   * still applies on blur either way.
+   */
+  formatWhileTyping?: boolean;
+  /** Caps the fraction digits while typing; `undefined` = unlimited. */
+  maxFractionDigits?: number;
+  /**
+   * Mouse-wheel step while the field is focused (wheel up adds). `undefined`
+   * / `0` (default) leaves the wheel to the page — wheel changes are opt-in.
+   */
+  wheelStep?: number;
   label?: string;
   labelMode?: 'static' | 'floating' | 'hidden' | 'outside';
   stylingMode?: 'outlined' | 'filled' | 'underlined';
@@ -72,7 +88,9 @@ export interface OgeNumberBoxProps
  * `<oge-number-box>`: `null` means empty (never `0`), display formatting via
  * `Intl.NumberFormat` applies on blur while focus shows the raw editable
  * number, values clamp to `min`/`max` on commit, and spin buttons / arrow
- * keys step by `step` with hold-to-repeat — all over the shared
+ * keys step by `step` with hold-to-repeat; `formatWhileTyping` groups live,
+ * `maxFractionDigits` caps the fraction while typing and `wheelStep` opts
+ * into focused mouse-wheel stepping — all over the shared
  * `@oge-ui/behavior` arithmetic, so stepping and parsing cannot drift from
  * the Angular editor.
  *
@@ -90,6 +108,9 @@ export const OgeNumberBox = forwardRef<OgeNumberBoxHandle, OgeNumberBoxProps>(
       format,
       locale,
       mode = 'text',
+      formatWhileTyping = false,
+      maxFractionDigits,
+      wheelStep,
       showSuccessIcon = false,
       selectOnFocus = false,
       inputAttr,
@@ -131,6 +152,33 @@ export const OgeNumberBox = forwardRef<OgeNumberBoxHandle, OgeNumberBoxProps>(
       // deps keyed by content, not identity — see formatterKey above
       [formatterKey],
     );
+    const groupDigits = useMemo(
+      () => createNumberTypingGrouper(resolvedLocale),
+      [resolvedLocale],
+    );
+
+    /** Live typing rules — grouping and the fraction cap (shared core). */
+    const typed = (
+      text: string,
+      caret: number,
+    ): { text: string; caret: number } => {
+      if (!formatWhileTyping && maxFractionDigits === undefined) {
+        return { text, caret };
+      }
+      return formatNumberWhileTyping(text, caret, {
+        decimal: formatter.decimal,
+        group: formatter.group,
+        grouping: formatWhileTyping,
+        maxFractionDigits,
+        groupDigits,
+      });
+    };
+    /** The focused (editable) text of a value. */
+    const editableText = (value: number | null): string => {
+      if (value === null) return '';
+      const raw = formatter.formatEditable(value);
+      return typed(raw, raw.length).text;
+    };
 
     /** Raw text while focused. */
     const [editingText, setEditingText] = useState('');
@@ -140,11 +188,7 @@ export const OgeNumberBox = forwardRef<OgeNumberBoxHandle, OgeNumberBoxProps>(
     const [prevValue, setPrevValue] = useState(field.value);
     if (prevValue !== field.value) {
       setPrevValue(field.value);
-      if (field.focused) {
-        setEditingText(
-          field.value === null ? '' : formatter.formatEditable(field.value),
-        );
-      }
+      if (field.focused) setEditingText(editableText(field.value));
     }
 
     const displayText = field.focused
@@ -162,8 +206,8 @@ export const OgeNumberBox = forwardRef<OgeNumberBoxHandle, OgeNumberBoxProps>(
     const spinIntervalTimer = useRef<ReturnType<typeof setInterval> | null>(
       null,
     );
-    const latestSpin = useRef({ min, max, step, field, formatter });
-    latestSpin.current = { min, max, step, field, formatter };
+    const latestSpin = useRef({ min, max, step, field, editableText });
+    latestSpin.current = { min, max, step, field, editableText };
 
     const canUp = (() => {
       if (field.effectiveDisabled || readonly) return false;
@@ -183,21 +227,52 @@ export const OgeNumberBox = forwardRef<OgeNumberBoxHandle, OgeNumberBoxProps>(
     };
 
     /** Spin commits immediately — it is a discrete action, not typing. */
-    const stepBy = (dir: 1 | -1, event?: Event): void => {
+    const stepBy = (
+      dir: 1 | -1,
+      event?: Event,
+      stepOverride?: number,
+    ): void => {
       const {
         min: lo,
         max: hi,
         step: by,
         field: f,
-        formatter: fmt,
+        editableText: editable,
       } = latestSpin.current;
       // A staged debounced keystroke must land before stepping from it.
       f.flush();
-      const next = offsetByStep(f.value, dir, by, lo, hi);
+      const next = offsetByStep(f.value, dir, stepOverride ?? by, lo, hi);
       f.setParseInvalid(false);
       f.commit.commitNow(next, event);
-      if (f.focused) setEditingText(fmt.formatEditable(next));
+      if (f.focused) setEditingText(editable(next));
     };
+
+    // Wheel stepping: a native non-passive listener — React's onWheel is
+    // passive, so its preventDefault could not stop the page from scrolling.
+    const latestWheel = useRef({ wheelStep, readonly, stepBy });
+    latestWheel.current = { wheelStep, readonly, stepBy };
+    useEffect(() => {
+      const el = nativeRef.current;
+      if (!el) return undefined;
+      const listener = (event: WheelEvent): void => {
+        const {
+          wheelStep: by = 0,
+          readonly: ro,
+          stepBy: run,
+        } = latestWheel.current;
+        const f = latestSpin.current.field;
+        const dir = numberWheelDirection(
+          event,
+          f.focused,
+          by > 0 && !f.effectiveDisabled && !ro,
+        );
+        if (dir === 0) return;
+        event.preventDefault();
+        run(dir, event, by);
+      };
+      el.addEventListener('wheel', listener, { passive: false });
+      return () => el.removeEventListener('wheel', listener);
+    }, []);
 
     const stopSpin = (): void => {
       if (spinDelayTimer.current !== null) {
@@ -365,7 +440,18 @@ export const OgeNumberBox = forwardRef<OgeNumberBoxHandle, OgeNumberBoxProps>(
             aria-invalid={field.showError ? true : undefined}
             aria-required={props.required ? true : undefined}
             onChange={(event) => {
-              const text = event.target.value;
+              const el = event.target;
+              const result = typed(
+                el.value,
+                el.selectionStart ?? el.value.length,
+              );
+              const text = result.text;
+              if (text !== el.value) {
+                // write before the state so React sees an unchanged value
+                // and leaves the caret where the shared core put it
+                el.value = text;
+                el.setSelectionRange(result.caret, result.caret);
+              }
               setEditingText(text);
               props.onInputChange?.({ text, event: event.nativeEvent });
               const parsed = formatter.parse(text);
@@ -382,11 +468,7 @@ export const OgeNumberBox = forwardRef<OgeNumberBoxHandle, OgeNumberBoxProps>(
               field.commit.queue(parsed.value, event.nativeEvent);
             }}
             onFocus={(event) => {
-              setEditingText(
-                field.value === null
-                  ? ''
-                  : formatter.formatEditable(field.value),
-              );
+              setEditingText(editableText(field.value));
               field.setParseInvalid(false);
               if (selectOnFocus) nativeRef.current?.select();
               field.handleFocus(event);

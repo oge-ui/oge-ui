@@ -5,7 +5,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { OgeCheckBox, OgeRadioGroup, OgeSwitch } from '@oge-ui/inputs';
+import {
+  OgeCheckBox,
+  OgeRadioGroup,
+  OgeSwitch,
+  OgeToggleGroup,
+} from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
@@ -19,12 +24,14 @@ import {
   FORMS_SNIPPET,
   RADIO_SNIPPET,
   SWITCH_SNIPPET,
+  TOGGLE_GROUP_SNIPPET,
 } from './toggle-controls-snippets';
 
 const SECTIONS = [
   'Check Box',
   'Switch',
   'Radio Group',
+  'Toggle Group',
   'Forms integration',
   'Keyboard & accessibility',
 ] as const;
@@ -41,6 +48,7 @@ interface DemoPlan {
     OgeCheckBox,
     OgeSwitch,
     OgeRadioGroup,
+    OgeToggleGroup,
     DemoCard,
     DocHeader,
     PageToc,
@@ -156,6 +164,38 @@ interface DemoPlan {
       </app-demo-card>
 
       <app-demo-card
+        heading="Toggle Group"
+        description="<code>oge-toggle-group</code> is the segmented control as a <strong>form editor</strong> — label, hint, validation and <code>[formField]</code> / <code>formControl</code>, which <code>oge-button-group</code> (an action control) does not carry. <code>single</code> is the WAI-ARIA radio group: arrows move focus <em>and</em> selection and the selected segment cannot be pressed off; <code>multiple</code> renders <code>aria-pressed</code> toggle buttons with an array value in items order."
+        [chips]="['selectionMode', 'radiogroup', 'aria-pressed']"
+        [code]="toggleGroupSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-10">
+          <oge-toggle-group
+            label="Alignment"
+            [items]="aligns"
+            displayExpr="text"
+            valueExpr="id"
+            [(value)]="align"
+          />
+          <oge-toggle-group
+            label="Delivery days"
+            selectionMode="multiple"
+            hint="Pick one or more"
+            [items]="days"
+            [(value)]="delivery"
+          />
+          <div
+            class="pt-1 text-sm text-gray-500 dark:text-gray-400"
+            data-testid="toggle-output"
+          >
+            align: <code>{{ align() }}</code> · days:
+            <code>{{ deliveryText() }}</code>
+          </div>
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
         heading="Forms integration"
         description="All three implement Signal Forms' <code>FormValueControl</code> and the classic CVA (constructor-assignment pattern) — <code>[formField]</code>, <code>formControl</code> and <code>ngModel</code> all work. <code>valueCommitted</code> carries <code>previousValue</code> and the originating event."
         [chips]="['FormValueControl', 'CVA', 'valueCommitted']"
@@ -196,6 +236,12 @@ interface DemoPlan {
         >
         jump to the edges, disabled items are skipped.
       </li>
+      <li>
+        Toggle group: one tab stop. Single mode is a radio group (arrows move
+        focus and selection); multiple mode is a group of
+        <code>aria-pressed</code> buttons — arrows move focus,
+        <kbd>Space</kbd>/<kbd>Enter</kbd> toggle.
+      </li>
     </ul>
   `,
 })
@@ -219,6 +265,19 @@ export class InputsToggleControlsPage {
   protected readonly switchSnippet = SWITCH_SNIPPET;
   protected readonly radioSnippet = RADIO_SNIPPET;
   protected readonly formsSnippet = FORMS_SNIPPET;
+  protected readonly toggleGroupSnippet = TOGGLE_GROUP_SNIPPET;
+
+  protected readonly aligns = [
+    { id: 'left', text: 'Left' },
+    { id: 'center', text: 'Center' },
+    { id: 'right', text: 'Right' },
+  ];
+  protected readonly days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  protected readonly align = signal<unknown>('left');
+  protected readonly delivery = signal<unknown>(['Mon', 'Thu']);
+  protected readonly deliveryText = computed(() =>
+    JSON.stringify(this.delivery()),
+  );
 
   protected readonly agreed = signal<boolean | null>(false);
   protected readonly all = signal<boolean | null>(null);

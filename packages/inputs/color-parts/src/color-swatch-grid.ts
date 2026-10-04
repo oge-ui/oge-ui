@@ -15,6 +15,7 @@ import {
   parseColor,
   type OgeRgba,
 } from '@oge-ui/core';
+import { colorPaletteNavIndex } from '@oge-ui/behavior';
 
 /** A palette swatch pick. */
 export interface OgeColorPalettePick {
@@ -30,20 +31,25 @@ interface PaletteCell {
 }
 
 /**
- * Internal swatch grid of the color panel — an APG `role="grid"` composition
+ * Internal swatch grid shared by the color box panel and the standalone
+ * `oge-color-palette` — an APG `role="grid"` composition
  * with a roving tabindex and real DOM focus on the cells (the calendar
  * precedent): arrows move by cell/row, Home/End jump the row edges,
  * Ctrl+Home/Ctrl+End the grid corners, Enter/Space picks. The selected cell
  * carries `aria-selected` and a checkmark colored by `contrastForeground`.
  */
 @Component({
-  selector: 'oge-color-palette',
+  selector: 'oge-color-swatch-grid',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  styleUrl: './color-parts.scss',
   host: {
     class: 'oge-color-palette',
     role: 'grid',
-    '[attr.aria-label]': 'label()',
+    '[attr.aria-label]': 'labelledBy() ? null : label()',
+    '[attr.aria-labelledby]': 'labelledBy()',
+    '[attr.aria-disabled]': "disabled() ? 'true' : null",
+    '[attr.aria-readonly]': "readonly() ? 'true' : null",
     '[style.--oge-color-palette-columns]': 'columns()',
   },
   template: `
@@ -53,7 +59,9 @@ interface PaletteCell {
           <div
             class="oge-color-palette-cell"
             role="gridcell"
-            [tabindex]="cell.index === active() ? 0 : -1"
+            [tabindex]="
+              cell.index === active() && !disabled() ? tabIndex() : -1
+            "
             [class.oge-color-palette-selected]="isSelected(cell)"
             [attr.aria-selected]="isSelected(cell)"
             [attr.aria-label]="cell.text"
@@ -83,7 +91,7 @@ interface PaletteCell {
     }
   `,
 })
-export class OgeColorPalette {
+export class OgeColorSwatchGrid {
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** Swatches as CSS color strings; unparseable entries are dropped. */
@@ -93,6 +101,15 @@ export class OgeColorPalette {
   readonly selected = input<OgeRgba | null>(null);
   /** Accessible name of the grid. */
   readonly label = input.required<string>();
+
+  /** Element id naming the grid instead of `label` (a visible field label). */
+  readonly labelledBy = input<string | null>(null);
+  /** Takes every cell out of the Tab sequence and ignores picks. */
+  readonly disabled = input(false);
+  /** Cells stay focusable and navigable, picks are ignored. */
+  readonly readonly = input(false);
+  /** `tabindex` of the roving cell. */
+  readonly tabIndex = input(0);
 
   readonly picked = output<OgeColorPalettePick>();
 
@@ -142,48 +159,43 @@ export class OgeColorPalette {
   }
 
   protected pick(cell: PaletteCell, event: Event): void {
+    if (this.disabled()) return;
     this.activeOverride.set(cell.index);
+    if (this.readonly()) return;
     this.picked.emit({ color: cell.text, event });
   }
 
+  /** Moves DOM focus to the roving cell. */
+  focus(): void {
+    this.hostEl.nativeElement
+      .querySelector<HTMLElement>(`[data-index="${this.active()}"]`)
+      ?.focus();
+  }
+
   protected onKeydown(cell: PaletteCell, event: KeyboardEvent): void {
-    const columns = Math.max(1, this.columns());
-    const count = this.cells().length;
-    if (count === 0) return;
-    const last = count - 1;
-    const rowStart = cell.index - (cell.index % columns);
-    const rowEnd = Math.min(rowStart + columns - 1, last);
-    const rtl = getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
-    let next: number | null = null;
-    switch (event.key) {
-      case 'ArrowRight':
-        next = cell.index + (rtl ? -1 : 1);
-        break;
-      case 'ArrowLeft':
-        next = cell.index + (rtl ? 1 : -1);
-        break;
-      case 'ArrowDown':
-        next = cell.index + columns;
-        break;
-      case 'ArrowUp':
-        next = cell.index - columns;
-        break;
-      case 'Home':
-        next = event.ctrlKey ? 0 : rowStart;
-        break;
-      case 'End':
-        next = event.ctrlKey ? last : rowEnd;
-        break;
-      case 'Enter':
-      case ' ':
-        event.preventDefault();
-        this.pick(cell, event);
-        return;
-      default:
-        return;
+    if (this.disabled()) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.pick(cell, event);
+      return;
     }
+    const rtl = getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
+    // the APG grid key map is shared with the React grid (`behavior`)
+    const next = colorPaletteNavIndex(
+      event.key,
+      cell.index,
+      this.cells().length,
+      this.columns(),
+      rtl,
+      event.ctrlKey || event.metaKey,
+    );
+    const isNavKey =
+      event.key.startsWith('Arrow') ||
+      event.key === 'Home' ||
+      event.key === 'End';
+    if (!isNavKey) return;
     event.preventDefault();
-    if (next === null || next < 0 || next > last) return;
+    if (next === null) return;
     this.activeOverride.set(next);
     this.hostEl.nativeElement
       .querySelector<HTMLElement>(`[data-index="${next}"]`)

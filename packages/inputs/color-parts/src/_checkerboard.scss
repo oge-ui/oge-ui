@@ -1,0 +1,13 @@
+// Checkerboard underlay shared by the color box swatch, the alpha track,
+// translucent palette cells and the gradient preview — what every
+// current-generation picker uses to make "transparent" visible.
+@mixin checkerboard($size: 8px) {
+  background-color: #fff;
+  background-image: conic-gradient(
+    rgba(0, 0, 0, 0.12) 25%,
+    transparent 25% 50%,
+    rgba(0, 0, 0, 0.12) 50% 75%,
+    transparent 75%
+  );
+  background-size: $size $size;
+}

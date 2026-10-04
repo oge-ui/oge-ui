@@ -77,4 +77,38 @@ const [notes, setNotes] = useState('');`,
 </div>`,
     }),
   },
+  {
+    title: 'Number entry',
+    description:
+      'formatWhileTyping groups thousands live with the locale’s separators and keeps the caret beside the digit you typed; maxFractionDigits refuses extra decimals as you type. format is the blur-time display — focus swaps in the editable number. wheelStep opts into mouse-wheel stepping, only while the field is focused.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeNumberBox'] },
+      name: 'NumberEntryDemo',
+      body: `// formatWhileTyping groups as you type (caret kept in place);
+// maxFractionDigits refuses a third decimal; format is the blur-time
+// display. wheelStep steps on the wheel — only while focused.
+const [budget, setBudget] = useState<number | null>(1234567.5);
+const [quantity, setQuantity] = useState<number | null>(10);`,
+      jsx: `<div className="demo-row">
+  <OgeNumberBox
+    label="Budget"
+    value={budget}
+    onValueChange={setBudget}
+    formatWhileTyping
+    maxFractionDigits={2}
+    format={{ style: 'currency', currency: 'EUR' }}
+  />
+  <OgeNumberBox
+    label="Quantity"
+    value={quantity}
+    onValueChange={setQuantity}
+    min={0}
+    max={99}
+    wheelStep={1}
+    showSpinButtons
+  />
+</div>`,
+    }),
+  },
 ];

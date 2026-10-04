@@ -16,6 +16,7 @@ interface ParsedParts {
   day?: number;
   hour?: number;
   minute?: number;
+  second?: number;
   dayPeriod?: 'am' | 'pm';
 }
 
@@ -108,11 +109,13 @@ export function parseDateText(
   const numbers = (working.match(/\d+/g) ?? []).map(Number);
   if (!numbers.length) return null;
 
-  // a time chunk (`HH:MM`) inside a datetime is detected via the separator
-  const timeMatch = /(\d{1,2}):(\d{2})/.exec(trimmed);
+  // a time chunk (`HH:MM` or `HH:MM:SS`) inside a datetime is detected via
+  // the separator
+  const timeMatch = /(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(trimmed);
   if (timeMatch && kind !== 'date') {
     parts.hour = Number(timeMatch[1]);
     parts.minute = Number(timeMatch[2]);
+    if (timeMatch[3] !== undefined) parts.second = Number(timeMatch[3]);
   }
 
   const dateNumbers =
@@ -163,11 +166,13 @@ export function parseDateText(
   const day = parts.day ?? ref.getDate();
   const hour = parts.hour ?? (kind === 'date' ? 0 : ref.getHours());
   const minute = parts.minute ?? (kind === 'date' ? 0 : ref.getMinutes());
+  const second = parts.second ?? 0;
 
   if (month < 0 || month > 11 || day < 1 || day > 31) return null;
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  if (second < 0 || second > 59) return null;
 
-  const result = new Date(year, month, day, hour, minute);
+  const result = new Date(year, month, day, hour, minute, second);
   // reject overflowed days (Feb 30 → Mar 2)
   if (kind !== 'time' && result.getMonth() !== month) return null;
   return result;
@@ -189,12 +194,14 @@ function isTimeNumberIndex(
   index: number,
   timeToken: string,
 ): boolean {
-  // the two numbers forming HH:MM are the pair that appears joined by ':'
-  const [hh, mm] = timeToken.split(':').map(Number);
-  const hourIndex = numbers.findIndex(
-    (value, i) => value === hh && numbers[i + 1] === mm,
+  // the numbers forming HH:MM[:SS] are the run that appears joined by ':'
+  const time = timeToken.split(':').map(Number);
+  const hourIndex = numbers.findIndex((value, i) =>
+    time.every((part, offset) => numbers[i + offset] === part),
   );
-  return index === hourIndex || index === hourIndex + 1;
+  return (
+    hourIndex >= 0 && index >= hourIndex && index < hourIndex + time.length
+  );
 }
 
 function detectDayPeriods(

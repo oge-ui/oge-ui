@@ -13,10 +13,21 @@ import {
 } from 'react';
 import { withInputWidth } from './field-extras';
 import {
+  OgeDateSegmentCore,
+  dateSegmentPlaceholders,
+  dayPeriodColumnOptions,
+  hourColumnOptions,
   isDayDisabled,
+  isTimePartSelected,
+  minuteColumnOptions,
+  nowForType,
   parseDateText,
   startOfDay,
+  timeDisplayOptions,
   toLocalDate,
+  withTimePart,
+  type OgeTimeColumnOption,
+  type OgeTimePart,
   type OgeCalendarDisabledDates,
   type OgeCalendarWeekNumberOptions,
   type OgeCalendarZoomLevel,
@@ -72,6 +83,26 @@ export interface OgeDateBoxProps
   interval?: number;
   /** Time picker layout: one interval list (default) or hour + minute columns. */
   timeView?: OgeDateBoxTimeView;
+  /**
+   * Clock of the display text and the time picker. `true` adds an AM/PM
+   * column to `timeView: 'columns'`; `false` forces 24-hour; `undefined`
+   * (default) follows the locale with a single 24-entry hour column.
+   */
+  hour12?: boolean;
+  /** Seconds in the display text, a seconds column and the masked entry. */
+  showSeconds?: boolean;
+  /** "Today" footer button (`date`/`datetime`) — picks today's day. */
+  showTodayButton?: boolean;
+  /** "Now" footer button (`time`/`datetime`) — picks the current time. */
+  showNowButton?: boolean;
+  /**
+   * Segment entry instead of free text (DevExtreme `useMaskBehavior`): the
+   * field shows the locale's numeric pattern, digits fill the active
+   * segment and auto-advance, ArrowUp/Down step it, ArrowLeft/Right move
+   * between segments and Alt+ArrowDown opens the picker. `displayFormat` is
+   * not used while it is on.
+   */
+  useMaskBehavior?: boolean;
   /** Picker commit policy: on pick (default) or via the OK/Cancel footer. */
   applyValueMode?: OgeDateBoxApplyValueMode;
   /** Clicking the field opens the picker. */
@@ -123,7 +154,9 @@ export interface OgeDateBoxProps
  * The popup follows the APG date-picker-dialog pattern: DOM focus moves INTO
  * the calendar grid on open and Escape restores it to the input. Unparseable
  * or out-of-range text shows the invalid state while typing and reverts to the
- * committed value on blur — a wrong date is never committed.
+ * committed value on blur — a wrong date is never committed. `useMaskBehavior`
+ * swaps free typing for the shared segment machine; `hour12`/`showSeconds`
+ * shape the time picker; `showTodayButton`/`showNowButton` add shortcuts.
  *
  * ```tsx
  * <OgeDateBox label="Start" value={start} onValueChange={setStart} />
@@ -140,6 +173,11 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       disabledDates,
       interval = 30,
       timeView = 'list',
+      hour12,
+      showSeconds = false,
+      showTodayButton = false,
+      showNowButton = false,
+      useMaskBehavior = false,
       applyValueMode = 'instantly',
       openOnFieldClick = true,
       acceptCustomValue = true,
@@ -177,12 +215,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const formatter = ((): ((date: Date) => string) => {
       if (typeof displayFormat === 'function') return displayFormat;
       const options: Intl.DateTimeFormatOptions =
-        displayFormat ??
-        (type === 'date'
-          ? { dateStyle: 'short' }
-          : type === 'time'
-            ? { timeStyle: 'short' }
-            : { dateStyle: 'short', timeStyle: 'short' });
+        displayFormat ?? timeDisplayOptions(type, hour12, showSeconds);
       const format = new Intl.DateTimeFormat(locale, options);
       return (date: Date) => format.format(date);
     })();
@@ -221,8 +254,26 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const openedRef = useRef(opened);
     openedRef.current = opened;
 
-    const latest = useRef({ props, field, opened, text, draft, value, type });
-    latest.current = { props, field, opened, text, draft, value, type };
+    const latest = useRef({
+      props,
+      field,
+      opened,
+      text,
+      draft,
+      value,
+      type,
+      maskDirty: false,
+    });
+    latest.current = {
+      props,
+      field,
+      opened,
+      text,
+      draft,
+      value,
+      type,
+      maskDirty: latest.current?.maskDirty ?? false,
+    };
 
     const setOpened = (next: boolean): void => {
       if (latest.current.props.opened === undefined) {
@@ -236,20 +287,67 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const lastValue = useRef(props.value);
     useEffect(() => {
       if (props.value !== undefined && lastValue.current !== props.value) {
-        setText(null);
-        field.setParseInvalid(false);
+        resetTyping();
       }
       lastValue.current = props.value;
     }, [props.value]);
 
-    const inputText = text ?? (value === null ? '' : formatter(value));
+    // --- masked entry (`useMaskBehavior`) ---------------------------------
+
+    const maskRef = useRef<{ core: OgeDateSegmentCore; key: string } | null>(
+      null,
+    );
+    /** `true` while the segments hold an uncommitted edit. */
+    const [maskDirty, setMaskDirty] = useState(false);
+    /** Bumped after every segment edit — the core itself is not reactive. */
+    const [, setMaskRevision] = useState(0);
+    const maskOptions = {
+      locale,
+      type,
+      hour12,
+      showSeconds,
+      placeholders: dateSegmentPlaceholders(field.msg),
+    };
+    const maskKey = JSON.stringify(maskOptions);
+    if (useMaskBehavior) {
+      if (!maskRef.current) {
+        maskRef.current = {
+          core: new OgeDateSegmentCore(maskOptions),
+          key: maskKey,
+        };
+      } else if (maskRef.current.key !== maskKey) {
+        maskRef.current.core.configure(maskOptions);
+        maskRef.current.key = maskKey;
+      }
+      // idempotent, so StrictMode's double render is harmless
+      if (!maskDirty) maskRef.current.core.setDate(value);
+    }
+    const mask = (): OgeDateSegmentCore =>
+      (maskRef.current as { core: OgeDateSegmentCore }).core;
+
+    const inputText = useMaskBehavior
+      ? mask().isEmpty && !field.focused
+        ? ''
+        : mask().text
+      : (text ?? (value === null ? '' : formatter(value)));
+
+    /** Drops uncommitted typing (free text and segments alike). */
+    const resetTyping = (): void => {
+      setText(null);
+      latest.current.maskDirty = false;
+      setMaskDirty(false);
+      field.setParseInvalid(false);
+    };
 
     // --- time slots ---------------------------------------------------------
 
     const timeSlots: TimeSlot[] = (() => {
       if (type === 'date') return [];
       const step = Math.max(1, interval);
-      const format = new Intl.DateTimeFormat(locale, { timeStyle: 'short' });
+      const format = new Intl.DateTimeFormat(
+        locale,
+        timeDisplayOptions('time', hour12, showSeconds),
+      );
       const slots: TimeSlot[] = [];
       for (let minutes = 0; minutes < 24 * 60; minutes += step) {
         slots.push({
@@ -262,23 +360,46 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       return slots;
     })();
 
-    const hourSlots = (() => {
+    // Columns-mode clock: AM/PM column only for an explicit `hour12: true`.
+    const columnHour12 = hour12 === true;
+    const timeColumns: {
+      part: OgeTimePart;
+      label: string;
+      options: OgeTimeColumnOption[];
+    }[] = (() => {
       if (type === 'date' || timeView !== 'columns') return [];
-      const format = new Intl.DateTimeFormat(locale, { hour: 'numeric' });
-      return Array.from({ length: 24 }, (_, hour) => ({
-        hour,
-        text: format.format(new Date(2001, 0, 1, hour)),
-      }));
-    })();
-
-    const minuteSlots = (() => {
-      if (type === 'date' || timeView !== 'columns') return [];
-      const step = Math.min(Math.max(1, interval), 60);
-      const slots: { minute: number; text: string }[] = [];
-      for (let minute = 0; minute < 60; minute += step) {
-        slots.push({ minute, text: `:${String(minute).padStart(2, '0')}` });
+      const columns = [
+        {
+          part: 'hour' as const,
+          label: field.msg.hourColumnLabel,
+          options: hourColumnOptions(locale, hour12),
+        },
+        {
+          part: 'minute' as const,
+          label: field.msg.minuteColumnLabel,
+          options: minuteColumnOptions(interval),
+        },
+      ];
+      const extra: {
+        part: OgeTimePart;
+        label: string;
+        options: OgeTimeColumnOption[];
+      }[] = [];
+      if (showSeconds) {
+        extra.push({
+          part: 'second',
+          label: field.msg.secondColumnLabel,
+          options: minuteColumnOptions(1),
+        });
       }
-      return slots.length ? slots : [{ minute: 0, text: ':00' }];
+      if (columnHour12) {
+        extra.push({
+          part: 'dayPeriod',
+          label: field.msg.dayPeriodColumnLabel,
+          options: dayPeriodColumnOptions(locale),
+        });
+      }
+      return [...columns, ...extra];
     })();
 
     const working = draft ?? value;
@@ -286,10 +407,8 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
     const isTimeSelected = (slot: TimeSlot): boolean =>
       working !== null &&
       working.getHours() * 60 + working.getMinutes() === slot.minutes;
-    const isHourSelected = (hour: number): boolean =>
-      working !== null && working.getHours() === hour;
-    const isMinuteSelected = (minute: number): boolean =>
-      working !== null && working.getMinutes() === minute;
+    const isPartSelected = (part: OgeTimePart, option: number): boolean =>
+      isTimePartSelected(working, part, option, columnHour12);
 
     const scrollTimeListToSelection = (): void => {
       setTimeout(() => {
@@ -382,12 +501,80 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       return parsed;
     };
 
+    /** Writes the masked text + active-segment selection into the input. */
+    const syncMask = (): void => {
+      const core = mask();
+      const el = nativeRef.current;
+      if (el) {
+        // write before the state so React sees an unchanged value and
+        // leaves the selection on the active segment
+        el.value = core.text;
+        const [start, end] = core.activeRange();
+        try {
+          el.setSelectionRange(start, end);
+        } catch {
+          // detached / hidden input — selection is best-effort
+        }
+      }
+      setMaskRevision((n) => n + 1);
+      const { state, date } = core.read(latest.current.value);
+      field.setParseInvalid(
+        state === 'invalid' ||
+          (state === 'complete' &&
+            date !== null &&
+            latest.current.type !== 'time' &&
+            dayBlocked(date)),
+      );
+    };
+
+    /** Commits complete segments; incomplete/invalid ones revert. */
+    const commitMask = (event?: Event): void => {
+      if (!latest.current.maskDirty) return;
+      const { state, date } = mask().read(latest.current.value);
+      resetTyping();
+      if (state === 'empty') {
+        field.commit.commitNow(null, event);
+      } else if (
+        state === 'complete' &&
+        date !== null &&
+        (latest.current.type === 'time' || !dayBlocked(date))
+      ) {
+        field.commit.commitNow(date, event);
+      }
+      setMaskRevision((n) => n + 1);
+    };
+
+    const maskEditable = useMaskBehavior && acceptCustomValue;
+
+    /** Mask keys; `true` when the segment machine consumed the key. */
+    const maskKeydown = (event: ReactKeyboardEvent): boolean => {
+      if (!maskEditable) return false;
+      const el = nativeRef.current;
+      if (!el) return false;
+      const rtl = getComputedStyle(el).direction === 'rtl';
+      const handled = mask().key(
+        event,
+        [el.selectionStart ?? 0, el.selectionEnd ?? 0],
+        rtl,
+        latest.current.value,
+      );
+      if (!handled) return false;
+      event.preventDefault();
+      latest.current.maskDirty = true;
+      setMaskDirty(true);
+      syncMask();
+      return true;
+    };
+
     /** Commits the typed text; unparseable/blocked text reverts to the value. */
     const commitTypedText = (event?: Event): void => {
+      if (useMaskBehavior) {
+        commitMask(event);
+        return;
+      }
       const raw = latest.current.text;
       if (raw === null) return;
-      setText(null);
-      field.setParseInvalid(false);
+      resetTyping();
       if (raw.trim() === '') {
         field.commit.commitNow(null, event);
         return;
@@ -399,6 +586,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
 
     const onKeydown = (event: ReactKeyboardEvent): void => {
       if (field.effectiveDisabled || latest.current.props.readonly) return;
+      if (maskKeydown(event)) return;
       switch (event.key) {
         case 'ArrowDown': {
           event.preventDefault();
@@ -414,10 +602,17 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
         case 'Escape': {
           // the panel machine closes the popup; second Escape reverts
           // uncommitted text
-          if (!openedRef.current && latest.current.text !== null) {
+          if (
+            !openedRef.current &&
+            (latest.current.text !== null || latest.current.maskDirty)
+          ) {
             event.preventDefault();
-            setText(null);
-            field.setParseInvalid(false);
+            latest.current.maskDirty = false;
+            resetTyping();
+            if (useMaskBehavior) {
+              mask().setDate(latest.current.value);
+              syncMask();
+            }
           }
           return;
         }
@@ -435,6 +630,9 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
         day.getDate(),
         latest.current.type === 'date' ? 0 : (time?.getHours() ?? 0),
         latest.current.type === 'date' ? 0 : (time?.getMinutes() ?? 0),
+        latest.current.type === 'date' || !showSeconds
+          ? 0
+          : (time?.getSeconds() ?? 0),
       );
     };
 
@@ -459,8 +657,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
         return;
       }
       field.commit.commitNow(merged, event);
-      setText(null);
-      field.setParseInvalid(false);
+      resetTyping();
       if (latest.current.type === 'date') {
         close();
         nativeRef.current?.focus();
@@ -477,8 +674,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
         return;
       }
       field.commit.commitNow(merged, event);
-      setText(null);
-      field.setParseInvalid(false);
+      resetTyping();
       close();
       nativeRef.current?.focus();
     };
@@ -488,46 +684,48 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       setDraft(next);
       if (applyValueMode === 'useButtons') return;
       field.commit.commitNow(next, event);
-      setText(null);
-      field.setParseInvalid(false);
+      resetTyping();
     };
 
-    const pickHour = (hour: number, event: Event): void => {
+    const pickPart = (
+      part: OgeTimePart,
+      option: number,
+      event: Event,
+    ): void => {
       const base =
         latest.current.draft ?? latest.current.value ?? startOfDay(new Date());
       applyColumnPick(
-        new Date(
-          base.getFullYear(),
-          base.getMonth(),
-          base.getDate(),
-          hour,
-          base.getMinutes(),
-        ),
+        withTimePart(base, part, option, columnHour12, showSeconds),
         event,
       );
     };
 
-    const pickMinute = (minute: number, event: Event): void => {
-      const base =
-        latest.current.draft ?? latest.current.value ?? startOfDay(new Date());
-      applyColumnPick(
-        new Date(
-          base.getFullYear(),
-          base.getMonth(),
-          base.getDate(),
-          base.getHours(),
-          minute,
-        ),
-        event,
-      );
+    const todayVisible = showTodayButton && type !== 'time';
+    const nowVisible = showNowButton && type !== 'date';
+    const todayBlocked = isDayDisabled(
+      startOfDay(new Date()),
+      min,
+      max,
+      disabledDates,
+    );
+
+    const pickNow = (event: Event): void => {
+      const now = nowForType(latest.current.type, showSeconds);
+      if (applyValueMode === 'useButtons') {
+        setDraft(now);
+        return;
+      }
+      field.commit.commitNow(now, event);
+      resetTyping();
+      close();
+      nativeRef.current?.focus();
     };
 
     const applyDraft = (event: { nativeEvent: Event }): void => {
       const current = latest.current.draft;
       if (current !== null) {
         field.commit.commitNow(current, event.nativeEvent);
-        setText(null);
-        field.setParseInvalid(false);
+        resetTyping();
       }
       close();
       nativeRef.current?.focus();
@@ -694,8 +892,31 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
             aria-describedby={describedBy}
             aria-invalid={field.showError ? true : undefined}
             aria-required={props.required ? true : undefined}
+            onPaste={(event) => {
+              if (!maskEditable || readonly) return;
+              event.preventDefault();
+              const parsed = parseTyped(
+                event.clipboardData?.getData('text') ?? '',
+              );
+              if (parsed === null) return;
+              mask().setDate(parsed);
+              latest.current.maskDirty = true;
+              setMaskDirty(true);
+              syncMask();
+            }}
             onChange={(event) => {
               const raw = event.target.value;
+              if (useMaskBehavior) {
+                // keys are handled on keydown; whatever still reached the
+                // text (autofill, a mobile keyboard, IME) is read whole
+                const parsed = parseTyped(raw);
+                if (parsed !== null) mask().setDate(parsed);
+                latest.current.maskDirty = true;
+                setMaskDirty(true);
+                syncMask();
+                props.onInputChange?.({ text: raw, event: event.nativeEvent });
+                return;
+              }
               setText(raw);
               props.onInputChange?.({ text: raw, event: event.nativeEvent });
               field.setParseInvalid(
@@ -704,11 +925,19 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
             }}
             onClick={() => {
               if (field.effectiveDisabled || readonly) return;
+              if (maskEditable) {
+                const el = nativeRef.current;
+                if (el) mask().focusAt(el.selectionStart ?? 0);
+                syncMask();
+              }
               if (!openedRef.current && openOnFieldClick) open();
             }}
             onKeyDown={onKeydown}
             onFocus={(event) => {
-              if (selectOnFocus) nativeRef.current?.select();
+              if (maskEditable && !readonly) {
+                mask().focusFirst();
+                syncMask();
+              } else if (selectOnFocus) nativeRef.current?.select();
               field.handleFocus(event);
             }}
             onBlur={onBlur}
@@ -751,34 +980,24 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
                 {type !== 'date' &&
                   (timeView === 'columns' ? (
                     <div ref={timeListRef} className="oge-date-box-columns">
-                      <div
-                        className="oge-date-box-col"
-                        role="listbox"
-                        aria-label={field.msg.calendarLabel}
-                      >
-                        {hourSlots.map((slot) =>
-                          timeButton(
-                            `h-${slot.hour}`,
-                            slot.text,
-                            isHourSelected(slot.hour),
-                            (event) => pickHour(slot.hour, event),
-                          ),
-                        )}
-                      </div>
-                      <div
-                        className="oge-date-box-col"
-                        role="listbox"
-                        aria-label={field.msg.calendarLabel}
-                      >
-                        {minuteSlots.map((slot) =>
-                          timeButton(
-                            `m-${slot.minute}`,
-                            slot.text,
-                            isMinuteSelected(slot.minute),
-                            (event) => pickMinute(slot.minute, event),
-                          ),
-                        )}
-                      </div>
+                      {timeColumns.map((column) => (
+                        <div
+                          key={column.part}
+                          className="oge-date-box-col"
+                          role="listbox"
+                          aria-label={column.label}
+                        >
+                          {column.options.map((option) =>
+                            timeButton(
+                              `${column.part}-${option.value}`,
+                              option.text,
+                              isPartSelected(column.part, option.value),
+                              (event) =>
+                                pickPart(column.part, option.value, event),
+                            ),
+                          )}
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div
@@ -798,22 +1017,53 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
                     </div>
                   ))}
               </div>
-              {applyValueMode === 'useButtons' && (
+              {(applyValueMode === 'useButtons' ||
+                todayVisible ||
+                nowVisible) && (
                 <div className="oge-date-box-actions">
-                  <button
-                    type="button"
-                    className="oge-date-box-action oge-date-box-ok"
-                    onClick={applyDraft}
-                  >
-                    {field.msg.okButton}
-                  </button>
-                  <button
-                    type="button"
-                    className="oge-date-box-action"
-                    onClick={() => close()}
-                  >
-                    {field.msg.cancelButton}
-                  </button>
+                  {todayVisible && (
+                    <button
+                      type="button"
+                      className="oge-date-box-action oge-date-box-shortcut oge-date-box-today"
+                      disabled={todayBlocked}
+                      onClick={(event) =>
+                        onCalendarPick(
+                          startOfDay(new Date()),
+                          event.nativeEvent,
+                        )
+                      }
+                    >
+                      {field.msg.todayButton}
+                    </button>
+                  )}
+                  {nowVisible && (
+                    <button
+                      type="button"
+                      className="oge-date-box-action oge-date-box-shortcut oge-date-box-now"
+                      onClick={(event) => pickNow(event.nativeEvent)}
+                    >
+                      {field.msg.nowButton}
+                    </button>
+                  )}
+                  {applyValueMode === 'useButtons' && (
+                    <>
+                      <span className="oge-date-box-actions-gap" />
+                      <button
+                        type="button"
+                        className="oge-date-box-action oge-date-box-ok"
+                        onClick={applyDraft}
+                      >
+                        {field.msg.okButton}
+                      </button>
+                      <button
+                        type="button"
+                        className="oge-date-box-action"
+                        onClick={() => close()}
+                      >
+                        {field.msg.cancelButton}
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

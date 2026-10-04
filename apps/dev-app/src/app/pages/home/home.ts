@@ -2051,7 +2051,7 @@ export class HomePage {
     {
       icon: 'text-cursor',
       name: 'Inputs',
-      desc: 'Text, number, select, tag, date and toggle editors on one field chrome.',
+      desc: 'Text, masked, number, select, date, color and choice editors on one field chrome.',
       path: '/components/inputs',
     },
     {

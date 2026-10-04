@@ -18,6 +18,7 @@ export const REACT_INPUTS_OVERVIEW_SECTIONS = [
   'Styling modes & sizes',
   'Label modes',
   'Prefix & suffix slots',
+  'Number entry',
 ] as const;
 
 const row = (...children: ReactNode[]) =>
@@ -62,6 +63,53 @@ function EditorsDemo(): ReactNode {
       autoResize: true,
       maxRows: 6,
     }),
+  );
+}
+
+/** Live grouping, the fraction cap and focused wheel stepping. */
+function NumberEntryDemo(): ReactNode {
+  const [budget, setBudget] = useState<number | null>(1234567.5);
+  const [quantity, setQuantity] = useState<number | null>(10);
+  return createElement(
+    'div',
+    null,
+    row(
+      createElement(OgeNumberBox, {
+        key: 'live',
+        label: 'Budget',
+        value: budget,
+        onValueChange: setBudget,
+        formatWhileTyping: true,
+        maxFractionDigits: 2,
+        format: { style: 'currency', currency: 'EUR' },
+      }),
+      createElement(OgeNumberBox, {
+        key: 'wheel',
+        label: 'Quantity',
+        value: quantity,
+        onValueChange: setQuantity,
+        min: 0,
+        max: 99,
+        wheelStep: 1,
+        showSpinButtons: true,
+      }),
+    ),
+    createElement(
+      'p',
+      { key: 'out', className: 'mt-3 text-sm' },
+      'Budget: ',
+      createElement(
+        'code',
+        { 'data-testid': 'number-live-value' },
+        String(budget),
+      ),
+      ' · Quantity: ',
+      createElement(
+        'code',
+        { 'data-testid': 'number-wheel-value' },
+        String(quantity),
+      ),
+    ),
   );
 }
 
@@ -123,12 +171,23 @@ function EditorsDemo(): ReactNode {
     >
       <app-react-host [render]="adornments" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['formatWhileTyping', 'maxFractionDigits', 'wheelStep']"
+      heading="Number entry"
+      description="<code>formatWhileTyping</code> groups thousands live with the locale’s separators and keeps the caret beside the digit you typed; <code>maxFractionDigits</code> refuses extra decimals as you type. <code>format</code> is the blur-time display — focus swaps in the editable number, so a currency sign never gets in the way. <code>wheelStep</code> opts into mouse-wheel stepping, only while the field is focused (a native non-passive listener, because React’s <code>onWheel</code> cannot stop the page scroll)."
+      [code]="demos[4].source"
+      language="tsx"
+    >
+      <app-react-host [render]="numberEntry" />
+    </app-demo-card>
   `,
 })
 export class ReactInputsOverviewDemos {
   protected readonly demos = INPUTS_OVERVIEW_DEMOS;
 
   protected readonly editors = () => createElement(EditorsDemo);
+  protected readonly numberEntry = () => createElement(NumberEntryDemo);
 
   protected readonly styling = () =>
     row(

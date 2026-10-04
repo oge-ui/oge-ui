@@ -86,3 +86,79 @@ export const TIMEVIEW_SNIPPET = demoSource({
   body: `protected readonly t1 = signal<Date | null>(null);
 protected readonly t2 = signal<Date | null>(null);`,
 });
+
+export const CLOCK_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeDateBox'] },
+  template: `<!-- hour12: true adds an AM/PM column (hours 12, 1 … 11); showSeconds
+     adds a seconds column and puts the seconds in the display text. -->
+<oge-date-box
+  label="Departure"
+  type="time"
+  timeView="columns"
+  [hour12]="true"
+  [showSeconds]="true"
+  [showNowButton]="true"
+  [(value)]="departure"
+/>
+
+<!-- Today / Now footer shortcuts; Today keeps the time of day -->
+<oge-date-box
+  label="Logged at"
+  type="datetime"
+  [showTodayButton]="true"
+  [showNowButton]="true"
+  [(value)]="loggedAt"
+/>`,
+  body: `protected readonly departure = signal<Date | null>(new Date(2026, 7, 15, 18, 45, 0));
+protected readonly loggedAt = signal<Date | null>(null);`,
+});
+
+export const MASK_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeDateBox'] },
+  template: `<!-- Segment entry: the locale's numeric pattern (dd.mm.yyyy in de-DE),
+     digits fill the selected segment and auto-advance, ArrowUp/Down step
+     it, ArrowLeft/Right move, Alt+ArrowDown opens the picker. -->
+<oge-date-box
+  label="Invoice date"
+  locale="de-DE"
+  [useMaskBehavior]="true"
+  [(value)]="invoiceDate"
+/>
+
+<oge-date-box
+  label="Check-in"
+  type="datetime"
+  locale="en-US"
+  [useMaskBehavior]="true"
+  [(value)]="checkIn"
+/>`,
+  body: `protected readonly invoiceDate = signal<Date | null>(null);
+protected readonly checkIn = signal<Date | null>(new Date(2026, 7, 15, 14, 0));`,
+});
+
+export const PRESETS_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeDateRangeBox'] },
+  helpers: { '@oge-ui/inputs': ['ogeDateRangePresets'] },
+  types: { '@oge-ui/inputs': ['OgeCalendarRange', 'OgeDateRangePreset'] },
+  template: `<!-- Presets list beside the calendar (a chip row in the adaptive
+     dialog). Built-ins take their labels from the messages; a custom
+     preset is { label, range: () => [start, end] }. -->
+<oge-date-range-box label="Report period" [presets]="presets" [(value)]="report" />
+
+<!-- type="time": a time-range picker — no calendar, two lists + OK -->
+<oge-date-range-box label="Opening hours" type="time" [interval]="30" [(value)]="hours" />`,
+  body: `protected readonly presets: OgeDateRangePreset[] = [
+  ogeDateRangePresets.today(),
+  ogeDateRangePresets.last7Days(),
+  ogeDateRangePresets.last30Days(),
+  ogeDateRangePresets.thisMonth(),
+  ogeDateRangePresets.lastMonth(),
+  ogeDateRangePresets.thisYear(),
+  { label: 'Q1 2026', range: () => [new Date(2026, 0, 1), new Date(2026, 2, 31)] },
+];
+protected readonly report = signal<OgeCalendarRange>([null, null]);
+protected readonly hours = signal<OgeCalendarRange>([
+  new Date(2026, 7, 15, 9, 0),
+  new Date(2026, 7, 15, 17, 30),
+]);`,
+});

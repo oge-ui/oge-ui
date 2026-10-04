@@ -31,9 +31,11 @@ import {
   type OgePopupPlacement,
 } from '@oge-ui/react-overlay';
 import {
+  ColorChannelInputs,
   ColorPalette,
   ColorSlider,
   ColorSurface,
+  type ColorChannelChange,
   type ColorPalettePick,
   type ColorSliderChange,
   type ColorSurfaceChange,
@@ -242,7 +244,6 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
     /** Working color with alpha — the alpha thumb and the preview pane. */
     const draftRgbaCss = `rgba(${displayRgba.r}, ${displayRgba.g}, ${displayRgba.b}, ${Math.round(displayRgba.a * 100) / 100})`;
     const rgbCss = `${displayRgba.r}, ${displayRgba.g}, ${displayRgba.b}`;
-    const hexText = formatColor(displayRgba, 'hex', editAlphaChannel);
     const paletteColors = props.palette ?? OGE_DEFAULT_COLOR_PALETTE;
 
     const surfaceValueText = field.msg.surfaceValueText
@@ -425,45 +426,6 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
       }
     };
 
-    // React fires `onChange` per keystroke; the Angular `(change)` semantics
-    // (apply on blur/Enter) are recovered with uncontrolled inputs applied
-    // from `onBlur` and Enter.
-    const applyHex = (element: HTMLInputElement, event: Event): void => {
-      const parsed = parseColor(element.value);
-      if (parsed === null) {
-        element.value = hexText; // revert — a wrong color is never applied
-        return;
-      }
-      applyDraftChange(rgbaToHsva(parsed), event);
-    };
-
-    const applyChannel = (
-      channel: 'r' | 'g' | 'b',
-      element: HTMLInputElement,
-      event: Event,
-    ): void => {
-      const numeric = Number.parseFloat(element.value);
-      const rgba = { ...hsvaToRgba(displayHsvaOf()) };
-      if (!Number.isFinite(numeric)) {
-        element.value = String(rgba[channel]);
-        return;
-      }
-      rgba[channel] = Math.min(Math.max(Math.round(numeric), 0), 255);
-      // keep the working hue: only re-derive the changed channel's effect
-      const next = { ...rgbaToHsva(rgba), a: displayHsvaOf().a };
-      applyDraftChange(next, event);
-    };
-
-    const applyAlphaInput = (element: HTMLInputElement, event: Event): void => {
-      const numeric = Number.parseFloat(element.value);
-      if (!Number.isFinite(numeric)) {
-        element.value = String(Math.round(displayHsvaOf().a * 100));
-        return;
-      }
-      const alpha = Math.min(Math.max(Math.round(numeric), 0), 100) / 100;
-      applyDraftChange({ ...displayHsvaOf(), a: alpha }, event);
-    };
-
     /** Opens the platform eyedropper; a cancelled pick is not an error. */
     const pickFromScreen = async (event: {
       nativeEvent: Event;
@@ -485,20 +447,6 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
         /* AbortError — the user pressed Escape */
       }
     };
-
-    /** Uncontrolled-input glue: apply on blur, and on Enter apply eagerly. */
-    const changeHandlers = (
-      apply: (element: HTMLInputElement, event: Event) => void,
-    ) => ({
-      onBlur: (event: ReactFocusEvent<HTMLInputElement>) =>
-        apply(event.target as HTMLInputElement, event.nativeEvent),
-      onKeyDown: (event: ReactKeyboardEvent<HTMLInputElement>) => {
-        event.stopPropagation();
-        if (event.key === 'Enter') {
-          apply(event.currentTarget, event.nativeEvent);
-        }
-      },
-    });
 
     const onPalettePick = (pick: ColorPalettePick): void => {
       const parsed = parseColor(pick.color);
@@ -595,35 +543,6 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
     ]
       .filter(Boolean)
       .join(' ');
-
-    /**
-     * A channel field of the panel — uncontrolled so typing is never fought,
-     * re-keyed on the working value so a draft change from elsewhere (the
-     * surface, a slider, the eyedropper) refreshes the box.
-     */
-    const channelField = (
-      tag: string,
-      ariaLabel: string,
-      value: number,
-      max: number,
-      apply: (element: HTMLInputElement, event: Event) => void,
-    ) => (
-      <label className="oge-color-box-field">
-        <input
-          className="oge-color-box-channel"
-          type="number"
-          min={0}
-          max={max}
-          defaultValue={value}
-          key={`${tag}-${value}`}
-          aria-label={ariaLabel}
-          {...changeHandlers(apply)}
-        />
-        <span className="oge-color-box-field-tag" aria-hidden="true">
-          {tag}
-        </span>
-      </label>
-    );
 
     return (
       <span
@@ -784,7 +703,14 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
                       onReleased={onPartReleased}
                     />
                   )}
-                  <div className="oge-color-box-fields">
+                  <ColorChannelInputs
+                    hsva={displayHsva}
+                    editAlpha={editAlphaChannel}
+                    messages={field.msg}
+                    onChanged={(change: ColorChannelChange) =>
+                      applyDraftChange(change.hsva, change.event)
+                    }
+                  >
                     {showEyedropper && eyedropperSupported && (
                       <button
                         type="button"
@@ -808,54 +734,7 @@ export const OgeColorBox = forwardRef<OgeColorBoxHandle, OgeColorBoxProps>(
                         </svg>
                       </button>
                     )}
-                    <label className="oge-color-box-field oge-color-box-field-hex">
-                      <input
-                        className="oge-color-box-channel"
-                        type="text"
-                        spellCheck={false}
-                        autoComplete="off"
-                        defaultValue={hexText}
-                        key={`hex-${hexText}`}
-                        aria-label={field.msg.hexInputLabel}
-                        {...changeHandlers(applyHex)}
-                      />
-                      <span
-                        className="oge-color-box-field-tag"
-                        aria-hidden="true"
-                      >
-                        HEX
-                      </span>
-                    </label>
-                    {channelField(
-                      'R',
-                      field.msg.redInputLabel,
-                      displayRgba.r,
-                      255,
-                      (element, event) => applyChannel('r', element, event),
-                    )}
-                    {channelField(
-                      'G',
-                      field.msg.greenInputLabel,
-                      displayRgba.g,
-                      255,
-                      (element, event) => applyChannel('g', element, event),
-                    )}
-                    {channelField(
-                      'B',
-                      field.msg.blueInputLabel,
-                      displayRgba.b,
-                      255,
-                      (element, event) => applyChannel('b', element, event),
-                    )}
-                    {editAlphaChannel &&
-                      channelField(
-                        'A',
-                        field.msg.alphaInputLabel,
-                        alphaPercent,
-                        100,
-                        applyAlphaInput,
-                      )}
-                  </div>
+                  </ColorChannelInputs>
                 </>
               )}
               {view !== 'gradient' && (

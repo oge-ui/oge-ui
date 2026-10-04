@@ -10,9 +10,14 @@ import {
   OGE_CALENDAR_API,
   OGE_CHECK_BOX_API,
   OGE_COLOR_BOX_API,
+  OGE_COLOR_GRADIENT_API,
+  OGE_COLOR_PALETTE_API,
+  OGE_CHECK_BOX_GROUP_API,
+  OGE_TOGGLE_GROUP_API,
   OGE_DATE_BOX_API,
   OGE_INPUTS_CONFIG_API,
   OGE_INPUTS_TYPES_API,
+  OGE_MASKED_TEXT_BOX_API,
   OGE_NUMBER_BOX_API,
   OGE_RADIO_GROUP_API,
   OGE_SELECT_BOX_API,
@@ -27,6 +32,7 @@ import {
 
 const SECTIONS = [
   'OgeTextBox',
+  'OgeMaskedTextBox',
   'OgeTextArea',
   'OgeNumberBox',
   'OgeSelectBox',
@@ -41,6 +47,10 @@ const SECTIONS = [
   'OgeCalendar',
   'OgeDateBox',
   'OgeColorBox',
+  'OgeColorGradient',
+  'OgeColorPalette',
+  'OgeCheckBoxGroup',
+  'OgeToggleGroup',
   'Shared input types',
   'Inputs configuration',
 ] as const;
@@ -48,6 +58,7 @@ const SECTIONS = [
 /** TOC of the React view — must mirror `ReactInputsApiSections`' titles. */
 const SECTIONS_REACT = [
   '<OgeTextBox>',
+  '<OgeMaskedTextBox>',
   '<OgeTextArea>',
   '<OgeNumberBox>',
   '<OgeSelectBox>',
@@ -62,6 +73,10 @@ const SECTIONS_REACT = [
   '<OgeCalendar>',
   '<OgeDateBox>',
   '<OgeColorBox>',
+  '<OgeColorGradient>',
+  '<OgeColorPalette>',
+  '<OgeCheckBoxGroup>',
+  '<OgeToggleGroup>',
   'Shared input types',
   'Inputs configuration',
 ] as const;
@@ -122,6 +137,11 @@ const SECTIONS_REACT = [
         title="OgeTextBox"
         selector="oge-text-box"
         [sections]="textBoxApi"
+      />
+      <app-api-reference
+        title="OgeMaskedTextBox"
+        selector="oge-masked-text-box"
+        [sections]="maskedTextBoxApi"
       />
       <app-api-reference
         title="OgeTextArea"
@@ -193,6 +213,26 @@ const SECTIONS_REACT = [
         selector="oge-color-box"
         [sections]="colorBoxApi"
       />
+      <app-api-reference
+        title="OgeColorGradient"
+        selector="oge-color-gradient"
+        [sections]="colorGradientApi"
+      />
+      <app-api-reference
+        title="OgeColorPalette"
+        selector="oge-color-palette"
+        [sections]="colorPaletteApi"
+      />
+      <app-api-reference
+        title="OgeCheckBoxGroup"
+        selector="oge-check-box-group"
+        [sections]="checkBoxGroupApi"
+      />
+      <app-api-reference
+        title="OgeToggleGroup"
+        selector="oge-toggle-group"
+        [sections]="toggleGroupApi"
+      />
       <app-api-reference title="Shared input types" [sections]="typesApi" />
       <app-api-reference title="Inputs configuration" [sections]="configApi" />
     }
@@ -243,6 +283,7 @@ export class InputsApiPage {
   protected readonly sections = SECTIONS;
   protected readonly sectionsReact = SECTIONS_REACT;
   protected readonly textBoxApi = OGE_TEXT_BOX_API;
+  protected readonly maskedTextBoxApi = OGE_MASKED_TEXT_BOX_API;
   protected readonly textAreaApi = OGE_TEXT_AREA_API;
   protected readonly numberBoxApi = OGE_NUMBER_BOX_API;
   protected readonly selectBoxApi = OGE_SELECT_BOX_API;
@@ -257,6 +298,10 @@ export class InputsApiPage {
   protected readonly calendarApi = OGE_CALENDAR_API;
   protected readonly dateBoxApi = OGE_DATE_BOX_API;
   protected readonly colorBoxApi = OGE_COLOR_BOX_API;
+  protected readonly colorGradientApi = OGE_COLOR_GRADIENT_API;
+  protected readonly colorPaletteApi = OGE_COLOR_PALETTE_API;
+  protected readonly checkBoxGroupApi = OGE_CHECK_BOX_GROUP_API;
+  protected readonly toggleGroupApi = OGE_TOGGLE_GROUP_API;
   protected readonly typesApi = OGE_INPUTS_TYPES_API;
   protected readonly configApi = OGE_INPUTS_CONFIG_API;
 }

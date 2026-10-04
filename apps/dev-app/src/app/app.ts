@@ -628,6 +628,11 @@ export class App {
           icon: 'check-square',
         },
         {
+          path: '/components/inputs/masked-text-box',
+          label: 'Masked Text Box',
+          icon: 'text-cursor',
+        },
+        {
           path: '/components/inputs/select-box',
           label: 'Select Box',
           icon: 'chevron-down',
@@ -648,6 +653,11 @@ export class App {
           icon: 'toggle',
         },
         {
+          path: '/components/inputs/check-box-group',
+          label: 'Check Box Group',
+          icon: 'check-square',
+        },
+        {
           path: '/components/inputs/slider',
           label: 'Slider',
           icon: 'sliders',
@@ -660,6 +670,16 @@ export class App {
         {
           path: '/components/inputs/color-box',
           label: 'Color Box',
+          icon: 'palette',
+        },
+        {
+          path: '/components/inputs/color-gradient',
+          label: 'Color Gradient',
+          icon: 'palette',
+        },
+        {
+          path: '/components/inputs/color-palette',
+          label: 'Color Palette',
           icon: 'palette',
         },
         {

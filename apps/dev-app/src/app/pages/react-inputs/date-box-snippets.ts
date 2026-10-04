@@ -178,4 +178,117 @@ const [due, setDue] = useState<Date | null>(null);`,
 </div>`,
     }),
   },
+  {
+    title: 'Clock, seconds & shortcuts',
+    description:
+      'hour12: true adds an AM/PM column to the column picker (hours 12, 1 … 11); false forces 24-hour; unset follows the locale. showSeconds adds a seconds column and shows the seconds in the field — typed HH:MM:SS parses. showTodayButton / showNowButton put Today and Now in the footer: Today keeps the time of day, Now commits the current time.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeDateBox'] },
+      name: 'ClockDemo',
+      body: `const [departure, setDeparture] = useState<Date | null>(
+  new Date(2026, 7, 15, 18, 45, 0),
+);
+const [loggedAt, setLoggedAt] = useState<Date | null>(null);`,
+      jsx: `<div className="demo-row">
+  {/* AM/PM + seconds columns, a Now shortcut */}
+  <OgeDateBox
+    label="Departure"
+    type="time"
+    timeView="columns"
+    hour12
+    showSeconds
+    showNowButton
+    value={departure}
+    onValueChange={setDeparture}
+  />
+  {/* Today keeps the time of day; Now takes the current time */}
+  <OgeDateBox
+    label="Logged at"
+    type="datetime"
+    showTodayButton
+    showNowButton
+    value={loggedAt}
+    onValueChange={setLoggedAt}
+  />
+</div>`,
+    }),
+  },
+  {
+    title: 'Masked entry',
+    description:
+      "useMaskBehavior swaps free typing for segments in the locale's own order and separators (dd.mm.yyyy in de-DE): digits fill the selected segment and jump on once no further digit fits, ArrowUp/Down step it, ArrowLeft/Right move between segments (mirrored in RTL), Backspace clears one, a/p set AM/PM and Alt+ArrowDown opens the picker. A pasted date fills every segment; an impossible one shows the invalid state and reverts on blur.",
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeDateBox'] },
+      name: 'MaskedDateDemo',
+      body: `const [invoiceDate, setInvoiceDate] = useState<Date | null>(null);
+const [checkIn, setCheckIn] = useState<Date | null>(
+  new Date(2026, 7, 15, 14, 0),
+);`,
+      jsx: `<div className="demo-row">
+  <OgeDateBox
+    label="Invoice date"
+    locale="de-DE"
+    useMaskBehavior
+    value={invoiceDate}
+    onValueChange={setInvoiceDate}
+  />
+  <OgeDateBox
+    label="Check-in"
+    type="datetime"
+    locale="en-US"
+    useMaskBehavior
+    value={checkIn}
+    onValueChange={setCheckIn}
+  />
+</div>`,
+    }),
+  },
+  {
+    title: 'Range presets & time ranges',
+    description:
+      'presets lists quick ranges beside the calendar — the built-in ogeDateRangePresets.last7Days(), thisMonth(), lastMonth()… (labels from the messages) or your own { label, range: () => [start, end] }, evaluated on pick. The active preset reads aria-pressed; the adaptive dialog shows them as a chip row. type: "time" makes a time-range picker: no calendar, two time lists and OK.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: {
+        '@oge-ui/react-inputs': ['OgeDateRangeBox', 'ogeDateRangePresets'],
+      },
+      types: {
+        '@oge-ui/react-inputs': ['OgeCalendarRange', 'OgeDateRangePreset'],
+      },
+      name: 'PresetsDemo',
+      before: `// Presets are evaluated on render and on pick, never at construction.
+const presets: OgeDateRangePreset[] = [
+  ogeDateRangePresets.today(),
+  ogeDateRangePresets.last7Days(),
+  ogeDateRangePresets.last30Days(),
+  ogeDateRangePresets.thisMonth(),
+  ogeDateRangePresets.lastMonth(),
+  ogeDateRangePresets.thisYear(),
+  { label: 'Q1 2026', range: () => [new Date(2026, 0, 1), new Date(2026, 2, 31)] },
+];`,
+      body: `const [report, setReport] = useState<OgeCalendarRange>([null, null]);
+const [hours, setHours] = useState<OgeCalendarRange>([
+  new Date(2026, 7, 15, 9, 0),
+  new Date(2026, 7, 15, 17, 30),
+]);`,
+      jsx: `<div className="demo-row">
+  <OgeDateRangeBox
+    label="Report period"
+    presets={presets}
+    value={report}
+    onValueChange={setReport}
+  />
+  {/* a time-range picker: no calendar, two lists + OK */}
+  <OgeDateRangeBox
+    label="Opening hours"
+    type="time"
+    interval={30}
+    value={hours}
+    onValueChange={setHours}
+  />
+</div>`,
+    }),
+  },
 ];

@@ -117,6 +117,44 @@ const [priority, setPriority] = useState<unknown>('Normal');`,
     }),
   },
   {
+    title: 'Toggle Group',
+    description:
+      'The segmented control as a form editor — label, hint and validation, which the button group (an action control) does not carry. single is the WAI-ARIA radio group: arrows move focus and selection and the selected segment cannot be pressed off; multiple renders aria-pressed toggle buttons with an array value in items order.',
+    source: reactDemoSource({
+      react: ['useState'],
+      use: { '@oge-ui/react-inputs': ['OgeToggleGroup'] },
+      name: 'ToggleGroupDemo',
+      before: `const aligns = [
+  { id: 'left', text: 'Left' },
+  { id: 'center', text: 'Center' },
+  { id: 'right', text: 'Right' },
+];
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];`,
+      body: `// single = APG radio group; multiple = aria-pressed toggles
+const [align, setAlign] = useState<unknown>('left');
+const [delivery, setDelivery] = useState<unknown>(['Mon', 'Thu']);`,
+      jsx: `<div className="demo-row demo-row-start">
+  <OgeToggleGroup
+    label="Alignment"
+    items={aligns}
+    displayExpr="text"
+    valueExpr="id"
+    value={align}
+    onValueChange={setAlign}
+  />
+
+  <OgeToggleGroup
+    label="Delivery days"
+    selectionMode="multiple"
+    hint="Pick one or more"
+    items={days}
+    value={delivery}
+    onValueChange={setDelivery}
+  />
+</div>`,
+    }),
+  },
+  {
     title: 'Forms integration',
     description:
       'React has no formField/formControl binding — the controlled pair IS the integration point. All three controls are the same controlled/uncontrolled pair (value + onValueChange, or defaultValue alone), so any form library binds them by holding the value: useState here, a field object with React Hook Form, Formik or TanStack Form elsewhere. onValueCommitted adds previousValue and the originating DOM event for cross-field rules.',
