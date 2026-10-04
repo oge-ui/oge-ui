@@ -7,11 +7,7 @@ import type { FilterExpr, RowKey } from '@oge-ui/core';
  * ranges) with TSV copy / paste and the fill handle.
  */
 export type OgeGridSelectionMode =
-  | 'none'
-  | 'single'
-  | 'multiple'
-  | 'checkbox'
-  | 'cell';
+  'none' | 'single' | 'multiple' | 'checkbox' | 'cell';
 
 /** What a click on a row should do to the selection. */
 export type OgeGridSelectionIntent = 'none' | 'selectOnly' | 'toggle' | 'range';

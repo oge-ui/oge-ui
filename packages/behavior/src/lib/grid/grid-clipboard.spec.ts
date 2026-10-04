@@ -35,9 +35,7 @@ describe('range TSV copy', () => {
       (row, col) => cells[row][col],
       (col) => ['Name', 'Note'][col],
     );
-    expect(tsv).toBe(
-      `Ada\t"'=HYPERLINK(""x"")"\r\n"tab\there"\t12`,
-    );
+    expect(tsv).toBe(`Ada\t"'=HYPERLINK(""x"")"\r\n"tab\there"\t12`);
   });
 
   it('prepends guarded captions with headers: true', () => {
@@ -59,7 +57,11 @@ describe('range TSV copy', () => {
       () => true,
     );
     expect(
-      buildOgeRangeTsv(multi, (r, c) => `${r}${c}`, () => ''),
+      buildOgeRangeTsv(
+        multi,
+        (r, c) => `${r}${c}`,
+        () => '',
+      ),
     ).toBe('00\t\r\n\t11');
   });
 });
@@ -129,9 +131,10 @@ describe('cell text parsing', () => {
     expect(parseLocaleNumber('1.234,5', 'de-DE')).toBe(1234.5);
     expect(parseLocaleNumber('-3e2', 'de-DE')).toBe(-300);
     expect(parseLocaleNumber('abc', 'en-US')).toBeNull();
-    expect(
-      parseOgeCellText('12', { dataType: 'number' }, messages),
-    ).toEqual({ ok: true, value: 12 });
+    expect(parseOgeCellText('12', { dataType: 'number' }, messages)).toEqual({
+      ok: true,
+      value: 12,
+    });
     expect(parseOgeCellText('x', { dataType: 'number' }, messages)).toEqual({
       ok: false,
     });
@@ -238,9 +241,9 @@ describe('fill', () => {
 
   it('maps the edit shortcuts', () => {
     expect(ogeGridEditShortcut({ key: 'z', ctrlKey: true })).toBe('undo');
-    expect(ogeGridEditShortcut({ key: 'Z', metaKey: true, shiftKey: true })).toBe(
-      'redo',
-    );
+    expect(
+      ogeGridEditShortcut({ key: 'Z', metaKey: true, shiftKey: true }),
+    ).toBe('redo');
     expect(ogeGridEditShortcut({ key: 'y', ctrlKey: true })).toBe('redo');
     expect(ogeGridEditShortcut({ key: 'd', ctrlKey: true })).toBe('fillDown');
     expect(ogeGridEditShortcut({ key: 'r', ctrlKey: true })).toBe('fillRight');

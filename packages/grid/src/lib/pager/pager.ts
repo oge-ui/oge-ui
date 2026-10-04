@@ -192,9 +192,7 @@ const ICON_PATHS = {
     @if (showInfo()) {
       <span class="oge-pager-info">
         @if (effInfoTemplate(); as tpl) {
-          <ng-container
-            *ngTemplateOutlet="tpl; context: infoContext()"
-          />
+          <ng-container *ngTemplateOutlet="tpl; context: infoContext()" />
         } @else {
           {{ totalCount() }} {{ messages().rowsSuffix }}
         }
@@ -222,9 +220,8 @@ export class OgePager {
    * Template for the info text (`*ogePagerInfoTemplate` children win); the
    * grid passes its own here.
    */
-  readonly infoTemplate = input<TemplateRef<OgePagerInfoTemplateContext> | null>(
-    null,
-  );
+  readonly infoTemplate =
+    input<TemplateRef<OgePagerInfoTemplateContext> | null>(null);
   readonly messages = input<OgeGridMessages>(OGE_DEFAULT_MESSAGES);
   readonly pageChange = output<number>();
   /** Emits the new page size; `0` means "all rows" (paging off). */
@@ -253,18 +250,16 @@ export class OgePager {
     }),
   );
 
-  protected readonly infoContext = computed<OgePagerInfoTemplateContext>(
-    () => {
-      const info = ogePagerInfoContext({
-        pageIndex: this.pageIndex(),
-        pageCount: this.pageCount(),
-        totalCount: this.totalCount(),
-        pageSize: this.pageSize(),
-        text: `${this.totalCount()} ${this.messages().rowsSuffix}`,
-      });
-      return { $implicit: info, ...info };
-    },
-  );
+  protected readonly infoContext = computed<OgePagerInfoTemplateContext>(() => {
+    const info = ogePagerInfoContext({
+      pageIndex: this.pageIndex(),
+      pageCount: this.pageCount(),
+      totalCount: this.totalCount(),
+      pageSize: this.pageSize(),
+      text: `${this.totalCount()} ${this.messages().rowsSuffix}`,
+    });
+    return { $implicit: info, ...info };
+  });
 
   constructor() {
     const host = inject<ElementRef<HTMLElement>>(ElementRef);

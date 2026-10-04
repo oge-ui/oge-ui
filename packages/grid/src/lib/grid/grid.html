@@ -1137,46 +1137,46 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       *ngTemplateOutlet="pinnedRow; context: { $implicit: node, rowIndex: totalCount() + 2 + pinnedTopNodes().length + pinIndex, side: 'bottom' }"
     />
     } @if (hasTotalRow()) {
-  <div
-    class="oge-total-row"
-    role="row"
-    [style.grid-template-columns]="gridTemplateColumns()"
-  >
-    @if (rowDragging()) {
-    <div class="oge-total-cell" role="gridcell"></div>
-    } @if (hasExpander()) {
-    <div class="oge-total-cell" role="gridcell"></div>
-    } @if (hasCheckboxColumn()) {
-    <div class="oge-total-cell" role="gridcell"></div>
-    } @if (hasCommandColumn()) {
-    <div class="oge-total-cell" role="gridcell"></div>
-    } @if (colSpacerLeft() > 0) {
     <div
-      class="oge-total-cell oge-col-spacer"
-      role="gridcell"
-      aria-hidden="true"
-    ></div>
-    } @for (column of renderColumns(); track column.id) {
-    <div
-      class="oge-total-cell"
-      role="gridcell"
-      [class.oge-cell-number]="column.dataType === 'number'"
-      [class.oge-align-center]="column.alignment === 'center'"
-      [class.oge-align-end]="column.alignment === 'end'"
-      [class.oge-pinned]="column.pinned !== false"
-      [style.inset-inline-start.px]="pinnedLeftOf(column)"
-      [style.inset-inline-end.px]="pinnedRightOf(column)"
+      class="oge-total-row"
+      role="row"
+      [style.grid-template-columns]="gridTemplateColumns()"
     >
-      {{ totalSummaryByColumn().get(column.id) ?? '' }}
+      @if (rowDragging()) {
+      <div class="oge-total-cell" role="gridcell"></div>
+      } @if (hasExpander()) {
+      <div class="oge-total-cell" role="gridcell"></div>
+      } @if (hasCheckboxColumn()) {
+      <div class="oge-total-cell" role="gridcell"></div>
+      } @if (hasCommandColumn()) {
+      <div class="oge-total-cell" role="gridcell"></div>
+      } @if (colSpacerLeft() > 0) {
+      <div
+        class="oge-total-cell oge-col-spacer"
+        role="gridcell"
+        aria-hidden="true"
+      ></div>
+      } @for (column of renderColumns(); track column.id) {
+      <div
+        class="oge-total-cell"
+        role="gridcell"
+        [class.oge-cell-number]="column.dataType === 'number'"
+        [class.oge-align-center]="column.alignment === 'center'"
+        [class.oge-align-end]="column.alignment === 'end'"
+        [class.oge-pinned]="column.pinned !== false"
+        [style.inset-inline-start.px]="pinnedLeftOf(column)"
+        [style.inset-inline-end.px]="pinnedRightOf(column)"
+      >
+        {{ totalSummaryByColumn().get(column.id) ?? '' }}
+      </div>
+      } @if (colSpacerRight() > 0) {
+      <div
+        class="oge-total-cell oge-col-spacer"
+        role="gridcell"
+        aria-hidden="true"
+      ></div>
+      }
     </div>
-    } @if (colSpacerRight() > 0) {
-    <div
-      class="oge-total-cell oge-col-spacer"
-      role="gridcell"
-      aria-hidden="true"
-    ></div>
-    }
-  </div>
     }
   </div>
   }
@@ -1220,7 +1220,10 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   >
     @if (headerFilterMode() !== 'list') { @if (headerConditionDraft(); as draft)
     { @if (headerFilterColumn(); as hfColumn) {
-    <section class="oge-hf-conditions" [attr.aria-label]="msg().filterByCondition">
+    <section
+      class="oge-hf-conditions"
+      [attr.aria-label]="msg().filterByCondition"
+    >
       <div class="oge-hf-section-title">{{ msg().filterByCondition }}</div>
       @for (which of ['first', 'second']; track which) { @if (which ===
       'second') {
@@ -1604,12 +1607,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
 </ng-template>
 
 <!-- a pinned row: display only (no editing, selection or roving focus) -->
-<ng-template
-  #pinnedRow
-  let-node
-  let-rowIndex="rowIndex"
-  let-side="side"
->
+<ng-template #pinnedRow let-node let-rowIndex="rowIndex" let-side="side">
   <div
     class="oge-row oge-pinned-row"
     role="row"
@@ -1626,7 +1624,11 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     } @if (hasCheckboxColumn()) {
     <div class="oge-cell oge-checkbox-cell" role="gridcell"></div>
     } @if (colSpacerLeft() > 0) {
-    <div class="oge-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+    <div
+      class="oge-cell oge-col-spacer"
+      role="gridcell"
+      aria-hidden="true"
+    ></div>
     } @for (column of renderColumns(); track column.id) {
     <div
       class="oge-cell"
@@ -1646,7 +1648,11 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       />
     </div>
     } @if (colSpacerRight() > 0) {
-    <div class="oge-cell oge-col-spacer" role="gridcell" aria-hidden="true"></div>
+    <div
+      class="oge-cell oge-col-spacer"
+      role="gridcell"
+      aria-hidden="true"
+    ></div>
     } @if (hasCommandColumn()) {
     <div class="oge-cell oge-command-cell" role="gridcell"></div>
     }

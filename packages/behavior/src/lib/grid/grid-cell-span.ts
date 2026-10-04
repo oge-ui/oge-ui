@@ -46,7 +46,11 @@ export interface OgeGridSpanInput<T, C extends OgeGridSpanColumn<T>> {
   nodes: readonly RowNode<T>[];
   columns: readonly C[];
   /** Per-cell span callback; wins over `mergeCells` where both apply. */
-  cellSpan?: (row: T, column: C, rowIndex: number) => OgeGridCellSpan | null | undefined;
+  cellSpan?: (
+    row: T,
+    column: C,
+    rowIndex: number,
+  ) => OgeGridCellSpan | null | undefined;
 }
 
 /** The empty layout — what virtualized grids and span-free grids use. */
@@ -57,7 +61,8 @@ export const OGE_NO_SPANS: OgeGridSpanLayout = Object.freeze({
 });
 
 const sameValue = (a: unknown, b: unknown): boolean => {
-  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  if (a instanceof Date && b instanceof Date)
+    return a.getTime() === b.getTime();
   return Object.is(a, b) || (a == null && b == null);
 };
 
@@ -86,7 +91,12 @@ export function computeOgeGridSpans<T, C extends OgeGridSpanColumn<T>>(
     return end;
   };
 
-  const place = (row: number, col: number, rowSpan: number, colSpan: number): void => {
+  const place = (
+    row: number,
+    col: number,
+    rowSpan: number,
+    colSpan: number,
+  ): void => {
     let rows = Math.max(1, Math.min(rowSpan, runEnd(row) - row + 1));
     let cols = Math.max(1, Math.min(colSpan, columns.length - col));
     // truncate against cells earlier spans already own
@@ -140,10 +150,14 @@ export function computeOgeGridSpans<T, C extends OgeGridSpanColumn<T>>(
           end + 1 < nodes.length &&
           nodes[end + 1].kind === 'data' &&
           !taken(end + 1, col) &&
-          sameValue(column.accessor((nodes[end + 1] as { data: T }).data), value)
+          sameValue(
+            column.accessor((nodes[end + 1] as { data: T }).data),
+            value,
+          )
         )
           end++;
-        if (end > row && value != null && value !== '') place(row, col, end - row + 1, 1);
+        if (end > row && value != null && value !== '')
+          place(row, col, end - row + 1, 1);
         row = end + 1;
       }
     });

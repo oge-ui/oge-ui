@@ -5,7 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import { createElement, type ReactNode } from 'react';
-import type { FilterExpr } from '@oge-ui/core';
+import { toLocalDate, type FilterExpr } from '@oge-ui/core';
 import { OgeGrid, type OgeGridColumnProps } from '@oge-ui/react-grid';
 import { DemoCard } from '../../shared/demo-card';
 import { makeEmployees, type Employee } from '../../shared/demo-data';
@@ -39,6 +39,13 @@ const COLUMNS: OgeGridColumnProps<Employee>[] = [
  * state so the echo box above the grid can show what the builder produced —
  * the same thing the Angular demo does with `[(filterValue)]`.
  */
+type DatedEmployee = Omit<Employee, 'hireDate'> & { hireDate: Date | null };
+
+const datedEmployees: DatedEmployee[] = makeEmployees(80, 13).map((row) => ({
+  ...row,
+  hireDate: toLocalDate(row.hireDate),
+}));
+
 @Component({
   selector: 'app-react-grid-filtering-demos',
   imports: [DemoCard, ReactHost],
@@ -64,6 +71,21 @@ const COLUMNS: OgeGridColumnProps<Employee>[] = [
         </div>
       }
       <app-react-host [render]="filtering" />
+    </app-demo-card>
+
+    <h3>Excel-style filter menu</h3>
+    <p>
+      <code>headerFilter.mode</code>: <code>'list'</code> (default),
+      <code>'conditions'</code> (two conditions joined by And / Or) or
+      <code>'both'</code>. Date columns list their values as a year → month →
+      day tree.
+    </p>
+    <app-demo-card
+      [chips]="['headerFilter.mode', 'date tree']"
+      [code]="demos[1].source"
+      language="tsx"
+    >
+      <app-react-host class="demo-filter-menu" [render]="menu" />
     </app-demo-card>
 
     <h3>Notes</h3>
@@ -101,6 +123,19 @@ export class ReactGridFilteringDemos {
   protected filterJson(): string {
     return JSON.stringify(this.filter());
   }
+
+  protected readonly menu = (): ReactNode =>
+    createElement(OgeGrid<DatedEmployee>, {
+      data: datedEmployees,
+      keyField: 'id',
+      headerFilter: { mode: 'both' },
+      paging: { pageSize: 8 },
+      columns: [
+        { field: 'firstName', caption: 'First Name' },
+        { field: 'salary', caption: 'Salary', dataType: 'number' },
+        { field: 'hireDate', caption: 'Hired', dataType: 'date' },
+      ],
+    });
 
   protected readonly filtering = (): ReactNode =>
     createElement(OgeGrid<Employee>, {

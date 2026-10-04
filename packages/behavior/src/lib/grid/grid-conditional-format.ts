@@ -50,12 +50,7 @@ export interface OgeGridColumnInfo {
 
 /** A token tone a formatting rule paints with. */
 export type OgeConditionalTone =
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | 'info'
-  | 'accent'
-  | 'muted';
+  'success' | 'warning' | 'danger' | 'info' | 'accent' | 'muted';
 
 /** Token-only styling a rule applies to a matching cell. */
 export interface OgeConditionalStyle {
@@ -76,9 +71,7 @@ export interface OgeConditionalCondition {
 /** A rule that styles cells matching a condition. */
 export interface OgeConditionalRule<T = unknown> {
   /** A predicate over the cell value and row, or a declarative condition. */
-  when:
-    | ((value: unknown, row: T) => boolean)
-    | OgeConditionalCondition;
+  when: ((value: unknown, row: T) => boolean) | OgeConditionalCondition;
   /** Class(es) added to matching cells. */
   class?: string | readonly string[];
   /** Token styling added to matching cells. */
@@ -204,7 +197,8 @@ function conditionPredicate(
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
 /** `0.4` → `'0.4'` with three decimals at most (stable CSS values). */
-const ratio = (value: number): string => String(Math.round(value * 1000) / 1000);
+const ratio = (value: number): string =>
+  String(Math.round(value * 1000) / 1000);
 
 /**
  * Resolves a column's formats for one cell: rules add their classes and
@@ -247,8 +241,10 @@ export function resolveOgeConditionalFormat<T>(
       continue;
     }
     if (numeric === null) continue;
-    const min = format.type === 'iconSet' ? range?.min : (format.min ?? range?.min);
-    const max = format.type === 'iconSet' ? range?.max : (format.max ?? range?.max);
+    const min =
+      format.type === 'iconSet' ? range?.min : (format.min ?? range?.min);
+    const max =
+      format.type === 'iconSet' ? range?.max : (format.max ?? range?.max);
     if (format.type === 'dataBar') {
       const low = Math.min(0, min ?? 0);
       const high = Math.max(max ?? numeric, low + Number.EPSILON);
@@ -257,7 +253,9 @@ export function resolveOgeConditionalFormat<T>(
       const at = clamp01((numeric - low) / span);
       classes.push('oge-cf-databar');
       if (numeric < 0) classes.push('oge-cf-databar-negative');
-      classes.push(`oge-cf-bar-${numeric < 0 ? 'danger' : (format.tone ?? 'accent')}`);
+      classes.push(
+        `oge-cf-bar-${numeric < 0 ? 'danger' : (format.tone ?? 'accent')}`,
+      );
       vars['--oge-cf-bar-start'] = ratio(Math.min(zero, at));
       vars['--oge-cf-bar'] = ratio(Math.abs(at - zero));
       continue;
@@ -265,7 +263,8 @@ export function resolveOgeConditionalFormat<T>(
     if (format.type === 'colorScale') {
       const low = min ?? numeric;
       const high = max ?? numeric;
-      const position = high > low ? clamp01((numeric - low) / (high - low)) : 0.5;
+      const position =
+        high > low ? clamp01((numeric - low) / (high - low)) : 0.5;
       const tones = format.tones ?? ['danger', 'warning', 'success'];
       classes.push('oge-cf-scale');
       if (tones.length === 3) {
@@ -275,7 +274,9 @@ export function resolveOgeConditionalFormat<T>(
           `oge-cf-scale-from-${upper ? tones[1] : tones[0]}`,
           `oge-cf-scale-to-${upper ? tones[2] : tones[1]}`,
         );
-        vars['--oge-cf-scale'] = ratio(upper ? (position - 0.5) * 2 : position * 2);
+        vars['--oge-cf-scale'] = ratio(
+          upper ? (position - 0.5) * 2 : position * 2,
+        );
       } else {
         classes.push(
           `oge-cf-scale-from-${tones[0]}`,

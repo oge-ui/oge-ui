@@ -96,7 +96,11 @@ export function groupKeyOf(value: unknown, interval?: GroupInterval): unknown {
     case 'month':
       return new Date(date.getFullYear(), date.getMonth(), 1);
     case 'quarter':
-      return new Date(date.getFullYear(), Math.floor(date.getMonth() / 3) * 3, 1);
+      return new Date(
+        date.getFullYear(),
+        Math.floor(date.getMonth() / 3) * 3,
+        1,
+      );
     case 'year':
       return new Date(date.getFullYear(), 0, 1);
     default:
@@ -105,7 +109,10 @@ export function groupKeyOf(value: unknown, interval?: GroupInterval): unknown {
 }
 
 /** The start of the bucket after the one `key` opens. */
-function nextBucketStart(key: Date, interval: Exclude<GroupInterval, number>): Date {
+function nextBucketStart(
+  key: Date,
+  interval: Exclude<GroupInterval, number>,
+): Date {
   const end = new Date(key);
   switch (interval) {
     case 'hour':

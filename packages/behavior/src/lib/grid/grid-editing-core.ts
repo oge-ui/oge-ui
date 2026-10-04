@@ -781,7 +781,6 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
     return value;
   }
 
-
   /** Emits the cancelable per-change pre event; `false` when canceled. */
   private notifyChangeApplying(change: OgeDataChange<T>): boolean {
     const values = (change.data ?? {}) as Record<string, unknown>;
@@ -860,6 +859,7 @@ export class OgeGridEditingCore<T = unknown, TSlot = unknown, S = unknown> {
 }
 
 function sameCellValue(a: unknown, b: unknown): boolean {
-  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  if (a instanceof Date && b instanceof Date)
+    return a.getTime() === b.getTime();
   return Object.is(a, b);
 }

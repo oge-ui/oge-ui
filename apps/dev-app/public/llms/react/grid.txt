@@ -134,7 +134,7 @@ _Selection & focus_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `selectionMode` | `'none' \| 'single' \| 'multiple' \| 'checkbox'` | `'none'` | Row selection: single, multiple (ctrl/shift ranges, Ctrl+A) or a checkbox column with a select-all header. |
+| `selectionMode` | `'none' \| 'single' \| 'multiple' \| 'checkbox' \| 'cell'` | `'none'` | Row selection: single, multiple (ctrl/shift ranges, Ctrl+A) or a checkbox column with a select-all header — or `'cell'`: rectangular cell ranges with TSV copy / paste and the fill handle (editing then starts on double-click, F2 or Enter). |
 | `selectedKeys / defaultSelectedKeys` | `readonly RowKey[]` | `[]` | The selected row keys — controlled with `selectedKeys` + `onSelectedKeysChange`, or seeded once with `defaultSelectedKeys`. |
 | `selectionDeferred` | `boolean` | `false` | Deferred selection: the selection is an expression rather than a key set, so "select all" over a remote source never materializes keys. Requires a string `keyField`. |
 | `selectionFilter` | `FilterExpr \| null` | `null` | The selection expression (deferred mode) — controlled with `onSelectionFilterChange`. |
@@ -177,6 +177,30 @@ _Appearance & misc_
 | `rtlEnabled` | `boolean` | `undefined` | Right-to-left layout. `undefined` auto-detects the inherited CSS `direction`; `true`/`false` force it. |
 | `renderNoData` | `(context: OgeGridNoDataContext) => ReactNode` | `undefined` | Renders the empty state instead of the `noData` message — the React form of `*ogeNoDataTemplate`. |
 | `className / style / ariaLabel` | `string \| CSSProperties` | `undefined` | Host class, inline style (give the grid its height here) and the accessible name of the grid. |
+
+_Cells, ranges & clipboard_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rangeSelection` | `OgeRangeSelectionOptions` | `—` | `{ copyHeaders, fillHandle, pasteAddsRows, multipleRanges }`. |
+| `selectedRanges / defaultSelectedRanges` | `readonly OgeGridCellRange[]` | `—` | The selected ranges — controlled with `selectedRanges` + `onSelectedRangesChange`, or seeded once. A sort, filter, page or grouping change clears them. |
+| `pinnedTopRows` | `readonly (T \| RowKey)[]` | `—` | Rows pinned in a sticky section under the header: data objects, or keys of loaded rows (which then leave the body). Display rows; virtual scrolling compatible. |
+| `pinnedBottomRows` | `readonly (T \| RowKey)[]` | `—` | Rows pinned in the sticky footer, above the total row. |
+| `stickyGroupRows` | `boolean` | `false` | Keeps the enclosing group rows under the header while scrolling — a visual aid; a click scrolls to the group. |
+| `cellSpan` | `(row: T, column: OgeGridColumnInfo) => OgeGridCellSpan \| null \| undefined` | `—` | Row / column spans per cell, with `aria-rowspan` / `aria-colspan` and span-aware arrows. Ignored while virtualized. |
+| `columnAutoWidth` | `boolean` | `false` | Sizes every column to its content once the first result set rendered. |
+| `cellHintEnabled` | `boolean` | `false` | Shows truncated cell text in the overlay tooltip on hover and on keyboard focus. |
+
+_Styling & drag groups_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rowClass` | `(row: T, key: RowKey) => OgeClassValue` | `—` | Classes for a data row — string, array or `{ class: condition }` record. |
+| `cellClass` | `(row: T, column: OgeGridColumnInfo) => OgeClassValue` | `—` | Classes for a data cell, per row and column. |
+| `rowDragGroup` | `string` | `—` | Grids sharing a group name accept each other’s dragged rows; the target’s `onRowDrop` carries the source row. The source needs `rowDragging`. |
+| `allowDropInsideRow` | `boolean` | `false` | A drop on the middle half of a row reports `position: 'inside'`. |
+| `renderPagerInfo` | `(context: OgePagerInfoContext) => ReactNode` | `—` | Renders the pager’s info text — the React form of `*ogePagerInfoTemplate`. |
+| `id` | `string` | `—` | Host element id — also the component id the row-drag events report. |
 
 #### Methods
 
@@ -246,6 +270,19 @@ _Editing_
 | `discardChanges(): void` | `handle` | Drops every pending change and closes any open editor; fires `onEditCanceled` when anything was open or pending. |
 | `hasChanges(): boolean` | `handle` | Whether unsaved edits exist: staged changes, added or removed rows. |
 
+_Ranges, clipboard & undo_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectRange(range, add?)` | `(range: OgeGridCellRange, add?: boolean) => void` | Selects a rectangular cell range; `add` keeps the existing ones. |
+| `clearRangeSelection()` | `() => void` | Clears every cell range. |
+| `getSelectedRangeData()` | `() => unknown[][]` | The selected cells’ values as a rows × columns matrix (the lattice Ctrl+C copies). |
+| `pasteText(text)` | `(text: string) => Promise<number>` | Pastes a TSV block into the editable cells from the focused cell (or fills the selected range with a single value): parsed with the column data type and lookup, validated, written as one undoable batch through the regular edit events. Resolves with the cells written. |
+| `fillDown() / fillRight()` | `() => Promise<number>` | Ctrl+D / Ctrl+R: copies the range’s first row (column) into the rest — a single row copies the row above it. |
+| `undo() / redo()` | `() => Promise<void>` | Ctrl+Z / Ctrl+Y: reverts or re-applies the last committed edit, paste or fill (staged in batch mode, saved otherwise). |
+| `canUndo() / canRedo()` | `() => boolean` | Whether the history has a step to revert / re-apply. |
+| `autoFitColumn(field) / autoFitColumns()` | `(field: string) => void` | Sizes a column (or every column) to its header and rendered cells — what a double-click on the resize handle and the header menu’s “Size to fit” run. |
+
 #### Events
 
 _Interaction_
@@ -295,6 +332,18 @@ _Lifecycle & errors_
 | `onExporting` | `(event: OgeExportingEvent) => void` | Cancelable: before a CSV export starts; `fileName` is mutable. |
 | `onDataErrorOccurred` | `(event: OgeDataErrorEvent) => void` | A DataSource load failed. |
 
+_Ranges, preparation & drag_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onRangeSelectionChanged` | `(event: OgeRangeSelectionChangedEvent) => void` | The selected ranges changed: `{ ranges, rowCount, columnCount, cellCount }`. |
+| `onRowPrepared` | `(event: OgeRowPreparedEvent<T>) => void` | A data row element rendered a row for the first time — `{ row, key, rowIndex, element }`. |
+| `onCellPrepared` | `(event: OgeCellPreparedEvent<T>) => void` | Every data cell of a prepared row. |
+| `onRowDragStart` | `(event: OgeRowDragStartEvent<T>) => void` | Cancelable: a row drag is about to start. |
+| `onRowDragOver` | `(event: OgeRowDragOverEvent) => void` | Cancelable, on the grid under the pointer; set `cancel` to refuse the spot. |
+| `onRowDrop` | `(event: OgeRowDropEvent) => void` | A row was dropped on this grid — its own or another component’s (`sameComponent: false`); move the data in the handler. |
+| `onRowDragEnd` | `(event: OgeRowDragEndEvent<T>) => void` | The source side of a drag ended. |
+
 ### OgeGridColumnProps
 
 #### Properties
@@ -306,7 +355,7 @@ _Basics_
 | `field` | `string` | `undefined` | Dotted paths are supported, e.g. `"customer.name"`. |
 | `caption` | `string` | `humanized field` | Header text; derived from `field` when omitted. |
 | `width` | `number \| string` | `undefined` | Number → px; string is used verbatim (e.g. `'2fr'`, `'150px'`). |
-| `dataType` | `'string' \| 'number' \| 'date' \| 'boolean'` | `'string'` | Drives the default formatting, the filter-row editor, the operator set and the default alignment. |
+| `dataType` | `'string' \| 'number' \| 'date' \| 'datetime' \| 'boolean'` | `'string'` | Drives the default formatting, the filter-row editor, the operator set and the default alignment. `'datetime'` keeps the time of day. |
 | `alignment` | `'start' \| 'center' \| 'end'` | `undefined` | Alignment of the cells, header and summaries (logical — `'end'` is the right edge in LTR). Unset, numbers align to the end and everything else to the start. |
 | `format` | `(value: unknown) => string` | `undefined` | Custom value formatter applied to the default (non-rendered) cell text and to exports. |
 | `visible` | `boolean` | `true` | Hides the column without removing it. |
@@ -328,7 +377,7 @@ _Sort, filter & group_
 | `filterOperator` | `FilterOperator` | `by dataType` | Filter-row operator override (default: `contains` for text, `eq` for number/date). |
 | `calculateFilterExpression` | `(value, operator) => FilterExpr \| null` | `undefined` | Custom filter expression for filter-row input on this column. |
 | `groupIndex` | `number` | `undefined` | Initial group level of this column (0 = first). |
-| `groupInterval` | `'day' \| 'month' \| 'year'` | `undefined` | Date bucket when grouping by this column — `'day'` by default for `dataType: 'date'`, so same-day rows share a group whatever their time. Sent as `LoadOptions.group[].interval`. |
+| `groupInterval` | `'hour' \| 'day' \| 'week' \| 'month' \| 'quarter' \| 'year' \| number` | `undefined` | Bucket when grouping by this column — calendar units for dates (`'day'` by default for `date` / `datetime`; `'week'` starts on the locale’s first day) or a positive width for numbers. Sent as `LoadOptions.group[].interval`. |
 
 _Summaries & editing_
 
@@ -350,6 +399,13 @@ _Render props_
 | --- | --- | --- | --- |
 | `renderCell` | `(context: OgeGridCellRenderContext<T>) => ReactNode` | `undefined` | Renders the cell content from `{ value, row, rowIndex, key, column }` — the React form of `*ogeCellTemplate`. |
 | `renderHeader` | `(context: OgeGridHeaderRenderContext<T>) => ReactNode` | `undefined` | Renders the header caption from `{ column, caption }` — the React form of `*ogeHeaderTemplate`. |
+
+_Formatting, merging & async validation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `conditionalFormats` | `readonly OgeConditionalFormat<T>[]` | `—` | Declarative formats: rules, data bars, colour scales and icon sets — token classes and CSS custom properties only. |
+| `mergeCells` | `boolean` | `false` | Merges vertically adjacent equal values into one cell (`aria-rowspan`). |
 
 ### Grid types & configuration
 
@@ -392,6 +448,24 @@ _Configuration_
 | `messages.resizeColumn / messages.columnResized / messages.columnMoved / messages.rowMoved / messages.treeRowMoved / messages.groupMoved / messages.groupRemoved` | `string` | The keyboard alternatives to dragging (WCAG 2.1.1 / 2.5.7): the resize separator’s name (`Resize {column}`) and the polite live-region announcements after a keyboard resize (`{column} width {width} pixels`), column move (`{column} moved to position {position} of {total}`), row move (`Row moved to position {position} of {total}`), tree-row move (`Row moved to level {level}, position {position} of {total}`) and group-chip reorder / removal (`Grouping by {column} moved to position {position} of {total}`, `Grouping by {column} removed`). |
 | `messages.booleanTrueLabel / messages.booleanFalseLabel` | `string` | Screen-reader text of a default-rendered boolean cell (`Yes` / `No`). The visible `booleanTrue` / `booleanFalse` glyph (`✓` / `✗`, also the CSV text) is rendered `aria-hidden`; the label is rendered visually hidden beside it. Columns with a custom `format`, a lookup or a cell template render their own text. Localizing `booleanTrue` / `booleanFalse` to words? Set the labels too — they are announced, the glyph text is not. |
 | `messages.sortAscendingAnnouncement / messages.sortDescendingAnnouncement / messages.sortClearedAnnouncement / messages.rowCountAnnouncement / messages.rowCountOneAnnouncement / messages.pageAnnouncement / messages.groupExpandedAnnouncement / messages.groupCollapsedAnnouncement / messages.rowExpandedAnnouncement / messages.rowCollapsedAnnouncement / messages.selectionCountAnnouncement / messages.validationErrorAnnouncement` | `string` | Live-announcement patterns, `{placeholder}`-interpolated. Defaults: `Sorted by {column}, ascending` / `descending`, `Sort cleared`, `{count} rows` / `{count} row`, `Page {n} of {total}`, `Group {value} expanded` / `collapsed`, `{value} expanded` / `collapsed` (tree list), `{count} rows selected` and `{column}: {error}` (spoken assertively when a save is blocked by an invalid editor). |
+
+_Ranges, formats, spans & drag_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGridCellRange / OgeGridCellCoord` | `interfaces` | `{ anchor, focus }` of `{ row, col }` — flat row index and visible column index, the keyboard machine’s coordinates. |
+| `OgeRangeSelectionOptions` | `interface` | `{ copyHeaders?, fillHandle?, pasteAddsRows?, multipleRanges? }`. |
+| `OgeRangeSelectionChangedEvent` | `interface` | `{ ranges, rowCount, columnCount, cellCount }`. |
+| `OgeClassValue` | `type` | What class hooks return: `string \| string[] \| Record<string, boolean> \| null`. |
+| `OgeGridColumnInfo` | `interface` | `{ field, caption, dataType, index }` — what `cellClass` / `cellSpan` learn about a column. |
+| `OgeConditionalFormat` | `type` | A rule or a data bar / colour scale / icon set (see `conditionalFormats`). |
+| `OgeGridCellSpan` | `interface` | `{ rowSpan?, colSpan? }`. |
+| `OgeRowPreparedEvent / OgeCellPreparedEvent` | `interfaces` | Payloads of `rowPrepared` / `cellPrepared`. |
+| `OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition` | `interfaces` | Cross-component row drag payloads; `position` is `'before' \| 'after' \| 'inside'`. |
+| `OgeHeaderFilterMode` | `type` | `headerFilter.mode`: `'list'` (default) the value checklist, `'conditions'` two operator + value conditions joined by And / Or, `'both'` the Excel-style menu (conditions above the list). Date columns list their values as a year → month → day tree. |
+| `OgePagerInfoContext` | `interface` | What `renderPagerInfo` / `<OgePager renderInfo>` receive: `{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }`. `paging.showFirstLastButtons` / `paging.showPageInput` (and the pager’s `showFirstLast` / `showPageInput`) add first/last buttons and a go-to-page input. |
+| `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
+| `messages.filterByCondition / messages.filterByValues / messages.firstCondition / messages.secondCondition / messages.firstPage / messages.lastPage / messages.goToPage / messages.pageOfCount / messages.groupWeekPattern / messages.groupQuarterPattern / messages.groupRangePattern` | `string` | Header filter menu sections and condition names, pager first/last/go-to-page labels (`of {count}`) and the interval group captions (`Week of {date}`, `Q{quarter} {year}`, `{from} – {to}`). |
 
 ## Demos
 
@@ -618,6 +692,106 @@ export function RtlGrid() {
       columns={columns}
       rtlEnabled
       paging={{ pageSize: 6, displayMode: 'compact' }}
+    />
+  );
+}
+```
+
+### Class hooks & formatting rules
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const columns: OgeGridColumnProps<Employee>[] = [
+  { field: 'firstName', caption: 'Name' },
+  { field: 'department', caption: 'Department' },
+  {
+    field: 'salary',
+    caption: 'Salary',
+    dataType: 'number',
+    // token-only formats: rule classes, a data bar
+    conditionalFormats: [
+      { when: { operator: 'ge', value: 100000 }, style: { tone: 'success', bold: true } },
+      { when: (value) => (value as number) < 45000, style: { background: 'danger' } },
+      { type: 'dataBar' },
+    ],
+  },
+  {
+    field: 'id',
+    caption: 'Score',
+    dataType: 'number',
+    conditionalFormats: [{ type: 'colorScale' }, { type: 'iconSet' }],
+  },
+];
+
+export function FormattedGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      rowClass={(row) => ({ 'is-engineering': row.department === 'Engineering' })}
+      cellClass={(row, column) =>
+        column.field === 'firstName' && row.salary > 100000 ? 'is-top-earner' : null
+      }
+      onCellPrepared={(event) => {
+        // the imperative escape hatch: decorate the element itself
+        if (event.field === 'salary') event.element.title = String(event.value);
+      }}
+    />
+  );
+}
+```
+
+### Merged cells, spans, auto-fit & hints
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+export function SpannedGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      // equal adjacent values merge (aria-rowspan); cellSpan spans columns
+      columns={[
+        { field: 'department', caption: 'Department', mergeCells: true },
+        { field: 'city', caption: 'City' },
+        { field: 'firstName', caption: 'First name', width: 90 },
+        { field: 'lastName', caption: 'Last name' },
+      ]}
+      cellSpan={(row, column) =>
+        column.field === 'firstName' && row.id === 1 ? { colSpan: 2 } : null
+      }
+      cellHintEnabled
+      columnAutoWidth
     />
   );
 }
@@ -918,6 +1092,40 @@ export function FilteredGrid() {
       filterValue={filter}
       onFilterValueChange={setFilter}
       paging={{ pageSize: 12 }}
+    />
+  );
+}
+```
+
+### Excel-style filter menu
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+export function FilterMenuGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      // mode 'both': two conditions (And / Or) above the value list;
+      // a date column lists its values as a year → month → day tree
+      headerFilter={{ mode: 'both' }}
+      columns={[
+        { field: 'firstName', caption: 'First Name' },
+        { field: 'salary', caption: 'Salary', dataType: 'number' },
+        { field: 'hireDate', caption: 'Hired', dataType: 'date' },
+      ]}
     />
   );
 }
@@ -1467,6 +1675,126 @@ export function ImperativeState() {
 }
 ```
 
+### Pinned rows & pager options
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+const totals = { id: 0, firstName: 'Total', department: '', salary: 36900, hireDate: new Date() };
+
+export function PinnedGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={[
+        { field: 'firstName', caption: 'Name' },
+        { field: 'salary', caption: 'Salary', dataType: 'number' },
+      ]}
+      // key 3 moves out of the body into the sticky top section;
+      // the totals object is a display row in the sticky footer
+      pinnedTopRows={[3]}
+      pinnedBottomRows={[totals]}
+      paging={{ pageSize: 5, showFirstLastButtons: true, showPageInput: true }}
+      renderPagerInfo={(info) => `${info.firstRow}–${info.lastRow} of ${info.totalCount}`}
+    />
+  );
+}
+```
+
+### Sticky group rows
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+export function StickyGroupsGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      style={{ height: 360 }}
+      virtualScroll
+      stickyGroupRows
+      groupBy={['department', 'hireDate']}
+      columns={[
+        { field: 'department', caption: 'Department' },
+        // quarter buckets read "Q2 2026"; numbers take a width, e.g. groupInterval: 10000
+        { field: 'hireDate', caption: 'Hired', dataType: 'date', groupInterval: 'quarter' },
+        { field: 'firstName', caption: 'Name' },
+      ]}
+    />
+  );
+}
+```
+
+### Drag rows between grids
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeRowDropEvent } from '@oge-ui/react-grid';
+
+interface Task {
+  id: number;
+  title: string;
+}
+
+export function TaskBoards() {
+  const [todo, setTodo] = useState<Task[]>([
+    { id: 1, title: 'Write specs' },
+    { id: 2, title: 'Ship it' },
+  ]);
+  const [done, setDone] = useState<Task[]>([{ id: 3, title: 'Plan' }]);
+
+  const onDrop = (event: OgeRowDropEvent) => {
+    if (event.sameComponent) return; // a reorder: the grid already moved it
+    const row = event.sourceRow as Task;
+    const [setFrom, setTo] =
+      event.targetComponentId === 'todo' ? [setDone, setTodo] : [setTodo, setDone];
+    setFrom((rows) => rows.filter((r) => r.id !== row.id));
+    setTo((rows) => {
+      const next = [...rows];
+      next.splice(event.toIndex, 0, row);
+      return next;
+    });
+  };
+  return (
+    <>
+      <OgeGrid id="todo" data={todo} keyField="id" rowDragging rowDragGroup="tasks"
+               columns={[{ field: 'title', caption: 'To do' }]} onRowDrop={onDrop} />
+      <OgeGrid id="done" data={done} keyField="id" rowDragging rowDragGroup="tasks"
+               columns={[{ field: 'title', caption: 'Done' }]} onRowDrop={onDrop} />
+    </>
+  );
+}
+```
+
 ### Playground — every feature on
 
 ```ts
@@ -1516,6 +1844,101 @@ export function EmployeeGrid() {
       focusedRowEnabled
       rowDragging
       rtlEnabled
+    />
+  );
+}
+```
+
+### Ranges, copy, paste & fill
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridCellRange } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'firstName', caption: 'First name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const },
+  { field: 'hireDate', caption: 'Hired', dataType: 'date' as const },
+  { field: 'id', caption: 'Id', editable: false },
+];
+
+export function RangeGrid() {
+  const [ranges, setRanges] = useState<readonly OgeGridCellRange[]>([]);
+  const [summary, setSummary] = useState('');
+  return (
+    <>
+      {/* click / Shift+click / drag / Shift+Arrow select; Ctrl+C copies TSV,
+          Ctrl+V pastes from Excel, drag the corner handle (or Ctrl+D / Ctrl+R)
+          to fill, Ctrl+Z / Ctrl+Y undo and redo */}
+      <OgeGrid
+        data={employees}
+        keyField="id"
+        columns={columns}
+        selectionMode="cell"
+        rangeSelection={{ copyHeaders: true, pasteAddsRows: true }}
+        editing={{ mode: 'batch', allowUpdating: true }}
+        selectedRanges={ranges}
+        onSelectedRangesChange={setRanges}
+        onRangeSelectionChanged={(event) =>
+          setSummary(`${event.cellCount} cells in ${event.ranges.length} range(s)`)
+        }
+      />
+      <p>{summary}</p>
+    </>
+  );
+}
+```
+
+### Async validation
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+/** Pretends to ask a server whether the name is taken. */
+const uniqueName = (value: unknown) =>
+  new Promise<string | null>((resolve) =>
+    setTimeout(() => resolve(value === 'Taken' ? 'This name is taken' : null), 600),
+  );
+
+export function AsyncValidationGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      editing={{ mode: 'row', allowUpdating: true }}
+      columns={[
+        // a rule returning a promise: the editor is aria-busy, Save waits for it
+        { field: 'lastName', caption: 'Last name (unique)', validators: [uniqueName] },
+        { field: 'hireDate', caption: 'Hired at', dataType: 'datetime' },
+      ]}
     />
   );
 }

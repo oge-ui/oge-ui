@@ -673,6 +673,71 @@ box, color box and the drop-down button — takes `adaptiveMode: 'auto' | 'none'
   containment makes it their containing block — the pivot field areas wrap intrinsically
   (`repeat(auto-fit, minmax(min(100%, 150px), 1fr))`) for that reason.
 
+### Grid interaction depth (ranges, clipboard, formats, spans, drag groups)
+
+The spreadsheet layer of both grids is `@oge-ui/behavior` code; the render layers only wire events
+and markup. Conventions a change here must keep:
+
+- **One coordinate system.** Cell ranges (`OgeGridRangeSelectionCore`), spans
+  (`computeOgeGridSpans`), the fill handle and paste planning all use the keyboard machine's
+  coordinates — flat row index (group / detail rows count) × visible column index. Only data rows
+  hold cells: every helper takes an `isDataRow` predicate and skips the rest. A new view (any
+  `loadOptions` change) clears the ranges instead of re-mapping them.
+- **Every value write is one pipeline.** Paste, fill, Ctrl+D / Ctrl+R and undo / redo call
+  `OgeGridEditingCore.applyCellValues()`: validators first (`OgeGridEditorBridge.validateValue`,
+  sync or async), then staged changes in batch mode or one `runSave` batch otherwise — the same
+  `savingChanges` → `rowUpdating` → `savedChanges` events a committed cell edit fires. Read-only
+  and calculated columns are skipped by construction. `OgeGridEditHistory` records committed
+  cell / row edits and every apply; an undo is an apply of the `before` values (row inserts and
+  removals are not in the history — Discard / Undo-delete cover them).
+- **Clipboard goes through the native events.** Copy writes the range TSV in the `copy` event
+  (`buildOgeRangeTsv`, formula-guarded like the CSV export — a pasted `=HYPERLINK(…)` is the same
+  injection); paste reads the `paste` event outside an open editor. `pasteText()` / the React
+  handle's `pasteText` are the programmatic twins. In `selectionMode: 'cell'` a single click
+  selects — editing starts on double-click, F2 or Enter.
+- **Async validation is a bridge capability.** `OgeGridEditorState.pending` makes a commit wait
+  on `whenValidated()`. Angular wraps each `AsyncValidatorFn` so its settling is observable
+  (Angular runs the first validation with `emitEvent: false`, so `statusChanges` never reports
+  it) and bumps a `controlRevision` signal the template reads; React classifies rules into
+  sync / async `WeakSet`s on first call so a server check runs once per typed value, not per
+  render. Pending editors are `aria-busy` with a visually hidden `validationPending` text — never
+  `role="status"` (the e2e suite owns that role for page status).
+- **Formats are tokens and custom properties.** `resolveOgeConditionalFormat` returns classes
+  (`oge-cf-tone-*`, `oge-cf-bg-*`, `oge-cf-bar-*`, `oge-cf-scale-from/to-*`) and
+  `--oge-cf-bar` / `--oge-cf-bar-start` / `--oge-cf-scale` values; colours live only in
+  `_structure.scss`, and forced colours swap bars for a `CanvasText` edge. A custom property set
+  from a template binding must also appear in a `.ts` record (`'--oge-span-rows': …`) —
+  `themes.spec.ts` scans TS/TSX, not HTML.
+- **`rowPrepared` / `cellPrepared` hand out the element** — the one deliberate exception to "no
+  element back-reference in payloads", because the hook exists for imperative decoration.
+  `OgePreparedTracker` fires once per (element, row object), so re-renders stay silent and
+  recycled virtual rows report again.
+- **Pinned rows are display rows.** Key entries leave the body (`flatNodes` filters them, the
+  unfiltered list is `allFlatNodes`); pinned rows render in the sticky header / `.oge-footer`
+  sections with `aria-rowindex` offsets (body rows shift by the pinned-top count) and take no part
+  in roving focus, selection or editing. Sticky group rows are an `aria-hidden` overlay positioned
+  `top: 100%` inside the sticky header — absolute, so they never shift the body — computed from
+  the first visible row (`ogeStickyGroupChain`); the real group rows stay focusable.
+- **Spans need real DOM rows.** `spanLayout` is `OGE_NO_SPANS` while virtualized or with column
+  virtualization. An owner cell sets `grid-column: span n` and, for row spans,
+  `height: calc(n × 100% + borders)` over uniform rows; covered cells of later rows render as
+  `aria-hidden` placeholders, covered cells of the owner's own row are omitted. The keyboard's
+  `spans` hook steps out of the owner's area and snaps into owners.
+- **Cross-component row drag is a registry, not a DOM attribute.** `registerOgeRowDragParticipant`
+  (behavior) holds `{ componentId, group, element, resolve, over, drop }`; the dragging grid
+  hit-tests with `findOgeRowDragParticipant` (innermost host wins) and the drop runs the target's
+  `drop`, which emits `rowDrop`. Cross-component drops move no data — consumers move rows, as with
+  DevExtreme's `onAdd`. The component id is the host `id` (React: the `id` prop), else an internal
+  id. Tree lists do not register yet.
+- **Header filter conditions live in the row-filter map** under `ogeHeaderConditionKey(field)`
+  (`hf:<field>`), so they persist through `stateKey`, combine with every other filter and clear
+  with `clearFilters()` — no snapshot change. The menu re-reads its draft with
+  `parseHeaderConditionExpr` (best effort; an unknown shape stays active and `Clear` removes it).
+- **Escapes in generated files.** Some editing tools turn backslash-u escape sequences (the
+  no-break space, U+202F) into the literal character when writing a file;
+  `no-irregular-whitespace` then fails lint. Check new regexes for literal no-break spaces
+  before committing.
+
 ## Component completeness standard
 
 Every component (new and existing) ships with a **complete, reference-parity-checked

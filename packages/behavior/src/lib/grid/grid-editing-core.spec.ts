@@ -178,7 +178,10 @@ describe('OgeGridEditingCore — paste / fill / undo', () => {
   });
 
   it('records committed cell edits in the history', () => {
-    let editor: OgeGridEditorState | undefined = { value: 'Eve', invalid: false };
+    let editor: OgeGridEditorState | undefined = {
+      value: 'Eve',
+      invalid: false,
+    };
     const { core, state } = setup('batch', {
       editorState: () => editor,
     });

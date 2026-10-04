@@ -11,13 +11,7 @@ export interface SortDescriptor {
  * number, the bucket width for numbers (`100` groups 0–99, 100–199, …).
  */
 export type GroupInterval =
-  | 'hour'
-  | 'day'
-  | 'week'
-  | 'month'
-  | 'quarter'
-  | 'year'
-  | number;
+  'hour' | 'day' | 'week' | 'month' | 'quarter' | 'year' | number;
 
 /** Whether a value is a {@link GroupInterval} (validated persisted state). */
 export function isGroupInterval(value: unknown): value is GroupInterval {

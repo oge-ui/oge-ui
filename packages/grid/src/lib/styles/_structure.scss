@@ -1424,7 +1424,6 @@ input.oge-filter-input {
 }
 
 .oge-cell-fill-preview {
-
   &::after {
     content: '';
     position: absolute;
@@ -1494,7 +1493,8 @@ input.oge-filter-input {
   inset-block-start: 100%;
   inset-inline: 0;
   pointer-events: auto;
-  box-shadow: 0 2px 4px -2px color-mix(in srgb, var(--oge-text-color) 30%, transparent);
+  box-shadow: 0 2px 4px -2px
+    color-mix(in srgb, var(--oge-text-color) 30%, transparent);
 
   .oge-sticky-group-row {
     position: static;

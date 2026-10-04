@@ -202,8 +202,7 @@ export function planOgeGridPaste(
 
 /** What a pasted / typed text means for one column. */
 export type OgeCellTextParse =
-  | { readonly ok: true; readonly value: unknown }
-  | { readonly ok: false };
+  { readonly ok: true; readonly value: unknown } | { readonly ok: false };
 
 /** The column facts {@link parseOgeCellText} needs. */
 export interface OgeCellTextColumn {
@@ -302,9 +301,7 @@ function separatorsOf(locale: string | undefined): {
     let group = ',';
     let decimal = '.';
     try {
-      for (const part of new Intl.NumberFormat(locale).formatToParts(
-        12345.6,
-      )) {
+      for (const part of new Intl.NumberFormat(locale).formatToParts(12345.6)) {
         if (part.type === 'group') group = part.value;
         if (part.type === 'decimal') decimal = part.value;
       }
@@ -466,9 +463,7 @@ export function ogeFillSeries(
         return out;
       }
     }
-    if (
-      ordered.every((v) => v instanceof Date && !Number.isNaN(v.getTime()))
-    ) {
+    if (ordered.every((v) => v instanceof Date && !Number.isNaN(v.getTime()))) {
       const dates = ordered as readonly Date[];
       const sameTime = dates.every((d) => sameTimeOfDay(d, dates[0]));
       const last = dates[dates.length - 1];
@@ -508,7 +503,9 @@ export function ogeFillSeries(
           for (let i = 1; i <= count; i++) {
             const n = last + step * i;
             out.push(
-              n < 0 ? `${prefix}${n}` : `${prefix}${String(n).padStart(width, '0')}`,
+              n < 0
+                ? `${prefix}${n}`
+                : `${prefix}${String(n).padStart(width, '0')}`,
             );
           }
           return out;

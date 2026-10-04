@@ -4870,7 +4870,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   ): OgeGridCellValueWrite | null {
     const node = untracked(this.flatNodes)[row];
     const column = untracked(this.resolvedColumns)[col];
-    if (node?.kind !== 'data' || !column?.field || !column.editable) return null;
+    if (node?.kind !== 'data' || !column?.field || !column.editable)
+      return null;
     if (!ogeValueFits(value, column.dataType)) return null;
     return { key: node.key, field: column.field, value };
   }
@@ -4887,7 +4888,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       if (direction === 'up') targetRows.reverse();
       for (let col = source.left; col <= source.right; col++) {
         const values = sourceRows.map((row) => this.valueAt(row, col));
-        const series = ogeFillSeries(values, targetRows.length, direction === 'up');
+        const series = ogeFillSeries(
+          values,
+          targetRows.length,
+          direction === 'up',
+        );
         targetRows.forEach((row, i) => {
           const write = this.writeAt(row, col, series[i]);
           if (write) writes.push(write);
@@ -5192,7 +5197,10 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     )) {
       const rowIndex = Number(element.dataset['rowindex']);
       const node = flat[rowIndex];
-      if (node?.kind !== 'data' || !this.preparedTracker.isNew(element, node.data))
+      if (
+        node?.kind !== 'data' ||
+        !this.preparedTracker.isNew(element, node.data)
+      )
         continue;
       this.rowPrepared.emit({
         row: node.data,
@@ -5220,7 +5228,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
   }
 
   /** Per-column info handed to `cellClass` / `cellSpan`, stable per layout. */
-  private readonly columnInfos = computed<ReadonlyMap<string, OgeGridColumnInfo>>(
+  private readonly columnInfos = computed<
+    ReadonlyMap<string, OgeGridColumnInfo>
+  >(
     () =>
       new Map(
         this.resolvedColumns().map((column) => [
@@ -5441,7 +5451,11 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
    * uniform row heights (no `wordWrap` / `autoRowHeight`).
    */
   readonly cellSpan = input<
-    ((row: T, column: OgeGridColumnInfo) => OgeGridCellSpan | null | undefined) | undefined
+    | ((
+        row: T,
+        column: OgeGridColumnInfo,
+      ) => OgeGridCellSpan | null | undefined)
+    | undefined
   >(undefined);
 
   protected readonly spanLayout = computed<OgeGridSpanLayout>(() => {
@@ -5515,7 +5529,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** `autoFitColumn()` for every visible column. */
   autoFitColumns(): void {
-    for (const column of untracked(this.resolvedColumns)) this.fitColumn(column);
+    for (const column of untracked(this.resolvedColumns))
+      this.fitColumn(column);
   }
 
   private fitColumn(column: ResolvedColumn<T>): void {
@@ -5660,7 +5675,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       componentId: this.componentId(),
       group,
       element: () => this.hostRef.nativeElement,
-      resolve: (hit, clientY, source) => this.resolveRowDrop(hit, clientY, source),
+      resolve: (hit, clientY, source) =>
+        this.resolveRowDrop(hit, clientY, source),
       over: (_source, target) => {
         const key = target?.key ?? null;
         if (this.dropTargetKey() !== key) this.dropTargetKey.set(key);
@@ -5705,7 +5721,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         index: position === 'after' ? index + 1 : index,
       };
     } else if (
-      ogeOwnedClosest(hit, '.oge-body, .oge-no-data', host, OGE_GRID_HOST_SELECTOR)
+      ogeOwnedClosest(
+        hit,
+        '.oge-body, .oge-no-data',
+        host,
+        OGE_GRID_HOST_SELECTOR,
+      )
     ) {
       target = {
         componentId: this.componentId(),
@@ -5733,7 +5754,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     target: OgeRowDragTarget,
   ): void {
     const same = source.componentId === this.componentId();
-    if (same && target.key !== null && target.key !== source.key && target.position !== 'inside')
+    if (
+      same &&
+      target.key !== null &&
+      target.key !== source.key &&
+      target.position !== 'inside'
+    )
       this.commitRowMove(source.key, target.key);
     this.rowDrop.emit({
       sourceComponentId: source.componentId,

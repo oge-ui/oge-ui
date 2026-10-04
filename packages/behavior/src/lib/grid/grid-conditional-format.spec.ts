@@ -37,17 +37,22 @@ describe('conditional formats', () => {
 
   it('applies predicate and declarative rules with token classes', () => {
     const formats: OgeConditionalFormat<{ v: unknown }>[] = [
-      { when: { operator: 'gt', value: 40 }, style: { tone: 'danger', bold: true } },
-      { when: (value) => value === 10, class: 'low-row', style: { background: 'info' } },
+      {
+        when: { operator: 'gt', value: 40 },
+        style: { tone: 'danger', bold: true },
+      },
+      {
+        when: (value) => value === 10,
+        class: 'low-row',
+        style: { background: 'info' },
+      },
     ];
-    expect(resolveOgeConditionalFormat(formats, 50, { v: 50 }, null).classes).toEqual([
-      'oge-cf-tone-danger',
-      'oge-cf-bold',
-    ]);
-    expect(resolveOgeConditionalFormat(formats, 10, { v: 10 }, null).classes).toEqual([
-      'low-row',
-      'oge-cf-bg-info',
-    ]);
+    expect(
+      resolveOgeConditionalFormat(formats, 50, { v: 50 }, null).classes,
+    ).toEqual(['oge-cf-tone-danger', 'oge-cf-bold']);
+    expect(
+      resolveOgeConditionalFormat(formats, 10, { v: 10 }, null).classes,
+    ).toEqual(['low-row', 'oge-cf-bg-info']);
     const none = resolveOgeConditionalFormat(formats, 20, { v: 20 }, null);
     expect(none.classes).toEqual([]);
     expect(none.icon).toBeNull();
@@ -61,7 +66,10 @@ describe('conditional formats', () => {
       { min: 10, max: 110 },
     );
     expect(bar.classes).toEqual(['oge-cf-databar', 'oge-cf-bar-accent']);
-    expect(bar.vars).toEqual({ '--oge-cf-bar-start': '0', '--oge-cf-bar': '0.5' });
+    expect(bar.vars).toEqual({
+      '--oge-cf-bar-start': '0',
+      '--oge-cf-bar': '0.5',
+    });
     const scale = resolveOgeConditionalFormat(
       [{ type: 'colorScale', tones: ['danger', 'success'] }],
       35,
@@ -100,7 +108,9 @@ describe('conditional formats', () => {
   });
 
   it('picks icon-set glyphs from thresholds or the thirds of the range', () => {
-    const fmt: OgeConditionalFormat[] = [{ type: 'iconSet', thresholds: [20, 80] }];
+    const fmt: OgeConditionalFormat[] = [
+      { type: 'iconSet', thresholds: [20, 80] },
+    ];
     expect(resolveOgeConditionalFormat(fmt, 10, {}, null).icon).toBe('low');
     expect(resolveOgeConditionalFormat(fmt, 50, {}, null).icon).toBe('mid');
     expect(resolveOgeConditionalFormat(fmt, 80, {}, null).icon).toBe('high');

@@ -83,6 +83,7 @@ export class OgeGridEditHistory {
 }
 
 function sameValue(a: unknown, b: unknown): boolean {
-  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  if (a instanceof Date && b instanceof Date)
+    return a.getTime() === b.getTime();
   return Object.is(a, b);
 }

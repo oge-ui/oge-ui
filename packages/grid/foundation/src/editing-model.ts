@@ -212,9 +212,7 @@ export class EditingModel<
    * Angular runs the first validation with `emitEvent: false`, so
    * `statusChanges` alone never reports it.
    */
-  private trackAsync(
-    source: ColumnSource<T> | undefined,
-  ): AsyncValidatorFn[] {
+  private trackAsync(source: ColumnSource<T> | undefined): AsyncValidatorFn[] {
     return [...(source?.asyncValidators?.() ?? [])].map(
       (validator) => (control: AbstractControl) => {
         const result = validator(control);
@@ -314,7 +312,10 @@ function notifySettled(control: AbstractControl): void {
 function firstResult(
   result: ReturnType<AsyncValidatorFn>,
 ): Promise<ValidationErrors | null> {
-  if (result && typeof (result as { subscribe?: unknown }).subscribe === 'function') {
+  if (
+    result &&
+    typeof (result as { subscribe?: unknown }).subscribe === 'function'
+  ) {
     return new Promise((resolve, reject) => {
       const subscription = (
         result as {

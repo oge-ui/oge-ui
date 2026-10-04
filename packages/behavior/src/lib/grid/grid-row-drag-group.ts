@@ -42,7 +42,11 @@ export interface OgeRowDragParticipant {
   /** The host element hits are tested against. */
   readonly element: () => Element | null;
   /** Maps a hit inside the host to a target (`null`: not a drop spot). */
-  resolve(hit: Element, clientY: number, source: OgeRowDragSource): OgeRowDragTarget | null;
+  resolve(
+    hit: Element,
+    clientY: number,
+    source: OgeRowDragSource,
+  ): OgeRowDragTarget | null;
   /** The drag hovers this participant (`target`) or left it (`null`). */
   over(source: OgeRowDragSource, target: OgeRowDragTarget | null): void;
   /** A committed drop on this participant. */

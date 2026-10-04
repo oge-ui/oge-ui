@@ -35,7 +35,11 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 }
 
 function pointer(el: Element, type: string, init: MouseEventInit = {}): void {
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true, ...init });
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    ...init,
+  });
   Object.defineProperty(event, 'pointerId', { value: 1 });
   Object.defineProperty(event, 'pointerType', { value: 'mouse' });
   el.dispatchEvent(event);
@@ -43,15 +47,26 @@ function pointer(el: Element, type: string, init: MouseEventInit = {}): void {
 
 function key(el: Element, key: string, init: KeyboardEventInit = {}): void {
   el.dispatchEvent(
-    new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init }),
+    new KeyboardEvent('keydown', {
+      key,
+      bubbles: true,
+      cancelable: true,
+      ...init,
+    }),
   );
 }
 
-function clipboardEvent(type: 'copy' | 'paste', text = ''): Event & {
+function clipboardEvent(
+  type: 'copy' | 'paste',
+  text = '',
+): Event & {
   data: Map<string, string>;
 } {
   const data = new Map<string, string>([['text/plain', text]]);
-  const event = new Event(type, { bubbles: true, cancelable: true }) as Event & {
+  const event = new Event(type, {
+    bubbles: true,
+    cancelable: true,
+  }) as Event & {
     data: Map<string, string>;
   };
   Object.defineProperty(event, 'clipboardData', {
@@ -101,7 +116,11 @@ describe('cell range selection', () => {
   async function render() {
     const fixture = TestBed.createComponent(RangeHost);
     await settle(fixture);
-    return { fixture, el: fixture.nativeElement as HTMLElement, host: fixture.componentInstance };
+    return {
+      fixture,
+      el: fixture.nativeElement as HTMLElement,
+      host: fixture.componentInstance,
+    };
   }
 
   it('click + shift-click selects a range with aria-selected and an event', async () => {
@@ -116,7 +135,11 @@ describe('cell range selection', () => {
     expect(host.ranges).toEqual([
       { anchor: { row: 0, col: 0 }, focus: { row: 2, col: 1 } },
     ]);
-    expect(host.changes.at(-1)).toMatchObject({ rowCount: 3, columnCount: 2, cellCount: 6 });
+    expect(host.changes.at(-1)).toMatchObject({
+      rowCount: 3,
+      columnCount: 2,
+      cellCount: 6,
+    });
     expect(
       el.querySelector('.oge-viewport')?.getAttribute('aria-multiselectable'),
     ).toBe('true');
@@ -169,19 +192,18 @@ describe('cell range selection', () => {
 
   it('Ctrl+D fills down, extending nothing outside the range; Ctrl+Z reverts', async () => {
     const { fixture, el, host } = await render();
-    host.grid().selectRange({ anchor: { row: 0, col: 1 }, focus: { row: 2, col: 1 } });
+    host
+      .grid()
+      .selectRange({ anchor: { row: 0, col: 1 }, focus: { row: 2, col: 1 } });
     await settle(fixture);
     cell(el, 0, 1).focus();
     await settle(fixture);
     key(cell(el, 0, 1), 'd', { ctrlKey: true });
     await new Promise((resolve) => setTimeout(resolve));
     await settle(fixture);
-    expect([0, 1, 2, 3].map((r) => cell(el, r, 1).textContent?.trim())).toEqual([
-      '10',
-      '10',
-      '10',
-      '40',
-    ]);
+    expect([0, 1, 2, 3].map((r) => cell(el, r, 1).textContent?.trim())).toEqual(
+      ['10', '10', '10', '40'],
+    );
     key(cell(el, 0, 1), 'z', { ctrlKey: true });
     await new Promise((resolve) => setTimeout(resolve));
     await settle(fixture);
@@ -190,7 +212,9 @@ describe('cell range selection', () => {
 
   it('draws the fill handle only while editing is on', async () => {
     const { fixture, el, host } = await render();
-    host.grid().selectRange({ anchor: { row: 0, col: 0 }, focus: { row: 1, col: 1 } });
+    host
+      .grid()
+      .selectRange({ anchor: { row: 0, col: 0 }, focus: { row: 1, col: 1 } });
     await settle(fixture);
     expect(cell(el, 1, 1).querySelector('.oge-fill-handle')).not.toBeNull();
     host.editing.set(false);
@@ -304,7 +328,9 @@ describe('Excel-style header filter menu', () => {
     const el = fixture.nativeElement as HTMLElement;
     (el.querySelectorAll('.oge-header-filter-btn')[1] as HTMLElement).click();
     await settle(fixture);
-    const popup = document.querySelector('.oge-header-filter-menu') as HTMLElement;
+    const popup = document.querySelector(
+      '.oge-header-filter-menu',
+    ) as HTMLElement;
     expect(popup.querySelector('.oge-hf-conditions')).not.toBeNull();
     expect(popup.querySelectorAll('.oge-hf-condition')).toHaveLength(2);
     const grid = fixture.debugElement.query(
@@ -335,7 +361,9 @@ describe('Excel-style header filter menu', () => {
     await settle(fixture);
     await new Promise((resolve) => setTimeout(resolve));
     await settle(fixture);
-    const popup = document.querySelector('.oge-header-filter-menu') as HTMLElement;
+    const popup = document.querySelector(
+      '.oge-header-filter-menu',
+    ) as HTMLElement;
     expect(
       Array.from(popup.querySelectorAll('.oge-hf-group > span')).map((s) =>
         s.textContent?.trim(),
@@ -357,7 +385,11 @@ describe('Excel-style header filter menu', () => {
     <oge-grid
       [data]="data"
       keyField="id"
-      [paging]="{ pageSize: 1, showFirstLastButtons: true, showPageInput: true }"
+      [paging]="{
+        pageSize: 1,
+        showFirstLastButtons: true,
+        showPageInput: true,
+      }"
     >
       <oge-column field="name" />
     </oge-grid>
@@ -374,7 +406,9 @@ describe('pager first / last / go-to-page', () => {
     const el = fixture.nativeElement as HTMLElement;
     (el.querySelector('.oge-pager-last') as HTMLButtonElement).click();
     await settle(fixture);
-    const input = el.querySelector('.oge-pager-input-field') as HTMLInputElement;
+    const input = el.querySelector(
+      '.oge-pager-input-field',
+    ) as HTMLInputElement;
     expect(input.value).toBe('4');
     expect(el.querySelector('.oge-pager-input-count')?.textContent).toContain(
       'of 4',

@@ -661,8 +661,8 @@ Docs: https://ogeui.com/components/data-grid
 
 `@oge-ui/grid`
 
-- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
-- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellTemplateContext`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagingOptions`, `OgeRowClickEvent`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`
+- values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgePagerInfoTemplate`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
+- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellPreparedEvent`, `OgeCellTemplateContext`, `OgeClassValue`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeConditionalFormat`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridColumnInfo`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagerInfoTemplateContext`, `OgePagingOptions`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRowClickEvent`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragStartEvent`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`
 
 `@oge-ui/grid/export-pdf`
 
@@ -729,7 +729,7 @@ _Selection & focus_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `selectionMode` | `OgeSelectionMode` | `'none'` | Row selection: none \| single \| multiple (ctrl/shift) \| checkbox column. |
+| `selectionMode` | `OgeSelectionMode` | `'none'` | Row selection: none \| single \| multiple (ctrl/shift) \| checkbox column — or `'cell'`: rectangular cell ranges (click, Shift+click, drag, Shift+Arrow, Ctrl+click for more ranges, Ctrl+A for all) with TSV copy / paste, the fill handle and range announcements; editing then starts on double-click, F2 or Enter. |
 | `selectedKeys` | `model<RowKey[]>` | `[]` | Two-way binding of the selected row keys. |
 | `selectAllMode` | `'allPages' \| 'page'` | `'allPages'` | Header select-all scope. |
 | `selectionDeferred` | `boolean` | `false` | Selection tracked as a serializable `selectionFilter` expression — no key set. Requires a string `keyField`. |
@@ -766,6 +766,28 @@ _Appearance & misc_
 | `rowAlternation` | `boolean` | `false` | Zebra striping, stable under virtualization. |
 | `highlightChanges` | `boolean` | `false` | Briefly flashes cells patched by push updates. |
 | `rtlEnabled` | `boolean \| undefined` | `—` | `undefined` auto-detects the inherited CSS `direction`. |
+
+_Cells, ranges & clipboard_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rangeSelection` | `OgeRangeSelectionOptions \| undefined` | `—` | `{ copyHeaders, fillHandle, pasteAddsRows, multipleRanges }`: Ctrl+C prepends the captions; the fill handle (on by default while editing) can be turned off; pasted lines past the last row become new rows; Ctrl+click may add ranges (default true). |
+| `selectedRanges` | `model<readonly OgeGridCellRange[]>` | `[]` | Two-way binding of the selected ranges (`{ anchor, focus }` in flat-row / visible-column coordinates). A sort, filter, page or grouping change clears them. |
+| `pinnedTopRows` | `readonly (T \| RowKey)[] \| undefined` | `—` | Rows pinned in a sticky section under the header: data objects, or keys of loaded rows (which then leave the body). Display rows — not editable, selectable or part of arrow-key navigation; virtual scrolling compatible. |
+| `pinnedBottomRows` | `readonly (T \| RowKey)[] \| undefined` | `—` | Rows pinned in the sticky footer, above the total row. |
+| `stickyGroupRows` | `boolean` | `false` | Keeps the group rows enclosing the first visible row under the header while scrolling (all levels, virtual scrolling included). A visual aid: the real group rows stay focusable; a click on a sticky row scrolls to it. |
+| `cellSpan` | `((row: T, column: OgeGridColumnInfo) => OgeGridCellSpan \| null \| undefined) \| undefined` | `—` | Row / column spans per cell (`{ rowSpan, colSpan }`). Spans never cross group rows; the owner cell gets `aria-rowspan` / `aria-colspan` and the arrows step over the covered area. Ignored while virtualized; row spans assume uniform row heights. |
+| `columnAutoWidth` | `boolean` | `false` | Sizes every column to its header and rendered cells once the first result set rendered. |
+| `cellHintEnabled` | `boolean` | `false` | Shows truncated cell text in the overlay tooltip on hover and immediately on keyboard focus (`aria-describedby` while shown). |
+
+_Styling & drag groups_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rowClass` | `((row: T, key: RowKey) => OgeClassValue) \| undefined` | `—` | Classes for a data row — a string, an array or a `{ class: condition }` record. |
+| `cellClass` | `((row: T, column: OgeGridColumnInfo) => OgeClassValue) \| undefined` | `—` | Classes for a data cell, per row and column (`{ field, caption, dataType, index }`). |
+| `rowDragGroup` | `string \| undefined` | `—` | Grids (and other components) sharing a group name accept each other’s dragged rows; the target fires `rowDrop` with the source row — move the data in the handler. The source needs `rowDragging`. |
+| `allowDropInsideRow` | `boolean` | `false` | A drop on the middle half of a row reports `position: 'inside'` (and moves nothing by itself) instead of before / after. |
 
 #### Methods
 
@@ -835,6 +857,19 @@ _Loading, state & export_
 | `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (first non-whitespace character `=`, `+`, `-`, `@` or a full-width `＝ ＋ － ＠`, or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
 | `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
 
+_Ranges, clipboard & undo_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectRange(range, add?)` | `(range: OgeGridCellRange, add?: boolean) => void` | Selects a rectangular cell range; `add` keeps the existing ones. |
+| `clearRangeSelection()` | `() => void` | Clears every cell range. |
+| `getSelectedRangeData()` | `() => unknown[][]` | The selected cells’ values as a rows × columns matrix (the lattice Ctrl+C copies). |
+| `pasteText(text)` | `(text: string) => Promise<number>` | Pastes a TSV block into the editable cells from the focused cell (or fills the selected range with a single value): parsed with the column data type and lookup, validated, written as one undoable batch through the regular edit events. Resolves with the cells written. |
+| `fillDown() / fillRight()` | `() => Promise<number>` | Ctrl+D / Ctrl+R: copies the range’s first row (column) into the rest — a single row copies the row above it. |
+| `undo() / redo()` | `() => Promise<void>` | Ctrl+Z / Ctrl+Y: reverts or re-applies the last committed edit, paste or fill (staged in batch mode, saved otherwise). |
+| `canUndo() / canRedo()` | `() => boolean` | Whether the history has a step to revert / re-apply. |
+| `autoFitColumn(field) / autoFitColumns()` | `(field: string) => void` | Sizes a column (or every column) to its header and rendered cells — what a double-click on the resize handle and the header menu’s “Size to fit” run. |
+
 #### Events
 
 _Interaction_
@@ -883,6 +918,18 @@ _Lifecycle & errors_
 | `exporting` | `OgeExportingEvent` | Cancelable, mutable `fileName` — before a CSV export. |
 | `dataErrorOccurred` | `OgeDataErrorEvent` | `{ error }` — a DataSource load or save failed. |
 
+_Ranges, preparation & drag_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `rangeSelectionChanged` | `OgeRangeSelectionChangedEvent` | The selected ranges changed: `{ ranges, rowCount, columnCount, cellCount }`. |
+| `rowPrepared` | `OgeRowPreparedEvent<T>` | A data row element rendered a row for the first time (scrolled in, re-keyed) — `{ row, key, rowIndex, element }`, the imperative escape hatch the declarative hooks cannot cover. |
+| `cellPrepared` | `OgeCellPreparedEvent<T>` | Every data cell of a prepared row: `{ row, key, field, value, rowIndex, columnIndex, element }`. |
+| `rowDragStart` | `OgeRowDragStartEvent<T>` | Cancelable: a row drag is about to start. |
+| `rowDragOver` | `OgeRowDragOverEvent` | Cancelable, on the grid under the pointer: a dragged row of the group hovers it; set `cancel` to refuse the spot. |
+| `rowDrop` | `OgeRowDropEvent` | A row was dropped on this grid — its own (a reorder, which also fires `rowReordered`) or another component’s (`sameComponent: false`): `{ sourceComponentId, targetComponentId, sourceKey, sourceRow, targetKey, targetRow, position, toIndex }`. |
+| `rowDragEnd` | `OgeRowDragEndEvent<T>` | The source side of a drag ended: `{ key, row, dropped, targetComponentId }`. |
+
 ### OgeColumn — `<oge-column>`
 
 #### Properties
@@ -900,7 +947,7 @@ _Basics_
 | --- | --- | --- | --- |
 | `field` | `string \| undefined` | `—` | Data field (dot paths supported via accessors). |
 | `caption` | `string \| undefined` | `—` | Header text; humanized from `field` when omitted. |
-| `dataType` | `OgeDataType` | `'string'` | 'string' \| 'number' \| 'date' \| 'boolean' — drives editors, filters and the default alignment. |
+| `dataType` | `OgeDataType` | `'string'` | 'string' \| 'number' \| 'date' \| 'datetime' \| 'boolean' — drives editors, filters and the default alignment. `'datetime'` keeps the time of day (date + time cells and editor; filters by calendar day). |
 | `alignment` | `OgeColumnAlignment \| undefined` | `—` | `'start' \| 'center' \| 'end'` for cells, header and summaries (logical — `'end'` is the right edge in LTR). Unset, numbers align to the end and everything else to the start. |
 | `width / minWidth` | `number \| string / number` | `—` | Track size; `minWidth` guards resizing. |
 | `maxWidth` | `number \| undefined` | `undefined` | Upper bound in px for user resizing — pointer drag and the Alt+←/→ / separator keys; also the separator’s `aria-valuemax`. |
@@ -917,7 +964,7 @@ _Sort, filter & group_
 | `sortable / filterable` | `boolean` | `true` | Per-column opt-outs. |
 | `sortOrder / sortIndex` | `'asc' \| 'desc' / number` | `—` | Initial sort (stateKey/user wins). |
 | `groupIndex` | `number \| undefined` | `—` | Initial grouping position. |
-| `groupInterval` | `'day' \| 'month' \| 'year' \| undefined` | `—` | Date bucket when grouping by this column — `'day'` by default for `dataType="date"`, so same-day rows share a group whatever their time. Sent as `LoadOptions.group[].interval`. |
+| `groupInterval` | `'hour' \| 'day' \| 'week' \| 'month' \| 'quarter' \| 'year' \| number \| undefined` | `—` | Bucket when grouping by this column — calendar units for dates (`'day'` by default for `date` / `datetime`; `'week'` starts on the locale’s first day of week) or a positive width for numbers (`100` → 0–99, 100–199…). Captions read `Week of …`, `Q2 2026`, `100 – 200`. Sent as `LoadOptions.group[].interval`. |
 | `filterOperator` | `FilterOperator \| undefined` | `—` | Initial operator of the filter-row cell. |
 | `calculateCellValue` | `(row: T) => unknown` | `—` | Calculated column value. |
 | `calculateSortValue` | `(row: T) => unknown` | `—` | Custom sort key. |
@@ -932,6 +979,14 @@ _Summaries & editing_
 | `calculateCustomSummary` | `(rows: readonly T[]) => unknown` | `—` | Reducer for `type: 'custom'`. |
 | `editable` | `boolean` | `true` | Per-column editing opt-out. |
 | `required / validators` | `boolean / readonly ValidatorFn[]` | `—` | Editor validation. |
+
+_Formatting, merging & async validation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `conditionalFormats` | `readonly OgeConditionalFormat<T>[] \| undefined` | `—` | Declarative formats: rules `{ when: (value, row) => boolean \| { operator, value }, class?, style?: { tone, background, bold } }`, `{ type: 'dataBar' }`, `{ type: 'colorScale', tones? }` and `{ type: 'iconSet', icons?, thresholds? }`. Token classes and CSS custom properties only — themes and forced colours keep working. |
+| `mergeCells` | `boolean` | `false` | Merges vertically adjacent equal values into one cell (`aria-rowspan`); not applied while virtualized. |
+| `asyncValidators` | `readonly AsyncValidatorFn[] \| undefined` | `—` | Async Angular validators (a server uniqueness check): the editor is `aria-busy` while one runs, a commit waits for it, failures use the usual error wiring; pastes and fills run them too. |
 
 #### Types
 
@@ -1012,6 +1067,24 @@ _Filter builder_
 | --- | --- | --- |
 | `builderToExpr / exprToBuilder / describeExpr / operatorsFor` | `functions` | Convert between builder trees and `FilterExpr`; humanize expressions. |
 | `OgeBuilderGroup / OgeBuilderCondition / OgeFilterBuilderField` | `interfaces` | Filter-builder data model. |
+
+_Ranges, formats, spans & drag_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGridCellRange / OgeGridCellCoord` | `interfaces` | `{ anchor, focus }` of `{ row, col }` — flat row index and visible column index, the keyboard machine’s coordinates. |
+| `OgeRangeSelectionOptions` | `interface` | `{ copyHeaders?, fillHandle?, pasteAddsRows?, multipleRanges? }`. |
+| `OgeRangeSelectionChangedEvent` | `interface` | `{ ranges, rowCount, columnCount, cellCount }`. |
+| `OgeClassValue` | `type` | What class hooks return: `string \| string[] \| Record<string, boolean> \| null`. |
+| `OgeGridColumnInfo` | `interface` | `{ field, caption, dataType, index }` — what `cellClass` / `cellSpan` learn about a column. |
+| `OgeConditionalFormat` | `type` | A rule or a data bar / colour scale / icon set (see `conditionalFormats`). |
+| `OgeGridCellSpan` | `interface` | `{ rowSpan?, colSpan? }`. |
+| `OgeRowPreparedEvent / OgeCellPreparedEvent` | `interfaces` | Payloads of `rowPrepared` / `cellPrepared`. |
+| `OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition` | `interfaces` | Cross-component row drag payloads; `position` is `'before' \| 'after' \| 'inside'`. |
+| `OgeHeaderFilterMode` | `type` | `headerFilter.mode`: `'list'` (default) the value checklist, `'conditions'` two operator + value conditions joined by And / Or, `'both'` the Excel-style menu (conditions above the list). Date columns list their values as a year → month → day tree. |
+| `OgePagerInfoTemplate` | `directive` | `*ogePagerInfoTemplate="let info"` replaces the pager’s info text; `info` is `{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }`. `paging.showFirstLastButtons` / `paging.showPageInput` add first/last buttons and a go-to-page input. |
+| `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
+| `messages.filterByCondition / messages.filterByValues / messages.firstCondition / messages.secondCondition / messages.firstPage / messages.lastPage / messages.goToPage / messages.pageOfCount / messages.groupWeekPattern / messages.groupQuarterPattern / messages.groupRangePattern` | `string` | Header filter menu sections and condition names, pager first/last/go-to-page labels (`of {count}`) and the interval group captions (`Week of {date}`, `Q{quarter} {year}`, `{from} – {to}`). |
 
 ### Demos
 
@@ -1109,6 +1182,108 @@ export class Demo {
   ];
 
   protected readonly yearly = (row: { salary: number }): number => row.salary * 12;
+}
+```
+
+#### Formats
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeCellPreparedEvent, OgeConditionalFormat, OgeGridColumnInfo } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+  salary: number;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              [rowClass]="rowClass" [cellClass]="cellClass"
+              (cellPrepared)="onCellPrepared($event)">
+      <oge-column field="firstName" caption="Name" />
+      <oge-column field="department" caption="Department" />
+      <!-- token-only formats: rule classes, a data bar, an icon set -->
+      <oge-column field="salary" caption="Salary" dataType="number"
+                  [conditionalFormats]="salaryFormats" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly rowClass = (row: Employee) => ({
+    'is-engineering': row.department === 'Engineering',
+  });
+
+  protected readonly cellClass = (row: Employee, column: OgeGridColumnInfo) =>
+    column.field === 'firstName' && row.salary > 8500 ? 'is-top-earner' : null;
+
+  protected readonly salaryFormats: OgeConditionalFormat<Employee>[] = [
+    { when: { operator: 'ge', value: 9000 }, style: { tone: 'success', bold: true } },
+    { when: (value) => (value as number) < 6000, style: { background: 'danger' } },
+    { type: 'dataBar' },
+    { type: 'iconSet', icons: 'arrows' },
+  ];
+
+  protected onCellPrepared(event: OgeCellPreparedEvent<Employee>): void {
+    // the imperative escape hatch: decorate the element itself
+    if (event.field === 'salary') event.element.title = String(event.value);
+  }
+}
+```
+
+#### Spans
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeGridColumnInfo } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  department: string;
+  city: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- equal adjacent values merge (aria-rowspan); cellSpan spans columns -->
+    <oge-grid [data]="employees" keyField="id" [cellSpan]="cellSpan"
+              [cellHintEnabled]="true" [columnAutoWidth]="true">
+      <oge-column field="department" caption="Department" [mergeCells]="true" />
+      <oge-column field="city" caption="City" />
+      <oge-column field="firstName" caption="First name" />
+      <oge-column field="lastName" caption="Last name" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly cellSpan = (row: Employee, column: OgeGridColumnInfo) =>
+    column.field === 'firstName' && row.id === 1 ? { colSpan: 2 } : null;
 }
 ```
 
@@ -1330,6 +1505,38 @@ export class Demo {
     // (insert/update/remove) is called and the grid reloads.
     console.log(event.changes);
   }
+}
+```
+
+#### Menu
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- mode 'both': two conditions (And / Or) above the value list;
+         a date column lists its values as a year → month → day tree -->
+    <oge-grid [data]="employees" keyField="id"
+              [headerFilter]="{ mode: 'both' }">
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+      <oge-column field="hireDate" caption="Hired" dataType="date" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
 }
 ```
 
@@ -1708,6 +1915,218 @@ export class Demo {
     { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
     { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
   ];
+}
+```
+
+#### Drag
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeRowDropEvent } from '@oge-ui/grid';
+
+interface Task {
+  id: number;
+  title: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rows of one rowDragGroup move between the grids -->
+    <oge-grid id="todo" [data]="todo()" keyField="id"
+              [rowDragging]="true" rowDragGroup="tasks" (rowDrop)="onDrop($event)">
+      <oge-column field="title" caption="To do" />
+    </oge-grid>
+    <oge-grid id="done" [data]="done()" keyField="id"
+              [rowDragging]="true" rowDragGroup="tasks" (rowDrop)="onDrop($event)">
+      <oge-column field="title" caption="Done" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  protected readonly todo = signal<Task[]>([
+    { id: 1, title: 'Write specs' },
+    { id: 2, title: 'Ship it' },
+  ]);
+  protected readonly done = signal<Task[]>([{ id: 3, title: 'Plan' }]);
+
+  protected onDrop(event: OgeRowDropEvent): void {
+    if (event.sameComponent) return; // a reorder: the grid already moved it
+    const from = event.sourceComponentId === 'todo' ? this.todo : this.done;
+    const to = event.targetComponentId === 'todo' ? this.todo : this.done;
+    const row = event.sourceRow as Task;
+    from.update((rows) => rows.filter((r) => r.id !== row.id));
+    to.update((rows) => {
+      const next = [...rows];
+      next.splice(event.toIndex, 0, row);
+      return next;
+    });
+  }
+}
+```
+
+#### Pinned
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid, OgePagerInfoTemplate } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid, OgePagerInfoTemplate],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- key 3 moves out of the body into the sticky top section;
+         the totals object is a display row in the sticky footer -->
+    <oge-grid [data]="employees" keyField="id"
+              [pinnedTopRows]="[3]"
+              [pinnedBottomRows]="[totals]"
+              [paging]="{ pageSize: 3, showFirstLastButtons: true, showPageInput: true }">
+      <oge-column field="firstName" caption="Name" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+      <span *ogePagerInfoTemplate="let info">
+        {{ info.firstRow }}–{{ info.lastRow }} of {{ info.totalCount }}
+      </span>
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly totals = { id: 0, firstName: 'Total', salary: 36900 };
+}
+```
+
+#### Sticky
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- the enclosing group rows stay under the header while you scroll -->
+    <oge-grid [data]="employees" keyField="id" style="height: 360px"
+              [virtualScroll]="true" [stickyGroupRows]="true"
+              [groupBy]="['department', 'hireDate']">
+      <oge-column field="department" caption="Department" />
+      <!-- quarter buckets: "Q2 2026"; numeric columns take a width, e.g. [groupInterval]="10000" -->
+      <oge-column field="hireDate" caption="Hired" dataType="date" groupInterval="quarter" />
+      <oge-column field="firstName" caption="Name" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+}
+```
+
+#### Async
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { AbstractControl, ValidationErrors } from '@angular/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid [data]="employees" keyField="id"
+              [editing]="{ mode: 'row', allowUpdating: true }">
+      <!-- the editor is aria-busy while the check runs; Save waits for it -->
+      <oge-column field="lastName" caption="Last name (unique)"
+                  [asyncValidators]="[uniqueName]" />
+      <oge-column field="hireDate" caption="Hired at" dataType="datetime" />
+    </oge-grid>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  /** Pretends to ask a server whether the name is taken. */
+  protected readonly uniqueName = (
+    control: AbstractControl,
+  ): Promise<ValidationErrors | null> =>
+    new Promise((resolve) =>
+      setTimeout(
+        () => resolve(control.value === 'Taken' ? { taken: true } : null),
+        600,
+      ),
+    );
+}
+```
+
+#### Range
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+import type { OgeGridCellRange, OgeRangeSelectionChangedEvent } from '@oge-ui/grid';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- click / Shift+click / drag / Shift+Arrow select ranges; Ctrl+C copies TSV,
+         Ctrl+V pastes from Excel, drag the corner handle (or Ctrl+D / Ctrl+R) to fill,
+         Ctrl+Z / Ctrl+Y undo and redo -->
+    <oge-grid [data]="employees" keyField="id"
+              selectionMode="cell"
+              [rangeSelection]="{ copyHeaders: true, pasteAddsRows: true }"
+              [editing]="{ mode: 'batch', allowUpdating: true }"
+              [(selectedRanges)]="ranges"
+              (rangeSelectionChanged)="onRanges($event)">
+      <oge-column field="firstName" caption="First name" />
+      <oge-column field="department" caption="Department" />
+      <oge-column field="salary" caption="Salary" dataType="number" />
+      <oge-column field="hireDate" caption="Hired" dataType="date" />
+      <oge-column field="id" caption="Id" [editable]="false" />
+    </oge-grid>
+    <p>{{ summary() }}</p>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  protected readonly ranges = signal<readonly OgeGridCellRange[]>([]);
+  protected readonly summary = signal('');
+
+  protected onRanges(event: OgeRangeSelectionChangedEvent): void {
+    this.summary.set(`${event.cellCount} cells in ${event.ranges.length} range(s)`);
+  }
 }
 ```
 
@@ -16790,7 +17209,7 @@ Framework-free data engine shared by every package: sort/filter/group/aggregate 
 
 `@oge-ui/core`
 
-- values: `ArrayDataSource`, `CursorDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OGE_PAGE_ELLIPSIS`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMinutes`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildSearchHighlightSegments`, `buildTreeIndex`, `clampDate`, `clampValue`, `colorsEqual`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `contrastForeground`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `formatColor`, `groupKeyFilter`, `groupKeyOf`, `groupNodeKey`, `groupRows`, `guardCsvFormula`, `hsvaToRgba`, `intervalKey`, `intervalRange`, `isUnsafeStateKey`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeColor`, `normalizeSplitTracks`, `ogeLiveConfig`, `parseColor`, `parseStateJson`, `pathKey`, `pathToFilterExpr`, `rangesOverlap`, `ratioToValue`, `relativeLuminance`, `resizeSplitAt`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveKeySelector`, `resolveMenubarCompact`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolveSelectedKeys`, `resolveWeekendDays`, `rgbaToHsva`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `sanitizeGridStateSnapshot`, `sanitizePivotGridStateSnapshot`, `sanitizeTreeListStateSnapshot`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `startOfMonth`, `startOfWeek`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `weekNumber`
+- values: `ArrayDataSource`, `CursorDataSource`, `CustomDataSource`, `LocalPivotStore`, `ODataDataSource`, `OGE_PAGE_ELLIPSIS`, `OffsetTree`, `PivotEngine`, `accValue`, `accumulate`, `addDays`, `addMinutes`, `addMonths`, `addYears`, `ancestorsOf`, `applyDisplayModes`, `applyFilter`, `applyPaging`, `applySort`, `buildCsv`, `buildODataQuery`, `buildPivotCsv`, `buildSearchFilter`, `buildSearchHighlightHtml`, `buildSearchHighlightSegments`, `buildTreeIndex`, `clampDate`, `clampValue`, `colorsEqual`, `compareValues`, `computePivot`, `computeSummaries`, `computeTreeCheckStates`, `computeWindow`, `constrainRangeValue`, `contrastForeground`, `createAcc`, `createFieldAccessor`, `createFilterPredicate`, `createTypeAheadBuffer`, `drillDownFilter`, `drillDownRows`, `edgeEnabledIndex`, `escapeCsvCell`, `filterTreeKeys`, `fitToolbarItems`, `flattenGroupedData`, `flattenNestedTree`, `flattenTreeData`, `foldText`, `foldTextWithMap`, `formatColor`, `groupKeyFilter`, `groupKeyOf`, `groupNodeKey`, `groupRows`, `guardCsvFormula`, `hsvaToRgba`, `intervalKey`, `intervalRange`, `isGroupInterval`, `isUnsafeStateKey`, `matchByPrefix`, `mergeAcc`, `monthMatrix`, `nextDay`, `normalizeColor`, `normalizeSplitTracks`, `ogeLiveConfig`, `parseColor`, `parseStateJson`, `pathKey`, `pathToFilterExpr`, `rangesOverlap`, `ratioToValue`, `relativeLuminance`, `resizeSplitAt`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveKeySelector`, `resolveMenubarCompact`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolveSelectedKeys`, `resolveWeekendDays`, `rgbaToHsva`, `runAsyncGuard`, `runLoadOptions`, `sameDay`, `sameMonth`, `sanitizeGridStateSnapshot`, `sanitizePivotGridStateSnapshot`, `sanitizeTreeListStateSnapshot`, `serializeLikeOriginal`, `snapToStep`, `sortAxisChildren`, `splitSeparatorRange`, `splitTrackPx`, `startOfDay`, `startOfMonth`, `startOfWeek`, `stepEnabledIndex`, `toLocalDate`, `toggleTreeSelection`, `valueToRatio`, `weekNumber`
 - types: `ArrayDataSourceOptions`, `CheckState`, `CsvColumn`, `CsvOptions`, `CursorDataSourceOptions`, `CursorPage`, `CursorPageRequest`, `CustomDataSourceOptions`, `CustomSummaryFn`, `CustomSummaryMap`, `DataChange`, `DataRowNode`, `DataSource`, `DataSourceCapabilities`, `DetailRowNode`, `FillerRowNode`, `FilterExpr`, `FilterOperator`, `FlattenConfig`, `FlattenTreeConfig`, `FoldedText`, `GridStateSnapshot`, `GroupDescriptor`, `GroupInterval`, `GroupRowNode`, `GroupedItem`, `LoadOptions`, `LoadResult`, `LocalPivotStoreOptions`, `NestedTreeConfig`, `NestedTreeResult`, `ODataDataSourceOptions`, `ODataQueryOptions`, `OgeAsyncGuard`, `OgeColorFormat`, `OgeDrawerLayoutMode`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeGuardHandlers`, `OgeHsva`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeNavDirection`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePivotStore`, `OgeRangeThumb`, `OgeRgba`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitResult`, `OgeToolbarOverflowPolicy`, `OgeTypeAheadBuffer`, `PivotAcc`, `PivotArea`, `PivotAxisNode`, `PivotAxisPayloadNode`, `PivotComputeOptions`, `PivotComputeSettings`, `PivotCsvOptions`, `PivotDrillDownArgs`, `PivotFieldConfig`, `PivotFieldDescriptor`, `PivotFieldFns`, `PivotFieldStateEntry`, `PivotGridStateSnapshot`, `PivotGroupInterval`, `PivotLoadOptions`, `PivotLoadResult`, `PivotPath`, `PivotResult`, `PivotRunningTotal`, `PivotSlot`, `PivotSummaryDisplayMode`, `RowKey`, `RowNode`, `RunLoadOptionsConfig`, `SearchHighlightSegment`, `SortDescriptor`, `SortDirection`, `SubscribableLike`, `SummaryDescriptor`, `SummaryRowNode`, `SummaryType`, `SummaryValue`, `TreeFilterMode`, `TreeIndex`, `TreeIndexConfig`, `TreeListStateSnapshot`, `ValueAccessor`, `ViewportWindow`, `WeekNumberRule`
 
 ## @oge-ui/react-buttons
@@ -28434,7 +28853,7 @@ _Selection & focus_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `selectionMode` | `'none' \| 'single' \| 'multiple' \| 'checkbox'` | `'none'` | Row selection: single, multiple (ctrl/shift ranges, Ctrl+A) or a checkbox column with a select-all header. |
+| `selectionMode` | `'none' \| 'single' \| 'multiple' \| 'checkbox' \| 'cell'` | `'none'` | Row selection: single, multiple (ctrl/shift ranges, Ctrl+A) or a checkbox column with a select-all header — or `'cell'`: rectangular cell ranges with TSV copy / paste and the fill handle (editing then starts on double-click, F2 or Enter). |
 | `selectedKeys / defaultSelectedKeys` | `readonly RowKey[]` | `[]` | The selected row keys — controlled with `selectedKeys` + `onSelectedKeysChange`, or seeded once with `defaultSelectedKeys`. |
 | `selectionDeferred` | `boolean` | `false` | Deferred selection: the selection is an expression rather than a key set, so "select all" over a remote source never materializes keys. Requires a string `keyField`. |
 | `selectionFilter` | `FilterExpr \| null` | `null` | The selection expression (deferred mode) — controlled with `onSelectionFilterChange`. |
@@ -28477,6 +28896,30 @@ _Appearance & misc_
 | `rtlEnabled` | `boolean` | `undefined` | Right-to-left layout. `undefined` auto-detects the inherited CSS `direction`; `true`/`false` force it. |
 | `renderNoData` | `(context: OgeGridNoDataContext) => ReactNode` | `undefined` | Renders the empty state instead of the `noData` message — the React form of `*ogeNoDataTemplate`. |
 | `className / style / ariaLabel` | `string \| CSSProperties` | `undefined` | Host class, inline style (give the grid its height here) and the accessible name of the grid. |
+
+_Cells, ranges & clipboard_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rangeSelection` | `OgeRangeSelectionOptions` | `—` | `{ copyHeaders, fillHandle, pasteAddsRows, multipleRanges }`. |
+| `selectedRanges / defaultSelectedRanges` | `readonly OgeGridCellRange[]` | `—` | The selected ranges — controlled with `selectedRanges` + `onSelectedRangesChange`, or seeded once. A sort, filter, page or grouping change clears them. |
+| `pinnedTopRows` | `readonly (T \| RowKey)[]` | `—` | Rows pinned in a sticky section under the header: data objects, or keys of loaded rows (which then leave the body). Display rows; virtual scrolling compatible. |
+| `pinnedBottomRows` | `readonly (T \| RowKey)[]` | `—` | Rows pinned in the sticky footer, above the total row. |
+| `stickyGroupRows` | `boolean` | `false` | Keeps the enclosing group rows under the header while scrolling — a visual aid; a click scrolls to the group. |
+| `cellSpan` | `(row: T, column: OgeGridColumnInfo) => OgeGridCellSpan \| null \| undefined` | `—` | Row / column spans per cell, with `aria-rowspan` / `aria-colspan` and span-aware arrows. Ignored while virtualized. |
+| `columnAutoWidth` | `boolean` | `false` | Sizes every column to its content once the first result set rendered. |
+| `cellHintEnabled` | `boolean` | `false` | Shows truncated cell text in the overlay tooltip on hover and on keyboard focus. |
+
+_Styling & drag groups_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rowClass` | `(row: T, key: RowKey) => OgeClassValue` | `—` | Classes for a data row — string, array or `{ class: condition }` record. |
+| `cellClass` | `(row: T, column: OgeGridColumnInfo) => OgeClassValue` | `—` | Classes for a data cell, per row and column. |
+| `rowDragGroup` | `string` | `—` | Grids sharing a group name accept each other’s dragged rows; the target’s `onRowDrop` carries the source row. The source needs `rowDragging`. |
+| `allowDropInsideRow` | `boolean` | `false` | A drop on the middle half of a row reports `position: 'inside'`. |
+| `renderPagerInfo` | `(context: OgePagerInfoContext) => ReactNode` | `—` | Renders the pager’s info text — the React form of `*ogePagerInfoTemplate`. |
+| `id` | `string` | `—` | Host element id — also the component id the row-drag events report. |
 
 #### Methods
 
@@ -28546,6 +28989,19 @@ _Editing_
 | `discardChanges(): void` | `handle` | Drops every pending change and closes any open editor; fires `onEditCanceled` when anything was open or pending. |
 | `hasChanges(): boolean` | `handle` | Whether unsaved edits exist: staged changes, added or removed rows. |
 
+_Ranges, clipboard & undo_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectRange(range, add?)` | `(range: OgeGridCellRange, add?: boolean) => void` | Selects a rectangular cell range; `add` keeps the existing ones. |
+| `clearRangeSelection()` | `() => void` | Clears every cell range. |
+| `getSelectedRangeData()` | `() => unknown[][]` | The selected cells’ values as a rows × columns matrix (the lattice Ctrl+C copies). |
+| `pasteText(text)` | `(text: string) => Promise<number>` | Pastes a TSV block into the editable cells from the focused cell (or fills the selected range with a single value): parsed with the column data type and lookup, validated, written as one undoable batch through the regular edit events. Resolves with the cells written. |
+| `fillDown() / fillRight()` | `() => Promise<number>` | Ctrl+D / Ctrl+R: copies the range’s first row (column) into the rest — a single row copies the row above it. |
+| `undo() / redo()` | `() => Promise<void>` | Ctrl+Z / Ctrl+Y: reverts or re-applies the last committed edit, paste or fill (staged in batch mode, saved otherwise). |
+| `canUndo() / canRedo()` | `() => boolean` | Whether the history has a step to revert / re-apply. |
+| `autoFitColumn(field) / autoFitColumns()` | `(field: string) => void` | Sizes a column (or every column) to its header and rendered cells — what a double-click on the resize handle and the header menu’s “Size to fit” run. |
+
 #### Events
 
 _Interaction_
@@ -28595,6 +29051,18 @@ _Lifecycle & errors_
 | `onExporting` | `(event: OgeExportingEvent) => void` | Cancelable: before a CSV export starts; `fileName` is mutable. |
 | `onDataErrorOccurred` | `(event: OgeDataErrorEvent) => void` | A DataSource load failed. |
 
+_Ranges, preparation & drag_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onRangeSelectionChanged` | `(event: OgeRangeSelectionChangedEvent) => void` | The selected ranges changed: `{ ranges, rowCount, columnCount, cellCount }`. |
+| `onRowPrepared` | `(event: OgeRowPreparedEvent<T>) => void` | A data row element rendered a row for the first time — `{ row, key, rowIndex, element }`. |
+| `onCellPrepared` | `(event: OgeCellPreparedEvent<T>) => void` | Every data cell of a prepared row. |
+| `onRowDragStart` | `(event: OgeRowDragStartEvent<T>) => void` | Cancelable: a row drag is about to start. |
+| `onRowDragOver` | `(event: OgeRowDragOverEvent) => void` | Cancelable, on the grid under the pointer; set `cancel` to refuse the spot. |
+| `onRowDrop` | `(event: OgeRowDropEvent) => void` | A row was dropped on this grid — its own or another component’s (`sameComponent: false`); move the data in the handler. |
+| `onRowDragEnd` | `(event: OgeRowDragEndEvent<T>) => void` | The source side of a drag ended. |
+
 ### OgeGridColumnProps
 
 #### Properties
@@ -28606,7 +29074,7 @@ _Basics_
 | `field` | `string` | `undefined` | Dotted paths are supported, e.g. `"customer.name"`. |
 | `caption` | `string` | `humanized field` | Header text; derived from `field` when omitted. |
 | `width` | `number \| string` | `undefined` | Number → px; string is used verbatim (e.g. `'2fr'`, `'150px'`). |
-| `dataType` | `'string' \| 'number' \| 'date' \| 'boolean'` | `'string'` | Drives the default formatting, the filter-row editor, the operator set and the default alignment. |
+| `dataType` | `'string' \| 'number' \| 'date' \| 'datetime' \| 'boolean'` | `'string'` | Drives the default formatting, the filter-row editor, the operator set and the default alignment. `'datetime'` keeps the time of day. |
 | `alignment` | `'start' \| 'center' \| 'end'` | `undefined` | Alignment of the cells, header and summaries (logical — `'end'` is the right edge in LTR). Unset, numbers align to the end and everything else to the start. |
 | `format` | `(value: unknown) => string` | `undefined` | Custom value formatter applied to the default (non-rendered) cell text and to exports. |
 | `visible` | `boolean` | `true` | Hides the column without removing it. |
@@ -28628,7 +29096,7 @@ _Sort, filter & group_
 | `filterOperator` | `FilterOperator` | `by dataType` | Filter-row operator override (default: `contains` for text, `eq` for number/date). |
 | `calculateFilterExpression` | `(value, operator) => FilterExpr \| null` | `undefined` | Custom filter expression for filter-row input on this column. |
 | `groupIndex` | `number` | `undefined` | Initial group level of this column (0 = first). |
-| `groupInterval` | `'day' \| 'month' \| 'year'` | `undefined` | Date bucket when grouping by this column — `'day'` by default for `dataType: 'date'`, so same-day rows share a group whatever their time. Sent as `LoadOptions.group[].interval`. |
+| `groupInterval` | `'hour' \| 'day' \| 'week' \| 'month' \| 'quarter' \| 'year' \| number` | `undefined` | Bucket when grouping by this column — calendar units for dates (`'day'` by default for `date` / `datetime`; `'week'` starts on the locale’s first day) or a positive width for numbers. Sent as `LoadOptions.group[].interval`. |
 
 _Summaries & editing_
 
@@ -28650,6 +29118,13 @@ _Render props_
 | --- | --- | --- | --- |
 | `renderCell` | `(context: OgeGridCellRenderContext<T>) => ReactNode` | `undefined` | Renders the cell content from `{ value, row, rowIndex, key, column }` — the React form of `*ogeCellTemplate`. |
 | `renderHeader` | `(context: OgeGridHeaderRenderContext<T>) => ReactNode` | `undefined` | Renders the header caption from `{ column, caption }` — the React form of `*ogeHeaderTemplate`. |
+
+_Formatting, merging & async validation_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `conditionalFormats` | `readonly OgeConditionalFormat<T>[]` | `—` | Declarative formats: rules, data bars, colour scales and icon sets — token classes and CSS custom properties only. |
+| `mergeCells` | `boolean` | `false` | Merges vertically adjacent equal values into one cell (`aria-rowspan`). |
 
 ### Grid types & configuration
 
@@ -28692,6 +29167,24 @@ _Configuration_
 | `messages.resizeColumn / messages.columnResized / messages.columnMoved / messages.rowMoved / messages.treeRowMoved / messages.groupMoved / messages.groupRemoved` | `string` | The keyboard alternatives to dragging (WCAG 2.1.1 / 2.5.7): the resize separator’s name (`Resize {column}`) and the polite live-region announcements after a keyboard resize (`{column} width {width} pixels`), column move (`{column} moved to position {position} of {total}`), row move (`Row moved to position {position} of {total}`), tree-row move (`Row moved to level {level}, position {position} of {total}`) and group-chip reorder / removal (`Grouping by {column} moved to position {position} of {total}`, `Grouping by {column} removed`). |
 | `messages.booleanTrueLabel / messages.booleanFalseLabel` | `string` | Screen-reader text of a default-rendered boolean cell (`Yes` / `No`). The visible `booleanTrue` / `booleanFalse` glyph (`✓` / `✗`, also the CSV text) is rendered `aria-hidden`; the label is rendered visually hidden beside it. Columns with a custom `format`, a lookup or a cell template render their own text. Localizing `booleanTrue` / `booleanFalse` to words? Set the labels too — they are announced, the glyph text is not. |
 | `messages.sortAscendingAnnouncement / messages.sortDescendingAnnouncement / messages.sortClearedAnnouncement / messages.rowCountAnnouncement / messages.rowCountOneAnnouncement / messages.pageAnnouncement / messages.groupExpandedAnnouncement / messages.groupCollapsedAnnouncement / messages.rowExpandedAnnouncement / messages.rowCollapsedAnnouncement / messages.selectionCountAnnouncement / messages.validationErrorAnnouncement` | `string` | Live-announcement patterns, `{placeholder}`-interpolated. Defaults: `Sorted by {column}, ascending` / `descending`, `Sort cleared`, `{count} rows` / `{count} row`, `Page {n} of {total}`, `Group {value} expanded` / `collapsed`, `{value} expanded` / `collapsed` (tree list), `{count} rows selected` and `{column}: {error}` (spoken assertively when a save is blocked by an invalid editor). |
+
+_Ranges, formats, spans & drag_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeGridCellRange / OgeGridCellCoord` | `interfaces` | `{ anchor, focus }` of `{ row, col }` — flat row index and visible column index, the keyboard machine’s coordinates. |
+| `OgeRangeSelectionOptions` | `interface` | `{ copyHeaders?, fillHandle?, pasteAddsRows?, multipleRanges? }`. |
+| `OgeRangeSelectionChangedEvent` | `interface` | `{ ranges, rowCount, columnCount, cellCount }`. |
+| `OgeClassValue` | `type` | What class hooks return: `string \| string[] \| Record<string, boolean> \| null`. |
+| `OgeGridColumnInfo` | `interface` | `{ field, caption, dataType, index }` — what `cellClass` / `cellSpan` learn about a column. |
+| `OgeConditionalFormat` | `type` | A rule or a data bar / colour scale / icon set (see `conditionalFormats`). |
+| `OgeGridCellSpan` | `interface` | `{ rowSpan?, colSpan? }`. |
+| `OgeRowPreparedEvent / OgeCellPreparedEvent` | `interfaces` | Payloads of `rowPrepared` / `cellPrepared`. |
+| `OgeRowDragStartEvent / OgeRowDragOverEvent / OgeRowDropEvent / OgeRowDragEndEvent / OgeRowDropPosition` | `interfaces` | Cross-component row drag payloads; `position` is `'before' \| 'after' \| 'inside'`. |
+| `OgeHeaderFilterMode` | `type` | `headerFilter.mode`: `'list'` (default) the value checklist, `'conditions'` two operator + value conditions joined by And / Or, `'both'` the Excel-style menu (conditions above the list). Date columns list their values as a year → month → day tree. |
+| `OgePagerInfoContext` | `interface` | What `renderPagerInfo` / `<OgePager renderInfo>` receive: `{ pageIndex, pageCount, totalCount, pageSize, firstRow, lastRow, text }`. `paging.showFirstLastButtons` / `paging.showPageInput` (and the pager’s `showFirstLast` / `showPageInput`) add first/last buttons and a go-to-page input. |
+| `messages.rangeSelectedAnnouncement / messages.cellsPastedAnnouncement / messages.cellsFilledAnnouncement / messages.undoAnnouncement / messages.redoAnnouncement / messages.fillHandle / messages.validationPending / messages.autoFitColumn` | `string` | Range, paste, fill and undo announcements (`{rows} by {columns} cells selected`, `{count} cells pasted`…), the fill handle’s tooltip, the busy editor’s status text and the “Size to fit” header-menu item. |
+| `messages.filterByCondition / messages.filterByValues / messages.firstCondition / messages.secondCondition / messages.firstPage / messages.lastPage / messages.goToPage / messages.pageOfCount / messages.groupWeekPattern / messages.groupQuarterPattern / messages.groupRangePattern` | `string` | Header filter menu sections and condition names, pager first/last/go-to-page labels (`of {count}`) and the interval group captions (`Week of {date}`, `Q{quarter} {year}`, `{from} – {to}`). |
 
 ### Demos
 
@@ -28918,6 +29411,106 @@ export function RtlGrid() {
       columns={columns}
       rtlEnabled
       paging={{ pageSize: 6, displayMode: 'compact' }}
+    />
+  );
+}
+```
+
+#### Class hooks & formatting rules
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+const columns: OgeGridColumnProps<Employee>[] = [
+  { field: 'firstName', caption: 'Name' },
+  { field: 'department', caption: 'Department' },
+  {
+    field: 'salary',
+    caption: 'Salary',
+    dataType: 'number',
+    // token-only formats: rule classes, a data bar
+    conditionalFormats: [
+      { when: { operator: 'ge', value: 100000 }, style: { tone: 'success', bold: true } },
+      { when: (value) => (value as number) < 45000, style: { background: 'danger' } },
+      { type: 'dataBar' },
+    ],
+  },
+  {
+    field: 'id',
+    caption: 'Score',
+    dataType: 'number',
+    conditionalFormats: [{ type: 'colorScale' }, { type: 'iconSet' }],
+  },
+];
+
+export function FormattedGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={columns}
+      rowClass={(row) => ({ 'is-engineering': row.department === 'Engineering' })}
+      cellClass={(row, column) =>
+        column.field === 'firstName' && row.salary > 100000 ? 'is-top-earner' : null
+      }
+      onCellPrepared={(event) => {
+        // the imperative escape hatch: decorate the element itself
+        if (event.field === 'salary') event.element.title = String(event.value);
+      }}
+    />
+  );
+}
+```
+
+#### Merged cells, spans, auto-fit & hints
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+}
+
+declare const employees: Employee[];
+
+export function SpannedGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      // equal adjacent values merge (aria-rowspan); cellSpan spans columns
+      columns={[
+        { field: 'department', caption: 'Department', mergeCells: true },
+        { field: 'city', caption: 'City' },
+        { field: 'firstName', caption: 'First name', width: 90 },
+        { field: 'lastName', caption: 'Last name' },
+      ]}
+      cellSpan={(row, column) =>
+        column.field === 'firstName' && row.id === 1 ? { colSpan: 2 } : null
+      }
+      cellHintEnabled
+      columnAutoWidth
     />
   );
 }
@@ -29218,6 +29811,40 @@ export function FilteredGrid() {
       filterValue={filter}
       onFilterValueChange={setFilter}
       paging={{ pageSize: 12 }}
+    />
+  );
+}
+```
+
+#### Excel-style filter menu
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+export function FilterMenuGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      // mode 'both': two conditions (And / Or) above the value list;
+      // a date column lists its values as a year → month → day tree
+      headerFilter={{ mode: 'both' }}
+      columns={[
+        { field: 'firstName', caption: 'First Name' },
+        { field: 'salary', caption: 'Salary', dataType: 'number' },
+        { field: 'hireDate', caption: 'Hired', dataType: 'date' },
+      ]}
     />
   );
 }
@@ -29767,6 +30394,126 @@ export function ImperativeState() {
 }
 ```
 
+#### Pinned rows & pager options
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+const totals = { id: 0, firstName: 'Total', department: '', salary: 36900, hireDate: new Date() };
+
+export function PinnedGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      columns={[
+        { field: 'firstName', caption: 'Name' },
+        { field: 'salary', caption: 'Salary', dataType: 'number' },
+      ]}
+      // key 3 moves out of the body into the sticky top section;
+      // the totals object is a display row in the sticky footer
+      pinnedTopRows={[3]}
+      pinnedBottomRows={[totals]}
+      paging={{ pageSize: 5, showFirstLastButtons: true, showPageInput: true }}
+      renderPagerInfo={(info) => `${info.firstRow}–${info.lastRow} of ${info.totalCount}`}
+    />
+  );
+}
+```
+
+#### Sticky group rows
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  department: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+export function StickyGroupsGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      style={{ height: 360 }}
+      virtualScroll
+      stickyGroupRows
+      groupBy={['department', 'hireDate']}
+      columns={[
+        { field: 'department', caption: 'Department' },
+        // quarter buckets read "Q2 2026"; numbers take a width, e.g. groupInterval: 10000
+        { field: 'hireDate', caption: 'Hired', dataType: 'date', groupInterval: 'quarter' },
+        { field: 'firstName', caption: 'Name' },
+      ]}
+    />
+  );
+}
+```
+
+#### Drag rows between grids
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeRowDropEvent } from '@oge-ui/react-grid';
+
+interface Task {
+  id: number;
+  title: string;
+}
+
+export function TaskBoards() {
+  const [todo, setTodo] = useState<Task[]>([
+    { id: 1, title: 'Write specs' },
+    { id: 2, title: 'Ship it' },
+  ]);
+  const [done, setDone] = useState<Task[]>([{ id: 3, title: 'Plan' }]);
+
+  const onDrop = (event: OgeRowDropEvent) => {
+    if (event.sameComponent) return; // a reorder: the grid already moved it
+    const row = event.sourceRow as Task;
+    const [setFrom, setTo] =
+      event.targetComponentId === 'todo' ? [setDone, setTodo] : [setTodo, setDone];
+    setFrom((rows) => rows.filter((r) => r.id !== row.id));
+    setTo((rows) => {
+      const next = [...rows];
+      next.splice(event.toIndex, 0, row);
+      return next;
+    });
+  };
+  return (
+    <>
+      <OgeGrid id="todo" data={todo} keyField="id" rowDragging rowDragGroup="tasks"
+               columns={[{ field: 'title', caption: 'To do' }]} onRowDrop={onDrop} />
+      <OgeGrid id="done" data={done} keyField="id" rowDragging rowDragGroup="tasks"
+               columns={[{ field: 'title', caption: 'Done' }]} onRowDrop={onDrop} />
+    </>
+  );
+}
+```
+
 #### Playground — every feature on
 
 ```ts
@@ -29816,6 +30563,101 @@ export function EmployeeGrid() {
       focusedRowEnabled
       rowDragging
       rtlEnabled
+    />
+  );
+}
+```
+
+#### Ranges, copy, paste & fill
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridCellRange } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+const columns = [
+  { field: 'firstName', caption: 'First name' },
+  { field: 'department', caption: 'Department' },
+  { field: 'salary', caption: 'Salary', dataType: 'number' as const },
+  { field: 'hireDate', caption: 'Hired', dataType: 'date' as const },
+  { field: 'id', caption: 'Id', editable: false },
+];
+
+export function RangeGrid() {
+  const [ranges, setRanges] = useState<readonly OgeGridCellRange[]>([]);
+  const [summary, setSummary] = useState('');
+  return (
+    <>
+      {/* click / Shift+click / drag / Shift+Arrow select; Ctrl+C copies TSV,
+          Ctrl+V pastes from Excel, drag the corner handle (or Ctrl+D / Ctrl+R)
+          to fill, Ctrl+Z / Ctrl+Y undo and redo */}
+      <OgeGrid
+        data={employees}
+        keyField="id"
+        columns={columns}
+        selectionMode="cell"
+        rangeSelection={{ copyHeaders: true, pasteAddsRows: true }}
+        editing={{ mode: 'batch', allowUpdating: true }}
+        selectedRanges={ranges}
+        onSelectedRangesChange={setRanges}
+        onRangeSelectionChanged={(event) =>
+          setSummary(`${event.cellCount} cells in ${event.ranges.length} range(s)`)
+        }
+      />
+      <p>{summary}</p>
+    </>
+  );
+}
+```
+
+#### Async validation
+
+```ts
+'use client';
+
+import { OgeGrid } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  salary: number;
+  hireDate: Date;
+}
+
+declare const employees: Employee[];
+
+/** Pretends to ask a server whether the name is taken. */
+const uniqueName = (value: unknown) =>
+  new Promise<string | null>((resolve) =>
+    setTimeout(() => resolve(value === 'Taken' ? 'This name is taken' : null), 600),
+  );
+
+export function AsyncValidationGrid() {
+  return (
+    <OgeGrid
+      data={employees}
+      keyField="id"
+      editing={{ mode: 'row', allowUpdating: true }}
+      columns={[
+        // a rule returning a promise: the editor is aria-busy, Save waits for it
+        { field: 'lastName', caption: 'Last name (unique)', validators: [uniqueName] },
+        { field: 'hireDate', caption: 'Hired at', dataType: 'datetime' },
+      ]}
     />
   );
 }
@@ -32257,8 +33099,8 @@ Framework-free interaction and accessibility layer shared by every package: popu
 
 `@oge-ui/behavior`
 
-- values: `DragDepthCounter`, `OGE_AUTO_SCROLL_EDGE`, `OGE_AUTO_SCROLL_MAX_SPEED`, `OGE_BREADCRUMB_ELLIPSIS_FALLBACK`, `OGE_COLUMN_RESIZE_FINE_STEP`, `OGE_COLUMN_RESIZE_FLOOR`, `OGE_COLUMN_RESIZE_STEP`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_ADAPTIVE_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_FORMS_CONFIG`, `OGE_DEFAULT_FORMS_MESSAGES`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_GRID_MESSAGES`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_DEFAULT_OVERLAY_TIMINGS`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_DEFAULT_TOAST_DEFAULTS`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DEFAULT_UPLOAD_CONFIG`, `OGE_DEFAULT_UPLOAD_MESSAGES`, `OGE_GESTURE_THRESHOLD`, `OGE_GRID_HOST_SELECTOR`, `OGE_GRID_WINDOW_BLOCK_SIZE`, `OGE_LIVE_ANNOUNCER_ATTR`, `OGE_LIVE_ANNOUNCER_CLASS`, `OGE_LONG_PRESS_DELAY`, `OGE_MENUBAR_HOVER_DELAY`, `OGE_MODAL_MIN_RESIZE`, `OGE_PAGE_ELLIPSIS`, `OGE_PAGINATION_DEFAULT_COMPACT_BELOW`, `OGE_PAGINATION_DEFAULT_MAX_BUTTONS`, `OGE_POPUP_AVAILABLE_HEIGHT_VAR`, `OGE_SELECT_OPTION_HEIGHT`, `OGE_SHEET_FOCUS_ATTR`, `OGE_SHEET_SWIPE_DISMISS`, `OGE_SLIDER_MAX_TICKS`, `OGE_SPLITTER_FULL_TRAVEL`, `OGE_SPLITTER_GRIP_SIDES`, `OGE_TAB_DRAG_THRESHOLD`, `OGE_TOAST_ANNOUNCE_DELAY_MS`, `OGE_TOAST_EXIT_MS`, `OGE_TOAST_POSITIONS`, `OGE_TOOLBAR_STOP_SELECTOR`, `OGE_TOOLTIP_PANEL_OPTIONS`, `OGE_TREE_DEFAULT_ITEM_HEIGHT`, `OGE_TREE_DRAG_HOVER_EXPAND_MS`, `OGE_TREE_DRAG_THRESHOLD`, `ObjectUrlRegistry`, `OgeAdaptiveSheetCore`, `OgeAnchoredPanelCore`, `OgeButtonPress`, `OgeContextMenuEcho`, `OgeFileUploaderCore`, `OgeGridAnnouncements`, `OgeGridColumnLayoutCore`, `OgeGridColumnsState`, `OgeGridDataCore`, `OgeGridDeferredChildrenCore`, `OgeGridEditingCore`, `OgeGridEditingState`, `OgeGridExpansionState`, `OgeGridFilterState`, `OgeGridGroupingState`, `OgeGridKeyboardNavCore`, `OgeGridPagingState`, `OgeGridRowVirtualizerCore`, `OgeGridSelectionState`, `OgeGridSortState`, `OgeGridStateCore`, `OgeGridStatePersistenceCore`, `OgeInputCommit`, `OgeListVirtualizerCore`, `OgeLiveAnnouncerCore`, `OgeMenuTypeAhead`, `OgeSelectListCore`, `OgeToastCore`, `OgeToastRef`, `OgeTooltipCore`, `OgeTreeListCore`, `UploadQueue`, `accordionAriaDisabled`, `accordionItemDescriptor`, `accordionNavIntent`, `accordionPageDirection`, `accordionTypeAheadStart`, `adaptiveHiddenColumnIds`, `adaptiveListViewportHeight`, `adaptiveMediaQuery`, `addDays`, `addMonths`, `addYears`, `allHeaderValuesSelected`, `allRowsSelected`, `ancestorsOf`, `applyButtonGroupSelection`, `applyTabOrder`, `applyToolbarOverride`, `asyncValidationRules`, `beginPointerDragDrop`, `beginPointerGesture`, `booleanCellLabel`, `breadcrumbDataDescriptors`, `breadcrumbMenuItems`, `buildRowFilterExpr`, `buildTreeViewIndex`, `buildTreeViewModel`, `buildTreeViewNodes`, `builderToExpr`, `buttonGroupNavIndex`, `buttonGroupRole`, `canCollapseAccordionPanel`, `canResizeSplitterAt`, `canSelectTab`, `captionize`, `chunkedLoaded`, `clampColumnWidth`, `clampModalDrag`, `clampModalResize`, `clampNumber`, `clampPaginationIndex`, `clampValue`, `colorsEqual`, `constrainRangeValue`, `contrastForeground`, `createAutoScroller`, `createDragGhost`, `createNumberFormatter`, `createTreeSearchPredicate`, `createTypeAheadBuffer`, `createXhrUploadAdapter`, `dataTransferHasFiles`, `dateFilterExpr`, `datePartOrder`, `dateRangeFilterExpr`, `decadeCells`, `defaultAlignmentFor`, `defaultOperatorFor`, `deferredToggleExpr`, `describeExpr`, `dropEffectFor`, `edgeEnabledIndex`, `effectiveFilterOperator`, `emptyValueForDataType`, `evaluateOgeValidationRules`, `exceedsTreeDragThreshold`, `expandedIdsAfterCollapse`, `expandedIdsAfterExpand`, `exprToBuilder`, `fileExtension`, `filterHeaderValues`, `filterOperatorSymbol`, `filterRowOperatorChoices`, `findMenubarItemPath`, `fitBreadcrumbDescriptors`, `fitToolbarDescriptors`, `fitToolbarItems`, `formColumnsCount`, `formColumnsCss`, `formatCellValue`, `formatColor`, `formatFileSize`, `formatPaginationMessage`, `formatPattern`, `formatUploadMessage`, `getOgeLiveAnnouncer`, `getTabbableElements`, `graphemeCount`, `groupHeaderValuesByYear`, `headerGroupState`, `headerValueText`, `headerYearLabel`, `hsvaToRgba`, `humanize`, `inertModalBackground`, `inferDataType`, `isAccordionTypeAheadKey`, `isBareEditor`, `isDataSource`, `isDayDisabled`, `isEmptyFormValue`, `isHeaderValueSelected`, `isMenubarCompact`, `isModalFocusOrphaned`, `isOgeContextMenuKey`, `isOgeDragExcludedTarget`, `isPreviewable`, `isSplitterPaneCollapsed`, `isSplitterPaneCollapsible`, `isStepReachable`, `isToolbarStopDisabled`, `isToolbarTextEntry`, `isTopOverlay`, `keyEqualsExpr`, `loadOptionsEqual`, `loadSplitterPanes`, `loadToolbarItems`, `lockBodyScroll`, `lookupTextOf`, `mapLookupItems`, `matchAccordionTitle`, `matchByPrefix`, `matchesAccept`, `matchesAdaptiveViewport`, `menuEdgeIndex`, `menuEnabledIndexes`, `menuMoveIndex`, `menubarBarKeys`, `menubarClosedReason`, `menubarDataDescriptors`, `menubarEventBase`, `menubarItemDomId`, `menubarPanelItems`, `menubarPanelLabel`, `menubarPanelPlacement`, `menubarPopupCloseReason`, `menubarStopDisabled`, `mergeUploadMessages`, `messageForFieldError`, `modalCssSize`, `monthCells`, `monthMatrix`, `motionScrollBehavior`, `navigate`, `nextTreeExpansion`, `nextTreeSelection`, `normalizeSplitTracks`, `offsetByStep`, `ogeAdjacentDataRow`, `ogeChooserMoveDirection`, `ogeColumnMoveTarget`, `ogeColumnSeparatorKeyCommand`, `ogeColumnWidthBounds`, `ogeContextMenuKeyTarget`, `ogeEdgeScrollVelocity`, `ogeElementAtPoint`, `ogeGridBandRow`, `ogeGridHeaderKeyCommand`, `ogeGridHeaderKeyShortcuts`, `ogeGroupChipKeyCommand`, `ogeListMoveTarget`, `ogeLiveConfig`, `ogeMoveGroupingTo`, `ogeOwnedClosest`, `ogeRowMoveDirection`, `ogeSeparatorTargetWidth`, `ogeTreeCsv`, `ogeTreeDataSource`, `ogeTreeDropPosition`, `ogeTreeHeaderValueGroups`, `ogeTreeHeaderValueText`, `ogeTreeRowKeyMove`, `ogeVisibleViewport`, `operatorsFor`, `orderByVisibleIndex`, `orderToolbarDescriptors`, `paginationHasNextPage`, `paginationInfoText`, `paginationIsCompact`, `paginationPageCount`, `parseColor`, `parseDateText`, `parseSplitterSize`, `pickEditorType`, `planChunks`, `planTreeViewKey`, `popupAvailableHeight`, `prefersReducedMotion`, `prepareTouchDrag`, `pruneHiddenMenubarItems`, `pushOverlay`, `ratioToValue`, `readClipboardFiles`, `readDataTransferFiles`, `readPath`, `readToolbarStyleMetrics`, `removeOverlay`, `reorderTabIds`, `resetGraphemeSegmenter`, `resetScrollLockForTests`, `resizeSplitAt`, `resizedColumnWidth`, `resolveAccordionIndex`, `resolveAdaptivePresentation`, `resolveAutoRepeat`, `resolveClickGuard`, `resolveDisabled`, `resolveDisplay`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveGridConfig`, `resolveHoldToConfirm`, `resolveItem`, `resolveLookupItems`, `resolveMenubarCompact`, `resolveModalInitialFocus`, `resolveOgeAccordionConfig`, `resolveOgeAttributeTarget`, `resolveOgeBreadcrumbConfig`, `resolveOgeButtonsConfig`, `resolveOgeCardConfig`, `resolveOgeDrawerConfig`, `resolveOgeFormsConfig`, `resolveOgeGridAdaptiveHiddenColumns`, `resolveOgeGridColumns`, `resolveOgeHeaderDropTarget`, `resolveOgeInputsConfig`, `resolveOgeLoadIndicatorConfig`, `resolveOgeMenubarConfig`, `resolveOgePaginationConfig`, `resolveOgeProgressBarConfig`, `resolveOgeRowDropIndex`, `resolveOgeSkeletonConfig`, `resolveOgeSplitterConfig`, `resolveOgeStepperConfig`, `resolveOgeTabsConfig`, `resolveOgeToolbarConfig`, `resolveOgeTreeViewConfig`, `resolveOverlayConfig`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolvePopupPosition`, `resolveSelectedKeys`, `resolveSplitterIndex`, `resolveStepIndex`, `resolveTabIndex`, `resolveTreeDropPosition`, `resolveTreeItemHeight`, `resolveTreeSelectByClick`, `resolveUploadConfig`, `resolveValue`, `rgbaToHsva`, `roundSplitterValue`, `rowClickSelectionIntent`, `rowCountText`, `rowFilterExpr`, `runAsyncGuard`, `sameAccordionIds`, `sameAccordionKeys`, `sameDay`, `sameMonth`, `sameSplitterSizes`, `sanitizeResourceUrl`, `sanitizeUrl`, `shouldRenderAccordionPanel`, `sliderKeyboardTarget`, `sliderPercent`, `sliderTicks`, `sliderValueFromPointer`, `snapToStep`, `someRowsSelected`, `sortChangeText`, `splitSeparatorRange`, `splitTrackPx`, `splitterBoundInTrackUnit`, `splitterBounds`, `splitterCollapseSideInDirection`, `splitterDragDelta`, `splitterFlexiblePx`, `splitterGridTemplate`, `splitterGripPath`, `splitterGripTitle`, `splitterKeyAction`, `splitterKeyShortcuts`, `splitterPaneDescriptor`, `splitterPaneOf`, `splitterSeparatorLabel`, `splitterSeparatorRanges`, `splitterSizesWithRestored`, `splitterTrackCss`, `splitterTracks`, `splitterTracksToSizes`, `startOfDay`, `startSliderDrag`, `startSplitterDrag`, `stepBlockReason`, `stepEnabledIndex`, `stepItemDescriptor`, `stepState`, `stepperArrowKeys`, `stepperKeyTarget`, `stepsCompleteBefore`, `syncOgeEditorErrorAria`, `tabItemDescriptor`, `toLocalDate`, `toggleAllHeaderValues`, `toggleHeaderGroup`, `toggleHeaderValue`, `toolbarCollapses`, `toolbarDataDescriptors`, `toolbarIconVisible`, `toolbarItemId`, `toolbarItemWidth`, `toolbarMenuItems`, `toolbarOverflowEvent`, `toolbarScrollState`, `toolbarTextVisible`, `tooltipDescribedByTarget`, `trackPointerGesture`, `trapTabKey`, `treeAccessor`, `treeAnchorIndex`, `treeAriaChecked`, `treeAriaSelected`, `treeCanDrop`, `treeCheckStates`, `treeChildrenLoadNeeded`, `treeEdgeIndex`, `treeEffectiveExpanded`, `treeExpandableKeys`, `treeFilterExpandedKeys`, `treeHasChildrenHint`, `treeLoadingAny`, `treeNodeDisabled`, `treeNodeIndent`, `treeParentIndex`, `treeRangeSelection`, `treeSearchAccessors`, `treeSelectAllState`, `treeSiblingExpansion`, `treeStepIndex`, `treeTypeAheadIndex`, `treeVisibleKeys`, `unlockBodyScroll`, `validateFile`, `validateSelection`, `validationSummaryTitle`, `valueToRatio`, `viewLabel`, `watchAdaptiveViewport`, `weekNumber`, `weekdayNames`, `withToolbarIndexes`, `writePath`, `yearCells`
-- types: `CalendarCell`, `CheckState`, `DateParseKind`, `LookupItem`, `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionDescriptorCore`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionLoadState`, `OgeAccordionMessages`, `OgeAccordionNavIntent`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionTogglePosition`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAdaptiveSheetCoreOptions`, `OgeAnchoredPanelCoreOptions`, `OgeAsyncGuard`, `OgeAutoRepeatOptions`, `OgeAutoScrollOptions`, `OgeAutoScroller`, `OgeBooleanCellMessages`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbDescriptorCore`, `OgeBreadcrumbFitRequest`, `OgeBreadcrumbFitResult`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbMessages`, `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeButtonGroupSelectionChange`, `OgeButtonGroupSelectionMode`, `OgeButtonGuardTiming`, `OgeButtonHoldState`, `OgeButtonHoldTiming`, `OgeButtonIconPosition`, `OgeButtonPressOptions`, `OgeButtonRepeatTiming`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeCalendarCellClickEvent`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeClickGuardOptions`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeColorFormat`, `OgeColumnAlignment`, `OgeColumnLookup`, `OgeColumnMoveTarget`, `OgeColumnSeparatorKeyCommand`, `OgeColumnWidthBounds`, `OgeContextMenuKeyTarget`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeDeferredBaseOptions`, `OgeDragGhost`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingCell`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFieldError`, `OgeFileUploaderCoreOptions`, `OgeFileUploaderEventName`, `OgeFileUploaderEvents`, `OgeFileUploaderProps`, `OgeFilterBuilderField`, `OgeFilterDescribeMessages`, `OgeFilterRowColumn`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeFormColCount`, `OgeFormDataType`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormGroupData`, `OgeFormItemDataBase`, `OgeFormLabelLocation`, `OgeFormScreenSize`, `OgeFormValidatedEvent`, `OgeFormatFileSizeOptions`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeGridAdaptiveHidingInput`, `OgeGridAnnounceSink`, `OgeGridAnnouncementSnapshot`, `OgeGridAnnouncementsDeps`, `OgeGridBandCell`, `OgeGridColumnDef`, `OgeGridColumnHidingMode`, `OgeGridColumnLayoutDeps`, `OgeGridColumnRange`, `OgeGridColumnResolveInput`, `OgeGridColumnSpec`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridDataCoreDeps`, `OgeGridDeferredChildrenDeps`, `OgeGridEditingCoreDeps`, `OgeGridEditorBridge`, `OgeGridEditorState`, `OgeGridFilterStateSnapshot`, `OgeGridFocusedCell`, `OgeGridHeaderDropTarget`, `OgeGridHeaderKeyCommand`, `OgeGridInvalidEditor`, `OgeGridKeyboardNavDeps`, `OgeGridKeyboardNavTreeHooks`, `OgeGridLayoutColumn`, `OgeGridMessages`, `OgeGridResolvedColumn`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridRowVirtualizerDeps`, `OgeGridRowWindowAdapter`, `OgeGridSelectAllState`, `OgeGridSelectionIntent`, `OgeGridSelectionMode`, `OgeGridSelectionModifiers`, `OgeGridStatePersistenceOptions`, `OgeGridToggleKind`, `OgeGroupChipKeyCommand`, `OgeGroupingOptions`, `OgeGuardHandlers`, `OgeHeaderFilterMessages`, `OgeHeaderFilterOptions`, `OgeHeaderFilterSelection`, `OgeHeaderValueGroup`, `OgeHeaderValueTextOptions`, `OgeHoldToConfirmOptions`, `OgeHsva`, `OgeInputCommitOptions`, `OgeInputCounterMode`, `OgeInputErrorDisplay`, `OgeInputLabelMode`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeKeyInput`, `OgeListVirtualizerDeps`, `OgeLiveAnnounceOptions`, `OgeLiveAnnouncerOptions`, `OgeLivePoliteness`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeMenuCloseReason`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenubarBarKeys`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarDescriptorCore`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarPanelSource`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalDragRequest`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalResizeRequest`, `OgeMovableColumn`, `OgeNumberFormatter`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgeOverlayTimings`, `OgePageChangedEvent`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePaginationCompactRequest`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgePagingOptions`, `OgePendingChildRequest`, `OgePinOverride`, `OgePointerDragDropOptions`, `OgePointerGestureHandle`, `OgePointerGestureInput`, `OgePointerGestureOptions`, `OgePopupAlign`, `OgePopupAvailableHeightRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeRangeThumb`, `OgeReactiveCell`, `OgeReactivityAdapter`, `OgeRect`, `OgeResolvedChunkOptions`, `OgeResolvedFormItem`, `OgeResolvedPopupPosition`, `OgeResolvedRetryOptions`, `OgeResolvedToastOptions`, `OgeRgba`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSanitizeUrlOptions`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectDisabledExpr`, `OgeSelectDisplayExpr`, `OgeSelectGroupExpr`, `OgeSelectImageExpr`, `OgeSelectItemsFn`, `OgeSelectListCoreDeps`, `OgeSelectListRow`, `OgeSelectSearchExpr`, `OgeSelectSearchMode`, `OgeSelectValueExpr`, `OgeSelectionChangedEvent`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSliderAxis`, `OgeSliderDragHandlers`, `OgeSliderScale`, `OgeSliderTrackRect`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterDataSourceLike`, `OgeSplitterDescriptorCore`, `OgeSplitterDragHandlers`, `OgeSplitterGripSide`, `OgeSplitterKeyAction`, `OgeSplitterKeyInput`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeSplitterView`, `OgeStateStorage`, `OgeStepBlockReason`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepDescriptorCore`, `OgeStepGuard`, `OgeStepReachRequest`, `OgeStepState`, `OgeStepperArrowKeys`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperKeyRequest`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabDescriptorCore`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastBaseOptions`, `OgeToastBasePatch`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastCoreOptions`, `OgeToastDefaults`, `OgeToastEntry`, `OgeToastPosition`, `OgeToastProgressStyle`, `OgeToastPromiseBaseOptions`, `OgeToastRegion`, `OgeToastSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDataSourceLike`, `OgeToolbarDescriptorCore`, `OgeToolbarDisplayDefaults`, `OgeToolbarDisplayMode`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitRequest`, `OgeToolbarFitResult`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemOverride`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContextCore`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarOverflowPolicy`, `OgeToolbarScrollState`, `OgeToolbarSize`, `OgeToolbarStyleMetrics`, `OgeToolbarStylingMode`, `OgeTooltipCoreOptions`, `OgeTreeBooleanMessages`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExportData`, `OgeTreeExportSourceColumn`, `OgeTreeExpr`, `OgeTreeIndexInput`, `OgeTreeInitNewRowEvent`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeKeyAction`, `OgeTreeKeyInput`, `OgeTreeKeyPlan`, `OgeTreeListCoreDeps`, `OgeTreeListStateSlices`, `OgeTreeLoadChildren`, `OgeTreeLoadMode`, `OgeTreeLoadState`, `OgeTreeNodesInput`, `OgeTreeOrphanPolicy`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeRowKeyMove`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`, `OgeTreeSearchColumn`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeToggleNotifier`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeViewModel`, `OgeTreeViewModelInput`, `OgeTreeViewNode`, `OgeTreeVirtualScrollOptions`, `OgeTypeAheadBuffer`, `OgeUploadAbortReason`, `OgeUploadAbortedEvent`, `OgeUploadActionsLayout`, `OgeUploadAdapter`, `OgeUploadAllUploadedEvent`, `OgeUploadAnnouncementMessages`, `OgeUploadButtonMessages`, `OgeUploadCallbacks`, `OgeUploadCancelableEvent`, `OgeUploadCandidate`, `OgeUploadChunk`, `OgeUploadChunkFailedEvent`, `OgeUploadChunkMetadata`, `OgeUploadChunkOptions`, `OgeUploadChunkUploadedEvent`, `OgeUploadChunkUploadingEvent`, `OgeUploadClearedEvent`, `OgeUploadClearingEvent`, `OgeUploadConfig`, `OgeUploadConfigInput`, `OgeUploadDisplayMode`, `OgeUploadDropEffect`, `OgeUploadDropZoneEvent`, `OgeUploadDropZoneMessages`, `OgeUploadErrorKind`, `OgeUploadFailedEvent`, `OgeUploadFieldError`, `OgeUploadFile`, `OgeUploadFileDownloadingEvent`, `OgeUploadFileError`, `OgeUploadFileListOptions`, `OgeUploadFileRejectedEvent`, `OgeUploadFileRemovedEvent`, `OgeUploadFileRemovingEvent`, `OgeUploadFileStatus`, `OgeUploadFilesDroppedEvent`, `OgeUploadFilesSelectedEvent`, `OgeUploadFilesSelectingEvent`, `OgeUploadHandle`, `OgeUploadListType`, `OgeUploadMessages`, `OgeUploadMessagesInput`, `OgeUploadMode`, `OgeUploadPart`, `OgeUploadPausedEvent`, `OgeUploadPausingEvent`, `OgeUploadPreloadedFile`, `OgeUploadPreviewHiddenEvent`, `OgeUploadPreviewShowingEvent`, `OgeUploadProgressEvent`, `OgeUploadQueueEvent`, `OgeUploadQueueOptions`, `OgeUploadRequest`, `OgeUploadRestrictions`, `OgeUploadResumedEvent`, `OgeUploadResumingEvent`, `OgeUploadRetryOptions`, `OgeUploadSelectionSource`, `OgeUploadStartedEvent`, `OgeUploadStatusMessages`, `OgeUploadTask`, `OgeUploadThumbnailFailedEvent`, `OgeUploadTimers`, `OgeUploadUploadedEvent`, `OgeUploadUploadingEvent`, `OgeUploadValidationMessages`, `OgeUploadValidationResult`, `OgeValidationContext`, `OgeValidationRule`, `OgeVirtualScrollOptions`, `RowKey`, `SearchHighlightSegment`, `TreeFilterMode`, `TreeIndex`, `WeekNumberRule`
+- values: `DragDepthCounter`, `OGE_AUTO_FIT_SLACK`, `OGE_AUTO_SCROLL_EDGE`, `OGE_AUTO_SCROLL_MAX_SPEED`, `OGE_BREADCRUMB_ELLIPSIS_FALLBACK`, `OGE_COLUMN_RESIZE_FINE_STEP`, `OGE_COLUMN_RESIZE_FLOOR`, `OGE_COLUMN_RESIZE_STEP`, `OGE_DEFAULT_ACCORDION_CONFIG`, `OGE_DEFAULT_ACCORDION_MESSAGES`, `OGE_DEFAULT_ADAPTIVE_BREAKPOINT`, `OGE_DEFAULT_ADAPTIVE_CONFIG`, `OGE_DEFAULT_BREADCRUMB_CONFIG`, `OGE_DEFAULT_BREADCRUMB_MESSAGES`, `OGE_DEFAULT_BUTTONS_CONFIG`, `OGE_DEFAULT_BUTTONS_MESSAGES`, `OGE_DEFAULT_CARD_CONFIG`, `OGE_DEFAULT_COLOR_PALETTE`, `OGE_DEFAULT_DRAWER_CONFIG`, `OGE_DEFAULT_DRAWER_MESSAGES`, `OGE_DEFAULT_FORMS_CONFIG`, `OGE_DEFAULT_FORMS_MESSAGES`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_GRID_MESSAGES`, `OGE_DEFAULT_INPUTS_CONFIG`, `OGE_DEFAULT_INPUTS_MESSAGES`, `OGE_DEFAULT_LOAD_INDICATOR_CONFIG`, `OGE_DEFAULT_LOAD_INDICATOR_MESSAGES`, `OGE_DEFAULT_MENUBAR_CONFIG`, `OGE_DEFAULT_MENUBAR_MESSAGES`, `OGE_DEFAULT_OVERLAY_CONFIG`, `OGE_DEFAULT_OVERLAY_MESSAGES`, `OGE_DEFAULT_OVERLAY_TIMINGS`, `OGE_DEFAULT_PAGINATION_CONFIG`, `OGE_DEFAULT_PAGINATION_MESSAGES`, `OGE_DEFAULT_PROGRESS_BAR_CONFIG`, `OGE_DEFAULT_PROGRESS_BAR_MESSAGES`, `OGE_DEFAULT_SKELETON_CONFIG`, `OGE_DEFAULT_SPLITTER_CONFIG`, `OGE_DEFAULT_SPLITTER_MESSAGES`, `OGE_DEFAULT_STEPPER_CONFIG`, `OGE_DEFAULT_STEPPER_MESSAGES`, `OGE_DEFAULT_TABS_CONFIG`, `OGE_DEFAULT_TABS_MESSAGES`, `OGE_DEFAULT_TOAST_DEFAULTS`, `OGE_DEFAULT_TOOLBAR_CONFIG`, `OGE_DEFAULT_TOOLBAR_MESSAGES`, `OGE_DEFAULT_TREE_VIEW_CONFIG`, `OGE_DEFAULT_TREE_VIEW_MESSAGES`, `OGE_DEFAULT_UPLOAD_CONFIG`, `OGE_DEFAULT_UPLOAD_MESSAGES`, `OGE_GESTURE_THRESHOLD`, `OGE_GRID_HOST_SELECTOR`, `OGE_GRID_WINDOW_BLOCK_SIZE`, `OGE_LIVE_ANNOUNCER_ATTR`, `OGE_LIVE_ANNOUNCER_CLASS`, `OGE_LONG_PRESS_DELAY`, `OGE_MENUBAR_HOVER_DELAY`, `OGE_MODAL_MIN_RESIZE`, `OGE_NO_SPANS`, `OGE_PAGE_ELLIPSIS`, `OGE_PAGINATION_DEFAULT_COMPACT_BELOW`, `OGE_PAGINATION_DEFAULT_MAX_BUTTONS`, `OGE_POPUP_AVAILABLE_HEIGHT_VAR`, `OGE_SELECT_OPTION_HEIGHT`, `OGE_SHEET_FOCUS_ATTR`, `OGE_SHEET_SWIPE_DISMISS`, `OGE_SLIDER_MAX_TICKS`, `OGE_SPLITTER_FULL_TRAVEL`, `OGE_SPLITTER_GRIP_SIDES`, `OGE_TAB_DRAG_THRESHOLD`, `OGE_TOAST_ANNOUNCE_DELAY_MS`, `OGE_TOAST_EXIT_MS`, `OGE_TOAST_POSITIONS`, `OGE_TOOLBAR_STOP_SELECTOR`, `OGE_TOOLTIP_PANEL_OPTIONS`, `OGE_TREE_DEFAULT_ITEM_HEIGHT`, `OGE_TREE_DRAG_HOVER_EXPAND_MS`, `OGE_TREE_DRAG_THRESHOLD`, `ObjectUrlRegistry`, `OgeAdaptiveSheetCore`, `OgeAnchoredPanelCore`, `OgeButtonPress`, `OgeContextMenuEcho`, `OgeFileUploaderCore`, `OgeGridAnnouncements`, `OgeGridColumnLayoutCore`, `OgeGridColumnsState`, `OgeGridDataCore`, `OgeGridDeferredChildrenCore`, `OgeGridEditHistory`, `OgeGridEditingCore`, `OgeGridEditingState`, `OgeGridExpansionState`, `OgeGridFilterState`, `OgeGridGroupingState`, `OgeGridKeyboardNavCore`, `OgeGridPagingState`, `OgeGridRangeSelectionCore`, `OgeGridRowVirtualizerCore`, `OgeGridSelectionState`, `OgeGridSortState`, `OgeGridStateCore`, `OgeGridStatePersistenceCore`, `OgeInputCommit`, `OgeListVirtualizerCore`, `OgeLiveAnnouncerCore`, `OgeMenuTypeAhead`, `OgePreparedTracker`, `OgeSelectListCore`, `OgeToastCore`, `OgeToastRef`, `OgeTooltipCore`, `OgeTreeListCore`, `UploadQueue`, `accordionAriaDisabled`, `accordionItemDescriptor`, `accordionNavIntent`, `accordionPageDirection`, `accordionTypeAheadStart`, `adaptiveHiddenColumnIds`, `adaptiveListViewportHeight`, `adaptiveMediaQuery`, `addDays`, `addMonths`, `addYears`, `allHeaderValuesSelected`, `allRowsSelected`, `ancestorsOf`, `applyButtonGroupSelection`, `applyTabOrder`, `applyToolbarOverride`, `asyncValidationRules`, `beginPointerDragDrop`, `beginPointerGesture`, `booleanCellLabel`, `breadcrumbDataDescriptors`, `breadcrumbMenuItems`, `buildOgeRangeTsv`, `buildRowFilterExpr`, `buildTreeViewIndex`, `buildTreeViewModel`, `buildTreeViewNodes`, `builderToExpr`, `buttonGroupNavIndex`, `buttonGroupRole`, `canCollapseAccordionPanel`, `canResizeSplitterAt`, `canSelectTab`, `captionize`, `chunkedLoaded`, `clampColumnWidth`, `clampModalDrag`, `clampModalResize`, `clampNumber`, `clampPaginationIndex`, `clampValue`, `colorsEqual`, `computeOgeGridSpans`, `constrainRangeValue`, `contrastForeground`, `createAutoScroller`, `createDragGhost`, `createNumberFormatter`, `createTreeSearchPredicate`, `createTypeAheadBuffer`, `createXhrUploadAdapter`, `dataTransferHasFiles`, `dateFilterExpr`, `datePartOrder`, `dateRangeFilterExpr`, `decadeCells`, `defaultAlignmentFor`, `defaultOperatorFor`, `deferredToggleExpr`, `describeExpr`, `dropEffectFor`, `edgeEnabledIndex`, `effectiveFilterOperator`, `emptyHeaderConditionFilter`, `emptyValueForDataType`, `evaluateOgeValidationRules`, `exceedsTreeDragThreshold`, `expandedIdsAfterCollapse`, `expandedIdsAfterExpand`, `exprToBuilder`, `fileExtension`, `filterHeaderValues`, `filterOperatorSymbol`, `filterRowOperatorChoices`, `findMenubarItemPath`, `findOgeRowDragParticipant`, `fitBreadcrumbDescriptors`, `fitToolbarDescriptors`, `fitToolbarItems`, `flattenHeaderDateTree`, `formColumnsCount`, `formColumnsCss`, `formatCellValue`, `formatColor`, `formatFileSize`, `formatPaginationMessage`, `formatPattern`, `formatUploadMessage`, `getOgeLiveAnnouncer`, `getTabbableElements`, `graphemeCount`, `groupHeaderValuesByDate`, `groupHeaderValuesByYear`, `headerConditionExpr`, `headerConditionNeedsValue`, `headerConditionOperators`, `headerGroupState`, `headerValueText`, `headerYearLabel`, `hsvaToRgba`, `humanize`, `inertModalBackground`, `inferDataType`, `isAccordionTypeAheadKey`, `isBareEditor`, `isDataSource`, `isDayDisabled`, `isEmptyFormValue`, `isHeaderValueSelected`, `isMenubarCompact`, `isModalFocusOrphaned`, `isOgeContextMenuKey`, `isOgeDateType`, `isOgeDragExcludedTarget`, `isOgeRangeExtendKey`, `isPreviewable`, `isSplitterPaneCollapsed`, `isSplitterPaneCollapsible`, `isStepReachable`, `isToolbarStopDisabled`, `isToolbarTextEntry`, `isTopOverlay`, `keyEqualsExpr`, `loadOptionsEqual`, `loadSplitterPanes`, `loadToolbarItems`, `lockBodyScroll`, `lookupTextOf`, `mapLookupItems`, `matchAccordionTitle`, `matchByPrefix`, `matchesAccept`, `matchesAdaptiveViewport`, `menuEdgeIndex`, `menuEnabledIndexes`, `menuMoveIndex`, `menubarBarKeys`, `menubarClosedReason`, `menubarDataDescriptors`, `menubarEventBase`, `menubarItemDomId`, `menubarPanelItems`, `menubarPanelLabel`, `menubarPanelPlacement`, `menubarPopupCloseReason`, `menubarStopDisabled`, `mergeUploadMessages`, `messageForFieldError`, `modalCssSize`, `monthCells`, `monthMatrix`, `motionScrollBehavior`, `navigate`, `nextTreeExpansion`, `nextTreeSelection`, `normalizeSplitTracks`, `offsetByStep`, `ogeAdjacentDataRow`, `ogeChooserMoveDirection`, `ogeClassList`, `ogeColumnMoveTarget`, `ogeColumnSeparatorKeyCommand`, `ogeColumnValueRange`, `ogeColumnWidthBounds`, `ogeContextMenuKeyTarget`, `ogeEdgeScrollVelocity`, `ogeElementAtPoint`, `ogeFillSeries`, `ogeFillTarget`, `ogeFirstVisibleRow`, `ogeFormatsNeedRange`, `ogeGridBandRow`, `ogeGridEditShortcut`, `ogeGridHeaderKeyCommand`, `ogeGridHeaderKeyShortcuts`, `ogeGroupChipKeyCommand`, `ogeGroupValueText`, `ogeHeaderConditionKey`, `ogeIsTextTruncated`, `ogeKeyboardFillPlan`, `ogeListMoveTarget`, `ogeLiveConfig`, `ogeMeasureAutoWidth`, `ogeMoveGroupingTo`, `ogeOwnedClosest`, `ogePagerInfoContext`, `ogePagerPages`, `ogeParsePageInput`, `ogeRangeAnnouncementCounts`, `ogeRangeBounds`, `ogeRangeContains`, `ogeRangeLattice`, `ogeRowDragParticipantCount`, `ogeRowDropPosition`, `ogeRowMoveDirection`, `ogeSeparatorTargetWidth`, `ogeStickyGroupChain`, `ogeTreeCsv`, `ogeTreeDataSource`, `ogeTreeDropPosition`, `ogeTreeHeaderValueGroups`, `ogeTreeHeaderValueText`, `ogeTreeRowKeyMove`, `ogeValueFits`, `ogeVisibleViewport`, `operatorsFor`, `orderByVisibleIndex`, `orderToolbarDescriptors`, `paginationHasNextPage`, `paginationInfoText`, `paginationIsCompact`, `paginationPageCount`, `parseColor`, `parseDateText`, `parseHeaderConditionExpr`, `parseLocaleNumber`, `parseOgeCellText`, `parseOgeTsv`, `parseSplitterSize`, `pickEditorType`, `planChunks`, `planOgeGridPaste`, `planTreeViewKey`, `popupAvailableHeight`, `prefersReducedMotion`, `prepareTouchDrag`, `pruneHiddenMenubarItems`, `pushOverlay`, `ratioToValue`, `readClipboardFiles`, `readDataTransferFiles`, `readPath`, `readToolbarStyleMetrics`, `registerOgeRowDragParticipant`, `removeOverlay`, `reorderTabIds`, `resetGraphemeSegmenter`, `resetScrollLockForTests`, `resizeSplitAt`, `resizedColumnWidth`, `resolveAccordionIndex`, `resolveAdaptivePresentation`, `resolveAutoRepeat`, `resolveClickGuard`, `resolveDisabled`, `resolveDisplay`, `resolveDrawerMode`, `resolveFirstDayOfWeek`, `resolveGridConfig`, `resolveHoldToConfirm`, `resolveItem`, `resolveLookupItems`, `resolveMenubarCompact`, `resolveModalInitialFocus`, `resolveOgeAccordionConfig`, `resolveOgeAttributeTarget`, `resolveOgeBreadcrumbConfig`, `resolveOgeButtonsConfig`, `resolveOgeCardConfig`, `resolveOgeConditionalFormat`, `resolveOgeDrawerConfig`, `resolveOgeFormsConfig`, `resolveOgeGridAdaptiveHiddenColumns`, `resolveOgeGridColumns`, `resolveOgeHeaderDropTarget`, `resolveOgeInputsConfig`, `resolveOgeLoadIndicatorConfig`, `resolveOgeMenubarConfig`, `resolveOgePaginationConfig`, `resolveOgeProgressBarConfig`, `resolveOgeRowDropIndex`, `resolveOgeSkeletonConfig`, `resolveOgeSplitterConfig`, `resolveOgeStepperConfig`, `resolveOgeTabsConfig`, `resolveOgeToolbarConfig`, `resolveOgeTreeViewConfig`, `resolveOverlayConfig`, `resolvePageCount`, `resolvePageRange`, `resolvePageWindow`, `resolvePopupPosition`, `resolveSelectedKeys`, `resolveSplitterIndex`, `resolveStepIndex`, `resolveTabIndex`, `resolveTreeDropPosition`, `resolveTreeItemHeight`, `resolveTreeSelectByClick`, `resolveUploadConfig`, `resolveValue`, `rgbaToHsva`, `roundSplitterValue`, `rowClickSelectionIntent`, `rowCountText`, `rowFilterExpr`, `runAsyncGuard`, `sameAccordionIds`, `sameAccordionKeys`, `sameDay`, `sameMonth`, `sameSplitterSizes`, `sanitizeResourceUrl`, `sanitizeUrl`, `shouldRenderAccordionPanel`, `sliderKeyboardTarget`, `sliderPercent`, `sliderTicks`, `sliderValueFromPointer`, `snapToStep`, `someRowsSelected`, `sortChangeText`, `splitSeparatorRange`, `splitTrackPx`, `splitterBoundInTrackUnit`, `splitterBounds`, `splitterCollapseSideInDirection`, `splitterDragDelta`, `splitterFlexiblePx`, `splitterGridTemplate`, `splitterGripPath`, `splitterGripTitle`, `splitterKeyAction`, `splitterKeyShortcuts`, `splitterPaneDescriptor`, `splitterPaneOf`, `splitterSeparatorLabel`, `splitterSeparatorRanges`, `splitterSizesWithRestored`, `splitterTrackCss`, `splitterTracks`, `splitterTracksToSizes`, `startOfDay`, `startSliderDrag`, `startSplitterDrag`, `stepBlockReason`, `stepEnabledIndex`, `stepItemDescriptor`, `stepState`, `stepperArrowKeys`, `stepperKeyTarget`, `stepsCompleteBefore`, `syncOgeEditorErrorAria`, `tabItemDescriptor`, `toLocalDate`, `toggleAllHeaderValues`, `toggleHeaderGroup`, `toggleHeaderValue`, `toolbarCollapses`, `toolbarDataDescriptors`, `toolbarIconVisible`, `toolbarItemId`, `toolbarItemWidth`, `toolbarMenuItems`, `toolbarOverflowEvent`, `toolbarScrollState`, `toolbarTextVisible`, `tooltipDescribedByTarget`, `trackPointerGesture`, `trapTabKey`, `treeAccessor`, `treeAnchorIndex`, `treeAriaChecked`, `treeAriaSelected`, `treeCanDrop`, `treeCheckStates`, `treeChildrenLoadNeeded`, `treeEdgeIndex`, `treeEffectiveExpanded`, `treeExpandableKeys`, `treeFilterExpandedKeys`, `treeHasChildrenHint`, `treeLoadingAny`, `treeNodeDisabled`, `treeNodeIndent`, `treeParentIndex`, `treeRangeSelection`, `treeSearchAccessors`, `treeSelectAllState`, `treeSiblingExpansion`, `treeStepIndex`, `treeTypeAheadIndex`, `treeVisibleKeys`, `unlockBodyScroll`, `validateFile`, `validateSelection`, `validationSummaryTitle`, `valueToRatio`, `viewLabel`, `watchAdaptiveViewport`, `weekNumber`, `weekdayNames`, `withToolbarIndexes`, `writePath`, `yearCells`
+- types: `CalendarCell`, `CheckState`, `DateParseKind`, `LookupItem`, `OgeAccordionCollapsedEvent`, `OgeAccordionCollapsingEvent`, `OgeAccordionConfig`, `OgeAccordionConfigInput`, `OgeAccordionContentFailedEvent`, `OgeAccordionContentLoadedEvent`, `OgeAccordionContentLoader`, `OgeAccordionDescriptorCore`, `OgeAccordionDisplayMode`, `OgeAccordionExpandGuard`, `OgeAccordionExpandedEvent`, `OgeAccordionExpandingEvent`, `OgeAccordionItemClickEvent`, `OgeAccordionItemData`, `OgeAccordionLoadState`, `OgeAccordionMessages`, `OgeAccordionNavIntent`, `OgeAccordionSize`, `OgeAccordionStylingMode`, `OgeAccordionTogglePosition`, `OgeAdaptiveConfig`, `OgeAdaptiveMode`, `OgeAdaptivePresentation`, `OgeAdaptiveSheetCoreOptions`, `OgeAnchoredPanelCoreOptions`, `OgeAsyncGuard`, `OgeAutoRepeatOptions`, `OgeAutoScrollOptions`, `OgeAutoScroller`, `OgeBooleanCellMessages`, `OgeBreadcrumbCollapseMode`, `OgeBreadcrumbConfig`, `OgeBreadcrumbConfigInput`, `OgeBreadcrumbDescriptorCore`, `OgeBreadcrumbFitRequest`, `OgeBreadcrumbFitResult`, `OgeBreadcrumbItemClickEvent`, `OgeBreadcrumbItemData`, `OgeBreadcrumbMessages`, `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeButtonGroupSelectionChange`, `OgeButtonGroupSelectionMode`, `OgeButtonGuardTiming`, `OgeButtonHoldState`, `OgeButtonHoldTiming`, `OgeButtonIconPosition`, `OgeButtonPressOptions`, `OgeButtonRepeatTiming`, `OgeButtonSeverity`, `OgeButtonSize`, `OgeButtonStylingMode`, `OgeButtonsConfig`, `OgeButtonsConfigInput`, `OgeButtonsMessages`, `OgeCalendarCellClickEvent`, `OgeCalendarDisabledDates`, `OgeCalendarRange`, `OgeCalendarSelectionMode`, `OgeCalendarWeekNumberOptions`, `OgeCalendarZoomLevel`, `OgeCardActionsAlign`, `OgeCardConfig`, `OgeCardConfigInput`, `OgeCardOrientation`, `OgeCardSeverity`, `OgeCardSize`, `OgeCardStylingMode`, `OgeCellPreparedEvent`, `OgeCellTextColumn`, `OgeCellTextMessages`, `OgeCellTextParse`, `OgeClassValue`, `OgeClickGuardOptions`, `OgeColorBoxApplyValueMode`, `OgeColorBoxView`, `OgeColorFormat`, `OgeColorScaleFormat`, `OgeColumnAlignment`, `OgeColumnLookup`, `OgeColumnMoveTarget`, `OgeColumnSeparatorKeyCommand`, `OgeColumnWidthBounds`, `OgeConditionalCellFormat`, `OgeConditionalCondition`, `OgeConditionalFormat`, `OgeConditionalIcon`, `OgeConditionalRange`, `OgeConditionalRule`, `OgeConditionalStyle`, `OgeConditionalTone`, `OgeContextMenuKeyTarget`, `OgeContextMenuSource`, `OgeDataBarFormat`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDateBoxApplyValueMode`, `OgeDateBoxDisplayFormat`, `OgeDateBoxTimeView`, `OgeDateBoxType`, `OgeDeferredBaseOptions`, `OgeDragGhost`, `OgeDrawerAutoFocus`, `OgeDrawerCloseReason`, `OgeDrawerClosedEvent`, `OgeDrawerClosingEvent`, `OgeDrawerConfig`, `OgeDrawerConfigInput`, `OgeDrawerLandmark`, `OgeDrawerMessages`, `OgeDrawerMode`, `OgeDrawerModeChangedEvent`, `OgeDrawerModeRequest`, `OgeDrawerModeResult`, `OgeDrawerOpeningEvent`, `OgeDrawerPosition`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditingCell`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFieldError`, `OgeFileUploaderCoreOptions`, `OgeFileUploaderEventName`, `OgeFileUploaderEvents`, `OgeFileUploaderProps`, `OgeFillDirection`, `OgeFillPlan`, `OgeFilterBuilderField`, `OgeFilterDescribeMessages`, `OgeFilterRowColumn`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeFormColCount`, `OgeFormDataType`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormGroupData`, `OgeFormItemDataBase`, `OgeFormLabelLocation`, `OgeFormScreenSize`, `OgeFormValidatedEvent`, `OgeFormatFileSizeOptions`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeGridAdaptiveHidingInput`, `OgeGridAnnounceSink`, `OgeGridAnnouncementSnapshot`, `OgeGridAnnouncementsDeps`, `OgeGridApplyValuesOptions`, `OgeGridBandCell`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridCellValueWrite`, `OgeGridCellWrite`, `OgeGridColumnDef`, `OgeGridColumnHidingMode`, `OgeGridColumnInfo`, `OgeGridColumnLayoutDeps`, `OgeGridColumnRange`, `OgeGridColumnResolveInput`, `OgeGridColumnSpec`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridDataCoreDeps`, `OgeGridDeferredChildrenDeps`, `OgeGridEditBatch`, `OgeGridEditRecord`, `OgeGridEditShortcut`, `OgeGridEditSource`, `OgeGridEditingCoreDeps`, `OgeGridEditorBridge`, `OgeGridEditorState`, `OgeGridFilterStateSnapshot`, `OgeGridFocusedCell`, `OgeGridHeaderDropTarget`, `OgeGridHeaderKeyCommand`, `OgeGridInvalidEditor`, `OgeGridKeyboardNavDeps`, `OgeGridKeyboardNavTreeHooks`, `OgeGridLayoutColumn`, `OgeGridMessages`, `OgeGridPasteContext`, `OgeGridPastePlan`, `OgeGridRangeBounds`, `OgeGridRangeEdges`, `OgeGridRangeLattice`, `OgeGridRangeSelectionDeps`, `OgeGridResolvedColumn`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridRowVirtualizerDeps`, `OgeGridRowWindowAdapter`, `OgeGridSelectAllState`, `OgeGridSelectionIntent`, `OgeGridSelectionMode`, `OgeGridSelectionModifiers`, `OgeGridSpanColumn`, `OgeGridSpanExtent`, `OgeGridSpanInput`, `OgeGridSpanLayout`, `OgeGridStatePersistenceOptions`, `OgeGridToggleKind`, `OgeGroupChipKeyCommand`, `OgeGroupIntervalMessages`, `OgeGroupingOptions`, `OgeGuardHandlers`, `OgeHeaderCondition`, `OgeHeaderConditionFilter`, `OgeHeaderDateNode`, `OgeHeaderFilterMessages`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderFilterSelection`, `OgeHeaderValueGroup`, `OgeHeaderValueTextOptions`, `OgeHoldToConfirmOptions`, `OgeHsva`, `OgeIconSetFormat`, `OgeInputCommitOptions`, `OgeInputCounterMode`, `OgeInputErrorDisplay`, `OgeInputLabelMode`, `OgeInputShowSuccessIcon`, `OgeInputSize`, `OgeInputStylingMode`, `OgeInputSubscriptSizing`, `OgeInputsConfig`, `OgeInputsConfigInput`, `OgeInputsMessages`, `OgeKeyInput`, `OgeListVirtualizerDeps`, `OgeLiveAnnounceOptions`, `OgeLiveAnnouncerOptions`, `OgeLivePoliteness`, `OgeLoadIndicatorConfig`, `OgeLoadIndicatorConfigInput`, `OgeLoadIndicatorMessages`, `OgeMenuCloseReason`, `OgeMenuItem`, `OgeMenuItemSeverity`, `OgeMenubarBarKeys`, `OgeMenubarCloseReason`, `OgeMenubarCompactChangedEvent`, `OgeMenubarCompactRequest`, `OgeMenubarCompactResult`, `OgeMenubarConfig`, `OgeMenubarConfigInput`, `OgeMenubarDescriptorCore`, `OgeMenubarItemClickEvent`, `OgeMenubarItemData`, `OgeMenubarMessages`, `OgeMenubarOpenMode`, `OgeMenubarOrientation`, `OgeMenubarPanelSource`, `OgeMenubarSubmenuClosedEvent`, `OgeMenubarSubmenuClosingEvent`, `OgeMenubarSubmenuOpenedEvent`, `OgeMenubarSubmenuOpeningEvent`, `OgeModalAutoFocus`, `OgeModalCloseReason`, `OgeModalClosedEvent`, `OgeModalClosingEvent`, `OgeModalDragRequest`, `OgeModalOpeningEvent`, `OgeModalPlacement`, `OgeModalResizeEvent`, `OgeModalResizeRequest`, `OgeMovableColumn`, `OgeNumberFormatter`, `OgeOverlayConfig`, `OgeOverlayConfigInput`, `OgeOverlayMessages`, `OgeOverlayTimings`, `OgePageChangedEvent`, `OgePageCountRequest`, `OgePageRangeRequest`, `OgePageRangeResult`, `OgePageWindowEntry`, `OgePageWindowRequest`, `OgePagerInfoContext`, `OgePaginationCompactRequest`, `OgePaginationConfig`, `OgePaginationConfigInput`, `OgePaginationDisplayMode`, `OgePaginationMessages`, `OgePaginationPageChangedEvent`, `OgePaginationPageSizeChangedEvent`, `OgePaginationSize`, `OgePagingOptions`, `OgePendingChildRequest`, `OgePinOverride`, `OgePointerDragDropOptions`, `OgePointerGestureHandle`, `OgePointerGestureInput`, `OgePointerGestureOptions`, `OgePopupAlign`, `OgePopupAvailableHeightRequest`, `OgePopupCloseReason`, `OgePopupPlacement`, `OgePopupPositionRequest`, `OgePopupSide`, `OgeProgressBarCompletedEvent`, `OgeProgressBarConfig`, `OgeProgressBarConfigInput`, `OgeProgressBarMessages`, `OgeProgressBarSeverity`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRangeThumb`, `OgeRangeTsvOptions`, `OgeReactiveCell`, `OgeReactivityAdapter`, `OgeRect`, `OgeResolvedChunkOptions`, `OgeResolvedFormItem`, `OgeResolvedPopupPosition`, `OgeResolvedRetryOptions`, `OgeResolvedToastOptions`, `OgeRgba`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragParticipant`, `OgeRowDragSource`, `OgeRowDragStartEvent`, `OgeRowDragTarget`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSanitizeUrlOptions`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectDisabledExpr`, `OgeSelectDisplayExpr`, `OgeSelectGroupExpr`, `OgeSelectImageExpr`, `OgeSelectItemsFn`, `OgeSelectListCoreDeps`, `OgeSelectListRow`, `OgeSelectSearchExpr`, `OgeSelectSearchMode`, `OgeSelectValueExpr`, `OgeSelectionChangedEvent`, `OgeSkeletonAnimation`, `OgeSkeletonConfig`, `OgeSkeletonConfigInput`, `OgeSkeletonShape`, `OgeSliderAxis`, `OgeSliderDragHandlers`, `OgeSliderScale`, `OgeSliderTrackRect`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeSplitBounds`, `OgeSplitSeparatorRange`, `OgeSplitTrack`, `OgeSplitterConfig`, `OgeSplitterConfigInput`, `OgeSplitterDataSourceLike`, `OgeSplitterDescriptorCore`, `OgeSplitterDragHandlers`, `OgeSplitterGripSide`, `OgeSplitterKeyAction`, `OgeSplitterKeyInput`, `OgeSplitterMessages`, `OgeSplitterOrientation`, `OgeSplitterPaneClickEvent`, `OgeSplitterPaneCollapsedEvent`, `OgeSplitterPaneCollapsingEvent`, `OgeSplitterPaneData`, `OgeSplitterPaneHoldEvent`, `OgeSplitterResizeEvent`, `OgeSplitterResizeStartEvent`, `OgeSplitterSize`, `OgeSplitterView`, `OgeStateStorage`, `OgeStepBlockReason`, `OgeStepBlockedEvent`, `OgeStepChangedEvent`, `OgeStepChangingEvent`, `OgeStepData`, `OgeStepDescriptorCore`, `OgeStepGuard`, `OgeStepReachRequest`, `OgeStepState`, `OgeStepperArrowKeys`, `OgeStepperConfig`, `OgeStepperConfigInput`, `OgeStepperDisplay`, `OgeStepperFinishEvent`, `OgeStepperKeyRequest`, `OgeStepperMessages`, `OgeStepperOrientation`, `OgeTabClickEvent`, `OgeTabCloseGuard`, `OgeTabClosedEvent`, `OgeTabClosingEvent`, `OgeTabDescriptorCore`, `OgeTabItem`, `OgeTabPanelAnimation`, `OgeTabReorderedEvent`, `OgeTabReorderingEvent`, `OgeTabSelectionChangedEvent`, `OgeTabSelectionChangingEvent`, `OgeTabsActivation`, `OgeTabsAlignment`, `OgeTabsConfig`, `OgeTabsConfigInput`, `OgeTabsIndicatorFit`, `OgeTabsMessages`, `OgeTabsNavButtonsMode`, `OgeTabsOrientation`, `OgeTabsPosition`, `OgeTabsSize`, `OgeTabsStylingMode`, `OgeToastAction`, `OgeToastActionEvent`, `OgeToastAnnounce`, `OgeToastBaseOptions`, `OgeToastBasePatch`, `OgeToastCloseReason`, `OgeToastClosedEvent`, `OgeToastCoreOptions`, `OgeToastDefaults`, `OgeToastEntry`, `OgeToastPosition`, `OgeToastProgressStyle`, `OgeToastPromiseBaseOptions`, `OgeToastRegion`, `OgeToastSeverity`, `OgeToolbarConfig`, `OgeToolbarConfigInput`, `OgeToolbarDataSourceLike`, `OgeToolbarDescriptorCore`, `OgeToolbarDisplayDefaults`, `OgeToolbarDisplayMode`, `OgeToolbarFitItem`, `OgeToolbarFitOptions`, `OgeToolbarFitRequest`, `OgeToolbarFitResult`, `OgeToolbarItemActiveChangedEvent`, `OgeToolbarItemClickEvent`, `OgeToolbarItemData`, `OgeToolbarItemHoldEvent`, `OgeToolbarItemLocation`, `OgeToolbarItemOverride`, `OgeToolbarItemSeverity`, `OgeToolbarItemTemplateContextCore`, `OgeToolbarItemType`, `OgeToolbarLocateInMenu`, `OgeToolbarMenuCloseReason`, `OgeToolbarMenuClosedEvent`, `OgeToolbarMenuClosingEvent`, `OgeToolbarMenuOpeningEvent`, `OgeToolbarMessages`, `OgeToolbarOrientation`, `OgeToolbarOverflow`, `OgeToolbarOverflowChangedEvent`, `OgeToolbarOverflowPolicy`, `OgeToolbarScrollState`, `OgeToolbarSize`, `OgeToolbarStyleMetrics`, `OgeToolbarStylingMode`, `OgeTooltipCoreOptions`, `OgeTreeBooleanMessages`, `OgeTreeCheckBoxesMode`, `OgeTreeChildrenFailedEvent`, `OgeTreeChildrenLoadedEvent`, `OgeTreeCollapsedEvent`, `OgeTreeCollapsingEvent`, `OgeTreeDataStructure`, `OgeTreeDropPosition`, `OgeTreeExpandEvent`, `OgeTreeExpandedEvent`, `OgeTreeExpandingEvent`, `OgeTreeExportData`, `OgeTreeExportSourceColumn`, `OgeTreeExpr`, `OgeTreeIndexInput`, `OgeTreeInitNewRowEvent`, `OgeTreeItemClickEvent`, `OgeTreeItemSelectionChangedEvent`, `OgeTreeKeyAction`, `OgeTreeKeyInput`, `OgeTreeKeyPlan`, `OgeTreeListCoreDeps`, `OgeTreeListStateSlices`, `OgeTreeLoadChildren`, `OgeTreeLoadMode`, `OgeTreeLoadState`, `OgeTreeNodesInput`, `OgeTreeOrphanPolicy`, `OgeTreeReorderedEvent`, `OgeTreeReorderingEvent`, `OgeTreeRowKeyMove`, `OgeTreeRowReparentEvent`, `OgeTreeRowToggleEvent`, `OgeTreeRowTogglingEvent`, `OgeTreeSearchColumn`, `OgeTreeSearchMode`, `OgeTreeSelectAllChangedEvent`, `OgeTreeSelectedKeysMode`, `OgeTreeSelectionChangedEvent`, `OgeTreeSelectionChangingEvent`, `OgeTreeSelectionMode`, `OgeTreeSize`, `OgeTreeToggleNotifier`, `OgeTreeViewConfig`, `OgeTreeViewConfigInput`, `OgeTreeViewMessages`, `OgeTreeViewModel`, `OgeTreeViewModelInput`, `OgeTreeViewNode`, `OgeTreeVirtualScrollOptions`, `OgeTypeAheadBuffer`, `OgeUploadAbortReason`, `OgeUploadAbortedEvent`, `OgeUploadActionsLayout`, `OgeUploadAdapter`, `OgeUploadAllUploadedEvent`, `OgeUploadAnnouncementMessages`, `OgeUploadButtonMessages`, `OgeUploadCallbacks`, `OgeUploadCancelableEvent`, `OgeUploadCandidate`, `OgeUploadChunk`, `OgeUploadChunkFailedEvent`, `OgeUploadChunkMetadata`, `OgeUploadChunkOptions`, `OgeUploadChunkUploadedEvent`, `OgeUploadChunkUploadingEvent`, `OgeUploadClearedEvent`, `OgeUploadClearingEvent`, `OgeUploadConfig`, `OgeUploadConfigInput`, `OgeUploadDisplayMode`, `OgeUploadDropEffect`, `OgeUploadDropZoneEvent`, `OgeUploadDropZoneMessages`, `OgeUploadErrorKind`, `OgeUploadFailedEvent`, `OgeUploadFieldError`, `OgeUploadFile`, `OgeUploadFileDownloadingEvent`, `OgeUploadFileError`, `OgeUploadFileListOptions`, `OgeUploadFileRejectedEvent`, `OgeUploadFileRemovedEvent`, `OgeUploadFileRemovingEvent`, `OgeUploadFileStatus`, `OgeUploadFilesDroppedEvent`, `OgeUploadFilesSelectedEvent`, `OgeUploadFilesSelectingEvent`, `OgeUploadHandle`, `OgeUploadListType`, `OgeUploadMessages`, `OgeUploadMessagesInput`, `OgeUploadMode`, `OgeUploadPart`, `OgeUploadPausedEvent`, `OgeUploadPausingEvent`, `OgeUploadPreloadedFile`, `OgeUploadPreviewHiddenEvent`, `OgeUploadPreviewShowingEvent`, `OgeUploadProgressEvent`, `OgeUploadQueueEvent`, `OgeUploadQueueOptions`, `OgeUploadRequest`, `OgeUploadRestrictions`, `OgeUploadResumedEvent`, `OgeUploadResumingEvent`, `OgeUploadRetryOptions`, `OgeUploadSelectionSource`, `OgeUploadStartedEvent`, `OgeUploadStatusMessages`, `OgeUploadTask`, `OgeUploadThumbnailFailedEvent`, `OgeUploadTimers`, `OgeUploadUploadedEvent`, `OgeUploadUploadingEvent`, `OgeUploadValidationMessages`, `OgeUploadValidationResult`, `OgeValidationContext`, `OgeValidationRule`, `OgeVirtualScrollOptions`, `RowKey`, `SearchHighlightSegment`, `TreeFilterMode`, `TreeIndex`, `WeekNumberRule`
 
 `@oge-ui/behavior/export-pdf`
 

@@ -167,10 +167,7 @@ export class OgeGridAnnouncements {
   }
 
   /** A paste, fill, undo or redo wrote `count` cells. */
-  cellsWritten(
-    kind: 'paste' | 'fill' | 'undo' | 'redo',
-    count: number,
-  ): void {
+  cellsWritten(kind: 'paste' | 'fill' | 'undo' | 'redo', count: number): void {
     if (!this.deps.enabled() || count <= 0) return;
     const messages = this.deps.messages();
     const pattern =

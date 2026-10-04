@@ -656,7 +656,9 @@ function OgeGridInner<T extends object>(
       const all = allFlatNodes();
       const pinned = pinnedKeys();
       if (!pinned.size) return all;
-      return all.filter((node) => node.kind !== 'data' || !pinned.has(node.key));
+      return all.filter(
+        (node) => node.kind !== 'data' || !pinned.has(node.key),
+      );
     });
 
     const resolvePinned = (
@@ -3597,7 +3599,8 @@ function OgeGridInner<T extends object>(
     latest.current.onSelectedRangesChange?.(rangesNow);
     latest.current.onRangeSelectionChanged?.({ ranges: rangesNow, ...stats });
     const counts = ogeRangeAnnouncementCounts(stats);
-    if (counts) announcer.rangeSelected(counts.rows, counts.columns, counts.cells);
+    if (counts)
+      announcer.rangeSelected(counts.rows, counts.columns, counts.cells);
   }, [rangesNow]);
 
   // a new view (sort, filter, page, grouping) invalidates the coordinates
@@ -3654,7 +3657,9 @@ function OgeGridInner<T extends object>(
     });
   }
 
-  function onFillHandlePointerDown(event: React.PointerEvent<HTMLElement>): void {
+  function onFillHandlePointerDown(
+    event: React.PointerEvent<HTMLElement>,
+  ): void {
     if (event.button !== 0) return;
     event.stopPropagation();
     const active = rangeCore.ranges().at(-1);
@@ -3698,7 +3703,8 @@ function OgeGridInner<T extends object>(
   ): OgeGridCellValueWrite | null {
     const node = model.flatNodes()[row];
     const column = model.resolvedColumns()[col];
-    if (node?.kind !== 'data' || !column?.field || !column.editable) return null;
+    if (node?.kind !== 'data' || !column?.field || !column.editable)
+      return null;
     if (!ogeValueFits(value, column.dataType)) return null;
     return { key: node.key, field: column.field, value };
   }
@@ -3715,7 +3721,11 @@ function OgeGridInner<T extends object>(
       if (direction === 'up') targetRows.reverse();
       for (let col = source.left; col <= source.right; col++) {
         const values = sourceRows.map((row) => valueAt(row, col));
-        const series = ogeFillSeries(values, targetRows.length, direction === 'up');
+        const series = ogeFillSeries(
+          values,
+          targetRows.length,
+          direction === 'up',
+        );
         targetRows.forEach((row, i) => {
           const write = writeAt(row, col, series[i]);
           if (write) writes.push(write);
@@ -3730,14 +3740,20 @@ function OgeGridInner<T extends object>(
         const values: unknown[] = [];
         for (let col = source.left; col <= source.right; col++)
           values.push(valueAt(row, col));
-        const series = ogeFillSeries(values, targetCols.length, direction === 'left');
+        const series = ogeFillSeries(
+          values,
+          targetCols.length,
+          direction === 'left',
+        );
         targetCols.forEach((col, i) => {
           const write = writeAt(row, col, series[i]);
           if (write) writes.push(write);
         });
       }
     }
-    const count = await model.editing.applyCellValues(writes, { source: 'fill' });
+    const count = await model.editing.applyCellValues(writes, {
+      source: 'fill',
+    });
     const range = plan.range;
     rangeCore.setRanges([
       {
@@ -3780,7 +3796,9 @@ function OgeGridInner<T extends object>(
         }
       }
     }
-    const count = await model.editing.applyCellValues(writes, { source: 'fill' });
+    const count = await model.editing.applyCellValues(writes, {
+      source: 'fill',
+    });
     announcer.cellsWritten('fill', count);
     return count;
   }
@@ -3803,7 +3821,10 @@ function OgeGridInner<T extends object>(
   }
 
   function onGridCopy(event: React.ClipboardEvent): void {
-    if (state.editing.editCell() !== null || state.editing.editRowKey() !== null)
+    if (
+      state.editing.editCell() !== null ||
+      state.editing.editRowKey() !== null
+    )
       return;
     const text = rangeClipboardText();
     if (text === null) return;
@@ -3830,7 +3851,9 @@ function OgeGridInner<T extends object>(
     const nodes = model.flatNodes();
     const columns = model.resolvedColumns();
     const active =
-      model.selectionMode() === 'cell' ? (rangeCore.ranges().at(-1) ?? null) : null;
+      model.selectionMode() === 'cell'
+        ? (rangeCore.ranges().at(-1) ?? null)
+        : null;
     const start = model.keyboard.focusedCell() ?? active?.anchor ?? null;
     if (!start) return 0;
     const messages = msgRef.current;
@@ -3993,7 +4016,8 @@ function OgeGridInner<T extends object>(
       rowIndex === undefined
         ? null
         : model.spanLayout().extentOf(rowIndex, column.absIndex);
-    if (span && span.rowSpan > 1) vars['--oge-span-rows'] = String(span.rowSpan);
+    if (span && span.rowSpan > 1)
+      vars['--oge-span-rows'] = String(span.rowSpan);
     return vars;
   };
 
@@ -4021,7 +4045,10 @@ function OgeGridInner<T extends object>(
 
   // --- sticky group rows -------------------------------------------------------
   function updateStickyGroups(): void {
-    if (!latest.current.stickyGroupRows || !state.grouping.descriptors().length) {
+    if (
+      !latest.current.stickyGroupRows ||
+      !state.grouping.descriptors().length
+    ) {
       if (model.stickyGroups().length) model.stickyGroups.set([]);
       return;
     }
@@ -4090,7 +4117,8 @@ function OgeGridInner<T extends object>(
 
   const autoWidthDone = useRef(false);
   useLayoutEffect(() => {
-    if (!props.columnAutoWidth || autoWidthDone.current || !data.result()) return;
+    if (!props.columnAutoWidth || autoWidthDone.current || !data.result())
+      return;
     autoWidthDone.current = true;
     autoFitColumns();
   });
@@ -4203,7 +4231,12 @@ function OgeGridInner<T extends object>(
         index: position === 'after' ? index + 1 : index,
       };
     } else if (
-      ogeOwnedClosest(hit, '.oge-body, .oge-no-data', host, OGE_GRID_HOST_SELECTOR)
+      ogeOwnedClosest(
+        hit,
+        '.oge-body, .oge-no-data',
+        host,
+        OGE_GRID_HOST_SELECTOR,
+      )
     ) {
       target = {
         componentId: componentId(),
@@ -4269,7 +4302,8 @@ function OgeGridInner<T extends object>(
         if (model.dropTargetKey() !== key) model.dropTargetKey.set(key);
         model.dropPosition.set(target?.position ?? null);
       },
-      drop: (source, target) => dropHandlers.current.acceptRowDrop(source, target),
+      drop: (source, target) =>
+        dropHandlers.current.acceptRowDrop(source, target),
     });
   }, [dragGroup]);
 
@@ -4284,49 +4318,52 @@ function OgeGridInner<T extends object>(
       key: node.key,
       row: node.data,
     };
-    type Participant = NonNullable<ReturnType<typeof findOgeRowDragParticipant>>;
+    type Participant = NonNullable<
+      ReturnType<typeof findOgeRowDragParticipant>
+    >;
     let current: Participant | null = null;
-    beginPointerDragDrop<{ participant: Participant; target: OgeRowDragTarget }>(
-      event,
-      {
-        source: handle,
-        ghost: handle.closest('.oge-row'),
-        longPress: 0,
-        autoScroll: viewportRef.current,
-        autoScrollOptions: { axis: 'y' },
-        resolve: (hit, move) => {
-          const participant = findOgeRowDragParticipant(hit, group);
-          const target =
-            participant && hit
-              ? participant.resolve(hit, move.clientY, source)
-              : null;
-          return participant && target ? { participant, target } : null;
-        },
-        onOver: (hit) => {
-          if (current && current !== hit?.participant) current.over(source, null);
-          current = hit?.participant ?? null;
-          current?.over(source, hit?.target ?? null);
-        },
-        onDrop: (hit) => hit.participant.drop(source, hit.target),
-        onEnd: ({ dropped }) => {
-          current?.over(source, null);
-          const targetId = dropped ? (current?.componentId ?? null) : null;
-          current = null;
-          latest.current.onRowDragEnd?.({
-            key: node.key,
-            row: node.data,
-            dropped,
-            targetComponentId: targetId,
-          });
-        },
+    beginPointerDragDrop<{
+      participant: Participant;
+      target: OgeRowDragTarget;
+    }>(event, {
+      source: handle,
+      ghost: handle.closest('.oge-row'),
+      longPress: 0,
+      autoScroll: viewportRef.current,
+      autoScrollOptions: { axis: 'y' },
+      resolve: (hit, move) => {
+        const participant = findOgeRowDragParticipant(hit, group);
+        const target =
+          participant && hit
+            ? participant.resolve(hit, move.clientY, source)
+            : null;
+        return participant && target ? { participant, target } : null;
       },
-    );
+      onOver: (hit) => {
+        if (current && current !== hit?.participant) current.over(source, null);
+        current = hit?.participant ?? null;
+        current?.over(source, hit?.target ?? null);
+      },
+      onDrop: (hit) => hit.participant.drop(source, hit.target),
+      onEnd: ({ dropped }) => {
+        current?.over(source, null);
+        const targetId = dropped ? (current?.componentId ?? null) : null;
+        current = null;
+        latest.current.onRowDragEnd?.({
+          key: node.key,
+          row: node.data,
+          dropped,
+          targetComponentId: targetId,
+        });
+      },
+    });
   }
 
   // --- header filter: conditions + date tree --------------------------------------
   const headerFilterMode: OgeHeaderFilterMode =
-    (typeof props.headerFilter === 'object' ? props.headerFilter.mode : undefined) ??
-    'list';
+    (typeof props.headerFilter === 'object'
+      ? props.headerFilter.mode
+      : undefined) ?? 'list';
 
   function setHeaderCondition(
     which: 'first' | 'second',
@@ -4925,7 +4962,9 @@ function OgeGridInner<T extends object>(
               onFocus={() =>
                 model.keyboard.onCellFocus(rowIndex, column.absIndex)
               }
-              onPointerDown={(event) => onCellPointerDown(rowIndex, column, event)}
+              onPointerDown={(event) =>
+                onCellPointerDown(rowIndex, column, event)
+              }
               onClick={(event) => onCellClick(node, column, event, false)}
               onDoubleClick={(event) => onCellClick(node, column, event, true)}
             >
@@ -5953,36 +5992,36 @@ function OgeGridInner<T extends object>(
                 'bottom',
               ),
             )}
-        {hasTotalRow ? (
-          <div
-            className="oge-total-row"
-            role="row"
-            style={{ gridTemplateColumns }}
-          >
-            {leadingBlanks('oge-total-cell')}
-            {spacer('left', 'oge-total-cell')}
-            {renderColumns.map((column) => (
+            {hasTotalRow ? (
               <div
-                key={column.id}
-                className={[
-                  'oge-total-cell',
-                  column.dataType === 'number' ? 'oge-cell-number' : '',
-                  column.alignment !== 'start'
-                    ? `oge-align-${column.alignment}`
-                    : '',
-                  column.pinned !== false ? 'oge-pinned' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                role="gridcell"
-                style={pinnedStyle(column)}
+                className="oge-total-row"
+                role="row"
+                style={{ gridTemplateColumns }}
               >
-                {totalSummaryByColumn.get(column.id) ?? ''}
+                {leadingBlanks('oge-total-cell')}
+                {spacer('left', 'oge-total-cell')}
+                {renderColumns.map((column) => (
+                  <div
+                    key={column.id}
+                    className={[
+                      'oge-total-cell',
+                      column.dataType === 'number' ? 'oge-cell-number' : '',
+                      column.alignment !== 'start'
+                        ? `oge-align-${column.alignment}`
+                        : '',
+                      column.pinned !== false ? 'oge-pinned' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    role="gridcell"
+                    style={pinnedStyle(column)}
+                  >
+                    {totalSummaryByColumn.get(column.id) ?? ''}
+                  </div>
+                ))}
+                {spacer('right', 'oge-total-cell')}
               </div>
-            ))}
-            {spacer('right', 'oge-total-cell')}
-          </div>
-        ) : null}
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -6163,13 +6202,16 @@ function OgeGridInner<T extends object>(
                 : 'oge-header-filter-popup oge-header-filter-menu'
             }
             role={headerFilterMode === 'list' ? 'listbox' : 'group'}
-            aria-label={headerFilterMode === 'list' ? undefined : msg.filterValues}
+            aria-label={
+              headerFilterMode === 'list' ? undefined : msg.filterValues
+            }
           >
             {headerFilterMode !== 'list' &&
             headerFilterColumn &&
             model.headerConditionDraft()
               ? (() => {
-                  const draft = model.headerConditionDraft() as OgeHeaderConditionFilter;
+                  const draft =
+                    model.headerConditionDraft() as OgeHeaderConditionFilter;
                   const hfColumn = headerFilterColumn;
                   const operatorItems = headerConditionOperators(
                     hfColumn.dataType,
@@ -6177,7 +6219,9 @@ function OgeGridInner<T extends object>(
                   const conditionRow = (which: 'first' | 'second') => {
                     const condition = draft[which];
                     const label =
-                      which === 'first' ? msg.firstCondition : msg.secondCondition;
+                      which === 'first'
+                        ? msg.firstCondition
+                        : msg.secondCondition;
                     const valueLabel = `${label} ${msg.filterValuePlaceholder}`;
                     const common = {
                       className: 'oge-hf-condition-value',
@@ -6371,7 +6415,8 @@ function OgeGridInner<T extends object>(
                       if (dateNode.level === 0 && dateNode.children.length)
                         classes.push('oge-hf-group');
                       if (dateNode.level === 1) classes.push('oge-hf-month');
-                      if (!dateNode.children.length) classes.push('oge-hf-leaf');
+                      if (!dateNode.children.length)
+                        classes.push('oge-hf-leaf');
                       return (
                         <div
                           key={dateNode.key}
@@ -6389,7 +6434,9 @@ function OgeGridInner<T extends object>(
                               aria-expanded={!collapsed}
                               aria-label={dateNode.label}
                               onClick={() => {
-                                const next = new Set(model.headerDateCollapsed());
+                                const next = new Set(
+                                  model.headerDateCollapsed(),
+                                );
                                 if (!next.delete(dateNode.key))
                                   next.add(dateNode.key);
                                 model.headerDateCollapsed.set(next);
@@ -6410,7 +6457,9 @@ function OgeGridInner<T extends object>(
                                   ? null
                                   : groupState === 'all'
                               }
-                              onValueCommitted={() => toggleHeaderGroup(dateNode)}
+                              onValueCommitted={() =>
+                                toggleHeaderGroup(dateNode)
+                              }
                             />
                             <span>{dateNode.label}</span>
                           </label>
@@ -6435,7 +6484,10 @@ function OgeGridInner<T extends object>(
                     {visibleHeaderValues.map((value, index) => (
                       <label key={index} className="oge-hf-item">
                         <OgeCheckBox
-                          value={headerValueIsSelected(headerSelection(), value)}
+                          value={headerValueIsSelected(
+                            headerSelection(),
+                            value,
+                          )}
                           onValueCommitted={() => toggleHeaderValue(value)}
                         />
                         <span>{headerValueTextOf(value)}</span>
@@ -6451,28 +6503,28 @@ function OgeGridInner<T extends object>(
         </OgePopup>
       ) : null}
       {props.cellHintEnabled && model.hintCell() && hintPanel.isOpen ? (
-            // fixed-positioned: escapes the grid's clipping without a portal
-            <div
-              ref={hintBubbleRef}
-              id={hintPanel.panelId}
-              role="tooltip"
-              className={[
-                'oge-tooltip',
-                'oge-grid-cell-hint',
-                hintPanel.position && 'oge-tooltip-ready',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              data-placement={hintPanel.position?.placement ?? undefined}
-              style={{
-                top: hintPanel.position?.top ?? 0,
-                left: hintPanel.position?.left ?? 0,
-                opacity: hintPanel.position ? undefined : 0,
-              }}
-            >
-              {model.hintText()}
-            </div>
-          ) : null}
+        // fixed-positioned: escapes the grid's clipping without a portal
+        <div
+          ref={hintBubbleRef}
+          id={hintPanel.panelId}
+          role="tooltip"
+          className={[
+            'oge-tooltip',
+            'oge-grid-cell-hint',
+            hintPanel.position && 'oge-tooltip-ready',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          data-placement={hintPanel.position?.placement ?? undefined}
+          style={{
+            top: hintPanel.position?.top ?? 0,
+            left: hintPanel.position?.left ?? 0,
+            opacity: hintPanel.position ? undefined : 0,
+          }}
+        >
+          {model.hintText()}
+        </div>
+      ) : null}
       {popupEditNode ? (
         <OgeModal
           className="oge-edit-modal"

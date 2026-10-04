@@ -119,9 +119,9 @@ describe('group interval captions', () => {
         messages,
       ),
     ).toBe('Q2 2026');
-    expect(
-      ogeGroupValueText(100, { dataType: 'number' }, 50, messages),
-    ).toBe('100 – 150');
+    expect(ogeGroupValueText(100, { dataType: 'number' }, 50, messages)).toBe(
+      '100 – 150',
+    );
     expect(
       ogeGroupValueText(
         new Date(2026, 3, 6),
@@ -130,9 +130,9 @@ describe('group interval captions', () => {
         messages,
       ).startsWith('Week of'),
     ).toBe(true);
-    expect(ogeGroupValueText('x', { dataType: 'string' }, undefined, messages)).toBe(
-      'x',
-    );
+    expect(
+      ogeGroupValueText('x', { dataType: 'string' }, undefined, messages),
+    ).toBe('x');
   });
 });
 

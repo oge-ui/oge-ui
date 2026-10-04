@@ -109,7 +109,9 @@ export class OgeGridEditingModel<T, TSlot> extends OgeGridEditingCore<
   /** Identity of the current edit session — the drafts are scoped to it. */
   private readonly session: () => string;
   /** Async rule results per `key::field` — the latest checked value wins. */
-  private readonly asyncChecks: OgeReactiveCell<ReadonlyMap<string, AsyncCheck>>;
+  private readonly asyncChecks: OgeReactiveCell<
+    ReadonlyMap<string, AsyncCheck>
+  >;
 
   constructor(
     private readonly react: OgeGridEditingModelDeps<T, TSlot>,

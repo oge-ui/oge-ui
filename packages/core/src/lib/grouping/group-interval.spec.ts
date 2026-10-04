@@ -66,9 +66,8 @@ describe('groupKeyFilter', () => {
 
 describe('hour / week / quarter and numeric intervals', () => {
   it('truncates dates to the hour, the week start and the quarter', async () => {
-    const { resolveFirstDayOfWeek, startOfWeek } = await import(
-      '../util/date-utils'
-    );
+    const { resolveFirstDayOfWeek, startOfWeek } =
+      await import('../util/date-utils');
     const at = new Date(2026, 4, 14, 17, 45);
     expect(groupKeyOf(at, 'hour')).toEqual(new Date(2026, 4, 14, 17));
     expect(groupKeyOf(at, 'quarter')).toEqual(new Date(2026, 3, 1));

@@ -60,6 +60,8 @@ export function ogePagerInfoContext(input: {
   const firstRow =
     totalCount === 0 ? 0 : pageSize > 0 ? pageIndex * pageSize + 1 : 1;
   const lastRow =
-    pageSize > 0 ? Math.min(totalCount, (pageIndex + 1) * pageSize) : totalCount;
+    pageSize > 0
+      ? Math.min(totalCount, (pageIndex + 1) * pageSize)
+      : totalCount;
   return { ...input, firstRow, lastRow };
 }

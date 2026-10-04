@@ -157,9 +157,7 @@ export function headerConditionExpr(
     .map((condition) => conditionExpr(field, dataType, condition))
     .filter((expr): expr is FilterExpr => expr !== null);
   if (!operands.length) return null;
-  return operands.length === 1
-    ? operands[0]
-    : { type: filter.logic, operands };
+  return operands.length === 1 ? operands[0] : { type: filter.logic, operands };
 }
 
 /** Reads one condition back from the expression {@link conditionExpr} built. */

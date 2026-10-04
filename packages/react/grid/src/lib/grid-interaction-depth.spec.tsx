@@ -41,7 +41,11 @@ async function settle(): Promise<void> {
 }
 
 function pointer(el: Element, type: string, init: MouseEventInit = {}): void {
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true, ...init });
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    ...init,
+  });
   Object.defineProperty(event, 'pointerId', { value: 1 });
   Object.defineProperty(event, 'pointerType', { value: 'mouse' });
   act(() => {
@@ -87,7 +91,11 @@ describe('<OgeGrid> cell range selection', () => {
     expect(ranges).toEqual([
       { anchor: { row: 0, col: 0 }, focus: { row: 2, col: 1 } },
     ]);
-    expect(changes.at(-1)).toMatchObject({ rowCount: 3, columnCount: 2, cellCount: 6 });
+    expect(changes.at(-1)).toMatchObject({
+      rowCount: 3,
+      columnCount: 2,
+      cellCount: 6,
+    });
   });
 
   it('Shift+Arrow extends; the copy event carries the range TSV with headers', async () => {
@@ -194,7 +202,10 @@ describe('<OgeGrid> styling hooks, formats, pinned rows, merged cells', () => {
             caption: 'Qty',
             dataType: 'number',
             conditionalFormats: [
-              { when: { operator: 'ge', value: 40 }, style: { tone: 'danger' } },
+              {
+                when: { operator: 'ge', value: 40 },
+                style: { tone: 'danger' },
+              },
               { type: 'dataBar' },
             ],
           },
@@ -230,7 +241,9 @@ describe('<OgeGrid> styling hooks, formats, pinned rows, merged cells', () => {
   it('renders pinned rows and merges equal values with aria-rowspan', async () => {
     renderStyled();
     await waitFor(() =>
-      expect(document.querySelector('.oge-header .oge-pinned-row')).not.toBeNull(),
+      expect(
+        document.querySelector('.oge-header .oge-pinned-row'),
+      ).not.toBeNull(),
     );
     const top = document.querySelector('.oge-header .oge-pinned-row');
     expect(top?.textContent).toContain('Bob');
@@ -256,19 +269,20 @@ describe('<OgeGrid> Excel-style header filter menu', () => {
         ]}
         keyField="id"
         headerFilter={{ mode: 'both' }}
-        columns={[
-          { field: 'name' },
-          { field: 'shipped', dataType: 'date' },
-        ]}
+        columns={[{ field: 'name' }, { field: 'shipped', dataType: 'date' }]}
       />,
     );
     await waitFor(() =>
-      expect(document.querySelectorAll('.oge-header-filter-btn')).toHaveLength(2),
+      expect(document.querySelectorAll('.oge-header-filter-btn')).toHaveLength(
+        2,
+      ),
     );
     fireEvent.click(document.querySelectorAll('.oge-header-filter-btn')[1]);
     await settle();
     await settle();
-    const popup = document.querySelector('.oge-header-filter-menu') as HTMLElement;
+    const popup = document.querySelector(
+      '.oge-header-filter-menu',
+    ) as HTMLElement;
     expect(popup.querySelectorAll('.oge-hf-condition')).toHaveLength(2);
     expect(
       Array.from(popup.querySelectorAll('.oge-hf-group > span:last-child')).map(
@@ -333,7 +347,9 @@ describe('<OgeGrid> async validators', () => {
     await waitFor(() => expect(cell(0, 0)).not.toBeNull());
     fireEvent.click(cell(0, 0));
     await settle();
-    const input = document.querySelector('.oge-editor input') as HTMLInputElement;
+    const input = document.querySelector(
+      '.oge-editor input',
+    ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'Eve' } });
     await settle();
     const editor = document.querySelector('.oge-cell-editor') as HTMLElement;
@@ -375,9 +391,13 @@ describe('<OgeGrid> cross-grid row drag', () => {
       </>,
     );
     await waitFor(() =>
-      expect(document.querySelector('#right .oge-rows .oge-row')).not.toBeNull(),
+      expect(
+        document.querySelector('#right .oge-rows .oge-row'),
+      ).not.toBeNull(),
     );
-    const rowEl = document.querySelector('#right .oge-rows .oge-row') as HTMLElement;
+    const rowEl = document.querySelector(
+      '#right .oge-rows .oge-row',
+    ) as HTMLElement;
     const participant = findOgeRowDragParticipant(rowEl, 'people');
     expect(participant?.componentId).toBe('right');
     const source = { componentId: 'left', key: 1, row: rows()[0] };
