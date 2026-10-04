@@ -148,6 +148,29 @@ describe('buildExcelWorkbook (rich)', () => {
     expect(sheet?.getCell('C3').alignment?.horizontal).toBe('right');
   });
 
+  it('writes datetime columns as typed dates with a date-time format', () => {
+    const rows = [{ at: new Date(2026, 9, 4, 14, 30) }];
+    const columns: OgeExportColumn<(typeof rows)[number]>[] = [
+      {
+        field: 'at',
+        caption: 'At',
+        dataType: 'datetime',
+        accessor: (r) => r.at,
+      },
+    ];
+    const book = buildExcelWorkbook({ rows, columns });
+    const cell = book.getWorksheet('Data')?.getCell('A2');
+    expect(cell?.value).toBeInstanceOf(Date);
+    expect(cell?.numFmt).toBe('yyyy-mm-dd hh:mm');
+    const custom = buildExcelWorkbook(
+      { rows, columns },
+      { dateTimeFormat: 'dd.mm.yyyy hh:mm' },
+    );
+    expect(custom.getWorksheet('Data')?.getCell('A2').numFmt).toBe(
+      'dd.mm.yyyy hh:mm',
+    );
+  });
+
   it('freeze/outline/autoFilter can be switched off', () => {
     const sheet = buildExcelWorkbook(grouped(), {
       freezeHeader: false,

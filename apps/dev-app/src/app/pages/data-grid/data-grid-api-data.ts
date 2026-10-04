@@ -1292,7 +1292,7 @@ export const OGE_GRID_TYPES_API: ApiSections = {
           name: 'exportGridToExcel(grid, options?)',
           type: '@oge-ui/grid/export-excel',
           description:
-            'Lazy Excel export (exceljs peer): merged band headers, frozen header rows + left-pinned columns (<code>freezeHeader</code>, <code>freezeColumns</code>), grid or auto column widths (<code>columnWidths</code>), number/date formats (<code>numberFormat</code>, <code>dateFormat</code>, <code>columnFormats</code>), group rows with collapsible outline levels (<code>outline</code>), group-footer and total rows as values or <code>SUBTOTAL</code> formulas (<code>summaryFormulas</code>), <code>headerStyle</code> / <code>groupStyle</code> / <code>summaryStyle</code>, auto-filter. <code>buildExcelWorkbook(data, options)</code> for custom pipelines.',
+            'Lazy Excel export (exceljs peer): merged band headers, frozen header rows + left-pinned columns (<code>freezeHeader</code>, <code>freezeColumns</code>), grid or auto column widths (<code>columnWidths</code>), number/date formats (<code>numberFormat</code>, <code>dateFormat</code>, <code>dateTimeFormat</code>, <code>columnFormats</code>), group rows with collapsible outline levels (<code>outline</code>), group-footer and total rows as values or <code>SUBTOTAL</code> formulas (<code>summaryFormulas</code>), <code>headerStyle</code> / <code>groupStyle</code> / <code>summaryStyle</code>, auto-filter. <code>buildExcelWorkbook(data, options)</code> for custom pipelines.',
         },
         {
           name: 'exportGridToPdf(grid, options?)',

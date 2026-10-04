@@ -68,6 +68,8 @@ export interface OgeExcelExportOptions<
   columnWidths?: 'grid' | 'auto';
   /** Excel number format for date columns. Default: `yyyy-mm-dd`. */
   dateFormat?: string;
+  /** Excel number format for datetime columns. Default: `yyyy-mm-dd hh:mm`. */
+  dateTimeFormat?: string;
   /** Excel number format for number columns. Default: Excel's `General`. */
   numberFormat?: string;
   /** Per-field Excel number formats (win over the dataType defaults). */
@@ -155,7 +157,7 @@ function applyStyle(cell: Cell, style: OgeExportCellStyle): void {
 function typedValue<T>(column: OgeExportColumn<T>, raw: unknown): unknown {
   if (raw == null) return '';
   if (column.dataType === 'number' && typeof raw === 'number') return raw;
-  if (column.dataType === 'date') {
+  if (column.dataType === 'date' || column.dataType === 'datetime') {
     const date = raw instanceof Date ? raw : new Date(String(raw));
     if (!Number.isNaN(date.getTime())) return date;
   }
@@ -169,6 +171,8 @@ function formatOf<T>(
   const own = column.field ? options.columnFormats?.[column.field] : undefined;
   if (own) return own;
   if (column.dataType === 'date') return options.dateFormat ?? 'yyyy-mm-dd';
+  if (column.dataType === 'datetime')
+    return options.dateTimeFormat ?? 'yyyy-mm-dd hh:mm';
   if (column.dataType === 'number') return options.numberFormat;
   return undefined;
 }
