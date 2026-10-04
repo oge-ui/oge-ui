@@ -1,5 +1,9 @@
 import { computed, effect, untracked, type ModelSignal } from '@angular/core';
-import { OgeAnchoredPanel, type OgePopupPlacement } from '@oge-ui/overlay';
+import {
+  OgeAnchoredPanel,
+  type OgePopupCloseReason,
+  type OgePopupPlacement,
+} from '@oge-ui/overlay';
 import type { OgeInputDropDownApi } from '@oge-ui/inputs/field';
 
 /** Signal getters and callbacks the owning dropdown editor wires into the controller. */
@@ -19,6 +23,11 @@ export interface SelectPanelControllerDeps {
   onOpened: () => void;
   /** Runs when the panel closes for any reason (reset state, emit). */
   onClosed: () => void;
+  /**
+   * Consulted before the panel closes itself (outside click, Escape);
+   * `false` keeps it open — the editor's cancelable `closing` event.
+   */
+  beforeClose?: (reason: OgePopupCloseReason) => boolean;
 }
 
 /**
@@ -40,6 +49,7 @@ export class SelectPanelController {
       offset: deps.offset,
       viewportPadding: deps.viewportPadding,
       restoreFocus: deps.restoreFocus,
+      beforeClose: (reason) => deps.beforeClose?.(reason) ?? true,
       onClosed: () => {
         if (deps.opened()) deps.opened.set(false);
         deps.onClosed();

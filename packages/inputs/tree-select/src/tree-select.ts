@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -13,6 +14,7 @@ import {
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
+import { formatPattern, ogeChipOverflow } from '@oge-ui/behavior';
 import {
   OgeTreeView,
   type OgeTreeCheckBoxesMode,
@@ -40,6 +42,7 @@ import type {
   OgeTreeSelectDisplayMode,
   OgeTreeSelectSelectionChangedEvent,
   OgeTreeSelectSelectionMode,
+  OgeTreeSelectShowSelectionAs,
 } from './tree-select-types';
 
 let nextTreeSelectId = 0;
@@ -70,44 +73,88 @@ let nextTreeSelectId = 0;
   selector: 'oge-tree-select',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [OgeFieldChrome, OgePopup, OgeTreeView],
+  imports: [NgTemplateOutlet, OgeFieldChrome, OgePopup, OgeTreeView],
   providers: [{ provide: OGE_INPUT_HOST, useExisting: OgeTreeSelect }],
   host: {
     class: 'oge-input oge-tree-select',
     '[class.oge-tree-select-open]': 'opened()',
+    '[class.oge-tree-select-chips]': 'chipsMode()',
   },
   template: `
     <oge-field-chrome>
       <ng-content select="[ogeInputPrefix]" ngProjectAs="[ogeInputPrefix]" />
-      <input
-        #native
-        class="oge-input-native oge-select-plain"
-        type="text"
-        role="combobox"
-        aria-haspopup="tree"
-        autocomplete="off"
-        readonly
-        [id]="inputId"
-        [value]="inputText()"
-        [placeholder]="placeholderText()"
-        [disabled]="effectiveDisabled()"
-        [attr.name]="name() || null"
-        [attr.title]="tooltip() ?? null"
-        [attr.tabindex]="tabIndex()"
-        [attr.aria-expanded]="opened()"
-        [attr.aria-controls]="opened() ? treeId : null"
-        [attr.aria-label]="labelMode() === 'hidden' && label() ? label() : null"
-        [attr.aria-labelledby]="
-          labelMode() !== 'hidden' && label() ? labelId : null
-        "
-        [attr.aria-describedby]="describedBy()"
-        [attr.aria-invalid]="showError() ? 'true' : null"
-        [attr.aria-required]="required() ? 'true' : null"
-        (click)="onFieldClick()"
-        (keydown)="onKeydown($event)"
-        (focus)="handleFocus($event)"
-        (blur)="handleBlur($event)"
-      />
+      @if (chipsMode()) {
+        <div class="oge-tag-strip">
+          @for (chip of visibleChips(); track chip.key) {
+            <span class="oge-tag">
+              <span class="oge-tag-text">{{ chip.text }}</span>
+              @if (!readonly() && !effectiveDisabled()) {
+                <button
+                  type="button"
+                  class="oge-tag-remove"
+                  tabindex="-1"
+                  [attr.aria-label]="msg().removeTagButton + ' ' + chip.text"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="removeKey(chip.key, $event)"
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="10"
+                    height="10"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m4 4 8 8m0-8-8 8" />
+                  </svg>
+                </button>
+              }
+            </span>
+          }
+          @if (overflowCount() > 0) {
+            <span class="oge-tag oge-tag-more">{{ moreText() }}</span>
+          }
+          <ng-container [ngTemplateOutlet]="fieldInput" />
+        </div>
+      } @else {
+        <ng-container [ngTemplateOutlet]="fieldInput" />
+      }
+      <ng-template #fieldInput>
+        <input
+          #native
+          class="oge-input-native oge-select-plain"
+          [class.oge-tag-input]="chipsMode()"
+          type="text"
+          role="combobox"
+          aria-haspopup="tree"
+          autocomplete="off"
+          readonly
+          [id]="inputId"
+          [value]="chipsMode() ? '' : inputText()"
+          [placeholder]="chipsMode() && !isEmpty() ? '' : placeholderText()"
+          [disabled]="effectiveDisabled()"
+          [attr.name]="name() || null"
+          [attr.title]="tooltip() ?? null"
+          [attr.tabindex]="tabIndex()"
+          [attr.aria-expanded]="opened()"
+          [attr.aria-controls]="opened() ? treeId : null"
+          [attr.aria-label]="
+            labelMode() === 'hidden' && label() ? label() : null
+          "
+          [attr.aria-labelledby]="
+            labelMode() !== 'hidden' && label() ? labelId : null
+          "
+          [attr.aria-describedby]="describedBy()"
+          [attr.aria-invalid]="showError() ? 'true' : null"
+          [attr.aria-required]="required() ? 'true' : null"
+          (click)="onFieldClick()"
+          (keydown)="onKeydown($event)"
+          (focus)="handleFocus($event)"
+          (blur)="handleBlur($event)"
+        />
+      </ng-template>
       <ng-content select="[ogeInputSuffix]" ngProjectAs="[ogeInputSuffix]" />
     </oge-field-chrome>
     @if (opened()) {
@@ -214,6 +261,14 @@ export class OgeTreeSelect<TItem extends object = Record<string, unknown>>
   /** How a multiple-selection value is rendered in the closed field. */
   readonly displayMode = input<OgeTreeSelectDisplayMode>('text');
   /**
+   * `'chips'` renders the selected nodes as removable chips in the field
+   * (Backspace removes the last one); `'text'` keeps the comma list /
+   * `displayMode`.
+   */
+  readonly showSelectionAs = input<OgeTreeSelectShowSelectionAs>('text');
+  /** In chips mode, caps the rendered chips; the rest fold into `+N more`. */
+  readonly maxDisplayedTags = input<number | undefined>(undefined);
+  /**
    * Which gesture expands a node inside the popup. Defaults to `dblclick`, not
    * the tree's own `click`: in a picker a single click should choose a node,
    * and the chevron expands either way.
@@ -301,6 +356,37 @@ export class OgeTreeSelect<TItem extends object = Record<string, unknown>>
     visit(rows);
     return map;
   });
+
+  protected readonly chipsMode = computed(
+    () => this.showSelectionAs() === 'chips',
+  );
+
+  /** One chip per selected key, labelled from `items`. */
+  private readonly chips = computed<readonly { key: RowKey; text: string }[]>(
+    () => {
+      const labels = this.labelByKey();
+      return this.selectedKeys().map((key) => ({
+        key,
+        text: labels.get(key) ?? String(key),
+      }));
+    },
+  );
+
+  private readonly overflow = computed(() =>
+    ogeChipOverflow(this.chips().length, this.maxDisplayedTags()),
+  );
+
+  protected readonly visibleChips = computed(() =>
+    this.chips().slice(0, this.overflow().shown),
+  );
+
+  protected readonly overflowCount = computed(() => this.overflow().hidden);
+
+  protected readonly moreText = computed(() =>
+    formatPattern(this.msg().moreTags, {
+      count: String(this.overflowCount()),
+    }),
+  );
 
   /** Text shown in the closed field. */
   protected readonly inputText = computed(() => {
@@ -414,9 +500,30 @@ export class OgeTreeSelect<TItem extends object = Record<string, unknown>>
           this.focus();
         }
         return;
+      case 'Backspace': {
+        const keys = this.selectedKeys();
+        if (this.chipsMode() && keys.length > 0) {
+          event.preventDefault();
+          this.removeKey(keys[keys.length - 1], event);
+        }
+        return;
+      }
       default:
         return;
     }
+  }
+
+  /** Removes one node from the selection (a chip's ✕, or Backspace). */
+  protected removeKey(key: RowKey, event: Event): void {
+    if (this.effectiveDisabled() || this.readonly()) return;
+    const previous = this.selectedKeys();
+    const keys = previous.filter((candidate) => candidate !== key);
+    if (keys.length === previous.length) return;
+    const next =
+      this.selectionMode() === 'multiple' ? [...keys] : (keys[0] ?? null);
+    this.commitNow(next, event);
+    this.selectionChanged.emit({ keys: [...keys], previousKeys: previous });
+    this.focus();
   }
 
   protected onTreeSelectionChange(keys: readonly RowKey[]): void {

@@ -1,0 +1,126 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// Multi-column combo box popup: one scroller holding a sticky header row and
+// the body rows, all on one shared `grid-template-columns`
+// (`--oge-mccb-columns`, built by `ogeComboGridTemplate`). Row heights match
+// OGE_SELECT_OPTION_HEIGHT so the list virtualizer's arithmetic holds.
+
+.oge-mccb-grid {
+  --oge-mccb-row-height: 34px;
+
+  max-height: 320px;
+  overflow: auto;
+  padding: 0 4px 4px;
+  // the sticky header must not cover a row scrolled into view from below it
+  scroll-padding-block-start: var(--oge-mccb-row-height);
+  scrollbar-width: thin;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
+
+  // the active cell carries the visible cue (aria-activedescendant)
+  &:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+  }
+}
+
+.oge-input-sm .oge-mccb-grid {
+  --oge-mccb-row-height: 28px;
+}
+
+.oge-input-lg .oge-mccb-grid {
+  --oge-mccb-row-height: 40px;
+}
+
+.oge-mccb-row {
+  display: grid;
+  grid-template-columns: var(--oge-mccb-columns, minmax(0, 1fr));
+  align-items: stretch;
+  min-width: var(--oge-mccb-min-width, 0);
+  box-sizing: border-box;
+}
+
+.oge-mccb-row.oge-select-option {
+  gap: 0;
+  height: var(--oge-mccb-row-height);
+  padding: 0;
+}
+
+.oge-mccb-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  height: var(--oge-mccb-row-height);
+  margin-inline: -4px;
+  padding-inline: 4px;
+  border-block-end: 1px solid var(--oge-border-color);
+  background: var(--oge-popup-bg);
+  color: var(--oge-muted-color);
+  font-size: calc(var(--oge-font-size) - 1px);
+  font-weight: 600;
+}
+
+.oge-mccb-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-inline: 10px;
+  overflow: hidden;
+  border-radius: calc(var(--oge-radius) - 2px);
+  transition: box-shadow 120ms ease;
+}
+
+.oge-mccb-header-cell {
+  user-select: none;
+}
+
+.oge-mccb-cell-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.oge-mccb-align-center {
+  justify-content: center;
+  text-align: center;
+}
+
+.oge-mccb-align-end {
+  justify-content: flex-end;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+// the keyboard's active cell inside the active row
+.oge-mccb-cell-active {
+  box-shadow: inset 0 0 0 2px var(--oge-accent);
+}
+
+.oge-mccb-status-row {
+  display: block;
+}
+
+.oge-popup-adaptive .oge-mccb-grid {
+  max-height: none;
+  flex: 1 1 auto;
+}
+
+@include tokens.reduced-motion {
+  .oge-mccb-cell {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-mccb-header {
+    border-block-end-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .oge-mccb-cell-active {
+    box-shadow: none;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

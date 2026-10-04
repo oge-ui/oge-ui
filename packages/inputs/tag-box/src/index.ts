@@ -5,4 +5,6 @@ export { OgeTagBox } from './tag-box';
 export {
   type OgeTagBoxSelectionChangedEvent,
   type OgeTagBoxItemClickEvent,
+  type OgeTagBoxTagTemplateContext,
+  type OgeTagBoxSelectAllEvent,
 } from './tag-box-types';

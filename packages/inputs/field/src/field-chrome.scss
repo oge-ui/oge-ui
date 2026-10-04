@@ -578,6 +578,139 @@
   object-fit: cover;
 }
 
+// --- select templates, remote paging, select all -----------------------------
+
+// `fieldTemplate`: the template paints over the real input, which stays
+// focusable and keeps its text for assistive technology
+.oge-select-field-templated .oge-input-infix {
+  position: relative;
+}
+
+.oge-select-field-templated .oge-input-native {
+  color: transparent;
+  caret-color: var(--oge-text-color);
+}
+
+.oge-select-field-content {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  pointer-events: none;
+}
+
+.oge-select-popup-header,
+.oge-select-popup-footer {
+  padding: 8px 12px;
+  color: var(--oge-muted-color);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-select-popup-header {
+  border-block-end: 1px solid var(--oge-border-color);
+}
+
+.oge-select-popup-footer {
+  border-block-start: 1px solid var(--oge-border-color);
+}
+
+// the "next page is loading" row under the loaded options
+.oge-select-loading-more {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 8px;
+
+  &::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    flex: none;
+    border: 2px solid var(--oge-accent-soft);
+    border-block-start-color: var(--oge-accent);
+    border-radius: 50%;
+    animation: oge-select-spin 800ms linear infinite;
+  }
+}
+
+@keyframes oge-select-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// tag box "select all" row — an option-shaped toggle above the listbox
+.oge-tag-select-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 14px;
+  border: 0;
+  border-block-end: 1px solid var(--oge-border-color);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: var(--oge-font-size);
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-tag-checkbox-mixed {
+  @include selection-glyph.selection-glyph-on;
+}
+
+.oge-select-limit {
+  padding: 6px 12px;
+  border-block-end: 1px solid var(--oge-border-color);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+@include tokens.reduced-motion {
+  .oge-select-loading-more::before {
+    animation-duration: 2400ms;
+  }
+
+  .oge-tag-select-all {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-select-loading-more::before {
+    border-color: CanvasText;
+    border-block-start-color: Highlight;
+  }
+
+  .oge-tag-checkbox-mixed {
+    border-color: Highlight;
+    background: Highlight;
+  }
+
+  .oge-select-limit {
+    border: 1px solid CanvasText;
+  }
+}
+
 // --- virtual scrolling ------------------------------------------------------
 // Fixed row heights must match OGE_SELECT_OPTION_HEIGHT in list-virtualizer.ts.
 
@@ -724,16 +857,22 @@
 }
 // --- tag box ----------------------------------------------------------------
 
-.oge-tag-box .oge-input-container {
+.oge-tag-box .oge-input-container,
+.oge-tree-select-chips .oge-input-container,
+.oge-multi-column-combo-box-multiple .oge-input-container {
   height: auto;
   min-height: 34px;
 }
 
-.oge-tag-box.oge-input-sm .oge-input-container {
+.oge-tag-box.oge-input-sm .oge-input-container,
+.oge-tree-select-chips.oge-input-sm .oge-input-container,
+.oge-multi-column-combo-box-multiple.oge-input-sm .oge-input-container {
   min-height: 28px;
 }
 
-.oge-tag-box.oge-input-lg .oge-input-container {
+.oge-tag-box.oge-input-lg .oge-input-container,
+.oge-tree-select-chips.oge-input-lg .oge-input-container,
+.oge-multi-column-combo-box-multiple.oge-input-lg .oge-input-container {
   min-height: 42px;
 }
 

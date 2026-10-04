@@ -239,6 +239,11 @@ export interface OgeInputsConfig {
   /** Select box: delay before typed search text filters the list. */
   searchTimeoutMs: number;
   /**
+   * Rows a list editor asks its `dataSource` for per page (`take`) — select
+   * box, tag box, autocomplete and multi-column combo box.
+   */
+  dataPageSize: number;
+  /**
    * Default `adaptiveMode` of every popup editor (select box, tag box,
    * autocomplete, tree select, date / date range / color box). `'none'`
    * keeps the anchored drop-down everywhere; `'auto'` presents it as a bottom
@@ -255,6 +260,7 @@ export const OGE_DEFAULT_INPUTS_CONFIG: OgeInputsConfig = {
   spinRepeatIntervalMs: 80,
   copiedResetMs: 2000,
   searchTimeoutMs: 250,
+  dataPageSize: 30,
   adaptiveMode: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveMode,
   adaptiveBreakpoint: OGE_DEFAULT_ADAPTIVE_CONFIG.adaptiveBreakpoint,
   messages: OGE_DEFAULT_INPUTS_MESSAGES,

@@ -42,6 +42,12 @@ export interface OgeSelectListCoreDeps<TItem> {
   disabledExpr: () => OgeSelectDisabledExpr<TItem> | undefined;
   imageExpr: () => OgeSelectImageExpr<TItem> | undefined;
   searchExpr: () => OgeSelectSearchExpr<TItem> | undefined;
+  /**
+   * Default search texts when no `searchExpr` is set — the multi-column combo
+   * box searches every searchable column's formatted cell text. Omitted, the
+   * display text is searched.
+   */
+  searchTexts?: (item: TItem) => readonly string[];
   searchEnabled: () => boolean;
   searchMode: () => OgeSelectSearchMode;
   /** Debounce before typed text filters the list; `0` filters synchronously. */
@@ -215,6 +221,8 @@ export class OgeSelectListCore<TItem> {
         String((item as Record<string, unknown>)[key] ?? ''),
       );
     }
+    const texts = this.deps.searchTexts?.(item);
+    if (texts) return [...texts];
     return [this.displayOf(item)];
   }
 
