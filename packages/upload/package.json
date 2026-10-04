@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/upload",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Signal-based Angular file uploader: drag & drop with directory and paste support, client-side restrictions, image previews, per-file progress, chunked and resumable transfer with pause/resume/retry, a pluggable upload adapter, and a full keyboard and screen-reader contract.",
   "keywords": [
     "angular",
@@ -23,9 +23,9 @@
     "@angular/forms": ">=22.0.0 <24.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.1",
-    "@oge-ui/layout": "1.1.1",
-    "@oge-ui/overlay": "1.1.1"
+    "@oge-ui/behavior": "1.1.2",
+    "@oge-ui/layout": "1.1.2",
+    "@oge-ui/overlay": "1.1.2"
   },
   "sideEffects": false,
   "schematics": "./schematics/collection.json",

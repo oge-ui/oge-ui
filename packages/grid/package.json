@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/grid",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Signal-based Angular data grid: virtualized rendering for 100k+ rows, filtering, grouping, editing, selection, column virtualization, state persistence and Excel/PDF export.",
   "keywords": [
     "angular",
@@ -24,12 +24,12 @@
     "@angular/forms": ">=22.0.0 <24.0.0"
   },
   "dependencies": {
-    "@oge-ui/behavior": "1.1.1",
-    "@oge-ui/core": "1.1.1",
-    "@oge-ui/inputs": "1.1.1",
-    "@oge-ui/forms": "1.1.1",
-    "@oge-ui/layout": "1.1.1",
-    "@oge-ui/overlay": "1.1.1"
+    "@oge-ui/behavior": "1.1.2",
+    "@oge-ui/core": "1.1.2",
+    "@oge-ui/inputs": "1.1.2",
+    "@oge-ui/forms": "1.1.2",
+    "@oge-ui/layout": "1.1.2",
+    "@oge-ui/overlay": "1.1.2"
   },
   "exports": {
     "./themes/*": "./themes/*"

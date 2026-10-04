@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/react-kanban",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "React Kanban board from the OGE UI suite: columns and swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move events, a built-in edit dialog, context menu and toolbar — running the same engine and the same stylesheet as the Angular Kanban package. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "react",
@@ -36,9 +36,9 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@oge-ui/kanban-engine": "1.1.1",
-    "@oge-ui/react-forms": "1.1.1",
-    "@oge-ui/react-overlay": "1.1.1"
+    "@oge-ui/kanban-engine": "1.1.2",
+    "@oge-ui/react-forms": "1.1.2",
+    "@oge-ui/react-overlay": "1.1.2"
   },
   "homepage": "https://www.ogeui.com",
   "repository": {

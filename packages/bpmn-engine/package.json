@@ -1,6 +1,6 @@
 {
   "name": "@oge-ui/bpmn-engine",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Framework-free engine of the OGE UI BPMN 2.0 editor: the diagram model, BPMN XML + diagram-interchange reader/writer, JSON envelope, SVG export, orthogonal routing, snapping, alignment, modeling rules, the snapshot command stack and the editor core (tools, gestures, keyboard map, view models) that the Angular and React editors both run. No dependencies. Source-available commercial license (free for evaluation and development).",
   "keywords": [
     "bpmn",
