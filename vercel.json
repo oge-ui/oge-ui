@@ -29,6 +29,21 @@
       "source": "/remote-data",
       "destination": "/components/data-grid/remote-data",
       "permanent": true
+    },
+    {
+      "source": "/components/menubar/routed",
+      "destination": "/components/menubar/routed/overview",
+      "permanent": false
+    },
+    {
+      "source": "/components/tabs/routed",
+      "destination": "/components/tabs/routed/overview",
+      "permanent": false
+    },
+    {
+      "source": "/components/breadcrumb/routed",
+      "destination": "/components/breadcrumb/routed/reports",
+      "permanent": false
     }
   ],
   "rewrites": [

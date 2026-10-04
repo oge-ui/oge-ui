@@ -1218,6 +1218,17 @@ and Search Console reported the whole site as "redirected / discovered – not i
   sidebar and `llms.txt`; `shared/title.strategy.ts` turns it into the document title
   (`Angular Button Group | OGE UI`). `shared/seo.service.ts` writes canonical, description and
   og/twitter tags on every `NavigationEnd` — on the server too, so they land in the static HTML.
+  **Every indexable route has its own 140–160-character description** in `DESCRIPTIONS`
+  (exact path first, then the longest whole-segment prefix, home text as the fallback);
+  `seo.service.spec.ts` fails on a duplicate or an out-of-range length — a family-level fallback
+  once gave 92 of 112 pages the same description. Each page also emits a `BreadcrumbList` JSON-LD
+  (Home → Components/Getting Started → Family → Page); routed demo children canonicalise to the
+  page they land on.
+- The sitemap's `<lastmod>` is the last commit touching the page file, its snippets and (API
+  pages) the api-data beside it; `llms-check` ignores `<lastmod>` so dates never fail CI.
+- Redirects the static host must answer itself (legacy grid paths: 301; routed demo parents:
+  307, which keeps `?framework=react`) live in `vercel.json` `redirects` — a prerendered Angular
+  redirect stub would drop the query string.
 - **Browser globals must be guarded** in code that runs during construction or destroy:
   `localStorage`, `document`, `window`, `ResizeObserver` are absent in the prerender worker
   (Angular's server DOM also lacks `dataset`; use `setAttribute`). Prefer `afterNextRender` /
