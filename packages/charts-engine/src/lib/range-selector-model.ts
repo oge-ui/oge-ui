@@ -20,7 +20,12 @@ import {
 } from './series-model';
 import { numberFormat, timeTickFormatter } from './tick-format';
 import { chartSeriesColor } from './cartesian-model';
-import type { OgeChartsMessages } from './charts-config';
+import type {
+  OgeChartsMessages,
+  OgeChartsPeriodMessages,
+} from './charts-config';
+import { addChartDateInterval, isChartDateInterval } from './axis-scale';
+import type { OgeChartCustomPeriod, OgeChartPeriod } from './charts-types';
 
 /** Height of the tick-label strip under the mini chart. */
 const H_SCALE = 18;
@@ -280,4 +285,126 @@ export function rangeSelectorAnnouncement(
   locale: string | undefined,
 ): string {
   return `${messages.aria.rangeWindow}: ${rangeSelectorLabel(kind, effective.min, locale)} – ${rangeSelectorLabel(kind, effective.max, locale)}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* period buttons                                                      */
+/* ------------------------------------------------------------------ */
+
+/** One rendered period button. */
+export interface OgeRangeSelectorPeriodVm {
+  /** Stable key: the built-in code or `custom-<index>`. */
+  readonly key: string;
+  /** Visible text. */
+  readonly text: string;
+  /** Accessible name. */
+  readonly label: string;
+  /** The window it applies; `null` = the full range. */
+  readonly range: ChartRange | null;
+  /** The current window is this period's (`aria-pressed`). */
+  readonly active: boolean;
+}
+
+type PeriodKey = keyof OgeChartsPeriodMessages;
+
+const BUILT_IN: Readonly<
+  Record<
+    OgeChartPeriod,
+    {
+      readonly text: PeriodKey;
+      readonly label: PeriodKey;
+      readonly months: number;
+    }
+  >
+> = {
+  '1M': { text: 'month1', label: 'month1Label', months: 1 },
+  '3M': { text: 'month3', label: 'month3Label', months: 3 },
+  '6M': { text: 'month6', label: 'month6Label', months: 6 },
+  YTD: { text: 'yearToDate', label: 'yearToDateLabel', months: 0 },
+  '1Y': { text: 'year1', label: 'year1Label', months: 12 },
+  All: { text: 'all', label: 'allLabel', months: 0 },
+};
+
+/**
+ * The window a period selects, ending at the data end: calendar months back
+ * (`1M`/`3M`/`6M`/`1Y`, real month lengths), January 1st of the end's year
+ * (`YTD`), the full range (`All` → `null`), or a custom span. `undefined`
+ * when the period does not apply to the axis (calendar periods on a linear
+ * axis) — such buttons are not rendered.
+ */
+export function rangeSelectorPeriodRange(
+  period: OgeChartPeriod | OgeChartCustomPeriod,
+  kind: ChartScaleKind,
+  bounds: ChartRange,
+): ChartRange | null | undefined {
+  const end = bounds.max;
+  const clamp = (min: number): ChartRange => ({
+    min: Math.max(bounds.min, Math.min(min, end)),
+    max: end,
+  });
+  if (typeof period === 'string') {
+    if (period === 'All') return null;
+    if (kind !== 'time') return undefined;
+    if (period === 'YTD') {
+      return clamp(new Date(new Date(end).getFullYear(), 0, 1).getTime());
+    }
+    return clamp(
+      addChartDateInterval(end, { months: BUILT_IN[period].months }, -1),
+    );
+  }
+  const range = period.range;
+  if (typeof range === 'number') return clamp(end - Math.abs(range));
+  if (isChartDateInterval(range)) {
+    return kind === 'time'
+      ? clamp(addChartDateInterval(end, range, -1))
+      : undefined;
+  }
+  const window = range as ChartRange;
+  return clampRange(
+    {
+      min: Math.min(window.min, window.max),
+      max: Math.max(window.min, window.max),
+    },
+    bounds,
+  );
+}
+
+/** The period buttons to render, with the one matching `value` pressed. */
+export function rangeSelectorPeriods<T>(
+  periods: readonly (OgeChartPeriod | OgeChartCustomPeriod)[],
+  data: OgeRangeSelectorData<T>,
+  value: ChartRange | null,
+  messages: OgeChartsMessages,
+): readonly OgeRangeSelectorPeriodVm[] {
+  const effective = rangeSelectorEffective(data, value);
+  const span = data.bounds.max - data.bounds.min || 1;
+  const close = (a: number, b: number): boolean =>
+    Math.abs(a - b) <= span * 0.002;
+  const result: OgeRangeSelectorPeriodVm[] = [];
+  periods.forEach((period, index) => {
+    const range = rangeSelectorPeriodRange(period, data.kind, data.bounds);
+    if (range === undefined) return;
+    const target = range ?? data.bounds;
+    const active =
+      close(effective.min, target.min) && close(effective.max, target.max);
+    if (typeof period === 'string') {
+      const keys = BUILT_IN[period];
+      result.push({
+        key: period,
+        text: messages.periods[keys.text],
+        label: messages.periods[keys.label],
+        range,
+        active,
+      });
+    } else {
+      result.push({
+        key: `custom-${index}`,
+        text: period.label,
+        label: period.label,
+        range,
+        active,
+      });
+    }
+  });
+  return result;
 }

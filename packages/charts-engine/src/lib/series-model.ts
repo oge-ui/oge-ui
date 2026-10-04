@@ -35,6 +35,11 @@ export interface ChartSeriesInput<T = unknown> {
   readonly color?: string;
   /** Index into the `valueAxis` array (multi-axis charts). */
   readonly axis?: number;
+  /**
+   * Name of the pane (`panes`) the series draws in. Without an explicit
+   * `axis` it binds to the first value axis of that pane.
+   */
+  readonly pane?: string;
   /** Stack group of stacked series; unset = one shared default stack. */
   readonly stack?: string;
   readonly dashStyle?: 'solid' | 'dash' | 'dot';

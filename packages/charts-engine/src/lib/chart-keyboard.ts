@@ -1,7 +1,8 @@
 /**
  * The charts' keyboard maps. No WAI-ARIA APG chart pattern exists; the plot
  * region is a focusable group where arrows walk arguments (Left/Right) and
- * series (Up/Down), Home/End jump, Enter/Space activate and Escape resets the
+ * series (Up/Down) — Up/Down and Left/Right swap on a rotated chart, and
+ * the horizontal pair mirrors in RTL — Home/End jump, Enter/Space activate and Escape resets the
  * zoom. The range selector's handles follow the APG slider pattern.
  *
  * Pure: each map turns a key + the current state into a command, and the
@@ -34,6 +35,13 @@ export interface OgeChartKeyContext {
   readonly isSeriesVisible: (seriesIndex: number) => boolean;
   /** Cartesian only: a zoom window is applied. */
   readonly zoomed?: boolean;
+  /**
+   * Cartesian only: the argument axis runs vertically — Up/Down walk the
+   * arguments (first on top) and Left/Right the series.
+   */
+  readonly rotated?: boolean;
+  /** Mirrored layout: the horizontal arrow keys swap (visual order). */
+  readonly rtl?: boolean;
 }
 
 /** Next visible series in `delta` direction, wrapping (stays put if none). */
@@ -61,14 +69,22 @@ export function cartesianKeyCommand(
     ),
     clearPointer: true,
   });
+  // arrows follow the screen: the argument axis' own direction walks the
+  // arguments, the cross direction walks the series
+  const forward = ctx.rtl === true ? 'ArrowLeft' : 'ArrowRight';
+  const backward = ctx.rtl === true ? 'ArrowRight' : 'ArrowLeft';
+  const argNext = ctx.rotated === true ? 'ArrowDown' : forward;
+  const argPrev = ctx.rotated === true ? 'ArrowUp' : backward;
+  const seriesNext = ctx.rotated === true ? forward : 'ArrowDown';
+  const seriesPrev = ctx.rotated === true ? backward : 'ArrowUp';
   switch (key) {
-    case 'ArrowRight':
+    case argNext:
       return step(1);
-    case 'ArrowLeft':
+    case argPrev:
       return step(-1);
-    case 'ArrowDown':
+    case seriesNext:
       return { type: 'series', seriesIndex: stepSeries(ctx, 1) };
-    case 'ArrowUp':
+    case seriesPrev:
       return { type: 'series', seriesIndex: stepSeries(ctx, -1) };
     case 'Home':
       return { type: 'argument', position: 0, clearPointer: false };

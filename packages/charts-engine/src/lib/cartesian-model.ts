@@ -50,10 +50,53 @@ import {
 import { downsamplePath } from './downsample';
 import {
   decideLabelLayout,
+  hideOverlappingLabels,
   numberFormat,
   siFormat,
-  timeTickFormatter,
+  type LabelLayoutDecision,
 } from './tick-format';
+import {
+  applyChartTickOptions,
+  createBrokenLinearScale,
+  offsetChartScale,
+} from './axis-scale';
+import {
+  chartArgumentLabelFormatter,
+  chartValueLabelFormatter,
+} from './axis-labels';
+import {
+  createChartFrame,
+  frameLabelAnchor,
+  frameLabelBaseline,
+  frameLine,
+  frameLogical,
+  framePoint,
+  frameRect,
+  frameTextTransform,
+  type OgeChartFrame,
+  type OgeChartLineVm,
+  type OgeChartRectVm,
+} from './chart-frame';
+import {
+  bindChartPaneAxes,
+  chartArgumentGridLines,
+  chartBreakMarker,
+  chartOutsideLabelMargins,
+  chartPaneAt,
+  chartPaneList,
+  chartValueAxisSlots,
+  chartValueGridLines,
+  layoutChartGuides,
+  layoutChartPanes,
+  paneChartBarSlots,
+  paneChartStacks,
+  type OgeChartBreakMarkerVm,
+  type OgeChartGridLineVm,
+  type OgeChartGuideVm,
+  type OgeChartPaneVm,
+} from './cartesian-layout';
+import { chartSeriesEnterOrigin } from './chart-animation';
+import type { BarSlot } from './series-layout';
 import {
   buildArgumentIndex,
   nearestIndex,
@@ -66,6 +109,7 @@ import {
   type OgeChartAxisOptions,
   type OgeChartCrosshairOptions,
   type OgeChartExportData,
+  type OgeChartPane,
   type OgeChartPointEvent,
   type OgeChartPointRef,
   type OgeChartStripLine,
@@ -303,6 +347,35 @@ export interface OgeCartesianSceneInput<T> {
   readonly height: number;
   readonly locale?: string;
   readonly markerThreshold?: number;
+  /** Swap the axes: argument axis vertical, value axis horizontal. */
+  readonly rotated?: boolean;
+  /** Mirror the horizontal layout (right-to-left). */
+  readonly rtl?: boolean;
+  /** Plot areas stacked over the shared argument axis. */
+  readonly panes?: readonly OgeChartPane[];
+}
+
+/** A tick label of any axis, in svg px. */
+export interface OgeChartAxisLabelVm {
+  readonly x: number;
+  readonly y: number;
+  readonly text: string;
+  readonly anchor: 'start' | 'middle' | 'end';
+  /** Tilted labels (`overlap: 'rotate'`). */
+  readonly transform: string | null;
+  readonly axis: 'argument' | 'value';
+  /** Value axes: the `valueAxis` index. */
+  readonly axisIndex: number;
+}
+
+/** An axis title, in svg px (`transform` carries the rotation). */
+export interface OgeChartAxisTitleVm {
+  readonly x: number;
+  readonly y: number;
+  readonly text: string;
+  readonly transform: string | null;
+  readonly axis: 'argument' | 'value';
+  readonly axisIndex: number;
 }
 
 /** Stage 2: everything the SVG draws, bar the hover layer. */
@@ -324,16 +397,47 @@ export interface OgeCartesianScene<T> {
   readonly renderSeries: readonly OgeChartRenderSeries[];
   readonly argGrid: boolean;
   readonly argAxisTitle: string;
+  /** Kept argument ticks; `px` along the argument axis (logical). */
   readonly argTicks: readonly OgeChartAxisTick[];
   readonly argRotated: boolean;
-  /** Horizontal grid lines (first value axis). */
+  /** Grid ticks of the first value axis (logical px). */
   readonly valueGridTicks: readonly OgeChartAxisTick[];
+  /** Value axes in the unrotated layout (kept for custom renderers). */
   readonly valueAxes: readonly OgeChartValueAxisVm[];
+  /** The top-level `stripLines` in the unrotated layout (logical px). */
   readonly stripRects: readonly OgeChartStripRect[];
   readonly annotations: readonly OgeChartAnnotationVm[];
   readonly legendItems: readonly OgeChartLegendEntry[];
   /** Nothing to plot: no visible series or no arguments. */
   readonly empty: boolean;
+  readonly rotated: boolean;
+  readonly rtl: boolean;
+  /**
+   * The orientation frame: series geometry is logical, drawn inside a group
+   * carrying `frame.transform`; every other list below is screen px.
+   */
+  readonly frame: OgeChartFrame;
+  readonly panes: readonly OgeChartPaneVm[];
+  /** Value-axis index per series (after pane binding). */
+  readonly seriesAxis: readonly number[];
+  /** Pane index per series. */
+  readonly seriesPane: readonly number[];
+  /** Every tick label (argument + value axes), svg px. */
+  readonly axisLabels: readonly OgeChartAxisLabelVm[];
+  readonly axisTitles: readonly OgeChartAxisTitleVm[];
+  /** Grid lines (major + minor), plot-local px. */
+  readonly gridLines: readonly OgeChartGridLineVm[];
+  /** The argument axis line of every pane, plot-local px. */
+  readonly axisLines: readonly OgeChartLineVm[];
+  /** Minor tick marks on the axis lines, plot-local px. */
+  readonly tickMarks: readonly OgeChartLineVm[];
+  /** Strips (bands) and constant / strip lines, plot-local px. */
+  readonly guides: readonly OgeChartGuideVm[];
+  /** Value-axis break markers, plot-local px. */
+  readonly breakMarkers: readonly OgeChartBreakMarkerVm[];
+  /** `text-anchor` / `dominant-baseline` of series value labels. */
+  readonly pointLabelAnchor: 'start' | 'middle' | 'end';
+  readonly pointLabelBaseline: 'central' | null;
 }
 
 /** The value axes as a list (a single object is one axis; `[]` is one default). */
@@ -360,13 +464,67 @@ export function chartSeriesColor(
   return series?.input.color ?? colors[seriesIndex % colors.length];
 }
 
+/**
+ * The data with each series' `axis` set to its pane binding, so every
+ * consumer of `scene.data` reads the bound axis from `input.axis`. The
+ * same object when nothing changes.
+ */
+function withBoundAxes<T>(
+  data: OgeCartesianData<T>,
+  seriesAxis: readonly number[],
+  stacks: OgeCartesianData<T>['stacks'],
+): OgeCartesianData<T> {
+  const changed = data.seriesList.some(
+    (series, index) => (series.input.axis ?? 0) !== seriesAxis[index],
+  );
+  if (!changed && stacks === data.stacks) return data;
+  return {
+    ...data,
+    stacks,
+    seriesList: changed
+      ? data.seriesList.map((series, index) =>
+          (series.input.axis ?? 0) === seriesAxis[index]
+            ? series
+            : {
+                ...series,
+                input: { ...series.input, axis: seriesAxis[index] },
+              },
+        )
+      : data.seriesList,
+  };
+}
+
+const VAXIS_ROW = 20;
+const TITLE_H = 14;
+const STAGGER_H = 12;
+const OUTSIDE_LABEL_H = 14;
+
 export function buildCartesianScene<T>(
   input: OgeCartesianSceneInput<T>,
 ): OgeCartesianScene<T> {
-  const { data } = input;
   const argumentAxis = input.argumentAxis ?? {};
   const locale = input.locale;
-  const { argKind, categories, categoryIndex, seriesList, stacks } = data;
+  const rotated = input.rotated === true;
+  const rtl = input.rtl === true;
+  const { argKind, categories, categoryIndex } = input.data;
+
+  /* panes + series → axis → pane binding */
+  const paneList = chartPaneList(input.panes);
+  const multiPane = paneList.length > 1;
+  const binding = bindChartPaneAxes(
+    chartValueAxesList(input.valueAxis),
+    paneList,
+    input.data.seriesList as readonly ChartSeries<unknown>[],
+  );
+  const valueAxesOptions = binding.axes;
+  const data = withBoundAxes(
+    input.data,
+    binding.seriesAxis,
+    multiPane
+      ? paneChartStacks(input.data.seriesList, binding.seriesPane)
+      : input.data.stacks,
+  );
+  const { seriesList, stacks } = data;
 
   const visibility = seriesList.map((series, index) => {
     const override = input.visibilityOverrides.get(index);
@@ -374,24 +532,6 @@ export function buildCartesianScene<T>(
   });
   const colors = seriesList.map((series, index) =>
     chartSeriesColor(series as ChartSeries<unknown>, index, input.palette),
-  );
-
-  /* plot rect */
-  const valueAxesOptions = chartValueAxesList(input.valueAxis);
-  const rightAxisCount = valueAxesOptions.filter(
-    (axis) => axis.position === 'end',
-  ).length;
-  const leftAxisCount = valueAxesOptions.length - rightAxisCount;
-  const argAxisTitle = argumentAxis.title ?? '';
-  const plotX = Math.max(1, leftAxisCount) * AXIS_W;
-  const plotY = MARGIN_TOP;
-  const plotW = Math.max(
-    10,
-    input.width - plotX - Math.max(rightAxisCount * AXIS_W, 12),
-  );
-  const plotH = Math.max(
-    10,
-    input.height - MARGIN_TOP - MARGIN_BOTTOM - (argAxisTitle ? 14 : 0),
   );
 
   /* argument bounds + scale */
@@ -425,65 +565,174 @@ export function buildCartesianScene<T>(
       ? argBounds
       : clampRange(input.visualRange, argBounds);
 
-  const argScale = ((): ChartScale => {
+  // RTL mirrors an unrotated chart through the argument scale; a rotated
+  // chart mirrors through the frame (its argument axis stays top-down)
+  const argInverted = (argumentAxis.inverted === true) !== (rtl && !rotated);
+  const makeArgScale = (rangePx: number): ChartScale => {
     const range = effectiveRange;
-    const rangePx = plotW;
-    const inverted = argumentAxis.inverted;
-    if (argKind === 'time') {
-      return createTimeScale({
-        min: range.min,
-        max: range.max,
-        rangePx,
-        inverted,
-      });
-    }
-    if (argKind === 'category') {
-      if (input.visualRange === null) {
-        return createCategoryScale({
-          count: categories.length,
+    const inverted = argInverted;
+    const raw = ((): ChartScale => {
+      if (argKind === 'time') {
+        return createTimeScale({
+          min: range.min,
+          max: range.max,
           rangePx,
           inverted,
         });
       }
-      const linear = createLinearScale({
-        min: range.min,
-        max: range.max,
-        rangePx,
-        inverted,
-      });
-      const ticks: number[] = [];
-      for (
-        let i = Math.max(0, Math.ceil(range.min));
-        i <= Math.min(categories.length - 1, Math.floor(range.max));
-        i++
-      ) {
-        ticks.push(i);
+      if (argKind === 'category') {
+        if (input.visualRange === null) {
+          return createCategoryScale({
+            count: categories.length,
+            rangePx,
+            inverted,
+          });
+        }
+        const linear = createLinearScale({
+          min: range.min,
+          max: range.max,
+          rangePx,
+          inverted,
+        });
+        const ticks: number[] = [];
+        for (
+          let i = Math.max(0, Math.ceil(range.min));
+          i <= Math.min(categories.length - 1, Math.floor(range.max));
+          i++
+        ) {
+          ticks.push(i);
+        }
+        return { ...linear, kind: 'category', ticks };
       }
-      return { ...linear, kind: 'category', ticks };
-    }
-    if (argKind === 'logarithmic') {
-      return createLogScale({
+      if (argKind === 'logarithmic') {
+        return createLogScale({
+          min: range.min,
+          max: range.max,
+          rangePx,
+          inverted,
+        });
+      }
+      return createLinearScale({
         min: range.min,
         max: range.max,
         rangePx,
         inverted,
       });
-    }
-    return createLinearScale({
-      min: range.min,
-      max: range.max,
-      rangePx,
-      inverted,
-    });
-  })();
+    })();
+    return applyChartTickOptions(raw, argumentAxis);
+  };
 
-  /* value scales */
+  /* argument labels — their text does not depend on the plot size */
+  const argLabelOptions = argumentAxis.label ?? {};
+  const argLabelsVisible = argLabelOptions.visible !== false;
+  const probeScale = makeArgScale(1000);
+  const argLabelOf = chartArgumentLabelFormatter(
+    argumentAxis,
+    argKind,
+    categories,
+    probeScale.tickUnit,
+    locale,
+  );
+  const allArgLabels = probeScale.ticks.map((tick) => argLabelOf(tick));
+  const widest = allArgLabels.reduce(
+    (acc, label) => Math.max(acc, label.length * 7),
+    0,
+  );
+  const requestedOverlap =
+    argLabelOptions.overlap ?? argumentAxis.labelOverlap ?? 'skip';
+  // a vertical argument axis cannot tilt or stagger its labels
+  const overlapMode =
+    rotated && (requestedOverlap === 'rotate' || requestedOverlap === 'stagger')
+      ? 'skip'
+      : requestedOverlap;
+
+  /* plot rect */
+  const slots = chartValueAxisSlots(valueAxesOptions, binding.axisPane);
+  const argAxisTitle = argumentAxis.title ?? '';
+  const outside = chartOutsideLabelMargins(
+    argumentAxis.constantLines ?? [],
+    valueAxesOptions.flatMap((axis) => axis.constantLines ?? []),
+    rotated,
+  );
+  const rowHeight = (axisIndex: number): number =>
+    VAXIS_ROW + (valueAxesOptions[axisIndex].title ? TITLE_H : 0);
+  const rowOffset = (axisIndex: number): number => {
+    let offset = 0;
+    valueAxesOptions.forEach((_, other) => {
+      if (
+        binding.axisPane[other] === binding.axisPane[axisIndex] &&
+        slots.side[other] === slots.side[axisIndex] &&
+        slots.slot[other] < slots.slot[axisIndex]
+      ) {
+        offset += rowHeight(other);
+      }
+    });
+    return offset;
+  };
+  const sideRows = (side: 'start' | 'end'): number => {
+    let rows = 0;
+    valueAxesOptions.forEach((_, index) => {
+      if (slots.side[index] !== side) return;
+      rows = Math.max(rows, rowOffset(index) + rowHeight(index));
+    });
+    return rows;
+  };
+
+  let plotX: number;
+  let plotY: number;
+  let plotW: number;
+  let plotH: number;
+  let layout: LabelLayoutDecision;
+  if (!rotated) {
+    const leftAxes = rtl ? slots.endCount : slots.startCount;
+    const rightAxes = rtl ? slots.startCount : slots.endCount;
+    const left =
+      (rtl ? Math.max(leftAxes * AXIS_W, 12) : Math.max(1, leftAxes) * AXIS_W) +
+      (rtl ? outside.end : 0);
+    const right =
+      (rtl
+        ? Math.max(1, rightAxes) * AXIS_W
+        : Math.max(rightAxes * AXIS_W, 12)) + (rtl ? 0 : outside.end);
+    plotX = left;
+    plotY = MARGIN_TOP + (outside.top ? OUTSIDE_LABEL_H : 0);
+    plotW = Math.max(10, input.width - left - right);
+    layout = decideLabelLayout(
+      probeScale.ticks.length,
+      plotW,
+      widest,
+      overlapMode,
+    );
+    const bottom =
+      (argLabelsVisible ? MARGIN_BOTTOM : 12) +
+      (argAxisTitle ? 14 : 0) +
+      (argLabelsVisible && layout.staggered === true ? STAGGER_H : 0);
+    plotH = Math.max(10, input.height - plotY - bottom);
+  } else {
+    const argSide =
+      (argLabelsVisible ? Math.min(160, Math.max(36, widest + 14)) : 8) +
+      (argAxisTitle ? 18 : 0);
+    const left = rtl ? 12 + outside.end : argSide;
+    const right = rtl ? argSide : 12 + outside.end;
+    const bottom = Math.max(12, sideRows('start') + 6);
+    plotX = left;
+    plotY = MARGIN_TOP + sideRows('end') + (outside.top ? OUTSIDE_LABEL_H : 0);
+    plotW = Math.max(10, input.width - left - right);
+    plotH = Math.max(10, input.height - plotY - bottom);
+    layout = decideLabelLayout(probeScale.ticks.length, plotH, 14, overlapMode);
+  }
+  const argLen = rotated ? plotH : plotW;
+  const valLen = rotated ? plotW : plotH;
+  const frame = createChartFrame(rotated, rtl, argLen, valLen);
+  const panes = layoutChartPanes(paneList, valLen, argLen, rotated);
+  const argScale = makeArgScale(argLen);
+
+  /* value scales (one per axis, inside its pane) */
   const valueScales = valueAxesOptions.map((axis, axisIndex) => {
     let min = Infinity;
     let max = -Infinity;
     seriesList.forEach((series, seriesIndex) => {
       if (!visibility[seriesIndex]) return;
-      if ((series.input.axis ?? 0) !== axisIndex) return;
+      if (binding.seriesAxis[seriesIndex] !== axisIndex) return;
       const stacked = stacks[seriesIndex];
       if (stacked !== null) {
         for (const entry of stacked) {
@@ -513,17 +762,29 @@ export function buildCartesianScene<T>(
     lo = toEpoch(axis.min) ?? lo;
     hi = toEpoch(axis.max) ?? hi;
     if (lo === hi) hi = lo + 1;
-    // value axes render top-down: inverted mapping unless the user flips
+    const pane = panes[binding.axisPane[axisIndex]] ?? panes[0];
+    // value axes run against the logical v (higher values up) unless flipped
     const inverted = axis.inverted !== true;
-    if (axis.type === 'logarithmic') {
-      return createLogScale({
-        min: Math.max(lo, Number.MIN_VALUE),
-        max: hi,
-        rangePx: plotH,
-        inverted,
-      });
-    }
-    return createLinearScale({ min: lo, max: hi, rangePx: plotH, inverted });
+    const targetTicks = multiPane
+      ? Math.max(2, Math.min(6, Math.floor(pane.size / 50)))
+      : 6;
+    const scale =
+      axis.type === 'logarithmic'
+        ? createLogScale({
+            min: Math.max(lo, Number.MIN_VALUE),
+            max: hi,
+            rangePx: pane.size,
+            inverted,
+          })
+        : createBrokenLinearScale({
+            min: lo,
+            max: hi,
+            rangePx: pane.size,
+            inverted,
+            breaks: axis.breaks,
+            targetTicks,
+          });
+    return offsetChartScale(applyChartTickOptions(scale, axis), pane.start);
   });
 
   /* bar band */
@@ -540,7 +801,7 @@ export function buildCartesianScene<T>(
     }
     // continuous axes: the smallest px gap between adjacent arguments
     const args = data.sortedArgs;
-    if (args.length < 2) return Math.min(40, plotW / 2);
+    if (args.length < 2) return Math.min(40, argLen / 2);
     let minDelta = Infinity;
     for (let i = 1; i < args.length; i++) {
       minDelta = Math.min(minDelta, args[i] - args[i - 1]);
@@ -559,43 +820,31 @@ export function buildCartesianScene<T>(
     argScale,
     valueScales,
     barBandPx,
-    plotW,
+    plotW: argLen,
     markerThreshold: input.markerThreshold ?? 200,
     locale,
+    barSlots: multiPane
+      ? paneChartBarSlots(seriesList, binding.seriesPane, barBandPx)
+      : undefined,
   });
 
-  /* axes */
-  const argLabelOf = (tickValue: number): string => {
-    if (argumentAxis.labelFormat !== undefined) {
-      const raw = argKind === 'category' ? categories[tickValue] : tickValue;
-      return argumentAxis.labelFormat(
-        argKind === 'time' ? new Date(tickValue) : raw,
-      );
-    }
-    if (argKind === 'category') return String(categories[tickValue] ?? '');
-    if (argKind === 'time') {
-      return timeTickFormatter(argScale.tickUnit ?? 'day', locale)(tickValue);
-    }
-    return numberFormat(tickValue, locale);
-  };
-  const allArgLabels = argScale.ticks.map((tick) => argLabelOf(tick));
-  const widest = allArgLabels.reduce(
-    (acc, label) => Math.max(acc, label.length * 7),
-    0,
-  );
-  const layout = decideLabelLayout(
-    argScale.ticks.length,
-    plotW,
-    widest,
-    argumentAxis.labelOverlap ?? 'skip',
-  );
-  const argTicks = argScale.ticks
-    .map((tick, index) => ({ tick, index }))
-    .filter(({ index }) => index % layout.skipEvery === 0)
-    .map(({ tick, index }) => ({
-      px: argScale.toPx(tick),
-      label: allArgLabels[index],
-    }));
+  /* argument ticks */
+  const tickLabels = argScale.ticks.map((tick) => argLabelOf(tick));
+  let kept = argScale.ticks
+    .map((_, index) => index)
+    .filter((index) => index % layout.skipEvery === 0);
+  if (layout.hideOverlapping === true) {
+    const subset = kept;
+    kept = hideOverlappingLabels(
+      subset.map((index) => argScale.toPx(argScale.ticks[index])),
+      subset.map((index) => (rotated ? 14 : tickLabels[index].length * 7)),
+    ).map((position) => subset[position]);
+  }
+  const argTicks = kept.map((index) => ({
+    px: argScale.toPx(argScale.ticks[index]),
+    label: tickLabels[index],
+  }));
+  const keptTickValues = kept.map((index) => argScale.ticks[index]);
 
   const firstValueScale = valueScales[0];
   const valueGridTicks =
@@ -606,23 +855,22 @@ export function buildCartesianScene<T>(
           label: '',
         }));
 
+  /* value axes — the unrotated summary */
+  const formats = valueAxesOptions.map((axis) =>
+    chartValueLabelFormatter(axis, locale),
+  );
   let leftSlot = 0;
   let rightSlot = 0;
   const valueAxes = valueAxesOptions.map((axis, index): OgeChartValueAxisVm => {
     const scale = valueScales[index];
+    const pane = panes[binding.axisPane[index]] ?? panes[0];
     const right = axis.position === 'end';
     const slot = right ? rightSlot++ : leftSlot++;
     const labelX = right
       ? plotX + plotW + 8 + slot * AXIS_W
       : plotX - 8 - slot * AXIS_W;
-    const format = (value: number): string => {
-      if (axis.labelFormat !== undefined) return axis.labelFormat(value);
-      return axis.abbreviate === false
-        ? numberFormat(value, locale)
-        : siFormat(value, locale);
-    };
     const titleX = right ? labelX + AXIS_W - 14 : labelX - AXIS_W + 14;
-    const titleY = plotY + plotH / 2;
+    const titleY = plotY + pane.start + pane.size / 2;
     return {
       index,
       anchor: right ? 'start' : 'end',
@@ -634,12 +882,190 @@ export function buildCartesianScene<T>(
           ? []
           : scale.ticks.map((tick) => ({
               px: scale.toPx(tick),
-              label: format(tick),
+              label: formats[index](tick),
             })),
     };
   });
 
-  /* strips + annotations */
+  /* screen-space axis labels + titles */
+  const axisLabels: OgeChartAxisLabelVm[] = [];
+  const axisTitles: OgeChartAxisTitleVm[] = [];
+  if (argLabelsVisible) {
+    argTicks.forEach((tick, order) => {
+      if (!rotated) {
+        const x = plotX + tick.px;
+        const y =
+          plotY +
+          plotH +
+          16 +
+          (layout.staggered === true && order % 2 === 1 ? STAGGER_H : 0);
+        axisLabels.push({
+          x,
+          y,
+          text: tick.label,
+          anchor: layout.rotated ? (rtl ? 'start' : 'end') : 'middle',
+          transform: layout.rotated
+            ? `rotate(${rtl ? 40 : -40} ${x} ${y})`
+            : null,
+          axis: 'argument',
+          axisIndex: 0,
+        });
+      } else {
+        axisLabels.push({
+          x: rtl ? plotX + plotW + 8 : plotX - 8,
+          y: plotY + tick.px + 4,
+          text: tick.label,
+          anchor: rtl ? 'start' : 'end',
+          transform: null,
+          axis: 'argument',
+          axisIndex: 0,
+        });
+      }
+    });
+  }
+  if (argAxisTitle) {
+    if (!rotated) {
+      axisTitles.push({
+        x: plotX + plotW / 2,
+        y: input.height - 4,
+        text: argAxisTitle,
+        transform: null,
+        axis: 'argument',
+        axisIndex: 0,
+      });
+    } else {
+      const x = rtl ? input.width - 6 : 12;
+      const y = plotY + plotH / 2;
+      axisTitles.push({
+        x,
+        y,
+        text: argAxisTitle,
+        transform: `rotate(${rtl ? 90 : -90} ${x} ${y})`,
+        axis: 'argument',
+        axisIndex: 0,
+      });
+    }
+  }
+  valueAxesOptions.forEach((axis, index) => {
+    const scale = valueScales[index];
+    const pane = panes[binding.axisPane[index]] ?? panes[0];
+    const side = slots.side[index];
+    const slot = slots.slot[index];
+    const inPane = (px: number): boolean =>
+      px >= pane.start - 0.5 && px <= pane.start + pane.size + 0.5;
+    const ticks = scale.ticks.filter((tick) => inPane(scale.toPx(tick)));
+    const visible = axis.label?.visible !== false;
+    if (!rotated) {
+      const onLeft = (side === 'start') !== rtl;
+      const x = onLeft
+        ? plotX - 8 - slot * AXIS_W
+        : plotX + plotW + 8 + slot * AXIS_W;
+      if (visible) {
+        for (const tick of ticks) {
+          axisLabels.push({
+            x,
+            y: plotY + scale.toPx(tick) + 4,
+            text: formats[index](tick),
+            anchor: onLeft ? 'end' : 'start',
+            transform: null,
+            axis: 'value',
+            axisIndex: index,
+          });
+        }
+      }
+      if (axis.title) {
+        const titleX = onLeft ? x - AXIS_W + 14 : x + AXIS_W - 14;
+        const titleY = plotY + pane.start + pane.size / 2;
+        axisTitles.push({
+          x: 0,
+          y: 0,
+          text: axis.title,
+          transform: `translate(${titleX},${titleY}) rotate(${onLeft ? -90 : 90})`,
+          axis: 'value',
+          axisIndex: index,
+        });
+      }
+      return;
+    }
+    const below = side === 'start';
+    const offset = rowOffset(index);
+    const y = below ? plotY + plotH + 15 + offset : plotY - 7 - offset;
+    if (visible) {
+      const texts = ticks.map((tick) => formats[index](tick));
+      const xs = ticks.map(
+        (tick) => plotX + framePoint(frame, 0, scale.toPx(tick)).x,
+      );
+      const keep = hideOverlappingLabels(
+        xs,
+        texts.map((text) => text.length * 6.5),
+      );
+      for (const position of keep) {
+        axisLabels.push({
+          x: xs[position],
+          y,
+          text: texts[position],
+          anchor: 'middle',
+          transform: null,
+          axis: 'value',
+          axisIndex: index,
+        });
+      }
+    }
+    if (axis.title) {
+      axisTitles.push({
+        x: plotX + framePoint(frame, 0, pane.start + pane.size / 2).x,
+        y: below ? y + TITLE_H : y - TITLE_H,
+        text: axis.title,
+        transform: null,
+        axis: 'value',
+        axisIndex: index,
+      });
+    }
+  });
+
+  /* grid, axis lines, minor tick marks, breaks */
+  const gridLines: OgeChartGridLineVm[] = [];
+  for (const pane of panes) {
+    const axisIndex = binding.axisPane.indexOf(pane.index);
+    if (axisIndex === -1) continue;
+    if (valueAxesOptions[axisIndex].grid === false) continue;
+    gridLines.push(...chartValueGridLines(frame, valueScales[axisIndex], pane));
+  }
+  if (argumentAxis.grid === true) {
+    gridLines.push(
+      ...chartArgumentGridLines(frame, argScale, panes, keptTickValues),
+    );
+  }
+  const axisLines = panes.map((pane) =>
+    frameLine(frame, 0, pane.start + pane.size, argLen, pane.start + pane.size),
+  );
+  const tickMarks: OgeChartLineVm[] = [];
+  for (const tick of argScale.minorTicks ?? []) {
+    const a = argScale.toPx(tick);
+    if (a < 0 || a > argLen) continue;
+    tickMarks.push(frameLine(frame, a, valLen, a, valLen + 4));
+  }
+  valueAxesOptions.forEach((_, index) => {
+    if (slots.slot[index] !== 0) return;
+    const scale = valueScales[index];
+    const pane = panes[binding.axisPane[index]] ?? panes[0];
+    const side = slots.side[index];
+    const atHigh = rotated ? side === 'start' : (side === 'start') === rtl;
+    const [a0, a1] = atHigh ? [argLen, argLen + 4] : [-4, 0];
+    for (const tick of scale.minorTicks ?? []) {
+      const v = scale.toPx(tick);
+      if (v < pane.start || v > pane.start + pane.size) continue;
+      tickMarks.push(frameLine(frame, a0, v, a1, v));
+    }
+  });
+  const breakMarkers: OgeChartBreakMarkerVm[] = [];
+  valueScales.forEach((scale) => {
+    for (const brk of scale.breaks ?? []) {
+      breakMarkers.push(chartBreakMarker(frame, brk.px));
+    }
+  });
+
+  /* strips + constant lines */
   const toNumeric = (value: number | Date | string): number | null =>
     numericArgument(value, argKind, categoryIndex);
   const stripRects: OgeChartStripRect[] = [];
@@ -655,23 +1081,77 @@ export function buildCartesianScene<T>(
       color: strip.color,
     });
   }
+  const guides: OgeChartGuideVm[] = layoutChartGuides(frame, plotW, plotH, {
+    axis: 'argument',
+    toPx: (value) => {
+      const numeric = toNumeric(value);
+      return numeric === null ? null : argScale.toPx(numeric);
+    },
+    crossStart: 0,
+    crossEnd: valLen,
+    alongStart: 0,
+    alongEnd: argLen,
+    strips: argumentAxis.strips ?? [],
+    constantLines: argumentAxis.constantLines ?? [],
+    stripLines: input.stripLines,
+  });
+  valueAxesOptions.forEach((axis, index) => {
+    if (axis.strips === undefined && axis.constantLines === undefined) return;
+    const scale = valueScales[index];
+    const pane = panes[binding.axisPane[index]] ?? panes[0];
+    guides.push(
+      ...layoutChartGuides(frame, plotW, plotH, {
+        axis: 'value',
+        toPx: (value) => {
+          const numeric =
+            value instanceof Date
+              ? value.getTime()
+              : typeof value === 'number'
+                ? value
+                : Number(value);
+          return Number.isFinite(numeric) ? scale.toPx(numeric) : null;
+        },
+        crossStart: 0,
+        crossEnd: argLen,
+        alongStart: pane.start,
+        alongEnd: pane.start + pane.size,
+        strips: axis.strips ?? [],
+        constantLines: axis.constantLines ?? [],
+      }),
+    );
+  });
+
+  /* annotations */
   const annotations: OgeChartAnnotationVm[] = [];
   for (const annotation of input.annotations ?? []) {
     const arg = toNumeric(annotation.argument);
     if (arg === null) continue;
-    const x = argScale.toPx(arg);
-    const valueScale = valueScales[annotation.axis ?? 0] ?? valueScales[0];
-    const anchorY =
-      annotation.value === undefined ? 14 : valueScale.toPx(annotation.value);
+    const axisIndex = annotation.axis ?? 0;
+    const valueScale = valueScales[axisIndex] ?? valueScales[0];
+    const pane = panes[binding.axisPane[axisIndex] ?? 0] ?? panes[0];
+    const anchorV =
+      annotation.value === undefined
+        ? pane.start + 14
+        : valueScale.toPx(annotation.value);
+    const anchor = framePoint(frame, argScale.toPx(arg), anchorV);
+    const labelW = annotation.text.length * 6.6 + 12;
+    let labelX = anchor.x + (annotation.offsetX ?? 12);
+    // keep the label box inside the plot horizontally
+    if (labelX - 6 + labelW > plotW) labelX = plotW - labelW + 6;
+    if (labelX - 6 < 0) labelX = 6;
+    const labelY = Math.max(
+      2,
+      Math.min(plotH, anchor.y + (annotation.offsetY ?? -12)),
+    );
     annotations.push({
-      x,
-      y: anchorY,
+      x: anchor.x,
+      y: anchor.y,
       isPoint: annotation.type !== 'text',
       text: annotation.text,
       color: annotation.color,
-      labelX: x + (annotation.offsetX ?? 12),
-      labelY: anchorY + (annotation.offsetY ?? -12),
-      labelW: annotation.text.length * 6.6 + 12,
+      labelX,
+      labelY,
+      labelW,
     });
   }
 
@@ -716,6 +1196,21 @@ export function buildCartesianScene<T>(
     annotations,
     legendItems,
     empty: !visibility.some(Boolean) || data.sortedArgs.length === 0,
+    rotated,
+    rtl,
+    frame,
+    panes,
+    seriesAxis: binding.seriesAxis,
+    seriesPane: binding.seriesPane,
+    axisLabels,
+    axisTitles,
+    gridLines,
+    axisLines,
+    tickMarks,
+    guides,
+    breakMarkers,
+    pointLabelAnchor: frameLabelAnchor(frame),
+    pointLabelBaseline: frameLabelBaseline(frame),
   };
 }
 
@@ -730,9 +1225,12 @@ function buildRenderSeries<T>(ctx: {
   plotW: number;
   markerThreshold: number;
   locale: string | undefined;
+  /** Precomputed slots (panes slot their bars separately). */
+  barSlots?: readonly (BarSlot | null)[];
 }): OgeChartRenderSeries[] {
   const { argScale: scale, valueScales: scales, stacks } = ctx;
-  const barSlots = computeBarSlots(ctx.seriesList, ctx.barBandPx);
+  const barSlots =
+    ctx.barSlots ?? computeBarSlots(ctx.seriesList, ctx.barBandPx);
   const result: OgeChartRenderSeries[] = [];
   ctx.seriesList.forEach((series, seriesIndex) => {
     if (!ctx.visibility[seriesIndex]) return;
@@ -1138,8 +1636,14 @@ export function cartesianActivePoints<T>(
 }
 
 export interface OgeChartCrosshairVm {
+  /** Argument px along the argument axis (logical). */
   readonly x: number;
+  /** Pointer px along the value axis (logical); `null` after keyboard moves. */
   readonly y: number | null;
+  /** The argument line across every pane, plot-local px. */
+  readonly argLine: OgeChartLineVm;
+  /** The value line inside the hovered pane, plot-local px. */
+  readonly valueLine: OgeChartLineVm | null;
 }
 
 export function cartesianCrosshair<T>(
@@ -1152,7 +1656,22 @@ export function cartesianCrosshair<T>(
   if (position === null) return null;
   const arg = scene.data.sortedArgs[position];
   if (arg === undefined) return null;
-  return { x: scene.argScale.toPx(arg), y: state.pointerY };
+  const { frame } = scene;
+  const a = scene.argScale.toPx(arg);
+  const v = state.pointerY;
+  const pane = v === null ? undefined : chartPaneAt(scene.panes, v);
+  const inPane =
+    v !== null &&
+    pane !== undefined &&
+    v >= pane.start &&
+    v <= pane.start + pane.size;
+  return {
+    x: a,
+    y: v,
+    argLine: frameLine(frame, a, 0, a, frame.valLen),
+    valueLine:
+      inPane && v !== null ? frameLine(frame, 0, v, frame.argLen, v) : null,
+  };
 }
 
 export interface OgeChartTooltipVm<T> {
@@ -1160,12 +1679,18 @@ export interface OgeChartTooltipVm<T> {
   readonly y: number;
   readonly points: readonly OgeChartPointEvent<T>[];
   readonly argumentText: string;
+  /** `'end'`: the balloon's right edge sits at `x` (it opens leftward). */
+  readonly alignX: 'start' | 'end';
+  /** `'end'`: the balloon's bottom edge sits at `y` (it opens upward). */
+  readonly alignY: 'start' | 'end';
 }
 
 /**
- * The tooltip balloon: positioned beside the crosshair, flipped to the left
- * in the last third of the plot. `suppressed` covers a drag in progress and
- * a cancelled `tooltipShowing`.
+ * The tooltip balloon: beside the crosshair, opening away from the nearer
+ * plot edge — leftward in the last third of the plot (the first two
+ * thirds in RTL, which prefers the left), upward in the last third of a
+ * rotated plot. `suppressed` covers a drag in progress and a cancelled
+ * `tooltipShowing`.
  */
 export function cartesianTooltip<T>(
   scene: OgeCartesianScene<T>,
@@ -1178,17 +1703,34 @@ export function cartesianTooltip<T>(
   const position = state.activeArgPos;
   if (points.length === 0 || position === null) return null;
   const arg = scene.data.sortedArgs[position];
-  const x = scene.plot.x + scene.argScale.toPx(arg);
-  const flip = x > scene.plot.x + scene.plot.w * 0.66;
+  const a = scene.argScale.toPx(arg);
+  const { plot, rtl } = scene;
+  const argumentText = chartArgumentText(
+    scene.data.argKind,
+    points[0].point,
+    scene.locale,
+  );
+  if (scene.rotated) {
+    const y = plot.y + a;
+    const above = a > plot.h * 0.66;
+    return {
+      x: rtl ? plot.x + plot.w - 8 : plot.x + 8,
+      y: above ? y - 12 : y + 12,
+      points,
+      argumentText,
+      alignX: rtl ? 'end' : 'start',
+      alignY: above ? 'end' : 'start',
+    };
+  }
+  const x = plot.x + a;
+  const flip = rtl ? x > plot.x + plot.w * 0.34 : x > plot.x + plot.w * 0.66;
   return {
     x: flip ? x - 12 : x + 12,
-    y: scene.plot.y + 8,
+    y: plot.y + 8,
     points,
-    argumentText: chartArgumentText(
-      scene.data.argKind,
-      points[0].point,
-      scene.locale,
-    ),
+    argumentText,
+    alignX: flip ? 'end' : 'start',
+    alignY: 'start',
   };
 }
 
@@ -1198,7 +1740,8 @@ export function cartesianTooltip<T>(
 
 /**
  * Where a pointer at plot coordinates `(x, y)` lands: the nearest argument
- * position, or `null` when outside the plot (or no data).
+ * position, or `null` when outside the plot (or no data). `pointerY` is
+ * the logical value-axis px (the horizontal crosshair / nearest series).
  */
 export function cartesianHoverAt<T>(
   scene: OgeCartesianScene<T>,
@@ -1208,11 +1751,34 @@ export function cartesianHoverAt<T>(
   if (x < 0 || x > scene.plot.w || y < 0 || y > scene.plot.h) {
     return { position: null, pointerY: null };
   }
+  const { a, v } = frameLogical(scene.frame, x, y);
   const position = nearestIndex(
     scene.data.sortedArgs,
-    scene.argScale.fromPx(x),
+    scene.argScale.fromPx(a),
   );
-  return { position: position === -1 ? null : position, pointerY: y };
+  return { position: position === -1 ? null : position, pointerY: v };
+}
+
+/**
+ * The argument-axis px (logical) under plot coordinates `(x, y)`; `null`
+ * outside the plot — where a drag-zoom starts.
+ */
+export function cartesianPlotArgPx<T>(
+  scene: OgeCartesianScene<T>,
+  x: number,
+  y: number,
+): number | null {
+  if (x < 0 || x > scene.plot.w || y < 0 || y > scene.plot.h) return null;
+  return frameLogical(scene.frame, x, y).a;
+}
+
+/** A drag's movement along the argument axis (y when rotated). */
+export function cartesianDragArgDelta<T>(
+  scene: OgeCartesianScene<T>,
+  deltaX: number,
+  deltaY: number,
+): number {
+  return scene.rotated ? deltaY : deltaX;
 }
 
 /** Whether a wheel zoom applies in this mode. */
@@ -1223,43 +1789,130 @@ export function chartWheelZoomEnabled(
 }
 
 /**
- * The window after one wheel notch at plot x (cursor-centered); `null` when
- * the pointer is outside the plot.
+ * The window after one wheel notch at plot `(x, y)` (cursor-centered: the
+ * argument under the cursor stays put); `null` when the pointer is outside
+ * the plot.
  */
 export function cartesianWheelRange<T>(
   scene: OgeCartesianScene<T>,
   x: number,
   deltaY: number,
+  y = 0,
 ): ChartRange | null {
-  if (x < 0 || x > scene.plot.w) return null;
+  const a = scene.rotated ? y : x;
+  if (scene.rotated ? x < 0 || x > scene.plot.w : false) return null;
+  if (a < 0 || a > scene.frame.argLen) return null;
+  const range = scene.effectiveRange;
+  const span = range.max - range.min || 1;
   return zoomRangeAt(
-    scene.effectiveRange,
-    x / scene.plot.w,
+    range,
+    (scene.argScale.fromPx(a) - range.min) / span,
     deltaY < 0 ? 0.8 : 1.25,
     scene.argBounds,
   );
 }
 
-/** What a primary-button press on the plot starts: pan, drag-zoom or nothing. */
+/**
+ * What a primary-button press on the plot starts: pan, drag-zoom or
+ * nothing. A touch has no Shift: one finger pans when panning is on (two
+ * fingers pinch), else it drag-zooms.
+ */
 export function chartDragMode(
   zoomEnabled: 'none' | 'wheel' | 'drag' | 'both',
   panEnabled: boolean,
   shiftKey: boolean,
+  pointerType?: string,
 ): 'pan' | 'zoom' | null {
-  if (panEnabled && shiftKey) return 'pan';
+  const pan = shiftKey || (pointerType === 'touch' && panEnabled);
+  if (panEnabled && pan) return 'pan';
   if ((zoomEnabled === 'drag' || zoomEnabled === 'both') && !shiftKey) {
     return 'zoom';
   }
   return null;
 }
 
-/** The pan window after dragging `deltaX` px from `startRange`. */
+/** Whether touches on the plot drive the chart (zoom or pan is on). */
+export function chartTouchGestures(
+  zoomEnabled: 'none' | 'wheel' | 'drag' | 'both',
+  panEnabled: boolean,
+): boolean {
+  return zoomEnabled !== 'none' || panEnabled;
+}
+
+/**
+ * The plot's `touch-action`: with touch zoom/pan on, the browser keeps only
+ * the pan across the argument axis (page scroll) and leaves pinch and the
+ * along-axis drag to the chart; otherwise `null` (the stylesheet's
+ * vertical-pan default).
+ */
+export function chartTouchAction<T>(
+  scene: OgeCartesianScene<T>,
+  zoomEnabled: 'none' | 'wheel' | 'drag' | 'both',
+  panEnabled: boolean,
+): 'pan-x' | 'pan-y' | null {
+  if (!chartTouchGestures(zoomEnabled, panEnabled)) return null;
+  return scene.rotated ? 'pan-x' : 'pan-y';
+}
+
+/**
+ * The pan window after dragging `(deltaX, deltaY)` px from `startRange` —
+ * the content follows the pointer along the argument axis, in either
+ * direction of a mirrored axis.
+ */
 export function cartesianPanRange<T>(
   scene: OgeCartesianScene<T>,
   startRange: ChartRange,
   deltaX: number,
+  deltaY = 0,
 ): ChartRange {
-  return panRange(startRange, -deltaX / scene.plot.w, scene.argBounds);
+  const delta = scene.rotated ? deltaY : deltaX;
+  const sign = scene.argScale.inverted ? -1 : 1;
+  return panRange(
+    startRange,
+    (-sign * delta) / Math.max(1, scene.frame.argLen),
+    scene.argBounds,
+  );
+}
+
+/**
+ * Two-finger pinch / pan: the window in which the argument values under
+ * both fingers at the start sit under the fingers now (plot coordinates).
+ * `null` while the fingers are too close along the argument axis.
+ */
+export function cartesianPinchRange<T>(
+  scene: OgeCartesianScene<T>,
+  startRange: ChartRange,
+  startA: { readonly x: number; readonly y: number },
+  startB: { readonly x: number; readonly y: number },
+  a: { readonly x: number; readonly y: number },
+  b: { readonly x: number; readonly y: number },
+): ChartRange | null {
+  const length = Math.max(1, scene.frame.argLen);
+  const inverted = scene.argScale.inverted;
+  // fraction along the domain (0 = range min) of a plot point
+  const frac = (point: { x: number; y: number }): number => {
+    const px = frameLogical(scene.frame, point.x, point.y).a;
+    return inverted ? 1 - px / length : px / length;
+  };
+  const f0a = frac(startA);
+  const f0b = frac(startB);
+  const f1a = frac(a);
+  const f1b = frac(b);
+  if (Math.abs(f0b - f0a) * length < 10 || Math.abs(f1b - f1a) * length < 10) {
+    return null;
+  }
+  const span = startRange.max - startRange.min;
+  const valueA = startRange.min + f0a * span;
+  const valueB = startRange.min + f0b * span;
+  const nextSpan = (valueB - valueA) / (f1b - f1a);
+  if (!(nextSpan > 0)) return null;
+  const min = valueA - f1a * nextSpan;
+  const bounds = scene.argBounds;
+  return clampRange(
+    { min, max: min + nextSpan },
+    bounds,
+    (bounds.max - bounds.min) * 0.01,
+  );
 }
 
 /** The committed drag-select window; `null` under the 8px threshold. */
@@ -1278,6 +1931,49 @@ export function chartZoomSelectionRect(
   px: number,
 ): { readonly x: number; readonly w: number } {
   return { x: Math.min(startPx, px), w: Math.abs(px - startPx) };
+}
+
+/**
+ * The zoom-drag rectangle between two argument-axis px (logical) across
+ * the whole value axis, plot-local px in any orientation.
+ */
+export function cartesianZoomRect<T>(
+  scene: OgeCartesianScene<T>,
+  startPx: number,
+  px: number,
+): OgeChartRectVm {
+  return frameRect(scene.frame, startPx, px, 0, scene.frame.valLen);
+}
+
+/**
+ * `transform` of a series value label at logical `(x, y)` — keeps the text
+ * upright inside the rotated series group; `null` when not rotated.
+ */
+export function cartesianLabelTransform<T>(
+  scene: OgeCartesianScene<T>,
+  x: number,
+  y: number,
+): string | null {
+  return frameTextTransform(scene.frame, x, y);
+}
+
+/** `transform-origin` of a series group during the first-render draw-in. */
+export function cartesianSeriesEnterOrigin<T>(
+  scene: OgeCartesianScene<T>,
+  seriesIndex: number,
+): string {
+  return chartSeriesEnterOrigin(
+    scene.valueScales[scene.seriesAxis[seriesIndex] ?? 0] ??
+      scene.valueScales[0],
+  );
+}
+
+/** The clip-path id suffix of a series — its pane index. */
+export function cartesianSeriesPane<T>(
+  scene: OgeCartesianScene<T>,
+  seriesIndex: number,
+): number {
+  return scene.seriesPane[seriesIndex] ?? 0;
 }
 
 /**

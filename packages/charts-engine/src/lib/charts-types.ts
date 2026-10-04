@@ -38,6 +38,96 @@ export interface OgeChartStripLine {
   readonly color?: string;
 }
 
+/**
+ * A threshold / target line across the plot at one axis value, with an
+ * optional label. Value-axis lines run parallel to the argument axis;
+ * argument-axis lines cross it.
+ */
+export interface OgeChartConstantLine {
+  /** Axis value (argument axes also take dates and category names). */
+  readonly value: number | Date | string;
+  readonly label?: string;
+  /** Any CSS colour — a theme token such as `var(--oge-danger)` included. */
+  readonly color?: string;
+  /** Stroke pattern. Default `'dash'`. */
+  readonly dash?: 'solid' | 'dash' | 'dot';
+  /** Stroke width, px. Default 1.5. */
+  readonly width?: number;
+  /**
+   * `'inside'` (default) prints the label inside the plot beside the line;
+   * `'outside'` prints it in the margin past the plot edge.
+   */
+  readonly position?: 'inside' | 'outside';
+}
+
+/** A shaded band between two axis values, with an optional label. */
+export interface OgeChartAxisStrip {
+  readonly start: number | Date | string;
+  readonly end: number | Date | string;
+  readonly label?: string;
+  /** Any CSS colour; default the `--oge-chart-strip-bg` token. */
+  readonly color?: string;
+}
+
+/** A value range the value axis skips, drawn with a zig-zag marker. */
+export interface OgeChartAxisBreak {
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * A calendar interval (time axes): ticks step by real months and years,
+ * never by a fixed number of milliseconds.
+ */
+export interface OgeChartDateInterval {
+  readonly years?: number;
+  readonly months?: number;
+  readonly weeks?: number;
+  readonly days?: number;
+  readonly hours?: number;
+  readonly minutes?: number;
+}
+
+/**
+ * The distance between major ticks: a number in axis units (milliseconds
+ * on a time axis, every n-th category on a category axis) or a calendar
+ * interval on a time axis.
+ */
+export type OgeChartTickInterval = number | OgeChartDateInterval;
+
+/** Minor ticks between the major ones. */
+export interface OgeChartMinorTickOptions {
+  readonly visible?: boolean;
+  /** Minor ticks per major interval. Default 4. */
+  readonly count?: number;
+}
+
+/**
+ * How overlapping axis labels resolve: `'rotate'` tilts them, `'stagger'`
+ * alternates two rows, `'hide'` drops the ones that collide, `'skip'`
+ * keeps every n-th, `'none'` draws all of them.
+ */
+export type OgeChartLabelOverlap = LabelOverlapMode;
+
+/**
+ * Tick-label text: a function, or `Intl` options (number options on
+ * numeric axes, date options on time axes).
+ */
+export type OgeChartLabelFormat =
+  | ((value: unknown) => string)
+  | Intl.NumberFormatOptions
+  | Intl.DateTimeFormatOptions;
+
+/** Tick-label options of an axis. */
+export interface OgeChartAxisLabelOptions {
+  /** Default true. */
+  readonly visible?: boolean;
+  readonly format?: OgeChartLabelFormat;
+  /** Text around the formatted value: `'{value} km'`. */
+  readonly template?: string;
+  readonly overlap?: OgeChartLabelOverlap;
+}
+
 /** Axis options (argument axis and each value axis). */
 export interface OgeChartAxisOptions {
   /** Unset argument axis auto-detects: numbers / dates / categories. */
@@ -52,10 +142,64 @@ export interface OgeChartAxisOptions {
   readonly labelFormat?: (value: unknown) => string;
   /** Overlap resolution of argument labels. Default `'skip'`. */
   readonly labelOverlap?: LabelOverlapMode;
-  /** Value axes: `'end'` renders on the right. */
+  /** Tick labels: `format`, `template`, `overlap`, `visible`. */
+  readonly label?: OgeChartAxisLabelOptions;
+  /** Value axes: `'end'` renders on the far side (right, or top when rotated). */
   readonly position?: 'start' | 'end';
   /** SI-abbreviated value labels (`1.2K`). Default true for value axes. */
   readonly abbreviate?: boolean;
+  /** Value axes: the pane (`panes[].name`) the axis belongs to. */
+  readonly pane?: string;
+  /** Threshold / target lines at axis values. */
+  readonly constantLines?: readonly OgeChartConstantLine[];
+  /** Shaded bands between axis values. */
+  readonly strips?: readonly OgeChartAxisStrip[];
+  /** Fixed distance between major ticks (replaces the automatic ladder). */
+  readonly tickInterval?: OgeChartTickInterval;
+  /** Minor ticks (and minor grid lines when `grid` is on). */
+  readonly minorTicks?: boolean | OgeChartMinorTickOptions;
+  /** Linear value axes: value ranges skipped with a zig-zag marker. */
+  readonly breaks?: readonly OgeChartAxisBreak[];
+  /** `false` keeps ticks on whole numbers. Default true. */
+  readonly allowDecimals?: boolean;
+}
+
+/**
+ * A plot area stacked over the shared argument axis (price + volume):
+ * series and value axes pick theirs by `name`.
+ */
+export interface OgeChartPane {
+  readonly name: string;
+  /** Height ratio against the other panes. Default 1. */
+  readonly height?: number;
+}
+
+/** Easing of the initial draw-in. */
+export type OgeChartAnimationEasing =
+  'linear' | 'ease' | 'easeIn' | 'easeOut' | 'easeInOut';
+
+/**
+ * Animation: hover/selection transitions plus the series draw-in on the
+ * first render. `prefers-reduced-motion: reduce` always wins.
+ */
+export interface OgeChartAnimationOptions {
+  readonly enabled?: boolean;
+  /** Draw-in duration, ms. Default 600. */
+  readonly duration?: number;
+  /** Default `'easeOut'`. */
+  readonly easing?: OgeChartAnimationEasing;
+}
+
+/** A built-in range-selector period. */
+export type OgeChartPeriod = '1M' | '3M' | '6M' | 'YTD' | '1Y' | 'All';
+
+/**
+ * A custom range-selector period: a fixed window, a span in axis units
+ * back from the data end, or a calendar interval back from it.
+ */
+export interface OgeChartCustomPeriod {
+  readonly label: string;
+  readonly range: ChartRange | number | OgeChartDateInterval;
 }
 
 export interface OgeChartLegendOptions {

@@ -42,18 +42,24 @@ export function timeTickFormatter(
   return (ms: number) => format.format(new Date(ms));
 }
 
-export type LabelOverlapMode = 'rotate' | 'skip' | 'none';
+export type LabelOverlapMode = 'rotate' | 'stagger' | 'hide' | 'skip' | 'none';
 
 export interface LabelLayoutDecision {
   /** Render every n-th label (1 = all). */
   readonly skipEvery: number;
   readonly rotated: boolean;
+  /** Alternate labels drop to a second row. */
+  readonly staggered?: boolean;
+  /** Drop each label that collides with the last one kept. */
+  readonly hideOverlapping?: boolean;
 }
 
 /**
  * Overlap resolution: if the widest label at `estimatedWidthPx` does not
- * fit the per-tick slot, either rotate (fits in the row height footprint)
- * or skip every n-th label. `'none'` renders everything regardless.
+ * fit the per-tick slot, rotate (fits in the row height footprint),
+ * stagger into two rows (falls back to skipping when even two rows
+ * collide), hide colliding labels, or skip every n-th label. `'none'`
+ * renders everything regardless.
  */
 export function decideLabelLayout(
   tickCount: number,
@@ -67,6 +73,44 @@ export function decideLabelLayout(
   const slot = rangePx / tickCount;
   if (estimatedWidthPx + 6 <= slot) return { skipEvery: 1, rotated: false };
   if (mode === 'rotate') return { skipEvery: 1, rotated: true };
+  if (mode === 'hide') {
+    return { skipEvery: 1, rotated: false, hideOverlapping: true };
+  }
+  if (mode === 'stagger') {
+    // two rows double the room per label
+    const skipEvery = Math.max(
+      1,
+      Math.ceil((estimatedWidthPx + 6) / (slot * 2)),
+    );
+    return { skipEvery, rotated: false, staggered: true };
+  }
   const skipEvery = Math.max(2, Math.ceil((estimatedWidthPx + 6) / slot));
   return { skipEvery, rotated: false };
+}
+
+/**
+ * Greedy `'hide'` overlap resolution over label centers along the axis
+ * (px, ascending or descending): keeps a label only when it clears the last
+ * kept one by `extentPx`. Returns the kept indexes.
+ */
+export function hideOverlappingLabels(
+  centers: readonly number[],
+  extents: readonly number[],
+  gapPx = 6,
+): number[] {
+  const kept: number[] = [];
+  let lastCenter: number | null = null;
+  let lastExtent = 0;
+  centers.forEach((center, index) => {
+    const extent = extents[index] ?? 0;
+    if (
+      lastCenter === null ||
+      Math.abs(center - lastCenter) >= (lastExtent + extent) / 2 + gapPx
+    ) {
+      kept.push(index);
+      lastCenter = center;
+      lastExtent = extent;
+    }
+  });
+  return kept;
 }
