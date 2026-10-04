@@ -1,7 +1,22 @@
+import { ogeFormatMessage } from '@oge-ui/core';
 import {
   OGE_DEFAULT_ADAPTIVE_CONFIG,
   type OgeAdaptiveMode,
 } from '../overlay/adaptive';
+
+/**
+ * The overflow chip text (`moreTags`) for `count` hidden tags, through
+ * `ogeFormatMessage` — so a catalog may spell it as an ICU plural
+ * (`'{count, plural, one {# weitere} other {# weitere}}'`) and `#` / `{count}`
+ * use the locale's digits.
+ */
+export function ogeMoreTagsText(
+  template: string,
+  count: number,
+  locale?: string,
+): string {
+  return ogeFormatMessage(template, { count }, locale);
+}
 
 /**
  * Every user-facing string and behavioral default of the input editors,
@@ -203,7 +218,7 @@ export interface OgeInputsMessages {
   adaptiveSearch: string;
   /** Dialog title of an adaptive popup whose editor has no label. */
   adaptiveTitle: string;
-  /** Overflow chip of `maxDisplayedTags` — placeholder `{count}`. */
+  /** Overflow chip of `maxDisplayedTags` — `{count}`, or an ICU plural over it. */
   moreTags: string;
   /** Status shown once `maxSelectedItems` is reached — placeholder `{max}`. */
   maxSelectedItemsMessage: string;

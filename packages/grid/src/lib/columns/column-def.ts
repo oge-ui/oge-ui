@@ -1,6 +1,6 @@
 import { signal, type TemplateRef } from '@angular/core';
 import type { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
-import type { OgeConditionalFormat } from '@oge-ui/behavior';
+import type { OgeColumnFormat, OgeConditionalFormat } from '@oge-ui/behavior';
 import type {
   FilterExpr,
   FilterOperator,
@@ -35,7 +35,8 @@ export interface OgeColumnDef<T = unknown> {
   maxWidth?: number;
   dataType?: OgeDataType;
   alignment?: OgeColumnAlignment;
-  format?: (value: unknown) => string;
+  /** A function or a declarative `OgeValueFormat` (see `OgeColumn.format`). */
+  format?: OgeColumnFormat;
   /** Initial visibility; the column chooser and state restore change it later. */
   visible?: boolean;
   sortable?: boolean;

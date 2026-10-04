@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  LOCALE_ID,
   ViewEncapsulation,
   computed,
   inject,
@@ -73,7 +74,10 @@ export class OgeValidationSummary {
     ...this.messages(),
   }));
 
+  // the heading's plural form follows the app locale
+  private readonly localeId = inject(LOCALE_ID);
+
   protected readonly title = computed(() =>
-    validationSummaryTitle(this.errors().length, this.msg()),
+    validationSummaryTitle(this.errors().length, this.msg(), this.localeId),
   );
 }

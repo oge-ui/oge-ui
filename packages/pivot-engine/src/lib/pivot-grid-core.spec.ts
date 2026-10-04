@@ -187,9 +187,46 @@ describe('OgePivotGridCore — layout and cells', () => {
           format: (v: unknown) => `€${String(v)}`,
         },
       ],
+      locale: 'en-US',
     });
     expect(core.preparedCell(0, 0, 0).text).toBe('33.3%');
     expect(core.preparedCell(0, 0, 1).text).toBe('€150');
+  });
+
+  it('renders percent modes and declarative formats in the locale', () => {
+    const fields = [
+      { dataField: 'region', area: 'row' as const },
+      {
+        dataField: 'amount',
+        area: 'data' as const,
+        summaryDisplayMode: 'percentOfGrandTotal' as const,
+      },
+      {
+        dataField: 'amount',
+        id: 'money',
+        area: 'data' as const,
+        format: { type: 'currency' as const, currency: 'EUR' },
+      },
+    ];
+    const tr = makeCore({ fields, locale: 'tr-TR' });
+    expect(tr.preparedCell(0, 0, 0).text).toBe('%33,3');
+    expect(tr.preparedCell(0, 0, 1).text).toBe(
+      new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'EUR',
+      }).format(150),
+    );
+    const de = makeCore({ fields, locale: 'de-DE' });
+    expect(de.preparedCell(0, 0, 0).text).toMatch(/^33,3\s%$/);
+    expect(de.preparedCell(0, 0, 1).text).toMatch(/^150,00\s€$/);
+    const ar = makeCore({ fields, locale: 'ar-EG' });
+    expect(ar.preparedCell(0, 0, 0).text).toBe(
+      new Intl.NumberFormat('ar-EG', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(1 / 3),
+    );
   });
 
   it('returns click payloads, drill-down rows and CSV', () => {

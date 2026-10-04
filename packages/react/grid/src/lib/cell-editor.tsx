@@ -32,6 +32,8 @@ export interface OgeCellEditorProps {
   lookupItems?: readonly LookupItem[];
   /** Accessible name — the column caption. */
   label?: string;
+  /** Locale the number / date editors format and parse in (the grid's). */
+  locale?: string;
   surface?: OgeCellEditorSurface;
   invalid?: boolean;
   /** Error text mirrored into the host `title` (cell surface). */
@@ -166,6 +168,7 @@ export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
         control = (
           <OgeNumberBox
             {...shared}
+            locale={props.locale}
             value={typeof value === 'number' ? value : null}
             onValueChange={onValueChange}
           />
@@ -176,6 +179,7 @@ export function OgeCellEditor(props: OgeCellEditorProps): ReactNode {
         control = (
           <OgeDateBox
             {...shared}
+            locale={props.locale}
             type={dataType === 'datetime' ? 'datetime' : 'date'}
             value={value instanceof Date ? value : null}
             onValueChange={onValueChange}

@@ -36,6 +36,7 @@ import {
   type SummaryType,
   type SortDescriptor,
   sanitizeGridStateSnapshot,
+  ogeDefaultLocale,
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
@@ -431,6 +432,10 @@ function OgeGridInner<T extends object>(
     const effColumnHidingMode = rx.derived(
       () => p().columnHidingMode ?? cfg().columnHidingMode,
     );
+    /** The locale in force: the prop, the provider, then `navigator.language`. */
+    const effLocale = rx.derived(
+      () => p().locale ?? cfg().locale ?? ogeDefaultLocale(),
+    );
     /**
      * Whether an adaptive-detail toggle can appear — from the declarations
      * alone, so the hiding pass can count its width without a cycle.
@@ -788,6 +793,7 @@ function OgeGridInner<T extends object>(
         pinOverrides: state.columns.pinOverrides(),
         order: state.columns.order(),
         adaptiveHiddenIds: adaptiveHiddenIds(),
+        locale: effLocale(),
       }),
     );
 
@@ -806,6 +812,7 @@ function OgeGridInner<T extends object>(
         pinOverrides: state.columns.pinOverrides(),
         order: state.columns.order(),
         adaptiveHiddenIds: new Set<string>(),
+        locale: effLocale(),
       });
 
     /** The columns hidden by width, rendered in each row's adaptive detail. */
@@ -823,6 +830,7 @@ function OgeGridInner<T extends object>(
             pinOverrides: state.columns.pinOverrides(),
             order: state.columns.order(),
             adaptiveHiddenIds: adaptiveHiddenIds(),
+            locale: effLocale(),
           })
         : [],
     );
@@ -881,6 +889,7 @@ function OgeGridInner<T extends object>(
           values[i],
           column.dataType,
           column.format,
+          column.locale,
         );
         const text = formatPattern(messages.totalSummaryPattern, {
           label: messages.summaryLabels[descriptor.type],
@@ -1304,6 +1313,7 @@ function OgeGridInner<T extends object>(
 
     return {
       rx,
+      effLocale,
       state,
       data,
       scrollTop,
@@ -1431,6 +1441,7 @@ function OgeGridInner<T extends object>(
           latest.current.announcements ?? configRef.current.announcements,
         caption: (field) =>
           model.columnsByField().get(field)?.caption ?? humanize(field),
+        locale: () => model.effLocale(),
       }),
     [model, liveAnnouncer],
   );
@@ -2043,7 +2054,12 @@ function OgeGridInner<T extends object>(
           ? model.columnsByField().get(summary.field)
           : undefined;
         const value = column
-          ? formatCellValue(summary.value, column.dataType, column.format)
+          ? formatCellValue(
+              summary.value,
+              column.dataType,
+              column.format,
+              column.locale,
+            )
           : String(summary.value ?? '');
         return formatPattern(msg.groupSummaryPattern, {
           label: msg.summaryLabels[summary.type],
@@ -2065,7 +2081,12 @@ function OgeGridInner<T extends object>(
       .map((summary) =>
         formatPattern(msg.totalSummaryPattern, {
           label: msg.summaryLabels[summary.type],
-          value: formatCellValue(summary.value, column.dataType, column.format),
+          value: formatCellValue(
+            summary.value,
+            column.dataType,
+            column.format,
+            column.locale,
+          ),
         }),
       )
       .join(' · ');
@@ -2989,6 +3010,7 @@ function OgeGridInner<T extends object>(
         dataType={column.dataType}
         lookupItems={model.editing.lookupItemsFor(node, column)}
         label={column.caption}
+        locale={column.locale}
         invalid={showError}
         errorTitle={showError ? entry.error : null}
         pending={entry.pending}
@@ -3473,6 +3495,7 @@ function OgeGridInner<T extends object>(
     return headerValueText(value, {
       dataType: column?.dataType ?? 'string',
       format: column?.format,
+      locale: column?.locale,
       lookupItems: column?.lookupItems,
       messages: msg,
     });
@@ -3912,6 +3935,7 @@ function OgeGridInner<T extends object>(
         raw,
         { dataType: column.dataType, lookupItems },
         messages,
+        column.locale,
       );
       return parsed.ok ? { field: column.field, value: parsed.value } : null;
     };
@@ -4482,8 +4506,15 @@ function OgeGridInner<T extends object>(
             msg.blankValue,
             (value) => headerValueTextOf(value),
             headerFilterColumn.dataType === 'datetime'
-              ? (date) => formatCellValue(date, 'date', undefined)
+              ? (date) =>
+                  formatCellValue(
+                    date,
+                    'date',
+                    undefined,
+                    headerFilterColumn.locale,
+                  )
               : undefined,
+            headerFilterColumn.locale,
           ),
           model.headerFilterSearch().trim()
             ? new Set()
@@ -4543,7 +4574,7 @@ function OgeGridInner<T extends object>(
     if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
     if (column.dataType === 'boolean' && value != null)
       return value ? msg.booleanTrue : msg.booleanFalse;
-    return formatCellValue(value, column.dataType, undefined);
+    return formatCellValue(value, column.dataType, undefined, column.locale);
   };
 
   /** Cell content: a boolean cell's glyph is aria-hidden, its word sr-only. */
@@ -4668,6 +4699,7 @@ function OgeGridInner<T extends object>(
         editor = (
           <OgeNumberBox
             {...common}
+            locale={column.locale}
             onInputChange={(event) => onFilterInput(column, event.text)}
           />
         );
@@ -4677,12 +4709,14 @@ function OgeGridInner<T extends object>(
           currentOperator(column) === 'between' ? (
             <OgeDateRangeBox
               {...common}
+              locale={column.locale}
               showClearButton
               onValueChange={(range) => onDateRangeFilter(column, range)}
             />
           ) : (
             <OgeDateBox
               {...common}
+              locale={column.locale}
               showClearButton
               onValueCommitted={(event) => onDateFilter(column, event.value)}
             />
@@ -6095,6 +6129,7 @@ function OgeGridInner<T extends object>(
           showPageInput={pagingOptions.showPageInput === true}
           renderInfo={props.renderPagerInfo}
           messages={msg}
+          locale={model.effLocale()}
           onPageChange={(page) => state.paging.goTo(page)}
           onPageSizeChange={(size) =>
             state.paging.configure(size === 0 ? null : size)
@@ -6280,6 +6315,7 @@ function OgeGridInner<T extends object>(
                         editor = (
                           <OgeNumberBox
                             {...common}
+                            locale={hfColumn.locale}
                             value={
                               typeof condition.value === 'number'
                                 ? condition.value
@@ -6310,6 +6346,7 @@ function OgeGridInner<T extends object>(
                         editor = (
                           <OgeDateBox
                             {...common}
+                            locale={hfColumn.locale}
                             value={
                               condition.value instanceof Date
                                 ? condition.value

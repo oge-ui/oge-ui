@@ -531,7 +531,7 @@ export const OGE_REACT_FILE_UPLOADER_API: ApiSections = {
           name: '&lt;OgeUploadConfigProvider config&gt;',
           type: 'component',
           description:
-            'App-wide defaults and messages — five nested message blocks: buttons, dropZone, status, validation, announcements. The counterpart of <code>provideOgeUploadConfig()</code>.',
+            'App-wide defaults and messages — five nested message blocks: buttons, dropZone, status, validation, announcements. Messages render through <code>ogeFormatMessage</code> in the config <code>locale</code>, so count messages are ICU plurals (<code>filesAdded: {count, plural, one {# file added} other {# files added}}</code>). The counterpart of <code>provideOgeUploadConfig()</code>.',
         },
         {
           name: '&lt;OgeUploadDropZone zone&gt;',

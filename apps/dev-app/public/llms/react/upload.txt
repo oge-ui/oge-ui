@@ -215,7 +215,7 @@ _Types_
 | `OgeUploadAdapter` | `interface` | `send(parts, request, callbacks)` and optional `remove(...)`. Batch versus per-file is the shape of the argument, not a flag. |
 | `OgeUploadChunkMetadata` | `interface` | Kendo’s `ChunkMetadata` field for field, so a Kendo-shaped server needs no changes. |
 | `<OgeUploadTransportProvider adapter>` | `component` | The default adapter for a subtree — the counterpart of Angular’s `OGE_UPLOAD_TRANSPORT` token. Override it in tests and demos; jsdom’s XHR performs real network I/O. |
-| `<OgeUploadConfigProvider config>` | `component` | App-wide defaults and messages — five nested message blocks: buttons, dropZone, status, validation, announcements. The counterpart of `provideOgeUploadConfig()`. |
+| `<OgeUploadConfigProvider config>` | `component` | App-wide defaults and messages — five nested message blocks: buttons, dropZone, status, validation, announcements. Messages render through `ogeFormatMessage` in the config `locale`, so count messages are ICU plurals (`filesAdded: {count, plural, one {# file added} other {# files added}}`). The counterpart of `provideOgeUploadConfig()`. |
 | `<OgeUploadDropZone zone>` | `component` | Turns its element into a drop target for the uploader whose `dropZone` matches the given name. Reports hover through `onOverChange` for your own styling. |
 | `<OgeUploadTrigger zone>` | `component` | A real `<button>` that opens an uploader’s file dialog from elsewhere on the page — dx’s `dialogTrigger`. Disables itself while no uploader answers to that name. |
 | `createXhrUploadAdapter()` | `() => OgeUploadAdapter` | The default transport. Exported so a custom adapter can delegate to it. |

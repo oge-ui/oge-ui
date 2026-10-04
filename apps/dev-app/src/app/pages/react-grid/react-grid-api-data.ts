@@ -354,6 +354,13 @@ export const OGE_REACT_GRID_API: ApiSections = {
             'Per-grid overrides of the UI strings (see <code>&lt;OgeGridConfigProvider&gt;</code> for app-wide).',
         },
         {
+          name: 'locale',
+          type: 'string',
+          default: 'undefined',
+          description:
+            'BCP 47 locale of the grid’s formatted text — default date cells, declarative column <code>format</code>s, summaries, group captions, header-filter values, the filter row’s number parsing and editors, clipboard parsing and exported text — and of its plural-aware messages. <code>undefined</code> falls back to <code>&lt;OgeGridConfigProvider config={{ locale }}&gt;</code>, then <code>navigator.language</code>.',
+        },
+        {
           name: 'loadPanel',
           type: 'boolean',
           default: 'false',
@@ -1030,10 +1037,10 @@ export const OGE_REACT_GRID_COLUMN_API: ApiSections = {
         },
         {
           name: 'format',
-          type: '(value: unknown) =&gt; string',
+          type: 'OgeColumnFormat',
           default: 'undefined',
           description:
-            'Custom value formatter applied to the default (non-rendered) cell text and to exports.',
+            "Display format for cells, summaries, group rows, header-filter values and export: a function, or a declarative <code>OgeValueFormat</code> rendered in the grid’s <code>locale</code> (<code>{ type: 'currency', currency: 'EUR' }</code>, <code>{ type: 'date', dateStyle: 'long' }</code>, <code>{ type: 'number', pattern: '#,##0.00' }</code>).",
         },
         {
           name: 'visible',
@@ -1259,7 +1266,7 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
           name: '&lt;OgePager&gt;',
           type: 'OgePagerProps',
           description:
-            'The grid’s pager on its own: <code>pageIndex</code>, <code>pageCount</code>, <code>totalCount</code>, <code>pageSizes</code>, <code>displayMode</code>, <code>onPageChange</code>, <code>onPageSizeChange</code>.',
+            'The grid’s pager on its own: <code>pageIndex</code>, <code>pageCount</code>, <code>totalCount</code>, <code>pageSizes</code>, <code>displayMode</code>, <code>locale</code> (of the plural-aware info text; default <code>navigator.language</code>), <code>onPageChange</code>, <code>onPageSizeChange</code>.',
         },
         {
           name: 'OgeGridHandle&lt;T&gt;',
@@ -1368,6 +1375,12 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
             'Every user-facing string, single-sourced in <code>@oge-ui/behavior</code> with the Angular grid.',
         },
         {
+          name: 'messages.pagerInfo / messages.rowsSuffix',
+          type: 'string',
+          description:
+            'The pager’s row-count text, an ICU plural over <code>{count}</code>: <code>{count, plural, one {# row} other {# rows}}</code>, numbers in the grid’s <code>locale</code>. <code>rowsSuffix</code> is <strong>deprecated</strong> — a suffix cannot inflect; a catalog that still sets it keeps the old <code>&lt;count&gt; &lt;suffix&gt;</code> text (with a dev-mode warning) until the next minor.',
+        },
+        {
           name: 'messages.reorderColumnHeader / messages.detailColumnHeader / messages.selectAllColumnHeader / messages.reorderRow',
           type: 'string',
           description:
@@ -1389,7 +1402,48 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
           name: 'messages.sortAscendingAnnouncement / messages.sortDescendingAnnouncement / messages.sortClearedAnnouncement / messages.rowCountAnnouncement / messages.rowCountOneAnnouncement / messages.pageAnnouncement / messages.groupExpandedAnnouncement / messages.groupCollapsedAnnouncement / messages.rowExpandedAnnouncement / messages.rowCollapsedAnnouncement / messages.selectionCountAnnouncement / messages.validationErrorAnnouncement',
           type: 'string',
           description:
-            'Live-announcement patterns, <code>{placeholder}</code>-interpolated. Defaults: <code>Sorted by {column}, ascending</code> / <code>descending</code>, <code>Sort cleared</code>, <code>{count} rows</code> / <code>{count} row</code>, <code>Page {n} of {total}</code>, <code>Group {value} expanded</code> / <code>collapsed</code>, <code>{value} expanded</code> / <code>collapsed</code> (tree list), <code>{count} rows selected</code> and <code>{column}: {error}</code> (spoken assertively when a save is blocked by an invalid editor).',
+            'Live-announcement patterns, <code>{placeholder}</code>-interpolated. Defaults: <code>Sorted by {column}, ascending</code> / <code>descending</code>, <code>Sort cleared</code>, <code>{count, plural, one {# row} other {# rows}}</code>, <code>Page {n} of {total}</code>, <code>Group {value} expanded</code> / <code>collapsed</code>, <code>{value} expanded</code> / <code>collapsed</code> (tree list), <code>{count, plural, one {# row selected} other {# rows selected}}</code> and <code>{column}: {error}</code> (spoken assertively when a save is blocked by an invalid editor). The count messages (and <code>cellsPastedAnnouncement</code> / <code>cellsFilledAnnouncement</code> / <code>undoAnnouncement</code> / <code>redoAnnouncement</code>) are ICU plurals rendered by <code>ogeFormatMessage</code> in the grid’s <code>locale</code> — write every plural form of your language in one key (<code>one</code> / <code>few</code> / <code>many</code> / <code>other</code>, <code>=0</code>). A plain <code>{count}</code> pattern still works. <code>rowCountOneAnnouncement</code> is <strong>deprecated</strong>: still honoured for exactly one row (with a dev-mode warning) until the next minor.',
+        },
+      ],
+    },
+    {
+      title: 'Locale, formats & plurals',
+      entries: [
+        {
+          name: 'OgeValueFormat',
+          type: "{ type: 'number' | 'decimal' | 'currency' | 'percent' | 'date' | 'time' | 'datetime'; currency?; minimumFractionDigits?; maximumFractionDigits?; dateStyle?; timeStyle?; pattern? }",
+          description:
+            'A declarative column <code>format</code> (from <code>&#64;oge-ui/core</code>), rendered through the shared <code>Intl</code> cache in the grid’s locale — the <code>locale</code> prop, then <code>&lt;OgeGridConfigProvider config={{ locale }}&gt;</code>, then <code>navigator.language</code>. <code>number</code> groups digits, <code>decimal</code> does not, <code>currency</code> defaults to <code>USD</code>, <code>percent</code> reads a ratio (<code>0.25</code> → <code>25%</code>); dates default to the locale’s numeric date / short time. <code>pattern</code> is a small LDML subset: <code>#,##0.00</code> for numbers, <code>dd.MM.yyyy HH:mm</code> / <code>d MMMM yyyy, EEEE</code> for dates (names and digits stay the locale’s). Unformatted number columns render the raw value — give them a format for locale separators.',
+        },
+        {
+          name: 'OgeColumnFormat',
+          type: '((value: unknown) =&gt; string) | OgeValueFormat',
+          description:
+            'What a column’s <code>format</code> accepts. A function wins and ignores the locale; a declarative format is compiled once per locale and reaches cells, summaries, group captions, header-filter values, the clipboard and CSV / Excel / PDF text. CSV keeps unformatted values raw.',
+        },
+        {
+          name: 'ogeNumberFormat / ogeDateTimeFormat / ogeRelativeTimeFormat / ogePluralRules',
+          type: '(locale?, options?) =&gt; Intl.NumberFormat | Intl.DateTimeFormat | Intl.RelativeTimeFormat | Intl.PluralRules',
+          description:
+            'The suite’s shared <code>Intl</code> cache (<code>&#64;oge-ui/core</code>): one instance per locale + options, SSR-safe, an unknown locale falls back to the runtime default instead of throwing. Use it in custom <code>format</code> functions instead of <code>new Intl.*</code> per cell.',
+        },
+        {
+          name: 'ogeFormatMessage(template, values, locale)',
+          type: '(template: string, values?: OgeMessageValues, locale?: string) =&gt; string',
+          description:
+            'ICU-lite message formatting behind every plural-aware catalog key: <code>{name}</code>, <code>{n, number|date|time, style}</code>, <code>{count, plural, =0 {…} one {# row} few {…} many {…} other {# rows}}</code> with <code>#</code> and <code>offset:</code>, <code>selectordinal</code> and <code>select</code>; ICU apostrophe quoting. Plural categories come from <code>Intl.PluralRules</code>; a malformed template never throws.',
+        },
+        {
+          name: 'ogeParseNumber(text, locale)',
+          type: '(text: string, locale?: string) =&gt; number',
+          description:
+            'Reads number text typed in a locale (<code>1.234,5</code> in de-DE, native digits in ar-EG); <code>NaN</code> when blank or not a number. The filter row parses typed numbers with it in the grid’s locale.',
+        },
+        {
+          name: 'ogeValueFormatter(format, locale) / ogeFormatValue(value, format, locale)',
+          type: '(format: OgeValueFormat, locale?) =&gt; (value: unknown) =&gt; string',
+          description:
+            'Compile or apply an <code>OgeValueFormat</code> outside a grid — the same text the grid renders.',
         },
       ],
     },

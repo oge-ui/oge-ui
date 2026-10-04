@@ -502,7 +502,7 @@ export const OGE_FILE_UPLOADER_API: ApiSections = {
           name: 'provideOgeUploadConfig(config)',
           type: 'Provider',
           description:
-            'App-wide defaults and messages — five nested message blocks: buttons, dropZone, status, validation, announcements.',
+            'App-wide defaults and messages — five nested message blocks: buttons, dropZone, status, validation, announcements. Messages render through <code>ogeFormatMessage</code> in the config <code>locale</code>, so count messages are ICU plurals (<code>filesAdded: {count, plural, one {# file added} other {# files added}}</code>).',
         },
         {
           name: 'OgeUploadDropZone',

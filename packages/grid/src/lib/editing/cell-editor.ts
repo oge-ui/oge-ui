@@ -102,6 +102,7 @@ export type OgeCellEditorSurface = 'cell' | 'form' | 'popup';
             labelMode="hidden"
             subscriptSizing="none"
             [fluid]="true"
+            [locale]="locale()"
             [label]="label()"
             [invalid]="invalid()"
             [formControl]="control()"
@@ -113,6 +114,7 @@ export type OgeCellEditorSurface = 'cell' | 'form' | 'popup';
             labelMode="hidden"
             subscriptSizing="none"
             [fluid]="true"
+            [locale]="locale()"
             [label]="label()"
             [invalid]="invalid()"
             [formControl]="control()"
@@ -125,6 +127,7 @@ export type OgeCellEditorSurface = 'cell' | 'form' | 'popup';
             labelMode="hidden"
             subscriptSizing="none"
             [fluid]="true"
+            [locale]="locale()"
             [label]="label()"
             [invalid]="invalid()"
             [formControl]="control()"
@@ -155,6 +158,8 @@ export class OgeCellEditor {
   readonly lookupItems = input<readonly LookupItem[] | undefined>(undefined);
   /** Accessible name — the column caption. */
   readonly label = input('');
+  /** Locale the number / date editors format and parse in (the grid's). */
+  readonly locale = input<string | undefined>(undefined);
   readonly surface = input<OgeCellEditorSurface>('form');
   /** Validation state, evaluated by the host per CD (control state is not reactive). */
   readonly invalid = input(false);

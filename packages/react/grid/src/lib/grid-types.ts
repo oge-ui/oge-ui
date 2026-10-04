@@ -10,6 +10,7 @@ import type {
   SummaryType,
 } from '@oge-ui/core';
 import type {
+  OgeColumnFormat,
   OgeGridColumnHidingMode,
   OgeColumnAlignment,
   OgeColumnLookup,
@@ -162,8 +163,14 @@ export interface OgeGridColumnProps<T = unknown> {
    * the start.
    */
   alignment?: OgeColumnAlignment;
-  /** Custom value formatter applied to the default (non-rendered) cell text. */
-  format?: (value: unknown) => string;
+  /**
+   * Cell text format of the default (non-rendered) cell, its summaries, group
+   * captions, header-filter values and exports: a function of the value, or a
+   * declarative `OgeValueFormat` rendered in the grid's `locale`
+   * (`{ type: 'currency', currency: 'EUR' }`, `{ type: 'date', dateStyle:
+   * 'long' }`, `{ type: 'number', pattern: '#,##0.00' }`).
+   */
+  format?: OgeColumnFormat;
   visible?: boolean;
   sortable?: boolean;
   filterable?: boolean;
@@ -391,6 +398,14 @@ export interface OgeGridProps<T extends object = Record<string, unknown>> {
   grouping?: OgeGroupingOptions;
   /** Per-grid overrides of the UI strings (see `OgeGridConfigProvider` for app-wide). */
   messages?: Partial<OgeGridMessages>;
+  /**
+   * BCP 47 locale of the grid's formatted text — default date cells,
+   * declarative column `format`s, summaries, group captions, header-filter
+   * values, the filter row's number parsing and editors, exported text — and
+   * of its plural-aware announcements. `undefined` falls back to the
+   * `<OgeGridConfigProvider>` `locale`, then `navigator.language`.
+   */
+  locale?: string;
   /**
    * Persists user state (sort, filters, grouping, column layout, page size)
    * under this key via the state storage (default: localStorage) and restores

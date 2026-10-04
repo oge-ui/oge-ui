@@ -4,6 +4,7 @@
  * `<OgeUploadConfigProvider>` resolve against one object — and so a
  * translation written for one layer is the translation for the other.
  */
+import { ogeFormatMessage } from '@oge-ui/core';
 
 /**
  * Button and action labels.
@@ -169,7 +170,7 @@ export const OGE_DEFAULT_UPLOAD_MESSAGES: OgeUploadMessages = {
   },
   announcements: {
     fileAdded: '{name} added',
-    filesAdded: '{count} files added',
+    filesAdded: '{count, plural, one {# file added} other {# files added}}',
     fileRejected: '{name} was rejected: {reason}',
     uploadStarted: 'Uploading {name}',
     uploadProgress: '{name}, {percent} percent',
@@ -180,7 +181,8 @@ export const OGE_DEFAULT_UPLOAD_MESSAGES: OgeUploadMessages = {
     uploadAborted: '{name} cancelled',
     fileRemoved: '{name} removed',
     cleared: 'All files removed',
-    allCompleted: '{succeeded} of {total} files uploaded',
+    allCompleted:
+      '{succeeded} of {total, plural, one {# file uploaded} other {# files uploaded}}',
     dropZoneEntered: 'Drop files to add them',
   },
 };
@@ -264,14 +266,16 @@ export function resolveUploadConfig(
   };
 }
 
-/** Expands `{token}` placeholders in a message. */
+/**
+ * Expands a message through core's `ogeFormatMessage`: `{token}`
+ * placeholders, and ICU plurals over numeric tokens
+ * (`{count, plural, one {# file added} other {# files added}}`) in `locale`
+ * (unset = the runtime default).
+ */
 export function formatUploadMessage(
   template: string,
   tokens: Record<string, string>,
+  locale?: string,
 ): string {
-  return template.replace(/\{(\w+)\}/g, (match, key: string) =>
-    Object.prototype.hasOwnProperty.call(tokens, key)
-      ? (tokens[key] ?? match)
-      : match,
-  );
+  return ogeFormatMessage(template, tokens, locale);
 }

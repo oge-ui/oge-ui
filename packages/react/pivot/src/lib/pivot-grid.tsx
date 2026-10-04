@@ -17,6 +17,7 @@ import {
   type Ref,
 } from 'react';
 import { OgeGridStatePersistenceCore } from '@oge-ui/behavior';
+import { ogeDefaultLocale } from '@oge-ui/core';
 import type {
   PivotArea,
   PivotFieldConfig,
@@ -39,7 +40,7 @@ import {
   type OgePivotMessages,
 } from '@oge-ui/pivot-engine';
 import { useOgeGridStateStorage } from '@oge-ui/react-grid';
-import { useOgePivotMessages } from './pivot-config';
+import { useOgePivotConfig, useOgePivotMessages } from './pivot-config';
 import type { OgePivotGridHandle, OgePivotGridProps } from './pivot-types';
 import { createPivotRxAdapter } from './rx-adapter';
 
@@ -78,6 +79,7 @@ function OgePivotGridInner<T>(
   ref: ForwardedRef<OgePivotGridHandle<T>>,
 ): ReactElement {
   const contextMessages = useOgePivotMessages();
+  const pivotConfig = useOgePivotConfig();
   const contextStorage = useOgeGridStateStorage();
   const [, rerender] = useReducer((n: number) => n + 1, 0);
 
@@ -110,6 +112,7 @@ function OgePivotGridInner<T>(
       messages: rx.input(messages),
       calculatedFields: rx.input<readonly OgePivotCalculatedField[]>(NO_CALCS),
       rowHeaderLayout: rx.input<OgePivotRowHeaderLayout>('compact'),
+      locale: rx.input<string | undefined>(undefined),
       rtlEnabled: rx.input<boolean | undefined>(undefined),
     };
     const core = new OgePivotGridCore<T>(rx, {
@@ -126,6 +129,7 @@ function OgePivotGridInner<T>(
         fieldChooser: () => latest.current.fieldChooser ?? NO_CHOOSER,
         calculatedFields: input.calculatedFields,
         rowHeaderLayout: input.rowHeaderLayout,
+        locale: input.locale,
         rtlEnabled: input.rtlEnabled,
       },
       fieldLayoutChange: (fields) =>
@@ -160,6 +164,10 @@ function OgePivotGridInner<T>(
   model.input.messages.set(messages);
   model.input.calculatedFields.set(props.calculatedFields ?? NO_CALCS);
   model.input.rowHeaderLayout.set(props.rowHeaderLayout ?? 'compact');
+  // the prop, the provider, then the browser language
+  model.input.locale.set(
+    props.locale ?? pivotConfig.locale ?? ogeDefaultLocale(),
+  );
   model.input.rtlEnabled.set(props.rtlEnabled);
 
   const viewportRef = useRef<HTMLDivElement>(null);

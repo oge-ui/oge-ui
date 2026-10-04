@@ -17,7 +17,7 @@ import {
 import type { FormValueControl } from '@angular/forms/signals';
 import {
   adaptiveListViewportHeight,
-  formatPattern,
+  ogeMoreTagsText,
   isNearScrollEnd,
   ogeAllowDropDownClose,
   ogeAllowDropDownOpen,
@@ -736,9 +736,11 @@ export class OgeMultiColumnComboBox<TItem = unknown>
   protected readonly overflowCount = computed(() => this.overflow().hidden);
 
   protected readonly moreText = computed(() =>
-    formatPattern(this.msg().moreTags, {
-      count: String(this.overflowCount()),
-    }),
+    ogeMoreTagsText(
+      this.msg().moreTags,
+      this.overflowCount(),
+      this.config.locale,
+    ),
   );
 
   protected readonly gridTemplate = computed(() =>

@@ -5,6 +5,7 @@
  * stops and the per-cell virtual window. Every render layer derives its
  * markup from these, so the two layers cannot disagree about a board. Pure.
  */
+import { ogeDateTimeFormat } from '@oge-ui/core';
 import {
   deriveColumns,
   orderColumns,
@@ -247,7 +248,7 @@ export function isKanbanOverdue(due: Date, now: Date = new Date()): boolean {
 
 /** The due-date badge text (`short` month + day, in `locale`). */
 export function formatKanbanDue(due: Date, locale: string | undefined): string {
-  return new Intl.DateTimeFormat(locale, {
+  return ogeDateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
   }).format(due);

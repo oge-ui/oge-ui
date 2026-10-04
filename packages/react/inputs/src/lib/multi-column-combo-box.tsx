@@ -17,7 +17,7 @@ import {
   OGE_SELECT_OPTION_HEIGHT,
   OgeSelectListCore,
   adaptiveListViewportHeight,
-  formatPattern,
+  ogeMoreTagsText,
   ogeAllowDropDownClose,
   ogeAllowDropDownOpen,
   ogeChipOverflow,
@@ -1016,9 +1016,7 @@ export const OgeMultiColumnComboBox = forwardRef(
                 ))}
               {overflow.hidden > 0 && (
                 <span className="oge-tag oge-tag-more">
-                  {formatPattern(field.msg.moreTags, {
-                    count: String(overflow.hidden),
-                  })}
+                  {ogeMoreTagsText(field.msg.moreTags, overflow.hidden)}
                 </span>
               )}
               {fieldInput}

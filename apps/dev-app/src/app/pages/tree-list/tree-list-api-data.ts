@@ -233,6 +233,12 @@ export const OGE_TREE_LIST_API: ApiSections = {
           description: 'cell/row/batch/form/popup via the shared EditingModel.',
         },
         {
+          name: 'locale',
+          type: 'string | undefined',
+          description:
+            'BCP 47 locale of the formatted text — default date cells, declarative column <code>format</code>s (<code>OgeValueFormat</code>), summaries, header-filter values, the filter row’s number parsing and editors, the pager info and exported text — and of the plural-aware announcements. <code>undefined</code> falls back to <code>provideOgeGridConfig({ locale })</code>, then Angular’s <code>LOCALE_ID</code>.',
+        },
+        {
           name: 'commandButtons / rowDragging / rowAlternation / wordWrap / loadPanel / rtlEnabled / messages / stateKey',
           type: 'various',
           description:

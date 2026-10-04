@@ -461,6 +461,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         } @case ('number') {
         <oge-number-box
           class="oge-filter-input"
+          [locale]="effLocale()"
           size="sm"
           labelMode="hidden"
           subscriptSizing="none"
@@ -471,6 +472,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         } @case ('date') { @if (currentOperator(column) === 'between') {
         <oge-date-range-box
           class="oge-filter-input"
+          [locale]="effLocale()"
           size="sm"
           labelMode="hidden"
           subscriptSizing="none"
@@ -482,6 +484,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         } @else {
         <oge-date-box
           class="oge-filter-input"
+          [locale]="effLocale()"
           size="sm"
           labelMode="hidden"
           subscriptSizing="none"
@@ -804,6 +807,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
           } @else {
           <oge-cell-editor
             surface="cell"
+            [locale]="column.locale"
             [control]="editControl(node, column)"
             [dataType]="column.dataType"
             [lookupItems]="lookupItemsFor(node, column)"
@@ -1209,6 +1213,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
   [pageIndex]="store.paging.pageIndex()"
   [pageCount]="pageCount()"
   [totalCount]="totalCount()"
+  [locale]="effLocale()"
   [pageSize]="store.paging.pageSize() ?? 0"
   [pageSizes]="pagingOpts.pageSizes ?? null"
   [showInfo]="pagingOpts.showInfo !== false"
@@ -1281,6 +1286,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         (hfColumn.dataType) { @case ('number') {
         <oge-number-box
           class="oge-hf-condition-value"
+          [locale]="effLocale()"
           size="sm"
           labelMode="hidden"
           subscriptSizing="none"
@@ -1306,6 +1312,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         } @case ('date') {
         <oge-date-box
           class="oge-hf-condition-value"
+          [locale]="effLocale()"
           size="sm"
           labelMode="hidden"
           subscriptSizing="none"
@@ -1317,6 +1324,7 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
         } @case ('datetime') {
         <oge-date-box
           class="oge-hf-condition-value"
+          [locale]="effLocale()"
           size="sm"
           labelMode="hidden"
           subscriptSizing="none"

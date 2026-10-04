@@ -5,7 +5,7 @@
  * labels and the pointer-gesture arithmetic. The Angular and React views
  * render from these results and nothing else.
  */
-import { sameDay } from '@oge-ui/core';
+import { ogeDateTimeFormat, sameDay } from '@oge-ui/core';
 import type { OgeSchedulerGridMessages } from './config';
 import {
   proposeMove,
@@ -240,7 +240,7 @@ export function buildGutterSlots(
   grid: TimeGridVm,
   locale: string | undefined,
 ): readonly SchedulerGutterSlot[] {
-  const format = new Intl.DateTimeFormat(locale, {
+  const format = ogeDateTimeFormat(locale, {
     hour: 'numeric',
     minute: grid.cellDuration % 60 === 0 ? undefined : '2-digit',
   });
@@ -369,11 +369,11 @@ export function schedulerCellAriaLabel(
   const label = messages.cellLabel
     .replace(
       '{date}',
-      new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(date),
+      ogeDateTimeFormat(locale, { dateStyle: 'full' }).format(date),
     )
     .replace(
       '{time}',
-      new Intl.DateTimeFormat(locale, {
+      ogeDateTimeFormat(locale, {
         hour: 'numeric',
         minute: '2-digit',
       }).format(date),
@@ -387,7 +387,7 @@ export function schedulerChipAriaLabel<T>(
   appointment: SchedulerAppointment<T>,
   locale: string | undefined,
 ): string {
-  const format = new Intl.DateTimeFormat(locale, {
+  const format = ogeDateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
@@ -428,7 +428,7 @@ export function dayWeekColumnHeaderText(
   column: DayWeekColumn,
   locale: string | undefined,
 ): string {
-  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(
+  const date = ogeDateTimeFormat(locale, { dateStyle: 'full' }).format(
     column.day,
   );
   return column.resourceText ? `${date}, ${column.resourceText}` : date;
@@ -481,7 +481,7 @@ export function weekdayShortText(
   day: Date,
   locale: string | undefined,
 ): string {
-  return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(day);
+  return ogeDateTimeFormat(locale, { weekday: 'short' }).format(day);
 }
 
 /* ---------- pointer-gesture arithmetic ---------- */

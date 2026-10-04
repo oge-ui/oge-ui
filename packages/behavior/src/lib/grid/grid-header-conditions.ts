@@ -1,6 +1,7 @@
 import {
   foldText,
   nextDay,
+  ogeDateTimeFormat,
   startOfDay,
   toLocalDate,
   type FilterExpr,
@@ -225,8 +226,6 @@ export interface OgeHeaderDateNode {
   readonly children: readonly OgeHeaderDateNode[];
 }
 
-let monthFormatter: Intl.DateTimeFormat | undefined;
-
 const pad = (n: number): string => String(n).padStart(2, '0');
 
 /**
@@ -243,8 +242,10 @@ export function groupHeaderValuesByDate(
   textOf: (value: unknown) => string,
   dayLabel: (date: Date, value: unknown) => string = (_date, value) =>
     textOf(value),
+  /** Locale of the month names (the column's); unset = runtime default. */
+  locale?: string,
 ): readonly OgeHeaderDateNode[] {
-  monthFormatter ??= new Intl.DateTimeFormat(undefined, { month: 'long' });
+  const monthFormatter = ogeDateTimeFormat(locale, { month: 'long' });
   interface Draft {
     key: string;
     label: string;

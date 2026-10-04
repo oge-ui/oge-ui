@@ -5,6 +5,7 @@
  * component. The Angular dialog renders them with `<oge-form>`, the React
  * one with `<OgeForm>` — the items are the same objects.
  */
+import { ogeDateTimeFormat } from '@oge-ui/core';
 import type { OgeFormItemDataBase } from '@oge-ui/behavior';
 import type { OgeSchedulerEditorMessages } from './config';
 import {
@@ -251,7 +252,7 @@ export function schedulerReminderItems(
 export function schedulerWeekdayItems(
   locale: string | undefined,
 ): { value: number; text: string }[] {
-  const format = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  const format = ogeDateTimeFormat(locale, { weekday: 'short' });
   // Jan 4–10 2026 is a Sunday-first week
   return Array.from({ length: 7 }, (_, weekday) => ({
     value: weekday,

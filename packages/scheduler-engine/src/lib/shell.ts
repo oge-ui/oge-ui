@@ -6,7 +6,7 @@
  * recurrence-expanded appointment window. Framework-free, so both render
  * layers run this one copy (ADR 0003).
  */
-import { rangesOverlap, startOfDay } from '@oge-ui/core';
+import { ogeDateTimeFormat, rangesOverlap, startOfDay } from '@oge-ui/core';
 import type {
   OgeSchedulerMessages,
   OgeSchedulerToolbarMessages,
@@ -211,16 +211,16 @@ export function schedulerPeriodTitle(
     return custom(range.start, new Date(range.end.getTime() - 1), view);
   }
   if (view === 'day') {
-    return new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(date);
+    return ogeDateTimeFormat(locale, { dateStyle: 'full' }).format(date);
   }
   if (view === 'month') {
-    return new Intl.DateTimeFormat(locale, {
+    return ogeDateTimeFormat(locale, {
       month: 'long',
       year: 'numeric',
     }).format(date);
   }
   if (view === 'year') {
-    return new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(date);
+    return ogeDateTimeFormat(locale, { year: 'numeric' }).format(date);
   }
   const { start, end } = viewRange(
     view === 'agenda' ? 'agenda' : 'week',
@@ -229,7 +229,7 @@ export function schedulerPeriodTitle(
     agendaDuration,
   );
   const last = new Date(end.getTime() - 1);
-  return new Intl.DateTimeFormat(locale, {
+  return ogeDateTimeFormat(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

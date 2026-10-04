@@ -60,6 +60,12 @@ export interface OgePivotGridProps<T = unknown> {
   /** Row-header layout: `'compact'` (default, indented), `'outline'` or `'tabular'`. */
   rowHeaderLayout?: OgePivotRowHeaderLayout;
   /**
+   * BCP 47 locale of the cell text — percent display modes, dates and
+   * declarative field `format`s. `undefined` falls back to the
+   * `<OgePivotConfigProvider>` `locale`, then `navigator.language`.
+   */
+  locale?: string;
+  /**
    * Right-to-left layout: row headers on the right, mirrored expand
    * chevrons, Left/Right arrow keys and field-chip moves, menus opening
    * leftwards. Unset follows the page — the computed `direction` or the

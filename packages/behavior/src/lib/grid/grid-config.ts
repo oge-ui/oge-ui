@@ -86,7 +86,17 @@ export interface OgeGridMessages {
   collapseRow: string;
   previousPage: string;
   nextPage: string;
-  rowsSuffix: string;
+  /**
+   * @deprecated Use `pagerInfo` — a suffix cannot inflect. A catalog that
+   * still sets it keeps the old `"<count> <suffix>"` pager text (with a
+   * dev-mode warning) until the next minor.
+   */
+  rowsSuffix?: string;
+  /**
+   * The pager's row-count text — an ICU plural over `{count}`
+   * (`ogeFormatMessage`): `'{count, plural, one {# row} other {# rows}}'`.
+   */
+  pagerInfo: string;
   pageSizeLabel: string;
   allRows: string;
   confirmDelete: string;
@@ -145,10 +155,18 @@ export interface OgeGridMessages {
   sortDescendingAnnouncement: string;
   /** Live announcement after the sort was removed; placeholder: {column}. */
   sortClearedAnnouncement: string;
-  /** Live result count after a filter or search change; placeholder: {count}. */
+  /**
+   * Live result count after a filter or search change — an ICU plural over
+   * `{count}` (`ogeFormatMessage`), so every language's plural forms fit in
+   * one key: `'{count, plural, one {# row} other {# rows}}'`.
+   */
   rowCountAnnouncement: string;
-  /** Singular form of `rowCountAnnouncement` (exactly one row); placeholder: {count}. */
-  rowCountOneAnnouncement: string;
+  /**
+   * @deprecated Put the singular into `rowCountAnnouncement` as an ICU plural
+   * branch. Still honoured for exactly one row (with a dev-mode warning)
+   * until the next minor.
+   */
+  rowCountOneAnnouncement?: string;
   /** Live announcement after a page change; placeholders: {n} {total}. */
   pageAnnouncement: string;
   /** Live announcement when a group row expands; placeholder: {value}. */
@@ -159,7 +177,7 @@ export interface OgeGridMessages {
   rowExpandedAnnouncement: string;
   /** Live announcement when a tree row collapses (tree-list); placeholder: {value}. */
   rowCollapsedAnnouncement: string;
-  /** Live announcement after select-all / clear-all; placeholder: {count}. */
+  /** Live announcement after select-all / clear-all; ICU plural over {count}. */
   selectionCountAnnouncement: string;
   /** Assertive announcement when a save is blocked by an invalid editor; placeholders: {column} {error}. */
   validationErrorAnnouncement: string;
@@ -168,13 +186,13 @@ export interface OgeGridMessages {
    * (`selectionMode: 'cell'`); placeholders: {rows} {columns} {cells}.
    */
   rangeSelectedAnnouncement: string;
-  /** Live announcement after a paste wrote cells; placeholder: {count}. */
+  /** Live announcement after a paste wrote cells; ICU plural over {count}. */
   cellsPastedAnnouncement: string;
-  /** Live announcement after a fill (handle drag, Ctrl+D / Ctrl+R) wrote cells; placeholder: {count}. */
+  /** Live announcement after a fill (handle drag, Ctrl+D / Ctrl+R) wrote cells; ICU plural over {count}. */
   cellsFilledAnnouncement: string;
-  /** Live announcement after Ctrl+Z reverted cells; placeholder: {count}. */
+  /** Live announcement after Ctrl+Z reverted cells; ICU plural over {count}. */
   undoAnnouncement: string;
-  /** Live announcement after Ctrl+Y re-applied cells; placeholder: {count}. */
+  /** Live announcement after Ctrl+Y re-applied cells; ICU plural over {count}. */
   redoAnnouncement: string;
   /** Tooltip of the range's fill handle (the drag affordance at its corner). */
   fillHandle: string;
@@ -243,7 +261,7 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   collapseRow: 'Collapse row',
   previousPage: 'Previous page',
   nextPage: 'Next page',
-  rowsSuffix: 'rows',
+  pagerInfo: '{count, plural, one {# row} other {# rows}}',
   pageSizeLabel: 'Rows per page',
   allRows: 'All',
   confirmDelete: 'Delete this row?',
@@ -311,20 +329,24 @@ export const OGE_DEFAULT_GRID_MESSAGES: OgeGridMessages = {
   sortAscendingAnnouncement: 'Sorted by {column}, ascending',
   sortDescendingAnnouncement: 'Sorted by {column}, descending',
   sortClearedAnnouncement: 'Sort cleared',
-  rowCountAnnouncement: '{count} rows',
-  rowCountOneAnnouncement: '{count} row',
+  rowCountAnnouncement: '{count, plural, one {# row} other {# rows}}',
   pageAnnouncement: 'Page {n} of {total}',
   groupExpandedAnnouncement: 'Group {value} expanded',
   groupCollapsedAnnouncement: 'Group {value} collapsed',
   rowExpandedAnnouncement: '{value} expanded',
   rowCollapsedAnnouncement: '{value} collapsed',
-  selectionCountAnnouncement: '{count} rows selected',
+  selectionCountAnnouncement:
+    '{count, plural, one {# row selected} other {# rows selected}}',
   validationErrorAnnouncement: '{column}: {error}',
   rangeSelectedAnnouncement: '{rows} by {columns} cells selected',
-  cellsPastedAnnouncement: '{count} cells pasted',
-  cellsFilledAnnouncement: '{count} cells filled',
-  undoAnnouncement: 'Undo: {count} cells restored',
-  redoAnnouncement: 'Redo: {count} cells changed',
+  cellsPastedAnnouncement:
+    '{count, plural, one {# cell pasted} other {# cells pasted}}',
+  cellsFilledAnnouncement:
+    '{count, plural, one {# cell filled} other {# cells filled}}',
+  undoAnnouncement:
+    'Undo: {count, plural, one {# cell restored} other {# cells restored}}',
+  redoAnnouncement:
+    'Redo: {count, plural, one {# cell changed} other {# cells changed}}',
   fillHandle: 'Drag to fill',
   validationPending: 'Checking…',
   autoFitColumn: 'Size to fit',
@@ -367,6 +389,14 @@ export interface OgeGridConfig {
    * validation changes are spoken through the shared live announcer.
    */
   announcements: boolean;
+  /**
+   * BCP 47 locale of every grid and tree list: default date cells, declarative
+   * column `format`s, summaries, group captions, header-filter values, the
+   * filter row's number parsing and exported text. `undefined` = the app
+   * locale (Angular `LOCALE_ID`; `navigator.language` in React). A
+   * component's own `locale` input / prop wins.
+   */
+  locale: string | undefined;
   messages: OgeGridMessages;
 }
 
@@ -381,6 +411,7 @@ export const OGE_DEFAULT_GRID_CONFIG: OgeGridConfig = {
   allowUnsorting: true,
   columnHidingMode: 'detail',
   announcements: true,
+  locale: undefined,
   messages: OGE_DEFAULT_GRID_MESSAGES,
 };
 

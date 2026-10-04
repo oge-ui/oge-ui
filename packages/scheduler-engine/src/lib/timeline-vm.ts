@@ -4,7 +4,7 @@
  * without grouping. Bars stack into lanes via the overlap-layout kernel
  * (transposed: the column index becomes the vertical lane).
  */
-import { sameDay } from '@oge-ui/core';
+import { ogeDateTimeFormat, sameDay } from '@oge-ui/core';
 import { proposeMove, type AppointmentProposal } from './gesture-math';
 import { layoutDayColumn } from './layout';
 import type { SchedulerAppointment } from './scheduler-model';
@@ -194,7 +194,7 @@ export function timelineHourLabels(
   const windowSpan = grid.windowEndMinutes - grid.windowStartMinutes;
   const totalSpan = windowSpan * grid.days.length;
   if (totalSpan <= 0) return [];
-  const format = new Intl.DateTimeFormat(locale, { hour: 'numeric' });
+  const format = ogeDateTimeFormat(locale, { hour: 'numeric' });
   const stepMinutes = view === 'timelineDay' ? 60 : 360;
   const labels: TimelineHourLabel[] = [];
   for (let dayIndex = 0; dayIndex < grid.days.length; dayIndex++) {
@@ -217,7 +217,7 @@ export function timelineHourLabels(
 
 /** A timeline day header (`Mon, Aug 3`). */
 export function timelineDayText(day: Date, locale: string | undefined): string {
-  return new Intl.DateTimeFormat(locale, {
+  return ogeDateTimeFormat(locale, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',

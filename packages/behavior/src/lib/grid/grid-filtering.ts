@@ -167,6 +167,8 @@ export interface OgeFilterRowColumn {
   readonly calculateFilterExpression:
     | ((value: unknown, operator: FilterOperator) => FilterExpr | null)
     | undefined;
+  /** Locale typed numbers are read in (`1,5` in de-DE); unset = `Number()`. */
+  readonly locale?: string | undefined;
 }
 
 /**
@@ -201,7 +203,13 @@ export function rowFilterExpr(
     const op = effectiveFilterOperator(column, operator);
     return text ? column.calculateFilterExpression(text, op) : null;
   }
-  return buildRowFilterExpr(field, column.dataType, raw, operator);
+  return buildRowFilterExpr(
+    field,
+    column.dataType,
+    raw,
+    operator,
+    column.locale,
+  );
 }
 
 /** Glyphs shown on the filter row's operator button. */

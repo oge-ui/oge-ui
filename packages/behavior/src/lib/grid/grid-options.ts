@@ -215,6 +215,8 @@ export interface OgeExportColumn<T = unknown> {
   dataType: OgeDataType;
   accessor: (row: T) => unknown;
   format?: ((value: unknown) => string) | undefined;
+  /** Locale unformatted dates are written in (the column's `locale`). */
+  locale?: string | undefined;
   /** On-screen width in px, when the column declares or was resized to one. */
   width?: number | undefined;
   /** Resolved cell alignment (numbers default to `'end'`). */

@@ -3,7 +3,7 @@
  * rows, the "+N more" overflow entries, the chip keyboard order, the
  * pointer-drop cell and the labels.
  */
-import { sameDay, startOfDay } from '@oge-ui/core';
+import { ogeDateTimeFormat, sameDay, startOfDay } from '@oge-ui/core';
 import type { OgeSchedulerGridMessages } from './config';
 import type { LaneLayout } from './lanes';
 import { buildMonthWeekLanes } from './month-layout';
@@ -101,7 +101,7 @@ export function monthColumnHeaderText(
   day: Date,
   locale: string | undefined,
 ): string {
-  return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(day);
+  return ogeDateTimeFormat(locale, { weekday: 'long' }).format(day);
 }
 
 /** Whether a month cell is selected (`aria-selected`) — the roving current day. */
@@ -121,7 +121,7 @@ export function schedulerDayCellAriaLabel(
 ): string {
   return messages.dayCellLabel.replace(
     '{date}',
-    new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(day),
+    ogeDateTimeFormat(locale, { dateStyle: 'full' }).format(day),
   );
 }
 

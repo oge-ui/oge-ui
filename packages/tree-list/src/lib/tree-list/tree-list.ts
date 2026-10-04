@@ -19,6 +19,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  LOCALE_ID,
   ViewEncapsulation,
   afterNextRender,
   afterRenderEffect,
@@ -426,6 +427,22 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
   /** Per-instance message overrides (merged over the global config). */
   readonly messages = input<Partial<OgeGridMessages> | undefined>(undefined);
 
+  /**
+   * BCP 47 locale of the tree list's formatted text — default date cells,
+   * declarative column `format`s, summaries, header-filter values, the filter
+   * row's number parsing and editors, exported text — and of its
+   * plural-aware announcements. `undefined` falls back to
+   * `provideOgeGridConfig({ locale })`, then Angular's `LOCALE_ID`.
+   */
+  readonly locale = input<string | undefined>(undefined);
+
+  private readonly localeId = inject(LOCALE_ID);
+
+  /** The locale in force: the input, the config, then `LOCALE_ID`. */
+  protected readonly effLocale = computed(
+    () => this.locale() ?? this.config.locale ?? this.localeId,
+  );
+
   /** Row selection: none | single | multiple (ctrl/shift) | checkbox column. */
   readonly selectionMode = input<OgeSelectionMode>('none');
 
@@ -832,6 +849,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     detailToggleWidth: computed(() =>
       this.adaptiveDetailPossible() ? EXPANDER_WIDTH : 0,
     ),
+    locale: this.effLocale,
   });
 
   protected readonly resolvedColumns = this.columnModel.resolvedColumns;
@@ -1936,7 +1954,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     if (column.dataType === 'boolean' && value != null) {
       return value ? this.msg().booleanTrue : this.msg().booleanFalse;
     }
-    return formatCellValue(value, column.dataType, undefined);
+    return formatCellValue(value, column.dataType, undefined, column.locale);
   }
 
   /**
@@ -2624,6 +2642,7 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
     messages: () => untracked(this.msg),
     enabled: () => untracked(this.announcements) ?? this.config.announcements,
     caption: (field) => untracked(() => this.captionOf(field)),
+    locale: () => untracked(this.effLocale),
   });
 
   private readonly announcementEffect = effect(() => {

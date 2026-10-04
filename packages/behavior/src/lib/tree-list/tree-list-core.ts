@@ -1640,7 +1640,7 @@ export function ogeTreeCsv<T>(
       if (columnIndex !== 0) return value;
       const text = column.format
         ? column.format(value)
-        : formatCellValue(value, column.dataType, undefined);
+        : formatCellValue(value, column.dataType, undefined, column.locale);
       const guarded =
         options?.formulaGuard === false ? text : guardCsvFormula(text);
       return '  '.repeat(levels[indexOf.get(row) ?? 0] ?? 0) + guarded;
@@ -1657,13 +1657,14 @@ export function ogeTreeHeaderValueText(
     dataType: OgeDataType;
     format?: ((value: unknown) => string) | undefined;
     lookupItems?: readonly LookupItem[] | undefined;
+    locale?: string | undefined;
   } | null,
   blankValue: string,
 ): string {
   if (!column) return String(value ?? '');
   if (value == null || value === '') return blankValue;
   if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
-  return formatCellValue(value, column.dataType, column.format);
+  return formatCellValue(value, column.dataType, column.format, column.locale);
 }
 
 /**

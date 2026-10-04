@@ -1,4 +1,5 @@
 import { humanize } from '@oge-ui/behavior';
+import { ogeValueFormatter } from '@oge-ui/core';
 import type {
   CustomSummaryMap,
   FilterExpr,
@@ -53,14 +54,23 @@ export function applyPivotFieldOverrides(
   return base.map((field) => ({ ...field, ...overrides.get(field.id) }));
 }
 
-/** Selector / formatter / text hook per field id (only fields that have one). */
+/**
+ * Selector / formatter / text hook per field id (only fields that have one);
+ * a declarative `format` is compiled for `locale` through the shared `Intl`
+ * cache.
+ */
 export function pivotFieldFnsOf<T>(
   defs: readonly OgePivotFieldDef<T>[],
+  locale?: string,
 ): Readonly<Record<string, PivotFieldFns<T>>> {
   const fns: Record<string, PivotFieldFns<T>> = {};
   for (const def of defs) {
     const id = def.id ?? def.dataField;
-    const { selector, format, customizeText } = def;
+    const { selector, customizeText } = def;
+    const format =
+      def.format && typeof def.format !== 'function'
+        ? ogeValueFormatter(def.format, locale)
+        : def.format;
     if (selector || format || customizeText)
       fns[id] = { selector, format, customizeText };
   }

@@ -278,6 +278,33 @@ notes / behaviour changes** at the end before upgrading.
   keep their 1.1 presentation until you set `'auto'` (per editor or in the
   family config).
 - Angular peers are `>=22.0.0 <24.0.0`.
+- **Locale formatting (grid, tree list, pivot)**: a new `locale` input / prop
+  and config key (`provideOgeGridConfig({ locale })`,
+  `provideOgePivotConfig({ locale })`, the React providers) drives default
+  date cells, declarative column `format`s
+  (`{ type: 'currency', currency: 'EUR' }` and friends), summaries, group
+  captions, header-filter values, the filter row's number parsing, the pager
+  and exported text. Unset, the Angular layer uses `LOCALE_ID` — so an
+  Angular app that never set `LOCALE_ID` now formats default date cells as
+  `en-US` instead of the browser language; provide `LOCALE_ID` or `locale`
+  to choose. React falls back to `navigator.language`. Unformatted number
+  columns still render the raw value. The pivot's percent display modes use
+  the locale's percent layout (`%33,3` in tr-TR, `33,3 %` in de-DE).
+- **Plural-aware messages**: count messages are ICU plurals rendered by
+  `ogeFormatMessage` (`'{count, plural, one {# row} other {# rows}}'`), and
+  numbers inside them use the locale's digits and grouping (`1,500 rows`).
+  Plain `{count}` patterns keep working. Deprecated for one minor, still
+  honoured with a dev-mode console warning:
+  - grid / tree list `rowCountOneAnnouncement` → put the singular into
+    `rowCountAnnouncement` as a `one {…}` branch;
+  - grid / tree list `rowsSuffix` → use `pagerInfo` (a suffix cannot
+    inflect; a catalog that still sets it keeps the old `<count> <suffix>`
+    pager text);
+  - forms `validationSummaryTitleOne` → fold it into
+    `validationSummaryTitle`.
+    The selection, paste / fill / undo / redo announcements, the uploader's
+    `filesAdded` / `allCompleted` and the tag box's `moreTags` accept ICU
+    plurals too. The pager's default text for one row is now `1 row`.
 
 ## 1.1.1 — 2026-10-01
 

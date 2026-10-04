@@ -15,7 +15,7 @@ import {
 import { withInputWidth } from './field-extras';
 import {
   buildTreeViewIndex,
-  formatPattern,
+  ogeMoreTagsText,
   ogeChipOverflow,
   treeAccessor,
   type OgeTreeCheckBoxesMode,
@@ -659,9 +659,7 @@ export const OgeTreeSelect = forwardRef(function OgeTreeSelectRender<
             ))}
             {overflow.hidden > 0 && (
               <span className="oge-tag oge-tag-more">
-                {formatPattern(field.msg.moreTags, {
-                  count: String(overflow.hidden),
-                })}
+                {ogeMoreTagsText(field.msg.moreTags, overflow.hidden)}
               </span>
             )}
             {fieldInput}

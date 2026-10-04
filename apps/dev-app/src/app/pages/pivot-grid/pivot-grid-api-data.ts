@@ -75,6 +75,12 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
             '<code>compact</code> indents every level in one column; <code>outline</code> gives each row field its own label column (a label only in its field’s column); <code>tabular</code> repeats the ancestors on every line so each reads on its own. The row header stays one <code>rowheader</code> cell per line, so the keyboard model does not change; the corner shows the row field captions.',
         },
         {
+          name: 'locale',
+          type: 'string | undefined',
+          description:
+            'BCP 47 locale of the cell text — percent display modes (<code>33.3%</code>, <code>%33,3</code> in tr-TR, <code>33,3 %</code> in de-DE), dates and declarative field <code>format</code>s. <code>undefined</code> falls back to <code>provideOgePivotConfig({ locale })</code>, then Angular’s <code>LOCALE_ID</code>.',
+        },
+        {
           name: 'rtlEnabled',
           type: 'boolean | undefined',
           default: 'undefined',
@@ -350,6 +356,12 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
       title: 'Configuration & engine',
       entries: [
         {
+          name: 'provideOgePivotConfig(config)',
+          type: 'Provider',
+          description:
+            'App- or component-scoped pivot defaults (<code>OgePivotConfig</code>: <code>{ locale }</code>); a function makes it live (<code>provideOgePivotConfig(() =&gt; ({ locale: uiLocale() }))</code>). Read with <code>inject(OGE_PIVOT_CONFIG)</code>.',
+        },
+        {
           name: 'provideOgePivotMessages(messages)',
           type: 'Provider',
           description:
@@ -544,7 +556,7 @@ export const OGE_PIVOT_FIELD_API: ApiSections = {
           name: 'selector / format / customizeText',
           type: 'functions',
           description:
-            'Out-of-band value selector, display formatter and text hook.',
+            "Out-of-band value selector, display format and text hook. <code>format</code> is a function or a declarative <code>OgeValueFormat</code> (<code>{ type: 'currency', currency: 'EUR' }</code>) rendered in the grid’s <code>locale</code>.",
         },
         {
           name: 'labelFilter',

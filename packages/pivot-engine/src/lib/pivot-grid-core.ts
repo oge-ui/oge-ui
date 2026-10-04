@@ -12,6 +12,7 @@ import {
   PivotEngine,
   buildPivotCsv,
   foldText,
+  ogeNumberFormat,
   type CustomSummaryMap,
   type OgePivotStore,
   type PivotArea,
@@ -127,6 +128,11 @@ export interface OgePivotGridInputs<T> {
   /** Row-header layout of the row fields. Default `'compact'`. */
   rowHeaderLayout?(): OgePivotRowHeaderLayout;
   /**
+   * BCP 47 locale of the cell text (percentages, dates, declarative field
+   * formats); `undefined` = the runtime default.
+   */
+  locale?(): string | undefined;
+  /**
    * Explicit right-to-left override; `undefined` follows the page direction
    * the host reports through {@link OgePivotGridCore.watchDirection}.
    */
@@ -185,6 +191,13 @@ export type OgePivotMenuKeyResult =
   | { readonly kind: 'focus'; readonly index: number }
   /** The menu closed — the host returns focus to the element that opened it. */
   | { readonly kind: 'close' };
+
+/** Percent display modes: one decimal, the locale's percent layout. */
+const PERCENT_OPTIONS: Intl.NumberFormatOptions = {
+  style: 'percent',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+};
 
 const SUMMARY_TYPES: readonly ('sum' | 'avg' | 'min' | 'max' | 'count')[] = [
   'sum',
@@ -342,7 +355,9 @@ export class OgePivotGridCore<T = unknown> {
     this.resolvedFields = rx.derived(() =>
       applyPivotFieldOverrides(this.baseFields(), store.fieldOverrides()),
     );
-    this.fieldFns = rx.derived(() => pivotFieldFnsOf(inputs.fields()));
+    this.fieldFns = rx.derived(() =>
+      pivotFieldFnsOf(inputs.fields(), inputs.locale?.()),
+    );
     this.customSummaries = rx.derived(() =>
       pivotCustomSummariesOf(inputs.fields()),
     );
@@ -706,11 +721,18 @@ export class OgePivotGridCore<T = unknown> {
         ?.format;
     let text = '';
     if (value != null) {
+      const locale = this.inputs.locale?.();
       if (format) text = format(value);
       else if (measure.summaryDisplayMode?.startsWith('percent')) {
-        text = `${(Number(value) * 100).toFixed(1)}%`;
+        // the locale's percent layout: `12.5%`, `%12,5` (tr), `12,5 %` (de)
+        text = ogeNumberFormat(locale, PERCENT_OPTIONS).format(Number(value));
       } else {
-        text = formatCellValue(value, measure.dataType ?? 'number', undefined);
+        text = formatCellValue(
+          value,
+          measure.dataType ?? 'number',
+          undefined,
+          locale,
+        );
       }
     }
     const rowLine = this.rowLines()[rowIndex];

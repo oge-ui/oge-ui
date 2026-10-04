@@ -993,14 +993,17 @@ export const OGE_FORMS_CONFIG_API: ApiSections = {
         {
           name: 'validationSummaryTitle',
           type: 'string',
-          default: "'{count} fields need your attention'",
-          description: 'Summary heading; <code>{count}</code> is interpolated.',
+          default:
+            "'{count, plural, one {# field needs your attention} other {# fields need your attention}}'",
+          description:
+            'Summary heading — an ICU plural over the error count, rendered by <code>ogeFormatMessage</code> with the locale’s plural rules (write <code>one</code> / <code>few</code> / <code>many</code> / <code>other</code> for your language in this one key). A plain <code>{count}</code> pattern works too.',
         },
         {
           name: 'validationSummaryTitleOne',
-          type: 'string',
-          default: "'1 field needs your attention'",
-          description: 'Summary heading when exactly one field is invalid.',
+          type: 'string | undefined',
+          default: 'undefined',
+          description:
+            '<strong>Deprecated</strong> — fold the singular into <code>validationSummaryTitle</code> as a plural branch. A catalog that still supplies it keeps it for exactly one invalid field (with a dev-mode warning) until the next minor.',
         },
         {
           name: 'validationSummaryLabel',

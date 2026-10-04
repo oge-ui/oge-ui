@@ -14,7 +14,7 @@ import {
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
-import { formatPattern, ogeChipOverflow } from '@oge-ui/behavior';
+import { ogeChipOverflow, ogeMoreTagsText } from '@oge-ui/behavior';
 import {
   OgeTreeView,
   type OgeTreeCheckBoxesMode,
@@ -383,9 +383,11 @@ export class OgeTreeSelect<TItem extends object = Record<string, unknown>>
   protected readonly overflowCount = computed(() => this.overflow().hidden);
 
   protected readonly moreText = computed(() =>
-    formatPattern(this.msg().moreTags, {
-      count: String(this.overflowCount()),
-    }),
+    ogeMoreTagsText(
+      this.msg().moreTags,
+      this.overflowCount(),
+      this.config.locale,
+    ),
   );
 
   /** Text shown in the closed field. */

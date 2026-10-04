@@ -2124,7 +2124,7 @@ _OgeInputsMessages_
 | `maskInvalidError` | `string` | `'Complete the value in the required format'` | Text box / masked text box: required mask slots are empty (also the `mask` Signal Forms error kind). `maskInvalidMessage` overrides it per editor. |
 | `invalidNumberError` | `string` | `'Enter a valid number'` | Number box parse failure (reverts on blur). |
 | `invalidError` | `string` | `'Invalid value'` | Fallback for unknown validation error kinds. |
-| `moreTags` | `string` | `'+{count} more'` | Overflow chip of `maxDisplayedTags` (tag box, tree select chips, multi-column combo box). |
+| `moreTags` | `string` | `'+{count} more'` | Overflow chip of `maxDisplayedTags` (tag box, tree select chips, multi-column combo box). Rendered by `ogeMoreTagsText` / `ogeFormatMessage`, so it may be an ICU plural (`{count, plural, one {+# weiteres} other {+# weitere}}`). |
 | `maxSelectedItemsMessage` | `string` | `'You can select up to {max} items'` | Status shown once `maxSelectedItems` is reached. |
 | `compareError` | `string` | `'The values do not match'` | Resolved message for the forms `compare` rule. |
 | `nowButton` | `string` | `'Now'` | Date box footer button of `showNowButton`. |
