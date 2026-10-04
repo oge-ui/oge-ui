@@ -30,9 +30,11 @@ const FIELDS: OgePivotFieldDef<Sale>[] = [
 function makeCore(
   chooser: OgePivotGridInputs<Sale>['fieldChooser'] = () => ({}),
   fieldLayoutChange?: (fields: readonly PivotFieldConfig[]) => void,
+  rtlEnabled?: () => boolean | undefined,
 ) {
   return new OgePivotGridCore<Sale>(PLAIN_ADAPTER, {
     inputs: {
+      rtlEnabled,
       data: () => SALES,
       fields: () => FIELDS,
       virtualScrolling: () => false,
@@ -289,5 +291,36 @@ describe('OgePivotGridCore — keyboard field moves', () => {
     });
     expect(calls).toEqual(['prevent', 'stop']);
     expect(core.menu()?.items.map((i) => i.text)).toContain('Move to Rows');
+  });
+});
+
+describe('OgePivotGridCore — RTL', () => {
+  it('follows the host direction and lets rtlEnabled win', async () => {
+    const wrap = document.createElement('div');
+    const host = document.createElement('div');
+    wrap.append(host);
+    document.body.append(wrap);
+    const explicit: { value?: boolean } = {};
+    const core = makeCore(undefined, undefined, () => explicit.value);
+    const stop = core.watchDirection(host);
+    expect(core.rtl()).toBe(false);
+    wrap.setAttribute('dir', 'rtl');
+    await Promise.resolve();
+    expect(core.rtl()).toBe(true);
+    explicit.value = false;
+    expect(core.rtl()).toBe(false);
+    stop();
+    wrap.remove();
+  });
+
+  it('labels the field menu moves by screen side in RTL', () => {
+    const core = makeCore(undefined, undefined, () => true);
+    core.openFieldMenu(field(core, 'amount'), 'data', { x: 0, y: 0 });
+    const items = core.menu()?.items ?? [];
+    // the earlier position (delta -1) is on the right in RTL
+    expect(items[0].text).toBe('Move right');
+    expect(items[0].disabled).toBe(false);
+    expect(items[1].text).toBe('Move left');
+    expect(items[1].disabled).toBe(true);
   });
 });

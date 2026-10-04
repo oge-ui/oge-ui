@@ -156,6 +156,29 @@ function AnalyticsDemo(): ReactNode {
   );
 }
 
+const RTL_FIELDS: OgePivotFieldDef<Sale>[] = [
+  { dataField: 'region', area: 'row' },
+  { dataField: 'country', area: 'row' },
+  { dataField: 'date', caption: 'Year', area: 'column', groupInterval: 'year' },
+  {
+    dataField: 'amount',
+    caption: 'Amount',
+    area: 'data',
+    summaryType: 'sum',
+    format: money,
+  },
+];
+
+/** Card 3: the mirrored (RTL) pivot. */
+function RtlDemo(): ReactNode {
+  return createElement(OgePivotGrid<Sale>, {
+    data: sales,
+    fields: RTL_FIELDS,
+    rtlEnabled: true,
+    style: { maxHeight: '420px' },
+  });
+}
+
 /** Card 2: stateKey persistence, CSV and the lazy Excel entry. */
 function ReportDemo(): ReactNode {
   const pivot = useRef<OgePivotGridHandle<Sale>>(null);
@@ -212,7 +235,7 @@ function ReportDemo(): ReactNode {
 }
 
 /**
- * The React half of the pivot analytics page — the same two cards as the
+ * The React half of the pivot analytics page — the same three cards as the
  * Angular page (display modes over 50 000 virtualized rows; stateKey + CSV +
  * Excel), rendered as real React trees inside
  * `/components/pivot-grid/analytics` when the reader has chosen React.
@@ -239,10 +262,21 @@ function ReportDemo(): ReactNode {
     >
       <app-react-host [render]="report" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['rtlEnabled', 'mirrored keys', 'logical layout']"
+      heading="RTL"
+      description="<code>rtlEnabled</code> (unset follows the page's <code>dir</code> and keeps following it) mirrors the pivot: row headers and the field panel's first chips sit on the right, collapsed expand chevrons point left, ArrowLeft/Right and Ctrl+Arrow chip moves swap, the field menu labels its moves by screen side and menus open leftwards. An explicit value also sets <code>dir</code> on the host."
+      [code]="demos[2].source"
+      language="tsx"
+    >
+      <app-react-host [render]="rtl" />
+    </app-demo-card>
   `,
 })
 export class ReactPivotAnalyticsDemos {
   protected readonly demos = PIVOT_ANALYTICS_DEMOS;
   protected readonly analytics = () => createElement(AnalyticsDemo);
   protected readonly report = () => createElement(ReportDemo);
+  protected readonly rtl = () => createElement(RtlDemo);
 }
