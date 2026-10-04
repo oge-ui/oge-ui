@@ -293,6 +293,10 @@ inputs and layout took the initial JS from 913 KB to 704 KB.
 - Library packages import siblings from the component entry (`@oge-ui/inputs/text-box`), never from
   the primary; apps and docs may use either. `rewrite_imports`-style tooling keys off the primary
   index, so keep its `export { … } from '@oge-ui/<pkg>/<entry>'` statements explicit (no `export *`).
+- The docs site's **eager shell** (`app.ts`, `shared/*`) imports component entries only. One
+  `import { OgeSelectBox } from '@oge-ui/inputs'` in `app.ts` (the version menu) put every inputs
+  entry into the initial bundle — 861 KB → 1.29 MB; the `dev-app` budget (error at 1 MB) is the
+  guard. Lazy demo pages may use the primary, as consumers do.
 - Code shared between sibling entries lives in a base entry (`@oge-ui/inputs/field`,
   `@oge-ui/layout/element-attrs`) and is exported there under a "shared with sibling entry points"
   comment — reachable, but deliberately absent from the primary's public list.
