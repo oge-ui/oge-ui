@@ -56,7 +56,10 @@ export function monthChipOrder<T>(
   return ordered;
 }
 
-/** The (week, day) cell under a pointer position inside the month area. */
+/**
+ * The (week, day) cell under a pointer position inside the month area. In
+ * `rtl` the first weekday is the rightmost column.
+ */
 export function monthDropCell(
   clientX: number,
   clientY: number,
@@ -66,6 +69,7 @@ export function monthDropCell(
     readonly width: number;
     readonly height: number;
   },
+  rtl = false,
 ): { week: number; day: number } {
   const week = Math.min(
     5,
@@ -75,7 +79,7 @@ export function monthDropCell(
     6,
     Math.max(0, Math.floor(((clientX - rect.left) / rect.width) * 7)),
   );
-  return { week, day };
+  return { week, day: rtl ? 6 - day : day };
 }
 
 /** Index (0–41) of the day an appointment starts on, `-1` outside the grid. */

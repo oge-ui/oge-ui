@@ -23,6 +23,32 @@ export interface SchedulerKeyInput {
   readonly shiftKey: boolean;
 }
 
+/**
+ * The logical arrow for a physical one: in RTL the inline axis runs
+ * right-to-left, so ArrowLeft means "next" and ArrowRight "previous". Every
+ * horizontal key decision below maps through it, so both render layers
+ * mirror identically.
+ */
+export function schedulerLogicalKey(key: string, rtl = false): string {
+  if (!rtl) return key;
+  if (key === 'ArrowLeft') return 'ArrowRight';
+  if (key === 'ArrowRight') return 'ArrowLeft';
+  return key;
+}
+
+function logicalInput(
+  input: SchedulerKeyInput,
+  rtl: boolean,
+): SchedulerKeyInput {
+  return rtl
+    ? {
+        key: schedulerLogicalKey(input.key, true),
+        ctrlKey: input.ctrlKey,
+        shiftKey: input.shiftKey,
+      }
+    : input;
+}
+
 /** A roving-cell decision. */
 export type SchedulerCellKeyAction =
   | { readonly kind: 'move'; readonly col: number; readonly row: number }
@@ -31,6 +57,7 @@ export type SchedulerCellKeyAction =
 /**
  * Time-grid cell keys: arrows move within the grid (clamped), Home/End jump
  * to the first/last column, Enter/Space activate (create). `null` = not ours.
+ * `rtl` mirrors Left/Right (the first column sits on the right).
  */
 export function timeGridCellKey(
   key: string,
@@ -38,8 +65,9 @@ export function timeGridCellKey(
   row: number,
   colCount: number,
   rowCount: number,
+  rtl = false,
 ): SchedulerCellKeyAction | null {
-  switch (key) {
+  switch (schedulerLogicalKey(key, rtl)) {
     case 'ArrowUp':
       return { kind: 'move', col, row: Math.max(0, row - 1) };
     case 'ArrowDown':
@@ -65,8 +93,9 @@ export function monthCellKey(
   key: string,
   week: number,
   day: number,
+  rtl = false,
 ): SchedulerCellKeyAction | null {
-  return timeGridCellKey(key, day, week, 7, 6);
+  return timeGridCellKey(key, day, week, 7, 6, rtl);
 }
 
 /** A chip-layer decision. */
@@ -78,13 +107,16 @@ export type SchedulerChipKeyAction =
 
 /**
  * Chip keys: Enter/Space open the popup, Delete/Backspace delete,
- * Left/Right cycle chronologically (clamped), Escape arms the tab exit.
+ * Left/Right cycle chronologically (clamped; mirrored in RTL), Escape arms
+ * the tab exit.
  */
 export function chipKey<T>(
-  key: string,
+  rawKey: string,
   appointment: SchedulerAppointment<T>,
   order: readonly SchedulerAppointment<T>[],
+  rtl = false,
 ): SchedulerChipKeyAction | null {
+  const key = schedulerLogicalKey(rawKey, rtl);
   switch (key) {
     case 'Enter':
     case ' ':
@@ -131,15 +163,18 @@ export interface SchedulerCtrlCommit<T> {
 /**
  * Day/week chips (**OGE extra** — the keyboard equivalent of drag):
  * Ctrl+Arrow moves by slot/day, Ctrl+Shift+Up/Down resizes the end edge.
+ * `rtl` mirrors Ctrl+Left/Right (Left moves to the next day).
  */
 export function timeGridChipCtrlKey<T>(
   appointment: SchedulerAppointment<T>,
-  input: SchedulerKeyInput,
+  rawInput: SchedulerKeyInput,
   cellDuration: number,
   allowDragging: boolean,
   allowResizing: boolean,
+  rtl = false,
 ): SchedulerCtrlKeyResult<T> {
-  if (!input.ctrlKey) return { handled: false };
+  if (!rawInput.ctrlKey) return { handled: false };
+  const input = logicalInput(rawInput, rtl);
   if (input.shiftKey) {
     if (input.key !== 'ArrowUp' && input.key !== 'ArrowDown') {
       return { handled: false };
@@ -192,16 +227,19 @@ export function timeGridChipCtrlKey<T>(
  * Timeline bars: Ctrl+Left/Right move by one snap, Ctrl+Shift+Left/Right
  * resize the end edge, Ctrl+Up/Down move to the neighbouring resource row.
  * Every commit reports as a move (the timeline's single commit channel).
+ * `rtl` mirrors Left/Right (time runs right-to-left).
  */
 export function timelineBarCtrlKey<T>(
   appointment: SchedulerAppointment<T>,
-  input: SchedulerKeyInput,
+  rawInput: SchedulerKeyInput,
   snap: number,
   allowDragging: boolean,
   rows: readonly { readonly id: unknown }[],
   idOf: (item: T) => unknown,
+  rtl = false,
 ): SchedulerCtrlKeyResult<T> {
-  if (!input.ctrlKey) return { handled: false };
+  if (!rawInput.ctrlKey) return { handled: false };
+  const input = logicalInput(rawInput, rtl);
   if (input.shiftKey) {
     if (input.key !== 'ArrowRight' && input.key !== 'ArrowLeft') {
       return { handled: false };

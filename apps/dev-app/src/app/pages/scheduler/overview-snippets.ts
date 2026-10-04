@@ -311,6 +311,39 @@ protected readonly appointments = [
 ];`,
 });
 
+export const RTL_SNIPPET = demoSource({
+  use: { '@oge-ui/scheduler': ['OgeScheduler'] },
+  template: `<!-- rtlEnabled unset follows the page's dir (and its changes);
+     true/false forces a direction and sets dir on the host. Columns,
+     month cells and the timeline run right-to-left, Left/Right keys and
+     horizontal drags mirror. -->
+<oge-scheduler
+  [dataSource]="appointments"
+  [currentDate]="date"
+  currentView="week"
+  [views]="['week', 'month', 'timelineWeek']"
+  [dayStartHour]="8"
+  [dayEndHour]="18"
+  [rtlEnabled]="true"
+  style="height: 560px"
+/>`,
+  body: `protected readonly date = new Date(2026, 7, 6);
+protected readonly appointments = [
+  {
+    id: 1,
+    text: 'Design review',
+    startDate: new Date(2026, 7, 4, 9, 30),
+    endDate: new Date(2026, 7, 4, 11, 0),
+  },
+  {
+    id: 2,
+    text: 'Sprint planning',
+    startDate: new Date(2026, 7, 6, 10, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+  },
+];`,
+});
+
 export const CONFIG_SNIPPET = demoSource({
   use: { '@oge-ui/scheduler': ['OgeScheduler'] },
   helpers: { '@oge-ui/scheduler': ['provideOgeSchedulerConfig'] },

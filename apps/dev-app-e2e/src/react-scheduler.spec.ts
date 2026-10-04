@@ -41,8 +41,8 @@ test.describe('React scheduler docs', () => {
     await expect(
       page.locator('app-react-host .oge-scheduler').first(),
     ).toBeVisible();
-    // all eight sections mirror the Angular page
-    await expect(page.locator('app-demo-card')).toHaveCount(8);
+    // all nine sections mirror the Angular page
+    await expect(page.locator('app-demo-card')).toHaveCount(9);
   });
 
   test('the api page renders the React tables', async ({ page }) => {

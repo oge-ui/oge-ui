@@ -19,7 +19,7 @@ import { ReactHost } from '../../shared/react-host';
 import { SCHEDULER_OVERVIEW_DEMOS } from './overview-snippets';
 
 /**
- * TOC of the React view — the same eight sections as the Angular overview
+ * TOC of the React view — the same nine sections as the Angular overview
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_SCHEDULER_OVERVIEW_SECTIONS = [
@@ -30,6 +30,7 @@ export const REACT_SCHEDULER_OVERVIEW_SECTIONS = [
   'Teams, recurrence & timeline',
   'Views',
   'Appointment template',
+  'RTL',
   'Configuration & i18n',
 ] as const;
 
@@ -341,6 +342,19 @@ function TemplateDemo(): ReactNode {
   });
 }
 
+function RtlDemo(): ReactNode {
+  return createElement(OgeScheduler<DemoAppt>, {
+    dataSource: basicData,
+    defaultCurrentDate: FIXED_DATE,
+    defaultCurrentView: 'week',
+    views: ['week', 'month', 'timelineWeek'],
+    dayStartHour: 8,
+    dayEndHour: 18,
+    rtlEnabled: true,
+    style: { height: 560 },
+  });
+}
+
 function ConfigDemo(): ReactNode {
   return createElement(
     OgeSchedulerConfigProvider,
@@ -355,7 +369,7 @@ function ConfigDemo(): ReactNode {
 }
 
 /**
- * The React half of the scheduler overview — the same eight demo sections as
+ * The React half of the scheduler overview — the same nine demo sections as
  * the Angular page, with the same example content, rendered as real React
  * trees inside `/components/scheduler` when the reader has chosen React
  * (ADR 0002).
@@ -452,10 +466,20 @@ function ConfigDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['rtlEnabled', 'dir', 'mirrored keys']"
+      heading="RTL"
+      description="Right-to-left: the day columns, month cells and the timeline run right-to-left (the first day is the rightmost column), the toolbar chevrons point the other way, Left/Right move the roving cell and cycle chips mirrored, Ctrl+Left moves an appointment to the next day and horizontal drags follow the pointer. <code>rtlEnabled</code> unset follows the page's <code>dir</code> (and its changes); this demo forces it on."
+      [code]="demos[7].source"
+      language="tsx"
+    >
+      <app-react-host [render]="rtl" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['OgeSchedulerConfigProvider', 'messages', 'locale']"
       heading="Configuration & i18n"
       description="Every user-facing string, aria labels included, lives in <code>OgeSchedulerMessages</code> — provide once with <code>&amp;lt;OgeSchedulerConfigProvider&amp;gt;</code> or override per instance with <code>messages</code>. <code>locale</code> drives every <code>Intl</code> format."
-      [code]="demos[7].source"
+      [code]="demos[8].source"
       language="tsx"
     >
       <app-react-host [render]="config" />
@@ -472,5 +496,6 @@ export class ReactSchedulerOverviewDemos {
   protected readonly teams = () => createElement(TeamsDemo);
   protected readonly views = () => createElement(ViewsDemo);
   protected readonly template = () => createElement(TemplateDemo);
+  protected readonly rtl = () => createElement(RtlDemo);
   protected readonly config = () => createElement(ConfigDemo);
 }

@@ -103,6 +103,8 @@ export interface DayWeekViewProps<T> {
   readonly workHours: OgeSchedulerWorkHours | null;
   readonly shadeUntilCurrentTime: boolean;
   readonly snapDuration: number | undefined;
+  /** Right-to-left layout: mirrors Left/Right keys and horizontal drag deltas. */
+  readonly rtl?: boolean;
   readonly groupResource: OgeSchedulerResource | null;
   readonly resourceIdOf: (item: T) => unknown;
   readonly renderAppointment:
@@ -292,6 +294,7 @@ function DayWeekViewInner<T>(
       slotIndex,
       colCount,
       grid.slotStartMinutes.length,
+      props.rtl,
     );
     if (action === null) return;
     event.preventDefault();
@@ -318,6 +321,7 @@ function DayWeekViewInner<T>(
       grid.cellDuration,
       props.allowDragging,
       props.allowResizing,
+      props.rtl,
     );
     if (ctrl.handled) {
       if (ctrl.commit !== undefined) {
@@ -328,7 +332,7 @@ function DayWeekViewInner<T>(
       }
       return;
     }
-    const action = chipKey(event.key, appointment, chipOrder);
+    const action = chipKey(event.key, appointment, chipOrder, props.rtl);
     if (action === null) return;
     switch (action.kind) {
       case 'activate':
@@ -429,6 +433,7 @@ function DayWeekViewInner<T>(
           originDay,
           originRes,
           snapMinutes,
+          props.rtl,
         );
         proposal = move.proposal;
         targetRes = move.targetRes;
@@ -507,6 +512,7 @@ function DayWeekViewInner<T>(
           rect.width,
           grid.days.length,
           snapMinutes,
+          props.rtl,
         );
         setPreview({ key: appointment.key, proposal });
       },
@@ -836,7 +842,7 @@ function DayWeekViewInner<T>(
                 style={{
                   top: pct(segment.topFraction * 100),
                   height: pct(segment.heightFraction * 100),
-                  left: pct(chipLeftPercent(segment, colCount)),
+                  insetInlineStart: pct(chipLeftPercent(segment, colCount)),
                   width: pct(chipWidthPercent(segment, colCount)),
                 }}
                 onClick={(event) => onChipClick(segment.appointment, event)}
@@ -885,7 +891,7 @@ function DayWeekViewInner<T>(
                 style={{
                   top: pct(previewBox.top),
                   height: pct(previewBox.height),
-                  left: pct(previewBox.left),
+                  insetInlineStart: pct(previewBox.left),
                   width: pct(previewBox.width),
                 }}
               />
@@ -898,7 +904,7 @@ function DayWeekViewInner<T>(
               style={{
                 top: pct(selectionBox.top),
                 height: pct(selectionBox.height),
-                left: pct(selectionBox.left),
+                insetInlineStart: pct(selectionBox.left),
                 width: pct(selectionBox.width),
               }}
             />
@@ -911,20 +917,24 @@ function DayWeekViewInner<T>(
               props.showCurrentTimeIndicator,
             );
             if (!fraction) return null;
-            const left = pct((dayIndex / grid.days.length) * 100);
+            const insetInlineStart = pct((dayIndex / grid.days.length) * 100);
             const width = pct((1 / grid.days.length) * 100);
             return (
               <Fragment key={day.getTime()}>
                 {props.shadeUntilCurrentTime && (
                   <div
                     className="oge-scheduler-shade"
-                    style={{ height: pct(fraction * 100), left, width }}
+                    style={{
+                      height: pct(fraction * 100),
+                      insetInlineStart,
+                      width,
+                    }}
                     aria-hidden="true"
                   />
                 )}
                 <div
                   className="oge-scheduler-now"
-                  style={{ top: pct(fraction * 100), left, width }}
+                  style={{ top: pct(fraction * 100), insetInlineStart, width }}
                   aria-hidden="true"
                 />
               </Fragment>

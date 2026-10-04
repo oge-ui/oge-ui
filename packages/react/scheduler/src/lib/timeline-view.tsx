@@ -44,6 +44,8 @@ export interface TimelineViewProps<T> {
   readonly resourceIdOf: (item: T) => unknown;
   readonly allowDragging: boolean;
   readonly snapDuration: number | undefined;
+  /** Right-to-left layout: mirrors Left/Right keys and horizontal drag deltas. */
+  readonly rtl?: boolean;
   readonly onChipClicked: (event: SchedulerChipEvent<T>) => void;
   readonly onChipDblClicked: (event: SchedulerChipEvent<T>) => void;
   readonly onChipDeleteRequested: (
@@ -146,6 +148,7 @@ export function SchedulerTimelineView<T>(props: TimelineViewProps<T>) {
           grid,
           snapMinutes,
           startLeftPct,
+          props.rtl,
         );
         proposal = move.proposal;
         targetRow = timelineRowAt(moveEvent.clientY, rowRects, originRow);
@@ -193,6 +196,7 @@ export function SchedulerTimelineView<T>(props: TimelineViewProps<T>) {
       props.allowDragging,
       rows,
       props.resourceIdOf,
+      props.rtl,
     );
     if (ctrl.handled) {
       if (ctrl.commit !== undefined) {

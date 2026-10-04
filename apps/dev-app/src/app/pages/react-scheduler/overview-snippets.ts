@@ -8,7 +8,7 @@ import {
  * the `llms.txt` generator and the compile gate load this module in plain Node.
  *
  * Section-for-section mirror of `../scheduler/overview-snippets.ts`, per the
- * parity standard (`docs/REACT-PARITY.md`): the same eight sections, same
+ * parity standard (`docs/REACT-PARITY.md`): the same nine sections, same
  * order, same example content, React idiom.
  */
 export const SCHEDULER_OVERVIEW_DEMOS: readonly ReactDemo[] = [
@@ -334,6 +334,40 @@ const appointments = [
       )}
     </>
   )}
+/>`,
+    }),
+  },
+  {
+    title: 'RTL',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-scheduler': ['OgeScheduler'] },
+      name: 'RtlScheduler',
+      before: `const appointments = [
+  {
+    id: 1,
+    text: 'Design review',
+    startDate: new Date(2026, 7, 4, 9, 30),
+    endDate: new Date(2026, 7, 4, 11, 0),
+  },
+  {
+    id: 2,
+    text: 'Sprint planning',
+    startDate: new Date(2026, 7, 6, 10, 0),
+    endDate: new Date(2026, 7, 6, 12, 0),
+  },
+];`,
+      jsx: `// rtlEnabled unset follows the page's dir (and its changes); true/false
+// forces a direction and sets dir on the host. Columns, month cells and the
+// timeline run right-to-left, Left/Right keys and horizontal drags mirror.
+<OgeScheduler
+  dataSource={appointments}
+  defaultCurrentDate={new Date(2026, 7, 6)}
+  defaultCurrentView="week"
+  views={['week', 'month', 'timelineWeek']}
+  dayStartHour={8}
+  dayEndHour={18}
+  rtlEnabled
+  style={{ height: 560 }}
 />`,
     }),
   },

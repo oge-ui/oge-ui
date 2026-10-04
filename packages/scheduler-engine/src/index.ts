@@ -116,6 +116,7 @@ export {
 export {
   chipKey,
   monthCellKey,
+  schedulerLogicalKey,
   timeGridCellKey,
   timeGridChipCtrlKey,
   timelineBarCtrlKey,
