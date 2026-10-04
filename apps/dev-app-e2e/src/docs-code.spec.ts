@@ -26,6 +26,6 @@ test('served code tabs render highlighted source with exact text fidelity', asyn
   const text = await code.evaluate((el) => el.textContent ?? '');
   expect(/[\uE000-\uF8FF]/.test(text)).toBe(false);
   const lines = text.split('\n').length;
-  await expect(page.locator('.line-numbers div').first()).toHaveText('1');
-  expect(await page.locator('.line-numbers div').count()).toBe(lines);
+  await expect(page.locator('.code-line-numbers div').first()).toHaveText('1');
+  expect(await page.locator('.code-line-numbers div').count()).toBe(lines);
 });
