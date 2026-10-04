@@ -52,6 +52,10 @@ export {
   useOgeToasts,
   OgeOverlayConfigProvider,
   useOgeOverlayConfig,
+  useOgeLiveAnnouncer,
+  useOgeAdaptiveViewport,
+  useOgeAdaptivePresentation,
+  type OgeLiveAnnouncerHandle,
   type UseAnchoredPanelOptions,
   type OgeAnchoredPanelHandle,
   type OgePopupProps,
@@ -93,6 +97,11 @@ export type {
   OgeToastAction,
   OgeToastActionEvent,
   OgeToastClosedEvent,
+  OgeLivePoliteness,
+  OgeLiveAnnounceOptions,
+  OgeAdaptiveConfig,
+  OgeAdaptiveMode,
+  OgeAdaptivePresentation,
 } from '@oge-ui/behavior';
 // Shared vocabulary that more than one family re-exports — named here so the
 // star exports above cannot drop it.

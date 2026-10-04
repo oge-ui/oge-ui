@@ -51,6 +51,9 @@ import {
   OgeTreeViewConfigProvider,
   OgeFormsConfigProvider,
   useAnchoredPanel,
+  useOgeLiveAnnouncer,
+  useOgeAdaptiveViewport,
+  useOgeAdaptivePresentation,
 } from './index';
 
 describe('@oge-ui/react umbrella barrel', () => {
@@ -102,6 +105,9 @@ describe('@oge-ui/react umbrella barrel', () => {
       OgePopup,
       OgeMenuList,
       useAnchoredPanel,
+      useOgeLiveAnnouncer,
+      useOgeAdaptiveViewport,
+      useOgeAdaptivePresentation,
     ]) {
       expect(symbol).toBeDefined();
     }
