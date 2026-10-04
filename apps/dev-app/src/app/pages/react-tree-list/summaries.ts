@@ -24,6 +24,7 @@ import {
   type PlanTask,
 } from '../tree-list/task-data';
 import { TREE_SUMMARIES_DEMOS } from './summaries-snippets';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 const plan = makePlan();
 
@@ -89,6 +90,7 @@ function SummariesDemo(): ReactNode {
     if (!tree.current) return;
     const { exportOgeTreeListToPdf } =
       await import('@oge-ui/react-tree-list/export-pdf');
+    await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
     await exportOgeTreeListToPdf(tree.current, {
       filename: 'plan.pdf',
       title: 'Project plan',

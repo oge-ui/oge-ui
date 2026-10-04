@@ -2,11 +2,11 @@
 
 > React Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, auto-scheduling on work calendars, resources and workload, drag editing with Escape-cancel, snapshot undo/redo, built-in context menu and task dialog, Excel/PDF/PNG export — running the same @oge-ui/gantt-engine controller and stylesheet as the Angular Gantt package.
 >
-> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/gantt
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/gantt
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/react-gantt
@@ -161,7 +161,7 @@ _Export entry points (lazy, optional peers)_
 | Name | Type | Description |
 | --- | --- | --- |
 | `exportGanttToExcel(handle, options?) / buildGanttExcelWorkbook(data, options?)` | `@oge-ui/react-gantt/export-excel` | Lazy Excel export (`exceljs` peer) from the Gantt's `ref` handle: the task tree as a typed worksheet — indented titles, bold summary rows, real Date cells, an appended resource column. The builder is the same one the Angular entry re-exports. |
-| `exportGanttToPdf(handle, options?) / buildGanttPdfDocument(data, options?)` | `@oge-ui/react-gantt/export-pdf` | Lazy PDF export (`jspdf` peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. |
+| `exportGanttToPdf(handle, options?) / buildGanttPdfDocument(data, options?)` | `@oge-ui/react-gantt/export-pdf` | Lazy PDF export (`jspdf` peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. Text outside WinAnsi (Turkish `ğ ş ı İ`, Central European, Greek, Cyrillic) needs a Unicode TrueType `font` — per export, or once for every PDF via `setOgePdfDefaultFont({ family, normal, bold })` from `@oge-ui/behavior`; without one the built-in Helvetica cannot draw it (a dev-mode warning says so). |
 | `exportGanttToPng(handle, options?) / buildGanttCanvas(data, options?)` | `@oge-ui/react-gantt/export-image` | Lazy PNG export with **no dependencies** — plain canvas drawing of the same chart. |
 
 #### Events

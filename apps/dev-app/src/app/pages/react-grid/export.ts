@@ -14,6 +14,7 @@ import { makeEmployees, type Employee } from '../../shared/demo-data';
 import { ReactHost } from '../../shared/react-host';
 import { salaryCellStyle } from '../data-grid/export-style';
 import { GRID_EXPORT_DEMOS } from './export-snippets';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 const employees = makeEmployees(120);
 
@@ -69,6 +70,7 @@ function ExportDemo(): ReactNode {
   const pdf = async (): Promise<void> => {
     if (!grid.current) return;
     const { exportGridToPdf } = await import('@oge-ui/react-grid/export-pdf');
+    await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
     await exportGridToPdf(grid.current, {
       filename: 'employees.pdf',
       title: 'Employees by department',

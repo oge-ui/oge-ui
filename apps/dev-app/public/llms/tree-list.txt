@@ -3,8 +3,8 @@
 > The data-grid feature set on hierarchical data: lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/tree-list
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/tree-list
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/tree-list
@@ -238,7 +238,7 @@ _Shared with the grid_
 | `OgeTreeListSummary<T> / OgeTreeSummaryItem` | `{ totalItems?; recursiveItems?; calculateCustomSummary? } / { field; type; name?; showInColumn? }` | The `summary` input: items aggregate `field` with a `SummaryType`; `custom` runs `calculateCustomSummary[name ?? field](rows, field)`; `showInColumn` moves the value under another column. |
 | `OgeTreeListRemoteOperations` | `{ filtering?: boolean }` | What the tree hands to its data source (see `remoteOperations` for the server contract). |
 | `OgeTreeExportOptions` | `{ visibleColumnsOnly?; selectedRowsOnly?; summaries? }` | What `getExportData()` and both export entries include. |
-| `exportOgeTreeListToPdf(treeList, options?)` | `@oge-ui/tree-list/export-pdf` | Lazy PDF export (optional `jspdf` + `jspdf-autotable` peers): hierarchy as first-column indentation, the header repeated on every page, total and per-parent summary rows, grid widths fitted to the page, `title`, `pageHeader` / `pageFooter`, `pageNumbers`. `buildTreePdfDocument(data, options)` for custom pipelines. |
+| `exportOgeTreeListToPdf(treeList, options?)` | `@oge-ui/tree-list/export-pdf` | Lazy PDF export (optional `jspdf` + `jspdf-autotable` peers): hierarchy as first-column indentation, the header repeated on every page, total and per-parent summary rows, grid widths fitted to the page, `title`, `pageHeader` / `pageFooter`, `pageNumbers`. `buildTreePdfDocument(data, options)` for custom pipelines. Text outside WinAnsi (Turkish `ğ ş ı İ`, Central European, Greek, Cyrillic) needs a Unicode TrueType `font` — per export, or once for every PDF via `setOgePdfDefaultFont({ family, normal, bold })` from `@oge-ui/behavior`; without one the built-in Helvetica cannot draw it (a dev-mode warning says so). |
 | `OgeTreeExcelExportOptions<T> / OgeTreePdfExportOptions<T>` | `interfaces` | The tree download helpers’ options — the grid exporters’ options (styles, formats, freeze panes, `summaryFormulas`, page chrome) minus grouping. |
 | `Re-exports` | `from @oge-ui/grid` | `OgeColumn`, templates, config/messages and the shared event payload types are re-exported so tree-only consumers have a single import source. |
 

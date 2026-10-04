@@ -5,10 +5,15 @@ import {
   OGE_REACT_CALENDAR_API,
   OGE_REACT_CHECK_BOX_API,
   OGE_REACT_COLOR_BOX_API,
+  OGE_REACT_COLOR_GRADIENT_API,
+  OGE_REACT_COLOR_PALETTE_API,
+  OGE_REACT_CHECK_BOX_GROUP_API,
+  OGE_REACT_TOGGLE_GROUP_API,
   OGE_REACT_DATE_BOX_API,
   OGE_REACT_MULTI_COLUMN_COMBO_BOX_API,
   OGE_REACT_INPUTS_CONFIG_API,
   OGE_REACT_INPUTS_TYPES_API,
+  OGE_REACT_MASKED_TEXT_BOX_API,
   OGE_REACT_NUMBER_BOX_API,
   OGE_REACT_RADIO_GROUP_API,
   OGE_REACT_RANGE_SLIDER_API,
@@ -41,6 +46,10 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-api-reference title="&lt;OgeTextBox&gt;" [sections]="textBoxApi" />
+    <app-api-reference
+      title="&lt;OgeMaskedTextBox&gt;"
+      [sections]="maskedTextBoxApi"
+    />
     <app-api-reference title="&lt;OgeTextArea&gt;" [sections]="textAreaApi" />
     <app-api-reference title="&lt;OgeNumberBox&gt;" [sections]="numberBoxApi" />
     <app-api-reference title="&lt;OgeSelectBox&gt;" [sections]="selectBoxApi" />
@@ -71,12 +80,29 @@ import {
     <app-api-reference title="&lt;OgeCalendar&gt;" [sections]="calendarApi" />
     <app-api-reference title="&lt;OgeDateBox&gt;" [sections]="dateBoxApi" />
     <app-api-reference title="&lt;OgeColorBox&gt;" [sections]="colorBoxApi" />
+    <app-api-reference
+      title="&lt;OgeColorGradient&gt;"
+      [sections]="colorGradientApi"
+    />
+    <app-api-reference
+      title="&lt;OgeColorPalette&gt;"
+      [sections]="colorPaletteApi"
+    />
+    <app-api-reference
+      title="&lt;OgeCheckBoxGroup&gt;"
+      [sections]="checkBoxGroupApi"
+    />
+    <app-api-reference
+      title="&lt;OgeToggleGroup&gt;"
+      [sections]="toggleGroupApi"
+    />
     <app-api-reference title="Shared input types" [sections]="typesApi" />
     <app-api-reference title="Inputs configuration" [sections]="configApi" />
   `,
 })
 export class ReactInputsApiSections {
   protected readonly textBoxApi = OGE_REACT_TEXT_BOX_API;
+  protected readonly maskedTextBoxApi = OGE_REACT_MASKED_TEXT_BOX_API;
   protected readonly textAreaApi = OGE_REACT_TEXT_AREA_API;
   protected readonly numberBoxApi = OGE_REACT_NUMBER_BOX_API;
   protected readonly selectBoxApi = OGE_REACT_SELECT_BOX_API;
@@ -93,6 +119,10 @@ export class ReactInputsApiSections {
   protected readonly calendarApi = OGE_REACT_CALENDAR_API;
   protected readonly dateBoxApi = OGE_REACT_DATE_BOX_API;
   protected readonly colorBoxApi = OGE_REACT_COLOR_BOX_API;
+  protected readonly colorGradientApi = OGE_REACT_COLOR_GRADIENT_API;
+  protected readonly colorPaletteApi = OGE_REACT_COLOR_PALETTE_API;
+  protected readonly checkBoxGroupApi = OGE_REACT_CHECK_BOX_GROUP_API;
+  protected readonly toggleGroupApi = OGE_REACT_TOGGLE_GROUP_API;
   protected readonly typesApi = OGE_REACT_INPUTS_TYPES_API;
   protected readonly configApi = OGE_REACT_INPUTS_CONFIG_API;
 }

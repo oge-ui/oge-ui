@@ -294,6 +294,7 @@ const FAMILIES = [
         tagtemplate: 'rendertag', // tag box chip slot
         selectionchanged: 'selectionchange', // React callbacks use the imperative-present form
         searchchanged: 'searchchange',
+        selectallchanged: 'selectallchange', // check box group — same idiom
         focused: 'focus', // (focused)/(blurred) never collide with DOM events in
         blurred: 'blur', // Angular; React names the callbacks onFocus/onBlur
         ontext: 'text', // <OgeSwitch onText> — the gate strips the `on` prefix

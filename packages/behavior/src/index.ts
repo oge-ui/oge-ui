@@ -59,6 +59,20 @@ export {
   OgeInputCommit,
   type OgeInputCommitOptions,
 } from './lib/input/input-commit';
+export {
+  OgeMaskCore,
+  OGE_DEFAULT_MASK_RULES,
+  parseMask,
+  ogeMaskComplete,
+  ogeMaskInputMode,
+  type OgeMaskRule,
+  type OgeMaskRules,
+  type OgeMaskShowMode,
+  type OgeMaskSlot,
+  type OgeMaskOptions,
+  type OgeMaskEdit,
+  type OgeMaskCompletedEvent,
+} from './lib/input/mask-core';
 export { graphemeCount, resetGraphemeSegmenter } from './lib/input/grapheme';
 export {
   resolveDisplay,
@@ -576,6 +590,47 @@ export {
   type DateParseKind,
 } from './lib/input/date-parse';
 export {
+  OgeDateSegmentCore,
+  dateSegmentPlaceholders,
+  dateSegmentTemplate,
+  type OgeDateSegment,
+  type OgeDateSegmentKey,
+  type OgeDateSegmentKind,
+  type OgeDateSegmentOptions,
+  type OgeDateSegmentPlaceholders,
+  type OgeDateSegmentState,
+} from './lib/input/date-segments';
+export {
+  dayPeriodColumnOptions,
+  dayPeriodLabels,
+  hourColumnOptions,
+  isTimePartSelected,
+  minuteColumnOptions,
+  nowForType,
+  resolveHour12,
+  timeDisplayOptions,
+  withTimePart,
+  type OgeDateRangeBoxType,
+  type OgeTimeColumnOption,
+  type OgeTimePart,
+} from './lib/input/time-parts';
+export {
+  ogeDateRangePresets,
+  dateRangePresetActive,
+  dateRangePresetLabel,
+  type OgeDateRangePreset,
+  type OgeDateRangePresetId,
+  type OgeDateRangePresetOptions,
+  type OgeDateRangeWeekPresetOptions,
+} from './lib/input/date-range-presets';
+export {
+  createNumberTypingGrouper,
+  formatNumberWhileTyping,
+  numberWheelDirection,
+  type OgeNumberTypingOptions,
+  type OgeNumberTypingResult,
+} from './lib/input/number-typing';
+export {
   colorsEqual,
   contrastForeground,
   formatColor,
@@ -589,6 +644,29 @@ export {
   type OgeHsva,
   type OgeRgba,
 } from './lib/input/color-core';
+export {
+  OGE_COLOR_PALETTE_PRESETS,
+  applyColorChannelText,
+  colorPaletteNavIndex,
+  compositeColorOver,
+  contrastLevels,
+  contrastRatio,
+  type OgeColorChannel,
+  type OgeColorPalettePreset,
+  type OgeColorPalettePresetData,
+  type OgeContrastLevels,
+} from './lib/input/color-core';
+export {
+  applySelectAll,
+  applyToggleGroupPress,
+  choiceIncludes,
+  selectAllState,
+  toggleChoiceValue,
+  toggleGroupSelectedIndices,
+  type OgeCheckBoxGroupLayout,
+  type OgeToggleGroupChange,
+  type OgeToggleGroupSelectionMode,
+} from './lib/input/choice-group-core';
 export {
   createNumberFormatter,
   clampNumber,
@@ -1383,3 +1461,15 @@ export {
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for
 // packages that depend on behavior but not on core
 export { ogeLiveConfig } from '@oge-ui/core';
+
+export {
+  getOgePdfDefaultFont,
+  isOgePdfWinAnsi,
+  registerOgePdfFont,
+  resolveOgePdfFont,
+  setOgePdfDefaultFont,
+  warnOgePdfUnicode,
+  type OgePdfFont,
+  type OgePdfFontData,
+  type OgePdfFontTarget,
+} from './lib/export/pdf-font';

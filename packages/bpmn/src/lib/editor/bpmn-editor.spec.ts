@@ -578,7 +578,7 @@ describe('OgeBpmnEditor', () => {
       '.oge-bpmn-brand-link',
     ) as HTMLElement;
     expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toBe('https://ogeui.com');
+    expect(link.getAttribute('href')).toBe('https://www.ogeui.com');
     expect(link.getAttribute('aria-label')).toBe(
       'Built with OGE UI — ogeui.com',
     );

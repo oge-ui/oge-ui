@@ -2,11 +2,11 @@
 
 > React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG import/export and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark.
 >
-> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/bpmn
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/bpmn
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/react-bpmn

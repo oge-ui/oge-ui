@@ -17,6 +17,7 @@ import { makeEmployees, type Employee } from '../../shared/demo-data';
 import { FrameworkService } from '../../shared/framework.service';
 import { ReactGridOverviewDemos } from '../react-grid/overview';
 import { QUICK_START_SNIPPET } from './overview-snippets';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 @Component({
   selector: 'app-data-grid-overview',
@@ -257,6 +258,7 @@ export class DataGridOverviewPage {
     const grid = this.grid();
     if (!grid) return;
     const { exportGridToPdf } = await import('@oge-ui/grid/export-pdf');
+    await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
     await exportGridToPdf(grid, {
       filename: 'employees.pdf',
       title: 'Employees',

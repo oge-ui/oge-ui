@@ -7,7 +7,12 @@
 @use '../../../inputs/switch/src/switch';
 @use '../../../inputs/radio-group/src/radio-group';
 @use '../../../inputs/slider/src/slider';
+@use '../../../inputs/color-parts/src/color-parts';
 @use '../../../inputs/color-box/src/color-box';
+@use '../../../inputs/color-gradient/src/color-gradient';
+@use '../../../inputs/color-palette/src/color-palette';
+@use '../../../inputs/check-box-group/src/check-box-group';
+@use '../../../inputs/toggle-group/src/toggle-group';
 @use '../../../inputs/calendar/src/calendar';
 @use '../../../inputs/date-box/src/date-box';
 @use '../../../inputs/multi-column-combo-box/src/multi-column-combo-box';

@@ -31,6 +31,7 @@ export interface OgeColorSurfaceChange {
   selector: 'oge-color-surface',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  styleUrl: './color-parts.scss',
   host: {
     class: 'oge-color-surface',
     '[class.oge-color-surface-dragging]': 'dragging()',
@@ -41,7 +42,8 @@ export interface OgeColorSurfaceChange {
       #thumb
       class="oge-color-surface-thumb"
       role="slider"
-      tabindex="0"
+      [attr.tabindex]="disabled() ? -1 : 0"
+      [attr.aria-disabled]="disabled() ? 'true' : null"
       data-focus-target
       [attr.aria-label]="label()"
       [attr.aria-roledescription]="roleDescription()"
@@ -71,6 +73,9 @@ export class OgeColorSurface {
   readonly roleDescription = input.required<string>();
   /** `aria-valuetext` naming both axes. */
   readonly valueText = input.required<string>();
+
+  /** Inert: no focus, no pointer or keyboard changes. */
+  readonly disabled = input(false);
 
   readonly changed = output<OgeColorSurfaceChange>();
   /** A pointer gesture completed (not emitted on Escape-cancel). */
@@ -103,7 +108,7 @@ export class OgeColorSurface {
   }
 
   protected onPointerDown(event: PointerEvent): void {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || this.disabled()) return;
     event.preventDefault();
     this.thumbEl()?.nativeElement.focus();
     const rect = this.hostEl.nativeElement.getBoundingClientRect();
@@ -159,6 +164,7 @@ export class OgeColorSurface {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
+    if (this.disabled()) return;
     const step = this.keyStep();
     const rtl = this.isRtl();
     let ds = 0;

@@ -56,6 +56,39 @@ protected readonly planId = signal<unknown>('free');
 protected readonly priority = signal<unknown>('Normal');`,
 });
 
+export const TOGGLE_GROUP_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeToggleGroup'] },
+  template: `<!-- A segmented editor with the field contract (label, hint,
+     validation, [formField] / formControl). single = the APG radio group:
+     arrows move focus AND selection, the selected segment cannot be pressed
+     off. multiple = aria-pressed toggle buttons, an array value in items
+     order; arrows only move focus. -->
+<oge-toggle-group
+  label="Alignment"
+  [items]="aligns"
+  displayExpr="text"
+  valueExpr="id"
+  [(value)]="align"
+/>
+
+<oge-toggle-group
+  label="Delivery days"
+  selectionMode="multiple"
+  hint="Pick one or more"
+  [items]="days"
+  [(value)]="delivery"
+/>`,
+  body: `protected readonly aligns = [
+  { id: 'left', text: 'Left' },
+  { id: 'center', text: 'Center' },
+  { id: 'right', text: 'Right' },
+];
+protected readonly days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+protected readonly align = signal<unknown>('left');
+protected readonly delivery = signal<unknown>(['Mon', 'Thu']);`,
+});
+
 export const FORMS_SNIPPET = demoSource({
   use: {
     '@angular/forms': ['ReactiveFormsModule'],

@@ -161,7 +161,10 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
         [closeLabel]="msg().adaptiveClose"
       >
         @if (headerTemplate(); as headerTpl) {
-          <div class="oge-select-popup-header">
+          <div
+            class="oge-select-popup-header"
+            (focusout)="onPopupFocusOut($event)"
+          >
             <ng-container
               *ngTemplateOutlet="headerTpl; context: popupContext()"
             />
@@ -384,7 +387,10 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
           }
         </div>
         @if (footerTemplate(); as footerTpl) {
-          <div class="oge-select-popup-footer">
+          <div
+            class="oge-select-popup-footer"
+            (focusout)="onPopupFocusOut($event)"
+          >
             <ng-container
               *ngTemplateOutlet="footerTpl; context: popupContext()"
             />
@@ -1074,7 +1080,22 @@ export class OgeSelectBox<TItem = unknown>
    */
   protected override handleBlur(event: FocusEvent): void {
     if (this.opened() && this.adaptiveActive()) return;
+    // focus moving into the popup (a control in the header / footer
+    // template) is not the user leaving the editor
+    if (this.opened() && this.inPopup(event.relatedTarget)) return;
     super.handleBlur(event);
+  }
+
+  /** Focus leaving a header / footer control for somewhere outside the editor. */
+  protected onPopupFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget;
+    if (next === this.nativeElement() || this.inPopup(next)) return;
+    super.handleBlur(event);
+  }
+
+  private inPopup(target: EventTarget | null): boolean {
+    const popup = this.popupRef()?.nativeElement;
+    return !!popup && target instanceof Node && popup.contains(target);
   }
 
   // --- expression resolution (template-visible) ------------------------------

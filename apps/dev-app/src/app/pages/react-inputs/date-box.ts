@@ -8,14 +8,16 @@ import {
   OgeCalendar,
   OgeDateBox,
   OgeDateRangeBox,
+  ogeDateRangePresets,
   type OgeCalendarRange,
+  type OgeDateRangePreset,
 } from '@oge-ui/react-inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { INPUTS_DATE_BOX_DEMOS } from './date-box-snippets';
 
 /**
- * TOC of the React view — the same six sections as the Angular date editors
+ * TOC of the React view — the same nine sections as the Angular date editors
  * page (`docs/REACT-PARITY.md`: pages mirror section for section). The last
  * two are prose sections the page renders for both layers.
  */
@@ -24,6 +26,9 @@ export const REACT_INPUTS_DATE_BOX_SECTIONS = [
   'Date Box',
   'Range selection',
   'Time & datetime',
+  'Clock, seconds & shortcuts',
+  'Masked entry',
+  'Range presets & time ranges',
   'Grid integration',
   'Keyboard & accessibility',
 ] as const;
@@ -192,6 +197,130 @@ function TimeDemo(): ReactNode {
   );
 }
 
+/** AM/PM + seconds columns and the Today / Now shortcuts. */
+function ClockDemo(): ReactNode {
+  const [departure, setDeparture] = useState<Date | null>(
+    new Date(2026, 7, 15, 18, 45, 0),
+  );
+  const [loggedAt, setLoggedAt] = useState<Date | null>(null);
+  return row(
+    createElement(OgeDateBox, {
+      key: 'departure',
+      label: 'Departure',
+      type: 'time',
+      timeView: 'columns',
+      hour12: true,
+      showSeconds: true,
+      showNowButton: true,
+      value: departure,
+      onValueChange: setDeparture,
+    }),
+    createElement(OgeDateBox, {
+      key: 'logged',
+      label: 'Logged at',
+      type: 'datetime',
+      showTodayButton: true,
+      showNowButton: true,
+      value: loggedAt,
+      onValueChange: setLoggedAt,
+    }),
+  );
+}
+
+/** Segment entry in the locale's own order. */
+function MaskedDateDemo(): ReactNode {
+  const [invoiceDate, setInvoiceDate] = useState<Date | null>(null);
+  const [checkIn, setCheckIn] = useState<Date | null>(
+    new Date(2026, 7, 15, 14, 0),
+  );
+  return createElement(
+    'div',
+    null,
+    row(
+      createElement(OgeDateBox, {
+        key: 'invoice',
+        label: 'Invoice date',
+        locale: 'de-DE',
+        useMaskBehavior: true,
+        value: invoiceDate,
+        onValueChange: setInvoiceDate,
+      }),
+      createElement(OgeDateBox, {
+        key: 'check-in',
+        label: 'Check-in',
+        type: 'datetime',
+        locale: 'en-US',
+        useMaskBehavior: true,
+        value: checkIn,
+        onValueChange: setCheckIn,
+      }),
+    ),
+    createElement(
+      'p',
+      { key: 'out', className: 'mt-3 text-sm' },
+      'Invoice date: ',
+      createElement(
+        'code',
+        { 'data-testid': 'mask-date-value' },
+        invoiceDate?.toDateString() ?? 'null',
+      ),
+    ),
+  );
+}
+
+const presets: OgeDateRangePreset[] = [
+  ogeDateRangePresets.today(),
+  ogeDateRangePresets.last7Days(),
+  ogeDateRangePresets.last30Days(),
+  ogeDateRangePresets.thisMonth(),
+  ogeDateRangePresets.lastMonth(),
+  ogeDateRangePresets.thisYear(),
+  {
+    label: 'Q1 2026',
+    range: () => [new Date(2026, 0, 1), new Date(2026, 2, 31)],
+  },
+];
+
+/** Quick ranges beside the calendar, and a time-range picker. */
+function PresetsDemo(): ReactNode {
+  const [report, setReport] = useState<OgeCalendarRange>([null, null]);
+  const [hours, setHours] = useState<OgeCalendarRange>([
+    new Date(2026, 7, 15, 9, 0),
+    new Date(2026, 7, 15, 17, 30),
+  ]);
+  return createElement(
+    'div',
+    null,
+    row(
+      createElement(OgeDateRangeBox, {
+        key: 'report',
+        label: 'Report period',
+        presets,
+        value: report,
+        onValueChange: setReport,
+      }),
+      createElement(OgeDateRangeBox, {
+        key: 'hours',
+        label: 'Opening hours',
+        type: 'time',
+        interval: 30,
+        value: hours,
+        onValueChange: setHours,
+      }),
+    ),
+    createElement(
+      'p',
+      { key: 'out', className: 'mt-3 text-sm' },
+      'Report: ',
+      createElement(
+        'code',
+        { 'data-testid': 'preset-range-value' },
+        `${report[0]?.toDateString() ?? '—'} → ${report[1]?.toDateString() ?? '—'}`,
+      ),
+    ),
+  );
+}
+
 /**
  * The React half of the date editors page — the same demo sections as the
  * Angular page, with the same example content, rendered as real React trees
@@ -255,6 +384,36 @@ function TimeDemo(): ReactNode {
     >
       <app-react-host [render]="time" />
     </app-demo-card>
+
+    <app-demo-card
+      heading="Clock, seconds & shortcuts"
+      description="<code>hour12: true</code> adds an AM/PM column to the column picker (hours 12, 1 … 11); <code>false</code> forces 24-hour; unset follows the locale. <code>showSeconds</code> adds a seconds column and shows the seconds in the field — typed <code>HH:MM:SS</code> parses. <code>showTodayButton</code> / <code>showNowButton</code> put Today and Now in the footer: Today keeps the time of day, Now commits the current time."
+      [chips]="['hour12', 'showSeconds', 'showTodayButton', 'showNowButton']"
+      [code]="demos[4].source"
+      language="tsx"
+    >
+      <app-react-host [render]="clock" />
+    </app-demo-card>
+
+    <app-demo-card
+      heading="Masked entry"
+      description="<code>useMaskBehavior</code> swaps free typing for segments in the locale's own order and separators (<code>dd.mm.yyyy</code> in de-DE, <code>mm/dd/yyyy, hh:mm --</code> in en-US): digits fill the selected segment and jump on once no further digit fits, <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> step it with wrap-around, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> move between segments (mirrored in RTL), <kbd>Backspace</kbd> clears one, a typed separator moves on, <kbd>a</kbd>/<kbd>p</kbd> set AM/PM and <kbd>Alt</kbd>+<kbd>&darr;</kbd> opens the picker. A pasted date fills every segment; an impossible one (Feb 31) shows the invalid state and reverts on blur."
+      [chips]="['useMaskBehavior', 'segments', 'Intl order']"
+      [code]="demos[5].source"
+      language="tsx"
+    >
+      <app-react-host [render]="masked" />
+    </app-demo-card>
+
+    <app-demo-card
+      heading="Range presets & time ranges"
+      description="<code>presets</code> lists quick ranges beside the calendar — the built-in <code>ogeDateRangePresets.last7Days()</code>, <code>thisMonth()</code>, <code>lastMonth()</code>… (labels from the messages) or your own <code>{ label, range: () =&amp;gt; [start, end] }</code>, evaluated on pick so a page left open past midnight stays right. The active preset reads <code>aria-pressed</code>; the adaptive dialog shows them as a chip row. <code>type: 'time'</code> makes a time-range picker: no calendar, two time lists and OK."
+      [chips]="['presets', 'ogeDateRangePresets', 'type: time']"
+      [code]="demos[6].source"
+      language="tsx"
+    >
+      <app-react-host [render]="presets" />
+    </app-demo-card>
   `,
 })
 export class ReactInputsDateBoxDemos {
@@ -264,4 +423,7 @@ export class ReactInputsDateBoxDemos {
   protected readonly dateBox = () => createElement(DateBoxDemo);
   protected readonly range = () => createElement(RangeDemo);
   protected readonly time = () => createElement(TimeDemo);
+  protected readonly clock = () => createElement(ClockDemo);
+  protected readonly masked = () => createElement(MaskedDateDemo);
+  protected readonly presets = () => createElement(PresetsDemo);
 }

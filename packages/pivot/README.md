@@ -3,7 +3,7 @@
 > **Commercial package.** Unlike the rest of the OGE UI suite (MIT), the
 > pivot grid is source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
-> See [LICENSE](LICENSE) and [ogeui.com/license](https://ogeui.com/license).
+> See [LICENSE](LICENSE) and [ogeui.com/license](https://www.ogeui.com/license).
 
 Pivot grid for Angular, built on the same signal-based foundation as
 [`@oge-ui/grid`](https://www.npmjs.com/package/@oge-ui/grid). The aggregation
@@ -146,5 +146,5 @@ The shared theme files ship with `@oge-ui/grid` and style all suite components:
 
 The complete machine-readable API reference ships inside the package at
 `node_modules/@oge-ui/pivot/llms.txt` — conventions, every documented member and
-copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
-<https://ogeui.com/llms-full.txt> (the whole suite).
+copy-pasteable demos in one file. Online: <https://www.ogeui.com/llms.txt> (index) and
+<https://www.ogeui.com/llms-full.txt> (the whole suite).

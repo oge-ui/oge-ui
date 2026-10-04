@@ -345,6 +345,81 @@ const FIELD_EVENTS: ApiGroup = {
   ],
 };
 
+const TEXT_BOX_MASK: ApiGroup = {
+  title: 'Mask',
+  entries: [
+    {
+      name: 'mask',
+      type: 'string',
+      description:
+        'Input mask — <code>0</code> digit, <code>9</code> optional digit, <code>#</code> digit/space/sign, <code>L</code>/<code>l</code> letter (required/optional, any script), <code>A</code>/<code>a</code> letter or digit, <code>C</code>/<code>c</code> any character, a backslash escapes a literal; every other character is a literal. Typing overwrites slot by slot and skips literals, Backspace/Delete empty a slot without shifting the rest, paste accepts raw or formatted text, IME composition is applied at <code>compositionend</code>.',
+    },
+    {
+      name: 'maskRules',
+      type: 'OgeMaskRules',
+      description:
+        'Extra or overriding single-character rules — a one-character <code>RegExp</code>, a string of allowed characters or a predicate; custom slots are always required. Keep the object stable (module scope / <code>useMemo</code>).',
+    },
+    {
+      name: 'maskChar',
+      type: 'string',
+      default: "'_'",
+      description: 'Placeholder character of empty mask slots.',
+    },
+    {
+      name: 'showMaskMode',
+      type: 'OgeMaskShowMode',
+      default: "'always'",
+      description:
+        "<code>'always'</code> shows the empty mask while blurred too (not under a floating label); <code>'onFocus'</code> only while focused or filled, so the <code>placeholder</code> shows.",
+    },
+    {
+      name: 'includeLiterals',
+      type: 'boolean',
+      default: 'false',
+      description:
+        'Commit the formatted text with literals instead of the raw characters.',
+    },
+    {
+      name: 'maskInvalidMessage',
+      type: 'string',
+      description:
+        'Error shown while required slots are empty (after blur, per <code>errorDisplay</code>); falls back to <code>messages.maskInvalidError</code>.',
+    },
+    {
+      name: 'maskValidation',
+      type: 'boolean',
+      default: 'true',
+      description:
+        'The built-in “required slots are filled” check (Kendo <code>maskValidation</code>): the field error. <code>false</code> leaves completeness to your own validators.',
+    },
+  ],
+};
+
+const MASK_METHODS: ApiGroup = {
+  title: 'Mask — imperative handle (via ref)',
+  entries: [
+    {
+      name: 'isMaskComplete()',
+      type: '() =&gt; boolean',
+      description:
+        '<code>true</code> unless a mask is set and a required slot of the entered value is empty (an empty field counts as complete).',
+    },
+  ],
+};
+
+const MASK_EVENTS: ApiGroup = {
+  title: 'Mask',
+  entries: [
+    {
+      name: 'onMaskCompleted',
+      type: '(event: OgeMaskCompletedEvent) =&gt; void',
+      description:
+        'The last required mask slot was filled — <code>{ value, rawValue, maskedValue }</code>.',
+    },
+  ],
+};
+
 export const OGE_REACT_TEXT_BOX_API: ApiSections = {
   properties: [
     {
@@ -431,11 +506,12 @@ export const OGE_REACT_TEXT_BOX_API: ApiSections = {
         },
       ],
     },
+    TEXT_BOX_MASK,
     COMMON_CHROME,
     COMMON_STATE,
   ],
-  methods: [COMMON_METHODS],
-  events: [FIELD_EVENTS],
+  methods: [MASK_METHODS, COMMON_METHODS],
+  events: [MASK_EVENTS, FIELD_EVENTS],
   types: [
     {
       entries: [
@@ -447,7 +523,150 @@ export const OGE_REACT_TEXT_BOX_API: ApiSections = {
         },
         {
           name: 'OgeTextBoxHandle',
-          type: '{ focus(); blur(); clear() }',
+          type: '{ focus(); blur(); clear(); isMaskComplete() }',
+          description: 'Imperative handle exposed through <code>ref</code>.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_MASKED_TEXT_BOX_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeMaskedTextBox',
+      entries: [
+        {
+          name: 'value / defaultValue',
+          type: 'string',
+          default: "''",
+          description:
+            'The editor value — the raw characters, or the formatted text with <code>includeLiterals</code>. Controlled with <code>value</code> + <code>onValueChange</code>, or uncontrolled from <code>defaultValue</code>.',
+        },
+        {
+          name: 'mask',
+          type: 'string (required)',
+          description:
+            'Input mask — <code>0</code> digit, <code>9</code> optional digit, <code>#</code> digit/space/sign, <code>L</code>/<code>l</code> letter (required/optional, any script), <code>A</code>/<code>a</code> letter or digit, <code>C</code>/<code>c</code> any character, a backslash escapes a literal; every other character is a literal. Typing overwrites slot by slot and skips literals, Backspace/Delete empty a slot without shifting the rest, paste accepts raw or formatted text, IME composition is applied at <code>compositionend</code>.',
+        },
+        {
+          name: 'maskRules',
+          type: 'OgeMaskRules',
+          description:
+            'Extra or overriding single-character rules — a one-character <code>RegExp</code>, a string of allowed characters or a predicate; custom slots are always required. Keep the object stable (module scope / <code>useMemo</code>).',
+        },
+        {
+          name: 'maskChar',
+          type: 'string',
+          default: "'_'",
+          description: 'Placeholder character of empty mask slots.',
+        },
+        {
+          name: 'showMaskMode',
+          type: 'OgeMaskShowMode',
+          default: "'always'",
+          description:
+            "<code>'always'</code> shows the empty mask while blurred too (not under a floating label); <code>'onFocus'</code> only while focused or filled, so the <code>placeholder</code> shows.",
+        },
+        {
+          name: 'includeLiterals',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Commit the formatted text with literals instead of the raw characters.',
+        },
+        {
+          name: 'maskInvalidMessage',
+          type: 'string',
+          description:
+            'Error shown while required slots are empty (after blur, per <code>errorDisplay</code>); falls back to <code>messages.maskInvalidError</code>.',
+        },
+        {
+          name: 'maskValidation',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'The built-in “required slots are filled” check (Kendo <code>maskValidation</code>): the field error. <code>false</code> leaves completeness to your own validators.',
+        },
+        {
+          name: 'spellcheck',
+          type: 'boolean',
+          default: 'false',
+          description: 'Off by default — masked values are codes, not words.',
+        },
+        {
+          name: 'autocomplete',
+          type: 'string',
+          default: "'off'",
+          description:
+            "Off by default; set e.g. <code>'tel-national'</code> to let the browser offer phone numbers.",
+        },
+        {
+          name: 'inputMode',
+          type: 'string',
+          description:
+            "Native <code>inputmode</code>; unset, a digit-only mask implies <code>'numeric'</code>.",
+        },
+        {
+          name: 'mode',
+          type: 'OgeTextBoxMode',
+          default: "'text'",
+          description: 'Native input type (as on the text box).',
+        },
+        {
+          name: 'showCopyButton',
+          type: 'boolean',
+          default: 'false',
+          description: 'Copy-to-clipboard rail button; copies the value.',
+        },
+        {
+          name: 'enterKeyHint',
+          type: 'string',
+          description: 'Native <code>enterkeyhint</code> attribute.',
+        },
+        {
+          name: 'autocapitalize',
+          type: 'string',
+          description: 'Native <code>autocapitalize</code> attribute.',
+        },
+      ],
+    },
+    COMMON_CHROME,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeMaskedTextBox — imperative handle (via ref)',
+      entries: [
+        {
+          name: 'rawValue()',
+          type: '() =&gt; string',
+          description:
+            'The committed value’s characters without literals, whatever <code>includeLiterals</code> says.',
+        },
+        {
+          name: 'maskedValue()',
+          type: '() =&gt; string',
+          description:
+            "The committed value as formatted text with literals (<code>''</code> while empty).",
+        },
+        ...MASK_METHODS.entries,
+      ],
+    },
+    COMMON_METHODS,
+  ],
+  events: [MASK_EVENTS, FIELD_EVENTS],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeMaskedTextBoxProps',
+          type: 'interface',
+          description: 'The text box props with <code>mask</code> required.',
+        },
+        {
+          name: 'OgeMaskedTextBoxHandle',
+          type: '{ focus(); blur(); clear(); isMaskComplete(); rawValue(); maskedValue() }',
           description: 'Imperative handle exposed through <code>ref</code>.',
         },
       ],
@@ -590,7 +809,26 @@ export const OGE_REACT_NUMBER_BOX_API: ApiSections = {
           name: 'format',
           type: 'Intl.NumberFormatOptions',
           description:
-            "Display formatting applied while unfocused; focus shows the raw number. <code>style: 'percent'</code> formats display only — the value is not rescaled.",
+            "Blur-time display format: applied while unfocused (and after the blur clamp); focus swaps in the editable number, so typing never fights a currency sign or a rounding. <code>style: 'percent'</code> formats display only — the value is not rescaled.",
+        },
+        {
+          name: 'formatWhileTyping',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Groups thousands live while focused (the locale’s separators — Indian 2-digit groups included), keeping the caret beside the digit just typed. The committed value is the same number either way.',
+        },
+        {
+          name: 'maxFractionDigits',
+          type: 'number',
+          description:
+            'Caps the fraction digits while typing — extra digits are not accepted (<code>0</code> refuses the decimal separator). Unset = unlimited.',
+        },
+        {
+          name: 'wheelStep',
+          type: 'number',
+          description:
+            'Opt-in mouse-wheel stepping by this amount, only while the field is focused (wheel up adds; clamped to <code>min</code>/<code>max</code>). A native non-passive listener — React’s <code>onWheel</code> is passive and could not stop the page scroll. Unset or <code>0</code> leaves the wheel to the page.',
         },
         {
           name: 'locale',
@@ -2356,7 +2594,41 @@ export const OGE_REACT_DATE_BOX_API: ApiSections = {
           type: "'list' | 'columns'",
           default: "'list'",
           description:
-            'Time picker layout: one interval list, or hour + minute columns.',
+            'Time picker layout: one interval list, or hour + minute columns (plus seconds / AM-PM columns when enabled). Each column is a labelled listbox.',
+        },
+        {
+          name: 'hour12',
+          type: 'boolean',
+          description:
+            "Clock of the display text and the picker. <code>true</code> adds an AM/PM column to <code>timeView: 'columns'</code> (hours 12, 1 … 11); <code>false</code> forces 24-hour; unset follows the locale with the single 24-entry hour column.",
+        },
+        {
+          name: 'showSeconds',
+          type: 'boolean',
+          default: 'false',
+          description:
+            "Seconds in the display text (<code>timeStyle: 'medium'</code>), a seconds column and a seconds segment of the masked entry; typed <code>HH:MM:SS</code> parses. Off, picks zero the seconds.",
+        },
+        {
+          name: 'showTodayButton',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Footer "Today" button (<code>date</code> / <code>datetime</code>): picks today through the calendar path — <code>datetime</code> keeps the time of day. Disabled when <code>min</code>/<code>max</code>/<code>disabledDates</code> exclude today.',
+        },
+        {
+          name: 'showNowButton',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Footer "Now" button (<code>time</code> / <code>datetime</code>): commits the current time (seconds kept only with <code>showSeconds</code>) and closes; with <code>useButtons</code> it drafts instead.',
+        },
+        {
+          name: 'useMaskBehavior',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Segment entry (DevExtreme <code>useMaskBehavior</code>) on the shared <code>OgeDateSegmentCore</code>: the field shows the locale’s numeric pattern (<code>dd.mm.yyyy</code>, <code>mm/dd/yyyy</code>… from <code>Intl</code>), digits fill the selected segment and auto-advance, ArrowUp/Down step it with wrap-around, ArrowLeft/Right (mirrored in RTL) and Home/End move between segments, Backspace/Delete clear, a typed separator moves on, <code>a</code>/<code>p</code> set AM/PM, paste reads a whole date and Alt+ArrowDown opens the picker. Commits on blur/Enter like typed text; impossible dates show the invalid state and revert. <code>displayFormat</code> is not used while it is on.',
         },
         {
           name: 'applyValueMode',
@@ -2405,17 +2677,30 @@ export const OGE_REACT_DATE_BOX_API: ApiSections = {
         },
         {
           name: 'type',
-          type: "'date' | 'datetime'",
+          type: 'OgeDateRangeBoxType',
           default: "'date'",
           description:
-            "<code>'datetime'</code> adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times.",
+            "<code>'datetime'</code> adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times. <code>'time'</code> is a time-range picker — no calendar, two time lists and OK.",
+        },
+        {
+          name: 'presets',
+          type: 'readonly OgeDateRangePreset[]',
+          default: '[]',
+          description:
+            'Quick ranges listed beside the calendar (a horizontal chip row in the adaptive dialog), each an <code>aria-pressed</code> button that reads pressed while the draft matches it. <code>{ label, range: () =&gt; [start, end] }</code> — <code>range</code> is evaluated on render and on pick, never at construction — or the built-in <code>ogeDateRangePresets.today() / yesterday() / last7Days() / last30Days() / thisWeek() / lastWeek() / thisMonth() / lastMonth() / thisYear() / lastYear()</code>, labelled from the messages. A <code>date</code> box commits and closes on a pick; <code>time</code>/<code>datetime</code> and the adaptive dialog draft it for OK/Done.',
+        },
+        {
+          name: 'hour12 / showSeconds',
+          type: 'boolean',
+          description:
+            'Clock and seconds of the display text and the time lists, as on <code>OgeDateBox</code>.',
         },
         {
           name: 'interval',
           type: 'number',
           default: '30',
           description:
-            "Time list step in minutes (<code>type: 'datetime'</code>).",
+            "Time list step in minutes (<code>type: 'time' | 'datetime'</code>).",
         },
         {
           name: 'min / max / disabledDates / firstDayOfWeek / showWeekNumbers / locale / displayFormat / openOnFieldClick / acceptCustomValue',
@@ -2478,6 +2763,28 @@ export const OGE_REACT_DATE_BOX_API: ApiSections = {
           type: '@oge-ui/behavior',
           description:
             'The string unions and the display-format shape — shared with the Angular package, so locale-aware typed parsing behaves identically.',
+        },
+        {
+          name: 'OgeDateRangeBoxType',
+          type: "'date' | 'time' | 'datetime'",
+          description: 'What the date range box edits.',
+        },
+        {
+          name: 'OgeDateRangePreset',
+          type: '{ label?: string; id?: string; range: () =&gt; [Date | null, Date | null] }',
+          description:
+            'One preset entry. <code>label</code> wins; built-ins carry an <code>id</code> whose message supplies the label.',
+        },
+        {
+          name: 'ogeDateRangePresets',
+          type: 'object of factories',
+          description:
+            'Built-in presets, each <code>(options?: { label?, now? }) =&gt; OgeDateRangePreset</code> covering whole local days; <code>thisWeek</code>/<code>lastWeek</code> also take <code>firstDayOfWeek</code> / <code>locale</code>. Re-exported from <code>@oge-ui/behavior</code> — the Angular package ships the same factories.',
+        },
+        {
+          name: 'OgeDateRangePresetId / OgeDateRangePresetOptions / OgeDateRangeWeekPresetOptions',
+          type: 'types',
+          description: 'The built-in ids and the factory option shapes.',
         },
       ],
     },
@@ -2721,6 +3028,50 @@ export const OGE_REACT_INPUTS_TYPES_API: ApiSections = {
       ],
     },
     {
+      title: 'Mask',
+      entries: [
+        {
+          name: 'OgeMaskRule',
+          type: 'RegExp | string | ((char: string) =&gt; boolean)',
+          description:
+            'One custom mask rule: a one-character <code>RegExp</code>, a string listing the allowed characters, or a predicate.',
+        },
+        {
+          name: 'OgeMaskRules',
+          type: 'Readonly&lt;Record&lt;string, OgeMaskRule&gt;&gt;',
+          description: 'Custom rules keyed by a single mask character.',
+        },
+        {
+          name: 'OgeMaskShowMode',
+          type: "'always' | 'onFocus'",
+          description: 'When the empty mask placeholders are visible.',
+        },
+        {
+          name: 'OgeMaskCompletedEvent',
+          type: '{ value: string; rawValue: string; maskedValue: string }',
+          description: 'Payload of <code>onMaskCompleted</code>.',
+        },
+        {
+          name: 'ogeMaskComplete(mask, value, { rules?, includeLiterals? })',
+          type: 'boolean',
+          description:
+            '<code>true</code> when <code>value</code> fills every required slot (empty counts as complete) — the check a form library or a server runs without an editor. The error kind <code>mask</code> resolves to <code>messages.maskInvalidError</code>.',
+        },
+        {
+          name: 'ogeMaskInputMode(mask, rules?)',
+          type: "'numeric' | undefined",
+          description:
+            "The <code>inputmode</code> a mask implies — <code>'numeric'</code> when every slot takes only digits.",
+        },
+        {
+          name: 'OGE_DEFAULT_MASK_RULES',
+          type: 'Record&lt;string, [test, optional]&gt;',
+          description:
+            'The built-in rules (<code>0 9 # L l A a C c</code>) as test/optional pairs.',
+        },
+      ],
+    },
+    {
       title: 'Callback payloads',
       entries: [
         {
@@ -2844,6 +3195,414 @@ export const OGE_REACT_INPUTS_CONFIG_API: ApiSections = {
           type: 'OgeInputsMessages',
           description:
             'User-facing strings — the same key set the Angular package documents (clear/reveal/copy/spin labels, counter patterns and the validation messages).',
+        },
+      ],
+    },
+  ],
+};
+
+// --- standalone color components + choice groups (G4a) ----------------------
+
+const CONTRAST_TYPES: ApiGroup = {
+  title: 'Contrast & palette helpers',
+  entries: [
+    {
+      name: 'contrastRatio',
+      type: '(foreground: OgeRgba, background: OgeRgba) =&gt; number',
+      description:
+        'WCAG 2.x contrast ratio (1–21); a translucent foreground is composited over the background first. Re-exported from <code>@oge-ui/behavior</code>.',
+    },
+    {
+      name: 'contrastLevels',
+      type: '(ratio: number) =&gt; OgeContrastLevels',
+      description:
+        'AA (4.5) / AA large (3) / AAA (7) / AAA large (4.5) verdicts on the unrounded ratio; the displayed <code>ratio</code> is truncated, never rounded up into a pass.',
+    },
+    {
+      name: 'OgeContrastLevels',
+      type: '{ ratio; aa; aaLarge; aaa; aaaLarge }',
+      description: 'Result of <code>contrastLevels</code>.',
+    },
+  ],
+};
+
+export const OGE_REACT_COLOR_GRADIENT_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeColorGradient',
+      entries: [
+        {
+          name: 'value / defaultValue',
+          type: 'string | null',
+          default: 'null',
+          description:
+            'The committed color as a CSS string, normalized to <code>format</code> on commit — controlled with <code>onValueChange</code>, or uncontrolled from <code>defaultValue</code>.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Accessible name of the <code>role="group"</code>; falls back to the <code>colorGradientLabel</code> message.',
+        },
+        {
+          name: 'format',
+          type: 'OgeColorFormat',
+          default: "'hex'",
+          description:
+            'Committed string shape; translucent colors widen to carry alpha.',
+        },
+        {
+          name: 'editAlphaChannel',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Renders the alpha slider and the alpha-percent input, and commits alpha-carrying strings.',
+        },
+        {
+          name: 'keyStep',
+          type: 'number',
+          default: '5',
+          description:
+            'Arrow-key increment of the surface and sliders; PageUp/PageDown move 5×.',
+        },
+        {
+          name: 'showInputs',
+          type: 'boolean',
+          default: 'true',
+          description:
+            'Renders the hex + R/G/B(/A) inputs; they apply on blur / Enter and revert unusable text.',
+        },
+        {
+          name: 'showContrast',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Renders the WCAG contrast readout — sample, ratio and AA / AAA pass-fail badges.',
+        },
+        {
+          name: 'contrastBackground',
+          type: 'string',
+          default: "'#ffffff'",
+          description:
+            'The background (any CSS color) the contrast ratio is measured against.',
+        },
+      ],
+    },
+    HOST_PROPS,
+    COMMON_STATE,
+  ],
+  methods: [FOCUS_METHODS],
+  events: [COMMON_EVENTS],
+  types: [
+    CONTRAST_TYPES,
+    {
+      title: 'Color gradient types',
+      entries: [
+        {
+          name: 'OgeColorGradientHandle',
+          type: '{ focus(); blur() }',
+          description:
+            '<code>focus()</code> moves to the saturation/brightness surface.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_COLOR_PALETTE_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeColorPalette',
+      entries: [
+        {
+          name: 'value / defaultValue',
+          type: 'string | null',
+          default: 'null',
+          description:
+            'The picked swatch string as listed — controlled with <code>onValueChange</code>, or uncontrolled from <code>defaultValue</code>.',
+        },
+        {
+          name: 'palette',
+          type: 'OgeColorPalettePreset | readonly string[]',
+          default: "'default'",
+          description:
+            "A preset (<code>'default' | 'basic' | 'office' | 'material' | 'monochrome'</code>) or your own CSS color list.",
+        },
+        {
+          name: 'columns',
+          type: 'number | undefined',
+          description:
+            'Tiles per row; <code>undefined</code> uses the preset’s own count (10 for a custom list).',
+        },
+        {
+          name: 'tileSize',
+          type: 'number | undefined',
+          description:
+            'Tile edge in px; <code>undefined</code> lets the tiles share the width.',
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description:
+            'Accessible name of the grid; falls back to the <code>paletteLabel</code> message.',
+        },
+      ],
+    },
+    HOST_PROPS,
+    COMMON_STATE,
+  ],
+  methods: [FOCUS_METHODS],
+  events: [COMMON_EVENTS],
+  types: [
+    {
+      title: 'Palette types',
+      entries: [
+        {
+          name: 'OgeColorPalettePreset',
+          type: "'default' | 'basic' | 'office' | 'material' | 'monochrome'",
+          description: 'The built-in swatch sets.',
+        },
+        {
+          name: 'OGE_COLOR_PALETTE_PRESETS',
+          type: 'Record&lt;OgeColorPalettePreset, OgeColorPalettePresetData&gt;',
+          description:
+            'The preset data — <code>{ colors, columns }</code> each.',
+        },
+        {
+          name: 'OgeColorPaletteHandle',
+          type: '{ focus(); blur() }',
+          description:
+            '<code>focus()</code> moves to the roving tile (the selected one, else the first).',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_CHECK_BOX_GROUP_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeCheckBoxGroup',
+      entries: [
+        {
+          name: 'value / defaultValue',
+          type: 'readonly unknown[]',
+          default: '[]',
+          description:
+            'The checked items’ <code>valueExpr</code> results in items order — controlled with <code>onValueChange</code>, or uncontrolled from <code>defaultValue</code>.',
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[]',
+          default: '[]',
+          description: 'One check box per item.',
+        },
+        {
+          name: 'displayExpr / valueExpr / disabledExpr',
+          type: 'shared with OgeSelectBox',
+          description:
+            'Field-name string or function expressions; disabled items keep their state.',
+        },
+        {
+          name: 'layout',
+          type: 'OgeCheckBoxGroupLayout',
+          default: "'vertical'",
+          description:
+            "<code>'vertical'</code>, <code>'horizontal'</code> (wrapping) or <code>'columns'</code>.",
+        },
+        {
+          name: 'columns',
+          type: 'number',
+          default: '2',
+          description: "Column count of <code>layout: 'columns'</code>.",
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description: 'Visible group label and the group’s accessible name.',
+        },
+        {
+          name: 'hint',
+          type: 'string | undefined',
+          description:
+            'Helper text under the items, hidden while an error shows.',
+        },
+        {
+          name: 'showSelectAll',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'A tri-state “select all” box over the enabled items; from mixed it selects all.',
+        },
+        {
+          name: 'selectAllText',
+          type: 'string | undefined',
+          description:
+            'Text of the select-all box; <code>undefined</code> = the <code>selectAllText</code> message.',
+        },
+        {
+          name: 'renderItem',
+          type: '(item: TItem, context: { index; checked }) =&gt; ReactNode',
+          description:
+            'Custom label next to each glyph — the render prop replacing Angular’s <code>itemTemplate</code>.',
+        },
+      ],
+    },
+    HOST_PROPS,
+    COMMON_STATE,
+  ],
+  methods: [
+    {
+      title: 'OgeCheckBoxGroup handle',
+      entries: [
+        {
+          name: 'selectAll() / unselectAll()',
+          type: '() =&gt; void',
+          description:
+            'Checks / unchecks every enabled item (disabled items keep their state).',
+        },
+      ],
+    },
+    FOCUS_METHODS,
+  ],
+  events: [
+    {
+      title: 'OgeCheckBoxGroup callbacks',
+      entries: [
+        {
+          name: 'onItemClick',
+          type: '(event: OgeCheckBoxGroupItemClickEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            'One check box was toggled by the user — <code>{ item, index, checked, event }</code>.',
+        },
+        {
+          name: 'onSelectAllChange',
+          type: '(event: OgeCheckBoxGroupSelectAllEvent) =&gt; void',
+          description:
+            'The select-all box was toggled by the user — <code>{ checked, event }</code>.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeCheckBoxGroupLayout',
+          type: "'horizontal' | 'vertical' | 'columns'",
+          description: 'Arrangement of the boxes.',
+        },
+        {
+          name: 'OgeCheckBoxGroupHandle',
+          type: '{ focus(); blur(); selectAll(); unselectAll() }',
+          description: 'The imperative handle.',
+        },
+      ],
+    },
+  ],
+};
+
+export const OGE_REACT_TOGGLE_GROUP_API: ApiSections = {
+  properties: [
+    {
+      title: 'OgeToggleGroup',
+      entries: [
+        {
+          name: 'value / defaultValue',
+          type: 'unknown',
+          default: 'null',
+          description:
+            'The selected value (<code>single</code>) or an array in items order (<code>multiple</code>) — controlled with <code>onValueChange</code>, or uncontrolled from <code>defaultValue</code>.',
+        },
+        {
+          name: 'items',
+          type: 'readonly TItem[]',
+          default: '[]',
+          description: 'The segments.',
+        },
+        {
+          name: 'displayExpr / valueExpr / disabledExpr',
+          type: 'shared with OgeSelectBox',
+          description: 'Field-name string or function expressions.',
+        },
+        {
+          name: 'selectionMode',
+          type: 'OgeToggleGroupSelectionMode',
+          default: "'single'",
+          description:
+            "<code>'single'</code> — APG radio group; <code>'multiple'</code> — <code>aria-pressed</code> toggle buttons.",
+        },
+        {
+          name: 'label',
+          type: 'string',
+          default: "''",
+          description: 'Visible caption and the track’s accessible name.',
+        },
+        {
+          name: 'hideLabel',
+          type: 'boolean',
+          default: 'false',
+          description: 'Keeps <code>label</code> as the accessible name only.',
+        },
+        {
+          name: 'hint',
+          type: 'string | undefined',
+          description: 'Helper text under the segments.',
+        },
+        {
+          name: 'fluid',
+          type: 'boolean',
+          default: 'false',
+          description: 'Stretches the track; segments share the width.',
+        },
+        {
+          name: 'renderItem',
+          type: '(item: TItem, context: { index; selected }) =&gt; ReactNode',
+          description:
+            'Custom segment content — the render prop replacing Angular’s <code>itemTemplate</code>.',
+        },
+      ],
+    },
+    HOST_PROPS,
+    COMMON_STATE,
+  ],
+  methods: [FOCUS_METHODS],
+  events: [
+    {
+      title: 'OgeToggleGroup callbacks',
+      entries: [
+        {
+          name: 'onItemClick',
+          type: '(event: OgeToggleGroupItemClickEvent&lt;TItem&gt;) =&gt; void',
+          description:
+            'A segment was pressed, before any value change — <code>{ item, index, event }</code>.',
+        },
+        {
+          name: 'onSelectionChange',
+          type: '(event: OgeToggleGroupSelectionChangedEvent) =&gt; void',
+          description:
+            'The value changed through user interaction — <code>{ value, addedValues, removedValues }</code>.',
+        },
+      ],
+    },
+    COMMON_EVENTS,
+  ],
+  types: [
+    {
+      entries: [
+        {
+          name: 'OgeToggleGroupSelectionMode',
+          type: "'single' | 'multiple'",
+          description: 'One value or many.',
+        },
+        {
+          name: 'OgeToggleGroupHandle',
+          type: '{ focus(); blur() }',
+          description: '<code>focus()</code> moves to the roving segment.',
         },
       ],
     },

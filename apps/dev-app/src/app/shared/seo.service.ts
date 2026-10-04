@@ -4,7 +4,7 @@ import { ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { documentTitle } from './title.strategy';
 
-const ORIGIN = 'https://ogeui.com';
+const ORIGIN = 'https://www.ogeui.com';
 
 const DEFAULT_DESCRIPTION =
   'OGE is a free, signal-based Angular UI component suite: a virtualized Data Grid, Tree List, Pivot Grid, Select Box, Buttons and form Inputs. Zoneless, themeable with CSS tokens, WAI-ARIA accessible.';
@@ -118,6 +118,22 @@ const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
     '/components/inputs/slider',
     'Angular Slider and RangeSlider: the WAI-ARIA APG slider and multi-thumb patterns as bare form editors — arrows/PageUp/Home/End, live drag commits with Escape-to-cancel, dynamic aria constraints between range thumbs, formatValue feeding aria-valuetext, and Signal Forms membership out of the box.',
+  ],
+  [
+    '/components/inputs/masked-text-box',
+    'Angular MaskedTextBox and TextBox mask: one shared mask engine — 0/9/#/L/l/A/a/C/c slots, escapes and custom rules, overwrite-style typing that skips literals, Backspace/Delete across literals, raw or formatted paste, IME-safe composition, raw or literal-carrying values, and a mask validator for Signal Forms and reactive forms.',
+  ],
+  [
+    '/components/inputs/color-gradient',
+    'Angular ColorGradient: the color box picker as a standalone inline editor — saturation/brightness surface, hue and alpha sliders, hex/RGBA inputs and a live WCAG contrast-ratio check against a configurable background.',
+  ],
+  [
+    '/components/inputs/color-palette',
+    'Angular ColorPalette: a standalone swatch grid with preset palettes, configurable columns and APG grid keyboard navigation (arrows, Home/End, RTL-aware), bound as a form value.',
+  ],
+  [
+    '/components/inputs/check-box-group',
+    'Angular CheckBoxGroup: an items-bound list of checkboxes with an array value — horizontal, vertical or column layouts, a tri-state select-all option, required-means-at-least-one validation, Signal Forms and reactive forms.',
   ],
   [
     '/components/inputs/color-box',

@@ -2,11 +2,11 @@
 
 > React pivot grid: local rows or a remote pre-aggregated store, four drag & drop field areas, multi-level column headers, expand/collapse on both axes, sub and grand totals, display modes and running totals, header and measure menus, value filters, a field chooser, two-axis virtual scrolling, state persistence and CSV/Excel export — running the same framework-free pivot engine (@oge-ui/pivot-engine) and the same stylesheet as the Angular pivot package.
 >
-> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/pivot-grid
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/pivot-grid
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/react-pivot
@@ -192,7 +192,7 @@ _Configuration & engine_
 | `OgePivotLabelFilter / OgePivotValueFilter / OgePivotTopNFilter` | `interfaces` | The member filters of a row or column field. |
 | `OgePivotLabelFilterOperator / OgePivotValueFilterOperator / OgePivotRowHeaderLayout` | `string unions` | The filter operators and the row-header layouts. |
 | `OgePivotCellTemplateContext` | `OgePivotCellPrepared & { rowIndex; columnIndex; measureIndex }` | What a value-cell `renderCell` receives. |
-| `exportPivotToPdf(handle, options?)` | `@oge-ui/react-pivot/export-pdf` | Lazy PDF export (optional `jspdf` + `jspdf-autotable` peers): the multi-level column headers repeated on every page, the grid’s own cell text, its row-header layout and field captions, bold totals, `title`, `pageHeader` / `pageFooter`, `pageNumbers`, `customizeCell`. `buildPivotPdfDocument(result, options)` for custom pipelines. |
+| `exportPivotToPdf(handle, options?)` | `@oge-ui/react-pivot/export-pdf` | Lazy PDF export (optional `jspdf` + `jspdf-autotable` peers): the multi-level column headers repeated on every page, the grid’s own cell text, its row-header layout and field captions, bold totals, `title`, `pageHeader` / `pageFooter`, `pageNumbers`, `customizeCell`. `buildPivotPdfDocument(result, options)` for custom pipelines. Text outside WinAnsi (Turkish `ğ ş ı İ`, Central European, Greek, Cyrillic) needs a Unicode TrueType `font` — per export, or once for every PDF via `setOgePdfDefaultFont({ family, normal, bold })` from `@oge-ui/behavior`; without one the built-in Helvetica cannot draw it (a dev-mode warning says so). |
 | `OgePivotPdfExportOptions / OgePivotPdfCell / OgePdfPageInfo` | `interfaces` | The PDF helper’s options, the mutable value cell its `customizeCell` receives (`text`, `style`) and what a page callback is told. |
 | `exportPivotToExcel(handle, options?)` | `@oge-ui/react-pivot/export-excel` | Lazy Excel export with merged multi-level headers; `buildPivotWorkbook(result)` for custom pipelines. |
 

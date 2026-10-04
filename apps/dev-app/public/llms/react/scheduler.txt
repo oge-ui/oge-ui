@@ -2,11 +2,11 @@
 
 > React scheduler / event calendar: day, work-week, week, month, agenda, timeline and year views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, drag-to-create, recurrence with occurrence-vs-series editing, resource grouping, reminders, an appointment popup and a form editor — running the same scheduler engine and stylesheet as the Angular scheduler package.
 >
-> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/scheduler
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/scheduler
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/react-scheduler

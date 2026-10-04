@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://ogeui.com"><img src="https://ogeui.com/logo.png" alt="OGE UI logo" width="96" /></a>
+  <a href="https://www.ogeui.com"><img src="https://www.ogeui.com/logo.png" alt="OGE UI logo" width="96" /></a>
 </p>
 
 <h1 align="center">oge-ui</h1>
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ogeui.com"><b>ogeui.com</b></a> — docs, live demos &amp; API reference
+  <a href="https://www.ogeui.com"><b>ogeui.com</b></a> — docs, live demos &amp; API reference
 </p>
 
 <p align="center">
@@ -33,21 +33,21 @@ import { OgeGrid, OgeColumn, OgeSelectBox, OgeTagBox, OgeButton } from 'oge-ui';
 
 ## What's inside
 
-| Component family                            | Highlights                                                                                                                             | Docs                                                    |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| **Data Grid** (`@oge-ui/grid`)              | Row + column virtualization into the millions, sorting, filtering, grouping, editing, master-detail, remote data, CSV/Excel/PDF export | [demos](https://ogeui.com/components/data-grid)         |
-| **Tree List** (`@oge-ui/tree-list`)         | The grid feature set on hierarchical data: lazy loading, tri-state selection, drag & drop                                              | [demos](https://ogeui.com/components/tree-list)         |
-| **Select Box & Tag Box** (`@oge-ui/inputs`) | WAI-ARIA combobox family: search, grouping, custom values, avatars, multi-select chips, autocomplete                                   | [demos](https://ogeui.com/components/inputs/select-box) |
-| **Inputs** (`@oge-ui/inputs`)               | TextBox, TextArea, NumberBox, CheckBox, Switch, RadioGroup, Calendar, DateBox, DateRangeBox — one field chrome, all three form systems | [demos](https://ogeui.com/components/inputs)            |
-| **Buttons** (`@oge-ui/buttons`)             | Async actions with auto loading, click guards, hold-to-confirm, groups, split buttons                                                  | [demos](https://ogeui.com/components/buttons)           |
-| **Overlay** (`@oge-ui/overlay`)             | Flip-aware anchored popups, menus, tooltips, context menus, modal dialogs, toasts                                                      | [demos](https://ogeui.com/components/overlay)           |
-| **Core** (`@oge-ui/core`)                   | Framework-free data engine: sorting/filtering/pivot/virtualization math                                                                | —                                                       |
+| Component family                            | Highlights                                                                                                                             | Docs                                                        |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Data Grid** (`@oge-ui/grid`)              | Row + column virtualization into the millions, sorting, filtering, grouping, editing, master-detail, remote data, CSV/Excel/PDF export | [demos](https://www.ogeui.com/components/data-grid)         |
+| **Tree List** (`@oge-ui/tree-list`)         | The grid feature set on hierarchical data: lazy loading, tri-state selection, drag & drop                                              | [demos](https://www.ogeui.com/components/tree-list)         |
+| **Select Box & Tag Box** (`@oge-ui/inputs`) | WAI-ARIA combobox family: search, grouping, custom values, avatars, multi-select chips, autocomplete                                   | [demos](https://www.ogeui.com/components/inputs/select-box) |
+| **Inputs** (`@oge-ui/inputs`)               | TextBox, TextArea, NumberBox, CheckBox, Switch, RadioGroup, Calendar, DateBox, DateRangeBox — one field chrome, all three form systems | [demos](https://www.ogeui.com/components/inputs)            |
+| **Buttons** (`@oge-ui/buttons`)             | Async actions with auto loading, click guards, hold-to-confirm, groups, split buttons                                                  | [demos](https://www.ogeui.com/components/buttons)           |
+| **Overlay** (`@oge-ui/overlay`)             | Flip-aware anchored popups, menus, tooltips, context menus, modal dialogs, toasts                                                      | [demos](https://www.ogeui.com/components/overlay)           |
+| **Core** (`@oge-ui/core`)                   | Framework-free data engine: sorting/filtering/pivot/virtualization math                                                                | —                                                           |
 
 Looking for the **Pivot Grid**? It lives in the separate, commercially
 licensed [`@oge-ui/pivot`](https://www.npmjs.com/package/@oge-ui/pivot)
 package (free for evaluation and development) and is installed on its own:
 `npm install @oge-ui/pivot` —
-[demos](https://ogeui.com/components/pivot-grid).
+[demos](https://www.ogeui.com/components/pivot-grid).
 
 ## Quick start
 
@@ -104,10 +104,10 @@ One set of CSS design tokens drives every component:
 Bundled bridges in `@oge-ui/core/themes/`: **dark** (add `.oge-theme-dark` or
 `data-oge-theme="dark"` to any ancestor, `"auto"` follows the OS),
 **Tailwind** and **Bootstrap** —
-[styling guide](https://ogeui.com/getting-started/styling).
+[styling guide](https://www.ogeui.com/getting-started/styling).
 All user-facing strings (aria labels included) are overridable via
 `provideOge<X>Config()` —
-[localization guide](https://ogeui.com/getting-started/localization).
+[localization guide](https://www.ogeui.com/getting-started/localization).
 
 ## Good to know
 
@@ -122,5 +122,5 @@ All user-facing strings (aria labels included) are overridable via
 
 The complete machine-readable API reference ships inside the package at
 `node_modules/oge-ui/llms.txt` — conventions, every documented member and
-copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
-<https://ogeui.com/llms-full.txt> (the whole suite).
+copy-pasteable demos in one file. Online: <https://www.ogeui.com/llms.txt> (index) and
+<https://www.ogeui.com/llms-full.txt> (the whole suite).

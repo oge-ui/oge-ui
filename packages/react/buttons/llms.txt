@@ -3,8 +3,8 @@
 > React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/buttons
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/buttons
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/react-buttons

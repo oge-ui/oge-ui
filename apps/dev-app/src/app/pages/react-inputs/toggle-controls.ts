@@ -4,7 +4,12 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { createElement, useState, type ReactNode } from 'react';
-import { OgeCheckBox, OgeRadioGroup, OgeSwitch } from '@oge-ui/react-inputs';
+import {
+  OgeCheckBox,
+  OgeRadioGroup,
+  OgeSwitch,
+  OgeToggleGroup,
+} from '@oge-ui/react-inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { INPUTS_TOGGLE_CONTROLS_DEMOS } from './toggle-controls-snippets';
@@ -19,6 +24,7 @@ export const REACT_INPUTS_TOGGLE_CONTROLS_SECTIONS = [
   'Check Box',
   'Switch',
   'Radio Group',
+  'Toggle Group',
   'Forms integration',
   'Keyboard & accessibility',
 ] as const;
@@ -155,6 +161,51 @@ function RadioGroupDemo(): ReactNode {
   );
 }
 
+const ALIGNS = [
+  { id: 'left', text: 'Left' },
+  { id: 'center', text: 'Center' },
+  { id: 'right', text: 'Right' },
+];
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+/** The segmented form editor in both selection modes. */
+function ToggleGroupDemo(): ReactNode {
+  const [align, setAlign] = useState<unknown>('left');
+  const [delivery, setDelivery] = useState<unknown>(['Mon', 'Thu']);
+  return row(
+    createElement(OgeToggleGroup<(typeof ALIGNS)[number]>, {
+      key: 'align',
+      label: 'Alignment',
+      items: ALIGNS,
+      displayExpr: 'text',
+      valueExpr: 'id',
+      value: align,
+      onValueChange: setAlign,
+    }),
+    createElement(OgeToggleGroup<string>, {
+      key: 'days',
+      label: 'Delivery days',
+      selectionMode: 'multiple',
+      hint: 'Pick one or more',
+      items: DAYS,
+      value: delivery,
+      onValueChange: setDelivery,
+    }),
+    createElement(
+      'div',
+      {
+        key: 'out',
+        className: 'pt-1 text-sm text-gray-500 dark:text-gray-400',
+        'data-testid': 'toggle-output',
+      },
+      'align: ',
+      createElement('code', null, String(align)),
+      ' · days: ',
+      createElement('code', null, JSON.stringify(delivery)),
+    ),
+  );
+}
+
 /**
  * The React form integration point: one state object, three controlled
  * editors. A form library would hold the same values in its field objects.
@@ -251,10 +302,20 @@ function ToggleFormDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      heading="Toggle Group"
+      description="<code>&amp;lt;OgeToggleGroup&amp;gt;</code> is the segmented control as a <strong>form editor</strong> — label, hint and validation, which the button group (an action control) does not carry. <code>single</code> is the WAI-ARIA radio group: arrows move focus <em>and</em> selection and the selected segment cannot be pressed off; <code>multiple</code> renders <code>aria-pressed</code> toggle buttons with an array value in items order."
+      [chips]="['selectionMode', 'radiogroup', 'aria-pressed']"
+      [code]="demos[3].source"
+      language="tsx"
+    >
+      <app-react-host [render]="toggleGroup" />
+    </app-demo-card>
+
+    <app-demo-card
       heading="Forms integration"
       description="React has no <code>formField</code>/<code>formControl</code> binding — <strong>the controlled pair is the integration point</strong>. All three controls are the same controlled/uncontrolled pair (<code>value</code> + <code>onValueChange</code>, or <code>defaultValue</code> alone), so any form layer binds them by holding the value: <code>useState</code> here, a field object with React Hook Form, Formik or TanStack Form. <code>onValueCommitted</code> carries <code>previousValue</code> and the originating event for cross-field rules."
       [chips]="['controlled pair', 'defaultValue', 'onValueCommitted']"
-      [code]="demos[3].source"
+      [code]="demos[4].source"
       language="tsx"
     >
       <app-react-host [render]="forms" />
@@ -267,5 +328,6 @@ export class ReactInputsToggleControlsDemos {
   protected readonly checkbox = () => createElement(CheckBoxDemo);
   protected readonly switchDemo = () => createElement(SwitchDemo);
   protected readonly radio = () => createElement(RadioGroupDemo);
+  protected readonly toggleGroup = () => createElement(ToggleGroupDemo);
   protected readonly forms = () => createElement(ToggleFormDemo);
 }

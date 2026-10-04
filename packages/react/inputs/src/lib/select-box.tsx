@@ -845,6 +845,21 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
     .filter(Boolean)
     .join(' ');
 
+  const inPopup = (target: EventTarget | null): boolean =>
+    !!popupRef.current &&
+    target instanceof Node &&
+    popupRef.current.contains(target);
+
+  /** Focus leaving a header / footer control for somewhere outside the editor. */
+  const onPopupBlur = (event: React.FocusEvent): void => {
+    const next = event.relatedTarget;
+    if (next === nativeRef.current || inPopup(next)) return;
+    list.resetSearch();
+    remote.core.setSearch(null, true);
+    if (openedRef.current) close('blur');
+    field.handleBlur(event);
+  };
+
   const popupContext: OgeSelectPopupRenderContext<TItem> = {
     items: list.visibleItems(),
     searchText: list.searchText() ?? '',
@@ -999,6 +1014,8 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
           onBlur={(event) => {
             // the adaptive sheet taking focus is not the user leaving
             if (openedRef.current && adaptive.active) return;
+            // nor is focus moving into a header / footer control
+            if (openedRef.current && inPopup(event.relatedTarget)) return;
             // custom values commit on blur; otherwise uncommitted search
             // text reverts to the selected display text
             if (
@@ -1043,7 +1060,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
           }
         >
           {props.renderHeader && (
-            <div className="oge-select-popup-header">
+            <div className="oge-select-popup-header" onBlur={onPopupBlur}>
               {props.renderHeader(popupContext)}
             </div>
           )}
@@ -1135,7 +1152,7 @@ export const OgeSelectBox = forwardRef(function OgeSelectBoxRender<TItem>(
             ) : null}
           </div>
           {props.renderFooter && (
-            <div className="oge-select-popup-footer">
+            <div className="oge-select-popup-footer" onBlur={onPopupBlur}>
               {props.renderFooter(popupContext)}
             </div>
           )}

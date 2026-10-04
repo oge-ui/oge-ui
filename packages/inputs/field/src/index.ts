@@ -25,6 +25,10 @@ export {
   type OgeInputValueCommittedEvent,
   type OgeInputKeyEvent,
   type OgeInputFocusEvent,
+  type OgeMaskRule,
+  type OgeMaskRules,
+  type OgeMaskShowMode,
+  type OgeMaskCompletedEvent,
 } from './input-types';
 export {
   provideOgeInputsConfig,

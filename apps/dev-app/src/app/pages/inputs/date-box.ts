@@ -8,7 +8,9 @@ import {
   OgeCalendar,
   OgeDateBox,
   OgeDateRangeBox,
+  ogeDateRangePresets,
   type OgeCalendarRange,
+  type OgeDateRangePreset,
 } from '@oge-ui/inputs';
 import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
@@ -20,8 +22,11 @@ import {
 import { PageToc } from '../../shared/page-toc';
 import {
   CALENDAR_SNIPPET,
+  CLOCK_SNIPPET,
   DATEBOX_SNIPPET,
   GRID_SNIPPET,
+  MASK_SNIPPET,
+  PRESETS_SNIPPET,
   RANGE_SNIPPET,
   TIMEVIEW_SNIPPET,
   TYPES_SNIPPET,
@@ -32,6 +37,9 @@ const SECTIONS = [
   'Date Box',
   'Range selection',
   'Time & datetime',
+  'Clock, seconds & shortcuts',
+  'Masked entry',
+  'Range presets & time ranges',
   'Grid integration',
   'Keyboard & accessibility',
 ] as const;
@@ -205,6 +213,92 @@ const SECTIONS = [
           />
         </div>
       </app-demo-card>
+
+      <app-demo-card
+        heading="Clock, seconds & shortcuts"
+        description="<code>hour12: true</code> adds an AM/PM column to the column picker (hours 12, 1 … 11); <code>false</code> forces 24-hour; unset follows the locale. <code>showSeconds</code> adds a seconds column and shows the seconds in the field — typed <code>HH:MM:SS</code> parses. <code>showTodayButton</code> / <code>showNowButton</code> put Today and Now in the footer: Today keeps the time of day, Now commits the current time."
+        [chips]="['hour12', 'showSeconds', 'showTodayButton', 'showNowButton']"
+        [code]="clockSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6">
+          <oge-date-box
+            label="Departure"
+            type="time"
+            timeView="columns"
+            [hour12]="true"
+            [showSeconds]="true"
+            [showNowButton]="true"
+            [(value)]="departure"
+          />
+          <oge-date-box
+            label="Logged at"
+            type="datetime"
+            [showTodayButton]="true"
+            [showNowButton]="true"
+            [(value)]="loggedAt"
+          />
+        </div>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Masked entry"
+        description="<code>useMaskBehavior</code> swaps free typing for segments in the locale's own order and separators (<code>dd.mm.yyyy</code> in de-DE, <code>mm/dd/yyyy, hh:mm --</code> in en-US): digits fill the selected segment and jump on once no further digit fits, <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> step it with wrap-around, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> move between segments (mirrored in RTL), <kbd>Backspace</kbd> clears one, a typed separator moves on, <kbd>a</kbd>/<kbd>p</kbd> set AM/PM and <kbd>Alt</kbd>+<kbd>&darr;</kbd> opens the picker. A pasted date fills every segment; an impossible one (Feb 31) shows the invalid state and reverts on blur."
+        [chips]="['useMaskBehavior', 'segments', 'Intl order']"
+        [code]="maskSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6">
+          <oge-date-box
+            label="Invoice date"
+            locale="de-DE"
+            [useMaskBehavior]="true"
+            [(value)]="invoiceDate"
+          />
+          <oge-date-box
+            label="Check-in"
+            type="datetime"
+            locale="en-US"
+            [useMaskBehavior]="true"
+            [(value)]="checkIn"
+          />
+        </div>
+        <p class="mt-3 text-sm">
+          Invoice date:
+          <code data-testid="mask-date-value">{{
+            invoiceDate()?.toDateString() ?? 'null'
+          }}</code>
+        </p>
+      </app-demo-card>
+
+      <app-demo-card
+        heading="Range presets & time ranges"
+        description="<code>presets</code> lists quick ranges beside the calendar — the built-in <code>ogeDateRangePresets.last7Days()</code>, <code>thisMonth()</code>, <code>lastMonth()</code>… (labels from the messages) or your own <code>{ label, range: () =&amp;gt; [start, end] }</code>, evaluated on pick so a page left open past midnight stays right. The active preset reads <code>aria-pressed</code>; the adaptive dialog shows them as a chip row. <code>type: 'time'</code> makes a time-range picker: no calendar, two time lists and OK."
+        [chips]="['presets', 'ogeDateRangePresets', 'type: time']"
+        [code]="presetsSnippet"
+        language="ts"
+      >
+        <div class="flex flex-wrap items-start gap-6">
+          <oge-date-range-box
+            label="Report period"
+            [presets]="presets"
+            [(value)]="report"
+          />
+          <oge-date-range-box
+            label="Opening hours"
+            type="time"
+            [interval]="30"
+            [(value)]="hours"
+          />
+        </div>
+        <p class="mt-3 text-sm">
+          Report:
+          <code data-testid="preset-range-value"
+            >{{ report()[0]?.toDateString() ?? '—' }} →
+            {{ report()[1]?.toDateString() ?? '—' }}</code
+          >
+        </p>
+      </app-demo-card>
     }
 
     <h3 id="grid-integration" class="scroll-mt-20">Grid integration</h3>
@@ -233,7 +327,13 @@ const SECTIONS = [
         Date box: <kbd>&darr;</kbd> opens the picker and hands focus to the
         calendar; <kbd>Esc</kbd> closes it and restores focus to the input,
         pressed again it reverts uncommitted text; <kbd>Enter</kbd> commits the
-        typed text.
+        typed text. With <code>useMaskBehavior</code> the arrows edit segments
+        instead, so <kbd>Alt</kbd>+<kbd>&darr;</kbd> opens the picker.
+      </li>
+      <li>
+        Time columns are labelled listboxes (Hours, Minutes, Seconds, AM/PM —
+        from the messages); range presets are a labelled group of
+        <code>aria-pressed</code> toggle buttons.
       </li>
       <li>
         All texts (month/weekday names, aria labels, error messages) come from
@@ -252,6 +352,35 @@ export class InputsDateBoxPage {
   protected readonly timeViewSnippet = TIMEVIEW_SNIPPET;
   protected readonly typesSnippet = TYPES_SNIPPET;
   protected readonly gridSnippet = GRID_SNIPPET;
+  protected readonly clockSnippet = CLOCK_SNIPPET;
+  protected readonly maskSnippet = MASK_SNIPPET;
+  protected readonly presetsSnippet = PRESETS_SNIPPET;
+
+  protected readonly departure = signal<Date | null>(
+    new Date(2026, 7, 15, 18, 45, 0),
+  );
+  protected readonly loggedAt = signal<Date | null>(null);
+  protected readonly invoiceDate = signal<Date | null>(null);
+  protected readonly checkIn = signal<Date | null>(
+    new Date(2026, 7, 15, 14, 0),
+  );
+  protected readonly presets: OgeDateRangePreset[] = [
+    ogeDateRangePresets.today(),
+    ogeDateRangePresets.last7Days(),
+    ogeDateRangePresets.last30Days(),
+    ogeDateRangePresets.thisMonth(),
+    ogeDateRangePresets.lastMonth(),
+    ogeDateRangePresets.thisYear(),
+    {
+      label: 'Q1 2026',
+      range: () => [new Date(2026, 0, 1), new Date(2026, 2, 31)],
+    },
+  ];
+  protected readonly report = signal<OgeCalendarRange>([null, null]);
+  protected readonly hours = signal<OgeCalendarRange>([
+    new Date(2026, 7, 15, 9, 0),
+    new Date(2026, 7, 15, 17, 30),
+  ]);
 
   protected readonly range = signal<OgeCalendarRange>([null, null]);
   protected readonly period = signal<OgeCalendarRange>([

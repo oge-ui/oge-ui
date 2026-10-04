@@ -38,7 +38,7 @@ Every string lives in `OgeUploadMessages`; override them app-wide with
 
 ## Docs
 
-- Live demos and the full API reference: <https://ogeui.com/components/upload>
+- Live demos and the full API reference: <https://www.ogeui.com/components/upload>
 - Machine-readable reference for coding assistants:
   `node_modules/@oge-ui/upload/llms.txt`
 

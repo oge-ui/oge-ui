@@ -90,6 +90,11 @@ export interface UseOgeFieldOptions<T> {
   transformFlushValue?: (value: T) => T;
   /** The message shown while `parseInvalid` (number/date boxes). */
   parseErrorMessage?: (msg: OgeInputsMessages) => string;
+  /**
+   * The editor's own format error (an unfinished `mask`): invalid and shown
+   * per `errorDisplay` — unlike `parseInvalid`, which shows at once.
+   */
+  formatError?: string | null;
   /** Refocus target for `clear()`. */
   focusNative(): void;
 }
@@ -177,8 +182,12 @@ export function useOgeField<T>(options: UseOgeFieldOptions<T>) {
   const effectiveTouched = (props.touched ?? false) || selfTouched;
   const effectiveDirty = (props.dirty ?? false) || selfDirty;
   const errors = props.errors ?? [];
+  const formatError = options.formatError ?? null;
   const effectiveInvalid =
-    (props.invalid ?? false) || errors.length > 0 || parseInvalid;
+    (props.invalid ?? false) ||
+    errors.length > 0 ||
+    parseInvalid ||
+    formatError !== null;
 
   const showError = (() => {
     if (parseInvalid) return true;
@@ -200,6 +209,7 @@ export function useOgeField<T>(options: UseOgeFieldOptions<T>) {
         ? options.parseErrorMessage(msg)
         : msg.invalidNumberError;
     }
+    if (formatError !== null) return formatError;
     const first = errors[0];
     if (first) return first.message ?? messageForFieldError(first, msg);
     return effectiveInvalid ? msg.invalidError : null;

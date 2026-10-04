@@ -26,4 +26,4 @@ User-agent: Amazonbot
 User-agent: MistralAI-User
 Allow: /
 
-Sitemap: https://ogeui.com/sitemap.xml
+Sitemap: https://www.ogeui.com/sitemap.xml

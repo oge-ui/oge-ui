@@ -1,0 +1,39 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// The swatch-grid rules ship with the part (`color-parts.scss`); this sheet
+// sizes the standalone editor.
+
+.oge-color-palette-editor {
+  @include tokens.core-tokens;
+
+  display: inline-block;
+  box-sizing: border-box;
+  --oge-color-palette-width: 264px;
+
+  inline-size: var(--oge-color-palette-width);
+  max-inline-size: 100%;
+  padding: 4px;
+  border-radius: var(--oge-radius);
+}
+
+// fixed tiles: the grid shrink-wraps them instead of sharing the width
+.oge-color-palette-editor-sized {
+  inline-size: auto;
+
+  .oge-color-palette {
+    grid-template-columns: repeat(
+      var(--oge-color-palette-columns, 10),
+      var(--oge-color-palette-tile)
+    );
+  }
+}
+
+.oge-color-palette-editor-invalid {
+  box-shadow: 0 0 0 1px var(--oge-danger);
+}
+
+@include tokens.forced-colors {
+  .oge-color-palette-editor-invalid {
+    outline: 2px solid CanvasText;
+  }
+}

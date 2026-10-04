@@ -64,7 +64,7 @@ export function FolderPicker() {
 ## Docs
 
 Live demos and the full API reference:
-<https://ogeui.com/components/tree-view> (pick **React** in the header
+<https://www.ogeui.com/components/tree-view> (pick **React** in the header
 switch). Machine-readable docs ship inside the package at
 `node_modules/@oge-ui/react-navigation/llms.txt`.
 

@@ -613,7 +613,9 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
   };
 
   const toggleAll = (event: Event): void => {
-    applySelectAll(selectAllState !== true, event);
+    // select while something can still be added; at the cap (or when all
+    // are on) the same click clears the visible items
+    applySelectAll(selectAllState !== true && !limitReached, event);
     if (!adaptive.active) nativeRef.current?.focus();
   };
 
@@ -1195,7 +1197,7 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
                       : null}
                 </span>
                 <span className="oge-select-option-text">
-                  {field.msg.selectAll}
+                  {field.msg.selectAllText}
                 </span>
               </div>
             )}

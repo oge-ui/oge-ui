@@ -48,6 +48,8 @@ export function messageForFieldError(
       return messages.patternError;
     case 'compare':
       return messages.compareError;
+    case 'mask':
+      return messages.maskInvalidError;
     default:
       return error.message ?? messages.invalidError;
   }

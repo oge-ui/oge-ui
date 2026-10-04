@@ -10,6 +10,10 @@ export type {
   OgeInputCounterMode,
   OgeInputShowSuccessIcon,
   OgeFieldError,
+  OgeMaskRule,
+  OgeMaskRules,
+  OgeMaskShowMode,
+  OgeMaskCompletedEvent,
 } from '@oge-ui/behavior';
 
 /** Native input types supported by the text box. */

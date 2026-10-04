@@ -144,7 +144,7 @@ function renderBlock(
     ...usable
       .concat(umbrella ? [UMBRELLA] : [])
       .map((name) => `- \`node_modules/${name}/llms.txt\``),
-    '- <https://ogeui.com/llms-full.txt> — every package, every member, every demo',
+    '- <https://www.ogeui.com/llms-full.txt> — every package, every member, every demo',
     '',
     END,
   );

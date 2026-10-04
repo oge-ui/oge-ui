@@ -42,3 +42,30 @@ export const PREFIX_SNIPPET = demoSource({
   <span ogeInputPrefix>https://</span>
 </oge-text-box>`,
 });
+
+export const NUMBER_ENTRY_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeNumberBox'] },
+  template: `<!-- formatWhileTyping groups thousands as you type (caret kept in
+     place); maxFractionDigits refuses a third decimal; format is the
+     blur-time display (focus swaps in the editable number). -->
+<oge-number-box
+  label="Budget"
+  [(value)]="budget"
+  [formatWhileTyping]="true"
+  [maxFractionDigits]="2"
+  [format]="{ style: 'currency', currency: 'EUR' }"
+/>
+
+<!-- wheelStep opts into mouse-wheel stepping — only while focused, so a
+     page scrolling past the field never changes it. -->
+<oge-number-box
+  label="Quantity"
+  [(value)]="quantity"
+  [min]="0"
+  [max]="99"
+  [wheelStep]="1"
+  [showSpinButtons]="true"
+/>`,
+  body: `protected readonly budget = signal<number | null>(1234567.5);
+protected readonly quantity = signal<number | null>(10);`,
+});

@@ -4,7 +4,7 @@
 > package is source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
 > No watermark, no runtime license checks. See [LICENSE](LICENSE) and
-> [ogeui.com/license](https://ogeui.com/license).
+> [ogeui.com/license](https://www.ogeui.com/license).
 
 React scheduler / event calendar from the OGE UI suite — running the **same**
 framework-free engine as the Angular `@oge-ui/scheduler`
@@ -77,7 +77,7 @@ and reloaded instead.
 
 ## Docs
 
-Live demos and the full API reference: <https://ogeui.com/components/scheduler>
+Live demos and the full API reference: <https://www.ogeui.com/components/scheduler>
 (pick **React** in the header). Machine-readable docs for coding assistants
 ship inside the package at `node_modules/@oge-ui/react-scheduler/llms.txt`.
 

@@ -3,8 +3,8 @@
 > React form editors on the same field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete (virtual scrolling, custom values), CheckBox, Switch, RadioGroup, Slider/RangeSlider, ColorBox, Calendar and DateBox/DateRangeBox — running the same commit pipeline, list/selection machines and stylesheet as the Angular package.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/inputs
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/inputs
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/react-inputs
@@ -106,6 +106,18 @@ _OgeTextBox_
 | `autocapitalize` | `string` | `—` | Native `autocapitalize` attribute. |
 | `spellcheck` | `boolean` | `—` | `undefined` omits the attribute (browser default). |
 
+_Mask_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mask` | `string` | `—` | Input mask — `0` digit, `9` optional digit, `#` digit/space/sign, `L`/`l` letter (required/optional, any script), `A`/`a` letter or digit, `C`/`c` any character, a backslash escapes a literal; every other character is a literal. Typing overwrites slot by slot and skips literals, Backspace/Delete empty a slot without shifting the rest, paste accepts raw or formatted text, IME composition is applied at `compositionend`. |
+| `maskRules` | `OgeMaskRules` | `—` | Extra or overriding single-character rules — a one-character `RegExp`, a string of allowed characters or a predicate; custom slots are always required. Keep the object stable (module scope / `useMemo`). |
+| `maskChar` | `string` | `'_'` | Placeholder character of empty mask slots. |
+| `showMaskMode` | `OgeMaskShowMode` | `'always'` | `'always'` shows the empty mask while blurred too (not under a floating label); `'onFocus'` only while focused or filled, so the `placeholder` shows. |
+| `includeLiterals` | `boolean` | `false` | Commit the formatted text with literals instead of the raw characters. |
+| `maskInvalidMessage` | `string` | `—` | Error shown while required slots are empty (after blur, per `errorDisplay`); falls back to `messages.maskInvalidError`. |
+| `maskValidation` | `boolean` | `true` | The built-in “required slots are filled” check (Kendo `maskValidation`): the field error. `false` leaves completeness to your own validators. |
+
 _Common — field chrome (all field editors)_
 
 | Name | Type | Default | Description |
@@ -152,6 +164,12 @@ _Common — state & validation (all editors)_
 
 #### Methods
 
+_Mask — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `isMaskComplete()` | `() => boolean` | `true` unless a mask is set and a required slot of the entered value is empty (an empty field counts as complete). |
+
 _Common — imperative handle (via ref)_
 
 | Name | Type | Description |
@@ -161,6 +179,12 @@ _Common — imperative handle (via ref)_
 | `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
 
 #### Events
+
+_Mask_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onMaskCompleted` | `(event: OgeMaskCompletedEvent) => void` | The last required mask slot was filled — `{ value, rawValue, maskedValue }`. |
 
 _Common (all field editors)_
 
@@ -179,7 +203,120 @@ _Common (all field editors)_
 | Name | Type | Description |
 | --- | --- | --- |
 | `OgeTextBoxProps` | `interface` | Extends `OgeControlProps<string>` with everything above. |
-| `OgeTextBoxHandle` | `{ focus(); blur(); clear() }` | Imperative handle exposed through `ref`. |
+| `OgeTextBoxHandle` | `{ focus(); blur(); clear(); isMaskComplete() }` | Imperative handle exposed through `ref`. |
+
+### <OgeMaskedTextBox>
+
+#### Properties
+
+_OgeMaskedTextBox_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `string` | `''` | The editor value — the raw characters, or the formatted text with `includeLiterals`. Controlled with `value` + `onValueChange`, or uncontrolled from `defaultValue`. |
+| `mask` | `string (required)` | `—` | Input mask — `0` digit, `9` optional digit, `#` digit/space/sign, `L`/`l` letter (required/optional, any script), `A`/`a` letter or digit, `C`/`c` any character, a backslash escapes a literal; every other character is a literal. Typing overwrites slot by slot and skips literals, Backspace/Delete empty a slot without shifting the rest, paste accepts raw or formatted text, IME composition is applied at `compositionend`. |
+| `maskRules` | `OgeMaskRules` | `—` | Extra or overriding single-character rules — a one-character `RegExp`, a string of allowed characters or a predicate; custom slots are always required. Keep the object stable (module scope / `useMemo`). |
+| `maskChar` | `string` | `'_'` | Placeholder character of empty mask slots. |
+| `showMaskMode` | `OgeMaskShowMode` | `'always'` | `'always'` shows the empty mask while blurred too (not under a floating label); `'onFocus'` only while focused or filled, so the `placeholder` shows. |
+| `includeLiterals` | `boolean` | `false` | Commit the formatted text with literals instead of the raw characters. |
+| `maskInvalidMessage` | `string` | `—` | Error shown while required slots are empty (after blur, per `errorDisplay`); falls back to `messages.maskInvalidError`. |
+| `maskValidation` | `boolean` | `true` | The built-in “required slots are filled” check (Kendo `maskValidation`): the field error. `false` leaves completeness to your own validators. |
+| `spellcheck` | `boolean` | `false` | Off by default — masked values are codes, not words. |
+| `autocomplete` | `string` | `'off'` | Off by default; set e.g. `'tel-national'` to let the browser offer phone numbers. |
+| `inputMode` | `string` | `—` | Native `inputmode`; unset, a digit-only mask implies `'numeric'`. |
+| `mode` | `OgeTextBoxMode` | `'text'` | Native input type (as on the text box). |
+| `showCopyButton` | `boolean` | `false` | Copy-to-clipboard rail button; copies the value. |
+| `enterKeyHint` | `string` | `—` | Native `enterkeyhint` attribute. |
+| `autocapitalize` | `string` | `—` | Native `autocapitalize` attribute. |
+
+_Common — field chrome (all field editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `''` | Field label; placement follows `labelMode`. |
+| `labelMode` | `OgeInputLabelMode` | `'static'` | Label placement: static / floating / hidden (aria-only) / outside. |
+| `stylingMode` | `OgeInputStylingMode` | `'outlined'` | Container fill style. |
+| `size` | `OgeInputSize` | `'md'` | Container height preset — 28/34/42px, the button scale. |
+| `placeholder` | `string` | `''` | Native placeholder text. |
+| `hint` | `string` | `—` | Helper text in the subscript region (hidden while an error shows). |
+| `tooltip` | `string` | `—` | Native `title` attribute of the input element. |
+| `subscriptSizing` | `OgeInputSubscriptSizing` | `'fixed'` | Whether the hint/error line reserves height, collapses, or is removed. |
+| `fluid` | `boolean` | `false` | Stretches the field to 100% width (default 240px via `--oge-input-width`). |
+| `width` | `number \| string` | `undefined` | This field’s width — a number is px, a string any CSS length. Sets `--oge-input-width` on this host only; `fluid` still wins. |
+| `showClearButton` | `boolean` | `false` | Renders the clear (✕) button while the field has a value. |
+| `id` | `string` | `—` | Base for the generated element ids (input/label/hint/error/counter). Omitted, a stable id comes from `useId()`. |
+| `tabIndex` | `number` | `0` | Tab order of the native input. |
+| `autofocus` | `boolean` | `false` | Focuses the editor after its first render. |
+| `messages` | `Partial<OgeInputsMessages>` | `—` | Per-instance overrides of user-facing strings; merged over the `<OgeInputsConfigProvider>` values. |
+| `prefix` | `ReactNode` | `—` | Leading adornment inside the field — the React face of the `[ogeInputPrefix]` slot. React slots take nodes, not directive markup. |
+| `suffix` | `ReactNode` | `—` | Trailing adornment, rendered after the built-in rail buttons — the React face of `[ogeInputSuffix]`. |
+| `showSuccessIcon` | `OgeInputShowSuccessIcon` | `false` | Success icon when valid: `false` / on touch / always. |
+| `selectOnFocus` | `boolean` | `false` | Selects the whole text when the input receives focus. |
+| `inputAttr` | `Record<string, string>` | `—` | Escape hatch: extra attributes rendered onto the native input (component-owned attributes are ignored). |
+| `className` | `string` | `—` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | `—` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeMaskedTextBox — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `rawValue()` | `() => string` | The committed value’s characters without literals, whatever `includeLiterals` says. |
+| `maskedValue()` | `() => string` | The committed value as formatted text with literals (`''` while empty). |
+| `isMaskComplete()` | `() => boolean` | `true` unless a mask is set and a required slot of the entered value is empty (an empty field counts as complete). |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the native input. |
+| `blur()` | `() => void` | Blurs the native input. |
+| `clear()` | `() => void` | Clears the value (commits immediately), keeps focus in the field; no-op when disabled/readonly. |
+
+#### Events
+
+_Mask_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onMaskCompleted` | `(event: OgeMaskCompletedEvent) => void` | The last required mask slot was filled — `{ value, rawValue, maskedValue }`. |
+
+_Common (all field editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+| `onInputChange` | `(event: { text: string; event: Event }) => void` | Raw text on every keystroke, regardless of commit policy. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeMaskedTextBoxProps` | `interface` | The text box props with `mask` required. |
+| `OgeMaskedTextBoxHandle` | `{ focus(); blur(); clear(); isMaskComplete(); rawValue(); maskedValue() }` | Imperative handle exposed through `ref`. |
 
 ### <OgeTextArea>
 
@@ -289,7 +426,10 @@ _OgeNumberBox_
 | `max` | `number` | `—` | Upper bound — clamped on commit. |
 | `step` | `number` | `1` | Spin/arrow-key increment. Spinning commits immediately. |
 | `showSpinButtons` | `boolean` | `false` | Up/down spin buttons with hold-to-repeat. |
-| `format` | `Intl.NumberFormatOptions` | `—` | Display formatting applied while unfocused; focus shows the raw number. `style: 'percent'` formats display only — the value is not rescaled. |
+| `format` | `Intl.NumberFormatOptions` | `—` | Blur-time display format: applied while unfocused (and after the blur clamp); focus swaps in the editable number, so typing never fights a currency sign or a rounding. `style: 'percent'` formats display only — the value is not rescaled. |
+| `formatWhileTyping` | `boolean` | `false` | Groups thousands live while focused (the locale’s separators — Indian 2-digit groups included), keeping the caret beside the digit just typed. The committed value is the same number either way. |
+| `maxFractionDigits` | `number` | `—` | Caps the fraction digits while typing — extra digits are not accepted (`0` refuses the decimal separator). Unset = unlimited. |
+| `wheelStep` | `number` | `—` | Opt-in mouse-wheel stepping by this amount, only while the field is focused (wheel up adds; clamped to `min`/`max`). A native non-passive listener — React’s `onWheel` is passive and could not stop the page scroll. Unset or `0` leaves the wheel to the page. |
 | `locale` | `string` | `—` | Overrides the runtime locale (React has no `LOCALE_ID`; the config provider carries the default). |
 | `mode` | `OgeNumberBoxMode` | `'text'` | Native `type` attribute; `inputmode` is always `decimal`. |
 
@@ -1440,7 +1580,12 @@ _OgeDateBox_
 | `displayFormat` | `Intl.DateTimeFormatOptions \| ((d: Date) => string)` | `—` | Display text; `undefined` = per-type Intl defaults. No format strings, no date library. |
 | `min / max / disabledDates` | `as OgeCalendar` | `—` | Out-of-range typed text marks the field invalid — it is never clamped (unlike the number box). |
 | `interval` | `number` | `30` | Time list step in minutes. |
-| `timeView` | `'list' \| 'columns'` | `'list'` | Time picker layout: one interval list, or hour + minute columns. |
+| `timeView` | `'list' \| 'columns'` | `'list'` | Time picker layout: one interval list, or hour + minute columns (plus seconds / AM-PM columns when enabled). Each column is a labelled listbox. |
+| `hour12` | `boolean` | `—` | Clock of the display text and the picker. `true` adds an AM/PM column to `timeView: 'columns'` (hours 12, 1 … 11); `false` forces 24-hour; unset follows the locale with the single 24-entry hour column. |
+| `showSeconds` | `boolean` | `false` | Seconds in the display text (`timeStyle: 'medium'`), a seconds column and a seconds segment of the masked entry; typed `HH:MM:SS` parses. Off, picks zero the seconds. |
+| `showTodayButton` | `boolean` | `false` | Footer "Today" button (`date` / `datetime`): picks today through the calendar path — `datetime` keeps the time of day. Disabled when `min`/`max`/`disabledDates` exclude today. |
+| `showNowButton` | `boolean` | `false` | Footer "Now" button (`time` / `datetime`): commits the current time (seconds kept only with `showSeconds`) and closes; with `useButtons` it drafts instead. |
+| `useMaskBehavior` | `boolean` | `false` | Segment entry (DevExtreme `useMaskBehavior`) on the shared `OgeDateSegmentCore`: the field shows the locale’s numeric pattern (`dd.mm.yyyy`, `mm/dd/yyyy`… from `Intl`), digits fill the selected segment and auto-advance, ArrowUp/Down step it with wrap-around, ArrowLeft/Right (mirrored in RTL) and Home/End move between segments, Backspace/Delete clear, a typed separator moves on, `a`/`p` set AM/PM, paste reads a whole date and Alt+ArrowDown opens the picker. Commits on blur/Enter like typed text; impossible dates show the invalid state and revert. `displayFormat` is not used while it is on. |
 | `applyValueMode` | `'instantly' \| 'useButtons'` | `'instantly'` | OK/Cancel footer collects picker changes in a draft when `useButtons`. |
 | `acceptCustomValue` | `boolean` | `true` | `false` makes the text read-only (picker input only). |
 | `openOnFieldClick` | `boolean` | `true` | Clicking the field opens the picker. |
@@ -1452,8 +1597,10 @@ _OgeDateRangeBox_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `value / defaultValue` | `[Date \| null, Date \| null]` | `[null, null]` | Start–end tuple on one field: two parsed inputs + a two-view range calendar popup. A reversed pair reorders on commit; either end may stay open. |
-| `type` | `'date' \| 'datetime'` | `'date'` | `'datetime'` adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times. |
-| `interval` | `number` | `30` | Time list step in minutes (`type: 'datetime'`). |
+| `type` | `OgeDateRangeBoxType` | `'date'` | `'datetime'` adds start/end time lists to the picker: day and time picks collect in a draft and commit together on OK; both sides parse and render times. `'time'` is a time-range picker — no calendar, two time lists and OK. |
+| `presets` | `readonly OgeDateRangePreset[]` | `[]` | Quick ranges listed beside the calendar (a horizontal chip row in the adaptive dialog), each an `aria-pressed` button that reads pressed while the draft matches it. `{ label, range: () => [start, end] }` — `range` is evaluated on render and on pick, never at construction — or the built-in `ogeDateRangePresets.today() / yesterday() / last7Days() / last30Days() / thisWeek() / lastWeek() / thisMonth() / lastMonth() / thisYear() / lastYear()`, labelled from the messages. A `date` box commits and closes on a pick; `time`/`datetime` and the adaptive dialog draft it for OK/Done. |
+| `hour12 / showSeconds` | `boolean` | `—` | Clock and seconds of the display text and the time lists, as on `OgeDateBox`. |
+| `interval` | `number` | `30` | Time list step in minutes (`type: 'time' \| 'datetime'`). |
 | `min / max / disabledDates / firstDayOfWeek / showWeekNumbers / locale / displayFormat / openOnFieldClick / acceptCustomValue` | `as OgeDateBox` | `—` | Shared configuration surface. |
 | `adaptiveMode / adaptiveBreakpoint` | `'auto' \| 'none' / number` | `provider: 'none' / 600` | `'auto'` presents the popup as a full-screen dialog showing one month, where picking both ends waits for an explicit Done that applies the range on viewports narrower than `adaptiveBreakpoint` px — a titled `role="dialog"` surface with a close button, scroll lock, inert background, a Tab trap, focus restore, safe-area insets and 16px / 44px touch sizing; Escape, a backdrop tap or a swipe down the handle dismiss it. `'none'` keeps the anchored drop-down. App-wide defaults come from the `<OgeInputsConfigProvider>`. |
 
@@ -1546,6 +1693,10 @@ _Date types_
 | --- | --- | --- |
 | `OgeDateBoxHandle / OgeDateRangeBoxHandle` | `{ focus(); blur(); clear(); open(); close(); toggle() }` | Imperative handles exposed through `ref`. |
 | `OgeDateBoxType / OgeDateBoxApplyValueMode / OgeDateBoxDisplayFormat / OgeDateBoxTimeView` | `@oge-ui/behavior` | The string unions and the display-format shape — shared with the Angular package, so locale-aware typed parsing behaves identically. |
+| `OgeDateRangeBoxType` | `'date' \| 'time' \| 'datetime'` | What the date range box edits. |
+| `OgeDateRangePreset` | `{ label?: string; id?: string; range: () => [Date \| null, Date \| null] }` | One preset entry. `label` wins; built-ins carry an `id` whose message supplies the label. |
+| `ogeDateRangePresets` | `object of factories` | Built-in presets, each `(options?: { label?, now? }) => OgeDateRangePreset` covering whole local days; `thisWeek`/`lastWeek` also take `firstDayOfWeek` / `locale`. Re-exported from `@oge-ui/behavior` — the Angular package ships the same factories. |
+| `OgeDateRangePresetId / OgeDateRangePresetOptions / OgeDateRangeWeekPresetOptions` | `types` | The built-in ids and the factory option shapes. |
 
 ### <OgeColorBox>
 
@@ -1662,6 +1813,318 @@ _Color types_
 | `OGE_DEFAULT_COLOR_PALETTE` | `readonly string[]` | The built-in 50-swatch palette used when `palette` is not set. |
 | `Color messages` | `OgeInputsMessages keys` | All popup strings localize through `<OgeInputsConfigProvider>`: `colorPickerLabel`, `hueSliderLabel`/`hueValueText`, `alphaSliderLabel`/`alphaValueText`, `colorSurfaceLabel`/`colorSurfaceRoleDescription`/`surfaceValueText`, `paletteLabel`, the hex/R/G/B/A input labels, `eyedropperButton` and `invalidColorError`. |
 
+### <OgeColorGradient>
+
+#### Properties
+
+_OgeColorGradient_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `string \| null` | `null` | The committed color as a CSS string, normalized to `format` on commit — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `label` | `string` | `''` | Accessible name of the `role="group"`; falls back to the `colorGradientLabel` message. |
+| `format` | `OgeColorFormat` | `'hex'` | Committed string shape; translucent colors widen to carry alpha. |
+| `editAlphaChannel` | `boolean` | `false` | Renders the alpha slider and the alpha-percent input, and commits alpha-carrying strings. |
+| `keyStep` | `number` | `5` | Arrow-key increment of the surface and sliders; PageUp/PageDown move 5×. |
+| `showInputs` | `boolean` | `true` | Renders the hex + R/G/B(/A) inputs; they apply on blur / Enter and revert unusable text. |
+| `showContrast` | `boolean` | `false` | Renders the WCAG contrast readout — sample, ratio and AA / AAA pass-fail badges. |
+| `contrastBackground` | `string` | `'#ffffff'` | The background (any CSS color) the contrast ratio is measured against. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+_Contrast & palette helpers_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `contrastRatio` | `(foreground: OgeRgba, background: OgeRgba) => number` | WCAG 2.x contrast ratio (1–21); a translucent foreground is composited over the background first. Re-exported from `@oge-ui/behavior`. |
+| `contrastLevels` | `(ratio: number) => OgeContrastLevels` | AA (4.5) / AA large (3) / AAA (7) / AAA large (4.5) verdicts on the unrounded ratio; the displayed `ratio` is truncated, never rounded up into a pass. |
+| `OgeContrastLevels` | `{ ratio; aa; aaLarge; aaa; aaaLarge }` | Result of `contrastLevels`. |
+
+_Color gradient types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeColorGradientHandle` | `{ focus(); blur() }` | `focus()` moves to the saturation/brightness surface. |
+
+### <OgeColorPalette>
+
+#### Properties
+
+_OgeColorPalette_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `string \| null` | `null` | The picked swatch string as listed — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `palette` | `OgeColorPalettePreset \| readonly string[]` | `'default'` | A preset (`'default' \| 'basic' \| 'office' \| 'material' \| 'monochrome'`) or your own CSS color list. |
+| `columns` | `number \| undefined` | `—` | Tiles per row; `undefined` uses the preset’s own count (10 for a custom list). |
+| `tileSize` | `number \| undefined` | `—` | Tile edge in px; `undefined` lets the tiles share the width. |
+| `label` | `string` | `''` | Accessible name of the grid; falls back to the `paletteLabel` message. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+_Palette types_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeColorPalettePreset` | `'default' \| 'basic' \| 'office' \| 'material' \| 'monochrome'` | The built-in swatch sets. |
+| `OGE_COLOR_PALETTE_PRESETS` | `Record<OgeColorPalettePreset, OgeColorPalettePresetData>` | The preset data — `{ colors, columns }` each. |
+| `OgeColorPaletteHandle` | `{ focus(); blur() }` | `focus()` moves to the roving tile (the selected one, else the first). |
+
+### <OgeCheckBoxGroup>
+
+#### Properties
+
+_OgeCheckBoxGroup_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `readonly unknown[]` | `[]` | The checked items’ `valueExpr` results in items order — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `items` | `readonly TItem[]` | `[]` | One check box per item. |
+| `displayExpr / valueExpr / disabledExpr` | `shared with OgeSelectBox` | `—` | Field-name string or function expressions; disabled items keep their state. |
+| `layout` | `OgeCheckBoxGroupLayout` | `'vertical'` | `'vertical'`, `'horizontal'` (wrapping) or `'columns'`. |
+| `columns` | `number` | `2` | Column count of `layout: 'columns'`. |
+| `label` | `string` | `''` | Visible group label and the group’s accessible name. |
+| `hint` | `string \| undefined` | `—` | Helper text under the items, hidden while an error shows. |
+| `showSelectAll` | `boolean` | `false` | A tri-state “select all” box over the enabled items; from mixed it selects all. |
+| `selectAllText` | `string \| undefined` | `—` | Text of the select-all box; `undefined` = the `selectAllText` message. |
+| `renderItem` | `(item: TItem, context: { index; checked }) => ReactNode` | `—` | Custom label next to each glyph — the render prop replacing Angular’s `itemTemplate`. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_OgeCheckBoxGroup handle_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `selectAll() / unselectAll()` | `() => void` | Checks / unchecks every enabled item (disabled items keep their state). |
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_OgeCheckBoxGroup callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeCheckBoxGroupItemClickEvent<TItem>) => void` | One check box was toggled by the user — `{ item, index, checked, event }`. |
+| `onSelectAllChange` | `(event: OgeCheckBoxGroupSelectAllEvent) => void` | The select-all box was toggled by the user — `{ checked, event }`. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeCheckBoxGroupLayout` | `'horizontal' \| 'vertical' \| 'columns'` | Arrangement of the boxes. |
+| `OgeCheckBoxGroupHandle` | `{ focus(); blur(); selectAll(); unselectAll() }` | The imperative handle. |
+
+### <OgeToggleGroup>
+
+#### Properties
+
+_OgeToggleGroup_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value / defaultValue` | `unknown` | `null` | The selected value (`single`) or an array in items order (`multiple`) — controlled with `onValueChange`, or uncontrolled from `defaultValue`. |
+| `items` | `readonly TItem[]` | `[]` | The segments. |
+| `displayExpr / valueExpr / disabledExpr` | `shared with OgeSelectBox` | `—` | Field-name string or function expressions. |
+| `selectionMode` | `OgeToggleGroupSelectionMode` | `'single'` | `'single'` — APG radio group; `'multiple'` — `aria-pressed` toggle buttons. |
+| `label` | `string` | `''` | Visible caption and the track’s accessible name. |
+| `hideLabel` | `boolean` | `false` | Keeps `label` as the accessible name only. |
+| `hint` | `string \| undefined` | `—` | Helper text under the segments. |
+| `fluid` | `boolean` | `false` | Stretches the track; segments share the width. |
+| `renderItem` | `(item: TItem, context: { index; selected }) => ReactNode` | `—` | Custom segment content — the render prop replacing Angular’s `itemTemplate`. |
+
+_Host styling_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `className` | `string` | Extra class names appended to the host element. |
+| `style` | `CSSProperties` | Inline styles on the host element. |
+
+_Common — state & validation (all editors)_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Disables the editor. |
+| `readonly` | `boolean` | `false` | Focusable but not editable. (Contract name — not `readOnly`.) |
+| `required` | `boolean` | `false` | Marks the field required (label asterisk + validation). |
+| `name` | `string` | `''` | Native `name` attribute. |
+| `invalid` | `boolean` | `false` | External invalid override — combined with the `errors` props. |
+| `pending` | `boolean` | `false` | Async-validation indicator; a spinner shows in the rail while `true`. |
+| `touched` | `boolean` | `false` | External touched override — hand it your form library’s touched flag. |
+| `dirty` | `boolean` | `false` | External dirty override. |
+| `errors` | `readonly OgeFieldError[]` | `[]` | Validation errors in the shared `OgeFieldError` shape — the bridge from React Hook Form, Formik or your own resolver. |
+| `errorText` | `string` | `—` | Explicit error message — always wins over resolved messages. |
+| `errorDisplay` | `OgeInputErrorDisplay` | `'touched'` | When resolved errors become visible. |
+| `debounce` | `number` | `—` | Commit delay in ms for `onValueChange`; blur and Enter flush immediately. |
+
+#### Methods
+
+_Common — imperative handle (via ref)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `focus()` | `() => void` | Moves keyboard focus to the control. |
+| `blur()` | `() => void` | Blurs the control. |
+
+#### Events
+
+_OgeToggleGroup callbacks_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onItemClick` | `(event: OgeToggleGroupItemClickEvent<TItem>) => void` | A segment was pressed, before any value change — `{ item, index, event }`. |
+| `onSelectionChange` | `(event: OgeToggleGroupSelectionChangedEvent) => void` | The value changed through user interaction — `{ value, addedValues, removedValues }`. |
+
+_Common (all editors)_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `onValueChange` | `(value: T) => void` | Every committed change — the controlled half of `value`. Pass `defaultValue` instead to let the editor own its state. |
+| `onValueCommitted` | `(event: { value: T; previousValue: T; event: Event \| undefined }) => void` | The same commits with `previousValue` and the originating DOM event (`undefined` for programmatic writes) — the rich payload for cross-field rules. |
+| `onCleared` | `() => void` | Value cleared via the clear button or the handle’s `clear()`. |
+| `onEnterKey` | `(event: KeyboardEvent) => void` | Enter pressed inside the editor (pending debounce is flushed first). |
+| `onFocus` | `(event: FocusEvent) => void` | The editor received focus. |
+| `onBlur` | `(event: FocusEvent) => void` | The editor lost focus. |
+
+#### Types
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeToggleGroupSelectionMode` | `'single' \| 'multiple'` | One value or many. |
+| `OgeToggleGroupHandle` | `{ focus(); blur() }` | `focus()` moves to the roving segment. |
+
 ### Shared input types
 
 #### Types
@@ -1681,6 +2144,18 @@ _Unions & contracts_
 | `OgeTextBoxMode` | `'text' \| 'email' \| 'password' \| 'search' \| 'tel' \| 'url'` | Native input type of the text box. |
 | `OgeNumberBoxMode` | `'text' \| 'tel'` | Native input type of the number box. |
 | `OgeFieldError` | `{ kind: string; message?: string }` | The validation-error shape the `errors` prop takes — map your form library’s errors into it once. |
+
+_Mask_
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `OgeMaskRule` | `RegExp \| string \| ((char: string) => boolean)` | One custom mask rule: a one-character `RegExp`, a string listing the allowed characters, or a predicate. |
+| `OgeMaskRules` | `Readonly<Record<string, OgeMaskRule>>` | Custom rules keyed by a single mask character. |
+| `OgeMaskShowMode` | `'always' \| 'onFocus'` | When the empty mask placeholders are visible. |
+| `OgeMaskCompletedEvent` | `{ value: string; rawValue: string; maskedValue: string }` | Payload of `onMaskCompleted`. |
+| `ogeMaskComplete(mask, value, { rules?, includeLiterals? })` | `boolean` | `true` when `value` fills every required slot (empty counts as complete) — the check a form library or a server runs without an editor. The error kind `mask` resolves to `messages.maskInvalidError`. |
+| `ogeMaskInputMode(mask, rules?)` | `'numeric' \| undefined` | The `inputmode` a mask implies — `'numeric'` when every slot takes only digits. |
+| `OGE_DEFAULT_MASK_RULES` | `Record<string, [test, optional]>` | The built-in rules (`0 9 # L l A a C c`) as test/optional pairs. |
 
 _Callback payloads_
 
@@ -1934,6 +2409,133 @@ export function AutocompleteChromeDemo() {
 'use client';
 
 import { useState } from 'react';
+import { OgeCheckBoxGroup } from '@oge-ui/react-inputs';
+
+const channels = [
+  { id: 'mail', name: 'E-mail' },
+  { id: 'sms', name: 'SMS' },
+  { id: 'push', name: 'Push (always on)', locked: true },
+  { id: 'call', name: 'Phone call' },
+];
+
+export function CheckBoxGroupDemo() {
+  const [notify, setNotify] = useState<readonly unknown[]>(['mail', 'push']);
+  return (
+    <>
+      <OgeCheckBoxGroup
+        label="Notify me by"
+        hint="We never share your details."
+        items={channels}
+        displayExpr="name"
+        valueExpr="id"
+        disabledExpr="locked"
+        value={notify}
+        onValueChange={setNotify}
+      />
+      <p className="mt-3 text-sm">
+        Value: <code>{JSON.stringify(notify)}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Select all
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCheckBoxGroup } from '@oge-ui/react-inputs';
+
+const columns = ['Name', 'E-mail', 'City', 'Country', 'Phone'];
+
+export function CheckBoxGroupSelectAllDemo() {
+  const [picked, setPicked] = useState<readonly unknown[]>(['Name', 'City']);
+  return (
+    <OgeCheckBoxGroup
+      label="Columns to export"
+      items={columns}
+      showSelectAll
+      value={picked}
+      onValueChange={setPicked}
+    />
+  );
+}
+```
+
+### Layouts
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCheckBoxGroup } from '@oge-ui/react-inputs';
+
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const toppings = ['Basil', 'Olives', 'Mushrooms', 'Peppers', 'Onion', 'Ham'];
+
+export function CheckBoxGroupLayoutDemo() {
+  const [workDays, setWorkDays] = useState<readonly unknown[]>([
+    'Mon', 'Tue', 'Wed', 'Thu', 'Fri',
+  ]);
+  const [pizza, setPizza] = useState<readonly unknown[]>(['Basil']);
+  return (
+    <div className="flex flex-col gap-6">
+      <OgeCheckBoxGroup
+        label="Days"
+        layout="horizontal"
+        items={days}
+        value={workDays}
+        onValueChange={setWorkDays}
+      />
+      <OgeCheckBoxGroup
+        label="Toppings"
+        layout="columns"
+        columns={3}
+        items={toppings}
+        value={pizza}
+        onValueChange={setPizza}
+      />
+    </div>
+  );
+}
+```
+
+### Inside a form
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeCheckBoxGroup } from '@oge-ui/react-inputs';
+
+const interests = ['Design', 'Engineering', 'Product', 'Sales'];
+
+export function CheckBoxGroupFormDemo() {
+  const [value, setValue] = useState<readonly unknown[]>([]);
+  const [touched, setTouched] = useState(false);
+  return (
+    <OgeCheckBoxGroup
+      label="Interests"
+      items={interests}
+      required
+      value={value}
+      onValueChange={setValue}
+      touched={touched}
+      onBlur={() => setTouched(true)}
+      errors={value.length ? [] : [{ kind: 'required', message: 'Pick at least one interest' }]}
+    />
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
 import { OgeColorBox } from '@oge-ui/react-inputs';
 
 export function ColorBoxDemo() {
@@ -2123,6 +2725,215 @@ export function FormDemo() {
 }
 ```
 
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorGradient } from '@oge-ui/react-inputs';
+
+export function ColorGradientDemo() {
+  const [brand, setBrand] = useState<string | null>('#3aa0ff');
+  return (
+    <>
+      <OgeColorGradient label="Brand color" value={brand} onValueChange={setBrand} />
+      <p className="mt-3 text-sm">
+        Value: <code>{brand ?? 'null'}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Alpha and formats
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorGradient } from '@oge-ui/react-inputs';
+
+export function ColorGradientAlphaDemo() {
+  const [overlay, setOverlay] = useState<string | null>(
+    'rgba(58, 160, 255, 0.5)',
+  );
+  const [accent, setAccent] = useState<string | null>('hsl(160, 84%, 39%)');
+  return (
+    <div className="demo-row demo-row-start">
+      <OgeColorGradient
+        label="Overlay"
+        format="rgba"
+        editAlphaChannel
+        value={overlay}
+        onValueChange={setOverlay}
+      />
+      <OgeColorGradient
+        label="Compact (hsl)"
+        format="hsl"
+        showInputs={false}
+        value={accent}
+        onValueChange={setAccent}
+      />
+    </div>
+  );
+}
+```
+
+### Contrast checker
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorGradient, contrastRatio, contrastLevels } from '@oge-ui/react-inputs';
+
+export function ColorGradientContrastDemo() {
+  const [text, setText] = useState<string | null>('#767676');
+  // the same verdict in code — e.g. to block a save
+  const white = { r: 255, g: 255, b: 255, a: 1 };
+  const aa = contrastLevels(contrastRatio({ r: 118, g: 118, b: 118, a: 1 }, white)).aa;
+  return (
+    <>
+      <OgeColorGradient
+        label="Text on white"
+        showContrast
+        contrastBackground="#ffffff"
+        value={text}
+        onValueChange={setText}
+      />
+      <p className="mt-3 text-sm">#767676 passes AA: {String(aa)}</p>
+    </>
+  );
+}
+```
+
+### Inside a form
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorGradient } from '@oge-ui/react-inputs';
+
+export function ColorGradientFormDemo() {
+  const [model, setModel] = useState({ theme: '#7c3aed' as string | null });
+  return (
+    <>
+      <OgeColorGradient
+        label="Theme color"
+        required
+        value={model.theme}
+        onValueChange={(theme) => setModel({ ...model, theme })}
+      />
+      <p className="mt-3 text-sm">
+        Model: <code>{model.theme}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorPalette } from '@oge-ui/react-inputs';
+
+export function ColorPaletteDemo() {
+  const [tag, setTag] = useState<string | null>('#4a86e8');
+  return (
+    <>
+      <OgeColorPalette label="Tag color" value={tag} onValueChange={setTag} />
+      <p className="mt-3 text-sm">
+        Value: <code>{tag ?? 'null'}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Presets
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorPalette } from '@oge-ui/react-inputs';
+
+export function ColorPalettePresetsDemo() {
+  const [office, setOffice] = useState<string | null>('#4472c4');
+  const [material, setMaterial] = useState<string | null>('#009688');
+  return (
+    <div className="demo-row demo-row-start">
+      <OgeColorPalette label="Office" palette="office" value={office} onValueChange={setOffice} />
+      <OgeColorPalette
+        label="Material"
+        palette="material"
+        value={material}
+        onValueChange={setMaterial}
+      />
+    </div>
+  );
+}
+```
+
+### Custom swatches
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorPalette } from '@oge-ui/react-inputs';
+
+const brand = [
+  '#0f172a', '#334155', '#64748b', '#cbd5e1',
+  '#4f46e5', '#7c3aed', '#db2777', '#f59e0b',
+];
+
+export function ColorPaletteCustomDemo() {
+  const [swatch, setSwatch] = useState<string | null>('#7c3aed');
+  return (
+    <OgeColorPalette
+      label="Brand swatches"
+      palette={brand}
+      columns={4}
+      tileSize={32}
+      value={swatch}
+      onValueChange={setSwatch}
+    />
+  );
+}
+```
+
+### Inside a form
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeColorPalette } from '@oge-ui/react-inputs';
+
+export function ColorPaletteFormDemo() {
+  const [color, setColor] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  return (
+    <OgeColorPalette
+      label="Label color"
+      palette="basic"
+      required
+      value={color}
+      onValueChange={setColor}
+      touched={touched}
+      onBlur={() => setTouched(true)}
+      errors={color ? [] : [{ kind: 'required' }]}
+    />
+  );
+}
+```
+
 ### Calendar
 
 ```ts
@@ -2300,6 +3111,313 @@ export function TimeDemo() {
         onValueChange={setDue}
       />
     </div>
+  );
+}
+```
+
+### Clock, seconds & shortcuts
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDateBox } from '@oge-ui/react-inputs';
+
+export function ClockDemo() {
+  const [departure, setDeparture] = useState<Date | null>(
+    new Date(2026, 7, 15, 18, 45, 0),
+  );
+  const [loggedAt, setLoggedAt] = useState<Date | null>(null);
+  return (
+    <div className="demo-row">
+      {/* AM/PM + seconds columns, a Now shortcut */}
+      <OgeDateBox
+        label="Departure"
+        type="time"
+        timeView="columns"
+        hour12
+        showSeconds
+        showNowButton
+        value={departure}
+        onValueChange={setDeparture}
+      />
+      {/* Today keeps the time of day; Now takes the current time */}
+      <OgeDateBox
+        label="Logged at"
+        type="datetime"
+        showTodayButton
+        showNowButton
+        value={loggedAt}
+        onValueChange={setLoggedAt}
+      />
+    </div>
+  );
+}
+```
+
+### Masked entry
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDateBox } from '@oge-ui/react-inputs';
+
+export function MaskedDateDemo() {
+  const [invoiceDate, setInvoiceDate] = useState<Date | null>(null);
+  const [checkIn, setCheckIn] = useState<Date | null>(
+    new Date(2026, 7, 15, 14, 0),
+  );
+  return (
+    <div className="demo-row">
+      <OgeDateBox
+        label="Invoice date"
+        locale="de-DE"
+        useMaskBehavior
+        value={invoiceDate}
+        onValueChange={setInvoiceDate}
+      />
+      <OgeDateBox
+        label="Check-in"
+        type="datetime"
+        locale="en-US"
+        useMaskBehavior
+        value={checkIn}
+        onValueChange={setCheckIn}
+      />
+    </div>
+  );
+}
+```
+
+### Range presets & time ranges
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeDateRangeBox, ogeDateRangePresets } from '@oge-ui/react-inputs';
+import type { OgeCalendarRange, OgeDateRangePreset } from '@oge-ui/react-inputs';
+
+// Presets are evaluated on render and on pick, never at construction.
+const presets: OgeDateRangePreset[] = [
+  ogeDateRangePresets.today(),
+  ogeDateRangePresets.last7Days(),
+  ogeDateRangePresets.last30Days(),
+  ogeDateRangePresets.thisMonth(),
+  ogeDateRangePresets.lastMonth(),
+  ogeDateRangePresets.thisYear(),
+  { label: 'Q1 2026', range: () => [new Date(2026, 0, 1), new Date(2026, 2, 31)] },
+];
+
+export function PresetsDemo() {
+  const [report, setReport] = useState<OgeCalendarRange>([null, null]);
+  const [hours, setHours] = useState<OgeCalendarRange>([
+    new Date(2026, 7, 15, 9, 0),
+    new Date(2026, 7, 15, 17, 30),
+  ]);
+  return (
+    <div className="demo-row">
+      <OgeDateRangeBox
+        label="Report period"
+        presets={presets}
+        value={report}
+        onValueChange={setReport}
+      />
+      {/* a time-range picker: no calendar, two lists + OK */}
+      <OgeDateRangeBox
+        label="Opening hours"
+        type="time"
+        interval={30}
+        value={hours}
+        onValueChange={setHours}
+      />
+    </div>
+  );
+}
+```
+
+### Getting started
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMaskedTextBox } from '@oge-ui/react-inputs';
+
+export function MaskedTextBoxDemo() {
+  // 0 = a required digit; ( ) - and the space are literals the caret
+  // skips. The value is the raw digits — no literals, no placeholders.
+  const [phone, setPhone] = useState('');
+  return (
+    <>
+      <OgeMaskedTextBox
+        label="Phone"
+        mask="(000) 000-0000"
+        value={phone}
+        onValueChange={setPhone}
+        autocomplete="tel-national"
+      />
+      <p>
+        Value: <code>{phone}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Mask syntax and custom rules
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMaskedTextBox } from '@oge-ui/react-inputs';
+import type { OgeMaskRules } from '@oge-ui/react-inputs';
+
+// module scope: a stable maskRules object (a new one per render
+// would rebuild the mask)
+const hexRules: OgeMaskRules = { H: /[0-9a-f]/i };
+// a backslash makes a rule character literal: "A" is printed, not typed
+const productMask = '\\A-000-LL';
+
+export function MaskSyntaxDemo() {
+  const [plate, setPlate] = useState('');
+  const [hex, setHex] = useState('');
+  const [extension, setExtension] = useState('');
+  const [product, setProduct] = useState('');
+  return (
+    <>
+      {/* L = a required letter (any script), 0 = a digit */}
+      <OgeMaskedTextBox label="Licence plate" mask="00 LLL 000" value={plate} onValueChange={setPlate} />
+      {/* a custom rule: H accepts one hex digit (always a required slot) */}
+      <OgeMaskedTextBox
+        label="Hex color"
+        mask="HHHHHH"
+        maskRules={hexRules}
+        prefix={<span>#</span>}
+        value={hex}
+        onValueChange={setHex}
+      />
+      {/* 9 = an optional digit; "ext. " has no rule characters, so it is literal */}
+      <OgeMaskedTextBox label="Extension" mask="ext. 0999" value={extension} onValueChange={setExtension} />
+      <OgeMaskedTextBox label="Product code" mask={productMask} value={product} onValueChange={setProduct} />
+    </>
+  );
+}
+```
+
+### Raw and formatted values
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMaskedTextBox } from '@oge-ui/react-inputs';
+
+export function MaskValuesDemo() {
+  const [raw, setRaw] = useState('');
+  const [formatted, setFormatted] = useState('');
+  const [status, setStatus] = useState('Type all 16 digits');
+  return (
+    <>
+      <OgeMaskedTextBox label="Card (raw)" mask="0000 0000 0000 0000" value={raw} onValueChange={setRaw} />
+      <OgeMaskedTextBox
+        label="Card (with literals)"
+        mask="0000 0000 0000 0000"
+        includeLiterals
+        value={formatted}
+        onValueChange={setFormatted}
+        onMaskCompleted={(event) => setStatus(`Complete: ${event.maskedValue}`)}
+      />
+      <p>
+        raw: <code>{raw}</code> · formatted: <code>{formatted}</code>
+      </p>
+      <p>{status}</p>
+    </>
+  );
+}
+```
+
+### Mask display
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMaskedTextBox } from '@oge-ui/react-inputs';
+
+export function MaskDisplayDemo() {
+  const [code, setCode] = useState('');
+  const [postal, setPostal] = useState('');
+  const [pin, setPin] = useState('');
+  return (
+    <>
+      <OgeMaskedTextBox label="Date code" mask="00.00.0000" maskChar="•" value={code} onValueChange={setCode} />
+      <OgeMaskedTextBox
+        label="Postal code"
+        mask="00000"
+        showMaskMode="onFocus"
+        placeholder="5 digits"
+        value={postal}
+        onValueChange={setPostal}
+      />
+      <OgeMaskedTextBox label="PIN" labelMode="floating" mask="0000" value={pin} onValueChange={setPin} />
+    </>
+  );
+}
+```
+
+### Validation and forms
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeMaskedTextBox, ogeMaskComplete } from '@oge-ui/react-inputs';
+
+const IBAN_MASK = 'LL00 0000 0000 0000 0000 00';
+
+export function MaskValidationDemo() {
+  const [iban, setIban] = useState('');
+  const [taxNumber, setTaxNumber] = useState('');
+  // the editor's own check, reusable by any form library or a server
+  const ibanValid = iban !== '' && ogeMaskComplete(IBAN_MASK, iban);
+  return (
+    <>
+      <OgeMaskedTextBox label="IBAN" mask={IBAN_MASK} required value={iban} onValueChange={setIban} />
+      <OgeMaskedTextBox
+        label="Tax number"
+        mask="000-000-0000"
+        maskInvalidMessage="Enter all 10 digits"
+        value={taxNumber}
+        onValueChange={setTaxNumber}
+      />
+      <p>
+        IBAN valid: <code>{String(ibanValid)}</code>
+      </p>
+    </>
+  );
+}
+```
+
+### Mask on the text box
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeTextBox } from '@oge-ui/react-inputs';
+
+export function TextBoxMaskDemo() {
+  const [time, setTime] = useState('');
+  return (
+    <>
+      <OgeTextBox label="Time" mask="00:00" includeLiterals showClearButton value={time} onValueChange={setTime} />
+      <p>
+        Value: <code>{time}</code>
+      </p>
+    </>
   );
 }
 ```
@@ -2660,6 +3778,44 @@ export function AdornmentsDemo() {
     <div className="demo-row">
       <OgeTextBox label="Price" prefix={<span>€</span>} />
       <OgeTextBox label="Website" placeholder="example.com" prefix={<span>https://</span>} />
+    </div>
+  );
+}
+```
+
+### Number entry
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeNumberBox } from '@oge-ui/react-inputs';
+
+export function NumberEntryDemo() {
+  // formatWhileTyping groups as you type (caret kept in place);
+  // maxFractionDigits refuses a third decimal; format is the blur-time
+  // display. wheelStep steps on the wheel — only while focused.
+  const [budget, setBudget] = useState<number | null>(1234567.5);
+  const [quantity, setQuantity] = useState<number | null>(10);
+  return (
+    <div className="demo-row">
+      <OgeNumberBox
+        label="Budget"
+        value={budget}
+        onValueChange={setBudget}
+        formatWhileTyping
+        maxFractionDigits={2}
+        format={{ style: 'currency', currency: 'EUR' }}
+      />
+      <OgeNumberBox
+        label="Quantity"
+        value={quantity}
+        onValueChange={setQuantity}
+        min={0}
+        max={99}
+        wheelStep={1}
+        showSpinButtons
+      />
     </div>
   );
 }
@@ -3577,6 +4733,49 @@ export function RadioGroupDemo() {
       <div className="text-sm">
         plan: <code>{String(planId ?? 'null')}</code>
       </div>
+    </div>
+  );
+}
+```
+
+### Toggle Group
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeToggleGroup } from '@oge-ui/react-inputs';
+
+const aligns = [
+  { id: 'left', text: 'Left' },
+  { id: 'center', text: 'Center' },
+  { id: 'right', text: 'Right' },
+];
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+export function ToggleGroupDemo() {
+  // single = APG radio group; multiple = aria-pressed toggles
+  const [align, setAlign] = useState<unknown>('left');
+  const [delivery, setDelivery] = useState<unknown>(['Mon', 'Thu']);
+  return (
+    <div className="demo-row demo-row-start">
+      <OgeToggleGroup
+        label="Alignment"
+        items={aligns}
+        displayExpr="text"
+        valueExpr="id"
+        value={align}
+        onValueChange={setAlign}
+      />
+
+      <OgeToggleGroup
+        label="Delivery days"
+        selectionMode="multiple"
+        hint="Pick one or more"
+        items={days}
+        value={delivery}
+        onValueChange={setDelivery}
+      />
     </div>
   );
 }

@@ -34,4 +34,4 @@ No Angular, React or rxjs import anywhere — lint-enforced by the workspace's
 
 Source-available commercial software, like the Kanban board it powers — free
 for evaluation and development, a paid license for production. See
-[LICENSE](LICENSE) and [ogeui.com/license](https://ogeui.com/license).
+[LICENSE](LICENSE) and [ogeui.com/license](https://www.ogeui.com/license).

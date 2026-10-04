@@ -16,6 +16,7 @@ import { FrameworkService } from '../../shared/framework.service';
 import { ReactTreeSummariesDemos } from '../react-tree-list/summaries';
 import { makePlan, makePlanServer, type PlanTask } from './task-data';
 import { REMOTE_SNIPPET, SUMMARIES_SNIPPET } from './summaries-snippets';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 const hours = (value: unknown): string =>
   typeof value === 'number' ? `${value.toFixed(0)} h` : String(value ?? '');
@@ -232,6 +233,7 @@ export class TreeSummariesPage {
     if (!tree) return;
     const { exportOgeTreeListToPdf } =
       await import('@oge-ui/tree-list/export-pdf');
+    await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
     await exportOgeTreeListToPdf(tree, {
       filename: 'plan.pdf',
       title: 'Project plan',

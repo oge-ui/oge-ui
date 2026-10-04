@@ -29,6 +29,9 @@ describe('messageForFieldError', () => {
     expect(messageForFieldError({ kind: 'pattern' }, messages)).toBe(
       messages.patternError,
     );
+    expect(messageForFieldError({ kind: 'mask' }, messages)).toBe(
+      messages.maskInvalidError,
+    );
   });
 
   it('interpolates the bound of a min/max error', () => {

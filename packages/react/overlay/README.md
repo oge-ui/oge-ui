@@ -149,7 +149,7 @@ export function App() {
 
 ## Docs
 
-Live demos and the full API reference: <https://ogeui.com/components/overlay>
+Live demos and the full API reference: <https://www.ogeui.com/components/overlay>
 (pick **React** in the header). Machine-readable docs for coding assistants
 ship inside the package at `node_modules/@oge-ui/react-overlay/llms.txt`.
 

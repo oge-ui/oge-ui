@@ -4,7 +4,7 @@
 > Kanban is source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
 > No watermark, no runtime license checks. See [LICENSE](LICENSE) and
-> [ogeui.com/license](https://ogeui.com/license).
+> [ogeui.com/license](https://www.ogeui.com/license).
 
 A signal-based Angular Kanban board: `<oge-kanban>` renders columns,
 swimlanes and cards over a pure, framework-free kernel — card
@@ -60,5 +60,5 @@ card — the exact keyboard twin of the drag — with polite live-region
 announcements. All strings, including every aria label, live in
 `OgeKanbanMessages` (`provideOgeKanbanConfig`).
 
-Docs: [ogeui.com/components/kanban](https://ogeui.com/components/kanban)
+Docs: [ogeui.com/components/kanban](https://www.ogeui.com/components/kanban)
 · AI reference: [`llms.txt`](llms.txt)

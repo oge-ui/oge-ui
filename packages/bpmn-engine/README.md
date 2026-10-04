@@ -48,4 +48,4 @@ if (model) {
 
 Source-available commercial software — free for evaluation and development,
 a paid license is required for production use. See [`LICENSE`](./LICENSE)
-and https://ogeui.com/license.
+and https://www.ogeui.com/license.

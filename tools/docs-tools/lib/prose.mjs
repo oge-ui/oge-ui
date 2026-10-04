@@ -138,7 +138,7 @@ export const SITE_VERSION = '${version}';
 }
 
 export const COMMERCIAL_NOTE =
-  'This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.';
+  'This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.';
 
 /**
  * What a `platform: 'agnostic'` engine package (ADR 0003) carries instead of

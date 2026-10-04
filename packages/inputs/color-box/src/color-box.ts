@@ -37,9 +37,16 @@ import {
   type OgeColorBoxApplyValueMode,
   type OgeColorBoxView,
 } from './color-box-types';
-import { OgeColorPalette, type OgeColorPalettePick } from './color-palette';
-import { OgeColorSlider, type OgeColorSliderChange } from './color-slider';
-import { OgeColorSurface, type OgeColorSurfaceChange } from './color-surface';
+import {
+  OgeColorChannelInputs,
+  OgeColorSlider,
+  OgeColorSurface,
+  OgeColorSwatchGrid,
+  type OgeColorChannelChange,
+  type OgeColorPalettePick,
+  type OgeColorSliderChange,
+  type OgeColorSurfaceChange,
+} from '@oge-ui/inputs/color-parts';
 
 /** The empty-field draft — opaque black, the DevExtreme precedent. */
 const DEFAULT_HSVA: OgeHsva = { h: 0, s: 0, v: 0, a: 1 };
@@ -75,7 +82,8 @@ const DEFAULT_HSVA: OgeHsva = { h: 0, s: 0, v: 0, a: 1 };
     OgePopup,
     OgeColorSurface,
     OgeColorSlider,
-    OgeColorPalette,
+    OgeColorSwatchGrid,
+    OgeColorChannelInputs,
   ],
   providers: [{ provide: OGE_INPUT_HOST, useExisting: OgeColorBox }],
   host: {
@@ -179,7 +187,12 @@ const DEFAULT_HSVA: OgeHsva = { h: 0, s: 0, v: 0, a: 1 };
                 (released)="onPartReleased()"
               />
             }
-            <div class="oge-color-box-fields">
+            <oge-color-channel-inputs
+              [hsva]="displayHsva()"
+              [editAlpha]="editAlphaChannel()"
+              [messages]="msg()"
+              (changed)="onChannelsChanged($event)"
+            >
               @if (showEyedropper() && eyedropperSupported) {
                 <button
                   type="button"
@@ -205,87 +218,10 @@ const DEFAULT_HSVA: OgeHsva = { h: 0, s: 0, v: 0, a: 1 };
                   </svg>
                 </button>
               }
-              <label class="oge-color-box-field oge-color-box-field-hex">
-                <input
-                  class="oge-color-box-channel"
-                  type="text"
-                  spellcheck="false"
-                  autocomplete="off"
-                  [value]="hexText()"
-                  [attr.aria-label]="msg().hexInputLabel"
-                  (change)="onHexChange($event)"
-                  (keydown)="$event.stopPropagation()"
-                />
-                <span class="oge-color-box-field-tag" aria-hidden="true"
-                  >HEX</span
-                >
-              </label>
-              <label class="oge-color-box-field">
-                <input
-                  class="oge-color-box-channel"
-                  type="number"
-                  min="0"
-                  max="255"
-                  [value]="displayRgba().r"
-                  [attr.aria-label]="msg().redInputLabel"
-                  (change)="onChannelChange('r', $event)"
-                  (keydown)="$event.stopPropagation()"
-                />
-                <span class="oge-color-box-field-tag" aria-hidden="true"
-                  >R</span
-                >
-              </label>
-              <label class="oge-color-box-field">
-                <input
-                  class="oge-color-box-channel"
-                  type="number"
-                  min="0"
-                  max="255"
-                  [value]="displayRgba().g"
-                  [attr.aria-label]="msg().greenInputLabel"
-                  (change)="onChannelChange('g', $event)"
-                  (keydown)="$event.stopPropagation()"
-                />
-                <span class="oge-color-box-field-tag" aria-hidden="true"
-                  >G</span
-                >
-              </label>
-              <label class="oge-color-box-field">
-                <input
-                  class="oge-color-box-channel"
-                  type="number"
-                  min="0"
-                  max="255"
-                  [value]="displayRgba().b"
-                  [attr.aria-label]="msg().blueInputLabel"
-                  (change)="onChannelChange('b', $event)"
-                  (keydown)="$event.stopPropagation()"
-                />
-                <span class="oge-color-box-field-tag" aria-hidden="true"
-                  >B</span
-                >
-              </label>
-              @if (editAlphaChannel()) {
-                <label class="oge-color-box-field">
-                  <input
-                    class="oge-color-box-channel"
-                    type="number"
-                    min="0"
-                    max="100"
-                    [value]="alphaPercent()"
-                    [attr.aria-label]="msg().alphaInputLabel"
-                    (change)="onAlphaInputChange($event)"
-                    (keydown)="$event.stopPropagation()"
-                  />
-                  <span class="oge-color-box-field-tag" aria-hidden="true"
-                    >A</span
-                  >
-                </label>
-              }
-            </div>
+            </oge-color-channel-inputs>
           }
           @if (view() !== 'gradient') {
-            <oge-color-palette
+            <oge-color-swatch-grid
               [colors]="paletteColors()"
               [columns]="paletteColumns()"
               [selected]="displayRgba()"
@@ -479,10 +415,6 @@ export class OgeColorBox
     return `${r}, ${g}, ${b}`;
   });
 
-  protected readonly hexText = computed(() =>
-    formatColor(this.displayRgba(), 'hex', this.editAlphaChannel()),
-  );
-
   protected readonly paletteColors = computed(
     () => this.palette() ?? OGE_DEFAULT_COLOR_PALETTE,
   );
@@ -612,39 +544,9 @@ export class OgeColorBox
     if (this.applyValueMode() === 'instantly') this.flushCommit();
   }
 
-  protected onHexChange(event: Event): void {
-    const element = event.target as HTMLInputElement;
-    const parsed = parseColor(element.value);
-    if (parsed === null) {
-      element.value = this.hexText(); // revert — a wrong color is never applied
-      return;
-    }
-    this.applyDraftChange(rgbaToHsva(parsed), event);
-  }
-
-  protected onChannelChange(channel: 'r' | 'g' | 'b', event: Event): void {
-    const element = event.target as HTMLInputElement;
-    const numeric = Number.parseFloat(element.value);
-    const rgba = { ...this.displayRgba() };
-    if (!Number.isFinite(numeric)) {
-      element.value = String(rgba[channel]);
-      return;
-    }
-    rgba[channel] = Math.min(Math.max(Math.round(numeric), 0), 255);
-    // keep the working hue: only re-derive the changed channel's effect
-    const next = { ...rgbaToHsva(rgba), a: this.displayHsva().a };
-    this.applyDraftChange(next, event);
-  }
-
-  protected onAlphaInputChange(event: Event): void {
-    const element = event.target as HTMLInputElement;
-    const numeric = Number.parseFloat(element.value);
-    if (!Number.isFinite(numeric)) {
-      element.value = String(this.alphaPercent());
-      return;
-    }
-    const alpha = Math.min(Math.max(Math.round(numeric), 0), 100) / 100;
-    this.applyDraftChange({ ...this.displayHsva(), a: alpha }, event);
+  /** Hex / R / G / B / alpha edits — parsed by the shared channel part. */
+  protected onChannelsChanged(change: OgeColorChannelChange): void {
+    this.applyDraftChange(change.hsva, change.event);
   }
 
   /** Opens the platform eyedropper; a cancelled pick is not an error. */

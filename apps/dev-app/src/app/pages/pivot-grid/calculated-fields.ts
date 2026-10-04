@@ -28,6 +28,7 @@ import {
   FILTERS_SNIPPET,
 } from './calculated-fields-snippets';
 import { makeOverviewSales, money, type Sale } from './pivot-demo-data';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 @Component({
   selector: 'app-pivot-calculated-fields',
@@ -241,6 +242,7 @@ export class PivotCalculatedFieldsPage {
     const pivot = this.calcPivot();
     if (!pivot) return;
     const { exportPivotToPdf } = await import('@oge-ui/pivot/export-pdf');
+    await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
     await exportPivotToPdf(pivot, {
       filename: 'sales.pdf',
       title: 'Sales with calculated measures',

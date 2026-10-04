@@ -71,13 +71,17 @@ test.describe('gantt', () => {
     await page.mouse.move(grabX + 80, grabY, { steps: 8 });
     await expect(host.locator('.oge-gantt-drag-tip')).toBeVisible();
     await page.mouse.up();
-    const moved = await bar.boundingBox();
-    expect((moved?.x ?? 0) - before.x).toBeGreaterThan(10);
+    // the commit re-renders the bar on the next frame: poll, never read once
+    const barX = async () => (await bar.boundingBox())?.x ?? 0;
+    await expect
+      .poll(async () => (await barX()) - before.x)
+      .toBeGreaterThan(10);
 
     // toolbar undo restores the committed position
     await host.getByRole('button', { name: 'Undo' }).click();
-    const undone = await bar.boundingBox();
-    expect(Math.round(undone?.x ?? 0)).toBe(Math.round(before.x));
+    await expect
+      .poll(async () => Math.round(await barX()))
+      .toBe(Math.round(before.x));
 
     // cancelled drag: Escape mid-gesture restores the position
     await page.mouse.move(grabX, grabY);
@@ -85,8 +89,9 @@ test.describe('gantt', () => {
     await page.mouse.move(grabX + 120, grabY, { steps: 8 });
     await page.keyboard.press('Escape');
     await page.mouse.up();
-    const after = await bar.boundingBox();
-    expect(Math.round(after?.x ?? 0)).toBe(Math.round(before.x));
+    await expect
+      .poll(async () => Math.round(await barX()))
+      .toBe(Math.round(before.x));
   });
 
   test('toolbar "New task" creates through the dialog', async ({ page }) => {

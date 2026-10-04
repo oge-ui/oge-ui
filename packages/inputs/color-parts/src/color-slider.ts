@@ -31,6 +31,7 @@ export interface OgeColorSliderChange {
   selector: 'oge-color-slider',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  styleUrl: './color-parts.scss',
   host: {
     class: 'oge-color-slider',
     '[class.oge-color-slider-alpha]': "kind() === 'alpha'",
@@ -43,7 +44,8 @@ export interface OgeColorSliderChange {
         #thumb
         class="oge-color-slider-thumb"
         role="slider"
-        tabindex="0"
+        [attr.tabindex]="disabled() ? -1 : 0"
+        [attr.aria-disabled]="disabled() ? 'true' : null"
         [attr.aria-label]="label()"
         [attr.aria-valuemin]="0"
         [attr.aria-valuemax]="max()"
@@ -69,6 +71,9 @@ export class OgeColorSlider {
   readonly label = input.required<string>();
   /** `aria-valuetext` — the number alone is not the meaning. */
   readonly valueText = input.required<string>();
+
+  /** Inert: no focus, no pointer or keyboard changes. */
+  readonly disabled = input(false);
 
   readonly changed = output<OgeColorSliderChange>();
   /** A pointer gesture completed (not emitted on Escape-cancel). */
@@ -100,7 +105,7 @@ export class OgeColorSlider {
   }
 
   protected onPointerDown(event: PointerEvent): void {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || this.disabled()) return;
     const track = this.trackEl()?.nativeElement;
     if (!track) return;
     event.preventDefault();
@@ -158,6 +163,7 @@ export class OgeColorSlider {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
+    if (this.disabled()) return;
     const next = this.keyboardTarget(this.value(), event);
     if (next === null) return;
     event.preventDefault();

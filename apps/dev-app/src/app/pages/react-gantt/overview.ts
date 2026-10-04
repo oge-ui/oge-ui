@@ -23,6 +23,7 @@ import {
 import { DemoCard } from '../../shared/demo-card';
 import { ReactHost } from '../../shared/react-host';
 import { GANTT_OVERVIEW_DEMOS } from './overview-snippets';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 /**
  * TOC of the React view — the same nine sections as the Angular overview, in
@@ -307,6 +308,7 @@ function WorkExportDemo(): ReactNode {
   const exportPdf = async (): Promise<void> => {
     const { exportGanttToPdf } = await import('@oge-ui/react-gantt/export-pdf');
     if (plan.current) {
+      await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
       await exportGanttToPdf(plan.current, {
         filename: 'plan.pdf',
         title: 'Plan',

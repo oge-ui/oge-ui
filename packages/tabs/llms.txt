@@ -3,8 +3,8 @@
 > Tab strip and tab panel: declarative or data-driven tabs, deferred rendering with keep-alive, closable and reorderable tabs, router integration.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/tabs
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/tabs
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/tabs

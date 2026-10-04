@@ -34,6 +34,7 @@ import {
   TOOLBAR_SNIPPET,
   WORK_EXPORT_SNIPPET,
 } from './overview-snippets';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 const SECTIONS = [
   'Getting started',
@@ -586,6 +587,7 @@ export class GanttOverviewPage {
     gantt: OgeGantt<T, D>,
   ): Promise<void> {
     const { exportGanttToPdf } = await import('@oge-ui/gantt/export-pdf');
+    await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
     await exportGanttToPdf(gantt, { filename: 'plan.pdf', title: 'Plan' });
   }
 

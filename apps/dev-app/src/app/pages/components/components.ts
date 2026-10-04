@@ -863,7 +863,7 @@ export class ComponentsIndexPage {
       icon: 'text-cursor',
       path: '/components/inputs',
       description:
-        'TextBox, TextArea, NumberBox, SelectBox, TagBox and a multi-column combo box on one field chrome: floating labels, counters, password reveal, locale-aware numbers, remote paged lists and searchable WAI-ARIA comboboxes.',
+        'TextBox, MaskedTextBox, NumberBox, SelectBox, TagBox, a multi-column combo box, date and color editors and choice groups on one field chrome: floating labels, input masks, live number formatting, remote paged lists and searchable WAI-ARIA comboboxes.',
     },
     {
       key: 'tabs',

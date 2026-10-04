@@ -297,7 +297,7 @@ export const OGE_REACT_GANTT_API: ApiSections = {
           name: 'exportGanttToPdf(handle, options?) / buildGanttPdfDocument(data, options?)',
           type: '@oge-ui/react-gantt/export-pdf',
           description:
-            'Lazy PDF export (<code>jspdf</code> peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination.',
+            'Lazy PDF export (<code>jspdf</code> peer): the chart drawn as vector graphics — scale header, bars with progress fill, summary brackets, milestone diamonds, optional critical-path outlining, multi-page pagination. Text outside WinAnsi (Turkish <code>ğ ş ı İ</code>, Central European, Greek, Cyrillic) needs a Unicode TrueType <code>font</code> — per export, or once for every PDF via <code>setOgePdfDefaultFont({ family, normal, bold })</code> from <code>@oge-ui/behavior</code>; without one the built-in Helvetica cannot draw it (a dev-mode warning says so).',
         },
         {
           name: 'exportGanttToPng(handle, options?) / buildGanttCanvas(data, options?)',

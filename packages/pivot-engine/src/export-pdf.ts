@@ -20,6 +20,9 @@ import {
   createOgePdfDocument,
   ogePdfCellStyles,
   ogePdfLayout,
+  ogePdfTableFont,
+  pdfTexts,
+  warnOgePdfUnicode,
   type OgePdfPageInfo,
   type OgePdfPageOptions,
 } from '@oge-ui/behavior/export-pdf';
@@ -218,6 +221,8 @@ export function buildPivotPdfDocument(
     return [...labels, ...values];
   });
 
+  const family = ogePdfTableFont(options);
+  if (!family) warnOgePdfUnicode(pdfTexts(headRowsOut, body, options));
   autoTable(doc, {
     startY,
     margin,
@@ -227,6 +232,7 @@ export function buildPivotPdfDocument(
     tableWidth: options.fitToWidth === false ? 'wrap' : 'auto',
     theme: 'grid',
     styles: {
+      ...(family ? { font: family } : {}),
       fontSize: options.fontSize ?? 9,
       cellPadding: 2,
       lineWidth: 0.1,

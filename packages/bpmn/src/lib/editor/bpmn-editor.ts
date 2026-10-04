@@ -1310,7 +1310,7 @@ let nextUid = 0;
         @if (showBranding()) {
           <a
             class="oge-bpmn-brand-link"
-            href="https://ogeui.com"
+            href="https://www.ogeui.com"
             target="_blank"
             rel="noopener"
             [attr.aria-label]="core.msg().brandLabel"

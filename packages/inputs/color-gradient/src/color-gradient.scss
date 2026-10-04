@@ -1,0 +1,138 @@
+@use '../../../grid/src/lib/styles/tokens';
+@use '../../color-parts/src/checkerboard' as cb;
+
+// The surface / slider / channel rules ship with the parts
+// (`color-parts.scss`); this sheet only lays the standalone editor out.
+
+.oge-color-gradient {
+  @include tokens.core-tokens;
+
+  display: inline-flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  --oge-color-gradient-width: 264px;
+
+  inline-size: var(--oge-color-gradient-width);
+  max-inline-size: 100%;
+  padding: 12px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius-lg);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+  transition: border-color 120ms ease;
+}
+
+.oge-color-gradient:focus-within {
+  border-color: var(--oge-accent);
+}
+
+.oge-color-gradient-invalid {
+  border-color: var(--oge-danger);
+}
+
+.oge-color-gradient.oge-disabled {
+  opacity: 0.55;
+
+  .oge-color-surface,
+  .oge-color-slider {
+    cursor: default;
+  }
+}
+
+.oge-color-gradient-readonly {
+  .oge-color-surface,
+  .oge-color-slider {
+    cursor: default;
+  }
+}
+
+// --- contrast readout ---------------------------------------------------------
+
+.oge-color-gradient-contrast {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--oge-border-color);
+  font-size: 0.85em;
+}
+
+.oge-color-gradient-contrast-sample {
+  @include cb.checkerboard(6px);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 24px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: calc(var(--oge-radius) - 2px);
+  font-weight: 700;
+}
+
+.oge-color-gradient-contrast-label {
+  color: var(--oge-muted-color);
+}
+
+.oge-color-gradient-contrast-ratio {
+  margin-inline-end: auto;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.oge-color-gradient-contrast-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.9em;
+  font-weight: 600;
+
+  svg {
+    inline-size: 11px;
+    block-size: 11px;
+  }
+}
+
+.oge-color-gradient-contrast-pass {
+  background: var(--oge-success-soft);
+  color: var(--oge-success);
+}
+
+.oge-color-gradient-contrast-fail {
+  background: var(--oge-danger-soft);
+  color: var(--oge-danger);
+}
+
+@include tokens.reduced-motion {
+  .oge-color-gradient {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-color-gradient {
+    border-color: CanvasText;
+  }
+
+  .oge-color-gradient:focus-within {
+    outline: 2px solid Highlight;
+  }
+
+  .oge-color-gradient-contrast-sample {
+    forced-color-adjust: none;
+    border-color: CanvasText;
+  }
+
+  .oge-color-gradient-contrast-badge {
+    border: 1px solid CanvasText;
+  }
+
+  .oge-color-gradient.oge-disabled {
+    color: GrayText;
+  }
+}

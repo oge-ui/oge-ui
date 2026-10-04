@@ -317,7 +317,9 @@ const DEFAULT_LIST_MAX_HEIGHT = 320;
                   </svg>
                 }
               </span>
-              <span class="oge-select-option-text">{{ msg().selectAll }}</span>
+              <span class="oge-select-option-text">{{
+                msg().selectAllText
+              }}</span>
             </div>
           }
           @if (
@@ -1034,7 +1036,12 @@ export class OgeTagBox<TItem = unknown>
   }
 
   protected toggleAll(event: Event): void {
-    this.applySelectAll(this.selectAllState() !== true, event);
+    // select while something can still be added; at the cap (or when all
+    // are on) the same click clears the visible items
+    const select =
+      this.selectAllState() !== true &&
+      ogeCanSelectMore(this.value().length, this.maxSelectedItems());
+    this.applySelectAll(select, event);
     if (!this.adaptiveActive()) this.focus();
   }
 

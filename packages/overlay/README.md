@@ -208,8 +208,8 @@ max visible per region live in `provideOgeOverlayConfig` (`toastPosition`,
 
 The complete machine-readable API reference ships inside the package at
 `node_modules/@oge-ui/overlay/llms.txt` — conventions, every documented member and
-copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
-<https://ogeui.com/llms-full.txt> (the whole suite).
+copy-pasteable demos in one file. Online: <https://www.ogeui.com/llms.txt> (index) and
+<https://www.ogeui.com/llms-full.txt> (the whole suite).
 
 ## License
 

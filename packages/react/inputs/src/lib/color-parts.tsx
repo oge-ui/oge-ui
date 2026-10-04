@@ -5,16 +5,24 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import {
+  applyColorChannelText,
+  colorPaletteNavIndex,
   colorsEqual,
   contrastForeground,
+  formatColor,
+  hsvaToRgba,
   parseColor,
   ratioToValue,
   startSliderDrag,
   valueToRatio,
+  type OgeColorChannel,
+  type OgeHsva,
+  type OgeInputsMessages,
   type OgeRgba,
 } from '@oge-ui/behavior';
 
@@ -38,6 +46,8 @@ interface ColorSurfaceProps {
   roleDescription: string;
   /** `aria-valuetext` naming both axes. */
   valueText: string;
+  /** Inert: no focus, no pointer or keyboard changes. */
+  disabled?: boolean;
   style?: CSSProperties;
   onChanged(change: ColorSurfaceChange): void;
   /** A pointer gesture completed (not emitted on Escape-cancel). */
@@ -80,7 +90,7 @@ export function ColorSurface(props: ColorSurfaceProps) {
   };
 
   const onPointerDown = (event: ReactPointerEvent): void => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || latest.current.disabled) return;
     const host = hostRef.current;
     if (!host) return;
     event.preventDefault();
@@ -108,6 +118,7 @@ export function ColorSurface(props: ColorSurfaceProps) {
   };
 
   const onKeydown = (event: ReactKeyboardEvent): void => {
+    if (latest.current.disabled) return;
     const step = latest.current.keyStep;
     const rtl = isRtl();
     let ds = 0;
@@ -157,7 +168,8 @@ export function ColorSurface(props: ColorSurfaceProps) {
         ref={thumbRef}
         className="oge-color-surface-thumb"
         role="slider"
-        tabIndex={0}
+        tabIndex={props.disabled ? -1 : 0}
+        aria-disabled={props.disabled ? true : undefined}
         data-focus-target=""
         aria-label={props.label}
         aria-roledescription={props.roleDescription}
@@ -191,6 +203,8 @@ interface ColorSliderProps {
   label: string;
   /** `aria-valuetext` — the number alone is not the meaning. */
   valueText: string;
+  /** Inert: no focus, no pointer or keyboard changes. */
+  disabled?: boolean;
   style?: CSSProperties;
   onChanged(change: ColorSliderChange): void;
   /** A pointer gesture completed (not emitted on Escape-cancel). */
@@ -233,7 +247,7 @@ export function ColorSlider(props: ColorSliderProps) {
   };
 
   const onPointerDown = (event: ReactPointerEvent): void => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || latest.current.disabled) return;
     const track = trackRef.current;
     if (!track) return;
     event.preventDefault();
@@ -280,6 +294,7 @@ export function ColorSlider(props: ColorSliderProps) {
   };
 
   const onKeydown = (event: ReactKeyboardEvent): void => {
+    if (latest.current.disabled) return;
     const next = keyboardTarget(latest.current.value, event);
     if (next === null) return;
     event.preventDefault();
@@ -306,7 +321,8 @@ export function ColorSlider(props: ColorSliderProps) {
           ref={thumbRef}
           className="oge-color-slider-thumb"
           role="slider"
-          tabIndex={0}
+          tabIndex={props.disabled ? -1 : 0}
+          aria-disabled={props.disabled ? true : undefined}
           aria-label={props.label}
           aria-valuemin={0}
           aria-valuemax={max}
@@ -342,12 +358,22 @@ interface ColorPaletteProps {
   selected: OgeRgba | null;
   /** Accessible name of the grid. */
   label: string;
+  /** Element id naming the grid instead of `label`. */
+  labelledBy?: string;
+  /** Takes every cell out of the Tab sequence and ignores picks. */
+  disabled?: boolean;
+  /** Cells stay focusable and navigable, picks are ignored. */
+  readonly?: boolean;
+  /** `tabindex` of the roving cell. */
+  tabIndex?: number;
+  invalid?: boolean;
+  required?: boolean;
   onPicked(pick: ColorPalettePick): void;
 }
 
 /**
- * Internal swatch grid of the color panel — the React render of the Angular
- * `oge-color-palette`: an APG `role="grid"` composition with a roving
+ * Internal swatch grid shared by the color box panel and `<OgeColorPalette>`
+ * — the React render of the Angular `oge-color-swatch-grid`: an APG `role="grid"` composition with a roving
  * tabindex and real DOM focus on the cells: arrows move by cell/row, Home/End
  * jump the row edges, Ctrl+Home/Ctrl+End the grid corners, Enter/Space picks.
  * The selected cell carries `aria-selected` and a checkmark colored by
@@ -393,49 +419,38 @@ export function ColorPalette(props: ColorPaletteProps) {
     props.selected !== null && colorsEqual(cell.rgba, props.selected);
 
   const pick = (cell: PaletteCell, event: Event): void => {
+    if (latest.current.disabled) return;
     setActiveOverride(cell.index);
+    if (latest.current.readonly) return;
     latest.current.onPicked({ color: cell.text, event });
   };
 
   const onKeydown = (cell: PaletteCell, event: ReactKeyboardEvent): void => {
-    const count = cells.length;
-    if (count === 0) return;
-    const last = count - 1;
-    const rowStart = cell.index - (cell.index % columns);
-    const rowEnd = Math.min(rowStart + columns - 1, last);
+    if (latest.current.disabled) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      pick(cell, event.nativeEvent);
+      return;
+    }
+    const isNavKey =
+      event.key.startsWith('Arrow') ||
+      event.key === 'Home' ||
+      event.key === 'End';
+    if (!isNavKey) return;
+    event.preventDefault();
     const rtl =
       !!hostRef.current &&
       getComputedStyle(hostRef.current).direction === 'rtl';
-    let next: number | null = null;
-    switch (event.key) {
-      case 'ArrowRight':
-        next = cell.index + (rtl ? -1 : 1);
-        break;
-      case 'ArrowLeft':
-        next = cell.index + (rtl ? 1 : -1);
-        break;
-      case 'ArrowDown':
-        next = cell.index + columns;
-        break;
-      case 'ArrowUp':
-        next = cell.index - columns;
-        break;
-      case 'Home':
-        next = event.ctrlKey ? 0 : rowStart;
-        break;
-      case 'End':
-        next = event.ctrlKey ? last : rowEnd;
-        break;
-      case 'Enter':
-      case ' ':
-        event.preventDefault();
-        pick(cell, event.nativeEvent);
-        return;
-      default:
-        return;
-    }
-    event.preventDefault();
-    if (next === null || next < 0 || next > last) return;
+    // the APG grid key map is shared with the Angular grid (`behavior`)
+    const next = colorPaletteNavIndex(
+      event.key,
+      cell.index,
+      cells.length,
+      columns,
+      rtl,
+      event.ctrlKey || event.metaKey,
+    );
+    if (next === null) return;
     setActiveOverride(next);
     // focus after React applies the new tabindex — same tick is fine, the
     // element already exists
@@ -449,7 +464,11 @@ export function ColorPalette(props: ColorPaletteProps) {
       ref={hostRef}
       className="oge-color-palette"
       role="grid"
-      aria-label={props.label}
+      aria-label={props.labelledBy ? undefined : props.label}
+      aria-labelledby={props.labelledBy}
+      aria-disabled={props.disabled ? true : undefined}
+      aria-readonly={props.readonly ? true : undefined}
+      aria-invalid={props.invalid ? true : undefined}
       style={
         {
           '--oge-color-palette-columns': columns,
@@ -468,7 +487,11 @@ export function ColorPalette(props: ColorPaletteProps) {
                 .filter(Boolean)
                 .join(' ')}
               role="gridcell"
-              tabIndex={cell.index === active ? 0 : -1}
+              tabIndex={
+                cell.index === active && !props.disabled
+                  ? (props.tabIndex ?? 0)
+                  : -1
+              }
               aria-selected={isSelected(cell)}
               aria-label={cell.text}
               data-index={cell.index}
@@ -495,6 +518,133 @@ export function ColorPalette(props: ColorPaletteProps) {
           ))}
         </div>
       ))}
+    </div>
+  );
+}
+
+/** A working-color change from one of the channel inputs. */
+export interface ColorChannelChange {
+  hsva: OgeHsva;
+  event: Event;
+}
+
+interface ColorChannelInputsProps {
+  /** The working color the inputs show. */
+  hsva: OgeHsva;
+  /** Renders the alpha-percent input and an alpha-carrying hex. */
+  editAlpha: boolean;
+  /** The resolved message catalog (aria labels of the inputs). */
+  messages: OgeInputsMessages;
+  disabled?: boolean;
+  readonly?: boolean;
+  /** Rendered before the fields (the color box's eyedropper). */
+  children?: ReactNode;
+  onChanged(change: ColorChannelChange): void;
+}
+
+const RGB_CHANNELS = [
+  { key: 'r', tag: 'R', label: 'redInputLabel' },
+  { key: 'g', tag: 'G', label: 'greenInputLabel' },
+  { key: 'b', tag: 'B', label: 'blueInputLabel' },
+] as const;
+
+/**
+ * Internal hex + R/G/B (+ alpha percent) inputs shared by the color box panel
+ * and `<OgeColorGradient>` — the React render of the Angular
+ * `oge-color-channel-inputs`. Uncontrolled inputs synced from the working
+ * color, committed on the native `change` event (blur / Enter), never per
+ * keystroke; unusable text is reverted in place. The parse rules are
+ * `applyColorChannelText` from `@oge-ui/behavior`.
+ */
+export function ColorChannelInputs(props: ColorChannelInputsProps) {
+  const rgba = hsvaToRgba(props.hsva);
+  const alphaPercent = Math.round(props.hsva.a * 100);
+  const hexText = formatColor(rgba, 'hex', props.editAlpha);
+  const latest = useRef(props);
+  latest.current = props;
+
+  const shown = (channel: OgeColorChannel): string =>
+    channel === 'hex'
+      ? hexText
+      : channel === 'a'
+        ? String(alphaPercent)
+        : String(rgba[channel]);
+
+  const onChange = (
+    channel: OgeColorChannel,
+    element: HTMLInputElement,
+    event: Event,
+  ): void => {
+    if (latest.current.readonly || latest.current.disabled) return;
+    if (element.value === shown(channel)) return; // nothing edited
+    const next = applyColorChannelText(
+      latest.current.hsva,
+      channel,
+      element.value,
+    );
+    if (next === null) {
+      element.value = shown(channel); // revert — a wrong color is never applied
+      return;
+    }
+    latest.current.onChanged({ hsva: next, event });
+  };
+
+  // React fires `onChange` per keystroke; the Angular `(change)` semantics
+  // (apply on blur / Enter) are recovered with uncontrolled inputs — keyed by
+  // the shown text, so a new working color remounts them with fresh values.
+  const field = (
+    channel: OgeColorChannel,
+    tag: string,
+    label: string,
+    numeric: { max: number } | null,
+  ) => (
+    <label
+      key={channel}
+      className={
+        channel === 'hex'
+          ? 'oge-color-box-field oge-color-box-field-hex'
+          : 'oge-color-box-field'
+      }
+    >
+      <input
+        key={`${channel}-${shown(channel)}`}
+        className="oge-color-box-channel"
+        type={numeric ? 'number' : 'text'}
+        min={numeric ? 0 : undefined}
+        max={numeric?.max}
+        spellCheck={numeric ? undefined : false}
+        autoComplete={numeric ? undefined : 'off'}
+        defaultValue={shown(channel)}
+        disabled={props.disabled}
+        readOnly={props.readonly}
+        aria-label={label}
+        onBlur={(event) =>
+          onChange(channel, event.target as HTMLInputElement, event.nativeEvent)
+        }
+        onKeyDown={(event) => {
+          event.stopPropagation();
+          if (event.key === 'Enter') {
+            onChange(channel, event.currentTarget, event.nativeEvent);
+          }
+        }}
+      />
+      <span className="oge-color-box-field-tag" aria-hidden="true">
+        {tag}
+      </span>
+    </label>
+  );
+
+  return (
+    <div className="oge-color-box-fields">
+      {props.children}
+      {field('hex', 'HEX', props.messages.hexInputLabel, null)}
+      {RGB_CHANNELS.map((channel) =>
+        field(channel.key, channel.tag, props.messages[channel.label], {
+          max: 255,
+        }),
+      )}
+      {props.editAlpha &&
+        field('a', 'A', props.messages.alphaInputLabel, { max: 100 })}
     </div>
   );
 }

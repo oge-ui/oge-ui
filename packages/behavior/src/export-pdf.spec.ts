@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   buildPdfDocument,
   buildTreePdfDocument,
   ogePdfCellStyles,
+  setOgePdfDefaultFont,
 } from './export-pdf';
 import { buildOgeExportItems } from './lib/grid/grid-export';
 import type { OgeExportColumn } from './lib/grid/grid-options';
@@ -135,6 +138,52 @@ describe('buildPdfDocument (rich)', () => {
       fillColor: '#eeeeee',
       lineWidth: 0.2,
     });
+  });
+});
+
+describe('Unicode fonts (Turkish text)', () => {
+  // the docs site ships Noto Sans for exactly this; any Unicode TTF works
+  const noto = readFileSync(
+    resolve(
+      import.meta.dirname,
+      '../../../apps/dev-app/public/fonts/NotoSans-Regular.ttf',
+    ),
+  );
+  const TURKISH: Sale[] = [
+    { region: 'İstanbul', amount: 1 },
+    { region: 'Muğla', amount: 2 },
+    { region: 'Eskişehir', amount: 3 },
+  ];
+
+  afterEach(() => setOgePdfDefaultFont(null));
+
+  it('embeds the font and uses it for the table, title and page chrome', () => {
+    const doc = buildPdfDocument(
+      { rows: TURKISH, columns: COLUMNS },
+      {
+        title: 'Şehirler',
+        pageNumbers: true,
+        font: { family: 'NotoSans', normal: new Uint8Array(noto) },
+      },
+    );
+    expect(Object.keys(doc.getFontList())).toContain('NotoSans');
+    const pdf = String(doc.output());
+    expect(pdf).toContain('/FontFile2'); // the TTF is embedded…
+    expect(pdf).toContain('/Identity-H'); // …with Unicode (CID) encoding
+    // the body is drawn in the embedded family, not a WinAnsi built-in
+    expect(doc.getFont().fontName).toBe('NotoSans');
+  });
+
+  it('picks up the registered default font', () => {
+    setOgePdfDefaultFont({ family: 'NotoSans', normal: new Uint8Array(noto) });
+    const doc = buildPdfDocument({ rows: TURKISH, columns: COLUMNS });
+    expect(Object.keys(doc.getFontList())).toContain('NotoSans');
+    // `font: null` opts a single export back out
+    const plain = buildPdfDocument(
+      { rows: [{ region: 'Ankara', amount: 1 }], columns: COLUMNS },
+      { font: null },
+    );
+    expect(String(plain.output())).not.toContain('/FontFile2');
   });
 });
 

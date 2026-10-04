@@ -141,6 +141,13 @@ export abstract class OgeControlBase<T> implements ControlValueAccessor {
   protected readonly selfDirty = signal(false);
   /** Set by subclasses whose text cannot be parsed (number box). */
   protected readonly parseInvalid = signal(false);
+  /**
+   * Set by subclasses whose value breaks the editor's own format rule (a
+   * text box `mask` with required slots left empty) — the message to show.
+   * Unlike `parseInvalid` it follows `errorDisplay` (default: after blur),
+   * because an unfinished mask is normal while typing.
+   */
+  protected readonly formatError = signal<string | null>(null);
   private readonly formsDisabled = signal(false);
   private readonly cvaState = signal<{
     invalid: boolean;
@@ -163,7 +170,8 @@ export abstract class OgeControlBase<T> implements ControlValueAccessor {
       this.invalid() ||
       this.errors().length > 0 ||
       this.cvaState().invalid ||
-      this.parseInvalid(),
+      this.parseInvalid() ||
+      this.formatError() !== null,
   );
 
   readonly showError = computed(() => {
@@ -184,6 +192,8 @@ export abstract class OgeControlBase<T> implements ControlValueAccessor {
     const explicit = this.errorText();
     if (explicit) return explicit;
     if (this.parseInvalid()) return this.parseErrorMessage();
+    const formatError = this.formatError();
+    if (formatError !== null) return formatError;
     const resolved = resolveErrorMessage(
       this.errors(),
       this.cvaState().errors,

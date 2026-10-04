@@ -1336,7 +1336,7 @@ export const OGE_REACT_GRID_TYPES_API: ApiSections = {
           name: 'exportGridToPdf(grid, options?)',
           type: '@oge-ui/react-grid/export-pdf',
           description:
-            'Downloads the current view as <code>.pdf</code>: the header block repeated per page, group and summary rows, grid widths fitted to the page (<code>fitToWidth</code>), <code>title</code>, <code>orientation</code>, <code>pageFormat</code>, <code>pageHeader</code> / <code>pageFooter</code> callbacks and <code>pageNumbers</code>. <code>jspdf</code> and <code>jspdf-autotable</code> are optional peers; <code>buildPdfDocument</code> is exported alongside.',
+            'Downloads the current view as <code>.pdf</code>: the header block repeated per page, group and summary rows, grid widths fitted to the page (<code>fitToWidth</code>), <code>title</code>, <code>orientation</code>, <code>pageFormat</code>, <code>pageHeader</code> / <code>pageFooter</code> callbacks and <code>pageNumbers</code>. <code>jspdf</code> and <code>jspdf-autotable</code> are optional peers; <code>buildPdfDocument</code> is exported alongside. Text outside WinAnsi (Turkish <code>ğ ş ı İ</code>, Central European, Greek, Cyrillic) needs a Unicode TrueType <code>font</code> — per export, or once for every PDF via <code>setOgePdfDefaultFont({ family, normal, bold })</code> from <code>@oge-ui/behavior</code>; without one the built-in Helvetica cannot draw it (a dev-mode warning says so).',
         },
         {
           name: 'OgeExcelExportOptions&lt;T&gt; / OgePdfExportOptions&lt;T&gt; / OgePdfPageInfo',
