@@ -26,6 +26,15 @@ export interface ChartScale {
   readonly ticks: readonly number[];
   /** Time scales: the tick unit the generator chose. */
   readonly tickUnit?: TimeTickUnit;
+  /** Minor tick positions (axis `minorTicks`), domain units. */
+  readonly minorTicks?: readonly number[];
+  /** Value-axis breaks as laid out (`createBrokenLinearScale`). */
+  readonly breaks?: readonly {
+    readonly start: number;
+    readonly end: number;
+    /** Gap center, px from the range start. */
+    readonly px: number;
+  }[];
 }
 
 export type TimeTickUnit =

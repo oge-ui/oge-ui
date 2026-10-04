@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import {
   OgeChart,
   OgePieChart,
   OgePolarChart,
   type OgeChartAxisOptions,
   type OgeChartLabelOptions,
+  type OgeChartPane,
   type OgeChartPointInfo,
-  type OgeChartRange,
   type OgeChartSeriesInput,
   type OgePieSeriesInput,
 } from '@oge-ui/charts';
@@ -97,25 +97,18 @@ const BUTTON =
     <app-demo-card
       [chips]="['Bollinger', 'EMA', 'RSI', 'linear trendline', 'R²']"
       heading="Trendlines & indicators"
-      description="<code>type: 'indicator'</code> series compute SMA, EMA, Bollinger Bands, MACD or RSI from the close prices — the same pure <code>ogeSma</code>/<code>ogeEma</code>/<code>ogeBollingerBands</code>/<code>ogeMacd</code>/<code>ogeRsi</code> you can import. The RSI chart below shares the zoom window (wheel over the price chart). <code>trendline</code> fits linear, exponential, logarithmic, polynomial or moving-average lines; <code>showR2</code> adds the fit to the tooltip."
+      description="<code>type: 'indicator'</code> series compute SMA, EMA, Bollinger Bands, MACD or RSI from the close prices — the same pure <code>ogeSma</code>/<code>ogeEma</code>/<code>ogeBollingerBands</code>/<code>ogeMacd</code>/<code>ogeRsi</code> you can import. The RSI series sets <code>pane: 'rsi'</code> and draws in its own pane under the price, on the shared argument axis (wheel zooms both). <code>trendline</code> fits linear, exponential, logarithmic, polynomial or moving-average lines; <code>showR2</code> adds the fit to the tooltip."
       [code]="trendlinesSnippet"
       language="ts"
     >
       <oge-chart
         [dataSource]="prices"
         [series]="priceSeries"
-        [(visualRange)]="range"
+        [panes]="panes"
+        [valueAxis]="paneAxes"
         zoomEnabled="wheel"
         [tooltip]="{ shared: true }"
-        style="height: 320px"
-      />
-      <oge-chart
-        [dataSource]="prices"
-        [series]="rsiSeries"
-        [(visualRange)]="range"
-        [valueAxis]="{ min: 0, max: 100 }"
-        [legend]="{ visible: false }"
-        style="height: 150px"
+        style="height: 440px"
       />
       <oge-chart
         [dataSource]="campaigns"
@@ -263,7 +256,14 @@ export class ChartsAnalyticsDemos {
   ];
 
   /* trendlines & indicators */
-  protected readonly range = signal<OgeChartRange | null>(null);
+  protected readonly panes: OgeChartPane[] = [
+    { name: 'price', height: 3 },
+    { name: 'rsi', height: 1 },
+  ];
+  protected readonly paneAxes: OgeChartAxisOptions[] = [
+    { pane: 'price', title: 'Price' },
+    { pane: 'rsi', title: 'RSI', min: 0, max: 100 },
+  ];
   protected readonly prices = Array.from({ length: 60 }, (_, i) => {
     const base = 100 + Math.sin(i / 6) * 8 + i * 0.4;
     return {
@@ -297,13 +297,12 @@ export class ChartsAnalyticsDemos {
       indicator: { type: 'ema', period: 10 },
       dashStyle: 'dash',
     },
-  ];
-  protected readonly rsiSeries: OgeChartSeriesInput[] = [
     {
       type: 'indicator',
       argumentField: 'day',
       closeField: 'close',
       indicator: { type: 'rsi', period: 14 },
+      pane: 'rsi',
     },
   ];
   protected readonly campaigns = Array.from({ length: 24 }, (_, i) => ({

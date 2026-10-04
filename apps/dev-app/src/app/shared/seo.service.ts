@@ -416,6 +416,10 @@ export const DESCRIPTIONS: readonly (readonly [string, string])[] = [
     'Angular Charts by OGE UI: line, bar, area, candlestick, pie, polar and range selector charts on an SVG kernel with zoom, pan, tooltips and annotations.',
   ],
   [
+    '/components/charts/axes-layout',
+    'Chart axes and layout: rotated horizontal bars, price and volume panes, constant lines and strips, axis breaks, tick intervals, RTL, pinch zoom and draw-in.',
+  ],
+  [
     '/components/charts/api',
     'Angular Charts API reference: every input, output and type of oge-chart, oge-pie-chart, oge-polar-chart and oge-range-selector, plus chart configuration.',
   ],

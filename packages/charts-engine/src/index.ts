@@ -9,10 +9,18 @@
 
 export {
   OGE_CHART_PALETTE,
+  type OgeChartAnimationEasing,
+  type OgeChartAnimationOptions,
   type OgeChartAnnotation,
+  type OgeChartAxisBreak,
+  type OgeChartAxisLabelOptions,
   type OgeChartAxisOptions,
+  type OgeChartAxisStrip,
   type OgeChartAxisType,
+  type OgeChartConstantLine,
   type OgeChartCrosshairOptions,
+  type OgeChartCustomPeriod,
+  type OgeChartDateInterval,
   type OgeChartExportData,
   type OgeChartIndicatorOptions,
   type OgeChartLabelInfo,
@@ -20,7 +28,12 @@ export {
   type OgeChartLabelPosition,
   type OgeChartLegendClickEvent,
   type OgeChartLegendItem,
+  type OgeChartLabelFormat,
+  type OgeChartLabelOverlap,
   type OgeChartLegendOptions,
+  type OgeChartMinorTickOptions,
+  type OgeChartPane,
+  type OgeChartPeriod,
   type OgeChartPieSliceEvent,
   type OgeChartPoint,
   type OgeChartPointCustomizer,
@@ -36,6 +49,7 @@ export {
   type OgeChartSeriesType,
   type OgeChartSmallValuesGrouping,
   type OgeChartStripLine,
+  type OgeChartTickInterval,
   type OgeChartTooltipOptions,
   type OgeChartTooltipShowingEvent,
 } from './lib/charts-types';
@@ -51,6 +65,7 @@ export {
   type OgeChartsConfigInput,
   type OgeChartsMessages,
   type OgeChartsValueMessages,
+  type OgeChartsPeriodMessages,
 } from './lib/charts-config';
 
 /* ---------------- analytics (pure) ---------------- */
@@ -92,17 +107,25 @@ export {
   cartesianActivePoints,
   cartesianAriaLabel,
   cartesianCrosshair,
+  cartesianDragArgDelta,
   cartesianExportData,
   cartesianHoverAt,
+  cartesianDataLabelAnchor,
+  cartesianLabelTransform,
   cartesianNearestSeries,
   cartesianPanRange,
+  cartesianPinchRange,
+  cartesianPlotArgPx,
   cartesianPointAnnouncement,
   cartesianSelectionRange,
   cartesianPointEventColor,
+  cartesianSeriesEnterOrigin,
+  cartesianSeriesPane,
   cartesianSrRows,
   cartesianTooltip,
   cartesianTooltipRowText,
   cartesianWheelRange,
+  cartesianZoomRect,
   cartesianZoomTo,
   chartArgumentText,
   chartDragMode,
@@ -111,6 +134,8 @@ export {
   chartPointColor,
   chartSeriesColor,
   chartSeriesGroupOpacity,
+  chartTouchAction,
+  chartTouchGestures,
   chartValueAxesList,
   chartValueText,
   chartWheelZoomEnabled,
@@ -125,7 +150,9 @@ export {
   type OgeCartesianScene,
   type OgeCartesianSceneInput,
   type OgeChartAnnotationVm,
+  type OgeChartAxisLabelVm,
   type OgeChartAxisTick,
+  type OgeChartAxisTitleVm,
   type OgeChartCrosshairVm,
   type OgeChartLegendEntry,
   type OgeChartPlotRect,
@@ -142,6 +169,45 @@ export {
   type OgeChartTooltipVm,
   type OgeChartValueAxisVm,
 } from './lib/cartesian-model';
+export {
+  CHART_PANE_GAP,
+  bindChartPaneAxes,
+  chartPaneAt,
+  chartPaneList,
+  chartValueAxisSlots,
+  layoutChartGuides,
+  layoutChartPanes,
+  type OgeChartAxisBinding,
+  type OgeChartAxisSlots,
+  type OgeChartBreakMarkerVm,
+  type OgeChartGridLineVm,
+  type OgeChartGuideLabelVm,
+  type OgeChartGuideVm,
+  type OgeChartPaneVm,
+} from './lib/cartesian-layout';
+export {
+  createChartFrame,
+  detectChartRtl,
+  frameLabelAnchor,
+  frameLabelBaseline,
+  frameLine,
+  frameLogical,
+  framePoint,
+  frameRect,
+  frameTextTransform,
+  type OgeChartFrame,
+  type OgeChartLineVm,
+  type OgeChartRectVm,
+  type OgeChartXY,
+} from './lib/chart-frame';
+export {
+  CHART_DRAW_IN_MS,
+  chartAnimationVars,
+  chartPrefersReducedMotion,
+  chartSeriesEnterOrigin,
+  resolveChartAnimation,
+  type OgeChartResolvedAnimation,
+} from './lib/chart-animation';
 export {
   buildPieScene,
   pieAriaLabel,
@@ -193,10 +259,13 @@ export {
   rangeSelectorDeltaValue,
   rangeSelectorEffective,
   rangeSelectorLabel,
+  rangeSelectorPeriodRange,
+  rangeSelectorPeriods,
   rangeSelectorWindowPx,
   rangeWindowDragRange,
   type OgeRangeSelectorData,
   type OgeRangeSelectorDataInput,
+  type OgeRangeSelectorPeriodVm,
   type OgeRangeSelectorScene,
   type OgeRangeSelectorSceneInput,
   type OgeRangeSelectorSeriesVm,
@@ -213,7 +282,12 @@ export {
 } from './lib/chart-keyboard';
 export {
   beginChartGesture,
+  createChartPinchTracker,
   type ChartGestureCallbacks,
+  type ChartGestureHandle,
+  type ChartPinchCallbacks,
+  type ChartPinchPoint,
+  type ChartPinchTracker,
 } from './lib/chart-gesture';
 export {
   measureChartElement,
@@ -304,6 +378,7 @@ export {
 export { downsamplePath } from './lib/downsample';
 export {
   decideLabelLayout,
+  hideOverlappingLabels,
   numberFormat,
   siFormat,
   timeTickFormatter,
@@ -316,6 +391,24 @@ export {
   type ArgumentIndex,
 } from './lib/hit-test';
 export { panRange, rangeFromSelection, zoomRangeAt } from './lib/zoom-math';
+export {
+  CHART_BREAK_GAP_PX,
+  addChartDateInterval,
+  applyChartTickOptions,
+  chartDateIntervalUnit,
+  chartMinorTicks,
+  createBrokenLinearScale,
+  isChartDateInterval,
+  normalizeChartBreaks,
+  offsetChartScale,
+  type ChartScaleBreak,
+  type ChartTickOptions,
+} from './lib/axis-scale';
+export {
+  applyChartLabelTemplate,
+  chartArgumentLabelFormatter,
+  chartValueLabelFormatter,
+} from './lib/axis-labels';
 export {
   buildPieSlices,
   groupSmallValues,

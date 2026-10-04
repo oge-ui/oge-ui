@@ -131,13 +131,26 @@ const goalSeries: OgeChartSeriesInput[] = [
   {
     title: 'Trendlines & indicators',
     source: reactDemoSource({
-      react: ['useState'],
       use: { '@oge-ui/react-charts': ['OgeChart'] },
       types: {
-        '@oge-ui/react-charts': ['OgeChartRange', 'OgeChartSeriesInput'],
+        '@oge-ui/react-charts': [
+          'OgeChartAxisOptions',
+          'OgeChartPane',
+          'OgeChartSeriesInput',
+        ],
       },
       name: 'Indicators',
-      before: `const prices = Array.from({ length: 60 }, (_, i) => {
+      before: `const panes: OgeChartPane[] = [
+  { name: 'price', height: 3 },
+  { name: 'rsi', height: 1 },
+];
+
+const paneAxes: OgeChartAxisOptions[] = [
+  { pane: 'price', title: 'Price' },
+  { pane: 'rsi', title: 'RSI', min: 0, max: 100 },
+];
+
+const prices = Array.from({ length: 60 }, (_, i) => {
   const base = 100 + Math.sin(i / 6) * 8 + i * 0.4;
   return {
     day: new Date(2026, 0, 1 + i),
@@ -171,14 +184,12 @@ const priceSeries: OgeChartSeriesInput[] = [
     indicator: { type: 'ema', period: 10 },
     dashStyle: 'dash',
   },
-];
-
-const rsiSeries: OgeChartSeriesInput[] = [
   {
     type: 'indicator',
     argumentField: 'day',
     closeField: 'close',
     indicator: { type: 'rsi', period: 14 },
+    pane: 'rsi',
   },
 ];
 
@@ -196,29 +207,19 @@ const campaignSeries: OgeChartSeriesInput[] = [
     trendline: { type: 'linear', showR2: true },
   },
 ];`,
-      body: `const [range, setRange] = useState<OgeChartRange | null>(null);`,
       jsx: `<>
   {/* Technical indicators are series: type 'indicator' computes SMA, EMA,
       Bollinger Bands, MACD or RSI from the close prices (the same pure
       ogeSma/ogeEma/ogeBollingerBands/ogeMacd/ogeRsi you can import). The
-      RSI sits in a second chart that shares the zoom window. */}
+      RSI draws in its own pane under the price, sharing the argument axis. */}
   <OgeChart
     dataSource={prices}
     series={priceSeries}
-    visualRange={range}
-    onVisualRangeChange={setRange}
+    panes={panes}
+    valueAxis={paneAxes}
     zoomEnabled="wheel"
     tooltip={{ shared: true }}
-    style={{ height: 320 }}
-  />
-  <OgeChart
-    dataSource={prices}
-    series={rsiSeries}
-    visualRange={range}
-    onVisualRangeChange={setRange}
-    valueAxis={{ min: 0, max: 100 }}
-    legend={{ visible: false }}
-    style={{ height: 150 }}
+    style={{ height: 440 }}
   />
   {/* Trendlines: linear, exponential, logarithmic, polynomial or moving
       average over any series; showR2 adds the fit to the tooltip. */}

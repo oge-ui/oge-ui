@@ -131,11 +131,82 @@
   display: block;
   touch-action: pan-y;
   user-select: none;
+  // geometry and text anchors are computed per direction by the engine; a
+  // page-level `dir="rtl"` must not flip `text-anchor` a second time
+  direction: ltr;
 }
 
 .oge-chart-grid {
   stroke: var(--oge-chart-grid-line);
   stroke-width: 1;
+}
+
+// touch zoom / pan on: the browser keeps only the page scroll across the
+// argument axis — pinch and the along-axis drag belong to the chart
+.oge-chart-touch-pan-y {
+  touch-action: pan-y;
+}
+
+.oge-chart-touch-pan-x {
+  touch-action: pan-x;
+}
+
+.oge-chart-grid-minor {
+  stroke-dasharray: 2 3;
+  opacity: 0.55;
+}
+
+.oge-chart-tick-mark {
+  stroke: var(--oge-chart-axis-line);
+  stroke-width: 1;
+}
+
+/* ---------- axis breaks ---------- */
+
+.oge-chart-break-gap {
+  fill: var(--oge-bg);
+  pointer-events: none;
+}
+
+.oge-chart-break-line {
+  fill: none;
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+/* ---------- first-render draw-in ---------- */
+
+// each series grows from its value-axis baseline (transform-origin is set
+// per series); the keyframes scale the logical value dimension, so the same
+// rule grows columns up and rotated bars sideways
+.oge-chart-series-enter {
+  transform-box: view-box;
+  animation: oge-chart-draw-in var(--oge-chart-anim-duration, 600ms)
+    var(--oge-chart-anim-easing, ease-out) both;
+}
+
+@keyframes oge-chart-draw-in {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  to {
+    transform: none;
+  }
+}
+
+.oge-chart-static {
+  .oge-chart-bar,
+  .oge-chart-marker,
+  .oge-chart-legend-btn {
+    transition: none;
+  }
 }
 
 .oge-chart-axis-line {
@@ -329,6 +400,22 @@
   pointer-events: none;
 }
 
+.oge-chart-constant-line {
+  stroke: var(--oge-danger);
+  pointer-events: none;
+}
+
+.oge-chart-constant-label {
+  fill: var(--oge-danger);
+  font-size: 11px;
+  font-weight: 600;
+  // a halo keeps the label legible over grid lines and series
+  paint-order: stroke;
+  stroke: var(--oge-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
 .oge-chart-annotation-dot {
   fill: var(--oge-accent);
   stroke: var(--oge-bg);
@@ -370,6 +457,49 @@
 .oge-range-wrap {
   min-height: 90px;
   height: 90px;
+}
+
+.oge-range-periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 8px 0;
+}
+
+.oge-range-period {
+  min-inline-size: 36px;
+  padding: 3px 9px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+  }
+}
+
+.oge-range-period-active {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-weight: 600;
+
+  &:hover {
+    background: var(--oge-accent-soft);
+  }
 }
 
 .oge-range-shade {
@@ -423,6 +553,19 @@
   box-shadow: var(--oge-shadow-btn);
 }
 
+// the balloon opens away from the nearer plot edge
+.oge-chart-tooltip-end-x {
+  transform: translateX(-100%);
+}
+
+.oge-chart-tooltip-end-y {
+  transform: translateY(-100%);
+}
+
+.oge-chart-tooltip-end-x.oge-chart-tooltip-end-y {
+  transform: translate(-100%, -100%);
+}
+
 .oge-chart-tooltip-arg {
   font-weight: 600;
   font-size: 12px;
@@ -454,8 +597,13 @@
   .oge-chart-bar,
   .oge-chart-marker,
   .oge-chart-pie-slice,
-  .oge-chart-legend-btn {
+  .oge-chart-legend-btn,
+  .oge-range-period {
     transition: none;
+  }
+
+  .oge-chart-series-enter {
+    animation: none;
   }
 }
 
@@ -467,16 +615,41 @@
   }
 
   .oge-chart-axis-line,
+  .oge-chart-tick-mark,
+  .oge-chart-break-line,
   .oge-chart-candle-wick,
   .oge-chart-pie-connector,
   .oge-chart-annotation-connector {
     stroke: CanvasText;
   }
 
+  .oge-chart-break-gap {
+    fill: Canvas;
+  }
+
+  .oge-chart-constant-line {
+    stroke: CanvasText;
+  }
+
   .oge-chart-axis-label,
   .oge-chart-axis-title,
-  .oge-chart-strip-label {
+  .oge-chart-strip-label,
+  .oge-chart-constant-label {
     fill: CanvasText;
+  }
+
+  .oge-chart-constant-label {
+    stroke: Canvas;
+  }
+
+  .oge-range-period {
+    border: 1px solid ButtonText;
+  }
+
+  .oge-range-period-active {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
   }
 
   .oge-chart-no-data {

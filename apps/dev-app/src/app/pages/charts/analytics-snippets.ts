@@ -118,26 +118,25 @@ protected readonly goalSeries: OgeChartSeriesInput[] = [
 
 export const TRENDLINES_INDICATORS_SNIPPET = demoSource({
   use: { '@oge-ui/charts': ['OgeChart'] },
-  types: { '@oge-ui/charts': ['OgeChartRange', 'OgeChartSeriesInput'] },
+  types: {
+    '@oge-ui/charts': [
+      'OgeChartAxisOptions',
+      'OgeChartPane',
+      'OgeChartSeriesInput',
+    ],
+  },
   template: `<!-- Technical indicators are series: type 'indicator' computes SMA,
      EMA, Bollinger Bands, MACD or RSI from the close prices (the same pure
      ogeSma/ogeEma/ogeBollingerBands/ogeMacd/ogeRsi you can import). The
-     RSI sits in a second chart that shares the zoom window. -->
+     RSI draws in its own pane under the price, sharing the argument axis. -->
 <oge-chart
   [dataSource]="prices"
   [series]="priceSeries"
-  [(visualRange)]="range"
+  [panes]="panes"
+  [valueAxis]="paneAxes"
   zoomEnabled="wheel"
   [tooltip]="{ shared: true }"
-  style="height: 320px"
-/>
-<oge-chart
-  [dataSource]="prices"
-  [series]="rsiSeries"
-  [(visualRange)]="range"
-  [valueAxis]="{ min: 0, max: 100 }"
-  [legend]="{ visible: false }"
-  style="height: 150px"
+  style="height: 440px"
 />
 <!-- Trendlines: linear, exponential, logarithmic, polynomial or moving
      average over any series; showR2 adds the fit to the tooltip. -->
@@ -148,7 +147,15 @@ export const TRENDLINES_INDICATORS_SNIPPET = demoSource({
   [valueAxis]="{ title: 'Revenue (k€)' }"
   style="height: 300px"
 />`,
-  body: `protected readonly range = signal<OgeChartRange | null>(null);
+  body: `protected readonly panes: OgeChartPane[] = [
+  { name: 'price', height: 3 },
+  { name: 'rsi', height: 1 },
+];
+
+protected readonly paneAxes: OgeChartAxisOptions[] = [
+  { pane: 'price', title: 'Price' },
+  { pane: 'rsi', title: 'RSI', min: 0, max: 100 },
+];
 
 protected readonly prices = Array.from({ length: 60 }, (_, i) => {
   const base = 100 + Math.sin(i / 6) * 8 + i * 0.4;
@@ -184,14 +191,12 @@ protected readonly priceSeries: OgeChartSeriesInput[] = [
     indicator: { type: 'ema', period: 10 },
     dashStyle: 'dash',
   },
-];
-
-protected readonly rsiSeries: OgeChartSeriesInput[] = [
   {
     type: 'indicator',
     argumentField: 'day',
     closeField: 'close',
     indicator: { type: 'rsi', period: 14 },
+    pane: 'rsi',
   },
 ];
 

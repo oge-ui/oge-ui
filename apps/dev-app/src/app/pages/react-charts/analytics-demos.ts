@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { createElement, useRef, useState, type ReactNode } from 'react';
+import { createElement, useRef, type ReactNode } from 'react';
 import {
   OgeChart,
   OgePieChart,
@@ -7,7 +7,7 @@ import {
   type OgeChartAxisOptions,
   type OgeChartHandle,
   type OgeChartLabelOptions,
-  type OgeChartRange,
+  type OgeChartPane,
   type OgeChartSeriesInput,
   type OgePieSeriesInput,
 } from '@oge-ui/react-charts';
@@ -124,14 +124,21 @@ const priceSeries: OgeChartSeriesInput[] = [
     indicator: { type: 'ema', period: 10 },
     dashStyle: 'dash',
   },
-];
-const rsiSeries: OgeChartSeriesInput[] = [
   {
     type: 'indicator',
     argumentField: 'day',
     closeField: 'close',
     indicator: { type: 'rsi', period: 14 },
+    pane: 'rsi',
   },
+];
+const panes: OgeChartPane[] = [
+  { name: 'price', height: 3 },
+  { name: 'rsi', height: 1 },
+];
+const paneAxes: OgeChartAxisOptions[] = [
+  { pane: 'price', title: 'Price' },
+  { pane: 'rsi', title: 'RSI', min: 0, max: 100 },
 ];
 const campaigns = Array.from({ length: 24 }, (_, i) => ({
   spend: 5 + i * 2,
@@ -295,27 +302,17 @@ function DataLabelsDemo(): ReactNode {
 }
 
 function IndicatorsDemo(): ReactNode {
-  const [range, setRange] = useState<OgeChartRange | null>(null);
   return createElement(
     'div',
     null,
     createElement(OgeChart, {
       dataSource: prices,
       series: priceSeries,
-      visualRange: range,
-      onVisualRangeChange: setRange,
+      panes,
+      valueAxis: paneAxes,
       zoomEnabled: 'wheel',
       tooltip: { shared: true },
-      style: { height: 320 },
-    }),
-    createElement(OgeChart, {
-      dataSource: prices,
-      series: rsiSeries,
-      visualRange: range,
-      onVisualRangeChange: setRange,
-      valueAxis: { min: 0, max: 100 },
-      legend: { visible: false },
-      style: { height: 150 },
+      style: { height: 440 },
     }),
     createElement(OgeChart, {
       dataSource: campaigns,
@@ -415,7 +412,7 @@ function ExportDemo(): ReactNode {
     <app-demo-card
       [chips]="['Bollinger', 'EMA', 'RSI', 'linear trendline', 'R²']"
       heading="Trendlines & indicators"
-      description="<code>type: 'indicator'</code> series compute SMA, EMA, Bollinger Bands, MACD or RSI from the close prices — the same pure <code>ogeSma</code>/<code>ogeEma</code>/<code>ogeBollingerBands</code>/<code>ogeMacd</code>/<code>ogeRsi</code> you can import. The RSI chart below shares the zoom window (wheel over the price chart). <code>trendline</code> fits linear, exponential, logarithmic, polynomial or moving-average lines; <code>showR2</code> adds the fit to the tooltip."
+      description="<code>type: 'indicator'</code> series compute SMA, EMA, Bollinger Bands, MACD or RSI from the close prices — the same pure <code>ogeSma</code>/<code>ogeEma</code>/<code>ogeBollingerBands</code>/<code>ogeMacd</code>/<code>ogeRsi</code> you can import. The RSI series sets <code>pane: 'rsi'</code> and draws in its own pane under the price, on the shared argument axis (wheel zooms both). <code>trendline</code> fits linear, exponential, logarithmic, polynomial or moving-average lines; <code>showR2</code> adds the fit to the tooltip."
       [code]="demos[1].source"
       language="tsx"
     >

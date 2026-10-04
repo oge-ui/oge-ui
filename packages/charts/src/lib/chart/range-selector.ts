@@ -27,10 +27,14 @@ import {
   rangeSelectorDeltaValue,
   rangeSelectorEffective,
   rangeSelectorLabel,
+  rangeSelectorPeriods,
   rangeSelectorWindowPx,
   rangeWindowDragRange,
+  type OgeChartCustomPeriod,
+  type OgeChartPeriod,
   type OgeChartRange,
   type OgeChartSeriesInput,
+  type OgeRangeSelectorPeriodVm,
 } from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
 
@@ -48,6 +52,26 @@ import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
   encapsulation: ViewEncapsulation.None,
   host: { class: 'oge-chart oge-range-selector' },
   template: `
+    @if (periodButtons().length > 0) {
+      <div
+        class="oge-range-periods"
+        role="group"
+        [attr.aria-label]="msg().periods.groupLabel"
+      >
+        @for (period of periodButtons(); track period.key) {
+          <button
+            type="button"
+            class="oge-range-period"
+            [class.oge-range-period-active]="period.active"
+            [attr.aria-pressed]="period.active"
+            [attr.title]="period.label === period.text ? null : period.label"
+            (click)="selectPeriod(period)"
+          >
+            {{ period.text }}
+          </button>
+        }
+      </div>
+    }
     <div #plotWrap class="oge-chart-plot-wrap oge-range-wrap">
       <svg
         #svgEl
@@ -152,6 +176,14 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
   readonly palette = input<readonly string[] | undefined>(undefined);
   readonly locale = input<string | undefined>(undefined);
   readonly messages = input<Partial<OgeChartsMessages>>({});
+  /**
+   * Period buttons above the strip: `'1M' | '3M' | '6M' | 'YTD' | '1Y' |
+   * 'All'` (calendar months back from the data end) and custom
+   * `{ label, range }` entries. Calendar periods only show on time scales.
+   */
+  readonly periods = input<readonly (OgeChartPeriod | OgeChartCustomPeriod)[]>(
+    [],
+  );
   /** The selected window; `null` = full range. Two-way. */
   readonly value = model<OgeChartRange | null>(null);
 
@@ -213,6 +245,23 @@ export class OgeRangeSelector<T extends object = Record<string, unknown>> {
     () => this.scene().backgroundSeries,
   );
   protected readonly ticksVm = computed(() => this.scene().ticks);
+
+  protected readonly periodButtons = computed(() =>
+    rangeSelectorPeriods(this.periods(), this.data(), this.value(), this.msg()),
+  );
+
+  /** A period button: applies its window (All → the full range), announced. */
+  protected selectPeriod(period: OgeRangeSelectorPeriodVm): void {
+    this.value.set(period.range);
+    this.announcement.set(
+      rangeSelectorAnnouncement(
+        this.msg(),
+        untracked(this.data).kind,
+        untracked(this.effective),
+        this.effectiveLocale(),
+      ),
+    );
+  }
 
   protected labelOf(value: number): string {
     return rangeSelectorLabel(this.data().kind, value, this.effectiveLocale());

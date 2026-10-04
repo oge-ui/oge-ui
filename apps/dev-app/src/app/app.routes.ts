@@ -881,6 +881,14 @@ export const appRoutes: Route[] = [
         title: 'OGE — Charts',
       },
       {
+        path: 'axes-layout',
+        loadComponent: () =>
+          import('./pages/charts/axes-layout').then(
+            (m) => m.ChartsAxesLayoutPage,
+          ),
+        title: 'OGE — Charts Axes & Layout',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/charts/api').then((m) => m.ChartsApiPage),

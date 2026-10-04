@@ -78,11 +78,33 @@ export interface OgeChartsValueMessages {
   readonly rsi: string;
 }
 
+/**
+ * Range-selector period buttons: the visible short text and the
+ * accessible name of each built-in period, plus the group label.
+ */
+export interface OgeChartsPeriodMessages {
+  /** `role="group"` label of the period buttons. */
+  readonly groupLabel: string;
+  readonly month1: string;
+  readonly month3: string;
+  readonly month6: string;
+  readonly yearToDate: string;
+  readonly year1: string;
+  readonly all: string;
+  readonly month1Label: string;
+  readonly month3Label: string;
+  readonly month6Label: string;
+  readonly yearToDateLabel: string;
+  readonly year1Label: string;
+  readonly allLabel: string;
+}
+
 /** Every user-facing string of the charts (house i18n rule). */
 export interface OgeChartsMessages {
   readonly aria: OgeChartsAriaMessages;
   readonly announcements: OgeChartsAnnouncementMessages;
   readonly values: OgeChartsValueMessages;
+  readonly periods: OgeChartsPeriodMessages;
   readonly noData: string;
 }
 
@@ -130,6 +152,21 @@ export const OGE_DEFAULT_CHARTS_MESSAGES: OgeChartsMessages = {
     macd: 'MACD ({fast}, {slow}, {signal})',
     rsi: 'RSI ({period})',
   },
+  periods: {
+    groupLabel: 'Zoom period',
+    month1: '1M',
+    month3: '3M',
+    month6: '6M',
+    yearToDate: 'YTD',
+    year1: '1Y',
+    all: 'All',
+    month1Label: '1 month',
+    month3Label: '3 months',
+    month6Label: '6 months',
+    yearToDateLabel: 'Year to date',
+    year1Label: '1 year',
+    allLabel: 'All data',
+  },
   noData: 'No data',
 };
 
@@ -176,8 +213,8 @@ export function resolveOgeChartsConfig(
 
 /**
  * A component's effective messages: its per-instance override over the
- * configured catalog, merged one level deeper (`aria`, `announcements` and
- * `values` key by key).
+ * configured catalog, merged one level deeper (`aria`, `announcements`,
+ * `values` and `periods` key by key).
  */
 export function mergeOgeChartsMessages(
   configured: OgeChartsMessages,
@@ -190,6 +227,7 @@ export function mergeOgeChartsMessages(
     aria: { ...configured.aria, ...local.aria },
     announcements: { ...configured.announcements, ...local.announcements },
     values: { ...configured.values, ...local.values },
+    periods: { ...configured.periods, ...local.periods },
   };
 }
 

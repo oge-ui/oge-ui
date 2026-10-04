@@ -234,7 +234,7 @@ test.describe('React charts depth', () => {
     ).toHaveCount(4);
   });
 
-  test('indicators, linked RSI and the trendline R² tooltip', async ({
+  test('indicators, the RSI pane and the trendline R² tooltip', async ({
     page,
   }) => {
     await open(page);
@@ -248,9 +248,9 @@ test.describe('React charts depth', () => {
       charts.nth(0).locator('.oge-chart-indicator-band'),
     ).toHaveCount(1);
     await expect(
-      charts.nth(1).locator('.oge-chart-indicator-level'),
+      charts.nth(0).locator('.oge-chart-indicator-level'),
     ).toHaveCount(2);
-    const scatter = charts.nth(2);
+    const scatter = charts.nth(1);
     await expect(scatter.locator('.oge-chart-trendline')).toHaveCount(1);
     const svg = scatter.locator('.oge-chart-svg');
     await svg.scrollIntoViewIfNeeded();
