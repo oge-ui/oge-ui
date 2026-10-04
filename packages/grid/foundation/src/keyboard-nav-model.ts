@@ -1,6 +1,7 @@
 import type { RowNode } from '@oge-ui/core';
 import {
   OgeGridKeyboardNavCore,
+  type OgeGridSpanLayout,
   type OgeGridKeyboardNavTreeHooks,
 } from '@oge-ui/behavior';
 import { SIGNAL_ADAPTER } from './signal-adapter';
@@ -21,6 +22,8 @@ export interface KeyboardNavModelDeps<T> {
   pageSize: () => number;
   /** Present on tree hosts; absent on plain grids. */
   tree?: KeyboardNavTreeHooks;
+  /** Row / column spans the arrows step over (`cellSpan`, `mergeCells`). */
+  spans?: () => OgeGridSpanLayout;
 }
 
 /**

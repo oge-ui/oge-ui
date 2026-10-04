@@ -45,7 +45,7 @@ const FORMAT_COLUMNS: OgeGridColumnProps<Employee>[] = [
 
 const SPAN_COLUMNS: OgeGridColumnProps<Employee>[] = [
   { field: 'department', caption: 'Department', mergeCells: true },
-  { field: 'city', caption: 'City' },
+  { field: 'city', caption: 'City', width: 64 },
   { field: 'firstName', caption: 'First name', width: 90 },
   { field: 'lastName', caption: 'Last name' },
 ];
@@ -95,7 +95,7 @@ const SPAN_COLUMNS: OgeGridColumnProps<Employee>[] = [
       text in a tooltip.
     </p>
     <app-demo-card
-      [chips]="['aria-rowspan', 'cellHintEnabled', 'columnAutoWidth']"
+      [chips]="['aria-rowspan', 'cellHintEnabled', 'auto-fit']"
       [code]="demos[1].source"
       language="tsx"
     >
@@ -134,6 +134,5 @@ export class ReactGridConditionalFormattingDemos {
           ? { colSpan: 2 }
           : null,
       cellHintEnabled: true,
-      columnAutoWidth: true,
     });
 }

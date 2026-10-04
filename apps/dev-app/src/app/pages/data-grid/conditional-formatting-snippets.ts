@@ -56,9 +56,11 @@ export const SPANS_SNIPPET = demoSource({
 }`,
   template: `<!-- equal adjacent values merge (aria-rowspan); cellSpan spans columns -->
 <oge-grid [data]="employees" keyField="id" [cellSpan]="cellSpan"
-          [cellHintEnabled]="true" [columnAutoWidth]="true">
+          [cellHintEnabled]="true">
   <oge-column field="department" caption="Department" [mergeCells]="true" />
-  <oge-column field="city" caption="City" />
+  <!-- a narrow column: hover or focus a city for the full text,
+       double-click its resize handle to fit it -->
+  <oge-column field="city" caption="City" [width]="64" />
   <oge-column field="firstName" caption="First name" />
   <oge-column field="lastName" caption="Last name" />
 </oge-grid>`,

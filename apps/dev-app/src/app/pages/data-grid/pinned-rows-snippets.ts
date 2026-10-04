@@ -3,10 +3,10 @@ import { demoSource } from '../../shared/demo-source';
 export const PINNED_SNIPPET = demoSource({
   use: { '@oge-ui/grid': ['OgeColumn', 'OgeGrid', 'OgePagerInfoTemplate'] },
   dataset: 'employees',
-  template: `<!-- key 3 moves out of the body into the sticky top section;
-     the totals object is a display row in the sticky footer -->
+  template: `<!-- display rows in the sticky sections; a key of a loaded row
+     ([pinnedTopRows]="[42]") moves that row out of the body instead -->
 <oge-grid [data]="employees" keyField="id"
-          [pinnedTopRows]="[3]"
+          [pinnedTopRows]="[budget]"
           [pinnedBottomRows]="[totals]"
           [paging]="{ pageSize: 3, showFirstLastButtons: true, showPageInput: true }">
   <oge-column field="firstName" caption="Name" />
@@ -15,7 +15,8 @@ export const PINNED_SNIPPET = demoSource({
     {{ info.firstRow }}–{{ info.lastRow }} of {{ info.totalCount }}
   </span>
 </oge-grid>`,
-  body: `protected readonly totals = { id: 0, firstName: 'Total', salary: 36900 };`,
+  body: `protected readonly budget = { id: -1, firstName: 'Budget', salary: 1500000 };
+protected readonly totals = { id: 0, firstName: 'Total', salary: 36900 };`,
 });
 
 export const STICKY_SNIPPET = demoSource({

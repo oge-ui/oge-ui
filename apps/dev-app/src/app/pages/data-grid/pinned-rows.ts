@@ -63,10 +63,10 @@ interface Task {
       <h3>Pinned rows & pager options</h3>
       <p>
         <code>pinnedTopRows</code> / <code>pinnedBottomRows</code> take data
-        objects or keys of loaded rows (which then leave the body). They sit in
-        sticky sections — virtual scrolling included — and are display rows. The
-        pager here adds first / last buttons, a go-to-page input and a custom
-        info text (<code>*ogePagerInfoTemplate</code>).
+        objects or keys of rows on the loaded page (which then leave the body).
+        They sit in sticky sections — virtual scrolling included — and are
+        display rows. The pager here adds first / last buttons, a go-to-page
+        input and a custom info text (<code>*ogePagerInfoTemplate</code>).
       </p>
       <app-demo-card
         [chips]="['sticky sections', 'showFirstLastButtons', 'showPageInput']"
@@ -77,7 +77,7 @@ interface Task {
           class="demo-pinned-grid"
           [data]="employees"
           keyField="id"
-          [pinnedTopRows]="[3]"
+          [pinnedTopRows]="[budget]"
           [pinnedBottomRows]="[totals]"
           [paging]="{
             pageSize: 5,
@@ -175,6 +175,12 @@ export class PinnedRowsPage {
   protected readonly stickySnippet = STICKY_SNIPPET;
   protected readonly dragSnippet = DRAG_SNIPPET;
   protected readonly employees = makeEmployees(23, 21);
+  protected readonly budget = {
+    id: -1,
+    firstName: 'Budget',
+    department: '',
+    salary: 1500000,
+  };
   protected readonly totals = {
     id: 0,
     firstName: 'Total',

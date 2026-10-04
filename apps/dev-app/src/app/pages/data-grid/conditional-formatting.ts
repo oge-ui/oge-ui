@@ -119,7 +119,7 @@ import {
         and on keyboard focus.
       </p>
       <app-demo-card
-        [chips]="['aria-rowspan', 'cellHintEnabled', 'columnAutoWidth']"
+        [chips]="['aria-rowspan', 'cellHintEnabled', 'auto-fit']"
         [code]="spansSnippet"
         language="ts"
       >
@@ -129,14 +129,13 @@ import {
           keyField="id"
           [cellSpan]="cellSpan"
           [cellHintEnabled]="true"
-          [columnAutoWidth]="true"
         >
           <oge-column
             field="department"
             caption="Department"
             [mergeCells]="true"
           />
-          <oge-column field="city" caption="City" />
+          <oge-column field="city" caption="City" [width]="64" />
           <oge-column field="firstName" caption="First name" [width]="90" />
           <oge-column field="lastName" caption="Last name" />
         </oge-grid>

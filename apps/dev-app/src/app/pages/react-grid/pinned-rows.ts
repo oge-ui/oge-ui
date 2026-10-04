@@ -33,6 +33,12 @@ const totals: Employee = {
   hireDate: '',
   salary: employees.reduce((sum, row) => sum + row.salary, 0),
 };
+const budget: Employee = {
+  ...totals,
+  id: -1,
+  firstName: 'Budget',
+  salary: 1500000,
+};
 const grouped: DatedEmployee[] = makeEmployees(400, 7).map((row) => ({
   ...row,
   hireDate: toLocalDate(row.hireDate),
@@ -126,7 +132,7 @@ export class ReactGridPinnedRowsDemos {
       data: employees,
       keyField: 'id',
       columns: PINNED_COLUMNS,
-      pinnedTopRows: [3],
+      pinnedTopRows: [budget],
       pinnedBottomRows: [totals],
       paging: { pageSize: 5, showFirstLastButtons: true, showPageInput: true },
       renderPagerInfo: (info) =>

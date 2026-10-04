@@ -698,9 +698,11 @@ interface Employee {
   template: `
     <!-- equal adjacent values merge (aria-rowspan); cellSpan spans columns -->
     <oge-grid [data]="employees" keyField="id" [cellSpan]="cellSpan"
-              [cellHintEnabled]="true" [columnAutoWidth]="true">
+              [cellHintEnabled]="true">
       <oge-column field="department" caption="Department" [mergeCells]="true" />
-      <oge-column field="city" caption="City" />
+      <!-- a narrow column: hover or focus a city for the full text,
+           double-click its resize handle to fit it -->
+      <oge-column field="city" caption="City" [width]="64" />
       <oge-column field="firstName" caption="First name" />
       <oge-column field="lastName" caption="Last name" />
     </oge-grid>
@@ -1412,10 +1414,10 @@ import { OgeColumn, OgeGrid, OgePagerInfoTemplate } from '@oge-ui/grid';
   imports: [OgeColumn, OgeGrid, OgePagerInfoTemplate],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- key 3 moves out of the body into the sticky top section;
-         the totals object is a display row in the sticky footer -->
+    <!-- display rows in the sticky sections; a key of a loaded row
+         ([pinnedTopRows]="[42]") moves that row out of the body instead -->
     <oge-grid [data]="employees" keyField="id"
-              [pinnedTopRows]="[3]"
+              [pinnedTopRows]="[budget]"
               [pinnedBottomRows]="[totals]"
               [paging]="{ pageSize: 3, showFirstLastButtons: true, showPageInput: true }">
       <oge-column field="firstName" caption="Name" />
@@ -1435,6 +1437,7 @@ export class Demo {
     { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
   ];
 
+  protected readonly budget = { id: -1, firstName: 'Budget', salary: 1500000 };
   protected readonly totals = { id: 0, firstName: 'Total', salary: 36900 };
 }
 ```

@@ -75,7 +75,9 @@ const columns: OgeGridColumnProps<Employee>[] = [
   // equal adjacent values merge (aria-rowspan); cellSpan spans columns
   columns={[
     { field: 'department', caption: 'Department', mergeCells: true },
-    { field: 'city', caption: 'City' },
+    // narrow: hover / focus shows the full text; double-click the
+    // resize handle to fit it
+    { field: 'city', caption: 'City', width: 64 },
     { field: 'firstName', caption: 'First name', width: 90 },
     { field: 'lastName', caption: 'Last name' },
   ]}
@@ -83,7 +85,6 @@ const columns: OgeGridColumnProps<Employee>[] = [
     column.field === 'firstName' && row.id === 1 ? { colSpan: 2 } : null
   }
   cellHintEnabled
-  columnAutoWidth
 />`,
     }),
   },

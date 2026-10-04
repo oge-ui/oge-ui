@@ -906,6 +906,8 @@ function OgeGridInner<T extends object>(
         rtl,
         pageSize: () =>
           Math.max(1, Math.floor(viewportHeight() / effRowHeight()) - 1),
+        // lazy: the span layout is declared further down
+        spans: () => spanLayout(),
       },
       rx,
     );

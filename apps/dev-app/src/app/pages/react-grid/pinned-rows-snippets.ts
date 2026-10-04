@@ -25,6 +25,7 @@ export const GRID_PINNED_DEMOS: readonly ReactDemo[] = [
       name: 'PinnedGrid',
       before: `${EMPLOYEE}
 
+const budget = { id: -1, firstName: 'Budget', department: '', salary: 1500000, hireDate: new Date() };
 const totals = { id: 0, firstName: 'Total', department: '', salary: 36900, hireDate: new Date() };`,
       jsx: `<OgeGrid
   data={employees}
@@ -33,9 +34,9 @@ const totals = { id: 0, firstName: 'Total', department: '', salary: 36900, hireD
     { field: 'firstName', caption: 'Name' },
     { field: 'salary', caption: 'Salary', dataType: 'number' },
   ]}
-  // key 3 moves out of the body into the sticky top section;
-  // the totals object is a display row in the sticky footer
-  pinnedTopRows={[3]}
+  // display rows in the sticky sections; a key of a loaded row
+  // (pinnedTopRows={[42]}) moves that row out of the body instead
+  pinnedTopRows={[budget]}
   pinnedBottomRows={[totals]}
   paging={{ pageSize: 5, showFirstLastButtons: true, showPageInput: true }}
   renderPagerInfo={(info) => \`\${info.firstRow}–\${info.lastRow} of \${info.totalCount}\`}

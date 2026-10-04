@@ -3148,6 +3148,8 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     pageSize: computed(() =>
       Math.max(1, Math.floor(this.viewportHeight() / this.effRowHeight()) - 1),
     ),
+    // lazy: the span layout is declared further down the class
+    spans: () => this.spanLayout(),
   });
 
   /** Focused cell: flat node index + visible column index. */
