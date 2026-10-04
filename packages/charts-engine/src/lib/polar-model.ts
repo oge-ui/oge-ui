@@ -320,6 +320,9 @@ export function buildPolarScene<T>(
             : null,
           seriesIndex,
           pointIndex,
+          seriesName: series.name,
+          argument: point.argument,
+          value: point.value,
         },
       });
     };

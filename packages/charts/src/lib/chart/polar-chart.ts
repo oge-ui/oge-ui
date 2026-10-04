@@ -20,6 +20,7 @@ import {
   buildPolarData,
   buildPolarScene,
   cartesianAriaLabel,
+  chartLabelTemplateBox,
   formatOgeChartMessage,
   isChartPointSelected,
   mergeOgeChartsMessages,
@@ -30,7 +31,10 @@ import {
   polarPointIndex,
   polarSrRows,
   polarTooltip,
+  printOgeChart,
   type OgeChartAxisOptions,
+  type OgeChartPrintOptions,
+  type OgeChartRenderLabel,
   type OgeChartLegendClickEvent,
   type OgeChartLegendOptions,
   type OgeChartPointEvent,
@@ -39,7 +43,10 @@ import {
   type OgePolarSeriesVm,
 } from '@oge-ui/charts-engine';
 import { OGE_CHARTS_CONFIG, type OgeChartsMessages } from '../config';
-import { OgeChartLegendTemplate } from './chart-templates';
+import {
+  OgeChartLabelTemplate,
+  OgeChartLegendTemplate,
+} from './chart-templates';
 
 type PolarSeriesVm = OgePolarSeriesVm;
 
@@ -85,13 +92,14 @@ type PolarSeriesVm = OgePolarSeriesVm;
                         name: item.name,
                         color: item.color,
                         hidden: item.hidden,
+                        swatch: item.swatch,
                       },
                     }"
                   />
                 } @else {
                   <span
                     class="oge-chart-legend-marker"
-                    [style.background-color]="item.color"
+                    [style.background]="item.swatch"
                   ></span>
                   <span class="oge-chart-legend-text">{{ item.name }}</span>
                 }
@@ -118,7 +126,10 @@ type PolarSeriesVm = OgePolarSeriesVm;
           [attr.height]="height()"
           [attr.viewBox]="'0 0 ' + width() + ' ' + height()"
         >
-          <!-- grid rings + spokes + tick labels -->
+          <!-- radial-bar tracks, grid rings + spokes + tick labels -->
+          @for (track of tracks(); track $index) {
+            <path class="oge-chart-radial-track" [attr.d]="track" />
+          }
           @for (ring of rings(); track ring.radius) {
             <path class="oge-chart-grid" [attr.d]="ring.path" fill="none" />
           }
@@ -175,7 +186,7 @@ type PolarSeriesVm = OgePolarSeriesVm;
                   isSelected(vm.seriesIndex, sector.pointIndex)
                 "
                 [attr.d]="sector.path"
-                [attr.fill]="vm.color"
+                [attr.fill]="sector.color ?? vm.color"
                 [attr.opacity]="vm.opacity * 0.85"
                 (mouseenter)="
                   hover.set({
@@ -194,8 +205,8 @@ type PolarSeriesVm = OgePolarSeriesVm;
                 "
                 [attr.cx]="marker.x"
                 [attr.cy]="marker.y"
-                r="4"
-                [attr.fill]="vm.color"
+                [attr.r]="marker.r ?? 4"
+                [attr.fill]="marker.color ?? vm.color"
                 (mouseenter)="
                   hover.set({
                     seriesIndex: vm.seriesIndex,
@@ -204,6 +215,33 @@ type PolarSeriesVm = OgePolarSeriesVm;
                 "
                 (mouseleave)="hover.set(null)"
               />
+            }
+            @for (label of vm.labels; track $index) {
+              @if (labelTemplate(); as tpl) {
+                <foreignObject
+                  class="oge-chart-label-fo"
+                  [attr.x]="labelBox(label).x"
+                  [attr.y]="labelBox(label).y"
+                  [attr.width]="labelBox(label).w"
+                  [attr.height]="labelBox(label).h"
+                >
+                  <ng-container
+                    [ngTemplateOutlet]="tpl.templateRef"
+                    [ngTemplateOutletContext]="{ $implicit: label }"
+                  />
+                </foreignObject>
+              } @else {
+                <text
+                  class="oge-chart-point-label"
+                  [class.oge-chart-point-label-inside]="label.inside"
+                  [attr.x]="label.x"
+                  [attr.y]="label.y"
+                  [attr.text-anchor]="label.anchor"
+                  [style.fill]="label.textColor ?? null"
+                >
+                  {{ label.text }}
+                </text>
+              }
             }
           }
           @if (legendItems().length === 0 || categories().length === 0) {
@@ -268,7 +306,7 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   private readonly config = inject(OGE_CHARTS_CONFIG);
 
   readonly dataSource = input<readonly T[]>([]);
-  /** Supported polar types: `line`, `area`, `scatter`, `bar`. */
+  /** Supported polar types: `line`, `area`, `scatter`, `bar`, `radialBar`. */
   readonly series = input<readonly OgeChartSeriesInput<T>[]>([]);
   readonly commonSeries = input<Partial<OgeChartSeriesInput<T>>>({});
   /** `min`/`max`/`labelFormat` of the radial value axis. */
@@ -290,6 +328,9 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   readonly legendClick = output<OgeChartLegendClickEvent>();
 
   protected readonly legendTemplate = contentChild(OgeChartLegendTemplate, {
+    descendants: false,
+  });
+  protected readonly labelTemplate = contentChild(OgeChartLabelTemplate, {
     descendants: false,
   });
   private readonly plotWrapEl =
@@ -332,6 +373,7 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
       dataSource: this.dataSource(),
       series: this.series(),
       commonSeries: this.commonSeries(),
+      messages: this.msg(),
     }),
   );
 
@@ -355,6 +397,7 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   protected readonly cy = computed(() => this.scene().cy);
   protected readonly categories = computed(() => this.data().categories);
   protected readonly rings = computed(() => this.scene().rings);
+  protected readonly tracks = computed(() => this.scene().tracks);
   protected readonly spokes = computed(() => this.scene().spokes);
   protected readonly renderSeries = computed<readonly PolarSeriesVm[]>(
     () => this.scene().renderSeries,
@@ -485,5 +528,19 @@ export class OgePolarChart<T extends object = Record<string, unknown>> {
   /** The live SVG root — the exporters rasterize/serialize it. */
   getSvgElement(): SVGSVGElement {
     return this.svgEl().nativeElement;
+  }
+
+  /** Opens the browser's print dialog for the chart alone. */
+  print(options: OgeChartPrintOptions = {}): Promise<void> {
+    return printOgeChart(this, { title: untracked(this.title), ...options });
+  }
+
+  protected labelBox(label: OgeChartRenderLabel): {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  } {
+    return chartLabelTemplateBox(label);
   }
 }

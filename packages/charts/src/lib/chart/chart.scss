@@ -203,6 +203,99 @@
   stroke-width: 1;
 }
 
+/* ---------- analytic series ---------- */
+
+.oge-chart-ohlc {
+  stroke: var(--oge-chart-candle-up);
+  stroke-width: 1.5;
+  stroke-linecap: square;
+}
+
+.oge-chart-ohlc-falling {
+  stroke: var(--oge-chart-candle-down);
+}
+
+.oge-chart-box {
+  fill-opacity: 0.28;
+  stroke-width: 1.5;
+}
+
+.oge-chart-box-median {
+  stroke-width: 2;
+}
+
+.oge-chart-box-whisker {
+  stroke-width: 1.25;
+}
+
+.oge-chart-dot {
+  stroke: var(--oge-bg);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.oge-chart-waterfall-connector {
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+
+.oge-chart-trendline,
+.oge-chart-indicator-line,
+.oge-chart-pareto-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.oge-chart-indicator-band {
+  stroke: none;
+  pointer-events: none;
+}
+
+.oge-chart-indicator-level {
+  stroke: var(--oge-chart-axis-fg);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.oge-chart-radial-track {
+  fill: var(--oge-chart-strip-bg);
+  pointer-events: none;
+}
+
+/* ---------- data labels ---------- */
+
+.oge-chart-point-label {
+  fill: var(--oge-text-color);
+  font-size: 11px;
+  font-weight: 500;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--oge-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+// on a coloured mark: the engine picks a contrasting fill; no halo
+.oge-chart-point-label-inside {
+  stroke: none;
+}
+
+.oge-chart-pie-label.oge-chart-point-label-inside {
+  font-weight: 600;
+}
+
+.oge-chart-label-fo {
+  overflow: visible;
+  pointer-events: none;
+  font-size: 11px;
+}
+
 /* ---------- overlays ---------- */
 
 .oge-chart-crosshair {
@@ -409,6 +502,39 @@
   .oge-chart-marker {
     forced-color-adjust: none;
     stroke: CanvasText;
+  }
+
+  // analytic marks: series-coloured lines keep their colours (identity);
+  // structural strokes (whiskers, connectors, reference levels) go system
+  .oge-chart-ohlc,
+  .oge-chart-trendline,
+  .oge-chart-indicator-line,
+  .oge-chart-indicator-band,
+  .oge-chart-pareto-line,
+  .oge-chart-dot {
+    forced-color-adjust: none;
+  }
+
+  .oge-chart-box-median,
+  .oge-chart-box-whisker,
+  .oge-chart-waterfall-connector,
+  .oge-chart-indicator-level {
+    stroke: CanvasText !important;
+  }
+
+  .oge-chart-radial-track {
+    fill: Canvas;
+    stroke: GrayText;
+  }
+
+  .oge-chart-point-label {
+    fill: CanvasText !important;
+    stroke: Canvas;
+  }
+
+  .oge-chart-point-label-inside {
+    stroke: Canvas;
+    stroke-width: 3px;
   }
 
   .oge-chart-point-selected {

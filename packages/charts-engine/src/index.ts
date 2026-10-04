@@ -278,6 +278,7 @@ export {
   chartContrastText,
   chartLabelBox,
   chartLabelOptions,
+  chartLabelTemplateBox,
   chartLabelText,
   chartPointHasLabel,
   chartPointLabelAnchor,

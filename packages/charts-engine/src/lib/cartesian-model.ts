@@ -975,6 +975,9 @@ function buildRenderSeries<T>(ctx: {
             : null,
           seriesIndex,
           pointIndex,
+          seriesName: series.name,
+          argument: point.argument,
+          value: point.value,
         },
       });
     };

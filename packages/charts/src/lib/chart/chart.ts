@@ -31,13 +31,16 @@ import {
   cartesianNearestSeries,
   cartesianPanRange,
   cartesianPointAnnouncement,
+  cartesianPointEventColor,
   cartesianSelectionRange,
   cartesianSrRows,
   cartesianTooltip,
+  cartesianTooltipRowText,
   cartesianWheelRange,
   cartesianZoomTo,
   chartArgumentText,
   chartDragMode,
+  chartLabelTemplateBox,
   chartMarkerRadius,
   chartSeriesGroupOpacity,
   chartValueText,
@@ -49,7 +52,10 @@ import {
   mergeOgeChartsMessages,
   nextChartSelection,
   observeChartSize,
+  printOgeChart,
   type OgeCartesianHoverState,
+  type OgeChartPrintOptions,
+  type OgeChartRenderLabel,
   type OgeChartAnnotation,
   type OgeChartAxisOptions,
   type OgeChartCrosshairOptions,
@@ -70,6 +76,7 @@ import {
 } from '@oge-ui/charts-engine';
 import {
   OgeChartAnnotationTemplate,
+  OgeChartLabelTemplate,
   OgeChartLegendTemplate,
   OgeChartTooltipTemplate,
 } from './chart-templates';
@@ -129,13 +136,14 @@ export { OGE_CHART_PALETTE };
                         name: item.name,
                         color: item.color,
                         hidden: item.hidden,
+                        swatch: item.swatch,
                       },
                     }"
                   />
                 } @else {
                   <span
                     class="oge-chart-legend-marker"
-                    [style.background-color]="item.color"
+                    [style.background]="item.swatch"
                   ></span>
                   <span class="oge-chart-legend-text">{{ item.name }}</span>
                 }
@@ -248,6 +256,17 @@ export { OGE_CHART_PALETTE };
                       [attr.opacity]="rs.opacity * 0.35"
                     />
                   }
+                  @for (extra of rs.extraPaths; track $index) {
+                    <path
+                      [attr.class]="extra.cls"
+                      [attr.d]="extra.d"
+                      [attr.fill]="extra.fill ?? 'none'"
+                      [attr.stroke]="extra.stroke"
+                      [attr.stroke-width]="extra.strokeWidth"
+                      [attr.stroke-dasharray]="extra.dashArray"
+                      [attr.opacity]="extra.opacity"
+                    />
+                  }
                   @if (rs.linePathD !== null) {
                     <path
                       class="oge-chart-line"
@@ -259,9 +278,10 @@ export { OGE_CHART_PALETTE };
                       fill="none"
                     />
                   }
-                  @for (bar of rs.bars; track bar.pointIndex) {
+                  @for (bar of rs.bars; track $index) {
                     <rect
                       class="oge-chart-bar"
+                      [class]="bar.cls ?? ''"
                       [class.oge-chart-point-selected]="
                         isSelected(rs.seriesIndex, bar.pointIndex)
                       "
@@ -269,7 +289,8 @@ export { OGE_CHART_PALETTE };
                       [attr.y]="bar.y"
                       [attr.width]="bar.w"
                       [attr.height]="bar.h"
-                      [attr.fill]="rs.color"
+                      [attr.fill]="bar.color ?? rs.color"
+                      [attr.stroke]="bar.stroke ?? null"
                       [attr.opacity]="rs.opacity"
                       rx="2"
                     />
@@ -289,6 +310,17 @@ export { OGE_CHART_PALETTE };
                       [attr.y]="candle.bodyY"
                       [attr.width]="candle.w"
                       [attr.height]="candle.bodyH"
+                      [style.fill]="candle.color ?? null"
+                    />
+                  }
+                  @for (seg of rs.segments; track $index) {
+                    <line
+                      [attr.class]="seg.cls"
+                      [attr.x1]="seg.x1"
+                      [attr.y1]="seg.y1"
+                      [attr.x2]="seg.x2"
+                      [attr.y2]="seg.y2"
+                      [style.stroke]="seg.color ?? null"
                     />
                   }
                   @for (marker of rs.markers; track marker.pointIndex) {
@@ -301,18 +333,44 @@ export { OGE_CHART_PALETTE };
                       [attr.cx]="marker.x"
                       [attr.cy]="marker.y"
                       [attr.r]="markerRadius(marker, rs.type)"
-                      [attr.fill]="rs.color"
+                      [attr.fill]="marker.color ?? rs.color"
+                    />
+                  }
+                  @for (dot of rs.dots; track $index) {
+                    <circle
+                      class="oge-chart-dot"
+                      [attr.cx]="dot.x"
+                      [attr.cy]="dot.y"
+                      [attr.r]="dot.r"
+                      [attr.fill]="dot.color ?? rs.color"
                     />
                   }
                   @for (label of rs.labels; track $index) {
-                    <text
-                      class="oge-chart-point-label"
-                      [attr.x]="label.x"
-                      [attr.y]="label.y"
-                      text-anchor="middle"
-                    >
-                      {{ label.text }}
-                    </text>
+                    @if (labelTemplate(); as tpl) {
+                      <foreignObject
+                        class="oge-chart-label-fo"
+                        [attr.x]="labelBox(label).x"
+                        [attr.y]="labelBox(label).y"
+                        [attr.width]="labelBox(label).w"
+                        [attr.height]="labelBox(label).h"
+                      >
+                        <ng-container
+                          [ngTemplateOutlet]="tpl.templateRef"
+                          [ngTemplateOutletContext]="{ $implicit: label }"
+                        />
+                      </foreignObject>
+                    } @else {
+                      <text
+                        class="oge-chart-point-label"
+                        [class.oge-chart-point-label-inside]="label.inside"
+                        [attr.x]="label.x"
+                        [attr.y]="label.y"
+                        [attr.text-anchor]="label.anchor"
+                        [style.fill]="label.textColor ?? null"
+                      >
+                        {{ label.text }}
+                      </text>
+                    }
                   }
                 </g>
               }
@@ -488,9 +546,9 @@ export { OGE_CHART_PALETTE };
                 <span class="oge-chart-tooltip-row">
                   <span
                     class="oge-chart-legend-marker"
-                    [style.background-color]="colorOf(point.seriesIndex)"
+                    [style.background-color]="pointColorOf(point)"
                   ></span>
-                  {{ point.seriesName }}: {{ valueText(point.point) }}
+                  {{ tooltipRowText(point) }}
                 </span>
               }
             }
@@ -580,6 +638,9 @@ export class OgeChart<T extends object = Record<string, unknown>> {
     OgeChartAnnotationTemplate,
     { descendants: false },
   );
+  protected readonly labelTemplate = contentChild(OgeChartLabelTemplate, {
+    descendants: false,
+  });
   private readonly plotWrapEl =
     viewChild.required<ElementRef<HTMLElement>>('plotWrap');
   private readonly svgEl =
@@ -622,6 +683,7 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       series: this.series(),
       commonSeries: this.commonSeries(),
       argumentType: this.argumentAxis().type,
+      messages: this.msg(),
     }),
   );
 
@@ -668,6 +730,25 @@ export class OgeChart<T extends object = Record<string, unknown>> {
 
   protected colorOf(seriesIndex: number): string {
     return this.scene().colors[seriesIndex] ?? OGE_CHART_PALETTE[0];
+  }
+
+  /** A tooltip row's marker: the point's own colour, else the series'. */
+  protected pointColorOf(point: OgeChartPointEvent<T>): string {
+    return cartesianPointEventColor(this.scene(), point);
+  }
+
+  /** `{series}: {value}` with the analytic parts and the trend / R². */
+  protected tooltipRowText(point: OgeChartPointEvent<T>): string {
+    return cartesianTooltipRowText(this.scene(), point);
+  }
+
+  protected labelBox(label: OgeChartRenderLabel): {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  } {
+    return chartLabelTemplateBox(label);
   }
 
   protected markerRadius(
@@ -808,11 +889,12 @@ export class OgeChart<T extends object = Record<string, unknown>> {
       this.data().argKind,
       point,
       this.effectiveLocale(),
+      this.msg().values,
     );
   }
 
   protected valueText(point: OgeChartPoint<T>): string {
-    return chartValueText(point, this.effectiveLocale());
+    return chartValueText(point, this.effectiveLocale(), this.msg().values);
   }
 
   /* ---------------- zoom / pan ---------------- */
@@ -1037,5 +1119,13 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   /** Snapshot for `@oge-ui/charts/export-image`. */
   getExportData(): OgeChartExportData<T> {
     return cartesianExportData(untracked(this.scene), untracked(this.title));
+  }
+
+  /**
+   * Opens the browser's print dialog for the chart alone (title above it,
+   * scaled to the page) — dependency-free, from a hidden frame.
+   */
+  print(options: OgeChartPrintOptions = {}): Promise<void> {
+    return printOgeChart(this, { title: untracked(this.title), ...options });
   }
 }

@@ -25,6 +25,10 @@ export interface OgeChartRenderLabel {
   readonly textColor: string | null;
   readonly seriesIndex: number;
   readonly pointIndex: number;
+  /** The labelled point — what a label template renders from. */
+  readonly seriesName: string;
+  readonly argument: unknown;
+  readonly value: number | null;
 }
 
 /** Approximate text box of an 11px label (no DOM measuring). */
@@ -43,6 +47,26 @@ export function chartLabelBox(label: {
         ? label.x - w
         : label.x;
   return { x, y: label.y - 10, w, h };
+}
+
+/**
+ * The `foreignObject` box a label template renders into (120 × 22 px,
+ * aligned like the text it replaces). Overlap resolution measured the
+ * default text, so keep templated labels compact.
+ */
+export function chartLabelTemplateBox(label: {
+  readonly x: number;
+  readonly y: number;
+  readonly anchor: 'start' | 'middle' | 'end';
+}): { x: number; y: number; w: number; h: number } {
+  const w = 120;
+  const x =
+    label.anchor === 'middle'
+      ? label.x - w / 2
+      : label.anchor === 'end'
+        ? label.x - w
+        : label.x;
+  return { x, y: label.y - 15, w, h: 22 };
 }
 
 /** Whether a series draws labels, and its resolved options. */

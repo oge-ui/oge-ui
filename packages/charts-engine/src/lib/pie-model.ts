@@ -354,6 +354,9 @@ export function buildPieScene<T>(input: OgePieSceneInput<T>): OgePieScene<T> {
         textColor: null,
         seriesIndex: vm.ringIndex,
         pointIndex: vm.slice.index,
+        seriesName: spec.name,
+        argument: vm.payload.argument,
+        value: vm.slice.value,
         connector:
           options?.connector === false
             ? null
@@ -384,6 +387,9 @@ export function buildPieScene<T>(input: OgePieSceneInput<T>): OgePieScene<T> {
         textColor: chartContrastText(vm.color),
         seriesIndex: vm.ringIndex,
         pointIndex: vm.slice.index,
+        seriesName: spec.name,
+        argument: vm.payload.argument,
+        value: vm.slice.value,
       },
     });
   }
