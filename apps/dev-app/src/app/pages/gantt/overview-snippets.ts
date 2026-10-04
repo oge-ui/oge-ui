@@ -372,3 +372,28 @@ protected async exportPng<T extends object, D extends object>(
   await exportGanttToPng(gantt, { filename: 'plan.png' });
 }`,
 });
+
+export const RTL_SNIPPET = demoSource({
+  use: { '@oge-ui/gantt': ['OgeGantt'] },
+  template: `<!-- rtlEnabled (unset = follow the page's dir) mirrors the whole
+     chart: the task tree sits on the right, the timeline runs right to left,
+     dependency arrows and drags follow, and the Left/Right keys swap — Left
+     expands a summary, Alt+Shift+Left indents, Ctrl+Left moves a bar later. -->
+<oge-gantt
+  [tasks]="tasks"
+  [dependencies]="links"
+  [rtlEnabled]="true"
+  style="height: 300px"
+/>`,
+  body: `protected readonly tasks = [
+  { id: 1, title: 'Release 1.0', start: new Date(2026, 7, 3), end: new Date(2026, 7, 21) },
+  { id: 2, parentId: 1, title: 'Design', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7), progress: 100 },
+  { id: 3, parentId: 1, title: 'Implementation', start: new Date(2026, 7, 7), end: new Date(2026, 7, 17), progress: 45 },
+  { id: 4, parentId: 1, title: 'Ship', start: new Date(2026, 7, 21), end: new Date(2026, 7, 21) },
+];
+
+protected readonly links = [
+  { id: 'a', predecessorId: 2, successorId: 3 },
+  { id: 'b', predecessorId: 3, successorId: 4 },
+];`,
+});

@@ -17,6 +17,7 @@
  * inputs change and `syncRenderedRange()` after each change of the data.
  */
 import type { OgeReactivityAdapter } from '@oge-ui/behavior';
+import { observeDirection, ogeIsRtl } from '@oge-ui/behavior';
 import type { OgeFormItemDataBase } from '@oge-ui/behavior';
 import {
   contrastForeground,
@@ -238,6 +239,11 @@ export interface OgeGanttCoreInputs<T, D> {
   allowDependencyDeleting(): boolean;
   readOnly(): boolean;
   selectedTaskKey(): RowKey | null;
+  /**
+   * Right-to-left override; `undefined` (or a host without the getter)
+   * follows the document direction read by `connectDirection()`.
+   */
+  rtlEnabled?(): boolean | undefined;
   /** The resolved provider config (DI token / React context). */
   config(): OgeGanttConfig;
 }
@@ -332,10 +338,21 @@ export class OgeGanttCore<
   readonly listWidth;
   /** The open built-in context menu, or `null`. */
   readonly contextMenu;
+  /** The document direction last read from the host (`connectDirection`). */
+  private readonly detectedRtl;
 
   /* ---------------- derived ---------------- */
 
   readonly msg: () => OgeGanttMessages;
+  /**
+   * Right-to-left: the `rtlEnabled` input, else the document direction. The
+   * timeline geometry stays logical (px from the range start, rendered with
+   * `inset-inline-start`); RTL mirrors pointer x, drag deltas, the arrow
+   * keys, the dependency SVG and the chart scroll offset.
+   */
+  readonly rtl: () => boolean;
+  /** `transform` for the dependency-arrow group: mirrors x in RTL. */
+  readonly arrowsTransform: () => string | null;
   readonly rowHeight: () => number;
   readonly effectiveLocale: () => string | undefined;
   readonly effectiveEditing: () => boolean;
@@ -386,6 +403,7 @@ export class OgeGanttCore<
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
   private readonly gestures = new Set<GanttGestureHandle>();
   private arrowKeyListener: ((event: KeyboardEvent) => void) | null = null;
+  private stopDirection: (() => void) | null = null;
 
   constructor(
     private readonly host: OgeGanttCoreHost<T, D>,
@@ -418,11 +436,13 @@ export class OgeGanttCore<
     } | null>(null);
     this.listWidth = rx.cell(360);
     this.contextMenu = rx.cell<GanttContextMenuState<T> | null>(null);
+    this.detectedRtl = rx.cell(false);
 
     this.msg = rx.derived<OgeGanttMessages>(() => ({
       ...inputs.config().messages,
       ...inputs.messages(),
     }));
+    this.rtl = rx.derived(() => inputs.rtlEnabled?.() ?? this.detectedRtl());
     this.rowHeight = rx.derived(() => inputs.config().rowHeight ?? 36);
     this.effectiveLocale = rx.derived(
       () => inputs.locale() ?? inputs.config().locale,
@@ -491,6 +511,10 @@ export class OgeGanttCore<
         this.resolvedFirstDayOfWeek(),
       );
     });
+
+    this.arrowsTransform = rx.derived(() =>
+      this.rtl() ? `matrix(-1 0 0 1 ${this.scale().totalPx} 0)` : null,
+    );
 
     this.windowRange = rx.derived(() =>
       ganttWindowRange(
@@ -759,8 +783,37 @@ export class OgeGanttCore<
     // per interaction, so a destroyed core is usable again as-is
   }
 
+  /**
+   * Reads the document direction around the host and keeps it current while
+   * a `dir` attribute changes on an ancestor (`<html dir>`, a wrapper). Call
+   * after the first render (SSR-safe: a no-op without an element);
+   * idempotent, and `destroy()` disconnects it. The host's own `dir` is
+   * skipped — the layers set it from `rtlEnabled`, which already wins.
+   */
+  connectDirection(): void {
+    this.stopDirection?.();
+    this.stopDirection = null;
+    const host = this.host.hostElement();
+    if (host === null) return;
+    const context = host.parentElement ?? host;
+    this.detectedRtl.set(ogeIsRtl(context));
+    this.stopDirection = observeDirection(context, (direction) =>
+      this.detectedRtl.set(direction === 'rtl'),
+    );
+  }
+
+  /**
+   * Chart-local logical x of a viewport `clientX`: px from the timeline's
+   * start edge (the left edge in LTR, the right edge in RTL).
+   */
+  private logicalX(clientX: number, rect: DOMRect, rtl: boolean): number {
+    return rtl ? rect.right - clientX : clientX - rect.left;
+  }
+
   /** Cancels running gestures, pending focus timers and key listeners. */
   destroy(): void {
+    this.stopDirection?.();
+    this.stopDirection = null;
     for (const gesture of [...this.gestures]) gesture.cancel();
     this.gestures.clear();
     for (const timer of this.timers) clearTimeout(timer);
@@ -1275,8 +1328,10 @@ export class OgeGanttCore<
    * Alt+Shift+Right/Left indent/outdent, Ctrl+Left/Right move the bar and
    * Ctrl+Shift+Left/Right resize its end.
    */
-  onRowKeydown(task: GanttTask<T>, event: GanttKeyLike): void {
+  onRowKeydown(task: GanttTask<T>, rawEvent: GanttKeyLike): void {
     this.run(() => {
+      // the map below is written in logical terms; RTL swaps Left/Right
+      const event = mirrorGanttKey(rawEvent, this.rtl());
       const visible = this.visibleTasks();
       const index = this.rowIndexOf(task);
       const focusRow = (next: GanttTask<T> | undefined): void => {
@@ -1346,6 +1401,7 @@ export class OgeGanttCore<
     event.preventDefault();
     const scale = this.scale();
     const tick = scale.ticks[0]?.widthPx ?? 40;
+    // `event` arrives mirrored: ArrowRight always means "later"
     const deltaPx = event.key === 'ArrowRight' ? tick : -tick;
     const proposal = event.shiftKey
       ? proposeTaskResize(
@@ -1404,13 +1460,15 @@ export class OgeGanttCore<
   scrollToDate(date: Date): void {
     const chart = this.host.chartScrollElement();
     if (chart === null) return;
-    chart.scrollLeft = Math.max(
+    const offset = Math.max(
       0,
       dateToPx(
         this.run(() => this.scale()),
         date,
       ) - 40,
     );
+    // RTL scroll offsets run from 0 at the start edge towards negative
+    chart.scrollLeft = this.run(() => this.rtl()) ? -offset : offset;
   }
 
   /** Today button: scrolls the chart to the current date. */
@@ -1458,12 +1516,14 @@ export class OgeGanttCore<
   onSplitterPointerDown(event: GanttPointerLike): void {
     if (event.button !== 0) return;
     const startWidth = this.run(() => this.listWidth());
+    // RTL: the pane sits on the right, so dragging left widens it
+    const sign = this.run(() => this.rtl()) ? -1 : 1;
     this.track(event, {
       onMove: (deltaX) => {
         this.listWidth.set(
           Math.min(
             GANTT_LIST_WIDTH_MAX,
-            Math.max(GANTT_LIST_WIDTH_MIN, startWidth + deltaX),
+            Math.max(GANTT_LIST_WIDTH_MIN, startWidth + sign * deltaX),
           ),
         );
       },
@@ -1487,9 +1547,10 @@ export class OgeGanttCore<
       return;
     }
     if (kind !== 'move') event.stopPropagation();
-    const { scale, firstDay } = this.run(() => ({
+    const { scale, firstDay, rtl } = this.run(() => ({
       scale: this.scale(),
       firstDay: this.resolvedFirstDayOfWeek(),
+      rtl: this.rtl(),
     }));
     const dateFormat = new Intl.DateTimeFormat(this.effectiveLocale(), {
       day: 'numeric',
@@ -1499,10 +1560,14 @@ export class OgeGanttCore<
     let progress: number | null = null;
     this.dragKey.set(bar.task.key);
     this.track(event, {
-      onMove: (deltaX, _deltaY, moveEvent) => {
+      onMove: (screenDeltaX, _deltaY, moveEvent) => {
+        // logical delta: positive = later, whatever the direction
+        const deltaX = rtl ? -screenDeltaX : screenDeltaX;
         const canvasRect = this.host.canvasElement()?.getBoundingClientRect();
         const tipX =
-          canvasRect !== undefined ? moveEvent.clientX - canvasRect.left : 0;
+          canvasRect !== undefined
+            ? this.logicalX(moveEvent.clientX, canvasRect, rtl)
+            : 0;
         const tipY =
           canvasRect !== undefined
             ? moveEvent.clientY - canvasRect.top - 28
@@ -1577,12 +1642,14 @@ export class OgeGanttCore<
     const rowHeight = this.rowHeight();
     const fromX = fromEnd ? bar.leftPx + bar.widthPx : bar.leftPx;
     const fromY = bar.index * rowHeight + rowHeight / 2;
+    const rtl = this.run(() => this.rtl());
     let target: { task: GanttTask<T>; toEnd: boolean } | null = null;
     this.track(event, {
       onMove: (_dx, _dy, moveEvent) => {
         const rect = this.host.canvasElement()?.getBoundingClientRect();
         if (rect === undefined) return;
-        const x = moveEvent.clientX - rect.left;
+        // logical x: the preview path is drawn in the mirrored arrow group
+        const x = this.logicalX(moveEvent.clientX, rect, rtl);
         const y = moveEvent.clientY - rect.top;
         const rowIndex = Math.floor(y / rowHeight);
         this.run(() => {
@@ -1881,7 +1948,7 @@ export class OgeGanttCore<
       const rect = canvas.getBoundingClientRect();
       const start = chartPxToDate(
         this.scale(),
-        event.clientX - rect.left,
+        this.logicalX(event.clientX, rect, this.rtl()),
         this.resolvedFirstDayOfWeek(),
       );
       this.openCreateDialog(
@@ -1901,11 +1968,13 @@ export class OgeGanttCore<
     const canvas = this.host.canvasElement();
     if (canvas === null) return;
     const rect = canvas.getBoundingClientRect();
-    const startPx = event.clientX - rect.left;
+    const rtl = this.run(() => this.rtl());
+    const startPx = this.logicalX(event.clientX, rect, rtl);
     const rowHeight = this.rowHeight();
     const rowIndex = Math.floor((event.clientY - rect.top) / rowHeight);
     this.track(event, {
-      onMove: (deltaX) => {
+      onMove: (screenDeltaX) => {
+        const deltaX = rtl ? -screenDeltaX : screenDeltaX;
         this.drawPreview.set({
           leftPx: Math.min(startPx, startPx + deltaX),
           widthPx: Math.abs(deltaX),
@@ -2075,4 +2144,26 @@ export class OgeGanttCore<
   ): void {
     this.announcement.set(formatGanttMessage(template, tokens));
   }
+}
+
+/**
+ * Mirrors the horizontal arrow keys for right-to-left layout, so the
+ * keyboard map can stay written in logical terms: `ArrowRight` = towards
+ * the end of the line (expand, indent, later on the timeline) and
+ * `ArrowLeft` = towards its start. Other keys pass through unchanged.
+ */
+export function mirrorGanttKey(
+  event: GanttKeyLike,
+  rtl: boolean,
+): GanttKeyLike {
+  if (!rtl || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) {
+    return event;
+  }
+  return {
+    key: event.key === 'ArrowLeft' ? 'ArrowRight' : 'ArrowLeft',
+    ctrlKey: event.ctrlKey,
+    shiftKey: event.shiftKey,
+    altKey: event.altKey,
+    preventDefault: () => event.preventDefault(),
+  };
 }

@@ -6,6 +6,7 @@ import type {
 import type { RowKey } from '@oge-ui/core';
 import {
   OgeGanttCore,
+  mirrorGanttKey,
   type OgeGanttCoreEvents,
   type OgeGanttCoreInputs,
 } from './gantt-core';
@@ -175,7 +176,7 @@ function setup(
   const read =
     <K extends keyof OgeGanttCoreInputs<Task, Link>>(key: K) =>
     () =>
-      props[key] as ReturnType<OgeGanttCoreInputs<Task, Link>[K]>;
+      props[key] as ReturnType<NonNullable<OgeGanttCoreInputs<Task, Link>[K]>>;
   const inputs = new Proxy({} as OgeGanttCoreInputs<Task, Link>, {
     get: (_target, key: string) => {
       if (key === 'scaleType') return () => scaleType;
@@ -195,8 +196,10 @@ function setup(
         dialogs.push({ model, isNew, items }),
       hostElement: () => hostEl,
       bodyElement: () => null,
-      chartScrollElement: () => null,
-      canvasElement: () => null,
+      chartScrollElement: () =>
+        (overrides['__chartScroll'] as HTMLElement | undefined) ?? null,
+      canvasElement: () =>
+        (overrides['__canvas'] as HTMLElement | undefined) ?? null,
     },
     plain,
   );
@@ -472,5 +475,169 @@ describe('OgeGanttCore', () => {
     core.destroy();
     expect(core.dragKey()).toBeNull();
     expect(core.announcement()).toBe('Cancelled');
+  });
+});
+
+describe('OgeGanttCore — right-to-left', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+    document.documentElement.removeAttribute('dir');
+  });
+
+  const pointer = (clientX: number, clientY = 0) => ({
+    button: 0,
+    clientX,
+    clientY,
+    pointerId: 1,
+    target: document.createElement('div'),
+    preventDefault: vi.fn(),
+    stopPropagation: vi.fn(),
+  });
+  const move = (x: number, y = 0) =>
+    document.dispatchEvent(
+      new MouseEvent('pointermove', { clientX: x, clientY: y }),
+    );
+  const up = () => document.dispatchEvent(new MouseEvent('pointerup'));
+
+  /** A canvas whose box spans [100, 100 + width] on screen. */
+  function canvas(width: number): HTMLElement {
+    const el = document.createElement('div');
+    el.getBoundingClientRect = () =>
+      ({
+        left: 100,
+        right: 100 + width,
+        top: 0,
+        bottom: 400,
+        width,
+        height: 400,
+        x: 100,
+        y: 0,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    return el;
+  }
+
+  it('mirrorGanttKey swaps only the horizontal arrows, only in RTL', () => {
+    expect(mirrorGanttKey(key('ArrowLeft'), true).key).toBe('ArrowRight');
+    expect(mirrorGanttKey(key('ArrowRight'), true).key).toBe('ArrowLeft');
+    expect(mirrorGanttKey(key('ArrowUp'), true).key).toBe('ArrowUp');
+    expect(mirrorGanttKey(key('ArrowLeft'), false).key).toBe('ArrowLeft');
+    const raw = key('ArrowLeft', { ctrlKey: true });
+    const mirrored = mirrorGanttKey(raw, true);
+    expect(mirrored.ctrlKey).toBe(true);
+    mirrored.preventDefault();
+    expect(raw.preventDefault).toHaveBeenCalled();
+  });
+
+  it('rtlEnabled wins; unset follows the dir around the host and its changes', async () => {
+    const explicit = setup({ rtlEnabled: true });
+    expect(explicit.core.rtl()).toBe(true);
+    expect(explicit.core.arrowsTransform()).toBe(
+      `matrix(-1 0 0 1 ${explicit.core.scale().totalPx} 0)`,
+    );
+
+    const auto = setup();
+    expect(auto.core.rtl()).toBe(false);
+    expect(auto.core.arrowsTransform()).toBeNull();
+    document.documentElement.setAttribute('dir', 'rtl');
+    auto.core.connectDirection();
+    expect(auto.core.rtl()).toBe(true);
+    document.documentElement.setAttribute('dir', 'ltr');
+    await Promise.resolve();
+    expect(auto.core.rtl()).toBe(false);
+    document.documentElement.setAttribute('dir', 'rtl');
+    await Promise.resolve();
+    expect(auto.core.rtl()).toBe(true);
+    // an explicit false still wins over the page
+    auto.props['rtlEnabled'] = false;
+    expect(auto.core.rtl()).toBe(false);
+    auto.core.destroy();
+    auto.props['rtlEnabled'] = undefined;
+    document.documentElement.setAttribute('dir', 'ltr');
+    await Promise.resolve();
+    expect(auto.core.rtl()).toBe(true); // disconnected: no longer observed
+  });
+
+  it('mirrors the tree keys: Left expands, Right collapses, Alt+Shift+Left indents', () => {
+    const { core, calls } = setup({ rtlEnabled: true });
+    const phase = core.visibleTasks()[0];
+    core.onRowKeydown(phase, key('ArrowRight'));
+    expect(core.visibleTasks()).toHaveLength(1); // collapsed
+    core.onRowKeydown(core.visibleTasks()[0], key('ArrowLeft'));
+    expect(core.visibleTasks()).toHaveLength(4); // expanded again
+    core.onRowKeydown(
+      core.visibleTasks()[2],
+      key('ArrowLeft', { altKey: true, shiftKey: true }),
+    );
+    const indented = (calls['taskUpdated'][0] as { taskData: Task }).taskData;
+    expect(indented.id).toBe('b');
+    expect(indented.parentId).toBe('a');
+  });
+
+  it('Ctrl+ArrowLeft moves a bar later in RTL', () => {
+    const { core, calls } = setup({ rtlEnabled: true });
+    core.onRowKeydown(
+      core.visibleTasks()[1],
+      key('ArrowLeft', { ctrlKey: true }),
+    );
+    const moved = (calls['taskUpdated'][0] as { taskData: Task }).taskData;
+    expect(moved.start).toEqual(new Date(2026, 0, 6));
+    expect(moved.end).toEqual(new Date(2026, 0, 10));
+  });
+
+  it('a pointer drag to the left moves a bar later in RTL (inverted deltaX)', () => {
+    const { core, calls } = setup({ rtlEnabled: true, __canvas: canvas(800) });
+    const bar = core.windowBars()[1];
+    const tick = core.scale().ticks[0].widthPx;
+    core.onBarPointerDown(bar, 'move', pointer(500));
+    move(500 - tick);
+    up();
+    const moved = (calls['taskUpdated'][0] as { taskData: Task }).taskData;
+    expect(moved.start).toEqual(new Date(2026, 0, 6));
+
+    const ltr = setup({ __canvas: canvas(800) });
+    ltr.core.onBarPointerDown(ltr.core.windowBars()[1], 'move', pointer(500));
+    move(500 - tick);
+    up();
+    const earlier = (ltr.calls['taskUpdated'][0] as { taskData: Task })
+      .taskData;
+    expect(earlier.start).toEqual(new Date(2026, 0, 4));
+  });
+
+  it('pointer x is measured from the right edge in RTL (link preview, drag tip)', () => {
+    const { core } = setup({ rtlEnabled: true, __canvas: canvas(800) });
+    const bar = core.windowBars()[1];
+    core.onLinkPointerDown(bar, true, pointer(800, 50));
+    move(700, 60);
+    // logical x = rect.right (900) - clientX (700) = 200
+    expect(core.linkPreview()?.path).toMatch(/ L 200 60$/);
+    up();
+
+    core.onBarPointerDown(bar, 'move', pointer(600));
+    move(650);
+    expect(core.dragTip()?.x).toBe(900 - 650);
+    up();
+  });
+
+  it('the splitter widens the pane when dragged left in RTL', () => {
+    const { core } = setup({ rtlEnabled: true });
+    core.onSplitterPointerDown(pointer(300));
+    move(260);
+    expect(core.listWidth()).toBe(400);
+    up();
+  });
+
+  it('scrollToDate uses the negative RTL scroll offset', () => {
+    const scroller = document.createElement('div');
+    let written = 0;
+    Object.defineProperty(scroller, 'scrollLeft', {
+      get: () => written,
+      set: (value: number) => {
+        written = value;
+      },
+    });
+    const { core } = setup({ rtlEnabled: true, __chartScroll: scroller });
+    core.scrollToDate(new Date(2026, 0, 16));
+    expect(written).toBeLessThan(0);
   });
 });

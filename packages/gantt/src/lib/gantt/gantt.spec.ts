@@ -32,6 +32,7 @@ interface Link {
       [tasks]="tasks()"
       [dependencies]="links()"
       [showCriticalPath]="showCritical()"
+      [rtlEnabled]="rtl()"
       scaleType="days"
       locale="en-US"
       style="height: 480px"
@@ -79,6 +80,7 @@ class Host {
     { id: 'l2', predecessorId: 'b', successorId: 'm', type: 'FS' },
   ]);
   readonly showCritical = signal(false);
+  readonly rtl = signal<boolean | undefined>(undefined);
   readonly updated: OgeGanttTaskUpdatedEvent<Task>[] = [];
   readonly inserted: OgeGanttDependencyInsertedEvent<Link>[] = [];
 }
@@ -290,5 +292,58 @@ describe('<oge-gantt>', () => {
     expect(empty).not.toBeNull();
     expect(empty?.textContent).toContain('No tasks yet');
     expect(empty?.querySelector('button')).not.toBeNull();
+  });
+
+  describe('right-to-left', () => {
+    function gantt(): HTMLElement {
+      return host.querySelector('oge-gantt') as HTMLElement;
+    }
+
+    it('rtlEnabled sets dir + the rtl class and mirrors the arrow group', async () => {
+      fixture.componentInstance.rtl.set(true);
+      await settle(fixture);
+      expect(gantt().getAttribute('dir')).toBe('rtl');
+      expect(gantt().classList).toContain('oge-gantt-rtl');
+      const group = host.querySelector('.oge-gantt-arrows > g');
+      const width = host
+        .querySelector('.oge-gantt-arrows')
+        ?.getAttribute('width');
+      expect(group?.getAttribute('transform')).toBe(
+        `matrix(-1 0 0 1 ${width} 0)`,
+      );
+      fixture.componentInstance.rtl.set(false);
+      await settle(fixture);
+      expect(gantt().getAttribute('dir')).toBe('ltr');
+      expect(group?.getAttribute('transform')).toBeNull();
+    });
+
+    it('unset follows a dir="rtl" ancestor, live', async () => {
+      expect(gantt().hasAttribute('dir')).toBe(false);
+      expect(gantt().classList).not.toContain('oge-gantt-rtl');
+      host.setAttribute('dir', 'rtl');
+      await settle(fixture);
+      expect(gantt().classList).toContain('oge-gantt-rtl');
+      expect(gantt().hasAttribute('dir')).toBe(false);
+      host.setAttribute('dir', 'ltr');
+      await settle(fixture);
+      expect(gantt().classList).not.toContain('oge-gantt-rtl');
+    });
+
+    it('Ctrl+ArrowLeft moves the focused bar later in RTL', async () => {
+      fixture.componentInstance.rtl.set(true);
+      await settle(fixture);
+      rows()[1].click();
+      await settle(fixture);
+      rows()[1].dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'ArrowLeft',
+          ctrlKey: true,
+          bubbles: true,
+        }),
+      );
+      await settle(fixture);
+      const updated = fixture.componentInstance.updated.at(-1)?.taskData;
+      expect(updated?.start).toEqual(new Date(2026, 0, 6));
+    });
   });
 });

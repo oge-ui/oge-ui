@@ -42,7 +42,7 @@ test.describe('React gantt docs', () => {
     );
     await expect(page.getByRole('status')).toHaveCount(0);
     // every Angular section has its React demo, in the same order
-    await expect(page.locator('app-react-host .oge-gantt')).toHaveCount(9);
+    await expect(page.locator('app-react-host .oge-gantt')).toHaveCount(10);
   });
 
   test('the api page renders the React tables', async ({ page }) => {
