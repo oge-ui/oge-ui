@@ -4,7 +4,39 @@
   "outputDirectory": "dist/apps/dev-app/browser",
   "installCommand": "npm ci",
   "trailingSlash": false,
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.csr.html" }],
+  "redirects": [
+    {
+      "source": "/basic-grid",
+      "destination": "/components/data-grid",
+      "permanent": true
+    },
+    {
+      "source": "/playground",
+      "destination": "/components/data-grid/playground",
+      "permanent": true
+    },
+    {
+      "source": "/sorting",
+      "destination": "/components/data-grid/sorting",
+      "permanent": true
+    },
+    {
+      "source": "/virtual-scroll",
+      "destination": "/components/data-grid/virtual-scroll",
+      "permanent": true
+    },
+    {
+      "source": "/remote-data",
+      "destination": "/components/data-grid/remote-data",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.csr.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -17,8 +49,14 @@
           "key": "Strict-Transport-Security",
           "value": "max-age=63072000; includeSubDomains; preload"
         },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
@@ -27,22 +65,45 @@
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
         },
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
-        { "key": "Cross-Origin-Resource-Policy", "value": "same-origin" },
-        { "key": "X-DNS-Prefetch-Control", "value": "off" }
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Cross-Origin-Resource-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-DNS-Prefetch-Control",
+          "value": "off"
+        }
       ]
     },
     {
       "source": "/llms(.*)",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" }
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cross-Origin-Resource-Policy",
+          "value": "cross-origin"
+        }
       ]
     },
     {
       "source": "/(sitemap.xml|robots.txt)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
     }
   ]
 }
