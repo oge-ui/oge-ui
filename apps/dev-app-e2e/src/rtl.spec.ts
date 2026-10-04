@@ -118,12 +118,18 @@ for (const layer of LAYERS) {
         .first();
       await expect(thumb).toBeVisible();
       await thumb.focus();
+      const min = (await thumb.getAttribute('aria-valuemin')) ?? '0';
+      const max = (await thumb.getAttribute('aria-valuemax')) ?? '100';
       await page.keyboard.press('Home');
+      await expect(thumb).toHaveAttribute('aria-valuenow', min);
       const atMin = await box(thumb);
       await page.keyboard.press('End');
+      await expect(thumb).toHaveAttribute('aria-valuenow', max);
       const atMax = await box(thumb);
       expect(atMax.x).toBeLessThan(atMin.x);
       await page.keyboard.press('Home');
+      // wait for Home to land: reading straight away can still see End's value
+      await expect(thumb).toHaveAttribute('aria-valuenow', min);
       const before = Number(await thumb.getAttribute('aria-valuenow'));
       await page.keyboard.press('ArrowLeft');
       await expect
