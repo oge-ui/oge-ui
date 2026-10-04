@@ -34,7 +34,9 @@
       "@oge-ui/charts/export-image": [
         "./packages/charts/export-image/src/index.ts"
       ],
-      "@oge-ui/charts/export-pdf": ["./packages/charts/export-pdf/src/index.ts"],
+      "@oge-ui/charts/export-pdf": [
+        "./packages/charts/export-pdf/src/index.ts"
+      ],
       "@oge-ui/core": ["./packages/core/src/index.ts"],
       "@oge-ui/forms": ["./packages/forms/src/index.ts"],
       "@oge-ui/gantt": ["./packages/gantt/src/index.ts"],

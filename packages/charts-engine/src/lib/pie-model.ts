@@ -323,8 +323,7 @@ export function buildPieScene<T>(input: OgePieSceneInput<T>): OgePieScene<T> {
     const spec = specs[vm.ringIndex];
     const options = spec.label ?? input.label;
     const labelStyle = labelStyles.get(vm.key);
-    const visible =
-      labelStyle?.visible ?? options?.visible ?? input.showLabels;
+    const visible = labelStyle?.visible ?? options?.visible ?? input.showLabels;
     if (!visible) continue;
     if (options?.showForZero === false && vm.slice.value === 0) continue;
     const info: ChartLabelInfo<T> = {
@@ -375,7 +374,12 @@ export function buildPieScene<T>(input: OgePieSceneInput<T>): OgePieScene<T> {
     const sweep = vm.slice.endAngle - vm.slice.startAngle;
     // too thin a wedge for any text
     if (sweep * r < 14) continue;
-    const at = pointAt(cx, cy, r, (vm.slice.startAngle + vm.slice.endAngle) / 2);
+    const at = pointAt(
+      cx,
+      cy,
+      r,
+      (vm.slice.startAngle + vm.slice.endAngle) / 2,
+    );
     inner.push({
       overlap: options?.overlap ?? 'hide',
       label: {
@@ -495,7 +499,10 @@ export function pieSrTable<T>(
   locale: string | undefined,
 ): {
   readonly headers: readonly string[] | null;
-  readonly rows: readonly { readonly argText: string; readonly cells: readonly string[] }[];
+  readonly rows: readonly {
+    readonly argText: string;
+    readonly cells: readonly string[];
+  }[];
 } {
   if (!scene.ringed) {
     return {

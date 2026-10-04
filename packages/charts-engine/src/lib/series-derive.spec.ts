@@ -239,7 +239,9 @@ describe('waterfall', () => {
     expect(rs.bars[2].color).toBe('#ef4444');
     expect(rs.bars[5].color).toBe(rs.color);
     expect(rs.bars[2].cls).toBe('oge-chart-waterfall-down');
-    expect(rs.segments.filter((seg) => seg.cls.includes('connector'))).toHaveLength(5);
+    expect(
+      rs.segments.filter((seg) => seg.cls.includes('connector')),
+    ).toHaveLength(5);
     expect(cartesianSrRows(s, 10)[2].cells[0]).toBe('-30 (decrease)');
     expect(cartesianSrRows(s, 10)[5].cells[0]).toBe('100 (total)');
   });
@@ -257,13 +259,15 @@ describe('box plot & histogram', () => {
     const rs = s.renderSeries[0];
     expect(rs.bars).toHaveLength(2);
     expect(rs.bars[0].cls).toBe('oge-chart-box');
-    expect(rs.segments.filter((seg) => seg.cls === 'oge-chart-box-median')).toHaveLength(2);
+    expect(
+      rs.segments.filter((seg) => seg.cls === 'oge-chart-box-median'),
+    ).toHaveLength(2);
     expect(rs.dots).toHaveLength(1);
     // the value axis reaches the outlier
     expect(s.valueScales[0].max).toBeGreaterThanOrEqual(100);
-    expect(
-      chartValueText(s.data.seriesList[0].points[0], 'en-US', words),
-    ).toBe('Min 1, Q1 3, Median 5, Q3 7, Max 8, 1 outliers');
+    expect(chartValueText(s.data.seriesList[0].points[0], 'en-US', words)).toBe(
+      'Min 1, Q1 3, Median 5, Q3 7, Max 8, 1 outliers',
+    );
   });
 
   it('box plot from precomputed quartiles', () => {
@@ -328,9 +332,9 @@ describe('pareto', () => {
     const rs = s.renderSeries[0];
     expect(rs.extraPaths[0].cls).toBe('oge-chart-pareto-line');
     expect(rs.dots).toHaveLength(3);
-    expect(
-      chartValueText(s.data.seriesList[0].points[1], 'en-US', words),
-    ).toBe('50 (cumulative 50%)');
+    expect(chartValueText(s.data.seriesList[0].points[1], 'en-US', words)).toBe(
+      '50 (cumulative 50%)',
+    );
   });
 
   it('the cumulative axis spans 0–100', () => {

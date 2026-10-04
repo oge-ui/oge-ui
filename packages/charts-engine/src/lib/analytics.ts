@@ -191,11 +191,7 @@ export function ogeRsi(
 /* ------------------------------------------------------------------ */
 
 export type OgeTrendlineType =
-  | 'linear'
-  | 'exponential'
-  | 'logarithmic'
-  | 'polynomial'
-  | 'movingAverage';
+  'linear' | 'exponential' | 'logarithmic' | 'polynomial' | 'movingAverage';
 
 export interface OgeTrendlineFitOptions {
   /** Polynomial degree (2–6). Default 2. */
@@ -300,7 +296,9 @@ export function ogeTrendline(
   const usable = points
     .filter(
       (point): point is { x: number; y: number } =>
-        point.y !== null && Number.isFinite(point.y) && Number.isFinite(point.x),
+        point.y !== null &&
+        Number.isFinite(point.y) &&
+        Number.isFinite(point.x),
     )
     .sort((a, b) => a.x - b.x);
   const domain = usable.filter((point) =>
@@ -410,9 +408,7 @@ export function ogeQuantile(sorted: readonly number[], q: number): number {
   const position = (sorted.length - 1) * Math.min(1, Math.max(0, q));
   const lower = Math.floor(position);
   const upper = Math.ceil(position);
-  return (
-    sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower)
-  );
+  return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
 }
 
 /**

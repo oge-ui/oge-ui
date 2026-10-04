@@ -50,11 +50,7 @@ export type ChartFieldExpr<T> = string | ((item: T) => unknown);
  * hole.
  */
 export type ChartLabelPosition =
-  | 'inside'
-  | 'outside'
-  | 'center'
-  | 'insideEnd'
-  | 'insideBase';
+  'inside' | 'outside' | 'center' | 'insideEnd' | 'insideBase';
 
 /** What a label `format` callback (and a label template) receives. */
 export interface ChartLabelInfo<T = unknown> {

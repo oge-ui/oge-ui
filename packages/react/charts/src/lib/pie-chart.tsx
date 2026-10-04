@@ -258,9 +258,7 @@ function OgePieChartInner<T extends object>(
                         className="oge-chart-legend-marker"
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="oge-chart-legend-text">
-                        {item.name}
-                      </span>
+                      <span className="oge-chart-legend-text">{item.name}</span>
                     </>
                   )}
                 </button>

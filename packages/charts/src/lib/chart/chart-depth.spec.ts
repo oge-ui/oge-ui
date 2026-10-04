@@ -162,7 +162,9 @@ describe('charts depth (labels, per-point colour, analytic series)', () => {
     expect(inside?.style.fill).toMatch(/255|#fff/);
     fixture.componentInstance.templated.set(true);
     await settle(fixture);
-    expect(host.querySelectorAll('.oge-chart-label-fo .custom-label')).toHaveLength(2);
+    expect(
+      host.querySelectorAll('.oge-chart-label-fo .custom-label'),
+    ).toHaveLength(2);
     expect(host.querySelectorAll('text.oge-chart-point-label')).toHaveLength(0);
   });
 
@@ -200,7 +202,9 @@ describe('charts depth (labels, per-point colour, analytic series)', () => {
     expect(host.querySelectorAll('.oge-chart-waterfall-up')).toHaveLength(1);
     expect(host.querySelectorAll('.oge-chart-waterfall-down')).toHaveLength(1);
     expect(host.querySelectorAll('.oge-chart-waterfall-total')).toHaveLength(1);
-    expect(host.querySelectorAll('.oge-chart-waterfall-connector')).toHaveLength(2);
+    expect(
+      host.querySelectorAll('.oge-chart-waterfall-connector'),
+    ).toHaveLength(2);
     expect(host.querySelectorAll('.oge-chart-box')).toHaveLength(3);
     expect(host.querySelectorAll('.oge-chart-box-median')).toHaveLength(3);
     expect(host.querySelectorAll('.oge-chart-dot').length).toBeGreaterThan(0);
@@ -245,9 +249,10 @@ describe('charts depth (labels, per-point colour, analytic series)', () => {
   });
 
   it('print() hands the chart to a print frame', async () => {
-    await set([{ m: 'Jan', v: 1 }], [
-      { type: 'bar', argumentField: 'm', valueField: 'v' },
-    ]);
+    await set(
+      [{ m: 'Jan', v: 1 }],
+      [{ type: 'bar', argumentField: 'm', valueField: 'v' }],
+    );
     const print = vi.fn();
     const spy = vi
       .spyOn(HTMLIFrameElement.prototype, 'contentWindow', 'get')

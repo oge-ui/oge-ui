@@ -119,26 +119,32 @@ describe('pie model', () => {
       input({
         colorField: (item) => (item.browser === 'Edge' ? '#0078d4' : ''),
         customizePoint: (info) =>
-          info.argument === 'Other' ? { color: '#999999', description: 'misc' } : undefined,
+          info.argument === 'Other'
+            ? { color: '#999999', description: 'misc' }
+            : undefined,
       }),
     );
     expect(scene.slices[2].color).toBe('#0078d4');
     expect(scene.slices[3].color).toBe('#999999');
-    expect(scene.legendItems[3]).toMatchObject({ name: 'Other', color: '#999999' });
+    expect(scene.legendItems[3]).toMatchObject({
+      name: 'Other',
+      color: '#999999',
+    });
     expect(pieValueText(scene.slices[3], 'en-US')).toBe('5 (5%), misc');
   });
 
   it('labels: outside with or without connectors, inside with contrast, format', () => {
     const outside = buildPieScene(input({ label: { connector: false } }));
     expect(outside.labelVms).toHaveLength(4);
-    expect(outside.labelVms.every((label) => label.connector === null)).toBe(true);
+    expect(outside.labelVms.every((label) => label.connector === null)).toBe(
+      true,
+    );
     const inside = buildPieScene(
       input({
         label: {
           visible: true,
           position: 'inside',
-          format: (info) =>
-            `${Math.round((info.percent ?? 0) * 100)}%`,
+          format: (info) => `${Math.round((info.percent ?? 0) * 100)}%`,
         },
       }),
     );

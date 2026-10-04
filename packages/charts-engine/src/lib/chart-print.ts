@@ -4,10 +4,7 @@
  * stylesheet — the chart scaled to the page width, nothing else on the
  * page — and the browser's print dialog opens on that frame. Dependency-free.
  */
-import {
-  serializeChartSvg,
-  type OgeChartSvgSource,
-} from './svg-export';
+import { serializeChartSvg, type OgeChartSvgSource } from './svg-export';
 
 export interface OgeChartPrintOptions {
   /** Heading printed above the chart (and the print job's title). */

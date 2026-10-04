@@ -618,9 +618,7 @@ export function buildCartesianScene<T>(
     let max = -Infinity;
     seriesList.forEach((series, seriesIndex) => {
       if (!visibility[seriesIndex]) return;
-      if (
-        paretoCumulativeAxis(series, valueAxesOptions.length) === axisIndex
-      ) {
+      if (paretoCumulativeAxis(series, valueAxesOptions.length) === axisIndex) {
         min = Math.min(min, 0);
         max = Math.max(max, 100);
       }
@@ -1547,17 +1545,15 @@ function renderIndicatorExtras<T>(
         dashArray: null,
         opacity: 0.12,
       },
-      ...[upper, lower].map(
-        (line): OgeChartRenderPath => ({
-          d: linePath(line),
-          cls: 'oge-chart-indicator-line',
-          fill: null,
-          stroke: ctx.color,
-          strokeWidth: 1,
-          dashArray: null,
-          opacity: 0.7,
-        }),
-      ),
+      ...[upper, lower].map((line): OgeChartRenderPath => ({
+        d: linePath(line),
+        cls: 'oge-chart-indicator-line',
+        fill: null,
+        stroke: ctx.color,
+        strokeWidth: 1,
+        dashArray: null,
+        opacity: 0.7,
+      })),
     );
   }
   if (options.type === 'macd') {

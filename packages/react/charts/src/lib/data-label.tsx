@@ -37,9 +37,7 @@ export function ChartDataLabel({
   return (
     <text
       className={
-        label.inside
-          ? `${className} oge-chart-point-label-inside`
-          : className
+        label.inside ? `${className} oge-chart-point-label-inside` : className
       }
       x={label.x}
       y={label.y}

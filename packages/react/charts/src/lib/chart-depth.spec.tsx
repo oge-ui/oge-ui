@@ -33,12 +33,14 @@ describe('React charts depth (labels, per-point colour, analytic series)', () =>
         />
       </StrictMode>,
     );
-    expect(all(container, '.oge-chart-bar').map((bar) => bar.getAttribute('fill'))).toEqual([
-      '#ff0000',
-      '#1e3a8a',
-    ]);
+    expect(
+      all(container, '.oge-chart-bar').map((bar) => bar.getAttribute('fill')),
+    ).toEqual(['#ff0000', '#1e3a8a']);
     expect(all(container, '.oge-chart-point-label')).toHaveLength(2);
-    const inside = all(container, '.oge-chart-point-label-inside') as SVGTextElement[];
+    const inside = all(
+      container,
+      '.oge-chart-point-label-inside',
+    ) as SVGTextElement[];
     // contrast-picked: dark text on the red bar, white on the navy one
     expect(inside[0].style.fill).toMatch(/17, 24, 39|#111827/);
     expect(inside[1].style.fill).toMatch(/255|#fff/);
@@ -49,20 +51,30 @@ describe('React charts depth (labels, per-point colour, analytic series)', () =>
       <OgeChart<Row>
         dataSource={[{ m: 'Jan', v: 10 }]}
         series={[
-          { type: 'bar', argumentField: 'm', valueField: 'v', showLabels: true },
+          {
+            type: 'bar',
+            argumentField: 'm',
+            valueField: 'v',
+            showLabels: true,
+          },
         ]}
         renderLabel={(label) => <b className="custom-label">{label.text}!</b>}
       />,
     );
-    expect(container.querySelector('.oge-chart-label-fo .custom-label')?.textContent).toBe(
-      '10!',
-    );
+    expect(
+      container.querySelector('.oge-chart-label-fo .custom-label')?.textContent,
+    ).toBe('10!');
     expect(all(container, 'text.oge-chart-point-label')).toHaveLength(0);
   });
 
   it('waterfall, box plot, ohlc and indicator marks; the sr table speaks them', () => {
     const series: OgeChartSeriesInput<Row>[] = [
-      { type: 'waterfall', argumentField: 'd', valueField: 'delta', summaryField: 'sum' },
+      {
+        type: 'waterfall',
+        argumentField: 'd',
+        valueField: 'delta',
+        summaryField: 'sum',
+      },
       { type: 'boxPlot', argumentField: 'd', valuesField: 'vals' },
       {
         type: 'ohlc',
@@ -99,7 +111,9 @@ describe('React charts depth (labels, per-point colour, analytic series)', () =>
     expect(all(container, '.oge-chart-dot').length).toBeGreaterThan(0);
     expect(all(container, '.oge-chart-ohlc')).toHaveLength(9);
     expect(all(container, '.oge-chart-indicator-level')).toHaveLength(2);
-    const cells = all(container, '.oge-chart-sr-table td').map((td) => td.textContent);
+    const cells = all(container, '.oge-chart-sr-table td').map(
+      (td) => td.textContent,
+    );
     expect(cells).toContain('-4 (decrease)');
     expect(cells.some((cell) => cell?.startsWith('Min 1, Q1 2'))).toBe(true);
   });
@@ -109,7 +123,12 @@ describe('React charts depth (labels, per-point colour, analytic series)', () =>
       <OgeChart<Row>
         dataSource={[1, 2, 3, 4, 5].map((x) => ({ x, y: x * 3 }))}
         series={[
-          { type: 'scatter', argumentField: 'x', valueField: 'y', trendline: 'polynomial' },
+          {
+            type: 'scatter',
+            argumentField: 'x',
+            valueField: 'y',
+            trendline: 'polynomial',
+          },
           { type: 'histogram', valueField: 'y', bins: { width: 5 } },
         ]}
       />,
@@ -126,10 +145,9 @@ describe('React charts depth (labels, per-point colour, analytic series)', () =>
       />,
     );
     expect(all(container, '.oge-chart-pareto-line')).toHaveLength(1);
-    expect(all(container, '.oge-chart-arg-label').map((label) => label.textContent)).toEqual([
-      'b',
-      'a',
-    ]);
+    expect(
+      all(container, '.oge-chart-arg-label').map((label) => label.textContent),
+    ).toEqual(['b', 'a']);
   });
 
   it('print() on the handle hands the chart to a print frame', async () => {
@@ -175,7 +193,9 @@ describe('React pie & polar depth', () => {
     );
     expect(all(container, '.oge-chart-pie-slice')).toHaveLength(2);
     expect(all(container, '.oge-chart-pie-label')).toHaveLength(2);
-    expect(all(container, '.oge-chart-pie-slice')[1].getAttribute('fill')).toBe('#123456');
+    expect(all(container, '.oge-chart-pie-slice')[1].getAttribute('fill')).toBe(
+      '#123456',
+    );
     rerender(
       <OgePieChart<Row>
         dataSource={data}

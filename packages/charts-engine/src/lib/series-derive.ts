@@ -67,7 +67,9 @@ export interface ChartDeriveContext<T> {
 export interface ChartDerived<T> {
   readonly seriesList: readonly ChartSeries<T>[];
   /** Waterfall base → top per point (null for other series). */
-  readonly waterfallStacks: readonly (readonly (StackedValue | null)[] | null)[];
+  readonly waterfallStacks: readonly (
+    readonly (StackedValue | null)[] | null
+  )[];
   /** Trendline fit per series (null = none). */
   readonly trends: readonly (OgeTrendlineFit | null)[];
 }
@@ -99,7 +101,8 @@ function deriveWaterfall<T>(series: ChartSeries<T>): {
   let lastSubtotal = 0;
   const stacks: (StackedValue | null)[] = [];
   const points = series.points.map((point): ChartPoint<T> => {
-    const summary = summaryOf === null ? null : summaryKind(summaryOf(point.source));
+    const summary =
+      summaryOf === null ? null : summaryKind(summaryOf(point.source));
     if (summary === 'total') {
       stacks.push({ base: 0, top: running });
       lastSubtotal = running;

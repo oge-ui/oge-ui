@@ -404,7 +404,10 @@ export function buildPolarScene<T>(
               : {}),
           });
         }
-        pushLabel(pointIndex, chartPointLabelAnchor(point.x, point.y, 4, position));
+        pushLabel(
+          pointIndex,
+          chartPointLabelAnchor(point.x, point.y, 4, position),
+        );
       });
     }
     const loop = type === 'line' || type === 'area';
