@@ -23,6 +23,9 @@ export default [
           // while the primary package entries stay static imports
           checkDynamicDependenciesExceptions: [
             '@oge-ui/grid',
+            '@oge-ui/react-grid',
+            '@oge-ui/tree-list',
+            '@oge-ui/react-tree-list',
             '@oge-ui/pivot',
             '@oge-ui/react-pivot',
             '@oge-ui/gantt',

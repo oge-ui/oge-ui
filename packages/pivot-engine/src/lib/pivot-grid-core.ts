@@ -67,10 +67,28 @@ import {
 import type { OgePivotMessages } from './pivot-messages';
 import { OgePivotStateCore } from './pivot-state-core';
 import {
+  applyPivotCalculatedFields,
+  type OgePivotCalculatedField,
+} from './pivot-calculated';
+import {
+  applyPivotMemberFilters,
+  type OgePivotMemberFilters,
+} from './pivot-filters';
+import {
+  toChartSeries,
+  type OgePivotChartData,
+  type OgePivotChartOptions,
+} from './pivot-chart';
+import {
+  pivotRowHeaderSegments,
+  type OgePivotRowHeaderLayout,
+} from './pivot-row-header';
+import {
   type OgePivotAxisLine,
   type OgePivotCellClickEvent,
   type OgePivotCellPosition,
   type OgePivotCellPrepared,
+  type OgePivotCellTemplateContext,
   type OgePivotFieldChooserOptions,
   type OgePivotFieldDef,
   type OgePivotFieldDropTarget,
@@ -102,6 +120,10 @@ export interface OgePivotGridInputs<T> {
   messages(): OgePivotMessages;
   customizeCell(): ((cell: OgePivotCellPrepared) => void) | undefined;
   fieldChooser(): OgePivotFieldChooserOptions;
+  /** Measures computed from the other measures of a cell. Default none. */
+  calculatedFields?(): readonly OgePivotCalculatedField[];
+  /** Row-header layout of the row fields. Default `'compact'`. */
+  rowHeaderLayout?(): OgePivotRowHeaderLayout;
 }
 
 export interface OgePivotGridCoreDeps<T> {
@@ -219,14 +241,33 @@ export class OgePivotGridCore<T = unknown> {
   readonly customSummaries: () => CustomSummaryMap<T> | undefined;
   readonly isRemote: () => boolean;
   readonly dataRows: () => readonly T[];
+  /** Label / value / Top-N filters per row or column field id. */
+  readonly memberFilters: () => ReadonlyMap<string, OgePivotMemberFilters>;
+  /** The local rows after the member filters — what the engine aggregates. */
+  readonly filteredRows: () => readonly T[];
+  /** The declared calculated measures. */
+  readonly calculatedFields: () => readonly OgePivotCalculatedField[];
+  /** Effective row-header layout. */
+  readonly rowHeaderLayout: () => OgePivotRowHeaderLayout;
+  /** Number of row fields in the layout (label columns of outline / tabular). */
+  readonly rowFieldCount: () => number;
+  /** Captions of the row fields (corner header of outline / tabular). */
+  readonly rowFieldCaptions: () => readonly string[];
+  /** Per-field label columns of each row line; `null` in the compact layout. */
+  readonly rowHeaderSegments: () => (readonly string[])[] | null;
   /** Data-dependent phase: rebuilt only when rows or the field layout change. */
   readonly engine: () => PivotEngine<T>;
   /** The persistable snapshot (field layout + expansion + panel flag). */
   readonly persistedSnapshot: () => PivotGridStateSnapshot;
   /** The load the host should issue, or `null` for local data. */
   readonly remoteRequest: () => OgePivotRemoteRequest<T> | null;
-  /** Expansion-dependent phase: cheap on toggle (local); remote uses the last payload. */
+  /**
+   * Expansion-dependent phase: cheap on toggle (local); remote uses the last
+   * payload. Calculated measures follow the regular ones.
+   */
   readonly result: () => PivotResult;
+  /** The materialized pivot before the calculated measures. */
+  private readonly baseResult: () => PivotResult;
   readonly measures: () => readonly PivotFieldConfig[];
   readonly rowLines: () => readonly OgePivotAxisLine[];
   readonly columnLines: () => readonly OgePivotAxisLine[];
@@ -297,10 +338,44 @@ export class OgePivotGridCore<T = unknown> {
       const data = inputs.data();
       return Array.isArray(data) ? (data as readonly T[]) : [];
     });
+    this.memberFilters = rx.derived(() => {
+      const map = new Map<string, OgePivotMemberFilters>();
+      for (const def of inputs.fields()) {
+        if (def.labelFilter || def.valueFilter || def.topN) {
+          map.set(def.id ?? def.dataField, {
+            labelFilter: def.labelFilter,
+            valueFilter: def.valueFilter,
+            topN: def.topN,
+          });
+        }
+      }
+      return map;
+    });
+    this.filteredRows = rx.derived(() =>
+      applyPivotMemberFilters(
+        this.dataRows(),
+        this.resolvedFields(),
+        this.memberFilters(),
+        this.fieldFns(),
+        this.customSummaries(),
+      ),
+    );
+    this.calculatedFields = rx.derived(() => inputs.calculatedFields?.() ?? []);
+    this.rowHeaderLayout = rx.derived(
+      () => inputs.rowHeaderLayout?.() ?? 'compact',
+    );
+    this.rowFieldCount = rx.derived(
+      () => pivotAreaFields(this.resolvedFields(), 'row').length,
+    );
+    this.rowFieldCaptions = rx.derived(() =>
+      pivotAreaFields(this.resolvedFields(), 'row').map(
+        (field) => field.caption ?? field.dataField,
+      ),
+    );
     this.engine = rx.derived(
       () =>
         new PivotEngine<T>({
-          rows: this.dataRows(),
+          rows: this.filteredRows(),
           fields: this.resolvedFields(),
           fns: this.fieldFns(),
           customSummaries: this.customSummaries(),
@@ -326,7 +401,7 @@ export class OgePivotGridCore<T = unknown> {
         ),
       };
     });
-    this.result = rx.derived(() => {
+    this.baseResult = rx.derived(() => {
       if (this.isRemote()) return this.remoteResult() ?? OGE_EMPTY_PIVOT_RESULT;
       return this.engine().materialize({
         rowExpandedPaths: store.rowExpandedPaths(),
@@ -339,12 +414,22 @@ export class OgePivotGridCore<T = unknown> {
         },
       });
     });
+    this.result = rx.derived(() =>
+      applyPivotCalculatedFields(this.baseResult(), this.calculatedFields()),
+    );
     this.measures = rx.derived(() => this.result().measures);
     this.rowLines = rx.derived(() =>
       pivotAxisLines(this.result().rowRoot, inputs.messages()),
     );
     this.columnLines = rx.derived(() =>
       pivotAxisLines(this.result().columnRoot, inputs.messages()),
+    );
+    this.rowHeaderSegments = rx.derived(() =>
+      pivotRowHeaderSegments(
+        this.rowLines(),
+        this.rowHeaderLayout(),
+        this.rowFieldCount(),
+      ),
     );
     this.columnDepth = rx.derived(() =>
       pivotAxisDepth(this.result().columnRoot),
@@ -404,6 +489,9 @@ export class OgePivotGridCore<T = unknown> {
         inputs.virtualScrolling(),
         this.columnDepth(),
         this.virtualColumnWidth(),
+        this.rowHeaderLayout() === 'compact'
+          ? 1
+          : Math.max(1, this.rowFieldCount()),
       ),
     );
     this.panelAreas = rx.derived(() =>
@@ -597,10 +685,13 @@ export class OgePivotGridCore<T = unknown> {
   ): OgePivotCellPrepared {
     const value = this.result().values[rowIndex]?.[columnIndex]?.[measureIndex];
     const measure = this.measures()[measureIndex];
-    const fns = this.fieldFns()[measure.id];
+    const format =
+      this.fieldFns()[measure.id]?.format ??
+      this.calculatedFields().find((field) => field.name === measure.id)
+        ?.format;
     let text = '';
     if (value != null) {
-      if (fns?.format) text = fns.format(value);
+      if (format) text = format(value);
       else if (measure.summaryDisplayMode?.startsWith('percent')) {
         text = `${(Number(value) * 100).toFixed(1)}%`;
       } else {
@@ -621,6 +712,33 @@ export class OgePivotGridCore<T = unknown> {
     };
     this.inputs.customizeCell()?.(prepared);
     return prepared;
+  }
+
+  /** What a value-cell template / `renderCell` receives. */
+  cellTemplateContext(
+    rowIndex: number,
+    columnIndex: number,
+    measureIndex: number,
+  ): OgePivotCellTemplateContext {
+    return {
+      ...this.preparedCell(rowIndex, columnIndex, measureIndex),
+      rowIndex,
+      columnIndex,
+      measureIndex,
+    };
+  }
+
+  /**
+   * The current view as chart data (see `toChartSeries`): rows × measures,
+   * following the expand state; pass `argumentIndexes` for a selection.
+   */
+  getChartData<TType extends string = 'bar'>(
+    options: OgePivotChartOptions<TType> = {},
+  ): OgePivotChartData<TType> {
+    return toChartSeries<TType>(this.result(), {
+      grandTotalText: this.inputs.messages().grandTotal,
+      ...options,
+    });
   }
 
   /**

@@ -9,6 +9,11 @@ import type {
   SortDirection,
   SummaryType,
 } from '@oge-ui/core';
+import type {
+  OgePivotLabelFilter,
+  OgePivotTopNFilter,
+  OgePivotValueFilter,
+} from '@oge-ui/pivot-engine';
 
 /**
  * Declarative pivot field. Renders nothing itself — the pivot grid collects
@@ -53,4 +58,11 @@ export class OgePivotField<T = unknown> {
   readonly format = input<(value: unknown) => string>();
   readonly customizeText =
     input<(info: { value: unknown; valueText: string }) => string>();
+  // member filters (row / column fields), applied before aggregation
+  /** Keeps the members whose label matches (`contains`, `beginsWith`, …). */
+  readonly labelFilter = input<OgePivotLabelFilter>();
+  /** Keeps the members whose total of a measure passes the comparison. */
+  readonly valueFilter = input<OgePivotValueFilter>();
+  /** Keeps the top (or bottom) N members by a measure's total. */
+  readonly topN = input<OgePivotTopNFilter>();
 }

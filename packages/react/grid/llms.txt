@@ -255,7 +255,7 @@ _Loading, state & export_
 | `beginCustomLoading(message?) / endCustomLoading()` | `handle` | Shows the load panel with an optional custom message, independent of data-source activity. |
 | `state(): GridStateSnapshot / applyState(snapshot)` | `handle` | Reads or applies the persistable UI state: sort, filters, column layout, page size. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `clearFilters() / clearSorting()` | `handle` | Clears every filter (row filters and search) / the sort order. |
-| `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows and column metadata of the current view (filter + search + sort applied) — the shared source for exporters. `scope` narrows to the page or selection. |
+| `getExportData(options?): Promise<OgeExportData<T>>` | `handle` | Rows, column metadata (width, alignment, pin side, band) and the structured lines — group rows, group footers, the total row (`items`) — of the current view (filter + search + sort applied). `scope: 'all' \| 'page' \| 'selection'` (or `selectedRowsOnly`), `visibleColumnsOnly: false` adds hidden columns, `groups` / `summaries: false` export flat. |
 | `getCsv(options?): Promise<string>` | `handle` | Builds CSV of the current view; `customizeCell` rewrites individual cells.Cells a spreadsheet would evaluate as a formula are apostrophe-prefixed (CSV formula injection); `formulaGuard: false` opts out. |
 | `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `handle` | Downloads the current view as a CSV file. Fires the cancelable `onExporting` first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
 
@@ -432,10 +432,13 @@ _Export_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeExportOptions<T>` | `{ scope?: 'all' \| 'page' \| 'selection'; customizeCell?: (cell: OgeExportCellArgs<T>) => unknown }` | Narrows and rewrites what the exporters emit. |
-| `OgeExportData<T> / OgeExportColumn<T>` | `{ rows, columns } / { caption, field, dataType, accessor, format? }` | What `getExportData()` resolves to. |
-| `exportGridToExcel(grid, options?)` | `@oge-ui/react-grid/export-excel` | Downloads the current view as `.xlsx`. Takes the grid’s handle where the Angular signature takes the component. `exceljs` is an optional peer, imported only by this entry point; `buildExcelWorkbook` is exported alongside for a workbook you assemble yourself — the same builder the Angular package calls. |
-| `exportGridToPdf(grid, options?)` | `@oge-ui/react-grid/export-pdf` | Downloads the current view as `.pdf` (`title`, `orientation`, `pageFormat`). `jspdf` and `jspdf-autotable` are optional peers; `buildPdfDocument` is exported alongside. |
+| `OgeExportOptions<T>` | `{ scope?; selectedRowsOnly?; visibleColumnsOnly?; groups?; summaries?; customizeCell?: (cell: OgeExportCellArgs<T>) => unknown; cellStyle?(args) }` | Narrows, rewrites and styles what the exporters emit. `customizeCell` rewrites a data cell (return a value) and restyles it (mutate `style`); `cellStyle` styles every cell — header, group and summary lines included — so conditional formatting exports the way it renders. |
+| `OgeExportData<T> / OgeExportColumn<T> / OgeExportCellArgs<T>` | `{ rows, columns, items? } / { caption, field, dataType, accessor, format?, width?, alignment?, pinned?, bandCaption? }` | What `getExportData()` resolves to; `items` carries the group / footer / total lines when the view is grouped or summarized. |
+| `OgeExportItem<T> / OgeExportSummaryCell / OgeExportRowKind` | `{ kind: 'data' \| 'group' \| 'groupFooter' \| 'total'; … }` | One exported line: a data row at its group depth, a group header (text, value, count, header summaries), a group footer or the total row with typed summary values. |
+| `OgeExportCellStyle / OgeExportCellStyleArgs<T>` | `{ bold?, italic?, underline?, color?, background?, fontSize?, alignment?, verticalAlignment?, wrap?, border?, numFmt? }` | Cell style both file builders apply (colours as `#rrggbb`; `numFmt` is Excel-only). |
+| `exportGridToExcel(grid, options?)` | `@oge-ui/react-grid/export-excel` | Downloads the current view as `.xlsx`: merged band headers, frozen header rows + left-pinned columns (`freezeHeader`, `freezeColumns`), grid or auto column widths (`columnWidths`), number/date formats (`numberFormat`, `dateFormat`, `columnFormats`), group rows with collapsible outline levels, group-footer and total rows as values or `SUBTOTAL` formulas (`summaryFormulas`), header/group/summary styles, auto-filter. Takes the grid’s handle where the Angular signature takes the component. `exceljs` is an optional peer, imported only by this entry point; `buildExcelWorkbook` is exported alongside — the same builder the Angular package calls. |
+| `exportGridToPdf(grid, options?)` | `@oge-ui/react-grid/export-pdf` | Downloads the current view as `.pdf`: the header block repeated per page, group and summary rows, grid widths fitted to the page (`fitToWidth`), `title`, `orientation`, `pageFormat`, `pageHeader` / `pageFooter` callbacks and `pageNumbers`. `jspdf` and `jspdf-autotable` are optional peers; `buildPdfDocument` is exported alongside. |
+| `OgeExcelExportOptions<T> / OgePdfExportOptions<T> / OgePdfPageInfo` | `interfaces` | The two download helpers’ options (each extends `OgeExportOptions`) and what a PDF page callback is told (`pageNumber`, `pageCount`). |
 
 _Configuration_
 
@@ -1042,6 +1045,128 @@ export function AssignmentsGrid() {
       editing={{ mode: 'row', allowUpdating: true, allowDeleting: true }}
       commandButtons={commandButtons}
     />
+  );
+}
+```
+
+### Rich Excel export
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeExportCellStyleArgs, OgeGridColumnProps, OgeGridHandle } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+
+const columns: OgeGridColumnProps<Employee>[] = [
+  { field: 'id', caption: 'Id', width: 70, dataType: 'number', pinned: 'left' },
+  // a band becomes a merged two-row header in Excel and PDF
+  { field: 'firstName', caption: 'First Name', width: 140, bandCaption: 'Employee' },
+  { field: 'lastName', caption: 'Last Name', width: 140, bandCaption: 'Employee' },
+  { field: 'city', caption: 'City' },
+  { field: 'hireDate', caption: 'Hired', dataType: 'date' },
+  { field: 'salary', caption: 'Salary', dataType: 'number',
+    groupSummary: 'sum', groupSummaryPosition: 'footer', totalSummary: 'sum' },
+];
+
+// conditional formatting: one value-level hook styles Excel and PDF alike
+const cellStyle = ({ column, value, kind }: OgeExportCellStyleArgs<Employee>) =>
+  kind === 'data' && column.field === 'salary' && Number(value) > 8000
+    ? { background: '#fff4ce', color: '#7a4b00', bold: true }
+    : undefined;
+
+export function ExcelExport() {
+  const grid = useRef<OgeGridHandle<Employee>>(null);
+
+  // the lazy entry keeps exceljs out of the main bundle
+  const excel = async (selectedRowsOnly = false) => {
+    const { exportGridToExcel } = await import('@oge-ui/react-grid/export-excel');
+    if (!grid.current) return;
+    await exportGridToExcel(grid.current, {
+      filename: 'employees.xlsx',
+      selectedRowsOnly,
+      summaryFormulas: true, // group footers + total as SUBTOTAL formulas
+      columnFormats: { salary: '#,##0 "€"' },
+      cellStyle,
+    });
+  };
+  return (
+    <>
+      <button type="button" onClick={() => void excel()}>Excel</button>
+      <button type="button" onClick={() => void excel(true)}>Selected rows</button>
+      <OgeGrid
+        ref={grid}
+        data={employees}
+        keyField="id"
+        columns={columns}
+        selectionMode="multiple"
+        groupBy={['department']}
+      />
+    </>
+  );
+}
+```
+
+### PDF page chrome
+
+```ts
+'use client';
+
+import { useRef } from 'react';
+import { OgeGrid } from '@oge-ui/react-grid';
+import type { OgeGridColumnProps, OgeGridHandle } from '@oge-ui/react-grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+declare const employees: Employee[];
+
+const columns: OgeGridColumnProps<Employee>[] = [
+  { field: 'firstName', caption: 'First Name' },
+  { field: 'lastName', caption: 'Last Name' },
+  { field: 'city', caption: 'City' },
+  { field: 'salary', caption: 'Salary', dataType: 'number', totalSummary: 'sum' },
+];
+
+export function PdfExport() {
+  const grid = useRef<OgeGridHandle<Employee>>(null);
+
+  const pdf = async () => {
+    const { exportGridToPdf } = await import('@oge-ui/react-grid/export-pdf');
+    if (!grid.current) return;
+    await exportGridToPdf(grid.current, {
+      filename: 'employees.pdf',
+      title: 'Employees by department',
+      orientation: 'portrait',
+      // the header repeats on every page; widths follow the grid, fitted to the page
+      pageHeader: () => 'OGE UI · HR report',
+      pageFooter: ({ pageNumber, pageCount }) => `Page ${pageNumber} of ${pageCount}`,
+    });
+  };
+  return (
+    <>
+      <button type="button" onClick={() => void pdf()}>PDF</button>
+      <OgeGrid ref={grid} data={employees} keyField="id" columns={columns} groupBy={['department']} />
+    </>
   );
 }
 ```

@@ -3,12 +3,15 @@ const { withNx } = require('@nx/rollup/with-nx');
 module.exports = withNx(
   {
     main: './src/index.ts',
-    // Optional-peer entry point: the pure `.xlsx` builder both render layers
-    // share. A separate entry so `exceljs` is pulled in only by an app that
+    // Optional-peer entry points: the pure `.xlsx` / `.pdf` builders both render layers
+    // share. Separate entries so `exceljs` / `jspdf` are pulled in only by an app that
     // actually imports it.
     // note: workspace-relative, and the file name becomes the entry name —
     // `<dir>/index.ts` would collide with the main `index` entry
-    additionalEntryPoints: ['packages/pivot-engine/src/export-excel.ts'],
+    additionalEntryPoints: [
+      'packages/pivot-engine/src/export-excel.ts',
+      'packages/pivot-engine/src/export-pdf.ts',
+    ],
     outputPath: '../../dist/packages/pivot-engine',
     tsConfig: './tsconfig.lib.json',
     compiler: 'swc',

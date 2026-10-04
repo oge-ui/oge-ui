@@ -2,6 +2,10 @@ import {
   ArrayDataSource,
   ancestorsOf,
   buildCsv,
+  computeSummaries,
+  type CustomSummaryMap,
+  type SummaryType,
+  type SummaryValue,
   guardCsvFormula,
   buildTreeIndex,
   computeTreeCheckStates,
@@ -42,8 +46,14 @@ import type { OgeTreeRowKeyMove } from '../grid/grid-keyboard-moves';
 import type {
   OgeExportColumn,
   OgeExportData,
+  OgeExportItem,
+  OgeExportSummaryCell,
   OgePagingOptions,
 } from '../grid/grid-options';
+import {
+  ogeExportColumnOf,
+  type OgeExportColumnSource,
+} from '../grid/grid-export';
 import {
   isDataSource,
   lookupTextOf,
@@ -90,6 +100,93 @@ export interface OgeTreeExportData<T = unknown> extends OgeExportData<T> {
   levels: readonly number[];
 }
 
+/** One tree-list aggregate: what to compute over which field. */
+export interface OgeTreeSummaryItem {
+  /** Field the aggregate reads. */
+  field: string;
+  /** `'custom'` runs `calculateCustomSummary[name ?? field]`. */
+  type: SummaryType;
+  /** Key of the custom reducer (defaults to `field`). */
+  name?: string;
+  /** Column the value shows under; defaults to `field`. */
+  showInColumn?: string;
+}
+
+/**
+ * Tree-list summaries — the `summary` input / prop.
+ *
+ * - `totalItems` aggregate every row the current filter leaves visible, at
+ *   every level (collapsed branches included), and render in a footer row.
+ * - `recursiveItems` aggregate, per parent row, all its visible
+ *   descendants; the value renders in the parent row's cell next to its own
+ *   value, and exports as a footer line after the parent's subtree.
+ */
+export interface OgeTreeListSummary<T = unknown> {
+  totalItems?: readonly OgeTreeSummaryItem[];
+  recursiveItems?: readonly OgeTreeSummaryItem[];
+  /** Reducers for `type: 'custom'` items, keyed by `name ?? field`. */
+  calculateCustomSummary?: CustomSummaryMap<T>;
+}
+
+/**
+ * Operations a tree list hands to its data source (`remoteOperations`).
+ * Only filtering is delegable: sorting stays sibling-scoped and client-side.
+ */
+export interface OgeTreeListRemoteOperations {
+  /**
+   * Filter row, header filter, filter builder and search go to the source
+   * (full load mode), which must answer with the matches plus all their
+   * ancestors; header-filter values come from `source.distinct()`.
+   */
+  filtering?: boolean;
+}
+
+/** What a tree-list export includes — `getExportData(options)` in both layers. */
+export interface OgeTreeExportOptions {
+  /**
+   * `true` (default) exports the visible columns (responsive hiding does
+   * not count); `false` adds the `visible: false` / chooser-hidden ones.
+   */
+  visibleColumnsOnly?: boolean;
+  /** Only the selected rows. Default false. */
+  selectedRowsOnly?: boolean;
+  /** Total and per-parent summary lines. Default true. */
+  summaries?: boolean;
+}
+
+/** Options of {@link OgeTreeListCore.getExportData}. */
+export interface OgeTreeExportBuildOptions {
+  /** Formats one summary ("Sum: 1,234"); summaries are skipped without it. */
+  summaryText?: (summary: SummaryValue) => string;
+  /** The label alone ("Sum") — Excel prefixes typed totals with it. */
+  summaryLabel?: (type: SummaryType) => string;
+  /** Total + recursive summary lines. Default true. */
+  summaries?: boolean;
+  /** Only the selected rows (the hierarchy levels stay as rendered). */
+  selectedRowsOnly?: boolean;
+}
+
+/** One summary per item, `showInColumn` honoured as the reported field. */
+function treeSummaryValues<T>(
+  rows: readonly T[],
+  items: readonly OgeTreeSummaryItem[],
+  custom: CustomSummaryMap<T> | undefined,
+): SummaryValue[] {
+  const values = computeSummaries(
+    rows,
+    items.map((item) => ({
+      field: item.field,
+      type: item.type,
+      ...(item.name ? { name: item.name } : {}),
+    })),
+    custom,
+  );
+  return values.map((value, index) => ({
+    ...value,
+    field: items[index].showInColumn ?? items[index].field,
+  }));
+}
+
 /** Fired after a row is dropped onto (or next to) another row. */
 export interface OgeTreeRowReparentEvent<T = unknown> {
   key: RowKey;
@@ -123,14 +220,7 @@ export interface OgeTreeSearchColumn<T> {
 }
 
 /** A column as the exporters read it — the render layers' resolved column fits. */
-export interface OgeTreeExportSourceColumn<T> {
-  readonly caption: string;
-  readonly field: string | undefined;
-  readonly dataType: OgeDataType;
-  readonly accessor: (row: T) => unknown;
-  readonly format?: ((value: unknown) => string) | undefined;
-  readonly lookupItems?: readonly LookupItem[] | undefined;
-}
+export type OgeTreeExportSourceColumn<T> = OgeExportColumnSource<T>;
 
 /** The strings the core formats booleans with. */
 export interface OgeTreeBooleanMessages {
@@ -163,6 +253,13 @@ export interface OgeTreeListCoreDeps<T> {
   /** Current zero-based page — owned by the host (Angular exposes it publicly). */
   pageIndex: OgeReactiveCell<number>;
   onError: (error: unknown) => void;
+  /** Total / recursive summaries; absent = none. */
+  summary?: () => OgeTreeListSummary<T> | undefined;
+  /**
+   * `remoteOperations.filtering`: filter, search and header-filter values go
+   * to the data source, which answers with matches plus their ancestors.
+   */
+  remoteFiltering?: () => boolean;
 }
 
 /** Hooks of {@link OgeTreeListCore.requestToggle} — the cancelable pipeline's events. */
@@ -190,15 +287,25 @@ function withoutFilter(options: LoadOptions): LoadOptions {
  * Wraps the user source for tree semantics: filter/search never reach the
  * source (filtering runs client-side so ancestor rows survive), and lazy mode
  * narrows the base load to the root rows.
+ *
+ * With `remoteFiltering` (full load mode) the filter and search text go
+ * through to the source instead. **Server contract:** answer with every row
+ * matching `filter` / `searchText` *plus all of its ancestors* (so each
+ * match keeps a path to a root), in the same flat parent-reference shape as
+ * an unfiltered load. The tree list then renders the answer as-is — no
+ * client-side re-filtering — and expands the branches leading to matches.
  */
 export function ogeTreeDataSource<T>(
   inner: DataSource<T>,
   lazy: { parentField: string; rootValue: unknown } | null,
+  remoteFiltering = false,
 ): DataSource<T> {
+  const passFilter = remoteFiltering && !lazy;
   return {
-    capabilities: { ...inner.capabilities, filter: false },
+    capabilities: { ...inner.capabilities, filter: passFilter },
     keyOf: (item) => inner.keyOf(item),
     load: (options) => {
+      if (passFilter) return inner.load(options);
       const rest = withoutFilter(options);
       return inner.load(
         lazy
@@ -305,7 +412,21 @@ export class OgeTreeListCore<T> {
   readonly checkStates: () => ReadonlyMap<RowKey, CheckState>;
   readonly allSelected: () => boolean;
   readonly someSelected: () => boolean;
+  /** Filtering runs on the server (`remoteOperations.filtering`, full mode). */
+  readonly remoteFilteringActive: () => boolean;
+  /** Rows the summaries aggregate: every filter-visible row, collapsed ones too. */
+  readonly summaryRows: () => readonly T[];
+  /** `summary.totalItems` values (empty without items). */
+  readonly totalSummaries: () => readonly SummaryValue[];
+  /** `summary.recursiveItems` values per parent row key (descendants only). */
+  readonly recursiveSummaries: () => ReadonlyMap<
+    RowKey,
+    readonly SummaryValue[]
+  >;
 
+  private readonly remoteDistinct: OgeReactiveCell<
+    ReadonlyMap<string, readonly unknown[]>
+  >;
   private readonly nestedParents: OgeReactiveCell<ReadonlyMap<
     RowKey,
     RowKey | null
@@ -328,6 +449,9 @@ export class OgeTreeListCore<T> {
     this.innerSourceCell = rx.cell<DataSource<T> | null>(null);
     this.remoteFilterRowsCell = rx.cell<readonly T[]>([]);
     this.pageSizeOverride = rx.cell<number | null>(null);
+    this.remoteDistinct = rx.cell<ReadonlyMap<string, readonly unknown[]>>(
+      new Map(),
+    );
     this.innerSource = () => this.innerSourceCell();
     this.remoteFilterRows = () => this.remoteFilterRowsCell();
 
@@ -447,7 +571,14 @@ export class OgeTreeListCore<T> {
       return expanded;
     });
 
+    this.remoteFilteringActive = rx.derived(
+      () =>
+        (deps.remoteFiltering?.() ?? false) && this.effLoadMode() === 'full',
+    );
+
     this.filterPredicate = rx.derived(() => {
+      // the server already answered with matches + ancestors
+      if (this.remoteFilteringActive()) return null;
       const expr = state.filter.combinedExpr();
       const search = state.filter.searchText().trim();
       const exprPredicate = expr ? createFilterPredicate<T>(expr) : null;
@@ -471,6 +602,14 @@ export class OgeTreeListCore<T> {
 
     this.filterExpandedKeys = rx.derived(() => {
       if (!deps.expandNodesOnFiltering()) return null;
+      if (this.remoteFilteringActive()) {
+        // a server answer holds only matches and their ancestors: open
+        // every loaded branch so the matches are on screen
+        const active =
+          state.filter.combinedExpr() != null ||
+          state.filter.searchText().trim() !== '';
+        return active ? new Set(this.treeIndex().childrenOf.keys()) : null;
+      }
       const visible = this.visibleKeys();
       if (!visible) return null;
       const index = this.treeIndex();
@@ -614,6 +753,94 @@ export class OgeTreeListCore<T> {
     this.someSelected = rx.derived(
       () => state.selection.count() > 0 && !this.allSelected(),
     );
+
+    // --- summaries ---
+    this.summaryRows = rx.derived(() => {
+      const index = this.treeIndex();
+      const visible = this.visibleKeys();
+      const rows: T[] = [];
+      for (const [key, row] of index.byKey) {
+        if (!visible || visible.has(key)) rows.push(row);
+      }
+      return rows;
+    });
+    this.totalSummaries = rx.derived(() => {
+      const summary = deps.summary?.();
+      const items = summary?.totalItems ?? [];
+      if (!items.length) return [];
+      return treeSummaryValues(
+        this.summaryRows(),
+        items,
+        summary?.calculateCustomSummary,
+      );
+    });
+    this.recursiveSummaries = rx.derived(() => {
+      const summary = deps.summary?.();
+      const items = summary?.recursiveItems ?? [];
+      const out = new Map<RowKey, readonly SummaryValue[]>();
+      if (!items.length) return out;
+      const index = this.treeIndex();
+      const visible = this.visibleKeys();
+      const keyOf = this.rowKeyOf();
+      // post-order: each parent's descendants = its children + theirs
+      const descendants = (key: RowKey): T[] => {
+        const rows: T[] = [];
+        for (const child of index.childrenOf.get(key) ?? []) {
+          const childKey = keyOf(child);
+          if (visible && !visible.has(childKey)) continue;
+          rows.push(child);
+          const below = descendants(childKey);
+          for (const row of below) rows.push(row);
+          if (below.length) {
+            out.set(
+              childKey,
+              treeSummaryValues(below, items, summary?.calculateCustomSummary),
+            );
+          }
+        }
+        return rows;
+      };
+      for (const root of index.roots) {
+        const rootKey = keyOf(root);
+        if (visible && !visible.has(rootKey)) continue;
+        const below = descendants(rootKey);
+        if (below.length) {
+          out.set(
+            rootKey,
+            treeSummaryValues(below, items, summary?.calculateCustomSummary),
+          );
+        }
+      }
+      return out;
+    });
+  }
+
+  // --- header-filter values ------------------------------------------------
+
+  /**
+   * Remote filtering asks the source for a column's distinct values (with
+   * the current filter) once per popup opening; local mode needs nothing.
+   */
+  requestDistinctValues(field: string): void {
+    if (!this.remoteFilteringActive()) return;
+    const source = this.innerSourceCell();
+    if (!source?.distinct) return;
+    const filter = this.deps.state.filter.combinedExpr() ?? null;
+    void source.distinct(field, { filter }).then(
+      (values) => {
+        const next = new Map(this.remoteDistinct());
+        next.set(field, values);
+        this.remoteDistinct.set(next);
+      },
+      (err: unknown) => this.deps.onError(err),
+    );
+  }
+
+  /** The values the server reported for `field`, once loaded. */
+  remoteDistinctValues(field: string): readonly unknown[] | undefined {
+    return this.remoteFilteringActive()
+      ? this.remoteDistinct().get(field)
+      : undefined;
   }
 
   // --- source wiring ---------------------------------------------------------
@@ -630,6 +857,7 @@ export class OgeTreeListCore<T> {
     this.effLoadMode();
     this.deps.rootValue();
     this.nestedItemsOf();
+    this.remoteFilteringActive();
   }
 
   /**
@@ -669,6 +897,7 @@ export class OgeTreeListCore<T> {
       lazy && parentField
         ? { parentField, rootValue: this.deps.rootValue() }
         : null,
+      this.remoteFilteringActive(),
     );
   }
 
@@ -1273,7 +1502,11 @@ export class OgeTreeListCore<T> {
   distinctValues(
     accessor: (row: T) => unknown,
     limit: number,
+    field?: string,
   ): readonly unknown[] {
+    // remote filtering: the server's distinct values once they arrived
+    const remote = field ? this.remoteDistinctValues(field) : undefined;
+    if (remote) return remote.slice(0, limit);
     const seen = new Map<string, unknown>();
     for (const row of this.indexRows()) {
       const value = accessor(row);
@@ -1314,34 +1547,63 @@ export class OgeTreeListCore<T> {
   getExportData(
     columns: readonly OgeTreeExportSourceColumn<T>[],
     messages: OgeTreeBooleanMessages,
+    options: OgeTreeExportBuildOptions = {},
   ): OgeTreeExportData<T> {
-    const nodes = this.flatNodes().filter(
+    let nodes = this.flatNodes().filter(
       (node): node is DataRowNode<T> => node.kind === 'data',
     );
-    const exportColumns: OgeExportColumn<T>[] = columns.map((column) => ({
-      caption: column.caption,
-      field: column.field,
-      dataType: column.dataType,
-      accessor: column.accessor,
-      format: column.format
-        ? column.format
-        : column.lookupItems
-          ? (value: unknown): string =>
-              lookupTextOf(column.lookupItems ?? [], value)
-          : column.dataType === 'boolean'
-            ? (value: unknown): string =>
-                value == null
-                  ? ''
-                  : value
-                    ? messages.booleanTrue
-                    : messages.booleanFalse
-            : undefined,
-    }));
-    return {
+    if (options.selectedRowsOnly) {
+      const selected = this.deps.state.selection.selected();
+      nodes = nodes.filter((node) => selected.has(node.key));
+    }
+    const exportColumns: OgeExportColumn<T>[] = columns.map((column) =>
+      ogeExportColumnOf(column, messages),
+    );
+    const data: OgeTreeExportData<T> = {
       rows: nodes.map((node) => node.data),
       columns: exportColumns,
       levels: nodes.map((node) => node.level),
     };
+    const summaryText = options.summaryText;
+    if (options.summaries === false || !summaryText) return data;
+    const total = this.totalSummaries();
+    const recursive = this.recursiveSummaries();
+    if (!total.length && !recursive.size) return data;
+    const cells = (values: readonly SummaryValue[]): OgeExportSummaryCell[] =>
+      values.map((value) => ({
+        field: value.field,
+        type: value.type,
+        value: value.value,
+        text: summaryText(value),
+        ...(options.summaryLabel
+          ? { label: options.summaryLabel(value.type) }
+          : {}),
+      }));
+    // a parent's footer closes its subtree: emit it once the walk leaves
+    // the parent's level again
+    const items: OgeExportItem<T>[] = [];
+    const open: { key: RowKey; level: number }[] = [];
+    const close = (level: number): void => {
+      while (open.length && open[open.length - 1].level >= level) {
+        const parent = open.pop();
+        const values = parent ? recursive.get(parent.key) : undefined;
+        if (parent && values?.length)
+          items.push({
+            kind: 'groupFooter',
+            level: parent.level + 1,
+            summaries: cells(values),
+          });
+      }
+    };
+    for (const node of nodes) {
+      close(node.level);
+      items.push({ kind: 'data', row: node.data, level: node.level });
+      if (recursive.has(node.key))
+        open.push({ key: node.key, level: node.level });
+    }
+    close(0);
+    if (total.length) items.push({ kind: 'total', summaries: cells(total) });
+    return { ...data, items };
   }
 
   /** TSV of the selected visible rows with a header row, or `''` when none. */

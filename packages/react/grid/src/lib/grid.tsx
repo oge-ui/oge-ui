@@ -93,6 +93,11 @@ import {
   isDataSource,
   keyEqualsExpr,
   lookupTextOf,
+  ogeExportColumnsOf,
+  ogeExportScope,
+  ogeGridExportItems,
+  ogeGridExportLoadOptions,
+  type OgeExportColumnSource,
   ogeGridBandRow,
   resolveOgeGridAdaptiveHiddenColumns,
   resolveOgeGridColumns,
@@ -784,6 +789,23 @@ function OgeGridInner<T extends object>(
       }),
     );
 
+    /**
+     * The columns an export writes: every visible one (the responsive width
+     * pass does not count) and, with `includeHidden`, the hidden ones too.
+     */
+    const exportColumnSources = (includeHidden: boolean): ResolvedColumn<T>[] =>
+      resolveOgeGridColumns<T, Slot<T>, OgeGridColumnProps<T>>({
+        specs: includeHidden
+          ? columnSpecs().map((spec) => ({ ...spec, visible: true }))
+          : columnSpecs(),
+        columnDefs: () => undefined,
+        firstDataRow,
+        widthOverrides: state.columns.widthOverrides(),
+        pinOverrides: state.columns.pinOverrides(),
+        order: state.columns.order(),
+        adaptiveHiddenIds: new Set<string>(),
+      });
+
     /** The columns hidden by width, rendered in each row's adaptive detail. */
     const adaptiveHiddenColumns = rx.derived<ResolvedColumn<T>[]>(() =>
       effColumnHidingMode() === 'detail'
@@ -1336,6 +1358,7 @@ function OgeGridInner<T extends object>(
       declaredColumns,
       groupFooterFields,
       resolvedColumns,
+      exportColumnSources,
       bandRow,
       colVirtualized,
       layout,
@@ -2042,42 +2065,22 @@ function OgeGridInner<T extends object>(
 
   // --- export ---
   function exportColumns(): OgeExportColumn<T>[] {
-    const messages = msgRef.current;
-    return model
-      .resolvedColumns()
-      .filter((column) => column.field)
-      .map((column) => ({
-        caption: column.caption,
-        field: column.field,
-        dataType: column.dataType,
-        accessor: column.accessor as (row: T) => unknown,
-        format:
-          column.format ??
-          (column.lookupItems
-            ? (value: unknown) =>
-                lookupTextOf(column.lookupItems as LookupItem[], value)
-            : column.dataType === 'boolean'
-              ? (value: unknown) =>
-                  value ? messages.booleanTrue : messages.booleanFalse
-              : undefined),
-      }));
+    return ogeExportColumnsOf(
+      model.resolvedColumns() as OgeExportColumnSource<T>[],
+      msgRef.current,
+    );
   }
 
   async function getExportData(
     options: OgeExportOptions<T> = {},
   ): Promise<OgeExportData<T>> {
-    const scope = options.scope ?? 'all';
+    const scope = ogeExportScope(options);
     const source = data.source();
     const load = state.loadOptions();
     const loaded = source
-      ? await source.load({
-          ...(load.sort?.length ? { sort: load.sort } : {}),
-          ...(load.filter ? { filter: load.filter } : {}),
-          ...(load.searchText ? { searchText: load.searchText } : {}),
-          ...(scope === 'page' && load.take != null
-            ? { skip: load.skip ?? 0, take: load.take }
-            : {}),
-        })
+      ? await source.load(
+          ogeGridExportLoadOptions(load, scope, options.groups !== false),
+        )
       : { data: [] };
     let rows = loaded.data as readonly T[];
     if (scope === 'selection') {
@@ -2085,7 +2088,33 @@ function OgeGridInner<T extends object>(
       const keyOf = model.keySelector();
       rows = rows.filter((row, index) => selectedNow.has(keyOf(row, index)));
     }
-    return { rows, columns: exportColumns() };
+    const messages = msgRef.current;
+    const columns = ogeExportColumnsOf(
+      model.exportColumnSources(
+        options.visibleColumnsOnly === false,
+      ) as OgeExportColumnSource<T>[],
+      messages,
+    );
+    // group fields need not be exported columns: look them up over all
+    const everyColumn = ogeExportColumnsOf(
+      model.exportColumnSources(true) as OgeExportColumnSource<T>[],
+      messages,
+    );
+    const items = ogeGridExportItems<T>({
+      rows,
+      loadOptions: load,
+      fieldInfo: (field) =>
+        everyColumn.find((column) => column.field === field),
+      groupFooterFields: model.groupFooterFields(),
+      customSummaries: columnSelectors.customSummaries,
+      // a source that summarizes itself sent the totals with the view
+      ...(source?.capabilities.summary
+        ? { totalValues: data.result()?.summary }
+        : {}),
+      messages,
+      options,
+    });
+    return { rows, columns, ...(items ? { items } : {}) };
   }
 
   async function getCsv(

@@ -33,9 +33,12 @@ export {
  */
 export async function exportOgeTreeListToExcel<T extends object>(
   treeList: OgeTreeListHandle<T>,
-  options: OgeTreeExcelExportOptions = {},
+  options: OgeTreeExcelExportOptions<T> = {},
 ): Promise<void> {
-  const workbook = buildTreeExcelWorkbook(treeList.getExportData(), options);
+  const workbook = buildTreeExcelWorkbook(
+    treeList.getExportData(options),
+    options,
+  );
   if (typeof document === 'undefined') return;
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {

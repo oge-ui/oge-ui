@@ -34,8 +34,13 @@ component renders whatever the engine materializes.
   localizable via the `OGE_PIVOT_MESSAGES` token
 - State persistence (`stateKey`) through the shared `OGE_STATE_STORAGE`
   token; `state()` / `applyState()` / `stateChange` for manual control
+- Calculated measures (`calculatedFields`), label / value / Top-N member
+  filters, compact / outline / tabular row headers, cell and header templates
+- Chart binding: `getChartData()` turns the view into `@oge-ui/charts` series
+  data (no dependency on the charts package)
 - Export: `getCsv()` / `exportCsv()` built in; Excel with merged multi-level
-  headers and typed cells via the lazy `@oge-ui/pivot/export-excel` entry
+  headers and typed cells via the lazy `@oge-ui/pivot/export-excel` entry; PDF
+  via `@oge-ui/pivot/export-pdf`
 
 ## Install
 

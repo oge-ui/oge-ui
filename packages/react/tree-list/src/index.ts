@@ -11,6 +11,10 @@ export type {
 export type {
   OgeTreeDropPosition,
   OgeTreeExportData,
+  OgeTreeExportOptions,
+  OgeTreeListRemoteOperations,
+  OgeTreeListSummary,
+  OgeTreeSummaryItem,
   OgeTreeInitNewRowEvent,
   OgeTreeLoadMode,
   OgeTreeOrphanPolicy,

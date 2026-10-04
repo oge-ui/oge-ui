@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   forwardRef,
   useEffect,
   useImperativeHandle,
@@ -11,6 +12,7 @@ import {
   type ForwardedRef,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  type CSSProperties,
   type ReactElement,
   type Ref,
 } from 'react';
@@ -19,6 +21,7 @@ import type {
   PivotArea,
   PivotFieldConfig,
   PivotGridStateSnapshot,
+  PivotResult,
 } from '@oge-ui/core';
 import {
   OgePivotGridCore,
@@ -28,6 +31,8 @@ import {
   pivotIsRtl,
   pivotKeyboardPointer,
   type OgePivotAxisLine,
+  type OgePivotCalculatedField,
+  type OgePivotRowHeaderLayout,
   type OgePivotHeaderCell,
   type OgePivotMenuItem,
   type OgePivotFieldDef,
@@ -41,6 +46,11 @@ import { createPivotRxAdapter } from './rx-adapter';
 const NO_ROWS: readonly never[] = [];
 const NO_FIELDS: readonly never[] = [];
 const NO_CHOOSER = {};
+const NO_CALCS: readonly never[] = [];
+
+/** The label-column count of the outline / tabular row headers. */
+const segmentColumns = (count: number): CSSProperties =>
+  ({ '--oge-pivot-rh-columns': count }) as CSSProperties;
 
 const arrow = (
   <svg
@@ -98,6 +108,8 @@ function OgePivotGridInner<T>(
       showRowGrandTotals: rx.input(true),
       showColumnGrandTotals: rx.input(true),
       messages: rx.input(messages),
+      calculatedFields: rx.input<readonly OgePivotCalculatedField[]>(NO_CALCS),
+      rowHeaderLayout: rx.input<OgePivotRowHeaderLayout>('compact'),
     };
     const core = new OgePivotGridCore<T>(rx, {
       inputs: {
@@ -111,6 +123,8 @@ function OgePivotGridInner<T>(
         messages: input.messages,
         customizeCell: () => latest.current.customizeCell,
         fieldChooser: () => latest.current.fieldChooser ?? NO_CHOOSER,
+        calculatedFields: input.calculatedFields,
+        rowHeaderLayout: input.rowHeaderLayout,
       },
       fieldLayoutChange: (fields) =>
         latest.current.onFieldLayoutChange?.(fields),
@@ -142,6 +156,8 @@ function OgePivotGridInner<T>(
   model.input.showRowGrandTotals.set(props.showRowGrandTotals ?? true);
   model.input.showColumnGrandTotals.set(props.showColumnGrandTotals ?? true);
   model.input.messages.set(messages);
+  model.input.calculatedFields.set(props.calculatedFields ?? NO_CALCS);
+  model.input.rowHeaderLayout.set(props.rowHeaderLayout ?? 'compact');
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -194,10 +210,24 @@ function OgePivotGridInner<T>(
   });
   useEffect(() => () => persistence.dispose(), [persistence]);
 
+  // a linked chart follows the materialized view (identity changes only)
+  const viewResult = core.result();
+  const lastResult = useRef<PivotResult | null>(null);
+  useEffect(() => {
+    if (lastResult.current === viewResult) return;
+    lastResult.current = viewResult;
+    latest.current.onResultChange?.(viewResult);
+  });
+
   useImperativeHandle(
     ref,
     (): OgePivotGridHandle<T> => ({
       getResult: () => core.getResult(),
+      getChartData: (options) => core.getChartData(options) as never,
+      getPreparedCell: (rowIndex, columnIndex, measureIndex) =>
+        core.preparedCell(rowIndex, columnIndex, measureIndex),
+      getRowFieldCaptions: () => core.rowFieldCaptions(),
+      getRowHeaderLayout: () => core.rowHeaderLayout(),
       drillDown: (args) => core.drillDown(args),
       expandAll: (area) => core.expandAll(area),
       collapseAll: (area) => core.collapseAll(area),
@@ -402,6 +432,8 @@ function OgePivotGridInner<T>(
   const template = core.matrixTemplate();
   const measures = core.measures();
   const rowLines = core.rowLines();
+  const segments = core.rowHeaderSegments();
+  const fieldCaptions = core.rowFieldCaptions();
   const slotFlags = core.columnSlotFlags();
   const collapsed = core.store.fieldPanelCollapsed();
   const menu = core.menu();
@@ -542,7 +574,22 @@ function OgePivotGridInner<T>(
                     gridRow: `1 / ${String(depth + 1)}`,
                     gridColumn: 1,
                   }}
-                ></div>
+                >
+                  {segments ? (
+                    <span
+                      className="oge-pivot-rh-segments"
+                      style={segmentColumns(fieldCaptions.length || 1)}
+                    >
+                      {fieldCaptions.map((caption, index) => (
+                        <Fragment key={index}>
+                          <span className="oge-pivot-rh-segment">
+                            {caption}
+                          </span>{' '}
+                        </Fragment>
+                      ))}
+                    </span>
+                  ) : null}
+                </div>
               )}
               {headerRow.cells.map((cell) => (
                 <div
@@ -582,7 +629,9 @@ function OgePivotGridInner<T>(
                       {arrow}
                     </span>
                   )}{' '}
-                  {cell.text}
+                  {props.renderColumnHeader
+                    ? props.renderColumnHeader(cell)
+                    : cell.text}
                 </div>
               ))}
             </div>
@@ -614,7 +663,7 @@ function OgePivotGridInner<T>(
                   style={{
                     gridRow: ariaRow,
                     gridColumn: 1,
-                    paddingInlineStart: `${String(12 + line.level * 18)}px`,
+                    paddingInlineStart: `${String(segments ? 12 : 12 + line.level * 18)}px`,
                   }}
                   data-hpos={core.rowHeaderPos(rowIndex)}
                   tabIndex={core.isRowHeaderTabbable(rowIndex) ? 0 : -1}
@@ -637,7 +686,27 @@ function OgePivotGridInner<T>(
                       {arrow}
                     </span>
                   )}{' '}
-                  {line.text}
+                  {props.renderRowHeader ? (
+                    props.renderRowHeader(line, {
+                      rowIndex,
+                      segments: segments?.[rowIndex] ?? null,
+                    })
+                  ) : segments?.[rowIndex] ? (
+                    <span
+                      className="oge-pivot-rh-segments"
+                      style={segmentColumns(segments[rowIndex].length)}
+                    >
+                      {segments[rowIndex].map((segment, index) => (
+                        <Fragment key={index}>
+                          <span className="oge-pivot-rh-segment">
+                            {segment}
+                          </span>{' '}
+                        </Fragment>
+                      ))}
+                    </span>
+                  ) : (
+                    line.text
+                  )}
                 </div>
                 {core.visibleColumnIndexes().map((columnIndex) => (
                   <div
@@ -680,7 +749,14 @@ function OgePivotGridInner<T>(
                             prepared.cssClass,
                           )}
                         >
-                          {prepared.text}
+                          {props.renderCell
+                            ? props.renderCell({
+                                ...prepared,
+                                rowIndex,
+                                columnIndex,
+                                measureIndex,
+                              })
+                            : prepared.text}
                         </span>
                       );
                     })}

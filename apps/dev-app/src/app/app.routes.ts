@@ -230,6 +230,12 @@ export const appRoutes: Route[] = [
         title: 'OGE — Data Grid Pinned Rows',
       },
       {
+        path: 'export',
+        loadComponent: () =>
+          import('./pages/data-grid/export').then((m) => m.GridExportPage),
+        title: 'OGE — Data Grid Excel & PDF Export',
+      },
+      {
         path: 'api',
         loadComponent: () =>
           import('./pages/data-grid/api').then((m) => m.DataGridApiPage),
@@ -281,6 +287,14 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/tree-list/drag-drop').then((m) => m.TreeDragPage),
         title: 'OGE — Tree List Drag & Drop',
+      },
+      {
+        path: 'summaries',
+        loadComponent: () =>
+          import('./pages/tree-list/summaries').then(
+            (m) => m.TreeSummariesPage,
+          ),
+        title: 'OGE — Tree List Summaries',
       },
       {
         path: 'editing',
@@ -775,6 +789,22 @@ export const appRoutes: Route[] = [
             (m) => m.PivotAnalyticsPage,
           ),
         title: 'OGE — Pivot Analytics & Export',
+      },
+      {
+        path: 'chart-integration',
+        loadComponent: () =>
+          import('./pages/pivot-grid/chart-integration').then(
+            (m) => m.PivotChartIntegrationPage,
+          ),
+        title: 'OGE — Pivot Chart Integration',
+      },
+      {
+        path: 'calculated-fields',
+        loadComponent: () =>
+          import('./pages/pivot-grid/calculated-fields').then(
+            (m) => m.PivotCalculatedFieldsPage,
+          ),
+        title: 'OGE — Pivot Calculated Fields',
       },
       {
         path: 'api',

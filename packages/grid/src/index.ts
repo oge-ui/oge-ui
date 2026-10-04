@@ -40,8 +40,11 @@ export {
   type OgeCommandButton,
   type OgeRowReorderedEvent,
   type OgeExportCellArgs,
+  type OgeExportCellStyle,
+  type OgeExportCellStyleArgs,
   type OgeExportColumn,
   type OgeExportData,
+  type OgeExportItem,
   type OgeExportOptions,
   type OgeRangeSelectionOptions,
   type OgeRangeSelectionChangedEvent,
@@ -59,6 +62,8 @@ export {
   type OgeRowDragEndEvent,
   type OgeRowDropPosition,
   type OgeHeaderFilterMode,
+  type OgeExportRowKind,
+  type OgeExportSummaryCell,
 } from './lib/grid/grid';
 export {
   OgePagerInfoTemplate,

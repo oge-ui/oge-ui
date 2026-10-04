@@ -1,5 +1,5 @@
-import type { RowKey, SortDescriptor } from '@oge-ui/core';
-import type { OgeDataType } from './grid-columns';
+import type { RowKey, SortDescriptor, SummaryType } from '@oge-ui/core';
+import type { OgeColumnAlignment, OgeDataType } from './grid-columns';
 import type { OgeHeaderFilterMode } from './grid-header-conditions';
 import type { OgeRowDropPosition } from './grid-row-drag-group';
 
@@ -208,21 +208,98 @@ export interface OgeDataErrorEvent {
   error: unknown;
 }
 
-/** Column metadata handed to exporters (CSV / Excel). */
+/** Column metadata handed to exporters (CSV / Excel / PDF). */
 export interface OgeExportColumn<T = unknown> {
   caption: string;
   field: string | undefined;
   dataType: OgeDataType;
   accessor: (row: T) => unknown;
   format?: ((value: unknown) => string) | undefined;
+  /** On-screen width in px, when the column declares or was resized to one. */
+  width?: number | undefined;
+  /** Resolved cell alignment (numbers default to `'end'`). */
+  alignment?: OgeColumnAlignment | undefined;
+  /** Pinned side; left-pinned columns become Excel freeze panes. */
+  pinned?: false | 'left' | 'right' | undefined;
+  /** Band (column-group) caption — becomes a merged header row. */
+  bandCaption?: string | undefined;
 }
+
+/** One computed summary as exporters write it. */
+export interface OgeExportSummaryCell {
+  field: string;
+  type: SummaryType;
+  /** Raw summary value (typed: numbers stay numbers in Excel). */
+  value: unknown;
+  /** Display text, already formatted with the host's summary pattern. */
+  text: string;
+  /** The summary's label alone ("Sum") — Excel prefixes typed values with it. */
+  label?: string;
+}
+
+/**
+ * One exported line, in output order. Data rows carry their nesting level
+ * (group depth or tree depth); group and summary lines carry what the
+ * on-screen group header / footer / total row shows.
+ */
+export type OgeExportItem<T = unknown> =
+  | { kind: 'data'; row: T; level: number }
+  | {
+      kind: 'group';
+      level: number;
+      field: string;
+      value: unknown;
+      /** Group header text (caption, value, count, header summaries). */
+      text: string;
+      count: number;
+      summaries: readonly OgeExportSummaryCell[];
+    }
+  | {
+      kind: 'groupFooter';
+      level: number;
+      summaries: readonly OgeExportSummaryCell[];
+    }
+  | { kind: 'total'; summaries: readonly OgeExportSummaryCell[] };
+
+/** What kind of line an exported cell belongs to. */
+export type OgeExportRowKind = OgeExportItem['kind'] | 'header';
 
 export interface OgeExportData<T = unknown> {
+  /** The exported data rows (flat — what `buildCsv` reads). */
   rows: readonly T[];
   columns: readonly OgeExportColumn<T>[];
+  /**
+   * The structured view — group rows, group footers and the total row
+   * interleaved with the data rows. Absent: the rows export flat.
+   */
+  items?: readonly OgeExportItem<T>[];
 }
 
-/** Arguments handed to `customizeCell` for every exported cell. */
+/**
+ * Cell style an exporter applies — shared by the Excel and PDF builders, so
+ * one `cellStyle` hook styles both. Colours are `#rrggbb`.
+ */
+export interface OgeExportCellStyle {
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  /** Text colour. */
+  color?: string;
+  /** Fill colour. */
+  background?: string;
+  /** Font size in points. */
+  fontSize?: number;
+  alignment?: OgeColumnAlignment;
+  verticalAlignment?: 'top' | 'middle' | 'bottom';
+  /** Wrap long text. */
+  wrap?: boolean;
+  /** Thin border on all four sides (`true`) or in a colour. */
+  border?: boolean | string;
+  /** Excel number format (`'#,##0.00'`, `'yyyy-mm-dd'`); ignored by PDF. */
+  numFmt?: string;
+}
+
+/** Arguments handed to `customizeCell` for every exported data cell. */
 export interface OgeExportCellArgs<T = unknown> {
   row: T;
   field: string | undefined;
@@ -231,22 +308,67 @@ export interface OgeExportCellArgs<T = unknown> {
   value: unknown;
   /** Default text the exporter would emit for this cell. */
   text: string;
+  /** The exported column. */
+  column?: OgeExportColumn<T>;
+  /** Nesting level of the row (group / tree depth). */
+  level?: number;
+  /**
+   * The cell's style (Excel and PDF) — mutate it to restyle the cell. Starts
+   * from the exporter's defaults merged with `cellStyle`'s result. CSV
+   * ignores it.
+   */
+  style?: OgeExportCellStyle;
+}
+
+/**
+ * Arguments of the `cellStyle` hook — a plain, value-level styling seam that
+ * also reaches header, group and summary lines (`row` is `undefined` there).
+ */
+export interface OgeExportCellStyleArgs<T = unknown> {
+  row: T | undefined;
+  column: OgeExportColumn<T>;
+  value: unknown;
+  kind: OgeExportRowKind;
+  level: number;
 }
 
 export interface OgeExportOptions<T = unknown> {
   /**
    * Which rows to export. `'all'` (default) ignores paging and exports the
    * full filtered + sorted set; `'page'` exports only the current page;
-   * `'selection'` exports the selected rows. Master-detail content and group
-   * headers are never exported — data rows only.
+   * `'selection'` exports the selected rows. Master-detail content is never
+   * exported.
    */
   scope?: 'all' | 'page' | 'selection';
+  /** Shorthand for `scope: 'selection'`. */
+  selectedRowsOnly?: boolean;
   /**
-   * Override what a cell exports: return a replacement (string for CSV/PDF;
-   * string/number/Date/boolean stay typed in Excel) or `undefined` to keep
-   * the default.
+   * `true` (default) exports the visible columns — columns hidden only by
+   * the responsive width pass still count as visible; `false` also exports
+   * the columns hidden with `visible: false` or the column chooser.
+   */
+  visibleColumnsOnly?: boolean;
+  /**
+   * Group rows (Excel outline levels) and group summaries when the grid is
+   * grouped. Default `true`; CSV is always flat.
+   */
+  groups?: boolean;
+  /** Group-footer and total summary rows. Default `true`. */
+  summaries?: boolean;
+  /**
+   * Override what a data cell exports: return a replacement (string for
+   * CSV/PDF; string/number/Date/boolean stay typed in Excel) or `undefined`
+   * to keep the default. Mutate `style` to restyle the cell.
    */
   customizeCell?: (cell: OgeExportCellArgs<T>) => unknown;
+  /**
+   * Value-level styling (conditional formatting) for every exported cell —
+   * header, group and summary lines included: return the style, or nothing.
+   * Runs before `customizeCell`, which can still adjust it.
+   */
+  cellStyle?: (
+    args: OgeExportCellStyleArgs<T>,
+  ) => OgeExportCellStyle | undefined | void;
 }
 
 /** Cancelable: fires when a row drag starts (`rowDragging`). */

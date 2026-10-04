@@ -117,7 +117,7 @@ store.editing.hasPending())) {
   #viewport
   class="oge-viewport"
   role="treegrid"
-  [attr.aria-rowcount]="renderedRowCount() + 1"
+  [attr.aria-rowcount]="renderedRowCount() + 1 + (hasTotalRow() ? 1 : 0)"
   [attr.aria-colcount]="resolvedColumns().length + leadingCellCount()"
   [attr.aria-multiselectable]="
     selectionMode() === 'multiple' || selectionMode() === 'checkbox' ? true : null
@@ -637,6 +637,9 @@ store.editing.hasPending())) {
           <span class="oge-tree-cell-text"
             >{{ cellDisplayText(node, column) }}</span
           >
+          } @if (node.hasChildren && recursiveSummaryText(node.key, column); as
+          nodeSummary) {
+          <span class="oge-tree-node-summary">{{ nodeSummary }}</span>
           }
         </div>
         } @if (colSpacerRight() > 0) {
@@ -832,6 +835,49 @@ store.editing.hasPending())) {
       } } }
     </div>
   </div>
+  @if (hasTotalRow()) {
+  <!-- summary.totalItems: the footer row, aligned with the column tracks -->
+  <div
+    class="oge-total-row"
+    role="row"
+    [style.grid-template-columns]="gridTemplateColumns()"
+  >
+    @if (rowDragging()) {
+    <div class="oge-total-cell" role="gridcell"></div>
+    } @if (hasAdaptiveToggle()) {
+    <div class="oge-total-cell" role="gridcell"></div>
+    } @if (hasCheckboxColumn()) {
+    <div class="oge-total-cell" role="gridcell"></div>
+    } @if (colSpacerLeft() > 0) {
+    <div
+      class="oge-total-cell oge-col-spacer"
+      role="gridcell"
+      aria-hidden="true"
+    ></div>
+    } @for (column of renderColumns(); track column.id) {
+    <div
+      class="oge-total-cell"
+      role="gridcell"
+      [class.oge-cell-number]="column.dataType === 'number'"
+      [class.oge-align-center]="column.alignment === 'center'"
+      [class.oge-align-end]="column.alignment === 'end'"
+      [class.oge-pinned]="column.pinned !== false"
+      [style.inset-inline-start.px]="pinnedLeftOf(column)"
+      [style.inset-inline-end.px]="pinnedRightOf(column)"
+    >
+      {{ totalSummaryByColumn().get(column.id) ?? '' }}
+    </div>
+    } @if (colSpacerRight() > 0) {
+    <div
+      class="oge-total-cell oge-col-spacer"
+      role="gridcell"
+      aria-hidden="true"
+    ></div>
+    } @if (hasCommandColumn()) {
+    <div class="oge-total-cell" role="gridcell"></div>
+    }
+  </div>
+  }
 </div>
 @if (pagingOptions(); as pagingOpts) {
 <oge-pager

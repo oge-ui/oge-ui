@@ -93,12 +93,12 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/grid`
 
 - values: `ColumnsSlice`, `ExpansionSlice`, `FilterSlice`, `GridDataAdapter`, `GridStateStore`, `GroupingSlice`, `OGE_DEFAULT_GRID_CONFIG`, `OGE_DEFAULT_MESSAGES`, `OGE_GRID_CONFIG`, `OGE_STATE_STORAGE`, `OgeCellEditor`, `OgeCellTemplate`, `OgeColumn`, `OgeColumnDefCache`, `OgeColumnGroup`, `OgeDetailTemplate`, `OgeEditTemplate`, `OgeEditingSlice`, `OgeFilterBuilderGroup`, `OgeGrid`, `OgeGridToolbarItem`, `OgeHeaderTemplate`, `OgeNoDataTemplate`, `OgePager`, `OgePagerInfoTemplate`, `OgeRowTemplate`, `PagingSlice`, `SelectionSlice`, `SortSlice`, `builderToExpr`, `describeExpr`, `exprToBuilder`, `formatCellValue`, `ogeColumnFromDef`, `operatorsFor`, `provideOgeGridConfig`
-- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellPreparedEvent`, `OgeCellTemplateContext`, `OgeClassValue`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeConditionalFormat`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportOptions`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridColumnInfo`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagerInfoTemplateContext`, `OgePagingOptions`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRowClickEvent`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragStartEvent`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`
+- types: `OgeBuilderCondition`, `OgeBuilderGroup`, `OgeCellClickEvent`, `OgeCellEditorSurface`, `OgeCellPreparedEvent`, `OgeCellTemplateContext`, `OgeClassValue`, `OgeColumnAlignment`, `OgeColumnDef`, `OgeColumnLookup`, `OgeCommandButton`, `OgeConditionalFormat`, `OgeContextMenuEvent`, `OgeContextMenuSource`, `OgeDataChange`, `OgeDataErrorEvent`, `OgeDataType`, `OgeDetailTemplateContext`, `OgeEditFormItem`, `OgeEditMode`, `OgeEditTemplateContext`, `OgeEditingOptions`, `OgeEditingStartEvent`, `OgeExportCellArgs`, `OgeExportCellStyle`, `OgeExportCellStyleArgs`, `OgeExportColumn`, `OgeExportData`, `OgeExportItem`, `OgeExportOptions`, `OgeExportRowKind`, `OgeExportSummaryCell`, `OgeExportingEvent`, `OgeFilterBuilderField`, `OgeFilterRowOptions`, `OgeFocusedCellChangedEvent`, `OgeFocusedRowChangedEvent`, `OgeGridCellCoord`, `OgeGridCellRange`, `OgeGridCellSpan`, `OgeGridColumnInfo`, `OgeGridConfig`, `OgeGridConfigInput`, `OgeGridMessages`, `OgeGridRowToggleEvent`, `OgeGridRowTogglingEvent`, `OgeGridToggleKind`, `OgeGridToolbarPosition`, `OgeGroupingOptions`, `OgeHeaderContextMenuEvent`, `OgeHeaderFilterMode`, `OgeHeaderFilterOptions`, `OgeHeaderTemplateContext`, `OgeInitNewRowEvent`, `OgeMenuItem`, `OgePageChangedEvent`, `OgePagerInfoTemplateContext`, `OgePagingOptions`, `OgeRangeSelectionChangedEvent`, `OgeRangeSelectionOptions`, `OgeRowClickEvent`, `OgeRowDragEndEvent`, `OgeRowDragOverEvent`, `OgeRowDragStartEvent`, `OgeRowDropEvent`, `OgeRowDropPosition`, `OgeRowInsertedEvent`, `OgeRowInsertingEvent`, `OgeRowPreparedEvent`, `OgeRowRemovedEvent`, `OgeRowRemovingEvent`, `OgeRowReorderedEvent`, `OgeRowTemplateContext`, `OgeRowUpdatedEvent`, `OgeRowUpdatingEvent`, `OgeSavedChangesEvent`, `OgeSavingChangesEvent`, `OgeScrollingOptions`, `OgeSearchPanelOptions`, `OgeSelectionChangedEvent`, `OgeSelectionMode`, `OgeSortChangedEvent`, `OgeSortingOptions`, `OgeStateStorage`
 
 `@oge-ui/grid/export-pdf`
 
 - values: `buildPdfDocument`, `exportGridToPdf`
-- types: `OgePdfExportOptions`
+- types: `OgePdfExportOptions`, `OgePdfPageInfo`
 
 `@oge-ui/grid/foundation`
 
@@ -286,7 +286,7 @@ _Loading, state & export_
 | `beginCustomLoading(message?) / endCustomLoading()` | `void` | Shows/hides the load panel with an optional message — independent of data activity. |
 | `state(): GridStateSnapshot / applyState(snapshot)` | `GridStateSnapshot / void` | Captures / applies the persistable UI state. `applyState` validates the snapshot first (`sanitize*StateSnapshot`): unknown keys are dropped, prototype keys rejected, wrong types skipped — invalid input is ignored, never thrown. |
 | `clearFilters() / clearSorting()` | `void` | Clears every filter (row, header, builder, search) / the sort order. |
-| `getExportData(options?): Promise<OgeExportData<T>>` | `Promise` | Rows + column metadata of the current view; `scope: 'all' \| 'page' \| 'selection'`. |
+| `getExportData(options?): Promise<OgeExportData<T>>` | `Promise` | Rows, column metadata (width, alignment, pin side, band) and the structured lines — group rows, group footers, the total row (`items`) — of the current view. `scope: 'all' \| 'page' \| 'selection'` (or `selectedRowsOnly`), `visibleColumnsOnly: false` adds hidden columns, `groups` / `summaries: false` export flat. |
 | `getCsv(options?): Promise<string>` | `Promise<string>` | CSV of the current view. Cells a spreadsheet would evaluate as a formula (first non-whitespace character `=`, `+`, `-`, `@` or a full-width `＝ ＋ － ＠`, or a leading tab/CR) are prefixed with an apostrophe so the file cannot execute on open — CSV formula injection. Numbers are exempt, so a `-5` column stays numeric. Pass `formulaGuard: false` when the output is machine-read rather than opened in a spreadsheet. |
 | `exportCsv(filename = 'grid.csv', options?): Promise<void>` | `Promise<void>` | Downloads the current view as CSV; fires the cancelable `exporting` event first. `options` are `getCsv()`’s (`scope`, `customizeCell`, `separator`…); formula-leading cells are always neutralized. |
 
@@ -476,10 +476,13 @@ _Export_
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `OgeExportOptions<T>` | `{ scope?: 'all' \| 'page' \| 'selection'; customizeCell?(args) }` | Shared by CSV/Excel/PDF. |
-| `OgeExportData<T> / OgeExportColumn<T> / OgeExportCellArgs<T>` | `interfaces` | Rows + resolved column metadata handed to exporters. |
-| `exportGridToExcel(grid, options?)` | `@oge-ui/grid/export-excel` | Lazy Excel export (exceljs peer); `buildExcelWorkbook(data)` for custom pipelines. |
-| `exportGridToPdf(grid, options?)` | `@oge-ui/grid/export-pdf` | Lazy PDF export (jspdf peer); `buildPdfDocument(data)` for custom pipelines. |
+| `OgeExportOptions<T>` | `{ scope?; selectedRowsOnly?; visibleColumnsOnly?; groups?; summaries?; customizeCell?(args); cellStyle?(args) }` | Shared by CSV/Excel/PDF. `customizeCell` rewrites a data cell (return a value) and restyles it (mutate `style`); `cellStyle` is the value-level styling seam for every cell — header, group and summary lines included — so conditional formatting exports the same way it renders. |
+| `OgeExportData<T> / OgeExportColumn<T> / OgeExportCellArgs<T>` | `interfaces` | Rows + resolved column metadata handed to exporters; `items` carries the group / footer / total lines when the view is grouped or summarized. |
+| `OgeExportItem<T> / OgeExportSummaryCell / OgeExportRowKind` | `{ kind: 'data' \| 'group' \| 'groupFooter' \| 'total'; … }` | One exported line: a data row at its group depth, a group header (text, value, count, header summaries), a group footer or the total row with typed summary values. |
+| `OgeExportCellStyle / OgeExportCellStyleArgs<T>` | `{ bold?, italic?, underline?, color?, background?, fontSize?, alignment?, verticalAlignment?, wrap?, border?, numFmt? }` | Cell style both file builders apply (colours as `#rrggbb`; `numFmt` is Excel-only). |
+| `exportGridToExcel(grid, options?)` | `@oge-ui/grid/export-excel` | Lazy Excel export (exceljs peer): merged band headers, frozen header rows + left-pinned columns (`freezeHeader`, `freezeColumns`), grid or auto column widths (`columnWidths`), number/date formats (`numberFormat`, `dateFormat`, `columnFormats`), group rows with collapsible outline levels (`outline`), group-footer and total rows as values or `SUBTOTAL` formulas (`summaryFormulas`), `headerStyle` / `groupStyle` / `summaryStyle`, auto-filter. `buildExcelWorkbook(data, options)` for custom pipelines. |
+| `exportGridToPdf(grid, options?)` | `@oge-ui/grid/export-pdf` | Lazy PDF export (jspdf peer): the header block repeated on every page (`repeatHeader`), group and summary rows, grid widths fitted to the page (`fitToWidth`), `orientation`, `pageFormat`, `title`, `pageHeader` / `pageFooter` callbacks and `pageNumbers`. `buildPdfDocument(data, options)` for custom pipelines. |
+| `OgeExcelExportOptions<T> / OgePdfExportOptions<T> / OgePdfPageInfo` | `interfaces` | The two download helpers’ options (each extends `OgeExportOptions`) and what a PDF page callback is told (`pageNumber`, `pageCount`). |
 
 _Configuration_
 
@@ -939,6 +942,137 @@ export class Demo {
     // set event.cancel = true to abort; otherwise the DataSource
     // (insert/update/remove) is called and the grid reloads.
     console.log(event.changes);
+  }
+}
+```
+
+### Excel
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeColumn, OgeColumnGroup, OgeGrid } from '@oge-ui/grid';
+import type { OgeExportCellStyleArgs } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeColumnGroup, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid #grid [data]="employees" keyField="id"
+              selectionMode="multiple" [groupBy]="['department']">
+      <oge-column field="id" caption="Id" [width]="70" dataType="number" pinned="left" />
+      <!-- a band becomes a merged two-row header in Excel and PDF -->
+      <oge-column-group caption="Employee">
+        <oge-column field="firstName" caption="First Name" [width]="140" />
+        <oge-column field="lastName" caption="Last Name" [width]="140" />
+      </oge-column-group>
+      <oge-column field="city" caption="City" />
+      <oge-column field="hireDate" caption="Hired" dataType="date" />
+      <oge-column field="salary" caption="Salary" dataType="number"
+                  groupSummary="sum" groupSummaryPosition="footer" totalSummary="sum" />
+    </oge-grid>
+
+    <button type="button" (click)="excel()">Excel</button>
+    <button type="button" (click)="excel(true)">Selected rows</button>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  private readonly grid = viewChild.required<OgeGrid<Employee>>('grid');
+
+  // conditional formatting: one value-level hook styles Excel and PDF alike
+  protected readonly cellStyle = ({ column, value, kind }: OgeExportCellStyleArgs<Employee>) =>
+    kind === 'data' && column.field === 'salary' && Number(value) > 8000
+      ? { background: '#fff4ce', color: '#7a4b00', bold: true }
+      : undefined;
+
+  // the lazy secondary entry keeps exceljs out of the main bundle
+  protected async excel(selectedRowsOnly = false): Promise<void> {
+    const { exportGridToExcel } = await import('@oge-ui/grid/export-excel');
+    await exportGridToExcel(this.grid(), {
+      filename: 'employees.xlsx',
+      selectedRowsOnly,
+      summaryFormulas: true, // group footers + total as SUBTOTAL formulas
+      columnFormats: { salary: '#,##0 "€"' },
+      cellStyle: this.cellStyle,
+    });
+  }
+}
+```
+
+### Pdf
+
+```ts
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { OgeColumn, OgeGrid } from '@oge-ui/grid';
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  department: string;
+  city: string;
+  salary: number;
+  hireDate: string;
+}
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeColumn, OgeGrid],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-grid #grid [data]="employees" keyField="id" [groupBy]="['department']">
+      <oge-column field="firstName" caption="First Name" />
+      <oge-column field="lastName" caption="Last Name" />
+      <oge-column field="city" caption="City" />
+      <oge-column field="salary" caption="Salary" dataType="number" totalSummary="sum" />
+    </oge-grid>
+
+    <button type="button" (click)="pdf()">PDF</button>
+  `,
+})
+export class Demo {
+  readonly employees = [
+    { id: 1, firstName: 'Ali', lastName: 'Yılmaz', department: 'Engineering', city: 'İstanbul', salary: 8400, hireDate: '2019-03-11' },
+    { id: 2, firstName: 'Ayşe', lastName: 'Kaya', department: 'Sales', city: 'Ankara', salary: 7200, hireDate: '2020-07-02' },
+    { id: 3, firstName: 'Mehmet', lastName: 'Demir', department: 'Engineering', city: 'İzmir', salary: 9100, hireDate: '2018-01-23' },
+    { id: 4, firstName: 'Zeynep', lastName: 'Şahin', department: 'Finance', city: 'İstanbul', salary: 6800, hireDate: '2021-11-15' },
+    { id: 5, firstName: 'Emre', lastName: 'Çelik', department: 'Support', city: 'Bursa', salary: 5400, hireDate: '2022-05-09' },
+  ];
+
+  private readonly grid = viewChild.required<OgeGrid<Employee>>('grid');
+
+  protected async pdf(): Promise<void> {
+    const { exportGridToPdf } = await import('@oge-ui/grid/export-pdf');
+    await exportGridToPdf(this.grid(), {
+      filename: 'employees.pdf',
+      title: 'Employees by department',
+      orientation: 'portrait',
+      // the header repeats on every page; widths follow the grid, fitted to the page
+      pageHeader: () => 'OGE UI · HR report',
+      pageFooter: ({ pageNumber, pageCount }) => `Page ${pageNumber} of ${pageCount}`,
+      customizeCell: ({ field, style }) => {
+        if (field === 'salary' && style) style.alignment = 'end';
+        return undefined;
+      },
+    });
   }
 }
 ```

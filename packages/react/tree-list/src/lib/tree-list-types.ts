@@ -34,6 +34,9 @@ import type {
   OgeSortingOptions,
   OgeStateStorage,
   OgeTreeExportData,
+  OgeTreeExportOptions,
+  OgeTreeListRemoteOperations,
+  OgeTreeListSummary,
   OgeTreeInitNewRowEvent,
   OgeTreeLoadMode,
   OgeTreeOrphanPolicy,
@@ -151,6 +154,18 @@ export interface OgeTreeListProps<T extends object = Record<string, unknown>> {
   filterPanel?: boolean;
   /** Excel-style distinct-value filter popups on the column headers. */
   headerFilter?: boolean | OgeHeaderFilterOptions;
+  /**
+   * Aggregates: `totalItems` render in a footer row over every
+   * filter-visible row; `recursiveItems` show each parent's aggregate of its
+   * visible descendants beside its own value. Both are included in exports.
+   */
+  summary?: OgeTreeListSummary<T>;
+  /**
+   * Operations the data source performs itself. `filtering: true` (full load
+   * mode) sends filter, search and header-filter value requests to the
+   * source, which answers with the matches **plus all their ancestors**.
+   */
+  remoteOperations?: OgeTreeListRemoteOperations;
   /**
    * Pages the visible (flattened) rows client-side. Paging and
    * `virtualScroll` are alternatives — when both are set, paging wins.
@@ -387,10 +402,12 @@ export interface OgeTreeListHandle<T extends object = Record<string, unknown>> {
   /** Whether unsaved edits exist: staged changes, added or removed rows. */
   hasChanges(): boolean;
   /**
-   * Rows, column metadata and depth levels of the visible tree — synchronous,
-   * like the Angular tree list (the grid's is async).
+   * Rows, column metadata, depth levels and summary lines of the visible
+   * tree — synchronous, like the Angular tree list (the grid's is async).
+   * `visibleColumnsOnly: false` adds hidden columns, `selectedRowsOnly`
+   * narrows to the selection, `summaries: false` drops the summary lines.
    */
-  getExportData(): OgeTreeExportData<T>;
+  getExportData(options?: OgeTreeExportOptions): OgeTreeExportData<T>;
   /** CSV of the visible tree, the hierarchy indented in the first column. */
   getCsv(options?: CsvOptions): string;
   /** Downloads the visible tree as a CSV file; fires the cancelable `onExporting` first. */
