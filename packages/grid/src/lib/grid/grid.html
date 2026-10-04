@@ -556,7 +556,12 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
     }
   </div>
   <div class="oge-body" [style.height.px]="bodyHeight()">
-    <div class="oge-rows" role="rowgroup" [style.transform]="rowsTransform()">
+    <div
+      class="oge-rows"
+      role="rowgroup"
+      [style.transform]="rowsTransform()"
+      [attr.aria-busy]="adapter.loading() || null"
+    >
       @for (node of viewNodes(); track node.key; let nodeIndex = $index) {
       @switch (node.kind) { @case ('data') { @if (isFormRow(node.key)) {
       <div
@@ -1122,11 +1127,16 @@ editMode() === 'batch' || toolbarItems().length > 0 ) {
       } } } @empty {
       <!-- while a load is in flight the load panel speaks for the grid -->
       @if (!adapter.loading()) { @if (noDataTemplate(); as noData) {
-      <div class="oge-no-data">
-        <ng-container *ngTemplateOutlet="noData.templateRef" />
+      <!-- a real row + cell: a rowgroup without rows breaks the grid role -->
+      <div class="oge-no-data" role="row">
+        <div role="gridcell">
+          <ng-container *ngTemplateOutlet="noData.templateRef" />
+        </div>
       </div>
       } @else {
-      <div class="oge-no-data">{{ msg().noData }}</div>
+      <div class="oge-no-data" role="row">
+        <div role="gridcell">{{ msg().noData }}</div>
+      </div>
       } } }
     </div>
   </div>

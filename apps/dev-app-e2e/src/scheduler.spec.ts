@@ -105,8 +105,11 @@ test.describe('scheduler', () => {
     );
     await expect(host.locator('.oge-scheduler-drag-preview')).toBeVisible();
     await page.mouse.up();
-    const moved = await chip.boundingBox();
-    expect(Math.abs((moved?.x ?? 0) - before.x)).toBeGreaterThan(10);
+    // the commit re-renders the chip on a later frame: poll, never read once
+    const chipX = async () => (await chip.boundingBox())?.x ?? 0;
+    await expect
+      .poll(async () => Math.abs((await chipX()) - before.x))
+      .toBeGreaterThan(10);
 
     // cancelled drag: Escape mid-gesture restores the committed position
     const committed = await chip.boundingBox();
@@ -122,8 +125,9 @@ test.describe('scheduler', () => {
     );
     await page.keyboard.press('Escape');
     await page.mouse.up();
-    const after = await chip.boundingBox();
-    expect(Math.round(after?.x ?? 0)).toBe(Math.round(committed?.x ?? 0));
+    await expect
+      .poll(async () => Math.round(await chipX()))
+      .toBe(Math.round(committed?.x ?? 0));
   });
 
   test('double-click creates through the form dialog', async ({ page }) => {
