@@ -58,9 +58,10 @@ interface ComponentCard {
           is wrapped: there is no Angular in your bundle.
         } @else {
           OGE is a suite of Angular UI components built on signals: a
-          virtualized data grid, tree list, pivot table, buttons and form
-          editors. Components run zoneless, ship with full template type
-          checking and theme through CSS design tokens.
+          virtualized data grid, tree list and pivot table, charts, scheduler,
+          gantt and kanban, form editors and form layout, plus layout,
+          navigation and overlay building blocks. Components run zoneless, ship
+          with full template type checking and theme through CSS design tokens.
         }
       </p>
       <div class="mt-6 flex flex-wrap items-center gap-3">
@@ -239,14 +240,59 @@ interface ComponentCard {
           <td><code>&#64;oge-ui/react-overlay</code></td>
           <td>
             <strong>React.</strong> The popup foundation the other React
-            families build on: viewport-aware anchored positioning and WAI-ARIA
-            menus.
+            families build on — viewport-aware anchored positioning and WAI-ARIA
+            menus — plus tooltip, context menu, modal and toast.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/react-grid</code></td>
+          <td>
+            <strong>React.</strong> The Data Grid: virtualization, sorting,
+            filtering, grouping, editing, range selection, conditional
+            formatting, pinned rows and Excel/PDF export.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/react-tree-list</code></td>
+          <td>
+            <strong>React.</strong> The Tree List: lazy loading, filtering,
+            tri-state selection, drag &amp; drop, editing and summaries.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/react-forms</code></td>
+          <td>
+            <strong>React.</strong> Form layout over the React editors, with
+            declarative validation rules and a validation summary.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/react-upload</code></td>
+          <td>
+            <strong>React.</strong> The file uploader with restrictions,
+            previews and chunked resumable transfer.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>&#64;oge-ui/react-pivot</code>,
+            <code>&#64;oge-ui/react-bpmn</code>,
+            <code>&#64;oge-ui/react-charts</code>,
+            <code>&#64;oge-ui/react-gantt</code>,
+            <code>&#64;oge-ui/react-kanban</code>,
+            <code>&#64;oge-ui/react-scheduler</code>
+          </td>
+          <td>
+            <strong>React.</strong> The six commercial families, each on the
+            same framework-free engine package as its Angular twin (commercial —
+            free for evaluation and development).
           </td>
         </tr>
         <tr>
           <td><code>&#64;oge-ui/grid</code></td>
           <td>
-            Data Grid component, column directives, templates, CSV/Excel/PDF
+            Data Grid component, column directives, templates, range selection
+            and clipboard, conditional formatting, pinned rows, CSV/Excel/PDF
             export entries and the shared theme files.
           </td>
         </tr>
@@ -254,14 +300,15 @@ interface ComponentCard {
           <td><code>&#64;oge-ui/tree-list</code></td>
           <td>
             Hierarchical grid with lazy loading, tri-state selection, drag &amp;
-            drop and Excel outline export.
+            drop, total and recursive summaries and Excel outline export.
           </td>
         </tr>
         <tr>
           <td><code>&#64;oge-ui/pivot</code></td>
           <td>
-            Pivot table with field chooser, totals and export (commercial — free
-            for evaluation and development).
+            Pivot table with field chooser, totals, calculated fields, Top N
+            filters, chart integration and export (commercial — free for
+            evaluation and development).
           </td>
         </tr>
         <tr>
@@ -324,8 +371,53 @@ interface ComponentCard {
         <tr>
           <td><code>&#64;oge-ui/inputs</code></td>
           <td>
-            TextBox, TextArea, NumberBox plus SelectBox and TagBox (multi-select
-            combobox) on one field chrome, with three form-binding modes.
+            Text, masked, textarea and number editors; SelectBox, TagBox,
+            Autocomplete, TreeSelect and a multi-column combo box; date,
+            calendar, color box, color gradient and color palette editors; check
+            box, check box group, switch, radio group, toggle group and sliders
+            — on one field chrome, with three form-binding modes.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/forms</code></td>
+          <td>
+            Form layout over the editors: responsive columns, nested groups, tab
+            and accordion sections, declarative validation and a validation
+            summary.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/tabs</code></td>
+          <td>
+            Tab strip and tab panel with lazy panels, closable tabs with async
+            guards, overflow navigation and drag reordering.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/layout</code></td>
+          <td>
+            Card, accordion, splitter, toolbar, progress bar, load indicator and
+            skeleton.
+          </td>
+        </tr>
+        <tr>
+          <td><code>&#64;oge-ui/navigation</code></td>
+          <td>
+            Tree view, drawer, stepper, menubar, breadcrumb and pagination.
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>&#64;oge-ui/pivot-engine</code>,
+            <code>&#64;oge-ui/bpmn-engine</code>,
+            <code>&#64;oge-ui/charts-engine</code>,
+            <code>&#64;oge-ui/gantt-engine</code>,
+            <code>&#64;oge-ui/kanban-engine</code>,
+            <code>&#64;oge-ui/scheduler-engine</code>
+          </td>
+          <td>
+            Framework-free engines of the commercial families, shared by their
+            Angular and React packages and pulled in as dependencies.
           </td>
         </tr>
       </tbody>
@@ -398,21 +490,21 @@ export class GettingStartedPage {
       icon: 'table',
       name: 'Data Grid',
       description:
-        'Virtualized rows, sorting, filtering, grouping, editing, master-detail, remote data and export.',
+        'Virtualized rows, sorting, filtering, grouping, editing, range selection, conditional formatting, remote data and export.',
     },
     {
       path: '/components/tree-list',
       icon: 'layout',
       name: 'Tree List',
       description:
-        'Hierarchical data with lazy loading, tri-state selection, drag & drop reordering and editing.',
+        'Hierarchical data with lazy loading, tri-state selection, drag & drop reordering, editing and summaries.',
     },
     {
       path: '/components/pivot-grid',
       icon: 'gauge',
       name: 'Pivot Grid',
       description:
-        'Cross-tab analytics: rows × columns × measures with totals, sorting and export.',
+        'Cross-tab analytics: rows × columns × measures with totals, calculated fields, chart integration and export.',
     },
     {
       path: '/components/buttons',
@@ -426,7 +518,14 @@ export class GettingStartedPage {
       icon: 'text-cursor',
       name: 'Inputs',
       description:
-        'Text, textarea, number and select editors with floating labels, validation and three form-binding modes.',
+        'Text, masked, number, select, date, color and choice editors with floating labels, validation and three form-binding modes.',
+    },
+    {
+      path: '/components/forms',
+      icon: 'text-cursor',
+      name: 'Forms',
+      description:
+        'Responsive form layout over the editors with nested groups, sections, declarative validation and a summary.',
     },
   ];
 }

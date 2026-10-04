@@ -23,6 +23,7 @@ import {
   readdirSync,
   writeFileSync,
 } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import {
   readApiBlocks,
@@ -120,9 +121,16 @@ if (checkOnly) {
   for (const [relative, contents] of artifacts) {
     const file = abs(relative);
     // `core.autocrlf` is on in this repo, so the working copy carries CRLF —
-    // compare content, not line endings.
-    const current = existsSync(file) ? lf(readFileSync(file, 'utf8')) : null;
-    if (current !== lf(contents)) stale.push(relative);
+    // compare content, not line endings. Sitemap `<lastmod>` dates come from
+    // git history, which moves with every commit (and is flattened by a
+    // shallow clone), so the gate compares the URL set, not the dates.
+    const normalize = relative.endsWith('sitemap.xml')
+      ? (text) => withoutLastmod(lf(text))
+      : lf;
+    const current = existsSync(file)
+      ? normalize(readFileSync(file, 'utf8'))
+      : null;
+    if (current !== normalize(contents)) stale.push(relative);
   }
   if (stale.length) {
     console.error(
@@ -145,6 +153,11 @@ if (checkOnly) {
 /** Normalizes line endings so the drift check is content-only. */
 function lf(text) {
   return text.replace(/\r\n/g, '\n');
+}
+
+/** Drops `<lastmod>` elements — see the sitemap note in the check above. */
+function withoutLastmod(text) {
+  return text.replace(/<lastmod>[^<]*<\/lastmod>/g, '');
 }
 
 // ---------------------------------------------------------------- builders
@@ -376,26 +389,88 @@ function buildSitemap() {
   const familyRoots = new Set(
     PACKAGES.filter((pkg) => pkg.docsRoot).map((pkg) => pkg.docsRoot.slice(1)),
   );
+  const lastChanged = gitLastChanged(PATHS.pagesDir);
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
   ];
   for (const page of routes) {
-    const loc = `${SITE_ORIGIN}/${page.path}`;
+    // A page whose own URL is a redirect stub (routed tabs → …/overview) is
+    // listed by where it lands — the URL that carries its canonical tag.
+    const loc = `${SITE_ORIGIN}/${page.landing ?? page.path}`;
     const priority =
       page.path === ''
         ? '1.0'
         : familyRoots.has(page.path) || !page.path.includes('/')
           ? '0.9'
           : null;
+    const lastmod = pageLastmod(page, lastChanged);
     lines.push(
-      priority
-        ? `  <url><loc>${loc}</loc><priority>${priority}</priority></url>`
-        : `  <url><loc>${loc}</loc></url>`,
+      `  <url><loc>${loc}</loc>` +
+        (lastmod ? `<lastmod>${lastmod}</lastmod>` : '') +
+        (priority ? `<priority>${priority}</priority>` : '') +
+        '</url>',
     );
   }
   lines.push('</urlset>');
   return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Last commit date (`YYYY-MM-DD`) of every file under `dir`, from one
+ * `git log` pass — newest first, so the first sighting of a path wins. An
+ * empty map when git is unavailable: the sitemap then simply omits lastmod.
+ *
+ * @param {string} dir repo-relative directory
+ * @returns {Map<string, string>} repo-relative path → date
+ */
+function gitLastChanged(dir) {
+  /** @type {Map<string, string>} */
+  const dates = new Map();
+  let log;
+  try {
+    log = execFileSync(
+      'git',
+      ['log', '--format=@%cs', '--name-only', '--no-renames', '--', dir],
+      { cwd: workspaceRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+    );
+  } catch {
+    return dates;
+  }
+  let date = null;
+  for (const line of log.split('\n')) {
+    const entry = line.trim();
+    if (!entry) continue;
+    if (entry.startsWith('@')) date = entry.slice(1);
+    else if (date && !dates.has(entry)) dates.set(entry, date);
+  }
+  return dates;
+}
+
+/**
+ * When a page last changed: the newest commit over its component file and
+ * the data modules it renders — `<page>-snippets.ts`, and for an API page
+ * every `*-api-data.ts` beside it.
+ */
+function pageLastmod(page, lastChanged) {
+  if (!page.source) return null;
+  const base = path.posix.join(
+    path.posix.dirname(PATHS.routes),
+    page.source.replace(/^\.\//, ''),
+  );
+  const dir = path.posix.dirname(base);
+  const name = path.posix.basename(base);
+  const isApi = /(^|-)api$/.test(name);
+  let newest = null;
+  for (const [file, date] of lastChanged) {
+    if (path.posix.dirname(file) !== dir) continue;
+    const fileName = path.posix.basename(file);
+    const ownFile =
+      fileName === `${name}.ts` || fileName === `${name}-snippets.ts`;
+    const apiData = isApi && fileName.endsWith('-api-data.ts');
+    if ((ownFile || apiData) && (!newest || date > newest)) newest = date;
+  }
+  return newest;
 }
 
 // ---------------------------------------------------------------- helpers
