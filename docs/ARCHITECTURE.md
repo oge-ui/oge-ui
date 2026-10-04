@@ -763,6 +763,10 @@ share one vocabulary in both layers, and every decision in it lives in `@oge-ui/
   virtualizer gets `maxHeight − headerRow` as its viewport — that keeps window and
   `scrollToIndex` arithmetic exact. Column helpers (`ogeComboCellText`, `ogeComboGridTemplate`,
   …) live in `lib/input/multi-column-core.ts`.
+- **The docs shell imports `OgeSelectBox` from `@oge-ui/inputs/select-box`, never the primary
+  barrel.** Compiled Angular components carry static `ɵcmp` initializers esbuild cannot drop, so a
+  primary-barrel import in an eager module pulls every editor of the family into the initial
+  bundle — it pushed the dev-app past its 1.2 MB budget (1.35 MB → 0.88 MB after the fix).
 - **`OgeSelectListCore.syncItemsSource()` is a no-op for static → static.** A React owner passes
   a fresh `items` array on every render (inline literals, `items = []` defaults); re-seeding the
   state for each identity bumped the store and re-rendered forever.

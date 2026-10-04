@@ -16,7 +16,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { OgeSelectBox } from '@oge-ui/inputs';
+import { OgeSelectBox } from '@oge-ui/inputs/select-box';
 import { FrameworkLogo } from './shared/framework-logo';
 import { ThemeLogo } from './shared/theme-logo';
 import { FrameworkSwitch } from './shared/framework-switch';
