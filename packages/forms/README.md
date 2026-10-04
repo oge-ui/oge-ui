@@ -1,6 +1,6 @@
 # @oge-ui/forms
 
-Form layout for the [OGE](https://ogeui.com) Angular UI suite. Signal-based,
+Form layout for the [OGE](https://www.ogeui.com) Angular UI suite. Signal-based,
 standalone, zoneless-ready, MIT.
 
 The package ships **`OgeForm`** with its renderless children
@@ -76,15 +76,15 @@ The mode is derived from what you bind, never configured.
 - **Theming** — logical properties throughout for RTL, and the shared
   `--oge-*` design tokens.
 
-See the [API reference](https://ogeui.com/components/forms/api) for the full
+See the [API reference](https://www.ogeui.com/components/forms/api) for the full
 surface.
 
 ## For AI coding assistants
 
 The complete machine-readable API reference ships inside the package at
 `node_modules/@oge-ui/forms/llms.txt` — conventions, every documented member and
-copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
-<https://ogeui.com/llms-full.txt> (the whole suite).
+copy-pasteable demos in one file. Online: <https://www.ogeui.com/llms.txt> (index) and
+<https://www.ogeui.com/llms-full.txt> (the whole suite).
 
 ## License
 

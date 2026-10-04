@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ogeui.com"><b>ogeui.com</b></a> — docs, live demos &amp; API reference
+  <a href="https://www.ogeui.com"><b>ogeui.com</b></a> — docs, live demos &amp; API reference
 </p>
 
 <p align="center">
@@ -196,14 +196,14 @@ Token defaults have zero specificity, so a plain `:root` rule wins and tokens
 cascade into any subtree. Bundled themes ship in `@oge-ui/core/themes/`:
 **dark** (`.oge-theme-dark` or `data-oge-theme="dark"` on any ancestor,
 `"auto"` to follow the OS), **Tailwind** and **Bootstrap** bridge stylesheets. See the
-[styling guide](https://ogeui.com/getting-started/styling).
+[styling guide](https://www.ogeui.com/getting-started/styling).
 
 ## Localization
 
 All user-facing strings (including aria labels) live in per-package message
 catalogs — override globally with `provideOge<X>Config()` or per instance via
 `[messages]`. See the
-[localization guide](https://ogeui.com/getting-started/localization).
+[localization guide](https://www.ogeui.com/getting-started/localization).
 
 ## For AI coding assistants
 
@@ -212,9 +212,9 @@ without guessing:
 
 | File                                                | What it is                                                             |
 | --------------------------------------------------- | ---------------------------------------------------------------------- |
-| [`/llms.txt`](https://ogeui.com/llms.txt)           | [llmstxt.org](https://llmstxt.org) index — packages and every doc page |
-| [`/llms-full.txt`](https://ogeui.com/llms-full.txt) | conventions, every documented API member and every demo, in one file   |
-| `https://ogeui.com/llms/<package>.txt`              | one self-contained reference per package                               |
+| [`/llms.txt`](https://www.ogeui.com/llms.txt)           | [llmstxt.org](https://llmstxt.org) index — packages and every doc page |
+| [`/llms-full.txt`](https://www.ogeui.com/llms-full.txt) | conventions, every documented API member and every demo, in one file   |
+| `https://www.ogeui.com/llms/<package>.txt`              | one self-contained reference per package                               |
 | `node_modules/@oge-ui/<package>/llms.txt`           | the same per-package file, inside the installed tarball                |
 
 `ng add @oge-ui/<package>` also writes a short usage block into your
@@ -269,6 +269,6 @@ OGE UI is **open-core**:
   the family's `LICENSE` (e.g. [packages/charts/LICENSE](packages/charts/LICENSE),
   also in `packages/charts-engine` and `packages/react/charts`); the root
   [LICENSE](LICENSE) lists every commercial directory, and
-  [ogeui.com/license](https://ogeui.com/license) has the terms. Future
+  [ogeui.com/license](https://www.ogeui.com/license) has the terms. Future
   enterprise-oriented packages may join this tier — never anything that is
   MIT today.

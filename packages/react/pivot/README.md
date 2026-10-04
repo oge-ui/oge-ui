@@ -1,6 +1,6 @@
 # @oge-ui/react-pivot
 
-React pivot grid from the [OGE UI](https://ogeui.com) suite — the React render
+React pivot grid from the [OGE UI](https://www.ogeui.com) suite — the React render
 layer of [`@oge-ui/pivot`](https://www.npmjs.com/package/@oge-ui/pivot). Both
 run the same framework-free engine
 ([`@oge-ui/pivot-engine`](https://www.npmjs.com/package/@oge-ui/pivot-engine))
@@ -44,5 +44,5 @@ export function Sales({ rows }: { rows: Sale[] }) {
   `@oge-ui/react-pivot/export-excel` for `.xlsx` (optional `exceljs` peer).
 - `<OgePivotMessagesProvider>` localizes every string.
 
-Docs and live demos: https://ogeui.com/components/pivot-grid (pick React in the
+Docs and live demos: https://www.ogeui.com/components/pivot-grid (pick React in the
 header switch).

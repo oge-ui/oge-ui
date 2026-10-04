@@ -956,7 +956,8 @@ export const appRoutes: Route[] = [
       import('./pages/license/license').then((m) => m.LicensePage),
     title: 'OGE — Licensing',
   },
-  // legacy redirects
+  // legacy redirects — the static host answers these with a 301 first
+  // (vercel.json "redirects"); these keep client-side navigation working
   { path: 'basic-grid', redirectTo: 'components/data-grid' },
   { path: 'playground', redirectTo: 'components/data-grid/playground' },
   { path: 'sorting', redirectTo: 'components/data-grid/sorting' },

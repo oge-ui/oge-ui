@@ -419,7 +419,16 @@ Sibling component packages (tabs, layout, …) grow the same shapes. The rule:
   `/export-pdf` are pure builders over that model — merged band headers, freeze panes from the
   header rows and left-pinned columns, outline levels with `summaryBelow: false` (headers sit above
   their rows), `SUBTOTAL(9/1/5/4/3, range)` formulas that ignore nested subtotals, the PDF header
-  repeated per page and page chrome drawn after layout so the footer knows the page count. Styling
+  repeated per page and page chrome drawn after layout so the footer knows the page count.
+  **PDF text is WinAnsi unless a font is embedded**: jsPDF's built-in Helvetica cannot draw Turkish
+  `ğ ş ı İ`, Central European, Greek or Cyrillic letters. Every PDF builder (grid, tree list,
+  pivot, Gantt) takes `font: OgePdfFont` and falls back to the one registered with
+  `setOgePdfDefaultFont()` (`@oge-ui/behavior`, `lib/export/pdf-font.ts` — jsPDF-agnostic, so the
+  barrel pulls no PDF code); missing bold/italic faces map to the regular face so a bold header
+  never drops back to Helvetica, and `warnOgePdfUnicode` warns once when such text is exported
+  without one. The docs demos register Noto Sans (`public/fonts`, SIL OFL) lazily on the first
+  export through `shared/pdf-font.ts`. CSV keeps its UTF-8 BOM and XLSX is Unicode by format.
+  Styling
   is one value-level seam, `cellStyle(args)` → `OgeExportCellStyle`, reaching every line; the data
   cell's `customizeCell` stays the value override and gains a mutable `style`. It runs for data
   cells only, so existing customizers that read `row` keep working. A grid feature that changes
@@ -1142,8 +1151,10 @@ and Search Console reported the whole site as "redirected / discovered – not i
   `DOCUMENT` injection; otherwise `typeof document !== 'undefined'`. One unguarded access fails the
   whole `dev-app:build`, and the first error kills the worker so later routes report
   "Terminating worker thread" — read the _first_ `ERROR` line.
-- Canonical host is the apex `https://ogeui.com` everywhere (`SITE_ORIGIN`, `SeoService.ORIGIN`,
-  `robots.txt`, sitemap). The Vercel domain settings must redirect `www.` → apex, never the reverse.
+- Canonical host is **`https://www.ogeui.com`** everywhere (`SITE_ORIGIN`, `SeoService.ORIGIN`,
+  `robots.txt`, sitemap, `llms.txt` links, package `homepage`). Vercel serves `www.` as the primary
+  domain and 308-redirects the apex to it, so the canonical must name `www.` — a canonical that
+  points at a redirecting URL sends Google conflicting signals (2026-10-04: switched from apex).
 - `robots.txt` explicitly allows the AI crawlers (GPTBot, ClaudeBot, PerplexityBot, …) — the
   `llms.txt` pipeline exists for them.
 - **Security headers live in `vercel.json`** — CSP, HSTS, `frame-ancestors`, Permissions-Policy,

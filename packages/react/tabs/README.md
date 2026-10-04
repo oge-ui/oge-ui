@@ -66,7 +66,7 @@ export function Workspace() {
 
 ## Docs
 
-Live demos and the full API reference: <https://ogeui.com/components/tabs>
+Live demos and the full API reference: <https://www.ogeui.com/components/tabs>
 (pick **React** in the header switch). Machine-readable docs ship inside the
 package at `node_modules/@oge-ui/react-tabs/llms.txt`.
 

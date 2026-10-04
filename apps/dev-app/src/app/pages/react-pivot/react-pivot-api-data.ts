@@ -442,7 +442,7 @@ export const OGE_REACT_PIVOT_GRID_API: ApiSections = {
           name: 'exportPivotToPdf(handle, options?)',
           type: '@oge-ui/react-pivot/export-pdf',
           description:
-            'Lazy PDF export (optional <code>jspdf</code> + <code>jspdf-autotable</code> peers): the multi-level column headers repeated on every page, the grid’s own cell text, its row-header layout and field captions, bold totals, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code>, <code>pageNumbers</code>, <code>customizeCell</code>. <code>buildPivotPdfDocument(result, options)</code> for custom pipelines.',
+            'Lazy PDF export (optional <code>jspdf</code> + <code>jspdf-autotable</code> peers): the multi-level column headers repeated on every page, the grid’s own cell text, its row-header layout and field captions, bold totals, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code>, <code>pageNumbers</code>, <code>customizeCell</code>. <code>buildPivotPdfDocument(result, options)</code> for custom pipelines. Text outside WinAnsi (Turkish <code>ğ ş ı İ</code>, Central European, Greek, Cyrillic) needs a Unicode TrueType <code>font</code> — per export, or once for every PDF via <code>setOgePdfDefaultFont({ family, normal, bold })</code> from <code>@oge-ui/behavior</code>; without one the built-in Helvetica cannot draw it (a dev-mode warning says so).',
         },
         {
           name: 'OgePivotPdfExportOptions / OgePivotPdfCell / OgePdfPageInfo',

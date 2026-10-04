@@ -2,10 +2,10 @@
 
 > Framework-free pivot grid engine shared by @oge-ui/pivot and @oge-ui/react-pivot (ADR 0003): field layout, header layout and virtualization math, the remote-store adapter, menus, value filters, the field chooser, keyboard navigation, persistence snapshots, the message catalog and the Excel workbook builder. Installed automatically — you rarely import it directly.
 >
-> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://ogeui.com/license before shipping it.
+> This package is commercially licensed — unlike the rest of the suite, it is not MIT. See https://www.ogeui.com/license before shipping it.
 
 Part of OGE UI v1.1.1.
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/pivot-engine

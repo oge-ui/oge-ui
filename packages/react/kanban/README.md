@@ -51,11 +51,11 @@ export function Board({ tasks }: { tasks: Task[] }) {
 - Configuration and i18n: `<OgeKanbanConfigProvider config={{ messages, locale, cardHeight }}>`.
 - The data array is never mutated — persist through the past-tense callbacks.
 
-Docs and live demos: [ogeui.com/components/kanban](https://ogeui.com/components/kanban)
+Docs and live demos: [ogeui.com/components/kanban](https://www.ogeui.com/components/kanban)
 (switch the header to React).
 
 ## License
 
 Source-available commercial software — free for evaluation and development,
 a paid license for production. See [LICENSE](LICENSE) and
-[ogeui.com/license](https://ogeui.com/license).
+[ogeui.com/license](https://www.ogeui.com/license).

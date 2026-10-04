@@ -3,8 +3,8 @@
 > Form layout over the editors — responsive columns, fieldset groups, declarative validation rules and a validation summary.
 
 Part of OGE UI v1.1.1.
-Docs and live demos: https://ogeui.com/components/forms
-Whole-suite reference: https://ogeui.com/llms-full.txt
+Docs and live demos: https://www.ogeui.com/components/forms
+Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
 ```sh
 npm i @oge-ui/forms

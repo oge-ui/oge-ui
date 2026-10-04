@@ -24,6 +24,13 @@ const ENTRY_POINTS = [
   'isTopOverlay',
   'lockBodyScroll',
   'OGE_DEFAULT_OVERLAY_TIMINGS',
+  // export fonts (Unicode PDF text)
+  'setOgePdfDefaultFont',
+  'getOgePdfDefaultFont',
+  'isOgePdfWinAnsi',
+  'registerOgePdfFont',
+  'resolveOgePdfFont',
+  'warnOgePdfUnicode',
   // gestures
   'beginPointerGesture',
   'prepareTouchDrag',

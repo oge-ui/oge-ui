@@ -4,7 +4,7 @@
 > Gantt is source-available commercial software: free for evaluation,
 > development and testing — a paid license is required for production use.
 > No watermark, no runtime license checks. See [LICENSE](LICENSE) and
-> [ogeui.com/license](https://ogeui.com/license).
+> [ogeui.com/license](https://www.ogeui.com/license).
 
 A signal-based Angular Gantt chart: `<oge-gantt>` pairs a virtualized
 treegrid task pane with a timeline chart over a pure, framework-free
@@ -88,5 +88,5 @@ the chart is a focusable, labeled scroll region. All strings, including every ar
 DateAdapter, no TZ database); `locale` (config-level or per instance)
 drives every `Intl` format.
 
-Docs: [ogeui.com/components/gantt](https://ogeui.com/components/gantt)
+Docs: [ogeui.com/components/gantt](https://www.ogeui.com/components/gantt)
 · AI reference: [`llms.txt`](llms.txt)

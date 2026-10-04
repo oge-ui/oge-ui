@@ -1,6 +1,6 @@
 # @oge-ui/navigation
 
-Navigation controls for the [OGE](https://ogeui.com) Angular UI suite.
+Navigation controls for the [OGE](https://www.ogeui.com) Angular UI suite.
 Signal-based, standalone, zoneless-ready, MIT.
 
 Today the package ships **`OgeTreeView`**, **`OgeDrawer`**, **`OgeStepper`**,
@@ -51,7 +51,7 @@ and the parent links are derived:
 - **Theming** — the shared `--oge-*` design tokens, logical properties for RTL,
   and `prefers-reduced-motion` support.
 
-See the [API reference](https://ogeui.com/components/tree-view/api) for the
+See the [API reference](https://www.ogeui.com/components/tree-view/api) for the
 full surface.
 
 ## Drawer
@@ -93,7 +93,7 @@ the content.
 - **Async `closeGuard`** — `false`, a throw and a rejection all veto the close; a
   promise reports `closePending`, and a second gesture meanwhile is dropped.
 
-See the [API reference](https://ogeui.com/components/tree-view/api) for the full
+See the [API reference](https://www.ogeui.com/components/tree-view/api) for the full
 surface.
 
 ## Stepper
@@ -138,7 +138,7 @@ Inside a form, `<oge-form-steps>` wraps this component and derives each step's
 completion from the form's own error rollup — identically in all three binding
 modes — and touches only the step being left, so the steps ahead stay quiet.
 
-See the [API reference](https://ogeui.com/components/tree-view/api) for the full
+See the [API reference](https://www.ogeui.com/components/tree-view/api) for the full
 surface.
 
 ## Menubar
@@ -188,7 +188,7 @@ Items come from a data tree, from nested `<oge-menubar-item>` children, or both
   counter pill — both live on the canonical `OgeMenuItem`, so every menu in
   the suite gained them.
 
-See the [API reference](https://ogeui.com/components/tree-view/api) for the full
+See the [API reference](https://www.ogeui.com/components/tree-view/api) for the full
 surface.
 
 ## Breadcrumb
@@ -229,7 +229,7 @@ both (children first).
 - **Config** — `provideOgeBreadcrumbConfig()`; the nav landmark's label and
   the ellipsis button's label live in `OgeBreadcrumbMessages`.
 
-See the [API reference](https://ogeui.com/components/tree-view/api) for the full
+See the [API reference](https://www.ogeui.com/components/tree-view/api) for the full
 surface.
 
 ## Pagination
@@ -264,15 +264,15 @@ surface.
 - **Config** — `provideOgePaginationConfig()`; every string incl. the info
   template (`{from}–{to} of {itemCount}`) lives in `OgePaginationMessages`.
 
-See the [API reference](https://ogeui.com/components/tree-view/api) for the full
+See the [API reference](https://www.ogeui.com/components/tree-view/api) for the full
 surface.
 
 ## For AI coding assistants
 
 The complete machine-readable API reference ships inside the package at
 `node_modules/@oge-ui/navigation/llms.txt` — conventions, every documented member
-and copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index)
-and <https://ogeui.com/llms-full.txt> (the whole suite).
+and copy-pasteable demos in one file. Online: <https://www.ogeui.com/llms.txt> (index)
+and <https://www.ogeui.com/llms-full.txt> (the whole suite).
 
 ## License
 

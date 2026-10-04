@@ -72,7 +72,7 @@ const [files, setFiles] = useState<readonly File[]>([]);
 
 ## Docs
 
-Live demos and the full API reference: <https://ogeui.com/components/upload>
+Live demos and the full API reference: <https://www.ogeui.com/components/upload>
 (pick **React** in the header). Machine-readable docs for coding assistants
 ship inside the package at `node_modules/@oge-ui/react-upload/llms.txt`.
 

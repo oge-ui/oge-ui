@@ -4,218 +4,218 @@
 
 Install with `npm i oge-ui` (every MIT family, one import path) or per family, e.g. `npm i @oge-ui/grid`. Requires Angular >= 22 and Node >= 22.22. Component styles ship inside the components, so no global stylesheet is required and the light theme is built in. App-wide defaults and every user-facing string come from `provideOge<Family>Config()`.
 
-For code generation, prefer the full reference — it inlines every API table and every demo source: [llms-full.txt](https://ogeui.com/llms-full.txt). Per-package references live at `https://ogeui.com/llms/<package>.txt` and ship inside each tarball at `node_modules/<package>/llms.txt`.
+For code generation, prefer the full reference — it inlines every API table and every demo source: [llms-full.txt](https://www.ogeui.com/llms-full.txt). Per-package references live at `https://www.ogeui.com/llms/<package>.txt` and ship inside each tarball at `node_modules/<package>/llms.txt`.
 
 ## Packages
 
-- [@oge-ui/grid](https://ogeui.com/components/data-grid): Virtualized data grid: 100k+ rows, sorting, filtering, grouping with summaries, inline/batch/form editing, selection, master-detail, state persistence and CSV/Excel/PDF export.
-- [@oge-ui/tree-list](https://ogeui.com/components/tree-list): The data-grid feature set on hierarchical data: lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
-- [@oge-ui/inputs](https://ogeui.com/components/inputs): Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, ColorBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
-- [@oge-ui/buttons](https://ogeui.com/components/buttons): Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.
-- [@oge-ui/overlay](https://ogeui.com/components/overlay): Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus, tooltips, context menus, the `oge-modal` dialog with `OgeModalService`, and `OgeToastService` notifications.
-- [@oge-ui/tabs](https://ogeui.com/components/tabs): Tab strip and tab panel: declarative or data-driven tabs, deferred rendering with keep-alive, closable and reorderable tabs, router integration.
-- [@oge-ui/layout](https://ogeui.com/components/accordion): Layout containers and loading visuals — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), load-indicator ring and shimmer skeleton with the aria progressbar contract done right.
-- [@oge-ui/forms](https://ogeui.com/components/forms): Form layout over the editors — responsive columns, fieldset groups, declarative validation rules and a validation summary.
-- [@oge-ui/upload](https://ogeui.com/components/upload): File uploader — drag & drop with directory and paste support, client-side restrictions, image previews, per-file progress, and chunked resumable transfer with pause, resume and retry.
-- [@oge-ui/navigation](https://ogeui.com/components/tree-view): Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
-- [@oge-ui/pivot](https://ogeui.com/components/pivot-grid): Cross-tab analytics: rows × columns × measures, grand totals, field chooser, sorting and Excel export. **Commercial licence.**
-- [@oge-ui/bpmn](https://ogeui.com/components/bpmn): From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark. **Commercial licence.**
+- [@oge-ui/grid](https://www.ogeui.com/components/data-grid): Virtualized data grid: 100k+ rows, sorting, filtering, grouping with summaries, inline/batch/form editing, selection, master-detail, state persistence and CSV/Excel/PDF export.
+- [@oge-ui/tree-list](https://www.ogeui.com/components/tree-list): The data-grid feature set on hierarchical data: lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
+- [@oge-ui/inputs](https://www.ogeui.com/components/inputs): Form editors on one field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete, DateBox, ColorBox, CheckBox, Switch, and the APG Slider/RangeSlider with live drag commits and Escape-to-cancel — floating labels, validation, Signal Forms and reactive forms.
+- [@oge-ui/buttons](https://www.ogeui.com/components/buttons): Buttons with async actions and automatic loading, click guards, hold-to-confirm, auto-repeat, badges, button groups and drop-down/split buttons.
+- [@oge-ui/overlay](https://www.ogeui.com/components/overlay): Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus, tooltips, context menus, the `oge-modal` dialog with `OgeModalService`, and `OgeToastService` notifications.
+- [@oge-ui/tabs](https://www.ogeui.com/components/tabs): Tab strip and tab panel: declarative or data-driven tabs, deferred rendering with keep-alive, closable and reorderable tabs, router integration.
+- [@oge-ui/layout](https://www.ogeui.com/components/accordion): Layout containers and loading visuals — accordion panels with single or multiple expansion, a splitter with resizable, collapsible and nestable panes, a toolbar with an overflow menu, a card content surface with attribute-slot sections, and the loading trio: progress bar (buffer/chunked/severity), load-indicator ring and shimmer skeleton with the aria progressbar contract done right.
+- [@oge-ui/forms](https://www.ogeui.com/components/forms): Form layout over the editors — responsive columns, fieldset groups, declarative validation rules and a validation summary.
+- [@oge-ui/upload](https://www.ogeui.com/components/upload): File uploader — drag & drop with directory and paste support, client-side restrictions, image previews, per-file progress, and chunked resumable transfer with pause, resume and retry.
+- [@oge-ui/navigation](https://www.ogeui.com/components/tree-view): Navigation controls — a tree view over flat or nested data with tri-state checkboxes, search, lazy load on demand, virtual scrolling and drag & drop reparenting, a drawer whose modality follows its layout mode (dialog when it covers the content, landmark when it shares the row), a WAI-ARIA APG menubar with nested submenus and a container-width hamburger collapse, an APG breadcrumb whose oldest middle crumbs collapse into an ellipsis menu against the container width while staying reachable as links, and a standalone pagination bar with a constant-width ellipsis page window, page-size selector, info range and adaptive compact mode.
+- [@oge-ui/pivot](https://www.ogeui.com/components/pivot-grid): Cross-tab analytics: rows × columns × measures, grand totals, field chooser, sorting and Excel export. **Commercial licence.**
+- [@oge-ui/bpmn](https://www.ogeui.com/components/bpmn): From-scratch BPMN 2.0 modeler: its own dependency-free XML + diagram-interchange engine, orthogonal routing, snapping, undo/redo, a keyboard-accessible SVG canvas and no watermark. **Commercial licence.**
 - [@oge-ui/bpmn-engine](https://www.npmjs.com/package/@oge-ui/bpmn-engine): Framework-free engine of the BPMN editor (ADR 0003): the diagram model, BPMN XML + DI reader/writer, JSON envelope, SVG export, orthogonal routing, snapping, alignment, modeling rules, the snapshot command stack and the editor core both the Angular and the React editor run. Installed automatically by either editor — import it directly for server-side or test pipelines. **Commercial licence.**
-- [@oge-ui/charts](https://ogeui.com/components/charts): Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection. **Commercial licence.**
+- [@oge-ui/charts](https://www.ogeui.com/components/charts): Charts: cartesian line/spline/area/bar/stacked/scatter/range/candlestick series and pie/doughnut on a dependency-free SVG kernel — time/log axes, zoom & pan, crosshair, shared tooltips, interactive legend and keyboard point inspection. **Commercial licence.**
 - [@oge-ui/charts-engine](https://www.npmjs.com/package/@oge-ui/charts-engine): Framework-free charts engine shared by the Angular and React charts: scales, series normalization, stacking, path builders with LTTB downsampling, pie and radar geometry, the cartesian/pie/polar/range-selector view models, keyboard maps, the gesture machine, the message catalog and the image exporter. Installed automatically — you rarely import it directly. **Commercial licence.**
-- [@oge-ui/gantt](https://ogeui.com/components/gantt): Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, drag editing with Escape-cancel and snapshot undo/redo. **Commercial licence.**
-- [@oge-ui/kanban](https://ogeui.com/components/kanban): Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits with drag previews, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar. **Commercial licence.**
+- [@oge-ui/gantt](https://www.ogeui.com/components/gantt): Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, drag editing with Escape-cancel and snapshot undo/redo. **Commercial licence.**
+- [@oge-ui/kanban](https://www.ogeui.com/components/kanban): Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits with drag previews, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar. **Commercial licence.**
 - [@oge-ui/kanban-engine](https://www.npmjs.com/package/@oge-ui/kanban-engine): Framework-free engine both Kanban render layers run: card normalization and write-back, swimlane grouping, search, drag hit-testing and auto-scroll, virtual windows, WIP arithmetic, keyboard and move machines, the edit-dialog model and the message catalog. Installed automatically with @oge-ui/kanban or @oge-ui/react-kanban. **Commercial licence.**
-- [@oge-ui/scheduler](https://ogeui.com/components/scheduler): Scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing. **Commercial licence.**
+- [@oge-ui/scheduler](https://www.ogeui.com/components/scheduler): Scheduler / event calendar: day, week and month views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, appointment popup and form editing. **Commercial licence.**
 - [@oge-ui/core](https://www.npmjs.com/package/@oge-ui/core): Framework-free data engine shared by every package: sort/filter/group/aggregate pipelines, selection and virtualization math. Installed automatically — you rarely import it directly.
-- [@oge-ui/react-buttons](https://ogeui.com/components/buttons): React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.
-- [@oge-ui/react-inputs](https://ogeui.com/components/inputs): React form editors on the same field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete (virtual scrolling, custom values), CheckBox, Switch, RadioGroup, Slider/RangeSlider, ColorBox, Calendar and DateBox/DateRangeBox — running the same commit pipeline, list/selection machines and stylesheet as the Angular package.
-- [@oge-ui/react-tabs](https://ogeui.com/components/tabs): React tab strip and tab panel: the WAI-ARIA APG tabs pattern with declarative or data-driven tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards, drag reordering and lazy panel rendering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.
-- [@oge-ui/react-layout](https://ogeui.com/components/accordion): React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, plus the progress bar, load indicator and shimmer skeleton — running the same config defaults, decision functions and stylesheet as the Angular layout package.
-- [@oge-ui/react-navigation](https://ogeui.com/components/tree-view): React navigation and wayfinding: a virtualized tree view with lazy children, checkbox tri-state and drag reparenting, a drawer with overlay/push/side modes and derived modality, a linear or free stepper with async step guards, a full WAI-ARIA menubar with submenus and type-ahead, a collapsing breadcrumb and a pagination bar — running the same config defaults, decision functions and stylesheet as the Angular navigation package.
-- [@oge-ui/react-forms](https://ogeui.com/components/forms): React form layout over the editors: a nested layout array of items, groups and tabbed/accordion/wizard sections, responsive container-query columns, declarative validation rules and a validation summary — running the same item model, the same rule evaluator and the same stylesheet as the Angular forms package.
-- [@oge-ui/react-upload](https://ogeui.com/components/upload): React file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews and a lightbox, per-file progress with rate and ETA, chunked resumable transfer with pause, resume and retry, a pluggable transport adapter, external drop zones and triggers — running the same upload engine, list machine and stylesheet as the Angular upload package.
-- [@oge-ui/react-kanban](https://ogeui.com/components/kanban): React Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move callbacks, built-in edit dialog, context menu and toolbar — running the same engine and stylesheet as the Angular Kanban package. **Commercial licence.**
-- [@oge-ui/react-charts](https://ogeui.com/components/charts): React charts on a dependency-free SVG kernel: sixteen cartesian series types (line/spline/step/area/stacked/bar/range/scatter/bubble/candlestick), pie and doughnut, radar/polar and a range selector — time and log axes, multiple value axes, strip lines, annotations, wheel/drag zoom and pan, crosshair, shared tooltips, an interactive legend, selection, keyboard point inspection and PNG/SVG export — running the same charts engine and stylesheet as the Angular charts package. **Commercial licence.**
-- [@oge-ui/react-grid](https://ogeui.com/components/data-grid): React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, grouping with summaries and deferred groups, master-detail, row render props, row drag, pinned/resizable/reorderable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.
-- [@oge-ui/react-tree-list](https://ogeui.com/components/tree-list): React tree list: the data-grid feature set on hierarchical data — flat parentId or nested payloads, lazy per-expansion loading with remote match discovery, ancestor-preserving filtering, recursive tri-state selection, paging over visible rows, virtualization, editing in all five modes and drag & drop reparenting — running the same framework-free tree engine, state slices and stylesheet as the Angular tree-list package.
-- [@oge-ui/react-bpmn](https://ogeui.com/components/bpmn): React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG import/export and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark. **Commercial licence.**
-- [@oge-ui/react-overlay](https://ogeui.com/components/overlay): React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
+- [@oge-ui/react-buttons](https://www.ogeui.com/components/buttons): React buttons and button groups: severity/styling variants, async single-flight actions, click guarding, badges, hold-to-confirm and auto-repeat — running the same press machine and the same stylesheet as the Angular package.
+- [@oge-ui/react-inputs](https://www.ogeui.com/components/inputs): React form editors on the same field chrome: TextBox, TextArea, NumberBox, SelectBox, TagBox, Autocomplete (virtual scrolling, custom values), CheckBox, Switch, RadioGroup, Slider/RangeSlider, ColorBox, Calendar and DateBox/DateRangeBox — running the same commit pipeline, list/selection machines and stylesheet as the Angular package.
+- [@oge-ui/react-tabs](https://www.ogeui.com/components/tabs): React tab strip and tab panel: the WAI-ARIA APG tabs pattern with declarative or data-driven tabs, automatic/manual activation, overflow scrolling with an all-tabs menu, closable tabs with async close guards, drag reordering and lazy panel rendering — running the same selection/close/reorder pipelines and the same stylesheet as the Angular tabs package.
+- [@oge-ui/react-layout](https://www.ogeui.com/components/accordion): React layout containers and loading visuals: card, accordion with async expand guards and lazy content, splitter with the APG window-splitter keyboard, toolbar with an overflow menu, plus the progress bar, load indicator and shimmer skeleton — running the same config defaults, decision functions and stylesheet as the Angular layout package.
+- [@oge-ui/react-navigation](https://www.ogeui.com/components/tree-view): React navigation and wayfinding: a virtualized tree view with lazy children, checkbox tri-state and drag reparenting, a drawer with overlay/push/side modes and derived modality, a linear or free stepper with async step guards, a full WAI-ARIA menubar with submenus and type-ahead, a collapsing breadcrumb and a pagination bar — running the same config defaults, decision functions and stylesheet as the Angular navigation package.
+- [@oge-ui/react-forms](https://www.ogeui.com/components/forms): React form layout over the editors: a nested layout array of items, groups and tabbed/accordion/wizard sections, responsive container-query columns, declarative validation rules and a validation summary — running the same item model, the same rule evaluator and the same stylesheet as the Angular forms package.
+- [@oge-ui/react-upload](https://www.ogeui.com/components/upload): React file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews and a lightbox, per-file progress with rate and ETA, chunked resumable transfer with pause, resume and retry, a pluggable transport adapter, external drop zones and triggers — running the same upload engine, list machine and stylesheet as the Angular upload package.
+- [@oge-ui/react-kanban](https://www.ogeui.com/components/kanban): React Kanban board: columns + swimlanes over a plain card array with field mapping, WIP limits, per-column virtualization, drag & drop with Escape-cancel and edge auto-scroll, Ctrl+Arrow keyboard card moving with live announcements, cancelable CRUD and move callbacks, built-in edit dialog, context menu and toolbar — running the same engine and stylesheet as the Angular Kanban package. **Commercial licence.**
+- [@oge-ui/react-charts](https://www.ogeui.com/components/charts): React charts on a dependency-free SVG kernel: sixteen cartesian series types (line/spline/step/area/stacked/bar/range/scatter/bubble/candlestick), pie and doughnut, radar/polar and a range selector — time and log axes, multiple value axes, strip lines, annotations, wheel/drag zoom and pan, crosshair, shared tooltips, an interactive legend, selection, keyboard point inspection and PNG/SVG export — running the same charts engine and stylesheet as the Angular charts package. **Commercial licence.**
+- [@oge-ui/react-grid](https://www.ogeui.com/components/data-grid): React data grid: data-driven columns with render props, multi-column sorting, a typed filter row with an operator menu, global search, paging, row and column virtualization, windowed remote loading, single/multiple/checkbox selection, Excel-like keyboard navigation, grouping with summaries and deferred groups, master-detail, row render props, row drag, pinned/resizable/reorderable columns, state persistence and CSV export — running the same framework-free grid engine, state slices and stylesheet as the Angular grid package.
+- [@oge-ui/react-tree-list](https://www.ogeui.com/components/tree-list): React tree list: the data-grid feature set on hierarchical data — flat parentId or nested payloads, lazy per-expansion loading with remote match discovery, ancestor-preserving filtering, recursive tri-state selection, paging over visible rows, virtualization, editing in all five modes and drag & drop reparenting — running the same framework-free tree engine, state slices and stylesheet as the Angular tree-list package.
+- [@oge-ui/react-bpmn](https://www.ogeui.com/components/bpmn): React BPMN 2.0 modeler: palette click-then-place and drag-to-canvas, context pad, inline label editing, orthogonal routing, snapping with guides, pools and lanes, boundary events and sub-processes, properties panel, minimap, element search, align/distribute, clipboard, snapshot undo/redo, BPMN XML + JSON + SVG import/export and overlays on a keyboard-accessible canvas — running the same framework-free engine and editor core (`@oge-ui/bpmn-engine`) and the same stylesheet as the Angular editor. No watermark. **Commercial licence.**
+- [@oge-ui/react-overlay](https://www.ogeui.com/components/overlay): React overlay surfaces: viewport-aware anchored popups (flip + clamp, RTL-aware, shared Escape stack), a full WAI-ARIA menu with submenus and type-ahead, accessible tooltips, a right-click context menu, a modal dialog with async close guards, drag/resize and an imperative provider, and stacked toasts with pause-on-hover timers, coalescing and promise morphing — running the same machines and stylesheet as the Angular overlay package.
 - [@oge-ui/behavior](https://www.npmjs.com/package/@oge-ui/behavior): Framework-free interaction and accessibility layer shared by every package: popup positioning, focus trapping, the single overlay Escape stack and ref-counted body scroll locking. Installed automatically — you rarely import it directly.
 - [@oge-ui/react](https://www.npmjs.com/package/@oge-ui/react): Re-exports every React family from a single import path, with one stylesheet for all of them. `npm i @oge-ui/react` then `import { OgeButton, OgeTextBox } from '@oge-ui/react'`.
 - [oge-ui](https://www.npmjs.com/package/oge-ui): Re-exports every MIT family from a single import path. `npm i oge-ui` then `import { OgeGrid, OgeButton } from 'oge-ui'`.
 - [@oge-ui/scheduler-engine](https://www.npmjs.com/package/@oge-ui/scheduler-engine): Framework-free engine behind both scheduler render layers (ADR 0003): view-model builders, the transitive-overlap column layout, lane packing, the RFC 5545 RRULE-subset parser and expander, gesture math, keyboard maps, the editing/recurrence/CRUD core (`OgeSchedulerCore`), default config and message catalog. Installed automatically with `@oge-ui/scheduler` or `@oge-ui/react-scheduler` — you rarely import it directly. **Commercial licence.**
-- [@oge-ui/react-scheduler](https://ogeui.com/components/scheduler): React scheduler / event calendar: day, work-week, week, month, agenda, timeline and year views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, drag-to-create, recurrence with occurrence-vs-series editing, resource grouping, reminders, an appointment popup and a form editor — running the same scheduler engine and stylesheet as the Angular scheduler package. **Commercial licence.**
+- [@oge-ui/react-scheduler](https://www.ogeui.com/components/scheduler): React scheduler / event calendar: day, work-week, week, month, agenda, timeline and year views, all-day strip, pure-kernel overlap layout, drag & resize with Escape-cancel, drag-to-create, recurrence with occurrence-vs-series editing, resource grouping, reminders, an appointment popup and a form editor — running the same scheduler engine and stylesheet as the Angular scheduler package. **Commercial licence.**
 - [@oge-ui/pivot-engine](https://www.npmjs.com/package/@oge-ui/pivot-engine): Framework-free pivot grid engine shared by @oge-ui/pivot and @oge-ui/react-pivot (ADR 0003): field layout, header layout and virtualization math, the remote-store adapter, menus, value filters, the field chooser, keyboard navigation, persistence snapshots, the message catalog and the Excel workbook builder. Installed automatically — you rarely import it directly. **Commercial licence.**
-- [@oge-ui/react-pivot](https://ogeui.com/components/pivot-grid): React pivot grid: local rows or a remote pre-aggregated store, four drag & drop field areas, multi-level column headers, expand/collapse on both axes, sub and grand totals, display modes and running totals, header and measure menus, value filters, a field chooser, two-axis virtual scrolling, state persistence and CSV/Excel export — running the same framework-free pivot engine (@oge-ui/pivot-engine) and the same stylesheet as the Angular pivot package. **Commercial licence.**
+- [@oge-ui/react-pivot](https://www.ogeui.com/components/pivot-grid): React pivot grid: local rows or a remote pre-aggregated store, four drag & drop field areas, multi-level column headers, expand/collapse on both axes, sub and grand totals, display modes and running totals, header and measure menus, value filters, a field chooser, two-axis virtual scrolling, state persistence and CSV/Excel export — running the same framework-free pivot engine (@oge-ui/pivot-engine) and the same stylesheet as the Angular pivot package. **Commercial licence.**
 - [@oge-ui/gantt-engine](https://www.npmjs.com/package/@oge-ui/gantt-engine): Framework-free engine behind the Angular and React Gantt (ADR 0003): task-tree model and field mapping, calendar-true time scales, auto-scheduling, critical path, dependency routing, the OgeGanttCore controller, message catalogs and the Excel/PDF/PNG export builders. Installed automatically by @oge-ui/gantt and @oge-ui/react-gantt — you rarely import it directly. **Commercial licence.**
-- [@oge-ui/react-gantt](https://ogeui.com/components/gantt): React Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, auto-scheduling on work calendars, resources and workload, drag editing with Escape-cancel, snapshot undo/redo, built-in context menu and task dialog, Excel/PDF/PNG export — running the same @oge-ui/gantt-engine controller and stylesheet as the Angular Gantt package. **Commercial licence.**
+- [@oge-ui/react-gantt](https://www.ogeui.com/components/gantt): React Gantt chart: virtualized task tree pane + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows, critical path, auto-scheduling on work calendars, resources and workload, drag editing with Escape-cancel, snapshot undo/redo, built-in context menu and task dialog, Excel/PDF/PNG export — running the same @oge-ui/gantt-engine controller and stylesheet as the Angular Gantt package. **Commercial licence.**
 
 ## Getting started
 
-- [Getting Started](https://ogeui.com/getting-started): Get started with OGE: install the signal-based Angular UI packages, bind your first components and theme them with CSS design tokens.
-- [Set up your project](https://ogeui.com/getting-started/setup)
-- [Style the app](https://ogeui.com/getting-started/styling)
-- [Localization](https://ogeui.com/getting-started/localization)
+- [Getting Started](https://www.ogeui.com/getting-started): Get started with OGE: install the signal-based Angular UI packages, bind your first components and theme them with CSS design tokens.
+- [Set up your project](https://www.ogeui.com/getting-started/setup)
+- [Style the app](https://www.ogeui.com/getting-started/styling)
+- [Localization](https://www.ogeui.com/getting-started/localization)
 
 ## AI
 
-- [AI coding assistants](https://ogeui.com/ai)
+- [AI coding assistants](https://www.ogeui.com/ai)
 
 ## Data Grid
 
-- [Data Grid](https://ogeui.com/components/data-grid): Angular Data Grid with row and column virtualization, sorting, filtering, grouping with summaries, inline/batch editing, master-detail, remote data and CSV/Excel/PDF export.
-- [Data Grid Playground](https://ogeui.com/components/data-grid/playground)
-- [Data Grid Sorting & Paging](https://ogeui.com/components/data-grid/sorting)
-- [Data Grid Virtual Scroll](https://ogeui.com/components/data-grid/virtual-scroll)
-- [Data Grid Infinite Scroll](https://ogeui.com/components/data-grid/infinite-scroll)
-- [Data Grid Remote Data](https://ogeui.com/components/data-grid/remote-data)
-- [Data Grid Live Updates](https://ogeui.com/components/data-grid/live-updates)
-- [Data Grid Columns](https://ogeui.com/components/data-grid/columns)
-- [Data Grid Filtering](https://ogeui.com/components/data-grid/filtering)
-- [Data Grid Selection](https://ogeui.com/components/data-grid/selection)
-- [Data Grid Editing](https://ogeui.com/components/data-grid/editing)
-- [Data Grid Grouping](https://ogeui.com/components/data-grid/grouping)
-- [Data Grid Rows & Templates](https://ogeui.com/components/data-grid/rows)
-- [Data Grid State Persistence](https://ogeui.com/components/data-grid/persistence)
-- [Data Grid Context Menus](https://ogeui.com/components/data-grid/context-menu)
-- [Data Grid Master-Detail](https://ogeui.com/components/data-grid/master-detail)
-- [Data Grid Range Selection & Clipboard](https://ogeui.com/components/data-grid/range-selection): Angular Data Grid range selection: rectangular cell ranges with Shift+click, drag and Shift+Arrow, TSV copy with a formula guard, paste from Excel into editable cells, a fill handle that extends number and date series, Ctrl+Z undo and async validation.
-- [Data Grid Conditional Formatting](https://ogeui.com/components/data-grid/conditional-formatting): Angular Data Grid conditional formatting: rowClass / cellClass hooks, declarative rules, data bars, colour scales and icon sets on design tokens, cellPrepared, merged cells with aria-rowspan, column auto-fit and overflow tooltips.
-- [Data Grid Pinned Rows](https://ogeui.com/components/data-grid/pinned-rows): Angular Data Grid pinned rows: sticky top and bottom rows that survive virtual scrolling, sticky group headers, drag and drop of rows between grids, and a pager with first/last buttons and a go-to-page input.
-- [Data Grid Excel & PDF Export](https://ogeui.com/components/data-grid/export)
-- [Data Grid API](https://ogeui.com/components/data-grid/api)
+- [Data Grid](https://www.ogeui.com/components/data-grid): Angular Data Grid with row and column virtualization, sorting, filtering, grouping with summaries, inline/batch editing, master-detail, remote data and CSV/Excel/PDF export.
+- [Data Grid Playground](https://www.ogeui.com/components/data-grid/playground)
+- [Data Grid Sorting & Paging](https://www.ogeui.com/components/data-grid/sorting)
+- [Data Grid Virtual Scroll](https://www.ogeui.com/components/data-grid/virtual-scroll)
+- [Data Grid Infinite Scroll](https://www.ogeui.com/components/data-grid/infinite-scroll)
+- [Data Grid Remote Data](https://www.ogeui.com/components/data-grid/remote-data)
+- [Data Grid Live Updates](https://www.ogeui.com/components/data-grid/live-updates)
+- [Data Grid Columns](https://www.ogeui.com/components/data-grid/columns)
+- [Data Grid Filtering](https://www.ogeui.com/components/data-grid/filtering)
+- [Data Grid Selection](https://www.ogeui.com/components/data-grid/selection)
+- [Data Grid Editing](https://www.ogeui.com/components/data-grid/editing)
+- [Data Grid Grouping](https://www.ogeui.com/components/data-grid/grouping)
+- [Data Grid Rows & Templates](https://www.ogeui.com/components/data-grid/rows)
+- [Data Grid State Persistence](https://www.ogeui.com/components/data-grid/persistence)
+- [Data Grid Context Menus](https://www.ogeui.com/components/data-grid/context-menu)
+- [Data Grid Master-Detail](https://www.ogeui.com/components/data-grid/master-detail)
+- [Data Grid Range Selection & Clipboard](https://www.ogeui.com/components/data-grid/range-selection): Angular Data Grid range selection: rectangular cell ranges with Shift+click, drag and Shift+Arrow, TSV copy with a formula guard, paste from Excel into editable cells, a fill handle that extends number and date series, Ctrl+Z undo and async validation.
+- [Data Grid Conditional Formatting](https://www.ogeui.com/components/data-grid/conditional-formatting): Angular Data Grid conditional formatting: rowClass / cellClass hooks, declarative rules, data bars, colour scales and icon sets on design tokens, cellPrepared, merged cells with aria-rowspan, column auto-fit and overflow tooltips.
+- [Data Grid Pinned Rows](https://www.ogeui.com/components/data-grid/pinned-rows): Angular Data Grid pinned rows: sticky top and bottom rows that survive virtual scrolling, sticky group headers, drag and drop of rows between grids, and a pager with first/last buttons and a go-to-page input.
+- [Data Grid Excel & PDF Export](https://www.ogeui.com/components/data-grid/export)
+- [Data Grid API](https://www.ogeui.com/components/data-grid/api)
 
 ## Tree List
 
-- [Tree List](https://ogeui.com/components/tree-list): Angular Tree List: the full data-grid feature set on hierarchical data — lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
-- [Tree List Lazy Loading](https://ogeui.com/components/tree-list/lazy-loading)
-- [Tree List Filtering](https://ogeui.com/components/tree-list/filtering)
-- [Tree List Selection](https://ogeui.com/components/tree-list/selection)
-- [Tree List Virtual Scroll](https://ogeui.com/components/tree-list/virtual-scroll)
-- [Tree List Drag & Drop](https://ogeui.com/components/tree-list/drag-drop)
-- [Tree List Summaries](https://ogeui.com/components/tree-list/summaries)
-- [Tree List Editing](https://ogeui.com/components/tree-list/editing)
-- [Tree List API](https://ogeui.com/components/tree-list/api)
+- [Tree List](https://www.ogeui.com/components/tree-list): Angular Tree List: the full data-grid feature set on hierarchical data — lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop.
+- [Tree List Lazy Loading](https://www.ogeui.com/components/tree-list/lazy-loading)
+- [Tree List Filtering](https://www.ogeui.com/components/tree-list/filtering)
+- [Tree List Selection](https://www.ogeui.com/components/tree-list/selection)
+- [Tree List Virtual Scroll](https://www.ogeui.com/components/tree-list/virtual-scroll)
+- [Tree List Drag & Drop](https://www.ogeui.com/components/tree-list/drag-drop)
+- [Tree List Summaries](https://www.ogeui.com/components/tree-list/summaries)
+- [Tree List Editing](https://www.ogeui.com/components/tree-list/editing)
+- [Tree List API](https://www.ogeui.com/components/tree-list/api)
 
 ## Inputs
 
-- [Inputs](https://ogeui.com/components/inputs): Angular form inputs on one field chrome: TextBox, TextArea, NumberBox and SelectBox with floating labels, validation, Signal Forms and reactive forms support.
-- [Input Validation](https://ogeui.com/components/inputs/validation)
-- [Masked Text Box](https://ogeui.com/components/inputs/masked-text-box): Angular MaskedTextBox and TextBox mask: one shared mask engine — 0/9/#/L/l/A/a/C/c slots, escapes and custom rules, overwrite-style typing that skips literals, Backspace/Delete across literals, raw or formatted paste, IME-safe composition, raw or literal-carrying values, and a mask validator for Signal Forms and reactive forms.
-- [Select Box](https://ogeui.com/components/inputs/select-box): Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading and full keyboard support — signal-based and zoneless.
-- [Tree Select](https://ogeui.com/components/inputs/tree-select)
-- [Autocomplete](https://ogeui.com/components/inputs/autocomplete)
-- [Toggle Controls](https://ogeui.com/components/inputs/toggle-controls)
-- [Check Box Group](https://ogeui.com/components/inputs/check-box-group): Angular CheckBoxGroup: an items-bound list of checkboxes with an array value — horizontal, vertical or column layouts, a tri-state select-all option, required-means-at-least-one validation, Signal Forms and reactive forms.
-- [Slider](https://ogeui.com/components/inputs/slider): Angular Slider and RangeSlider: the WAI-ARIA APG slider and multi-thumb patterns as bare form editors — arrows/PageUp/Home/End, live drag commits with Escape-to-cancel, dynamic aria constraints between range thumbs, formatValue feeding aria-valuetext, and Signal Forms membership out of the box.
-- [Date Editors](https://ogeui.com/components/inputs/date-box)
-- [Color Box](https://ogeui.com/components/inputs/color-box): Angular ColorBox: a color picker dropdown on the shared field chrome — CSS color string value normalized to hex/rgb/rgba/hsl, saturation/brightness surface with hue/alpha sliders, swatch palette grid, any-CSS-color text parsing incl. named colors, instantly/useButtons commit modes, and composed dialog+slider+grid accessibility (no APG color-picker pattern exists).
-- [Color Gradient](https://ogeui.com/components/inputs/color-gradient): Angular ColorGradient: the color box picker as a standalone inline editor — saturation/brightness surface, hue and alpha sliders, hex/RGBA inputs and a live WCAG contrast-ratio check against a configurable background.
-- [Color Palette](https://ogeui.com/components/inputs/color-palette): Angular ColorPalette: a standalone swatch grid with preset palettes, configurable columns and APG grid keyboard navigation (arrows, Home/End, RTL-aware), bound as a form value.
-- [Input Showcase](https://ogeui.com/components/inputs/showcase)
-- [Inputs API](https://ogeui.com/components/inputs/api)
+- [Inputs](https://www.ogeui.com/components/inputs): Angular form inputs on one field chrome: TextBox, TextArea, NumberBox and SelectBox with floating labels, validation, Signal Forms and reactive forms support.
+- [Input Validation](https://www.ogeui.com/components/inputs/validation)
+- [Masked Text Box](https://www.ogeui.com/components/inputs/masked-text-box): Angular MaskedTextBox and TextBox mask: one shared mask engine — 0/9/#/L/l/A/a/C/c slots, escapes and custom rules, overwrite-style typing that skips literals, Backspace/Delete across literals, raw or formatted paste, IME-safe composition, raw or literal-carrying values, and a mask validator for Signal Forms and reactive forms.
+- [Select Box](https://www.ogeui.com/components/inputs/select-box): Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading and full keyboard support — signal-based and zoneless.
+- [Tree Select](https://www.ogeui.com/components/inputs/tree-select)
+- [Autocomplete](https://www.ogeui.com/components/inputs/autocomplete)
+- [Toggle Controls](https://www.ogeui.com/components/inputs/toggle-controls)
+- [Check Box Group](https://www.ogeui.com/components/inputs/check-box-group): Angular CheckBoxGroup: an items-bound list of checkboxes with an array value — horizontal, vertical or column layouts, a tri-state select-all option, required-means-at-least-one validation, Signal Forms and reactive forms.
+- [Slider](https://www.ogeui.com/components/inputs/slider): Angular Slider and RangeSlider: the WAI-ARIA APG slider and multi-thumb patterns as bare form editors — arrows/PageUp/Home/End, live drag commits with Escape-to-cancel, dynamic aria constraints between range thumbs, formatValue feeding aria-valuetext, and Signal Forms membership out of the box.
+- [Date Editors](https://www.ogeui.com/components/inputs/date-box)
+- [Color Box](https://www.ogeui.com/components/inputs/color-box): Angular ColorBox: a color picker dropdown on the shared field chrome — CSS color string value normalized to hex/rgb/rgba/hsl, saturation/brightness surface with hue/alpha sliders, swatch palette grid, any-CSS-color text parsing incl. named colors, instantly/useButtons commit modes, and composed dialog+slider+grid accessibility (no APG color-picker pattern exists).
+- [Color Gradient](https://www.ogeui.com/components/inputs/color-gradient): Angular ColorGradient: the color box picker as a standalone inline editor — saturation/brightness surface, hue and alpha sliders, hex/RGBA inputs and a live WCAG contrast-ratio check against a configurable background.
+- [Color Palette](https://www.ogeui.com/components/inputs/color-palette): Angular ColorPalette: a standalone swatch grid with preset palettes, configurable columns and APG grid keyboard navigation (arrows, Home/End, RTL-aware), bound as a form value.
+- [Input Showcase](https://www.ogeui.com/components/inputs/showcase)
+- [Inputs API](https://www.ogeui.com/components/inputs/api)
 
 ## Buttons
 
-- [Buttons](https://ogeui.com/components/buttons): Angular Buttons with async actions and automatic loading, click guards, hold-to-confirm, badges, button groups and drop-down/split buttons.
-- [Button Interactions](https://ogeui.com/components/buttons/interactions)
-- [Button Group](https://ogeui.com/components/buttons/button-group)
-- [Drop Down Button](https://ogeui.com/components/buttons/drop-down-button)
-- [Buttons API](https://ogeui.com/components/buttons/api)
+- [Buttons](https://www.ogeui.com/components/buttons): Angular Buttons with async actions and automatic loading, click guards, hold-to-confirm, badges, button groups and drop-down/split buttons.
+- [Button Interactions](https://www.ogeui.com/components/buttons/interactions)
+- [Button Group](https://www.ogeui.com/components/buttons/button-group)
+- [Drop Down Button](https://www.ogeui.com/components/buttons/drop-down-button)
+- [Buttons API](https://www.ogeui.com/components/buttons/api)
 
 ## Overlay
 
-- [Overlay](https://ogeui.com/components/overlay): Angular overlay primitives: flip-aware anchored popups, WAI-ARIA menus, tooltips and context menus for any element.
-- [Tooltip & Context Menu](https://ogeui.com/components/overlay/tooltip-context-menu)
-- [Modal](https://ogeui.com/components/overlay/modal)
-- [Toast](https://ogeui.com/components/overlay/toast)
-- [Overlay API](https://ogeui.com/components/overlay/api)
+- [Overlay](https://www.ogeui.com/components/overlay): Angular overlay primitives: flip-aware anchored popups, WAI-ARIA menus, tooltips and context menus for any element.
+- [Tooltip & Context Menu](https://www.ogeui.com/components/overlay/tooltip-context-menu)
+- [Modal](https://www.ogeui.com/components/overlay/modal)
+- [Toast](https://www.ogeui.com/components/overlay/toast)
+- [Overlay API](https://www.ogeui.com/components/overlay/api)
 
 ## Tabs
 
-- [Tabs](https://ogeui.com/components/tabs)
-- [Routed Tabs](https://ogeui.com/components/tabs/routed)
-- [Tabs API](https://ogeui.com/components/tabs/api)
+- [Tabs](https://www.ogeui.com/components/tabs)
+- [Routed Tabs](https://www.ogeui.com/components/tabs/routed)
+- [Tabs API](https://www.ogeui.com/components/tabs/api)
 
 ## Layout
 
-- [Accordion](https://ogeui.com/components/accordion): Angular Accordion: WAI-ARIA expansion panels with single or multiple expansion, lazy content, async expand guards, invalid-section jumping and header actions — signal-based and zoneless.
-- [Accordion API](https://ogeui.com/components/accordion/api)
+- [Accordion](https://www.ogeui.com/components/accordion): Angular Accordion: WAI-ARIA expansion panels with single or multiple expansion, lazy content, async expand guards, invalid-section jumping and header actions — signal-based and zoneless.
+- [Accordion API](https://www.ogeui.com/components/accordion/api)
 
 ## Forms
 
-- [Form](https://ogeui.com/components/forms): Angular form component: responsive column layout over the OGE editors, nestable fieldset groups, dataType-driven editor selection, validation summary, and Signal Forms, reactive forms or plain signal binding.
-- [Form Layout](https://ogeui.com/components/forms/layout): Angular form layout: fixed or auto-fit columns, colSpan, nested fieldset groups, and responsive column counts driven by container queries rather than window width.
-- [Form Validation](https://ogeui.com/components/forms/validation): Angular form validation: declarative rules compiled into Signal Forms, custom and cross-field rules, reactive-forms interop, and an accessible validation summary that focuses the first invalid field.
-- [Forms API](https://ogeui.com/components/forms/api)
+- [Form](https://www.ogeui.com/components/forms): Angular form component: responsive column layout over the OGE editors, nestable fieldset groups, dataType-driven editor selection, validation summary, and Signal Forms, reactive forms or plain signal binding.
+- [Form Layout](https://www.ogeui.com/components/forms/layout): Angular form layout: fixed or auto-fit columns, colSpan, nested fieldset groups, and responsive column counts driven by container queries rather than window width.
+- [Form Validation](https://www.ogeui.com/components/forms/validation): Angular form validation: declarative rules compiled into Signal Forms, custom and cross-field rules, reactive-forms interop, and an accessible validation summary that focuses the first invalid field.
+- [Forms API](https://www.ogeui.com/components/forms/api)
 
 ## Upload
 
-- [Upload](https://ogeui.com/components/upload): Angular file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews, per-file progress, chunked resumable transfer with pause, resume and retry, a pluggable upload adapter, and a full keyboard and screen-reader contract. MIT.
-- [Upload API](https://ogeui.com/components/upload/api)
+- [Upload](https://www.ogeui.com/components/upload): Angular file upload: drag & drop with directory and paste support, client-side restrictions that stay on the row with their reason, image previews, per-file progress, chunked resumable transfer with pause, resume and retry, a pluggable upload adapter, and a full keyboard and screen-reader contract. MIT.
+- [Upload API](https://www.ogeui.com/components/upload/api)
 
 ## Navigation
 
-- [Tree View](https://ogeui.com/components/tree-view)
-- [Tree View API](https://ogeui.com/components/tree-view/api)
+- [Tree View](https://www.ogeui.com/components/tree-view)
+- [Tree View API](https://www.ogeui.com/components/tree-view/api)
 
 ## Pivot Grid
 
-- [Pivot Grid](https://ogeui.com/components/pivot-grid): Angular Pivot Grid: cross-tab analytics with rows × columns × measures, grand totals, field chooser, sorting and Excel export.
-- [Pivot Analytics & Export](https://ogeui.com/components/pivot-grid/analytics)
-- [Pivot Chart Integration](https://ogeui.com/components/pivot-grid/chart-integration)
-- [Pivot Calculated Fields](https://ogeui.com/components/pivot-grid/calculated-fields)
-- [Pivot Grid API](https://ogeui.com/components/pivot-grid/api)
+- [Pivot Grid](https://www.ogeui.com/components/pivot-grid): Angular Pivot Grid: cross-tab analytics with rows × columns × measures, grand totals, field chooser, sorting and Excel export.
+- [Pivot Analytics & Export](https://www.ogeui.com/components/pivot-grid/analytics)
+- [Pivot Chart Integration](https://www.ogeui.com/components/pivot-grid/chart-integration)
+- [Pivot Calculated Fields](https://www.ogeui.com/components/pivot-grid/calculated-fields)
+- [Pivot Grid API](https://www.ogeui.com/components/pivot-grid/api)
 
 ## BPMN Editor
 
-- [BPMN Editor](https://ogeui.com/components/bpmn): BPMN Editor for Angular and React: a from-scratch BPMN 2.0 modeler on one dependency-free XML + diagram-interchange engine — palette, orthogonal routing, snapping, undo/redo, keyboard-accessible canvas with live-region announcements, and no watermark. Commercial, free for evaluation.
-- [BPMN Editor API](https://ogeui.com/components/bpmn/api)
+- [BPMN Editor](https://www.ogeui.com/components/bpmn): BPMN Editor for Angular and React: a from-scratch BPMN 2.0 modeler on one dependency-free XML + diagram-interchange engine — palette, orthogonal routing, snapping, undo/redo, keyboard-accessible canvas with live-region announcements, and no watermark. Commercial, free for evaluation.
+- [BPMN Editor API](https://www.ogeui.com/components/bpmn/api)
 
 ## Charts
 
-- [Charts](https://ogeui.com/components/charts): Angular Charts: line, spline, area, bar, stacked, scatter, range and candlestick series plus pie/doughnut on a dependency-free SVG kernel — calendar-true time axes, log axes, zoom & pan, crosshair, shared tooltips, interactive legend, keyboard point inspection and a screen-reader data table. Commercial, free for evaluation.
-- [Charts API](https://ogeui.com/components/charts/api)
+- [Charts](https://www.ogeui.com/components/charts): Angular Charts: line, spline, area, bar, stacked, scatter, range and candlestick series plus pie/doughnut on a dependency-free SVG kernel — calendar-true time axes, log axes, zoom & pan, crosshair, shared tooltips, interactive legend, keyboard point inspection and a screen-reader data table. Commercial, free for evaluation.
+- [Charts API](https://www.ogeui.com/components/charts/api)
 
 ## Gantt
 
-- [Gantt](https://ogeui.com/components/gantt): Angular Gantt chart: virtualized task tree + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows with cycle-safe drawing, critical path, drag editing with Escape-cancel, snapshot undo/redo and full keyboard access. Commercial, free for evaluation.
-- [Gantt API](https://ogeui.com/components/gantt/api)
+- [Gantt](https://www.ogeui.com/components/gantt): Angular Gantt chart: virtualized task tree + timeline chart, summary/milestone/baseline bars, FS/SS/FF/SF dependency arrows with cycle-safe drawing, critical path, drag editing with Escape-cancel, snapshot undo/redo and full keyboard access. Commercial, free for evaluation.
+- [Gantt API](https://www.ogeui.com/components/gantt/api)
 
 ## Kanban
 
-- [Kanban](https://ogeui.com/components/kanban): Angular Kanban board: columns, swimlanes and WIP limits over a plain card array with field mapping, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar. Commercial, free for evaluation.
-- [Kanban API](https://ogeui.com/components/kanban/api)
+- [Kanban](https://www.ogeui.com/components/kanban): Angular Kanban board: columns, swimlanes and WIP limits over a plain card array with field mapping, per-column virtualization, drag & drop with Escape-cancel, Ctrl+Arrow keyboard card moving with live announcements, built-in edit dialog, context menu and toolbar. Commercial, free for evaluation.
+- [Kanban API](https://www.ogeui.com/components/kanban/api)
 
 ## Scheduler
 
-- [Scheduler](https://ogeui.com/components/scheduler): Angular Scheduler / event calendar: day, week and month views, all-day strip, deterministic overlap layout from a framework-free kernel, drag & resize with Escape-cancel, anchored appointment popup, form-based editing and full keyboard access. Commercial, free for evaluation.
-- [Scheduler API](https://ogeui.com/components/scheduler/api)
+- [Scheduler](https://www.ogeui.com/components/scheduler): Angular Scheduler / event calendar: day, week and month views, all-day strip, deterministic overlap layout from a framework-free kernel, drag & resize with Escape-cancel, anchored appointment popup, form-based editing and full keyboard access. Commercial, free for evaluation.
+- [Scheduler API](https://www.ogeui.com/components/scheduler/api)
 
 ## Other pages
 
-- [Components](https://ogeui.com/components)
-- [Progress & Loading](https://ogeui.com/components/progress): Angular Progress & Loading: a linear progress bar (buffer and chunked variants, severity colors), an indeterminate load-indicator ring and a shimmer skeleton — role="progressbar" with aria-valuenow correctly omitted in the indeterminate state, and reduced motion that slows instead of freezing.
-- [Progress & Loading API](https://ogeui.com/components/progress/api): Angular Progress & Loading API reference: every property, event and type of oge-progress-bar, oge-load-indicator and oge-skeleton, including the config providers.
-- [Card](https://ogeui.com/components/card): Angular Card: a content surface with header, full-bleed media, action row and footer as attribute slots — outlined, raised, filled or flat chrome, horizontal orientation, and an accessible clickable-card pattern instead of a nested-interactive trap.
-- [Card API](https://ogeui.com/components/card/api): Angular Card API reference: every property and type of oge-card, the attribute slot directives (media, avatar, header actions, actions, footer, separator) and the config provider.
-- [Splitter](https://ogeui.com/components/splitter): Angular Splitter: resizable, collapsible and nestable panes on the WAI-ARIA window splitter pattern — ratio or pixel sizing, arrow-key resizing, RTL and touch support, signal-based and zoneless.
-- [Splitter API](https://ogeui.com/components/splitter/api): Angular Splitter API reference: every property, method, event and type of oge-splitter and oge-splitter-pane, including the WAI-ARIA separator attributes and the config provider.
-- [Toolbar](https://ogeui.com/components/toolbar): Angular Toolbar: a WAI-ARIA APG command bar with roving tabindex, before/center/after groups and an overflow menu for the commands that stop fitting — signal-based, RTL-aware and zoneless.
-- [Toolbar API](https://ogeui.com/components/toolbar/api): Angular Toolbar API reference: every property, method, event and type of oge-toolbar and oge-toolbar-item, the projection slots, the overflow model and the config provider.
-- [Stepper](https://ogeui.com/components/stepper): Angular Stepper: a linear or free wizard whose ARIA model stays the same in both orientations — an ordered list of buttons with aria-current="step", async leave guards, and refusals that say why.
-- [Drawer](https://ogeui.com/components/drawer): Angular Drawer: an overlay, push or side panel whose modality is derived from its mode — role="dialog" with a focus trap and inert background when it covers the content, a landmark when it shares the row. Responsive to its own container, not the window.
-- [Breadcrumb](https://ogeui.com/components/breadcrumb): Angular Breadcrumb: the WAI-ARIA APG trail — a nav landmark of real links with aria-current="page", collapsing its oldest middle crumbs against its own container width into an ellipsis menu where they stay reachable as links. No roving tabindex, because the APG defines none.
-- [Routed Breadcrumb](https://ogeui.com/components/breadcrumb/routed): Angular Breadcrumb with the router: derive the trail from the URL, keep crumbs real links and hand the primary click to the router — no router dependency in the package.
-- [Pagination](https://ogeui.com/components/pagination): Angular Pagination: a standalone pager around 0-based two-way pageIndex/pageSize models — a constant-width numeric window with real ellipsis markers, page-size selector with an All option, info range in a polite live region, jump-to-page input and a container-width adaptive compact mode. No APG pagination pattern exists; the markup composes a nav landmark, real buttons and aria-current="page".
-- [Menubar](https://ogeui.com/components/menubar): Angular Menubar: a persistent WAI-ARIA APG menubar with roving tabindex, nested submenus on the shared overlay machinery, cancelable open/close pairs and a container-width hamburger collapse — plus the APG's own advice on when a nav of links serves better.
-- [Routed Menubar](https://ogeui.com/components/menubar/routed): Angular Menubar with the router: activeKey bound one-way from the URL renders aria-current="page", itemClick navigates — no router dependency in the package, url items stay real links.
-- [Licensing](https://ogeui.com/license)
+- [Components](https://www.ogeui.com/components)
+- [Progress & Loading](https://www.ogeui.com/components/progress): Angular Progress & Loading: a linear progress bar (buffer and chunked variants, severity colors), an indeterminate load-indicator ring and a shimmer skeleton — role="progressbar" with aria-valuenow correctly omitted in the indeterminate state, and reduced motion that slows instead of freezing.
+- [Progress & Loading API](https://www.ogeui.com/components/progress/api): Angular Progress & Loading API reference: every property, event and type of oge-progress-bar, oge-load-indicator and oge-skeleton, including the config providers.
+- [Card](https://www.ogeui.com/components/card): Angular Card: a content surface with header, full-bleed media, action row and footer as attribute slots — outlined, raised, filled or flat chrome, horizontal orientation, and an accessible clickable-card pattern instead of a nested-interactive trap.
+- [Card API](https://www.ogeui.com/components/card/api): Angular Card API reference: every property and type of oge-card, the attribute slot directives (media, avatar, header actions, actions, footer, separator) and the config provider.
+- [Splitter](https://www.ogeui.com/components/splitter): Angular Splitter: resizable, collapsible and nestable panes on the WAI-ARIA window splitter pattern — ratio or pixel sizing, arrow-key resizing, RTL and touch support, signal-based and zoneless.
+- [Splitter API](https://www.ogeui.com/components/splitter/api): Angular Splitter API reference: every property, method, event and type of oge-splitter and oge-splitter-pane, including the WAI-ARIA separator attributes and the config provider.
+- [Toolbar](https://www.ogeui.com/components/toolbar): Angular Toolbar: a WAI-ARIA APG command bar with roving tabindex, before/center/after groups and an overflow menu for the commands that stop fitting — signal-based, RTL-aware and zoneless.
+- [Toolbar API](https://www.ogeui.com/components/toolbar/api): Angular Toolbar API reference: every property, method, event and type of oge-toolbar and oge-toolbar-item, the projection slots, the overflow model and the config provider.
+- [Stepper](https://www.ogeui.com/components/stepper): Angular Stepper: a linear or free wizard whose ARIA model stays the same in both orientations — an ordered list of buttons with aria-current="step", async leave guards, and refusals that say why.
+- [Drawer](https://www.ogeui.com/components/drawer): Angular Drawer: an overlay, push or side panel whose modality is derived from its mode — role="dialog" with a focus trap and inert background when it covers the content, a landmark when it shares the row. Responsive to its own container, not the window.
+- [Breadcrumb](https://www.ogeui.com/components/breadcrumb): Angular Breadcrumb: the WAI-ARIA APG trail — a nav landmark of real links with aria-current="page", collapsing its oldest middle crumbs against its own container width into an ellipsis menu where they stay reachable as links. No roving tabindex, because the APG defines none.
+- [Routed Breadcrumb](https://www.ogeui.com/components/breadcrumb/routed): Angular Breadcrumb with the router: derive the trail from the URL, keep crumbs real links and hand the primary click to the router — no router dependency in the package.
+- [Pagination](https://www.ogeui.com/components/pagination): Angular Pagination: a standalone pager around 0-based two-way pageIndex/pageSize models — a constant-width numeric window with real ellipsis markers, page-size selector with an All option, info range in a polite live region, jump-to-page input and a container-width adaptive compact mode. No APG pagination pattern exists; the markup composes a nav landmark, real buttons and aria-current="page".
+- [Menubar](https://www.ogeui.com/components/menubar): Angular Menubar: a persistent WAI-ARIA APG menubar with roving tabindex, nested submenus on the shared overlay machinery, cancelable open/close pairs and a container-width hamburger collapse — plus the APG's own advice on when a nav of links serves better.
+- [Routed Menubar](https://www.ogeui.com/components/menubar/routed): Angular Menubar with the router: activeKey bound one-way from the URL renders aria-current="page", itemClick navigates — no router dependency in the package, url items stay real links.
+- [Licensing](https://www.ogeui.com/license)
 
 ## Optional
 
-- [Full reference](https://ogeui.com/llms-full.txt): every API member and demo source in one file — the best single input for code generation.
+- [Full reference](https://www.ogeui.com/llms-full.txt): every API member and demo source in one file — the best single input for code generation.
 - [Roadmap](https://github.com/oge-ui/oge-ui/blob/main/ROADMAP.md): shipped features and feature-parity tables against the reference libraries.
 - [Changelog](https://github.com/oge-ui/oge-ui/blob/main/CHANGELOG.md): released versions per package.
 - [Source](https://github.com/oge-ui/oge-ui): Nx monorepo — every package under `packages/`, docs app under `apps/dev-app`.

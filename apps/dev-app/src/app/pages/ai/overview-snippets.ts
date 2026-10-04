@@ -24,18 +24,18 @@ dialogs, dropdowns and toasts.
 **Full API reference** — read this before guessing at an API:
 
 - \`node_modules/@oge-ui/grid/llms.txt\`
-- <https://ogeui.com/llms-full.txt>
+- <https://www.ogeui.com/llms-full.txt>
 
 <!-- oge-ui:end -->`;
 
 export const FETCH = `# the index: packages, every documentation page, one line each
-curl https://ogeui.com/llms.txt
+curl https://www.ogeui.com/llms.txt
 
 # everything inlined — conventions, every API member, every demo source
-curl https://ogeui.com/llms-full.txt
+curl https://www.ogeui.com/llms-full.txt
 
 # one package only
-curl https://ogeui.com/llms/grid.txt
+curl https://www.ogeui.com/llms/grid.txt
 
 # already on disk after npm install
 cat node_modules/@oge-ui/grid/llms.txt`;

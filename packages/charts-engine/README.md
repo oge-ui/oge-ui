@@ -4,7 +4,7 @@
 > source-available commercial software: free for evaluation, development
 > and testing — a paid license is required for production use. No
 > watermark, no runtime license checks. See [LICENSE](LICENSE) and
-> [ogeui.com/license](https://ogeui.com/license).
+> [ogeui.com/license](https://www.ogeui.com/license).
 
 The framework-free engine behind the OGE UI charts. Plain TypeScript, no
 Angular, no React, no D3 — both render layers of the family run this one

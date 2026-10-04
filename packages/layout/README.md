@@ -1,6 +1,6 @@
 # @oge-ui/layout
 
-Layout containers for the [OGE](https://ogeui.com) Angular UI suite. Signal-based,
+Layout containers for the [OGE](https://www.ogeui.com) Angular UI suite. Signal-based,
 standalone, zoneless-ready, MIT.
 
 Today the package ships **`OgeAccordion`** with its declarative child
@@ -65,7 +65,7 @@ protected readonly sections: OgeAccordionItemData[] = [
   `prefers-reduced-motion`, logical properties throughout for RTL, and the
   shared `--oge-*` design tokens.
 
-See the [API reference](https://ogeui.com/components/accordion/api) for the full
+See the [API reference](https://www.ogeui.com/components/accordion/api) for the full
 surface.
 
 ## Card
@@ -110,7 +110,7 @@ is the content.
 - **Theming** — the shared `--oge-*` design tokens, logical properties for RTL,
   and `--oge-card-pad` / `--oge-card-media-size` sub-tokens for per-card tuning.
 
-See the [API reference](https://ogeui.com/components/card/api) for the full
+See the [API reference](https://www.ogeui.com/components/card/api) for the full
 surface.
 
 ## Splitter
@@ -150,7 +150,7 @@ nested splitter on the opposite axis.
   `touch-action: none` so a touch drag resizes instead of scrolling the page,
   and Escape reverts an in-flight drag.
 
-See the [API reference](https://ogeui.com/components/splitter/api) for the full
+See the [API reference](https://www.ogeui.com/components/splitter/api) for the full
 surface.
 
 ## Toolbar
@@ -197,15 +197,15 @@ arrives through `[ogeToolbarItemTemplate]` or the `[ogeToolbarBefore]` /
   toggles, `overflowChanged`, and the cancelable `menuOpening`/`menuClosing`
   pair around the overflow menu.
 
-See the [API reference](https://ogeui.com/components/toolbar/api) for the full
+See the [API reference](https://www.ogeui.com/components/toolbar/api) for the full
 surface.
 
 ## For AI coding assistants
 
 The complete machine-readable API reference ships inside the package at
 `node_modules/@oge-ui/layout/llms.txt` — conventions, every documented member and
-copy-pasteable demos in one file. Online: <https://ogeui.com/llms.txt> (index) and
-<https://ogeui.com/llms-full.txt> (the whole suite).
+copy-pasteable demos in one file. Online: <https://www.ogeui.com/llms.txt> (index) and
+<https://www.ogeui.com/llms-full.txt> (the whole suite).
 
 ## License
 
