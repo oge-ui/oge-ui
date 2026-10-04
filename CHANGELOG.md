@@ -5,9 +5,9 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
-## 1.2.0 — 2026-10-04
+## 1.1.2 — 2026-10-04
 
-Everything below is on `main` and ships together as **1.2.0**. It is the
+Everything below is on `main` and ships together as **1.1.2**. It is the
 first half of the plan that closes the gaps found by four post-1.1.1 audits
 and the [competitive gap reports](docs/competitive-gaps/README.md): a green,
 hardened CI; security and locale fixes; accessibility, touch and mobile
@@ -294,8 +294,7 @@ notes / behaviour changes** at the end before upgrading.
   answer with host redirects.
 - Code blocks are framed with working syntax colours; npm download counts
   are collected at build time; the shell imports component entries only
-  (initial bundle under 1 MB); the 1.1 docs are archived at
-  `v1-1.ogeui.com`.
+  (initial bundle under 1 MB).
 
 ### Migration notes / behaviour changes
 

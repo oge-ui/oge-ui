@@ -114,7 +114,7 @@ with a partial one) is not done, whatever the code says.
 An exception is a **deliberate, dated, justified** gap — never a silent one.
 Anything not listed here is a defect.
 
-- **1.2.0 waves (2026-10-03/04) — idiom only.** The G1 / G4 / W3 additions
+- **1.1.2 waves (2026-10-03/04) — idiom only.** The G1 / G4 / W3 additions
   shipped in both layers on the same behavior cores; what
   `check-parity.mjs` records for them is idiom, not features: the select box /
   tag box `groupTemplate` / `fieldTemplate` / `headerTemplate` /

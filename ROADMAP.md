@@ -3,23 +3,23 @@
 Comparison of `@oge-ui/grid` against the feature set of leading commercial data grids.
 Legend: Done · Partial · Missing.
 
-Last updated: 2026-10-04 (1.2.0 in progress — waves W0–W3, G1 and G4 shipped on `main`).
+Last updated: 2026-10-04 (1.1.2 released — waves W0–W4, G1, G2 and G4).
 
 > This roadmap tracks the **Angular** packages against the reference grids.
 > The React render layer — which families ship, in what slices, and every
 > recorded difference — is tracked in [`ROADMAP-REACT.md`](ROADMAP-REACT.md)
 > and [`docs/REACT-PARITY.md`](docs/REACT-PARITY.md).
 
-## 1.2.0 plan and what comes next
+## 1.1.2 plan and what comes next
 
 After 1.1.1, four audits (components, quality/CI, platform/DX,
 a11y/i18n/mobile/security) and the per-family
 [competitive gap reports](docs/competitive-gaps/README.md) produced one plan,
-whose first half shipped as **1.2.0** (2026-10-04); the rest is planned for
-**1.3.0**. Every wave lands in the Angular and
+whose first half shipped as **1.1.2** (2026-10-04); the rest follows in small
+patch releases (1.1.x). Every wave lands in the Angular and
 React layers together, with API rows, demos and regenerated `llms` artifacts;
 what shipped is listed in [`CHANGELOG.md`](CHANGELOG.md) under
-"1.2.0". Order for 1.3.0: G3 + W7 → G5 → W8 → W5 / W6 → G6, plus the
+"1.1.2". Order for the next releases: G3 + W7 → G5 → W8 → W5 / W6 → G6, plus the
 `@oge-ui/locales` packs left from W4.
 
 | Wave | Scope                                                                                                                                                                                                                                                                                                                                                                                                       | Status  |
@@ -39,7 +39,7 @@ what shipped is listed in [`CHANGELOG.md`](CHANGELOG.md) under
 | W5   | SSR / test / release infra: hydration and SSR smoke specs, strict CSP + Trusted Types e2e, coverage thresholds, cross-browser + mobile Playwright projects, visual regression, provenance releases, SBOM, API reports, `publint` / `attw`, `size-limit`                                                                                                                                                     | Planned |
 | W6   | DX and docs: full-text search, StackBlitz, framework guides, ACR / VPAT, changelog page, token reference + ThemeBuilder, `@oge-ui/themes`, testing harnesses                                                                                                                                                                                                                                                | Planned |
 | G6   | AI: grid assistant (natural language → state), AI column, smart paste, AI prompt + chat components                                                                                                                                                                                                                                                                                                          | Planned |
-| W9   | Release 1.2.0: changelog + migration notes, `nx release`, archived 1.1 docs, publish, site deploy                                                                                                                                                                                                                                                                                                           | Done    |
+| W9   | Release 1.1.2: changelog + migration notes, `nx release`, publish, site deploy (no versioned docs archive)                                                                                                                                                                                                                                                                                                  | Done    |
 
 Outside 1.2: a third render layer (Vue / Web Components) and a Figma kit stay
 recorded as planned work (ADR 0001), not scheduled.
@@ -167,7 +167,7 @@ recorded as planned work (ADR 0001), not scheduled.
 | Master-detail                                 | Yes       | Done | typed template                                                                                                                                                                                                                                                                                                                                                                                       |
 | Hierarchical data (tree grid)                 | Yes       | Done | separate `@oge-ui/tree-list` component (see table below)                                                                                                                                                                                                                                                                                                                                             |
 
-## 10. Interaction depth, styling & export (G1, 1.2.0)
+## 10. Interaction depth, styling & export (G1, 1.1.2)
 
 Both render layers, on shared `@oge-ui/behavior` cores.
 

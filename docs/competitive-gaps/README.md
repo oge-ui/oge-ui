@@ -11,7 +11,7 @@ rows are marked _Unverified_ rather than counted as gaps.
 Every family has a React twin on the same engine, so **each gap applies to
 both render layers** and is fixed once in the shared core.
 
-**Status since the reports.** The unreleased 1.2.0 work on `main` has closed
+**Status since the reports.** The 1.1.2 work on `main` has closed
 eight of the top 20 and part of a ninth: waves 1–3 (hardening, accessibility,
 touch and adaptive mode), G1 (grid, tree list and pivot depth) and G4 (inputs
 and forms depth). The family reports mark each closed row **Have** /

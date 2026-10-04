@@ -5,7 +5,7 @@ The React render layer's execution plan for [ADR 0001](docs/adr/0001-multi-frame
 [ADR 0002](docs/adr/0002-framework-aware-docs.md) (one docs site, a global
 framework switch). This file is the schedule; the ADRs are the rationale.
 
-Last updated: 2026-10-04 (full parity since 1.1.1; every 1.2.0 wave so far —
+Last updated: 2026-10-04 (full parity since 1.1.1; every 1.1.2 wave so far —
 W0–W3, G1 grid depth and G4 inputs depth — shipped in both layers in the same
 change, see [`ROADMAP.md`](ROADMAP.md#120-plan-and-what-comes-next); earlier:
 R7 `@oge-ui/react-tree-list`, the commercial families on their engine

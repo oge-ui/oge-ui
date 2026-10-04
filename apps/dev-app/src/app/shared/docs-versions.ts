@@ -21,7 +21,6 @@ export interface DocsVersion {
 
 /** Older versions, newest first. */
 export const ARCHIVED_DOCS: readonly DocsVersion[] = [
-  { label: '1.1', origin: 'https://v1-1.ogeui.com' },
   { label: '0.13', origin: 'https://v0-13.ogeui.com' },
 ];
 
