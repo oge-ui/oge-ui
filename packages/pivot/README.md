@@ -7,12 +7,22 @@
 
 Pivot grid for Angular, built on the same signal-based foundation as
 [`@oge-ui/grid`](https://www.npmjs.com/package/@oge-ui/grid). The aggregation
-engine lives in `@oge-ui/core` as pure, framework-free TypeScript — the
-component renders whatever the engine materializes.
+engine lives in `@oge-ui/core` as pure, framework-free TypeScript and the grid
+core (layout, keyboard, field moves, chart binding, calculated fields, member
+filters) in the commercial
+[`@oge-ui/pivot-engine`](https://www.npmjs.com/package/@oge-ui/pivot-engine)
+that the React pivot shares — the component renders whatever the engines
+materialize.
 
 - Four areas (row / column / data / filter) declared with `<oge-pivot-field>`
-  directives; drag chips between areas or use the field chooser dialog
-  (`applyChangesMode: 'instantly' | 'onDemand'`)
+  directives; drag chips between areas (pointer events — a drop on a chip
+  inserts before it, touch needs a long press, Escape cancels) or use the
+  field chooser dialog (`applyChangesMode: 'instantly' | 'onDemand'`)
+- Keyboard and single-pointer alternatives to dragging: each chip is a
+  focusable button with a field menu (move left / right, move to each area,
+  remove — Enter / Space / Shift+F10), Ctrl+Left/Right reorders, Ctrl+Up/Down
+  changes area, Delete removes; every move is announced. Headers and cells
+  share one roving tab stop (APG grid)
 - Single-pass aggregation: axis paths are interned once, expand/collapse only
   re-materializes the visible matrix; an expanded group keeps its own line,
   which carries the subtotals
@@ -34,13 +44,21 @@ component renders whatever the engine materializes.
   localizable via the `OGE_PIVOT_MESSAGES` token
 - State persistence (`stateKey`) through the shared `OGE_STATE_STORAGE`
   token; `state()` / `applyState()` / `stateChange` for manual control
-- Calculated measures (`calculatedFields`), label / value / Top-N member
-  filters, compact / outline / tabular row headers, cell and header templates
+- Calculated measures (`calculatedFields`: computed from a cell's other
+  measures, totals included, with format, display modes and running totals),
+  label / value / Top-N member filters applied before aggregation,
+  `rowHeaderLayout: 'compact' | 'outline' | 'tabular'`, and
+  `*ogePivotCellTemplate` / `*ogePivotRowHeaderTemplate` /
+  `*ogePivotColumnHeaderTemplate`; `(resultChange)`, `getPreparedCell()`,
+  `getRowHeaderLayout()`
 - Chart binding: `getChartData()` turns the view into `@oge-ui/charts` series
   data (no dependency on the charts package)
 - Export: `getCsv()` / `exportCsv()` built in; Excel with merged multi-level
   headers and typed cells via the lazy `@oge-ui/pivot/export-excel` entry; PDF
-  via `@oge-ui/pivot/export-pdf`
+  via the lazy `@oge-ui/pivot/export-pdf` entry (`exportPivotToPdf`, Unicode
+  fonts through `OgePdfFont`)
+- Container-driven chrome: field areas wrap and the field chooser restacks on
+  narrow widths; forced-colors and high-contrast safe
 
 ## Install
 
@@ -124,11 +142,13 @@ localStorage; pluggable with any async backend).
 
 ## Imperative API & events
 
-Methods: `getResult()` (the matrix exactly as rendered), `drillDown(args)`,
+Methods: `getResult()` (the matrix exactly as rendered), `getChartData()`,
+`getPreparedCell()`, `getRowHeaderLayout()`, `drillDown(args)`,
 `expandAll(area)` / `collapseAll(area)`, `getFieldLayout()`,
 `showFieldChooser()`, `state()` / `applyState()`, `getCsv()` / `exportCsv()`.
 Events: `(cellClick)` / `(cellDblClick)` → `{ rowPath, columnPath,
-measureIndex, value, event }`, `(fieldLayoutChange)`, `(stateChange)`; the
+measureIndex, value, event }`, `(fieldLayoutChange)`, `(stateChange)`,
+`(resultChange)`; the
 DevExtreme `cellPrepared` callback maps to the `customizeCell` input, and
 jQuery-era lifecycle members (`option()`, `repaint()`,
 `onInitialized`/`onOptionChanged`/`onContentReady`) are intentionally not

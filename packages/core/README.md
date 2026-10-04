@@ -3,8 +3,9 @@
 The framework-agnostic engine behind the
 [OGE](https://www.npmjs.com/package/@oge-ui/grid) UI components: plain
 TypeScript, shipped as ESM, with zero dependency on Angular or any other
-framework. The Angular grid (`@oge-ui/grid`) is a thin signal-based shell
-over this package, and future framework adapters (React, ...) will share it.
+framework. The Angular and React grids (`@oge-ui/grid`,
+`@oge-ui/react-grid`) are thin shells over this package and
+[`@oge-ui/behavior`](https://www.npmjs.com/package/@oge-ui/behavior).
 
 ## What's inside
 
@@ -30,8 +31,23 @@ A few smaller pieces round it out:
 - Virtualization math: a Fenwick-tree `OffsetTree` with O(log n)
   offset/index/height updates, plus `computeWindow`.
 - Summaries: `sum`, `avg`, `min`, `max` and `count`, all null-safe.
-- `buildCsv` (RFC 4180-style CSV) and a serializable `GridStateSnapshot`
-  for state persistence.
+- Grouping intervals: `GroupInterval` buckets dates by `'hour' | 'day' |
+'week' | 'month' | 'quarter' | 'year'` and numbers by a bucket width; the
+  `'datetime'` data type sits beside `'date'`.
+- `buildCsv` (RFC 4180-style CSV) with `guardCsvFormula`, which neutralizes
+  formula-leading cells (`=`, `+`, `-`, `@`, tab, CR, their full-width forms)
+  after leading whitespace.
+- Serializable `GridStateSnapshot` / tree-list / pivot snapshots for state
+  persistence, and `parseStateJson` + `sanitizeGridStateSnapshot` /
+  `sanitizeTreeListStateSnapshot` / `sanitizePivotGridStateSnapshot`, which
+  drop unknown keys, reject `__proto__` / `constructor` / `prototype` at any
+  depth, type-check every field and never throw — every `applyState()` runs
+  restored state through them.
+- Locale helpers: `resolveFirstDayOfWeek` and `resolveWeekendDays`
+  (`Intl.Locale` week info, Saturday + Sunday fallback).
+- The theme stylesheets under `@oge-ui/core/themes/` — `dark.css`,
+  `high-contrast.css` (AAA contrast, forced-colors friendly), `tailwind.css`,
+  `bootstrap.css`.
 
 ## Installation
 

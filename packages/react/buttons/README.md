@@ -38,6 +38,8 @@ the Angular suite (see the suite's `docs/REACT-PARITY.md`).
   empty / error rows, cached). `splitButton` adds an independent action main
   button; `rememberLastAction` turns the last picked item into the main
   button's label and action. Custom panel content via `renderContent`.
+  `adaptiveMode` / `adaptiveBreakpoint` present the menu as a bottom sheet on
+  small viewports (globally through `<OgeButtonsConfigProvider>`).
 - **i18n** — every user-facing string lives in `OgeButtonsMessages`
   (`<OgeButtonsConfigProvider>`), including screen-reader labels.
 

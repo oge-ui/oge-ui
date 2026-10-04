@@ -21,9 +21,16 @@ function decides.
   with per-panel invalid-field counts, and a wizard that touches only the step
   the user is leaving so the steps ahead stay quiet.
 - **Declarative validation** — `isRequired` plus `required` / `email` /
-  `numeric` / `stringLength` / `pattern` / `range` / `custom` / `async` rules,
-  evaluated by `@oge-ui/behavior` and worded from the inputs package's message
-  table.
+  `numeric` / `stringLength` / `pattern` / `range` / `compare` / `custom` /
+  `async` rules, evaluated by `@oge-ui/behavior` and worded from the inputs
+  package's message table. `compare` checks a value against another field or a
+  function of the model (confirm password, end after start).
+- **Conditional items** — `visibleWhen`, `requiredWhen` and `disabledWhen`
+  take `(data) => boolean` or `{ field, equals | notEquals | in }`; hidden and
+  conditionally disabled items are not validated.
+- **Server errors** — `setErrors({ email: ['Already registered'] })`,
+  `setFieldErrors()` and `clearErrors()` on the `ref` handle show server-side
+  messages in the field and the summary until that field is edited.
 - **`<OgeValidationSummary>`** — `role="alert"` error list whose rows focus
   their field; `<OgeForm showValidationSummary>` renders one after a failed
   submit.

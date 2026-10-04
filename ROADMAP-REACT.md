@@ -5,8 +5,11 @@ The React render layer's execution plan for [ADR 0001](docs/adr/0001-multi-frame
 [ADR 0002](docs/adr/0002-framework-aware-docs.md) (one docs site, a global
 framework switch). This file is the schedule; the ADRs are the rationale.
 
-Last updated: 2026-09-30 (R7 complete: `@oge-ui/react-tree-list`; commercial React families landing on their engine packages; earlier: R4 layout, tabs, navigation + the
-`@oge-ui/react` umbrella).
+Last updated: 2026-10-04 (full parity since 1.1.1; every 1.2.0 wave so far —
+W0–W3, G1 grid depth and G4 inputs depth — shipped in both layers in the same
+change, see [`ROADMAP.md`](ROADMAP.md#120-plan-and-what-comes-next); earlier:
+R7 `@oge-ui/react-tree-list`, the commercial families on their engine
+packages, R4 layout, tabs, navigation + the `@oge-ui/react` umbrella).
 
 ## The parity principle
 
@@ -89,7 +92,7 @@ rest (ADR 0002 item 8 shrinks family by family).
 | ---------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Buttons (button, group, drop-down)                         | `@oge-ui/react-buttons`    | ✅ full family parity (R1)                                                                                                                                                                                                                                                                                                                         |
 | Overlay (panel, menu, tooltip, context menu, modal, toast) | `@oge-ui/react-overlay`    | ✅ full family parity: the tooltip timing machine, the toast engine and the modal helpers moved into `behavior` with the Angular surfaces rewired onto them (specs unchanged); React tooltip, context menu, modal + `useOgeModals()` provider and toast provider shipped with docs parity, the `overlay` parity gate and e2e                       |
-| Inputs (15 editors)                                        | `@oge-ui/react-inputs`     | ✅ full family parity (R3; tree select closed in R4)                                                                                                                                                                                                                                                                                               |
+| Inputs (22 editors)                                        | `@oge-ui/react-inputs`     | ✅ full family parity (R3; tree select closed in R4; masked text box, multi-column combo box, color gradient, color palette, check box group and toggle group added in both layers in G4)                                                                                                                                                          |
 | Tabs (tabs, tab panel)                                     | `@oge-ui/react-tabs`       | ✅ full family parity (R4); the routed page is a recorded exception                                                                                                                                                                                                                                                                                |
 | Layout (7 components)                                      | `@oge-ui/react-layout`     | ✅ full family parity (R4)                                                                                                                                                                                                                                                                                                                         |
 | Navigation (6 components)                                  | `@oge-ui/react-navigation` | ✅ full family parity (R4); both routed pages are recorded exceptions                                                                                                                                                                                                                                                                              |

@@ -20,7 +20,8 @@ the Angular suite (see the suite's `docs/REACT-PARITY.md`).
   request-body progress), the four upload modes (`instantly`, `useButtons`,
   `useForm`, `select`), three list types, three display modes, 28 callbacks
   (every cancelable pre-event included), six render-prop slots and a full
-  keyboard and screen-reader contract.
+  keyboard and screen-reader contract (announcements through the shared live
+  announcer; `useId()`-derived ids, so SSR output hydrates cleanly).
 - **`<OgeUploadDropZone>`** / **`<OgeUploadTrigger>`** — feed an uploader from
   a panel or a button anywhere else in the tree, by its `dropZone` name.
 - **`<OgeUploadConfigProvider>`** — the React counterpart of

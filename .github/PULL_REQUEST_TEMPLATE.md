@@ -10,6 +10,9 @@
 - [ ] Follows the conventions in `docs/ARCHITECTURE.md` (signals only, OnPush,
       `.oge-*` classes, design tokens, messages catalogs for user-facing text)
 - [ ] Specs added/updated beside the source
-- [ ] Docs updated if the public API changed (dev-app page + `<area>-api-data.ts`)
-- [ ] Does **not** modify `packages/pivot` (commercial package — external PRs
-      are not accepted there; see CONTRIBUTING.md)
+- [ ] Public API changes land in both render layers, with `*-api-data.ts`
+      rows, `*-snippets.ts` demos and regenerated `llms` artifacts
+      (`npx nx run docs-tools:llms`)
+- [ ] Does **not** modify a commercial family (`pivot`, `bpmn`, `scheduler`,
+      `gantt`, `kanban`, `charts`, their `*-engine` and `react-*` packages) —
+      external PRs are not accepted there; see CONTRIBUTING.md

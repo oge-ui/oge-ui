@@ -55,7 +55,11 @@ declare function save(json: unknown): void;
 Overlay `html` is rendered without `dangerouslySetInnerHTML`: the engine
 parses it into an allow-listed node tree (the policy Angular's sanitizing
 `[innerHTML]` applies) and URL attributes go through `@oge-ui/behavior`'s
-`sanitizeUrl`.
+`sanitizeUrl` scheme allowlist. Links that keep a `target` get
+`rel="noopener noreferrer"`, and `role` attributes are dropped. Where the
+browser enforces Trusted Types, XML import parses through a lazily created
+`oge-ui#bpmn` policy. On narrow containers the properties panel floats over
+the canvas edge.
 
 ## License
 

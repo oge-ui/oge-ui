@@ -17,8 +17,10 @@ You rarely install this package directly: both render packages depend on it.
   resolution (declared fields + user overrides), the local-engine /
   remote-store split with abortable loads, axis lines and multi-row column
   header layout, two-axis virtualization windows, cell text and the
-  `customizeCell` hook, roving-tabindex keyboard navigation, drag & drop
-  between areas, the header and measure context menus, the distinct-value
+  `customizeCell` hook, one roving tab stop over headers and cells, pointer
+  drag of field chips (`fieldPointerDown`, long press on touch) plus the
+  field menu and chip keyboard that run the same `moveFieldTo`, polite move
+  announcements, the header and measure context menus, the distinct-value
   filter popup, the field chooser (live or draft), persistence snapshots and
   CSV export.
 - `OgePivotStateCore` — field-layout overrides, the expansion of both axes
@@ -27,9 +29,16 @@ You rarely install this package directly: both render packages depend on it.
 - Pure helpers — `pivotFieldConfigOf`, `buildPivotLoadOptions`,
   `pivotResultFromPayload`, `pivotColumnHeaderCells`, `pivotRowWindow`,
   `pivotMatrixKeyTarget` and friends — each unit-tested on its own.
+- Analysis helpers — `toChartSeries(result)` (the current view as plain
+  `dataSource` + series for `@oge-ui/charts`; no charts dependency), the
+  calculated-field evaluator behind `calculatedFields` and
+  `applyPivotMemberFilters` (label / value / Top-N filters before aggregation).
 - `OGE_DEFAULT_PIVOT_MESSAGES` — the message catalog both layers localize.
 - `@oge-ui/pivot-engine/export-excel` — `buildPivotWorkbook`, the `.xlsx`
   builder with merged multi-level headers (`exceljs` is an optional peer).
+- `@oge-ui/pivot-engine/export-pdf` — `buildPivotPdfDocument` /
+  `downloadPivotPdf` (`jspdf` + `jspdf-autotable` optional peers; Unicode text
+  through an `OgePdfFont`).
 
 The aggregation itself (`PivotEngine`, `PivotFieldConfig`, the
 `OgePivotStore` remote contract) is MIT and lives in

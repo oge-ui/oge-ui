@@ -22,7 +22,9 @@ the dependencies are taken instead of rebuilt.
 
 - Task tree with summary brackets (duration-weighted progress roll-up),
   milestone diamonds (zero-duration tasks), baseline under-bars, resource
-  labels, weekend/holiday shading, `stripLines` markers and ranges, a
+  labels, weekend/holiday shading (`weekendDays`, resolved from the locale's
+  `Intl.Locale` week data when unset — Friday + Saturday in `he-IL` — with
+  Saturday + Sunday as the fallback), `stripLines` markers and ranges, a
   today line and `showCriticalPath` zero-slack outlining
 - FS / SS / FF / SF dependency arrows routed orthogonally (dx numeric
   codes 0–3 also parse); drawing a link that would close a cycle is
@@ -81,7 +83,11 @@ pattern instead: the task pane is a `role="treegrid"` with roving-tabindex
 rows (arrows, Left/Right collapse/expand, Enter edits, Delete deletes) and
 the focused row drives its bar from the keyboard — Ctrl+Left/Right moves,
 Ctrl+Shift+Left/Right resizes — with polite live-region announcements;
-the chart is a focusable, labeled scroll region. All strings, including every aria label, live in
+the chart is a focusable, labeled scroll region. Announcements go through the
+suite's shared live announcer, drag grips have 24px hit areas (44px on
+coarse pointers, and they also show on focus / selection / `hover: none`),
+bar drags run on the shared pointer gesture, and bars, links and selection
+use system colours in forced-colors mode. All strings, including every aria label, live in
 `OgeGanttMessages` (`provideOgeGanttConfig`).
 
 **Dates** are Intl-only local wall time (house rule: no date library, no

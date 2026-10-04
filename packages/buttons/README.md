@@ -7,8 +7,9 @@ interaction guards no other button ships out of the box.
 
 - **Variants** — `severity: normal | accent | success | warning | danger` ×
   `stylingMode: contained | outlined | text` × `size: sm | md | lg`, all driven
-  by `--oge-*` design tokens (dark, Bootstrap and Tailwind bridge themes work
-  unchanged).
+  by `--oge-*` design tokens (dark, high-contrast, Bootstrap and Tailwind
+  bridge themes work unchanged; forced-colors mode keeps a visible focus ring
+  and system colours).
 - **Async smart button** — hand `action` a promise-returning function: the
   button turns on `loading`, disables itself, ignores re-clicks while pending
   (single-flight) and emits `actionDone` / `actionFailed` when it settles.
@@ -32,6 +33,9 @@ interaction guards no other button ships out of the box.
   empty / error rows, cached). `splitButton` adds an independent action main
   button; `rememberLastAction` turns the last picked item into the main
   button's label and action. Custom panel content via `*ogeDropDownContent`.
+  `adaptiveMode: 'auto'` (with `adaptiveBreakpoint`, default 600px; global
+  through `provideOgeButtonsConfig`) shows the menu as a bottom sheet on
+  narrow viewports.
 - **i18n** — every user-facing string lives in `OgeButtonsMessages`
   (`provideOgeButtonsConfig`), including screen-reader labels.
 

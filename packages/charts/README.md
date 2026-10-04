@@ -76,6 +76,8 @@ carrying the first rows of data (an OGE extra — none of the reference
 libraries ship one), real legend buttons with `aria-pressed`, and a
 focusable plot region where arrow keys walk arguments and series with
 polite live-region announcements — Enter selects, Escape resets zoom.
+In forced-colors mode axes, grid lines, series and the focus ring switch to
+system colours.
 All strings, including every aria label, live in `OgeChartsMessages`
 (`provideOgeChartsConfig`, config-level `locale`).
 

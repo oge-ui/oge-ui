@@ -5,6 +5,280 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
+## Unreleased (1.2.0)
+
+Everything below is on `main` and ships together as **1.2.0**. It is the
+first half of the plan that closes the gaps found by four post-1.1.1 audits
+and the [competitive gap reports](docs/competitive-gaps/README.md): a green,
+hardened CI; security and locale fixes; accessibility, touch and mobile
+support across every family; and the grid and inputs depth waves (G1, G4).
+Every addition lands in the Angular and the React layer together. Charts
+depth (G2), scheduling depth (G3), overlay/BPMN depth (G5), locale packs,
+time zones, new components and AI helpers follow — see
+[`ROADMAP.md`](ROADMAP.md#120-plan-and-what-comes-next). Read **Migration
+notes / behaviour changes** at the end before upgrading.
+
+### CI, security and project
+
+- **Green CI on Angular 22.2 / Nx 23.2.1 / Vitest 4.1.11** with zero
+  `npm audit` findings: targeted `overrides` for the vulnerable pins inside
+  the tooling, and `node tools/audit-check.mjs` as the audit gate — it fails
+  on any advisory at moderate or above unless `audit-allowlist.json` lists it
+  with a reason and an expiry date (only for advisories with no patched
+  release; two build-tooling entries, expiring 2026-10-31).
+- CI is split into verify (`nx affected`), sharded e2e (3 shards, HTML +
+  JUnit report artifacts, `--fail-on-flaky-tests`) and audit jobs; every
+  third-party action is pinned to a commit SHA, runners use
+  `harden-runner`, and OpenSSF Scorecard and CodeQL run on the repository.
+- A control-character guard (`tools/docs-tools/check-control-chars.mjs`,
+  part of `docs-tools:lint`) rejects raw C0 control bytes in sources, and a
+  lint rule flags literal English `aria-label` values in library templates
+  and TSX.
+- `SECURITY.md` gains a support table (1.x supported; 0.13.x security fixes
+  until 2027-04-01) and a response timeline (GHSA, CVSS 4.0, fix targets);
+  new `PRIVACY.md` for the docs site.
+- Angular peer ranges widen to `>=22.0.0 <24.0.0` to match the documented
+  22–23 support; the README has a compatibility matrix (OGE × Angular ×
+  React × Node) and the browser list.
+- Docs site: **www.ogeui.com** is the canonical host (canonical, `og:url`,
+  sitemap, robots, `llms` links and package homepages); legacy grid paths
+  answer with a host 301; a version menu links the archived 0.13 docs; npm
+  download stats come from a build-time `/npm-downloads.json`; the initial
+  bundle drops from 1.29 MB to 861 kB (budget error now 1 MB).
+
+### Security and correctness hardening
+
+- **CSV formula guard** (`guardCsvFormula`, every CSV and clipboard TSV
+  export) checks the first _non-whitespace_ character and the full-width
+  leads `＝ ＋ － ＠`; the tree list guards the first-column value before
+  indenting it.
+- **State snapshots are validated** on every restore —
+  `sanitizeGridStateSnapshot`, `sanitizeTreeListStateSnapshot`,
+  `sanitizePivotGridStateSnapshot` and `parseStateJson` in `@oge-ui/core`
+  drop unknown keys, reject `__proto__` / `constructor` / `prototype` at any
+  depth and type-check every value; `stateKey` persistence and every
+  `applyState()` in both layers use them.
+- **`sanitizeUrl` is a scheme allowlist** (relative, `http(s)`, `mailto`,
+  `tel`, `ftp`, `sms`) with an `allowedSchemes` option; script schemes can
+  never be allowed, `blob:` / `data:` stay behind `allowObjectUrls`.
+- **BPMN**: overlay links that keep `target` get `rel="noopener noreferrer"`,
+  `role` is dropped, and XML / overlay parsing goes through a
+  lazily created Trusted Types policy **`oge-ui#bpmn`**.
+- **SSR-safe React ids**: tabs, drawer, stepper and the file uploader derive
+  their ARIA ids from `useId()` instead of `performance.now()` / module
+  counters, so hydration no longer mismatches.
+- **Unicode PDF fonts**: `OgePdfFont` and `setOgePdfDefaultFont()` in
+  `@oge-ui/behavior` embed a TrueType font into every grid, tree-list, pivot
+  and Gantt PDF export (Turkish `ğ ş ı İ`, Polish, Greek, Cyrillic …), with a
+  one-time warning when such text is exported without one.
+- Excel export writes `datetime` columns as typed dates with a
+  `dateTimeFormat` (default `yyyy-mm-dd hh:mm`).
+
+### Localization
+
+- Grid and tree-list accessible names that were hard-coded English move into
+  `OgeGridMessages` (`reorderColumnHeader`, `detailColumnHeader`,
+  `selectAllColumnHeader`, `reorderRow`, `reparentColumnHeader`,
+  `reparentRow`), in both layers.
+- Boolean cells render their glyph `aria-hidden` plus a visually hidden word
+  from the new `booleanTrueLabel` / `booleanFalseLabel` messages.
+- **`weekendDays`** on the scheduler (day/week, work week, month, timeline)
+  and the Gantt (off-day shading), defaulting to the locale's weekend via
+  core's new `resolveWeekendDays()` (`Intl.Locale#getWeekInfo`, falling back
+  to Saturday + Sunday).
+- Column resizing works in RTL (handle on the logical inline-end edge,
+  mirrored pointer delta) in the grid and tree list.
+
+### Scheduler recurrence (RRULE)
+
+- `UNTIL` / `EXDATE` / `RDATE` / `DTSTART` values ending in `Z` are UTC
+  (previously read as local wall time).
+- `BYSETPOS`, `BYHOUR` and `BYMINUTE` are parsed, serialized and expanded in
+  RFC order.
+- The rule text may be an iCalendar block — `RRULE` plus `DTSTART` /
+  `RDATE` / `EXDATE` lines (CRLF/LF, folding, `VALUE=DATE`); `RDATE` adds
+  occurrences without consuming `COUNT`, `EXDATE` merges with the
+  recurrence-exception field. Still rejected: `TZID`, `BYYEARDAY`,
+  `BYWEEKNO`, `BYSECOND`, `EXRULE`, `VALUE=PERIOD`.
+
+### Accessibility
+
+- **Forced colors and focus**: a forced-colors-safe focus-ring mixin
+  replaces every `outline: none`, and system-colour blocks cover selection,
+  focus, toggles, sliders, tabs, buttons, progress, Gantt, Kanban,
+  scheduler, charts, popups, tooltips and skeletons.
+- **High-contrast theme** — `@oge-ui/core/themes/high-contrast.css`
+  (`.oge-theme-high-contrast` / `data-oge-theme="high-contrast"`, AAA
+  contrast spec), registered by
+  `ng add @oge-ui/<package> --theme=high-contrast`.
+- **Reduced motion**: `prefers-reduced-motion` blocks in every animating
+  stylesheet; `prefersReducedMotion()` / `motionScrollBehavior()` in
+  behavior for smooth scrolling.
+- **Target sizes**: 24 px (44 px under `pointer: coarse`) hit areas for Gantt
+  grips, scheduler resize handles, toast close, Kanban card actions and the
+  column resize handle; hover-only affordances also appear on focus, on
+  selection and under `hover: none`.
+- **Keyboard alternatives for every drag** (WCAG 2.1.1 / 2.5.7): grid and
+  tree-list column resize (Alt+Arrow on a header, or the focusable
+  `role="separator"` handle), column reorder (Ctrl+Shift+Arrow), row reorder
+  (Ctrl+Arrow), tree reparenting (Ctrl+Arrow indent / outdent), group-panel
+  chips and column-chooser items; pivot field chips (field menu, Ctrl+Arrow
+  reorder / move between areas, Delete) with a single-tab-stop APG grid;
+  Kanban columns as lists of focusable cards with one Tab stop per column
+  and Tab-reachable card content; scheduler grids with a `columnheader` row,
+  `aria-selected` and `aria-readonly`.
+- **One live announcer**: `OgeLiveAnnouncerCore` in behavior with
+  `OgeLiveAnnouncer` (Angular) / `useOgeLiveAnnouncer` (React); toast, Gantt
+  and the uploader speak through it, and the grid and tree list announce
+  sort, filter / search result counts, paging, expansion, select-all,
+  keyboard moves and blocked saves (`announcements` opt-out).
+- Edit cells wire `aria-invalid`, `aria-errormessage` and
+  `aria-describedby` to their error text.
+- Empty grid / tree-list bodies render the no-data text as a
+  `row > gridcell`, and the rowgroup is `aria-busy` while loading.
+
+### Touch and mobile
+
+- **One pointer-gesture engine** in behavior — `beginPointerGesture`,
+  `beginPointerDragDrop`, `prepareTouchDrag`, `createAutoScroller` (3 px
+  threshold, pointer capture, Escape / blur cancel, touch long press,
+  `touch-action` management, edge auto-scroll). HTML5 drag and drop is gone
+  from the packages: grid header reorder, group panel, column chooser and row
+  drag, tree-list reparenting, pivot field chips and Kanban run on it, and
+  Kanban cards lift on a 300 ms touch hold.
+- **Adaptive popups** — `adaptiveMode` (`'none'` default | `'auto'`) and
+  `adaptiveBreakpoint` (600) on the select box, tag box,
+  autocomplete, tree select, date box, date range box, color box and
+  drop-down button, globally through `provideOgeInputsConfig` /
+  `provideOgeButtonsConfig` and the React providers; `oge-popup` /
+  `<OgePopup>` gain the titled bottom-sheet (`adaptive: 'sheet'`, lists and
+  pickers) / full-screen (`'fullscreen'`, calendars) presentation
+  (`OgeAdaptiveSheetCore`: scroll lock, inert background, focus trap, swipe
+  to dismiss).
+- Anchored panels position against the **visual viewport** (on-screen
+  keyboard, pinch zoom); `dvh` / `svh` limits; safe-area insets on modal,
+  toast regions and drawer panels; 16 px input text under `pointer: coarse`.
+- Grid and tree list **`columnHidingMode`** (`'detail'` default | `'hide'`):
+  columns hidden by `hidingPriority` are revealed in a per-row detail line.
+- Scheduler **`adaptiveView`** switches to the agenda below a width; the
+  BPMN editor and the pivot field areas / chooser adapt to their container.
+
+### Data grid (G1)
+
+- **Cell ranges**: `selectionMode: 'cell'` with the `selectedRanges` model
+  and `rangeSelectionChanged`, Shift+click / drag / Arrow and Ctrl+click; TSV
+  copy and multi-cell **paste** (native `copy` / `paste` events,
+  `pasteText()`), Ctrl+D / Ctrl+R and the **fill handle**, Ctrl+Z / Ctrl+Y
+  over one edit history.
+- **Styling hooks**: `rowClass` / `cellClass`, `rowPrepared` /
+  `cellPrepared`, and column `conditionalFormats` (rules, data bars, colour
+  scales, icon sets).
+- **Pinned and sticky rows**: `pinnedTopRows` / `pinnedBottomRows` and the
+  `stickyGroupRows` overlay.
+- **Spans**: `cellSpan` and column `mergeCells`, with `aria-rowspan` /
+  `aria-colspan` and span-aware keyboard navigation.
+- **Auto-fit**: `autoFitColumn(s)`, resize-handle double-click, the header
+  menu's "Size to fit" and `columnAutoWidth`; `cellHintEnabled` overflow
+  tooltips.
+- **Cross-grid row drag**: `rowDragGroup` / `allowDropInsideRow` with
+  `rowDragStart` / `rowDragOver` / `rowDrop` / `rowDragEnd`.
+- **Excel-style header filter**: `headerFilter.mode`
+  `'list' | 'conditions' | 'both'` and a year / month / day date tree.
+- Column `asyncValidators` (promise-returning validators in React) with
+  `aria-busy` pending editors.
+- `dataType: 'datetime'`; `groupInterval` gains hour / week / quarter and
+  numeric buckets.
+- Pager `showFirstLast`, `showPageInput` and a pager info template
+  (`*ogePagerInfoTemplate` / `renderInfo`).
+- **Rich export** on a shared export model in `@oge-ui/behavior` — XLSX with
+  merged band headers, frozen header rows and pinned columns, column widths,
+  number / date formats, group outline levels, summary rows as values or
+  `SUBTOTAL` formulas, cell styles (`cellStyle`, styled `customizeCell`) and
+  the auto-filter; PDF with repeated banded headers, group and summary rows,
+  fitted widths, cell styles, page header / footer callbacks and page
+  numbers. `getExportData` takes `selectedRowsOnly`, `visibleColumnsOnly`,
+  `groups` and `summaries`.
+
+### Tree list and pivot (G1)
+
+- Tree list: `summary.totalItems` footer row and `summary.recursiveItems`
+  per-parent aggregates (in exports too); `remoteOperations.filtering`
+  sends filter, search and header-filter requests to the source; new
+  `export-pdf` entries in both layers.
+- Pivot: **chart binding** — `toChartSeries(result)` / `getChartData()`
+  hand plain data to `@oge-ui/charts` (no package dependency);
+  **`calculatedFields`** with formats, display modes and running totals;
+  `labelFilter` / `valueFilter` / `topN` per field, applied before
+  aggregation; cell / row-header / column-header templates (React
+  `renderCell` / `renderRowHeader` / `renderColumnHeader`);
+  `rowHeaderLayout` `'compact' | 'outline' | 'tabular'`; `resultChange`;
+  new `export-pdf` entries.
+
+### Inputs and forms (G4)
+
+- **Input masks** on one engine (`OgeMaskCore`): the text box's `mask`,
+  `maskRules`, `maskChar`, `showMaskMode`, `includeLiterals`,
+  `maskInvalidMessage`, `maskValidation` and `maskCompleted`, plus the new
+  **`OgeMaskedTextBox`** (`@oge-ui/inputs/masked-text-box`).
+- Date box: segment entry (`useMaskBehavior`), `hour12`, `showSeconds`,
+  `showTodayButton` / `showNowButton`; date range box `presets`
+  (`ogeDateRangePresets`) and `type: 'time' | 'datetime'`.
+- Number box `formatWhileTyping`, fraction limits while typing and
+  `wheelStep`.
+- New editors, each with its own entry point: **`OgeColorGradient`**
+  (`color-gradient`), **`OgeColorPalette`** (`color-palette`),
+  **`OgeCheckBoxGroup`** (`check-box-group`), **`OgeToggleGroup`**
+  (`toggle-group`) and **`OgeMultiColumnComboBox`**
+  (`multi-column-combo-box`: columns, APG combobox-with-grid keyboard,
+  search across columns, single / multiple, virtual + remote).
+- **Remote load-on-scroll** for the list editors: `dataSource` (any
+  `DataSource`, optional `byKey`), `pageSize`, `pageLoaded`, `reload()`,
+  debounced server search and `AbortSignal` cancellation.
+- **Select box**: `groupTemplate`, `fieldTemplate`, `headerTemplate`,
+  `footerTemplate` (React `renderGroup` / `renderField` / `renderHeader` /
+  `renderFooter`) and cancelable `opening` / `closing { reason }`.
+- **Tag box parity**: `tagTemplate`, item / group templates, lazy items,
+  loading, custom values, `showSelectAll` (`selectAll()` /
+  `unselectAll()`, `selectAllValueChanged`), `maxSelectedItems` +
+  `maxSelectedItemsMessage`, `opening` / `closing`, remote `dataSource`.
+- Tree select `showSelectionAs: 'chips'` with `maxDisplayedTags`.
+- Forms (both layers): server errors — `setErrors()`, `setFieldErrors()`,
+  `clearErrors()` (`OgeFormServerErrors`; shown at once, cleared on edit);
+  declarative `visibleWhen` / `requiredWhen` / `disabledWhen` conditions;
+  the **`compare`** rule (`comparisonTarget`, `comparisonType`).
+
+### Migration notes / behaviour changes
+
+- **RRULE**: a plain `BYDAY` (no ordinal) in a `MONTHLY` / `YEARLY` rule now
+  means _every_ such weekday of the month (RFC 5545) instead of the first
+  one; write `1MO` or add `BYSETPOS=1` for the old meaning. Duplicate
+  candidates — e.g. a `BYMONTHDAY` value listed twice — collapse into one
+  occurrence.
+- **Boolean cells** announce the new `booleanTrueLabel` /
+  `booleanFalseLabel` messages (default "Yes" / "No"); translate them along
+  with `booleanTrue` / `booleanFalse`, which CSV and filter lists keep using.
+- **`columnHidingMode` defaults to `'detail'`**: columns hidden by
+  `hidingPriority` now show in a per-row detail line behind a toggle. Set
+  `columnHidingMode="hide"` for the 1.1 behaviour.
+- **Pivot**: dropping a field on a chip inserts it _before_ that chip, and a
+  drop on an area really appends at its end. `OGE_PIVOT_FIELD_DRAG_TYPE` and
+  `OgePivotDragLike` are deprecated — field drag no longer uses HTML5 drag
+  and drop.
+- **Exports**: empty (`null` / `undefined`) boolean values export as empty
+  cells instead of the `booleanFalse` text.
+- **CSV guard**: leading whitespace no longer hides a formula lead, so a text
+  cell `" -5"` now exports as `' -5`; a plain number such as `-5` stays
+  numeric.
+- **`sanitizeUrl` is an allowlist**: any scheme other than relative,
+  `http(s)`, `mailto`, `tel`, `ftp` and `sms` becomes `about:blank`; pass
+  `allowedSchemes: ['web+app']` for a custom protocol.
+- **Tag box** overflow chip reads `+N more` (the `moreTags` message,
+  default `'+{count} more'`) instead of `+N`.
+- **Adaptive mode is opt-in**: `adaptiveMode` defaults to `'none'`, so popups
+  keep their 1.1 presentation until you set `'auto'` (per editor or in the
+  family config).
+- Angular peers are `>=22.0.0 <24.0.0`.
+
 ## 1.1.1 — 2026-10-01
 
 Every package moves to 1.1.1 together — the first 1.x release. The version

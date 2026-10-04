@@ -33,15 +33,15 @@ import { OgeGrid, OgeColumn, OgeSelectBox, OgeTagBox, OgeButton } from 'oge-ui';
 
 ## What's inside
 
-| Component family                            | Highlights                                                                                                                             | Docs                                                        |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **Data Grid** (`@oge-ui/grid`)              | Row + column virtualization into the millions, sorting, filtering, grouping, editing, master-detail, remote data, CSV/Excel/PDF export | [demos](https://www.ogeui.com/components/data-grid)         |
-| **Tree List** (`@oge-ui/tree-list`)         | The grid feature set on hierarchical data: lazy loading, tri-state selection, drag & drop                                              | [demos](https://www.ogeui.com/components/tree-list)         |
-| **Select Box & Tag Box** (`@oge-ui/inputs`) | WAI-ARIA combobox family: search, grouping, custom values, avatars, multi-select chips, autocomplete                                   | [demos](https://www.ogeui.com/components/inputs/select-box) |
-| **Inputs** (`@oge-ui/inputs`)               | TextBox, TextArea, NumberBox, CheckBox, Switch, RadioGroup, Calendar, DateBox, DateRangeBox — one field chrome, all three form systems | [demos](https://www.ogeui.com/components/inputs)            |
-| **Buttons** (`@oge-ui/buttons`)             | Async actions with auto loading, click guards, hold-to-confirm, groups, split buttons                                                  | [demos](https://www.ogeui.com/components/buttons)           |
-| **Overlay** (`@oge-ui/overlay`)             | Flip-aware anchored popups, menus, tooltips, context menus, modal dialogs, toasts                                                      | [demos](https://www.ogeui.com/components/overlay)           |
-| **Core** (`@oge-ui/core`)                   | Framework-free data engine: sorting/filtering/pivot/virtualization math                                                                | —                                                           |
+| Component family                            | Highlights                                                                                                                                                                                                                                                               | Docs                                                        |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| **Data Grid** (`@oge-ui/grid`)              | Row + column virtualization into the millions, sorting, filtering, grouping, editing, cell ranges + clipboard paste + fill + undo, pinned rows, conditional formats, master-detail, remote data, CSV/Excel/PDF export                                                    | [demos](https://www.ogeui.com/components/data-grid)         |
+| **Tree List** (`@oge-ui/tree-list`)         | The grid feature set on hierarchical data: lazy loading, tri-state selection, drag & drop                                                                                                                                                                                | [demos](https://www.ogeui.com/components/tree-list)         |
+| **Select Box & Tag Box** (`@oge-ui/inputs`) | WAI-ARIA combobox family: search, grouping, templates, custom values, select all, remote load-on-scroll, multi-column combo box, tree select, autocomplete                                                                                                               | [demos](https://www.ogeui.com/components/inputs/select-box) |
+| **Inputs** (`@oge-ui/inputs`)               | TextBox (+ input masks), MaskedTextBox, TextArea, NumberBox, CheckBox, CheckBoxGroup, Switch, RadioGroup, ToggleGroup, Calendar, DateBox, DateRangeBox, Slider, ColorBox, ColorGradient, ColorPalette — one field chrome, all three form systems, adaptive mobile popups | [demos](https://www.ogeui.com/components/inputs)            |
+| **Buttons** (`@oge-ui/buttons`)             | Async actions with auto loading, click guards, hold-to-confirm, groups, split buttons                                                                                                                                                                                    | [demos](https://www.ogeui.com/components/buttons)           |
+| **Overlay** (`@oge-ui/overlay`)             | Flip-aware anchored popups, menus, tooltips, context menus, modal dialogs, toasts                                                                                                                                                                                        | [demos](https://www.ogeui.com/components/overlay)           |
+| **Core** (`@oge-ui/core`)                   | Framework-free data engine: sorting/filtering/pivot/virtualization math                                                                                                                                                                                                  | —                                                           |
 
 Looking for the **Pivot Grid**? It lives in the separate, commercially
 licensed [`@oge-ui/pivot`](https://www.npmjs.com/package/@oge-ui/pivot)
@@ -103,7 +103,10 @@ One set of CSS design tokens drives every component:
 
 Bundled bridges in `@oge-ui/core/themes/`: **dark** (add `.oge-theme-dark` or
 `data-oge-theme="dark"` to any ancestor, `"auto"` follows the OS),
-**Tailwind** and **Bootstrap** —
+**high-contrast** (`.oge-theme-high-contrast` or
+`data-oge-theme="high-contrast"`; AAA contrast, forced-colors friendly),
+**Tailwind** and **Bootstrap** — `ng add oge-ui --theme=<name>` registers
+one for you —
 [styling guide](https://www.ogeui.com/getting-started/styling).
 All user-facing strings (aria labels included) are overridable via
 `provideOge<X>Config()` —

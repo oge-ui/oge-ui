@@ -25,9 +25,14 @@ dependencies are taken instead of rebuilt.
   `[(currentView)]`, per-view hour-window and slot-duration overrides,
   `hiddenWeekDays`, `min`/`max` navigation bounds and a toolbar
   date-navigator calendar (embeds `@oge-ui/inputs`' `OgeCalendar`)
-- Planner ergonomics: `workHours` off-hours shading, weekend shading,
+- Planner ergonomics: `workHours` off-hours shading, weekend shading from
+  `weekendDays` (defaults to the locale's weekend via `Intl.Locale` week
+  info, Saturday + Sunday as the fallback),
   `shadeUntilCurrentTime`, `scrollTime`/`scrollTo(date)`, `snapDuration`
   and a `readOnly` display-only shorthand
+- `adaptiveView` (`false` default, `true` or `{ breakpoint, view }`) switches
+  to the agenda view when the scheduler's own width drops below the
+  breakpoint (600px) and restores the previous view when it grows again
 - Binds plain arrays or any `@oge-ui/core` `DataSource` (OData, custom);
   field mapping via `startDateExpr` / `endDateExpr` / `textExpr` /
   `allDayExpr` / `colorExpr` / … (dotted paths or getter functions);
@@ -37,7 +42,9 @@ dependencies are taken instead of rebuilt.
   and month rows, per-day "+N more" overflow counts
 - Recurring appointments (documented RFC 5545 subset: FREQ
   DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL, COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY,
-  BYMONTH, WKST) expand into occurrences in every view; the editor carries
+  BYMONTH, BYHOUR, BYMINUTE, BYSETPOS, WKST; the rule text may also be an
+  iCalendar block with DTSTART / RDATE / EXDATE lines) expand into
+  occurrences in every view; the editor carries
   a recurrence section, and edits/deletes ask "this appointment or the
   series?" (`recurrenceEditMode`) — occurrence scope detaches via EXDATE
 - Resources: editor select fields, color-by-resource
@@ -67,13 +74,19 @@ No WAI-ARIA APG pattern covers a scheduler; the widget composes the
 calendar-grid pattern instead: the view body is a `role="grid"` with roving
 tabindex and arrow/Page/Home/End navigation, appointments form a second tab
 stop of `role="button"` chips with keyboard move/resize (Ctrl+Arrow,
-Ctrl+Shift+Up/Down) and polite live-region announcements. All strings,
+Ctrl+Shift+Up/Down) and polite live-region announcements. Each grid opens
+with a visually hidden row of `role="columnheader"` cells (full date, plus
+the resource when grouped), gridcells carry `aria-selected`, and the grid is
+`aria-readonly` when no write path is open. Resize handles have 24px hit
+areas (44px on coarse pointers), and forced-colors mode uses system colours.
+All strings,
 including every aria label, live in `OgeSchedulerMessages`
 (`provideOgeSchedulerConfig`).
 
 **Dates** are Intl-only local wall time (house rule: no date library, no
 DateAdapter, no TZ database) — RRULE `…Z` stamps are UTC and convert to the
-matching local instant, while `TZID=` parameters reject the rule; that limit
+matching local instant, while `TZID=` parameters (and BYYEARDAY, BYWEEKNO,
+BYSECOND, EXRULE, `VALUE=PERIOD`) reject the rule; that limit
 is documented rather than half-supported.
 
 Docs: [ogeui.com/components/scheduler](https://www.ogeui.com/components/scheduler)

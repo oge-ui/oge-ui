@@ -28,19 +28,49 @@ the Angular suite (see the suite's `docs/REACT-PARITY.md`).
   panel, group / footer / total summaries, custom summaries and deferred group
   loading, master-detail (`renderDetail`), whole-row (`renderRow`) and empty
   state (`renderNoData`) render props, and row drag with `onRowReordered` —
-  every one of them through the same machine the Angular grid drives.
-- **`<OgePager>`** — the grid's pager, also usable on its own.
+  editing in every mode with the command column, header filters (value list,
+  Excel-style conditions or both, a year → month → day tree for dates), the
+  filter panel / builder, column bands (`bandCaption`), the column chooser and
+  context menus — every one of them through the same machine the Angular grid
+  drives.
+- **Spreadsheet-style depth** — `selectionMode="cell"` with `selectedRanges` /
+  `onRangeSelectionChanged` (Shift+click, drag, Shift+Arrow, Ctrl+click), TSV
+  copy and multi-cell paste (`pasteText`), the fill handle plus Ctrl+D /
+  Ctrl+R (`fillDown()` / `fillRight()`), and `undo()` / `redo()` over one edit
+  history; promise-returning validators with `aria-busy` editors.
+- **Styling and layout hooks** — `rowClass` / `cellClass`, `onRowPrepared` /
+  `onCellPrepared`, column `conditionalFormats` (rules, data bars, colour
+  scales, icon sets), `pinnedTopRows` / `pinnedBottomRows`, `stickyGroupRows`,
+  `cellSpan` and column `mergeCells`, `columnAutoWidth` /
+  `autoFitColumn()` (also on a resize-handle double-click), `cellHintEnabled`
+  overflow tooltips, `dataType: 'datetime'` and hour / week / quarter /
+  numeric `groupInterval`s.
+- **Rows across grids and small screens** — `rowDragGroup` /
+  `allowDropInsideRow` with `onRowDragStart` / `onRowDragOver` / `onRowDrop` /
+  `onRowDragEnd`; drags run on a pointer gesture (touch long press, edge
+  auto-scroll, Escape cancels). `columnHidingMode` (`'detail'` by default)
+  reveals columns hidden by `hidingPriority` in a per-row detail line.
+- **Accessibility** — a keyboard alternative for every drag (Alt+Arrow column
+  resize on a focusable separator, Ctrl+Shift+Arrow column reorder, Ctrl+Arrow
+  row moves, group-chip reorder), polite live announcements for sort, filter
+  result counts, paging, expansion and validation (`announcements` opt-out),
+  `aria-invalid` / `aria-errormessage` on edit cells, and every accessible
+  name from `OgeGridMessages`.
+- **Export** — `@oge-ui/react-grid/export-excel` (`exportGridToExcel`: band
+  headers, frozen panes, outline groups, summaries, number/date formats, cell
+  styles) and `@oge-ui/react-grid/export-pdf` (`exportGridToPdf`: repeated
+  band headers, group and summary rows, page header/footer, and a `font`
+  option — or `setOgePdfDefaultFont()` from `@oge-ui/behavior` — for
+  non-WinAnsi text such as Turkish).
+- **`<OgePager>`** — the grid's pager, also usable on its own, with
+  `showFirstLast`, `showPageInput` and `renderInfo`.
 - **`<OgeGridConfigProvider>`** — the React counterpart of
   `provideOgeGridConfig()`; every default and every message string is
   single-sourced in `@oge-ui/behavior`.
 - **`<OgeGridStateStorageProvider>`** — the counterpart of the
   `OGE_STATE_STORAGE` token: where `stateKey` persistence writes (default
-  `localStorage`).
-
-Editing (cell / row / batch / popup / form), the command column, header
-filters, the filter builder, the column chooser, column bands and context
-menus are the next slices of the same engine — tracked, with dates, in the
-suite's `docs/REACT-PARITY.md`.
+  `localStorage`). Restored snapshots are validated (unknown keys dropped,
+  prototype keys rejected) before they apply.
 
 ## Installation
 

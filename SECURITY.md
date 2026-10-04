@@ -99,6 +99,27 @@ numeric. Pass
 opened in Excel or Sheets. The `.xlsx` exporters write typed cells, which
 Excel never evaluates, so they need no guard.
 
+PDF exports (grid, tree list, pivot, Gantt) embed only the TrueType font the
+application hands them — `font` in the export options or the process-wide
+`setOgePdfDefaultFont()` from `@oge-ui/behavior` — and fetch nothing on their
+own. Serve that `.ttf` from your own origin (the docs site ships Noto Sans,
+SIL OFL, under `public/fonts`); without one, jsPDF's built-in WinAnsi fonts
+are used, which cannot draw text outside cp1252 — the export warns once in
+the console when it meets such text.
+
+### Restored state is validated, never trusted
+
+A persisted grid, tree-list or pivot state comes back from `localStorage`, a
+URL or a server — all places an attacker can write to. Every restore path
+(`stateKey` persistence, `applyState()` in both render layers, the pivot
+engine) runs the snapshot through `sanitizeGridStateSnapshot`,
+`sanitizeTreeListStateSnapshot` or `sanitizePivotGridStateSnapshot` from
+`@oge-ui/core`: unknown keys are dropped, `__proto__` / `constructor` /
+`prototype` are rejected at any depth, every value is type-checked and
+absurd nesting is refused. They never throw. `parseStateJson()` is the
+matching `JSON.parse` replacement — it returns `undefined` for invalid JSON or
+a prototype key — so restore your own stored state through the same pair.
+
 ### Uploads validate on the client only
 
 `@oge-ui/upload` enforces `accept`, `allowedFileExtensions` and the size
@@ -141,7 +162,10 @@ against the repo is therefore a build-time issue for us, not an exposure for
 you — CI fails the build on any advisory at moderate or above so it stays
 that way. The one exception is an advisory with no patched release yet: it
 is listed in `audit-allowlist.json` with its reason and an expiry date a few
-weeks out, after which the build fails again until it is fixed.
+weeks out, after which the build fails again until it is fixed
+(`node tools/audit-check.mjs` is the gate). CI's third-party actions are
+pinned to commit SHAs, and the repository is scored by OpenSSF Scorecard and
+scanned by CodeQL.
 
 `exceljs`, `jspdf` and `jspdf-autotable` are optional peers loaded only by the
 `@oge-ui/*/export-excel` and `export-pdf` entry points. Advisories in those
