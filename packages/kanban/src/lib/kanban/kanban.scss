@@ -470,6 +470,11 @@
 
 .oge-kanban-lane-chevron-collapsed {
   rotate: -90deg;
+
+  /* collapsed points to inline-end: left in RTL */
+  &:dir(rtl) {
+    rotate: 90deg;
+  }
 }
 
 .oge-kanban-lane-title {
@@ -853,6 +858,10 @@
     box-shadow:
       var(--oge-kanban-card-shadow-drag),
       inset 0 0 0 1px var(--oge-kanban-card-ring);
+
+    &:dir(rtl) {
+      rotate: -2.5deg;
+    }
   }
 }
 

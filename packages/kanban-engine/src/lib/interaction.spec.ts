@@ -12,6 +12,7 @@ import {
   kanbanColumnOrderPreview,
   kanbanDropIndex,
   kanbanKeyboardMove,
+  kanbanLogicalKey,
   kanbanNavigationTarget,
   kanbanNewColumn,
   kanbanToolbarAddColumn,
@@ -100,6 +101,39 @@ describe('kanban navigation', () => {
     // done refuses drops, so ArrowRight from doing has nowhere to go
     expect(
       kanbanKeyboardMove(lanes, columns, doing, doingPos, 'ArrowRight', never),
+    ).toBeNull();
+  });
+});
+
+describe('kanban RTL keys', () => {
+  it('swaps only the horizontal arrows', () => {
+    expect(kanbanLogicalKey('ArrowLeft', true)).toBe('ArrowRight');
+    expect(kanbanLogicalKey('ArrowRight', true)).toBe('ArrowLeft');
+    expect(kanbanLogicalKey('ArrowUp', true)).toBe('ArrowUp');
+    expect(kanbanLogicalKey('ArrowLeft', false)).toBe('ArrowLeft');
+  });
+
+  it('mirrors roving and Ctrl+Arrow moves', () => {
+    const { lanes } = board();
+    const at = findKanbanCard(lanes, 1) as NonNullable<
+      ReturnType<typeof findKanbanCard>
+    >;
+    // the next column sits on the left in RTL
+    expect(
+      kanbanNavigationTarget(lanes, at, 'ArrowLeft', never, true)?.key,
+    ).toBe(3);
+    expect(
+      kanbanNavigationTarget(lanes, at, 'ArrowRight', never, true),
+    ).toBeUndefined();
+    const card = lanes[0].columns[0].cards[1];
+    const pos = findKanbanCard(lanes, 2) as NonNullable<
+      ReturnType<typeof findKanbanCard>
+    >;
+    expect(
+      kanbanKeyboardMove(lanes, columns, card, pos, 'ArrowLeft', never, true),
+    ).toEqual({ toColumn: 'doing', toIndex: 1 });
+    expect(
+      kanbanKeyboardMove(lanes, columns, card, pos, 'ArrowRight', never, true),
     ).toBeNull();
   });
 });

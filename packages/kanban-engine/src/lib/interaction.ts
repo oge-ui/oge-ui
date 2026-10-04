@@ -55,20 +55,34 @@ function firstCardFrom<T>(
 }
 
 /**
+ * The logical key for a horizontal arrow: in RTL the board's first column is
+ * on the right, so ArrowLeft moves forward (to the next column) and
+ * ArrowRight back. Every other key passes through unchanged.
+ */
+export function kanbanLogicalKey(key: string, rtl: boolean): string {
+  if (!rtl) return key;
+  if (key === 'ArrowLeft') return 'ArrowRight';
+  if (key === 'ArrowRight') return 'ArrowLeft';
+  return key;
+}
+
+/**
  * The card an unmodified navigation key moves focus to: ArrowUp/Down within
  * the column, ArrowLeft/Right to the first card of the nearest non-empty,
  * non-collapsed column, Home/End within the column. `undefined` = the key is
- * not a navigation key here (or there is nowhere to go).
+ * not a navigation key here (or there is nowhere to go). `rtl` mirrors
+ * ArrowLeft/Right (see {@link kanbanLogicalKey}).
  */
 export function kanbanNavigationTarget<T>(
   lanes: readonly KanbanSwimlane<T>[],
   position: KanbanCardPosition,
   key: string,
   isCollapsed: (key: string) => boolean,
+  rtl = false,
 ): KanbanCard<T> | undefined {
   const { laneIndex, columnIndex, cardIndex } = position;
   const lane = lanes[laneIndex];
-  switch (key) {
+  switch (kanbanLogicalKey(key, rtl)) {
     case 'ArrowDown':
       return lane.columns[columnIndex].cards[cardIndex + 1];
     case 'ArrowUp':
@@ -98,6 +112,7 @@ export interface KanbanKeyboardMove {
  * Ctrl+Arrow: the exact keyboard twin of the drag — up/down reorders within
  * the column, left/right moves to the nearest non-collapsed legal column at
  * the same position. `null` = no move (edge, or an illegal/absent target).
+ * `rtl` mirrors ArrowLeft/Right (see {@link kanbanLogicalKey}).
  */
 export function kanbanKeyboardMove<T>(
   lanes: readonly KanbanSwimlane<T>[],
@@ -106,7 +121,9 @@ export function kanbanKeyboardMove<T>(
   position: KanbanCardPosition,
   key: string,
   isCollapsed: (key: string) => boolean,
+  rtl = false,
 ): KanbanKeyboardMove | null {
+  key = kanbanLogicalKey(key, rtl);
   const lane = lanes[position.laneIndex];
   const cellCards = lane.columns[position.columnIndex].cards;
   switch (key) {

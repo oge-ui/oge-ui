@@ -166,6 +166,13 @@ export interface OgeKanbanProps<T extends object = Record<string, unknown>> {
   columnWidth?: number;
   /** How `colorExpr` renders. Default `'stripe'`. */
   cardColorMode?: OgeKanbanCardColorMode;
+  /**
+   * Right-to-left layout: the first column on the right, ArrowLeft/Right
+   * (and Ctrl+Arrow moves) mirrored. Unset follows the page — the computed
+   * `direction` or the nearest `dir`, read after mount and kept current; an
+   * explicit value also sets `dir` on the host.
+   */
+  rtlEnabled?: boolean;
   /** Replaces the edit dialog's default form wholesale (`<OgeForm>` items). */
   dialogItems?: readonly OgeFormItemDefinition[];
 

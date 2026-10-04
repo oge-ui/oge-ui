@@ -175,6 +175,8 @@ export class KanbanController<T extends object> {
   props!: OgeKanbanProps<T>;
   config!: OgeKanbanConfig;
   host: HTMLElement | null = null;
+  /** The page direction (the `rtlEnabled` fallback), kept by the board. */
+  detectedRtl = false;
 
   private version = 0;
   private readonly listeners = new Set<() => void>();
@@ -249,6 +251,11 @@ export class KanbanController<T extends object> {
       this.lastDataSource = props.dataSource;
       this.st.items = [...(props.dataSource ?? [])];
     }
+  }
+
+  /** The direction the arrow keys follow: `rtlEnabled`, else the page. */
+  get rtl(): boolean {
+    return this.props.rtlEnabled ?? this.detectedRtl;
   }
 
   private set(patch: Partial<KanbanInternalState<T>>): void {
@@ -683,6 +690,7 @@ export class KanbanController<T extends object> {
       position,
       event.key,
       this.isCollapsedFn,
+      this.rtl,
     );
     if (target === undefined) return;
     event.preventDefault();
@@ -709,6 +717,7 @@ export class KanbanController<T extends object> {
       position,
       event.key,
       this.isCollapsedFn,
+      this.rtl,
     );
     if (move === null) return;
     event.preventDefault();

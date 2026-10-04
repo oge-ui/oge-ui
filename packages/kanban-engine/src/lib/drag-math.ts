@@ -28,7 +28,9 @@ export interface KanbanCellRect {
 /**
  * Index of the cell under the pointer, or -1. Cells are ordered
  * lane-major/column-minor (board DOM order); the column scan uses binary
- * search over the sorted `rect.left` runs of the matching lane.
+ * search over the sorted `rect.left` runs of the matching lane — ascending
+ * in LTR, descending in RTL (the first column is rightmost), detected from
+ * the measured rects so neither layer has to pass the direction.
  */
 export function hitTestCell(
   x: number,
@@ -48,14 +50,18 @@ export function hitTestCell(
     }
   }
   if (laneStart < 0) return -1;
-  // binary search on left edge within [laneStart, laneEnd]
+  // binary search on left edge within [laneStart, laneEnd]; an RTL run
+  // (descending lefts) searches the mirrored axis
+  const mirrored = cells[laneStart].rect.left > cells[laneEnd].rect.left;
   let lo = laneStart;
   let hi = laneEnd;
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;
     const rect = cells[mid].rect;
-    if (x < rect.left) hi = mid - 1;
-    else if (x > rect.right) lo = mid + 1;
+    const before = mirrored ? x > rect.right : x < rect.left;
+    const after = mirrored ? x < rect.left : x > rect.right;
+    if (before) hi = mid - 1;
+    else if (after) lo = mid + 1;
     else return mid;
   }
   return -1;
@@ -94,13 +100,22 @@ export { ogeEdgeScrollVelocity as edgeScrollVelocity } from '@oge-ui/behavior';
  * Target index for dropping a dragged column at pointer `x`, given the
  * columns' horizontal center points in display order. The dragged column's
  * own position (`fromIndex`) yields itself until the pointer crosses a
- * neighbour's center — the standard "swap on center-cross" feel.
+ * neighbour's center — the standard "swap on center-cross" feel. Centers
+ * that run right-to-left (an RTL board) mirror the axis, so the same rule
+ * holds with the first column on the right.
  */
 export function columnReorderIndex(
   x: number,
   centers: readonly number[],
   fromIndex: number,
 ): number {
+  if (centers.length > 1 && centers[0] > centers[centers.length - 1]) {
+    return columnReorderIndex(
+      -x,
+      centers.map((center) => -center),
+      fromIndex,
+    );
+  }
   let target = fromIndex;
   for (let i = 0; i < centers.length; i++) {
     if (i === fromIndex) continue;
