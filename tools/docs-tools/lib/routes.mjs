@@ -10,9 +10,7 @@ import ts from 'typescript';
  * order. Pure redirects are skipped.
  *
  * @param {string} routesFile absolute path to `app.routes.ts`
- * @returns {{ path: string, title: string, label: string }[]}
- *   `path` is the full route without a leading slash (`''` for home),
- *   `title` is the raw document title, `label` strips the `OGE — ` prefix.
+ * @returns {RoutePage[]}
  */
 export function readRoutes(routesFile) {
   const text = readFileSync(routesFile, 'utf8');
@@ -26,11 +24,23 @@ export function readRoutes(routesFile) {
   if (!routesArray) {
     throw new Error(`Could not find an \`appRoutes\` array in ${routesFile}`);
   }
-  /** @type {{ path: string, title: string, label: string }[]} */
+  /** @type {RoutePage[]} */
   const pages = [];
   collect(routesArray, '', pages);
   return pages;
 }
+
+/**
+ * @typedef {object} RoutePage
+ * @property {string} path full route without a leading slash (`''` for home)
+ * @property {string} title raw document title
+ * @property {string} label the title without the `OGE — ` prefix
+ * @property {string | null} source the `loadComponent` import specifier,
+ *   relative to `app.routes.ts` (`./pages/tabs/routed`), when there is one
+ * @property {string | null} landing where the page actually lands when its
+ *   empty child path redirects (`components/tabs/routed/overview`) — the
+ *   page's own URL is then a redirect stub, so the sitemap lists this instead
+ */
 
 /** @param {ts.SourceFile} source */
 function findRoutesArray(source) {
@@ -51,7 +61,7 @@ function findRoutesArray(source) {
 /**
  * @param {ts.ArrayLiteralExpression} array
  * @param {string} prefix
- * @param {{ path: string, title: string, label: string }[]} out
+ * @param {RoutePage[]} out
  */
 function collect(array, prefix, out) {
   for (const element of array.elements) {
@@ -62,15 +72,39 @@ function collect(array, prefix, out) {
     // A route can carry both a component and children (routed tabs) — the page
     // itself comes first so the flat list stays in reading order.
     if (route.title !== undefined) {
-      out.push({ path, title: route.title, label: stripBrand(route.title) });
+      out.push({
+        path,
+        title: route.title,
+        label: stripBrand(route.title),
+        source: route.source ?? null,
+        landing: route.children ? landingOf(route.children, path) : null,
+      });
     }
     if (route.children) collect(route.children, path, out);
   }
 }
 
 /**
+ * The target of an empty-path child redirect (`{ path: '', redirectTo: … }`),
+ * joined onto `path`; `null` when the route renders at its own URL.
+ *
+ * @param {ts.ArrayLiteralExpression} children
+ * @param {string} path
+ */
+function landingOf(children, path) {
+  for (const element of children.elements) {
+    if (!ts.isObjectLiteralExpression(element)) continue;
+    const child = readRouteProps(element);
+    if ((child.path ?? '') === '' && child.redirectTo !== undefined) {
+      return joinPath(path, child.redirectTo);
+    }
+  }
+  return null;
+}
+
+/**
  * @param {ts.ObjectLiteralExpression} node
- * @returns {{ path?: string, title?: string, redirectTo?: string, children?: ts.ArrayLiteralExpression }}
+ * @returns {{ path?: string, title?: string, redirectTo?: string, source?: string, children?: ts.ArrayLiteralExpression }}
  */
 function readRouteProps(node) {
   /** @type {Record<string, unknown>} */
@@ -84,9 +118,36 @@ function readRouteProps(node) {
       props[name] = value.text;
     } else if (name === 'children' && ts.isArrayLiteralExpression(value)) {
       props[name] = value;
+    } else if (name === 'redirectTo') {
+      // `keepQuery('overview')` — the helper that keeps the query string
+      const [target] = ts.isCallExpression(value) ? value.arguments : [];
+      props[name] = target && ts.isStringLiteralLike(target) ? target.text : '';
+    } else if (name === 'loadComponent') {
+      const specifier = dynamicImportOf(value);
+      if (specifier) props.source = specifier;
     }
   }
   return props;
+}
+
+/** The specifier of the first `import('…')` inside `node`. */
+function dynamicImportOf(node) {
+  let found = null;
+  const visit = (child) => {
+    if (found) return;
+    if (
+      ts.isCallExpression(child) &&
+      child.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      child.arguments[0] &&
+      ts.isStringLiteralLike(child.arguments[0])
+    ) {
+      found = child.arguments[0].text;
+      return;
+    }
+    ts.forEachChild(child, visit);
+  };
+  visit(node);
+  return found;
 }
 
 /** @param {ts.PropertyName} name */
