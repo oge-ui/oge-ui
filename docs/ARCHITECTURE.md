@@ -691,7 +691,8 @@ values, locale)` (`=n`, `zero one two few many other`, `#`, `offset:`, `selector
   ring survives there and is invisible everywhere else. **Never write `outline: none` / `outline: 0`** —
   a rule that hides the UA ring uses `outline: 2px solid transparent` on `:focus`/`:focus-visible`, never
   on the base state (under forced colors a base-state transparent outline is drawn all the time).
-  Transitions `120ms ease`. RTL via logical properties (no `rtlEnabled` machinery in new code).
+  Transitions `120ms ease`. RTL via logical properties; a script that needs the direction asks
+  `ogeResolveDirection` (see "Direction (RTL)" below).
 - **Forced colors.** Every stylesheet with state (selected, checked, active, focused, disabled,
   progress, chart/gantt marks) ends with an `@include tokens.forced-colors { … }` block using system
   colours only — `Highlight`/`HighlightText` for selection, `CanvasText` for frames and marks,
@@ -984,6 +985,49 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
 - **Signal Forms `required()` treats `[]` as a value.** Array editors express "at least one"
   as `minLength(path, 1, { message })`; reactive `Validators.required` already rejects `[]`.
 
+### Direction (RTL)
+
+- **Direction comes from `ogeResolveDirection`.** Layout mirrors through CSS logical properties;
+  everything a _script_ decides — horizontal arrow-key maps, pointer `deltaX` maths, absolutely
+  positioned SVG `x`, which side an anchored panel opens on — asks `@oge-ui/behavior`'s
+  `lib/a11y/direction.ts`: `ogeResolveDirection(el, explicit?)` → `'ltr' | 'rtl'` (an explicit
+  `rtlEnabled` wins; otherwise the computed `direction`, then the nearest `dir` attribute for
+  engines that do not resolve inherited `direction`, e.g. jsdom), `ogeIsRtl(el, explicit?)`, and
+  `observeDirection(el, cb)` (one `MutationObserver` on `<html>` filtered to `dir`, so a later
+  language switch re-mirrors a mounted component; returns the disconnect). All three are SSR-safe.
+  **Never write `getComputedStyle(el).direction === 'rtl'` in a component** — the copies that
+  existed (anchored panel, toolbar, grid context menu, button group, inputs, splitter, menubar,
+  stepper, menu list, tab strip, both grids and tree lists) now call the helper.
+- **Pure decisions take an `rtl` boolean.** Key maps and delta maths live in the engines/cores
+  (`scheduler-engine` keyboard, `OgeGanttCore`, `kanban-engine` interaction + drag math,
+  `pivot-keyboard`, `sliderKeyboardTarget`, `menubarBarKeys` …) and receive the resolved
+  direction from the render layer, so both layers mirror identically and the specs test the
+  decision without a DOM.
+- **`rtlEnabled` only where geometry is computed in script** (grid, tree list, charts,
+  scheduler, Gantt, kanban, pivot): `boolean | undefined`; unset follows the page (read after the
+  first render, kept current with `observeDirection`), an explicit value wins and is also set as
+  `dir` on the host so the logical-property layout follows it. Components whose layout is pure
+  CSS take no input — wrap them in `dir`.
+- **Geometry stays logical; mirror at the edges.** Pointer input becomes a logical x
+  (`rect.right - clientX`, inverted `deltaX`) and positions are written as `inset-inline-start`,
+  so the maths is direction-free. Absolutely positioned SVG cannot use logical properties: the
+  Gantt draws dependency arrows in logical px inside one `<g transform="matrix(-1 0 0 1 W 0)">`
+  (`core.arrowsTransform()`), never a `scaleX(-1)` on the whole canvas (it would mirror text).
+  RTL `scrollLeft` is negative in Chromium — read it through `Math.abs`, write it negated.
+  Render layers without a direct `behavior` dependency reach the helper through their engine
+  (`watchKanbanDirection` in `kanban-engine`, `pivotIsRtl` in `pivot-engine`).
+- **Dependency-free engines keep twins.** `charts-engine` (`detectChartRtl` / `observeChartRtl`)
+  and `bpmn-engine` (`bpmnIsRtl` / `observeBpmnDirection`) copy the rule instead of importing
+  `behavior` (their published dependency stance); keep them in step with `direction.ts`.
+- **The BPMN canvas stays LTR.** DI coordinates are absolute, so a diagram is the same diagram
+  in an RTL page: the canvas and minimap SVGs declare `direction: ltr` (an inherited `rtl` would
+  flip every label's `text-anchor`) and the arrow-key nudges move shapes in diagram space. Only
+  the chrome mirrors — rail and properties panel swap sides through the flex row, their separator
+  keys and drags invert, and the context pad sits left of the shape (`side: 'left'`).
+- **e2e proves the geometry.** `apps/dev-app-e2e/src/rtl.spec.ts` boots each page with
+  `<html dir="rtl">` in both layers and asserts mirrored positions and arrow keys; jsdom has no
+  layout, so unit specs cover only the decisions and the `dir` plumbing.
+
 ### Charts: orientation frame, panes and guides
 
 - **Series geometry is logical; only the frame turns.** `charts-engine`'s scene lays everything
@@ -1003,7 +1047,8 @@ reference)` → `preventDefault`) and writes `core.text` and `core.activeRange()
   argument scale and swapped value-axis sides; a rotated chart mirrors through the frame. The
   SVG declares `direction: ltr` so a page-level `dir="rtl"` does not flip `text-anchor` a second
   time. `rtlEnabled` unset reads `detectChartRtl()` (computed `direction`, then the nearest
-  `dir`) after the first render — SSR-safe — and `refresh()` re-reads it; an explicit value is
+  `dir`) after the first render — SSR-safe — `observeChartRtl` follows a later `dir` flip and
+  `refresh()` re-reads it; an explicit value is
   also set as `dir` on the host so the HTML legend and tooltip follow.
 - **Panes split the logical value axis.** `layoutChartPanes` gives each pane a band; value
   scales are created per pane and shifted with `offsetChartScale`, so every `valueScale.toPx`

@@ -188,6 +188,7 @@ export {
 export {
   createChartFrame,
   detectChartRtl,
+  observeChartRtl,
   frameLabelAnchor,
   frameLabelBaseline,
   frameLine,

@@ -286,6 +286,84 @@ describe('<oge-kanban>', () => {
   });
 });
 
+@Component({
+  imports: [OgeKanban],
+  template: `
+    <div [attr.dir]="dir()">
+      <oge-kanban
+        [dataSource]="tasks"
+        [columns]="columns"
+        [virtualScrolling]="false"
+        [rtlEnabled]="rtlEnabled()"
+        keyExpr="id"
+        columnExpr="status"
+        titleExpr="title"
+        style="height: 480px; display: block"
+      />
+    </div>
+  `,
+})
+class RtlHost {
+  readonly dir = signal<string | null>(null);
+  readonly rtlEnabled = signal<boolean | undefined>(undefined);
+  readonly tasks: Task[] = [
+    { id: 1, status: 'todo', title: 'Design tokens' },
+    { id: 3, status: 'doing', title: 'Build board' },
+  ];
+  readonly columns = [
+    { key: 'todo', title: 'To do' },
+    { key: 'doing', title: 'In progress' },
+  ];
+}
+
+describe('<oge-kanban> RTL', () => {
+  async function press(
+    fixture: ComponentFixture<RtlHost>,
+    key: string,
+  ): Promise<string | undefined> {
+    const card = (fixture.nativeElement as HTMLElement).querySelector(
+      '.oge-kanban-card',
+    ) as HTMLElement;
+    card.focus();
+    card.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    await settle(fixture);
+    return document.activeElement?.textContent ?? undefined;
+  }
+
+  it('follows a dir="rtl" ancestor: ArrowLeft goes to the next column', async () => {
+    const fixture = TestBed.createComponent(RtlHost);
+    fixture.componentInstance.dir.set('rtl');
+    await settle(fixture);
+    expect(await press(fixture, 'ArrowRight')).toContain('Design tokens');
+    expect(await press(fixture, 'ArrowLeft')).toContain('Build board');
+  });
+
+  it('picks up a later dir change on the page', async () => {
+    const fixture = TestBed.createComponent(RtlHost);
+    await settle(fixture);
+    expect(await press(fixture, 'ArrowRight')).toContain('Build board');
+    fixture.componentInstance.dir.set('rtl');
+    await settle(fixture);
+    expect(await press(fixture, 'ArrowLeft')).toContain('Build board');
+  });
+
+  it('an explicit rtlEnabled wins and sets dir on the host', async () => {
+    const fixture = TestBed.createComponent(RtlHost);
+    fixture.componentInstance.dir.set('rtl');
+    fixture.componentInstance.rtlEnabled.set(false);
+    await settle(fixture);
+    const board = (fixture.nativeElement as HTMLElement).querySelector(
+      'oge-kanban',
+    ) as HTMLElement;
+    expect(board.getAttribute('dir')).toBe('ltr');
+    expect(await press(fixture, 'ArrowRight')).toContain('Build board');
+    fixture.componentInstance.rtlEnabled.set(true);
+    await settle(fixture);
+    expect(board.getAttribute('dir')).toBe('rtl');
+    expect(await press(fixture, 'ArrowLeft')).toContain('Build board');
+  });
+});
+
 describe('<oge-kanban> card template', () => {
   it('replaces the card body with template context', async () => {
     @Component({

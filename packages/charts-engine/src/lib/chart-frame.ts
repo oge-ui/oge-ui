@@ -168,3 +168,45 @@ export function detectChartRtl(element: Element | null | undefined): boolean {
     typeof element.closest === 'function' ? element.closest('[dir]') : null;
   return owner?.getAttribute('dir')?.toLowerCase() === 'rtl';
 }
+
+/**
+ * Calls `callback` when a `dir` attribute on `element` or an ancestor flips
+ * its direction (`detectChartRtl`). Returns the disconnect function — a no-op
+ * without a `MutationObserver` (server rendering). A local twin of
+ * `@oge-ui/behavior`'s `observeDirection`: `charts-engine` stays
+ * dependency-free.
+ */
+export function observeChartRtl(
+  element: Element | null | undefined,
+  callback: (rtl: boolean) => void,
+): () => void {
+  if (
+    element === null ||
+    element === undefined ||
+    typeof MutationObserver === 'undefined'
+  ) {
+    return () => undefined;
+  }
+  const root = element.ownerDocument?.documentElement;
+  if (!root) return () => undefined;
+  let current = detectChartRtl(element);
+  const observer = new MutationObserver((records) => {
+    if (
+      !records.some(
+        (r) => r.target === element || (r.target as Node).contains(element),
+      )
+    ) {
+      return;
+    }
+    const next = detectChartRtl(element);
+    if (next === current) return;
+    current = next;
+    callback(next);
+  });
+  observer.observe(root, {
+    attributes: true,
+    attributeFilter: ['dir'],
+    subtree: true,
+  });
+  return () => observer.disconnect();
+}

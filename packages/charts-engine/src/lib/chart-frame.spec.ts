@@ -1,6 +1,8 @@
+import { vi } from 'vitest';
 import {
   createChartFrame,
   detectChartRtl,
+  observeChartRtl,
   frameLabelAnchor,
   frameLabelBaseline,
   frameLine,
@@ -95,6 +97,26 @@ describe('detectChartRtl', () => {
     outer.setAttribute('dir', 'ltr');
     expect(detectChartRtl(inner)).toBe(false);
     expect(detectChartRtl(null)).toBe(false);
+    outer.remove();
+  });
+});
+
+describe('observeChartRtl', () => {
+  it('reports dir flips on an ancestor until disconnected', async () => {
+    const outer = document.createElement('div');
+    const inner = document.createElement('span');
+    outer.append(inner);
+    document.body.append(outer);
+    const seen = vi.fn();
+    const stop = observeChartRtl(inner, seen);
+    outer.setAttribute('dir', 'rtl');
+    await Promise.resolve();
+    expect(seen).toHaveBeenLastCalledWith(true);
+    stop();
+    outer.setAttribute('dir', 'ltr');
+    await Promise.resolve();
+    expect(seen).toHaveBeenCalledTimes(1);
+    expect(observeChartRtl(null, seen)).toBeTypeOf('function');
     outer.remove();
   });
 });

@@ -1,3 +1,4 @@
+import { ogeIsRtl } from '@oge-ui/behavior';
 import type { PivotArea } from '@oge-ui/core';
 
 /**
@@ -5,10 +6,16 @@ import type { PivotArea } from '@oge-ui/core';
  * `.oge-pivot-*` markup — no framework, no state.
  */
 
-/** Whether an element lays out right-to-left (mirrors the arrow keys). */
-export function pivotIsRtl(element: Element): boolean {
-  const view = element.ownerDocument.defaultView;
-  return view ? view.getComputedStyle(element).direction === 'rtl' : false;
+/**
+ * Whether an element lays out right-to-left (mirrors the arrow keys): an
+ * explicit `rtlEnabled` wins, else the page direction — `ogeIsRtl` from
+ * `@oge-ui/behavior` (computed `direction`, then the nearest `dir`).
+ */
+export function pivotIsRtl(
+  element: Element,
+  explicit?: boolean | undefined,
+): boolean {
+  return ogeIsRtl(element, explicit);
 }
 
 /** Shift+F10 or the context-menu key: the keyboard's right-click. */

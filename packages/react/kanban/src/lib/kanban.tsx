@@ -28,6 +28,7 @@ import {
   kanbanGridTemplate,
   kanbanInitials,
   prepareKanbanTouchDrag,
+  watchKanbanDirection,
   type KanbanCard,
   type KanbanColumnDef,
 } from '@oge-ui/kanban-engine';
@@ -93,6 +94,15 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
       observer?.disconnect();
       ctl.teardown();
     };
+  }, [ctl]);
+
+  // the rtlEnabled fallback: the page direction, kept current
+  useEffect(() => {
+    const host = hostRef.current;
+    if (host === null) return;
+    return watchKanbanDirection(host, (rtl) => {
+      ctl.detectedRtl = rtl;
+    });
   }, [ctl]);
 
   useImperativeHandle(
@@ -280,6 +290,13 @@ function OgeKanbanInner<T extends object = Record<string, unknown>>(
       role="group"
       aria-label={msg.board.boardLabel}
       style={hostStyle}
+      dir={
+        props.rtlEnabled === undefined
+          ? undefined
+          : props.rtlEnabled
+            ? 'rtl'
+            : 'ltr'
+      }
     >
       {showToolbar && (
         <div

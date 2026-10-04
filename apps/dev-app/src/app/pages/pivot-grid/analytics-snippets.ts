@@ -48,3 +48,21 @@ protected async exportExcel(): Promise<void> {
   await exportPivotToExcel(this.pivot(), { filename: 'sales.xlsx' });
 }`,
 });
+
+export const RTL_SNIPPET = demoSource({
+  use: { '@oge-ui/pivot': ['OgePivotField', 'OgePivotGrid'] },
+  template: `<!-- rtlEnabled (unset = follow the page's dir) mirrors the pivot: row
+     headers on the right, collapsed chevrons pointing left, ArrowLeft /
+     ArrowRight and Ctrl+Arrow chip moves swapped, menus opening leftwards. -->
+<oge-pivot-grid [data]="sales" [rtlEnabled]="true">
+  <oge-pivot-field dataField="region" area="row" />
+  <oge-pivot-field dataField="country" area="row" />
+  <oge-pivot-field dataField="date" area="column" groupInterval="year" />
+  <oge-pivot-field dataField="amount" area="data" summaryType="sum" />
+</oge-pivot-grid>`,
+  body: `protected readonly sales = [
+  { region: 'EMEA', country: 'Germany', date: '2026-02-11', amount: 1249 },
+  { region: 'EMEA', country: 'Türkiye', date: '2026-05-02', amount: 890 },
+  { region: 'APAC', country: 'Japan', date: '2025-11-19', amount: 2140 },
+];`,
+});

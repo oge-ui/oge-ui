@@ -211,10 +211,19 @@ export function pivotChipKeyIntent(
   return null;
 }
 
-/** A pointer stand-in that anchors a keyboard-opened menu below an element. */
+/**
+ * A pointer stand-in that anchors a keyboard-opened menu below an element —
+ * at its inline-start corner (the right edge in RTL, where the menu opens
+ * leftwards).
+ */
 export function pivotKeyboardPointer(
   event: { preventDefault(): void; stopPropagation(): void },
-  rect: { readonly left: number; readonly bottom: number },
+  rect: {
+    readonly left: number;
+    readonly right?: number;
+    readonly bottom: number;
+  },
+  rtl = false,
 ): {
   readonly clientX: number;
   readonly clientY: number;
@@ -222,7 +231,7 @@ export function pivotKeyboardPointer(
   stopPropagation(): void;
 } {
   return {
-    clientX: rect.left,
+    clientX: rtl ? (rect.right ?? rect.left) : rect.left,
     clientY: rect.bottom,
     preventDefault: () => event.preventDefault(),
     stopPropagation: () => event.stopPropagation(),

@@ -41,6 +41,7 @@ import {
   type OgeSelectSearchMode,
   type OgeSelectValueExpr,
   type OgeVirtualScrollOptions,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -595,9 +596,7 @@ export const OgeMultiColumnComboBox = forwardRef(
     const onKeyDown = (event: ReactKeyboardEvent): void => {
       if (field.effectiveDisabled || readonly) return;
       const isOpen = openedRef.current;
-      const rtl =
-        hostRef.current !== null &&
-        getComputedStyle(hostRef.current).direction === 'rtl';
+      const rtl = hostRef.current !== null && ogeIsRtl(hostRef.current);
       switch (event.key) {
         case 'ArrowDown':
         case 'ArrowUp': {

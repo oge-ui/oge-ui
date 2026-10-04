@@ -150,6 +150,13 @@ export const OGE_REACT_KANBAN_API: ApiSections = {
             "How <code>colorExpr</code> renders: an accent bar on the card's edge, or the whole card surface tinted with the color.",
         },
         {
+          name: 'rtlEnabled',
+          type: 'boolean | undefined',
+          default: 'undefined',
+          description:
+            'Right-to-left layout: the first column sits on the right, ArrowLeft/Right roving and Ctrl+Arrow card moves are mirrored (ArrowLeft goes to the next column), the column-reorder drag and drop hit-testing follow the mirrored geometry and the collapsed-lane chevron points left. Unset follows the page — the computed <code>direction</code> or the nearest <code>dir</code> attribute, read after the first render and kept current when a <code>dir</code> changes; an explicit value also sets <code>dir</code> on the host.',
+        },
+        {
           name: 'dialogItems',
           type: 'readonly OgeFormItemDefinition[] | undefined',
           default: 'undefined',

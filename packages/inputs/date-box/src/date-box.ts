@@ -26,6 +26,7 @@ import {
   withTimePart,
   type OgeTimeColumnOption,
   type OgeTimePart,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
@@ -592,7 +593,7 @@ export class OgeDateBox
     if (!this.useMaskBehavior() || !this.acceptCustomValue()) return false;
     const el = this.native()?.nativeElement;
     if (!el) return false;
-    const rtl = getComputedStyle(el).direction === 'rtl';
+    const rtl = ogeIsRtl(el);
     const handled = this.mask().key(
       event,
       [el.selectionStart ?? 0, el.selectionEnd ?? 0],

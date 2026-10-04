@@ -14,6 +14,7 @@ import {
 } from 'react';
 import type { OgeFormItemDefinition } from '@oge-ui/react-forms';
 import { OgeCalendar } from '@oge-ui/react-inputs';
+import { observeDirection, ogeIsRtl } from '@oge-ui/behavior';
 import { OgePopup, useAnchoredPanel } from '@oge-ui/react-overlay';
 import {
   OgeSchedulerAdaptiveViewController,
@@ -251,6 +252,25 @@ function OgeSchedulerInner<T extends object>(
     return () => observer.disconnect();
   }, [adaptiveView]);
 
+  // auto direction: read after mount (SSR-safe) and kept current while
+  // mounted; an explicit rtlEnabled wins and is written as the host's dir
+  const [autoRtl, setAutoRtl] = useState(false);
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    setAutoRtl(ogeIsRtl(host));
+    return observeDirection(host, (direction) =>
+      setAutoRtl(direction === 'rtl'),
+    );
+  }, []);
+  const rtl = props.rtlEnabled ?? autoRtl;
+  const hostDir =
+    props.rtlEnabled === undefined
+      ? undefined
+      : props.rtlEnabled
+        ? 'rtl'
+        : 'ltr';
+
   // reminder ticker: reminderTriggered once per occurrence (24h look-ahead)
   useEffect(() => {
     const timer = setInterval(() => core.checkReminders(), 30_000);
@@ -373,6 +393,7 @@ function OgeSchedulerInner<T extends object>(
         return (
           <SchedulerTimelineView<T>
             key={currentView}
+            rtl={rtl}
             view={currentView}
             anchorDate={currentDate}
             appointments={visible}
@@ -396,6 +417,7 @@ function OgeSchedulerInner<T extends object>(
         return (
           <SchedulerMonthView<T>
             ref={monthRef}
+            rtl={rtl}
             anchorDate={currentDate}
             appointments={visible}
             firstDayOfWeek={firstDayOfWeek}
@@ -424,6 +446,7 @@ function OgeSchedulerInner<T extends object>(
         return (
           <SchedulerDayWeekView<T>
             ref={dayWeekRef}
+            rtl={rtl}
             view={core.dayWeekView()}
             anchorDate={currentDate}
             appointments={visible}
@@ -473,6 +496,7 @@ function OgeSchedulerInner<T extends object>(
       className={
         props.className ? `oge-scheduler ${props.className}` : 'oge-scheduler'
       }
+      dir={hostDir}
       style={props.style}
     >
       <div

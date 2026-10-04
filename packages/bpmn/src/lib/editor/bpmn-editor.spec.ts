@@ -378,6 +378,27 @@ describe('OgeBpmnEditor', () => {
     expect(edges(fixture).length).toBe(5);
   });
 
+  it('puts the context pad left of the shape in an RTL page; the canvas stays LTR', async () => {
+    document.documentElement.setAttribute('dir', 'rtl');
+    try {
+      const { fixture, editor } = await renderImported();
+      editor.select(['Activity_approve']);
+      await settle(fixture);
+      const pad = el(fixture).querySelector('.oge-bpmn-context-pad');
+      expect(pad?.classList.contains('oge-bpmn-context-pad-left')).toBe(true);
+      document.documentElement.setAttribute('dir', 'ltr');
+      await Promise.resolve();
+      await settle(fixture);
+      expect(
+        el(fixture)
+          .querySelector('.oge-bpmn-context-pad')
+          ?.classList.contains('oge-bpmn-context-pad-left'),
+      ).toBe(false);
+    } finally {
+      document.documentElement.removeAttribute('dir');
+    }
+  });
+
   it('readOnly disables the palette, the keyboard editing and the context pad', async () => {
     const { fixture, editor, wrap } = await renderImported();
     fixture.componentInstance.readOnly.set(true);

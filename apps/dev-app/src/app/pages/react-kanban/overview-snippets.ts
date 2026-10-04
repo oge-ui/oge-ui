@@ -353,4 +353,39 @@ const tasks = [
 </>`,
     }),
   },
+  {
+    title: 'RTL',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-kanban': ['OgeKanban'] },
+      name: 'RtlBoard',
+      before: `const columns = [
+  { key: 'todo', title: 'To do' },
+  { key: 'doing', title: 'In progress' },
+  { key: 'done', title: 'Done' },
+];
+
+const tasks = [
+  { id: 1, status: 'todo', title: 'Ctrl+ArrowLeft moves me forward' },
+  { id: 2, status: 'todo', title: 'Translate the onboarding flow' },
+  { id: 3, status: 'doing', title: 'Mirror the icons' },
+  { id: 4, status: 'done', title: 'Arabic and Hebrew catalogs' },
+];`,
+      jsx: `<>
+  {/* rtlEnabled (unset = follow the page's dir) mirrors the board: the
+      first column sits on the right, ArrowLeft moves focus to the NEXT
+      column and Ctrl+ArrowLeft moves the card there, the column-reorder
+      drag and the drop hit-testing follow the mirrored geometry. */}
+  <OgeKanban
+    dataSource={tasks}
+    keyExpr="id"
+    columnExpr="status"
+    titleExpr="title"
+    columns={columns}
+    rtlEnabled
+    allowColumnReordering
+    style={{ height: 380 }}
+  />
+</>`,
+    }),
+  },
 ];

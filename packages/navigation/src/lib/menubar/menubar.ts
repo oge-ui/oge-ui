@@ -38,6 +38,7 @@ import {
   stepEnabledIndex,
   OGE_MENUBAR_HOVER_DELAY,
   type OgeMenubarDescriptorCore,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
@@ -724,7 +725,7 @@ export class OgeMenubar {
 
   /** Writing direction of the host, read live so RTL needs no input. */
   private isRtl(): boolean {
-    return getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    return ogeIsRtl(this.host.nativeElement);
   }
 
   private stopDisabled(index: number): boolean {

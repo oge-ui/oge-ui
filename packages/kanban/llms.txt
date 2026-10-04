@@ -134,6 +134,7 @@ _Behavior_
 | `allowAdding / allowUpdating / allowDeleting / allowDragging / allowColumnReordering / allowColumnAdding` | `boolean` | `true / true / true / true / false / false` | Capability gates for the toolbar, dialog, menu, hover quick actions, keyboard shortcuts and drags. `allowColumnAdding` renders the "+ Add column" ghost column (inline composer → cancelable `columnAdding` → `columnAdded`). Per-column `allowAdding: false` overrides the board. |
 | `columnWidth` | `number` | `300` | Fixed column track width in px — headers stay legible and the board scrolls horizontally, Trello-style. |
 | `cardColorMode` | `'stripe' \| 'surface'` | `'stripe'` | How `colorExpr` renders: an accent bar on the card's edge, or the whole card surface tinted with the color. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: the first column sits on the right, ArrowLeft/Right roving and Ctrl+Arrow card moves are mirrored (ArrowLeft goes to the next column), the column-reorder drag and drop hit-testing follow the mirrored geometry and the collapsed-lane chevron points left. Unset follows the page — the computed `direction` or the nearest `dir` attribute, read after the first render and kept current when a `dir` changes; an explicit value also sets `dir` on the host. |
 | `dialogItems` | `readonly OgeFormItemData[] \| undefined` | `undefined` | Replaces the edit dialog's default form wholesale (generic `OgeForm` items); `cardEditDialogShowing` can still adjust per open. The default form only renders editors for fields the board actually maps. |
 | `readOnly` | `boolean` | `false` | One switch over every `allow*` capability; the context menu falls back to the browser's native menu. |
 | `messages / locale` | `Partial<OgeKanbanMessages> / string \| undefined` | `{} / undefined` | Per-instance overrides of the DI config (`provideOgeKanbanConfig`). Every user-facing string, aria labels and live-region templates included, lives in the messages interface; `locale` drives every Intl format. |
@@ -447,6 +448,49 @@ export class Demo {
     { id: 1, status: 'todo', title: 'Tab to the board, then arrow around' },
     { id: 2, status: 'todo', title: 'Ctrl+ArrowRight moves me' },
     { id: 3, status: 'doing', title: 'Enter opens my dialog' },
+  ];
+}
+```
+
+### Rtl
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeKanban } from '@oge-ui/kanban';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeKanban],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rtlEnabled (unset = follow the page's dir) mirrors the board: the
+         first column sits on the right, ArrowLeft moves focus to the NEXT
+         column and Ctrl+ArrowLeft moves the card there, the column-reorder
+         drag and the drop hit-testing follow the mirrored geometry. -->
+    <oge-kanban
+      [dataSource]="tasks"
+      keyExpr="id"
+      columnExpr="status"
+      titleExpr="title"
+      [columns]="columns"
+      [rtlEnabled]="true"
+      [allowColumnReordering]="true"
+      style="height: 380px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly columns = [
+    { key: 'todo', title: 'To do' },
+    { key: 'doing', title: 'In progress' },
+    { key: 'done', title: 'Done' },
+  ];
+
+  protected readonly tasks = [
+    { id: 1, status: 'todo', title: 'Ctrl+ArrowLeft moves me forward' },
+    { id: 2, status: 'todo', title: 'Translate the onboarding flow' },
+    { id: 3, status: 'doing', title: 'Mirror the icons' },
+    { id: 4, status: 'done', title: 'Arabic and Hebrew catalogs' },
   ];
 }
 ```

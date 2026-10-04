@@ -34,6 +34,7 @@ import {
   type OgeDropDownOpeningEvent,
   type OgeListDataSource,
   type OgeListPageLoadedEvent,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import {
   OGE_OVERLAY_CONFIG,
@@ -1029,7 +1030,7 @@ export class OgeMultiColumnComboBox<TItem = unknown>
   protected onKeydown(event: KeyboardEvent): void {
     if (this.effectiveDisabled() || this.readonly()) return;
     const open = this.opened();
-    const rtl = getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
+    const rtl = ogeIsRtl(this.hostEl.nativeElement);
     switch (event.key) {
       case 'ArrowDown':
       case 'ArrowUp': {

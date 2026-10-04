@@ -48,6 +48,26 @@ describe('hitTestCell', () => {
   });
 });
 
+describe('hitTestCell in RTL', () => {
+  // DOM order a, b, c laid out right-to-left: lefts descend
+  const cells = [
+    cell('a', 220, 0),
+    cell('b', 110, 0),
+    cell('c', 0, 0),
+    cell('a', 220, 320, 'lane2'),
+    cell('b', 110, 320, 'lane2'),
+    cell('c', 0, 320, 'lane2'),
+  ];
+
+  it('finds the cell on the mirrored axis', () => {
+    expect(hitTestCell(250, 100, cells)).toBe(0);
+    expect(hitTestCell(150, 100, cells)).toBe(1);
+    expect(hitTestCell(50, 100, cells)).toBe(2);
+    expect(hitTestCell(50, 400, cells)).toBe(5);
+    expect(hitTestCell(215, 100, cells)).toBe(-1);
+  });
+});
+
 describe('insertionIndexAt', () => {
   const target = cell('a', 0, 0);
 
@@ -110,5 +130,13 @@ describe('columnReorderIndex', () => {
   it('moves left when crossing a left neighbour center', () => {
     expect(columnReorderIndex(40, centers, 2)).toBe(0);
     expect(columnReorderIndex(140, centers, 2)).toBe(1);
+  });
+
+  it('mirrors for right-to-left centers (RTL board)', () => {
+    const rtl = [350, 250, 150, 50];
+    expect(columnReorderIndex(240, rtl, 1)).toBe(1);
+    expect(columnReorderIndex(140, rtl, 1)).toBe(2);
+    expect(columnReorderIndex(40, rtl, 1)).toBe(3);
+    expect(columnReorderIndex(360, rtl, 2)).toBe(0);
   });
 });

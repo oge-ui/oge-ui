@@ -58,6 +58,7 @@ import {
   type OgeSplitterResizeStartEvent,
   type OgeSplitterSize,
   type OgeSplitterView,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { isDevMode } from './dev';
 import { useOgeSplitterConfig } from './layout-config';
@@ -667,9 +668,7 @@ export const OgeSplitter: ForwardRefExoticComponent<
       return true;
     };
 
-    const isRtl = (): boolean =>
-      !!hostRef.current &&
-      getComputedStyle(hostRef.current).direction === 'rtl';
+    const isRtl = (): boolean => !!hostRef.current && ogeIsRtl(hostRef.current);
 
     const onSeparatorPointerDown = (
       separatorIndex: number,

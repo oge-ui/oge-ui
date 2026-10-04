@@ -113,6 +113,7 @@ function OgePivotGridInner<T>(
       calculatedFields: rx.input<readonly OgePivotCalculatedField[]>(NO_CALCS),
       rowHeaderLayout: rx.input<OgePivotRowHeaderLayout>('compact'),
       locale: rx.input<string | undefined>(undefined),
+      rtlEnabled: rx.input<boolean | undefined>(undefined),
     };
     const core = new OgePivotGridCore<T>(rx, {
       inputs: {
@@ -129,6 +130,7 @@ function OgePivotGridInner<T>(
         calculatedFields: input.calculatedFields,
         rowHeaderLayout: input.rowHeaderLayout,
         locale: input.locale,
+        rtlEnabled: input.rtlEnabled,
       },
       fieldLayoutChange: (fields) =>
         latest.current.onFieldLayoutChange?.(fields),
@@ -166,6 +168,7 @@ function OgePivotGridInner<T>(
   model.input.locale.set(
     props.locale ?? pivotConfig.locale ?? ogeDefaultLocale(),
   );
+  model.input.rtlEnabled.set(props.rtlEnabled);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -179,6 +182,13 @@ function OgePivotGridInner<T>(
   useEffect(() => {
     core.revive();
     return () => core.dispose();
+  }, [core]);
+
+  // the rtlEnabled fallback: the page direction, kept current
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    return core.watchDirection(host);
   }, [core]);
 
   // remote load: issued when the serialized request changed
@@ -264,7 +274,10 @@ function OgePivotGridInner<T>(
   // --- keyboard: one APG grid over headers + values ------------------------
   const onGridKeyDown = (event: ReactKeyboardEvent<HTMLElement>): void => {
     const target = event.currentTarget;
-    const outcome = core.gridKeydown(event, pivotIsRtl(target));
+    const outcome = core.gridKeydown(
+      event,
+      pivotIsRtl(target, props.rtlEnabled),
+    );
     if (!outcome) return;
     event.preventDefault();
     if (!outcome.moved) return;
@@ -319,7 +332,11 @@ function OgePivotGridInner<T>(
       core.openHeaderMenu(
         axis,
         line,
-        pivotKeyboardPointer(event, target.getBoundingClientRect()),
+        pivotKeyboardPointer(
+          event,
+          target.getBoundingClientRect(),
+          pivotIsRtl(target, props.rtlEnabled),
+        ),
       );
       focusMenuItem();
       return;
@@ -333,12 +350,13 @@ function OgePivotGridInner<T>(
     (event: ReactKeyboardEvent<HTMLElement>): void => {
       const chip = event.currentTarget;
       const rect = chip.getBoundingClientRect();
+      const rtl = pivotIsRtl(chip, props.rtlEnabled);
       const outcome = core.fieldChipKeydown(
         field,
         zone,
         event,
-        { x: rect.left, y: rect.bottom },
-        pivotIsRtl(chip),
+        { x: rtl ? rect.right : rect.left, y: rect.bottom },
+        rtl,
       );
       if (!outcome) return;
       const inChooser = !!chip.closest('.oge-pivot-chooser');
@@ -456,6 +474,13 @@ function OgePivotGridInner<T>(
         props.className ? `oge-pivot-grid ${props.className}` : 'oge-pivot-grid'
       }
       style={props.style}
+      dir={
+        props.rtlEnabled === undefined
+          ? undefined
+          : props.rtlEnabled
+            ? 'rtl'
+            : 'ltr'
+      }
       onKeyDown={(event) => {
         if (event.key !== 'Escape') return;
         const hadMenu = !!core.menu();

@@ -4,6 +4,8 @@ import {
   DestroyRef,
   ElementRef,
   ViewEncapsulation,
+  afterNextRender,
+  computed,
   contentChild,
   effect,
   inject,
@@ -71,7 +73,11 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   imports: [NgTemplateOutlet, OgeGanttTaskDialog],
-  host: { class: 'oge-gantt' },
+  host: {
+    class: 'oge-gantt',
+    '[class.oge-gantt-rtl]': 'core.rtl()',
+    '[attr.dir]': 'hostDir()',
+  },
   styleUrl: './gantt.scss',
   template: `
     <div
@@ -454,27 +460,30 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
                 [attr.width]="core.scale().totalPx"
                 aria-hidden="true"
               >
-                @for (
-                  arrow of core.windowArrows();
-                  track arrow.dependency.key
-                ) {
-                  <path
-                    class="oge-gantt-arrow"
-                    [class.oge-gantt-arrow-critical]="arrow.critical"
-                    [class.oge-gantt-arrow-selected]="
-                      arrow.dependency.key === core.selectedDependencyKey()
-                    "
-                    [attr.d]="arrow.path"
-                    (click)="core.onArrowClick(arrow.dependency, $event)"
-                  />
-                }
-                @if (core.linkPreview(); as preview) {
-                  <path
-                    class="oge-gantt-arrow oge-gantt-arrow-preview"
-                    [class.oge-gantt-arrow-invalid]="!preview.valid"
-                    [attr.d]="preview.path"
-                  />
-                }
+                <!-- logical x; RTL mirrors the whole group (x' = width - x) -->
+                <g [attr.transform]="core.arrowsTransform()">
+                  @for (
+                    arrow of core.windowArrows();
+                    track arrow.dependency.key
+                  ) {
+                    <path
+                      class="oge-gantt-arrow"
+                      [class.oge-gantt-arrow-critical]="arrow.critical"
+                      [class.oge-gantt-arrow-selected]="
+                        arrow.dependency.key === core.selectedDependencyKey()
+                      "
+                      [attr.d]="arrow.path"
+                      (click)="core.onArrowClick(arrow.dependency, $event)"
+                    />
+                  }
+                  @if (core.linkPreview(); as preview) {
+                    <path
+                      class="oge-gantt-arrow oge-gantt-arrow-preview"
+                      [class.oge-gantt-arrow-invalid]="!preview.valid"
+                      [attr.d]="preview.path"
+                    />
+                  }
+                </g>
               </svg>
               @for (bar of core.windowBars(); track bar.task.key) {
                 <div
@@ -852,6 +861,13 @@ export class OgeGantt<
   readonly autoScheduling = input(false);
   readonly locale = input<string | undefined>(undefined);
   readonly messages = input<Partial<OgeGanttMessages>>({});
+  /**
+   * Right-to-left layout: mirrors the timeline, the arrow keys, drag deltas
+   * and the dependency arrows. Unset follows the page direction (the nearest
+   * `dir` / computed `direction`, kept current while it changes); an explicit
+   * value is also set as `dir` on the host.
+   */
+  readonly rtlEnabled = input<boolean | undefined>(undefined);
 
   /** Master editing switch (dx `editing.enabled`). */
   readonly editingEnabled = input(true);
@@ -948,6 +964,7 @@ export class OgeGantt<
         allowDependencyDeleting: () => this.allowDependencyDeleting(),
         readOnly: () => this.readOnly(),
         selectedTaskKey: () => this.selectedTaskKey(),
+        rtlEnabled: () => this.rtlEnabled(),
         config: () => this.config,
       },
       events: this.coreEvents(),
@@ -962,7 +979,15 @@ export class OgeGantt<
     SIGNAL_ADAPTER,
   );
 
+  /** An explicit `rtlEnabled` is mirrored to `dir` so CSS follows it. */
+  protected readonly hostDir = computed(() => {
+    const rtl = this.rtlEnabled();
+    return rtl === undefined ? null : rtl ? 'rtl' : 'ltr';
+  });
+
   constructor() {
+    // direction is read in the browser only, after the first render
+    afterNextRender(() => this.core.connectDirection());
     effect(() => this.core.syncRenderedRange());
     // the core's announcements go through the document's shared live region
     effect(() => {

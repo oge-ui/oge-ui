@@ -81,4 +81,37 @@ const exportExcel = async () => {
 </>`,
     }),
   },
+  {
+    title: 'RTL',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-pivot': ['OgePivotGrid'] },
+      types: { '@oge-ui/react-pivot': ['OgePivotFieldDef'] },
+      name: 'RtlPivot',
+      before: `interface Sale {
+  region: string;
+  country: string;
+  date: string;
+  amount: number;
+}
+
+const sales: Sale[] = [
+  { region: 'EMEA', country: 'Germany', date: '2026-02-11', amount: 1249 },
+  { region: 'EMEA', country: 'Türkiye', date: '2026-05-02', amount: 890 },
+  { region: 'APAC', country: 'Japan', date: '2025-11-19', amount: 2140 },
+];
+
+const fields: OgePivotFieldDef<Sale>[] = [
+  { dataField: 'region', area: 'row' },
+  { dataField: 'country', area: 'row' },
+  { dataField: 'date', area: 'column', groupInterval: 'year' },
+  { dataField: 'amount', area: 'data', summaryType: 'sum' },
+];`,
+      jsx: `<>
+  {/* rtlEnabled (unset = follow the page's dir) mirrors the pivot: row
+      headers on the right, collapsed chevrons pointing left, ArrowLeft /
+      ArrowRight and Ctrl+Arrow chip moves swapped, menus opening leftwards. */}
+  <OgePivotGrid data={sales} fields={fields} rtlEnabled />
+</>`,
+    }),
+  },
 ];

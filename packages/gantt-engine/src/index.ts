@@ -10,6 +10,7 @@
 /* ---------------- the controller ---------------- */
 export {
   OgeGanttCore,
+  mirrorGanttKey,
   type GanttArrow,
   type GanttBar,
   type GanttBarGestureKind,

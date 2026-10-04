@@ -8,7 +8,7 @@ import {
  * the `llms.txt` generator and the compile gate load this module in plain Node.
  *
  * Section-for-section mirror of `../gantt/overview-snippets.ts`, per the
- * parity standard (`docs/REACT-PARITY.md`): the same nine sections, same
+ * parity standard (`docs/REACT-PARITY.md`): the same ten sections, same
  * order, same headings, same example content, React idiom.
  */
 export const GANTT_OVERVIEW_DEMOS: readonly ReactDemo[] = [
@@ -409,6 +409,32 @@ const exportPng = async () => {
   <OgeGanttConfigProvider config={{ locale: 'de' }}>
     <OgeGantt tasks={tasks} locale="de" style={{ height: 300 }} />
   </OgeGanttConfigProvider>
+</>`,
+    }),
+  },
+  {
+    title: 'RTL',
+    source: reactDemoSource({
+      use: { '@oge-ui/react-gantt': ['OgeGantt'] },
+      name: 'RtlPlan',
+      before: `const tasks = [
+  { id: 1, title: 'Release 1.0', start: new Date(2026, 7, 3), end: new Date(2026, 7, 21) },
+  { id: 2, parentId: 1, title: 'Design', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7), progress: 100 },
+  { id: 3, parentId: 1, title: 'Implementation', start: new Date(2026, 7, 7), end: new Date(2026, 7, 17), progress: 45 },
+  { id: 4, parentId: 1, title: 'Ship', start: new Date(2026, 7, 21), end: new Date(2026, 7, 21) },
+];
+
+const links = [
+  { id: 'a', predecessorId: 2, successorId: 3 },
+  { id: 'b', predecessorId: 3, successorId: 4 },
+];`,
+      jsx: `<>
+  {/* rtlEnabled (unset = follow the page's dir) mirrors the whole chart:
+      the task tree sits on the right, the timeline runs right to left,
+      dependency arrows and drags follow, and the Left/Right keys swap —
+      Left expands a summary, Alt+Shift+Left indents, Ctrl+Left moves a
+      bar later. */}
+  <OgeGantt tasks={tasks} dependencies={links} rtlEnabled style={{ height: 300 }} />
 </>`,
     }),
   },

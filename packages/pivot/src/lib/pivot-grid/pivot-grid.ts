@@ -143,6 +143,8 @@ function fieldDefOf<T>(directive: OgePivotField<T>): OgePivotFieldDef<T> {
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'oge-pivot-grid',
+    '[attr.dir]':
+      "rtlEnabled() === undefined ? null : rtlEnabled() ? 'rtl' : 'ltr'",
     '(document:click)': 'onDocumentClick($event)',
     '(keydown.escape)': 'closePopups()',
   },
@@ -186,6 +188,14 @@ export class OgePivotGrid<T = unknown> {
    * `provideOgePivotConfig({ locale })`, then Angular's `LOCALE_ID`.
    */
   readonly locale = input<string | undefined>(undefined);
+  /**
+   * Right-to-left layout: row headers on the right, mirrored expand
+   * chevrons, Left/Right arrow keys and field-chip moves, menus opening
+   * leftwards. Unset follows the page — the computed `direction` or the
+   * nearest `dir`, read after the first render and kept current; an explicit
+   * value also sets `dir` on the host.
+   */
+  readonly rtlEnabled = input<boolean | undefined>(undefined);
   /** Debounced notification whenever the persistable state changes. */
   readonly stateChange = output<PivotGridStateSnapshot>();
   /**
@@ -235,6 +245,7 @@ export class OgePivotGrid<T = unknown> {
       calculatedFields: () => this.calculatedFields(),
       rowHeaderLayout: () => this.rowHeaderLayout(),
       locale: () => this.effLocale(),
+      rtlEnabled: () => this.rtlEnabled(),
     },
     fieldLayoutChange: (fields) => this.fieldLayoutChange.emit(fields),
   });
@@ -312,6 +323,11 @@ export class OgePivotGrid<T = unknown> {
     effect(() => {
       const request = this.core.remoteRequest();
       untracked(() => this.core.load(request));
+    });
+    // the rtlEnabled fallback: the page direction, kept current
+    afterNextRender(() => {
+      const stop = this.core.watchDirection(this.hostRef.nativeElement);
+      destroyRef.onDestroy(stop);
     });
     afterNextRender(() => {
       const viewport = this.viewportRef()?.nativeElement;
@@ -517,7 +533,10 @@ export class OgePivotGrid<T = unknown> {
   /** Arrow / Home / End over headers and value cells — one APG grid. */
   protected onGridKeydown(event: KeyboardEvent): void {
     const target = event.target as HTMLElement;
-    const outcome = this.core.gridKeydown(event, isRtl(target));
+    const outcome = this.core.gridKeydown(
+      event,
+      isRtl(target, this.rtlEnabled()),
+    );
     if (!outcome) return;
     event.preventDefault();
     if (!outcome.moved) return;
@@ -556,7 +575,11 @@ export class OgePivotGrid<T = unknown> {
       this.core.openHeaderMenu(
         axis,
         line,
-        pivotKeyboardPointer(event, target.getBoundingClientRect()),
+        pivotKeyboardPointer(
+          event,
+          target.getBoundingClientRect(),
+          isRtl(target, this.rtlEnabled()),
+        ),
       );
       this.focusMenuItem(0, true);
       return;
@@ -602,12 +625,13 @@ export class OgePivotGrid<T = unknown> {
   ): void {
     const chip = event.currentTarget as HTMLElement;
     const rect = chip.getBoundingClientRect();
+    const rtl = isRtl(chip, this.rtlEnabled());
     const outcome = this.core.fieldChipKeydown(
       field,
       zone,
       event,
-      { x: rect.left, y: rect.bottom },
-      isRtl(chip),
+      { x: rtl ? rect.right : rect.left, y: rect.bottom },
+      rtl,
     );
     if (!outcome) return;
     const inChooser = !!chip.closest('.oge-pivot-chooser');

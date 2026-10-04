@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ratioToValue } from '@oge-ui/core';
+import { ogeIsRtl } from '@oge-ui/behavior';
 
 /** A 2D saturation/brightness change from the gradient surface. */
 export interface OgeColorSurfaceChange {
@@ -91,7 +92,7 @@ export class OgeColorSurface {
   }
 
   private isRtl(): boolean {
-    return getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
+    return ogeIsRtl(this.hostEl.nativeElement);
   }
 
   private atPointer(

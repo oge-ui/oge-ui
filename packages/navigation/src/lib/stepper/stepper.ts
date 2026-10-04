@@ -24,6 +24,7 @@ import {
   stepItemDescriptor,
   stepState,
   stepperKeyTarget,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { OGE_STEPPER_CONFIG, type OgeStepperMessages } from './config';
 import { OgeStep } from './step';
@@ -521,8 +522,7 @@ export class OgeStepper {
     const vertical = this.orientation() === 'vertical';
     const rtl =
       !vertical &&
-      getComputedStyle(this.headerEls()[0]?.nativeElement ?? document.body)
-        .direction === 'rtl';
+      ogeIsRtl(this.headerEls()[0]?.nativeElement ?? document.body);
     const ds = this.descriptors();
     // wrap = false inside the helper: a process does not loop from the last
     // step back to the first.

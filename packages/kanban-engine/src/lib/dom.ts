@@ -6,6 +6,7 @@
  * column-reorder drag, and the focus/scroll/menu helpers. Only standard DOM
  * APIs; the pure arithmetic lives in `drag-math.ts`.
  */
+import { observeDirection, ogeIsRtl } from '@oge-ui/behavior';
 import type { KanbanColumnDef, KanbanSwimlane } from './board-model';
 import {
   isKanbanLegalTarget,
@@ -25,6 +26,21 @@ export function kanbanCssEscape(value: string): string {
   return typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
     ? CSS.escape(value)
     : value.replace(/["\\]/g, '\\$&');
+}
+
+/**
+ * Follows the board's document direction: calls `onChange` with the current
+ * RTL state right away, then whenever a `dir` attribute on the host or an
+ * ancestor changes it (`ogeIsRtl` / `observeDirection` from
+ * `@oge-ui/behavior`). Both layers call it after the first render and keep
+ * the result as the `rtlEnabled` fallback. Returns the disconnect function.
+ */
+export function watchKanbanDirection(
+  host: HTMLElement,
+  onChange: (rtl: boolean) => void,
+): () => void {
+  onChange(ogeIsRtl(host));
+  return observeDirection(host, (direction) => onChange(direction === 'rtl'));
 }
 
 function laneOf(el: HTMLElement): string | null {

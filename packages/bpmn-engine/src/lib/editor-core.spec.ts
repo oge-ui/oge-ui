@@ -271,6 +271,45 @@ describe('OgeBpmnEditorCore', () => {
     expect(core.propertiesWidth()).toBe(core.PROPS_MIN);
   });
 
+  it('mirrors the chrome in RTL: separator keys and the context-pad side; the canvas nudge stays physical', async () => {
+    const { core, wrap } = setup();
+    wrap.setAttribute('dir', 'rtl');
+    core.revive();
+    expect(core.chromeRtl()).toBe(true);
+    // the rail sits on the right: ArrowLeft moves its separator left = wider
+    core.onPanelResizeKey(key('ArrowLeft'), 'rail');
+    expect(core.railWidth()).toBe(80);
+    core.onPanelResizeKey(key('ArrowLeft'), 'properties');
+    expect(core.propertiesWidth()).toBe(224);
+
+    await core.importXml(demoProcessXml('bpmn'));
+    core.select(['Activity_approve']);
+    const node = core.nodeViews().find((n) => n.id === 'Activity_approve');
+    const pad = core.padView();
+    expect(pad?.side).toBe('left');
+    expect(node).toBeDefined();
+    const zoom = core.vp().zoom;
+
+    // canvas nudges move in diagram space — ArrowRight still moves right
+    const before = core.nodeViews().find((n) => n.id === 'Activity_approve');
+    core.onCanvasKeydown(key('ArrowRight'));
+    const after = core.nodeViews().find((n) => n.id === 'Activity_approve');
+    expect((after?.x ?? 0) - (before?.x ?? 0)).toBeGreaterThan(0);
+
+    // a later dir change is observed
+    wrap.setAttribute('dir', 'ltr');
+    await Promise.resolve();
+    expect(core.chromeRtl()).toBe(false);
+    const ltrPad = core.padView();
+    expect(ltrPad?.side).toBe('right');
+    // RTL anchors 8px off the shape's left edge, LTR 8px off its right edge
+    expect((ltrPad?.x ?? 0) - (pad?.x ?? 0)).toBeCloseTo(
+      ((node?.width ?? 0) + (after?.x ?? 0) - (before?.x ?? 0)) * zoom + 16,
+    );
+    core.destroy();
+    wrap.removeAttribute('dir');
+  });
+
   it('survives a destroy → revive cycle on the same instance (StrictMode)', async () => {
     const { core, events } = setup();
     core.destroy();

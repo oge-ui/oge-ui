@@ -46,6 +46,8 @@ import {
   type OgeContextMenuSource,
   type OgeGridRowTogglingEvent,
   type OgeGridToggleKind,
+  ogeIsRtl,
+  observeDirection,
 } from '@oge-ui/behavior';
 import { groupKeyFilter, type GroupInterval } from '@oge-ui/core';
 import { OgeDateRangeBox } from '@oge-ui/react-inputs';
@@ -1767,14 +1769,20 @@ function OgeGridInner<T extends object>(
     if (!viewport || !host) return;
     model.viewportHeight.set(viewport.clientHeight);
     model.hostWidth.set(viewport.clientWidth);
-    model.detectedRtl.set(getComputedStyle(host).direction === 'rtl');
-    if (typeof ResizeObserver === 'undefined') return;
+    model.detectedRtl.set(ogeIsRtl(host));
+    const stopDirection = observeDirection(host, (direction) =>
+      model.detectedRtl.set(direction === 'rtl'),
+    );
+    if (typeof ResizeObserver === 'undefined') return stopDirection;
     const observer = new ResizeObserver(() => {
       model.viewportHeight.set(viewport.clientHeight);
       model.hostWidth.set(viewport.clientWidth);
     });
     observer.observe(viewport);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      stopDirection();
+    };
   }, [model]);
 
   // state persistence

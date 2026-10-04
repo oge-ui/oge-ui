@@ -175,3 +175,72 @@ describe('<OgePivotGrid> — keyboard alternatives (mirror of the Angular spec)'
     expect(texts).toContain('Summary type: Count');
   });
 });
+
+describe('<OgePivotGrid> — RTL (mirror of the Angular spec)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const RTL_FIELDS: OgePivotFieldDef<Sale>[] = [
+    { dataField: 'region', area: 'row' },
+    { dataField: 'year', area: 'column' },
+    { dataField: 'amount', area: 'data', summaryType: 'sum' },
+  ];
+
+  function arrowFromFirstCell(container: HTMLElement, key: string) {
+    const first = container.querySelector('[data-cell="0-0"]') as HTMLElement;
+    act(() => first.focus());
+    fireEvent.keyDown(first, { key });
+    flush();
+    return active();
+  }
+
+  it('follows a dir="rtl" ancestor: ArrowRight walks to the row header', () => {
+    const { container } = render(
+      <StrictMode>
+        <div dir="rtl">
+          <OgePivotGrid data={SALES} fields={RTL_FIELDS} />
+        </div>
+      </StrictMode>,
+    );
+    expect(arrowFromFirstCell(container, 'ArrowRight').classList).toContain(
+      'oge-pivot-row-header',
+    );
+  });
+
+  it('an explicit rtlEnabled wins and sets dir on the host', () => {
+    const { container, rerender } = render(
+      <div dir="rtl">
+        <OgePivotGrid data={SALES} fields={RTL_FIELDS} rtlEnabled={false} />
+      </div>,
+    );
+    const grid = container.querySelector('.oge-pivot-grid') as HTMLElement;
+    expect(grid.getAttribute('dir')).toBe('ltr');
+    expect(arrowFromFirstCell(container, 'ArrowLeft').classList).toContain(
+      'oge-pivot-row-header',
+    );
+    rerender(
+      <div dir="rtl">
+        <OgePivotGrid data={SALES} fields={RTL_FIELDS} rtlEnabled />
+      </div>,
+    );
+    expect(grid.getAttribute('dir')).toBe('rtl');
+  });
+
+  it('labels the field menu moves by screen side', () => {
+    const { container } = render(
+      <OgePivotGrid data={SALES} fields={RTL_FIELDS} rtlEnabled />,
+    );
+    const region = chip(container, 'row', 'Region');
+    act(() => region.focus());
+    fireEvent.keyDown(region, { key: 'F10', shiftKey: true });
+    flush();
+    const items = Array.from(
+      container.querySelectorAll('.oge-context-menu .oge-menu-item'),
+    ).map((item) => item.textContent?.trim());
+    expect(items.slice(0, 2)).toEqual(['Move right', 'Move left']);
+  });
+});

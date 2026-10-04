@@ -154,6 +154,25 @@ describe('<OgeBpmnEditor>', () => {
     expect(live(container)).toBe('Task created');
   });
 
+  it('puts the context pad left of the shape in an RTL page; the canvas stays LTR', async () => {
+    document.documentElement.setAttribute('dir', 'rtl');
+    try {
+      const { container, handle } = await imported();
+      act(() => handle().select(['Activity_approve']));
+      const pad = container.querySelector('.oge-bpmn-context-pad');
+      expect(pad?.classList.contains('oge-bpmn-context-pad-left')).toBe(true);
+      act(() => document.documentElement.setAttribute('dir', 'ltr'));
+      await act(async () => undefined);
+      expect(
+        container
+          .querySelector('.oge-bpmn-context-pad')
+          ?.classList.contains('oge-bpmn-context-pad-left'),
+      ).toBe(false);
+    } finally {
+      document.documentElement.removeAttribute('dir');
+    }
+  });
+
   it('commits a properties-panel field on the native change, once', async () => {
     const onElementsChanged = vi.fn();
     const { container, handle } = await imported({ onElementsChanged });

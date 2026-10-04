@@ -22,6 +22,7 @@ import {
   DRAG_DROP_SNIPPET,
   GETTING_STARTED_SNIPPET,
   KEYBOARD_SNIPPET,
+  RTL_SNIPPET,
   SWIMLANES_SNIPPET,
   TEMPLATE_SNIPPET,
   WIP_SNIPPET,
@@ -40,6 +41,7 @@ const SECTIONS = [
   'Edit dialog & events',
   'Card template',
   'Configuration & i18n',
+  'RTL',
 ] as const;
 
 type DemoCardRow = Record<string, unknown>;
@@ -310,6 +312,25 @@ type DemoCardRow = Record<string, unknown>;
           style="height: 380px"
         />
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['rtlEnabled', 'mirrored keys', 'logical layout']"
+        heading="RTL"
+        description="<code>rtlEnabled</code> (unset follows the page's <code>dir</code> and keeps following it) mirrors the board: the first column sits on the right, ArrowLeft moves focus to the next column and Ctrl+ArrowLeft moves the focused card there, the column-reorder drag and the drop hit-testing follow the mirrored geometry, and the collapsed-lane chevron points left. An explicit value also sets <code>dir</code> on the host."
+        [code]="rtlSnippet"
+        language="ts"
+      >
+        <oge-kanban
+          [dataSource]="rtlTasks"
+          keyExpr="id"
+          columnExpr="status"
+          titleExpr="title"
+          [columns]="laneColumns"
+          [rtlEnabled]="true"
+          [allowColumnReordering]="true"
+          style="height: 380px"
+        />
+      </app-demo-card>
     }
   `,
 })
@@ -326,6 +347,14 @@ export class KanbanOverviewPage {
   protected readonly dialogEventsSnippet = DIALOG_EVENTS_SNIPPET;
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
+  protected readonly rtlSnippet = RTL_SNIPPET;
+
+  protected readonly rtlTasks: DemoCardRow[] = [
+    { id: 1, status: 'todo', title: 'Ctrl+ArrowLeft moves me forward' },
+    { id: 2, status: 'todo', title: 'Translate the onboarding flow' },
+    { id: 3, status: 'doing', title: 'Mirror the icons' },
+    { id: 4, status: 'done', title: 'Arabic and Hebrew catalogs' },
+  ];
 
   protected readonly basicColumns = [
     { key: 'todo', title: 'To do', color: '#64748b' },

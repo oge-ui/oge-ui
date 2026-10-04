@@ -9,7 +9,11 @@ import { DemoCard } from '../../shared/demo-card';
 import { DocHeader } from '../../shared/doc-header';
 import { FrameworkService } from '../../shared/framework.service';
 import { ReactPivotAnalyticsDemos } from '../react-pivot/analytics';
-import { ANALYTICS_SNIPPET, EXPORT_SNIPPET } from './analytics-snippets';
+import {
+  ANALYTICS_SNIPPET,
+  EXPORT_SNIPPET,
+  RTL_SNIPPET,
+} from './analytics-snippets';
 import { makeAnalyticsSales, money, type Sale } from './pivot-demo-data';
 
 @Component({
@@ -210,6 +214,36 @@ import { makeAnalyticsSales, money, type Sale } from './pivot-demo-data';
           />
         </oge-pivot-grid>
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['rtlEnabled', 'mirrored keys', 'logical layout']"
+        heading="RTL"
+        description="<code>rtlEnabled</code> (unset follows the page's <code>dir</code> and keeps following it) mirrors the pivot: row headers and the field panel's first chips sit on the right, collapsed expand chevrons point left, ArrowLeft/Right and Ctrl+Arrow chip moves swap, the field menu labels its moves by screen side and menus open leftwards. An explicit value also sets <code>dir</code> on the host."
+        [code]="rtlSnippet"
+        language="ts"
+      >
+        <oge-pivot-grid
+          [data]="sales"
+          [rtlEnabled]="true"
+          style="max-height: 420px"
+        >
+          <oge-pivot-field dataField="region" area="row" />
+          <oge-pivot-field dataField="country" area="row" />
+          <oge-pivot-field
+            dataField="date"
+            caption="Year"
+            area="column"
+            groupInterval="year"
+          />
+          <oge-pivot-field
+            dataField="amount"
+            caption="Amount"
+            area="data"
+            summaryType="sum"
+            [format]="money"
+          />
+        </oge-pivot-grid>
+      </app-demo-card>
     }
 
     <h3>Notes</h3>
@@ -267,6 +301,7 @@ export class PivotAnalyticsPage {
   protected readonly sales = makeAnalyticsSales(5000);
   protected readonly analyticsSnippet = ANALYTICS_SNIPPET;
   protected readonly exportSnippet = EXPORT_SNIPPET;
+  protected readonly rtlSnippet = RTL_SNIPPET;
 
   // optional: the React view renders neither Angular grid
   protected readonly analytics =

@@ -62,6 +62,7 @@ import {
   type OgeSplitterResizeStartEvent,
   type OgeSplitterSize,
   type OgeSplitterView,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { OgeElementAttrs } from '@oge-ui/layout/element-attrs';
 import { OGE_SPLITTER_CONFIG } from './config';
@@ -978,7 +979,7 @@ export class OgeSplitter {
   }
 
   private isRtl(): boolean {
-    return getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    return ogeIsRtl(this.host.nativeElement);
   }
 
   private resolveIndex(target: number | string): number {

@@ -17,6 +17,7 @@ import {
   type OgeSelectDisabledExpr,
   type OgeSelectDisplayExpr,
   type OgeSelectValueExpr,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { useOgeField, type OgeControlProps } from './use-field';
 
@@ -161,9 +162,7 @@ export const OgeRadioGroup = forwardRef(function OgeRadioGroupRender<TItem>(
       } else if (key === 'ArrowUp') {
         forward = false;
       } else {
-        const rtl =
-          hostRef.current !== null &&
-          getComputedStyle(hostRef.current).direction === 'rtl';
+        const rtl = hostRef.current !== null && ogeIsRtl(hostRef.current);
         forward = (key === 'ArrowRight') !== rtl;
       }
       const position = enabledIndices.indexOf(focusTargetIndex);

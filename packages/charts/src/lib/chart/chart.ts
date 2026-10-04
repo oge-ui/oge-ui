@@ -69,6 +69,7 @@ import {
   measureChartElement,
   mergeOgeChartsMessages,
   nextChartSelection,
+  observeChartRtl,
   observeChartSize,
   printOgeChart,
   type OgeCartesianHoverState,
@@ -717,6 +718,11 @@ export class OgeChart<T extends object = Record<string, unknown>> {
   constructor() {
     afterNextRender(() => {
       this.autoRtl.set(detectChartRtl(this.hostEl.nativeElement));
+      // follow a later `dir` flip (an app-wide language switch)
+      const stopRtl = observeChartRtl(this.hostEl.nativeElement, (rtl) =>
+        this.autoRtl.set(rtl),
+      );
+      this.destroyRef.onDestroy(stopRtl);
       const stop = observeChartSize(this.plotWrapEl().nativeElement, (size) =>
         this.hostSize.set(size),
       );

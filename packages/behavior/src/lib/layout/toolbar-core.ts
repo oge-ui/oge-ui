@@ -3,6 +3,7 @@ import {
   type OgeToolbarFitResult,
   type OgeToolbarOverflowPolicy,
 } from '@oge-ui/core';
+import { ogeIsRtl } from '../a11y/direction';
 import type { OgeMenuItem } from '../menu/menu-types';
 import type { OgePopupCloseReason } from '../overlay/anchored-panel-core';
 
@@ -566,6 +567,8 @@ export interface OgeToolbarStyleMetrics {
 export function readToolbarStyleMetrics(
   style: CSSStyleDeclaration,
   vertical: boolean,
+  /** The toolbar host: adds the nearest-`dir` fallback of `ogeIsRtl`. */
+  host?: Element | null,
 ): OgeToolbarStyleMetrics {
   const padding = vertical
     ? parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
@@ -573,7 +576,7 @@ export function readToolbarStyleMetrics(
       parseFloat(style.paddingInlineEnd || style.paddingRight);
   const gap = parseFloat(vertical ? style.rowGap : style.columnGap);
   return {
-    rtl: style.direction === 'rtl',
+    rtl: style.direction === 'rtl' || (host ? ogeIsRtl(host) : false),
     padding: Number.isFinite(padding) ? padding : 0,
     gap: Number.isFinite(gap) ? gap : null,
   };

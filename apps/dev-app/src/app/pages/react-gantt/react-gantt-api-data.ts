@@ -163,6 +163,13 @@ export const OGE_REACT_GANTT_API: ApiSections = {
             'Per-instance message overrides, merged over the provider config per top-level block.',
         },
         {
+          name: 'rtlEnabled',
+          type: 'boolean | undefined',
+          default: 'undefined',
+          description:
+            'Right-to-left layout: the task tree moves to the right, the timeline runs from right to left (dependency arrows, baselines, today line and drag tip included), pointer drags and the splitter invert their direction and the Left/Right keys mirror — Left expands a summary, Alt+Shift+Left indents and Ctrl+Left moves a bar later. Unset follows the page: the computed <code>direction</code> or the nearest <code>dir</code> attribute, read after the first render and kept current while it changes; an explicit value also sets <code>dir</code> on the host.',
+        },
+        {
           name: 'selectedTaskKey / defaultSelectedTaskKey',
           type: 'RowKey | null',
           default: 'null',

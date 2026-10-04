@@ -2,6 +2,8 @@ import {
   beginPointerDragDrop,
   formatCellValue,
   isOgeDragExcludedTarget,
+  observeDirection,
+  ogeIsRtl,
   ogeOwnedClosest,
   type OgeReactiveCell,
   type OgeReactivityAdapter,
@@ -130,6 +132,11 @@ export interface OgePivotGridInputs<T> {
    * formats); `undefined` = the runtime default.
    */
   locale?(): string | undefined;
+  /**
+   * Explicit right-to-left override; `undefined` follows the page direction
+   * the host reports through {@link OgePivotGridCore.watchDirection}.
+   */
+  rtlEnabled?(): boolean | undefined;
 }
 
 export interface OgePivotGridCoreDeps<T> {
@@ -232,6 +239,10 @@ export class OgePivotGridCore<T = unknown> {
   /** Text of the polite live region (field moves). */
   readonly announcement: OgeReactiveCell<string>;
   readonly menu: OgeReactiveCell<OgePivotMenuState | null>;
+  /** The page direction (the `rtlEnabled` fallback), see {@link watchDirection}. */
+  readonly detectedRtl: OgeReactiveCell<boolean>;
+  /** The resolved direction: `rtlEnabled`, else the page direction. */
+  readonly rtl: () => boolean;
   /** Where the field chip being dragged would land (drop indicator). */
   readonly fieldDropTarget: OgeReactiveCell<OgePivotFieldDropTarget | null>;
   readonly filterPopup: OgeReactiveCell<OgePivotFilterPopupState | null>;
@@ -326,6 +337,8 @@ export class OgePivotGridCore<T = unknown> {
     this.focusedHeader = rx.cell<OgePivotGridPosition | null>(null);
     this.announcement = rx.cell('');
     this.menu = rx.cell<OgePivotMenuState | null>(null);
+    this.detectedRtl = rx.cell(false);
+    this.rtl = rx.derived(() => inputs.rtlEnabled?.() ?? this.detectedRtl());
     this.fieldDropTarget = rx.cell<OgePivotFieldDropTarget | null>(null);
     this.filterPopup = rx.cell<OgePivotFilterPopupState | null>(null);
     this.filterSearch = rx.cell('');
@@ -475,9 +488,11 @@ export class OgePivotGridCore<T = unknown> {
     this.columnWindow = rx.derived(() => {
       const count = this.result().columnLeafCount;
       if (!inputs.virtualScrolling()) return { start: 0, end: count };
+      // RTL scrollLeft runs 0 → -max (the standard model): the window
+      // wants the inline-start offset
       return pivotColumnWindow(
         count,
-        this.scrollPos().left,
+        Math.abs(this.scrollPos().left),
         this.viewportSize().width,
         this.virtualColumnWidth(),
       );
@@ -867,6 +882,18 @@ export class OgePivotGridCore<T = unknown> {
   /** `data-hpos` value of the row header of value row `rowIndex`. */
   rowHeaderPos(rowIndex: number): string {
     return `${String(this.columnDepth() + rowIndex)}-0`;
+  }
+
+  /**
+   * Follows the host's page direction (the `rtlEnabled` fallback): reads it
+   * now and again whenever a `dir` attribute on the host or an ancestor
+   * changes. Hosts call it after the first render; returns the disconnect.
+   */
+  watchDirection(host: Element): () => void {
+    this.detectedRtl.set(ogeIsRtl(host));
+    return observeDirection(host, (direction) =>
+      this.detectedRtl.set(direction === 'rtl'),
+    );
   }
 
   /**
@@ -1337,14 +1364,16 @@ export class OgePivotGridCore<T = unknown> {
     if (area !== null && zone !== null) {
       const order = pivotAreaFields(fields, area);
       const index = order.findIndex((f) => f.id === field.id);
+      // in RTL the earlier position is on the right: the labels follow
+      const rtl = this.rtl();
       items.push(
         {
-          text: messages.moveFieldLeft,
+          text: rtl ? messages.moveFieldRight : messages.moveFieldLeft,
           disabled: index <= 0,
           action: () => this.moveFieldBy(field.id, -1),
         },
         {
-          text: messages.moveFieldRight,
+          text: rtl ? messages.moveFieldLeft : messages.moveFieldRight,
           disabled: index < 0 || index >= order.length - 1,
           action: () => this.moveFieldBy(field.id, 1),
         },

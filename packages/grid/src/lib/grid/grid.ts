@@ -70,6 +70,8 @@ import {
   ogeSeparatorTargetWidth,
   type OgeColumnWidthBounds,
   type OgeGridColumnHidingMode,
+  ogeIsRtl,
+  observeDirection,
 } from '@oge-ui/behavior';
 import {
   OgeContextMenuEcho,
@@ -1282,9 +1284,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       });
       observer.observe(viewport);
       this.destroyRef.onDestroy(() => observer.disconnect());
-      this.detectedRtl.set(
-        getComputedStyle(this.hostRef.nativeElement).direction === 'rtl',
+      const host = this.hostRef.nativeElement;
+      this.detectedRtl.set(ogeIsRtl(host));
+      const stopDirection = observeDirection(host, (direction) =>
+        this.detectedRtl.set(direction === 'rtl'),
       );
+      this.destroyRef.onDestroy(stopDirection);
     });
   }
 

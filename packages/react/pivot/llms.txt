@@ -103,6 +103,7 @@ Predictable wrong guesses, and what to write instead.
 | `calculatedFields` | `readonly OgePivotCalculatedField[]` | `[]` | Measures computed from the other measures of each cell — `{ name, caption, expression: (values) => number \| null, format, displayMode, runningTotal }`. Evaluated on every cell, subtotals and grand totals included, so a ratio stays a ratio of the totals. `displayMode` takes the measure display modes (percent of row / column / grand total, `absoluteVariation` = difference from the previous column, `percentVariation`); `runningTotal` accumulates along an axis. They follow the regular measures in cells, exports and chart data. |
 | `rowHeaderLayout` | `'compact' \| 'outline' \| 'tabular'` | `'compact'` | `compact` indents every level in one column; `outline` gives each row field its own label column (a label only in its field’s column); `tabular` repeats the ancestors on every line so each reads on its own. The row header stays one `rowheader` cell per line, so the keyboard model does not change; the corner shows the row field captions. |
 | `locale` | `string` | `undefined` | BCP 47 locale of the cell text — percent display modes (`33.3%`, `%33,3` in tr-TR, `33,3 %` in de-DE), dates and declarative field `format`s. `undefined` falls back to `<OgePivotConfigProvider config={{ locale }}>`, then `navigator.language`. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: row headers on the right, collapsed expand chevrons pointing left, Left/Right arrow keys and Ctrl+Arrow field-chip moves mirrored, the field menu's move items labelled by screen side, and the context menu and filter popup opening leftwards. Unset follows the page — the computed `direction` or the nearest `dir` attribute, read after the first render and kept current when a `dir` changes; an explicit value also sets `dir` on the host. |
 | `renderCell` | `(cell: OgePivotCellTemplateContext) => ReactNode` | `—` | Custom content of each value cell (one call per measure) — the prepared cell (`text` after formats, display modes and `customizeCell`, `value`, paths, totals flags) plus `rowIndex` / `columnIndex` / `measureIndex`. Angular’s `*ogePivotCellTemplate`. |
 | `renderRowHeader` | `(line: OgePivotAxisLine, context: { rowIndex; segments }) => ReactNode` | `—` | Custom row-header label; the expander and keyboard behaviour stay the grid’s. Angular’s `*ogePivotRowHeaderTemplate`. |
 | `renderColumnHeader` | `(cell: OgePivotHeaderCell) => ReactNode` | `—` | Custom column-header content. Angular’s `*ogePivotColumnHeaderTemplate`. |
@@ -329,6 +330,46 @@ export function SalesReport() {
 
       <button type="button" onClick={exportCsv}>CSV</button>
       <button type="button" onClick={exportExcel}>Excel</button>
+    </>
+  );
+}
+```
+
+### RTL
+
+```ts
+'use client';
+
+import { OgePivotGrid } from '@oge-ui/react-pivot';
+import type { OgePivotFieldDef } from '@oge-ui/react-pivot';
+
+interface Sale {
+  region: string;
+  country: string;
+  date: string;
+  amount: number;
+}
+
+const sales: Sale[] = [
+  { region: 'EMEA', country: 'Germany', date: '2026-02-11', amount: 1249 },
+  { region: 'EMEA', country: 'Türkiye', date: '2026-05-02', amount: 890 },
+  { region: 'APAC', country: 'Japan', date: '2025-11-19', amount: 2140 },
+];
+
+const fields: OgePivotFieldDef<Sale>[] = [
+  { dataField: 'region', area: 'row' },
+  { dataField: 'country', area: 'row' },
+  { dataField: 'date', area: 'column', groupInterval: 'year' },
+  { dataField: 'amount', area: 'data', summaryType: 'sum' },
+];
+
+export function RtlPivot() {
+  return (
+    <>
+      {/* rtlEnabled (unset = follow the page's dir) mirrors the pivot: row
+          headers on the right, collapsed chevrons pointing left, ArrowLeft /
+          ArrowRight and Ctrl+Arrow chip moves swapped, menus opening leftwards. */}
+      <OgePivotGrid data={sales} fields={fields} rtlEnabled />
     </>
   );
 }

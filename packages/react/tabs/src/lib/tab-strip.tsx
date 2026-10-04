@@ -24,6 +24,7 @@ import {
   type OgeTabsSize,
   type OgeTabsStylingMode,
   motionScrollBehavior,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import {
   OgeMenuList,
@@ -149,8 +150,7 @@ export function OgeTabStrip(props: OgeTabStripProps) {
         ? true
         : hasOverflow;
 
-  const isRtl = (): boolean =>
-    !!hostRef.current && getComputedStyle(hostRef.current).direction === 'rtl';
+  const isRtl = (): boolean => !!hostRef.current && ogeIsRtl(hostRef.current);
 
   // --- measurement ---------------------------------------------------------
 

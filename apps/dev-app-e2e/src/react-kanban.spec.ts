@@ -41,7 +41,7 @@ test.describe('React kanban docs', () => {
       'react',
     );
     await expect(page.getByRole('status')).toHaveCount(0);
-    await expect(page.locator('app-react-host .oge-kanban')).toHaveCount(8);
+    await expect(page.locator('app-react-host .oge-kanban')).toHaveCount(9);
   });
 
   test('the api page renders the React table', async ({ page }) => {

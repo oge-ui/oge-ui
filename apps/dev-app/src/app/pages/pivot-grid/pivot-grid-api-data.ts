@@ -81,6 +81,13 @@ export const OGE_PIVOT_GRID_API: ApiSections = {
             'BCP 47 locale of the cell text — percent display modes (<code>33.3%</code>, <code>%33,3</code> in tr-TR, <code>33,3 %</code> in de-DE), dates and declarative field <code>format</code>s. <code>undefined</code> falls back to <code>provideOgePivotConfig({ locale })</code>, then Angular’s <code>LOCALE_ID</code>.',
         },
         {
+          name: 'rtlEnabled',
+          type: 'boolean | undefined',
+          default: 'undefined',
+          description:
+            "Right-to-left layout: row headers on the right, collapsed expand chevrons pointing left, Left/Right arrow keys and Ctrl+Arrow field-chip moves mirrored, the field menu's move items labelled by screen side, and the context menu and filter popup opening leftwards. Unset follows the page — the computed <code>direction</code> or the nearest <code>dir</code> attribute, read after the first render and kept current when a <code>dir</code> changes; an explicit value also sets <code>dir</code> on the host.",
+        },
+        {
           name: 'stateKey',
           type: 'string | undefined',
           description:
