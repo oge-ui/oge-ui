@@ -50,21 +50,21 @@ export const OGE_REACT_CHART_API: ApiSections = {
           type: 'OgeChartAxisOptions',
           default: '{}',
           description:
-            'Argument axis: <code>type</code> auto-detects (numbers / dates / categories) when unset; <code>min</code>/<code>max</code>, <code>inverted</code>, <code>grid</code>, <code>title</code>, <code>labelFormat</code>, <code>labelOverlap</code> (<code>rotate</code>/<code>skip</code>/<code>none</code>).',
+            'Argument axis: <code>type</code> auto-detects (numbers / dates / categories) when unset; <code>min</code>/<code>max</code>, <code>inverted</code>, <code>grid</code>, <code>title</code>; <code>label</code> (<code>OgeChartAxisLabelOptions</code>: <code>format</code> as a function or <code>Intl</code> options, <code>template</code> such as <code>&#39;{value} km&#39;</code>, <code>overlap</code> <code>rotate</code>/<code>stagger</code>/<code>hide</code>/<code>skip</code>/<code>none</code>, <code>visible</code>) — <code>labelFormat</code>/<code>labelOverlap</code> remain as shorthands; <code>tickInterval</code> (axis units, every n-th category, or a calendar interval such as <code>{ weeks: 1 }</code>), <code>minorTicks</code>, <code>strips</code> and <code>constantLines</code>.',
         },
         {
           name: 'valueAxis',
           type: 'OgeChartAxisOptions | readonly OgeChartAxisOptions[]',
           default: '{}',
           description:
-            "One or more value axes; series pick theirs via <code>axis</code>. <code>position: 'end'</code> renders on the right, <code>type: 'logarithmic'</code> spaces decades evenly, <code>abbreviate: false</code> disables SI labels (<code>1.2K</code>).",
+            "One or more value axes; series pick theirs via <code>axis</code> (or by <code>pane</code>). <code>position: 'end'</code> renders on the far side (right, or on top when rotated), <code>type: 'logarithmic'</code> spaces decades evenly, <code>abbreviate: false</code> disables SI labels (<code>1.2K</code>). <code>pane</code> places the axis in a pane; <code>constantLines</code> (<code>{ value, label?, color?, dash?, width?, position: 'inside' | 'outside' }</code>) draw threshold / target lines whose labels stay clear of the plot edges; <code>strips</code> (<code>{ start, end, label?, color? }</code>) shade value bands; <code>breaks</code> (<code>{ start, end }[]</code>, linear axes) skip value ranges with a zig-zag marker; <code>tickInterval</code>, <code>minorTicks</code>, <code>allowDecimals: false</code> and <code>label</code> work as on the argument axis.",
         },
         {
           name: 'stripLines',
           type: 'readonly OgeChartStripLine[]',
           default: '[]',
           description:
-            'Argument-axis markers: <code>{ start, end?, label?, color? }</code> — a line without <code>end</code>, a shaded band with it.',
+            'Argument-axis markers: <code>{ start, end?, label?, color? }</code> — a line without <code>end</code>, a shaded band with it (see also <code>argumentAxis.strips</code> / <code>constantLines</code>).',
         },
         {
           name: 'annotations',
@@ -76,6 +76,32 @@ export const OGE_REACT_CHART_API: ApiSections = {
       ],
     },
     {
+      title: 'Layout & direction',
+      entries: [
+        {
+          name: 'rotated',
+          type: 'boolean',
+          default: 'false',
+          description:
+            'Swaps the axes: the argument axis runs vertically (first argument on top), the value axis horizontally. Applies to every series type — bars become horizontal bars (stacked and range bars too), lines run top-down — and the tooltip, crosshair, zoom/pan, the data table and the keyboard follow (Up/Down walk the arguments, Left/Right the series).',
+        },
+        {
+          name: 'panes',
+          type: 'readonly OgeChartPane[]',
+          default: '[]',
+          description:
+            "Plot areas stacked over one shared argument axis (price + volume): <code>{ name, height? }</code> with <code>height</code> as a ratio. Series pick a pane with <code>pane</code> (binding to that pane's first value axis, or a default one) and value axes with <code>valueAxis[].pane</code>; stacks and bar slots are per pane. The argument axis sits under the last pane, the crosshair spans every pane (its horizontal line stays in the hovered one) and zoom/pan move them together. Rotated charts lay panes side by side.",
+        },
+        {
+          name: 'rtlEnabled',
+          type: 'boolean | undefined',
+          default: 'undefined',
+          description:
+            "Right-to-left layout: mirrors the argument axis, moves the value axes to the other side, flips the legend, the tooltip's opening side and the Left/Right arrow keys. Unset follows the page — the computed <code>direction</code> or the nearest <code>dir</code> attribute, read after the first render (re-read by <code>refresh()</code>); an explicit value also sets <code>dir</code> on the host.",
+        },
+      ],
+    },
+    {
       title: 'Interaction',
       entries: [
         {
@@ -83,7 +109,7 @@ export const OGE_REACT_CHART_API: ApiSections = {
           type: "'none' | 'wheel' | 'drag' | 'both' / boolean",
           default: "'none' / false",
           description:
-            'Cursor-centered wheel zoom (a non-passive listener, so the page does not scroll under it), drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom.',
+            'Cursor-centered wheel zoom (a non-passive listener, so the page does not scroll under it), drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom. On touch screens two fingers pinch-zoom and pan together (the argument values under both fingers stay under them) and one finger pans when <code>panEnabled</code> is on, otherwise drag-zooms; the plot declares <code>touch-action</code> so the page still scrolls across the argument axis.',
         },
         {
           name: 'visualRange / defaultVisualRange',
@@ -133,10 +159,10 @@ export const OGE_REACT_CHART_API: ApiSections = {
         },
         {
           name: 'animation',
-          type: 'boolean',
+          type: 'boolean | OgeChartAnimationOptions',
           default: 'true',
           description:
-            'Hover/selection transitions; honors <code>prefers-reduced-motion</code>.',
+            "Hover/selection transitions plus a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation. <code>{ enabled?, duration? (ms, 600), easing? ('linear' | 'ease' | 'easeIn' | 'easeOut' | 'easeInOut') }</code>; <code>false</code> turns both off and <code>prefers-reduced-motion: reduce</code> always does.",
         },
         {
           name: 'locale',
@@ -267,6 +293,42 @@ export const OGE_REACT_CHART_API: ApiSections = {
           type: "'linear' | 'logarithmic' | 'category' | 'time' / { min, max }",
           description:
             'Axis kinds and the numeric window type (time axes: epoch ms; category: index space).',
+        },
+        {
+          name: 'OgeChartConstantLine / OgeChartAxisStrip / OgeChartAxisBreak',
+          type: 'interface',
+          description:
+            "Guides of an axis: <code>{ value, label?, color?, dash? ('solid' | 'dash' | 'dot'), width?, position? ('inside' | 'outside') }</code>, <code>{ start, end, label?, color? }</code> and <code>{ start, end }</code> (value axes only). Colours take any CSS colour, theme tokens included.",
+        },
+        {
+          name: 'OgeChartPane',
+          type: 'interface',
+          description:
+            '<code>{ name, height? }</code> — a pane of <code>panes</code>; <code>height</code> is a ratio against the other panes (default 1).',
+        },
+        {
+          name: 'OgeChartTickInterval / OgeChartDateInterval / OgeChartMinorTickOptions',
+          type: 'number | interface',
+          description:
+            '<code>tickInterval</code>: a number in axis units (ms on time axes, every n-th category on category axes) or a calendar interval <code>{ years?, months?, weeks?, days?, hours?, minutes? }</code> stepping real calendar boundaries; <code>minorTicks</code>: <code>true</code> or <code>{ visible?, count? (4) }</code>.',
+        },
+        {
+          name: 'OgeChartAxisLabelOptions / OgeChartLabelFormat / OgeChartLabelOverlap',
+          type: 'interface / union',
+          description:
+            "<code>{ visible?, format?, template?, overlap? }</code>; <code>format</code> is a function or <code>Intl.NumberFormatOptions</code> / <code>Intl.DateTimeFormatOptions</code>; <code>overlap</code> is <code>'rotate' | 'stagger' | 'hide' | 'skip' | 'none'</code> (a rotated chart's vertical argument axis falls back to <code>skip</code> for rotate/stagger).",
+        },
+        {
+          name: 'OgeChartAnimationOptions / OgeChartAnimationEasing',
+          type: 'interface / union',
+          description:
+            "<code>{ enabled?, duration?, easing? }</code> with <code>'linear' | 'ease' | 'easeIn' | 'easeOut' | 'easeInOut'</code>.",
+        },
+        {
+          name: 'OgeChartPeriod / OgeChartCustomPeriod',
+          type: 'union / interface',
+          description:
+            "Range-selector periods: <code>'1M' | '3M' | '6M' | 'YTD' | '1Y' | 'All'</code>, or <code>{ label, range }</code> where <code>range</code> is a window <code>{ min, max }</code>, a span in axis units back from the data end, or a calendar interval back from it.",
         },
         {
           name: 'OgeChartHandle&lt;T&gt;',
@@ -406,6 +468,13 @@ export const OGE_REACT_RANGE_SELECTOR_API: ApiSections = {
           type: "'time' | 'linear' | undefined",
           description:
             'Auto-detects from the first argument (dates → time) when unset.',
+        },
+        {
+          name: 'periods',
+          type: 'readonly (OgeChartPeriod | OgeChartCustomPeriod)[]',
+          default: '[]',
+          description:
+            "Period buttons above the strip (a <code>role=\"group\"</code> of toggle buttons with <code>aria-pressed</code>): <code>'1M' | '3M' | '6M' | '1Y'</code> count calendar months back from the data end, <code>'YTD'</code> starts on January 1st, <code>'All'</code> resets; custom <code>{ label, range }</code> entries take a window, a span or a calendar interval. Calendar periods only render on time scales; the texts and accessible descriptions come from <code>messages.periods</code>.",
         },
         {
           name: 'palette / locale / messages',
@@ -559,7 +628,7 @@ export const OGE_REACT_CHARTS_CONFIG_API: ApiSections = {
           name: 'messages',
           type: 'OgeChartsMessages',
           description:
-            'Every user-facing string, aria labels included: <code>aria</code> (<code>OgeChartsAriaMessages</code> — chart/pie labels with <code>{title}</code>/<code>{count}</code>, table caption, plot hint, legend label), <code>announcements</code> (<code>OgeChartsAnnouncementMessages</code> — live-region templates with <code>{series}</code>/<code>{argument}</code>/<code>{value}</code>) and <code>noData</code>. Defaults: <code>OGE_DEFAULT_CHARTS_MESSAGES</code>.',
+            'Every user-facing string, aria labels included: <code>aria</code> (<code>OgeChartsAriaMessages</code> — chart/pie labels with <code>{title}</code>/<code>{count}</code>, table caption, plot hint, legend label), <code>announcements</code> (<code>OgeChartsAnnouncementMessages</code> — live-region templates with <code>{series}</code>/<code>{argument}</code>/<code>{value}</code>), <code>periods</code> (<code>OgeChartsPeriodMessages</code> — the range-selector period group label, button texts and their spelled-out descriptions) and <code>noData</code>. Defaults: <code>OGE_DEFAULT_CHARTS_MESSAGES</code>.',
         },
         {
           name: 'locale',

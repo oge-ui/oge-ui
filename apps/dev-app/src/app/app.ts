@@ -335,6 +335,11 @@ export class App {
       items: [
         { path: '/components/charts', label: 'Overview', icon: 'activity' },
         {
+          path: '/components/charts/axes-layout',
+          label: 'Axes & Layout',
+          icon: 'layers',
+        },
+        {
           path: '/components/charts/api',
           label: 'API Reference',
           icon: 'code',

@@ -17241,7 +17241,7 @@ Docs: https://www.ogeui.com/components/charts
 `@oge-ui/charts`
 
 - values: `OGE_CHARTS_CONFIG`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `OgeChart`, `OgeChartAnnotationTemplate`, `OgeChartLegendTemplate`, `OgeChartTooltipTemplate`, `OgePieChart`, `OgePolarChart`, `OgeRangeSelector`, `provideOgeChartsConfig`
-- types: `OgeChartAnnotation`, `OgeChartAnnotationTemplateContext`, `OgeChartAxisOptions`, `OgeChartAxisType`, `OgeChartCrosshairOptions`, `OgeChartExportData`, `OgeChartLegendClickEvent`, `OgeChartLegendOptions`, `OgeChartLegendTemplateContext`, `OgeChartPieSliceEvent`, `OgeChartPoint`, `OgeChartPointEvent`, `OgeChartPointRef`, `OgeChartRange`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSmallValuesGrouping`, `OgeChartStripLine`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipTemplateContext`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`
+- types: `OgeChartAnimationEasing`, `OgeChartAnimationOptions`, `OgeChartAnnotation`, `OgeChartAnnotationTemplateContext`, `OgeChartAxisBreak`, `OgeChartAxisLabelOptions`, `OgeChartAxisOptions`, `OgeChartAxisStrip`, `OgeChartAxisType`, `OgeChartConstantLine`, `OgeChartCrosshairOptions`, `OgeChartCustomPeriod`, `OgeChartDateInterval`, `OgeChartExportData`, `OgeChartLabelFormat`, `OgeChartLabelOverlap`, `OgeChartLegendClickEvent`, `OgeChartLegendOptions`, `OgeChartLegendTemplateContext`, `OgeChartMinorTickOptions`, `OgeChartPane`, `OgeChartPeriod`, `OgeChartPieSliceEvent`, `OgeChartPoint`, `OgeChartPointEvent`, `OgeChartPointRef`, `OgeChartRange`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSmallValuesGrouping`, `OgeChartStripLine`, `OgeChartTickInterval`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipTemplateContext`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`, `OgeChartsPeriodMessages`
 
 `@oge-ui/charts/export-image`
 
@@ -17265,16 +17265,24 @@ _Axes_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `argumentAxis` | `OgeChartAxisOptions` | `{}` | Argument axis: `type` auto-detects (numbers / dates / categories) when unset; `min`/`max`, `inverted`, `grid`, `title`, `labelFormat`, `labelOverlap` (`rotate`/`skip`/`none`). |
-| `valueAxis` | `OgeChartAxisOptions \| readonly OgeChartAxisOptions[]` | `{}` | One or more value axes; series pick theirs via `axis`. `position: 'end'` renders on the right, `type: 'logarithmic'` spaces decades evenly, `abbreviate: false` disables SI labels (`1.2K`). |
-| `stripLines` | `readonly OgeChartStripLine[]` | `[]` | Argument-axis markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded band with it. |
+| `argumentAxis` | `OgeChartAxisOptions` | `{}` | Argument axis: `type` auto-detects (numbers / dates / categories) when unset; `min`/`max`, `inverted`, `grid`, `title`; `label` (`OgeChartAxisLabelOptions`: `format` as a function or `Intl` options, `template` such as `'{value} km'`, `overlap` `rotate`/`stagger`/`hide`/`skip`/`none`, `visible`) — `labelFormat`/`labelOverlap` remain as shorthands; `tickInterval` (axis units, every n-th category, or a calendar interval such as `{ weeks: 1 }`), `minorTicks`, `strips` and `constantLines`. |
+| `valueAxis` | `OgeChartAxisOptions \| readonly OgeChartAxisOptions[]` | `{}` | One or more value axes; series pick theirs via `axis` (or by `pane`). `position: 'end'` renders on the far side (right, or on top when rotated), `type: 'logarithmic'` spaces decades evenly, `abbreviate: false` disables SI labels (`1.2K`). `pane` places the axis in a pane; `constantLines` (`{ value, label?, color?, dash?, width?, position: 'inside' \| 'outside' }`) draw threshold / target lines whose labels stay clear of the plot edges; `strips` (`{ start, end, label?, color? }`) shade value bands; `breaks` (`{ start, end }[]`, linear axes) skip value ranges with a zig-zag marker; `tickInterval`, `minorTicks`, `allowDecimals: false` and `label` work as on the argument axis. |
+| `stripLines` | `readonly OgeChartStripLine[]` | `[]` | Argument-axis markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded band with it (see also `argumentAxis.strips` / `constantLines`). |
 | `annotations` | `readonly OgeChartAnnotation[]` | `[]` | Plot annotations: `type: 'point'` draws a marker dot with a connector into a label box at (`argument`, `value`); `'text'` places the label alone (top of the plot without a value). `axis`, `color` and `offsetX/Y` refine placement. |
+
+_Layout & direction_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rotated` | `boolean` | `false` | Swaps the axes: the argument axis runs vertically (first argument on top), the value axis horizontally. Applies to every series type — bars become horizontal bars (stacked and range bars too), lines run top-down — and the tooltip, crosshair, zoom/pan, the data table and the keyboard follow (Up/Down walk the arguments, Left/Right the series). |
+| `panes` | `readonly OgeChartPane[]` | `[]` | Plot areas stacked over one shared argument axis (price + volume): `{ name, height? }` with `height` as a ratio. Series pick a pane with `pane` (binding to that pane's first value axis, or a default one) and value axes with `valueAxis[].pane`; stacks and bar slots are per pane. The argument axis sits under the last pane, the crosshair spans every pane (its horizontal line stays in the hovered one) and zoom/pan move them together. Rotated charts lay panes side by side. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: mirrors the argument axis, moves the value axes to the other side, flips the legend, the tooltip's opening side and the Left/Right arrow keys. Unset follows the page — the computed `direction` or the nearest `dir` attribute, read after the first render (re-read by `refresh()`); an explicit value also sets `dir` on the host. |
 
 _Interaction_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `zoomEnabled / panEnabled` | `'none' \| 'wheel' \| 'drag' \| 'both' / boolean` | `'none' / false` | Cursor-centered wheel zoom, drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom. |
+| `zoomEnabled / panEnabled` | `'none' \| 'wheel' \| 'drag' \| 'both' / boolean` | `'none' / false` | Cursor-centered wheel zoom, drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom. On touch screens two fingers pinch-zoom and pan together (the argument values under both fingers stay under them) and one finger pans when `panEnabled` is on, otherwise drag-zooms; the plot declares `touch-action` so the page still scrolls across the argument axis. |
 | `visualRange` | `OgeChartRange \| null` | `null` | The zoom window in argument-axis units (`null` = full extent). Two-way (`[(visualRange)]`); writes clamp into the data bounds. |
 | `tooltip` | `OgeChartTooltipOptions` | `{}` | `{ enabled?, shared? }` — shared lists every series at the hovered argument; otherwise the value-nearest series wins. |
 | `crosshair` | `OgeChartCrosshairOptions` | `{}` | `{ enabled?, horizontal? }` — the vertical tracker snaps to the nearest argument (binary search). |
@@ -17286,7 +17294,7 @@ _Appearance & i18n_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `title / subtitle` | `string` | `''` | Headings above the plot. |
-| `animation` | `boolean` | `true` | Hover/selection transitions; honors `prefers-reduced-motion`. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover/selection transitions plus a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation. `{ enabled?, duration? (ms, 600), easing? ('linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut') }`; `false` turns both off and `prefers-reduced-motion: reduce` always does. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
 | `messages` | `Partial<OgeChartsMessages>` | `{}` | Per-instance message overrides, merged over the DI config per top-level block. |
 
@@ -17324,6 +17332,12 @@ _Export entry point (lazy, dependency-free)_
 | `OgeChartSeriesType` | `string union` | 'line' \| 'spline' \| 'stepLine' \| 'area' \| 'splineArea' \| 'stepArea' \| 'stackedArea' \| 'fullStackedArea' \| 'bar' \| 'stackedBar' \| 'fullStackedBar' \| 'rangeBar' \| 'scatter' \| 'bubble' \| 'rangeArea' \| 'candlestick'. |
 | `OgeChartPoint<T>` | `interface` | The normalized point: `argument`, `argNumeric`, `value`(s incl. OHLC), `source`, `index`. |
 | `OgeChartAxisType / OgeChartRange` | `'linear' \| 'logarithmic' \| 'category' \| 'time' / { min, max }` | Axis kinds and the numeric window type (time axes: epoch ms; category: index space). |
+| `OgeChartConstantLine / OgeChartAxisStrip / OgeChartAxisBreak` | `interface` | Guides of an axis: `{ value, label?, color?, dash? ('solid' \| 'dash' \| 'dot'), width?, position? ('inside' \| 'outside') }`, `{ start, end, label?, color? }` and `{ start, end }` (value axes only). Colours take any CSS colour, theme tokens included. |
+| `OgeChartPane` | `interface` | `{ name, height? }` — a pane of `panes`; `height` is a ratio against the other panes (default 1). |
+| `OgeChartTickInterval / OgeChartDateInterval / OgeChartMinorTickOptions` | `number \| interface` | `tickInterval`: a number in axis units (ms on time axes, every n-th category on category axes) or a calendar interval `{ years?, months?, weeks?, days?, hours?, minutes? }` stepping real calendar boundaries; `minorTicks`: `true` or `{ visible?, count? (4) }`. |
+| `OgeChartAxisLabelOptions / OgeChartLabelFormat / OgeChartLabelOverlap` | `interface / union` | `{ visible?, format?, template?, overlap? }`; `format` is a function or `Intl.NumberFormatOptions` / `Intl.DateTimeFormatOptions`; `overlap` is `'rotate' \| 'stagger' \| 'hide' \| 'skip' \| 'none'` (a rotated chart's vertical argument axis falls back to `skip` for rotate/stagger). |
+| `OgeChartAnimationOptions / OgeChartAnimationEasing` | `interface / union` | `{ enabled?, duration?, easing? }` with `'linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut'`. |
+| `OgeChartPeriod / OgeChartCustomPeriod` | `union / interface` | Range-selector periods: `'1M' \| '3M' \| '6M' \| 'YTD' \| '1Y' \| 'All'`, or `{ label, range }` where `range` is a window `{ min, max }`, a span in axis units back from the data end, or a calendar interval back from it. |
 | `[ogeChartTooltipTemplate]` | `structural directive (OgeChartTooltipTemplate)` | Replaces the tooltip's content; context `OgeChartTooltipTemplateContext`: `{ $implicit: OgeChartPointEvent[] }`. |
 | `[ogeChartAnnotationTemplate]` | `structural directive (OgeChartAnnotationTemplate)` | Replaces an annotation's label (rendered in a `foreignObject`, so any HTML works); context `OgeChartAnnotationTemplateContext`: `{ $implicit: { text } }`. |
 | `[ogeChartLegendTemplate]` | `structural directive (OgeChartLegendTemplate)` | Replaces a legend item's content; context `OgeChartLegendTemplateContext`: `{ $implicit: { name, color, hidden } }`. |
@@ -17389,6 +17403,7 @@ _Export entry point (lazy, dependency-free)_
 | `dataSource / series` | `readonly T[] / readonly OgeChartSeriesInput[]` | `[] / []` | The mini background chart (line/area recommended) drawn behind the selection window. |
 | `value` | `OgeChartRange \| null` | `null` | The selected window in argument units (`null` = full range). Two-way (`[(value)]`) — bind the same signal to a chart's `[(visualRange)]` and the two stay in lockstep. |
 | `scaleType` | `'time' \| 'linear' \| undefined` | `—` | Auto-detects from the first argument (dates → time) when unset. |
+| `periods` | `readonly (OgeChartPeriod \| OgeChartCustomPeriod)[]` | `[]` | Period buttons above the strip (a `role="group"` of toggle buttons with `aria-pressed`): `'1M' \| '3M' \| '6M' \| '1Y'` count calendar months back from the data end, `'YTD'` starts on January 1st, `'All'` resets; custom `{ label, range }` entries take a window, a span or a calendar interval. Calendar periods only render on time scales; the texts and accessible descriptions come from `messages.periods`. |
 | `palette / locale / messages` | `see OgeChart` | `—` | Shared options; handle labels come from `messages.aria.rangeStart/rangeEnd/rangeWindow`. |
 
 #### Methods
@@ -17410,7 +17425,7 @@ _Export entry point (lazy, dependency-free)_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `provideOgeChartsConfig(config)` | `Provider` | `—` | Configures every chart below the provider (`OgeChartsConfigInput`); shallow merge over `OGE_DEFAULT_CHARTS_CONFIG` per top-level key — a partial `messages` replaces whole nested blocks. The token is `OGE_CHARTS_CONFIG` (`OgeChartsConfig`). |
-| `messages` | `OgeChartsMessages` | `—` | Every user-facing string, aria labels included: `aria` (`OgeChartsAriaMessages` — chart/pie labels with `{title}`/`{count}`, table caption, plot hint, legend label), `announcements` (`OgeChartsAnnouncementMessages` — live-region templates with `{series}`/`{argument}`/`{value}`) and `noData`. Defaults: `OGE_DEFAULT_CHARTS_MESSAGES`. |
+| `messages` | `OgeChartsMessages` | `—` | Every user-facing string, aria labels included: `aria` (`OgeChartsAriaMessages` — chart/pie labels with `{title}`/`{count}`, table caption, plot hint, legend label), `announcements` (`OgeChartsAnnouncementMessages` — live-region templates with `{series}`/`{argument}`/`{value}`), `periods` (`OgeChartsPeriodMessages` — the range-selector period group label, button texts and their spelled-out descriptions) and `noData`. Defaults: `OGE_DEFAULT_CHARTS_MESSAGES`. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `[locale]` input wins. |
 | `a11yTableLimit` | `number` | `50` | Rows of the screen-reader data table. |
 | `markerThreshold` | `number` | `200` | Marker circles render only up to this many points per series — beyond it the single path carries the series alone. Line-family paths additionally auto-downsample with LTTB to about one point per pixel once a series outgrows the plot width (hit-testing and tooltips keep the full data). |
@@ -17418,6 +17433,363 @@ _Export entry point (lazy, dependency-free)_
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Animation
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartAnimationOptions, OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- The first render draws each series in from its value baseline:
+         bars grow, lines rise. animation takes true / false or { enabled,
+         duration, easing }; prefers-reduced-motion always switches it off. -->
+    <button type="button" (click)="replay()">Replay</button>
+    @if (visible()) {
+      <oge-chart
+        [dataSource]="data"
+        [series]="series"
+        [animation]="animation"
+        style="height: 320px"
+      />
+    }
+  `,
+})
+export class Demo {
+  protected readonly data = [
+    { quarter: 'Q1', revenue: 120, cost: 80 },
+    { quarter: 'Q2', revenue: 150, cost: 92 },
+    { quarter: 'Q3', revenue: 138, cost: 101 },
+    { quarter: 'Q4', revenue: 190, cost: 110 },
+  ];
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'bar', argumentField: 'quarter', valueField: 'revenue', name: 'Revenue' },
+    { type: 'spline', argumentField: 'quarter', valueField: 'cost', name: 'Cost' },
+  ];
+
+  protected readonly animation: OgeChartAnimationOptions = { duration: 1100, easing: 'easeInOut' };
+  protected readonly visible = signal(true);
+
+  /** Re-mounting the chart plays the draw-in again. */
+  protected replay(): void {
+    this.visible.set(false);
+    setTimeout(() => this.visible.set(true));
+  }
+}
+```
+
+#### Breaks
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- One outlier would flatten every other bar. breaks skip a value
+         range on a linear value axis — the gap is drawn with a zig-zag marker
+         and no tick lands inside it. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [valueAxis]="{ breaks: [{ start: 140, end: 940 }] }"
+      style="height: 340px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = [
+    { team: 'Search', tickets: 84 },
+    { team: 'Billing', tickets: 112 },
+    { team: 'Platform', tickets: 1010 },
+    { team: 'Mobile', tickets: 96 },
+    { team: 'Data', tickets: 61 },
+  ];
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'bar', argumentField: 'team', valueField: 'tickets', name: 'Open tickets', showLabels: true },
+  ];
+}
+```
+
+#### Guides
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartAxisOptions, OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- constantLines draw a threshold at an axis value with a label
+         (inside next to the line, or outside past the plot edge); strips shade
+         a value band. Both work on the value AND the argument axis; labels
+         never run off the plot. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [valueAxis]="valueAxis"
+      [argumentAxis]="argumentAxis"
+      style="height: 360px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(
+    (month, i) => ({ month, latency: 180 + Math.round(Math.sin(i / 1.7) * 70) + i * 4 }),
+  );
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'spline', argumentField: 'month', valueField: 'latency', name: 'p95 latency (ms)' },
+  ];
+
+  protected readonly valueAxis: OgeChartAxisOptions = {
+    constantLines: [
+      { value: 250, label: 'SLO 250 ms', color: 'var(--oge-danger)', width: 2 },
+      { value: 150, label: 'Goal', dash: 'dot', position: 'outside' },
+    ],
+    strips: [{ start: 100, end: 150, label: 'Comfort zone' }],
+  };
+
+  protected readonly argumentAxis: OgeChartAxisOptions = {
+    constantLines: [{ value: 'Jun', label: 'Release 2.0', color: 'var(--oge-accent)', dash: 'solid' }],
+    strips: [{ start: 'Sep', end: 'Oct', label: 'Freeze' }],
+  };
+}
+```
+
+#### Panes
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeChart, OgeRangeSelector } from '@oge-ui/charts';
+import type { OgeChartAxisOptions, OgeChartPane, OgeChartPeriod, OgeChartRange, OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart, OgeRangeSelector],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- panes stack plot areas over ONE shared argument axis: series and
+         value axes pick theirs by name. The crosshair runs through every pane
+         (its horizontal line stays in the hovered one) and zoom/pan move all of
+         them. The range selector's period buttons set the same window. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [panes]="panes"
+      [valueAxis]="valueAxes"
+      [crosshair]="{ horizontal: true }"
+      [tooltip]="{ shared: true }"
+      [(visualRange)]="range"
+      zoomEnabled="both"
+      [panEnabled]="true"
+      style="height: 420px"
+    />
+    <oge-range-selector
+      [dataSource]="data"
+      [series]="navigator"
+      [periods]="periods"
+      [(value)]="range"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = Array.from({ length: 260 }, (_, i) => {
+    const open = 100 + Math.sin(i / 14) * 18 + i * 0.12;
+    const close = open + Math.sin(i * 1.7) * 3;
+    return {
+      day: new Date(2025, 8, 1 + i),
+      open,
+      close,
+      high: Math.max(open, close) + 2,
+      low: Math.min(open, close) - 2,
+      volume: 1800 + Math.round(Math.abs(Math.cos(i / 3)) * 2400),
+    };
+  });
+
+  protected readonly panes: OgeChartPane[] = [
+    { name: 'price', height: 3 },
+    { name: 'volume', height: 1 },
+  ];
+
+  protected readonly valueAxes: OgeChartAxisOptions[] = [
+    { pane: 'price', title: 'Price' },
+    { pane: 'volume', title: 'Volume' },
+  ];
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    {
+      type: 'candlestick',
+      argumentField: 'day',
+      openField: 'open',
+      highField: 'high',
+      lowField: 'low',
+      closeField: 'close',
+      name: 'OGE',
+      pane: 'price',
+    },
+    { type: 'bar', argumentField: 'day', valueField: 'volume', name: 'Volume', pane: 'volume', opacity: 0.6 },
+  ];
+
+  protected readonly navigator: OgeChartSeriesInput[] = [
+    { type: 'area', argumentField: 'day', valueField: 'close', name: 'Close' },
+  ];
+
+  protected readonly periods: OgeChartPeriod[] = ['1M', '3M', '6M', 'YTD', '1Y', 'All'];
+  protected readonly range = signal<OgeChartRange | null>(null);
+}
+```
+
+#### Rotated
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rotated swaps the axes: the argument axis runs down the left,
+         values grow to the right. Every series type follows — these
+         stackedBar series become horizontal stacked bars — and so do the
+         tooltip, crosshair, zoom and the keyboard (Up/Down walk the
+         categories, Left/Right the series). -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [commonSeries]="{ argumentField: 'region' }"
+      [rotated]="true"
+      [tooltip]="{ shared: true }"
+      [valueAxis]="{ title: 'Units sold', abbreviate: false }"
+      style="height: 360px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = [
+    { region: 'North', online: 420, retail: 310 },
+    { region: 'East', online: 380, retail: 260 },
+    { region: 'South', online: 290, retail: 340 },
+    { region: 'West', online: 510, retail: 220 },
+    { region: 'Central', online: 240, retail: 180 },
+  ];
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'stackedBar', valueField: 'online', name: 'Online' },
+    { type: 'stackedBar', valueField: 'retail', name: 'Retail' },
+  ];
+}
+```
+
+#### Rtl
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rtlEnabled (unset = follow the page's dir) mirrors the argument
+         axis, moves the value axis to the right, flips the legend and the
+         tooltip side and swaps the Left/Right arrow keys. On touch screens two
+         fingers pinch-zoom and pan the plot; one finger pans when panEnabled is
+         on, otherwise it drag-zooms. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [rtlEnabled]="true"
+      zoomEnabled="both"
+      [panEnabled]="true"
+      [legend]="{ position: 'top' }"
+      style="height: 340px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = Array.from({ length: 30 }, (_, i) => ({
+    day: i + 1,
+    visits: 400 + Math.round(Math.sin(i / 3) * 120 + i * 8),
+    orders: 60 + Math.round(Math.cos(i / 4) * 20 + i * 2),
+  }));
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'area', argumentField: 'day', valueField: 'visits', name: 'Visits' },
+    { type: 'line', argumentField: 'day', valueField: 'orders', name: 'Orders' },
+  ];
+}
+```
+
+#### Ticks
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeChart } from '@oge-ui/charts';
+import type { OgeChartAxisOptions, OgeChartSeriesInput } from '@oge-ui/charts';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeChart],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- tickInterval fixes the tick distance — a number in axis units or a
+         calendar interval such as { weeks: 1 }; minorTicks adds the ticks (and
+         grid lines) in between; allowDecimals: false keeps whole numbers.
+         label.format takes Intl options (or a function), label.template wraps
+         the text and label.overlap picks rotate / stagger / hide / skip. -->
+    <oge-chart
+      [dataSource]="data"
+      [series]="series"
+      [argumentAxis]="argumentAxis"
+      [valueAxis]="valueAxis"
+      style="height: 340px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly data = Array.from({ length: 70 }, (_, i) => ({
+    day: new Date(2026, 2, 2 + i),
+    temperature: 9 + Math.round(Math.sin(i / 9) * 5 + i / 8),
+  }));
+
+  protected readonly series: OgeChartSeriesInput[] = [
+    { type: 'stepLine', argumentField: 'day', valueField: 'temperature', name: 'Daily high' },
+  ];
+
+  protected readonly argumentAxis: OgeChartAxisOptions = {
+    tickInterval: { weeks: 1 },
+    minorTicks: { count: 6 },
+    grid: true,
+    label: { format: { day: 'numeric', month: 'short' }, overlap: 'stagger' },
+  };
+
+  protected readonly valueAxis: OgeChartAxisOptions = {
+    allowDecimals: false,
+    tickInterval: 2,
+    label: { template: '{value} °C' },
+  };
+}
+```
 
 #### Annotations
 
@@ -17951,8 +18323,8 @@ Framework-free charts engine shared by the Angular and React charts: scales, ser
 
 `@oge-ui/charts-engine`
 
-- values: `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `angleForIndex`, `areaPath`, `baselineAreaPath`, `beginChartGesture`, `buildArgumentIndex`, `buildCartesianData`, `buildCartesianScene`, `buildPieScene`, `buildPieSlices`, `buildPolarData`, `buildPolarScene`, `buildRangeSelectorData`, `buildRangeSelectorScene`, `buildSeries`, `candleGeometry`, `cartesianActivePoints`, `cartesianAriaLabel`, `cartesianCrosshair`, `cartesianExportData`, `cartesianHoverAt`, `cartesianKeyCommand`, `cartesianNearestSeries`, `cartesianPanRange`, `cartesianPointAnnouncement`, `cartesianSelectionRange`, `cartesianSrRows`, `cartesianTooltip`, `cartesianWheelRange`, `cartesianZoomTo`, `categoryBandPx`, `chartArgumentText`, `chartDragMode`, `chartMarkerRadius`, `chartSeriesColor`, `chartSeriesGroupOpacity`, `chartValueAxesList`, `chartValueText`, `chartWheelZoomEnabled`, `chartZoomSelectionRect`, `clampRange`, `collectCategories`, `commitRangeSelection`, `computeBarSlots`, `computeStacks`, `createCategoryScale`, `createLinearScale`, `createLogScale`, `createTimeScale`, `decideLabelLayout`, `detectArgumentKind`, `detectRangeSelectorKind`, `downsamplePath`, `formatOgeChartMessage`, `groupSmallValues`, `isBarType`, `isChartPointSelected`, `isStackedType`, `layoutPieLabels`, `linePath`, `logTicks`, `measureChartElement`, `mergeChartSeriesInputs`, `mergeOgeChartsMessages`, `nearestIndex`, `nextChartSelection`, `nextPolarSelection`, `niceStep`, `niceTicks`, `numberFormat`, `numericArgument`, `observeChartSize`, `panRange`, `pickTimeUnit`, `pieAriaLabel`, `pieLabelText`, `pieSelectedAnnouncement`, `pieSliceAt`, `pieTooltip`, `pieValueText`, `polarKeyCommand`, `polarPointAnnouncement`, `polarPointIndex`, `polarSrRows`, `polarToCartesian`, `polarTooltip`, `radarGridPath`, `radarLoopPath`, `rangeCenteredAt`, `rangeFromSelection`, `rangeHandleDragRange`, `rangeHandleKeyRange`, `rangeSelectorAnnouncement`, `rangeSelectorDeltaValue`, `rangeSelectorEffective`, `rangeSelectorLabel`, `rangeSelectorWindowPx`, `rangeWindowDragRange`, `resolveOgeChartsConfig`, `seriesValueExtent`, `siFormat`, `sliceArcPath`, `splinePath`, `steppedPoints`, `timeTickFormatter`, `timeTicks`, `togglePieSlice`, `zoomRangeAt`
-- types: `ArgumentIndex`, `BarSlot`, `CandleGeometry`, `ChartFieldExpr`, `ChartGestureCallbacks`, `ChartPoint`, `ChartRange`, `ChartScale`, `ChartScaleKind`, `ChartSeries`, `ChartSeriesInput`, `ChartSeriesType`, `GroupedPieValue`, `LabelLayoutDecision`, `LabelOverlapMode`, `OgeCartesianData`, `OgeCartesianDataInput`, `OgeCartesianHoverState`, `OgeCartesianScene`, `OgeCartesianSceneInput`, `OgeChartAnnotation`, `OgeChartAnnotationVm`, `OgeChartAxisOptions`, `OgeChartAxisTick`, `OgeChartAxisType`, `OgeChartCrosshairOptions`, `OgeChartCrosshairVm`, `OgeChartExportData`, `OgeChartFieldExpr`, `OgeChartKeyCommand`, `OgeChartKeyContext`, `OgeChartLegendClickEvent`, `OgeChartLegendEntry`, `OgeChartLegendItem`, `OgeChartLegendOptions`, `OgeChartPieSliceEvent`, `OgeChartPlotRect`, `OgeChartPoint`, `OgeChartPointEvent`, `OgeChartPointRef`, `OgeChartRange`, `OgeChartRenderBar`, `OgeChartRenderCandle`, `OgeChartRenderLabel`, `OgeChartRenderMarker`, `OgeChartRenderSeries`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSize`, `OgeChartSmallValuesGrouping`, `OgeChartSrRow`, `OgeChartStripLine`, `OgeChartStripRect`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipVm`, `OgeChartValueAxisVm`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`, `OgePieGeometry`, `OgePieScene`, `OgePieSceneInput`, `OgePieSliceVm`, `OgePieTooltipVm`, `OgePolarData`, `OgePolarDataInput`, `OgePolarHover`, `OgePolarMarkerVm`, `OgePolarRingVm`, `OgePolarScene`, `OgePolarSceneInput`, `OgePolarSeriesVm`, `OgePolarSpokeVm`, `OgePolarTooltipVm`, `OgeRangeSelectorData`, `OgeRangeSelectorDataInput`, `OgeRangeSelectorScene`, `OgeRangeSelectorSceneInput`, `OgeRangeSelectorSeriesVm`, `PathPoint`, `PieLabelPosition`, `PieSlice`, `PieSmallValuesGrouping`, `PolarXY`, `StackedValue`, `TimeTickUnit`
+- values: `CHART_BREAK_GAP_PX`, `CHART_DRAW_IN_MS`, `CHART_PANE_GAP`, `OGE_CHART_PALETTE`, `OGE_DEFAULT_CHARTS_CONFIG`, `OGE_DEFAULT_CHARTS_MESSAGES`, `addChartDateInterval`, `angleForIndex`, `applyChartLabelTemplate`, `applyChartTickOptions`, `areaPath`, `baselineAreaPath`, `beginChartGesture`, `bindChartPaneAxes`, `buildArgumentIndex`, `buildCartesianData`, `buildCartesianScene`, `buildPieScene`, `buildPieSlices`, `buildPolarData`, `buildPolarScene`, `buildRangeSelectorData`, `buildRangeSelectorScene`, `buildSeries`, `candleGeometry`, `cartesianActivePoints`, `cartesianAriaLabel`, `cartesianCrosshair`, `cartesianDragArgDelta`, `cartesianExportData`, `cartesianHoverAt`, `cartesianKeyCommand`, `cartesianLabelTransform`, `cartesianNearestSeries`, `cartesianPanRange`, `cartesianPinchRange`, `cartesianPlotArgPx`, `cartesianPointAnnouncement`, `cartesianSelectionRange`, `cartesianSeriesEnterOrigin`, `cartesianSeriesPane`, `cartesianSrRows`, `cartesianTooltip`, `cartesianWheelRange`, `cartesianZoomRect`, `cartesianZoomTo`, `categoryBandPx`, `chartAnimationVars`, `chartArgumentLabelFormatter`, `chartArgumentText`, `chartDateIntervalUnit`, `chartDragMode`, `chartMarkerRadius`, `chartMinorTicks`, `chartPaneAt`, `chartPaneList`, `chartPrefersReducedMotion`, `chartSeriesColor`, `chartSeriesEnterOrigin`, `chartSeriesGroupOpacity`, `chartTouchAction`, `chartTouchGestures`, `chartValueAxesList`, `chartValueAxisSlots`, `chartValueLabelFormatter`, `chartValueText`, `chartWheelZoomEnabled`, `chartZoomSelectionRect`, `clampRange`, `collectCategories`, `commitRangeSelection`, `computeBarSlots`, `computeStacks`, `createBrokenLinearScale`, `createCategoryScale`, `createChartFrame`, `createChartPinchTracker`, `createLinearScale`, `createLogScale`, `createTimeScale`, `decideLabelLayout`, `detectArgumentKind`, `detectChartRtl`, `detectRangeSelectorKind`, `downsamplePath`, `formatOgeChartMessage`, `frameLabelAnchor`, `frameLabelBaseline`, `frameLine`, `frameLogical`, `framePoint`, `frameRect`, `frameTextTransform`, `groupSmallValues`, `hideOverlappingLabels`, `isBarType`, `isChartDateInterval`, `isChartPointSelected`, `isStackedType`, `layoutChartGuides`, `layoutChartPanes`, `layoutPieLabels`, `linePath`, `logTicks`, `measureChartElement`, `mergeChartSeriesInputs`, `mergeOgeChartsMessages`, `nearestIndex`, `nextChartSelection`, `nextPolarSelection`, `niceStep`, `niceTicks`, `normalizeChartBreaks`, `numberFormat`, `numericArgument`, `observeChartSize`, `offsetChartScale`, `panRange`, `pickTimeUnit`, `pieAriaLabel`, `pieLabelText`, `pieSelectedAnnouncement`, `pieSliceAt`, `pieTooltip`, `pieValueText`, `polarKeyCommand`, `polarPointAnnouncement`, `polarPointIndex`, `polarSrRows`, `polarToCartesian`, `polarTooltip`, `radarGridPath`, `radarLoopPath`, `rangeCenteredAt`, `rangeFromSelection`, `rangeHandleDragRange`, `rangeHandleKeyRange`, `rangeSelectorAnnouncement`, `rangeSelectorDeltaValue`, `rangeSelectorEffective`, `rangeSelectorLabel`, `rangeSelectorPeriodRange`, `rangeSelectorPeriods`, `rangeSelectorWindowPx`, `rangeWindowDragRange`, `resolveChartAnimation`, `resolveOgeChartsConfig`, `seriesValueExtent`, `siFormat`, `sliceArcPath`, `splinePath`, `steppedPoints`, `timeTickFormatter`, `timeTicks`, `togglePieSlice`, `zoomRangeAt`
+- types: `ArgumentIndex`, `BarSlot`, `CandleGeometry`, `ChartFieldExpr`, `ChartGestureCallbacks`, `ChartGestureHandle`, `ChartPinchCallbacks`, `ChartPinchPoint`, `ChartPinchTracker`, `ChartPoint`, `ChartRange`, `ChartScale`, `ChartScaleBreak`, `ChartScaleKind`, `ChartSeries`, `ChartSeriesInput`, `ChartSeriesType`, `ChartTickOptions`, `GroupedPieValue`, `LabelLayoutDecision`, `LabelOverlapMode`, `OgeCartesianData`, `OgeCartesianDataInput`, `OgeCartesianHoverState`, `OgeCartesianScene`, `OgeCartesianSceneInput`, `OgeChartAnimationEasing`, `OgeChartAnimationOptions`, `OgeChartAnnotation`, `OgeChartAnnotationVm`, `OgeChartAxisBinding`, `OgeChartAxisBreak`, `OgeChartAxisLabelOptions`, `OgeChartAxisLabelVm`, `OgeChartAxisOptions`, `OgeChartAxisSlots`, `OgeChartAxisStrip`, `OgeChartAxisTick`, `OgeChartAxisTitleVm`, `OgeChartAxisType`, `OgeChartBreakMarkerVm`, `OgeChartConstantLine`, `OgeChartCrosshairOptions`, `OgeChartCrosshairVm`, `OgeChartCustomPeriod`, `OgeChartDateInterval`, `OgeChartExportData`, `OgeChartFieldExpr`, `OgeChartFrame`, `OgeChartGridLineVm`, `OgeChartGuideLabelVm`, `OgeChartGuideVm`, `OgeChartKeyCommand`, `OgeChartKeyContext`, `OgeChartLabelFormat`, `OgeChartLabelOverlap`, `OgeChartLegendClickEvent`, `OgeChartLegendEntry`, `OgeChartLegendItem`, `OgeChartLegendOptions`, `OgeChartLineVm`, `OgeChartMinorTickOptions`, `OgeChartPane`, `OgeChartPaneVm`, `OgeChartPeriod`, `OgeChartPieSliceEvent`, `OgeChartPlotRect`, `OgeChartPoint`, `OgeChartPointEvent`, `OgeChartPointRef`, `OgeChartRange`, `OgeChartRectVm`, `OgeChartRenderBar`, `OgeChartRenderCandle`, `OgeChartRenderLabel`, `OgeChartRenderMarker`, `OgeChartRenderSeries`, `OgeChartResolvedAnimation`, `OgeChartSeriesEvent`, `OgeChartSeriesInput`, `OgeChartSeriesType`, `OgeChartSize`, `OgeChartSmallValuesGrouping`, `OgeChartSrRow`, `OgeChartStripLine`, `OgeChartStripRect`, `OgeChartTickInterval`, `OgeChartTooltipOptions`, `OgeChartTooltipShowingEvent`, `OgeChartTooltipVm`, `OgeChartValueAxisVm`, `OgeChartXY`, `OgeChartsAnnouncementMessages`, `OgeChartsAriaMessages`, `OgeChartsConfig`, `OgeChartsConfigInput`, `OgeChartsMessages`, `OgeChartsPeriodMessages`, `OgePieGeometry`, `OgePieScene`, `OgePieSceneInput`, `OgePieSliceVm`, `OgePieTooltipVm`, `OgePolarData`, `OgePolarDataInput`, `OgePolarHover`, `OgePolarMarkerVm`, `OgePolarRingVm`, `OgePolarScene`, `OgePolarSceneInput`, `OgePolarSeriesVm`, `OgePolarSpokeVm`, `OgePolarTooltipVm`, `OgeRangeSelectorData`, `OgeRangeSelectorDataInput`, `OgeRangeSelectorPeriodVm`, `OgeRangeSelectorScene`, `OgeRangeSelectorSceneInput`, `OgeRangeSelectorSeriesVm`, `PathPoint`, `PieLabelPosition`, `PieSlice`, `PieSmallValuesGrouping`, `PolarXY`, `StackedValue`, `TimeTickUnit`
 
 `@oge-ui/charts-engine/export-image`
 
@@ -32607,16 +32979,24 @@ _Axes_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `argumentAxis` | `OgeChartAxisOptions` | `{}` | Argument axis: `type` auto-detects (numbers / dates / categories) when unset; `min`/`max`, `inverted`, `grid`, `title`, `labelFormat`, `labelOverlap` (`rotate`/`skip`/`none`). |
-| `valueAxis` | `OgeChartAxisOptions \| readonly OgeChartAxisOptions[]` | `{}` | One or more value axes; series pick theirs via `axis`. `position: 'end'` renders on the right, `type: 'logarithmic'` spaces decades evenly, `abbreviate: false` disables SI labels (`1.2K`). |
-| `stripLines` | `readonly OgeChartStripLine[]` | `[]` | Argument-axis markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded band with it. |
+| `argumentAxis` | `OgeChartAxisOptions` | `{}` | Argument axis: `type` auto-detects (numbers / dates / categories) when unset; `min`/`max`, `inverted`, `grid`, `title`; `label` (`OgeChartAxisLabelOptions`: `format` as a function or `Intl` options, `template` such as `'{value} km'`, `overlap` `rotate`/`stagger`/`hide`/`skip`/`none`, `visible`) — `labelFormat`/`labelOverlap` remain as shorthands; `tickInterval` (axis units, every n-th category, or a calendar interval such as `{ weeks: 1 }`), `minorTicks`, `strips` and `constantLines`. |
+| `valueAxis` | `OgeChartAxisOptions \| readonly OgeChartAxisOptions[]` | `{}` | One or more value axes; series pick theirs via `axis` (or by `pane`). `position: 'end'` renders on the far side (right, or on top when rotated), `type: 'logarithmic'` spaces decades evenly, `abbreviate: false` disables SI labels (`1.2K`). `pane` places the axis in a pane; `constantLines` (`{ value, label?, color?, dash?, width?, position: 'inside' \| 'outside' }`) draw threshold / target lines whose labels stay clear of the plot edges; `strips` (`{ start, end, label?, color? }`) shade value bands; `breaks` (`{ start, end }[]`, linear axes) skip value ranges with a zig-zag marker; `tickInterval`, `minorTicks`, `allowDecimals: false` and `label` work as on the argument axis. |
+| `stripLines` | `readonly OgeChartStripLine[]` | `[]` | Argument-axis markers: `{ start, end?, label?, color? }` — a line without `end`, a shaded band with it (see also `argumentAxis.strips` / `constantLines`). |
 | `annotations` | `readonly OgeChartAnnotation[]` | `[]` | Plot annotations: `type: 'point'` draws a marker dot with a connector into a label box at (`argument`, `value`); `'text'` places the label alone (top of the plot without a value). `axis`, `color` and `offsetX/Y` refine placement. |
+
+_Layout & direction_
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rotated` | `boolean` | `false` | Swaps the axes: the argument axis runs vertically (first argument on top), the value axis horizontally. Applies to every series type — bars become horizontal bars (stacked and range bars too), lines run top-down — and the tooltip, crosshair, zoom/pan, the data table and the keyboard follow (Up/Down walk the arguments, Left/Right the series). |
+| `panes` | `readonly OgeChartPane[]` | `[]` | Plot areas stacked over one shared argument axis (price + volume): `{ name, height? }` with `height` as a ratio. Series pick a pane with `pane` (binding to that pane's first value axis, or a default one) and value axes with `valueAxis[].pane`; stacks and bar slots are per pane. The argument axis sits under the last pane, the crosshair spans every pane (its horizontal line stays in the hovered one) and zoom/pan move them together. Rotated charts lay panes side by side. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: mirrors the argument axis, moves the value axes to the other side, flips the legend, the tooltip's opening side and the Left/Right arrow keys. Unset follows the page — the computed `direction` or the nearest `dir` attribute, read after the first render (re-read by `refresh()`); an explicit value also sets `dir` on the host. |
 
 _Interaction_
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `zoomEnabled / panEnabled` | `'none' \| 'wheel' \| 'drag' \| 'both' / boolean` | `'none' / false` | Cursor-centered wheel zoom (a non-passive listener, so the page does not scroll under it), drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom. |
+| `zoomEnabled / panEnabled` | `'none' \| 'wheel' \| 'drag' \| 'both' / boolean` | `'none' / false` | Cursor-centered wheel zoom (a non-passive listener, so the page does not scroll under it), drag-select zoom (Escape cancels mid-drag, 8px threshold), Shift+drag pan. Escape on the focused plot resets the zoom. On touch screens two fingers pinch-zoom and pan together (the argument values under both fingers stay under them) and one finger pans when `panEnabled` is on, otherwise drag-zooms; the plot declares `touch-action` so the page still scrolls across the argument axis. |
 | `visualRange / defaultVisualRange` | `OgeChartRange \| null` | `undefined / null` | The zoom window in argument-axis units (`null` = full extent) — controlled when `visualRange` is provided (pair it with `onVisualRangeChange`), otherwise seeded by `defaultVisualRange`. Writes clamp into the data bounds. |
 | `tooltip` | `OgeChartTooltipOptions` | `{}` | `{ enabled?, shared? }` — shared lists every series at the hovered argument; otherwise the value-nearest series wins. |
 | `crosshair` | `OgeChartCrosshairOptions` | `{}` | `{ enabled?, horizontal? }` — the vertical tracker snaps to the nearest argument (binary search). |
@@ -32628,7 +33008,7 @@ _Appearance & i18n_
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `title / subtitle` | `string` | `''` | Headings above the plot. |
-| `animation` | `boolean` | `true` | Hover/selection transitions; honors `prefers-reduced-motion`. |
+| `animation` | `boolean \| OgeChartAnimationOptions` | `true` | Hover/selection transitions plus a one-time draw-in on the first render with data — each series grows from its value baseline (bars grow, lines rise) in every orientation. `{ enabled?, duration? (ms, 600), easing? ('linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut') }`; `false` turns both off and `prefers-reduced-motion: reduce` always does. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
 | `messages` | `Partial<OgeChartsMessages>` | `{}` | Per-instance message overrides, merged over the provider config per top-level block. |
 | `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-chart` host element — give it a height (`style={{ height: 380 }}`). |
@@ -32669,6 +33049,12 @@ _Export entry point (lazy, dependency-free)_
 | `OgeChartSeriesType` | `string union` | 'line' \| 'spline' \| 'stepLine' \| 'area' \| 'splineArea' \| 'stepArea' \| 'stackedArea' \| 'fullStackedArea' \| 'bar' \| 'stackedBar' \| 'fullStackedBar' \| 'rangeBar' \| 'scatter' \| 'bubble' \| 'rangeArea' \| 'candlestick'. |
 | `OgeChartPoint<T>` | `interface` | The normalized point: `argument`, `argNumeric`, `value`(s incl. OHLC), `source`, `index`. |
 | `OgeChartAxisType / OgeChartRange` | `'linear' \| 'logarithmic' \| 'category' \| 'time' / { min, max }` | Axis kinds and the numeric window type (time axes: epoch ms; category: index space). |
+| `OgeChartConstantLine / OgeChartAxisStrip / OgeChartAxisBreak` | `interface` | Guides of an axis: `{ value, label?, color?, dash? ('solid' \| 'dash' \| 'dot'), width?, position? ('inside' \| 'outside') }`, `{ start, end, label?, color? }` and `{ start, end }` (value axes only). Colours take any CSS colour, theme tokens included. |
+| `OgeChartPane` | `interface` | `{ name, height? }` — a pane of `panes`; `height` is a ratio against the other panes (default 1). |
+| `OgeChartTickInterval / OgeChartDateInterval / OgeChartMinorTickOptions` | `number \| interface` | `tickInterval`: a number in axis units (ms on time axes, every n-th category on category axes) or a calendar interval `{ years?, months?, weeks?, days?, hours?, minutes? }` stepping real calendar boundaries; `minorTicks`: `true` or `{ visible?, count? (4) }`. |
+| `OgeChartAxisLabelOptions / OgeChartLabelFormat / OgeChartLabelOverlap` | `interface / union` | `{ visible?, format?, template?, overlap? }`; `format` is a function or `Intl.NumberFormatOptions` / `Intl.DateTimeFormatOptions`; `overlap` is `'rotate' \| 'stagger' \| 'hide' \| 'skip' \| 'none'` (a rotated chart's vertical argument axis falls back to `skip` for rotate/stagger). |
+| `OgeChartAnimationOptions / OgeChartAnimationEasing` | `interface / union` | `{ enabled?, duration?, easing? }` with `'linear' \| 'ease' \| 'easeIn' \| 'easeOut' \| 'easeInOut'`. |
+| `OgeChartPeriod / OgeChartCustomPeriod` | `union / interface` | Range-selector periods: `'1M' \| '3M' \| '6M' \| 'YTD' \| '1Y' \| 'All'`, or `{ label, range }` where `range` is a window `{ min, max }`, a span in axis units back from the data end, or a calendar interval back from it. |
 | `OgeChartHandle<T>` | `ref handle` | Every method above: `zoomToRange`, `resetZoom`, `hideTooltip`, `refresh`, `focus`, `getExportData`, `getSvgElement`. |
 
 _Template directives (render props)_
@@ -32746,6 +33132,7 @@ _OgePolarChartHandle (ref)_
 | `dataSource / series` | `readonly T[] / readonly OgeChartSeriesInput[]` | `[] / []` | The mini background chart (line/area recommended) drawn behind the selection window. |
 | `value / defaultValue` | `OgeChartRange \| null` | `undefined / null` | The selected window in argument units (`null` = full range) — controlled when provided. Share one state between it and a chart's `visualRange` and the two stay in lockstep. |
 | `scaleType` | `'time' \| 'linear' \| undefined` | `—` | Auto-detects from the first argument (dates → time) when unset. |
+| `periods` | `readonly (OgeChartPeriod \| OgeChartCustomPeriod)[]` | `[]` | Period buttons above the strip (a `role="group"` of toggle buttons with `aria-pressed`): `'1M' \| '3M' \| '6M' \| '1Y'` count calendar months back from the data end, `'YTD'` starts on January 1st, `'All'` resets; custom `{ label, range }` entries take a window, a span or a calendar interval. Calendar periods only render on time scales; the texts and accessible descriptions come from `messages.periods`. |
 | `palette / locale / messages` | `see OgeChart` | `—` | Shared options; handle labels come from `messages.aria.rangeStart/rangeEnd/rangeWindow`. |
 | `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-range-selector` host. |
 
@@ -32771,7 +33158,7 @@ _OgeRangeSelectorHandle (ref)_
 | --- | --- | --- | --- |
 | `OgeChartsConfigProvider` | `component ({ config?: OgeChartsConfigInput })` | `—` | Configures every chart below the provider — the React counterpart of `provideOgeChartsConfig()`. Shallow merge over the outer provider (or `OGE_DEFAULT_CHARTS_CONFIG`) per top-level key — a partial `messages` replaces whole nested blocks — and it re-resolves whenever `config` changes, which is how the UI language switches at runtime. |
 | `useOgeChartsConfig()` | `OgeChartsConfig` | `—` | The resolved config of the current subtree. |
-| `messages` | `OgeChartsMessages` | `—` | Every user-facing string, aria labels included: `aria` (`OgeChartsAriaMessages` — chart/pie labels with `{title}`/`{count}`, table caption, plot hint, legend label), `announcements` (`OgeChartsAnnouncementMessages` — live-region templates with `{series}`/`{argument}`/`{value}`) and `noData`. Defaults: `OGE_DEFAULT_CHARTS_MESSAGES`. |
+| `messages` | `OgeChartsMessages` | `—` | Every user-facing string, aria labels included: `aria` (`OgeChartsAriaMessages` — chart/pie labels with `{title}`/`{count}`, table caption, plot hint, legend label), `announcements` (`OgeChartsAnnouncementMessages` — live-region templates with `{series}`/`{argument}`/`{value}`), `periods` (`OgeChartsPeriodMessages` — the range-selector period group label, button texts and their spelled-out descriptions) and `noData`. Defaults: `OGE_DEFAULT_CHARTS_MESSAGES`. |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format in scope; a per-instance `locale` prop wins. |
 | `a11yTableLimit` | `number` | `50` | Rows of the screen-reader data table. |
 | `markerThreshold` | `number` | `200` | Marker circles render only up to this many points per series — beyond it the single path carries the series alone. Line-family paths additionally auto-downsample with LTTB to about one point per pixel once a series outgrows the plot width (hit-testing and tooltips keep the full data). |
@@ -32779,6 +33166,345 @@ _OgeRangeSelectorHandle (ref)_
 ### Demos
 
 Each demo below is a complete standalone component — copy one whole and it compiles.
+
+#### Rotated bars
+
+```ts
+'use client';
+
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const data = [
+  { region: 'North', online: 420, retail: 310 },
+  { region: 'East', online: 380, retail: 260 },
+  { region: 'South', online: 290, retail: 340 },
+  { region: 'West', online: 510, retail: 220 },
+  { region: 'Central', online: 240, retail: 180 },
+];
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'stackedBar', valueField: 'online', name: 'Online' },
+  { type: 'stackedBar', valueField: 'retail', name: 'Retail' },
+];
+
+export function RotatedBars() {
+  return (
+    // rotated swaps the axes: the argument axis runs down the left, values
+    // grow to the right. Every series type follows — these stackedBar series
+    // become horizontal stacked bars — and so do the tooltip, crosshair, zoom
+    // and the keyboard (Up/Down walk the categories, Left/Right the series).
+    <OgeChart
+      dataSource={data}
+      series={series}
+      commonSeries={{ argumentField: 'region' }}
+      rotated
+      tooltip={{ shared: true }}
+      valueAxis={{ title: 'Units sold', abbreviate: false }}
+      style={{ height: 360 }}
+    />
+  );
+}
+```
+
+#### Constant lines & strips
+
+```ts
+'use client';
+
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartAxisOptions, OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const data = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(
+  (month, i) => ({ month, latency: 180 + Math.round(Math.sin(i / 1.7) * 70) + i * 4 }),
+);
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'spline', argumentField: 'month', valueField: 'latency', name: 'p95 latency (ms)' },
+];
+
+const valueAxis: OgeChartAxisOptions = {
+  constantLines: [
+    { value: 250, label: 'SLO 250 ms', color: 'var(--oge-danger)', width: 2 },
+    { value: 150, label: 'Goal', dash: 'dot', position: 'outside' },
+  ],
+  strips: [{ start: 100, end: 150, label: 'Comfort zone' }],
+};
+
+const argumentAxis: OgeChartAxisOptions = {
+  constantLines: [{ value: 'Jun', label: 'Release 2.0', color: 'var(--oge-accent)', dash: 'solid' }],
+  strips: [{ start: 'Sep', end: 'Oct', label: 'Freeze' }],
+};
+
+export function ConstantLines() {
+  return (
+    // constantLines draw a threshold at an axis value with a label (inside
+    // next to the line, or outside past the plot edge); strips shade a value
+    // band. Both work on the value AND the argument axis; labels never run
+    // off the plot.
+    <OgeChart
+      dataSource={data}
+      series={series}
+      valueAxis={valueAxis}
+      argumentAxis={argumentAxis}
+      style={{ height: 360 }}
+    />
+  );
+}
+```
+
+#### Panes (price + volume)
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeChart, OgeRangeSelector } from '@oge-ui/react-charts';
+import type { OgeChartAxisOptions, OgeChartPane, OgeChartPeriod, OgeChartRange, OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const data = Array.from({ length: 260 }, (_, i) => {
+  const open = 100 + Math.sin(i / 14) * 18 + i * 0.12;
+  const close = open + Math.sin(i * 1.7) * 3;
+  return {
+    day: new Date(2025, 8, 1 + i),
+    open,
+    close,
+    high: Math.max(open, close) + 2,
+    low: Math.min(open, close) - 2,
+    volume: 1800 + Math.round(Math.abs(Math.cos(i / 3)) * 2400),
+  };
+});
+
+const panes: OgeChartPane[] = [
+  { name: 'price', height: 3 },
+  { name: 'volume', height: 1 },
+];
+
+const valueAxes: OgeChartAxisOptions[] = [
+  { pane: 'price', title: 'Price' },
+  { pane: 'volume', title: 'Volume' },
+];
+
+const series: OgeChartSeriesInput[] = [
+  {
+    type: 'candlestick',
+    argumentField: 'day',
+    openField: 'open',
+    highField: 'high',
+    lowField: 'low',
+    closeField: 'close',
+    name: 'OGE',
+    pane: 'price',
+  },
+  { type: 'bar', argumentField: 'day', valueField: 'volume', name: 'Volume', pane: 'volume', opacity: 0.6 },
+];
+
+const navigator: OgeChartSeriesInput[] = [
+  { type: 'area', argumentField: 'day', valueField: 'close', name: 'Close' },
+];
+
+const periods: OgeChartPeriod[] = ['1M', '3M', '6M', 'YTD', '1Y', 'All'];
+
+export function PriceAndVolume() {
+  const [range, setRange] = useState<OgeChartRange | null>(null);
+  return (
+    // panes stack plot areas over ONE shared argument axis: series and value
+    // axes pick theirs by name. The crosshair runs through every pane (its
+    // horizontal line stays in the hovered one) and zoom/pan move all of them.
+    // The range selector's period buttons set the same window.
+    <>
+      <OgeChart
+        dataSource={data}
+        series={series}
+        panes={panes}
+        valueAxis={valueAxes}
+        crosshair={{ horizontal: true }}
+        tooltip={{ shared: true }}
+        visualRange={range}
+        onVisualRangeChange={setRange}
+        zoomEnabled="both"
+        panEnabled
+        style={{ height: 420 }}
+      />
+      <OgeRangeSelector
+        dataSource={data}
+        series={navigator}
+        periods={periods}
+        value={range}
+        onValueChange={setRange}
+      />
+    </>
+  );
+}
+```
+
+#### Axis breaks
+
+```ts
+'use client';
+
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const data = [
+  { team: 'Search', tickets: 84 },
+  { team: 'Billing', tickets: 112 },
+  { team: 'Platform', tickets: 1010 },
+  { team: 'Mobile', tickets: 96 },
+  { team: 'Data', tickets: 61 },
+];
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'team', valueField: 'tickets', name: 'Open tickets', showLabels: true },
+];
+
+export function AxisBreaks() {
+  return (
+    // One outlier would flatten every other bar. breaks skip a value range on
+    // a linear value axis — the gap is drawn with a zig-zag marker and no tick
+    // lands inside it.
+    <OgeChart
+      dataSource={data}
+      series={series}
+      valueAxis={{ breaks: [{ start: 140, end: 940 }] }}
+      style={{ height: 340 }}
+    />
+  );
+}
+```
+
+#### Ticks & labels
+
+```ts
+'use client';
+
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartAxisOptions, OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const data = Array.from({ length: 70 }, (_, i) => ({
+  day: new Date(2026, 2, 2 + i),
+  temperature: 9 + Math.round(Math.sin(i / 9) * 5 + i / 8),
+}));
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'stepLine', argumentField: 'day', valueField: 'temperature', name: 'Daily high' },
+];
+
+const argumentAxis: OgeChartAxisOptions = {
+  tickInterval: { weeks: 1 },
+  minorTicks: { count: 6 },
+  grid: true,
+  label: { format: { day: 'numeric', month: 'short' }, overlap: 'stagger' },
+};
+
+const valueAxis: OgeChartAxisOptions = {
+  allowDecimals: false,
+  tickInterval: 2,
+  label: { template: '{value} °C' },
+};
+
+export function TicksAndLabels() {
+  return (
+    // tickInterval fixes the tick distance — a number in axis units or a
+    // calendar interval such as { weeks: 1 }; minorTicks adds the ticks (and
+    // grid lines) in between; allowDecimals: false keeps whole numbers.
+    // label.format takes Intl options (or a function), label.template wraps
+    // the text and label.overlap picks rotate / stagger / hide / skip.
+    <OgeChart
+      dataSource={data}
+      series={series}
+      argumentAxis={argumentAxis}
+      valueAxis={valueAxis}
+      style={{ height: 340 }}
+    />
+  );
+}
+```
+
+#### RTL & touch
+
+```ts
+'use client';
+
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const data = Array.from({ length: 30 }, (_, i) => ({
+  day: i + 1,
+  visits: 400 + Math.round(Math.sin(i / 3) * 120 + i * 8),
+  orders: 60 + Math.round(Math.cos(i / 4) * 20 + i * 2),
+}));
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'area', argumentField: 'day', valueField: 'visits', name: 'Visits' },
+  { type: 'line', argumentField: 'day', valueField: 'orders', name: 'Orders' },
+];
+
+export function RightToLeft() {
+  return (
+    // rtlEnabled (unset = follow the page's dir) mirrors the argument axis,
+    // moves the value axis to the right, flips the legend and the tooltip side
+    // and swaps the Left/Right arrow keys. On touch screens two fingers
+    // pinch-zoom and pan the plot; one finger pans when panEnabled is on,
+    // otherwise it drag-zooms.
+    <OgeChart
+      dataSource={data}
+      series={series}
+      rtlEnabled
+      zoomEnabled="both"
+      panEnabled
+      legend={{ position: 'top' }}
+      style={{ height: 340 }}
+    />
+  );
+}
+```
+
+#### Draw-in animation
+
+```ts
+'use client';
+
+import { useState } from 'react';
+import { OgeChart } from '@oge-ui/react-charts';
+import type { OgeChartAnimationOptions, OgeChartSeriesInput } from '@oge-ui/react-charts';
+
+const data = [
+  { quarter: 'Q1', revenue: 120, cost: 80 },
+  { quarter: 'Q2', revenue: 150, cost: 92 },
+  { quarter: 'Q3', revenue: 138, cost: 101 },
+  { quarter: 'Q4', revenue: 190, cost: 110 },
+];
+
+const series: OgeChartSeriesInput[] = [
+  { type: 'bar', argumentField: 'quarter', valueField: 'revenue', name: 'Revenue' },
+  { type: 'spline', argumentField: 'quarter', valueField: 'cost', name: 'Cost' },
+];
+
+const animation: OgeChartAnimationOptions = { duration: 1100, easing: 'easeInOut' };
+
+export function DrawIn() {
+  // a new key re-mounts the chart, which plays the draw-in again
+  const [run, setRun] = useState(0);
+  return (
+    // The first render draws each series in from its value baseline: bars
+    // grow, lines rise. animation takes true / false or { enabled, duration,
+    // easing }; prefers-reduced-motion always switches it off.
+    <>
+      <button type="button" onClick={() => setRun(run + 1)}>
+        Replay
+      </button>
+      <OgeChart
+        key={run}
+        dataSource={data}
+        series={series}
+        animation={animation}
+        style={{ height: 320 }}
+      />
+    </>
+  );
+}
+```
 
 #### Getting started
 
