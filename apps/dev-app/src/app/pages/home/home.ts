@@ -87,8 +87,8 @@ const ORG: OrgNode[] = [
  * variables under `.dark`. Copy sits beside a corner-ticked live component
  * window with pointer tilt and glare; a package marquee runs under the
  * hero; features are a compact `01…05` numbered grid; component rows carry
- * their family icons; and live monthly npm download tiles are fetched
- * client-side from api.npmjs.org (graceful '—' fallback). Motion runs on
+ * their family icons; and npm download tiles read the build-time
+ * `/npm-downloads.json` (graceful '—' fallback). Motion runs on
  * native listeners + rAF outside change detection and settles under
  * prefers-reduced-motion; the window tilt is dropped while the select tab
  * is active (a transformed ancestor would misplace the popup's fixed
@@ -2281,36 +2281,13 @@ export class HomePage {
     });
   }
 
-  /** First month an `@oge-ui` package hit npm — the base of every total. */
-  private static readonly NPM_SINCE = '2026-01-01';
-
   /**
-   * npm caps a `point/{from}:{to}` range at 18 months, so the span from the
-   * first release to today is split into 12-month windows and summed — the
-   * total stays correct as the project ages, with no date to maintain.
-   */
-  private static downloadWindows(): string[] {
-    const iso = (date: Date): string => date.toISOString().slice(0, 10);
-    const today = new Date();
-    const windows: string[] = [];
-    let from = new Date(`${HomePage.NPM_SINCE}T00:00:00Z`);
-    while (from <= today) {
-      const to = new Date(from);
-      to.setUTCFullYear(to.getUTCFullYear() + 1);
-      to.setUTCDate(to.getUTCDate() - 1);
-      const end = to < today ? to : today;
-      windows.push(`${iso(from)}:${iso(end)}`);
-      from = new Date(end);
-      from.setUTCDate(from.getUTCDate() + 1);
-    }
-    return windows;
-  }
-
-  /**
-   * Fetches all-time download counts from api.npmjs.org (CORS-open): npm
-   * refreshes its counters daily, so every page load shows the latest figure.
-   * Failures leave the '—' placeholder — the section degrades gracefully
-   * offline or under rate limiting.
+   * All-time npm download counts, collected at build time into
+   * `/npm-downloads.json` by `tools/docs-tools/npm-downloads.mjs` (run by the
+   * Vercel build). One same-origin request: calling api.npmjs.org from the
+   * browser per package hit npm's rate limit, whose 429s carry no CORS
+   * header, and the site CSP does not allow that origin. A package missing
+   * from the file shows the '—' placeholder.
    */
   private loadNpmStats(): void {
     const format = (n: number): string =>
@@ -2319,51 +2296,30 @@ export class HomePage {
         : n >= 1_000
           ? `${(n / 1_000).toFixed(1)}k`
           : String(n);
-    const windows = HomePage.downloadWindows();
-    void Promise.all(
-      this.packages.map(async (pkg) => {
-        try {
-          const perWindow = await Promise.all(
-            windows.map(async (range) => {
-              const res = await fetch(
-                `https://api.npmjs.org/downloads/point/${range}/${pkg}`,
-              );
-              if (!res.ok) return null;
-              const body = (await res.json()) as { downloads?: number };
-              return typeof body.downloads === 'number' ? body.downloads : null;
-            }),
+    void fetch('/npm-downloads.json')
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null)
+      .then((body: { packages?: Record<string, number> } | null) => {
+        const counts = body?.packages ?? {};
+        const known = this.packages.filter(
+          (pkg) => typeof counts[pkg] === 'number',
+        );
+        this.npmStats.set(
+          this.packages.map((pkg) => {
+            const count = counts[pkg];
+            return {
+              pkg,
+              downloads: typeof count === 'number' ? format(count) : '—',
+            };
+          }),
+        );
+        if (known.length > 0) {
+          this.npmTotal.set(
+            format(known.reduce((sum, pkg) => sum + (counts[pkg] ?? 0), 0)),
           );
-          // A missing window would silently understate the total — bail out.
-          if (perWindow.some((value) => value === null)) {
-            return { pkg, count: null };
-          }
-          return {
-            pkg,
-            count: perWindow.reduce<number>(
-              (sum, value) => sum + (value ?? 0),
-              0,
-            ),
-          };
-        } catch {
-          return { pkg, count: null };
+          this.npmCounted.set(known.length);
         }
-      }),
-    ).then((results) => {
-      const counts = new Map(results.map((r) => [r.pkg, r.count]));
-      this.npmStats.set(
-        this.packages.map((pkg) => {
-          const count = counts.get(pkg);
-          return { pkg, downloads: count == null ? '—' : format(count) };
-        }),
-      );
-      const known = results.filter(
-        (r): r is { pkg: string; count: number } => r.count !== null,
-      );
-      if (known.length > 0) {
-        this.npmTotal.set(format(known.reduce((sum, r) => sum + r.count, 0)));
-        this.npmCounted.set(known.length);
-      }
-    });
+      });
   }
 
   protected copyInstall(): void {

@@ -210,12 +210,12 @@ catalogs — override globally with `provideOge<X>Config()` or per instance via
 OGE ships a machine-readable reference so an assistant can write correct code
 without guessing:
 
-| File                                                | What it is                                                             |
-| --------------------------------------------------- | ---------------------------------------------------------------------- |
+| File                                                    | What it is                                                             |
+| ------------------------------------------------------- | ---------------------------------------------------------------------- |
 | [`/llms.txt`](https://www.ogeui.com/llms.txt)           | [llmstxt.org](https://llmstxt.org) index — packages and every doc page |
 | [`/llms-full.txt`](https://www.ogeui.com/llms-full.txt) | conventions, every documented API member and every demo, in one file   |
 | `https://www.ogeui.com/llms/<package>.txt`              | one self-contained reference per package                               |
-| `node_modules/@oge-ui/<package>/llms.txt`           | the same per-package file, inside the installed tarball                |
+| `node_modules/@oge-ui/<package>/llms.txt`               | the same per-package file, inside the installed tarball                |
 
 `ng add @oge-ui/<package>` also writes a short usage block into your
 `AGENTS.md`, so assistants working in your repo reach for OGE by default. Pass

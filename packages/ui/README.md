@@ -33,15 +33,15 @@ import { OgeGrid, OgeColumn, OgeSelectBox, OgeTagBox, OgeButton } from 'oge-ui';
 
 ## What's inside
 
-| Component family                            | Highlights                                                                                                                             | Docs                                                    |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Component family                            | Highlights                                                                                                                             | Docs                                                        |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | **Data Grid** (`@oge-ui/grid`)              | Row + column virtualization into the millions, sorting, filtering, grouping, editing, master-detail, remote data, CSV/Excel/PDF export | [demos](https://www.ogeui.com/components/data-grid)         |
 | **Tree List** (`@oge-ui/tree-list`)         | The grid feature set on hierarchical data: lazy loading, tri-state selection, drag & drop                                              | [demos](https://www.ogeui.com/components/tree-list)         |
 | **Select Box & Tag Box** (`@oge-ui/inputs`) | WAI-ARIA combobox family: search, grouping, custom values, avatars, multi-select chips, autocomplete                                   | [demos](https://www.ogeui.com/components/inputs/select-box) |
 | **Inputs** (`@oge-ui/inputs`)               | TextBox, TextArea, NumberBox, CheckBox, Switch, RadioGroup, Calendar, DateBox, DateRangeBox — one field chrome, all three form systems | [demos](https://www.ogeui.com/components/inputs)            |
 | **Buttons** (`@oge-ui/buttons`)             | Async actions with auto loading, click guards, hold-to-confirm, groups, split buttons                                                  | [demos](https://www.ogeui.com/components/buttons)           |
 | **Overlay** (`@oge-ui/overlay`)             | Flip-aware anchored popups, menus, tooltips, context menus, modal dialogs, toasts                                                      | [demos](https://www.ogeui.com/components/overlay)           |
-| **Core** (`@oge-ui/core`)                   | Framework-free data engine: sorting/filtering/pivot/virtualization math                                                                | —                                                       |
+| **Core** (`@oge-ui/core`)                   | Framework-free data engine: sorting/filtering/pivot/virtualization math                                                                | —                                                           |
 
 Looking for the **Pivot Grid**? It lives in the separate, commercially
 licensed [`@oge-ui/pivot`](https://www.npmjs.com/package/@oge-ui/pivot)
