@@ -974,7 +974,11 @@ export const OgeBpmnEditor = forwardRef<
           )}
           {pad && (
             <div
-              className="oge-bpmn-context-pad"
+              className={
+                pad.side === 'left'
+                  ? 'oge-bpmn-context-pad oge-bpmn-context-pad-left'
+                  : 'oge-bpmn-context-pad'
+              }
               role="toolbar"
               aria-label={pad.ariaLabel}
               style={{ left: `${pad.x}px`, top: `${pad.y}px` }}
@@ -1042,7 +1046,11 @@ export const OgeBpmnEditor = forwardRef<
           )}
           {multiPad && (
             <div
-              className="oge-bpmn-context-pad"
+              className={
+                multiPad.side === 'left'
+                  ? 'oge-bpmn-context-pad oge-bpmn-context-pad-left'
+                  : 'oge-bpmn-context-pad'
+              }
               role="toolbar"
               aria-label={msg.align.menuLabel}
               style={{ left: `${multiPad.x}px`, top: `${multiPad.y}px` }}

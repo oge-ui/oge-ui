@@ -93,6 +93,7 @@ import {
 import type { BpmnDiagramJson } from './bpmn-json';
 import { fromBpmnJson, toBpmnJson } from './bpmn-json';
 import { renderDiagramSvg } from './svg-export';
+import { bpmnIsRtl, observeBpmnDirection } from './direction';
 import { connectionKindFor } from './rules';
 import type { BpmnSnapGuide } from './snapping';
 import { snapPoint, snapToNeighbors, snapValue } from './snapping';
@@ -257,8 +258,15 @@ export type BpmnIdRect = Rect & { readonly id: string };
 /** The single-selection context pad. */
 export interface BpmnPadView {
   readonly id: string;
+  /**
+   * Screen x of the pad's anchor edge: its left edge beside the shape's
+   * right side, or — `side: 'left'` (RTL chrome) — its right edge beside the
+   * shape's left side (the pad is translated by its own width).
+   */
   readonly x: number;
   readonly y: number;
+  /** Which side of the shape the pad sits on (`'left'` in RTL). */
+  readonly side: 'left' | 'right';
   readonly connect: boolean;
   readonly append: boolean;
   readonly editLabel: boolean;
@@ -272,6 +280,8 @@ export interface BpmnMultiPadView {
   readonly ids: readonly string[];
   readonly x: number;
   readonly y: number;
+  /** Which side of the joint bounding box the pad sits on (`'left'` in RTL). */
+  readonly side: 'left' | 'right';
 }
 
 /** Screen geometry of the inline label editor. */
@@ -556,6 +566,12 @@ export class OgeBpmnEditorCore {
   readonly propertiesCollapsed: OgeBpmnReactiveCell<boolean>;
   /** Fullscreen (native) or maximized-fallback state. */
   readonly maximized: OgeBpmnReactiveCell<boolean>;
+  /**
+   * Whether the editor chrome is right-to-left (the host's direction). The
+   * canvas stays LTR; only the chrome mirrors. Kept current by `revive()`
+   * (a `dir` observer) and `refreshDirection()`.
+   */
+  readonly chromeRtl: OgeBpmnReactiveCell<boolean>;
   /** Registered HTML overlays (badges), keyed by their generated handle. */
   private readonly overlayDefs: OgeBpmnReactiveCell<
     readonly { readonly id: string; readonly def: OgeBpmnOverlay }[]
@@ -631,6 +647,7 @@ export class OgeBpmnEditorCore {
   private overlayCounter = 0;
   private unsubscribe: (() => void) | null = null;
   private fullscreenListener: (() => void) | null = null;
+  private directionObserver: (() => void) | null = null;
 
   constructor(
     rx: OgeBpmnReactivity,
@@ -664,6 +681,7 @@ export class OgeBpmnEditorCore {
     this.propertiesWidth = rx.cell(240);
     this.propertiesCollapsed = rx.cell(false);
     this.maximized = rx.cell(false);
+    this.chromeRtl = rx.cell(false);
     this.overlayDefs = rx.cell<
       readonly { readonly id: string; readonly def: OgeBpmnOverlay }[]
     >([]);
@@ -812,6 +830,13 @@ export class OgeBpmnEditorCore {
    * after a cleanup on the same instance).
    */
   revive(): void {
+    this.refreshDirection();
+    if (this.directionObserver === null) {
+      this.directionObserver = observeBpmnDirection(
+        this.host.hostElement(),
+        (rtl) => this.chromeRtl.set(rtl),
+      );
+    }
     if (this.unsubscribe === null) {
       this.unsubscribe = this.stack.onChange((m, source) =>
         this.onModelChange(m, source),
@@ -839,8 +864,19 @@ export class OgeBpmnEditorCore {
     }
   }
 
+  /**
+   * Re-reads the chrome direction from the host (computed `direction`, then
+   * the nearest `dir`). Render layers call it once the host is attached.
+   */
+  refreshDirection(): void {
+    const rtl = bpmnIsRtl(this.host.hostElement());
+    if (rtl !== this.chromeRtl()) this.chromeRtl.set(rtl);
+  }
+
   /** Tears down listeners, an in-flight gesture and a pending autosave. */
   destroy(): void {
+    this.directionObserver?.();
+    this.directionObserver = null;
     this.unsubscribe?.();
     this.unsubscribe = null;
     this.fullscreenListener?.();
@@ -1191,8 +1227,10 @@ export class OgeBpmnEditorCore {
     const [min, max] = this.panelWidthBounds(panel);
     const startX = event.clientX;
     const startWidth = width();
-    // the properties panel sits on the right — dragging left widens it
-    const direction = panel === 'rail' ? 1 : -1;
+    // the properties panel sits on the inline end — dragging towards the
+    // inline start widens it; RTL chrome mirrors both separators
+    const mirror = bpmnIsRtl(this.host.hostElement()) ? -1 : 1;
+    const direction = (panel === 'rail' ? 1 : -1) * mirror;
     capturePointer(event);
     const finish = (cancelled: boolean): void => {
       cleanup();
@@ -1217,7 +1255,9 @@ export class OgeBpmnEditorCore {
   onPanelResizeKey(event: BpmnKeyInput, panel: BpmnPanel): void {
     const width = this.panelWidthCell(panel);
     const [min, max] = this.panelWidthBounds(panel);
-    const grow = panel === 'rail' ? 1 : -1; // ArrowRight moves the separator right
+    // ArrowRight moves the separator right; the rail sits on the right in RTL
+    const mirror = bpmnIsRtl(this.host.hostElement()) ? -1 : 1;
+    const grow = (panel === 'rail' ? 1 : -1) * mirror;
     let next: number | null = null;
     switch (event.key) {
       case 'ArrowRight':
@@ -3502,14 +3542,12 @@ export class OgeBpmnEditorCore {
       if (!di) {
         return null;
       }
-      const p = diagramToScreen(v, {
-        x: di.bounds.x + di.bounds.width,
-        y: di.bounds.y,
-      });
+      const p = this.padAnchor(di.bounds);
       return {
         id,
-        x: p.x + 8,
+        x: p.x,
         y: p.y,
+        side: p.side,
         connect: true,
         append: node.type !== 'textAnnotation' && node.type !== 'endEvent',
         editLabel: true,
@@ -3523,14 +3561,12 @@ export class OgeBpmnEditorCore {
       if (!di) {
         return null;
       }
-      const p = diagramToScreen(v, {
-        x: di.bounds.x + di.bounds.width,
-        y: di.bounds.y,
-      });
+      const p = this.padAnchor(di.bounds);
       return {
         id,
-        x: p.x + 8,
+        x: p.x,
         y: p.y,
+        side: p.side,
         connect: true,
         append: false,
         editLabel: true,
@@ -3550,10 +3586,12 @@ export class OgeBpmnEditorCore {
       source !== undefined &&
       source.type !== 'textAnnotation' &&
       source.defaultFlowId === id;
+    const rtl = this.chromeRtl();
     return {
       id,
-      x: p.x + 8,
+      x: rtl ? p.x - 8 : p.x + 8,
       y: p.y - 40,
+      side: rtl ? 'left' : 'right',
       connect: false,
       append: false,
       editLabel: edge.type === 'sequenceFlow' || edge.type === 'messageFlow',
@@ -3623,11 +3661,27 @@ export class OgeBpmnEditorCore {
     if (bbox === null) {
       return null;
     }
+    const p = this.padAnchor(bbox);
+    return { ids, x: p.x, y: p.y, side: p.side };
+  }
+
+  /**
+   * Where a context pad anchors beside `bounds` (diagram space): 8px off its
+   * top-right corner, or its top-left corner when the chrome is RTL.
+   */
+  private padAnchor(bounds: Rect): {
+    readonly x: number;
+    readonly y: number;
+    readonly side: 'left' | 'right';
+  } {
+    const rtl = this.chromeRtl();
     const p = diagramToScreen(this.vp(), {
-      x: bbox.x + bbox.width,
-      y: bbox.y,
+      x: rtl ? bounds.x : bounds.x + bounds.width,
+      y: bounds.y,
     });
-    return { ids, x: p.x + 8, y: p.y };
+    return rtl
+      ? { x: p.x - 8, y: p.y, side: 'left' }
+      : { x: p.x + 8, y: p.y, side: 'right' };
   }
 
   /** Search matches (max 8) by case-insensitive name/id containment. */
