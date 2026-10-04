@@ -2,7 +2,7 @@
 
 > Popup foundation and surfaces: flip-aware anchored placement, WAI-ARIA menus, tooltips, context menus, the `oge-modal` dialog with `OgeModalService`, and `OgeToastService` notifications.
 
-Part of OGE UI v1.1.1.
+Part of OGE UI v1.1.2.
 Docs and live demos: https://www.ogeui.com/components/overlay
 Whole-suite reference: https://www.ogeui.com/llms-full.txt
 
