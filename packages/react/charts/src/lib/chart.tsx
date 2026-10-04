@@ -21,6 +21,24 @@ import {
 import {
   beginChartGesture,
   buildCartesianData,
+  cartesianDragArgDelta,
+  cartesianLabelTransform,
+  cartesianPinchRange,
+  cartesianPlotArgPx,
+  cartesianSeriesEnterOrigin,
+  cartesianSeriesPane,
+  cartesianZoomRect,
+  chartAnimationVars,
+  chartPrefersReducedMotion,
+  chartTouchAction,
+  chartTouchGestures,
+  createChartPinchTracker,
+  detectChartRtl,
+  resolveChartAnimation,
+  type ChartGestureHandle,
+  type ChartPinchTracker,
+  type OgeChartAnimationOptions,
+  type OgeChartPane,
   buildCartesianScene,
   cartesianActivePoints,
   cartesianAriaLabel,
@@ -42,7 +60,6 @@ import {
   chartSeriesGroupOpacity,
   chartValueText,
   chartWheelZoomEnabled,
-  chartZoomSelectionRect,
   formatOgeChartMessage,
   isChartPointSelected,
   mergeOgeChartsMessages,
@@ -97,8 +114,23 @@ export interface OgeChartProps<T extends object = Record<string, unknown>> {
   readonly panEnabled?: boolean;
   readonly selectionMode?: 'point' | 'series' | 'none';
   readonly palette?: readonly string[];
-  /** Hover/selection transitions; `prefers-reduced-motion` always wins. */
-  readonly animation?: boolean;
+  /**
+   * Hover/selection transitions plus the series draw-in on the first render
+   * (`{ enabled, duration, easing }`); `prefers-reduced-motion` always wins.
+   */
+  readonly animation?: boolean | OgeChartAnimationOptions;
+  /**
+   * Swaps the axes: the argument axis runs vertically, the value axis
+   * horizontally — bars become horizontal bars, lines run top-down.
+   */
+  readonly rotated?: boolean;
+  /**
+   * Right-to-left layout (mirrored argument axis, value axes, legend,
+   * tooltip and arrow keys); unset follows the `dir` of the page.
+   */
+  readonly rtlEnabled?: boolean;
+  /** Plot areas stacked over the shared argument axis (price + volume). */
+  readonly panes?: readonly OgeChartPane[];
   readonly title?: string;
   readonly subtitle?: string;
   readonly locale?: string;
@@ -190,6 +222,9 @@ function OgeChartInner<T extends object>(
   );
   const palette = useStable(props.palette);
   const messages = useStable(props.messages);
+  const panes = useStable(props.panes ?? EMPTY);
+  const animationOption = useStable(props.animation ?? true);
+  const rotated = props.rotated === true;
 
   const msg = useMemo(
     () => mergeOgeChartsMessages(config.messages, messages),
@@ -210,8 +245,26 @@ function OgeChartInner<T extends object>(
     props.onSelectedPointsChange,
   );
 
+  const rootRef = useRef<HTMLDivElement>(null);
   const plotWrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  /* ---------------- orientation / animation ---------------- */
+
+  // the page direction, read after mount (SSR-safe)
+  const [autoRtl, setAutoRtl] = useState(false);
+  useEffect(() => {
+    setAutoRtl(detectChartRtl(rootRef.current));
+  }, []);
+  const rtl = props.rtlEnabled ?? autoRtl;
+  const [reducedMotion] = useState(chartPrefersReducedMotion);
+  const animation = useMemo(
+    () => resolveChartAnimation(animationOption, reducedMotion),
+    [animationOption, reducedMotion],
+  );
+  // true until the first-render draw-in has played
+  const [entering, setEntering] = useState(true);
+  const drawingIn = entering && animation.drawIn;
   const [size, refresh] = useChartSize(plotWrapRef, {
     width: 600,
     height: 400,
@@ -250,6 +303,9 @@ function OgeChartInner<T extends object>(
         height: size.height,
         locale,
         markerThreshold,
+        rotated,
+        rtl,
+        panes,
       }),
     [
       data,
@@ -264,8 +320,19 @@ function OgeChartInner<T extends object>(
       size.height,
       locale,
       markerThreshold,
+      rotated,
+      rtl,
+      panes,
     ],
   );
+
+  // the draw-in runs once: from the first render with data, for `duration`
+  const sceneEmpty = scene.empty;
+  useEffect(() => {
+    if (!entering || sceneEmpty) return undefined;
+    const timer = setTimeout(() => setEntering(false), animation.duration + 50);
+    return () => clearTimeout(timer);
+  }, [entering, sceneEmpty, animation.duration]);
 
   /* ---------------- hover state ---------------- */
 
@@ -423,7 +490,8 @@ function OgeChartInner<T extends object>(
       if (!chartWheelZoomEnabled(now.props.zoomEnabled ?? 'none')) return;
       const svgRect = svg.getBoundingClientRect();
       const x = event.clientX - svgRect.left - now.scene.plot.x;
-      const next = cartesianWheelRange(now.scene, x, event.deltaY);
+      const y = event.clientY - svgRect.top - now.scene.plot.y;
+      const next = cartesianWheelRange(now.scene, x, event.deltaY, y);
       if (next === null) return;
       event.preventDefault();
       setVisualRange(next);
@@ -433,27 +501,102 @@ function OgeChartInner<T extends object>(
     return () => svg.removeEventListener('wheel', onWheel);
   }, [setVisualRange]);
 
+  // the running one-finger / mouse gesture (a second finger cancels it)
+  const activeGesture = useRef<ChartGestureHandle | null>(null);
+  const pinchStart = useRef<{ range: OgeChartRange; rect: DOMRect } | null>(
+    null,
+  );
+  const pinchRef = useRef<ChartPinchTracker | null>(null);
+  // two fingers on the plot: pinch-zoom and two-finger pan
+  const pinch = (): ChartPinchTracker => {
+    pinchRef.current ??= createChartPinchTracker({
+      onPinchStart: () => {
+        activeGesture.current?.cancel();
+        activeGesture.current = null;
+        setZoomDrag(null);
+        const svg = svgRef.current;
+        if (svg === null) return;
+        pinchStart.current = {
+          range: latest.current.scene.effectiveRange,
+          rect: svg.getBoundingClientRect(),
+        };
+      },
+      onPinch: (startA, startB, a, b) => {
+        const start = pinchStart.current;
+        if (start === null) return;
+        const now = latest.current.scene;
+        const local = (point: { clientX: number; clientY: number }) => ({
+          x: point.clientX - start.rect.left - now.plot.x,
+          y: point.clientY - start.rect.top - now.plot.y,
+        });
+        const next = cartesianPinchRange(
+          now,
+          start.range,
+          local(startA),
+          local(startB),
+          local(a),
+          local(b),
+        );
+        if (next !== null) setVisualRange(next);
+      },
+      onPinchEnd: (cancelled) => {
+        pinchStart.current = null;
+        if (!cancelled) {
+          setAnnouncement(latest.current.msg.announcements.zoomed);
+        }
+      },
+    });
+    return pinchRef.current;
+  };
+  useEffect(
+    () => () => {
+      pinchRef.current?.dispose();
+      pinchRef.current = null;
+    },
+    [],
+  );
+
   const onPlotPointerDown = (event: ReactPointerEvent<SVGSVGElement>): void => {
+    if (
+      event.pointerType === 'touch' &&
+      chartTouchGestures(zoomEnabled, panEnabled)
+    ) {
+      // the second finger turns the gesture into a pinch
+      const tracker = pinch();
+      if (tracker.pointerDown(event.nativeEvent) || tracker.active) return;
+    }
     if (event.button !== 0) return;
-    const mode = chartDragMode(zoomEnabled, panEnabled, event.shiftKey);
+    const mode = chartDragMode(
+      zoomEnabled,
+      panEnabled,
+      event.shiftKey,
+      event.pointerType,
+    );
     if (mode === null) return;
     const svgRect = event.currentTarget.getBoundingClientRect();
-    const startPx = event.clientX - svgRect.left - scene.plot.x;
-    if (startPx < 0 || startPx > scene.plot.w) return;
+    const startPx = cartesianPlotArgPx(
+      scene,
+      event.clientX - svgRect.left - scene.plot.x,
+      event.clientY - svgRect.top - scene.plot.y,
+    );
+    if (startPx === null) return;
     const startRange = scene.effectiveRange;
     let drag: ZoomDrag | null = null;
-    beginChartGesture(event.nativeEvent, {
-      onMove: (deltaX) => {
+    activeGesture.current = beginChartGesture(event.nativeEvent, {
+      onMove: (deltaX, deltaY) => {
+        const now = latest.current.scene;
         if (mode === 'pan') {
-          setVisualRange(
-            cartesianPanRange(latest.current.scene, startRange, deltaX),
-          );
+          setVisualRange(cartesianPanRange(now, startRange, deltaX, deltaY));
         } else {
-          drag = { startPx, px: startPx + deltaX };
+          drag = {
+            startPx,
+            px: startPx + cartesianDragArgDelta(now, deltaX, deltaY),
+          };
           setZoomDrag(drag);
         }
       },
       onFinish: (commit, cancelled) => {
+        activeGesture.current = null;
         setZoomDrag(null);
         if (mode === 'pan' || cancelled || !commit || drag === null) return;
         const range = cartesianSelectionRange(
@@ -531,6 +674,8 @@ function OgeChartInner<T extends object>(
       seriesCount: scene.data.seriesList.length,
       isSeriesVisible: (index) => scene.visibility[index] === true,
       zoomed: scene.zoomed,
+      rotated: scene.rotated,
+      rtl: scene.rtl,
     });
     if (command === null) return;
     event.preventDefault();
@@ -588,7 +733,10 @@ function OgeChartInner<T extends object>(
         setActiveArgPos(null);
         setPointerY(null);
       },
-      refresh,
+      refresh() {
+        refresh();
+        setAutoRtl(detectChartRtl(rootRef.current));
+      },
       focus() {
         plotWrapRef.current?.focus();
       },
@@ -622,13 +770,33 @@ function OgeChartInner<T extends object>(
   const zoomSelection =
     zoomDrag === null
       ? null
-      : chartZoomSelectionRect(zoomDrag.startPx, zoomDrag.px);
+      : cartesianZoomRect(scene, zoomDrag.startPx, zoomDrag.px);
   const isSelected = (seriesIndex: number, pointIndex: number): boolean =>
     isChartPointSelected(selectedPoints, seriesIndex, pointIndex);
-  const argLabelY = plot.y + plot.h + 16;
+  const touchAction = chartTouchAction(scene, zoomEnabled, panEnabled);
+  const rootStyle = {
+    ...chartAnimationVars(animation),
+    ...props.style,
+  } as CSSProperties;
 
   return (
-    <div className={cx('oge-chart', props.className)} style={props.style}>
+    <div
+      ref={rootRef}
+      className={cx(
+        'oge-chart',
+        rotated && 'oge-chart-rotated',
+        !animation.transitions && 'oge-chart-static',
+        props.className,
+      )}
+      style={rootStyle}
+      dir={
+        props.rtlEnabled === undefined
+          ? undefined
+          : props.rtlEnabled
+            ? 'rtl'
+            : 'ltr'
+      }
+    >
       {title ? <div className="oge-chart-title">{title}</div> : null}
       {subtitle ? <div className="oge-chart-subtitle">{subtitle}</div> : null}
       <div
@@ -690,7 +858,11 @@ function OgeChartInner<T extends object>(
               wrapper above; the svg click is the pointer equivalent */}
           <svg
             ref={svgRef}
-            className="oge-chart-svg"
+            className={cx(
+              'oge-chart-svg',
+              touchAction === 'pan-x' && 'oge-chart-touch-pan-x',
+              touchAction === 'pan-y' && 'oge-chart-touch-pan-y',
+            )}
             role="img"
             aria-label={rootAriaLabel}
             width={scene.width}
@@ -701,181 +873,235 @@ function OgeChartInner<T extends object>(
             onClick={onPlotClick}
           >
             <defs>
-              <clipPath id={clipId}>
-                <rect x="0" y="0" width={plot.w} height={plot.h} />
-              </clipPath>
+              {scene.panes.map((pane) => (
+                <clipPath key={pane.index} id={`${clipId}-${pane.index}`}>
+                  <rect
+                    x={pane.clip.x}
+                    y={pane.clip.y}
+                    width={pane.clip.w}
+                    height={pane.clip.h}
+                  />
+                </clipPath>
+              ))}
             </defs>
             <g transform={`translate(${plot.x},${plot.y})`}>
-              {/* strip lines / bands */}
-              {scene.stripRects.map((strip, index) => (
-                <Fragment key={index}>
-                  {strip.widthPx > 0 ? (
-                    <rect
-                      className="oge-chart-strip"
-                      x={strip.px}
-                      y="0"
-                      width={strip.widthPx}
-                      height={plot.h}
-                      fill={strip.color}
-                    />
-                  ) : (
-                    <line
-                      className="oge-chart-strip-line"
-                      x1={strip.px}
-                      x2={strip.px}
-                      y1="0"
-                      y2={plot.h}
-                      stroke={strip.color}
-                    />
-                  )}
-                  {strip.label ? (
-                    <text
-                      className="oge-chart-strip-label"
-                      x={strip.px + 4}
-                      y="12"
-                    >
-                      {strip.label}
-                    </text>
-                  ) : null}
-                </Fragment>
-              ))}
+              {/* strips (bands) */}
+              {scene.guides.map((guide, index) =>
+                guide.kind === 'band' ? (
+                  <rect
+                    key={index}
+                    className="oge-chart-strip"
+                    x={guide.rect.x}
+                    y={guide.rect.y}
+                    width={guide.rect.w}
+                    height={guide.rect.h}
+                    fill={guide.color}
+                  />
+                ) : null,
+              )}
               {/* grid */}
-              {scene.valueGridTicks.map((tick) => (
+              {scene.gridLines.map((line, index) => (
                 <line
-                  key={tick.px}
-                  className="oge-chart-grid"
-                  x1="0"
-                  x2={plot.w}
-                  y1={tick.px}
-                  y2={tick.px}
+                  key={index}
+                  className={cx(
+                    'oge-chart-grid',
+                    line.minor && 'oge-chart-grid-minor',
+                  )}
+                  x1={line.x1}
+                  x2={line.x2}
+                  y1={line.y1}
+                  y2={line.y2}
                 />
               ))}
-              {scene.argGrid
-                ? scene.argTicks.map((tick) => (
-                    <line
-                      key={tick.px}
-                      className="oge-chart-grid"
-                      x1={tick.px}
-                      x2={tick.px}
-                      y1="0"
-                      y2={plot.h}
-                    />
-                  ))
-                : null}
-              {/* series */}
-              <g clipPath={`url(#${clipId})`}>
+              {/* series: logical geometry inside the orientation frame */}
+              <g
+                className="oge-chart-plot-frame"
+                transform={scene.frame.transform ?? undefined}
+              >
                 {renderSeries.map((rs) => (
                   <g
                     key={rs.seriesIndex}
-                    className="oge-chart-series"
-                    opacity={chartSeriesGroupOpacity(
-                      hoveredLegend,
-                      rs.seriesIndex,
-                    )}
+                    clipPath={`url(#${clipId}-${cartesianSeriesPane(scene, rs.seriesIndex)})`}
                   >
-                    {rs.areaPathD !== null ? (
-                      <path
-                        className="oge-chart-area"
-                        d={rs.areaPathD}
-                        fill={rs.color}
-                        opacity={rs.opacity * 0.35}
-                      />
-                    ) : null}
-                    {rs.linePathD !== null ? (
-                      <path
-                        className="oge-chart-line"
-                        d={rs.linePathD}
-                        stroke={rs.color}
-                        strokeWidth={rs.strokeWidth}
-                        strokeDasharray={rs.dashArray ?? undefined}
-                        opacity={rs.opacity}
-                        fill="none"
-                      />
-                    ) : null}
-                    {rs.bars.map((bar) => (
-                      <rect
-                        key={bar.pointIndex}
-                        className={cx(
-                          'oge-chart-bar',
-                          isSelected(rs.seriesIndex, bar.pointIndex) &&
-                            'oge-chart-point-selected',
-                        )}
-                        x={bar.x}
-                        y={bar.y}
-                        width={bar.w}
-                        height={bar.h}
-                        fill={rs.color}
-                        opacity={rs.opacity}
-                        rx="2"
-                      />
-                    ))}
-                    {rs.candles.map((candle) => (
-                      <Fragment key={candle.pointIndex}>
-                        <line
-                          className="oge-chart-candle-wick"
-                          x1={candle.x}
-                          x2={candle.x}
-                          y1={candle.wickY1}
-                          y2={candle.wickY2}
+                    <g
+                      className={cx(
+                        'oge-chart-series',
+                        drawingIn && 'oge-chart-series-enter',
+                      )}
+                      style={
+                        drawingIn
+                          ? {
+                              transformOrigin: cartesianSeriesEnterOrigin(
+                                scene,
+                                rs.seriesIndex,
+                              ),
+                            }
+                          : undefined
+                      }
+                      opacity={chartSeriesGroupOpacity(
+                        hoveredLegend,
+                        rs.seriesIndex,
+                      )}
+                    >
+                      {rs.areaPathD !== null ? (
+                        <path
+                          className="oge-chart-area"
+                          d={rs.areaPathD}
+                          fill={rs.color}
+                          opacity={rs.opacity * 0.35}
                         />
+                      ) : null}
+                      {rs.linePathD !== null ? (
+                        <path
+                          className="oge-chart-line"
+                          d={rs.linePathD}
+                          stroke={rs.color}
+                          strokeWidth={rs.strokeWidth}
+                          strokeDasharray={rs.dashArray ?? undefined}
+                          opacity={rs.opacity}
+                          fill="none"
+                        />
+                      ) : null}
+                      {rs.bars.map((bar) => (
                         <rect
+                          key={bar.pointIndex}
                           className={cx(
-                            'oge-chart-candle',
-                            !candle.rising && 'oge-chart-candle-falling',
+                            'oge-chart-bar',
+                            isSelected(rs.seriesIndex, bar.pointIndex) &&
+                              'oge-chart-point-selected',
                           )}
-                          x={candle.x - candle.w / 2}
-                          y={candle.bodyY}
-                          width={candle.w}
-                          height={candle.bodyH}
+                          x={bar.x}
+                          y={bar.y}
+                          width={bar.w}
+                          height={bar.h}
+                          fill={rs.color}
+                          opacity={rs.opacity}
+                          rx="2"
                         />
-                      </Fragment>
-                    ))}
-                    {rs.markers.map((marker) => (
-                      <circle
-                        key={marker.pointIndex}
-                        className={cx(
-                          'oge-chart-marker',
-                          rs.type === 'bubble' && 'oge-chart-bubble',
-                          isSelected(rs.seriesIndex, marker.pointIndex) &&
-                            'oge-chart-point-selected',
-                        )}
-                        cx={marker.x}
-                        cy={marker.y}
-                        r={chartMarkerRadius(marker, rs.type)}
-                        fill={rs.color}
-                      />
-                    ))}
-                    {rs.labels.map((label, index) => (
-                      <text
-                        key={index}
-                        className="oge-chart-point-label"
-                        x={label.x}
-                        y={label.y}
-                        textAnchor="middle"
-                      >
-                        {label.text}
-                      </text>
-                    ))}
+                      ))}
+                      {rs.candles.map((candle) => (
+                        <Fragment key={candle.pointIndex}>
+                          <line
+                            className="oge-chart-candle-wick"
+                            x1={candle.x}
+                            x2={candle.x}
+                            y1={candle.wickY1}
+                            y2={candle.wickY2}
+                          />
+                          <rect
+                            className={cx(
+                              'oge-chart-candle',
+                              !candle.rising && 'oge-chart-candle-falling',
+                            )}
+                            x={candle.x - candle.w / 2}
+                            y={candle.bodyY}
+                            width={candle.w}
+                            height={candle.bodyH}
+                          />
+                        </Fragment>
+                      ))}
+                      {rs.markers.map((marker) => (
+                        <circle
+                          key={marker.pointIndex}
+                          className={cx(
+                            'oge-chart-marker',
+                            rs.type === 'bubble' && 'oge-chart-bubble',
+                            isSelected(rs.seriesIndex, marker.pointIndex) &&
+                              'oge-chart-point-selected',
+                          )}
+                          cx={marker.x}
+                          cy={marker.y}
+                          r={chartMarkerRadius(marker, rs.type)}
+                          fill={rs.color}
+                        />
+                      ))}
+                      {rs.labels.map((label, index) => (
+                        <text
+                          key={index}
+                          className="oge-chart-point-label"
+                          x={label.x}
+                          y={label.y}
+                          textAnchor={scene.pointLabelAnchor}
+                          dominantBaseline={
+                            scene.pointLabelBaseline ?? undefined
+                          }
+                          transform={
+                            cartesianLabelTransform(scene, label.x, label.y) ??
+                            undefined
+                          }
+                        >
+                          {label.text}
+                        </text>
+                      ))}
+                    </g>
                   </g>
                 ))}
               </g>
+              {/* constant lines / strip lines */}
+              {scene.guides.map((guide, index) =>
+                guide.kind === 'line' ? (
+                  <line
+                    key={index}
+                    className={
+                      guide.variant === 'constant'
+                        ? 'oge-chart-constant-line'
+                        : 'oge-chart-strip-line'
+                    }
+                    x1={guide.line.x1}
+                    x2={guide.line.x2}
+                    y1={guide.line.y1}
+                    y2={guide.line.y2}
+                    stroke={guide.color}
+                    strokeWidth={guide.strokeWidth}
+                    strokeDasharray={guide.dashArray ?? undefined}
+                  />
+                ) : null,
+              )}
+              {/* axis breaks */}
+              {scene.breakMarkers.map((marker, index) => (
+                <Fragment key={index}>
+                  <path className="oge-chart-break-gap" d={marker.fillD} />
+                  <path className="oge-chart-break-line" d={marker.lineD} />
+                </Fragment>
+              ))}
+              {scene.guides.map((guide, index) =>
+                guide.label !== null ? (
+                  <text
+                    key={index}
+                    className={cx(
+                      'oge-chart-strip-label',
+                      guide.variant === 'constant' &&
+                        'oge-chart-constant-label',
+                    )}
+                    x={guide.label.x}
+                    y={guide.label.y}
+                    textAnchor={guide.label.anchor}
+                    fill={
+                      guide.variant === 'constant' ? guide.color : undefined
+                    }
+                  >
+                    {guide.label.text}
+                  </text>
+                ) : null,
+              )}
               {/* crosshair */}
               {crosshairVm !== null ? (
                 <>
                   <line
                     className="oge-chart-crosshair"
-                    x1={crosshairVm.x}
-                    x2={crosshairVm.x}
-                    y1="0"
-                    y2={plot.h}
+                    x1={crosshairVm.argLine.x1}
+                    x2={crosshairVm.argLine.x2}
+                    y1={crosshairVm.argLine.y1}
+                    y2={crosshairVm.argLine.y2}
                   />
-                  {crosshair.horizontal === true && crosshairVm.y !== null ? (
+                  {crosshair.horizontal === true &&
+                  crosshairVm.valueLine !== null ? (
                     <line
                       className="oge-chart-crosshair"
-                      x1="0"
-                      x2={plot.w}
-                      y1={crosshairVm.y}
-                      y2={crosshairVm.y}
+                      x1={crosshairVm.valueLine.x1}
+                      x2={crosshairVm.valueLine.x2}
+                      y1={crosshairVm.valueLine.y1}
+                      y2={crosshairVm.valueLine.y2}
                     />
                   ) : null}
                 </>
@@ -885,9 +1111,9 @@ function OgeChartInner<T extends object>(
                 <rect
                   className="oge-chart-zoom-rect"
                   x={zoomSelection.x}
-                  y="0"
+                  y={zoomSelection.y}
                   width={zoomSelection.w}
-                  height={plot.h}
+                  height={zoomSelection.h}
                 />
               ) : null}
               {/* annotations */}
@@ -942,67 +1168,56 @@ function OgeChartInner<T extends object>(
                   )}
                 </Fragment>
               ))}
-              {/* axes lines */}
-              <line
-                className="oge-chart-axis-line"
-                x1="0"
-                x2={plot.w}
-                y1={plot.h}
-                y2={plot.h}
-              />
+              {/* axis lines + minor tick marks */}
+              {scene.axisLines.map((line, index) => (
+                <line
+                  key={index}
+                  className="oge-chart-axis-line"
+                  x1={line.x1}
+                  x2={line.x2}
+                  y1={line.y1}
+                  y2={line.y2}
+                />
+              ))}
+              {scene.tickMarks.map((mark, index) => (
+                <line
+                  key={index}
+                  className="oge-chart-tick-mark"
+                  x1={mark.x1}
+                  x2={mark.x2}
+                  y1={mark.y1}
+                  y2={mark.y2}
+                />
+              ))}
             </g>
-            {/* argument labels */}
-            {scene.argTicks.map((tick) => (
+            {/* axis labels + titles */}
+            {scene.axisLabels.map((label, index) => (
               <text
-                key={tick.px}
-                className="oge-chart-axis-label oge-chart-arg-label"
-                x={plot.x + tick.px}
-                y={argLabelY}
-                textAnchor={scene.argRotated ? 'end' : 'middle'}
-                transform={
-                  scene.argRotated
-                    ? `rotate(-40 ${plot.x + tick.px} ${argLabelY})`
-                    : undefined
-                }
+                key={index}
+                className={cx(
+                  'oge-chart-axis-label',
+                  label.axis === 'argument' && 'oge-chart-arg-label',
+                )}
+                x={label.x}
+                y={label.y}
+                textAnchor={label.anchor}
+                transform={label.transform ?? undefined}
               >
-                {tick.label}
+                {label.text}
               </text>
             ))}
-            {/* value labels */}
-            {scene.valueAxes.map((axis) => (
-              <Fragment key={axis.index}>
-                {axis.ticks.map((tick) => (
-                  <text
-                    key={tick.px}
-                    className="oge-chart-axis-label"
-                    x={axis.labelX}
-                    y={plot.y + tick.px + 4}
-                    textAnchor={axis.anchor}
-                  >
-                    {tick.label}
-                  </text>
-                ))}
-                {axis.title ? (
-                  <text
-                    className="oge-chart-axis-title"
-                    transform={axis.titleTransform}
-                    textAnchor="middle"
-                  >
-                    {axis.title}
-                  </text>
-                ) : null}
-              </Fragment>
-            ))}
-            {scene.argAxisTitle ? (
+            {scene.axisTitles.map((axisTitle, index) => (
               <text
+                key={index}
                 className="oge-chart-axis-title"
-                x={plot.x + plot.w / 2}
-                y={scene.height - 4}
+                x={axisTitle.x}
+                y={axisTitle.y}
+                transform={axisTitle.transform ?? undefined}
                 textAnchor="middle"
               >
-                {scene.argAxisTitle}
+                {axisTitle.text}
               </text>
-            ) : null}
+            ))}
             {scene.empty ? (
               <text
                 className="oge-chart-no-data"
@@ -1017,7 +1232,11 @@ function OgeChartInner<T extends object>(
           {/* tooltip */}
           {tooltipVm !== null ? (
             <div
-              className="oge-chart-tooltip"
+              className={cx(
+                'oge-chart-tooltip',
+                tooltipVm.alignX === 'end' && 'oge-chart-tooltip-end-x',
+                tooltipVm.alignY === 'end' && 'oge-chart-tooltip-end-y',
+              )}
               style={{ left: `${tooltipVm.x}px`, top: `${tooltipVm.y}px` }}
               aria-hidden="true"
             >

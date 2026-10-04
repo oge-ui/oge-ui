@@ -27,8 +27,11 @@ import {
   rangeSelectorDeltaValue,
   rangeSelectorEffective,
   rangeSelectorLabel,
+  rangeSelectorPeriods,
   rangeSelectorWindowPx,
   rangeWindowDragRange,
+  type OgeChartCustomPeriod,
+  type OgeChartPeriod,
   type OgeChartRange,
   type OgeChartSeriesInput,
   type OgeChartsMessages,
@@ -50,6 +53,12 @@ export interface OgeRangeSelectorProps<
   readonly palette?: readonly string[];
   readonly locale?: string;
   readonly messages?: Partial<OgeChartsMessages>;
+  /**
+   * Period buttons above the strip: `'1M' | '3M' | '6M' | 'YTD' | '1Y' |
+   * 'All'` (calendar months back from the data end) and custom
+   * `{ label, range }` entries. Calendar periods only show on time scales.
+   */
+  readonly periods?: readonly (OgeChartPeriod | OgeChartCustomPeriod)[];
   /** The selected window (`null` = full range) — controlled when provided. */
   readonly value?: OgeChartRange | null;
   readonly defaultValue?: OgeChartRange | null;
@@ -108,6 +117,11 @@ function OgeRangeSelectorInner<T extends object>(
   const windowPx = rangeSelectorWindowPx(scene, effective);
   const labelOf = (point: number): string =>
     rangeSelectorLabel(data.kind, point, locale);
+  const periods = useStable(props.periods ?? EMPTY);
+  const periodButtons = useMemo(
+    () => rangeSelectorPeriods(periods, data, value, msg),
+    [periods, data, value, msg],
+  );
 
   // the gesture closures outlive the render that started them
   const latest = useRef({ data, scene });
@@ -207,6 +221,39 @@ function OgeRangeSelectorInner<T extends object>(
       className={cx('oge-chart', 'oge-range-selector', props.className)}
       style={props.style}
     >
+      {periodButtons.length > 0 ? (
+        <div
+          className="oge-range-periods"
+          role="group"
+          aria-label={msg.periods.groupLabel}
+        >
+          {periodButtons.map((period) => (
+            <button
+              key={period.key}
+              type="button"
+              className={cx(
+                'oge-range-period',
+                period.active && 'oge-range-period-active',
+              )}
+              aria-pressed={period.active}
+              title={period.label === period.text ? undefined : period.label}
+              onClick={() => {
+                setValue(period.range);
+                setAnnouncement(
+                  rangeSelectorAnnouncement(
+                    msg,
+                    data.kind,
+                    rangeSelectorEffective(data, period.range),
+                    locale,
+                  ),
+                );
+              }}
+            >
+              {period.text}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div ref={plotWrapRef} className="oge-chart-plot-wrap oge-range-wrap">
         <svg
           className="oge-chart-svg"
