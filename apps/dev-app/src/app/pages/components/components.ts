@@ -23,6 +23,7 @@ import {
   OgeBreadcrumb,
   OgeDrawer,
   OgeMenubar,
+  OgePagination,
   OgeStep,
   OgeStepper,
   OgeTreeView,
@@ -59,6 +60,7 @@ type FamilyKey =
   | 'drawer'
   | 'menubar'
   | 'breadcrumb'
+  | 'pagination'
   | 'stepper'
   | 'pivot'
   | 'bpmn'
@@ -123,6 +125,7 @@ interface OrgNode {
     OgeDrawer,
     OgeMenubar,
     OgeBreadcrumb,
+    OgePagination,
     OgeStepper,
     OgeStep,
   ],
@@ -148,6 +151,33 @@ interface OrgNode {
         }
       </div>
     </div>
+
+    <!-- Recently added pages. Deliberately not a <section>: the gallery e2e
+         finds family cards as the first section whose text contains the
+         family name, and these links name families. -->
+    <nav aria-labelledby="recently-added" class="mt-8">
+      <h2
+        id="recently-added"
+        class="!m-0 text-[13px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+      >
+        Recently added
+      </h2>
+      <ul class="!m-0 mt-3 flex list-none flex-wrap gap-2 !p-0">
+        @for (item of recentlyAdded; track item.path) {
+          <li class="!m-0">
+            <a
+              [routerLink]="item.path"
+              class="inline-flex items-baseline gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1 text-[13px] text-gray-700 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 dark:border-gray-800 dark:text-gray-300 dark:hover:border-indigo-500/40 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
+            >
+              <span class="text-[11px] text-gray-400 dark:text-gray-500">{{
+                item.family
+              }}</span>
+              {{ item.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
 
     <!-- the card titles are spans, and previews (the accordion) bring their own
          h3 — this gives the page a real h1 → h2 → h3 outline -->
@@ -745,6 +775,16 @@ interface OrgNode {
                     <oge-breadcrumb [items]="breadcrumbItems" />
                   </div>
                 }
+                @case ('pagination') {
+                  <div class="w-full self-start">
+                    <oge-pagination
+                      [(pageIndex)]="previewPage"
+                      [itemCount]="120"
+                      [pageSize]="10"
+                      [messages]="{ paginationLabel: 'Gallery preview' }"
+                    />
+                  </div>
+                }
                 @case ('tree-view') {
                   <div class="w-full self-start">
                     <oge-tree-view
@@ -827,6 +867,79 @@ export class ComponentsIndexPage {
     'zero runtime dependencies',
   ];
 
+  /** Pages added since the last release line — newest feature work first. */
+  protected readonly recentlyAdded: readonly {
+    family: string;
+    label: string;
+    path: string;
+  }[] = [
+    {
+      family: 'Data Grid',
+      label: 'Range selection & clipboard',
+      path: '/components/data-grid/range-selection',
+    },
+    {
+      family: 'Data Grid',
+      label: 'Conditional formatting',
+      path: '/components/data-grid/conditional-formatting',
+    },
+    {
+      family: 'Data Grid',
+      label: 'Pinned rows',
+      path: '/components/data-grid/pinned-rows',
+    },
+    {
+      family: 'Data Grid',
+      label: 'Excel & PDF export',
+      path: '/components/data-grid/export',
+    },
+    {
+      family: 'Tree List',
+      label: 'Summaries',
+      path: '/components/tree-list/summaries',
+    },
+    {
+      family: 'Pivot Grid',
+      label: 'Chart integration',
+      path: '/components/pivot-grid/chart-integration',
+    },
+    {
+      family: 'Pivot Grid',
+      label: 'Calculated fields',
+      path: '/components/pivot-grid/calculated-fields',
+    },
+    {
+      family: 'Inputs',
+      label: 'Masked text box',
+      path: '/components/inputs/masked-text-box',
+    },
+    {
+      family: 'Inputs',
+      label: 'Multi-column combo box',
+      path: '/components/inputs/multi-column-combo-box',
+    },
+    {
+      family: 'Inputs',
+      label: 'Color gradient',
+      path: '/components/inputs/color-gradient',
+    },
+    {
+      family: 'Inputs',
+      label: 'Color palette',
+      path: '/components/inputs/color-palette',
+    },
+    {
+      family: 'Inputs',
+      label: 'Check box group',
+      path: '/components/inputs/check-box-group',
+    },
+    {
+      family: 'Inputs',
+      label: 'Toggle group',
+      path: '/components/inputs/toggle-controls',
+    },
+  ];
+
   protected readonly cellClass =
     'border border-gray-200 px-2 py-1 dark:border-gray-700';
   protected readonly totalClass =
@@ -839,7 +952,7 @@ export class ComponentsIndexPage {
       icon: 'table',
       path: '/components/data-grid',
       description:
-        'Virtualized rows into the millions, multi-sort, filtering, grouping with summaries, five editing modes, master-detail, remote data and export.',
+        'Virtualized rows into the millions, filtering, grouping with summaries, five editing modes, range selection with clipboard, conditional formatting, pinned rows and Excel/PDF export.',
     },
     {
       key: 'tree',
@@ -847,7 +960,7 @@ export class ComponentsIndexPage {
       icon: 'layout',
       path: '/components/tree-list',
       description:
-        'The grid feature set on hierarchical data: lazy loading, ancestor-preserving filtering, tri-state selection and drag & drop reordering.',
+        'The grid feature set on hierarchical data: lazy loading, ancestor-preserving filtering, tri-state selection, drag & drop reordering and recursive summaries.',
     },
     {
       key: 'buttons',
@@ -863,7 +976,7 @@ export class ComponentsIndexPage {
       icon: 'text-cursor',
       path: '/components/inputs',
       description:
-        'TextBox, MaskedTextBox, NumberBox, SelectBox, TagBox, a multi-column combo box, date and color editors and choice groups on one field chrome: floating labels, input masks, live number formatting, remote paged lists and searchable WAI-ARIA comboboxes.',
+        'TextBox, MaskedTextBox, NumberBox, SelectBox, TagBox, a multi-column combo box, date editors, color box, gradient and palette, check box and toggle groups on one field chrome: floating labels, input masks, remote paged lists and WAI-ARIA comboboxes.',
     },
     {
       key: 'tabs',
@@ -954,6 +1067,14 @@ export class ComponentsIndexPage {
         'The APG trail: a nav landmark of real links with aria-current on the current page, collapsing its oldest middle crumbs against its own container width — the hidden ones stay reachable as links. Neither DevExtreme nor Material ships one.',
     },
     {
+      key: 'pagination',
+      name: 'Pagination',
+      icon: 'pages',
+      path: '/components/pagination',
+      description:
+        'A standalone pager on two-way page index and size models: a constant-width numeric window with ellipses, page-size selector, live info range, jump-to-page and a container-width compact mode.',
+    },
+    {
       key: 'tree-view',
       name: 'Tree View',
       icon: 'tree',
@@ -967,7 +1088,7 @@ export class ComponentsIndexPage {
       icon: 'gauge',
       path: '/components/pivot-grid',
       description:
-        'Cross-tab analytics on raw records: rows × columns × measures with grand totals, field chooser, sorting and export.',
+        'Cross-tab analytics on raw records: rows × columns × measures with grand totals, field chooser, calculated fields, Top N filters, chart integration and export.',
     },
     {
       key: 'bpmn',
@@ -1048,6 +1169,7 @@ export class ComponentsIndexPage {
     { id: 4, parentId: 1, name: 'Can Yılmaz', title: 'Design Lead' },
   ];
 
+  protected readonly previewPage = signal(2);
   protected readonly previewName = signal('Ada');
   protected readonly previewAmount = signal<number | null>(42);
   protected readonly previewProfile = signal({

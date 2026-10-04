@@ -147,9 +147,10 @@ const ORG: OrgNode[] = [
           <p
             class="home-in home-d3 mt-5 max-w-lg text-[15.5px] leading-relaxed text-[color:var(--og-mut)]"
           >
-            A virtualized data grid, tree list, pivot table, buttons and form
-            editors. Signal APIs end to end, zoneless by default, themed with
-            CSS tokens — over a framework-free engine both render layers share.
+            A virtualized data grid, tree list and pivot table, charts,
+            scheduler, gantt and kanban, forms and 20+ editors. Signal APIs end
+            to end, zoneless by default, themed with CSS tokens — over a
+            framework-free engine both render layers share.
           </p>
 
           <div class="home-in home-d4 mt-7 flex flex-wrap items-center gap-4">
@@ -1991,19 +1992,19 @@ export class HomePage {
     {
       icon: 'table',
       name: 'Data Grid',
-      desc: 'Virtualized rows, multi-sort, filtering, grouping, editing, master-detail and export.',
+      desc: 'Virtualized rows, filtering, grouping, editing, range selection, conditional formatting and export.',
       path: '/components/data-grid',
     },
     {
       icon: 'layout',
       name: 'Tree List',
-      desc: 'Hierarchical data with lazy loading, tri-state selection and drag & drop.',
+      desc: 'Hierarchical data with lazy loading, tri-state selection, drag & drop and summaries.',
       path: '/components/tree-list',
     },
     {
       icon: 'gauge',
       name: 'Pivot Grid',
-      desc: 'Cross-tab analytics: rows × columns × measures with totals and export.',
+      desc: 'Cross-tab analytics with totals, calculated fields, linked charts and export.',
       path: '/components/pivot-grid',
     },
     {
@@ -2131,6 +2132,12 @@ export class HomePage {
       name: 'Stepper',
       desc: 'Linear or free wizard with async leave guards and refusals that say why.',
       path: '/components/stepper',
+    },
+    {
+      icon: 'pages',
+      name: 'Pagination',
+      desc: 'Standalone pager: numeric window, page sizes, jump-to-page, adaptive compact mode.',
+      path: '/components/pagination',
     },
   ];
 

@@ -16,6 +16,7 @@ const FAMILIES = [
   { name: 'Drawer', preview: 'oge-drawer' },
   { name: 'Menubar', preview: 'oge-menubar' },
   { name: 'Breadcrumb', preview: 'oge-breadcrumb' },
+  { name: 'Pagination', preview: 'oge-pagination' },
   { name: 'Stepper', preview: 'oge-stepper' },
   { name: 'BPMN Editor', preview: '[data-preview="bpmn"]' },
   { name: 'Scheduler', preview: '[data-preview="scheduler"]' },
