@@ -31,23 +31,27 @@ import {
   cartesianNearestSeries,
   cartesianPanRange,
   cartesianPointAnnouncement,
+  cartesianPointEventColor,
   cartesianSelectionRange,
   cartesianSrRows,
   cartesianTooltip,
+  cartesianTooltipRowText,
   cartesianWheelRange,
   cartesianZoomTo,
   chartArgumentText,
   chartDragMode,
   chartMarkerRadius,
   chartSeriesGroupOpacity,
-  chartValueText,
   chartWheelZoomEnabled,
   chartZoomSelectionRect,
   formatOgeChartMessage,
   isChartPointSelected,
   mergeOgeChartsMessages,
   nextChartSelection,
+  printOgeChart,
   type OgeCartesianHoverState,
+  type OgeChartPrintOptions,
+  type OgeChartRenderLabel,
   type OgeCartesianScene,
   type OgeChartAnnotation,
   type OgeChartAxisOptions,
@@ -67,6 +71,7 @@ import {
   type OgeChartsMessages,
 } from '@oge-ui/charts-engine';
 import { useOgeChartsConfig } from './charts-config';
+import { ChartDataLabel } from './data-label';
 import {
   cx,
   svgSafeId,
@@ -130,6 +135,8 @@ export interface OgeChartProps<T extends object = Record<string, unknown>> {
   readonly renderLegendItem?: (item: OgeChartLegendItem) => ReactNode;
   /** Replaces an annotation's label, inside a `foreignObject` (`*ogeChartAnnotationTemplate`). */
   readonly renderAnnotation?: (note: { readonly text: string }) => ReactNode;
+  /** Replaces every data label's content, inside a 120 × 22 px `foreignObject` (`*ogeChartLabelTemplate`). */
+  readonly renderLabel?: (label: OgeChartRenderLabel) => ReactNode;
   readonly className?: string;
   readonly style?: CSSProperties;
 }
@@ -150,6 +157,8 @@ export interface OgeChartHandle<T extends object = Record<string, unknown>> {
   getExportData(): OgeChartExportData<T>;
   /** The live SVG root — what the image exporters serialize. */
   getSvgElement(): SVGSVGElement;
+  /** Opens the browser's print dialog for the chart alone (title above it). */
+  print(options?: OgeChartPrintOptions): Promise<void>;
 }
 
 interface ZoomDrag {
@@ -171,6 +180,7 @@ function OgeChartInner<T extends object>(
     renderTooltip,
     renderLegendItem,
     renderAnnotation,
+    renderLabel,
   } = props;
   const dataSource = props.dataSource ?? EMPTY;
   const series = useStable(props.series ?? EMPTY);
@@ -228,8 +238,9 @@ function OgeChartInner<T extends object>(
         series,
         commonSeries,
         argumentType,
+        messages: msg,
       }),
-    [dataSource, series, commonSeries, argumentType],
+    [dataSource, series, commonSeries, argumentType, msg],
   );
   const [visibilityOverrides, setVisibilityOverrides] = useState<
     ReadonlyMap<number, boolean>
@@ -492,6 +503,7 @@ function OgeChartInner<T extends object>(
           now.scene.data.argKind,
           target.point,
           now.locale,
+          now.msg.values,
         ),
       });
     }
@@ -603,6 +615,12 @@ function OgeChartInner<T extends object>(
         if (svg === null) throw new Error('OgeChart is not mounted');
         return svg;
       },
+      print(options) {
+        return printOgeChart(this, {
+          title: latest.current.props.title ?? '',
+          ...options,
+        });
+      },
     }),
     [refresh, setVisualRange],
   );
@@ -662,12 +680,13 @@ function OgeChartInner<T extends object>(
                       name: item.name,
                       color: item.color,
                       hidden: item.hidden,
+                      swatch: item.swatch,
                     })
                   ) : (
                     <>
                       <span
                         className="oge-chart-legend-marker"
-                        style={{ backgroundColor: item.color }}
+                        style={{ background: item.swatch }}
                       />
                       <span className="oge-chart-legend-text">{item.name}</span>
                     </>
@@ -781,6 +800,18 @@ function OgeChartInner<T extends object>(
                         opacity={rs.opacity * 0.35}
                       />
                     ) : null}
+                    {rs.extraPaths.map((extra, index) => (
+                      <path
+                        key={`x${index}`}
+                        className={extra.cls}
+                        d={extra.d}
+                        fill={extra.fill ?? 'none'}
+                        stroke={extra.stroke ?? undefined}
+                        strokeWidth={extra.strokeWidth}
+                        strokeDasharray={extra.dashArray ?? undefined}
+                        opacity={extra.opacity}
+                      />
+                    ))}
                     {rs.linePathD !== null ? (
                       <path
                         className="oge-chart-line"
@@ -792,11 +823,12 @@ function OgeChartInner<T extends object>(
                         fill="none"
                       />
                     ) : null}
-                    {rs.bars.map((bar) => (
+                    {rs.bars.map((bar, index) => (
                       <rect
-                        key={bar.pointIndex}
+                        key={index}
                         className={cx(
                           'oge-chart-bar',
+                          bar.cls,
                           isSelected(rs.seriesIndex, bar.pointIndex) &&
                             'oge-chart-point-selected',
                         )}
@@ -804,7 +836,8 @@ function OgeChartInner<T extends object>(
                         y={bar.y}
                         width={bar.w}
                         height={bar.h}
-                        fill={rs.color}
+                        fill={bar.color ?? rs.color}
+                        stroke={bar.stroke ?? undefined}
                         opacity={rs.opacity}
                         rx="2"
                       />
@@ -827,8 +860,22 @@ function OgeChartInner<T extends object>(
                           y={candle.bodyY}
                           width={candle.w}
                           height={candle.bodyH}
+                          style={
+                            candle.color ? { fill: candle.color } : undefined
+                          }
                         />
                       </Fragment>
+                    ))}
+                    {rs.segments.map((seg, index) => (
+                      <line
+                        key={`s${index}`}
+                        className={seg.cls}
+                        x1={seg.x1}
+                        y1={seg.y1}
+                        x2={seg.x2}
+                        y2={seg.y2}
+                        style={seg.color ? { stroke: seg.color } : undefined}
+                      />
                     ))}
                     {rs.markers.map((marker) => (
                       <circle
@@ -842,19 +889,25 @@ function OgeChartInner<T extends object>(
                         cx={marker.x}
                         cy={marker.y}
                         r={chartMarkerRadius(marker, rs.type)}
-                        fill={rs.color}
+                        fill={marker.color ?? rs.color}
+                      />
+                    ))}
+                    {rs.dots.map((dot, index) => (
+                      <circle
+                        key={`d${index}`}
+                        className="oge-chart-dot"
+                        cx={dot.x}
+                        cy={dot.y}
+                        r={dot.r}
+                        fill={dot.color ?? rs.color}
                       />
                     ))}
                     {rs.labels.map((label, index) => (
-                      <text
-                        key={index}
-                        className="oge-chart-point-label"
-                        x={label.x}
-                        y={label.y}
-                        textAnchor="middle"
-                      >
-                        {label.text}
-                      </text>
+                      <ChartDataLabel
+                        key={`l${index}`}
+                        label={label}
+                        render={renderLabel}
+                      />
                     ))}
                   </g>
                 ))}
@@ -1036,10 +1089,13 @@ function OgeChartInner<T extends object>(
                       <span
                         className="oge-chart-legend-marker"
                         style={{
-                          backgroundColor: scene.colors[point.seriesIndex],
+                          backgroundColor: cartesianPointEventColor(
+                            scene,
+                            point,
+                          ),
                         }}
                       />
-                      {point.seriesName}: {chartValueText(point.point, locale)}
+                      {cartesianTooltipRowText(scene, point)}
                     </span>
                   ))}
                 </>
