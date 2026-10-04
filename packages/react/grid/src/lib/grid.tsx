@@ -4720,8 +4720,11 @@ function OgeGridInner<T extends object>(
     if (loading) return null;
     const custom = latest.current.renderNoData;
     return (
-      <div className="oge-no-data">
-        {custom ? custom({ messages: msg }) : msg.noData}
+      // a real row + cell: a rowgroup without rows breaks the grid role
+      <div className="oge-no-data" role="row">
+        <div role="gridcell">
+          {custom ? custom({ messages: msg }) : msg.noData}
+        </div>
       </div>
     );
   };
@@ -6009,6 +6012,7 @@ function OgeGridInner<T extends object>(
           <div
             className="oge-rows"
             role="rowgroup"
+            aria-busy={loading || undefined}
             style={{ transform: rowsTransform ?? undefined }}
           >
             {viewNodes.length === 0 ? noData() : viewNodes.map(renderNode)}
