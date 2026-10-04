@@ -89,3 +89,14 @@ describe('highlight — tokenization', () => {
     expect(out).toContain('&lt;');
   });
 });
+
+describe('highlight (shell aliases)', () => {
+  it('highlights bash fences with the shell rules and keeps the text', () => {
+    const sh = '# install\nnpm install @oge-ui/grid --save';
+    const html = highlight(sh, 'bash');
+    expect(html).toContain('<span class="tok-comment"># install</span>');
+    expect(html).toContain('<span class="tok-type">@oge-ui/grid</span>');
+    expect(html).toContain('<span class="tok-attr">--save</span>');
+    expect(textOf(html)).toBe(sh);
+  });
+});

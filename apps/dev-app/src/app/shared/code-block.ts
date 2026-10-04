@@ -5,6 +5,7 @@ import {
   inject,
   input,
   signal,
+  ViewEncapsulation,
 } from '@angular/core';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import { highlight } from './highlight';
@@ -26,24 +27,36 @@ const DEFAULT_TITLES: Record<string, string> = {
   sh: 'terminal',
 };
 
+const LANGUAGE_LABELS: Record<string, string> = {
+  ts: 'TS',
+  tsx: 'TSX',
+  html: 'HTML',
+  css: 'CSS',
+  scss: 'SCSS',
+  sh: 'Shell',
+  bash: 'Shell',
+  json: 'JSON',
+};
+
 /**
  * VS Code-style code block: file tabs in the window bar (multi-file support),
- * line numbers, Dark+ palette, copy. Always dark, independent of docs theme.
+ * line numbers, Dark+ syntax palette on a navy surface, language badge,
+ * copy. Always dark, independent of the docs theme, and framed so it stands
+ * apart from both the light and the dark page.
  */
 @Component({
   selector: 'app-code-block',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // the highlighter's token spans arrive through [innerHTML] and carry no
+  // _ngcontent attribute, so emulated styles would never colour them
+  encapsulation: ViewEncapsulation.None,
   template: `
     <div
-      class="overflow-hidden bg-[#1e1e1e]"
-      [class]="
-        frameless()
-          ? ''
-          : 'my-3 mb-5 rounded-xl border border-[#2d2d2d] shadow-lg'
-      "
+      class="code-block overflow-hidden"
+      [class.code-block-framed]="!frameless()"
     >
       <!-- window bar with file tabs -->
-      <div class="flex items-center gap-3 bg-[#181818] px-3 pt-2">
+      <div class="code-bar flex items-center gap-3 px-3 pt-2">
         <span class="flex gap-1.5 pb-2">
           <span class="h-3 w-3 rounded-full bg-[#ff5f57]"></span>
           <span class="h-3 w-3 rounded-full bg-[#febc2e]"></span>
@@ -56,7 +69,7 @@ const DEFAULT_TITLES: Record<string, string> = {
               class="flex shrink-0 items-center gap-2 rounded-t-md px-3.5 py-1.5 font-mono text-[12px] transition-colors"
               [class]="
                 index === activeIndex()
-                  ? 'border-t-2 border-[#4f8ff0] bg-[#1e1e1e] text-gray-200'
+                  ? 'code-tab-active text-gray-100'
                   : 'border-t-2 border-transparent text-gray-500 hover:text-gray-300'
               "
               (click)="activeIndex.set(index)"
@@ -69,9 +82,15 @@ const DEFAULT_TITLES: Record<string, string> = {
             </button>
           }
         </div>
+        <span
+          class="code-lang mb-1.5 ml-auto shrink-0 select-none rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider"
+          aria-hidden="true"
+          >{{ languageLabel() }}</span
+        >
         <button
           type="button"
-          class="mb-1.5 ml-auto flex shrink-0 items-center gap-1.5 rounded-md border border-[#3c3c3c] px-2 py-1 text-xs text-gray-300 transition-colors hover:border-[#5a5a5a] hover:bg-[#2a2a2a] hover:text-white"
+          class="code-copy mb-1.5 flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs transition-colors"
+          [attr.aria-label]="copied() ? 'Copied' : 'Copy code'"
           (click)="copy()"
         >
           @if (copied()) {
@@ -117,7 +136,7 @@ const DEFAULT_TITLES: Record<string, string> = {
         [attr.aria-label]="(title() ?? language()) + ' code'"
       >
         <div
-          class="line-numbers select-none py-4 pl-4 pr-3 text-right"
+          class="code-line-numbers select-none py-4 pl-4 pr-3 text-right"
           aria-hidden="true"
         >
           @for (line of lineNumbers(); track line) {
@@ -131,17 +150,89 @@ const DEFAULT_TITLES: Record<string, string> = {
     </div>
   `,
   styles: `
+    /* Distinct from the page in both docs themes: a navy editor surface
+       (lighter than the dark page, dark against the light one), a framed
+       edge, and the brand gradient as a hairline accent on top. */
+    .code-block {
+      --cb-bg: #131826;
+      --cb-bar: #0e121c;
+      --cb-border: #2b3348;
+      --cb-gutter: #5b6680;
+      background: var(--cb-bg);
+    }
+
+    /* on the dark page the editor surface is lifted a step further */
+    .dark .code-block {
+      --cb-bg: #161c2d;
+      --cb-bar: #111624;
+      --cb-border: #34405c;
+    }
+
+    .code-block-framed {
+      position: relative;
+      margin: 0.75rem 0 1.25rem;
+      border: 1px solid var(--cb-border);
+      border-radius: 0.75rem;
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 0.04) inset,
+        0 18px 40px -22px rgb(15 23 42 / 0.65);
+    }
+
+    .code-block-framed::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto;
+      height: 2px;
+      background: linear-gradient(90deg, #22d3ee, #8b5cf6 55%, #ec4899);
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .code-bar {
+      background: var(--cb-bar);
+      border-bottom: 1px solid var(--cb-border);
+    }
+
+    .code-tab-active {
+      background: var(--cb-bg);
+      border-top: 2px solid #818cf8;
+      margin-bottom: -1px;
+    }
+
+    .code-lang {
+      color: #a5b4fc;
+      background: rgb(129 140 248 / 0.12);
+      border: 1px solid rgb(129 140 248 / 0.25);
+    }
+
+    .code-copy {
+      color: #cbd5e1;
+      border: 1px solid var(--cb-border);
+      background: rgb(255 255 255 / 0.03);
+
+      &:hover {
+        color: #fff;
+        border-color: #818cf8;
+        background: rgb(129 140 248 / 0.15);
+      }
+    }
+
     .code-body {
       font-family:
         ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
       font-size: 13px;
       line-height: 1.7;
+
+      &:focus-visible {
+        outline: 2px solid #818cf8;
+        outline-offset: -2px;
+      }
     }
 
-    .line-numbers {
-      color: #6e7681;
-      border-right: 1px solid #2d2d2d;
-      background: #1e1e1e;
+    .code-line-numbers {
+      color: var(--cb-gutter);
+      border-right: 1px solid var(--cb-border);
+      background: var(--cb-bg);
       position: sticky;
       left: 0;
       min-width: 44px;
@@ -218,6 +309,12 @@ export class CodeBlock {
   private readonly activeFile = computed<CodeFile | undefined>(() => {
     const files = this.effFiles();
     return files[Math.min(this.activeIndex(), files.length - 1)];
+  });
+
+  /** Short language badge shown in the window bar. */
+  protected readonly languageLabel = computed(() => {
+    const language = this.activeFile()?.language ?? '';
+    return LANGUAGE_LABELS[language] ?? language;
   });
 
   protected dotClass(language: string): string {

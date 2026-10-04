@@ -87,14 +87,29 @@ const RULES: Record<string, Rule[]> = {
       render: span('tok-string'),
     },
     {
-      pattern: /(^|\s)(npm|npx|nx|ng|git|install)(?=\s|$)/gm,
+      pattern: /(^|\s)(npm|npx|nx|ng|git|pnpm|yarn|install|add|run)(?=\s|$)/gm,
       render: prefixed('tok-keyword'),
     },
+    { pattern: /(^|\s)(--?[\w-]+)/gm, render: prefixed('tok-attr') },
+    { pattern: /@[\w-]+\/[\w./-]+|\boge-ui\b/g, render: span('tok-type') },
   ],
 };
 
+/** Fence names the snippets use, mapped onto the four rule sets. */
+const ALIASES: Record<string, string> = {
+  bash: 'sh',
+  shell: 'sh',
+  zsh: 'sh',
+  terminal: 'sh',
+  tsx: 'ts',
+  js: 'ts',
+  jsx: 'ts',
+  json: 'ts',
+  scss: 'css',
+};
+
 export function highlight(code: string, language: string): string {
-  const rules = RULES[language] ?? RULES['ts'];
+  const rules = RULES[ALIASES[language] ?? language] ?? RULES['ts'];
   let out = '';
   let pos = 0;
 

@@ -60,7 +60,12 @@
 
   /* inline code chips only — never the <code> inside the VS Code-style editor */
   main :not(pre) > code {
-    @apply rounded bg-slate-100 px-1 py-px text-[13px] dark:bg-gray-800 dark:text-gray-300;
+    @apply rounded-md bg-indigo-50 px-1.5 py-0.5 font-mono text-[0.85em] font-medium text-indigo-700 ring-1 ring-inset ring-indigo-200/70 dark:bg-indigo-400/10 dark:text-indigo-200 dark:ring-indigo-400/25;
+  }
+
+  /* a link around inline code keeps the link colour and underline */
+  main a > code {
+    @apply text-inherit;
   }
 }
 
