@@ -5,13 +5,14 @@ Notable changes to the OGE UI packages. Versions are tagged per package
 Maintained by hand: `nx release` disables its workspace changelog when projects
 are versioned independently, which is the case here.
 
-## Unreleased (1.2.0)
+## 1.2.0 — 2026-10-04
 
 Everything below is on `main` and ships together as **1.2.0**. It is the
 first half of the plan that closes the gaps found by four post-1.1.1 audits
 and the [competitive gap reports](docs/competitive-gaps/README.md): a green,
 hardened CI; security and locale fixes; accessibility, touch and mobile
-support across every family; and the grid and inputs depth waves (G1, G4).
+support across every family; the grid, inputs and charts depth waves (G1, G4,
+G2); and locale formatting, plural messages and right-to-left support (W4).
 Every addition lands in the Angular and the React layer together. Charts
 depth (G2), scheduling depth (G3), overlay/BPMN depth (G5), locale packs,
 time zones, new components and AI helpers follow — see
@@ -246,6 +247,55 @@ notes / behaviour changes** at the end before upgrading.
   `clearErrors()` (`OgeFormServerErrors`; shown at once, cleared on edit);
   declarative `visibleWhen` / `requiredWhen` / `disabledWhen` conditions;
   the **`compare`** rule (`comparisonTarget`, `comparisonType`).
+
+### Charts (G2)
+
+- **Orientation and layout**: `rotated` charts (horizontal bars and every
+  other series type), value- and argument-axis `constantLines` / `strips`,
+  `panes` with per-pane value axes under one shared argument axis
+  (price + volume), axis `breaks`, `tickInterval`, `minorTicks`,
+  `allowDecimals` and label `format` / `template` / `overlap`.
+- **Interaction**: pinch-zoom and two-finger pan, `rtlEnabled` (follows the
+  page `dir`), a one-time draw-in `animation` that respects reduced motion,
+  and range-selector `periods` (1M, 3M, 6M, YTD, 1Y, All, custom).
+- **Series and analytics**: per-point colour (`colorField`,
+  `customizePoint`), full data labels (position, format, template, overlap
+  resolution, pie connectors), trendlines and the SMA / EMA / Bollinger /
+  MACD / RSI indicators (pure `ogeSma` … functions plus an `indicator`
+  series), and new types: `waterfall`, `boxPlot`, `histogram`, `pareto`,
+  `ohlc`, stacked and full-stacked lines / spline areas, nested doughnut
+  rings and the polar `radialBar`.
+- **Export**: `exportChartToJpeg`, a new `/export-pdf` entry
+  (`exportChartToPdf`, Unicode title via `setOgePdfDefaultFont`) and
+  `print()` on every chart.
+
+### Locale formatting, plurals and RTL (W4)
+
+- **Shared `Intl` cache** in `@oge-ui/core` (`ogeNumberFormat`,
+  `ogeDateTimeFormat`, `ogeRelativeTimeFormat`, `ogePluralRules`,
+  `ogeParseNumber`); hot formatters across the suite now use it.
+- **`locale`** input / config on the grid, tree list and pivot (Angular:
+  input → provider → `LOCALE_ID`; React: prop → provider → browser) and a
+  declarative column / field `format` (`number`, `currency`, `percent`,
+  `date`, `time`, `datetime`, fraction digits, styles, `pattern`) used by
+  cells, summaries, filters, editors, paste and exports.
+- **Plural-aware messages**: `ogeFormatMessage` (ICU-lite: plural,
+  selectordinal, select, number / date arguments) drives row-count,
+  selection, pager, validation-summary, upload and "+N more" texts.
+- **Right-to-left** via one direction helper (`ogeResolveDirection`,
+  `observeDirection`): scheduler, Gantt, Kanban and pivot mirror keys,
+  drag math and layout and take `rtlEnabled`; the BPMN chrome mirrors while
+  its canvas stays LTR.
+
+### Docs site
+
+- `https://www.ogeui.com` is the canonical host; every page has its own
+  description, a `BreadcrumbList` and a sitemap `lastmod`; legacy paths
+  answer with host redirects.
+- Code blocks are framed with working syntax colours; npm download counts
+  are collected at build time; the shell imports component entries only
+  (initial bundle under 1 MB); the 1.1 docs are archived at
+  `v1-1.ogeui.com`.
 
 ### Migration notes / behaviour changes
 
