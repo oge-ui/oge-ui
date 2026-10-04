@@ -477,7 +477,7 @@ export const OGE_TREE_LIST_API: ApiSections = {
           name: 'exportOgeTreeListToPdf(treeList, options?)',
           type: '@oge-ui/tree-list/export-pdf',
           description:
-            'Lazy PDF export (optional <code>jspdf</code> + <code>jspdf-autotable</code> peers): hierarchy as first-column indentation, the header repeated on every page, total and per-parent summary rows, grid widths fitted to the page, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code>, <code>pageNumbers</code>. <code>buildTreePdfDocument(data, options)</code> for custom pipelines.',
+            'Lazy PDF export (optional <code>jspdf</code> + <code>jspdf-autotable</code> peers): hierarchy as first-column indentation, the header repeated on every page, total and per-parent summary rows, grid widths fitted to the page, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code>, <code>pageNumbers</code>. <code>buildTreePdfDocument(data, options)</code> for custom pipelines. Text outside WinAnsi (Turkish <code>ğ ş ı İ</code>, Central European, Greek, Cyrillic) needs a Unicode TrueType <code>font</code> — per export, or once for every PDF via <code>setOgePdfDefaultFont({ family, normal, bold })</code> from <code>@oge-ui/behavior</code>; without one the built-in Helvetica cannot draw it (a dev-mode warning says so).',
         },
         {
           name: 'OgeTreeExcelExportOptions&lt;T&gt; / OgeTreePdfExportOptions&lt;T&gt;',

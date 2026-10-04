@@ -1298,7 +1298,7 @@ export const OGE_GRID_TYPES_API: ApiSections = {
           name: 'exportGridToPdf(grid, options?)',
           type: '@oge-ui/grid/export-pdf',
           description:
-            'Lazy PDF export (jspdf peer): the header block repeated on every page (<code>repeatHeader</code>), group and summary rows, grid widths fitted to the page (<code>fitToWidth</code>), <code>orientation</code>, <code>pageFormat</code>, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code> callbacks and <code>pageNumbers</code>. <code>buildPdfDocument(data, options)</code> for custom pipelines.',
+            'Lazy PDF export (jspdf peer): the header block repeated on every page (<code>repeatHeader</code>), group and summary rows, grid widths fitted to the page (<code>fitToWidth</code>), <code>orientation</code>, <code>pageFormat</code>, <code>title</code>, <code>pageHeader</code> / <code>pageFooter</code> callbacks and <code>pageNumbers</code>. <code>buildPdfDocument(data, options)</code> for custom pipelines. Text outside WinAnsi (Turkish <code>ğ ş ı İ</code>, Central European, Greek, Cyrillic) needs a Unicode TrueType <code>font</code> — per export, or once for every PDF via <code>setOgePdfDefaultFont({ family, normal, bold })</code> from <code>@oge-ui/behavior</code>; without one the built-in Helvetica cannot draw it (a dev-mode warning says so).',
         },
         {
           name: 'OgeExcelExportOptions&lt;T&gt; / OgePdfExportOptions&lt;T&gt; / OgePdfPageInfo',

@@ -31,6 +31,7 @@ import {
   type Sale,
 } from '../pivot-grid/pivot-demo-data';
 import { PIVOT_CALCULATED_DEMOS } from './calculated-fields-snippets';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 const sales = makeOverviewSales(400);
 
@@ -74,6 +75,7 @@ function CalculatedDemo(): ReactNode {
   const pdf = async (): Promise<void> => {
     if (!pivot.current) return;
     const { exportPivotToPdf } = await import('@oge-ui/react-pivot/export-pdf');
+    await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
     await exportPivotToPdf(pivot.current, {
       filename: 'sales.pdf',
       title: 'Sales with calculated measures',

@@ -29,6 +29,24 @@ import type {
   OgeExportRowKind,
 } from './lib/grid/grid-options';
 import type { OgeTreeExportData } from './lib/tree-list/tree-list-core';
+import {
+  registerOgePdfFont,
+  resolveOgePdfFont,
+  warnOgePdfUnicode,
+  type OgePdfFont,
+} from './lib/export/pdf-font';
+
+export {
+  getOgePdfDefaultFont,
+  isOgePdfWinAnsi,
+  registerOgePdfFont,
+  resolveOgePdfFont,
+  setOgePdfDefaultFont,
+  warnOgePdfUnicode,
+  type OgePdfFont,
+  type OgePdfFontData,
+  type OgePdfFontTarget,
+} from './lib/export/pdf-font';
 
 /** What a page header / footer callback is told. */
 export interface OgePdfPageInfo {
@@ -50,6 +68,13 @@ export interface OgePdfPageOptions {
   margin?: number;
   /** Body font size in points. Default: 9. */
   fontSize?: number;
+  /**
+   * Unicode TrueType font to embed. Required for characters outside
+   * WinAnsi — Turkish `ğ ş ı İ`, Central European, Greek, Cyrillic, … —
+   * which the built-in Helvetica draws as garbage. Default: the font set by
+   * `setOgePdfDefaultFont()`, else Helvetica; `null` forces Helvetica.
+   */
+  font?: OgePdfFont | null;
   /** Text drawn at the top of every page; return nothing to skip a page. */
   pageHeader?: (page: OgePdfPageInfo) => string | undefined | void;
   /** Text drawn at the bottom of every page (e.g. `Page 2 of 5`). */
@@ -122,10 +147,23 @@ export function ogePdfCellStyles(style: OgeExportCellStyle): Partial<Styles> {
 
 /** Creates the document with the shared page options applied. */
 export function createOgePdfDocument(options: OgePdfPageOptions): jsPDF {
-  return new jsPDF({
+  const doc = new jsPDF({
     orientation: options.orientation ?? 'landscape',
     format: options.pageFormat ?? 'a4',
   });
+  const font = resolveOgePdfFont(options);
+  if (font) registerOgePdfFont(doc, font);
+  return doc;
+}
+
+/**
+ * The autoTable `font` style for `options`: the embedded family, or
+ * undefined for the built-in default.
+ */
+export function ogePdfTableFont(
+  options: OgePdfPageOptions,
+): string | undefined {
+  return resolveOgePdfFont(options)?.family;
 }
 
 /** The table's top on page one and the margins left for the page chrome. */
@@ -168,6 +206,8 @@ export function applyOgePdfPageChrome(
   for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
     doc.setPage(pageNumber);
     const { width, height } = doc.internal.pageSize;
+    const family = ogePdfTableFont(options);
+    if (family) doc.setFont(family, 'normal');
     doc.setFontSize(8);
     const head = options.pageHeader?.({ pageNumber, pageCount });
     if (head) doc.text(head, margin, margin - 2);
@@ -175,6 +215,23 @@ export function applyOgePdfPageChrome(
     if (foot)
       doc.text(foot, width / 2, height - margin / 2, { align: 'center' });
   }
+}
+
+/** Every string a table writes (for the WinAnsi warning). */
+export function* pdfTexts(
+  head: unknown,
+  body: unknown,
+  options: OgePdfPageOptions,
+): Generator<string> {
+  if (options.title) yield options.title;
+  const visit = function* (value: unknown): Generator<string> {
+    if (typeof value === 'string') yield value;
+    else if (Array.isArray(value)) for (const v of value) yield* visit(v);
+    else if (value && typeof value === 'object' && 'content' in value)
+      yield String((value as { content: unknown }).content ?? '');
+  };
+  yield* visit(head);
+  yield* visit(body);
 }
 
 /** px → mm (96 dpi). */
@@ -345,6 +402,8 @@ function writeTable<T>(
   const printable =
     doc.internal.pageSize.getWidth() - margin.left - margin.right;
   const widths = columnWidths(columns, printable, options.fitToWidth !== false);
+  const family = ogePdfTableFont(options);
+  if (!family) warnOgePdfUnicode(pdfTexts(head, body, options));
   autoTable(doc, {
     startY,
     margin,
@@ -354,6 +413,7 @@ function writeTable<T>(
     tableWidth: options.fitToWidth === false ? 'wrap' : 'auto',
     theme: 'grid',
     styles: {
+      ...(family ? { font: family } : {}),
       fontSize: options.fontSize ?? 9,
       cellPadding: 2,
       lineWidth: 0.1,

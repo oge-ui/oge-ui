@@ -3,6 +3,12 @@
  * layers; `jspdf` is an **optional peer** pulled in only by this entry point.
  */
 import { jsPDF } from 'jspdf';
+import {
+  registerOgePdfFont,
+  resolveOgePdfFont,
+  warnOgePdfUnicode,
+  type OgePdfFont,
+} from '@oge-ui/behavior';
 import type { OgeGanttExportData, OgeGanttTask } from './lib/gantt-types';
 
 export interface OgeGanttPdfExportOptions {
@@ -18,6 +24,13 @@ export interface OgeGanttPdfExportOptions {
   markCriticalPath?: boolean;
   /** BCP 47 locale of the scale labels. Default: browser locale. */
   locale?: string;
+  /**
+   * Unicode TrueType font to embed — needed for text outside WinAnsi
+   * (Turkish `ğ ş ı İ`, Greek, Cyrillic, …). Default: the font set by
+   * `setOgePdfDefaultFont()` from `@oge-ui/behavior/export-pdf`, else
+   * Helvetica; `null` forces Helvetica.
+   */
+  font?: OgePdfFont | null;
 }
 
 const MARGIN = 12;
@@ -60,6 +73,14 @@ export function buildGanttPdfDocument<T>(
     orientation: options.orientation ?? 'landscape',
     format: options.pageFormat ?? 'a4',
   });
+  const font = resolveOgePdfFont(options);
+  const family = font ? registerOgePdfFont(doc, font) : 'helvetica';
+  if (family === 'helvetica') {
+    warnOgePdfUnicode([
+      ...(options.title ? [options.title] : []),
+      ...data.tasks.map((task) => task.title),
+    ]);
+  }
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const chartX = MARGIN + TITLE_COL_W;
@@ -80,14 +101,14 @@ export function buildGanttPdfDocument<T>(
   let y = MARGIN;
   if (options.title !== undefined) {
     doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(family, 'bold');
     doc.text(options.title, MARGIN, y + 4);
     y += 9;
   }
 
   const drawScaleHeader = (top: number): number => {
     doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(family, 'normal');
     doc.setTextColor(110);
     doc.setDrawColor(210);
     const ticks = 8;
@@ -112,7 +133,7 @@ export function buildGanttPdfDocument<T>(
       options.markCriticalPath !== false && data.critical.has(task.key);
     // title cell
     doc.setFontSize(8);
-    doc.setFont('helvetica', task.isSummary ? 'bold' : 'normal');
+    doc.setFont(family, task.isSummary ? 'bold' : 'normal');
     const indent = Math.min(20, task.level * 3);
     doc.text(
       doc.splitTextToSize(task.title, TITLE_COL_W - indent - 2)[0] ?? '',

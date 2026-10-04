@@ -1349,3 +1349,15 @@ export {
 // the live-config helper behind provideOge<X>Config(() => …), re-exported for
 // packages that depend on behavior but not on core
 export { ogeLiveConfig } from '@oge-ui/core';
+
+export {
+  getOgePdfDefaultFont,
+  isOgePdfWinAnsi,
+  registerOgePdfFont,
+  resolveOgePdfFont,
+  setOgePdfDefaultFont,
+  warnOgePdfUnicode,
+  type OgePdfFont,
+  type OgePdfFontData,
+  type OgePdfFontTarget,
+} from './lib/export/pdf-font';

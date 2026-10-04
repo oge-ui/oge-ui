@@ -12,6 +12,7 @@ import { makeEmployees, type Employee } from '../../shared/demo-data';
 import { ReactGridExportDemos } from '../react-grid/export';
 import { EXCEL_SNIPPET, PDF_SNIPPET } from './export-snippets';
 import { salaryCellStyle } from './export-style';
+import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 const money = (value: unknown): string =>
   typeof value === 'number'
@@ -194,6 +195,7 @@ export class GridExportPage {
     const grid = this.grid();
     if (!grid) return;
     const { exportGridToPdf } = await import('@oge-ui/grid/export-pdf');
+    await loadDocsPdfFont(); // Unicode font: Turkish ğ ş ı İ
     await exportGridToPdf(grid, {
       filename: 'employees.pdf',
       title: 'Employees by department',
