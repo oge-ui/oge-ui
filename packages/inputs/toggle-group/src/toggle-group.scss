@@ -1,0 +1,155 @@
+@use '../../../grid/src/lib/styles/tokens';
+
+// A segmented control: one rounded track, segments separated by hairlines,
+// the selected segment an accent-tinted pill (the button group's selected
+// look, so the two read as one family).
+
+.oge-toggle-group {
+  @include tokens.core-tokens;
+
+  --oge-toggle-group-height: 34px;
+
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--oge-text-color);
+  font-size: var(--oge-font-size);
+}
+
+.oge-toggle-group-sm {
+  --oge-toggle-group-height: 28px;
+
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-toggle-group-lg {
+  --oge-toggle-group-height: 42px;
+
+  font-size: calc(var(--oge-font-size) + 1px);
+}
+
+.oge-toggle-group-label {
+  font-weight: 600;
+}
+
+.oge-toggle-group-track {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: var(--oge-radius);
+  background: var(--oge-row-hover-bg);
+}
+
+.oge-toggle-group-fluid .oge-toggle-group-track {
+  align-self: stretch;
+
+  .oge-toggle-group-item {
+    flex: 1 1 0;
+  }
+}
+
+.oge-toggle-group-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-block-size: calc(var(--oge-toggle-group-height) - 6px);
+  padding-inline: 12px;
+  border: 1px solid transparent;
+  border-radius: calc(var(--oge-radius) - 2px);
+  background: transparent;
+  color: var(--oge-muted-color);
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover:not(:disabled) {
+    color: var(--oge-text-color);
+    background: var(--oge-bg);
+  }
+
+  &:focus {
+    outline: 2px solid transparent;
+  }
+
+  &:focus-visible {
+    @include tokens.focus-ring;
+
+    z-index: 1;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+}
+
+.oge-toggle-group-item-selected {
+  border-color: var(--oge-accent);
+  background: var(--oge-accent-soft);
+  color: var(--oge-accent);
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+  }
+}
+
+.oge-toggle-group-readonly .oge-toggle-group-item {
+  cursor: default;
+}
+
+.oge-toggle-group-invalid .oge-toggle-group-track {
+  border-color: var(--oge-danger);
+}
+
+.oge-toggle-group-subscript {
+  color: var(--oge-muted-color);
+  font-size: calc(var(--oge-font-size) - 1px);
+}
+
+.oge-toggle-group-error {
+  color: var(--oge-danger);
+}
+
+@include tokens.reduced-motion {
+  .oge-toggle-group-item {
+    transition: none;
+  }
+}
+
+@include tokens.forced-colors {
+  .oge-toggle-group-track {
+    border-color: CanvasText;
+  }
+
+  .oge-toggle-group-item {
+    border-color: ButtonText;
+    color: ButtonText;
+  }
+
+  .oge-toggle-group-item-selected {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .oge-toggle-group-item:disabled {
+    border-color: GrayText;
+    color: GrayText;
+  }
+
+  .oge-toggle-group-invalid .oge-toggle-group-track {
+    border-width: 2px;
+  }
+}

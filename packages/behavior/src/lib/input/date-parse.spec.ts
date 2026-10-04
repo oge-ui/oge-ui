@@ -171,3 +171,20 @@ describe('parseDateText — datetime', () => {
     ).toEqual([2024, 3, 4, 8, 15]);
   });
 });
+
+describe('parseDateText — seconds', () => {
+  it('reads HH:MM:SS and keeps the seconds out of the date digits', () => {
+    const at = parseDateText('3/4/2024 14:30:15', 'en-US', 'datetime');
+    expect(at?.getSeconds()).toBe(15);
+    expect(parts(at)).toEqual([2024, 3, 4, 14, 30]);
+    const time = parseDateText('9:05:59 PM', 'en-US', 'time');
+    expect([time?.getHours(), time?.getMinutes(), time?.getSeconds()]).toEqual([
+      21, 5, 59,
+    ]);
+  });
+
+  it('defaults the seconds to zero and rejects out-of-range ones', () => {
+    expect(parseDateText('14:30', 'en-US', 'time')?.getSeconds()).toBe(0);
+    expect(parseDateText('14:30:61', 'en-US', 'time')).toBeNull();
+  });
+});

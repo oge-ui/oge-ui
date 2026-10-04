@@ -4,6 +4,7 @@ import {
   ElementRef,
   LOCALE_ID,
   ViewEncapsulation,
+  afterNextRender,
   computed,
   inject,
   input,
@@ -17,10 +18,21 @@ import { OGE_INPUT_HOST, type OgeInputSpinApi } from '@oge-ui/inputs/field';
 import { OgeInputBase } from '@oge-ui/inputs/field';
 import type { OgeNumberBoxMode } from '@oge-ui/inputs/field';
 import {
+  createNumberTypingGrouper,
+  formatNumberWhileTyping,
+  numberWheelDirection,
+} from '@oge-ui/behavior';
+import {
   clampNumber,
   createNumberFormatter,
   offsetByStep,
 } from './number-format';
+
+interface FormatterCache {
+  key: string;
+  formatter: ReturnType<typeof createNumberFormatter>;
+  groupDigits: (digits: string) => string;
+}
 
 /**
  * Locale-aware numeric editor: `null` means empty (never `0`), display
@@ -41,6 +53,11 @@ import {
  *
  * Note: `style: 'percent'` formats the display only — the model value is not
  * rescaled.
+ *
+ * `format` is a blur-time display format: while focused the field shows the
+ * editable number, which `formatWhileTyping` groups live (caret preserved)
+ * and `maxFractionDigits` caps as you type. `wheelStep` opts into
+ * mouse-wheel stepping while the field is focused.
  */
 @Component({
   selector: 'oge-number-box',
@@ -99,6 +116,22 @@ export class OgeNumberBox
   readonly locale = input<string | undefined>(undefined);
   /** Native `type` attr; keyboards vary by device. `inputmode` is always decimal. */
   readonly mode = input<OgeNumberBoxMode>('text');
+  /**
+   * Groups thousands live while typing (locale separators, caret kept in
+   * place). `false` (default) shows the raw number while focused; `format`
+   * still applies on blur either way.
+   */
+  readonly formatWhileTyping = input(false);
+  /**
+   * Caps the fraction digits while typing — extra digits are not accepted.
+   * `undefined` = unlimited (the blur-time `format` may still round the display).
+   */
+  readonly maxFractionDigits = input<number | undefined>(undefined);
+  /**
+   * Mouse-wheel step while the field is focused (wheel up adds). `undefined`
+   * / `0` (default) leaves the wheel to the page — wheel changes are opt-in.
+   */
+  readonly wheelStep = input<number | undefined>(undefined);
 
   private readonly localeId = inject(LOCALE_ID);
   /**
@@ -116,20 +149,44 @@ export class OgeNumberBox
   private readonly formatterKey = computed(
     () => `${this.effectiveLocale()}|${JSON.stringify(this.format() ?? null)}`,
   );
-  private cachedFormatter: {
-    key: string;
-    formatter: ReturnType<typeof createNumberFormatter>;
-  } | null = null;
+  private cachedFormatter: FormatterCache | null = null;
 
   private formatter(): ReturnType<typeof createNumberFormatter> {
+    return this.formatterCache().formatter;
+  }
+
+  private formatterCache(): FormatterCache {
     const key = this.formatterKey();
     if (this.cachedFormatter?.key !== key) {
       this.cachedFormatter = {
         key,
         formatter: createNumberFormatter(this.effectiveLocale(), this.format()),
+        groupDigits: createNumberTypingGrouper(this.effectiveLocale()),
       };
     }
-    return this.cachedFormatter.formatter;
+    return this.cachedFormatter;
+  }
+
+  /** Live typing rules — grouping and the fraction cap (shared core). */
+  private typed(text: string, caret: number): { text: string; caret: number } {
+    const grouping = this.formatWhileTyping();
+    const maxFractionDigits = this.maxFractionDigits();
+    if (!grouping && maxFractionDigits === undefined) return { text, caret };
+    const { formatter, groupDigits } = this.formatterCache();
+    return formatNumberWhileTyping(text, caret, {
+      decimal: formatter.decimal,
+      group: formatter.group,
+      grouping,
+      maxFractionDigits,
+      groupDigits,
+    });
+  }
+
+  /** The focused (editable) text of a value. */
+  private editableText(value: number | null): string {
+    if (value === null) return '';
+    const raw = this.formatter().formatEditable(value);
+    return this.typed(raw, raw.length).text;
   }
 
   /** Raw text while focused. */
@@ -201,27 +258,42 @@ export class OgeNumberBox
   }
 
   /** Spin commits immediately — it is a discrete action, not typing. */
-  private stepBy(dir: 1 | -1, event?: Event): void {
+  private stepBy(dir: 1 | -1, event?: Event, by = this.step()): void {
     // A staged debounced keystroke must land before stepping from it.
     this.flushCommit();
-    const next = offsetByStep(
-      this.value(),
-      dir,
-      this.step(),
-      this.min(),
-      this.max(),
-    );
+    const next = offsetByStep(this.value(), dir, by, this.min(), this.max());
     this.parseInvalid.set(false);
     this.commitNow(next, event);
     if (this.focusedSig()) {
-      this.editingText.set(this.formatter().formatEditable(next));
+      this.editingText.set(this.editableText(next));
     }
+  }
+
+  /** Native, non-passive wheel listener — `preventDefault` must work. */
+  private onWheel(event: WheelEvent): void {
+    const by = this.wheelStep() ?? 0;
+    const dir = numberWheelDirection(
+      event,
+      this.focusedSig(),
+      by > 0 && !this.effectiveDisabled() && !this.readonly(),
+    );
+    if (dir === 0) return;
+    event.preventDefault();
+    this.stepBy(dir, event, by);
   }
 
   // --- typing / commit --------------------------------------------------------
 
   protected onNativeInput(event: Event): void {
-    const text = (event.target as HTMLInputElement).value;
+    const el = event.target as HTMLInputElement;
+    const result = this.typed(el.value, el.selectionStart ?? el.value.length);
+    const text = result.text;
+    if (text !== el.value) {
+      // write before the signal so the binding sees an unchanged value and
+      // leaves the caret where the shared core put it
+      el.value = text;
+      el.setSelectionRange(result.caret, result.caret);
+    }
     this.editingText.set(text);
     this.inputChange.emit({ text, event });
     const parsed = this.formatter().parse(text);
@@ -255,10 +327,7 @@ export class OgeNumberBox
 
   protected override onFocusChanged(focused: boolean): void {
     if (focused) {
-      const value = this.value();
-      this.editingText.set(
-        value === null ? '' : this.formatter().formatEditable(value),
-      );
+      this.editingText.set(this.editableText(this.value()));
       this.parseInvalid.set(false);
       return;
     }
@@ -277,10 +346,7 @@ export class OgeNumberBox
 
   protected override onValueWritten(): void {
     if (this.focusedSig()) {
-      const value = this.value();
-      this.editingText.set(
-        value === null ? '' : this.formatter().formatEditable(value),
-      );
+      this.editingText.set(this.editableText(this.value()));
     }
   }
 
@@ -303,5 +369,14 @@ export class OgeNumberBox
   constructor() {
     super();
     this.destroyRef.onDestroy(() => this.stopSpin());
+    afterNextRender(() => {
+      const el = this.native()?.nativeElement;
+      if (!el) return;
+      const listener = (event: WheelEvent) => this.onWheel(event);
+      el.addEventListener('wheel', listener, { passive: false });
+      this.destroyRef.onDestroy(() =>
+        el.removeEventListener('wheel', listener),
+      );
+    });
   }
 }

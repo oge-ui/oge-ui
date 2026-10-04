@@ -48,6 +48,11 @@ export interface OgeInputsMessages {
   /** Placeholder `{requiredLength}`. */
   maxLengthError: string;
   patternError: string;
+  /**
+   * Masked text box / text box with a `mask`: the value leaves required mask
+   * slots empty. A per-editor `maskInvalidMessage` overrides it.
+   */
+  maskInvalidError: string;
   /** Number box parse failure. */
   invalidNumberError: string;
   /** Fallback for unknown validation error kinds. */
@@ -100,6 +105,52 @@ export interface OgeInputsMessages {
   rangeStartLabel: string;
   /** Aria label of the date range box's end input. */
   rangeEndLabel: string;
+  /** "Now" button of a time / date-time picker (`showNowButton`). */
+  nowButton: string;
+  /** Aria label of a date range box's preset list. */
+  presetsLabel: string;
+  /** Built-in range preset `ogeDateRangePresets.today()`. */
+  presetToday: string;
+  /** Built-in range preset `ogeDateRangePresets.yesterday()`. */
+  presetYesterday: string;
+  /** Built-in range preset `ogeDateRangePresets.last7Days()`. */
+  presetLast7Days: string;
+  /** Built-in range preset `ogeDateRangePresets.last30Days()`. */
+  presetLast30Days: string;
+  /** Built-in range preset `ogeDateRangePresets.thisWeek()`. */
+  presetThisWeek: string;
+  /** Built-in range preset `ogeDateRangePresets.lastWeek()`. */
+  presetLastWeek: string;
+  /** Built-in range preset `ogeDateRangePresets.thisMonth()`. */
+  presetThisMonth: string;
+  /** Built-in range preset `ogeDateRangePresets.lastMonth()`. */
+  presetLastMonth: string;
+  /** Built-in range preset `ogeDateRangePresets.thisYear()`. */
+  presetThisYear: string;
+  /** Built-in range preset `ogeDateRangePresets.lastYear()`. */
+  presetLastYear: string;
+  /** Aria label of the time picker's hour column. */
+  hourColumnLabel: string;
+  /** Aria label of the time picker's minute column. */
+  minuteColumnLabel: string;
+  /** Aria label of the time picker's second column. */
+  secondColumnLabel: string;
+  /** Aria label of the time picker's AM/PM column. */
+  dayPeriodColumnLabel: string;
+  /** Empty day segment of the masked date entry (`useMaskBehavior`). */
+  segmentDay: string;
+  /** Empty month segment of the masked date entry. */
+  segmentMonth: string;
+  /** Empty year segment of the masked date entry. */
+  segmentYear: string;
+  /** Empty hour segment of the masked date entry. */
+  segmentHour: string;
+  /** Empty minute segment of the masked date entry. */
+  segmentMinute: string;
+  /** Empty second segment of the masked date entry. */
+  segmentSecond: string;
+  /** Empty AM/PM segment of the masked date entry. */
+  segmentDayPeriod: string;
   /** Color box parse failure (reverts on blur). */
   invalidColorError: string;
   /** Aria label of the color box popup dialog when the field has no label. */
@@ -132,6 +183,18 @@ export interface OgeInputsMessages {
   alphaInputLabel: string;
   /** Aria label / title of the color box's eyedropper button. */
   eyedropperButton: string;
+  /** Aria label of the standalone color gradient group when it has no label. */
+  colorGradientLabel: string;
+  /** Caption of the color gradient's contrast readout. */
+  contrastLabel: string;
+  /** The contrast ratio text — placeholder `{ratio}`. */
+  contrastRatioText: string;
+  /** Badge text of a WCAG level the color meets — placeholder `{level}` (AA / AAA). */
+  contrastPass: string;
+  /** Badge text of a WCAG level the color fails — placeholder `{level}` (AA / AAA). */
+  contrastFail: string;
+  /** Label of the check box group's "select all" box. */
+  selectAllText: string;
   /** Aria label of the adaptive sheet / full-screen dialog's close (✕) button. */
   adaptiveClose: string;
   /** Confirm action of the adaptive tag box and date range box (closes the sheet). */
@@ -163,6 +226,7 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   minLengthError: 'Enter at least {requiredLength} characters',
   maxLengthError: 'Enter no more than {requiredLength} characters',
   patternError: 'The value has an invalid format',
+  maskInvalidError: 'Complete the value in the required format',
   invalidNumberError: 'Enter a valid number',
   invalidError: 'Invalid value',
   dropDownToggle: 'Toggle dropdown',
@@ -189,6 +253,29 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   cancelButton: 'Cancel',
   rangeStartLabel: 'Start date',
   rangeEndLabel: 'End date',
+  nowButton: 'Now',
+  presetsLabel: 'Quick ranges',
+  presetToday: 'Today',
+  presetYesterday: 'Yesterday',
+  presetLast7Days: 'Last 7 days',
+  presetLast30Days: 'Last 30 days',
+  presetThisWeek: 'This week',
+  presetLastWeek: 'Last week',
+  presetThisMonth: 'This month',
+  presetLastMonth: 'Last month',
+  presetThisYear: 'This year',
+  presetLastYear: 'Last year',
+  hourColumnLabel: 'Hours',
+  minuteColumnLabel: 'Minutes',
+  secondColumnLabel: 'Seconds',
+  dayPeriodColumnLabel: 'AM/PM',
+  segmentDay: 'dd',
+  segmentMonth: 'mm',
+  segmentYear: 'yyyy',
+  segmentHour: 'hh',
+  segmentMinute: 'mm',
+  segmentSecond: 'ss',
+  segmentDayPeriod: '--',
   invalidColorError: 'Enter a valid color',
   colorPickerLabel: 'Color picker',
   hueSliderLabel: 'Hue',
@@ -205,6 +292,12 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   blueInputLabel: 'Blue',
   alphaInputLabel: 'Opacity percent',
   eyedropperButton: 'Pick color from screen',
+  colorGradientLabel: 'Color gradient',
+  contrastLabel: 'Contrast',
+  contrastRatioText: '{ratio}:1',
+  contrastPass: '{level} pass',
+  contrastFail: '{level} fail',
+  selectAllText: 'Select all',
   adaptiveClose: 'Close',
   adaptiveDone: 'Done',
   adaptiveSearch: 'Search',

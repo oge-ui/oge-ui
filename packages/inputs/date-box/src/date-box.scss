@@ -196,18 +196,114 @@
   font-weight: 600;
 }
 
+// Today / Now shortcuts sit at the start of the footer, OK / Cancel at the end
+.oge-date-box-actions-gap {
+  flex: 1 1 auto;
+}
+
+.oge-date-box-shortcut {
+  border-color: transparent;
+  color: var(--oge-accent);
+  font-weight: 500;
+
+  &:disabled {
+    color: var(--oge-muted-color);
+    cursor: default;
+  }
+}
+
+.oge-date-box-action:focus-visible,
+.oge-date-range-preset:focus-visible {
+  @include tokens.focus-ring;
+}
+
+// --- range presets ------------------------------------------------------------
+// A vertical list beside the calendar; a horizontal chip row in the adaptive
+// full-screen dialog, where there is no room beside it.
+.oge-date-range-body {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.oge-date-range-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 128px;
+  padding: 2px 4px 2px 2px;
+  border-inline-end: 1px solid var(--oge-border-color);
+}
+
+.oge-date-range-preset {
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--oge-radius);
+  background: none;
+  color: var(--oge-text-color);
+  font: inherit;
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--oge-row-hover-bg);
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--oge-accent-soft);
+    color: var(--oge-accent);
+    font-weight: 600;
+  }
+}
+
+.oge-popup-adaptive .oge-date-range-body {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.oge-popup-adaptive .oge-date-range-presets {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  border-inline-end: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--oge-scrollbar-thumb) var(--oge-scrollbar-track);
+
+  .oge-date-range-preset {
+    border: 1px solid var(--oge-border-color);
+    border-radius: 999px;
+    min-height: 36px;
+  }
+}
+
 // --- forced colors (Windows High Contrast) ---------------------------------
 // System colours only; state never rides on a background colour alone.
 @include tokens.forced-colors {
   .oge-date-box-time-selected,
-  .oge-date-box-time-selected:hover {
+  .oge-date-box-time-selected:hover,
+  .oge-date-range-preset[aria-pressed='true'] {
     background: Highlight;
     color: HighlightText;
+  }
+
+  .oge-date-range-preset[aria-pressed='true'] {
+    outline: 2px solid CanvasText;
+  }
+
+  .oge-date-box-shortcut:disabled {
+    color: GrayText;
   }
 }
 
 @include tokens.reduced-motion {
-  .oge-date-box-time {
+  .oge-date-box-time,
+  .oge-date-range-preset {
     transition: none;
   }
 }

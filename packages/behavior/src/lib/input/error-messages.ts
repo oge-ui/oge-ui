@@ -46,6 +46,8 @@ export function messageForFieldError(
       });
     case 'pattern':
       return messages.patternError;
+    case 'mask':
+      return messages.maskInvalidError;
     default:
       return error.message ?? messages.invalidError;
   }

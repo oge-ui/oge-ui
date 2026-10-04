@@ -4,13 +4,24 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
   useRef,
   useState,
   type CSSProperties,
   type ReactNode,
 } from 'react';
 import { withInputWidth } from './field-extras';
-import { graphemeCount } from '@oge-ui/behavior';
+import {
+  OgeMaskCore,
+  graphemeCount,
+  ogeMaskInputMode,
+  type OgeMaskCompletedEvent,
+  type OgeMaskEdit,
+  type OgeMaskRules,
+  type OgeMaskShowMode,
+} from '@oge-ui/behavior';
 import {
   OgeFieldChrome,
   type OgeInputCopyState,
@@ -25,6 +36,10 @@ import {
 import { useOgeField, type OgeControlProps } from './use-field';
 import { useOgeInputsConfig } from './inputs-config';
 
+/** SSR-safe layout effect (client components still server-render). */
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 /** Native input types supported by the text box. */
 export type OgeTextBoxMode =
   'text' | 'email' | 'password' | 'search' | 'tel' | 'url';
@@ -35,6 +50,8 @@ export interface OgeTextBoxHandle {
   blur(): void;
   /** Clears the value (commits immediately), keeps focus in the field. */
   clear(): void;
+  /** `true` unless a mask is set and a required slot of the entered value is empty. */
+  isMaskComplete(): boolean;
 }
 
 export interface OgeTextBoxProps
@@ -66,6 +83,31 @@ export interface OgeTextBoxProps
   revealable?: boolean;
   /** Copy-to-clipboard rail button (API keys, tokens…). */
   showCopyButton?: boolean;
+  /**
+   * Input mask — `0` digit, `9` optional digit, `#` digit/space/sign, `L`/`l`
+   * letter (required/optional), `A`/`a` letter or digit, `C`/`c` any
+   * character, a backslash escapes a literal; every other character is a
+   * literal. Typing overwrites slot by slot, skipping literals; paste accepts
+   * raw or formatted text. Unset = a plain text box.
+   */
+  mask?: string;
+  /** Extra or overriding single-character mask rules (always required slots). Memoize it. */
+  maskRules?: OgeMaskRules;
+  /** Placeholder character of empty mask slots. Default `'_'`. */
+  maskChar?: string;
+  /** `'always'` shows the mask while blurred too; `'onFocus'` only while focused or filled. */
+  showMaskMode?: OgeMaskShowMode;
+  /** The value carries the mask literals (`(555) 123-4567`) instead of the raw characters. */
+  includeLiterals?: boolean;
+  /** Error shown while required mask slots are empty; falls back to `messages.maskInvalidError`. */
+  maskInvalidMessage?: string;
+  /**
+   * The built-in "required slots are filled" check (Kendo `maskValidation`).
+   * `false` leaves completeness to your own validation. Default `true`.
+   */
+  maskValidation?: boolean;
+  /** Fires when the last required mask slot is filled. */
+  onMaskCompleted?: (event: OgeMaskCompletedEvent) => void;
   /** Raw text on every keystroke, regardless of the commit policy. */
   onInputChange?: (event: { text: string; event: Event }) => void;
   /** Content of the `[ogeInputPrefix]` slot. */
@@ -113,6 +155,13 @@ export const OgeTextBox = forwardRef<OgeTextBoxHandle, OgeTextBoxProps>(
       counterMode = 'limit',
       revealable = true,
       showCopyButton = false,
+      mask,
+      maskRules,
+      maskChar = '_',
+      showMaskMode = 'always',
+      includeLiterals = false,
+      maskInvalidMessage,
+      maskValidation = true,
       prefix,
       suffix,
       className,
@@ -121,12 +170,145 @@ export const OgeTextBox = forwardRef<OgeTextBoxHandle, OgeTextBoxProps>(
 
     const config = useOgeInputsConfig();
     const nativeRef = useRef<HTMLInputElement>(null);
+
+    // --- mask ---------------------------------------------------------------
+
+    const maskCore = useMemo(
+      () =>
+        mask ? new OgeMaskCore({ mask, rules: maskRules, maskChar }) : null,
+      [mask, maskRules, maskChar],
+    );
+    const [, bumpMask] = useReducer((n: number) => n + 1, 0);
+    // Model → mask: a new pattern or an external value write re-fills the
+    // slots. Compared with the last value *seen*, not the core's own value,
+    // so a debounced commit in flight never wipes what is being typed.
+    const maskSync = useRef<{ core: OgeMaskCore | null; value: unknown }>({
+      core: null,
+      value: undefined,
+    });
+    const maskMessages = { ...config.messages, ...props.messages };
+    const maskFormatError =
+      maskCore &&
+      maskValidation &&
+      !maskCore.isEmpty() &&
+      !maskCore.isComplete()
+        ? (maskInvalidMessage ?? maskMessages.maskInvalidError)
+        : null;
+
     const field = useOgeField<string>({
       props,
       emptyValue: '',
       isEmpty: (value) => value === '',
       focusNative: () => nativeRef.current?.focus(),
+      formatError: maskFormatError,
     });
+
+    if (maskCore) {
+      const sync = maskSync.current;
+      if (sync.core !== maskCore || !Object.is(sync.value, field.value)) {
+        // idempotent for the same (core, value) pair — StrictMode-safe
+        const refill =
+          sync.core !== maskCore ||
+          maskCore.value(includeLiterals) !== field.value;
+        maskSync.current = { core: maskCore, value: field.value };
+        if (refill) {
+          const errorBefore = maskFormatError;
+          maskCore.setValue(field.value ?? '', includeLiterals);
+          const errorAfter =
+            maskValidation && !maskCore.isEmpty() && !maskCore.isComplete()
+              ? (maskInvalidMessage ?? maskMessages.maskInvalidError)
+              : null;
+          // the error above was derived before the refill — re-render once
+          // (a same-component update during render; converges next pass)
+          if (errorAfter !== errorBefore) bumpMask();
+        }
+      }
+    }
+    /** The natively rendered IME text while a composition is in progress. */
+    const [compositionText, setCompositionText] = useState<string | null>(null);
+    const compositionRange = useRef<[number, number] | null>(null);
+    const pendingCaret = useRef<number | null>(null);
+    useIsomorphicLayoutEffect(() => {
+      const caret = pendingCaret.current;
+      const el = nativeRef.current;
+      if (caret === null || !el) return;
+      pendingCaret.current = null;
+      try {
+        el.setSelectionRange(caret, caret);
+      } catch {
+        // non-fatal
+      }
+    });
+
+    const applyMaskEdit = (
+      core: OgeMaskCore,
+      el: HTMLInputElement,
+      edit: OgeMaskEdit,
+      event: Event,
+      wasComplete: boolean,
+    ) => {
+      el.value = edit.text;
+      try {
+        el.setSelectionRange(edit.caret, edit.caret);
+      } catch {
+        // detached / hidden inputs refuse selection writes — non-fatal
+      }
+      pendingCaret.current = edit.caret;
+      // maskSync keeps the last *model* value: a debounced commit still in
+      // flight must not look like an external write on the next render
+      const value = core.value(includeLiterals);
+      setLiveText(value);
+      bumpMask();
+      props.onInputChange?.({ text: edit.text, event });
+      if (edit.changed) field.commit.queue(value, event);
+      if (!wasComplete && !core.isEmpty() && core.isComplete()) {
+        props.onMaskCompleted?.({
+          value,
+          rawValue: core.rawValue(),
+          maskedValue: core.maskedValue(),
+        });
+      }
+    };
+    const latestMask = useRef({ maskCore, applyMaskEdit, readonly: false });
+    latestMask.current = {
+      maskCore,
+      applyMaskEdit,
+      readonly: props.readonly ?? false,
+    };
+
+    // React's onBeforeInput is a keypress polyfill without `inputType` (no
+    // deletions), so the mask listens to the native event.
+    useEffect(() => {
+      const el = nativeRef.current;
+      if (!el) return;
+      const onBeforeInput = (event: Event) => {
+        const {
+          maskCore: core,
+          applyMaskEdit: apply,
+          readonly,
+        } = latestMask.current;
+        if (!core || readonly) return;
+        const native = event as InputEvent;
+        const data =
+          native.data ?? native.dataTransfer?.getData('text/plain') ?? null;
+        const wasComplete = !core.isEmpty() && core.isComplete();
+        const edit = core.beforeInput(
+          native.inputType ?? 'insertText',
+          data,
+          el.selectionStart ?? 0,
+          el.selectionEnd ?? 0,
+        );
+        if (!edit) return; // IME composition — applied at compositionend
+        event.preventDefault();
+        apply(core, el, edit, event, wasComplete);
+      };
+      el.addEventListener('beforeinput', onBeforeInput);
+      return () => el.removeEventListener('beforeinput', onBeforeInput);
+    }, []);
+
+    const maskEmpty = maskCore ? maskCore.isEmpty() : true;
+    const effectiveInputMode =
+      inputMode ?? (mask ? ogeMaskInputMode(mask, maskRules) : undefined);
 
     /** Text as typed — follows `value` on committed/programmatic writes. */
     const [liveText, setLiveText] = useState(field.value);
@@ -235,12 +417,25 @@ export const OgeTextBox = forwardRef<OgeTextBoxHandle, OgeTextBoxProps>(
           field.clear();
           setLiveText('');
         },
+        isMaskComplete: () => {
+          const core = latestMask.current.maskCore;
+          return !core || core.isEmpty() || core.isComplete();
+        },
       }),
       [],
     );
 
     const readonly = props.readonly ?? false;
     const floatUp = field.focused || !field.isEmpty;
+    const displayText = !maskCore
+      ? liveText
+      : compositionText !== null
+        ? compositionText
+        : maskEmpty &&
+            !(showMaskMode === 'always' && labelMode !== 'floating') &&
+            !field.focused
+          ? ''
+          : maskCore.text();
     const placeholderText =
       labelMode === 'floating' && label && !floatUp ? '' : placeholder;
 
@@ -323,15 +518,19 @@ export const OgeTextBox = forwardRef<OgeTextBoxHandle, OgeTextBoxProps>(
             className="oge-input-native"
             id={field.ids.inputId}
             type={effectiveType}
-            value={liveText}
+            value={displayText}
             placeholder={placeholderText}
             disabled={field.effectiveDisabled}
             readOnly={readonly}
             name={props.name || undefined}
-            maxLength={counterMode === 'limit' ? maxLength : undefined}
+            maxLength={
+              counterMode === 'limit' && !maskCore ? maxLength : undefined
+            }
             minLength={minLength}
             autoComplete={autocomplete}
-            inputMode={inputMode as OgeTextBoxProps['inputMode'] & undefined}
+            inputMode={
+              effectiveInputMode as OgeTextBoxProps['inputMode'] & undefined
+            }
             enterKeyHint={enterKeyHint as 'enter' | 'done' | 'go' | undefined}
             autoCapitalize={autocapitalize}
             spellCheck={spellcheck}
@@ -348,20 +547,82 @@ export const OgeTextBox = forwardRef<OgeTextBoxHandle, OgeTextBoxProps>(
             {...extraAttrs}
             onChange={(event) => {
               const text = event.target.value;
+              if (maskCore) {
+                if (composing.current) {
+                  // keep the native composition on screen until it settles
+                  setCompositionText(text);
+                  return;
+                }
+                // input no beforeinput announced (autofill, some keyboards)
+                const wasComplete =
+                  !maskCore.isEmpty() && maskCore.isComplete();
+                applyMaskEdit(
+                  maskCore,
+                  event.target,
+                  maskCore.reconcile(
+                    text,
+                    event.target.selectionStart ?? undefined,
+                  ),
+                  event.nativeEvent,
+                  wasComplete,
+                );
+                return;
+              }
               setLiveText(text);
               props.onInputChange?.({ text, event: event.nativeEvent });
               if (composing.current) return; // buffered until compositionend
               field.commit.queue(text, event.nativeEvent);
             }}
-            onCompositionStart={() => (composing.current = true)}
+            onCompositionStart={() => {
+              composing.current = true;
+              const el = nativeRef.current;
+              compositionRange.current =
+                maskCore && el
+                  ? [el.selectionStart ?? 0, el.selectionEnd ?? 0]
+                  : null;
+            }}
             onCompositionEnd={(event) => {
               composing.current = false;
               const el = nativeRef.current;
+              if (maskCore && el) {
+                const [start, end] = compositionRange.current ?? [0, 0];
+                compositionRange.current = null;
+                setCompositionText(null);
+                const wasComplete =
+                  !maskCore.isEmpty() && maskCore.isComplete();
+                applyMaskEdit(
+                  maskCore,
+                  el,
+                  maskCore.insert(start, end, event.data ?? ''),
+                  event.nativeEvent,
+                  wasComplete,
+                );
+                return;
+              }
               if (el) field.commit.queue(el.value, event.nativeEvent);
+            }}
+            onClick={(event) => {
+              const el = event.currentTarget;
+              if (!maskCore || el.selectionStart !== el.selectionEnd) return;
+              const caret = maskCore.normalizeCaret(el.selectionStart ?? 0);
+              if (caret !== el.selectionStart)
+                el.setSelectionRange(caret, caret);
             }}
             onFocus={(event) => {
               field.handleFocus(event);
               if (selectOnFocus) nativeRef.current?.select();
+              else if (maskCore) {
+                // show the mask now and park the caret on the first empty slot
+                const el = event.currentTarget;
+                el.value = maskCore.text();
+                const caret = maskCore.normalizeCaret(el.selectionStart ?? 0);
+                pendingCaret.current = caret;
+                try {
+                  el.setSelectionRange(caret, caret);
+                } catch {
+                  // non-fatal
+                }
+              }
             }}
             onBlur={field.handleBlur}
             onKeyDown={field.handleEnterKey}

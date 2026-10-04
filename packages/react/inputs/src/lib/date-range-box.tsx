@@ -13,10 +13,15 @@ import {
 } from 'react';
 import { withInputWidth } from './field-extras';
 import {
+  dateRangePresetActive,
+  dateRangePresetLabel,
   isDayDisabled,
   parseDateText,
   startOfDay,
+  timeDisplayOptions,
   toLocalDate,
+  type OgeDateRangeBoxType,
+  type OgeDateRangePreset,
   type OgeCalendarDisabledDates,
   type OgeCalendarRange,
   type OgeCalendarWeekNumberOptions,
@@ -56,9 +61,20 @@ export interface OgeDateRangeBoxProps
     OgeFieldExtrasProps {
   /**
    * `'datetime'` adds start/end time lists to the picker (commits via OK) and
-   * parses/renders times on both sides.
+   * parses/renders times on both sides; `'time'` drops the calendar for a
+   * time-of-day range.
    */
-  type?: 'date' | 'datetime';
+  type?: OgeDateRangeBoxType;
+  /** Clock of the display text and time lists; `undefined` = the locale's. */
+  hour12?: boolean;
+  /** Seconds in the display text (`time`/`datetime`). */
+  showSeconds?: boolean;
+  /**
+   * Quick ranges listed beside the calendar (a chip row in the adaptive
+   * dialog): `[{ label, range: () => [start, end] }]` or the built-in
+   * `ogeDateRangePresets.*()` factories, whose labels come from the messages.
+   */
+  presets?: readonly OgeDateRangePreset[];
   /** Time list step in minutes (`type: 'datetime'`). */
   interval?: number;
   /** Display text — `Intl.DateTimeFormatOptions` or a formatter; `undefined` = short per type. */
@@ -118,6 +134,9 @@ export const OgeDateRangeBox = forwardRef<
 >(function OgeDateRangeBoxRender(props, ref) {
   const {
     type = 'date',
+    hour12,
+    showSeconds = false,
+    presets = [],
     interval = 30,
     displayFormat,
     min,
@@ -157,10 +176,7 @@ export const OgeDateRangeBox = forwardRef<
     if (typeof displayFormat === 'function') return displayFormat;
     const format = new Intl.DateTimeFormat(
       locale,
-      displayFormat ??
-        (type === 'datetime'
-          ? { dateStyle: 'short', timeStyle: 'short' }
-          : { dateStyle: 'short' }),
+      displayFormat ?? timeDisplayOptions(type, hour12, showSeconds),
     );
     return (date: Date) => format.format(date);
   })();
@@ -239,9 +255,12 @@ export const OgeDateRangeBox = forwardRef<
   const formattedEnd = value[1] === null ? '' : formatter(value[1]);
 
   const timeSlots = (() => {
-    if (type !== 'datetime') return [];
+    if (type === 'date') return [];
     const step = Math.max(1, interval);
-    const format = new Intl.DateTimeFormat(locale, { timeStyle: 'short' });
+    const format = new Intl.DateTimeFormat(
+      locale,
+      timeDisplayOptions('time', hour12, false),
+    );
     const slots: { minutes: number; text: string }[] = [];
     for (let minutes = 0; minutes < 24 * 60; minutes += step) {
       slots.push({
@@ -284,11 +303,15 @@ export const OgeDateRangeBox = forwardRef<
       if (announcedOpen.current) return;
       announcedOpen.current = true;
       setPickerRange(latest.current.value);
-      setTimeout(() =>
-        popupRef.current
-          ?.querySelector<HTMLElement>('[data-focus-target]')
-          ?.focus(),
-      );
+      setTimeout(() => {
+        const popup = popupRef.current;
+        // the calendar's focus target; a time range has only the lists
+        (
+          popup?.querySelector<HTMLElement>('[data-focus-target]') ??
+          popup?.querySelector<HTMLElement>('.oge-date-box-time-selected') ??
+          popup?.querySelector<HTMLElement>('.oge-date-box-time')
+        )?.focus();
+      });
       latest.current.props.onDropDownOpened?.();
     } else {
       if (machine.isOpen) machine.close('api');
@@ -313,6 +336,7 @@ export const OgeDateRangeBox = forwardRef<
   const parseSide = (raw: string): Date | null => {
     const parsed = parseDateText(raw, locale, latest.current.type);
     if (parsed === null) return null;
+    if (latest.current.type === 'time') return parsed;
     return isDayDisabled(
       parsed,
       latest.current.props.min,
@@ -404,18 +428,19 @@ export const OgeDateRangeBox = forwardRef<
       day.getDate(),
       previous?.getHours() ?? 0,
       previous?.getMinutes() ?? 0,
+      showSeconds ? (previous?.getSeconds() ?? 0) : 0,
     );
   };
 
   const onRangePick = (picked: OgeCalendarRange): void => {
     // calendar days come in at midnight — datetime keeps each side's time
     const merged: OgeCalendarRange =
-      latest.current.type === 'datetime'
+      latest.current.type !== 'date'
         ? [mergeSideTime(picked[0], 0), mergeSideTime(picked[1], 1)]
         : picked;
     setPickerRange(merged);
     // datetime commits via the OK footer, the adaptive dialog via Done
-    if (latest.current.type === 'datetime' || adaptiveRef.current) return;
+    if (latest.current.type !== 'date' || adaptiveRef.current) return;
     const [start, end] = merged;
     if (start && end) {
       setStartText(null);
@@ -447,6 +472,23 @@ export const OgeDateRangeBox = forwardRef<
     return (
       date !== null && date.getHours() * 60 + date.getMinutes() === minutes
     );
+  };
+
+  /**
+   * A preset pick: `date` boxes commit and close (the adaptive dialog waits
+   * for Done); `time`/`datetime` boxes draft it for the OK footer.
+   */
+  const applyPreset = (preset: OgeDateRangePreset, event: Event): void => {
+    const [start, end] = preset.range();
+    setPickerRange([start, end]);
+    latest.current.pickerRange = [start, end];
+    if (latest.current.type !== 'date' || adaptiveRef.current) return;
+    setStartText(null);
+    setEndText(null);
+    field.setParseInvalid(false);
+    commitRange(start, end, event);
+    close();
+    startInputRef.current?.focus();
   };
 
   /** OK footer (`type: 'datetime'`): commits the drafted range and closes. */
@@ -591,7 +633,7 @@ export const OgeDateRangeBox = forwardRef<
             visible: showDropDownButton && !field.effectiveDisabled,
             expanded: opened,
             toggle,
-            icon: 'calendar',
+            icon: type === 'time' ? 'clock' : 'calendar',
           },
         }}
         prefix={prefix}
@@ -613,7 +655,7 @@ export const OgeDateRangeBox = forwardRef<
           adaptiveTitle={label || field.msg.calendarLabel}
           closeLabel={field.msg.adaptiveClose}
           sheetFooter={
-            adaptive.active && type !== 'datetime' ? (
+            adaptive.active && type === 'date' ? (
               <SheetDone label={field.msg.adaptiveDone} onClick={applyDraft} />
             ) : undefined
           }
@@ -626,20 +668,45 @@ export const OgeDateRangeBox = forwardRef<
               adaptive.active ? undefined : label || field.msg.calendarLabel
             }
           >
-            <OgeCalendar
-              className="oge-date-box-calendar"
-              selectionMode="range"
-              viewsCount={adaptive.active ? 1 : 2}
-              range={draftRange}
-              onRangeChange={onRangePick}
-              min={min}
-              max={max}
-              disabledDates={disabledDates}
-              firstDayOfWeek={firstDayOfWeek}
-              showWeekNumbers={showWeekNumbers}
-              locale={props.locale}
-            />
-            {type === 'datetime' && (
+            <div className="oge-date-range-body">
+              {presets.length > 0 && (
+                <div
+                  className="oge-date-range-presets"
+                  role="group"
+                  aria-label={field.msg.presetsLabel}
+                >
+                  {presets.map((preset, index) => (
+                    <button
+                      key={preset.id ?? index}
+                      type="button"
+                      className="oge-date-range-preset"
+                      aria-pressed={dateRangePresetActive(preset, draftRange)}
+                      onClick={(event) =>
+                        applyPreset(preset, event.nativeEvent)
+                      }
+                    >
+                      {dateRangePresetLabel(preset, field.msg)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {type !== 'time' && (
+                <OgeCalendar
+                  className="oge-date-box-calendar"
+                  selectionMode="range"
+                  viewsCount={adaptive.active ? 1 : 2}
+                  range={draftRange}
+                  onRangeChange={onRangePick}
+                  min={min}
+                  max={max}
+                  disabledDates={disabledDates}
+                  firstDayOfWeek={firstDayOfWeek}
+                  showWeekNumbers={showWeekNumbers}
+                  locale={props.locale}
+                />
+              )}
+            </div>
+            {type !== 'date' && (
               <>
                 <div className="oge-date-range-times">
                   {[0, 1].map((side) => (

@@ -1,0 +1,296 @@
+@use '../../../grid/src/lib/styles/tokens';
+@use 'checkerboard' as cb;
+
+// The color picker parts shared by the color box panel, the standalone
+// color gradient and the standalone color palette. Every part component
+// carries this one `styleUrl`; Angular registers identical style text once.
+
+// --- 2D saturation/brightness surface ---------------------------------------
+
+.oge-color-surface {
+  position: relative;
+  display: block;
+  block-size: 148px;
+  border-radius: var(--oge-radius);
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, var(--oge-color-surface-hue, #f00));
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.oge-color-surface-thumb {
+  @include tokens.hit-area;
+
+  position: absolute;
+  inline-size: 14px;
+  block-size: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--oge-color-thumb, transparent);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  transition: box-shadow 120ms ease;
+
+  [dir='rtl'] & {
+    transform: translate(50%, -50%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow:
+      0 0 0 3px var(--oge-focus-ring),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// --- hue / alpha sliders ----------------------------------------------------
+
+.oge-color-slider {
+  display: block;
+  padding-block: 2px;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.oge-color-slider-track {
+  position: relative;
+  block-size: 12px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #f00 0%,
+    #ff0 17%,
+    #0f0 33%,
+    #0ff 50%,
+    #00f 67%,
+    #f0f 83%,
+    #f00 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.oge-color-slider-alpha .oge-color-slider-track {
+  @include cb.checkerboard;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      to right,
+      rgba(var(--oge-color-slider-rgb, 0, 0, 0), 0),
+      rgba(var(--oge-color-slider-rgb, 0, 0, 0), 1)
+    );
+  }
+}
+
+.oge-color-slider-thumb {
+  @include tokens.hit-area;
+
+  position: absolute;
+  top: 50%;
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--oge-color-thumb, transparent);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 1px 3px rgba(0, 0, 0, 0.25);
+  transform: translate(-50%, -50%);
+  transition: box-shadow 120ms ease;
+
+  [dir='rtl'] & {
+    transform: translate(50%, -50%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow:
+      0 0 0 3px var(--oge-focus-ring),
+      0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+}
+
+// --- hex + channel inputs ---------------------------------------------------
+
+.oge-color-box-fields {
+  display: flex;
+  gap: 6px;
+}
+
+.oge-color-box-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  flex: 1 1 0;
+  min-inline-size: 0;
+}
+
+.oge-color-box-field-hex {
+  flex: 2 1 0;
+}
+
+.oge-color-box-channel {
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: 4px 2px;
+  border: 1px solid var(--oge-border-color);
+  border-radius: calc(var(--oge-radius) - 2px);
+  background: var(--oge-bg);
+  color: var(--oge-text-color);
+  font: inherit;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid transparent;
+    border-color: var(--oge-accent);
+    box-shadow: 0 0 0 3px var(--oge-focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+  }
+}
+
+.oge-color-box-field-tag {
+  color: var(--oge-muted-color);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+// --- palette swatch grid ----------------------------------------------------
+
+.oge-color-palette {
+  display: grid;
+  grid-template-columns: repeat(var(--oge-color-palette-columns, 10), 1fr);
+  gap: 4px;
+}
+
+.oge-color-palette-row {
+  display: contents;
+}
+
+.oge-color-palette-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-inline-size: 16px;
+  border-radius: calc(var(--oge-radius) - 2px);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover {
+    transform: scale(1.12);
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+      0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+
+  &:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+      0 0 0 3px var(--oge-focus-ring);
+  }
+}
+
+// the selected swatch reads at a glance: an accent ring outside the cell
+.oge-color-palette-selected {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 0 0 2px var(--oge-bg),
+    0 0 0 4px var(--oge-accent);
+}
+
+.oge-color-palette[aria-disabled='true'] .oge-color-palette-cell {
+  cursor: default;
+  opacity: 0.55;
+
+  &:hover {
+    transform: none;
+  }
+}
+
+.oge-color-palette[aria-readonly='true'] .oge-color-palette-cell {
+  cursor: default;
+}
+
+.oge-color-palette-check {
+  inline-size: 12px;
+  block-size: 12px;
+  pointer-events: none;
+}
+
+@include tokens.reduced-motion {
+  .oge-color-surface-thumb,
+  .oge-color-slider-thumb,
+  .oge-color-palette-cell,
+  .oge-color-box-channel {
+    transition: none;
+  }
+
+  .oge-color-palette-cell:hover {
+    transform: none;
+  }
+}
+
+// --- forced colors ----------------------------------------------------------
+// The swatches ARE the meaning (`forced-color-adjust: none` keeps their
+// paint); frames, thumbs and the selection get system colors.
+@include tokens.forced-colors {
+  .oge-color-surface,
+  .oge-color-slider-track,
+  .oge-color-palette-cell {
+    forced-color-adjust: none;
+    outline: 1px solid CanvasText;
+  }
+
+  .oge-color-surface-thumb,
+  .oge-color-slider-thumb {
+    forced-color-adjust: none;
+    border-color: Canvas;
+    outline: 2px solid CanvasText;
+
+    &:focus-visible {
+      outline: 3px solid Highlight;
+    }
+  }
+
+  .oge-color-palette-selected {
+    outline: 3px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  .oge-color-palette-cell:focus-visible {
+    outline: 3px solid Highlight;
+  }
+
+  .oge-color-box-channel {
+    border-color: CanvasText;
+  }
+}

@@ -13,6 +13,13 @@ import {
 } from '@angular/core';
 import { startOfDay, toLocalDate } from '@oge-ui/core';
 import {
+  dateRangePresetActive,
+  dateRangePresetLabel,
+  timeDisplayOptions,
+  type OgeDateRangeBoxType,
+  type OgeDateRangePreset,
+} from '@oge-ui/behavior';
+import {
   OGE_OVERLAY_CONFIG,
   OgePopup,
   ogeAdaptivePresentation,
@@ -44,6 +51,9 @@ import { parseDateText } from './date-parse';
  *
  * Both sides parse locale-aware through `Intl` exactly like the date box —
  * unparseable text reverts on blur, a reversed pair is reordered on commit.
+ * `type: 'time' | 'datetime'` turns it into a time-range or date-time-range
+ * picker; `presets` lists quick ranges (`ogeDateRangePresets.last7Days()`…)
+ * beside the calendar.
  * Works standalone via `[(value)]`, with Signal Forms via `[formField]`, and
  * with reactive/template forms via `formControl`/`ngModel`.
  */
@@ -110,7 +120,7 @@ import { parseDateText } from './date-parse';
         [adaptiveTitle]="label() || msg().calendarLabel"
         [closeLabel]="msg().adaptiveClose"
       >
-        @if (adaptiveActive() && type() !== 'datetime') {
+        @if (adaptiveActive() && type() === 'date') {
           <div ogePopupSheetFooter class="oge-popup-sheet-footer">
             <button
               type="button"
@@ -129,20 +139,42 @@ import { parseDateText } from './date-parse';
             adaptiveActive() ? null : label() || msg().calendarLabel
           "
         >
-          <oge-calendar
-            class="oge-date-box-calendar"
-            selectionMode="range"
-            [viewsCount]="adaptiveActive() ? 1 : 2"
-            [range]="draftRange()"
-            [min]="min()"
-            [max]="max()"
-            [disabledDates]="disabledDates()"
-            [firstDayOfWeek]="firstDayOfWeek()"
-            [showWeekNumbers]="showWeekNumbers()"
-            [locale]="locale()"
-            (rangeChange)="onRangePick($event)"
-          />
-          @if (type() === 'datetime') {
+          <div class="oge-date-range-body">
+            @if (presets().length) {
+              <div
+                class="oge-date-range-presets"
+                role="group"
+                [attr.aria-label]="msg().presetsLabel"
+              >
+                @for (preset of presets(); track $index) {
+                  <button
+                    type="button"
+                    class="oge-date-range-preset"
+                    [attr.aria-pressed]="isPresetActive(preset)"
+                    (click)="applyPreset(preset, $event)"
+                  >
+                    {{ presetLabel(preset) }}
+                  </button>
+                }
+              </div>
+            }
+            @if (type() !== 'time') {
+              <oge-calendar
+                class="oge-date-box-calendar"
+                selectionMode="range"
+                [viewsCount]="adaptiveActive() ? 1 : 2"
+                [range]="draftRange()"
+                [min]="min()"
+                [max]="max()"
+                [disabledDates]="disabledDates()"
+                [firstDayOfWeek]="firstDayOfWeek()"
+                [showWeekNumbers]="showWeekNumbers()"
+                [locale]="locale()"
+                (rangeChange)="onRangePick($event)"
+              />
+            }
+          </div>
+          @if (type() !== 'date') {
             <div class="oge-date-range-times">
               @for (side of [0, 1]; track side) {
                 <div class="oge-date-range-time-col">
@@ -213,9 +245,20 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
   readonly value = model<OgeCalendarRange>([null, null]);
   /**
    * `'datetime'` adds start/end time lists to the picker (commits via OK) and
-   * parses/renders times on both sides.
+   * parses/renders times on both sides; `'time'` drops the calendar for a
+   * time-of-day range (the days are today's, or the bound value's).
    */
-  readonly type = input<'date' | 'datetime'>('date');
+  readonly type = input<OgeDateRangeBoxType>('date');
+  /** Clock of the display text and time lists; `undefined` = the locale's. */
+  readonly hour12 = input<boolean | undefined>(undefined);
+  /** Seconds in the display text (`time`/`datetime`). */
+  readonly showSeconds = input(false);
+  /**
+   * Quick ranges listed beside the calendar (a chip row in the adaptive
+   * dialog): `[{ label, range: () => [start, end] }]` or the built-in
+   * `ogeDateRangePresets.*()` factories, whose labels come from the messages.
+   */
+  readonly presets = input<readonly OgeDateRangePreset[]>([]);
   /** Time list step in minutes (`type: 'datetime'`). */
   readonly interval = input(30);
   /** Display text — `Intl.DateTimeFormatOptions` or a formatter; `undefined` = short per type. */
@@ -287,11 +330,15 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
     restoreFocus: () => this.focus(),
     onOpened: () => {
       this.pickerRange.set(this.value());
-      setTimeout(() =>
-        (this.popupRef()?.nativeElement as HTMLElement | undefined)
-          ?.querySelector<HTMLElement>('[data-focus-target]')
-          ?.focus(),
-      );
+      setTimeout(() => {
+        const popup = this.popupRef()?.nativeElement as HTMLElement | undefined;
+        // the calendar's focus target; a time range has only the lists
+        (
+          popup?.querySelector<HTMLElement>('[data-focus-target]') ??
+          popup?.querySelector<HTMLElement>('.oge-date-box-time-selected') ??
+          popup?.querySelector<HTMLElement>('.oge-date-box-time')
+        )?.focus();
+      });
       this.dropDownOpened.emit();
     },
     onClosed: () => {
@@ -303,13 +350,23 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
   /** Anchored-panel model — public so templates/tests can read `panelId`. */
   readonly panel = this.panelController.panel;
 
-  override readonly dropdown: OgeInputDropDownApi = {
-    ...this.panelController.dropDownApi(
+  override readonly dropdown: OgeInputDropDownApi = (() => {
+    const api = this.panelController.dropDownApi(
       () => !this.effectiveDisabled(),
       () => this.toggle(),
-    ),
-    icon: 'calendar',
-  };
+    );
+    const self = this as OgeDateRangeBox;
+    return {
+      visible: api.visible,
+      expanded: api.expanded,
+      toggle: api.toggle,
+      get icon() {
+        return self.type() === 'time'
+          ? ('clock' as const)
+          : ('calendar' as const);
+      },
+    };
+  })();
 
   /** Uncommitted typed texts per side; `null` = show the formatted value. */
   protected readonly startText = signal<string | null>(null);
@@ -327,18 +384,17 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
     const format = new Intl.DateTimeFormat(
       this.effectiveLocale(),
       custom ??
-        (this.type() === 'datetime'
-          ? { dateStyle: 'short', timeStyle: 'short' }
-          : { dateStyle: 'short' }),
+        timeDisplayOptions(this.type(), this.hour12(), this.showSeconds()),
     );
     return (date: Date) => format.format(date);
   });
 
   protected readonly timeSlots = computed(() => {
     const step = Math.max(1, this.interval());
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
-      timeStyle: 'short',
-    });
+    const format = new Intl.DateTimeFormat(
+      this.effectiveLocale(),
+      timeDisplayOptions('time', this.hour12(), false),
+    );
     const slots: { minutes: number; text: string }[] = [];
     for (let minutes = 0; minutes < 24 * 60; minutes += step) {
       slots.push({
@@ -396,6 +452,7 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
   private parseSide(raw: string): Date | null {
     const parsed = parseDateText(raw, this.effectiveLocale(), this.type());
     if (parsed === null) return null;
+    if (this.type() === 'time') return parsed;
     return isDayDisabled(parsed, this.min(), this.max(), this.disabledDates())
       ? null
       : parsed;
@@ -460,12 +517,12 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
   protected onRangePick(range: OgeCalendarRange): void {
     // calendar days come in at midnight — datetime keeps each side's time
     const merged: OgeCalendarRange =
-      this.type() === 'datetime'
+      this.type() !== 'date'
         ? [this.mergeSideTime(range[0], 0), this.mergeSideTime(range[1], 1)]
         : range;
     this.pickerRange.set(merged);
     // datetime commits via the OK footer, the adaptive dialog via Done
-    if (this.type() === 'datetime' || this.adaptiveActive()) return;
+    if (this.type() !== 'date' || this.adaptiveActive()) return;
     const [start, end] = merged;
     if (start && end) {
       this.startText.set(null);
@@ -486,7 +543,34 @@ export class OgeDateRangeBox extends OgeInputBase<OgeCalendarRange> {
       day.getDate(),
       previous?.getHours() ?? 0,
       previous?.getMinutes() ?? 0,
+      this.showSeconds() ? (previous?.getSeconds() ?? 0) : 0,
     );
+  }
+
+  // --- presets -----------------------------------------------------------------
+
+  protected presetLabel(preset: OgeDateRangePreset): string {
+    return dateRangePresetLabel(preset, this.msg());
+  }
+
+  protected isPresetActive(preset: OgeDateRangePreset): boolean {
+    return dateRangePresetActive(preset, this.draftRange());
+  }
+
+  /**
+   * A preset pick: `date` boxes commit and close (the adaptive dialog waits
+   * for Done); `time`/`datetime` boxes draft it for the OK footer.
+   */
+  protected applyPreset(preset: OgeDateRangePreset, event: Event): void {
+    const [start, end] = preset.range();
+    this.pickerRange.set([start, end]);
+    if (this.type() !== 'date' || this.adaptiveActive()) return;
+    this.startText.set(null);
+    this.endText.set(null);
+    this.parseInvalid.set(false);
+    this.commitRange(start, end, event);
+    this.close();
+    this.focus();
   }
 
   protected pickSideTime(side: number, minutes: number): void {
