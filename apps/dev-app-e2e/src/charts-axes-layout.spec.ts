@@ -57,9 +57,9 @@ for (const layer of LAYERS) {
         first.y + first.height / 2,
       );
       await expect(host.locator('.oge-chart-tooltip')).toContainText('North');
-      // Up/Down walk the categories
+      // Up/Down walk the categories — from the hovered row (North), one
+      // step down is the next category
       await host.locator('.oge-chart-plot-wrap').focus();
-      await page.keyboard.press('ArrowDown');
       await page.keyboard.press('ArrowDown');
       await expect(host.locator('.oge-chart-live')).toContainText('East');
     });
@@ -193,7 +193,9 @@ for (const layer of LAYERS) {
         }
         const results = await new AxeBuilder({ page })
           .include('app-demo-card')
-          .disableRules(['color-contrast'])
+          // heading-order: the site-wide demo-card pattern (h1 → card h3),
+          // disabled in every chart spec for the same reason
+          .disableRules(['color-contrast', 'heading-order'])
           .analyze();
         expect(results.violations.map((v) => v.id)).toEqual([]);
       }
