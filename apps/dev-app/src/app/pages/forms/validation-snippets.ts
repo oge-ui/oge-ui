@@ -45,6 +45,68 @@ protected readonly matchRule: OgeValidationRule[] = [
 ];`,
 });
 
+export const SERVER_SNIPPET = demoSource({
+  use: {
+    '@oge-ui/forms': ['OgeForm'],
+    '@oge-ui/buttons': ['OgeButton'],
+  },
+  types: { '@oge-ui/forms': ['OgeFormItemData'] },
+  template: `<oge-form
+  #registration
+  [(formData)]="data"
+  [items]="items"
+  [showValidationSummary]="true"
+  (submitted)="register(registration)"
+>
+  <div ogeFormActions>
+    <oge-button text="Register" stylingMode="contained" [useSubmitBehavior]="true" />
+  </div>
+</oge-form>`,
+  body: `protected readonly data = signal({
+  kind: 'person',
+  company: '',
+  email: 'taken@example.com',
+  password: '',
+  confirm: '',
+});
+
+protected readonly items: OgeFormItemData[] = [
+  {
+    field: 'kind',
+    editorType: 'radioGroup',
+    editorOptions: {
+      items: [{ id: 'person', text: 'Person' }, { id: 'company', text: 'Company' }],
+      valueExpr: 'id',
+      displayExpr: 'text',
+    },
+  },
+  {
+    field: 'company',
+    // shown — and required — only for companies; hidden items are not validated
+    visibleWhen: { field: 'kind', equals: 'company' },
+    requiredWhen: { field: 'kind', equals: 'company' },
+  },
+  { field: 'email', isRequired: true },
+  { field: 'password', isRequired: true },
+  {
+    field: 'confirm',
+    validationRules: [{ type: 'compare', comparisonTarget: 'password' }],
+  },
+];
+
+protected async register(form: Pick<OgeForm, 'setErrors'>): Promise<void> {
+  const response = await fetch('/api/register', {
+    method: 'POST',
+    body: JSON.stringify(this.data()),
+  });
+  if (!response.ok) {
+    // e.g. { email: ['This email is already registered'] } — shown in the
+    // field and the summary, cleared as soon as the user edits the field
+    form.setErrors(await response.json());
+  }
+}`,
+});
+
 export const SIGNAL_FORMS_SNIPPET = demoSource({
   use: { '@oge-ui/forms': ['OgeForm', 'OgeFormItem'] },
   helpers: {

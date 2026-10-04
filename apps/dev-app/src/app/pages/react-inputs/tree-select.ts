@@ -17,6 +17,7 @@ export const REACT_INPUTS_TREE_SELECT_SECTIONS = [
   'Basic usage',
   'Nested data & search',
   'Multiple selection',
+  'Selection as chips',
   'Lazy load on demand',
 ] as const;
 
@@ -169,6 +170,24 @@ function MultipleDemo(): ReactNode {
   );
 }
 
+function ChipsDemo(): ReactNode {
+  const [shared, setShared] = useState<unknown>([2, 5, 7]);
+  return createElement(OgeTreeSelect<Folder>, {
+    label: 'Shared folders',
+    items: FOLDERS,
+    displayExpr: 'name',
+    rootValue: null,
+    selectionMode: 'multiple',
+    showCheckBoxes: 'normal',
+    selectNodesRecursive: false,
+    showSelectionAs: 'chips',
+    maxDisplayedTags: 3,
+    defaultExpandedKeys: [1, 2, 6],
+    value: shared,
+    onValueChange: setShared,
+  });
+}
+
 function LazyDemo(): ReactNode {
   const [remoteId, setRemoteId] = useState<unknown>(null);
   return createElement(OgeTreeSelect<Folder>, {
@@ -242,6 +261,16 @@ function LazyDemo(): ReactNode {
     </app-demo-card>
 
     <app-demo-card
+      [chips]="['showSelectionAs', 'maxDisplayedTags']"
+      heading="Selection as chips"
+      description='<code>showSelectionAs="chips"</code> renders the selected nodes as removable chips inside the field — each ✕ is labelled with the node it removes, <kbd>Backspace</kbd> removes the last one — and <code>maxDisplayedTags</code> folds the rest into a <code>+N more</code> chip.'
+      [code]="demos[4].source"
+      language="tsx"
+    >
+      <app-react-host [render]="chips" />
+    </app-demo-card>
+
+    <app-demo-card
       [chips]="['loadChildren', 'hasItemsExpr']"
       heading="Lazy load on demand"
       description="Bind only the roots and let <code>loadChildren</code> fetch the rest on first expand; a placeholder row shows while the promise is pending. Fetched nodes join the index, so a cascading selection reaches them too."
@@ -274,4 +303,5 @@ export class ReactInputsTreeSelectDemos {
   protected readonly nested = () => createElement(NestedDemo);
   protected readonly multiple = () => createElement(MultipleDemo);
   protected readonly lazy = () => createElement(LazyDemo);
+  protected readonly chips = () => createElement(ChipsDemo);
 }

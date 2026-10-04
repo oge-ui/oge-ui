@@ -11,6 +11,7 @@ import {
   OgeValidationSummary,
   type OgeFormErrorEntry,
   type OgeFormHandle,
+  type OgeFormItemDefinition,
   type OgeValidationRule,
 } from '@oge-ui/react-forms';
 import { DemoCard } from '../../shared/demo-card';
@@ -27,6 +28,7 @@ import { FORMS_VALIDATION_DEMOS } from './validation-snippets';
 export const REACT_FORMS_VALIDATION_SECTIONS = [
   'Declarative rules',
   'Custom & cross-field rules',
+  'Server errors & conditional fields',
   'Validation summary',
   'Configuration',
 ] as const;
@@ -101,6 +103,76 @@ function CustomRulesDemo(): ReactNode {
       { field: 'password', label: 'Password', isRequired: true },
       { field: 'confirm', label: 'Confirm', validationRules: MATCH_RULE },
     ],
+  });
+}
+
+interface Registration {
+  kind: string;
+  company: string;
+  email: string;
+  password: string;
+  confirm: string;
+}
+
+const REGISTRATION_ITEMS: OgeFormItemDefinition[] = [
+  {
+    field: 'kind',
+    label: 'Account type',
+    editorType: 'radioGroup',
+    editorOptions: {
+      items: [
+        { id: 'person', text: 'Person' },
+        { id: 'company', text: 'Company' },
+      ],
+      valueExpr: 'id',
+      displayExpr: 'text',
+      layout: 'horizontal',
+    },
+  },
+  {
+    field: 'company',
+    label: 'Company name',
+    visibleWhen: { field: 'kind', equals: 'company' },
+    requiredWhen: { field: 'kind', equals: 'company' },
+  },
+  { field: 'email', label: 'Email', isRequired: true },
+  { field: 'password', label: 'Password', isRequired: true },
+  {
+    field: 'confirm',
+    label: 'Confirm password',
+    validationRules: [{ type: 'compare', comparisonTarget: 'password' }],
+  },
+];
+
+/** Conditional items, the compare rule and server errors after a submit. */
+function ServerErrorsDemo(): ReactNode {
+  const [data, setData] = useState<Registration>({
+    kind: 'person',
+    company: '',
+    email: 'taken@example.com',
+    password: '',
+    confirm: '',
+  });
+  const form = useRef<OgeFormHandle<Registration>>(null);
+  return createElement(OgeForm<Registration>, {
+    ref: form,
+    formData: data,
+    onFormDataChange: setData,
+    showValidationSummary: true,
+    items: REGISTRATION_ITEMS,
+    onSubmitted: async ({ data: submitted }) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      if (submitted.email === 'taken@example.com') {
+        form.current?.setErrors({
+          email: ['This email is already registered'],
+        });
+      }
+    },
+    actions: createElement(OgeButton, {
+      text: 'Register',
+      stylingMode: 'contained',
+      useSubmitBehavior: true,
+    }),
   });
 }
 
@@ -186,11 +258,21 @@ function FormsConfigDemo(): ReactNode {
     <app-demo-card
       [chips]="['custom', 'cross-field', 'async']"
       heading="Custom &amp; cross-field rules"
-      description="A <code>custom</code> rule receives its own value and the whole model, which is how a confirm-password check works without a second engine. There is deliberately no <code>compare</code> rule type — a rule object that names another field loses type safety. An <code>async</code> rule is scheduled by the form and reported when it settles."
+      description="A <code>custom</code> rule receives its own value and the whole model; the declarative <code>compare</code> rule covers the common case — <code>{ type: &#39;compare&#39;, comparisonTarget: &#39;password&#39; }</code> (or a function of the model, with <code>comparisonType</code> <code>===</code> / <code>!==</code> / <code>&lt;</code> / <code>&gt;=</code>…). Both run through the one shared evaluator. An <code>async</code> rule is scheduled by the form and reported when it settles."
       [code]="demos[1].source"
       language="tsx"
     >
       <app-react-host [render]="custom" />
+    </app-demo-card>
+
+    <app-demo-card
+      [chips]="['setErrors()', 'visibleWhen', 'requiredWhen', 'compare']"
+      heading="Server errors &amp; conditional fields"
+      description="<code>visibleWhen</code> / <code>requiredWhen</code> / <code>disabledWhen</code> take a predicate over the model or <code>{ field, equals }</code> — a hidden item is not validated. After the (simulated) server rejects the submit, <code>setErrors({ email: [...] })</code> on the handle puts its message in the field and in the summary; editing the field clears it."
+      [code]="demos[4].source"
+      language="tsx"
+    >
+      <app-react-host [render]="server" />
     </app-demo-card>
 
     <app-demo-card
@@ -221,4 +303,5 @@ export class ReactFormsValidationDemos {
   protected readonly custom = () => createElement(CustomRulesDemo);
   protected readonly summary = () => createElement(ValidationSummaryDemo);
   protected readonly config = () => createElement(FormsConfigDemo);
+  protected readonly server = () => createElement(ServerErrorsDemo);
 }

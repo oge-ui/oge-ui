@@ -6,6 +6,7 @@ import {
   OGE_REACT_CHECK_BOX_API,
   OGE_REACT_COLOR_BOX_API,
   OGE_REACT_DATE_BOX_API,
+  OGE_REACT_MULTI_COLUMN_COMBO_BOX_API,
   OGE_REACT_INPUTS_CONFIG_API,
   OGE_REACT_INPUTS_TYPES_API,
   OGE_REACT_NUMBER_BOX_API,
@@ -52,6 +53,10 @@ import {
       title="&lt;OgeAutocomplete&gt;"
       [sections]="autocompleteApi"
     />
+    <app-api-reference
+      title="&lt;OgeMultiColumnComboBox&gt;"
+      [sections]="multiColumnComboBoxApi"
+    />
     <app-api-reference title="&lt;OgeCheckBox&gt;" [sections]="checkBoxApi" />
     <app-api-reference title="&lt;OgeSlider&gt;" [sections]="sliderApi" />
     <app-api-reference
@@ -78,6 +83,8 @@ export class ReactInputsApiSections {
   protected readonly treeSelectApi = OGE_REACT_TREE_SELECT_API;
   protected readonly tagBoxApi = OGE_REACT_TAG_BOX_API;
   protected readonly autocompleteApi = OGE_REACT_AUTOCOMPLETE_API;
+  protected readonly multiColumnComboBoxApi =
+    OGE_REACT_MULTI_COLUMN_COMBO_BOX_API;
   protected readonly checkBoxApi = OGE_REACT_CHECK_BOX_API;
   protected readonly sliderApi = OGE_REACT_SLIDER_API;
   protected readonly rangeSliderApi = OGE_REACT_RANGE_SLIDER_API;

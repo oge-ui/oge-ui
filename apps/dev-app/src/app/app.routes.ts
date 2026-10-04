@@ -687,6 +687,14 @@ export const appRoutes: Route[] = [
         title: 'OGE — Tree Select',
       },
       {
+        path: 'multi-column-combo-box',
+        loadComponent: () =>
+          import('./pages/inputs/multi-column-combo-box').then(
+            (m) => m.InputsMultiColumnComboBoxPage,
+          ),
+        title: 'OGE — Multi-Column ComboBox',
+      },
+      {
         path: 'autocomplete',
         loadComponent: () =>
           import('./pages/inputs/autocomplete').then(

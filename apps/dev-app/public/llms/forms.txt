@@ -93,7 +93,7 @@ Predictable wrong guesses, and what to write instead.
 `@oge-ui/forms`
 
 - values: `OGE_DEFAULT_FORMS_CONFIG`, `OGE_DEFAULT_FORMS_MESSAGES`, `OGE_FORMS_CONFIG`, `OGE_FORM_COL_SPAN`, `OGE_FORM_DATA_TYPE`, `OGE_FORM_EDITOR`, `OGE_FORM_EDITOR_OPTIONS`, `OGE_FORM_GROUP`, `OGE_FORM_HINT`, `OGE_FORM_LABEL`, `OGE_FORM_ORDER`, `OGE_FORM_PLACEHOLDER`, `OgeForm`, `OgeFormAccordion`, `OgeFormActions`, `OgeFormEditorTemplate`, `OgeFormGroup`, `OgeFormGroupCaptionTemplate`, `OgeFormItem`, `OgeFormItemTemplate`, `OgeFormLabelTemplate`, `OgeFormSteps`, `OgeFormTabs`, `OgeValidationSummary`, `itemFromMetadata`, `provideOgeFormsConfig`
-- types: `OgeFormColCount`, `OgeFormDataType`, `OgeFormEditorAppearance`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormFieldNode`, `OgeFormGroupCaptionTemplateContext`, `OgeFormGroupData`, `OgeFormItemData`, `OgeFormItemTemplateContext`, `OgeFormKeyEvent`, `OgeFormLabelLocation`, `OgeFormLabelTemplateContext`, `OgeFormMode`, `OgeFormScreenSize`, `OgeFormSubmittedEvent`, `OgeFormSubmittingEvent`, `OgeFormValidatedEvent`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeResolvedFormItem`, `OgeValidationContext`, `OgeValidationRule`
+- types: `OgeComparisonType`, `OgeFormColCount`, `OgeFormCondition`, `OgeFormDataType`, `OgeFormEditorAppearance`, `OgeFormEditorOptions`, `OgeFormEditorType`, `OgeFormErrorEntry`, `OgeFormFieldChangedEvent`, `OgeFormFieldNode`, `OgeFormGroupCaptionTemplateContext`, `OgeFormGroupData`, `OgeFormItemData`, `OgeFormItemTemplateContext`, `OgeFormKeyEvent`, `OgeFormLabelLocation`, `OgeFormLabelTemplateContext`, `OgeFormMode`, `OgeFormScreenSize`, `OgeFormServerErrors`, `OgeFormSubmittedEvent`, `OgeFormSubmittingEvent`, `OgeFormValidatedEvent`, `OgeFormsConfig`, `OgeFormsConfigInput`, `OgeFormsMessages`, `OgeResolvedFormItem`, `OgeValidationContext`, `OgeValidationRule`
 
 ## API reference
 
@@ -155,6 +155,9 @@ _State_
 | `focusFirstInvalid()` | `boolean` | Focuses — and, with `scrollToFirstInvalid`, scrolls to — the first invalid field. Returns `false` when the form is valid. |
 | `itemOption(field: string)` | `OgeResolvedFormItem \| undefined` | The resolved configuration of one item, as the form actually renders it. Replaces the reference libraries' `getEditor()`, which hands out a component instance. |
 | `updateData(field: string, value: unknown)` | `void` | Writes one field. The overload `updateData(partial)` merges an object into the bound data. |
+| `setErrors(errors: OgeFormServerErrors)` | `void` | Applies server-side errors — `{ email: ['Already registered'] }` (a string or a list per field). Each field shows its first message at once, in the field and in the validation summary, and the error clears as soon as that field is edited. Replaces every previous server error; `{}` clears them. In `[formGroup]` mode the message lands on the control as `{ server }`; in `[fieldTree]` mode it is a Signal Forms submission error, which Angular clears on the next edit. |
+| `setFieldErrors(field, messages)` | `void` | Sets (or, with `null` / `[]`, clears) the server errors of one field. |
+| `clearErrors(field?)` | `void` | Clears the server errors of one field, or of every field. |
 
 #### Events
 
@@ -176,7 +179,10 @@ _State_
 | `OgeFormLabelLocation` | `'top' \| 'start' \| 'end'` | Where an item's label sits relative to its editor. |
 | `OgeFormScreenSize` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | Container-query breakpoints: under 480, then 480 / 720 / 960 / 1200 pixels of form width. |
 | `OgeFormColCount` | `number \| 'auto'` | A fixed track count, or auto-fit by `minColWidth`. |
-| `OgeValidationRule` | `{ type: 'required' \| 'email' \| 'numeric' \| 'stringLength' \| 'pattern' \| 'range' \| 'custom' \| 'async'; … }` | A declarative rule. Compiled into an Angular Signal Forms schema — there is no second validation engine. |
+| `OgeValidationRule` | `{ type: 'required' \| 'email' \| 'numeric' \| 'stringLength' \| 'pattern' \| 'range' \| 'compare' \| 'custom' \| 'async'; … }` | A declarative rule. Compiled into an Angular Signal Forms schema — there is no second validation engine. |
+| `compare rule` | `{ type: 'compare'; comparisonTarget: string \| ((data) => unknown); comparisonType?: OgeComparisonType; ignoreEmptyValue?: boolean; message? }` | Compares the value with another field (`'password'`) or a function of the model — confirm-password, end-after-start. `comparisonType` is `'==='` (default), `'!=='`, `'=='`, `'!='`, `'<'`, `'<='`, `'>'` or `'>='` (dates compare by time); an empty field is checked unless `ignoreEmptyValue`. Message: `compareError`. |
+| `OgeFormCondition` | `((data) => boolean) \| { field; equals?; notEquals?; in? }` | The dependency of `visibleWhen` / `requiredWhen` / `disabledWhen`, evaluated by `evaluateOgeFormCondition()` in `@oge-ui/behavior`. |
+| `OgeFormServerErrors` | `Record<string, string \| readonly string[] \| null>` | Argument of `setErrors()`. |
 | `OgeValidationContext` | `{ value: unknown; data: Record<string, unknown> }` | What a `custom` rule sees: its own value and the whole model, which is what makes cross-field rules possible. |
 | `OgeFormErrorEntry` | `{ field: string; label: string; message: string }` | One row of the validation summary. |
 | `OgeResolvedFormItem` | `interface` | An item after label defaulting, dataType inference, editor selection and state inheritance — what `itemOption()` returns. |
@@ -200,6 +206,9 @@ _State_
 | `visible` | `boolean` | `true` | A hidden item is dropped from the layout entirely — no hidden input, no stale DOM value. |
 | `visibleIndex` | `number \| undefined` | `undefined` | Items with an index come first, in index order; everything else keeps its declaration order behind them. |
 | `isRequired` | `boolean` | `false` | Adds a `required` rule and shows the required mark. |
+| `visibleWhen` | `OgeFormCondition \| undefined` | `undefined` | Shows the item only while the condition holds — `(data) => boolean` or `{ field, equals \| notEquals \| in }` (a bare `{ field }` tests truthiness), re-evaluated on every model change. A hidden item is not validated and drops out of the summary. |
+| `requiredWhen` | `OgeFormCondition \| undefined` | `undefined` | Makes the item required (mark and rule) only while the condition holds. |
+| `disabledWhen` | `OgeFormCondition \| undefined` | `undefined` | Disables the editor while the condition holds; a conditionally disabled item is not validated. |
 | `validationRules` | `readonly OgeValidationRule[] \| undefined` | `undefined` | Declarative rules, compiled into the form's Signal Forms schema. Ignored — with a dev-mode warning — when the form is bound with `[fieldTree]` or `[formGroup]`. |
 | `readOnly` | `boolean \| undefined` | `undefined` | `undefined` falls back to the enclosing group, then the form. |
 | `disabled` | `boolean \| undefined` | `undefined` | `undefined` falls back to the enclosing group, then the form. |
@@ -1040,6 +1049,79 @@ import { OgeForm, OgeFormItem } from '@oge-ui/forms';
 })
 export class Demo {
   protected readonly signup = signal({ username: '', email: '', age: 0 });
+}
+```
+
+### Server
+
+```ts
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { OgeForm } from '@oge-ui/forms';
+import { OgeButton } from '@oge-ui/buttons';
+import type { OgeFormItemData } from '@oge-ui/forms';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeForm, OgeButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <oge-form
+      #registration
+      [(formData)]="data"
+      [items]="items"
+      [showValidationSummary]="true"
+      (submitted)="register(registration)"
+    >
+      <div ogeFormActions>
+        <oge-button text="Register" stylingMode="contained" [useSubmitBehavior]="true" />
+      </div>
+    </oge-form>
+  `,
+})
+export class Demo {
+  protected readonly data = signal({
+    kind: 'person',
+    company: '',
+    email: 'taken@example.com',
+    password: '',
+    confirm: '',
+  });
+
+  protected readonly items: OgeFormItemData[] = [
+    {
+      field: 'kind',
+      editorType: 'radioGroup',
+      editorOptions: {
+        items: [{ id: 'person', text: 'Person' }, { id: 'company', text: 'Company' }],
+        valueExpr: 'id',
+        displayExpr: 'text',
+      },
+    },
+    {
+      field: 'company',
+      // shown — and required — only for companies; hidden items are not validated
+      visibleWhen: { field: 'kind', equals: 'company' },
+      requiredWhen: { field: 'kind', equals: 'company' },
+    },
+    { field: 'email', isRequired: true },
+    { field: 'password', isRequired: true },
+    {
+      field: 'confirm',
+      validationRules: [{ type: 'compare', comparisonTarget: 'password' }],
+    },
+  ];
+
+  protected async register(form: Pick<OgeForm, 'setErrors'>): Promise<void> {
+    const response = await fetch('/api/register', {
+      method: 'POST',
+      body: JSON.stringify(this.data()),
+    });
+    if (!response.ok) {
+      // e.g. { email: ['This email is already registered'] } — shown in the
+      // field and the summary, cleared as soon as the user edits the field
+      form.setErrors(await response.json());
+    }
+  }
 }
 ```
 

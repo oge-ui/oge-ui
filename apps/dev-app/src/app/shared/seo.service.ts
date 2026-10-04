@@ -12,8 +12,12 @@ const DEFAULT_DESCRIPTION =
 /** Longest-prefix match wins — order from specific to general. */
 const DESCRIPTIONS: readonly (readonly [string, string])[] = [
   [
+    '/components/inputs/multi-column-combo-box',
+    'Angular Multi-Column ComboBox: a combo box whose popup is a small data grid — columns with captions, widths, Intl formats and cell templates, a sticky header, APG combobox-with-grid keyboard (row and cell navigation via aria-activedescendant), search across columns, virtual scrolling, remote paged data, single or multiple selection and Signal Forms.',
+  ],
+  [
     '/components/inputs/select-box',
-    'Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading and full keyboard support — signal-based and zoneless.',
+    'Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading, remote paged data sources, field/group/header/footer templates, cancelable opening/closing events and full keyboard support — signal-based and zoneless.',
   ],
   [
     '/components/data-grid/range-selection',

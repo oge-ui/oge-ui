@@ -23,6 +23,7 @@ import {
   OgeForm,
   OgeFormItem,
   OgeValidationSummary,
+  type OgeFormItemData,
   type OgeValidationRule,
 } from '@oge-ui/forms';
 import { DemoCard } from '../../shared/demo-card';
@@ -37,6 +38,7 @@ import {
   CONFIG_SNIPPET,
   CUSTOM_SNIPPET,
   METADATA_SNIPPET,
+  SERVER_SNIPPET,
   REACTIVE_SNIPPET,
   RULES_SNIPPET,
   SIGNAL_FORMS_SNIPPET,
@@ -46,6 +48,7 @@ import {
 const SECTIONS = [
   'Declarative rules',
   'Custom & cross-field rules',
+  'Server errors & conditional fields',
   'Angular Signal Forms',
   'Reactive forms',
   'Validation summary',
@@ -141,7 +144,7 @@ const SECTIONS = [
       <app-demo-card
         [chips]="['custom', 'cross-field', 'async']"
         heading="Custom & cross-field rules"
-        description="A <code>custom</code> rule receives its own value and the whole model, which is how a confirm-password check works without a second engine. There is deliberately no <code>compare</code> rule type — a rule object that names another field loses type safety, and <code>validate()</code> with <code>valueOf()</code> in a real schema does it properly."
+        description="A <code>custom</code> rule receives its own value and the whole model; the declarative <code>compare</code> rule covers the common case — <code>{ type: &#39;compare&#39;, comparisonTarget: &#39;password&#39; }</code> (or a function of the model, with <code>comparisonType</code> <code>===</code> / <code>!==</code> / <code>&lt;</code> / <code>&gt;=</code>…). Both run through the one shared evaluator."
         [code]="customSnippet"
         language="ts"
       >
@@ -156,6 +159,30 @@ const SECTIONS = [
             label="Confirm"
             [validationRules]="matchRule"
           />
+        </oge-form>
+      </app-demo-card>
+
+      <app-demo-card
+        [chips]="['setErrors()', 'visibleWhen', 'requiredWhen', 'compare']"
+        heading="Server errors & conditional fields"
+        description="<code>visibleWhen</code> / <code>requiredWhen</code> / <code>disabledWhen</code> take a predicate over the model or <code>{ field, equals }</code> — a hidden item is not validated. After the (simulated) server rejects the submit, <code>setErrors({ email: [...] })</code> puts its message in the field and in the summary; editing the field clears it."
+        [code]="serverSnippet"
+        language="ts"
+      >
+        <oge-form
+          #registration
+          [(formData)]="registrationData"
+          [items]="registrationItems"
+          [showValidationSummary]="true"
+          (submitted)="onRegister(registration)"
+        >
+          <div ogeFormActions>
+            <oge-button
+              text="Register"
+              stylingMode="contained"
+              [useSubmitBehavior]="true"
+            />
+          </div>
         </oge-form>
       </app-demo-card>
 
@@ -247,6 +274,52 @@ export class FormsValidationPage {
   protected readonly reactiveSnippet = REACTIVE_SNIPPET;
   protected readonly summarySnippet = SUMMARY_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
+  protected readonly serverSnippet = SERVER_SNIPPET;
+
+  protected readonly registrationData = signal({
+    kind: 'person',
+    company: '',
+    email: 'taken@example.com',
+    password: '',
+    confirm: '',
+  });
+  protected readonly registrationItems: OgeFormItemData[] = [
+    {
+      field: 'kind',
+      label: 'Account type',
+      editorType: 'radioGroup',
+      editorOptions: {
+        items: [
+          { id: 'person', text: 'Person' },
+          { id: 'company', text: 'Company' },
+        ],
+        valueExpr: 'id',
+        displayExpr: 'text',
+        layout: 'horizontal',
+      },
+    },
+    {
+      field: 'company',
+      label: 'Company name',
+      visibleWhen: { field: 'kind', equals: 'company' },
+      requiredWhen: { field: 'kind', equals: 'company' },
+    },
+    { field: 'email', label: 'Email', isRequired: true },
+    { field: 'password', label: 'Password', isRequired: true },
+    {
+      field: 'confirm',
+      label: 'Confirm password',
+      validationRules: [{ type: 'compare', comparisonTarget: 'password' }],
+    },
+  ];
+
+  /** The server says no — its errors land in the field and the summary. */
+  protected async onRegister(form: Pick<OgeForm, 'setErrors'>): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    if (this.registrationData().email === 'taken@example.com') {
+      form.setErrors({ email: ['This email is already registered'] });
+    }
+  }
 
   protected readonly signup = signal({ username: '', email: '', age: 0 });
   protected readonly usernameRules: OgeValidationRule[] = [

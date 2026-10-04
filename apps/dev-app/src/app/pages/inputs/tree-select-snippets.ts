@@ -59,6 +59,31 @@ export const MULTIPLE_SNIPPET = demoSource({
 protected readonly permissions = signal<unknown>([]);`,
 });
 
+export const CHIPS_SNIPPET = demoSource({
+  use: { '@oge-ui/inputs': ['OgeTreeSelect'] },
+  template: `<oge-tree-select
+  label="Shared folders"
+  [items]="folders"
+  displayExpr="name"
+  [rootValue]="null"
+  selectionMode="multiple"
+  showCheckBoxes="normal"
+  [selectNodesRecursive]="false"
+  showSelectionAs="chips"
+  [maxDisplayedTags]="3"
+  [(value)]="shared"
+/>`,
+  body: `protected readonly folders = [
+  { id: 1, parentId: null, name: 'Documents' },
+  { id: 2, parentId: 1, name: 'Reports' },
+  { id: 5, parentId: 1, name: 'Contracts' },
+  { id: 6, parentId: null, name: 'Photos' },
+  { id: 7, parentId: 6, name: 'Holiday' },
+];
+
+protected readonly shared = signal<unknown>([2, 5, 7]);`,
+});
+
 export const LAZY_SNIPPET = demoSource({
   use: { '@oge-ui/inputs': ['OgeTreeSelect'] },
   template: `<oge-tree-select

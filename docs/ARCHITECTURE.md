@@ -710,6 +710,75 @@ box, color box and the drop-down button — takes `adaptiveMode: 'auto' | 'none'
   containment makes it their containing block — the pivot field areas wrap intrinsically
   (`repeat(auto-fit, minmax(min(100%, 150px), 1fr))`) for that reason.
 
+### List editors: remote data, pre-events, templates (select box family)
+
+The dropdown list editors — select box, tag box, autocomplete and the multi-column combo box —
+share one vocabulary in both layers, and every decision in it lives in `@oge-ui/behavior`:
+
+- **`dataSource` reuses the grid's contract.** The input type is `OgeListDataSource<TItem>` —
+  structurally `Pick<DataSource, 'load'>` plus an optional `byKey(value)` — so every
+  `@oge-ui/core` source (`CustomDataSource`, `ArrayDataSource`, `CursorDataSource`,
+  `ODataDataSource`) fits unchanged. Do not invent a list-specific loader. The machine is
+  `OgeRemoteListCore` (`lib/input/remote-list-core.ts`): `skip`/`take` pages + `searchText`,
+  `requireTotalCount: true`, one page in flight, an `AbortController` per request (a new query
+  aborts the old one and an aborted request never writes state), pages cached per search text,
+  `searchTimeout` debounce, `minSearchLength` gating (`showDataBeforeSearch` decides between
+  "load unfiltered" and "load nothing"), and remembered items + `byKey` so a committed value
+  stays resolvable while the list shows another search. Without `totalCount` a short page marks
+  the end.
+- **Paging follows the view, never a timer.** The editor calls `notifyVisibleEnd(index)` with
+  `max(virtual window end, keyboard active index)`; a non-virtual list loads on
+  `isNearScrollEnd` and, after render, fills a page too short to scroll (guarded on
+  `clientHeight > 0`, so jsdom never pages itself to the end). In remote mode the list core
+  runs with `serverFiltering` (no client-side text filter) and `maxItemCount` does not apply.
+- **`aria-setsize` / `aria-rowcount` report the server total**, or `-1` while open-ended.
+- **Cancelable `opening` / `closing`** (`OgeDropDownOpeningEvent` / `OgeDropDownClosingEvent`
+  with a `reason`) follow the house pre-event pattern. Owner-initiated closes run the veto
+  themselves; closes the panel machine starts (outside pointer-down, Escape) go through the new
+  `OgeAnchoredPanelCore` `beforeClose` hook. An editor that handles Escape in its own keydown
+  calls `stopPropagation()` so the panel's document listener does not run a second close (and a
+  second `closing`) for the same key.
+- **Templates are `TemplateRef` inputs in Angular and render props in React**
+  (`groupTemplate`/`renderGroup`, `fieldTemplate`/`renderField`, `headerTemplate`/`renderHeader`,
+  `footerTemplate`/`renderFooter`, `tagTemplate`/`renderTag`) — the pairs are recorded in
+  `check-parity.mjs`. `fieldTemplate` paints over the real input (`aria-hidden`, input text made
+  transparent) so focus, typing and the accessible value never move.
+- **The tag box's "select all" row is an option in the listbox** (`aria-checked` true / false /
+  mixed) reached by ArrowUp from the first option — it must be inside the activedescendant
+  navigation, because focus never leaves the input. `ogeSelectAllState` / `ogeToggleAllValues`
+  act on the visible, enabled items and respect `maxSelectedItems`; the cap's message is a
+  `role="status"` line **above** the listbox (a listbox may not own a status).
+- **The multi-column combo box is the APG combobox-with-grid-popup.** `aria-activedescendant`
+  names the active `gridcell`; Left/Right/Home/End move cells only once the keyboard is in the
+  grid (before that they belong to the caret). The sticky header shares the scroller, so the
+  virtualizer gets `maxHeight − headerRow` as its viewport — that keeps window and
+  `scrollToIndex` arithmetic exact. Column helpers (`ogeComboCellText`, `ogeComboGridTemplate`,
+  …) live in `lib/input/multi-column-core.ts`.
+- **`OgeSelectListCore.syncItemsSource()` is a no-op for static → static.** A React owner passes
+  a fresh `items` array on every render (inline literals, `items = []` defaults); re-seeding the
+  state for each identity bumped the store and re-rendered forever.
+
+### Forms: conditions, compare rule, server errors
+
+- `visibleWhen` / `requiredWhen` / `disabledWhen` on items take an `OgeFormCondition` — a
+  predicate over the model or `{ field, equals | notEquals | in }` — evaluated by
+  `evaluateOgeFormCondition` (behavior). A hidden or conditionally disabled item is **not
+  validated**: React skips it in its evaluator loop, Angular's `schemaFromRules` returns no
+  errors for it and adds a Signal Forms `disabled()` rule for `disabledWhen`.
+- The declarative `compare` rule lives in the shared evaluator; unlike the other format rules it
+  checks an empty field unless `ignoreEmptyValue` (DevExtreme parity), and its message is the
+  inputs catalog's `compareError`.
+- `setErrors()` / `setFieldErrors()` / `clearErrors()` exist in both layers. The form keeps the
+  server map as the source of truth for `errors()` and the summary (ungated — the fields are
+  marked touched) and clears a field's entry when its value changes. How the editor _shows_ it
+  differs per binding, because Signal Forms owns the editor's invalid state: `formData` mode
+  feeds the map into its own schema as a `validate()`; `[fieldTree]` mode hands it to Signal
+  Forms as **submission errors** (`submit(tree, { action, ignoreValidators: 'all' })`, which
+  Angular clears on the next edit — `clearErrors()` cannot retract those early);
+  `[formGroup]` mode sets `{ server }` on the control.
+- `src/lib/forms/form-values.ts` holds `readPath` / `writePath` / `isEmptyFormValue` so the item
+  model and the rule evaluator can share them without an import cycle.
+
 ### Grid interaction depth (ranges, clipboard, formats, spans, drag groups)
 
 The spreadsheet layer of both grids is `@oge-ui/behavior` code; the render layers only wire events

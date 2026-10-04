@@ -638,6 +638,11 @@ export class App {
           icon: 'tree',
         },
         {
+          path: '/components/inputs/multi-column-combo-box',
+          label: 'Multi-Column ComboBox',
+          icon: 'table',
+        },
+        {
           path: '/components/inputs/autocomplete',
           label: 'Autocomplete',
           icon: 'search',

@@ -102,8 +102,9 @@ For code generation, prefer the full reference — it inlines every API table an
 
 - [Inputs](https://ogeui.com/components/inputs): Angular form inputs on one field chrome: TextBox, TextArea, NumberBox and SelectBox with floating labels, validation, Signal Forms and reactive forms support.
 - [Input Validation](https://ogeui.com/components/inputs/validation)
-- [Select Box](https://ogeui.com/components/inputs/select-box): Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading and full keyboard support — signal-based and zoneless.
+- [Select Box](https://ogeui.com/components/inputs/select-box): Angular Select Box: searchable WAI-ARIA combobox with displayExpr/valueExpr data mapping, grouping, custom values, lazy loading, remote paged data sources, field/group/header/footer templates, cancelable opening/closing events and full keyboard support — signal-based and zoneless.
 - [Tree Select](https://ogeui.com/components/inputs/tree-select)
+- [Multi-Column ComboBox](https://ogeui.com/components/inputs/multi-column-combo-box): Angular Multi-Column ComboBox: a combo box whose popup is a small data grid — columns with captions, widths, Intl formats and cell templates, a sticky header, APG combobox-with-grid keyboard (row and cell navigation via aria-activedescendant), search across columns, virtual scrolling, remote paged data, single or multiple selection and Signal Forms.
 - [Autocomplete](https://ogeui.com/components/inputs/autocomplete)
 - [Toggle Controls](https://ogeui.com/components/inputs/toggle-controls)
 - [Slider](https://ogeui.com/components/inputs/slider): Angular Slider and RangeSlider: the WAI-ARIA APG slider and multi-thumb patterns as bare form editors — arrows/PageUp/Home/End, live drag commits with Escape-to-cancel, dynamic aria constraints between range thumbs, formatValue feeding aria-valuetext, and Signal Forms membership out of the box.

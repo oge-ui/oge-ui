@@ -142,6 +142,9 @@ _OgeFormHandle — via ref_
 | `focusFirstInvalid()` | `boolean` | Reveals the section holding the first invalid field, focuses it — and, with `scrollToFirstInvalid`, scrolls to it. Returns `false` when the form is valid. |
 | `itemOption(field: string)` | `OgeResolvedFormItem \| undefined` | The resolved configuration of one item, as the form actually renders it. |
 | `updateData(field: string, value: unknown)` | `void` | Writes one field. The overload `updateData(partial)` merges an object into the bound data. |
+| `setErrors(errors: OgeFormServerErrors)` | `void` | Applies server-side errors — `{ email: ['Already registered'] }` (a string or a list per field). Each field shows its first message at once, in the field and in the validation summary, and the error clears as soon as that field is edited. Replaces every previous server error; `{}` clears them. |
+| `setFieldErrors(field, messages)` | `void` | Sets (or, with `null` / `[]`, clears) the server errors of one field. |
+| `clearErrors(field?)` | `void` | Clears the server errors of one field, or of every field. |
 | `errors` | `readonly OgeFormErrorEntry[]` | One entry per invalid field, in layout order, regardless of whether the field is showing its error yet. |
 | `valid` | `boolean` | Whether every bound field currently validates. |
 | `dirty` | `boolean` | Whether any bound field has been edited since the last reset. |
@@ -166,7 +169,10 @@ _OgeFormHandle — via ref_
 | `OgeFormLabelLocation` | `'top' \| 'start' \| 'end'` | Where an item's label sits relative to its editor. |
 | `OgeFormScreenSize` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | Container-query breakpoints: under 480, then 480 / 720 / 960 / 1200 pixels of form width. |
 | `OgeFormColCount` | `number \| 'auto'` | A fixed track count, or auto-fit by `minColWidth`. |
-| `OgeValidationRule` | `{ type: 'required' \| 'email' \| 'numeric' \| 'stringLength' \| 'pattern' \| 'range' \| 'custom' \| 'async'; … }` | A declarative rule, evaluated by `evaluateOgeValidationRules()` in `@oge-ui/behavior` — the same function Angular's schema calls, so a rule can never be worded differently in the two layers. |
+| `OgeValidationRule` | `{ type: 'required' \| 'email' \| 'numeric' \| 'stringLength' \| 'pattern' \| 'range' \| 'compare' \| 'custom' \| 'async'; … }` | A declarative rule, evaluated by `evaluateOgeValidationRules()` in `@oge-ui/behavior` — the same function Angular's schema calls, so a rule can never be worded differently in the two layers. |
+| `compare rule` | `{ type: 'compare'; comparisonTarget: string \| ((data) => unknown); comparisonType?: OgeComparisonType; ignoreEmptyValue?: boolean; message? }` | Compares the value with another field (`'password'`) or a function of the model — confirm-password, end-after-start. `comparisonType` is `'==='` (default), `'!=='`, `'=='`, `'!='`, `'<'`, `'<='`, `'>'` or `'>='` (dates compare by time); an empty field is checked unless `ignoreEmptyValue`. Message: `compareError`. |
+| `OgeFormCondition` | `((data) => boolean) \| { field; equals?; notEquals?; in? }` | The dependency of `visibleWhen` / `requiredWhen` / `disabledWhen`, evaluated by `evaluateOgeFormCondition()` in `@oge-ui/behavior`. |
+| `OgeFormServerErrors` | `Record<string, string \| readonly string[] \| null>` | Argument of `setErrors()`. |
 | `OgeValidationContext` | `{ value: unknown; data: Record<string, unknown> }` | What a `custom` rule sees: its own value and the whole model, which is what makes cross-field rules possible. |
 | `OgeFormErrorEntry` | `{ field: string; label: string; message: string }` | One row of the validation summary. |
 | `OgeResolvedFormItem` | `interface` | An item after label defaulting, dataType inference, editor selection and state inheritance — what `itemOption()` returns. |
@@ -191,6 +197,9 @@ _OgeFormHandle — via ref_
 | `visible` | `boolean` | `true` | A hidden item is dropped from the layout entirely — no hidden input, no stale DOM value. |
 | `visibleIndex` | `number \| undefined` | `undefined` | Items with an index come first, in index order; everything else keeps its declaration order behind them. |
 | `isRequired` | `boolean` | `false` | Adds a `required` rule and shows the required mark. |
+| `visibleWhen` | `OgeFormCondition \| undefined` | `undefined` | Shows the item only while the condition holds — `(data) => boolean` or `{ field, equals \| notEquals \| in }` (a bare `{ field }` tests truthiness), re-evaluated on every model change. A hidden item is not validated and drops out of the summary. |
+| `requiredWhen` | `OgeFormCondition \| undefined` | `undefined` | Makes the item required (mark and rule) only while the condition holds. |
+| `disabledWhen` | `OgeFormCondition \| undefined` | `undefined` | Disables the editor while the condition holds; a conditionally disabled item is not validated. |
 | `validationRules` | `readonly OgeValidationRule[] \| undefined` | `undefined` | Declarative rules, run by the shared evaluator in `@oge-ui/behavior`. `async` rules are scheduled by the form and reported when they settle. |
 | `readOnly` | `boolean \| undefined` | `undefined` | `undefined` falls back to the enclosing group, then the form. |
 | `disabled` | `boolean \| undefined` | `undefined` | `undefined` falls back to the enclosing group, then the form. |
@@ -1095,6 +1104,76 @@ export function FormsConfigDemo() {
         ]}
       />
     </OgeFormsConfigProvider>
+  );
+}
+```
+
+### Server errors & conditional fields
+
+```ts
+'use client';
+
+import { useRef, useState } from 'react';
+import { OgeForm } from '@oge-ui/react-forms';
+import { OgeButton } from '@oge-ui/react-buttons';
+import type { OgeFormHandle, OgeFormItemDefinition } from '@oge-ui/react-forms';
+
+interface Registration {
+  kind: string;
+  company: string;
+  email: string;
+  password: string;
+  confirm: string;
+}
+
+const items: OgeFormItemDefinition[] = [
+  {
+    field: 'kind',
+    editorType: 'radioGroup',
+    editorOptions: {
+      items: [{ id: 'person', text: 'Person' }, { id: 'company', text: 'Company' }],
+      valueExpr: 'id',
+      displayExpr: 'text',
+    },
+  },
+  {
+    field: 'company',
+    // shown — and required — only for companies; hidden items are not validated
+    visibleWhen: { field: 'kind', equals: 'company' },
+    requiredWhen: { field: 'kind', equals: 'company' },
+  },
+  { field: 'email', isRequired: true },
+  { field: 'password', isRequired: true },
+  { field: 'confirm', validationRules: [{ type: 'compare', comparisonTarget: 'password' }] },
+];
+
+export function FormServerErrorsDemo() {
+  const form = useRef<OgeFormHandle<Registration>>(null);
+  const [data, setData] = useState<Registration>({
+    kind: 'person',
+    company: '',
+    email: '',
+    password: '',
+    confirm: '',
+  });
+  return (
+    <OgeForm
+      ref={form}
+      formData={data}
+      onFormDataChange={setData}
+      items={items}
+      showValidationSummary
+      onSubmitted={async ({ data: submitted }) => {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          body: JSON.stringify(submitted),
+        });
+        // e.g. { email: ['This email is already registered'] } — shown in the
+        // field and the summary, cleared as soon as the user edits the field
+        if (!response.ok) form.current?.setErrors(await response.json());
+      }}
+      actions={<OgeButton text="Register" stylingMode="contained" useSubmitBehavior />}
+    />
   );
 }
 ```
