@@ -15,9 +15,21 @@ the Angular suite (see the suite's `docs/REACT-PARITY.md`).
 - **`useAnchoredPanel`** — the anchored-panel machine as a hook: open/close
   state, flip + clamp positioning (RTL-aware), outside-click and Escape
   closing on the shared overlay Escape stack, scroll/resize repositioning,
-  content-resize observation and focus restore.
+  content-resize observation and focus restore. Panels position against the
+  visual viewport and follow its resize / scroll (on-screen keyboard, pinch
+  zoom).
 - **`<OgePopup>`** — the presentational popup chrome (fixed positioning,
-  surface tokens, first-measure fade-in).
+  surface tokens, first-measure fade-in) and its adaptive presentations:
+  `adaptive="sheet"` (a bottom sheet with swipe-down dismiss) or
+  `"fullscreen"`, both a titled modal `role="dialog"` with scroll lock, an
+  inert background, a Tab trap, focus restore and `sheetHeader` /
+  `sheetFooter` slots. `useOgeAdaptivePresentation()` /
+  `useOgeAdaptiveViewport()` resolve an editor's `adaptiveMode` against a
+  breakpoint.
+- **`useOgeLiveAnnouncer()`** — one polite and one assertive visually hidden
+  live region per document, created lazily (SSR-inert), debounced and
+  deduplicated; toasts, the gantt, the uploader and the grids speak through
+  it.
 - **`<OgeMenuList>`** — WAI-ARIA `menu`: `aria-activedescendant` pattern,
   wrapping arrow keys that skip disabled items and separators, Home/End,
   printable-key type-ahead, checkbox items, link items, icons, badges,
@@ -40,7 +52,8 @@ the Angular suite (see the suite's `docs/REACT-PARITY.md`).
 - **`<OgeToastProvider>` + `useOgeToasts()`** — stacked toasts in six logical
   positions with a FIFO queue, severity sugar, pause-on-hover/focus/hidden-tab
   timers, progress bar, action buttons, coalescing with a ×N badge, in-place
-  `update()` and `promise()` morphing, live-region announcements.
+  `update()` and `promise()` morphing, announcements through the shared live
+  announcer, safe-area insets on notched screens.
 - **`<OgeOverlayConfigProvider>`** — the React counterpart of
   `provideOgeOverlayConfig()`; every default and every message string is
   single-sourced in `@oge-ui/behavior`.

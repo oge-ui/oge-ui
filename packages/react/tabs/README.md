@@ -20,6 +20,9 @@ component and feature parity with the Angular tabs family.
   `provideOgeTabsConfig()`; defaults and strings are single-sourced in
   `@oge-ui/behavior`.
 
+Element ids (for `aria-controls` / `aria-labelledby`) derive from React's
+`useId()`, so server-rendered markup hydrates without mismatches.
+
 Both components take declarative `tabs` (each with its own `content`) or
 data-driven `items`, and support: automatic/manual APG activation, roving
 tabindex with wrap-around and disabled skipping, horizontal or vertical

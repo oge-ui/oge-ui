@@ -26,7 +26,9 @@ styles. Nothing here wraps Angular.
   task; a built-in context menu and task dialog (`<OgeModal>` +
   `<OgeForm>`); Ctrl+Arrow keyboard move/resize, Alt+Shift+Arrow
   indent/outdent; every edit is one snapshot undo/redo step and every change
-  is announced politely.
+  is announced politely through the shared live announcer. Off-day shading
+  follows `weekendDays` (defaults from the locale's week info), and bar grips
+  get 24px (44px on coarse pointers) hit areas.
 - **Every Angular input is a prop**, every output an `onX` callback, the two
   models (`scaleType`, `selectedTaskKey`) are controlled/uncontrolled pairs,
   the public methods are on the `ref` handle (`OgeGanttHandle`) and the two
@@ -35,7 +37,7 @@ styles. Nothing here wraps Angular.
   `provideOgeGanttConfig()`; every message string and default is
   single-sourced in the engine.
 - **Export entry points** — `@oge-ui/react-gantt/export-excel`
-  (`exceljs`), `/export-pdf` (`jspdf`) and `/export-image` (no dependency),
+  (`exceljs`), `/export-pdf` (`jspdf`; a `font` option embeds a Unicode font for non-WinAnsi text) and `/export-image` (no dependency),
   each taking the Gantt's handle.
 
 ## Installation

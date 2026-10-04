@@ -97,7 +97,10 @@ No WAI-ARIA APG chart pattern exists; the charts compose `role="img"` with a
 generated label, a screen-reader-only data table, real legend buttons with
 `aria-pressed`, and a focusable plot region where the arrow keys walk
 arguments and series with polite live-region announcements — Enter
-selects, Escape resets the zoom.
+selects, Escape resets the zoom. In forced-colors mode axes, labels and
+grid lines switch to system colours while series keep their colours with a
+`CanvasText` edge, and `prefers-reduced-motion`
+always overrides the hover and selection transitions.
 
 ## License
 

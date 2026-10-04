@@ -20,7 +20,7 @@ model, theming, virtualization, keyboard navigation and data layer.
   the missing subtree first (`parentId in [...]`)
 - Column chooser, drag-and-drop column reordering, row & header context menus,
   `[ogeToolbar]` slot, `commandButtons`, `loadPanel`, `wordWrap`
-- Selection (single / multiple / checkbox / recursive tri-state), full treegrid ARIA, RTL-aware keyboard
+- Selection (single / multiple / checkbox / recursive tri-state), full treegrid ARIA, RTL-aware keyboard and column resizing, localized header / handle labels
 - Editing in all five modes (cell / row / batch / form / popup) with the grid's
   editors, validators and `savingChanges` flow; `formItems`/`formColCount`
   form layouts; `addRow(parentKey)` inserts under a chosen node with an
@@ -28,8 +28,17 @@ model, theming, virtualization, keyboard navigation and data layer.
 - Cancelable `rowExpanding`/`rowCollapsing` events; `autoNavigateToFocusedRow`
   expands and scrolls to a programmatically focused row; `forEachNode()` /
   `getVisibleRows()` node APIs; `allowSelectAll` toggle
-- Drag & drop: reparent by dropping onto a row, or reorder among siblings by
-  dropping before/after (with drop indicators)
+- Drag & drop on pointer events (no HTML5 drag and drop; touch drags the
+  handle at once, headers and chooser rows after a long press): reparent by
+  dropping onto a row, or reorder among siblings by dropping before/after
+  (with drop indicators)
+- A keyboard alternative for every drag: Ctrl+ArrowUp/Down among siblings,
+  Ctrl+ArrowRight indent, Ctrl+ArrowLeft outdent, Alt+Arrow or the focusable
+  resize separator for column widths, Ctrl+Shift+Arrow column reorder — each
+  move announced in a polite live region; sort, filter result counts and
+  expansion are announced too (`announcements` opts out)
+- Responsive column hiding with `columnHidingMode: 'detail'` (default): hidden
+  columns appear in a per-row detail line behind a toggle; `'hide'` drops them
 - State persistence (`stateKey`) for sort, filters, column layout and expansion
 - Summaries: `summary.totalItems` in a footer row, `summary.recursiveItems`
   as per-parent aggregates (sum / avg / min / max / count / custom)

@@ -29,9 +29,24 @@ framework: nothing here wraps Angular.
   (`rowDragging` + `onRowReparented`), WAI-ARIA treegrid keyboard navigation,
   keyboard context menus (Menu key / Shift+F10), pinned, resizable and
   reorderable columns, bands (`bandCaption`), the column chooser, `stateKey`
-  persistence and synchronous CSV export.
+  persistence (snapshots validated before they apply) and synchronous CSV
+  export.
+- **Summaries and remote filtering** — `summary.totalItems` (a footer row) and
+  `summary.recursiveItems` (per-parent sum / avg / min / max / count / custom
+  aggregates), both carried into the exports; `remoteOperations.filtering`
+  sends filter, search and header-filter value requests to the source, which
+  answers with the matches plus their ancestors.
+- **Accessibility and small screens** — keyboard alternatives for every drag
+  (Ctrl+Arrow moves and indents / outdents rows, Ctrl+Shift+Arrow reorders
+  columns, Alt+Arrow resizes on a focusable separator), pointer-gesture drags
+  with touch support, live announcements (`announcements` opt-out), and
+  `columnHidingMode` (`'detail'` by default) for columns hidden by
+  `hidingPriority`.
 - **`@oge-ui/react-tree-list/export-excel`** — `exportOgeTreeListToExcel()`
   with Excel row outlining (optional `exceljs` peer).
+- **`@oge-ui/react-tree-list/export-pdf`** — `exportOgeTreeListToPdf()` with
+  indented rows and summaries (optional `jspdf` + `jspdf-autotable` peers;
+  pass a `font` for non-WinAnsi text).
 - Columns, config and storage are the grid's: `OgeGridColumnProps`,
   `<OgeGridConfigProvider>` and `<OgeGridStateStorageProvider>` are
   re-exported, exactly as the Angular tree list re-exports `@oge-ui/grid`'s

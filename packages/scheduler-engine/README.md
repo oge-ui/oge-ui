@@ -25,15 +25,23 @@ package.
   rows with "+N more" overflow), the timeline's transposed lane layout.
 - **Recurrence** — `parseRecurrenceRule` / `serializeRecurrenceRule` for the
   documented RFC 5545 subset (FREQ DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL,
-  COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY, BYMONTH, WKST), `expandRecurrence` and
-  EXDATE handling.
+  COUNT ⊕ UNTIL, BYDAY, BYMONTHDAY, BYMONTH, BYHOUR, BYMINUTE, BYSETPOS,
+  WKST), `expandRecurrence` in RFC order, iCalendar blocks with DTSTART /
+  RDATE / EXDATE lines (RDATE adds occurrences without consuming COUNT), and
+  UTC `…Z` stamps converted to local instants. Still rejected: TZID,
+  BYYEARDAY, BYWEEKNO, BYSECOND, EXRULE, `VALUE=PERIOD`.
 - **Interaction** — gesture math (`proposeMove`, `proposeResize`, the drag
   arithmetic of every view), the pointer-gesture machine
-  (`beginPointerGesture`: 3px threshold, capture-phase Escape-cancel) and
+  (`beginPointerGesture`, shared from `@oge-ui/behavior`: 3px threshold,
+  capture-phase Escape-cancel, touch long press) and
   the keyboard maps (`timeGridCellKey`, `chipKey`, `timeGridChipCtrlKey`,
   `timelineBarCtrlKey`).
 - **View models** — day/week columns (per-resource split), month, timeline,
-  agenda and year builders, aria-label and text formatters.
+  agenda and year builders, aria-label and text formatters, the grid
+  semantics helpers (`dayWeekColumnHeaderText`, `monthColumnHeaderText`,
+  `dayWeekCellSelected`, `monthCellSelected`, `schedulerGridReadOnly`).
+- **Adaptive view** — `OgeSchedulerAdaptiveViewController` switches to the
+  agenda view below a container breakpoint and restores the previous view.
 - **`OgeSchedulerCore`** — the shell machine: the working set, `DataSource`
   loads and write-through, the cancelable CRUD pipelines, occurrence vs.
   series routing, the editor model mapping and default form items,

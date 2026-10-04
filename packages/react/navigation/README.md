@@ -17,11 +17,13 @@ component and feature parity with the Angular navigation family.
 - **`<OgeDrawer>`** — `overlay` / `push` / `side` modes with **modality
   derived from the mode**, logical positions (RTL mirrors on its own),
   `compactBelow` downgrades, focus trap, the shared Escape stack and async
-  close guards.
+  close guards; safe-area insets on notched screens.
 - **`<OgeStepper>`** — linear or free navigation, both orientations, per-step
   validity and optional/editable flags, async step guards. One ARIA semantic
   in both orientations: `aria-current="step"` with `role="group"` bodies —
   never a tablist, which would promise panels may be browsed freely.
+  Drawer and stepper ids derive from `useId()`, so SSR output hydrates
+  cleanly.
 - **`<OgeMenubar>`** — the APG menubar with nested submenus, type-ahead,
   hover mode and a container-width hamburger collapse.
 - **`<OgeBreadcrumb>`** — collapsing trail with an overflow menu.

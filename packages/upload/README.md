@@ -25,7 +25,8 @@ npm install @oge-ui/upload
   control, so the form goes invalid without restating them as a `ValidatorFn`.
 - **A keyboard and screen-reader contract**, not an afterthought: the drop zone
   is a real button, the list is a real list with a roving tab stop, `Delete`
-  removes the focused row, and every change is announced politely.
+  removes the focused row, and every change is announced politely through
+  the suite's shared live announcer (one region per document).
 
 ## Customization
 

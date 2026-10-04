@@ -59,7 +59,14 @@ the signal-based `<oge-bpmn-editor>` component renders it with an accessible
   string, fitted viewBox, element colors honored
 - Overlays API (`addOverlay` / `removeOverlay` / `clearOverlays`): HTML
   badges anchored to elements for process monitoring, tracking pan / zoom /
-  model changes, rendered through Angular's sanitizing `[innerHTML]`
+  model changes, rendered through Angular's sanitizing `[innerHTML]`; links
+  that keep a `target` get `rel="noopener noreferrer"` and `role` attributes
+  are dropped
+- Trusted Types ready: XML parsing goes through a lazily created
+  `oge-ui#bpmn` policy when `trustedTypes` exists — allow it in your
+  `trusted-types` CSP directive
+- Container-driven layout: on a narrow editor the properties panel floats
+  over the canvas edge and the header name field shrinks
 
 **Accessibility & i18n**
 

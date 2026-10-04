@@ -40,7 +40,9 @@ is the selling point, so the dependencies are taken instead of rebuilt.
 
 - Card drag & drop within and across columns and swimlanes — 3px
   threshold, live placeholder, lifted tilt, edge auto-scroll, mid-drag
-  Escape restore, exactly one commit; column drag reordering
+  Escape restore, exactly one commit; column drag reordering; on touch,
+  cards and column headers lift after a 300 ms long press so the board
+  still scrolls
 - Double-click a card to edit (`@oge-ui/forms` dialog with a
   `cardEditDialogShowing` hook for custom fields), double-click an empty
   column to add; built-in right-click menu (edit, delete, move to
@@ -52,12 +54,16 @@ is the selling point, so the dependencies are taken instead of rebuilt.
 
 **Accessibility (honest limits)**
 
-No WAI-ARIA APG pattern covers a kanban; the widget composes the listbox
-pattern instead: each column is a labeled `role="listbox"` with
-roving-tabindex `role="option"` cards (arrows navigate within and across
-columns, Enter edits, Delete deletes) and Ctrl+Arrow moves the focused
-card — the exact keyboard twin of the drag — with polite live-region
-announcements. All strings, including every aria label, live in
+No WAI-ARIA APG pattern covers a kanban; the widget composes list
+semantics with a roving focus instead: each column is a labeled
+`role="list"` of `listitem` wrappers, each holding a focusable
+`role="group"` card with `aria-roledescription` (`messages.board.cardRoleDescription`)
+and `aria-current` for the selection. One Tab stop per column; arrows
+navigate within and across columns, Enter edits, Delete deletes, and
+Ctrl+Arrow moves the focused card — the exact keyboard twin of the drag —
+with polite live-region announcements. Quick actions are real labeled
+buttons with 24px hit areas (44px on coarse pointers), and controls inside a
+custom card template are reachable with Tab (Escape returns to the card). All strings, including every aria label, live in
 `OgeKanbanMessages` (`provideOgeKanbanConfig`).
 
 Docs: [ogeui.com/components/kanban](https://www.ogeui.com/components/kanban)

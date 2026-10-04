@@ -22,7 +22,10 @@ SVG out, no DOM rendering.
   warnings instead of silent drops, extension elements preserved verbatim),
   `writeBpmnXml` (byte-deterministic), `toBpmnJson` / `fromBpmnJson`
   (versioned envelope with structural validation) and `renderDiagramSvg`
-  (self-contained static SVG).
+  (self-contained static SVG). XML parsing runs through the `oge-ui#bpmn`
+  Trusted Types policy (`OGE_BPMN_TRUSTED_TYPES_POLICY`) when the browser
+  enforces Trusted Types; `sanitizeBpmnOverlayHtml` turns overlay HTML into
+  safe nodes (`rel="noopener noreferrer"` on targeted links, no `role`).
 - **Modeling** — orthogonal routing, grid + neighbor snapping, alignment and
   distribution, auto-layout for DI-less documents, the connection and morph
   rules, every undoable command and the snapshot `BpmnCommandStack`.

@@ -32,16 +32,31 @@ export function Sales({ rows }: { rows: Sale[] }) {
 ```
 
 - Local rows or any remote `OgePivotStore` (pre-aggregated, abortable loads).
-- Four drag & drop field areas, a field chooser (live or `onDemand` draft).
+- Four field areas, a field chooser (live or `onDemand` draft). Field chips
+  move by pointer drag (touch long press, Escape cancels; a drop on a chip
+  inserts before it), by keyboard (Ctrl+Arrow reorder / change area, Delete
+  removes) or from a field menu, with polite move announcements.
 - Multi-level column headers, expand/collapse on both axes, sub and grand
   totals, percent-of / variation display modes and running totals.
+- `calculatedFields` — measures computed from a cell's other measures, on
+  totals too, with their own format and display mode.
+- Member filters per row or column field: `labelFilter`, `valueFilter` and
+  `topN`, applied before aggregation so totals follow.
 - Header menus (sort, sort by summary, value filter, remove, expand/collapse
   all) and measure menus (summary type, display mode).
-- Two-axis virtual scrolling, roving-tabindex keyboard navigation.
+- `renderCell` / `renderRowHeader` / `renderColumnHeader` render props and
+  `rowHeaderLayout` (`compact`, `outline`, `tabular`).
+- Chart binding without a charts dependency: `getChartData()` on the handle
+  (or `toChartSeries(result)`) returns a plain `dataSource` + `series` for
+  `@oge-ui/react-charts`; `onResultChange` keeps a chart in sync.
+- Two-axis virtual scrolling, one-tab-stop APG grid navigation across headers
+  and values.
 - `stateKey` persistence through the same `OgeGridStateStorageProvider` the
-  React grid uses; `state()` / `applyState()` on the `ref` handle.
-- `getCsv()` / `exportCsv()` on the handle, and
-  `@oge-ui/react-pivot/export-excel` for `.xlsx` (optional `exceljs` peer).
+  React grid uses; `state()` / `applyState()` on the `ref` handle (snapshots
+  are validated before they apply).
+- `getCsv()` / `exportCsv()` on the handle, `@oge-ui/react-pivot/export-excel`
+  for `.xlsx` (optional `exceljs` peer) and `@oge-ui/react-pivot/export-pdf`
+  for PDF (optional `jspdf` + `jspdf-autotable` peers).
 - `<OgePivotMessagesProvider>` localizes every string.
 
 Docs and live demos: https://www.ogeui.com/components/pivot-grid (pick React in the

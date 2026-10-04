@@ -18,7 +18,15 @@ the suite's drop-down buttons and select editors build on.
   reasons, focus restore, generated `panelId` for `aria-controls`.
 - **`<oge-popup>`**: presentational chrome bound to a panel model —
   `position: fixed`, `--oge-z-popup` stacking, popup surface tokens, hidden
-  until the first measure (no flash at 0,0).
+  until the first measure (no flash at 0,0). `adaptive: 'sheet' |
+'fullscreen'` re-presents the same content as a titled `role="dialog"`
+  bottom sheet or full-screen surface (`adaptiveTitle`, `closeLabel`, header /
+  footer slots, swipe-down dismiss) — the presentation the inputs' and
+  buttons' `adaptiveMode: 'auto'` switches to on narrow viewports.
+- **`OgeLiveAnnouncer`** — a root service that speaks through the document's
+  one polite and one assertive live region (shared with every OGE component,
+  SSR-inert): `announce(message, 'polite' | 'assertive')`, `clear()`;
+  duplicates are dropped and messages auto-clear.
 - **`<oge-menu-list>`** — WAI-ARIA `menu` with the `aria-activedescendant`
   pattern: wrapping arrow navigation that skips disabled items and separators,
   Home/End, **type-ahead**, Enter/Space activation, `menuitemcheckbox`
@@ -52,6 +60,10 @@ the suite's drop-down buttons and select editors build on.
   underneath.
 - `<oge-popup>` plays a reduced-motion-aware fade/scale entrance from the
   anchored edge (`data-placement` drives the transform origin).
+- Anchored panels position against the **visual viewport** and follow its
+  resize / scroll (on-screen keyboard, pinch zoom); the available height is
+  published as `--oge-popup-available-height`. Modals and toast regions
+  respect `env(safe-area-inset-*)`.
 
 ## Installation
 
@@ -157,8 +169,8 @@ component to declare. `show()` takes a message or an options object, and
 `success` / `info` / `warning` / `error` are severity shorthands. Toasts
 render in body-appended fixed regions (six logical positions, `top-start`
 through `bottom-end`, RTL-aware), never take focus and never join the Escape
-stack; they announce through permanently mounted live regions (`error`
-asserts, the rest are polite). Auto-dismiss timers pause on hover,
+stack; they announce through the shared live announcer (`error` asserts,
+the rest are polite). Auto-dismiss timers pause on hover,
 focus-within and while the tab is hidden, and resume with the remaining time.
 
 ```ts

@@ -15,9 +15,12 @@ You rarely install it directly: both board packages depend on it.
   search.
 - **View model** — visible columns (declared, derived or added at runtime,
   in the persisted or live-dragged order), grid tracks, per-column counts and
-  WIP state, accessible labels, roving tab stops, per-cell virtual windows.
-- **Interaction machines** — the pointer-gesture machine (3px threshold,
-  pointer capture, capture-phase Escape), drag hit-testing and edge
+  WIP state, accessible labels, roving tab stops (`syncKanbanCardTabStops`:
+  one per column, card content parked until its card is the stop),
+  per-cell virtual windows.
+- **Interaction machines** — the pointer gesture (`@oge-ui/behavior`'s
+  shared `beginPointerGesture`: 3px threshold, pointer capture,
+  capture-phase Escape, 300 ms touch long press), drag hit-testing and edge
   auto-scroll, arrow-key roving and the Ctrl+Arrow keyboard move twin, the
   move pipeline (plan → cancelable event → commit onto the working set with
   midpoint ordering or array reordering).

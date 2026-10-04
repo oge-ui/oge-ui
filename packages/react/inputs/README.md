@@ -19,30 +19,49 @@ subscript — and the standard React controlled/uncontrolled pair
 
 - **Text** — **`<OgeTextBox>`** (modes `text/email/password/search/tel/url`,
   grapheme counter, password reveal, copy-to-clipboard, debounce with
-  blur/Enter flush), **`<OgeTextArea>`** (auto-resize with a row clamp) and
-  **`<OgeNumberBox>`** (`Intl` formatting, clamping, spin buttons with
-  hold-to-repeat; empty is `null`, never `0`).
-- **Toggles** — **`<OgeCheckBox>`** (three-state), **`<OgeSwitch>`** and
-  **`<OgeRadioGroup>`** (roving tabindex, horizontal/vertical layout).
+  blur/Enter flush, optional input `mask` with `maskRules` / `showMaskMode` /
+  `includeLiterals`), **`<OgeMaskedTextBox>`** (mask-first editor on the shared
+  `OgeMaskCore`: `0 9 # L l A a C c` slots, custom rules, overwrite editing,
+  IME-safe), **`<OgeTextArea>`** (auto-resize with a row clamp) and
+  **`<OgeNumberBox>`** (`Intl` formatting, `formatWhileTyping`, mouse-wheel
+  `wheelStep`, clamping, spin buttons with hold-to-repeat; empty is `null`,
+  never `0`).
+- **Toggles and choice groups** — **`<OgeCheckBox>`** (three-state),
+  **`<OgeSwitch>`**, **`<OgeRadioGroup>`** (roving tabindex,
+  horizontal/vertical layout), **`<OgeCheckBoxGroup>`** (multi-value group with
+  select-all) and **`<OgeToggleGroup>`** (single/multiple toggle-button group).
 - **Drop-down editors** — **`<OgeSelectBox>`** (search, grouping, lazy items,
-  type-ahead, `acceptCustomValue`), **`<OgeTagBox>`** (multi-select chips with
-  overflow) and **`<OgeAutocomplete>`** (free text with suggestions,
-  `forceSelection`, match highlighting). All three support `virtualScroll` for
-  large lists.
+  type-ahead, `acceptCustomValue`, `renderItem` / `renderGroup` /
+  `renderField` / `renderHeader` / `renderFooter`, cancelable `onOpening` /
+  `onClosing`), **`<OgeTagBox>`** (multi-select chips with `renderTag`,
+  `showSelectAll`, `maxSelectedItems` and a `+N more` overflow chip),
+  **`<OgeAutocomplete>`** (free text with suggestions, `forceSelection`, match
+  highlighting), **`<OgeMultiColumnComboBox>`** (a grid-shaped popup with
+  columns, APG combobox-with-grid keyboard, single or multiple selection) and
+  **`<OgeTreeSelect>`** (the navigation tree as a picker, single or multiple,
+  `showSelectionAs="chips"`). The list editors support `virtualScroll` and a
+  remote paged `dataSource` (`pageSize`, `onPageLoaded`) that loads on scroll
+  with debounced server search and request cancellation.
 - **Sliders** — **`<OgeSlider>`** and **`<OgeRangeSlider>`**: the APG slider
   pattern with live drag commits, Escape-to-cancel, ticks, value bubbles and
   the multi-thumb constraint.
 - **Dates** — **`<OgeCalendar>`** (month/year/decade drill, single/multiple/
   range selection, week numbers), **`<OgeDateBox>`** (`date`/`time`/`datetime`
-  with locale-aware parsing) and **`<OgeDateRangeBox>`**.
-- **`<OgeColorBox>`** — saturation/brightness surface, hue and alpha sliders,
-  hex/RGB inputs, swatch palette and the platform eyedropper.
+  with locale-aware parsing, segment entry via `useMaskBehavior`, `hour12`,
+  `showSeconds`, `showNowButton`) and **`<OgeDateRangeBox>`** (`presets`, plus
+  `type="time"` / `"datetime"` ranges).
+- **Colour** — **`<OgeColorBox>`** (saturation/brightness surface, hue and
+  alpha sliders, hex/RGB inputs, swatch palette and the platform eyedropper),
+  plus the standalone **`<OgeColorGradient>`** (inline picker with an optional
+  WCAG contrast readout) and **`<OgeColorPalette>`** (swatch grid from a preset
+  or your own colours).
+- **Adaptive popups** — `adaptiveMode` (`'none'` by default) and
+  `adaptiveBreakpoint` turn the select box, tag box, autocomplete, tree
+  select, multi-column combo box, date box, date range box and colour box
+  popups into a bottom sheet or full-screen dialog on small viewports.
 - **`<OgeInputsConfigProvider>`** — the React counterpart of
   `provideOgeInputsConfig()`; defaults and strings are single-sourced in
   `@oge-ui/behavior`.
-
-Tree select is a recorded parity exception: it renders the navigation tree,
-which has no React port yet (see the suite's `docs/REACT-PARITY.md`).
 
 ## Installation
 

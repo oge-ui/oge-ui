@@ -48,6 +48,13 @@ export function Board({ tasks }: { tasks: Task[] }) {
   `defaultCollapsedColumns` + `onCollapsedColumnsChange`, …), the public
   methods live on the `ref` handle (`moveCard`, `addCard`, `editCard`, …) and
   the templates are render props (`renderCard`, `renderColumnHeader`).
+- Accessible board semantics: each column is a labelled `role="list"` with
+  one Tab stop, cards are focusable groups (`aria-roledescription`,
+  `aria-current` for the selection), and the quick actions and any controls
+  in a `renderCard` template are real, Tab-reachable buttons.
+- Pointer and touch: drags run on the suite's shared pointer gesture — cards
+  and column headers lift after a 300 ms touch hold, the board auto-scrolls
+  at its edges, Escape cancels.
 - Configuration and i18n: `<OgeKanbanConfigProvider config={{ messages, locale, cardHeight }}>`.
 - The data array is never mutated — persist through the past-tense callbacks.
 

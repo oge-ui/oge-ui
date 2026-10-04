@@ -31,6 +31,18 @@ framework: nothing here wraps Angular.
   `onAppointmentUpdating` / `onAppointmentDeleting`; three render props
   (`renderAppointment`, `renderCell`, `renderDateHeader`) and an imperative
   handle (`ref`).
+- **Recurrence** — `RRULE` with `BYSETPOS`, `BYHOUR` / `BYMINUTE`, UTC (`Z`)
+  stamps, and an iCalendar block form with `DTSTART` / `RDATE` / `EXDATE`
+  lines (`TZID`, `BYYEARDAY`, `BYWEEKNO`, `BYSECOND`, `EXRULE` are still
+  rejected).
+- **Locale and small screens** — `weekendDays` (defaults from
+  `Intl.Locale#getWeekInfo()`, falling back to Saturday + Sunday) and
+  `adaptiveView`, which switches to the agenda view when the scheduler's own
+  width drops below a breakpoint and restores the previous view on the way
+  back.
+- **Accessibility** — the day/week and month grids carry a `columnheader` row,
+  `aria-selected` and `aria-readonly`; resize handles get 24px (44px on
+  coarse pointers) hit areas.
 - **`<OgeSchedulerConfigProvider>`** — the React counterpart of
   `provideOgeSchedulerConfig()`; every default and every message string is
   single-sourced in the engine.

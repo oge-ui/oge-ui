@@ -87,6 +87,8 @@ the content.
   to the room it actually has. The rule is core's pure `resolveDrawerMode()`.
 - **One Escape stack** — the drawer registers with the same overlay stack every
   other OGE surface uses, so a popup opened inside it closes before it does.
+- **Safe areas** — the panel pads itself with `env(safe-area-inset-*)`, so it
+  clears notches and home indicators on mobile devices.
 - **Chrome** — an optional `showCloseButton`, a `disabled` switch that blocks the
   open/close gestures without disabling the panel's content, and
   `toggle(force?)` for driving the drawer from a router or a media query.

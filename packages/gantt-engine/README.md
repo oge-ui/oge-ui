@@ -30,7 +30,8 @@ or `npm install @oge-ui/react-gantt` is the whole setup.
   undo/redo, the derived bars/arrows/scale/workload view models, row
   virtualization, the cancelable editing pipelines (task and dependency CRUD,
   indent/outdent, auto-scheduling), the treegrid keyboard map, the pointer
-  gestures with Escape-cancel, the context-menu model and every label and
+  gestures with Escape-cancel (on `@oge-ui/behavior`'s shared
+  `beginPointerGesture`), the weekend-day resolution, the context-menu model and every label and
   live-region announcement. It takes an `OgeReactivityAdapter` from
   `@oge-ui/behavior` — Angular backs it with signals, React with a versioned
   store.
@@ -40,7 +41,8 @@ or `npm install @oge-ui/react-gantt` is the whole setup.
 - **Export builders** — separate entry points with optional peers, so only an
   app that exports pays for the library:
   - `@oge-ui/gantt-engine/export-excel` → `buildGanttExcelWorkbook` (`exceljs`),
-  - `@oge-ui/gantt-engine/export-pdf` → `buildGanttPdfDocument` (`jspdf`),
+  - `@oge-ui/gantt-engine/export-pdf` → `buildGanttPdfDocument` (`jspdf`;
+    Unicode text through an `OgePdfFont`),
   - `@oge-ui/gantt-engine/export-image` → `buildGanttCanvas` (no dependency).
 
 Every module has a spec beside it; `src/index.spec.ts` guards the barrel, which

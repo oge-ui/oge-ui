@@ -40,9 +40,18 @@ The mode is derived from what you bind, never configured.
   `visibleIndex` apply across both sources.
 - **One validation engine** — Angular's Signal Forms. `validationRules`
   (`required` / `email` / `numeric` / `stringLength` / `pattern` / `range` /
-  `custom` / `async`) is declarative sugar compiled into a schema, so
-  `[(formData)]` and `[fieldTree]` run the same code path. A `custom` rule sees
-  the whole model, which is how cross-field checks work.
+  `compare` / `custom` / `async`) is declarative sugar compiled into a schema,
+  so `[(formData)]` and `[fieldTree]` run the same code path. `compare` checks
+  a value against another field or a function of the model (confirm password,
+  end after start); a `custom` rule sees the whole model for anything else.
+- **Conditional fields** — `visibleWhen`, `requiredWhen` and `disabledWhen`
+  take an `OgeFormCondition` (`(data) => boolean` or `{ field, equals |
+notEquals | in }`), re-evaluated on every model change; hidden or
+  conditionally disabled items are not validated.
+- **Server errors** — `setErrors({ email: ['Already registered'] })` shows
+  backend validation messages in the field and the validation summary;
+  each clears as soon as its field is edited; `setFieldErrors(field,
+messages)` and `clearErrors(field?)` manage them one field at a time.
 - **Editor selection** — `dataType` picks the editor and is itself inferred
   from the model value; an `editorOptions.items` list beats it, and an explicit
   `editorType` beats everything.
