@@ -59,6 +59,12 @@ export interface OgePivotGridProps<T = unknown> {
   calculatedFields?: readonly OgePivotCalculatedField[];
   /** Row-header layout: `'compact'` (default, indented), `'outline'` or `'tabular'`. */
   rowHeaderLayout?: OgePivotRowHeaderLayout;
+  /**
+   * BCP 47 locale of the cell text — percent display modes, dates and
+   * declarative field `format`s. `undefined` falls back to the
+   * `<OgePivotConfigProvider>` `locale`, then `navigator.language`.
+   */
+  locale?: string;
   /** Custom content of each value cell (per measure) — Angular's `*ogePivotCellTemplate`. */
   renderCell?: (cell: OgePivotCellTemplateContext) => ReactNode;
   /** Custom row-header label — Angular's `*ogePivotRowHeaderTemplate`. */

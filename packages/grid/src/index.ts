@@ -99,6 +99,10 @@ export {
 } from './lib/columns/column';
 export { OgeColumnGroup } from './lib/columns/column-group';
 export { formatCellValue } from './lib/columns/value-format';
+// declarative column formats are core's / behavior's — re-exported so a
+// `[format]="{ type: 'currency', currency: 'EUR' }"` needs no second import
+export type { OgeColumnFormat } from '@oge-ui/behavior';
+export type { OgeValueFormat, OgeValueFormatType } from '@oge-ui/core';
 export {
   OgeCellTemplate,
   type OgeCellTemplateContext,

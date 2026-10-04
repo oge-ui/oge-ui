@@ -65,6 +65,12 @@ export {
   type OgePivotMessages,
 } from './lib/pivot-messages';
 export {
+  OGE_DEFAULT_PIVOT_CONFIG,
+  resolveOgePivotConfig,
+  type OgePivotConfig,
+  type OgePivotConfigInput,
+} from './lib/pivot-config';
+export {
   OGE_PIVOT_FIELD_DRAG_TYPE,
   type OgePivotAxisLine,
   type OgePivotCellClickEvent,

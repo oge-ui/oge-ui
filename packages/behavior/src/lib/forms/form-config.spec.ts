@@ -57,13 +57,48 @@ describe('validationSummaryTitle', () => {
     );
   });
 
-  it('follows an overridden table', () => {
+  it('follows an overridden plain pattern', () => {
     const messages = {
       ...OGE_DEFAULT_FORMS_MESSAGES,
       validationSummaryTitle: '{count} alan düzeltilmeli',
-      validationSummaryTitleOne: '1 alan düzeltilmeli',
+    };
+    expect(validationSummaryTitle(2, messages, 'tr')).toBe(
+      '2 alan düzeltilmeli',
+    );
+    expect(validationSummaryTitle(1, messages, 'tr')).toBe(
+      '1 alan düzeltilmeli',
+    );
+  });
+
+  it('picks the locale plural form of an ICU heading', () => {
+    const messages = {
+      ...OGE_DEFAULT_FORMS_MESSAGES,
+      validationSummaryTitle:
+        '{count, plural, one {# pole wymaga uwagi} few {# pola wymagają uwagi} many {# pól wymaga uwagi} other {# pola wymaga uwagi}}',
+    };
+    expect(validationSummaryTitle(1, messages, 'pl')).toBe(
+      '1 pole wymaga uwagi',
+    );
+    expect(validationSummaryTitle(3, messages, 'pl')).toBe(
+      '3 pola wymagają uwagi',
+    );
+    expect(validationSummaryTitle(5, messages, 'pl')).toBe(
+      '5 pól wymaga uwagi',
+    );
+  });
+
+  it('still honours the deprecated singular key, with a warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const messages = {
+      ...OGE_DEFAULT_FORMS_MESSAGES,
+      validationSummaryTitle: '{count} alan düzeltilmeli',
+      validationSummaryTitleOne: 'Bir alan düzeltilmeli',
     };
     expect(validationSummaryTitle(2, messages)).toBe('2 alan düzeltilmeli');
-    expect(validationSummaryTitle(1, messages)).toBe('1 alan düzeltilmeli');
+    expect(validationSummaryTitle(1, messages)).toBe('Bir alan düzeltilmeli');
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('validationSummaryTitleOne'),
+    );
+    warn.mockRestore();
   });
 });

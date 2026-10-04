@@ -17,6 +17,7 @@ import {
   OgeSelectListCore,
   adaptiveListViewportHeight,
   formatPattern,
+  ogeMoreTagsText,
   ogeAllowDropDownClose,
   ogeAllowDropDownOpen,
   ogeCanSelectMore,
@@ -1034,9 +1035,7 @@ export const OgeTagBox = forwardRef(function OgeTagBoxRender<TItem>(
           ))}
           {overflowCount > 0 && (
             <span className="oge-tag oge-tag-more">
-              {formatPattern(field.msg.moreTags, {
-                count: String(overflowCount),
-              })}
+              {ogeMoreTagsText(field.msg.moreTags, overflowCount)}
             </span>
           )}
           <input

@@ -37,8 +37,10 @@ export {
   OGE_DEFAULT_GRID_CONFIG,
   OGE_DEFAULT_GRID_MESSAGES,
 } from '@oge-ui/behavior';
+export type { OgeValueFormat, OgeValueFormatType } from '@oge-ui/core';
 export type {
   OgeColumnAlignment,
+  OgeColumnFormat,
   OgeColumnLookup,
   OgeContextMenuSource,
   OgeDataChange,

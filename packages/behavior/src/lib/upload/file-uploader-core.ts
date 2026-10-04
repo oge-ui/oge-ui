@@ -1536,7 +1536,7 @@ export class OgeFileUploaderCore {
   }
 
   private announce(template: string, tokens: Record<string, string>): void {
-    this.announcement = format(template, tokens);
+    this.announcement = format(template, tokens, this.options.config().locale);
     this.notify();
   }
 

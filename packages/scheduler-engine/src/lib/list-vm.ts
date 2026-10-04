@@ -5,6 +5,7 @@
  * appointment popup render.
  */
 import {
+  ogeDateTimeFormat,
   addDays,
   contrastForeground,
   parseColor,
@@ -63,7 +64,7 @@ export function buildAgendaDays<T>(
 
 /** An agenda day heading (`Thursday, August 2026`). */
 export function agendaDayText(day: Date, locale: string | undefined): string {
-  return new Intl.DateTimeFormat(locale, {
+  return ogeDateTimeFormat(locale, {
     weekday: 'long',
     month: 'long',
     year: 'numeric',
@@ -78,7 +79,7 @@ export function agendaTimeText<T>(
   allDayLabel: string,
 ): string {
   if (appointment.displayAllDay) return allDayLabel;
-  const format = new Intl.DateTimeFormat(locale, {
+  const format = ogeDateTimeFormat(locale, {
     hour: 'numeric',
     minute: '2-digit',
   });
@@ -139,7 +140,7 @@ export function buildYearMonths(
   counts: ReadonlyMap<string, number>,
   locale: string | undefined,
 ): readonly YearMonth[] {
-  const titleFormat = new Intl.DateTimeFormat(locale, { month: 'long' });
+  const titleFormat = ogeDateTimeFormat(locale, { month: 'long' });
   return Array.from({ length: 12 }, (_, month) => {
     const anchor = new Date(year, month, 1);
     const grid = buildMonthGrid(anchor, firstDayOfWeek);
@@ -159,7 +160,7 @@ export function buildYearMonths(
 
 /** Narrow weekday initial of the year view headers. */
 export function yearWeekdayText(day: Date, locale: string | undefined): string {
-  return new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(day);
+  return ogeDateTimeFormat(locale, { weekday: 'narrow' }).format(day);
 }
 
 /** A year cell's accessible name, with the count when busy. */
@@ -167,7 +168,7 @@ export function yearCellLabel(
   cell: YearCell,
   locale: string | undefined,
 ): string {
-  const date = new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(
+  const date = ogeDateTimeFormat(locale, { dateStyle: 'full' }).format(
     cell.day,
   );
   return cell.count > 0 ? `${date} (${cell.count})` : date;
@@ -187,7 +188,7 @@ export function chipTimeText<T>(
   appointment: SchedulerAppointment<T>,
   locale: string | undefined,
 ): string {
-  const format = new Intl.DateTimeFormat(locale, {
+  const format = ogeDateTimeFormat(locale, {
     hour: 'numeric',
     minute: '2-digit',
   });
@@ -199,7 +200,7 @@ export function popupTimeText<T>(
   appointment: SchedulerAppointment<T>,
   locale: string | undefined,
 ): string {
-  const format = new Intl.DateTimeFormat(locale, {
+  const format = ogeDateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: appointment.allDay ? undefined : 'short',
   });

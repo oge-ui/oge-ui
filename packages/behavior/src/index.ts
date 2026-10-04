@@ -47,6 +47,7 @@ export {
   OGE_DEFAULT_INPUTS_MESSAGES,
   OGE_DEFAULT_INPUTS_CONFIG,
   resolveOgeInputsConfig,
+  ogeMoreTagsText,
   type OgeInputsMessages,
   type OgeInputsConfig,
   type OgeInputsConfigInput,
@@ -153,6 +154,8 @@ export {
   type OgeGridColumnSpec,
   type OgeGridResolvedColumn,
   isOgeDateType,
+  ogeCompileColumnFormat,
+  type OgeColumnFormat,
 } from './lib/grid/grid-columns';
 export {
   OgeGridRangeSelectionCore,
@@ -244,9 +247,11 @@ export {
 } from './lib/grid/grid-header-conditions';
 export {
   ogePagerInfoContext,
+  ogePagerInfoText,
   ogePagerPages,
   ogeParsePageInput,
   type OgePagerInfoContext,
+  type OgePagerInfoMessages,
 } from './lib/grid/grid-pager';
 export {
   findOgeRowDragParticipant,

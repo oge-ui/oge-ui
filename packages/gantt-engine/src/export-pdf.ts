@@ -2,6 +2,7 @@
  * The pure Gantt `.pdf` builder (vector-drawn chart), shared by both render
  * layers; `jspdf` is an **optional peer** pulled in only by this entry point.
  */
+import { ogeDateTimeFormat } from '@oge-ui/core';
 import { jsPDF } from 'jspdf';
 import {
   registerOgePdfFont,
@@ -93,7 +94,7 @@ export function buildGanttPdfDocument<T>(
     msPerMm: rangeMs / chartW,
     rangeStart,
   };
-  const dateFormat = new Intl.DateTimeFormat(options.locale, {
+  const dateFormat = ogeDateTimeFormat(options.locale, {
     day: 'numeric',
     month: 'short',
   });

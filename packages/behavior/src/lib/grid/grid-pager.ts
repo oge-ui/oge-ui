@@ -4,6 +4,33 @@
  * the context the info-text slot receives.
  */
 
+import { ogeFormatMessage, warnOgeDeprecatedMessage } from '@oge-ui/core';
+
+/** The catalog keys {@link ogePagerInfoText} reads. */
+export interface OgePagerInfoMessages {
+  pagerInfo: string;
+  /** @deprecated See `OgeGridMessages.rowsSuffix`. */
+  rowsSuffix?: string;
+}
+
+/**
+ * The pager's info text for `count` rows — the plural-aware `pagerInfo`
+ * message (`{count, plural, one {# row} other {# rows}}`) in `locale`. A
+ * catalog that still supplies the deprecated `rowsSuffix` keeps its old
+ * `"<count> <suffix>"` text, with a dev-mode warning.
+ */
+export function ogePagerInfoText(
+  messages: OgePagerInfoMessages,
+  count: number,
+  locale?: string,
+): string {
+  if (messages.rowsSuffix !== undefined) {
+    warnOgeDeprecatedMessage('rowsSuffix', 'pagerInfo');
+    return `${count} ${messages.rowsSuffix}`;
+  }
+  return ogeFormatMessage(messages.pagerInfo, { count }, locale);
+}
+
 /** Windowed page list: first, last, and up to 5 pages around the current one. */
 export function ogePagerPages(count: number, current: number): number[] {
   if (count <= 9) return Array.from({ length: count }, (_, i) => i);

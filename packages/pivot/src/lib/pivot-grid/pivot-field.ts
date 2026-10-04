@@ -6,6 +6,7 @@ import type {
   PivotPath,
   PivotRunningTotal,
   PivotSummaryDisplayMode,
+  OgeValueFormat,
   SortDirection,
   SummaryType,
 } from '@oge-ui/core';
@@ -55,7 +56,11 @@ export class OgePivotField<T = unknown> {
   readonly showTotals = input(true);
   // out-of-band functions
   readonly selector = input<(row: T) => unknown>();
-  readonly format = input<(value: unknown) => string>();
+  /**
+   * Cell / member text: a function, or a declarative `OgeValueFormat`
+   * (`{ type: 'currency', currency: 'EUR' }`) rendered in the grid's `locale`.
+   */
+  readonly format = input<((value: unknown) => string) | OgeValueFormat>();
   readonly customizeText =
     input<(info: { value: unknown; valueText: string }) => string>();
   // member filters (row / column fields), applied before aggregation

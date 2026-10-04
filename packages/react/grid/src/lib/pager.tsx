@@ -12,11 +12,13 @@ import {
   OGE_DEFAULT_GRID_MESSAGES,
   formatPattern,
   ogePagerInfoContext,
+  ogePagerInfoText,
   ogePagerPages,
   ogeParsePageInput,
   type OgeGridMessages,
   type OgePagerInfoContext,
 } from '@oge-ui/behavior';
+import { ogeDefaultLocale } from '@oge-ui/core';
 
 export interface OgePagerProps {
   /** Zero-based current page. */
@@ -37,9 +39,14 @@ export interface OgePagerProps {
    * navigates (clamped to the valid range).
    */
   showPageInput?: boolean;
-  /** Renders the info text instead of `{count} rows`. */
+  /** Renders the info text instead of the `pagerInfo` message. */
   renderInfo?: (context: OgePagerInfoContext) => ReactNode;
   messages?: OgeGridMessages;
+  /**
+   * BCP 47 locale of the plural-aware info text (`pagerInfo`); the grid
+   * passes its own. `undefined` = `navigator.language`.
+   */
+  locale?: string;
   onPageChange?: (pageIndex: number) => void;
   /** Emits the new page size; `0` means "all rows" (paging off). */
   onPageSizeChange?: (pageSize: number) => void;
@@ -86,6 +93,7 @@ export function OgePager({
   showPageInput = false,
   renderInfo,
   messages = OGE_DEFAULT_GRID_MESSAGES,
+  locale,
   onPageChange,
   onPageSizeChange,
   className,
@@ -93,6 +101,11 @@ export function OgePager({
 }: OgePagerProps) {
   const host = useRef<HTMLDivElement>(null);
   const [hostWidth, setHostWidth] = useState(Number.POSITIVE_INFINITY);
+  const infoText = ogePagerInfoText(
+    messages,
+    totalCount,
+    locale ?? ogeDefaultLocale(),
+  );
 
   useEffect(() => {
     const el = host.current;
@@ -239,10 +252,10 @@ export function OgePager({
                   pageCount,
                   totalCount,
                   pageSize,
-                  text: `${totalCount} ${messages.rowsSuffix}`,
+                  text: infoText,
                 }),
               )
-            : `${totalCount} ${messages.rowsSuffix}`}
+            : infoText}
         </span>
       ) : null}
     </div>

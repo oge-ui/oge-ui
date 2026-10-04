@@ -16,6 +16,7 @@
  */
 import type { OgeReactiveCell, OgeReactivityAdapter } from '@oge-ui/behavior';
 import {
+  ogeDateTimeFormat,
   addMinutes,
   clampDate,
   nextDay,
@@ -1042,7 +1043,7 @@ export class OgeSchedulerCore<T extends object, TItem = unknown> {
     kind: 'moved' | 'resized',
     event: SchedulerProposalEvent<T>,
   ): void {
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
+    const format = ogeDateTimeFormat(this.effectiveLocale(), {
       dateStyle: 'medium',
       timeStyle: event.appointment.allDay ? undefined : 'short',
     });

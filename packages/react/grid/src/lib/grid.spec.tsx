@@ -123,7 +123,8 @@ describe('OgeGrid', () => {
     const nameFilter = screen.getByLabelText('Filter Name');
     fireEvent.change(nameFilter, { target: { value: 'ar' } });
     await waitFor(() => expect(cellTexts(1)).toEqual(['Margaret']));
-    expect(screen.getByText('1 rows')).toBeInTheDocument();
+    // the pager info is a plural-aware message (`pagerInfo`)
+    expect(screen.getByText('1 row')).toBeInTheDocument();
   });
 
   it('searches across the visible columns from the search panel', async () => {

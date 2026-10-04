@@ -2,6 +2,7 @@
  * The dependency-free Gantt `.png` builder (canvas drawing), shared by both
  * render layers.
  */
+import { ogeDateTimeFormat } from '@oge-ui/core';
 import type { OgeGanttExportData, OgeGanttTask } from './lib/gantt-types';
 
 /**
@@ -64,7 +65,7 @@ export function buildGanttCanvas<T>(
   const rangeMs = Math.max(1, data.rangeEnd.getTime() - rangeStart);
   const xOf = (date: Date): number =>
     chartX + ((date.getTime() - rangeStart) / rangeMs) * chartW;
-  const dateFormat = new Intl.DateTimeFormat(options.locale, {
+  const dateFormat = ogeDateTimeFormat(options.locale, {
     day: 'numeric',
     month: 'short',
   });

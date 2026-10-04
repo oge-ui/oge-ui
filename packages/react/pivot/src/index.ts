@@ -1,9 +1,14 @@
 export { OgePivotGrid } from './lib/pivot-grid';
 export type { OgePivotGridHandle, OgePivotGridProps } from './lib/pivot-types';
 export {
+  OGE_DEFAULT_PIVOT_CONFIG,
   OGE_DEFAULT_PIVOT_MESSAGES,
+  OgePivotConfigProvider,
   OgePivotMessagesProvider,
+  useOgePivotConfig,
   useOgePivotMessages,
+  type OgePivotConfig,
+  type OgePivotConfigInput,
   type OgePivotMessages,
 } from './lib/pivot-config';
 // The field shape, the event payloads and the drag type come from

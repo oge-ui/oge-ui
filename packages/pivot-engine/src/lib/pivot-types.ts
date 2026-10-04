@@ -1,4 +1,5 @@
 import type {
+  OgeValueFormat,
   CustomSummaryFn,
   PivotArea,
   PivotGroupInterval,
@@ -56,7 +57,11 @@ export interface OgePivotFieldDef<T = unknown> {
   /** Default `true`. */
   readonly showTotals?: boolean;
   readonly selector?: (row: T) => unknown;
-  readonly format?: (value: unknown) => string;
+  /**
+   * Cell / member text: a function, or a declarative `OgeValueFormat`
+   * (`{ type: 'currency', currency: 'EUR' }`) rendered in the grid's `locale`.
+   */
+  readonly format?: ((value: unknown) => string) | OgeValueFormat;
   readonly customizeText?: (info: {
     value: unknown;
     valueText: string;

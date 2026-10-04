@@ -5,6 +5,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  LOCALE_ID,
   ViewEncapsulation,
   afterNextRender,
   afterRenderEffect,
@@ -594,6 +595,22 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
 
   /** Per-grid overrides of the UI strings (see `provideOgeGridConfig` for app-wide). */
   readonly messages = input<Partial<OgeGridMessages> | undefined>(undefined);
+
+  /**
+   * BCP 47 locale of the grid's formatted text — default date cells,
+   * declarative column `format`s, summaries, group captions, header-filter
+   * values, the filter row's number parsing and editors, exported text — and
+   * of its plural-aware announcements. `undefined` falls back to
+   * `provideOgeGridConfig({ locale })`, then Angular's `LOCALE_ID`.
+   */
+  readonly locale = input<string | undefined>(undefined);
+
+  private readonly localeId = inject(LOCALE_ID);
+
+  /** The locale in force: the input, the config, then `LOCALE_ID`. */
+  protected readonly effLocale = computed(
+    () => this.locale() ?? this.config.locale ?? this.localeId,
+  );
 
   /**
    * Persists user state (sort, filters, grouping, column layout, page size)
@@ -2236,6 +2253,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     detailToggleWidth: computed(() =>
       this.adaptiveDetailPossible() ? EXPANDER_WIDTH : 0,
     ),
+    locale: this.effLocale,
   });
 
   protected readonly resolvedColumns = this.columnModel.resolvedColumns;
@@ -2332,7 +2350,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (column.dataType === 'boolean' && !column.format && value != null) {
       return value ? this.msg().booleanTrue : this.msg().booleanFalse;
     }
-    return formatCellValue(value, column.dataType, column.format);
+    return formatCellValue(
+      value,
+      column.dataType,
+      column.format,
+      column.locale,
+    );
   }
 
   protected cellContext(
@@ -2369,7 +2392,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     if (column.dataType === 'boolean' && value != null) {
       return value ? this.msg().booleanTrue : this.msg().booleanFalse;
     }
-    return formatCellValue(value, column.dataType, undefined);
+    return formatCellValue(value, column.dataType, undefined, column.locale);
   }
 
   /**
@@ -2497,7 +2520,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
           ? this.columnByField(summary.field)
           : undefined;
         const value = column
-          ? formatCellValue(summary.value, column.dataType, column.format)
+          ? formatCellValue(
+              summary.value,
+              column.dataType,
+              column.format,
+              column.locale,
+            )
           : String(summary.value ?? '');
         return formatPattern(messages.groupSummaryPattern, {
           label: messages.summaryLabels[summary.type],
@@ -2521,7 +2549,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       .map((summary) =>
         formatPattern(messages.totalSummaryPattern, {
           label: messages.summaryLabels[summary.type],
-          value: formatCellValue(summary.value, column.dataType, column.format),
+          value: formatCellValue(
+            summary.value,
+            column.dataType,
+            column.format,
+            column.locale,
+          ),
         }),
       )
       .join(' · ');
@@ -2570,7 +2603,12 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     descriptors.forEach((descriptor, i) => {
       const column = this.columnByField(descriptor.field);
       if (!column) return;
-      const value = formatCellValue(values[i], column.dataType, column.format);
+      const value = formatCellValue(
+        values[i],
+        column.dataType,
+        column.format,
+        column.locale,
+      );
       const text = formatPattern(messages.totalSummaryPattern, {
         label: messages.summaryLabels[descriptor.type],
         value,
@@ -3568,6 +3606,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
     messages: () => untracked(this.msg),
     enabled: () => untracked(this.announcements) ?? this.config.announcements,
     caption: (field) => untracked(() => this.groupCaption(field)),
+    locale: () => untracked(this.effLocale),
   });
 
   private readonly announcementEffect = effect(() => {
@@ -4645,6 +4684,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       dataType: column?.dataType ?? 'string',
       lookupItems: column?.lookupItems,
       format: column?.format,
+      locale: column?.locale,
       messages: this.msg(),
     });
   }
@@ -5092,6 +5132,7 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
         raw,
         { dataType: column.dataType, lookupItems },
         messages,
+        column.locale,
       );
       return parsed.ok ? { field: column.field, value: parsed.value } : null;
     };
@@ -5892,8 +5933,9 @@ export class OgeGrid<T extends object = Record<string, unknown>> {
       (value) => this.headerValueText(value),
       // a datetime day node gathers several timestamps: label it by the day
       column.dataType === 'datetime'
-        ? (date) => formatCellValue(date, 'date', undefined)
+        ? (date) => formatCellValue(date, 'date', undefined, column.locale)
         : undefined,
+      column.locale,
     );
     return flattenHeaderDateTree(
       tree,

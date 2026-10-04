@@ -34,8 +34,13 @@ export {
 } from './lib/pivot-grid/pivot-templates';
 export { OgePivotStateStore } from './lib/pivot-grid/pivot-state.store';
 export {
+  OGE_DEFAULT_PIVOT_CONFIG,
   OGE_DEFAULT_PIVOT_MESSAGES,
+  OGE_PIVOT_CONFIG,
   OGE_PIVOT_MESSAGES,
+  provideOgePivotConfig,
   provideOgePivotMessages,
+  type OgePivotConfig,
+  type OgePivotConfigInput,
   type OgePivotMessages,
 } from './lib/pivot-grid/pivot-config';

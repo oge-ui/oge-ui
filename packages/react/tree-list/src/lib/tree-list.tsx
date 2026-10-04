@@ -25,6 +25,7 @@ import {
   type RowNode,
   type TreeListStateSnapshot,
   sanitizeTreeListStateSnapshot,
+  ogeDefaultLocale,
 } from '@oge-ui/core';
 import {
   OgeContextMenuEcho,
@@ -326,6 +327,10 @@ function OgeTreeListInner<T extends object>(
     const effColumnHidingMode = rx.derived(
       () => p().columnHidingMode ?? cfg().columnHidingMode,
     );
+    /** The locale in force: the prop, the provider, then `navigator.language`. */
+    const effLocale = rx.derived(
+      () => p().locale ?? cfg().locale ?? ogeDefaultLocale(),
+    );
     /** Whether an adaptive-detail toggle can appear (declarations only — no cycle). */
     const adaptiveDetailPossible = rx.derived(
       () =>
@@ -432,6 +437,7 @@ function OgeTreeListInner<T extends object>(
             pinOverrides: state.columns.pinOverrides(),
             order: state.columns.order(),
             adaptiveHiddenIds: adaptiveHiddenIds(),
+            locale: effLocale(),
           })
         : [],
     );
@@ -448,6 +454,7 @@ function OgeTreeListInner<T extends object>(
         pinOverrides: state.columns.pinOverrides(),
         order: state.columns.order(),
         adaptiveHiddenIds: adaptiveHiddenIds(),
+        locale: effLocale(),
       }),
     );
 
@@ -466,6 +473,7 @@ function OgeTreeListInner<T extends object>(
         pinOverrides: state.columns.pinOverrides(),
         order: state.columns.order(),
         adaptiveHiddenIds: new Set<string>(),
+        locale: effLocale(),
       });
 
     // --- the tree model (shared with the Angular tree list) ---
@@ -762,6 +770,7 @@ function OgeTreeListInner<T extends object>(
 
     return {
       rx,
+      effLocale,
       state,
       data,
       core,
@@ -858,6 +867,7 @@ function OgeTreeListInner<T extends object>(
         caption: (field) =>
           model.resolvedColumns().find((column) => column.field === field)
             ?.caption ?? humanize(field),
+        locale: () => model.effLocale(),
       }),
     [model, liveAnnouncer],
   );
@@ -1846,6 +1856,7 @@ function OgeTreeListInner<T extends object>(
         dataType={column.dataType}
         lookupItems={model.editing.lookupItemsFor(node, column)}
         label={column.caption}
+        locale={column.locale}
         invalid={showError}
         errorTitle={showError ? entry.error : null}
         onEnterKey={() => onEditorEnter()}
@@ -2381,7 +2392,7 @@ function OgeTreeListInner<T extends object>(
     if (column.lookupItems) return lookupTextOf(column.lookupItems, value);
     if (column.dataType === 'boolean' && value != null)
       return value ? msg.booleanTrue : msg.booleanFalse;
-    return formatCellValue(value, column.dataType, undefined);
+    return formatCellValue(value, column.dataType, undefined, column.locale);
   };
 
   const booleanFilterItems = [
@@ -2461,6 +2472,7 @@ function OgeTreeListInner<T extends object>(
         editor = (
           <OgeNumberBox
             {...common}
+            locale={column.locale}
             onInputChange={(event) => onFilterInput(column, event.text)}
           />
         );
@@ -2469,6 +2481,7 @@ function OgeTreeListInner<T extends object>(
         editor = (
           <OgeDateBox
             {...common}
+            locale={column.locale}
             showClearButton
             onValueCommitted={(event) => onDateFilter(column, event.value)}
           />
@@ -3580,6 +3593,7 @@ function OgeTreeListInner<T extends object>(
           showInfo={pagingOptions.showInfo !== false}
           displayMode={pagingOptions.displayMode ?? 'full'}
           messages={msg}
+          locale={model.effLocale()}
           onPageChange={(page) => model.pageIndex.set(page)}
           onPageSizeChange={(size) => core.setPageSize(size)}
         />

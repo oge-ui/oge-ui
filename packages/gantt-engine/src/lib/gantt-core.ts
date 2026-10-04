@@ -19,6 +19,7 @@
 import type { OgeReactivityAdapter } from '@oge-ui/behavior';
 import type { OgeFormItemDataBase } from '@oge-ui/behavior';
 import {
+  ogeDateTimeFormat,
   contrastForeground,
   parseColor,
   resolveFirstDayOfWeek,
@@ -881,7 +882,7 @@ export class OgeGanttCore<
     column: { field: string; format?: (task: GanttTask) => string },
   ): string {
     if (column.format !== undefined) return column.format(task);
-    const dateFormat = new Intl.DateTimeFormat(this.effectiveLocale(), {
+    const dateFormat = ogeDateTimeFormat(this.effectiveLocale(), {
       day: 'numeric',
       month: 'short',
     });
@@ -912,7 +913,7 @@ export class OgeGanttCore<
   }
 
   taskAriaLabel(task: GanttTask<T>): string {
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
+    const format = ogeDateTimeFormat(this.effectiveLocale(), {
       dateStyle: 'medium',
     });
     return this.msg()
@@ -926,11 +927,9 @@ export class OgeGanttCore<
     const scale = this.scale();
     const locale = this.effectiveLocale();
     if (scale.type === 'hours') {
-      return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
-        date,
-      );
+      return ogeDateTimeFormat(locale, { dateStyle: 'medium' }).format(date);
     }
-    return new Intl.DateTimeFormat(locale, {
+    return ogeDateTimeFormat(locale, {
       month: 'long',
       year: 'numeric',
     }).format(date);
@@ -941,18 +940,16 @@ export class OgeGanttCore<
     const locale = this.effectiveLocale();
     switch (scale.type) {
       case 'hours':
-        return new Intl.DateTimeFormat(locale, { hour: 'numeric' }).format(
-          date,
-        );
+        return ogeDateTimeFormat(locale, { hour: 'numeric' }).format(date);
       case 'days':
         return String(date.getDate());
       case 'weeks':
-        return new Intl.DateTimeFormat(locale, {
+        return ogeDateTimeFormat(locale, {
           day: 'numeric',
           month: 'short',
         }).format(date);
       case 'months':
-        return new Intl.DateTimeFormat(locale, { month: 'short' }).format(date);
+        return ogeDateTimeFormat(locale, { month: 'short' }).format(date);
     }
   }
 
@@ -979,7 +976,7 @@ export class OgeGanttCore<
   }
 
   tooltipDates(task: GanttTask<T>): string {
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
+    const format = ogeDateTimeFormat(this.effectiveLocale(), {
       day: 'numeric',
       month: 'short',
     });
@@ -1491,7 +1488,7 @@ export class OgeGanttCore<
       scale: this.scale(),
       firstDay: this.resolvedFirstDayOfWeek(),
     }));
-    const dateFormat = new Intl.DateTimeFormat(this.effectiveLocale(), {
+    const dateFormat = ogeDateTimeFormat(this.effectiveLocale(), {
       day: 'numeric',
       month: 'short',
     });
@@ -1658,7 +1655,7 @@ export class OgeGanttCore<
     proposal: GanttTaskProposal,
     kind: 'moved' | 'resized',
   ): void {
-    const format = new Intl.DateTimeFormat(this.effectiveLocale(), {
+    const format = ogeDateTimeFormat(this.effectiveLocale(), {
       dateStyle: 'medium',
     });
     this.applyPatch(

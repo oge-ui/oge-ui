@@ -1,4 +1,5 @@
 import {
+  ogeDateTimeFormat,
   addMonths,
   monthMatrix,
   sameDay,
@@ -95,7 +96,7 @@ export function monthCells(
   max: Date | undefined,
   disabledDates: OgeCalendarDisabledDates | undefined,
 ): CalendarCell[] {
-  const format = new Intl.DateTimeFormat(locale, { day: 'numeric' });
+  const format = ogeDateTimeFormat(locale, { day: 'numeric' });
   return monthMatrix(
     anchor.getFullYear(),
     anchor.getMonth(),
@@ -115,7 +116,7 @@ export function yearCells(
   min: Date | undefined,
   max: Date | undefined,
 ): CalendarCell[] {
-  const format = new Intl.DateTimeFormat(locale, { month: 'short' });
+  const format = ogeDateTimeFormat(locale, { month: 'short' });
   const year = anchor.getFullYear();
   return Array.from({ length: 12 }, (_, month) => {
     const date = new Date(year, month, 1);
@@ -158,7 +159,7 @@ export function weekdayNames(
   locale: string | undefined,
   firstDayOfWeek: number,
 ): string[] {
-  const format = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  const format = ogeDateTimeFormat(locale, { weekday: 'short' });
   // 2023-01-01 was a Sunday — a fixed anchor keeps names deterministic
   return Array.from({ length: 7 }, (_, index) =>
     format.format(new Date(2023, 0, 1 + ((firstDayOfWeek + index) % 7))),
@@ -172,13 +173,13 @@ export function viewLabel(
   locale: string | undefined,
 ): string {
   if (zoom === 'month') {
-    return new Intl.DateTimeFormat(locale, {
+    return ogeDateTimeFormat(locale, {
       month: 'long',
       year: 'numeric',
     }).format(anchor);
   }
   if (zoom === 'year') {
-    return new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(anchor);
+    return ogeDateTimeFormat(locale, { year: 'numeric' }).format(anchor);
   }
   const decadeStart = Math.floor(anchor.getFullYear() / 10) * 10;
   return `${decadeStart}–${decadeStart + 9}`;

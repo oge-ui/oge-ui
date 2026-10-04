@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  LOCALE_ID,
   ViewEncapsulation,
   afterNextRender,
   computed,
@@ -48,7 +49,11 @@ import {
   type OgePivotRowHeaderLayout,
 } from '@oge-ui/pivot-engine';
 import { NgTemplateOutlet } from '@angular/common';
-import { OGE_PIVOT_MESSAGES, type OgePivotMessages } from './pivot-config';
+import {
+  OGE_PIVOT_CONFIG,
+  OGE_PIVOT_MESSAGES,
+  type OgePivotMessages,
+} from './pivot-config';
 import {
   OgePivotCellTemplate,
   OgePivotColumnHeaderTemplate,
@@ -175,6 +180,12 @@ export class OgePivotGrid<T = unknown> {
   readonly calculatedFields = input<readonly OgePivotCalculatedField[]>([]);
   /** Row-header layout: `'compact'` (indented), `'outline'` or `'tabular'`. */
   readonly rowHeaderLayout = input<OgePivotRowHeaderLayout>('compact');
+  /**
+   * BCP 47 locale of the cell text — percent display modes, dates and
+   * declarative field `format`s. `undefined` falls back to
+   * `provideOgePivotConfig({ locale })`, then Angular's `LOCALE_ID`.
+   */
+  readonly locale = input<string | undefined>(undefined);
   /** Debounced notification whenever the persistable state changes. */
   readonly stateChange = output<PivotGridStateSnapshot>();
   /**
@@ -189,6 +200,12 @@ export class OgePivotGrid<T = unknown> {
 
   protected readonly store = new OgePivotStateStore();
   private readonly defaultMessages = inject(OGE_PIVOT_MESSAGES);
+  private readonly config = inject(OGE_PIVOT_CONFIG);
+  private readonly localeId = inject(LOCALE_ID);
+  /** The locale in force: the input, the config, then `LOCALE_ID`. */
+  private readonly effLocale = computed(
+    () => this.locale() ?? this.config.locale ?? this.localeId,
+  );
   protected readonly msg = computed<OgePivotMessages>(() => ({
     ...this.defaultMessages,
     ...this.messages(),
@@ -217,6 +234,7 @@ export class OgePivotGrid<T = unknown> {
       fieldChooser: () => this.fieldChooser(),
       calculatedFields: () => this.calculatedFields(),
       rowHeaderLayout: () => this.rowHeaderLayout(),
+      locale: () => this.effLocale(),
     },
     fieldLayoutChange: (fields) => this.fieldLayoutChange.emit(fields),
   });

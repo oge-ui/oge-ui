@@ -4,6 +4,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  LOCALE_ID,
   ViewEncapsulation,
   afterNextRender,
   computed,
@@ -16,6 +17,7 @@ import {
 } from '@angular/core';
 import {
   ogePagerInfoContext,
+  ogePagerInfoText,
   ogePagerPages,
   ogeParsePageInput,
 } from '@oge-ui/behavior';
@@ -194,7 +196,7 @@ const ICON_PATHS = {
         @if (effInfoTemplate(); as tpl) {
           <ng-container *ngTemplateOutlet="tpl; context: infoContext()" />
         } @else {
-          {{ totalCount() }} {{ messages().rowsSuffix }}
+          {{ infoText() }}
         }
       </span>
     }
@@ -223,6 +225,12 @@ export class OgePager {
   readonly infoTemplate =
     input<TemplateRef<OgePagerInfoTemplateContext> | null>(null);
   readonly messages = input<OgeGridMessages>(OGE_DEFAULT_MESSAGES);
+  /**
+   * BCP 47 locale of the plural-aware info text (`pagerInfo`); the grid
+   * passes its own. `undefined` = Angular's `LOCALE_ID`.
+   */
+  readonly locale = input<string | undefined>(undefined);
+  private readonly localeId = inject(LOCALE_ID);
   readonly pageChange = output<number>();
   /** Emits the new page size; `0` means "all rows" (paging off). */
   readonly pageSizeChange = output<number>();
@@ -244,6 +252,15 @@ export class OgePager {
     return mode === 'adaptive' && this.hostWidth() < 480;
   });
 
+  /** `{count, plural, one {# row} other {# rows}}` in the locale. */
+  protected readonly infoText = computed(() =>
+    ogePagerInfoText(
+      this.messages(),
+      this.totalCount(),
+      this.locale() ?? this.localeId,
+    ),
+  );
+
   protected readonly pageOfText = computed(() =>
     formatPattern(this.messages().pageOfCount, {
       count: String(this.pageCount()),
@@ -256,7 +273,7 @@ export class OgePager {
       pageCount: this.pageCount(),
       totalCount: this.totalCount(),
       pageSize: this.pageSize(),
-      text: `${this.totalCount()} ${this.messages().rowsSuffix}`,
+      text: this.infoText(),
     });
     return { $implicit: info, ...info };
   });

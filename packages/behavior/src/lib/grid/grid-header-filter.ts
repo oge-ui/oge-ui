@@ -1,47 +1,46 @@
-import { foldText } from '@oge-ui/core';
+import { foldText, ogeDateTimeFormat, ogeValueFormatter } from '@oge-ui/core';
 import {
   lookupTextOf,
   type LookupItem,
+  type OgeColumnFormat,
   type OgeDataType,
 } from './grid-columns';
 
+const DATETIME_OPTIONS: Intl.DateTimeFormatOptions = {
+  dateStyle: 'short',
+  timeStyle: 'short',
+};
+
 /**
- * Shared date formatter: constructing Intl.DateTimeFormat is expensive, and
- * `Date.toLocaleDateString()` builds one per call — a real cost when
- * thousands of date cells render. One cached instance formats them all.
+ * Default cell text when no cell slot is given: the column's `format`
+ * (a function, or a declarative `OgeValueFormat` rendered in `locale`), else
+ * the data type's default — dates in `locale`'s numeric date (date + short
+ * time for `'datetime'`), everything else as `String(value)`.
+ *
+ * Formatters come from core's shared `Intl` cache (`ogeDateTimeFormat`), so
+ * thousands of date cells share one formatter per locale instead of building
+ * one per `toLocaleDateString()` call. `locale` unset = the runtime default.
  */
-let dateFormatter: Intl.DateTimeFormat | undefined;
-
-function formatDate(value: Date): string {
-  dateFormatter ??= new Intl.DateTimeFormat();
-  return dateFormatter.format(value);
-}
-
-let dateTimeFormatter: Intl.DateTimeFormat | undefined;
-
-function formatDateTime(value: Date): string {
-  dateTimeFormatter ??= new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  });
-  return dateTimeFormatter.format(value);
-}
-
-/** Default cell text when no cell slot and no custom `format` is given. */
 export function formatCellValue(
   value: unknown,
   dataType: OgeDataType,
-  format?: (value: unknown) => string,
+  format?: OgeColumnFormat,
+  locale?: string,
 ): string {
-  if (format) return format(value);
+  if (typeof format === 'function') return format(value);
+  if (format) return ogeValueFormatter(format, locale)(value);
   if (value == null) return '';
   switch (dataType) {
     case 'boolean':
       return value ? '✓' : '✗';
     case 'date':
-      return value instanceof Date ? formatDate(value) : String(value);
+      return value instanceof Date
+        ? ogeDateTimeFormat(locale).format(value)
+        : String(value);
     case 'datetime':
-      return value instanceof Date ? formatDateTime(value) : String(value);
+      return value instanceof Date
+        ? ogeDateTimeFormat(locale, DATETIME_OPTIONS).format(value)
+        : String(value);
     default:
       return String(value);
   }
@@ -86,7 +85,9 @@ export interface OgeHeaderFilterMessages {
 export interface OgeHeaderValueTextOptions {
   dataType: OgeDataType;
   lookupItems?: readonly LookupItem[];
-  format?: (value: unknown) => string;
+  format?: OgeColumnFormat;
+  /** Locale dates and declarative formats render in (the column's). */
+  locale?: string;
   messages: OgeHeaderFilterMessages;
 }
 
@@ -98,10 +99,23 @@ export function headerValueText(
   if (value == null || value === '') return options.messages.blankValue;
   if (options.lookupItems) return lookupTextOf(options.lookupItems, value);
   if (options.dataType === 'date' || options.dataType === 'datetime')
-    return formatCellValue(value, options.dataType, options.format);
+    return formatCellValue(
+      value,
+      options.dataType,
+      options.format,
+      options.locale,
+    );
   if (options.dataType === 'boolean') {
     return value ? options.messages.booleanTrue : options.messages.booleanFalse;
   }
+  // a formatted column lists its values the way its cells show them
+  if (options.format)
+    return formatCellValue(
+      value,
+      options.dataType,
+      options.format,
+      options.locale,
+    );
   return String(value);
 }
 

@@ -1,4 +1,8 @@
-import type { SortDescriptor } from '@oge-ui/core';
+import {
+  ogeFormatMessage,
+  warnOgeDeprecatedMessage,
+  type SortDescriptor,
+} from '@oge-ui/core';
 import type { OgeLiveAnnounceOptions } from '../a11y/live-announcer';
 import { formatPattern } from '../input/error-messages';
 import type { OgeGridMessages } from './grid-config';
@@ -45,6 +49,11 @@ export interface OgeGridAnnouncementsDeps {
   caption: (field: string) => string;
   /** Debounce of the filter result count in ms (default `500`). */
   countDelay?: () => number;
+  /**
+   * Locale of the plural-aware messages (`{count, plural, …}`) and the
+   * numbers in them — the grid's `locale`; unset = the runtime default.
+   */
+  locale?: () => string | undefined;
 }
 
 /**
@@ -84,9 +93,12 @@ export class OgeGridAnnouncements {
     ) {
       this.awaitingResult = null;
       if (enabled) {
-        this.deps.announce(rowCountText(messages, next.rowCount), {
-          delay: this.deps.countDelay?.() ?? 500,
-        });
+        this.deps.announce(
+          rowCountText(messages, next.rowCount, this.deps.locale?.()),
+          {
+            delay: this.deps.countDelay?.() ?? 500,
+          },
+        );
       }
     }
 
@@ -145,9 +157,11 @@ export class OgeGridAnnouncements {
   selectionCount(count: number): void {
     if (!this.deps.enabled()) return;
     this.deps.announce(
-      formatPattern(this.deps.messages().selectionCountAnnouncement, {
-        count: String(count),
-      }),
+      ogeFormatMessage(
+        this.deps.messages().selectionCountAnnouncement,
+        { count },
+        this.deps.locale?.(),
+      ),
     );
   }
 
@@ -178,7 +192,9 @@ export class OgeGridAnnouncements {
           : kind === 'undo'
             ? messages.undoAnnouncement
             : messages.redoAnnouncement;
-    this.deps.announce(formatPattern(pattern, { count: String(count) }));
+    this.deps.announce(
+      ogeFormatMessage(pattern, { count }, this.deps.locale?.()),
+    );
   }
 
   /** A commit was blocked by an invalid editor — spoken assertively. */
@@ -194,14 +210,23 @@ export class OgeGridAnnouncements {
   }
 }
 
-/** `{count} rows` / `{count} row` from the catalog. */
-export function rowCountText(messages: OgeGridMessages, count: number): string {
-  return formatPattern(
-    count === 1
-      ? messages.rowCountOneAnnouncement
-      : messages.rowCountAnnouncement,
-    { count: String(count) },
-  );
+/**
+ * The filter result count from the catalog's plural-aware
+ * `rowCountAnnouncement` (`{count, plural, one {# row} other {# rows}}`).
+ * The deprecated `rowCountOneAnnouncement`, when a catalog still supplies it,
+ * keeps winning for exactly one row (with a dev-mode warning).
+ */
+export function rowCountText(
+  messages: OgeGridMessages,
+  count: number,
+  locale?: string,
+): string {
+  const legacyOne = messages.rowCountOneAnnouncement;
+  if (legacyOne !== undefined) {
+    warnOgeDeprecatedMessage('rowCountOneAnnouncement', 'rowCountAnnouncement');
+    if (count === 1) return ogeFormatMessage(legacyOne, { count }, locale);
+  }
+  return ogeFormatMessage(messages.rowCountAnnouncement, { count }, locale);
 }
 
 /**

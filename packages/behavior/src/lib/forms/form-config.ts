@@ -3,6 +3,7 @@
  * by both render layers (ADR 0001). Angular's `provideOgeFormsConfig()` and
  * React's `<OgeFormsConfigProvider>` merge over these exact values.
  */
+import { ogeFormatMessage, warnOgeDeprecatedMessage } from '@oge-ui/core';
 import type { OgeFormLabelLocation } from './form-types';
 
 export interface OgeFormsMessages {
@@ -16,10 +17,18 @@ export interface OgeFormsMessages {
   optionalLabel: string;
   /** Separator drawn after a label when `showColonAfterLabel`. */
   labelColon: string;
-  /** Heading of the validation summary; `{count}` is the error count. */
+  /**
+   * Heading of the validation summary — an ICU plural over the error count
+   * (`ogeFormatMessage`): `'{count, plural, one {# field needs…} other {…}}'`.
+   * A plain `{count}` pattern works too.
+   */
   validationSummaryTitle: string;
-  /** Heading of the validation summary when exactly one field is invalid. */
-  validationSummaryTitleOne: string;
+  /**
+   * @deprecated Put the singular into `validationSummaryTitle` as an ICU
+   * plural branch. Still honoured for exactly one invalid field (with a
+   * dev-mode warning) until the next minor.
+   */
+  validationSummaryTitleOne?: string;
   /** Accessible label of the validation summary region. */
   validationSummaryLabel: string;
   /** Fallback message for an invalid field with no resolvable error text. */
@@ -40,8 +49,8 @@ export const OGE_DEFAULT_FORMS_MESSAGES: OgeFormsMessages = {
   requiredLabel: 'required',
   optionalLabel: 'optional',
   labelColon: ':',
-  validationSummaryTitle: '{count} fields need your attention',
-  validationSummaryTitleOne: '1 field needs your attention',
+  validationSummaryTitle:
+    '{count, plural, one {# field needs your attention} other {# fields need your attention}}',
   validationSummaryLabel: 'Validation summary',
   invalidError: 'This value is invalid',
   submitButton: 'Submit',
@@ -85,12 +94,24 @@ export function resolveOgeFormsConfig(
   };
 }
 
-/** The summary heading for an error count — singular and plural in one place. */
+/**
+ * The summary heading for an error count, through `ogeFormatMessage` so the
+ * plural form is the locale's (`locale` unset = the runtime default). A
+ * catalog still supplying the deprecated `validationSummaryTitleOne` keeps it
+ * for exactly one error.
+ */
 export function validationSummaryTitle(
   count: number,
   messages: OgeFormsMessages,
+  locale?: string,
 ): string {
-  return count === 1
-    ? messages.validationSummaryTitleOne
-    : messages.validationSummaryTitle.replace('{count}', String(count));
+  const legacyOne = messages.validationSummaryTitleOne;
+  if (legacyOne !== undefined) {
+    warnOgeDeprecatedMessage(
+      'validationSummaryTitleOne',
+      'validationSummaryTitle',
+    );
+    if (count === 1) return ogeFormatMessage(legacyOne, { count }, locale);
+  }
+  return ogeFormatMessage(messages.validationSummaryTitle, { count }, locale);
 }

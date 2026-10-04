@@ -43,6 +43,8 @@ export interface OgeExportColumnSource<T> {
   readonly dataType: OgeDataType;
   readonly accessor: (row: T) => unknown;
   readonly format?: ((value: unknown) => string) | undefined;
+  /** Locale unformatted dates render in (the column's). */
+  readonly locale?: string | undefined;
   readonly lookupItems?: readonly LookupItem[] | undefined;
   readonly width?: number | string | undefined;
   readonly alignment?: OgeColumnAlignment | undefined;
@@ -101,6 +103,7 @@ export function ogeExportColumnOf<T>(
       column.alignment ?? (column.dataType === 'number' ? 'end' : 'start'),
     pinned: column.pinned ?? false,
     bandCaption: column.bandCaption,
+    ...(column.locale ? { locale: column.locale } : {}),
   };
 }
 
@@ -343,7 +346,7 @@ export function ogeExportCellText<T>(
   if (raw == null) return '';
   return column.format
     ? column.format(raw)
-    : formatCellValue(raw, column.dataType, undefined);
+    : formatCellValue(raw, column.dataType, undefined, column.locale);
 }
 
 /** Merges styles left to right (later wins per key; `undefined` keys skipped). */
@@ -383,6 +386,8 @@ export interface OgeGridExportFieldInfo {
   readonly caption: string;
   readonly dataType: OgeDataType;
   readonly format?: ((value: unknown) => string) | undefined;
+  /** Locale summaries and group values render in (the column's). */
+  readonly locale?: string | undefined;
 }
 
 export interface OgeGridExportStructureInput<T> {
@@ -443,7 +448,7 @@ export function ogeGridExportItems<T>(
   const valueText = (field: string, value: unknown): string => {
     const info = input.fieldInfo(field);
     return info
-      ? formatCellValue(value, info.dataType, info.format)
+      ? formatCellValue(value, info.dataType, info.format, info.locale)
       : String(value ?? '');
   };
   return buildOgeExportItems(input.rows, {
@@ -504,7 +509,12 @@ export function ogeSummaryText(
     value:
       summary.type === 'count' || !column
         ? String(summary.value ?? '')
-        : formatCellValue(summary.value, column.dataType, column.format),
+        : formatCellValue(
+            summary.value,
+            column.dataType,
+            column.format,
+            column.locale,
+          ),
   });
 }
 

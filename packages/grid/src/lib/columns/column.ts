@@ -11,7 +11,7 @@ import type {
   OgeColumnLookup,
   OgeDataType,
 } from '@oge-ui/grid/foundation';
-import type { OgeConditionalFormat } from '@oge-ui/behavior';
+import type { OgeColumnFormat, OgeConditionalFormat } from '@oge-ui/behavior';
 import { OgeCellTemplate } from '../templates/cell-template';
 import { OgeEditTemplate } from '../templates/edit-template';
 import { OgeHeaderTemplate } from '../templates/header-template';
@@ -50,8 +50,14 @@ export class OgeColumn<T = unknown> {
    * the start.
    */
   readonly alignment = input<OgeColumnAlignment>();
-  /** Custom value formatter applied to the default (non-templated) cell text. */
-  readonly format = input<(value: unknown) => string>();
+  /**
+   * Cell text format of the default (non-templated) cell, its summaries,
+   * group captions, header-filter values and exports: a function of the
+   * value, or a declarative `OgeValueFormat` rendered in the grid's `locale`
+   * (`{ type: 'currency', currency: 'EUR' }`, `{ type: 'date', dateStyle:
+   * 'long' }`, `{ type: 'number', pattern: '#,##0.00' }`).
+   */
+  readonly format = input<OgeColumnFormat>();
   readonly visible = model(true);
   readonly sortable = input(true);
   readonly filterable = input(true);

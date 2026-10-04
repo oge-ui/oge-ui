@@ -1,8 +1,11 @@
 import {
   createFieldAccessor,
   nextDay,
+  ogeParseNumber,
+  ogeValueFormatter,
   startOfDay,
   type DataSource,
+  type OgeValueFormat,
   type FilterExpr,
   type FilterOperator,
   type ValueAccessor,
@@ -49,6 +52,25 @@ export interface LookupItem {
   text: string;
 }
 
+/**
+ * A column's display format: a function of the raw value, or a declarative
+ * {@link OgeValueFormat} (`{ type: 'currency', currency: 'EUR' }`) rendered
+ * through the shared `Intl` cache in the component's `locale`.
+ */
+export type OgeColumnFormat = ((value: unknown) => string) | OgeValueFormat;
+
+/**
+ * Compiles a column format for `locale`: functions pass through, declarative
+ * formats become a cached-`Intl` formatter, `undefined` stays `undefined`.
+ */
+export function ogeCompileColumnFormat(
+  format: OgeColumnFormat | undefined,
+  locale: string | undefined,
+): ((value: unknown) => string) | undefined {
+  if (!format || typeof format === 'function') return format;
+  return ogeValueFormatter(format, locale);
+}
+
 /** Programmatic column definition (alternative to a declarative column). */
 export interface OgeGridColumnDef {
   field: string;
@@ -72,7 +94,7 @@ export interface OgeGridColumnSpec<T = unknown, TSlot = unknown, S = unknown> {
   dataType: OgeDataType;
   /** `undefined` derives it from `dataType` (numbers → `'end'`). */
   alignment: OgeColumnAlignment | undefined;
-  format: ((value: unknown) => string) | undefined;
+  format: OgeColumnFormat | undefined;
   visible: boolean;
   sortable: boolean;
   filterable: boolean;
@@ -125,7 +147,13 @@ export interface OgeGridResolvedColumn<
     | undefined;
   pinned: false | 'left' | 'right';
   accessor: ValueAccessor<T>;
+  /** The column's format compiled for {@link locale} (see `OgeColumnFormat`). */
   format: ((value: unknown) => string) | undefined;
+  /**
+   * BCP 47 locale every default cell text, summary, group caption, filter-row
+   * parse and export of this column uses; `undefined` is the runtime default.
+   */
+  locale?: string | undefined;
   editable: boolean;
   lookupItems: readonly LookupItem[] | undefined;
   lookup: OgeColumnLookup | undefined;
@@ -153,13 +181,17 @@ export function buildRowFilterExpr(
   dataType: OgeDataType,
   raw: string,
   operator?: FilterOperator,
+  locale?: string,
 ): FilterExpr | null {
   const text = raw.trim();
   if (!text) return null;
   const op = operator ?? defaultOperatorFor(dataType);
   switch (dataType) {
     case 'number': {
-      const value = Number(text);
+      // typed in the grid's locale: `1,5` is one and a half in de-DE / tr-TR;
+      // without one, plain `Number()` as before
+      const value =
+        locale === undefined ? Number(text) : ogeParseNumber(text, locale);
       return Number.isNaN(value) ? null : { type: 'binary', field, op, value };
     }
     case 'boolean':
@@ -380,6 +412,8 @@ export interface OgeGridColumnResolveInput<T, TSlot, S> {
   order: readonly string[] | null;
   /** Ids hidden by {@link adaptiveHiddenColumnIds}. */
   adaptiveHiddenIds: ReadonlySet<string>;
+  /** Locale declarative formats compile for; `undefined` = runtime default. */
+  locale?: string | undefined;
 }
 
 /**
@@ -421,7 +455,8 @@ export function resolveOgeGridColumns<T, TSlot, S>(
           accessor:
             calculate ??
             (field ? createFieldAccessor<T>(field) : () => undefined),
-          format: column.format,
+          format: ogeCompileColumnFormat(column.format, input.locale),
+          locale: input.locale,
           editable: column.editable && field != null && !calculate,
           lookupItems: resolveLookupItems(column.lookup),
           lookup: column.lookup,
@@ -463,6 +498,7 @@ export function resolveOgeGridColumns<T, TSlot, S>(
       hidingPriority: undefined,
       accessor: createFieldAccessor<T>(field),
       format: undefined,
+      locale: input.locale,
       editable: true,
       cellTemplate: undefined,
       headerTemplate: undefined,

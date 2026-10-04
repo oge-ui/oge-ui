@@ -1,3 +1,5 @@
+import { ogeNumberFormat } from '@oge-ui/core';
+
 /**
  * Byte formatting for the uploader's file rows.
  *
@@ -55,7 +57,7 @@ export function formatFileSize(
 
   // Whole bytes, and no decimal once the mantissa reaches double digits.
   const decimals = unit === 0 || value >= 10 ? 0 : precision;
-  const text = new Intl.NumberFormat(options.locale, {
+  const text = ogeNumberFormat(options.locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(value);

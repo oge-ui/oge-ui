@@ -353,6 +353,7 @@ store.editing.hasPending())) {
         } @case ('number') {
         <oge-number-box
           class="oge-filter-input"
+          [locale]="effLocale()"
           size="sm"
           labelMode="hidden"
           subscriptSizing="none"
@@ -363,6 +364,7 @@ store.editing.hasPending())) {
         } @case ('date') {
         <oge-date-box
           class="oge-filter-input"
+          [locale]="effLocale()"
           size="sm"
           labelMode="hidden"
           subscriptSizing="none"
@@ -613,6 +615,7 @@ store.editing.hasPending())) {
           } @else {
           <oge-cell-editor
             surface="cell"
+            [locale]="column.locale"
             [control]="editControl(node, column)"
             [dataType]="column.dataType"
             [lookupItems]="lookupItemsFor(node, column)"
@@ -894,6 +897,7 @@ store.editing.hasPending())) {
   [pageIndex]="pageIndex()"
   [pageCount]="pageCount()"
   [totalCount]="totalCount()"
+  [locale]="effLocale()"
   [pageSize]="effPageSize() ?? 0"
   [pageSizes]="pagingOpts.pageSizes ?? null"
   [showInfo]="pagingOpts.showInfo !== false"

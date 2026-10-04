@@ -211,6 +211,14 @@ export interface OgeTreeListProps<T extends object = Record<string, unknown>> {
   columnChooser?: boolean;
   /** Per-instance message overrides (merged over `OgeGridConfigProvider`). */
   messages?: Partial<OgeGridMessages>;
+  /**
+   * BCP 47 locale of the tree list's formatted text — default date cells,
+   * declarative column `format`s, summaries, header-filter values, the filter
+   * row's number parsing and editors, exported text — and of its
+   * plural-aware announcements. `undefined` falls back to the
+   * `<OgeGridConfigProvider>` `locale`, then `navigator.language`.
+   */
+  locale?: string;
   /** Row selection: none | single | multiple (ctrl/shift) | checkbox column. */
   selectionMode?: OgeGridSelectionMode;
   /**

@@ -33,6 +33,7 @@ export type {
 
 import type {
   OgeColumnAlignment,
+  OgeColumnFormat,
   OgeColumnLookup,
   OgeDataType,
 } from '@oge-ui/behavior';
@@ -52,7 +53,7 @@ export interface ColumnSource<T = unknown> {
   readonly width: () => number | string | undefined;
   readonly dataType: () => OgeDataType;
   readonly alignment: () => OgeColumnAlignment | undefined;
-  readonly format: () => ((value: unknown) => string) | undefined;
+  readonly format: () => OgeColumnFormat | undefined;
   readonly visible: () => boolean;
   readonly sortable: () => boolean;
   readonly filterable: () => boolean;
@@ -110,6 +111,8 @@ export interface ColumnModelDeps<T, S extends ColumnSource<T>> {
   adaptiveLeadingWidth: () => number;
   /** Adaptive-detail toggle width, counted once a column is hidden. */
   detailToggleWidth?: () => number;
+  /** The host's effective locale; declarative formats compile for it. */
+  locale?: () => string | undefined;
 }
 
 /**
@@ -201,6 +204,7 @@ export class ColumnModel<
       pinOverrides: this.deps.pinOverrides(),
       order: this.deps.order(),
       adaptiveHiddenIds: this.adaptiveHiddenIds(),
+      locale: this.deps.locale?.(),
     }),
   );
 
@@ -217,6 +221,7 @@ export class ColumnModel<
       pinOverrides: this.deps.pinOverrides(),
       order: this.deps.order(),
       adaptiveHiddenIds: this.adaptiveHiddenIds(),
+      locale: this.deps.locale?.(),
     }),
   );
 
@@ -238,6 +243,7 @@ export class ColumnModel<
       pinOverrides: this.deps.pinOverrides(),
       order: this.deps.order(),
       adaptiveHiddenIds: new Set<string>(),
+      locale: this.deps.locale?.(),
     });
   }
 
