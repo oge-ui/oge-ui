@@ -28,6 +28,8 @@ import {
   buildSeries,
   collectCategories,
   isBarType,
+  isFinancialType,
+  isZeroBasedType,
   numericArgument,
   seriesValueExtent,
   type ChartPoint,
@@ -41,12 +43,30 @@ import {
   type StackedValue,
 } from './series-layout';
 import {
+  areaPath,
   baselineAreaPath,
   linePath,
   splinePath,
   steppedPoints,
   type PathPoint,
 } from './path-builder';
+import {
+  chartTrendlineOptions,
+  deriveChartSeries,
+  paretoCategoryOrder,
+} from './series-derive';
+import type { OgeTrendlineFit } from './analytics';
+import {
+  chartBarLabelAnchor,
+  chartContrastText,
+  chartLabelOptions,
+  chartLabelText,
+  chartPointHasLabel,
+  chartPointLabelAnchor,
+  resolveChartLabels,
+  type ChartLabelCandidate,
+  type OgeChartRenderLabel,
+} from './data-labels';
 import { downsamplePath } from './downsample';
 import {
   decideLabelLayout,
@@ -71,7 +91,14 @@ import {
   type OgeChartStripLine,
   type OgeChartTooltipOptions,
 } from './charts-types';
-import { formatOgeChartMessage, type OgeChartsMessages } from './charts-config';
+import {
+  OGE_DEFAULT_CHARTS_MESSAGES,
+  formatOgeChartMessage,
+  type OgeChartsMessages,
+  type OgeChartsValueMessages,
+} from './charts-config';
+
+export type { OgeChartRenderLabel } from './data-labels';
 
 const MARGIN_TOP = 16;
 const MARGIN_BOTTOM = 34;
@@ -128,6 +155,8 @@ export interface OgeCartesianDataInput<T> {
   readonly commonSeries?: Partial<ChartSeriesInput<T>>;
   /** `argumentAxis.type`; unset auto-detects. */
   readonly argumentType?: ChartScaleKind;
+  /** The resolved messages (indicator names, value texts). Default: English. */
+  readonly messages?: OgeChartsMessages;
 }
 
 /** Stage 1: the normalized data the scene is drawn from. */
@@ -141,6 +170,9 @@ export interface OgeCartesianData<T> {
   /** Distinct numeric arguments, ascending — the keyboard/hover walk. */
   readonly sortedArgs: readonly number[];
   readonly hasBars: boolean;
+  /** Trendline fit per series (`null` = no trendline). */
+  readonly trends: readonly (OgeTrendlineFit | null)[];
+  readonly messages: OgeChartsMessages;
 }
 
 export function buildCartesianData<T>(
@@ -154,26 +186,43 @@ export function buildCartesianData<T>(
     merged,
     input.argumentType,
   );
-  const categories =
+  const collected =
     argKind === 'category' ? collectCategories(input.dataSource, merged) : [];
+  // a pareto series sorts the category axis by its values, descending
+  const categories =
+    argKind === 'category'
+      ? (paretoCategoryOrder(input.dataSource, merged, collected) ?? collected)
+      : collected;
   const categoryIndex = new Map(
     categories.map((category, index) => [category, index] as const),
   );
-  const seriesList = merged.map((entry, index) =>
-    buildSeries(input.dataSource, entry, index, argKind, categoryIndex),
+  const messages = input.messages ?? OGE_DEFAULT_CHARTS_MESSAGES;
+  const derived = deriveChartSeries(
+    merged.map((entry, index) =>
+      buildSeries(input.dataSource, entry, index, argKind, categoryIndex),
+    ),
+    { dataSource: input.dataSource, messages },
   );
+  const seriesList = derived.seriesList;
   const argIndex = buildArgumentIndex(
     seriesList.map((series) => series.points.map((point) => point.argNumeric)),
+  );
+  const stacks = computeStacks(seriesList).map(
+    (entry, index) => derived.waterfallStacks[index] ?? entry,
   );
   return {
     argKind,
     categories,
     categoryIndex,
     seriesList,
-    stacks: computeStacks(seriesList),
+    stacks,
     argIndex,
     sortedArgs: argIndex.sortedArgs,
-    hasBars: seriesList.some((series) => isBarType(series.type)),
+    hasBars: seriesList.some(
+      (series) => isBarType(series.type) || series.type === 'histogram',
+    ),
+    trends: derived.trends,
+    messages,
   };
 }
 
@@ -188,6 +237,12 @@ export interface OgeChartRenderBar {
   readonly h: number;
   readonly seriesIndex: number;
   readonly pointIndex: number;
+  /** Per-point fill (`colorField`, `customizePoint`, waterfall kinds); `null` = the series colour. */
+  readonly color?: string | null;
+  /** Outline (box-plot boxes); `null` = none. */
+  readonly stroke?: string | null;
+  /** Extra class: `oge-chart-box`, `oge-chart-waterfall-up`, `oge-chart-indicator-hist`, … */
+  readonly cls?: string | null;
 }
 
 export interface OgeChartRenderCandle {
@@ -199,6 +254,8 @@ export interface OgeChartRenderCandle {
   readonly w: number;
   readonly rising: boolean;
   readonly pointIndex: number;
+  /** Per-point body fill; `null` = the rising/falling theme colour. */
+  readonly color?: string | null;
 }
 
 export interface OgeChartRenderMarker {
@@ -208,12 +265,46 @@ export interface OgeChartRenderMarker {
   readonly pointIndex: number;
   /** Bubble radius; undefined = the default marker size of the type. */
   readonly r?: number;
+  /** Per-point fill; `null` = the series colour. */
+  readonly color?: string | null;
 }
 
-export interface OgeChartRenderLabel {
+/**
+ * A line mark that is not a series path: OHLC ticks, box-plot whiskers and
+ * medians, waterfall connectors, indicator reference levels.
+ */
+export interface OgeChartRenderSegment {
+  readonly x1: number;
+  readonly y1: number;
+  readonly x2: number;
+  readonly y2: number;
+  /** `oge-chart-ohlc`, `oge-chart-box-whisker`, `oge-chart-box-median`, `oge-chart-waterfall-connector`, `oge-chart-indicator-level`. */
+  readonly cls: string;
+  /** Stroke override; `null` = the class's theme colour. */
+  readonly color: string | null;
+}
+
+/** A small non-interactive dot (box-plot outliers, pareto line points). */
+export interface OgeChartRenderDot {
   readonly x: number;
   readonly y: number;
-  readonly text: string;
+  readonly r: number;
+  readonly color: string | null;
+}
+
+/**
+ * An extra path drawn with a series: trendlines, Bollinger bands and
+ * lines, the MACD signal, the pareto cumulative line.
+ */
+export interface OgeChartRenderPath {
+  readonly d: string;
+  /** `oge-chart-trendline`, `oge-chart-indicator-band`, `oge-chart-indicator-line`, `oge-chart-pareto-line`. */
+  readonly cls: string;
+  readonly fill: string | null;
+  readonly stroke: string | null;
+  readonly strokeWidth: number;
+  readonly dashArray: string | null;
+  readonly opacity: number;
 }
 
 /** One visible series, as drawn. */
@@ -227,7 +318,12 @@ export interface OgeChartRenderSeries {
   readonly bars: readonly OgeChartRenderBar[];
   readonly candles: readonly OgeChartRenderCandle[];
   readonly markers: readonly OgeChartRenderMarker[];
+  /** Data labels after overlap resolution and clipping. */
   readonly labels: readonly OgeChartRenderLabel[];
+  readonly segments: readonly OgeChartRenderSegment[];
+  readonly dots: readonly OgeChartRenderDot[];
+  /** Drawn under the series line (bands, trendlines, signal lines). */
+  readonly extraPaths: readonly OgeChartRenderPath[];
   readonly dashArray: string | null;
   readonly strokeWidth: number;
   readonly opacity: number;
@@ -279,6 +375,45 @@ export interface OgeChartLegendEntry {
   readonly name: string;
   readonly color: string;
   readonly hidden: boolean;
+  /**
+   * The marker's CSS `background`: the series colour, or — when points carry
+   * their own colours (`colorField`, `customizePoint`, waterfall kinds) — a
+   * striped swatch of the distinct colours.
+   */
+  readonly swatch: string;
+}
+
+/** The legend swatch of a set of colours (one colour → that colour). */
+export function chartLegendSwatch(colors: readonly string[]): string {
+  const distinct = [...new Set(colors)].slice(0, 6);
+  if (distinct.length <= 1) return distinct[0] ?? 'transparent';
+  const step = 100 / distinct.length;
+  const stops = distinct
+    .map(
+      (color, index) =>
+        `${color} ${Math.round(index * step)}% ${Math.round((index + 1) * step)}%`,
+    )
+    .join(', ');
+  return `linear-gradient(90deg, ${stops})`;
+}
+
+const WATERFALL_UP = '#10b981';
+const WATERFALL_DOWN = '#ef4444';
+
+/** A point's own colour (per-point style, waterfall kind), else `null`. */
+export function chartPointColor<T>(
+  series: ChartSeries<T>,
+  point: ChartPoint<T> | undefined,
+  seriesColor: string,
+): string | null {
+  if (point === undefined) return null;
+  if (point.style?.color !== undefined) return point.style.color;
+  if (series.type === 'waterfall' && point.kind !== undefined) {
+    if (point.kind === 'up') return series.input.upColor ?? WATERFALL_UP;
+    if (point.kind === 'down') return series.input.downColor ?? WATERFALL_DOWN;
+    return series.input.totalColor ?? seriesColor;
+  }
+  return null;
 }
 
 export interface OgeChartPlotRect {
@@ -483,6 +618,12 @@ export function buildCartesianScene<T>(
     let max = -Infinity;
     seriesList.forEach((series, seriesIndex) => {
       if (!visibility[seriesIndex]) return;
+      if (
+        paretoCumulativeAxis(series, valueAxesOptions.length) === axisIndex
+      ) {
+        min = Math.min(min, 0);
+        max = Math.max(max, 100);
+      }
       if ((series.input.axis ?? 0) !== axisIndex) return;
       const stacked = stacks[seriesIndex];
       if (stacked !== null) {
@@ -498,7 +639,7 @@ export function buildCartesianScene<T>(
           max = Math.max(max, extent.max);
         }
       }
-      if (isBarType(series.type) || series.type === 'area') {
+      if (isZeroBasedType(series.type)) {
         min = Math.min(min, 0);
         max = Math.max(max, 0);
       }
@@ -555,11 +696,14 @@ export function buildCartesianScene<T>(
     seriesList,
     visibility,
     colors,
+    palette: input.palette ?? OGE_CHART_PALETTE,
     stacks,
+    trends: data.trends,
     argScale,
     valueScales,
     barBandPx,
     plotW,
+    plotH,
     markerThreshold: input.markerThreshold ?? 200,
     locale,
   });
@@ -682,13 +826,17 @@ export function buildCartesianScene<T>(
       color: colors[seriesIndex],
       hidden: !visibility[seriesIndex],
       inLegend: series.input.showInLegend !== false,
+      swatch: chartLegendSwatch(
+        seriesSwatchColors(series, colors[seriesIndex]),
+      ),
     }))
     .filter((item) => item.inLegend)
-    .map(({ seriesIndex, name, color, hidden }) => ({
+    .map(({ seriesIndex, name, color, hidden, swatch }) => ({
       seriesIndex,
       name,
       color,
       hidden,
+      swatch,
     }));
 
   return {
@@ -719,21 +867,71 @@ export function buildCartesianScene<T>(
   };
 }
 
+/** The value axis of a pareto series' cumulative line, when it exists. */
+function paretoCumulativeAxis<T>(
+  series: ChartSeries<T>,
+  axisCount: number,
+): number | null {
+  if (series.type !== 'pareto') return null;
+  const axis = series.input.cumulativeAxis;
+  return axis !== undefined && axis >= 0 && axis < axisCount ? axis : null;
+}
+
+/** The colours a series' legend swatch shows (distinct, first 500 points). */
+function seriesSwatchColors<T>(
+  series: ChartSeries<T>,
+  seriesColor: string,
+): string[] {
+  const colors: string[] = [];
+  const limit = Math.min(series.points.length, 500);
+  for (let i = 0; i < limit; i++) {
+    const point = series.points[i];
+    if (point.value === null && !isFinancialType(series.type)) continue;
+    colors.push(chartPointColor(series, point, seriesColor) ?? seriesColor);
+  }
+  return colors.length > 0 ? colors : [seriesColor];
+}
+
+const dashOf = (style: 'solid' | 'dash' | 'dot' | undefined): string | null =>
+  style === 'dash' ? '6 4' : style === 'dot' ? '2 3' : null;
+
+const SPLINE_TYPES = new Set<ChartSeries['type']>([
+  'spline',
+  'splineArea',
+  'stackedSplineArea',
+  'fullStackedSplineArea',
+]);
+
+const AREA_TYPES = new Set<ChartSeries['type']>([
+  'area',
+  'splineArea',
+  'stepArea',
+  'stackedArea',
+  'fullStackedArea',
+  'rangeArea',
+  'stackedSplineArea',
+  'fullStackedSplineArea',
+]);
+
 function buildRenderSeries<T>(ctx: {
   seriesList: readonly ChartSeries<T>[];
   visibility: readonly boolean[];
   colors: readonly string[];
+  palette: readonly string[];
   stacks: OgeCartesianData<T>['stacks'];
+  trends: OgeCartesianData<T>['trends'];
   argScale: ChartScale;
   valueScales: readonly ChartScale[];
   barBandPx: number;
   plotW: number;
+  plotH: number;
   markerThreshold: number;
   locale: string | undefined;
 }): OgeChartRenderSeries[] {
   const { argScale: scale, valueScales: scales, stacks } = ctx;
   const barSlots = computeBarSlots(ctx.seriesList, ctx.barBandPx);
   const result: OgeChartRenderSeries[] = [];
+  const candidates: ChartLabelCandidate[] = [];
   ctx.seriesList.forEach((series, seriesIndex) => {
     if (!ctx.visibility[seriesIndex]) return;
     const valueScale = scales[series.input.axis ?? 0] ?? scales[0];
@@ -742,15 +940,49 @@ function buildRenderSeries<T>(ctx: {
     const slot = barSlots[seriesIndex];
     const xOf = (point: ChartPoint<T>): number | null =>
       point.argNumeric === null ? null : scale.toPx(point.argNumeric);
-    const showLabels = series.input.showLabels === true;
-    const labels: OgeChartRenderLabel[] = [];
-    const labelText = (value: number): string => siFormat(value, ctx.locale);
-    const dashArray =
-      series.input.dashStyle === 'dash'
-        ? '6 4'
-        : series.input.dashStyle === 'dot'
-          ? '2 3'
-          : null;
+    const pointColor = (point: ChartPoint<T>): string | null =>
+      chartPointColor(series, point, color);
+    const labelOptions = chartLabelOptions(series);
+    const labelPosition = labelOptions.position ?? 'outside';
+    const overlap = labelOptions.overlap ?? 'hide';
+    const pushLabel = (
+      point: ChartPoint<T>,
+      pointIndex: number,
+      anchor: { x: number; y: number; inside: boolean },
+      percent: number | null,
+      markColor: string | null,
+      defaultText?: string,
+    ): void => {
+      if (!chartPointHasLabel(series, point)) return;
+      candidates.push({
+        overlap,
+        label: {
+          x: anchor.x,
+          y: anchor.y,
+          text: chartLabelText(
+            series,
+            point,
+            seriesIndex,
+            pointIndex,
+            percent,
+            ctx.locale,
+            defaultText,
+          ),
+          anchor: 'middle',
+          inside: anchor.inside,
+          textColor: anchor.inside
+            ? chartContrastText(markColor ?? color)
+            : null,
+          seriesIndex,
+          pointIndex,
+        },
+      });
+    };
+    const markerRadius = (point: ChartPoint<T>, fallback: number): number => {
+      const size = point.style?.marker?.size;
+      return size !== undefined ? size / 2 : fallback;
+    };
+    const dashArray = dashOf(series.input.dashStyle);
     const strokeWidth = series.input.width ?? 2;
     const opacity = series.input.opacity ?? 1;
 
@@ -759,9 +991,131 @@ function buildRenderSeries<T>(ctx: {
     const bars: OgeChartRenderBar[] = [];
     const candles: OgeChartRenderCandle[] = [];
     const markers: OgeChartRenderMarker[] = [];
+    const segments: OgeChartRenderSegment[] = [];
+    const dots: OgeChartRenderDot[] = [];
+    const extraPaths: OgeChartRenderPath[] = [];
 
     const type = series.type;
-    if (isBarType(type)) {
+    if (type === 'boxPlot') {
+      series.points.forEach((point, pointIndex) => {
+        const x = xOf(point);
+        const q1 = point.extra?.q1;
+        const q3 = point.extra?.q3;
+        if (
+          x === null ||
+          slot === null ||
+          q1 === undefined ||
+          q1 === null ||
+          q3 === undefined ||
+          q3 === null ||
+          point.value === null
+        ) {
+          return;
+        }
+        const w = Math.max(3, slot.widthPx * 0.7);
+        const bx = x + slot.offsetPx + (slot.widthPx - w) / 2;
+        const cx = bx + w / 2;
+        const q1Px = valueScale.toPx(q1);
+        const q3Px = valueScale.toPx(q3);
+        const medianPx = valueScale.toPx(point.value);
+        const fill = pointColor(point) ?? color;
+        bars.push({
+          x: bx,
+          y: Math.min(q1Px, q3Px),
+          w,
+          h: Math.max(1, Math.abs(q3Px - q1Px)),
+          seriesIndex,
+          pointIndex,
+          color: fill,
+          stroke: fill,
+          cls: 'oge-chart-box',
+        });
+        segments.push({
+          x1: bx,
+          y1: medianPx,
+          x2: bx + w,
+          y2: medianPx,
+          cls: 'oge-chart-box-median',
+          color: fill,
+        });
+        const cap = w / 4;
+        for (const [whisker, edge] of [
+          [point.high, q3Px],
+          [point.low, q1Px],
+        ] as const) {
+          if (whisker === null) continue;
+          const whiskerPx = valueScale.toPx(whisker);
+          segments.push(
+            {
+              x1: cx,
+              y1: edge,
+              x2: cx,
+              y2: whiskerPx,
+              cls: 'oge-chart-box-whisker',
+              color: fill,
+            },
+            {
+              x1: cx - cap,
+              y1: whiskerPx,
+              x2: cx + cap,
+              y2: whiskerPx,
+              cls: 'oge-chart-box-whisker',
+              color: fill,
+            },
+          );
+        }
+        for (const outlier of point.outliers ?? []) {
+          dots.push({ x: cx, y: valueScale.toPx(outlier), r: 3, color: fill });
+        }
+        const topPx = valueScale.toPx(point.high ?? q3);
+        pushLabel(
+          point,
+          pointIndex,
+          chartPointLabelAnchor(cx, topPx, 0, labelPosition),
+          null,
+          null,
+        );
+      });
+    } else if (type === 'histogram') {
+      const basePx = valueScale.toPx(
+        Math.max(valueScale.min, Math.min(valueScale.max, 0)),
+      );
+      series.points.forEach((point, pointIndex) => {
+        const start = point.extra?.binStart;
+        const end = point.extra?.binEnd;
+        if (
+          start === undefined ||
+          start === null ||
+          end === undefined ||
+          end === null ||
+          point.value === null
+        ) {
+          return;
+        }
+        const x1 = scale.toPx(start);
+        const x2 = scale.toPx(end);
+        const topPx = valueScale.toPx(point.value);
+        const fill = pointColor(point);
+        bars.push({
+          x: Math.min(x1, x2) + 0.5,
+          y: Math.min(topPx, basePx),
+          w: Math.max(1, Math.abs(x2 - x1) - 1),
+          h: Math.max(1, Math.abs(basePx - topPx)),
+          seriesIndex,
+          pointIndex,
+          color: fill,
+          cls: 'oge-chart-histogram-bar',
+        });
+        pushLabel(
+          point,
+          pointIndex,
+          chartBarLabelAnchor((x1 + x2) / 2, topPx, basePx, labelPosition),
+          null,
+          fill,
+        );
+      });
+    } else if (isBarType(type)) {
+      const barEnds: { x: number; right: number; level: number }[] = [];
       series.points.forEach((point, pointIndex) => {
         const x = xOf(point);
         if (x === null || slot === null) return;
@@ -775,6 +1129,7 @@ function buildRenderSeries<T>(ctx: {
         if (segment === null) return;
         const y1 = valueScale.toPx(segment.base);
         const y2 = valueScale.toPx(segment.top);
+        const fill = pointColor(point);
         bars.push({
           x: x + slot.offsetPx,
           y: Math.min(y1, y2),
@@ -782,15 +1137,93 @@ function buildRenderSeries<T>(ctx: {
           h: Math.max(1, Math.abs(y2 - y1)),
           seriesIndex,
           pointIndex,
+          color: fill,
+          cls:
+            type === 'waterfall' && point.kind !== undefined
+              ? `oge-chart-waterfall-${point.kind}`
+              : null,
         });
-        if (showLabels && point.value !== null) {
-          labels.push({
-            x: x + slot.offsetPx + slot.widthPx / 2,
-            y: Math.min(y1, y2) - 4,
-            text: labelText(point.value),
-          });
+        barEnds.push({
+          x: x + slot.offsetPx,
+          right: x + slot.offsetPx + slot.widthPx,
+          level: y2,
+        });
+        if (point.value !== null) {
+          const percent =
+            type === 'fullStackedBar'
+              ? segment.top - segment.base
+              : type === 'pareto'
+                ? (point.extra?.cumulative ?? null)
+                : null;
+          pushLabel(
+            point,
+            pointIndex,
+            chartBarLabelAnchor(
+              x + slot.offsetPx + slot.widthPx / 2,
+              y2,
+              y1,
+              labelPosition,
+            ),
+            percent,
+            fill,
+          );
         }
       });
+      if (type === 'waterfall' && series.input.showConnectors !== false) {
+        const ordered = [...barEnds].sort((a, b) => a.x - b.x);
+        for (let i = 0; i + 1 < ordered.length; i++) {
+          segments.push({
+            x1: ordered[i].right,
+            y1: ordered[i].level,
+            x2: ordered[i + 1].x,
+            y2: ordered[i].level,
+            cls: 'oge-chart-waterfall-connector',
+            color: null,
+          });
+        }
+      }
+      if (type === 'pareto' && slot !== null) {
+        const axis = paretoCumulativeAxis(series, scales.length);
+        const cumScale =
+          axis !== null
+            ? scales[axis]
+            : createLinearScale({
+                min: 0,
+                max: 105,
+                rangePx: ctx.plotH,
+                inverted: true,
+              });
+        const lineColor =
+          series.input.cumulativeColor ??
+          ctx.palette[(seriesIndex + 1) % ctx.palette.length];
+        const linePoints = series.points
+          .map((point) => ({ point, x: xOf(point) }))
+          .filter(
+            (entry): entry is { point: ChartPoint<T>; x: number } =>
+              entry.x !== null &&
+              entry.point.extra?.cumulative !== undefined &&
+              entry.point.extra.cumulative !== null,
+          )
+          .sort((a, b) => a.x - b.x)
+          .map((entry) => ({
+            x: entry.x + slot.offsetPx + slot.widthPx / 2,
+            y: cumScale.toPx((entry.point.extra?.cumulative ?? 0) * 100),
+          }));
+        if (linePoints.length > 0) {
+          extraPaths.push({
+            d: linePath(linePoints),
+            cls: 'oge-chart-pareto-line',
+            fill: null,
+            stroke: lineColor,
+            strokeWidth: 2,
+            dashArray: null,
+            opacity: 1,
+          });
+          for (const entry of linePoints) {
+            dots.push({ x: entry.x, y: entry.y, r: 3, color: lineColor });
+          }
+        }
+      }
     } else if (type === 'bubble') {
       let sizeMin = Infinity;
       let sizeMax = -Infinity;
@@ -803,48 +1236,106 @@ function buildRenderSeries<T>(ctx: {
       series.points.forEach((point, pointIndex) => {
         const x = xOf(point);
         if (x === null || point.value === null) return;
+        if (point.style?.marker?.visible === false) return;
         const frac =
           point.size === null ? 0.5 : (point.size - sizeMin) / sizeSpan;
         // sqrt so AREA (not radius) tracks the size value
-        const r = 4 + Math.sqrt(frac) * 14;
+        const r = markerRadius(point, 4 + Math.sqrt(frac) * 14);
         const y = valueScale.toPx(point.value);
-        markers.push({ x, y, seriesIndex, pointIndex, r });
-        if (showLabels) {
-          labels.push({ x, y: y - r - 4, text: labelText(point.value) });
-        }
+        const fill = pointColor(point);
+        markers.push({ x, y, seriesIndex, pointIndex, r, color: fill });
+        pushLabel(
+          point,
+          pointIndex,
+          chartPointLabelAnchor(x, y, r, labelPosition),
+          null,
+          fill,
+        );
       });
-    } else if (type === 'candlestick') {
+    } else if (isFinancialType(type)) {
       const w = Math.max(3, ctx.barBandPx * 0.5);
       series.points.forEach((point, pointIndex) => {
         const x = xOf(point);
         const geometry = candleGeometry(point);
         if (x === null || geometry === null) return;
-        const bodyY1 = valueScale.toPx(geometry.bodyTop);
-        const bodyY2 = valueScale.toPx(geometry.bodyBottom);
-        candles.push({
-          x,
-          bodyY: Math.min(bodyY1, bodyY2),
-          bodyH: Math.max(1, Math.abs(bodyY2 - bodyY1)),
-          wickY1: valueScale.toPx(geometry.wickTop),
-          wickY2: valueScale.toPx(geometry.wickBottom),
-          w,
-          rising: geometry.rising,
+        const fill = pointColor(point);
+        const highPx = valueScale.toPx(geometry.wickTop);
+        if (type === 'ohlc') {
+          const cls = geometry.rising
+            ? 'oge-chart-ohlc'
+            : 'oge-chart-ohlc oge-chart-ohlc-falling';
+          const openPx = valueScale.toPx(point.open as number);
+          const closePx = valueScale.toPx(point.close as number);
+          segments.push(
+            {
+              x1: x,
+              y1: highPx,
+              x2: x,
+              y2: valueScale.toPx(geometry.wickBottom),
+              cls,
+              color: fill,
+            },
+            { x1: x - w / 2, y1: openPx, x2: x, y2: openPx, cls, color: fill },
+            {
+              x1: x,
+              y1: closePx,
+              x2: x + w / 2,
+              y2: closePx,
+              cls,
+              color: fill,
+            },
+          );
+        } else {
+          const bodyY1 = valueScale.toPx(geometry.bodyTop);
+          const bodyY2 = valueScale.toPx(geometry.bodyBottom);
+          candles.push({
+            x,
+            bodyY: Math.min(bodyY1, bodyY2),
+            bodyH: Math.max(1, Math.abs(bodyY2 - bodyY1)),
+            wickY1: highPx,
+            wickY2: valueScale.toPx(geometry.wickBottom),
+            w,
+            rising: geometry.rising,
+            pointIndex,
+            color: fill,
+          });
+        }
+        pushLabel(
+          point,
           pointIndex,
-        });
+          chartPointLabelAnchor(x, highPx, 0, 'outside'),
+          null,
+          null,
+          point.close === null ? undefined : siFormat(point.close, ctx.locale),
+        );
       });
     } else if (type === 'scatter') {
       series.points.forEach((point, pointIndex) => {
         const x = xOf(point);
         if (x === null || point.value === null) return;
+        if (point.style?.marker?.visible === false) return;
         const y = valueScale.toPx(point.value);
-        markers.push({ x, y, seriesIndex, pointIndex });
-        if (showLabels) {
-          labels.push({ x, y: y - 8, text: labelText(point.value) });
-        }
+        const r = markerRadius(point, 4);
+        const fill = pointColor(point);
+        markers.push({
+          x,
+          y,
+          seriesIndex,
+          pointIndex,
+          ...(point.style?.marker?.size !== undefined ? { r } : {}),
+          color: fill,
+        });
+        pushLabel(
+          point,
+          pointIndex,
+          chartPointLabelAnchor(x, y, r, labelPosition),
+          null,
+          fill,
+        );
       });
     } else {
-      // line-family
-      const spline = type === 'spline' || type === 'splineArea';
+      // line-family (incl. stacked lines / spline areas and indicators)
+      const spline = SPLINE_TYPES.has(type);
       const step = type === 'stepLine' || type === 'stepArea';
       const top: PathPoint[] = series.points.map((point, pointIndex) => {
         const x = xOf(point);
@@ -865,14 +1356,7 @@ function buildRenderSeries<T>(ctx: {
           ? downsamplePath(top, budget)
           : top;
       linePathD = spline ? splinePath(pathTop) : linePath(pathTop);
-      if (
-        type === 'area' ||
-        type === 'splineArea' ||
-        type === 'stepArea' ||
-        type === 'stackedArea' ||
-        type === 'fullStackedArea' ||
-        type === 'rangeArea'
-      ) {
+      if (AREA_TYPES.has(type)) {
         if (type === 'rangeArea') {
           const bottom: PathPoint[] = series.points.map((point) => {
             const x = xOf(point);
@@ -887,10 +1371,7 @@ function buildRenderSeries<T>(ctx: {
           const back = reversePathPoints(bottom);
           areaPathD =
             linePathD !== '' && back !== '' ? `${linePathD} ${back} Z` : null;
-        } else if (
-          (type === 'stackedArea' || type === 'fullStackedArea') &&
-          stacked !== null
-        ) {
+        } else if (stacked !== null) {
           const bottom: PathPoint[] = series.points.map((point, pointIndex) => {
             const x = xOf(point);
             const segment = stacked[pointIndex];
@@ -902,7 +1383,9 @@ function buildRenderSeries<T>(ctx: {
                   : valueScale.toPx(segment.base),
             };
           });
-          areaPathD = `${linePathD} ${reversePathPoints(bottom)} Z`;
+          areaPathD = spline
+            ? areaPath(top, bottom, true)
+            : `${linePathD} ${reversePathPoints(bottom)} Z`;
         } else {
           const baselineY = valueScale.toPx(
             Math.max(valueScale.min, Math.min(valueScale.max, 0)),
@@ -910,26 +1393,90 @@ function buildRenderSeries<T>(ctx: {
           areaPathD = baselineAreaPath(pathTop, baselineY, spline);
         }
       }
+      if (type === 'indicator') {
+        renderIndicatorExtras(series, {
+          xOf,
+          valueScale,
+          color,
+          altColor: ctx.palette[(seriesIndex + 1) % ctx.palette.length],
+          barBandPx: ctx.barBandPx,
+          plotW: ctx.plotW,
+          seriesIndex,
+          extraPaths,
+          bars,
+          segments,
+        });
+      }
       if (series.points.length <= ctx.markerThreshold) {
         series.points.forEach((point, pointIndex) => {
           const pathPoint = top[pointIndex];
           if (pathPoint.y === null) return;
+          const forced = point.style?.marker?.visible;
+          if (forced === false || (type === 'indicator' && forced !== true)) {
+            return;
+          }
+          const r = markerRadius(point, 3.5);
           markers.push({
             x: pathPoint.x,
             y: pathPoint.y,
             seriesIndex,
             pointIndex,
+            ...(point.style?.marker?.size !== undefined ? { r } : {}),
+            color: pointColor(point),
           });
-          if (showLabels && point.value !== null) {
-            labels.push({
-              x: pathPoint.x,
-              y: pathPoint.y - 8,
-              text: labelText(point.value),
-            });
+          if (point.value !== null) {
+            const segment = stacked?.[pointIndex] ?? null;
+            pushLabel(
+              point,
+              pointIndex,
+              chartPointLabelAnchor(pathPoint.x, pathPoint.y, r, labelPosition),
+              type.startsWith('fullStacked') && segment !== null
+                ? segment.top - segment.base
+                : null,
+              pointColor(point),
+            );
           }
         });
       }
     }
+
+    // trendline: sampled densely so curved fits stay smooth
+    const trend = ctx.trends[seriesIndex];
+    const trendOptions = chartTrendlineOptions(
+      series.input as ChartSeriesInput<unknown>,
+    );
+    if (trend !== null && trend !== undefined && trendOptions !== null) {
+      const first = trend.points[0];
+      const last = trend.points[trend.points.length - 1];
+      const samples =
+        trend.type === 'linear' || trend.type === 'movingAverage'
+          ? trend.points
+          : Array.from({ length: 64 }, (_, i) => {
+              const x = first.x + ((last.x - first.x) * i) / 63;
+              return { x, y: trend.predict(x) };
+            });
+      const d = linePath(
+        samples.map((sample) => ({
+          x: scale.toPx(sample.x),
+          y:
+            sample.y === null || !Number.isFinite(sample.y)
+              ? null
+              : valueScale.toPx(sample.y),
+        })),
+      );
+      if (d !== '') {
+        extraPaths.push({
+          d,
+          cls: 'oge-chart-trendline',
+          fill: null,
+          stroke: trendOptions.color ?? color,
+          strokeWidth: trendOptions.width ?? 1.5,
+          dashArray: dashOf(trendOptions.dashStyle ?? 'dash'),
+          opacity: 0.9,
+        });
+      }
+    }
+
     result.push({
       seriesIndex,
       name: series.name,
@@ -940,13 +1487,120 @@ function buildRenderSeries<T>(ctx: {
       bars,
       candles,
       markers,
-      labels,
+      labels: [],
+      segments,
+      dots,
+      extraPaths,
       dashArray,
       strokeWidth,
       opacity,
     });
   });
-  return result;
+  if (candidates.length === 0) return result;
+  // one overlap pass across the whole chart, then back into the series
+  const kept = resolveChartLabels(candidates, ctx.plotW, ctx.plotH);
+  return result.map((entry) => ({
+    ...entry,
+    labels: kept.filter((label) => label.seriesIndex === entry.seriesIndex),
+  }));
+}
+
+/** Bollinger band + lines, MACD signal + histogram, reference levels. */
+function renderIndicatorExtras<T>(
+  series: ChartSeries<T>,
+  ctx: {
+    xOf: (point: ChartPoint<T>) => number | null;
+    valueScale: ChartScale;
+    color: string;
+    altColor: string;
+    barBandPx: number;
+    plotW: number;
+    seriesIndex: number;
+    extraPaths: OgeChartRenderPath[];
+    bars: OgeChartRenderBar[];
+    segments: OgeChartRenderSegment[];
+  },
+): void {
+  const options = series.input.indicator ?? { type: 'sma' as const };
+  const lineOf = (key: 'upper' | 'lower' | 'signal'): PathPoint[] =>
+    series.points.map((point) => {
+      const x = ctx.xOf(point);
+      const value = point.extra?.[key] ?? null;
+      return {
+        x: x ?? 0,
+        y: x === null || value === null ? null : ctx.valueScale.toPx(value),
+      };
+    });
+  if (options.type === 'bollinger') {
+    const upper = lineOf('upper');
+    const lower = lineOf('lower');
+    ctx.extraPaths.push(
+      {
+        d: areaPath(upper, lower),
+        cls: 'oge-chart-indicator-band',
+        fill: ctx.color,
+        stroke: null,
+        strokeWidth: 0,
+        dashArray: null,
+        opacity: 0.12,
+      },
+      ...[upper, lower].map(
+        (line): OgeChartRenderPath => ({
+          d: linePath(line),
+          cls: 'oge-chart-indicator-line',
+          fill: null,
+          stroke: ctx.color,
+          strokeWidth: 1,
+          dashArray: null,
+          opacity: 0.7,
+        }),
+      ),
+    );
+  }
+  if (options.type === 'macd') {
+    ctx.extraPaths.push({
+      d: linePath(lineOf('signal')),
+      cls: 'oge-chart-indicator-line',
+      fill: null,
+      stroke: ctx.altColor,
+      strokeWidth: 1.5,
+      dashArray: null,
+      opacity: 1,
+    });
+    const w = Math.max(1, ctx.barBandPx * 0.5);
+    const basePx = ctx.valueScale.toPx(
+      Math.max(ctx.valueScale.min, Math.min(ctx.valueScale.max, 0)),
+    );
+    series.points.forEach((point, pointIndex) => {
+      const x = ctx.xOf(point);
+      const value = point.extra?.histogram ?? null;
+      if (x === null || value === null) return;
+      const topPx = ctx.valueScale.toPx(value);
+      ctx.bars.push({
+        x: x - w / 2,
+        y: Math.min(topPx, basePx),
+        w,
+        h: Math.max(1, Math.abs(basePx - topPx)),
+        seriesIndex: ctx.seriesIndex,
+        pointIndex,
+        color: value >= 0 ? WATERFALL_UP : WATERFALL_DOWN,
+        cls: 'oge-chart-indicator-hist',
+      });
+    });
+  }
+  const levels =
+    options.levels ?? (options.type === 'rsi' ? [30, 70] : undefined) ?? [];
+  for (const level of levels) {
+    const y = ctx.valueScale.toPx(level);
+    ctx.segments.push({
+      x1: 0,
+      y1: y,
+      x2: ctx.plotW,
+      y2: y,
+      cls: 'oge-chart-indicator-level',
+      color: null,
+    });
+  }
 }
 
 /** Bottom edge of a ribbon: reversed point order, joined with L commands. */
@@ -972,7 +1626,21 @@ export function chartArgumentText<T>(
   argKind: ChartScaleKind,
   point: ChartPoint<T>,
   locale: string | undefined,
+  words: OgeChartsValueMessages = OGE_DEFAULT_CHARTS_MESSAGES.values,
 ): string {
+  const binStart = point.extra?.binStart;
+  const binEnd = point.extra?.binEnd;
+  if (
+    binStart !== undefined &&
+    binStart !== null &&
+    binEnd !== undefined &&
+    binEnd !== null
+  ) {
+    return formatOgeChartMessage(words.bin, {
+      start: numberFormat(binStart, locale),
+      end: numberFormat(binEnd, locale),
+    });
+  }
   if (argKind === 'time' && point.argNumeric !== null) {
     return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
       new Date(point.argNumeric),
@@ -981,20 +1649,77 @@ export function chartArgumentText<T>(
   return String(point.argument);
 }
 
-/** The value(s) of a point: OHLC, a `low – high` range, or the value. */
+/**
+ * The value(s) of a point: OHLC, a `low – high` range, box statistics, or
+ * the value — with the analytic parts (waterfall kind, pareto share,
+ * indicator bands) and a `customizePoint` `description` appended.
+ */
 export function chartValueText<T>(
   point: ChartPoint<T>,
   locale: string | undefined,
+  words: OgeChartsValueMessages = OGE_DEFAULT_CHARTS_MESSAGES.values,
 ): string {
-  if (point.open !== null && point.close !== null) {
-    const format = (value: number | null): string =>
-      value === null ? '' : numberFormat(value, locale);
-    return `O ${format(point.open)} H ${format(point.high)} L ${format(point.low)} C ${format(point.close)}`;
+  const format = (value: number | null | undefined): string =>
+    value === null || value === undefined ? '' : numberFormat(value, locale);
+  const extra = point.extra;
+  let text: string;
+  if (extra?.q1 !== undefined && extra.q3 !== undefined) {
+    const parts = [
+      `${words.low} ${format(point.low)}`,
+      `${words.q1} ${format(extra.q1)}`,
+      `${words.median} ${format(extra.median ?? point.value)}`,
+      `${words.q3} ${format(extra.q3)}`,
+      `${words.high} ${format(point.high)}`,
+    ];
+    const outliers = point.outliers?.length ?? 0;
+    if (outliers > 0) {
+      parts.push(
+        formatOgeChartMessage(words.outliers, { count: String(outliers) }),
+      );
+    }
+    text = parts.join(', ');
+  } else if (point.open !== null && point.close !== null) {
+    text = `O ${format(point.open)} H ${format(point.high)} L ${format(point.low)} C ${format(point.close)}`;
+  } else if (point.value2 !== null && point.value !== null) {
+    text = `${format(point.value2)} – ${format(point.value)}`;
+  } else {
+    text = format(point.value);
+    const details: string[] = [];
+    if (point.kind !== undefined) {
+      details.push(
+        point.kind === 'up'
+          ? words.increase
+          : point.kind === 'down'
+            ? words.decrease
+            : point.kind === 'intermediate'
+              ? words.intermediate
+              : words.total,
+      );
+    }
+    if (extra?.cumulative !== undefined && extra.cumulative !== null) {
+      details.push(
+        formatOgeChartMessage(words.cumulative, {
+          value: new Intl.NumberFormat(locale, {
+            style: 'percent',
+            maximumFractionDigits: 1,
+          }).format(extra.cumulative),
+        }),
+      );
+    }
+    for (const key of ['upper', 'lower', 'signal', 'histogram'] as const) {
+      const value = extra?.[key];
+      if (value !== undefined && value !== null) {
+        details.push(`${words[key]} ${format(value)}`);
+      }
+    }
+    if (details.length > 0 && text !== '') {
+      text = `${text} (${details.join(', ')})`;
+    }
   }
-  if (point.value2 !== null && point.value !== null) {
-    return `${numberFormat(point.value2, locale)} – ${numberFormat(point.value, locale)}`;
-  }
-  return point.value === null ? '' : numberFormat(point.value, locale);
+  const description = point.style?.description;
+  return description !== undefined && text !== ''
+    ? `${text}, ${description}`
+    : text;
 }
 
 /** The group/plot label: `{title}`, `{count}` + the keyboard hint. */
@@ -1028,6 +1753,7 @@ export function cartesianSrRows<T>(
       return chartValueText(
         seriesList[item.seriesIndex].points[pointIndex],
         scene.locale,
+        scene.data.messages.values,
       );
     });
     const first = items.find(
@@ -1042,6 +1768,7 @@ export function cartesianSrRows<T>(
               index.pointIndexAt(position, first.seriesIndex)
             ],
             scene.locale,
+            scene.data.messages.values,
           );
     return { argText, cells };
   });
@@ -1063,9 +1790,65 @@ export function cartesianPointAnnouncement<T>(
     argument:
       point === null
         ? ''
-        : chartArgumentText(scene.data.argKind, point, scene.locale),
-    value: point === null ? '' : chartValueText(point, scene.locale),
+        : chartArgumentText(
+            scene.data.argKind,
+            point,
+            scene.locale,
+            messages.values,
+          ),
+    value:
+      point === null
+        ? ''
+        : chartValueText(point, scene.locale, messages.values),
   });
+}
+
+/**
+ * One tooltip row: `{series}: {value}` with the analytic parts, plus the
+ * trend value and R² when the series' trendline asks for it (`showR2`).
+ */
+export function cartesianTooltipRowText<T>(
+  scene: OgeCartesianScene<T>,
+  event: OgeChartPointEvent<T>,
+): string {
+  const words = scene.data.messages.values;
+  const series = scene.data.seriesList[event.seriesIndex];
+  let text = `${event.seriesName}: ${chartValueText(event.point, scene.locale, words)}`;
+  const trend = scene.data.trends[event.seriesIndex];
+  const options =
+    series === undefined
+      ? null
+      : chartTrendlineOptions(series.input as ChartSeriesInput<unknown>);
+  if (
+    trend !== null &&
+    trend !== undefined &&
+    options?.showR2 === true &&
+    event.point.argNumeric !== null
+  ) {
+    const estimate = trend.predict(event.point.argNumeric);
+    text += ` · ${formatOgeChartMessage(words.trend, {
+      value: estimate === null ? '' : numberFormat(estimate, scene.locale),
+      r2:
+        trend.r2 === null
+          ? '–'
+          : new Intl.NumberFormat(scene.locale, {
+              maximumFractionDigits: 3,
+            }).format(trend.r2),
+    })}`;
+  }
+  return text;
+}
+
+/** The marker colour of a tooltip row: the point's own colour, else the series'. */
+export function cartesianPointEventColor<T>(
+  scene: OgeCartesianScene<T>,
+  event: OgeChartPointEvent<T>,
+): string {
+  const series = scene.data.seriesList[event.seriesIndex];
+  const seriesColor = scene.colors[event.seriesIndex] ?? OGE_CHART_PALETTE[0];
+  return series === undefined
+    ? seriesColor
+    : (chartPointColor(series, event.point, seriesColor) ?? seriesColor);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1125,7 +1908,7 @@ export function cartesianActivePoints<T>(
     const pointIndex = index.pointIndexAt(position, seriesIndex);
     if (pointIndex === -1) return;
     const point = series.points[pointIndex];
-    if (point.value === null && series.type !== 'candlestick') return;
+    if (point.value === null && !isFinancialType(series.type)) return;
     list.push({
       seriesIndex,
       seriesName: series.name,
@@ -1188,6 +1971,7 @@ export function cartesianTooltip<T>(
       scene.data.argKind,
       points[0].point,
       scene.locale,
+      scene.data.messages.values,
     ),
   };
 }

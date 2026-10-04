@@ -13,9 +13,12 @@
  * ```
  */
 export {
+  exportChartToJpeg,
   exportChartToPng,
   exportChartToSvg,
+  rasterizeChartSvg,
   serializeChartSvg,
   type OgeChartImageExportOptions,
+  type OgeChartJpegExportOptions,
   type OgeChartSvgSource,
 } from '@oge-ui/charts-engine/export-image';

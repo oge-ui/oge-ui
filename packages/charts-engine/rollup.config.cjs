@@ -5,10 +5,14 @@ module.exports = withNx(
     main: './src/index.ts',
     // The image exporter is its own entry, like the Angular package's
     // `/export-image` secondary entry: an app that never exports an image
-    // never loads the serializer.
+    // never loads the serializer. `/export-pdf` is the only module that
+    // imports the optional peers `jspdf` and `@oge-ui/behavior`.
     // note: workspace-relative, and each file name becomes the entry name —
     // `<dir>/index.ts` would collide with the main `index` entry
-    additionalEntryPoints: ['packages/charts-engine/src/export-image.ts'],
+    additionalEntryPoints: [
+      'packages/charts-engine/src/export-image.ts',
+      'packages/charts-engine/src/export-pdf.ts',
+    ],
     outputPath: '../../dist/packages/charts-engine',
     tsConfig: './tsconfig.lib.json',
     compiler: 'swc',

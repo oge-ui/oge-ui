@@ -4,15 +4,51 @@
  */
 import type { ChartRange, ChartScaleKind } from './scale';
 import type {
+  ChartIndicatorOptions,
+  ChartLabelInfo,
+  ChartLabelOptions,
+  ChartLabelPosition,
   ChartPoint,
+  ChartPointCustomizer,
+  ChartPointExtra,
+  ChartPointInfo,
+  ChartPointStyle,
   ChartSeriesInput,
   ChartSeriesType,
+  ChartTrendlineOptions,
 } from './series-model';
 import type { PieSmallValuesGrouping } from './pie-layout';
 import type { LabelOverlapMode } from './tick-format';
 
 /** Series types: `'line' | 'spline' | 'area' | … | 'candlestick'`. */
 export type OgeChartSeriesType = ChartSeriesType;
+
+/** Data-label options of a series (`label`). */
+export type OgeChartLabelOptions<T = unknown> = ChartLabelOptions<T>;
+
+/** Data-label positions. */
+export type OgeChartLabelPosition = ChartLabelPosition;
+
+/** What a label `format` callback and a label template receive. */
+export type OgeChartLabelInfo<T = unknown> = ChartLabelInfo<T>;
+
+/** Per-point overrides returned by `customizePoint`. */
+export type OgeChartPointStyle = ChartPointStyle;
+
+/** What `customizePoint` receives. */
+export type OgeChartPointInfo<T = unknown> = ChartPointInfo<T>;
+
+/** The `customizePoint` hook. */
+export type OgeChartPointCustomizer<T = unknown> = ChartPointCustomizer<T>;
+
+/** Trendline options of a series (`trendline`). */
+export type OgeChartTrendlineOptions = ChartTrendlineOptions;
+
+/** What an `'indicator'` series computes (`indicator`). */
+export type OgeChartIndicatorOptions = ChartIndicatorOptions;
+
+/** Derived numbers on analytic points (`point.extra`). */
+export type OgeChartPointExtra = ChartPointExtra;
 
 /** One series definition (field mapping via names, dotted paths or getters). */
 export type OgeChartSeriesInput<T = unknown> = ChartSeriesInput<T>;
@@ -157,6 +193,9 @@ export interface OgeChartPieSliceEvent<T = unknown> {
   /** Merged sources for the synthetic "others" slice. */
   readonly sources: readonly T[];
   readonly grouped: boolean;
+  /** Nested doughnut: the ring (0 = innermost) and its name. */
+  readonly ringIndex?: number;
+  readonly ringName?: string;
 }
 
 /** A legend entry — what a custom legend item renders. */
@@ -164,6 +203,11 @@ export interface OgeChartLegendItem {
   readonly name: string;
   readonly color: string;
   readonly hidden: boolean;
+  /**
+   * The marker's CSS `background` — the colour, or a striped swatch when
+   * the series' points carry their own colours.
+   */
+  readonly swatch?: string;
 }
 
 /**
