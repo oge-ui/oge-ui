@@ -35,6 +35,7 @@ import {
   type OgeDateBoxDisplayFormat,
   type OgeDateBoxTimeView,
   type OgeDateBoxType,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import {
   OgePopup,
@@ -551,7 +552,7 @@ export const OgeDateBox = forwardRef<OgeDateBoxHandle, OgeDateBoxProps>(
       if (!maskEditable) return false;
       const el = nativeRef.current;
       if (!el) return false;
-      const rtl = getComputedStyle(el).direction === 'rtl';
+      const rtl = ogeIsRtl(el);
       const handled = mask().key(
         event,
         [el.selectionStart ?? 0, el.selectionEnd ?? 0],

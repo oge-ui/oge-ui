@@ -15,7 +15,7 @@ import { ReactHost } from '../../shared/react-host';
 import { KANBAN_OVERVIEW_DEMOS } from './overview-snippets';
 
 /**
- * TOC of the React view — the same eight sections as the Angular overview
+ * TOC of the React view — the same nine sections as the Angular overview
  * (`docs/REACT-PARITY.md`: pages mirror section for section).
  */
 export const REACT_KANBAN_OVERVIEW_SECTIONS = [
@@ -27,6 +27,7 @@ export const REACT_KANBAN_OVERVIEW_SECTIONS = [
   'Edit dialog & events',
   'Card template',
   'Configuration & i18n',
+  'RTL',
 ] as const;
 
 type Row = Record<string, unknown>;
@@ -217,6 +218,32 @@ function DragDropDemo(): ReactNode {
     }),
     createElement('p', { className: 'mt-2 text-sm text-slate-500' }, log),
   );
+}
+
+const RTL_COLUMNS = [
+  { key: 'todo', title: 'To do' },
+  { key: 'doing', title: 'In progress' },
+  { key: 'done', title: 'Done' },
+];
+
+const RTL_TASKS: Row[] = [
+  { id: 1, status: 'todo', title: 'Ctrl+ArrowLeft moves me forward' },
+  { id: 2, status: 'todo', title: 'Translate the onboarding flow' },
+  { id: 3, status: 'doing', title: 'Mirror the icons' },
+  { id: 4, status: 'done', title: 'Arabic and Hebrew catalogs' },
+];
+
+function RtlDemo(): ReactNode {
+  return createElement(OgeKanban<Row>, {
+    dataSource: RTL_TASKS,
+    keyExpr: 'id',
+    columnExpr: 'status',
+    titleExpr: 'title',
+    columns: RTL_COLUMNS,
+    rtlEnabled: true,
+    allowColumnReordering: true,
+    style: { height: 380 },
+  });
 }
 
 function KeyboardDemo(): ReactNode {
@@ -430,6 +457,16 @@ function ConfigDemo(): ReactNode {
     >
       <app-react-host [render]="config" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['rtlEnabled', 'mirrored keys', 'logical layout']"
+      heading="RTL"
+      description="<code>rtlEnabled</code> (unset follows the page's <code>dir</code> and keeps following it) mirrors the board: the first column sits on the right, ArrowLeft moves focus to the next column and Ctrl+ArrowLeft moves the focused card there, the column-reorder drag and the drop hit-testing follow the mirrored geometry, and the collapsed-lane chevron points left. An explicit value also sets <code>dir</code> on the host."
+      [code]="demos[8].source"
+      language="tsx"
+    >
+      <app-react-host [render]="rtl" />
+    </app-demo-card>
   `,
 })
 export class ReactKanbanOverviewDemos {
@@ -443,4 +480,5 @@ export class ReactKanbanOverviewDemos {
   protected readonly dialog = () => createElement(DialogDemo);
   protected readonly template = () => createElement(TemplateDemo);
   protected readonly config = () => createElement(ConfigDemo);
+  protected readonly rtl = () => createElement(RtlDemo);
 }

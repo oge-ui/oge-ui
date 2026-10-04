@@ -226,7 +226,9 @@ export function timelineDayText(day: Date, locale: string | undefined): string {
 
 /**
  * A bar drag's horizontal arithmetic: whole days plus a slot-snapped time
- * shift, and the preview's new left edge.
+ * shift, and the preview's new inline-start edge (`startLeftPct` is the
+ * bar's `inset-inline-start` %). `rtl` inverts the pointer delta: time runs
+ * right-to-left, so dragging left moves later.
  */
 export function timelineDragMove<T>(
   appointment: SchedulerAppointment<T>,
@@ -235,7 +237,9 @@ export function timelineDragMove<T>(
   grid: TimeGridVm,
   snap: number,
   startLeftPct: number,
+  rtl = false,
 ): { proposal: AppointmentProposal; leftPct: number } {
+  if (rtl) deltaX = -deltaX;
   const windowSpan = grid.windowEndMinutes - grid.windowStartMinutes;
   const totalSpan = windowSpan * grid.days.length;
   const dayWidth = trackWidth / grid.days.length;

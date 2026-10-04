@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   ViewEncapsulation,
+  afterNextRender,
   afterRenderEffect,
   computed,
   effect,
@@ -869,6 +870,7 @@ let nextUid = 0;
         @if (core.padView(); as pad) {
           <div
             class="oge-bpmn-context-pad"
+            [class.oge-bpmn-context-pad-left]="pad.side === 'left'"
             role="toolbar"
             [attr.aria-label]="pad.ariaLabel"
             [style.left.px]="pad.x"
@@ -1005,6 +1007,7 @@ let nextUid = 0;
         @if (core.multiPadView(); as pad) {
           <div
             class="oge-bpmn-context-pad"
+            [class.oge-bpmn-context-pad-left]="pad.side === 'left'"
             role="toolbar"
             [attr.aria-label]="core.msg().align.menuLabel"
             [style.left.px]="pad.x"
@@ -1489,6 +1492,9 @@ export class OgeBpmnEditor {
   constructor() {
     this.core.revive();
     this.destroyRef.onDestroy(() => this.core.destroy());
+    // the host is attached only after the first render: read the chrome
+    // direction (context-pad side, separator keys) from the page then
+    afterNextRender(() => this.core.refreshDirection());
     // zoom model → viewport (zoom around the canvas center).
     effect(() => {
       const z = this.zoom();

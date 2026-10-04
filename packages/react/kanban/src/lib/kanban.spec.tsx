@@ -380,3 +380,63 @@ describe('<OgeKanban> card content', () => {
     expect(document.activeElement).toBe(input);
   });
 });
+
+describe('<OgeKanban> RTL', () => {
+  function press(container: HTMLElement, key: string): string {
+    const card = qa(container, '.oge-kanban-card')[0];
+    act(() => card.focus());
+    fireEvent.keyDown(card, { key });
+    return document.activeElement?.textContent ?? '';
+  }
+
+  it('follows a dir="rtl" ancestor: ArrowLeft goes to the next column', () => {
+    const { container } = render(
+      <StrictMode>
+        <div dir="rtl">
+          <Board />
+        </div>
+      </StrictMode>,
+    );
+    expect(press(container, 'ArrowRight')).toContain('Design tokens');
+    expect(press(container, 'ArrowLeft')).toContain('Build board');
+  });
+
+  it('picks up a later dir change on the page', async () => {
+    function Page() {
+      const [dir, setDir] = useState<string | undefined>(undefined);
+      return (
+        <div dir={dir}>
+          <button type="button" onClick={() => setDir('rtl')}>
+            rtl
+          </button>
+          <Board />
+        </div>
+      );
+    }
+    const { container } = render(<Page />);
+    expect(press(container, 'ArrowRight')).toContain('Build board');
+    fireEvent.click(q(container, 'button') as HTMLElement);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(press(container, 'ArrowLeft')).toContain('Build board');
+  });
+
+  it('an explicit rtlEnabled wins and sets dir on the host', () => {
+    const { container, rerender } = render(
+      <div dir="rtl">
+        <Board rtlEnabled={false} />
+      </div>,
+    );
+    const board = q(container, '.oge-kanban') as HTMLElement;
+    expect(board.getAttribute('dir')).toBe('ltr');
+    expect(press(container, 'ArrowRight')).toContain('Build board');
+    rerender(
+      <div>
+        <Board rtlEnabled />
+      </div>,
+    );
+    expect(board.getAttribute('dir')).toBe('rtl');
+    expect(press(container, 'ArrowLeft')).toContain('Build board');
+  });
+});

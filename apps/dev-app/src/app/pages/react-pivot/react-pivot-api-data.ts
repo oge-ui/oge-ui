@@ -78,6 +78,13 @@ export const OGE_REACT_PIVOT_GRID_API: ApiSections = {
             '<code>compact</code> indents every level in one column; <code>outline</code> gives each row field its own label column (a label only in its field’s column); <code>tabular</code> repeats the ancestors on every line so each reads on its own. The row header stays one <code>rowheader</code> cell per line, so the keyboard model does not change; the corner shows the row field captions.',
         },
         {
+          name: 'rtlEnabled',
+          type: 'boolean | undefined',
+          default: 'undefined',
+          description:
+            "Right-to-left layout: row headers on the right, collapsed expand chevrons pointing left, Left/Right arrow keys and Ctrl+Arrow field-chip moves mirrored, the field menu's move items labelled by screen side, and the context menu and filter popup opening leftwards. Unset follows the page — the computed <code>direction</code> or the nearest <code>dir</code> attribute, read after the first render and kept current when a <code>dir</code> changes; an explicit value also sets <code>dir</code> on the host.",
+        },
+        {
           name: 'renderCell',
           type: '(cell: OgePivotCellTemplateContext) =&gt; ReactNode',
           description:

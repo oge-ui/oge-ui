@@ -298,3 +298,33 @@ protected readonly tasks = [
   { id: 3, status: 'Fertig', title: 'Kickoff-Termin' },
 ];`,
 });
+
+export const RTL_SNIPPET = demoSource({
+  use: { '@oge-ui/kanban': ['OgeKanban'] },
+  template: `<!-- rtlEnabled (unset = follow the page's dir) mirrors the board: the
+     first column sits on the right, ArrowLeft moves focus to the NEXT
+     column and Ctrl+ArrowLeft moves the card there, the column-reorder
+     drag and the drop hit-testing follow the mirrored geometry. -->
+<oge-kanban
+  [dataSource]="tasks"
+  keyExpr="id"
+  columnExpr="status"
+  titleExpr="title"
+  [columns]="columns"
+  [rtlEnabled]="true"
+  [allowColumnReordering]="true"
+  style="height: 380px"
+/>`,
+  body: `protected readonly columns = [
+  { key: 'todo', title: 'To do' },
+  { key: 'doing', title: 'In progress' },
+  { key: 'done', title: 'Done' },
+];
+
+protected readonly tasks = [
+  { id: 1, status: 'todo', title: 'Ctrl+ArrowLeft moves me forward' },
+  { id: 2, status: 'todo', title: 'Translate the onboarding flow' },
+  { id: 3, status: 'doing', title: 'Mirror the icons' },
+  { id: 4, status: 'done', title: 'Arabic and Hebrew catalogs' },
+];`,
+});

@@ -115,7 +115,10 @@ describe('<oge-scheduler> v0.3 — grouping, timeline drag, year', () => {
     expect(heads[1].textContent?.trim()).toBe('Grace');
     // chip sits in Ada's Thursday subcolumn (col 6 of 14)
     const chip = host.querySelector<HTMLElement>('.oge-scheduler-chip-box');
-    expect(parseFloat(chip?.style.left ?? '0')).toBeCloseTo((6 / 14) * 100, 1);
+    expect(parseFloat(chip?.style.insetInlineStart ?? '0')).toBeCloseTo(
+      (6 / 14) * 100,
+      1,
+    );
     expect(parseFloat(chip?.style.width ?? '0')).toBeCloseTo(100 / 14, 1);
   });
 

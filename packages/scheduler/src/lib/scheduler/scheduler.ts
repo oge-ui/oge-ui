@@ -5,15 +5,18 @@ import {
   ElementRef,
   ViewEncapsulation,
   afterNextRender,
+  computed,
   contentChild,
   effect,
   inject,
   input,
   model,
   output,
+  signal,
   untracked,
   viewChild,
 } from '@angular/core';
+import { observeDirection, ogeIsRtl } from '@oge-ui/behavior';
 import type { DataSource } from '@oge-ui/core';
 import type { OgeFormItemData } from '@oge-ui/forms';
 import { OgeCalendar } from '@oge-ui/inputs/calendar';
@@ -94,7 +97,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
     OgeSchedulerDayWeekView,
     OgeSchedulerMonthView,
   ],
-  host: { class: 'oge-scheduler' },
+  host: { class: 'oge-scheduler', '[attr.dir]': 'hostDir()' },
   styleUrl: './scheduler.scss',
   template: `
     <div
@@ -271,6 +274,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [resourceIdOf]="groupResourceIdOf()"
           [allowDragging]="canDrag()"
           [snapDuration]="snapDuration()"
+          [rtl]="rtl()"
           (chipClicked)="onChipClicked($event)"
           (chipDblClicked)="onChipDblClicked($event)"
           (chipDeleteRequested)="onDeleteRequested($event)"
@@ -294,6 +298,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [resourceIdOf]="groupResourceIdOf()"
           [allowDragging]="canDrag()"
           [snapDuration]="snapDuration()"
+          [rtl]="rtl()"
           (chipClicked)="onChipClicked($event)"
           (chipDblClicked)="onChipDblClicked($event)"
           (chipDeleteRequested)="onDeleteRequested($event)"
@@ -323,6 +328,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           (chipDeleteRequested)="onDeleteRequested($event)"
           [allowDragging]="canDrag()"
           [readOnly]="gridReadOnly()"
+          [rtl]="rtl()"
           (moveCommitted)="onMoveCommitted($event)"
           (gestureCancelled)="onGestureCancelled()"
           (chipContextMenu)="onChipContextMenu($event)"
@@ -365,6 +371,7 @@ import { SIGNAL_ADAPTER } from './signal-adapter';
           [snapDuration]="snapDuration()"
           [groupResource]="groupResource()"
           [resourceIdOf]="groupResourceIdOf()"
+          [rtl]="rtl()"
           (moveCommitted)="onTimelineMoveCommitted($event)"
           (resizeCommitted)="onResizeCommitted($event)"
           (gestureCancelled)="onGestureCancelled()"
@@ -590,6 +597,20 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
   readonly snapDuration = input<number | undefined>(undefined);
   /** Initial scroll position of the day/week body, in hours (e.g. `8.5`). */
   readonly scrollTime = input<number | undefined>(undefined);
+  /**
+   * Right-to-left layout: day columns, month cells and the timeline run
+   * right-to-left, and Left/Right keys and horizontal drags mirror. Unset
+   * follows the page (`ogeResolveDirection`, kept current while mounted); an
+   * explicit value is also set as `dir` on the host.
+   */
+  readonly rtlEnabled = input<boolean | undefined>(undefined);
+  private readonly autoRtl = signal(false);
+  /** The resolved direction every view receives. */
+  protected readonly rtl = computed(() => this.rtlEnabled() ?? this.autoRtl());
+  protected readonly hostDir = computed(() => {
+    const explicit = this.rtlEnabled();
+    return explicit === undefined ? null : explicit ? 'rtl' : 'ltr';
+  });
   /** Custom period-title formatter for the toolbar date navigator. */
   readonly dateNavigatorText = input<
     ((start: Date, end: Date, view: OgeSchedulerView) => string) | undefined
@@ -753,6 +774,13 @@ export class OgeScheduler<T extends object = Record<string, unknown>> {
     });
     afterNextRender(() => {
       const host = this.hostEl.nativeElement;
+      // auto direction: read after the first render (SSR-safe) and kept
+      // current while mounted
+      this.autoRtl.set(ogeIsRtl(host));
+      const stopDirection = observeDirection(host, (direction) =>
+        this.autoRtl.set(direction === 'rtl'),
+      );
+      this.destroyRef.onDestroy(stopDirection);
       adaptive.update(host.clientWidth);
       if (typeof ResizeObserver === 'undefined') return;
       const observer = new ResizeObserver(() =>

@@ -17,6 +17,7 @@ import {
   startSliderDrag,
   type OgeSliderAxis,
   type OgeSliderScale,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import type { OgeControlProps } from './use-field';
 
@@ -131,7 +132,7 @@ export function useSliderBase<T>(input: UseSliderBaseInput<T>) {
 
   const isRtl = (): boolean => {
     const host = latest.current.hostRef.current;
-    return !!host && getComputedStyle(host).direction === 'rtl';
+    return !!host && ogeIsRtl(host);
   };
   const axisOf = (): OgeSliderAxis => ({
     vertical: latest.current.props.orientation === 'vertical',

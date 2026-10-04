@@ -157,6 +157,13 @@ export interface OgeSchedulerProps<T extends object = Record<string, unknown>> {
   snapDuration?: number;
   /** Initial scroll position of the day/week body, in hours (e.g. `8.5`). */
   scrollTime?: number;
+  /**
+   * Right-to-left layout: day columns, month cells and the timeline run
+   * right-to-left, and Left/Right keys and horizontal drags mirror. Unset
+   * follows the page (`ogeResolveDirection`, kept current while mounted); an
+   * explicit value is also set as `dir` on the host.
+   */
+  rtlEnabled?: boolean;
   /** Custom period-title formatter for the toolbar date navigator. */
   dateNavigatorText?: (
     start: Date,

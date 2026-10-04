@@ -180,6 +180,25 @@ describe('day/week view model', () => {
     expect(allDayDragProposal(a, -100, 700, 7, 30).startDate).toEqual(
       new Date(2026, 7, 3, 9),
     );
+    // RTL: columns run right-to-left, so the horizontal delta inverts
+    const rtlMove = dayWeekDragMove(
+      a,
+      -100,
+      60,
+      700,
+      600,
+      grid,
+      7,
+      1,
+      1,
+      0,
+      30,
+      true,
+    );
+    expect(rtlMove.proposal.startDate).toEqual(new Date(2026, 7, 5, 10));
+    expect(allDayDragProposal(a, 100, 700, 7, 30, true).startDate).toEqual(
+      new Date(2026, 7, 3, 9),
+    );
   });
 
   it('shades off-hours, finds the now line and labels cells', () => {
@@ -276,6 +295,9 @@ describe('month view model', () => {
     const rect = { left: 0, top: 0, width: 700, height: 600 };
     expect(monthDropCell(350, 150, rect)).toEqual({ week: 1, day: 3 });
     expect(monthDropCell(-5, 900, rect)).toEqual({ week: 5, day: 0 });
+    // RTL: the first weekday is the rightmost column
+    expect(monthDropCell(650, 150, rect, true)).toEqual({ week: 1, day: 0 });
+    expect(monthDropCell(10, 150, rect, true)).toEqual({ week: 1, day: 6 });
     expect(
       monthOriginIndex(
         month.weeks,
@@ -322,6 +344,10 @@ describe('timeline view model', () => {
     const move = timelineDragMove(a, 100, 1000, timeline, 30, 10);
     expect(move.proposal.startDate).toEqual(new Date(2026, 7, 6, 10));
     expect(move.leftPct).toBeCloseTo(20);
+    // RTL: dragging left moves later; leftPct stays the inline-start edge
+    const rtlMove = timelineDragMove(a, -100, 1000, timeline, 30, 10, true);
+    expect(rtlMove.proposal.startDate).toEqual(new Date(2026, 7, 6, 10));
+    expect(rtlMove.leftPct).toBeCloseTo(20);
     expect(
       timelineRowAt(
         50,

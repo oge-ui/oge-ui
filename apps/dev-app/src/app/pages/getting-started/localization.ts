@@ -7,6 +7,7 @@ import {
   GLOBAL,
   NUMBER_LOCALE,
   PER_COMPONENT,
+  RTL,
   RUNTIME,
   VALIDATION,
 } from './localization-snippets';
@@ -19,6 +20,7 @@ const SECTIONS = [
   'Validation messages',
   'Number & date locales',
   'Behavior defaults',
+  'Right-to-left',
 ] as const;
 
 @Component({
@@ -113,6 +115,20 @@ const SECTIONS = [
       product-wide tuning does not require touching templates:
     </p>
     <app-code-block [code]="behavior" language="ts" />
+
+    <h2 id="right-to-left" class="scroll-mt-20">Right-to-left</h2>
+    <p>
+      Direction is not a setting: every component follows the page's
+      <code>dir</code>. Layout mirrors through CSS logical properties, and
+      everything decided in script — mirrored Left/Right arrow keys, drag
+      deltas, timeline and chart axes, which side a popup opens on — resolves
+      the direction through one shared helper,
+      <code>ogeResolveDirection</code> from <code>@oge-ui/behavior</code>, so
+      both render layers agree. The BPMN canvas is the deliberate exception:
+      diagram coordinates are absolute, so only its chrome (palette, properties
+      panel, context pad) mirrors.
+    </p>
+    <app-code-block [code]="rtl" language="html" />
   `,
 })
 export class GettingStartedLocalizationPage {
@@ -123,4 +139,5 @@ export class GettingStartedLocalizationPage {
   protected readonly validation = VALIDATION;
   protected readonly numberLocale = NUMBER_LOCALE;
   protected readonly behavior = BEHAVIOR;
+  protected readonly rtl = RTL;
 }

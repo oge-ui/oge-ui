@@ -15,7 +15,7 @@ import {
   parseColor,
   type OgeRgba,
 } from '@oge-ui/core';
-import { colorPaletteNavIndex } from '@oge-ui/behavior';
+import { colorPaletteNavIndex, ogeIsRtl } from '@oge-ui/behavior';
 
 /** A palette swatch pick. */
 export interface OgeColorPalettePick {
@@ -179,7 +179,7 @@ export class OgeColorSwatchGrid {
       this.pick(cell, event);
       return;
     }
-    const rtl = getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
+    const rtl = ogeIsRtl(this.hostEl.nativeElement);
     // the APG grid key map is shared with the React grid (`behavior`)
     const next = colorPaletteNavIndex(
       event.key,

@@ -66,6 +66,8 @@ export interface MonthViewProps<T> {
   readonly messages: OgeSchedulerGridMessages;
   readonly periodLabel: string;
   readonly allowDragging: boolean;
+  /** Right-to-left layout: mirrors Left/Right keys and horizontal drag deltas. */
+  readonly rtl?: boolean;
   /** `aria-readonly` on the grid — the scheduler cannot change anything. */
   readonly readOnly: boolean;
   readonly renderAppointment:
@@ -155,7 +157,7 @@ function MonthViewInner<T>(
     dayIndex: number,
     event: ReactKeyboardEvent<HTMLElement>,
   ): void => {
-    const action = monthCellKey(event.key, weekIndex, dayIndex);
+    const action = monthCellKey(event.key, weekIndex, dayIndex, props.rtl);
     if (action === null) return;
     event.preventDefault();
     if (action.kind === 'activate') {
@@ -174,7 +176,7 @@ function MonthViewInner<T>(
     appointment: SchedulerAppointment<T>,
     event: ReactKeyboardEvent<HTMLElement>,
   ): void => {
-    const action = chipKey(event.key, appointment, chipOrder);
+    const action = chipKey(event.key, appointment, chipOrder, props.rtl);
     if (action === null) return;
     switch (action.kind) {
       case 'activate':
@@ -216,6 +218,7 @@ function MonthViewInner<T>(
           moveEvent.clientX,
           moveEvent.clientY,
           rect,
+          props.rtl,
         );
         setDropTarget({ week, day });
         if (originIndex === -1) return;

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { OgePivotField } from './pivot-field';
 import { OgePivotGrid } from './pivot-grid';
@@ -194,5 +194,83 @@ describe('OgePivotGrid — keyboard alternatives', () => {
     await settle(fixture);
     expect(el.querySelector('.oge-context-menu')).not.toBeNull();
     expect(document.activeElement?.getAttribute('role')).toBe('menuitem');
+  });
+});
+
+@Component({
+  imports: [OgePivotGrid, OgePivotField],
+  template: `
+    <div [attr.dir]="dir()">
+      <oge-pivot-grid [data]="data" [rtlEnabled]="rtlEnabled()">
+        <oge-pivot-field dataField="region" area="row" />
+        <oge-pivot-field dataField="year" area="column" />
+        <oge-pivot-field dataField="amount" area="data" summaryType="sum" />
+      </oge-pivot-grid>
+    </div>
+  `,
+})
+class RtlPivotHost {
+  readonly data = SALES;
+  readonly dir = signal<string | null>(null);
+  readonly rtlEnabled = signal<boolean | undefined>(undefined);
+}
+
+describe('OgePivotGrid — RTL', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  async function arrowFromFirstCell(
+    fixture: ComponentFixture<RtlPivotHost>,
+    key: string,
+  ): Promise<HTMLElement> {
+    const el = fixture.nativeElement as HTMLElement;
+    const first = el.querySelector<HTMLElement>('[data-cell="0-0"]');
+    first?.focus();
+    press(first, key);
+    await settle(fixture);
+    return document.activeElement as HTMLElement;
+  }
+
+  it('follows a dir="rtl" ancestor: ArrowRight walks to the row header', async () => {
+    const fixture = TestBed.createComponent(RtlPivotHost);
+    fixture.componentInstance.dir.set('rtl');
+    await settle(fixture);
+    document.body.appendChild(fixture.nativeElement);
+    const header = await arrowFromFirstCell(fixture, 'ArrowRight');
+    expect(header.classList).toContain('oge-pivot-row-header');
+  });
+
+  it('an explicit rtlEnabled wins and sets dir on the host', async () => {
+    const fixture = TestBed.createComponent(RtlPivotHost);
+    fixture.componentInstance.dir.set('rtl');
+    fixture.componentInstance.rtlEnabled.set(false);
+    await settle(fixture);
+    document.body.appendChild(fixture.nativeElement);
+    const grid = (fixture.nativeElement as HTMLElement).querySelector(
+      'oge-pivot-grid',
+    ) as HTMLElement;
+    expect(grid.getAttribute('dir')).toBe('ltr');
+    const header = await arrowFromFirstCell(fixture, 'ArrowLeft');
+    expect(header.classList).toContain('oge-pivot-row-header');
+    fixture.componentInstance.rtlEnabled.set(true);
+    await settle(fixture);
+    expect(grid.getAttribute('dir')).toBe('rtl');
+  });
+
+  it('labels the field menu moves by screen side', async () => {
+    const fixture = TestBed.createComponent(RtlPivotHost);
+    fixture.componentInstance.rtlEnabled.set(true);
+    await settle(fixture);
+    document.body.appendChild(fixture.nativeElement);
+    const el = fixture.nativeElement as HTMLElement;
+    const region = chip(el, 'row', 'Region');
+    region?.focus();
+    press(region, 'F10', { shiftKey: true });
+    await settle(fixture);
+    const items = Array.from(
+      el.querySelectorAll('.oge-context-menu .oge-menu-item'),
+    ).map((item) => item.textContent?.trim());
+    expect(items.slice(0, 2)).toEqual(['Move right', 'Move left']);
   });
 });

@@ -199,6 +199,8 @@ The **existing** components are unusually complete. Every one has a ROADMAP pari
 
 ### 2.16 BPMN editor (`@oge-ui/bpmn`) vs bpmn-js / Camunda Modeler
 
+Status refresh (2026-10-04, W4 D4): **RTL — Have (chrome).** In an RTL page the rail and properties panel swap sides, their separator keys/drags invert and the context pad opens left of the shape; the canvas deliberately stays LTR (absolute DI coordinates, physical arrow-key nudges). Covered by `rtl.spec.ts` in both layers.
+
 | Feature                                                                                                                                            | Who has it                                                        | OGE status                                                                          | Impact                            | Effort |
 | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- | ------ |
 | BPMN 2.0 XML + DI round-trip, unknown attrs/extensionElements preserved                                                                            | bpmn-js                                                           | Have (byte-deterministic writer; camunda files round-trip)                          | —                                 | —      |

@@ -125,6 +125,7 @@ export {
   kanbanColumnOrderPreview,
   kanbanDropIndex,
   kanbanKeyboardMove,
+  kanbanLogicalKey,
   kanbanNavigationTarget,
   kanbanNewColumn,
   kanbanToolbarAddColumn,
@@ -153,6 +154,7 @@ export {
   startKanbanFrameLoop,
   stepKanbanMenuFocus,
   syncKanbanCardTabStops,
+  watchKanbanDirection,
   type KanbanDragGeometry,
   type KanbanDragOrigin,
 } from './lib/dom';

@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ratioToValue, valueToRatio } from '@oge-ui/core';
+import { ogeIsRtl } from '@oge-ui/behavior';
 
 /** A 1D value change from the hue/alpha slider. */
 export interface OgeColorSliderChange {
@@ -95,7 +96,7 @@ export class OgeColorSlider {
   }
 
   private isRtl(): boolean {
-    return getComputedStyle(this.hostEl.nativeElement).direction === 'rtl';
+    return ogeIsRtl(this.hostEl.nativeElement);
   }
 
   private valueAtPointer(event: PointerEvent, rect: DOMRect): number {

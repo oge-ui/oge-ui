@@ -121,6 +121,7 @@ _Appearance & behavior_
 | `autoScheduling` | `boolean` | `false` | Forward-pass scheduling: moving a predecessor pushes its successors to satisfy FS/SS/FF/SF constraints (never pulls them earlier). |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the provider locale, then the browser locale. |
 | `messages` | `Partial<OgeGanttMessages>` | `{}` | Per-instance message overrides, merged over the provider config per top-level block. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: the task tree moves to the right, the timeline runs from right to left (dependency arrows, baselines, today line and drag tip included), pointer drags and the splitter invert their direction and the Left/Right keys mirror — Left expands a summary, Alt+Shift+Left indents and Ctrl+Left moves a bar later. Unset follows the page: the computed `direction` or the nearest `dir` attribute, read after the first render and kept current while it changes; an explicit value also sets `dir` on the host. |
 | `selectedTaskKey / defaultSelectedTaskKey` | `RowKey \| null` | `null` | The selected task. Controlled when `selectedTaskKey` is set (pair it with `onSelectedTaskKeyChange`); `defaultSelectedTaskKey` seeds the uncontrolled state and is applied at mount. |
 | `className / style` | `string / CSSProperties` | `—` | Applied to the `.oge-gantt` host — give it a height (the body scrolls inside it). |
 
@@ -667,6 +668,39 @@ export function LocalizedPlan() {
       <OgeGanttConfigProvider config={{ locale: 'de' }}>
         <OgeGantt tasks={tasks} locale="de" style={{ height: 300 }} />
       </OgeGanttConfigProvider>
+    </>
+  );
+}
+```
+
+### RTL
+
+```ts
+'use client';
+
+import { OgeGantt } from '@oge-ui/react-gantt';
+
+const tasks = [
+  { id: 1, title: 'Release 1.0', start: new Date(2026, 7, 3), end: new Date(2026, 7, 21) },
+  { id: 2, parentId: 1, title: 'Design', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7), progress: 100 },
+  { id: 3, parentId: 1, title: 'Implementation', start: new Date(2026, 7, 7), end: new Date(2026, 7, 17), progress: 45 },
+  { id: 4, parentId: 1, title: 'Ship', start: new Date(2026, 7, 21), end: new Date(2026, 7, 21) },
+];
+
+const links = [
+  { id: 'a', predecessorId: 2, successorId: 3 },
+  { id: 'b', predecessorId: 3, successorId: 4 },
+];
+
+export function RtlPlan() {
+  return (
+    <>
+      {/* rtlEnabled (unset = follow the page's dir) mirrors the whole chart:
+          the task tree sits on the right, the timeline runs right to left,
+          dependency arrows and drags follow, and the Left/Right keys swap —
+          Left expands a summary, Alt+Shift+Left indents, Ctrl+Left moves a
+          bar later. */}
+      <OgeGantt tasks={tasks} dependencies={links} rtlEnabled style={{ height: 300 }} />
     </>
   );
 }

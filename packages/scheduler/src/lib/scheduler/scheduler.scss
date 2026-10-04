@@ -79,6 +79,12 @@
   min-width: 30px;
 }
 
+/* previous/next chevrons point along the reading direction */
+[dir='rtl'] .oge-scheduler-btn-icon svg,
+.oge-scheduler-btn-icon:dir(rtl) svg {
+  transform: scaleX(-1);
+}
+
 .oge-scheduler-btn-add {
   display: inline-flex;
   align-items: center;
@@ -407,7 +413,7 @@
   &::after {
     content: '';
     position: absolute;
-    inset-inline-start: 50%;
+    left: 50%; // physical on purpose: centring is direction-neutral
     transform: translateX(-50%);
     width: 24px;
     height: 3px;
@@ -886,7 +892,7 @@
 .oge-scheduler-scope {
   position: fixed;
   inset-block-start: 50%;
-  inset-inline-start: 50%;
+  left: 50%; // physical on purpose: centring is direction-neutral
   transform: translate(-50%, -50%);
   z-index: calc(var(--oge-z-modal) + 11);
   min-width: 320px;
@@ -1261,7 +1267,7 @@
 .oge-scheduler-year-dot {
   position: absolute;
   inset-block-end: 2px;
-  inset-inline-start: 50%;
+  left: 50%; // physical on purpose: centring is direction-neutral
   transform: translateX(-50%);
   width: 5px;
   height: 5px;

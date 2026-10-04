@@ -26,7 +26,7 @@ import { GANTT_OVERVIEW_DEMOS } from './overview-snippets';
 import { loadDocsPdfFont } from '../../shared/pdf-font';
 
 /**
- * TOC of the React view — the same nine sections as the Angular overview, in
+ * TOC of the React view — the same ten sections as the Angular overview, in
  * the same order with the same headings (`docs/REACT-PARITY.md`).
  */
 export const REACT_GANTT_OVERVIEW_SECTIONS = [
@@ -39,6 +39,7 @@ export const REACT_GANTT_OVERVIEW_SECTIONS = [
   'Work calendar, teams & export',
   'Task template',
   'Configuration & i18n',
+  'RTL',
 ] as const;
 
 type DemoTask = Record<string, unknown>;
@@ -364,7 +365,7 @@ const confirmDelete = (event: OgeGanttTaskDeletingEvent<DemoTask>): void => {
 };
 
 /**
- * The React half of the Gantt overview — the same nine demos as the Angular
+ * The React half of the Gantt overview — the same ten demos as the Angular
  * page, rendered as real React trees inside `/components/gantt` when the
  * reader has chosen React (ADR 0002).
  */
@@ -472,6 +473,16 @@ const confirmDelete = (event: OgeGanttTaskDeletingEvent<DemoTask>): void => {
     >
       <app-react-host [render]="config" />
     </app-demo-card>
+
+    <app-demo-card
+      [chips]="['rtlEnabled', 'dir', 'mirrored keys']"
+      heading="RTL"
+      description="<code>rtlEnabled</code> (unset follows the page's <code>dir</code>, live) mirrors the chart: the task tree moves to the right, the timeline runs right to left — dependency arrows, baselines, the today line and drags follow — and the Left/Right keys swap: Left expands a summary, Alt+Shift+Left indents, Ctrl+Left moves a bar later."
+      [code]="demos[9].source"
+      language="tsx"
+    >
+      <app-react-host [render]="rtl" />
+    </app-demo-card>
   `,
 })
 export class ReactGanttOverviewDemos {
@@ -553,4 +564,12 @@ export class ReactGanttOverviewDemos {
       { config: { locale: 'de' } },
       gantt({ tasks: configTasks, locale: 'de', style: { height: 300 } }),
     );
+  protected readonly rtl = () =>
+    gantt({
+      className: 'app-gantt-rtl-demo',
+      tasks: basicTasks,
+      dependencies: basicLinks,
+      rtlEnabled: true,
+      style: { height: 300 },
+    });
 }

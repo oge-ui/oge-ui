@@ -97,6 +97,8 @@ import {
   type OgeTreeRowToggleEvent,
   type OgeTreeRowTogglingEvent,
   type OgeGridColumnHidingMode,
+  ogeIsRtl,
+  observeDirection,
 } from '@oge-ui/behavior';
 import {
   beginPointerDragDrop,
@@ -3271,9 +3273,12 @@ export class OgeTreeList<T extends object = Record<string, unknown>> {
       });
       observer.observe(viewport);
       this.destroyRef.onDestroy(() => observer.disconnect());
-      this.detectedRtl.set(
-        getComputedStyle(this.hostRef.nativeElement).direction === 'rtl',
+      const host = this.hostRef.nativeElement;
+      this.detectedRtl.set(ogeIsRtl(host));
+      const stopDirection = observeDirection(host, (direction) =>
+        this.detectedRtl.set(direction === 'rtl'),
       );
+      this.destroyRef.onDestroy(stopDirection);
     });
   }
 }

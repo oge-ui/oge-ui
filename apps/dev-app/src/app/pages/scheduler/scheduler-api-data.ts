@@ -139,6 +139,13 @@ export const OGE_SCHEDULER_API: ApiSections = {
           description:
             'Initial scroll position of the day/week body in hours (fractions allowed, e.g. <code>8.5</code>); re-applied on view/period changes.',
         },
+        {
+          name: 'rtlEnabled',
+          type: 'boolean | undefined',
+          default: 'undefined',
+          description:
+            'Right-to-left layout: day columns, month cells and the timeline run right-to-left (the first day is the rightmost column), the toolbar chevrons flip, Left/Right (and Ctrl+Left/Right moves) mirror and horizontal drag deltas invert. Unset follows the page — <code>ogeResolveDirection</code> reads the computed <code>direction</code> or the nearest <code>dir</code> attribute after the first render and observes later <code>dir</code> changes; an explicit value also sets <code>dir</code> on the host.',
+        },
       ],
     },
     {

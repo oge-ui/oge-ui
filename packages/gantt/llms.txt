@@ -149,6 +149,7 @@ _Appearance & behavior_
 | `autoScheduling` | `boolean` | `false` | Forward-pass scheduling: moving a predecessor pushes its successors to satisfy FS/SS/FF/SF constraints (never pulls them earlier). |
 | `locale` | `string \| undefined` | `—` | BCP 47 locale for every `Intl` format; defaults to the config locale, then the browser locale. |
 | `messages` | `Partial<OgeGanttMessages>` | `{}` | Per-instance message overrides, merged over the DI config per top-level block. |
+| `rtlEnabled` | `boolean \| undefined` | `undefined` | Right-to-left layout: the task tree moves to the right, the timeline runs from right to left (dependency arrows, baselines, today line and drag tip included), pointer drags and the splitter invert their direction and the Left/Right keys mirror — Left expands a summary, Alt+Shift+Left indents and Ctrl+Left moves a bar later. Unset follows the page: the computed `direction` or the nearest `dir` attribute, read after the first render and kept current while it changes; an explicit value also sets `dir` on the host. |
 | `selectedTaskKey` | `RowKey \| null` | `null` | The selected task. Two-way (`[(selectedTaskKey)]`). |
 
 _Editing gates_
@@ -534,6 +535,44 @@ export class Demo {
 
   protected readonly links = [
     { id: 'a', predecessorId: 2, successorId: 3 }, // FS is the default type
+    { id: 'b', predecessorId: 3, successorId: 4 },
+  ];
+}
+```
+
+### Rtl
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { OgeGantt } from '@oge-ui/gantt';
+
+@Component({
+  selector: 'demo-root',
+  imports: [OgeGantt],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <!-- rtlEnabled (unset = follow the page's dir) mirrors the whole
+         chart: the task tree sits on the right, the timeline runs right to left,
+         dependency arrows and drags follow, and the Left/Right keys swap — Left
+         expands a summary, Alt+Shift+Left indents, Ctrl+Left moves a bar later. -->
+    <oge-gantt
+      [tasks]="tasks"
+      [dependencies]="links"
+      [rtlEnabled]="true"
+      style="height: 300px"
+    />
+  `,
+})
+export class Demo {
+  protected readonly tasks = [
+    { id: 1, title: 'Release 1.0', start: new Date(2026, 7, 3), end: new Date(2026, 7, 21) },
+    { id: 2, parentId: 1, title: 'Design', start: new Date(2026, 7, 3), end: new Date(2026, 7, 7), progress: 100 },
+    { id: 3, parentId: 1, title: 'Implementation', start: new Date(2026, 7, 7), end: new Date(2026, 7, 17), progress: 45 },
+    { id: 4, parentId: 1, title: 'Ship', start: new Date(2026, 7, 21), end: new Date(2026, 7, 21) },
+  ];
+
+  protected readonly links = [
+    { id: 'a', predecessorId: 2, successorId: 3 },
     { id: 'b', predecessorId: 3, successorId: 4 },
   ];
 }

@@ -30,6 +30,7 @@ import {
   EDITING_SNIPPET,
   FIELD_MAPPING_SNIPPET,
   GETTING_STARTED_SNIPPET,
+  RTL_SNIPPET,
   TEMPLATE_SNIPPET,
   TOOLBAR_SNIPPET,
   WORK_EXPORT_SNIPPET,
@@ -46,6 +47,7 @@ const SECTIONS = [
   'Work calendar, teams & export',
   'Task template',
   'Configuration & i18n',
+  'RTL',
 ] as const;
 
 type DemoTask = Record<string, unknown>;
@@ -305,6 +307,22 @@ type DemoTask = Record<string, unknown>;
       >
         <oge-gantt [tasks]="configTasks" locale="de" style="height: 300px" />
       </app-demo-card>
+
+      <app-demo-card
+        [chips]="['rtlEnabled', 'dir', 'mirrored keys']"
+        heading="RTL"
+        description="<code>rtlEnabled</code> (unset follows the page's <code>dir</code>, live) mirrors the chart: the task tree moves to the right, the timeline runs right to left — dependency arrows, baselines, the today line and drags follow — and the Left/Right keys swap: Left expands a summary, Alt+Shift+Left indents, Ctrl+Left moves a bar later."
+        [code]="rtlSnippet"
+        language="ts"
+      >
+        <oge-gantt
+          class="app-gantt-rtl-demo"
+          [tasks]="basicTasks"
+          [dependencies]="basicLinks"
+          [rtlEnabled]="true"
+          style="height: 300px"
+        />
+      </app-demo-card>
     }
   `,
 })
@@ -321,6 +339,7 @@ export class GanttOverviewPage {
   protected readonly workExportSnippet = WORK_EXPORT_SNIPPET;
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
+  protected readonly rtlSnippet = RTL_SNIPPET;
 
   protected readonly scale = signal<OgeGanttScaleType>('weeks');
 

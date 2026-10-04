@@ -282,6 +282,16 @@
   transform: rotate(90deg);
 }
 
+// a collapsed chevron points to inline-end: left in RTL (it turns the other
+// way round to point down when open)
+.oge-pivot-arrow:dir(rtl) {
+  transform: rotate(180deg);
+}
+
+.oge-pivot-arrow-open:dir(rtl) {
+  transform: rotate(90deg);
+}
+
 .oge-pivot-cell {
   display: flex;
   align-items: center;
@@ -431,6 +441,13 @@
   display: flex;
   flex-direction: column;
   min-width: 168px;
+}
+
+// the anchor x is the menu's inline-start corner: in RTL the popups open
+// leftwards from it (keyboard-opened menus anchor at the element's right edge)
+.oge-pivot-grid .oge-context-menu:dir(rtl),
+.oge-pivot-grid .oge-header-filter-popup:dir(rtl) {
+  translate: -100% 0;
 }
 
 .oge-pivot-grid .oge-menu-item {

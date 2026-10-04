@@ -385,6 +385,13 @@
   }
 }
 
+// The canvas stays LTR in an RTL page: DI coordinates are absolute, and an
+// inherited `direction: rtl` would flip every label's `text-anchor`.
+.oge-bpmn-canvas,
+.oge-bpmn-minimap svg {
+  direction: ltr;
+}
+
 .oge-bpmn-canvas {
   display: block;
   inline-size: 100%;
@@ -674,6 +681,12 @@
   background: var(--oge-popup-bg);
   box-shadow: var(--oge-shadow-card);
   z-index: 2;
+}
+
+// RTL chrome: the pad sits on the shape's left side, its `left` is the pad's
+// right edge.
+.oge-bpmn-context-pad-left {
+  transform: translateX(-100%);
 }
 
 .oge-bpmn-pad-btn {

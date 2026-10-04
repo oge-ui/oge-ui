@@ -16,7 +16,11 @@ import {
   viewChildren,
 } from '@angular/core';
 import { edgeEnabledIndex, stepEnabledIndex } from '@oge-ui/core';
-import { OGE_TAB_DRAG_THRESHOLD, motionScrollBehavior } from '@oge-ui/behavior';
+import {
+  OGE_TAB_DRAG_THRESHOLD,
+  motionScrollBehavior,
+  ogeIsRtl,
+} from '@oge-ui/behavior';
 import {
   OgeAnchoredPanel,
   OgeMenuList,
@@ -470,7 +474,7 @@ export class OgeTabStrip {
     const ds = this.descriptors();
     if (ds.length === 0 || this.disabled()) return;
     const vertical = this.orientation() === 'vertical';
-    const rtl = getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    const rtl = ogeIsRtl(this.host.nativeElement);
     const nextKey = vertical ? 'ArrowDown' : rtl ? 'ArrowLeft' : 'ArrowRight';
     const prevKey = vertical ? 'ArrowUp' : rtl ? 'ArrowRight' : 'ArrowLeft';
     const current = this.currentFocusIndex();
@@ -527,7 +531,7 @@ export class OgeTabStrip {
     const el = this.scroller()?.nativeElement;
     if (!el) return;
     const vertical = this.orientation() === 'vertical';
-    const rtl = getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    const rtl = ogeIsRtl(this.host.nativeElement);
     const amount =
       (vertical ? el.clientHeight : el.clientWidth) * 0.75 * direction;
     if (vertical) {
@@ -629,7 +633,7 @@ export class OgeTabStrip {
   private computeDropIndex(clientX: number, clientY: number): number {
     const els = this.tabElements();
     const vertical = this.orientation() === 'vertical';
-    const rtl = getComputedStyle(this.host.nativeElement).direction === 'rtl';
+    const rtl = ogeIsRtl(this.host.nativeElement);
     for (let i = 0; i < els.length; i++) {
       const rect = els[i].nativeElement.getBoundingClientRect();
       const mid = vertical

@@ -35,6 +35,7 @@ import {
   chartTouchGestures,
   createChartPinchTracker,
   detectChartRtl,
+  observeChartRtl,
   resolveChartAnimation,
   type ChartGestureHandle,
   type ChartPinchTracker,
@@ -266,6 +267,8 @@ function OgeChartInner<T extends object>(
   const [autoRtl, setAutoRtl] = useState(false);
   useEffect(() => {
     setAutoRtl(detectChartRtl(rootRef.current));
+    // follow a later `dir` flip (an app-wide language switch)
+    return observeChartRtl(rootRef.current, setAutoRtl);
   }, []);
   const rtl = props.rtlEnabled ?? autoRtl;
   const [reducedMotion] = useState(chartPrefersReducedMotion);

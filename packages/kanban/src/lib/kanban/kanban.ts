@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   ViewEncapsulation,
   afterNextRender,
@@ -62,6 +63,7 @@ import {
   kanbanKeyboardMove,
   kanbanMoveTargets,
   kanbanNavigationTarget,
+  watchKanbanDirection,
   kanbanNewColumn,
   kanbanScrollIntoViewTop,
   kanbanToolbarAddColumn,
@@ -158,6 +160,8 @@ interface KanbanMenuState {
     '[attr.aria-label]': 'msg().board.boardLabel',
     '[class.oge-kanban-dragging]': 'drag() !== null',
     '[style.--oge-kanban-slot.px]': 'cardHeightPx() + 8',
+    '[attr.dir]':
+      "rtlEnabled() === undefined ? null : rtlEnabled() ? 'rtl' : 'ltr'",
   },
   styleUrl: './kanban.scss',
   template: `
@@ -1032,6 +1036,19 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
    */
   readonly cardColorMode = input<'stripe' | 'surface'>('stripe');
   /**
+   * Right-to-left layout: the first column on the right, ArrowLeft/Right
+   * (and Ctrl+Arrow moves) mirrored. Unset follows the page — the computed
+   * `direction` or the nearest `dir`, read after the first render and kept
+   * current; an explicit value also sets `dir` on the host.
+   */
+  readonly rtlEnabled = input<boolean | undefined>(undefined);
+  /** The page direction (the `rtlEnabled` fallback). */
+  private readonly detectedRtl = signal(false);
+  /** The direction the arrow keys follow. */
+  protected readonly rtl = computed(
+    () => this.rtlEnabled() ?? this.detectedRtl(),
+  );
+  /**
    * Replaces the edit dialog's default form wholesale (generic
    * `OgeFormItemData[]`); `cardEditDialogShowing` can still adjust per open.
    */
@@ -1169,6 +1186,14 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
     // the browser decides about panning at touchstart: arm the touch guard
     // before the first long-press card drag
     afterNextRender(() => prepareKanbanTouchDrag(this.hostEl.nativeElement));
+    // the rtlEnabled fallback: the page direction, kept current
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const stop = watchKanbanDirection(this.hostEl.nativeElement, (rtl) =>
+        this.detectedRtl.set(rtl),
+      );
+      destroyRef.onDestroy(stop);
+    });
     afterRenderEffect(() => {
       this.lanes(); // re-measure when the board reshapes
       this.measureCells();
@@ -1562,6 +1587,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       position,
       event.key,
       this.isCollapsedFn,
+      this.rtl(),
     );
     if (target === undefined) return;
     event.preventDefault();
@@ -1589,6 +1615,7 @@ export class OgeKanban<T extends object = Record<string, unknown>> {
       position,
       event.key,
       this.isCollapsedFn,
+      this.rtl(),
     );
     if (move === null) return;
     event.preventDefault();

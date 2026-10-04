@@ -108,6 +108,13 @@ export interface OgeGanttProps<
   locale?: string;
   /** Per-instance overrides, merged over the provider's messages per block. */
   messages?: Partial<OgeGanttMessages>;
+  /**
+   * Right-to-left layout: mirrors the timeline, the arrow keys, drag deltas
+   * and the dependency arrows. Unset follows the page direction (the nearest
+   * `dir` / computed `direction`, kept current while it changes); an explicit
+   * value is also set as `dir` on the host.
+   */
+  rtlEnabled?: boolean;
 
   /* ---------------- editing gates ---------------- */
   editingEnabled?: boolean;

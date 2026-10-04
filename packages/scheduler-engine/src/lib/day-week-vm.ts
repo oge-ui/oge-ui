@@ -523,7 +523,8 @@ export function originDayIndex<T>(
 
 /**
  * A chip drag: horizontal delta → target column (day × resource), vertical
- * delta → time shift, both snapped.
+ * delta → time shift, both snapped. `rtl` inverts the horizontal delta
+ * (columns run right-to-left).
  */
 export function dayWeekDragMove<T>(
   appointment: SchedulerAppointment<T>,
@@ -537,10 +538,11 @@ export function dayWeekDragMove<T>(
   originDay: number,
   originRes: number,
   snap: number,
+  rtl = false,
 ): { proposal: AppointmentProposal; targetRes: number } {
   const span = grid.windowEndMinutes - grid.windowStartMinutes;
   const colWidth = rectWidth / colCount;
-  const colDelta = Math.round(deltaX / colWidth);
+  const colDelta = Math.round((rtl ? -deltaX : deltaX) / colWidth);
   const originCol = Math.max(0, originDay) * resCount + originRes;
   const newCol = Math.min(colCount - 1, Math.max(0, originCol + colDelta));
   const deltaDays = Math.floor(newCol / resCount) - Math.max(0, originDay);
@@ -570,14 +572,20 @@ export function dayWeekResizeProposal<T>(
   return proposeResize(appointment, edge, (deltaY / rectHeight) * span, snap);
 }
 
-/** An all-day bar drag: day-only move, time of day and flag survive. */
+/**
+ * An all-day bar drag: day-only move, time of day and flag survive. `rtl`
+ * inverts the horizontal delta.
+ */
 export function allDayDragProposal<T>(
   appointment: SchedulerAppointment<T>,
   deltaX: number,
   rectWidth: number,
   dayCount: number,
   snap: number,
+  rtl = false,
 ): AppointmentProposal {
-  const deltaDays = Math.round(deltaX / (rectWidth / dayCount));
+  const deltaDays = Math.round(
+    (rtl ? -deltaX : deltaX) / (rectWidth / dayCount),
+  );
   return proposeMove(appointment, deltaDays, 0, snap);
 }

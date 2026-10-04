@@ -231,6 +231,8 @@ export class OgeSchedulerMonthView<T = unknown> {
   readonly allowDragging = input(true);
   /** `aria-readonly` on the grid — the scheduler cannot change anything. */
   readonly readOnly = input(false);
+  /** Right-to-left layout: mirrors Left/Right keys and horizontal drag deltas. */
+  readonly rtl = input(false);
   readonly appointmentTemplate = input<OgeAppointmentTemplate<T> | null>(null);
   readonly cellTemplate = input<OgeSchedulerCellTemplate | null>(null);
 
@@ -350,7 +352,7 @@ export class OgeSchedulerMonthView<T = unknown> {
     dayIndex: number,
     event: KeyboardEvent,
   ): void {
-    const action = monthCellKey(event.key, weekIndex, dayIndex);
+    const action = monthCellKey(event.key, weekIndex, dayIndex, this.rtl());
     if (action === null) return;
     event.preventDefault();
     if (action.kind === 'activate') {
@@ -369,7 +371,12 @@ export class OgeSchedulerMonthView<T = unknown> {
     appointment: SchedulerAppointment<T>,
     event: KeyboardEvent,
   ): void {
-    const action = chipKey(event.key, appointment, this.chipOrder());
+    const action = chipKey(
+      event.key,
+      appointment,
+      this.chipOrder(),
+      this.rtl(),
+    );
     if (action === null) return;
     switch (action.kind) {
       case 'activate':
@@ -429,6 +436,7 @@ export class OgeSchedulerMonthView<T = unknown> {
           moveEvent.clientX,
           moveEvent.clientY,
           rect,
+          this.rtl(),
         );
         this.dropTarget.set({ week, day });
         if (originIndex === -1) return;

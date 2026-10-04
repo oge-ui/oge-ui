@@ -26,6 +26,7 @@ import {
   FIELD_MAPPING_SNIPPET,
   GETTING_STARTED_SNIPPET,
   PLANNING_SNIPPET,
+  RTL_SNIPPET,
   TEAMS_SNIPPET,
   TEMPLATE_SNIPPET,
   VIEWS_SNIPPET,
@@ -39,6 +40,7 @@ const SECTIONS = [
   'Teams, recurrence & timeline',
   'Views',
   'Appointment template',
+  'RTL',
   'Configuration & i18n',
 ] as const;
 
@@ -275,6 +277,25 @@ type DemoAppt = Record<string, unknown>;
       </app-demo-card>
 
       <app-demo-card
+        [chips]="['rtlEnabled', 'dir', 'mirrored keys']"
+        heading="RTL"
+        description="Right-to-left: the day columns, month cells and the timeline run right-to-left (the first day is the rightmost column), the toolbar chevrons point the other way, Left/Right move the roving cell and cycle chips mirrored, Ctrl+Left moves an appointment to the next day and horizontal drags follow the pointer. <code>rtlEnabled</code> unset follows the page's <code>dir</code> (and its changes); this demo forces it on."
+        [code]="rtlSnippet"
+        language="ts"
+      >
+        <oge-scheduler
+          [dataSource]="basicData"
+          [currentDate]="fixedDate"
+          currentView="week"
+          [views]="['week', 'month', 'timelineWeek']"
+          [dayStartHour]="8"
+          [dayEndHour]="18"
+          [rtlEnabled]="true"
+          style="height: 560px"
+        />
+      </app-demo-card>
+
+      <app-demo-card
         [chips]="['provideOgeSchedulerConfig', 'messages', 'locale']"
         heading="Configuration & i18n"
         description="Every user-facing string, aria labels included, lives in <code>OgeSchedulerMessages</code> — provide once with <code>provideOgeSchedulerConfig()</code> or override per instance with <code>[messages]</code>. <code>locale</code> drives every <code>Intl</code> format."
@@ -303,6 +324,7 @@ export class SchedulerOverviewPage {
   protected readonly teamsSnippet = TEAMS_SNIPPET;
   protected readonly templateSnippet = TEMPLATE_SNIPPET;
   protected readonly configSnippet = CONFIG_SNIPPET;
+  protected readonly rtlSnippet = RTL_SNIPPET;
 
   protected readonly fixedDate = new Date(2026, 7, 6);
   protected readonly basicDate = signal(new Date(2026, 7, 6));

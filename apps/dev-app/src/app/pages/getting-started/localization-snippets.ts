@@ -91,3 +91,21 @@ export const appConfig = {
 };
 
 // anywhere: uiLanguage.set('tr');`;
+
+export const RTL = `<!-- 1. Most components need nothing: layout uses CSS logical properties,
+        so setting dir on <html> (or any ancestor) mirrors them. -->
+<html lang="ar" dir="rtl">
+
+<!-- 2. Components that compute geometry in script (grid, tree list, charts,
+        scheduler, Gantt, kanban, pivot) follow the page too, and re-mirror
+        when dir changes at runtime. rtlEnabled forces a direction for one
+        instance and also sets dir on its host: -->
+<oge-scheduler [dataSource]="appointments" [rtlEnabled]="true" />
+
+// 3. Your own widgets can share the same rule (SSR-safe):
+import { ogeIsRtl, observeDirection } from '@oge-ui/behavior';
+
+const rtl = ogeIsRtl(hostElement); // computed direction, then the nearest dir
+const stop = observeDirection(hostElement, (direction) => {
+  // 'ltr' | 'rtl' — mirror your arrow keys / drag maths here
+});`;

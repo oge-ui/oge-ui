@@ -280,7 +280,7 @@ import type {
               [class.oge-scheduler-chip-clipped-end]="segment.clippedEnd"
               [style.top.%]="segment.topFraction * 100"
               [style.height.%]="segment.heightFraction * 100"
-              [style.left.%]="chipLeft(segment)"
+              [style.inset-inline-start.%]="chipLeft(segment)"
               [style.width.%]="chipWidth(segment)"
               [class.oge-scheduler-dragging]="isDragging(segment.appointment)"
               (click)="onChipClick(segment.appointment, $event)"
@@ -320,7 +320,7 @@ import type {
               aria-hidden="true"
               [style.top.%]="box.top"
               [style.height.%]="box.height"
-              [style.left.%]="box.left"
+              [style.inset-inline-start.%]="box.left"
               [style.width.%]="box.width"
             ></div>
           }
@@ -331,7 +331,7 @@ import type {
             aria-hidden="true"
             [style.top.%]="box.top"
             [style.height.%]="box.height"
-            [style.left.%]="box.left"
+            [style.inset-inline-start.%]="box.left"
             [style.width.%]="box.width"
           ></div>
         }
@@ -341,7 +341,9 @@ import type {
               <div
                 class="oge-scheduler-shade"
                 [style.height.%]="fraction * 100"
-                [style.left.%]="(dayIndex / grid().days.length) * 100"
+                [style.inset-inline-start.%]="
+                  (dayIndex / grid().days.length) * 100
+                "
                 [style.width.%]="(1 / grid().days.length) * 100"
                 aria-hidden="true"
               ></div>
@@ -349,7 +351,9 @@ import type {
             <div
               class="oge-scheduler-now"
               [style.top.%]="fraction * 100"
-              [style.left.%]="(dayIndex / grid().days.length) * 100"
+              [style.inset-inline-start.%]="
+                (dayIndex / grid().days.length) * 100
+              "
               [style.width.%]="(1 / grid().days.length) * 100"
               aria-hidden="true"
             ></div>
@@ -388,6 +392,8 @@ export class OgeSchedulerDayWeekView<T = unknown> {
   readonly workHours = input<OgeSchedulerWorkHours | null>(null);
   /** Shades today's column above the now-line (dx parity). */
   readonly shadeUntilCurrentTime = input(false);
+  /** Right-to-left layout: mirrors Left/Right keys and horizontal drag deltas. */
+  readonly rtl = input(false);
   /** Drag snap raster in minutes; defaults to `cellDuration`. */
   readonly snapDuration = input<number | undefined>(undefined);
   /** Column-grouping resource (day columns split per item); `null` = off. */
@@ -578,6 +584,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       slotIndex,
       this.colCount(),
       grid.slotStartMinutes.length,
+      this.rtl(),
     );
     if (action === null) return;
     event.preventDefault();
@@ -604,6 +611,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       this.grid().cellDuration,
       this.allowDragging(),
       this.allowResizing(),
+      this.rtl(),
     );
     if (ctrl.handled) {
       if (ctrl.commit !== undefined) {
@@ -617,7 +625,12 @@ export class OgeSchedulerDayWeekView<T = unknown> {
       }
       return;
     }
-    const action = chipKey(event.key, appointment, this.chipOrder());
+    const action = chipKey(
+      event.key,
+      appointment,
+      this.chipOrder(),
+      this.rtl(),
+    );
     if (action === null) return;
     switch (action.kind) {
       case 'activate':
@@ -762,6 +775,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
           originDay,
           originRes,
           this.snapMinutes(),
+          this.rtl(),
         );
         proposal = move.proposal;
         targetRes = move.targetRes;
@@ -845,6 +859,7 @@ export class OgeSchedulerDayWeekView<T = unknown> {
           rect.width,
           grid.days.length,
           this.snapMinutes(),
+          this.rtl(),
         );
         this.preview.set({ key: appointment.key, proposal });
       },

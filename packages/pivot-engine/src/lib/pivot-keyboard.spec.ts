@@ -238,4 +238,11 @@ describe('pivotKeyboardPointer', () => {
     pointer.stopPropagation();
     expect(calls).toEqual(['prevent', 'stop']);
   });
+
+  it('anchors at the right edge in RTL', () => {
+    const event = { preventDefault: () => 0, stopPropagation: () => 0 };
+    const rect = { left: 12, right: 90, bottom: 40 };
+    expect(pivotKeyboardPointer(event, rect, true).clientX).toBe(90);
+    expect(pivotKeyboardPointer(event, rect).clientX).toBe(12);
+  });
 });

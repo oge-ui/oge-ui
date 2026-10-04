@@ -216,6 +216,11 @@
   transform: rotate(90deg);
 }
 
+/* the collapsed chevron points along the reading direction */
+.oge-gantt-rtl .oge-gantt-toggle:not(.oge-gantt-toggle-open) {
+  transform: scaleX(-1);
+}
+
 .oge-gantt-toggle-spacer {
   width: 22px;
   flex-shrink: 0;
@@ -661,6 +666,11 @@
   white-space: nowrap;
   pointer-events: none;
   transform: translateX(-50%);
+}
+
+/* centred on the logical pointer x: inset-inline-start is the right edge */
+.oge-gantt-rtl .oge-gantt-drag-tip {
+  transform: translateX(50%);
 }
 
 /* ---------- hover tooltip ---------- */

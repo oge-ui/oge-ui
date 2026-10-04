@@ -128,6 +128,7 @@ function OgeGanttInner<
             p().selectedTaskKey !== undefined
               ? (p().selectedTaskKey ?? null)
               : selectedState.current,
+          rtlEnabled: () => p().rtlEnabled,
           config: () => configRef.current,
         },
         events: {
@@ -214,8 +215,11 @@ function OgeGanttInner<
 
   // StrictMode-safe lifetime: cleanup tears gestures/timers down, the mount
   // side revives the same instance (docs/ARCHITECTURE.md)
+  // direction is read in the browser after mount and observed while `dir`
+  // changes; destroy() disconnects the observer
   useEffect(() => {
     core.revive();
+    core.connectDirection();
     return () => core.destroy();
   }, [core]);
 
@@ -300,8 +304,21 @@ function OgeGanttInner<
   return (
     <div
       ref={hostRef}
-      className={['oge-gantt', props.className].filter(Boolean).join(' ')}
+      className={[
+        'oge-gantt',
+        core.rtl() ? 'oge-gantt-rtl' : '',
+        props.className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       style={props.style}
+      dir={
+        props.rtlEnabled === undefined
+          ? undefined
+          : props.rtlEnabled
+            ? 'rtl'
+            : 'ltr'
+      }
     >
       <div
         className="oge-gantt-toolbar"
@@ -716,34 +733,37 @@ function OgeGanttInner<
                   width={scale.totalPx}
                   aria-hidden="true"
                 >
-                  {core.windowArrows().map((arrow) => (
-                    <path
-                      key={String(arrow.dependency.key)}
-                      className={[
-                        'oge-gantt-arrow',
-                        arrow.critical ? 'oge-gantt-arrow-critical' : '',
-                        arrow.dependency.key === core.selectedDependencyKey()
-                          ? 'oge-gantt-arrow-selected'
-                          : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                      d={arrow.path}
-                      onClick={(event) =>
-                        core.onArrowClick(arrow.dependency, event)
-                      }
-                    />
-                  ))}
-                  {linkPreview !== null ? (
-                    <path
-                      className={
-                        linkPreview.valid
-                          ? 'oge-gantt-arrow oge-gantt-arrow-preview'
-                          : 'oge-gantt-arrow oge-gantt-arrow-preview oge-gantt-arrow-invalid'
-                      }
-                      d={linkPreview.path}
-                    />
-                  ) : null}
+                  {/* logical x; RTL mirrors the whole group (x' = width - x) */}
+                  <g transform={core.arrowsTransform() ?? undefined}>
+                    {core.windowArrows().map((arrow) => (
+                      <path
+                        key={String(arrow.dependency.key)}
+                        className={[
+                          'oge-gantt-arrow',
+                          arrow.critical ? 'oge-gantt-arrow-critical' : '',
+                          arrow.dependency.key === core.selectedDependencyKey()
+                            ? 'oge-gantt-arrow-selected'
+                            : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        d={arrow.path}
+                        onClick={(event) =>
+                          core.onArrowClick(arrow.dependency, event)
+                        }
+                      />
+                    ))}
+                    {linkPreview !== null ? (
+                      <path
+                        className={
+                          linkPreview.valid
+                            ? 'oge-gantt-arrow oge-gantt-arrow-preview'
+                            : 'oge-gantt-arrow oge-gantt-arrow-preview oge-gantt-arrow-invalid'
+                        }
+                        d={linkPreview.path}
+                      />
+                    ) : null}
+                  </g>
                 </svg>
                 {core.windowBars().map((bar) => {
                   const task = bar.task;

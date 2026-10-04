@@ -494,4 +494,43 @@ describe('<OgeGantt>', () => {
     render(<Harness selectedTaskKey={key} />);
     expect(rows()[1].getAttribute('aria-selected')).toBe('true');
   });
+
+  describe('right-to-left', () => {
+    const gantt = () => document.querySelector('.oge-gantt') as HTMLElement;
+
+    it('rtlEnabled sets dir + the rtl class and mirrors the arrow group', () => {
+      const { rerender } = render(<Harness rtlEnabled />);
+      expect(gantt().getAttribute('dir')).toBe('rtl');
+      expect(gantt().classList).toContain('oge-gantt-rtl');
+      const svg = document.querySelector('.oge-gantt-arrows') as SVGElement;
+      expect(svg.querySelector('g')?.getAttribute('transform')).toBe(
+        `matrix(-1 0 0 1 ${svg.getAttribute('width')} 0)`,
+      );
+      rerender(<Harness rtlEnabled={false} />);
+      expect(gantt().getAttribute('dir')).toBe('ltr');
+      expect(svg.querySelector('g')?.hasAttribute('transform')).toBe(false);
+    });
+
+    it('unset follows a dir="rtl" ancestor, live', async () => {
+      const wrapper = document.createElement('div');
+      wrapper.setAttribute('dir', 'rtl');
+      document.body.append(wrapper);
+      render(<Harness />, { container: wrapper });
+      await settle();
+      expect(gantt().classList).toContain('oge-gantt-rtl');
+      expect(gantt().hasAttribute('dir')).toBe(false);
+      wrapper.setAttribute('dir', 'ltr');
+      await settle();
+      expect(gantt().classList).not.toContain('oge-gantt-rtl');
+    });
+
+    it('Ctrl+ArrowLeft moves the focused bar later in RTL', () => {
+      const onTaskUpdated = vi.fn();
+      render(<Harness rtlEnabled onTaskUpdated={onTaskUpdated} />);
+      fireEvent.click(rows()[1]);
+      fireEvent.keyDown(rows()[1], { key: 'ArrowLeft', ctrlKey: true });
+      const updated = onTaskUpdated.mock.calls.at(-1)?.[0].taskData as Task;
+      expect(updated.start).toEqual(new Date(2026, 0, 6));
+    });
+  });
 });

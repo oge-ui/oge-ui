@@ -16,6 +16,7 @@ import {
   scrollKanbanCell,
   startKanbanFrameLoop,
   stepKanbanMenuFocus,
+  watchKanbanDirection,
 } from './dom';
 import type { KanbanDragState } from './interaction';
 
@@ -204,5 +205,25 @@ describe('kanban DOM readers', () => {
     expect(frames).toBe(3);
     const stop = startKanbanFrameLoop(() => true);
     stop();
+  });
+});
+
+describe('watchKanbanDirection', () => {
+  it('reports the page direction now and after a dir change', async () => {
+    const wrap = document.createElement('div');
+    const host = document.createElement('div');
+    wrap.append(host);
+    document.body.append(wrap);
+    const seen: boolean[] = [];
+    const stop = watchKanbanDirection(host, (rtl) => seen.push(rtl));
+    expect(seen).toEqual([false]);
+    wrap.setAttribute('dir', 'rtl');
+    await Promise.resolve();
+    expect(seen).toEqual([false, true]);
+    stop();
+    wrap.removeAttribute('dir');
+    await Promise.resolve();
+    expect(seen).toEqual([false, true]);
+    wrap.remove();
   });
 });

@@ -1,6 +1,7 @@
 import {
   chipKey,
   monthCellKey,
+  schedulerLogicalKey,
   timeGridCellKey,
   timeGridChipCtrlKey,
   timelineBarCtrlKey,
@@ -181,5 +182,94 @@ describe('keyboard maps', () => {
       idOf,
     );
     expect(up).toEqual({ handled: true });
+  });
+
+  describe('RTL mirrors the horizontal arrows', () => {
+    it('maps physical to logical arrows only in RTL', () => {
+      expect(schedulerLogicalKey('ArrowLeft', true)).toBe('ArrowRight');
+      expect(schedulerLogicalKey('ArrowRight', true)).toBe('ArrowLeft');
+      expect(schedulerLogicalKey('ArrowUp', true)).toBe('ArrowUp');
+      expect(schedulerLogicalKey('ArrowLeft')).toBe('ArrowLeft');
+    });
+
+    it('time-grid and month cells: Left moves to the next day', () => {
+      expect(timeGridCellKey('ArrowLeft', 2, 3, 7, 20, true)).toEqual({
+        kind: 'move',
+        col: 3,
+        row: 3,
+      });
+      expect(timeGridCellKey('ArrowRight', 2, 3, 7, 20, true)).toEqual({
+        kind: 'move',
+        col: 1,
+        row: 3,
+      });
+      // vertical keys and Home/End are logical already
+      expect(timeGridCellKey('ArrowDown', 2, 3, 7, 20, true)).toMatchObject({
+        col: 2,
+        row: 4,
+      });
+      expect(timeGridCellKey('Home', 4, 3, 7, 20, true)).toMatchObject({
+        col: 0,
+      });
+      expect(monthCellKey('ArrowLeft', 1, 3, true)).toEqual({
+        kind: 'move',
+        col: 4,
+        row: 1,
+      });
+    });
+
+    it('chips cycle chronologically with the mirrored arrows', () => {
+      const a = appt(1, new Date(2026, 7, 6, 9), new Date(2026, 7, 6, 10));
+      const b = appt(2, new Date(2026, 7, 6, 11), new Date(2026, 7, 6, 12));
+      expect(chipKey('ArrowLeft', a, [a, b], true)).toEqual({
+        kind: 'focus',
+        key: 2,
+      });
+      expect(chipKey('ArrowRight', b, [a, b], true)).toEqual({
+        kind: 'focus',
+        key: 1,
+      });
+    });
+
+    it('Ctrl+Left moves a chip to the next day, a timeline bar later', () => {
+      const a = appt(1, new Date(2026, 7, 6, 9), new Date(2026, 7, 6, 10));
+      const day = timeGridChipCtrlKey(
+        a,
+        key('ArrowLeft', true),
+        30,
+        true,
+        true,
+        true,
+      );
+      expect(day.handled && day.commit?.proposal.startDate).toEqual(
+        new Date(2026, 7, 7, 9),
+      );
+      const rows = [{ id: 'a' }];
+      const idOf = (item: { owner?: string }) => item.owner;
+      const later = timelineBarCtrlKey(
+        a,
+        key('ArrowLeft', true),
+        15,
+        true,
+        rows,
+        idOf,
+        true,
+      );
+      expect(later.handled && later.commit?.proposal.startDate).toEqual(
+        new Date(2026, 7, 6, 9, 15),
+      );
+      const grow = timelineBarCtrlKey(
+        a,
+        key('ArrowLeft', true, true),
+        15,
+        true,
+        rows,
+        idOf,
+        true,
+      );
+      expect(grow.handled && grow.commit?.proposal.endDate).toEqual(
+        new Date(2026, 7, 6, 10, 15),
+      );
+    });
   });
 });

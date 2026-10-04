@@ -21,6 +21,7 @@ import {
   type OgeButtonSeverity,
   type OgeButtonSize,
   type OgeButtonStylingMode,
+  ogeIsRtl,
 } from '@oge-ui/behavior';
 import { OgeButton } from './button';
 import { isDevMode } from './dev';
@@ -266,9 +267,7 @@ export const OgeButtonGroup = forwardRef<
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const buttons = enabledButtons();
     const current = buttons.findIndex((el) => el.tabIndex === 0);
-    const rtl =
-      rootRef.current !== null &&
-      getComputedStyle(rootRef.current).direction === 'rtl';
+    const rtl = rootRef.current !== null && ogeIsRtl(rootRef.current);
     const next = buttonGroupNavIndex(event.key, current, buttons.length, rtl);
     if (next < 0) return;
     event.preventDefault();

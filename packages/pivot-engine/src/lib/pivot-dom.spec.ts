@@ -63,6 +63,9 @@ describe('pivot DOM readers', () => {
     expect(pivotIsRtl(host)).toBe(false);
     host.style.direction = 'rtl';
     expect(pivotIsRtl(host)).toBe(true);
+    expect(pivotIsRtl(host, false)).toBe(false);
+    host.style.direction = '';
+    expect(pivotIsRtl(host, true)).toBe(true);
     expect(pivotIsMenuKey({ key: 'ContextMenu' })).toBe(true);
     expect(pivotIsMenuKey({ key: 'F10', shiftKey: true })).toBe(true);
     expect(pivotIsMenuKey({ key: 'F10' })).toBe(false);

@@ -59,6 +59,14 @@ export interface OgePivotGridProps<T = unknown> {
   calculatedFields?: readonly OgePivotCalculatedField[];
   /** Row-header layout: `'compact'` (default, indented), `'outline'` or `'tabular'`. */
   rowHeaderLayout?: OgePivotRowHeaderLayout;
+  /**
+   * Right-to-left layout: row headers on the right, mirrored expand
+   * chevrons, Left/Right arrow keys and field-chip moves, menus opening
+   * leftwards. Unset follows the page — the computed `direction` or the
+   * nearest `dir`, read after mount and kept current; an explicit value also
+   * sets `dir` on the host.
+   */
+  rtlEnabled?: boolean;
   /** Custom content of each value cell (per measure) — Angular's `*ogePivotCellTemplate`. */
   renderCell?: (cell: OgePivotCellTemplateContext) => ReactNode;
   /** Custom row-header label — Angular's `*ogePivotRowHeaderTemplate`. */

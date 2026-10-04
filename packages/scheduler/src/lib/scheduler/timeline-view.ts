@@ -149,6 +149,8 @@ export class OgeSchedulerTimelineView<T = unknown> {
   readonly allowDragging = input(true);
   /** Drag snap raster in minutes; defaults to `cellDuration`. */
   readonly snapDuration = input<number | undefined>(undefined);
+  /** Right-to-left layout: mirrors Left/Right keys and horizontal drag deltas. */
+  readonly rtl = input(false);
 
   readonly chipClicked = output<SchedulerChipEvent<T>>();
   readonly chipDblClicked = output<SchedulerChipEvent<T>>();
@@ -248,6 +250,7 @@ export class OgeSchedulerTimelineView<T = unknown> {
           grid,
           this.snapMinutes(),
           startLeftPct,
+          this.rtl(),
         );
         proposal = move.proposal;
         targetRow = timelineRowAt(moveEvent.clientY, rowRects, originRow);
@@ -309,6 +312,7 @@ export class OgeSchedulerTimelineView<T = unknown> {
       this.allowDragging(),
       this.rows(),
       this.resourceIdOf(),
+      this.rtl(),
     );
     if (ctrl.handled) {
       if (ctrl.commit !== undefined) {
