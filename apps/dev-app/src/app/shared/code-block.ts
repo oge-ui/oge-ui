@@ -62,7 +62,9 @@ const LANGUAGE_LABELS: Record<string, string> = {
           <span class="h-3 w-3 rounded-full bg-[#febc2e]"></span>
           <span class="h-3 w-3 rounded-full bg-[#28c840]"></span>
         </span>
-        <div class="flex min-w-0 overflow-x-auto">
+        <div
+          class="scrollbar-hide flex min-w-0 overflow-x-auto overflow-y-hidden"
+        >
           @for (file of effFiles(); track file.name; let index = $index) {
             <button
               type="button"
@@ -196,7 +198,6 @@ const LANGUAGE_LABELS: Record<string, string> = {
     .code-tab-active {
       background: var(--cb-bg);
       border-top: 2px solid #818cf8;
-      margin-bottom: -1px;
     }
 
     .code-lang {
