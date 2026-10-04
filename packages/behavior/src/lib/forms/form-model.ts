@@ -5,6 +5,8 @@
  * arithmetic. The Angular `<oge-form>` and React's `<OgeForm>` both render
  * exactly what these functions decide.
  */
+import { evaluateOgeFormCondition } from './form-validation';
+
 import type {
   OgeFormColCount,
   OgeFormDataType,
@@ -14,6 +16,10 @@ import type {
   OgeResolvedFormItem,
   OgeValidationRule,
 } from './form-types';
+
+// the dot-path helpers moved to `form-values` (shared with the rule
+// evaluator without an import cycle); re-exported under their old home
+export { readPath, writePath } from './form-values';
 
 const EMPTY_OPTIONS: OgeFormEditorOptions = {};
 const EMPTY_RULES: readonly OgeValidationRule[] = [];
@@ -30,37 +36,6 @@ export function captionize(field: string): string {
     .trim();
   if (spaced.length === 0) return field;
   return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
-}
-
-/** Reads a dot-notation path out of a model object. */
-export function readPath(data: unknown, path: string): unknown {
-  if (data == null) return undefined;
-  let current: unknown = data;
-  for (const key of path.split('.')) {
-    if (current == null || typeof current !== 'object') return undefined;
-    current = (current as Record<string, unknown>)[key];
-  }
-  return current;
-}
-
-/** Writes a dot-notation path, cloning every object along the way. */
-export function writePath<T extends object>(
-  data: T,
-  path: string,
-  value: unknown,
-): T {
-  const keys = path.split('.');
-  const head = keys[0] as keyof T & string;
-  if (keys.length === 1) return { ...data, [head]: value };
-  const child = (data as Record<string, unknown>)[head];
-  const nested =
-    child != null && typeof child === 'object'
-      ? (child as Record<string, unknown>)
-      : {};
-  return {
-    ...data,
-    [head]: writePath(nested, keys.slice(1).join('.'), value),
-  };
 }
 
 /** Infers the value shape from a live model value. */
@@ -124,19 +99,44 @@ export function isBareEditor(editorType: OgeFormEditorType): boolean {
   return BARE_EDITORS.has(editorType);
 }
 
-/** Resolves one item's effective configuration against the model and the form. */
+/**
+ * Whether an item renders: `visible` is not `false` and its `visibleWhen`
+ * condition (if any) holds for the current model.
+ */
+export function isFormItemVisible(
+  item: Pick<OgeFormItemDataBase, 'visible' | 'visibleWhen'>,
+  data: unknown,
+): boolean {
+  return (
+    item.visible !== false && evaluateOgeFormCondition(item.visibleWhen, data)
+  );
+}
+
+/**
+ * Resolves one item's effective configuration against the model and the form.
+ * `data` (the whole model) feeds the `requiredWhen` / `disabledWhen`
+ * conditions; omitted, conditions read as not holding.
+ */
 export function resolveItem(
   item: OgeFormItemDataBase,
   id: string,
   modelValue: unknown,
   inherited: { readonly readOnly: boolean; readonly disabled: boolean },
+  data?: unknown,
 ): OgeResolvedFormItem {
   const options = item.editorOptions ?? EMPTY_OPTIONS;
   const dataType = item.dataType ?? inferDataType(modelValue);
   const editorType = pickEditorType(dataType, options, item.editorType);
   const rules = item.validationRules ?? EMPTY_RULES;
   const required =
-    item.isRequired === true || rules.some((r) => r.type === 'required');
+    item.isRequired === true ||
+    rules.some((r) => r.type === 'required') ||
+    evaluateOgeFormCondition(item.requiredWhen, data, false);
+  const conditionallyDisabled = evaluateOgeFormCondition(
+    item.disabledWhen,
+    data,
+    false,
+  );
   return {
     id,
     field: item.field,
@@ -150,7 +150,7 @@ export function resolveItem(
     colSpan: Math.max(1, Math.floor(item.colSpan ?? 1)),
     required,
     readOnly: item.readOnly ?? inherited.readOnly,
-    disabled: item.disabled ?? inherited.disabled,
+    disabled: conditionallyDisabled || (item.disabled ?? inherited.disabled),
     cssClass: item.cssClass,
     group: item.group,
     validationRules: rules,

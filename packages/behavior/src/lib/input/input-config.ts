@@ -140,6 +140,14 @@ export interface OgeInputsMessages {
   adaptiveSearch: string;
   /** Dialog title of an adaptive popup whose editor has no label. */
   adaptiveTitle: string;
+  /** Text of the tag box's "select all" row (`showSelectAll`). */
+  selectAll: string;
+  /** Overflow chip of `maxDisplayedTags` — placeholder `{count}`. */
+  moreTags: string;
+  /** Status shown once `maxSelectedItems` is reached — placeholder `{max}`. */
+  maxSelectedItemsMessage: string;
+  /** `compare` validation rule failure (forms). */
+  compareError: string;
 }
 
 export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
@@ -209,6 +217,10 @@ export const OGE_DEFAULT_INPUTS_MESSAGES: OgeInputsMessages = {
   adaptiveDone: 'Done',
   adaptiveSearch: 'Search',
   adaptiveTitle: 'Select',
+  selectAll: 'Select all',
+  moreTags: '+{count} more',
+  maxSelectedItemsMessage: 'You can select up to {max} items',
+  compareError: 'The values do not match',
 };
 
 /** Application-wide defaults, overridable per editor via the matching inputs. */

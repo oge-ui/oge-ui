@@ -6,6 +6,7 @@ import {
   formColumnsCss,
   inferDataType,
   isBareEditor,
+  isFormItemVisible,
   orderByVisibleIndex,
   pickEditorType,
   readPath,
@@ -188,6 +189,22 @@ describe('resolveItem', () => {
     ).toBe(1);
   });
 
+  it('applies requiredWhen / disabledWhen against the whole model', () => {
+    const item = {
+      field: 'vat',
+      requiredWhen: { field: 'kind', equals: 'company' },
+      disabledWhen: { field: 'kind', equals: 'person' },
+    } as const;
+    const company = resolveItem(item, 'i', '', inherited, { kind: 'company' });
+    expect(company.required).toBe(true);
+    expect(company.disabled).toBe(false);
+    const person = resolveItem(item, 'i', '', inherited, { kind: 'person' });
+    expect(person.required).toBe(false);
+    expect(person.disabled).toBe(true);
+    // without the model, conditions read as not holding
+    expect(resolveItem(item, 'i', '', inherited).required).toBe(false);
+  });
+
   it('honours labelVisible: false without dropping the label text', () => {
     const resolved = resolveItem(
       { field: 'a', label: 'A', labelVisible: false },
@@ -257,5 +274,22 @@ describe('column arithmetic', () => {
     // 'auto' has no fixed count — 12 is the practical ceiling for a colSpan
     expect(formColumnsCount('auto', 2)).toBe(12);
     expect(formColumnsCount(undefined, 'auto')).toBe(12);
+  });
+});
+
+describe('isFormItemVisible', () => {
+  it('combines visible with the visibleWhen condition', () => {
+    const when = { field: 'kind', equals: 'company' } as const;
+    expect(isFormItemVisible({}, {})).toBe(true);
+    expect(isFormItemVisible({ visible: false }, {})).toBe(false);
+    expect(isFormItemVisible({ visibleWhen: when }, { kind: 'company' })).toBe(
+      true,
+    );
+    expect(isFormItemVisible({ visibleWhen: when }, { kind: 'person' })).toBe(
+      false,
+    );
+    expect(
+      isFormItemVisible({ visibleWhen: (data) => data['n'] === 1 }, { n: 1 }),
+    ).toBe(true);
   });
 });

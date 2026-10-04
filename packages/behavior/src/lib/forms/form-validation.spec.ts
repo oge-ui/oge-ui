@@ -3,6 +3,7 @@ import { messageForFieldError } from '../input/error-messages';
 import { OGE_DEFAULT_INPUTS_MESSAGES } from '../input/input-config';
 import {
   asyncValidationRules,
+  evaluateOgeFormCondition,
   evaluateOgeValidationRules,
   isEmptyFormValue,
 } from './form-validation';
@@ -227,5 +228,97 @@ describe('rule order', () => {
   it('lets an explicit message override the table', () => {
     const [error] = run('nope', [{ type: 'email', message: 'Böyle olmaz' }]);
     expect(error.message).toBe('Böyle olmaz');
+  });
+});
+
+describe('compare rule', () => {
+  const confirm: OgeValidationRule = {
+    type: 'compare',
+    comparisonTarget: 'password',
+  };
+
+  it('fails a confirm field that does not match its target', () => {
+    expect(run('secret', [confirm], false, { password: 'secret' })).toEqual([]);
+    const [error] = run('secreT', [confirm], false, { password: 'secret' });
+    expect(error.kind).toBe('compare');
+    expect(messageForFieldError(error, OGE_DEFAULT_INPUTS_MESSAGES)).toBe(
+      OGE_DEFAULT_INPUTS_MESSAGES.compareError,
+    );
+  });
+
+  it('checks an empty field unless ignoreEmptyValue is set', () => {
+    expect(run('', [confirm], false, { password: 'x' })).toHaveLength(1);
+    expect(
+      run('', [{ ...confirm, ignoreEmptyValue: true }], false, {
+        password: 'x',
+      }),
+    ).toEqual([]);
+  });
+
+  it('supports ordering comparisons, dates and a function target', () => {
+    const end: OgeValidationRule = {
+      type: 'compare',
+      comparisonTarget: (data) => data['start'],
+      comparisonType: '>',
+      message: 'End after start',
+    };
+    const start = new Date(2026, 0, 10);
+    expect(run(new Date(2026, 0, 11), [end], false, { start })).toEqual([]);
+    const [error] = run(new Date(2026, 0, 9), [end], false, { start });
+    expect(error.message).toBe('End after start');
+    expect(
+      run(
+        5,
+        [{ type: 'compare', comparisonTarget: 'max', comparisonType: '<=' }],
+        false,
+        {
+          max: 5,
+        },
+      ),
+    ).toEqual([]);
+    expect(
+      run(
+        1,
+        [{ type: 'compare', comparisonTarget: 'other', comparisonType: '!==' }],
+        false,
+        {
+          other: 1,
+        },
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+describe('evaluateOgeFormCondition', () => {
+  const data = { kind: 'company', vat: '', tags: ['a'], nested: { on: true } };
+
+  it('reads the fallback without a condition', () => {
+    expect(evaluateOgeFormCondition(undefined, data)).toBe(true);
+    expect(evaluateOgeFormCondition(undefined, data, false)).toBe(false);
+  });
+
+  it('tests equals / notEquals / in / truthiness on a field', () => {
+    expect(
+      evaluateOgeFormCondition({ field: 'kind', equals: 'company' }, data),
+    ).toBe(true);
+    expect(
+      evaluateOgeFormCondition({ field: 'kind', notEquals: 'company' }, data),
+    ).toBe(false);
+    expect(
+      evaluateOgeFormCondition(
+        { field: 'kind', in: ['person', 'company'] },
+        data,
+      ),
+    ).toBe(true);
+    expect(evaluateOgeFormCondition({ field: 'vat' }, data)).toBe(false);
+    expect(evaluateOgeFormCondition({ field: 'tags' }, data)).toBe(true);
+    expect(evaluateOgeFormCondition({ field: 'nested.on' }, data)).toBe(true);
+  });
+
+  it('runs a predicate over the whole model', () => {
+    expect(
+      evaluateOgeFormCondition((model) => model['kind'] === 'company', data),
+    ).toBe(true);
+    expect(evaluateOgeFormCondition(() => false, null)).toBe(false);
   });
 });

@@ -61,6 +61,27 @@ export interface OgeValidationContext {
   readonly data: Record<string, unknown>;
 }
 
+/** How a `compare` rule relates the field's value to its comparison target. */
+export type OgeComparisonType =
+  '===' | '!==' | '==' | '!=' | '<' | '<=' | '>' | '>=';
+
+/**
+ * A declarative dependency on the form data, used by `visibleWhen`,
+ * `disabledWhen` and `requiredWhen`: a predicate over the whole model, or a
+ * field test — `equals`, `notEquals` or `in` against the field's value, or,
+ * with none of them, the field's truthiness (an empty string / array is
+ * falsy).
+ */
+export type OgeFormCondition =
+  | ((data: Record<string, unknown>) => boolean)
+  | {
+      /** Model property to test; dot-notation reaches nested objects. */
+      readonly field: string;
+      readonly equals?: unknown;
+      readonly notEquals?: unknown;
+      readonly in?: readonly unknown[];
+    };
+
 /** A declarative validation rule, evaluated identically by both layers. */
 export type OgeValidationRule =
   | { readonly type: 'required'; readonly message?: string }
@@ -86,6 +107,20 @@ export type OgeValidationRule =
       readonly type: 'range';
       readonly min?: Date;
       readonly max?: Date;
+      readonly message?: string;
+    }
+  | {
+      /**
+       * Compares the value with another field (`'password'`) or a function of
+       * the model: confirm-password, "end after start", and the like.
+       */
+      readonly type: 'compare';
+      readonly comparisonTarget:
+        string | ((data: Record<string, unknown>) => unknown);
+      /** Default `'==='`. */
+      readonly comparisonType?: OgeComparisonType;
+      /** Skip the check while the field is empty (default `false`, as in DevExtreme). */
+      readonly ignoreEmptyValue?: boolean;
       readonly message?: string;
     }
   | {
@@ -176,13 +211,23 @@ export interface OgeFormItemDataBase {
   /** Layout columns the item spans; clamped to the current column count. */
   readonly colSpan?: number;
   readonly visible?: boolean;
+  /**
+   * Shows the item only while the condition holds (re-evaluated on every
+   * model change). A hidden item is not validated and drops out of the
+   * validation summary.
+   */
+  readonly visibleWhen?: OgeFormCondition;
   /** Explicit ordering; items without one keep their declaration order. */
   readonly visibleIndex?: number;
   /** Adds a `required` rule and shows the required mark. */
   readonly isRequired?: boolean;
+  /** Makes the item required only while the condition holds. */
+  readonly requiredWhen?: OgeFormCondition;
   readonly validationRules?: readonly OgeValidationRule[];
   readonly readOnly?: boolean;
   readonly disabled?: boolean;
+  /** Disables the editor while the condition holds; a disabled item is not validated. */
+  readonly disabledWhen?: OgeFormCondition;
   /** Extra class on the item wrapper. */
   readonly cssClass?: string;
   /** Group caption this item belongs to, for data-driven grouping. */

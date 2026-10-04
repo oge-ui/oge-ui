@@ -46,6 +46,8 @@ export function messageForFieldError(
       });
     case 'pattern':
       return messages.patternError;
+    case 'compare':
+      return messages.compareError;
     default:
       return error.message ?? messages.invalidError;
   }

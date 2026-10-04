@@ -56,6 +56,12 @@ export interface OgeSelectListCoreDeps<TItem> {
   groupBy?: () => OgeSelectGroupExpr<TItem> | undefined;
   /** Component-specific narrowing applied before the search filter (e.g. hiding selected items). */
   preFilterItems?: (items: readonly TItem[]) => readonly TItem[];
+  /**
+   * The items already arrive filtered by the server (`dataSource` mode): the
+   * typed text is not applied client-side and `minSearchLength` is the
+   * remote machine's call, not this one's.
+   */
+  serverFiltering?: () => boolean;
   /** Overrides how the active option is brought into view (virtual mode uses offset math). */
   scrollActiveIntoView?: (index: number) => void;
 }
@@ -298,6 +304,7 @@ export class OgeSelectListCore<TItem> {
     const base = this.resolvedItems();
     const items = this.deps.preFilterItems?.(base) ?? base;
     if (!this.deps.searchEnabled()) return items;
+    if (this.deps.serverFiltering?.()) return items;
     const term = this.filterText();
     const typed = (term ?? '').trim();
     const min = this.deps.minSearchLength?.() ?? 0;

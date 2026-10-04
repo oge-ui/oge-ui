@@ -492,6 +492,36 @@ export {
   type OgeSelectListRow,
 } from './lib/input/select-list-core';
 export {
+  OgeRemoteListCore,
+  isNearScrollEnd,
+  type OgeListDataSource,
+  type OgeListDataStatus,
+  type OgeListPageLoadedEvent,
+  type OgeRemoteListCoreDeps,
+} from './lib/input/remote-list-core';
+export {
+  ogeAllowDropDownOpen,
+  ogeAllowDropDownClose,
+  ogeSelectAllState,
+  ogeToggleAllValues,
+  ogeCanSelectMore,
+  ogeChipOverflow,
+  type OgeDropDownCloseReason,
+  type OgeDropDownOpeningEvent,
+  type OgeDropDownClosingEvent,
+  type OgeSelectAllState,
+} from './lib/input/select-helpers';
+export {
+  ogeComboColumnCaption,
+  ogeComboCellValue,
+  ogeComboCellText,
+  ogeComboSearchStrings,
+  ogeComboGridTemplate,
+  ogeComboFixedWidth,
+  ogeComboColumnTarget,
+  type OgeComboBoxColumnBase,
+} from './lib/input/multi-column-core';
+export {
   clampValue,
   constrainRangeValue,
   ratioToValue,
@@ -1278,6 +1308,7 @@ export {
   pickEditorType,
   isBareEditor,
   resolveItem,
+  isFormItemVisible,
   orderByVisibleIndex,
   emptyValueForDataType,
   formColumnsCss,
@@ -1285,6 +1316,7 @@ export {
 } from './lib/forms/form-model';
 export {
   evaluateOgeValidationRules,
+  evaluateOgeFormCondition,
   asyncValidationRules,
   isEmptyFormValue,
 } from './lib/forms/form-validation';
@@ -1298,6 +1330,8 @@ export {
   type OgeFormsMessages,
 } from './lib/forms/form-config';
 export type {
+  OgeComparisonType,
+  OgeFormCondition,
   OgeFormColCount,
   OgeFormDataType,
   OgeFormEditorOptions,
